@@ -1,0 +1,20 @@
+# Credentials and secrets
+.credentials.json
+*.key
+*.pem
+secrets.*
+
+# Session data (large, ephemeral)
+*.jsonl
+*.jsonl.gz
+
+# Cache and telemetry
+cache/
+telemetry/
+statsig/
+debug/
+paste-cache/
+shell-snapshots/
+downloads/
+file-history/
+session-env/
