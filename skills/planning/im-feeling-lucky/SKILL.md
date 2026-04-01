@@ -224,4 +224,5 @@ If time permits, also report:
 - [ ] Identified dependency relationships
 - [ ] Categorized items and scored diversity
 - [ ] Ranked and presented top 5 by total score
+- [ ] No AI/agent attribution in any output or recommendations
 - [ ] Included score breakdown for each recommendation

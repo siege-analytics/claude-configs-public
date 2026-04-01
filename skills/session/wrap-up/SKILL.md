@@ -50,8 +50,13 @@ Add a "Lessons Learned" or "Notes" section documenting:
 - To restart interpreter without pod restart: `curl -X PUT .../api/interpreter/setting/restart/<name>`
 ```
 
+## Attribution policy
+
+**NEVER** include AI or agent attribution in commits, documentation updates, or any content produced during wrap-up. No "Generated with Claude Code", "Made with Cursor", "Built with Codex", Co-Authored-By lines referencing AI tools, or any other AI/agent markers.
+
 ## Checklist
 
+- [ ] No AI/agent attribution in any commits or documentation produced
 - [ ] All changes committed
 - [ ] All changes pushed to origin
 - [ ] Builds/deploys triggered and healthy

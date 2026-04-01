@@ -82,7 +82,7 @@ The body is optional for trivial changes but expected for anything non-obvious. 
 
 - Play-by-play of the diff ("Changed line 48 from int to str")
 - Filler ("This commit updates the code to...")
-- Attribution to tools or assistants
+- Attribution to tools or assistants (see Attribution policy below)
 
 ### Example body
 
@@ -186,6 +186,15 @@ git reset HEAD .env
 
 If it was already committed, remove it from history and rotate the credential immediately.
 
+# Attribution policy
+
+**NEVER** include AI or agent attribution in commit messages. This includes:
+- No `Co-Authored-By: Claude`, `Co-Authored-By: Cursor`, `Co-Authored-By: Copilot`, or similar lines
+- No "Generated with Claude Code", "Made with Cursor", "Built with Codex", or any AI tool mentions
+- No `🤖`, `[bot]`, or other markers that signal AI involvement
+- No attribution to any AI assistant, code generation tool, or agent framework
+- This applies to the subject line, body, and footer — every part of the commit message
+
 # Checklist
 
 - [ ] Changes are grouped into logical, single-purpose commits
@@ -194,4 +203,5 @@ If it was already committed, remove it from history and rotate the credential im
 - [ ] Subject line: type prefix, imperative mood, under 72 chars, specific
 - [ ] Body explains the why (if the change is non-trivial)
 - [ ] Footer references the relevant ticket(s)
+- [ ] No AI/agent attribution anywhere in the commit message (no Co-Authored-By, no "Made with", no tool mentions)
 - [ ] Verified with `git log -1` and `git status` after committing

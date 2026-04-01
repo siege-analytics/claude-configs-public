@@ -119,6 +119,10 @@ After consolidation:
 - [ ] Added docs/ references into detailed repo material
 - [ ] Verified no redundancy remains
 
+## Attribution policy
+
+**NEVER** include AI or agent attribution in consolidated documentation, commits, or any content produced. No "Generated with Claude Code", "Made with Cursor", "Built with Codex", Co-Authored-By lines referencing AI tools, or any other AI/agent markers.
+
 ## Notes
 
 - Prefer relative links (`../docs/`) over absolute URLs when possible

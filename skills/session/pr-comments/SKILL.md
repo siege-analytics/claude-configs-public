@@ -243,6 +243,14 @@ When invoked, run this workflow:
 5. **Report** the structured summary to the user
 6. **Recommend** next action: fix blocking items, respond to questions, merge, or wait
 
+# Attribution policy
+
+**NEVER** include AI or agent attribution in PR comments, review comments, or review summaries. This includes:
+- No "Generated with Claude Code", "Made with Cursor", "Built with Codex", or any AI tool mentions
+- No `🤖`, `[bot]`, or other markers that signal AI involvement
+- No attribution to any AI assistant, code generation tool, or agent framework
+- This applies to inline comments, top-level comments, review bodies, and reply threads
+
 # Checklist
 
 - [ ] Read the PR description and diff before engaging with comments

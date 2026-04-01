@@ -184,6 +184,14 @@ which collides with `C00000000547` (a different entity).
 - Data quality: `SELECT COUNT(*) FROM silver WHERE LENGTH(committee_id) != 9` should return 0
 ```
 
+# Attribution policy
+
+**NEVER** include AI or agent attribution in tickets, issue bodies, or comments. This includes:
+- No "Generated with Claude Code", "Made with Cursor", "Built with Codex", or any AI tool mentions
+- No `🤖`, `[bot]`, or other markers that signal AI involvement
+- No attribution to any AI assistant, code generation tool, or agent framework
+- This applies to the ticket title, body, comments, and any linked content
+
 # Checklist
 
 - [ ] Detected the correct ticketing platform from repo context
@@ -193,4 +201,5 @@ which collides with `C00000000547` (a different entity).
 - [ ] Epics created first, sub-tickets linked to parent
 - [ ] Ticket fields are correctly populated
 - [ ] Ticket body follows the template and is well written
+- [ ] No AI/agent attribution anywhere in the ticket (no "Generated with", no "Made with", no tool mentions)
 - [ ] The above have all been reviewed and iterated upon

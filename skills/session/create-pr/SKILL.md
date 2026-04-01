@@ -234,6 +234,15 @@ gh pr ready <number>
 
 If a PR is large, explain in the description why it can't be split and suggest a review strategy (e.g., "Review the schema changes first, then the transforms, then tests").
 
+# Attribution policy
+
+**NEVER** include AI or agent attribution in PR titles, descriptions, or metadata. This includes:
+- No "Generated with Claude Code", "Made with Cursor", "Built with Codex", or any AI tool mentions
+- No `🤖`, `[bot]`, or other markers that signal AI involvement
+- No `Co-Authored-By` lines referencing AI tools in the merge commit
+- No attribution to any AI assistant, code generation tool, or agent framework
+- This applies to the title, description body, commit table, and any comments on the PR
+
 # Checklist
 
 - [ ] All commits pushed to remote
@@ -247,4 +256,5 @@ If a PR is large, explain in the description why it can't be split and suggest a
 - [ ] Testing section describes concrete verification
 - [ ] Reviewers assigned
 - [ ] PR added to project board
+- [ ] No AI/agent attribution anywhere in the PR (no "Generated with", no "Made with", no tool mentions)
 - [ ] Cross-platform sync: mirror platform updated if dual-tracked

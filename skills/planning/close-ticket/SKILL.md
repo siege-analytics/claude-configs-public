@@ -131,6 +131,14 @@ Some projects distinguish between "close" (done, verified) and "move to In Revie
 - If the operator explicitly says to close, close it.
 - Never move tickets to Done autonomously -- that is the operator's call.
 
+# Attribution policy
+
+**NEVER** include AI or agent attribution in closing comments, summaries, or ticket metadata. This includes:
+- No "Generated with Claude Code", "Made with Cursor", "Built with Codex", or any AI tool mentions
+- No `🤖`, `[bot]`, or other markers that signal AI involvement
+- No attribution to any AI assistant, code generation tool, or agent framework
+- This applies to closing comments, summary text, and any linked content
+
 # Checklist
 
 - [ ] Read the full ticket history (all comments, linked PRs, related tickets)
@@ -141,4 +149,5 @@ Some projects distinguish between "close" (done, verified) and "move to In Revie
 - [ ] Verification is described concretely (environment, commands, results)
 - [ ] Follow-up tickets are linked if any were created
 - [ ] Cross-platform sync: closed on all tracked platforms
+- [ ] No AI/agent attribution anywhere in the closing content (no "Generated with", no "Made with", no tool mentions)
 - [ ] Status set appropriately (In Review vs. Done per project workflow)

@@ -148,6 +148,14 @@ and needs cluster access I don't have.
 - The Hive registration step still fails via Spark Connect (see en#349)
 ```
 
+# Attribution policy
+
+**NEVER** include AI or agent attribution in ticket updates, comments, or field changes. This includes:
+- No "Generated with Claude Code", "Made with Cursor", "Built with Codex", or any AI tool mentions
+- No `🤖`, `[bot]`, or other markers that signal AI involvement
+- No attribution to any AI assistant, code generation tool, or agent framework
+- This applies to comments, status updates, and any text written on the ticket
+
 # Checklist
 
 - [ ] Read the ticket's current state and existing comments before updating
@@ -155,4 +163,5 @@ and needs cluster access I don't have.
 - [ ] Commits are linked with SHAs and grouped logically
 - [ ] Field changes are accompanied by a comment explaining why
 - [ ] No duplicate information from previous comments
+- [ ] No AI/agent attribution anywhere in the update (no "Generated with", no "Made with", no tool mentions)
 - [ ] Cross-platform sync: if the ticket is dual-tracked (GitHub + GitLab), update both
