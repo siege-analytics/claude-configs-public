@@ -23,6 +23,7 @@ description: Author and maintain the Notion knowledge base — accessible, 5th-g
 The Notion knowledge base exists for people who are **not** reading the code. It serves:
 - **Leena** (PM): needs to track progress, explain the project to stakeholders, plan sprints
 - **Steve** (downstream engineer): needs to understand upstream data contracts
+- **Dheeraj** (engineer, product, CTO): needs documentation of every part of data and technology choices, progress to completion and project dependencies
 - **Clients** (LegiNation, future): need to understand what data is available and how to use it
 - **Future team members**: need onboarding material that doesn't assume existing context
 
