@@ -1,8 +1,7 @@
 ---
 name: spark
 description: PySpark job patterns, Delta Lake, and medallion architecture. Covers when to use Spark, job structure, transform design, and performance.
-user-invocable: false
-paths: "**/*.py"
+routed-by: coding-standards
 ---
 
 # Spark Jobs

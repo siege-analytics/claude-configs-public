@@ -1,7 +1,7 @@
 ---
 name: spatial
 description: Decision framework for spatial analysis. Determines when to use spatial methods vs. string lookups vs. graph traversal, and which technology and algorithms to apply.
-user-invocable: false
+routed-by: analysis-methods
 ---
 
 # Spatial Analysis

@@ -18,7 +18,7 @@ Build and maintain Claude Code skills that conform to Anthropic's specification.
 
 ## Skill Classification
 
-Every skill is one of three types. The type determines which frontmatter fields to set.
+Every skill is one of three types, plus an optional structural pattern (Router). The type determines which frontmatter fields to set.
 
 ### Reference
 
@@ -75,6 +75,37 @@ allowed-tools: Read Grep Glob
 - Read-only tools are usually sufficient
 - Often accepts a focus argument (`$ARGUMENTS`)
 
+### Router (Structural Pattern)
+
+A skill that selects and loads sub-skills based on context signals. Routers are a structural pattern applied to Reference skills — they sit at a category level and dispatch to language- or methodology-specific sub-skills.
+
+**Examples:** coding-standards (routes to python, sql, spark, etc.), analysis-methods (routes to spatial, statistical, graph, etc.).
+
+**Required frontmatter (router itself):**
+```yaml
+user-invocable: false
+paths: "<broad glob covering all sub-skill file types>"
+```
+
+**Required frontmatter (sub-skills under a router):**
+```yaml
+routed-by: <router-name>
+```
+
+The `routed-by` field is not in Anthropic's spec — Claude ignores unknown fields. It serves as documentation for humans and for audit checks.
+
+**Characteristics:**
+- Contains a routing table mapping signals (file types, imports) to sub-skill file paths
+- Loads sub-skills via relative file references: `[python/SKILL.md](python/SKILL.md)`
+- All sub-skills under a router must share the same classification
+- Body leads with gotchas (common misrouting mistakes)
+- Description is trigger-optimized: front-loads the activation signals
+- Sub-skills have NO `user-invocable` or `disable-model-invocation` — they exist only to be loaded by the router
+
+**Classification rule:** A router and all its sub-skills must be the same type. If a category contains skills of different types (e.g., coding/ has Reference sub-skills + an Analytical code-review skill), the different-type skill stays flat alongside the router.
+
+**When to create a router:** When a category has (or will soon have) more than 5 skills sharing a common classification and invocation pattern.
+
 ## Anthropic Specification Reference
 
 ### File Structure
@@ -105,6 +136,7 @@ skill-name/
 | `agent` | string | — | Subagent type when `context: fork`. |
 | `model` | string | — | Model override when skill is active. |
 | `effort` | string | — | `low`, `medium`, `high`, `max`. |
+| `routed-by` | string | — | Name of the router skill that loads this sub-skill. Informational; not in Anthropic spec. |
 
 ### Hard Constraints
 

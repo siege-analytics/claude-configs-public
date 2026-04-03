@@ -1,8 +1,7 @@
 ---
 name: python
 description: Python style and conventions for clean, maintainable code. Covers naming, structure, error handling, type hints, and 3.11+ idioms.
-user-invocable: false
-paths: "**/*.py"
+routed-by: coding-standards
 ---
 
 # Python Style

@@ -1,6 +1,107 @@
 # SQL Reference
 
-Detailed type tables, PostGIS patterns, SparkSQL operations, and dialect differences. Referenced by the main skill.
+Detailed type tables, PostGIS patterns, SparkSQL operations, dialect differences, and production gotchas. Referenced by the main skill.
+
+## PostgreSQL Gotchas
+
+Production failure modes. These are counter-intuitive behaviors that cause real bugs.
+
+### Use JSONB, Not JSON
+
+```sql
+-- JSON: stored as text, parsed on every access, no indexing
+-- JSONB: binary format, indexable, supports containment operators
+CREATE TABLE events (data JSONB);  -- not JSON
+
+-- JSONB supports GIN indexes for fast containment queries
+CREATE INDEX ON events USING GIN (data);
+SELECT * FROM events WHERE data @> '{"type": "donation"}';
+```
+
+`JSON` preserves whitespace and key order (rarely useful). `JSONB` is faster for everything else.
+
+### Use timestamptz, Not timestamp
+
+```sql
+-- timestamp: no timezone, ambiguous — "2024-03-15 14:00:00" in which timezone?
+-- timestamptz: stores UTC, converts to session timezone on display
+ALTER TABLE donations ADD COLUMN created_at TIMESTAMPTZ DEFAULT NOW();
+```
+
+`timestamp` silently drops timezone information. If your server moves or your session timezone changes, all your times are wrong.
+
+### Use Cursor Pagination, Not OFFSET
+
+```sql
+-- BAD: OFFSET scans and discards rows — O(n) for page n
+SELECT * FROM donations ORDER BY id LIMIT 20 OFFSET 10000;
+-- Scans 10,020 rows to return 20
+
+-- GOOD: Cursor pagination — O(1) regardless of page depth
+SELECT * FROM donations WHERE id > :last_seen_id ORDER BY id LIMIT 20;
+-- Seeks directly to the cursor position via index
+```
+
+OFFSET gets slower on every page. At page 500 of a 10M-row table, it's scanning 10,000 rows to return 20.
+
+### Use SKIP LOCKED for Queues
+
+```sql
+-- BAD: SELECT FOR UPDATE blocks all other workers on the same rows
+BEGIN;
+SELECT * FROM job_queue WHERE status = 'pending' ORDER BY created_at LIMIT 1 FOR UPDATE;
+-- All other workers block here until this transaction commits
+
+-- GOOD: SKIP LOCKED lets workers grab different rows concurrently
+BEGIN;
+SELECT * FROM job_queue WHERE status = 'pending' ORDER BY created_at LIMIT 1
+FOR UPDATE SKIP LOCKED;
+-- Other workers skip this row and grab the next one
+UPDATE job_queue SET status = 'processing' WHERE id = :id;
+COMMIT;
+```
+
+### Diagnostic Queries
+
+Run these to find problems before they find you.
+
+```sql
+-- Find missing indexes: tables with sequential scans but no index scans
+SELECT schemaname, relname, seq_scan, idx_scan,
+       seq_scan - idx_scan AS too_many_seq_scans
+FROM pg_stat_user_tables
+WHERE seq_scan > idx_scan AND seq_scan > 1000
+ORDER BY too_many_seq_scans DESC;
+
+-- Find unused indexes (candidates for removal)
+SELECT schemaname, indexrelname, idx_scan, pg_size_pretty(pg_relation_size(indexrelid)) AS size
+FROM pg_stat_user_indexes
+WHERE idx_scan = 0 AND schemaname NOT IN ('pg_catalog')
+ORDER BY pg_relation_size(indexrelid) DESC;
+
+-- Find table bloat (dead rows consuming space)
+SELECT schemaname, relname, n_dead_tup, n_live_tup,
+       ROUND(n_dead_tup::numeric / GREATEST(n_live_tup, 1) * 100, 1) AS dead_pct
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 10000
+ORDER BY n_dead_tup DESC;
+
+-- Find slow queries (requires pg_stat_statements extension)
+SELECT query, calls, mean_exec_time, total_exec_time
+FROM pg_stat_statements
+ORDER BY mean_exec_time DESC
+LIMIT 10;
+
+-- Find lock contention
+SELECT blocked.pid AS blocked_pid, blocked_activity.query AS blocked_query,
+       blocking.pid AS blocking_pid, blocking_activity.query AS blocking_query
+FROM pg_catalog.pg_locks blocked
+JOIN pg_catalog.pg_stat_activity blocked_activity ON blocked.pid = blocked_activity.pid
+JOIN pg_catalog.pg_locks blocking ON blocked.locktype = blocking.locktype
+  AND blocked.relation = blocking.relation AND blocked.pid != blocking.pid
+JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking.pid = blocking_activity.pid
+WHERE NOT blocked.granted;
+```
 
 ## PostgreSQL Data Types
 

@@ -1,8 +1,7 @@
 ---
 name: sql
 description: SQL conventions for PostgreSQL, PostGIS, and SparkSQL. Covers query structure, performance patterns, and dialect differences.
-user-invocable: false
-paths: "**/*.sql"
+routed-by: coding-standards
 ---
 
 # SQL Style
@@ -137,6 +136,21 @@ SELECT COALESCE(employer, 'Not reported') AS employer
 SELECT COUNT(*) AS total_rows, COUNT(employer) AS has_employer
 FROM donations;
 ```
+
+## Gotchas
+
+Counter-intuitive PostgreSQL behaviors that cause production bugs:
+
+| Default Instinct | Correct Choice | Why |
+|-----------------|----------------|-----|
+| `JSON` type | `JSONB` | JSON has no indexing, parsed on every access |
+| `TIMESTAMP` | `TIMESTAMPTZ` | timestamp silently drops timezone info |
+| `OFFSET` pagination | Cursor pagination (`WHERE id > :last`) | OFFSET is O(n) for page n |
+| `SELECT FOR UPDATE` for queues | `FOR UPDATE SKIP LOCKED` | FOR UPDATE blocks all workers |
+| `VARCHAR(255)` | `TEXT` | PostgreSQL treats them identically; VARCHAR adds a useless constraint |
+| `SERIAL` | `GENERATED ALWAYS AS IDENTITY` | SERIAL has surprising edge cases with permissions and sequences |
+
+See [reference.md](reference.md) for diagnostic queries (missing indexes, table bloat, slow queries, lock contention).
 
 ## PostgreSQL, PostGIS, and SparkSQL Reference
 

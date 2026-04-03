@@ -18,17 +18,23 @@ Skills are classified by how they're invoked:
 - **Reference** — Knowledge Claude applies automatically when relevant. Not a slash command.
 - **Action** — Workflows with side effects. User invokes via `/skill-name`.
 - **Analytical** — Analysis that produces findings. User invokes via `/skill-name`.
+- **Router** — Dispatches to sub-skills based on context. Saves description budget at scale.
 
-### Reference Skills
+### Router Skills
 
-Auto-applied by Claude when it detects relevant work (e.g., writing Python, reviewing SQL).
+Routers cover an entire category with one description slot. Sub-skills are loaded on demand based on file type, imports, or problem signals.
+
+| Router | Sub-Skills | Triggers On |
+|--------|-----------|-------------|
+| **coding-standards** | python, sql, spark (+ future: django, react, typescript, go) | `*.py`, `*.sql`, `*.ts`, `*.tsx`, `*.js`, `*.go` |
+| **analysis-methods** | spatial (+ future: statistical, graph, entity-resolution, nlp) | Geographic data, modeling, network analysis |
+
+### Reference Skills (Flat)
+
+Auto-applied by Claude when relevant. Not behind a router.
 
 | Category | Skill | Description |
 |----------|-------|-------------|
-| `coding/` | **python** | Python style, naming, error handling, type hints, 3.11+ idioms |
-| `coding/` | **sql** | PostgreSQL, PostGIS, SparkSQL conventions and performance |
-| `coding/` | **spark** | PySpark job patterns, Delta Lake, medallion architecture |
-| `analysis/` | **spatial** | Decision framework: spatial vs string vs graph, algorithm selection |
 | `documentation/` | **update-docs** | Cascading documentation: inline, files, repo, KMS levels |
 | `documentation/` | **update-notion** | Notion knowledge base authoring at 5th-grade reading level |
 
@@ -58,6 +64,7 @@ User-invoked. Read-only analysis that produces recommendations.
 |----------|-------|-------------|
 | `coding/` | **code-review** | Systematic review: correctness, security, data integrity, performance |
 | `planning/` | **im-feeling-lucky** | Prioritize roadmap items by context, age, dependencies, diversity |
+| `thinking/` | **think** | Design-first gate: structured design before any implementation |
 
 ### Meta Skills
 
