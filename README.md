@@ -15,6 +15,13 @@ For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zsh
 
 | Category | Skill | Purpose |
 |----------|-------|---------|
+| `coding/` | **python** | Python style: naming, structure, error handling, type hints, 3.11+ idioms |
+| `coding/` | **sql** | PostgreSQL, PostGIS, and SparkSQL conventions and performance patterns |
+| `coding/` | **spark** | PySpark job patterns, Delta Lake, medallion architecture, transform design |
+| `coding/` | **code-review** | Systematic review methodology: correctness, security, data integrity, performance |
+| `analysis/` | **spatial** | Decision framework: spatial vs string vs graph, technology and algorithm selection |
+| `documentation/` | **cascading-documentation** | Multi-level documentation from code to knowledge base |
+| `documentation/` | **notion-knowledge-base** | Notion page authoring at 5th-grade reading level |
 | `session/` | **wrap-up** | End-of-session cleanup: commit changes, update README/ROADMAP/CLAUDE.md with lessons learned |
 | `planning/` | **im-feeling-lucky** | Analyze ROADMAPs and suggest top 5 items to work on next, weighted by context, age, dependencies |
 | `maintenance/` | **consolidate** | Find and consolidate redundant documentation across repositories |
