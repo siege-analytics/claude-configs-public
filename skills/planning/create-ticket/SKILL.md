@@ -1,6 +1,9 @@
 ---
 name: create-ticket
-description: Create a well described ticket in the user's system (Jira, Linear, GitHub, GitLab, etc.)
+description: Create a well-described ticket in the user's ticketing system (GitHub, GitLab, Jira, Linear, etc.)
+disable-model-invocation: true
+allowed-tools: Read Grep Glob Bash
+argument-hint: "[ticket-type] [title]"
 ---
 
 # Instructions

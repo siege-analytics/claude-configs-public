@@ -1,13 +1,15 @@
 ---
 name: consolidate
-description: Consolidate redundant documentation across electinfo repositories. Identifies duplicate content in recent markdown changes, moves canonical content to docs/, and replaces duplicates with links.
+description: Find and consolidate redundant documentation. Identifies duplicates, moves canonical content to docs/, replaces copies with links.
+disable-model-invocation: true
+allowed-tools: Read Grep Glob Bash Edit Write
 ---
 
 # Consolidate Skill
 
 ## Purpose
 
-Reduce documentation redundancy across electinfo repositories by:
+Reduce documentation redundancy across repositories by:
 - Centralizing core concepts in `docs/`
 - Replacing duplicate content with cross-references
 - Maintaining detailed, repo-specific material in each repository
@@ -16,7 +18,7 @@ Reduce documentation redundancy across electinfo repositories by:
 
 ### 1. Gather Recent Markdown Changes
 
-Scan the last 10 commits touching markdown files across all electinfo repositories:
+Scan the last 10 commits touching markdown files across all project repositories:
 
 ```bash
 cd ~/git/electinfo

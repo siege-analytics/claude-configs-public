@@ -1,6 +1,7 @@
 ---
 name: update-docs
-description: Update documentation at every level of the cascade (inline, files, repo, KMS) when making changes. Ensures documentation stays federated, consistent, and current.
+description: Update documentation at every cascade level (inline, files, repo, KMS) when making changes. Keeps docs federated and consistent.
+user-invocable: false
 ---
 
 # Instructions

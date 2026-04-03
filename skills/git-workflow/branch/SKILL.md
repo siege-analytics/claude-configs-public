@@ -1,6 +1,9 @@
 ---
 name: branch
-description: Create and manage git branches using a consistent naming convention (type/descriptive_string) that mirrors ticket taxonomy
+description: Create and manage git branches using a consistent naming convention (type/descriptive_string) that mirrors ticket taxonomy.
+disable-model-invocation: true
+allowed-tools: Bash
+argument-hint: "[type/descriptive_string]"
 ---
 
 # Instructions

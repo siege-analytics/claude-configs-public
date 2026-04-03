@@ -1,6 +1,8 @@
 ---
 name: im-feeling-lucky
-description: Analyze ROADMAPs and suggest top 5 items to work on next, weighted by age, dependencies, diversity, and relevance to current repository context.
+description: Analyze ROADMAPs and suggest top 5 items to work on next, weighted by age, dependencies, diversity, and repository context.
+disable-model-invocation: true
+allowed-tools: Read Grep Glob Bash
 ---
 
 # I'm Feeling Lucky Skill

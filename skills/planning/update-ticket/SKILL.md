@@ -1,6 +1,9 @@
 ---
 name: update-ticket
-description: Add progress comments, link commits, and update fields on an existing ticket (GitHub, GitLab, Jira, Linear, etc.)
+description: Add progress comments, link commits, and update fields on an existing ticket (GitHub, GitLab, Jira, Linear).
+disable-model-invocation: true
+allowed-tools: Read Grep Glob Bash
+argument-hint: "[issue-number]"
 ---
 
 # Instructions

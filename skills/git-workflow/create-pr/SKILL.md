@@ -1,6 +1,9 @@
 ---
 name: create-pr
-description: Create a pull request with a clear title, structured description, linked tickets, and commit narrative. Enforces bidirectional ticket-PR linking.
+description: Create a pull request with structured description, linked tickets, and commit narrative. Enforces bidirectional linking.
+disable-model-invocation: true
+allowed-tools: Read Grep Glob Bash
+argument-hint: "[base-branch]"
 ---
 
 # Instructions

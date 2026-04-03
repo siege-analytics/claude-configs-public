@@ -1,6 +1,9 @@
 ---
 name: merge
-description: Merge branches following a develop-first workflow where feature branches merge to develop, and develop merges to main only with explicit approval
+description: Merge branches following a develop-first workflow. Feature branches merge to develop; develop merges to main only with explicit approval.
+disable-model-invocation: true
+allowed-tools: Bash
+argument-hint: "[source-branch] [target-branch]"
 ---
 
 # Instructions

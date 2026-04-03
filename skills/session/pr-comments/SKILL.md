@@ -1,6 +1,9 @@
 ---
 name: pr-comments
-description: Write, read, and respond to PR comments — including reviewing automated feedback, watching for agent-ready signals, and structured code review replies
+description: Read, triage, and respond to PR comments. Reviews automated feedback, detects handoff signals, and writes structured replies.
+disable-model-invocation: true
+allowed-tools: Read Grep Glob Bash
+argument-hint: "[PR-number]"
 ---
 
 # Instructions

@@ -1,6 +1,8 @@
 ---
 name: commit
-description: Create well-structured git commits with descriptive messages that link to tickets and explain the why. Enforces ticket references — if work is committable, it is ticketable.
+description: Create git commits with descriptive messages that link to tickets and explain the why. Enforces ticket references.
+disable-model-invocation: true
+allowed-tools: Read Grep Glob Bash
 ---
 
 # Instructions

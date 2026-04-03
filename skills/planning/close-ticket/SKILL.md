@@ -1,6 +1,9 @@
 ---
 name: close-ticket
-description: Close a ticket with a summary comment documenting the solution, linked commits, and verification status
+description: Close a ticket with a summary comment documenting the solution, linked commits, and verification status.
+disable-model-invocation: true
+allowed-tools: Read Grep Glob Bash
+argument-hint: "[issue-number]"
 ---
 
 # Instructions

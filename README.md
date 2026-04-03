@@ -13,18 +13,57 @@ For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zsh
 
 ## Skills
 
-| Category | Skill | Purpose |
-|----------|-------|---------|
-| `coding/` | **python** | Python style: naming, structure, error handling, type hints, 3.11+ idioms |
-| `coding/` | **sql** | PostgreSQL, PostGIS, and SparkSQL conventions and performance patterns |
-| `coding/` | **spark** | PySpark job patterns, Delta Lake, medallion architecture, transform design |
-| `coding/` | **code-review** | Systematic review methodology: correctness, security, data integrity, performance |
-| `analysis/` | **spatial** | Decision framework: spatial vs string vs graph, technology and algorithm selection |
-| `documentation/` | **cascading-documentation** | Multi-level documentation from code to knowledge base |
-| `documentation/` | **notion-knowledge-base** | Notion page authoring at 5th-grade reading level |
-| `session/` | **wrap-up** | End-of-session cleanup: commit changes, update README/ROADMAP/CLAUDE.md with lessons learned |
-| `planning/` | **im-feeling-lucky** | Analyze ROADMAPs and suggest top 5 items to work on next, weighted by context, age, dependencies |
-| `maintenance/` | **consolidate** | Find and consolidate redundant documentation across repositories |
+Skills are classified by how they're invoked:
+
+- **Reference** — Knowledge Claude applies automatically when relevant. Not a slash command.
+- **Action** — Workflows with side effects. User invokes via `/skill-name`.
+- **Analytical** — Analysis that produces findings. User invokes via `/skill-name`.
+
+### Reference Skills
+
+Auto-applied by Claude when it detects relevant work (e.g., writing Python, reviewing SQL).
+
+| Category | Skill | Description |
+|----------|-------|-------------|
+| `coding/` | **python** | Python style, naming, error handling, type hints, 3.11+ idioms |
+| `coding/` | **sql** | PostgreSQL, PostGIS, SparkSQL conventions and performance |
+| `coding/` | **spark** | PySpark job patterns, Delta Lake, medallion architecture |
+| `analysis/` | **spatial** | Decision framework: spatial vs string vs graph, algorithm selection |
+| `documentation/` | **update-docs** | Cascading documentation: inline, files, repo, KMS levels |
+| `documentation/` | **update-notion** | Notion knowledge base authoring at 5th-grade reading level |
+
+### Action Skills
+
+User-invoked. These change state (git, APIs, tickets, files).
+
+| Category | Skill | Description |
+|----------|-------|-------------|
+| `git-workflow/` | **commit** | Structured commits with ticket references |
+| `git-workflow/` | **branch** | Branch naming convention (type/descriptive_string) |
+| `git-workflow/` | **create-pr** | Pull requests with bidirectional ticket linking |
+| `git-workflow/` | **merge** | Develop-first merge workflow |
+| `git-workflow/` | **develop-guard** | Ensure develop branch exists |
+| `session/` | **wrap-up** | End-of-session commit and documentation cleanup |
+| `planning/` | **create-ticket** | Create tickets in any platform (GitHub, GitLab, Jira, Linear) |
+| `planning/` | **close-ticket** | Close with summary comment, linked commits, verification |
+| `planning/` | **update-ticket** | Add progress, link commits, update fields |
+| `maintenance/` | **consolidate** | Find and consolidate redundant documentation |
+| `session/` | **pr-comments** | Triage and respond to PR comments |
+
+### Analytical Skills
+
+User-invoked. Read-only analysis that produces recommendations.
+
+| Category | Skill | Description |
+|----------|-------|-------------|
+| `coding/` | **code-review** | Systematic review: correctness, security, data integrity, performance |
+| `planning/` | **im-feeling-lucky** | Prioritize roadmap items by context, age, dependencies, diversity |
+
+### Meta Skills
+
+| Category | Skill | Description |
+|----------|-------|-------------|
+| `meta/` | **skillbuilder** | Create, audit, and fix skills per Anthropic's guidelines |
 
 ## Quick Start
 

@@ -1,6 +1,7 @@
 ---
 name: update-notion
-description: Author and maintain the Notion knowledge base — accessible, 5th-grade-reading-level pages explaining what we build, how, why, and for whom. Works through the electinfo/sync system.
+description: Author Notion knowledge base pages at 5th-grade reading level. Templates for data sources, technologies, stakeholders, and reading maps.
+user-invocable: false
 ---
 
 # Instructions

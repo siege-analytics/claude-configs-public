@@ -1,6 +1,9 @@
 ---
 name: code-review
 description: Systematic code review methodology. Covers correctness, security, performance, readability, and how to prioritize findings.
+disable-model-invocation: true
+allowed-tools: Read Grep Glob
+argument-hint: "[PR-number-or-path] [optional-focus-area]"
 ---
 
 # Code Review

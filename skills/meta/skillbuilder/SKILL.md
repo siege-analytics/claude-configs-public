@@ -1,6 +1,6 @@
 ---
 name: skillbuilder
-description: Create, audit, and fix Claude Code skills per Anthropic's official guidelines. Enforces frontmatter, line limits, description length, and skill classification.
+description: Create, audit, and fix Claude Code skills. Enforces Anthropic's spec: frontmatter, limits, and classification.
 disable-model-invocation: true
 allowed-tools: Read Grep Glob Write Edit
 argument-hint: [create|audit|fix] [skill-name-or-path]

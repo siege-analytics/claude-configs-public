@@ -1,6 +1,8 @@
 ---
 name: wrap-up
-description: End-of-session cleanup that commits/deploys changes, updates README.md, ROADMAP.md, and CLAUDE.md with lessons learned. Use when finishing work on a repository.
+description: End-of-session cleanup that commits changes, updates README/ROADMAP/CLAUDE.md with lessons learned. Use when finishing work.
+disable-model-invocation: true
+allowed-tools: Read Grep Glob Bash Edit Write
 ---
 
 # Wrap-up Skill

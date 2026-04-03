@@ -1,6 +1,8 @@
 ---
 name: develop-guard
-description: Ensure a develop branch (or synonym) exists before creating feature branches. Create one from main if missing. Prevent direct merges to main.
+description: Ensure a develop branch exists before feature branches. Create from main if missing. Prevent direct merges to main.
+disable-model-invocation: true
+allowed-tools: Bash
 ---
 
 # Instructions
