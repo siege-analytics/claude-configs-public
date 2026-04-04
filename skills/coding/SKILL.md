@@ -1,6 +1,6 @@
 ---
 name: coding-standards
-description: "Coding conventions. TRIGGER: writing or reviewing Python, SQL, PySpark, Django, React, TypeScript, or Go. Routes to the language-specific guide."
+description: "Coding conventions. TRIGGER: writing Python, SQL, PySpark, Django, pipeline jobs, Rundeck YAML, or Go. Routes to the language-specific guide."
 user-invocable: false
 paths: "**/*.py,**/*.sql,**/*.ts,**/*.tsx,**/*.js,**/*.jsx,**/*.go"
 ---
@@ -20,6 +20,7 @@ Select and apply the appropriate coding guide based on file type and framework.
 | `*.ts`, `*.tsx` | TypeScript style | [typescript/SKILL.md](typescript/SKILL.md) |
 | `*.tsx`, `*.jsx` with React imports | React patterns | [react/SKILL.md](react/SKILL.md) |
 | `*.go` | Go conventions | [go/SKILL.md](go/SKILL.md) |
+| `*.py` with pipeline/fetch/job/schedule context, Rundeck YAML, Airflow DAGs | Pipeline job pattern | [pipeline-jobs/SKILL.md](pipeline-jobs/SKILL.md) |
 
 Not all sub-skills exist yet. If a routing table entry points to a file that doesn't exist, skip it and apply general best practices for that language.
 
