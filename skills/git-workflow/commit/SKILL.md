@@ -7,6 +7,13 @@ allowed-tools: Read Grep Glob Bash
 
 # Instructions
 
+0. **Branch guard — verify you are NOT on a protected branch**
+   1. Run `git branch --show-current` to get the current branch name
+   2. If the branch is `main`, `master`, `develop`, `dev`, `development`, `staging`, `next`, or `integration` → **STOP**
+   3. Inform the user: "You are on `{branch}`. Commits should go on a feature branch, not directly on a protected branch."
+   4. Offer to create a feature branch (use the branch skill) before proceeding
+   5. Only proceed if the user explicitly overrides: "Commit directly to {branch}"
+   6. If the user overrides, add `[direct-commit]` to the commit body as an audit trail
 1. Review what has changed
    1. Run `git status` to see all modified, added, and untracked files
    2. Run `git diff` to review the actual changes (staged and unstaged)
@@ -278,6 +285,7 @@ If it was already committed, remove it from history and rotate the credential im
 
 # Checklist
 
+- [ ] **Not on a protected branch** (main, develop, etc.) — or user explicitly overrode with `[direct-commit]`
 - [ ] Changes are grouped into logical, single-purpose commits
 - [ ] Files are staged by name, not with `git add -A`
 - [ ] No sensitive files (secrets, credentials, keys) are staged
