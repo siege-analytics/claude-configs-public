@@ -39,6 +39,16 @@ Add a "Lessons Learned" or "Notes" section documenting:
 - Gotchas or non-obvious behaviors discovered
 - Useful commands or patterns that worked well
 
+### 5. Update Notion Knowledge Base (if architecture changed)
+
+If this session changed architecture, data models, pipeline structure, or system capabilities:
+- Run affected Notion sync jobs: `python -m sync.run roadmap dashboard automated_skills`
+- Create an "Architecture Update — YYYY-MM-DD" page under Telemetry describing what changed and why, at 5th-grade reading level
+- Update the Project Roadmap if project status or dependencies changed
+- Update the Automated Skills page if new skills or automation were added
+
+**Trigger:** Ask yourself — "Would Leena or a new team member need to know about this?" If yes, it belongs in Notion.
+
 ## Example CLAUDE.md Addition
 
 ```markdown
@@ -65,3 +75,5 @@ Add a "Lessons Learned" or "Notes" section documenting:
 - [ ] README.md updated with current state
 - [ ] ROADMAP.md updated with next steps
 - [ ] CLAUDE.md updated with lessons learned
+- [ ] Notion updated if architecture, models, or capabilities changed
+- [ ] Architecture Update page created if significant changes were made
