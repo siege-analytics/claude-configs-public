@@ -47,6 +47,13 @@ If this session changed architecture, data models, pipeline structure, or system
 - Update the Project Roadmap if project status or dependencies changed
 - Update the Automated Skills page if new skills or automation were added
 
+**Provenance tagging:** Every Notion page must declare how it is maintained:
+- **Sync pages** (rebuilt by cron jobs) already have footers via `notion.provenance_footer("sync")`
+- **Agent-created pages** (like Architecture Updates) must append `notion.provenance_footer("agent")` as the last blocks
+- **Manual pages** are tagged by the Content Registry
+- After creating an agent page, add it to `CONTENT_REGISTRY` in `sync/config/__init__.py` with `"type": "agent"`
+- If the page needs human follow-up (e.g., creating a form, configuring a DB), add an entry to `PENDING_HUMAN_ACTIONS` in `content_registry.py`
+
 **Trigger:** Ask yourself — "Would Leena or a new team member need to know about this?" If yes, it belongs in Notion.
 
 ## Example CLAUDE.md Addition
