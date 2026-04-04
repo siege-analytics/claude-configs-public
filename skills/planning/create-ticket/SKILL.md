@@ -105,9 +105,18 @@ Fill out as many of the ticket fields exist. Ensure that all information is prec
     * project manager
     * senior technical lead
     * junior engineer/analyst
-* Each ticket should contain the following sections, using this template:
+* Every ticket MUST begin with a **plain-language summary** — a short paragraph at the very top, before any technical sections, that explains:
+  * **What this task does** in one sentence a non-technical person can understand
+  * **Why we need it** — the business reason, not the technical reason
+  * **What it relates to** — which part of the product or pipeline this belongs to
+  * This summary is for the project manager (who may not be technical) to understand what this work is about so she can plan sprints, set priorities, and ask informed questions. It should be written at a 5th-grade reading level. No jargon. No acronyms without explanation.
+* After the summary, each ticket should contain the following sections, using this template:
 
 ```markdown
+> **Summary**: [One paragraph, plain language, no jargon. What does this do,
+> why do we need it, and what part of the system does it belong to? Written
+> so a non-technical project manager can understand it and plan around it.]
+
 ## Intended outcome
 What the world looks like when this ticket is done.
 
@@ -159,6 +168,12 @@ Below is a complete ticket as it would appear on GitHub Issues.
 **Body**:
 
 ```markdown
+> **Summary**: When we process committee records from raw FEC filings, some
+> committee ID numbers are losing their leading zeros (like "C00000547" becoming
+> just "547"). This makes it impossible to match committees correctly, because
+> different committees can look identical without those zeros. This is a data
+> quality bug in the FEC processing pipeline.
+
 ## Intended outcome
 All committee records from bronze propagate to silver with their original
 `committee_id` intact, including IDs like `C00000547` that have leading zeros.
@@ -203,6 +218,8 @@ which collides with `C00000000547` (a different entity).
 - [ ] If there are many tickets to be created, they are sequenced in logical order
 - [ ] Epics created first, sub-tickets linked to parent
 - [ ] Ticket fields are correctly populated
+- [ ] Ticket begins with a plain-language summary (no jargon, 5th-grade reading level)
+- [ ] Summary explains what, why, and what part of the system — readable by a non-technical PM
 - [ ] Ticket body follows the template and is well written
 - [ ] No AI/agent attribution anywhere in the ticket (no "Generated with", no "Made with", no tool mentions)
 - [ ] The above have all been reviewed and iterated upon
