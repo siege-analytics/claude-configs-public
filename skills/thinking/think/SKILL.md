@@ -1,7 +1,6 @@
 ---
 name: think
-description: "Design-first gate. TRIGGER: before implementing a feature, refactor, or architecture change. Enforces structured design before any code is written."
-disable-model-invocation: true
+description: "MANDATORY design-first gate. AUTO-TRIGGER: before implementing any feature, refactor, or architecture change. Enforces structured design before any code is written. Do NOT skip this skill."
 allowed-tools: Read Grep Glob
 ---
 
@@ -91,20 +90,23 @@ Present the design to the user. Wait for explicit approval before writing any co
 
 If the user suggests changes, revise the design and present again.
 
-## When to Use This Skill
+## When This Skill Applies
 
-Use `/think` when:
-- Adding a new feature or capability
-- Refactoring existing code
-- Making architectural decisions
-- Changing data models or schemas
-- Anything that touches more than 3 files
-- Anything where the approach isn't obvious
+This skill is **MANDATORY**. It auto-triggers whenever you are about to:
+- Add a new feature or capability
+- Refactor existing code
+- Make architectural decisions
+- Change data models or schemas
+- Touch more than 3 files
+- Do anything where the approach isn't obvious
 
-Do NOT use `/think` for:
-- Single-line fixes (typos, obvious bugs)
-- Tasks where the user has given detailed, specific instructions
+You MUST complete the full design workflow and receive user approval before writing any code. Skipping this skill is not an option.
+
+**Exemptions** (the ONLY cases where you may skip this skill):
+- Single-line fixes (typos, obvious bugs with a clear one-line fix)
+- Tasks where the user has given detailed, specific, step-by-step instructions
 - Pure research or exploration (use the Explore agent instead)
+- Git operations, documentation-only edits, and other non-code tasks
 
 ## Iron Laws
 
