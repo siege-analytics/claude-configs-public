@@ -6,13 +6,34 @@ This is the enforcement layer for every skill in this collection and the electin
 
 ---
 
+## THE FIRST GATE: `think`
+
+> **The most important skill in this entire chain is `think`.** Every catalog-bypass, every premature cutover, every half-designed pipeline this resolver exists to prevent traces back to acting before thinking.
+
+Before ANY of the following, you MUST read `skills/thinking/think/SKILL.md` and produce a written design note:
+
+- Implementing a new feature
+- Refactoring existing code
+- Changing architecture (new layer, new catalog, new data path, new integration)
+- Making a cutover (moving Consumer / production traffic to a new source)
+- Proposing a schema change
+- Building a new skill, hook, or enforcement mechanism (yes, including this resolver itself)
+- Any task estimated > 30 minutes
+
+**Explicit exemptions** (from `think` skill): trivial fixes, following step-by-step instructions from the user, research/read-only work, non-code tasks.
+
+The `think` gate is not a pattern-match entry below — it is the **first gate**. Every other pattern in this resolver assumes `think` has already fired.
+
+---
+
 ## How to use
 
-1. Before taking an action, scan the task patterns below.
-2. If any pattern matches, `cat` the mapped SKILL.md and read it in full.
-3. If multiple patterns match, read all of them.
-4. Only then take the action.
-5. If no pattern matches but the action has non-trivial blast radius (data writes, mutations to shared systems, infra changes), consult the **universal checks** at the bottom.
+1. **`think` first** if the task has architectural or blast-radius implications (see above).
+2. Scan the task patterns below.
+3. If any pattern matches, `cat` the mapped SKILL.md and read it in full.
+4. If multiple patterns match, read all of them.
+5. Only then take the action.
+6. If no pattern matches but the action has non-trivial blast radius (data writes, mutations to shared systems, infra changes), consult the **universal checks** at the bottom.
 
 ---
 
@@ -85,6 +106,8 @@ This is the enforcement layer for every skill in this collection and the electin
 ## Universal pre-action checks (always apply)
 
 These fire for every non-trivial action, regardless of whether a pattern above matched:
+
+0. **THINK FIRST** (the non-negotiable gate): for anything beyond a trivial mechanical change, read `skills/thinking/think/SKILL.md` and write a design note. If you can't state what you're about to do, why, what could go wrong, and what the rollback looks like — you are not ready to act. Every serious failure in this session traces back to skipping this.
 
 1. **Catalog-first**: if the action touches data that lives under a catalog (Unity Catalog, Hive Metastore), go through the catalog. Never write raw paths to bucket locations the catalog manages. Confirm the table's registered location BEFORE writing.
 

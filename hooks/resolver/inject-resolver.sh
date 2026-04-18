@@ -26,14 +26,25 @@ fi
 
 cat <<EOF
 <skill-resolver>
-The skill resolver is ACTIVE for this session. Before any non-trivial action:
+The skill resolver is ACTIVE for this session.
 
+>>> THE FIRST GATE IS think <<<
+
+Before ANY non-trivial action (feature, refactor, architecture change,
+cutover, schema change, >30min task) you MUST read
+skills/thinking/think/SKILL.md and produce a design note. Every
+catalog-bypass, premature cutover, and half-designed pipeline this
+resolver prevents traces back to skipping this step. think is
+not a pattern to match — it is the gate before everything else.
+
+For the task itself:
 1. Scan the task patterns in $RESOLVER
 2. If a pattern matches, READ the mapped SKILL.md in full before acting
-3. Apply the universal pre-action checks regardless of whether a pattern matched
+3. Apply the universal pre-action checks regardless
 
 Universal checks (always):
-- Catalog-first: if the action touches data under a catalog, go through the catalog
+- THINK FIRST (the non-negotiable)
+- Catalog-first: action on catalog-managed data goes through the catalog
 - Brain-first: check existing state before recreating
 - Test-before-bulk: ≥20 items runs a 3–5 item test first
 - Ticket-required: non-trivial work has a ticket
