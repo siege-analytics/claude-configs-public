@@ -6,10 +6,36 @@ For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zsh
 
 ## Contents
 
-| Directory | Purpose |
-|-----------|---------|
+| Path | Purpose |
+|---|---|
+| [`RESOLVER.md`](RESOLVER.md) | **Skill resolver** — master index mapping task patterns to required skills. Mandatory first read before any non-trivial action. |
 | `skills/` | Categorized reusable skills for Claude Code sessions |
+| `hooks/` | Shell hooks (PreToolUse, UserPromptSubmit) that enforce the resolver |
 | `templates/` | Project templates (CLAUDE.md, settings.local.json) |
+
+## The Skill Resolver
+
+The problem this repo solves: **skills are only useful if they fire before the action they govern.** A catalog of skills the agent *could* consult is worth nothing if the agent doesn't actually read them first.
+
+[`RESOLVER.md`](RESOLVER.md) is a task-pattern → required-skill index. When Claude is about to do something (write Delta data, create a PR, author a ticket), it scans the resolver, finds the matching row, and reads the mapped `SKILL.md` before acting. If no pattern matches, universal pre-action checks (catalog-first, brain-first, test-before-bulk, ticket-required, etc.) still apply.
+
+**The first gate is [`think`](skills/thinking/think/SKILL.md).** Every catalog-bypass, every premature cutover, every half-designed pipeline the resolver exists to prevent traces back to acting before thinking. The `think` skill is not one pattern among many — it is the mandatory first step before any feature, refactor, architecture change, cutover, or >30-minute task. The rest of the resolver assumes `think` has already fired.
+
+**Inspired by [GBrain](https://github.com/garrytan/gbrain)'s "thin harness, fat skills" pattern** — intelligence lives in the skills, not the runtime. The resolver is the discovery layer; `think` is the gate.
+
+### Enforcement
+
+Three enforcement layers keep the resolver active:
+
+1. **Session start** — every project `CLAUDE.md` references `RESOLVER.md` as the first action of any non-trivial task.
+2. **Every user turn** — [`hooks/resolver/inject-resolver.sh`](hooks/resolver/inject-resolver.sh) is a `UserPromptSubmit` hook that injects the resolver summary into active context on every prompt. Context doesn't decay by turn 20.
+3. **Pre-tool-use** — [`hooks/infrastructure/catalog-guard.sh`](hooks/infrastructure/catalog-guard.sh) is a `PreToolUse` hook on `Bash` that matches dangerous catalog-bypass patterns (`.write.save(s3a://...)`, raw Delta/Parquet writes to catalog-managed buckets, direct S3 copies into `hive-warehouse`/`silver`/`gold`) and blocks them with a STOP-read-skill reminder.
+
+Wire the hooks by merging [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into `~/.claude/settings.json` (or project `.claude/settings.local.json`), replacing `/path/to/claude-configs-public` with the actual absolute path to this repo.
+
+### Why this exists
+
+The pattern was introduced after a live incident: Delta data was written directly to `s3a://hive-warehouse/enterprise_bulk/*` instead of through Unity Catalog. The `pipeline-guard` skill already said "Register in Unity Catalog" — but as a footnote in a checklist the agent didn't re-read before acting. Downstream Consumer queried `SELECT ... FROM enterprise_bulk.<table>` through UC, which resolved to a different physical path — so the "cutover" was invisible, and 99 orphaned objects sat in shared storage. The rule existed; the trigger didn't. The resolver is the trigger.
 
 ## Skills
 
