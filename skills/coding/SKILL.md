@@ -16,7 +16,10 @@ Select and apply the appropriate coding guide based on file type and framework.
 | `*.py` with Django imports (`from django`, `django.`) | Django conventions | [django/SKILL.md](django/SKILL.md) |
 | `*.py` with PySpark imports (`from pyspark`, `import pyspark`) | PySpark patterns | [spark/SKILL.md](spark/SKILL.md) |
 | `*.py` (general) | Python style | [python/SKILL.md](python/SKILL.md) |
+| `*.py` library code, especially on re-review / CR feedback touching architecture | Python engineering patterns (DRY, dataclass discipline, interface integrity, runtime types) | [python-patterns/SKILL.md](python-patterns/SKILL.md) |
+| `try`/`except` on screen, silent-failure patterns, `except Exception: pass` | Python exception discipline | [python-exceptions/SKILL.md](python-exceptions/SKILL.md) |
 | `*.sql` or SQL in Python strings | SQL conventions | [sql/SKILL.md](sql/SKILL.md) |
+| SQL with `ST_*` functions, `geometry` / `geography` columns, PostGIS extension | PostGIS patterns | [postgis/SKILL.md](postgis/SKILL.md) |
 | `*.ts`, `*.tsx` | TypeScript style | [typescript/SKILL.md](typescript/SKILL.md) |
 | `*.tsx`, `*.jsx` with React imports | React patterns | [react/SKILL.md](react/SKILL.md) |
 | `*.go` | Go conventions | [go/SKILL.md](go/SKILL.md) |
@@ -27,7 +30,7 @@ Not all sub-skills exist yet. If a routing table entry points to a file that doe
 ## Rules
 
 1. **Load only what is needed.** A plain Python file loads only `python/SKILL.md`. Do not load spark, django, or sql unless their imports are present.
-2. **Stack when appropriate.** A PySpark file loads both `python/SKILL.md` (general style) and `spark/SKILL.md` (Spark-specific). A Django file loads `python/SKILL.md` + `django/SKILL.md`. SQL embedded in Python loads the relevant Python sub-skill + `sql/SKILL.md`.
+2. **Stack when appropriate.** A PySpark file loads both `python/SKILL.md` (general style) and `spark/SKILL.md` (Spark-specific). A Django file loads `python/SKILL.md` + `django/SKILL.md`. SQL embedded in Python loads the relevant Python sub-skill + `sql/SKILL.md`. PostGIS SQL loads `sql/SKILL.md` + `postgis/SKILL.md`. Library-code review loads `python/SKILL.md` + `python-patterns/SKILL.md` + optionally `python-exceptions/SKILL.md`.
 3. **Specificity wins.** When a framework sub-skill and the general language sub-skill conflict, the framework sub-skill takes precedence.
 4. **Reference files load on demand.** Each sub-skill may have a `reference.md`. Load it only when the sub-skill directs you to consult it for the current task.
 

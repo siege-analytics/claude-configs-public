@@ -285,3 +285,231 @@ EXPLAIN EXTENDED
 SELECT * FROM main.silver.donations WHERE state = 'NJ';
 -- Look for: "PartitionFilters: [state = NJ]"
 ```
+
+
+# Addendum to coding/sql/reference.md — PostgreSQL Performance
+
+Append this section after the existing dialect-specific content. Scoped to PostgreSQL specifically (PostGIS lives in its own sub-skill).
+
+Draws from:
+- **Markus Winand — *SQL Performance Explained* + use-the-index-luke.com** (the index discipline canon)
+- **depesz.com (Hubert Lubaczewski) + explain.depesz.com** — EXPLAIN plan reading
+- **Laurenz Albe (Cybertec)** — partitioning, isolation, replication
+- **Bruce Momjian** — talks on MVCC, VACUUM, streaming replication
+
+---
+
+## Indexes — the main lever
+
+### Pick the index type
+
+| Type | Use for |
+|---|---|
+| **B-tree** | Default. Equality + range on ordered data. 95% of indexes. |
+| **Hash** | Equality only, and only when you're sure. Usually B-tree is just as fast. |
+| **GIN** | `jsonb`, array, full-text search (`tsvector`) |
+| **GiST** | Geometric data (PostGIS), ranges, full-text |
+| **SP-GiST** | Space-partitioning — phone numbers, IP addresses, non-uniform data |
+| **BRIN** | Huge tables physically sorted by the indexed column (time-series ingest). Tiny on disk. |
+
+### Composite index ordering (Winand's key insight)
+
+Order matters. Columns used in equality filters go FIRST, range filters LAST:
+
+```sql
+-- Query: WHERE cycle = 2024 AND contribution_date BETWEEN '2024-01-01' AND '2024-06-30'
+CREATE INDEX donations_cycle_date_idx ON donations (cycle, contribution_date);
+-- Good: B-tree can seek to cycle=2024, then range-scan date
+
+-- WRONG order:
+CREATE INDEX donations_date_cycle_idx ON donations (contribution_date, cycle);
+-- B-tree has to scan entire date range looking for cycle=2024 rows
+```
+
+Rule: **columns compared with = go first, then columns compared with <, >, BETWEEN**. Columns used in `ORDER BY` can sometimes be added at the end to avoid a sort.
+
+### Covering (INCLUDE) indexes
+
+```sql
+CREATE INDEX donations_donor_idx
+    ON donations (contributor_id)
+    INCLUDE (amount, contribution_date);
+```
+
+Makes the index itself satisfy `SELECT amount, contribution_date WHERE contributor_id = ?` — no heap fetch. Powerful for hot-path queries but adds to index bloat; profile before enabling.
+
+### Partial indexes — a free win for lopsided data
+
+```sql
+-- 99% of donations aren't flagged; index only the 1%
+CREATE INDEX donations_flagged_idx
+    ON donations (id)
+    WHERE flagged = true;
+```
+
+Tiny index, instant seeks on the common query. Works for any predicate.
+
+### Index anti-patterns
+
+| Pattern | Problem |
+|---|---|
+| `WHERE UPPER(name) = 'SMITH'` | Index on `name` unused. Use `LOWER`/`UPPER` in the index, or a functional index |
+| `WHERE name LIKE '%smith%'` | Leading `%` prevents B-tree use. Trigram (`pg_trgm`) index instead |
+| `WHERE date::text = '2024-01-01'` | Cast prevents index use. Compare as date |
+| Too many indexes (>10 per table) | Write amplification. Audit with `pg_stat_user_indexes` and drop unused |
+| Index on a column with 2 distinct values | Useless. Planner reverts to Seq Scan |
+
+## EXPLAIN — read the plan, always
+
+```sql
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) SELECT ...;
+```
+
+Paste the output into **explain.depesz.com** for a visual breakdown. Look for:
+
+| Sign | Meaning |
+|---|---|
+| **Seq Scan** on a big table | Missing or unused index |
+| **Nested Loop** with high iterations | Wrong join strategy; usually means one side is underestimated |
+| **"rows removed by filter"** | Index didn't narrow enough; add a better predicate to the index |
+| **External merge/sort** | `work_mem` too small; query sorts to disk |
+| **Bitmap Index Scan** + **Bitmap Heap Scan** | Fine for many matches; inefficient for a handful |
+| **"actual time" >> "estimated cost"** | Planner statistics are stale — `ANALYZE` the table |
+
+`BUFFERS` shows actual I/O. If "shared read" is high, you're hitting disk; if "shared hit" is high, cache is warm.
+
+## Statistics
+
+```sql
+-- Rebuild stats after bulk load
+VACUUM ANALYZE donations;
+
+-- Auto-vacuum settings in postgresql.conf for write-heavy tables
+ALTER TABLE donations SET (
+    autovacuum_vacuum_scale_factor = 0.05,  -- more aggressive than default 0.2
+    autovacuum_analyze_scale_factor = 0.02
+);
+```
+
+Auto-vacuum defaults are right for low-write tables, too timid for high-write ones. Monitor `pg_stat_user_tables.n_dead_tup` and `last_autovacuum`.
+
+## Partitioning — when and how
+
+Partition when:
+- Table > 100M rows AND
+- Queries consistently filter on the partition key AND
+- Partition maintenance (drop old / add new) is part of the workflow
+
+```sql
+-- Declarative range partitioning (PG10+)
+CREATE TABLE donations (
+    id BIGSERIAL,
+    contribution_date DATE NOT NULL,
+    amount DECIMAL
+) PARTITION BY RANGE (contribution_date);
+
+CREATE TABLE donations_2024 PARTITION OF donations
+    FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
+CREATE TABLE donations_2025 PARTITION OF donations
+    FOR VALUES FROM ('2025-01-01') TO ('2026-01-01');
+
+-- Attach per-partition indexes
+CREATE INDEX ON donations_2024 (contributor_id);
+CREATE INDEX ON donations_2025 (contributor_id);
+```
+
+Gotchas:
+- Foreign keys from a partitioned table to another table work; FKs pointing *into* a partitioned table have restrictions pre-PG12
+- Default partition catches unrouted rows — ALWAYS create one, even if it's empty: `FOR VALUES WITH (MODULUS 1, REMAINDER 0)` or `DEFAULT`
+- `pg_partman` automates rolling partitions (drop oldest monthly, etc.)
+
+## MVCC and VACUUM (Momjian's territory)
+
+Postgres stores old row versions until VACUUM reclaims them. On write-heavy tables this creates "bloat":
+
+```sql
+-- Check bloat
+SELECT schemaname, tablename, n_dead_tup, n_live_tup,
+       round(100.0 * n_dead_tup / NULLIF(n_live_tup + n_dead_tup, 0), 1) AS dead_pct
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 1000
+ORDER BY dead_pct DESC;
+```
+
+If `dead_pct > 20%`, autovacuum is losing. Options:
+- Increase autovacuum aggressiveness (per-table settings above)
+- `VACUUM (FULL, ANALYZE) donations;` — exclusive lock, rewrites the whole table. Offline maintenance only.
+- `pg_repack` extension — does VACUUM FULL's work without the exclusive lock. Production-safe.
+
+## Isolation levels — pick deliberately
+
+| Level | Default? | Use for |
+|---|---|---|
+| Read Uncommitted | No (not actually supported — acts as Read Committed) | Never |
+| **Read Committed** | **Yes** | Default; each statement sees a fresh snapshot |
+| Repeatable Read | No | Multi-statement analytical queries that need a consistent view |
+| Serializable | No | Financial-grade consistency; adds serialization-error retries |
+
+Serializable is not a free lunch — `SQLSTATE 40001` retries become the norm. Don't enable it casually.
+
+## Locking — know the footguns
+
+```sql
+-- This locks the whole table for the duration of ALTER
+ALTER TABLE donations ADD COLUMN reviewed BOOLEAN NOT NULL DEFAULT false;
+-- On a 50M-row table, minutes of lock. Reads blocked.
+
+-- Better: two-step migration
+ALTER TABLE donations ADD COLUMN reviewed BOOLEAN;
+-- ...backfill in batches, each with its own transaction...
+UPDATE donations SET reviewed = false WHERE reviewed IS NULL;
+-- ...when backfill is done:
+ALTER TABLE donations ALTER COLUMN reviewed SET DEFAULT false;
+ALTER TABLE donations ALTER COLUMN reviewed SET NOT NULL;
+```
+
+Postgres 11+ added `DEFAULT` without table rewrite for new rows, but `NOT NULL` still requires the rewrite. Laurenz Albe's posts on this are the reference.
+
+## CTEs — no longer an optimization fence (PG12+)
+
+Pre-PG12: CTEs materialized, creating planner boundaries. Post-PG12: CTEs are inlined by default (exceptions: recursive CTEs, `WITH ... AS MATERIALIZED`, CTEs with side effects).
+
+Rule: use CTEs freely for readability. If the planner makes a bad choice, try `WITH cte AS NOT MATERIALIZED (...)` to force inlining.
+
+## Connection pooling
+
+Postgres isn't cheap on connections (~10 MB each). For web workloads:
+
+- **PgBouncer** (session-level pooler) for transactional workloads
+- **Odyssey** (Yandex, multi-threaded) for very high concurrency
+- **Connection pool from the app** (psycopg_pool, SQLAlchemy pool) for steady-state
+- Don't: open 1000 idle connections from your app server and hope
+
+Session vs transaction vs statement pooling:
+- `session`: client holds connection for the duration of its session. Compatible with prepared statements, SET, etc.
+- `transaction`: connection returned to pool on COMMIT. Breaks `SET`, prepared statements.
+- `statement`: connection returned after each query. Breaks transactions. Rarely correct.
+
+## Common mistakes
+
+| Pattern | Impact | Fix |
+|---|---|---|
+| `SELECT *` in production code | Breaks when column added, extra network | Name columns |
+| Implicit casts (`WHERE int_col = '5'`) | Sometimes index-unusable | Cast constants, not columns |
+| Updating the whole table in one transaction | Long lock + bloat | Batch updates (`WHERE id BETWEEN ...`) |
+| `OR` across different columns in a WHERE | Planner can't combine indexes well | Rewrite as UNION ALL of two indexable queries |
+| Nested `ANY(ARRAY(...))` | Planner can't flatten | Rewrite as IN or JOIN |
+| Not analyzing after bulk load | Planner uses empty stats | `ANALYZE <table>` or `VACUUM ANALYZE` |
+| `COUNT(*)` on huge table | Full scan | Approximate count via `reltuples` from `pg_class` if OK |
+| Prepared statements against a pg_bouncer in transaction mode | Silent breakage | Disable prepared statements or switch pooler mode |
+| Ignoring `pg_stat_statements` | Flying blind on hot queries | Always install; inspect weekly |
+
+## References
+
+- **Markus Winand** — *SQL Performance Explained* + use-the-index-luke.com (indexing canon)
+- **depesz.com** — Hubert Lubaczewski's blog + explain.depesz.com (EXPLAIN plans)
+- **Laurenz Albe** — Cybertec PostgreSQL Blog (internals, performance)
+- **Bruce Momjian** — momjian.us (lectures on MVCC, VACUUM)
+- **PostgreSQL docs + release notes** — postgresql.org/docs (primary reference)
+- **`pgTune`** — pgtune.leopard.in.ua (baseline configuration)
+- **`pg_stat_statements`** extension — always enable; the single best introspection tool
