@@ -17,10 +17,13 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 |---|---|
 | Writing or reviewing any `.py`, `.sql`, `.ts`, `.go`, `.tsx`, `.jsx` | [`coding/SKILL.md`](coding/SKILL.md) router |
 | "Review this PR", "review this diff" | [`coding/code-review/SKILL.md`](coding/code-review/SKILL.md) |
+| Library code architecture — DRY, dataclass discipline, interface integrity, runtime types | [`coding/python-patterns/SKILL.md`](coding/python-patterns/SKILL.md) |
 | "Why is this try/except too broad?", silent-failure patterns, `except Exception: pass` | [`coding/python-exceptions/SKILL.md`](coding/python-exceptions/SKILL.md) |
+| Django models, views, forms, migrations, settings | [`coding/django/SKILL.md`](coding/django/SKILL.md) |
 | Data pipeline, scheduled job, Rundeck YAML, Airflow DAG | [`coding/pipeline-jobs/SKILL.md`](coding/pipeline-jobs/SKILL.md) |
-| PySpark DataFrame work | [`coding/spark/SKILL.md`](coding/spark/SKILL.md) |
-| SQL query structure, joins, window functions | [`coding/sql/SKILL.md`](coding/sql/SKILL.md) |
+| PySpark DataFrame work, tuning, shuffle / skew | [`coding/spark/SKILL.md`](coding/spark/SKILL.md) |
+| SQL query structure, joins, window functions, Postgres performance | [`coding/sql/SKILL.md`](coding/sql/SKILL.md) |
+| PostGIS — ST_* functions, spatial indexes, spatial joins | [`coding/postgis/SKILL.md`](coding/postgis/SKILL.md) |
 
 ### Analysis
 
@@ -91,7 +94,8 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 
 | Trigger | Skill |
 |---|---|
-| Unity Catalog, Databricks governance | [`infrastructure/unity-catalog/SKILL.md`](infrastructure/unity-catalog/SKILL.md) |
+| Databricks workspace, jobs, DLT, Delta, Unity Catalog, Photon, liquid clustering | [`infrastructure/databricks/SKILL.md`](infrastructure/databricks/SKILL.md) |
+| Unity Catalog permissioning specifics (standalone) | [`infrastructure/unity-catalog/SKILL.md`](infrastructure/unity-catalog/SKILL.md) |
 
 ## Disambiguation rules
 

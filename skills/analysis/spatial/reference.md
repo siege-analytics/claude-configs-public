@@ -308,3 +308,165 @@ At the **analysis boundary** — when data is used for reporting — raise if da
 - [ ] Unmatched-row rate is logged after every join
 - [ ] Boundary-edge miss rate is logged for point-in-polygon
 - [ ] Tests include a "known-dirty" fixture (empty strings, ISO-3166 variants, Excel-stripped FIPS, renamed precincts)
+
+
+# Addendum to analysis/spatial/reference.md — ESDA / Geographic Data Science
+
+Append this section after the "Dirty Tabular Data" section.
+
+Draws from **Rey, Arribas-Bel, Wolf — *Geographic Data Science with Python*** (geographicdata.science/book/intro.html) — the canonical open-access reference.
+
+---
+
+## Exploratory Spatial Data Analysis (ESDA)
+
+Most spatial work is descriptive: "what's going on spatially with this variable?" Before regressions and models, run ESDA.
+
+### Core PySAL stack
+
+| Library | Use |
+|---|---|
+| `libpysal` | Spatial weights (W) construction — Queen/Rook contiguity, KNN, distance-band |
+| `esda` | Global and local spatial statistics — Moran's I, LISA, Geary's C |
+| `spreg` | Spatial regression — lag, error, SARAR, GWR hooks |
+| `segregation` | Residential / spatial segregation indices |
+| `mgwr` | Geographically Weighted Regression |
+| `splot` | ESDA-specific visualizations (choropleth, LISA cluster maps) |
+
+### Spatial weights — the foundation
+
+Every spatial statistic requires a weights matrix `W` — who is a neighbor of whom.
+
+```python
+from libpysal import weights
+
+# Queen contiguity (shares vertex OR edge)
+w = weights.Queen.from_dataframe(gdf)
+w.transform = "r"  # row-standardize
+
+# Rook contiguity (shares edge only)
+w = weights.Rook.from_dataframe(gdf)
+
+# K-nearest neighbors (for point data or non-contiguous polygons)
+w = weights.KNN.from_dataframe(gdf, k=8)
+
+# Distance band (within X meters)
+w = weights.DistanceBand.from_dataframe(gdf, threshold=5000, binary=False)
+```
+
+Rules:
+- Check for islands: `w.islands` returns GEOIDs with zero neighbors. These break Moran's I.
+- Row-standardize (`w.transform = "r"`) for most analyses — makes weights a weighted average.
+- Cache `W` objects — they're expensive to build for large geographies.
+
+### Moran's I — global spatial autocorrelation
+
+```python
+from esda.moran import Moran
+
+moran = Moran(gdf["median_income"], w)
+print(f"Moran's I: {moran.I:.3f} (p={moran.p_sim:.3f})")
+```
+
+Interpretation:
+- `I` ≈ 1: strong positive spatial autocorrelation (similar values cluster)
+- `I` ≈ 0: random spatial pattern
+- `I` ≈ -1: strong negative autocorrelation (dissimilar values adjacent — rare in real data)
+
+Always report `p_sim` (permutation-based p-value) not the analytic p-value. Spatial data violates the IID assumption.
+
+### LISA — local indicators
+
+```python
+from esda.moran import Moran_Local
+
+lisa = Moran_Local(gdf["median_income"], w)
+gdf["lisa_q"] = lisa.q  # 1=HH, 2=LH, 3=LL, 4=HL
+gdf["lisa_sig"] = lisa.p_sim < 0.05
+
+# Classify for mapping
+def lisa_category(row):
+    if not row["lisa_sig"]:
+        return "Not significant"
+    return {1: "High-High", 2: "Low-High", 3: "Low-Low", 4: "High-Low"}[row["lisa_q"]]
+gdf["lisa_cat"] = gdf.apply(lisa_category, axis=1)
+```
+
+LISA clusters are where real stories live: "this block group is a Low-Low island in a High-High region" is much more informative than a global Moran's I.
+
+### splot — consistent LISA maps
+
+```python
+from splot.esda import lisa_cluster
+
+fig, ax = lisa_cluster(lisa, gdf, p=0.05)
+```
+
+Use `splot` rather than rolling your own choropleth — the color scheme is the GDS book's standard and readers can interpret across analyses.
+
+## Spatial regression (from chapter 11 of the book)
+
+| Model | When |
+|---|---|
+| **OLS** | Baseline; check Moran's I of residuals. If significant, OLS is underspecified. |
+| **Spatial lag** | The dependent variable spills over space (crime contagion, house prices) |
+| **Spatial error** | Unobserved factors are spatially correlated (missing neighborhood fixed effects) |
+| **SARAR** | Both lag and error — use when diagnostics say both |
+| **GWR (mgwr)** | Coefficients themselves vary over space |
+
+### Diagnostic workflow
+
+```python
+from spreg import OLS, ML_Lag, ML_Error
+
+ols = OLS(y, X, w=w, name_y="income", name_x=["var1", "var2"], spat_diag=True)
+print(ols.summary)  # includes LM tests for lag and error
+
+# If LM_Lag p < 0.05 → try spatial lag
+lag = ML_Lag(y, X, w=w)
+
+# If LM_Error p < 0.05 → try spatial error
+err = ML_Error(y, X, w=w)
+```
+
+### Never skip
+
+- Plot residuals spatially — clustering is a diagnostic failure
+- Report Moran's I of residuals alongside any coefficient
+- If the dependent variable is count-data, don't use OLS — use a Poisson variant
+
+## Geocoding (GDS chapter 4)
+
+The book's recommendation aligns with this repo's `spatial/SKILL.md` Step 2:
+
+| Volume | Accuracy | Method |
+|---|---|---|
+| <100 addresses | High | Census Geocoder or Google API |
+| 100–10K | Medium | Batched Census Geocoder (free, US) |
+| 10K–1M | Medium | Self-hosted Nominatim or Pelias |
+| >1M | Approximate | ZIP / tract centroid lookup |
+
+Python:
+```python
+import geopandas as gpd
+from census_geocoder import geocoder  # hypothetical; check current lib
+
+result = geocoder(addresses, returntype="locations", benchmark="Public_AR_Current")
+```
+
+## Reproducibility — the book's discipline
+
+1. **Notebooks for exploration, modules for production.** Copy-paste from a notebook into `.py` once the analysis is stable.
+2. **Pin data versions.** Store the dataset URL + a checksum alongside the notebook. Census URLs change.
+3. **Every figure exports as both PNG (for docs) and PDF (for print).**
+4. **Use `contextily` for basemaps** — it handles Web Mercator reprojection automatically and attributes the tile provider. Don't hand-roll basemap loading.
+5. **`pyproj` has a `Transformer.from_crs` caching pattern** — use it for repeated reprojections in loops.
+
+## Canonical references
+
+- **Rey, Arribas-Bel, Wolf — *Geographic Data Science with Python*** (geographicdata.science/book)
+- **PySAL documentation** — pysal.org
+- **Luc Anselin's work (GeoDa author)** — foundational spatial econometrics literature
+- **Fotheringham, Brunsdon, Charlton — *Geographically Weighted Regression*** — GWR canon
+
+Every ESDA operation above has a worked example in one of the book chapters. Link to the relevant chapter in any analysis that uses the method.
