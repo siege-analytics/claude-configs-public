@@ -190,3 +190,121 @@ LEFT JOIN zip_centroids AS z ON d.zip_code = z.zip_code;
 | Using spatial join when a crosswalk exists | 100x more compute for the same answer | Check if a lookup table (ZIP-to-district) exists first |
 | Storing coordinates as TEXT | Can't index, can't query, can't transform | Use GEOMETRY or GEOGRAPHY type |
 | Mixing CRS without transforming | Points miss their polygons | Always `ST_Transform` to match the target CRS |
+
+
+# Addendum to analysis/spatial/reference.md
+
+Proposed new section to append after the "Common Mistakes" table. Positions the dirty-tabular-data reality, which the SKILL.md now leads with.
+
+---
+
+## Dirty Tabular Data — Why Geometry Exists
+
+In real-world civic / census / redistricting work, the tabular representation is usually the *reason* you need geometry. The crosswalks, FIPS codes, and state columns users rely on are wrong more often than anyone admits.
+
+### Common lies
+
+| Lie | What actually happens |
+|---|---|
+| "ZIP → Congressional District is a 1-to-1 table" | ~10% of ZIPs span multiple CDs. Court-ordered redistricts invalidate tables mid-cycle. |
+| "FIPS codes are stable" | Mostly true — except Alaska borough reorgs (Wrangell 2008, Hoonah-Angoon 2015), Bedford VA county merger (2013), new Puerto Rico municipios. |
+| "Census GEOIDs for tracts stay the same" | They change every decennial. `GEOID20 ≠ GEOID10` for most features. |
+| "State abbreviation 'PR' means Puerto Rico everywhere" | USPS: `PR`. Census sometimes: `RQ`. ISO-3166: `PR`. Some voter files: `P.R.` with dots. |
+| "The precinct name is consistent year-to-year" | Spelling drift. `"WARD 1 PCT 3"` becomes `"Ward 1-3"` becomes `"W1P3"` without warning. |
+| "Contributor address normalization is uniform" | Abbreviations (`Street`/`St.`/`St`), apartment handling (`#4`/`Apt 4`/`Unit 4`), and typo rates vary by source. |
+| "The crosswalk file's publication date equals its data vintage" | No. A 2024-published ZIP-to-CD crosswalk may use 2020 CD boundaries even if states have since redrawn. |
+
+### Vintage alignment
+
+Any join involving geographies has an implicit `year` dimension. Always pin it:
+
+```python
+# BAD: which vintage of FIPS are you joining?
+merged = donors.merge(counties, on="county_fips")
+
+# GOOD: make the vintage explicit
+counties_2020 = counties[counties.year == 2020]
+merged = donors.merge(counties_2020, on="county_fips")
+assert merged["county_name_2020"].isna().sum() == 0, "unmatched counties"
+```
+
+When the upstream source doesn't expose vintage, you can sometimes detect it by row count (Alaska has 30 boroughs post-2008, 25 pre). Where detection fails, treat the source as untrusted and use geometry.
+
+### Identifier reconciliation patterns
+
+**1. Build a crosswalk with explicit coverage.**
+
+```python
+# A reconciliation table that names every identifier system involved
+@dataclass
+class StateIdentifiers:
+    fips: str         # "48"
+    usps: str         # "TX"
+    iso3166: str      # "US-TX"
+    census_name: str  # "Texas" — but watch "District of Columbia" vs "DC"
+    common: str       # "Texas"
+```
+
+Then any code that takes "a state" runs through a single `normalize_state(raw) -> StateIdentifiers`.
+
+**2. Validate at ingestion boundaries.**
+
+Don't trust an upstream `state` column to be 2-char USPS. Coerce and raise on unknown:
+
+```python
+def normalize_state(raw: str) -> str:
+    if raw in USPS_CODES:
+        return raw
+    if raw in FIPS_TO_USPS:
+        return FIPS_TO_USPS[raw]
+    if raw.upper() in NAME_TO_USPS:
+        return NAME_TO_USPS[raw.upper()]
+    raise ValueError(f"unknown state identifier: {raw!r}")
+```
+
+Do the same for ZIP (sometimes a 9-digit ZIP+4 gets split, sometimes not), FIPS (leading zeros stripped by Excel), and party (`D`/`DEM`/`Democratic`/`democrat`).
+
+**3. Log mismatches at coarse granularity.**
+
+When you DO join and some rows drop, log it with enough context to reproduce:
+
+```python
+pre = len(donors)
+merged = donors.merge(districts, on=["state", "cd"], how="left")
+unmatched = merged[merged["district_id"].isna()]
+log_warning(
+    f"district join lost {len(unmatched)} of {pre} donors "
+    f"({len(unmatched)/pre:.1%}); unique unmatched (state, cd): "
+    f"{unmatched[['state', 'cd']].drop_duplicates().head(10).to_dict('records')}"
+)
+```
+
+Silent NaN rows are how dirty data corrupts analytics. A logged count turns "analysis is wrong" into "diagnostics say 3% of rows were dropped, here's why."
+
+### Boundary-edge misses
+
+Point-in-polygon can also lie:
+
+- **Coastline mismatch.** TIGER coastline != Natural Earth coastline != RDH coastline. A lat/lng near the shore may fall in no polygon, or two polygons, depending on which source.
+- **Shared state borders.** Segments on the Texas-Louisiana line may have small (< 100m) drift between TIGER 2010 and TIGER 2020, creating sliver gaps.
+- **Enclaves and exclaves.** Some districts aren't simply-connected (e.g. Kentucky Bend). Polygon libraries sometimes simplify these away.
+
+Mitigations:
+- After point-in-polygon, check for unmatched points and log rate
+- For edge cases, use a snap-to-nearest-polygon fallback with a distance threshold (e.g., snap if within 100m, otherwise flag)
+- If accuracy matters, use the same provider's boundaries AND the same provider's point geocoder — don't mix TIGER with Google geocoder
+
+### When to raise vs. silently accept
+
+At the **ingestion boundary** — when data enters your system — raise on unknown identifiers. It's better to halt an ingest than to silently miscategorize donors for a month.
+
+At the **analysis boundary** — when data is used for reporting — raise if data loss exceeds a threshold (e.g., > 1% unmatched after join). Below that, log and proceed, but include the rate in the output.
+
+### Checklist before shipping spatial / identifier code
+
+- [ ] Every public function documents the identifier systems it accepts
+- [ ] Normalization runs at ingestion with explicit failure mode
+- [ ] Join vintages are pinned (no ambiguous "current" year)
+- [ ] Unmatched-row rate is logged after every join
+- [ ] Boundary-edge miss rate is logged for point-in-polygon
+- [ ] Tests include a "known-dirty" fixture (empty strings, ISO-3166 variants, Excel-stripped FIPS, renamed precincts)
