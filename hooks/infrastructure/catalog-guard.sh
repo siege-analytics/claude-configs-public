@@ -19,20 +19,17 @@
 # than another orphaned-file cleanup.
 
 set -euo pipefail
+export PATH="/home/craftagents/bin:$PATH"
 
 # Claude Code sends the tool call JSON on stdin for PreToolUse.
 INPUT=$(cat)
 
 # Extract the command text. For Bash the tool input is like:
 #   {"tool": "Bash", "tool_input": {"command": "...", "description": "..."}}
-COMMAND=$(printf '%s' "$INPUT" | python3 -c "
-import json, sys
-try:
-    data = json.load(sys.stdin)
-    print(data.get('tool_input', {}).get('command', ''))
-except Exception:
-    pass
-" 2>/dev/null || echo "")
+COMMAND=$(printf '%s' "$INPUT" \
+  | /usr/local/bun-node-fallback-bin/node -e \
+    'const d=JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")); process.stdout.write(d.tool_input?.command||"")' \
+  2>/dev/null || echo "")
 
 if [ -z "$COMMAND" ]; then
   exit 0
