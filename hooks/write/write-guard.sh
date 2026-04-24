@@ -6,7 +6,7 @@ set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
 
 INPUT=$(cat)
-FILE_PATH=$(echo "$INPUT" \
+FILE_PATH=$(printf '%s' "$INPUT" \
   | /usr/local/bun-node-fallback-bin/node -e \
     'const d=JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")); process.stdout.write((d.tool_input?.file_path||d.tool_input?.path||""))' \
   2>/dev/null || echo "")
@@ -35,8 +35,8 @@ echo "$FILE_PATH" | grep -qE "parsers/conf/.*\.yaml" \
 echo "$FILE_PATH" | grep -qE "parsers/schemas/.*\.py" \
   && block "coding/python" "Schema changes require type hint compliance and NumPy docstring review."
 
-# Delta / Parquet writes
-echo "$FILE_PATH" | grep -qE "\.(parquet|delta)$|/delta/" \
+# Delta / Parquet writes to catalog-managed locations
+echo "$FILE_PATH" | grep -qE "\.(parquet|delta)$|/(silver|gold|bronze|hive-warehouse|bullion|platinum|quicksilver)/.*(_delta_log|\.delta)" \
   && block "infrastructure/unity-catalog" "Delta/Parquet writes to catalog paths must go through Unity Catalog skill."
 
 # Workspace skill or source config changes
