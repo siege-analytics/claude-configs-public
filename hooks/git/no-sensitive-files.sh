@@ -7,6 +7,7 @@
 # .env, credentials, private keys, tokens.
 
 set -uo pipefail
+export PATH="/home/craftagents/bin:$PATH"
 
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || true)
