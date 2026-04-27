@@ -6,6 +6,28 @@ This is the enforcement layer for every skill in this collection and the electin
 
 ---
 
+## Trivial vs. Non-Trivial
+
+**Trivial** — no skill consultation required:
+- Read-only: search, grep, read, list, explain
+- Single-file, single-line reversible edits (undone by `git restore`)
+- Exploratory questions / analysis with no file writes
+- Draft content not yet committed
+
+**Non-trivial** — resolver must be consulted, appropriate skill invoked:
+- Any `git commit`, `git push`, branch create/delete, merge, rebase, reset
+- Any write to data files, schemas, Hydra configs, Pydantic models, Parquet/Delta
+- Code file writes touching public APIs, imports, or library interfaces
+- Ticket creation, PR creation, issue updates, any external API write
+- Infrastructure changes: K8s, Airflow DAGs, Rundeck YAML, Spark CRDs
+- Documentation writes spanning multiple repos
+- Session wrap-up / end-of-session actions
+
+**Rule:** if it cannot be undone with `git restore` or `rm`, it is non-trivial. All commits are
+non-trivial — diff size does not matter.
+
+---
+
 ## THE FIRST GATE: `think`
 
 > **The most important skill in this entire chain is `think`.** Every catalog-bypass, every premature cutover, every half-designed pipeline this resolver exists to prevent traces back to acting before thinking.
@@ -34,6 +56,29 @@ The `think` gate is not a pattern-match entry below — it is the **first gate**
 4. If multiple patterns match, read all of them.
 5. Only then take the action.
 6. If no pattern matches but the action has non-trivial blast radius (data writes, mutations to shared systems, infra changes), consult the **universal checks** at the bottom.
+
+---
+
+## electinfo Workspace Overrides
+
+These rules take precedence over anything in individual skill files:
+
+1. **Git remotes:** Always use HTTPS with `${GITHUB_PERSONAL_ACCESS_TOKEN}`. Never SSH. See `[skill:git]`.
+2. **Ticket creation:** Use `[skill:qaticket]` — defaults to adam@elect.info assignee, Engineering team, QA label. The generic `planning/create-ticket` skill is a fallback only for non-Linear/non-GitHub platforms.
+3. **No AI attribution:** No `Co-Authored-By`, no bot markers, no tool credits anywhere in commits, tickets, or docs.
+
+### electinfo-specific routing
+
+| Trigger | Skill |
+|---|---|
+| Editing `rundeck/jobs/fec-enterprise/*.yaml` | `enterprise-spark-jobs/SKILL.md` + `git-workflow/commit/SKILL.md` |
+| Spark executor OOM, exit code 52, memory tuning | `enterprise-spark-jobs/SKILL.md` |
+| Debugging or retrieving a Rundeck execution log | `rundeck-logs/SKILL.md` |
+| Posting comments to Linear or GitHub issues | `adammode/SKILL.md` (prepends `From adam@elect.info:`) |
+| Creating a ticket in Linear or GitHub | `qaticket/SKILL.md` |
+| Any Delta/Parquet write to S3 bronze/silver/gold | `infrastructure/unity-catalog/SKILL.md` |
+| PostGIS queries, spatial joins, ST_* functions | `coding/postgis/SKILL.md` + `analysis/spatial/SKILL.md` |
+| Session end, committing work | `session/wrap-up/SKILL.md` + `git-workflow/commit/SKILL.md` |
 
 ---
 
@@ -149,3 +194,13 @@ Skills collection paths (all relative to their repo roots):
 
 - **Siege (this repo)**: `~/git/electinfo/claude-configs-public/skills/`
 - **Electinfo**: `~/git/electinfo/electinfo_claude_skills/skills/` (includes a subtree of siege skills under `skills/siege/` plus electinfo-specific skills at the top level)
+
+---
+
+## Disambiguation rules
+
+1. **Prefer the most specific skill.** `coderabbit-response` beats `code-review` when a bot posted the review.
+2. **Skills chain explicitly.** `create-pr` → `commit` → `branch` in reverse.
+3. **Conventions always apply.** Every skill that writes a commit reads `_output-rules.md` first.
+4. **Router sub-skills load only when triggered.** A `.py` file without `pyspark` imports doesn't load `coding/spark/`.
+5. **When in doubt, ask the user.**
