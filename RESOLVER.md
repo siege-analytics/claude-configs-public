@@ -82,7 +82,7 @@ The `think` gate is not a pattern-match entry below — it is the **first gate**
 | Create a ticket | `skills/planning/create-ticket/SKILL.md` |
 | Update a ticket (progress comment, field change) | `skills/planning/update-ticket/SKILL.md` |
 | Close a ticket | `skills/planning/close-ticket/SKILL.md` |
-| Decide what to work on next | `skills/planning/im-feeling-lucky/SKILL.md` |
+| Start work on a ticket (first commit, mark In Progress, assign to self) | `skills/planning/pre-work-check/SKILL.md` |
 
 ### Documentation
 
@@ -115,7 +115,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
 3. **Test-before-bulk**: any batch operation (≥20 items) runs on 3–5 items first, verifies, then scales.
 
-4. **Ticket-required**: non-trivial work has a ticket. If you're about to commit, there's a ticket reference in the message.
+4. **Ticket-required + Epic-in-project + Dependency-clear**: Any work that creates a change in state or behavior of the software that will impact the product requires a ticket. Typographical corrections with no functional effect are exempt. That ticket must belong to a project or epic — unprojected tickets are not worked. All blocking upstream tickets must be Done before you start. Include the ticket reference in every commit. Read `skills/planning/pre-work-check/SKILL.md` before starting any such work.
 
 5. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write.
 
