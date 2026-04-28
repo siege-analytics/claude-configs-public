@@ -24,6 +24,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | PySpark DataFrame work, tuning, shuffle / skew | [`coding/spark/SKILL.md`](coding/spark/SKILL.md) |
 | SQL query structure, joins, window functions, Postgres performance | [`coding/sql/SKILL.md`](coding/sql/SKILL.md) |
 | PostGIS — ST_* functions, spatial indexes, spatial joins | [`coding/postgis/SKILL.md`](coding/postgis/SKILL.md) |
+| QML component decomposition (properties-in / signals-out, MuseScore plugins) | [`coding/qml-component-review/SKILL.md`](coding/qml-component-review/SKILL.md) |
 
 ### Analysis
 
@@ -96,6 +97,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 |---|---|
 | Databricks workspace, jobs, DLT, Delta, Unity Catalog, Photon, liquid clustering | [`infrastructure/databricks/SKILL.md`](infrastructure/databricks/SKILL.md) |
 | Unity Catalog permissioning specifics (standalone) | [`infrastructure/unity-catalog/SKILL.md`](infrastructure/unity-catalog/SKILL.md) |
+| Safe interaction with shared servers (cyberpower, K8s, Rundeck) — process and concurrency limits | [`infrastructure/ops/SKILL.md`](infrastructure/ops/SKILL.md) |
 
 ## Disambiguation rules
 

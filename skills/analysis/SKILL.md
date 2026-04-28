@@ -7,7 +7,7 @@ paths: "**/*.py,**/*.geojson,**/*.shp,**/*.gpkg,**/*.parquet"
 
 # Analysis Methods Router
 
-Select the appropriate analysis methodology based on the problem type. The first question is always whether the obvious approach is actually the right one.
+Select the appropriate analysis methodology based on the problem type. **First question: is your tabular representation trustworthy? If not, you need geometry precisely because the identifiers are dirty — skip crosswalk shortcuts.** See `_data-trust-rules.md` at skills root.
 
 ## Routing Table
 
@@ -23,10 +23,11 @@ Not all sub-skills exist yet. If a routing table entry points to a file that doe
 
 ## Rules
 
-1. **Consult the decision framework before loading.** The spatial sub-skill asks "do you actually need geometry?" Many spatial-sounding problems are graph or string-lookup problems. Route accordingly.
+1. **Consult the decision framework before loading.** The spatial sub-skill leads with "do you trust your tabular representation?" — real-world civic / census / redistricting data is usually dirty, which is the reason spatial methods exist. The older question "do you need geometry?" is Step 2.
 2. **Load only the relevant methodology.** Most analysis tasks need exactly one sub-skill.
 3. **Stack rarely.** Entity resolution + graph analysis may combine for network deduplication. Spatial + statistical may combine for geographic modeling. But the default is one sub-skill.
 4. **Reference files load on demand.** Each sub-skill may have a `reference.md`. Load it only when directed.
+5. **Conventions always apply.** `_data-trust-rules.md` applies to any skill that ingests or joins external data. `_output-rules.md` applies to anything that produces output.
 
 ## Gotchas
 

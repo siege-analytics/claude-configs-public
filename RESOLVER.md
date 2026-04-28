@@ -106,6 +106,7 @@ These rules take precedence over anything in individual skill files:
 | Write a pipeline / ETL / scheduled data job | `skills/coding/pipeline-jobs/SKILL.md` |
 | Write a Rundeck job YAML | `electinfo_claude_skills/skills/rundeck-job/SKILL.md` |
 | Review existing code (yours or others') | `skills/coding/code-review/SKILL.md` |
+| Review an extracted QML component (properties-in / signals-out, MuseScore plugins) | `skills/coding/qml-component-review/SKILL.md` |
 
 ### Design & planning
 
@@ -144,6 +145,7 @@ These rules take precedence over anything in individual skill files:
 |---|---|
 | End a session / hand off work | `skills/session/wrap-up/SKILL.md` |
 | Recover from a magnum / enterprise-runner outage | `electinfo_claude_skills/skills/monitor-magnum/SKILL.md` |
+| SSH to a shared server / launch a batch job / triage server health | `skills/infrastructure/ops/SKILL.md` |
 | Create a new skill | `skills/meta/skillbuilder/SKILL.md` |
 
 ---

@@ -33,6 +33,8 @@ Not all sub-skills exist yet. If a routing table entry points to a file that doe
 2. **Stack when appropriate.** A PySpark file loads both `python/SKILL.md` (general style) and `spark/SKILL.md` (Spark-specific). A Django file loads `python/SKILL.md` + `django/SKILL.md`. SQL embedded in Python loads the relevant Python sub-skill + `sql/SKILL.md`. PostGIS SQL loads `sql/SKILL.md` + `postgis/SKILL.md`. Library-code review loads `python/SKILL.md` + `python-patterns/SKILL.md` + optionally `python-exceptions/SKILL.md`.
 3. **Specificity wins.** When a framework sub-skill and the general language sub-skill conflict, the framework sub-skill takes precedence.
 4. **Reference files load on demand.** Each sub-skill may have a `reference.md`. Load it only when the sub-skill directs you to consult it for the current task.
+5. **Conventions always apply.** Every skill that writes a commit reads `_output-rules.md` first (at skills root).
+6. **Tests and docs ship with code.** Regardless of language, every PR that changes code also ships tests for the change and updates user-facing documentation (README, docs tree, CHANGELOG, or module guide) when public behavior changes. No "tests coming later" and no "docs coming later" PRs. See the language-specific sub-skill for format conventions.
 
 ## Gotchas
 
@@ -41,3 +43,4 @@ Not all sub-skills exist yet. If a routing table entry points to a file that doe
 - PySpark SQL (SparkSQL) follows the sql sub-skill for query structure but the spark sub-skill for DataFrame operations.
 - `*.js` files may be plain JavaScript or a framework. Without React/Vue/Angular imports, apply only general conventions.
 - TypeScript and JavaScript share many patterns but TypeScript has additional type-system conventions. Don't apply TypeScript rules to `.js` files.
+- `python-patterns` and `python-exceptions` are reviewer's lenses, not default style. Load them when doing architectural review or triaging CodeRabbit findings, not for every `.py` file.
