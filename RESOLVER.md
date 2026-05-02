@@ -106,6 +106,9 @@ These rules take precedence over anything in individual skill files:
 | Write a pipeline / ETL / scheduled data job | `skills/coding/pipeline-jobs/SKILL.md` |
 | Write a Rundeck job YAML | `electinfo_claude_skills/skills/rundeck-job/SKILL.md` |
 | Review existing code (yours or others') | `skills/coding/code-review/SKILL.md` |
+| Write Scala on Databricks notebooks, `.scala` files, `Dataset[T]` Spark code | `skills/coding/scala-on-spark/SKILL.md` (delegates to `shelves/languages/effective-java/`, `effective-kotlin/`, and `coding/spark/`) |
+| Design a service / module boundary | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/engineering-principles/clean-architecture/SKILL.md` |
+| Pick a storage engine, replication scheme, or partitioning strategy | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
 
 ### Design & planning
 

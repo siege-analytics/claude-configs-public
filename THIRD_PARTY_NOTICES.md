@@ -24,7 +24,69 @@ Each book skill under `skills/shelves/<shelf>/<book>/` carries an attribution fo
 
 | Shelf | Book skill | Source |
 |---|---|---|
-| _(populated by PRs 2–7)_ | | |
+| engineering-principles | clean-code | wondelai/skills |
+| engineering-principles | clean-architecture | wondelai/skills |
+| engineering-principles | design-patterns | ZLStas/skills |
+| engineering-principles | domain-driven-design | wondelai/skills |
+| engineering-principles | refactoring-patterns | wondelai/skills |
+| engineering-principles | pragmatic-programmer | wondelai/skills |
+| engineering-principles | software-design-philosophy | wondelai/skills |
+| _(rules)_ | `_principles-rules.md` | ZLStas/skills (`rules/common/clean-code.md`) |
+| _(rules)_ | `_python-rules.md` | ZLStas/skills (`rules/python/effective-python.md`) |
+| _(rules)_ | `_jvm-rules.md` | ZLStas/skills (`rules/java/` + `rules/kotlin/`, merged) |
+| _(rules)_ | `_typescript-rules.md` | ZLStas/skills (`rules/typescript/effective-typescript.md`) |
+| _(rules)_ | `_rust-rules.md` | ZLStas/skills (`rules/rust/rust.md`) |
+| systems-architecture | data-intensive | wondelai/skills (`ddia-systems`, renamed) |
+| systems-architecture | system-design | wondelai/skills |
+| systems-architecture | microservices-patterns | ZLStas/skills |
+| systems-architecture | release-it | wondelai/skills |
+| systems-architecture | high-perf-browser | wondelai/skills |
+| systems-architecture | system-design-interview | ZLStas/skills |
+| languages | effective-python | ZLStas/skills |
+| languages | using-asyncio-python | ZLStas/skills |
+| languages | web-scraping-python | ZLStas/skills |
+| languages | effective-java | ZLStas/skills |
+| languages | effective-kotlin | ZLStas/skills |
+| languages | kotlin-in-action | ZLStas/skills |
+| languages | spring-boot-in-action | ZLStas/skills |
+| languages | programming-with-rust | ZLStas/skills |
+| languages | rust-in-action | ZLStas/skills |
+| languages | effective-typescript | ZLStas/skills |
+| data-and-pipelines | data-pipelines | ZLStas/skills |
+| product | jobs-to-be-done | wondelai/skills |
+| product | continuous-discovery | wondelai/skills |
+| product | design-sprint | wondelai/skills |
+| product | lean-startup | wondelai/skills |
+| product | lean-ux | wondelai/skills |
+| product | inspired-product | wondelai/skills |
+| product | mom-test | wondelai/skills |
+| product | improve-retention | wondelai/skills |
+| marketing | cro-methodology | wondelai/skills |
+| marketing | storybrand-messaging | wondelai/skills |
+| marketing | contagious | wondelai/skills |
+| marketing | made-to-stick | wondelai/skills |
+| marketing | scorecard-marketing | wondelai/skills |
+| marketing | one-page-marketing | wondelai/skills |
+| marketing | hooked-ux | wondelai/skills |
+| sales | predictable-revenue | wondelai/skills |
+| sales | negotiation | wondelai/skills |
+| sales | influence-psychology | wondelai/skills |
+| sales | hundred-million-offers | wondelai/skills |
+| strategy | blue-ocean-strategy | wondelai/skills |
+| strategy | crossing-the-chasm | wondelai/skills |
+| strategy | traction-eos | wondelai/skills |
+| strategy | obviously-awesome | wondelai/skills |
+| design | refactoring-ui | wondelai/skills |
+| design | ios-hig-design | wondelai/skills |
+| design | ux-heuristics | wondelai/skills |
+| design | web-typography | wondelai/skills |
+| design | top-design | wondelai/skills |
+| design | design-everyday-things | wondelai/skills |
+| design | microinteractions | wondelai/skills |
+| team | drive-motivation | wondelai/skills |
+| team | 37signals-way | wondelai/skills |
+| storytelling | storytelling-with-data | ZLStas/skills |
+| storytelling | animation-at-work | ZLStas/skills |
 
 ## Fair-use note
 

@@ -8,6 +8,13 @@ paths: "**/*.sql,**/postgis/**,**/*.py"
 
 # PostGIS
 
+## Companion shelves
+
+For storage-engine reasoning (B-tree vs GiST/BRIN indexes, partitioning at scale):
+- [`shelves/systems-architecture/data-intensive/`](../../shelves/systems-architecture/data-intensive/SKILL.md)
+
+> Note: a deeper Mastering-PostGIS distillation is staged in `STAGED-spatial-and-siege-utilities` and not included in this PR stack.
+
 Apply when writing SQL against PostgreSQL with the PostGIS extension enabled. See [reference.md](reference.md) for full query templates, extension setup, and raster operations.
 
 Draws from:

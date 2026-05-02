@@ -8,6 +8,16 @@ paths: "**/*.py"
 
 # Python Engineering Patterns
 
+## Companion shelves
+
+Tier A delegation. The deep rationale lives in:
+- [`shelves/languages/effective-python/`](../../shelves/languages/effective-python/SKILL.md) — Pythonic structure.
+- [`shelves/languages/using-asyncio-python/`](../../shelves/languages/using-asyncio-python/SKILL.md) — async patterns.
+- [`shelves/engineering-principles/clean-code/`](../../shelves/engineering-principles/clean-code/SKILL.md) — DRY, function discipline.
+- [`shelves/engineering-principles/design-patterns/`](../../shelves/engineering-principles/design-patterns/SKILL.md) — GoF in Python.
+
+Use the rules below for Siege-specific conventions; load the shelf books for principle-level reasoning.
+
 Apply these to library code — things imported and called by other modules. See [reference.md](reference.md) for specific before/after refactors and the Geographic Data Science with Python ESDA patterns.
 
 ## DRY — extract when duplication is real
