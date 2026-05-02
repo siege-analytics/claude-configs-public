@@ -52,7 +52,8 @@ Each book skill under `skills/shelves/<shelf>/<book>/` carries an attribution fo
 | languages | programming-with-rust | ZLStas/skills |
 | languages | rust-in-action | ZLStas/skills |
 | languages | effective-typescript | ZLStas/skills |
-| _(further shelves populated by PRs 5–7)_ | | |
+| data-and-pipelines | data-pipelines | ZLStas/skills |
+| _(further shelves populated by PRs 6–7)_ | | |
 
 ## Fair-use note
 
