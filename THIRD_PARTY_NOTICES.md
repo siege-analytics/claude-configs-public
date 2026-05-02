@@ -36,7 +36,13 @@ Each book skill under `skills/shelves/<shelf>/<book>/` carries an attribution fo
 | _(rules)_ | `_jvm-rules.md` | ZLStas/skills (`rules/java/` + `rules/kotlin/`, merged) |
 | _(rules)_ | `_typescript-rules.md` | ZLStas/skills (`rules/typescript/effective-typescript.md`) |
 | _(rules)_ | `_rust-rules.md` | ZLStas/skills (`rules/rust/rust.md`) |
-| _(further shelves populated by PRs 3–7)_ | | |
+| systems-architecture | data-intensive | wondelai/skills (`ddia-systems`, renamed) |
+| systems-architecture | system-design | wondelai/skills |
+| systems-architecture | microservices-patterns | ZLStas/skills |
+| systems-architecture | release-it | wondelai/skills |
+| systems-architecture | high-perf-browser | wondelai/skills |
+| systems-architecture | system-design-interview | ZLStas/skills |
+| _(further shelves populated by PRs 4–7)_ | | |
 
 ## Fair-use note
 
