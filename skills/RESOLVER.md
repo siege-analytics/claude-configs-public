@@ -31,6 +31,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | [`coding/scala-on-spark/SKILL.md`](coding/scala-on-spark/SKILL.md) |
 | SQL query structure, joins, window functions, Postgres performance | [`coding/sql/SKILL.md`](coding/sql/SKILL.md) |
 | PostGIS — ST_* functions, spatial indexes, spatial joins | [`coding/postgis/SKILL.md`](coding/postgis/SKILL.md) |
+| QML component review — properties-in / signals-out, MuseScore plugins, Qt Quick decomposition | [`coding/qml-component-review/SKILL.md`](coding/qml-component-review/SKILL.md) |
 
 ### Analysis
 
@@ -75,6 +76,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Update ticket status | [`planning/update-ticket/SKILL.md`](planning/update-ticket/SKILL.md) |
 | Close a ticket | [`planning/close-ticket/SKILL.md`](planning/close-ticket/SKILL.md) |
 | "What should I work on next?", opportunity surfacing | [`planning/im-feeling-lucky/SKILL.md`](planning/im-feeling-lucky/SKILL.md) |
+| Starting work on a ticket — claim it, mark in-progress, branch, then code | [`planning/pre-work-check/SKILL.md`](planning/pre-work-check/SKILL.md) |
 
 ### Documentation
 
@@ -123,6 +125,7 @@ DBrain book-skill library. Each shelf is itself a router — load the shelf, it 
 |---|---|
 | Databricks workspace, jobs, DLT, Delta, Unity Catalog, Photon, liquid clustering | [`infrastructure/databricks/SKILL.md`](infrastructure/databricks/SKILL.md) |
 | Unity Catalog permissioning specifics (standalone) | [`infrastructure/unity-catalog/SKILL.md`](infrastructure/unity-catalog/SKILL.md) |
+| Operating shared infra — cyberpower, K8s, Rundeck — process and concurrency limits | [`infrastructure/ops/SKILL.md`](infrastructure/ops/SKILL.md) |
 
 ## Disambiguation rules
 
