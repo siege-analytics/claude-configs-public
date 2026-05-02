@@ -76,7 +76,17 @@ Each book skill under `skills/shelves/<shelf>/<book>/` carries an attribution fo
 | strategy | crossing-the-chasm | wondelai/skills |
 | strategy | traction-eos | wondelai/skills |
 | strategy | obviously-awesome | wondelai/skills |
-| _(further shelves populated by PR 7)_ | | |
+| design | refactoring-ui | wondelai/skills |
+| design | ios-hig-design | wondelai/skills |
+| design | ux-heuristics | wondelai/skills |
+| design | web-typography | wondelai/skills |
+| design | top-design | wondelai/skills |
+| design | design-everyday-things | wondelai/skills |
+| design | microinteractions | wondelai/skills |
+| team | drive-motivation | wondelai/skills |
+| team | 37signals-way | wondelai/skills |
+| storytelling | storytelling-with-data | ZLStas/skills |
+| storytelling | animation-at-work | ZLStas/skills |
 
 ## Fair-use note
 
