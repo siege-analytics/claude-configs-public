@@ -90,6 +90,26 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | "Is every skill reachable from the resolver?" | [`meta/check-resolvable/SKILL.md`](meta/check-resolvable/SKILL.md) |
 | "Test that the right skill fires for each input" | [`testing/resolver-evals/SKILL.md`](testing/resolver-evals/SKILL.md) |
 
+### Shelves (book-derived libraries)
+
+DBrain book-skill library. Each shelf is itself a router — load the shelf, it tells you which book to read in full. See [`shelves/SKILL.md`](shelves/SKILL.md) for the meta-router.
+
+| Trigger | Shelf |
+|---|---|
+| Engineering practice question, code review rationale, refactoring justification | [`shelves/engineering-principles/SKILL.md`](shelves/engineering-principles/SKILL.md) |
+| Distributed system design, storage engine choice, replication, scaling | [`shelves/systems-architecture/SKILL.md`](shelves/systems-architecture/SKILL.md) |
+| Language-specific idiom or best practice (Python, JVM, TS, Rust) | [`shelves/languages/SKILL.md`](shelves/languages/SKILL.md) |
+| Data pipeline design, scheduled-job patterns, batch/stream | [`shelves/data-and-pipelines/SKILL.md`](shelves/data-and-pipelines/SKILL.md) |
+| Product discovery, feature scoping, JTBD, user research | [`shelves/product/SKILL.md`](shelves/product/SKILL.md) |
+| Marketing copy, conversion, positioning messaging | [`shelves/marketing/SKILL.md`](shelves/marketing/SKILL.md) |
+| Sales motion, pricing, negotiation | [`shelves/sales/SKILL.md`](shelves/sales/SKILL.md) |
+| Strategy, market entry, competitive positioning | [`shelves/strategy/SKILL.md`](shelves/strategy/SKILL.md) |
+| UI/UX design, visual hierarchy, typography, microinteractions | [`shelves/design/SKILL.md`](shelves/design/SKILL.md) |
+| Team motivation, ways of working, organizational practice | [`shelves/team/SKILL.md`](shelves/team/SKILL.md) |
+| Communicating data, presenting findings, animation in slides | [`shelves/storytelling/SKILL.md`](shelves/storytelling/SKILL.md) |
+
+> **Status:** shelves are added incrementally via the `feat/dbrain-*` PR stack. Rows above pointing at not-yet-merged shelf files will resolve as PRs land.
+
 ### Infrastructure
 
 | Trigger | Skill |
