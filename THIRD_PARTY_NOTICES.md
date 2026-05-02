@@ -24,7 +24,19 @@ Each book skill under `skills/shelves/<shelf>/<book>/` carries an attribution fo
 
 | Shelf | Book skill | Source |
 |---|---|---|
-| _(populated by PRs 2–7)_ | | |
+| engineering-principles | clean-code | wondelai/skills |
+| engineering-principles | clean-architecture | wondelai/skills |
+| engineering-principles | design-patterns | ZLStas/skills |
+| engineering-principles | domain-driven-design | wondelai/skills |
+| engineering-principles | refactoring-patterns | wondelai/skills |
+| engineering-principles | pragmatic-programmer | wondelai/skills |
+| engineering-principles | software-design-philosophy | wondelai/skills |
+| _(rules)_ | `_principles-rules.md` | ZLStas/skills (`rules/common/clean-code.md`) |
+| _(rules)_ | `_python-rules.md` | ZLStas/skills (`rules/python/effective-python.md`) |
+| _(rules)_ | `_jvm-rules.md` | ZLStas/skills (`rules/java/` + `rules/kotlin/`, merged) |
+| _(rules)_ | `_typescript-rules.md` | ZLStas/skills (`rules/typescript/effective-typescript.md`) |
+| _(rules)_ | `_rust-rules.md` | ZLStas/skills (`rules/rust/rust.md`) |
+| _(further shelves populated by PRs 3–7)_ | | |
 
 ## Fair-use note
 
