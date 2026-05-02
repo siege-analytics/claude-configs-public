@@ -7,7 +7,13 @@ paths: "**/*.py,**/*.geojson,**/*.shp,**/*.gpkg,**/*.parquet"
 
 # Analysis Methods Router
 
-Select the appropriate analysis methodology based on the problem type. The first question is always whether the obvious approach is actually the right one.
+Select the appropriate analysis methodology based on the problem type.
+
+## First question: is your tabular representation trustworthy?
+
+Before routing to any methodology, apply [`_data-trust-rules.md`](../_data-trust-rules.md). In Siege civic / Census / FEC / redistricting work, the tabular representation is usually wrong, stale, or missing rows. Spatial methods exist *precisely because* the identifiers are dirty — if your join key isn't trustworthy, you don't get to skip geometry by reaching for a crosswalk. You skip the crosswalk *because* you have geometry.
+
+The same premise applies to entity resolution (the names don't match, that's why you need fuzzy matching) and to graph analysis (the explicit FK relationships are missing or wrong, that's why you need to reconstruct edges). Each sub-skill assumes you've already failed the trust check on the easy path.
 
 ## Routing Table
 
@@ -23,10 +29,12 @@ Not all sub-skills exist yet. If a routing table entry points to a file that doe
 
 ## Rules
 
-1. **Consult the decision framework before loading.** The spatial sub-skill asks "do you actually need geometry?" Many spatial-sounding problems are graph or string-lookup problems. Route accordingly.
-2. **Load only the relevant methodology.** Most analysis tasks need exactly one sub-skill.
-3. **Stack rarely.** Entity resolution + graph analysis may combine for network deduplication. Spatial + statistical may combine for geographic modeling. But the default is one sub-skill.
-4. **Reference files load on demand.** Each sub-skill may have a `reference.md`. Load it only when directed.
+1. **Trust check first.** Apply `_data-trust-rules.md` before routing. If your join key is dirty, you're choosing the methodology that *handles* the dirt (geometry, fuzzy matching, graph reconstruction), not the one that pretends the dirt isn't there.
+2. **Consult the decision framework inside each sub-skill.** The spatial sub-skill, having confirmed the trust premise, then asks "given that I have to use geometry, which engine and which path?" Many spatial-sounding problems are still graph or string-lookup problems — but only after the trust check.
+3. **Load only the relevant methodology.** Most analysis tasks need exactly one sub-skill.
+4. **Stack rarely.** Entity resolution + graph analysis may combine for network deduplication. Spatial + statistical may combine for geographic modeling. But the default is one sub-skill.
+5. **`_data-trust-rules.md` applies to any skill that ingests or joins external data.** It's an always-on convention, not a sub-skill — sibling of `_output-rules.md`. Load it once at session start.
+6. **Reference files load on demand.** Each sub-skill may have a `reference.md` or per-axis references under `references/`. Load on demand, not eagerly.
 
 ## Gotchas
 
