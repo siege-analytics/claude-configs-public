@@ -136,6 +136,24 @@ count: int = 0              # just use: count = 0
 - Use `list[X]`, `dict[K, V]`, `tuple[X, Y]` (lowercase, 3.9+)
 - Complex types get a `TypeAlias`: `Coordinate: TypeAlias = tuple[float, float]`
 
+## Tests and Documentation — non-negotiable
+
+Every code change ships with three things in the same PR:
+
+1. **Tests.** Every new function, method, or behavior change has a test. Every `raise` path has a negative test. Bug fixes ship with a regression test that fails on the previous commit. PRs without tests must explicitly justify *why* in the description (and that justification must be accepted by review, not asserted).
+2. **Docstrings.** Every public function, class, and method has a docstring covering purpose, parameters, returns, and raises. Use the format already in the module. If the module has no convention, use Google style.
+3. **User-facing docs.** If behavior changes at the module's public API (new exception type, new parameter, removed function), the change is reflected in the user-facing docs (`README.md`, `docs/` tree, CHANGELOG, or the module's `guide.md` / ADR) in the same PR. Never "docs will come later."
+
+When writing code:
+- Start the test file and source file together. Don't defer tests to a follow-up PR.
+- When a test can't be written cheaply (network, GPU, proprietary data), write a *fake-module success path* test that verifies the orchestration with a stub dependency — still better than no test.
+- Update docs as you go. A stale README is a bug report waiting to happen.
+
+When reviewing code:
+- Block merges that add untested behavior.
+- Block merges that add public API without docstrings.
+- Block merges that change observable behavior without updating user-facing docs.
+
 ## Further Reference
 
 See [reference.md](reference.md) for:
