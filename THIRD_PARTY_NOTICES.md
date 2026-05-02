@@ -53,7 +53,30 @@ Each book skill under `skills/shelves/<shelf>/<book>/` carries an attribution fo
 | languages | rust-in-action | ZLStas/skills |
 | languages | effective-typescript | ZLStas/skills |
 | data-and-pipelines | data-pipelines | ZLStas/skills |
-| _(further shelves populated by PRs 6–7)_ | | |
+| product | jobs-to-be-done | wondelai/skills |
+| product | continuous-discovery | wondelai/skills |
+| product | design-sprint | wondelai/skills |
+| product | lean-startup | wondelai/skills |
+| product | lean-ux | wondelai/skills |
+| product | inspired-product | wondelai/skills |
+| product | mom-test | wondelai/skills |
+| product | improve-retention | wondelai/skills |
+| marketing | cro-methodology | wondelai/skills |
+| marketing | storybrand-messaging | wondelai/skills |
+| marketing | contagious | wondelai/skills |
+| marketing | made-to-stick | wondelai/skills |
+| marketing | scorecard-marketing | wondelai/skills |
+| marketing | one-page-marketing | wondelai/skills |
+| marketing | hooked-ux | wondelai/skills |
+| sales | predictable-revenue | wondelai/skills |
+| sales | negotiation | wondelai/skills |
+| sales | influence-psychology | wondelai/skills |
+| sales | hundred-million-offers | wondelai/skills |
+| strategy | blue-ocean-strategy | wondelai/skills |
+| strategy | crossing-the-chasm | wondelai/skills |
+| strategy | traction-eos | wondelai/skills |
+| strategy | obviously-awesome | wondelai/skills |
+| _(further shelves populated by PR 7)_ | | |
 
 ## Fair-use note
 
