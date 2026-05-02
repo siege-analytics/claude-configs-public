@@ -42,7 +42,17 @@ Each book skill under `skills/shelves/<shelf>/<book>/` carries an attribution fo
 | systems-architecture | release-it | wondelai/skills |
 | systems-architecture | high-perf-browser | wondelai/skills |
 | systems-architecture | system-design-interview | ZLStas/skills |
-| _(further shelves populated by PRs 4–7)_ | | |
+| languages | effective-python | ZLStas/skills |
+| languages | using-asyncio-python | ZLStas/skills |
+| languages | web-scraping-python | ZLStas/skills |
+| languages | effective-java | ZLStas/skills |
+| languages | effective-kotlin | ZLStas/skills |
+| languages | kotlin-in-action | ZLStas/skills |
+| languages | spring-boot-in-action | ZLStas/skills |
+| languages | programming-with-rust | ZLStas/skills |
+| languages | rust-in-action | ZLStas/skills |
+| languages | effective-typescript | ZLStas/skills |
+| _(further shelves populated by PRs 5–7)_ | | |
 
 ## Fair-use note
 
