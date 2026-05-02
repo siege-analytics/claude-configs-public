@@ -1,6 +1,6 @@
 ---
 name: sedona
-description: "Apache Sedona for distributed spatial work on Spark. TRIGGER: from sedona, SedonaContext, SedonaRegistrator, ST_* in Spark SQL, %scala spatial code on Databricks. Same skill for both PySpark and Scala scaffolding — spatial logic identical, scaffolding diverges in known ways. Stacks with `coding/spark/`, `coding/scala-on-spark/`, and `shelves/systems-architecture/data-intensive/`."
+description: "Apache Sedona for distributed spatial work on Spark. PySpark is the default scaffolding; Scala variant covered in references. TRIGGER: from sedona, SedonaContext, SedonaRegistrator, ST_* in Spark SQL, %scala Sedona on Databricks. Stacks with `coding/spark/`, `coding/scala-on-spark/` (when using Scala), and `shelves/systems-architecture/data-intensive/`."
 routed-by: coding-standards
 user-invocable: false
 paths: "**/*.py,**/*.scala,**/*.sql"
@@ -31,7 +31,7 @@ Don't use Sedona for:
 - [`spatial-joins-at-scale.md`](references/spatial-joins-at-scale.md) — range joins, distance joins, cost model, when to broadcast
 - [`udf-vs-builtin.md`](references/udf-vs-builtin.md) — ST_* SQL vs Python UDF performance gap
 - [`raster.md`](references/raster.md) — Sedona raster ops; when in scope vs out
-- [`scaffolding-python-vs-scala.md`](references/scaffolding-python-vs-scala.md) — same logic, scaffolding diverges in 5–10 known ways
+- [`scaffolding-python-vs-scala.md`](references/scaffolding-python-vs-scala.md) — Scala variant of the PySpark defaults; same spatial logic, scaffolding diverges in 5–10 known ways
 - [`pitfalls.md`](references/pitfalls.md) — skew, OOM on join, CRS lost across stages, Kryo registration
 - [`siege-utilities-sedona.md`](references/siege-utilities-sedona.md) — ALWAYS call `resolve_spatial_runtime_plan()` first; encode/decode geometry for Spark safety
 
@@ -65,7 +65,9 @@ loader = select_spatial_loader(
 print(loader.engine, loader.method)
 ```
 
-## Sedona session — PySpark
+## Sedona session
+
+PySpark is the default scaffolding for Sedona work in Siege projects. (For Scala scaffolding, see [`scaffolding-python-vs-scala.md`](references/scaffolding-python-vs-scala.md) — the spatial logic is identical, only the session-creation and DataFrame-construction syntax changes.)
 
 ```python
 from sedona.spark import SedonaContext
@@ -81,26 +83,6 @@ sedona = SedonaContext.create(config)
 ```
 
 Two settings always needed: KryoSerializer and the SedonaKryoRegistrator. Without them, geometry serialization across stages drops to Java default and breaks silently or wastes I/O.
-
-## Sedona session — Scala
-
-```scala
-import org.apache.sedona.spark.SedonaContext
-import org.apache.spark.sql.SparkSession
-
-val config = SedonaContext
-  .builder()
-  .appName("spatial-pipeline")
-  .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-  .config("spark.kryo.registrator", "org.apache.sedona.core.serde.SedonaKryoRegistrator")
-  .getOrCreate()
-
-val sedona = SedonaContext.create(config)
-```
-
-Same settings. Same registrator. The spatial logic that follows is identical between Python and Scala.
-
-See [`scaffolding-python-vs-scala.md`](references/scaffolding-python-vs-scala.md) for the small differences (DataFrame creation, UDF registration, type imports).
 
 ## Read spatial data
 

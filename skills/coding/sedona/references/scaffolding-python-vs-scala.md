@@ -1,16 +1,23 @@
-# Sedona Scaffolding: Python vs Scala
+# Sedona Scaffolding — Scala Variant
 
-The spatial logic is identical. The scaffolding around it diverges in 5–10 known ways. This file is the diff.
+**PySpark is the Siege default** for Sedona work. This file documents the Scala variant — load it only when you're actually writing `.scala` files or `%scala` notebook cells. The spatial logic and SQL strings are identical between languages; only the scaffolding around them diverges.
 
-## Same — the spatial logic
+## When you'd use Scala
 
-Whether you write `df.createOrReplaceTempView("points")` then `sedona.sql("SELECT ST_Within(...) ...")`, or you do the equivalent in Scala, the **SQL strings are identical** and the optimizer behavior is identical. ST_* functions are JVM-native; Python and Scala both call into the same JVM implementations.
+| Situation | Why Scala over PySpark |
+|---|---|
+| Existing Scala codebase you're extending | Don't introduce a Python boundary |
+| Spark Streaming spatial work | Streaming APIs are first-class in Scala, second-class in Python |
+| You need compile-time `Dataset[T]` typing | Python is dynamic; Scala catches schema errors at compile time |
+| Team / project preference | Already decided |
 
-This means: you can prototype in PySpark notebooks, then port to Scala for production with no spatial-logic rewrites — only scaffolding changes.
+For everything else — notebook exploration, batch jobs, ML around the spatial work — **stay in PySpark**.
 
-## Different — session creation
+## The diff
 
-**PySpark:**
+### Session creation
+
+**Default (PySpark):**
 ```python
 from sedona.spark import SedonaContext
 
@@ -24,7 +31,7 @@ config = (
 sedona = SedonaContext.create(config)
 ```
 
-**Scala:**
+**Scala variant:**
 ```scala
 import org.apache.sedona.spark.SedonaContext
 import org.apache.spark.sql.SparkSession
@@ -39,16 +46,16 @@ val config = SedonaContext
 val sedona = SedonaContext.create(config)
 ```
 
-## Different — DataFrame creation
+### DataFrame creation
 
-**PySpark:**
+**Default (PySpark):**
 ```python
 df = sedona.read.format("geoparquet").load("s3://bucket/data.parquet")
 df = df.withColumn("geom", expr("ST_GeomFromWKT(wkt_col, 4326)"))
 df.createOrReplaceTempView("points")
 ```
 
-**Scala:**
+**Scala variant:**
 ```scala
 import org.apache.spark.sql.functions.expr
 
@@ -58,9 +65,11 @@ val df = sedona.read.format("geoparquet").load("s3://bucket/data.parquet")
 df.createOrReplaceTempView("points")
 ```
 
-## Different — UDF registration (avoid both, but if you must)
+### UDF registration (avoid both, but if you must)
 
-**PySpark — vectorized Pandas UDF:**
+Always prefer ST_* SQL — see [`udf-vs-builtin.md`](udf-vs-builtin.md). Both per-row paths pay the same serialization cost and bypass the optimizer.
+
+**Default (PySpark — vectorized Pandas UDF):**
 ```python
 from pyspark.sql.functions import pandas_udf
 from pyspark.sql.types import StringType
@@ -71,7 +80,7 @@ def my_udf(s: pd.Series) -> pd.Series:
     return s.str.upper()
 ```
 
-**Scala — typed UDF:**
+**Scala variant (typed UDF):**
 ```scala
 import org.apache.spark.sql.functions.udf
 
@@ -79,55 +88,30 @@ val myUdf = udf((s: String) => s.toUpperCase)
 sedona.udf.register("my_udf", myUdf)
 ```
 
-Both still pay the per-row serialization cost. **Always prefer ST_* SQL — see [`udf-vs-builtin.md`](udf-vs-builtin.md).**
+### DataFrame typing
 
-## Different — when to use which
-
-| Situation | Recommended scaffolding |
-|---|---|
-| Notebook exploration, ad-hoc analysis | **PySpark** — REPL is faster, plotting is easier |
-| Production batch job on Databricks | Either; team preference. Scala has slightly better job startup time and JVM type safety. |
-| Spark Streaming spatial work | **Scala** — Streaming APIs are first-class in Scala, second-class in Python |
-| Heavy ML around the spatial work | **PySpark** — better integration with sklearn/torch on the driver |
-| Already in a Scala codebase (existing transformations) | **Scala** — don't introduce a Python boundary |
-
-## Different — DataFrame typing
-
-**PySpark** is dynamically typed. Schema errors surface at runtime:
-
-```python
-df = sedona.sql("SELECT bad_col FROM points")  # runs
-df.show()  # ERRORS HERE: column doesn't exist
-```
-
-**Scala** has typed `Dataset[T]` (when you use it):
+PySpark is dynamically typed; schema errors surface at runtime. Scala has typed `Dataset[T]` available — use it when you want compile-time safety on column names and types:
 
 ```scala
 case class Point(id: Long, geom: Geometry)
-
 val ds: Dataset[Point] = df.as[Point]
 // Compile-time error if df doesn't match Point schema
 ```
 
-If you want compile-time safety on column names and types, Scala + `Dataset[T]` is the path. Otherwise stay with `DataFrame` and the typing differences vanish.
+If you don't need that safety, stay with `DataFrame` and the typing difference vanishes. For Spark/Scala typing patterns generally, see [`coding/scala-on-spark/SKILL.md`](../../scala-on-spark/SKILL.md).
 
-For Spark/Scala typing patterns generally, see [`coding/scala-on-spark/SKILL.md`](../../scala-on-spark/SKILL.md).
+### Error handling
 
-## Different — error handling
-
-**PySpark** uses Python exceptions:
-
+**Default (PySpark — Python exceptions):**
 ```python
 try:
-    result = sedona.sql("...")
-    result.write.format("parquet").save("...")
+    sedona.sql("...").write.format("parquet").save("...")
 except Exception as e:
     logger.error(f"Spatial join failed: {e}")
     raise
 ```
 
-**Scala** uses `Try`/`Either` patterns or Java exceptions:
-
+**Scala variant (`Try`/`Either` or Java exceptions):**
 ```scala
 import scala.util.{Try, Success, Failure}
 
@@ -137,10 +121,9 @@ Try(sedona.sql("...").write.format("parquet").save("...")) match {
 }
 ```
 
-## Different — testing
+### Testing
 
-**PySpark** uses pytest + `pyspark.testing` or your own fixtures:
-
+**Default (PySpark — pytest + fixtures):**
 ```python
 @pytest.fixture
 def sedona():
@@ -154,12 +137,11 @@ def test_spatial_join(sedona):
     assert result.count() == 100
 ```
 
-**Scala** uses ScalaTest + sedona-test JARs:
-
+**Scala variant (ScalaTest + sedona-test JARs):**
 ```scala
 class SpatialJoinSpec extends AnyFlatSpec with BeforeAndAfterAll {
   val sedona: SparkSession = SedonaContext.builder().master("local[2]").getOrCreate()
-  
+
   "spatial join" should "match expected count" in {
     // ...
     result.count() shouldBe 100
@@ -167,11 +149,11 @@ class SpatialJoinSpec extends AnyFlatSpec with BeforeAndAfterAll {
 }
 ```
 
-## Same — partition tuning, broadcast, AQE
+## Same in both — partition tuning, broadcast, AQE
 
 All Spark-level tuning is identical. `spark.sedona.global.partitionnum`, `broadcast()`, AQE settings all apply equally.
 
-## Same — debugging
+## Same in both — debugging
 
 `EXPLAIN`, the Spark UI, `result.explain()` work identically. Plan output is the same JVM plan in both languages.
 
