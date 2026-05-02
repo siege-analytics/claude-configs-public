@@ -6,6 +6,11 @@ routed-by: coding-standards
 
 # SQL Style
 
+## Companion shelves
+
+For storage-engine reasoning behind query planning (B-tree vs LSM, partitioning, transactions):
+- [`shelves/systems-architecture/data-intensive/`](../../shelves/systems-architecture/data-intensive/SKILL.md)
+
 Apply these conventions when writing SQL for PostgreSQL (including PostGIS), SparkSQL, or reviewing queries in either dialect. See [reference.md](reference.md) for type tables, PostGIS queries, SparkSQL operations, and dialect differences.
 
 ## General Formatting

@@ -27,6 +27,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Django models, views, forms, migrations, settings | [`coding/django/SKILL.md`](coding/django/SKILL.md) |
 | Data pipeline, scheduled job, Rundeck YAML, Airflow DAG | [`coding/pipeline-jobs/SKILL.md`](coding/pipeline-jobs/SKILL.md) |
 | PySpark DataFrame work, tuning, shuffle / skew | [`coding/spark/SKILL.md`](coding/spark/SKILL.md) |
+| Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | [`coding/scala-on-spark/SKILL.md`](coding/scala-on-spark/SKILL.md) |
 | SQL query structure, joins, window functions, Postgres performance | [`coding/sql/SKILL.md`](coding/sql/SKILL.md) |
 | PostGIS — ST_* functions, spatial indexes, spatial joins | [`coding/postgis/SKILL.md`](coding/postgis/SKILL.md) |
 
