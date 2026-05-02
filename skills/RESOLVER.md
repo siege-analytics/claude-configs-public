@@ -8,6 +8,11 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 |---|---|
 | [`_output-rules.md`](_output-rules.md) | Commit trailers, attribution policy, docstring minimums, markdown style — shared across all skills that write anything |
 | [`_data-trust-rules.md`](_data-trust-rules.md) | Default assumption: tabular data lies. Validate at boundaries. — applied before any spatial / identifier work |
+| [`_principles-rules.md`](_principles-rules.md) | Clean Code maxims (naming, function size, error handling) — always-on for any code task |
+| [`_python-rules.md`](_python-rules.md) | Effective Python idioms — applied when touching `*.py` |
+| [`_jvm-rules.md`](_jvm-rules.md) | Effective Java + Effective Kotlin merged — applied when touching JVM languages, including Scala on Spark |
+| [`_typescript-rules.md`](_typescript-rules.md) | Effective TypeScript idioms — applied when touching `*.ts` / `*.tsx` |
+| [`_rust-rules.md`](_rust-rules.md) | Rust idioms — applied when touching `*.rs` |
 
 ## Routing table
 
