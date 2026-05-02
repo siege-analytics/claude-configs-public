@@ -8,6 +8,16 @@ argument-hint: "[PR-number-or-path] [optional-focus-area]"
 
 # Code Review
 
+## Companion shelves
+
+Anchor each review dimension in:
+- [`shelves/engineering-principles/clean-code/`](../../shelves/engineering-principles/clean-code/SKILL.md) — naming, function size, comment discipline (the *why* behind most review comments).
+- [`shelves/engineering-principles/design-patterns/`](../../shelves/engineering-principles/design-patterns/SKILL.md) — when to suggest a pattern (and when not to).
+- [`shelves/engineering-principles/refactoring-patterns/`](../../shelves/engineering-principles/refactoring-patterns/SKILL.md) — name the safe transformation, don't hand-wave.
+- For Spark/JVM PRs: [`shelves/languages/effective-java/`](../../shelves/languages/effective-java/SKILL.md), [`shelves/languages/effective-kotlin/`](../../shelves/languages/effective-kotlin/SKILL.md).
+
+The Siege-specific catches below (catalog bypass, NULL drops, partition skew) stay here.
+
 ## When to Use This Skill
 
 When reviewing a pull request, a diff, or code written during a session. Apply this methodology systematically — don't rely on skimming to catch issues.

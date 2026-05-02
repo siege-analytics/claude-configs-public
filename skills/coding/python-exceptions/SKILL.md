@@ -8,6 +8,13 @@ paths: "**/*.py"
 
 # Python Exception Handling
 
+## Companion shelves
+
+For the *why* behind exception discipline (don't swallow, narrow except, fail loud), load:
+- [`shelves/engineering-principles/clean-code/references/error-handling.md`](../../shelves/engineering-principles/clean-code/references/error-handling.md)
+
+The rules below stay Python-specific (operational guidance for our codebase).
+
 Apply these rules whenever a `try`/`except` is on screen. See [reference.md](reference.md) for custom exception hierarchy patterns, context managers, and batch-failure strategies.
 
 ## The one rule

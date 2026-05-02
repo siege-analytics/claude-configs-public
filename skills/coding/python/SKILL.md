@@ -6,6 +6,13 @@ routed-by: coding-standards
 
 # Python Style
 
+## Companion shelves
+
+Always-on: [`_principles-rules.md`](../../_principles-rules.md), [`_python-rules.md`](../../_python-rules.md).
+For deeper rationale load:
+- [`shelves/languages/effective-python/`](../../shelves/languages/effective-python/SKILL.md) — canonical Python idioms.
+- [`shelves/engineering-principles/clean-code/`](../../shelves/engineering-principles/clean-code/SKILL.md) — naming, function size, error handling.
+
 Apply these conventions when writing or reviewing Python code. See [reference.md](reference.md) for data structure selection, string formatting, logging, testing, project structure, and anti-patterns.
 
 ## Language Version
