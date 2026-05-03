@@ -269,7 +269,7 @@ For the engine-specific SU-interop maps:
 - [`coding/postgis/references/siege-utilities-postgis.md`](../../coding/postgis/references/siege-utilities-postgis.md)
 - [`coding/geopandas/references/siege-utilities-geopandas.md`](../../coding/geopandas/references/siege-utilities-geopandas.md)
 - [`coding/sedona/references/siege-utilities-sedona.md`](../../coding/sedona/references/siege-utilities-sedona.md)
-- (DuckDB-spatial doesn't have a separate SU map yet — use the DuckDB SKILL.md's "What SU does and doesn't do" section)
+- [`coding/duckdb-spatial/references/siege-utilities-duckdb-spatial.md`](../../coding/duckdb-spatial/references/siege-utilities-duckdb-spatial.md)
 
 ## The check-before-write workflow
 

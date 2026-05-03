@@ -35,6 +35,7 @@ DuckDB's `spatial` extension ships GEOS, GDAL, and PROJ inside a single in-proce
 - [`geoparquet-without-gdal.md`](references/geoparquet-without-gdal.md) — WKB-encoded geometry columns; the SU gap; how to read/write GeoParquet entirely without GDAL
 - [`spatial-extension-cookbook.md`](references/spatial-extension-cookbook.md) — `INSTALL spatial`, `ST_Read`, `ST_AsWKB`, `ST_Distance_Sphere`, partition pruning
 - [`pitfalls.md`](references/pitfalls.md) — extension version drift, WKB endianness, single-process ceiling
+- [`siege-utilities-duckdb-spatial.md`](references/siege-utilities-duckdb-spatial.md) — SU's current DuckDB integration is thin (format conversion only); pending SU-1 / SU-7 / SU-9 will close most inline-SQL gaps
 
 ## Always-on companions
 
@@ -156,7 +157,7 @@ SU pulls `duckdb>=0.7.0` as a `performance` extra but currently uses it only for
 - **SU-9:** DuckDB spatial-query helpers — `INSTALL spatial; LOAD spatial; ST_Read(...)` wrapper that returns a GeoDataFrame.
 - **SU-7:** `csv_to_geoparquet(csv_path, lat_col, lon_col, output_path)` — the pipeline shape above as a one-liner.
 
-Until they land, write the inline DuckDB SQL.
+Until they land, write the inline DuckDB SQL. See [`references/siege-utilities-duckdb-spatial.md`](references/siege-utilities-duckdb-spatial.md) for the full per-task interop map.
 
 ## Common mistakes
 
