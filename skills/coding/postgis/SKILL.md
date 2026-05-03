@@ -8,12 +8,21 @@ paths: "**/*.sql,**/postgis/**,**/*.py"
 
 # PostGIS
 
-## Companion shelves
+## Companion shelves and references
 
 For storage-engine reasoning (B-tree vs GiST/BRIN indexes, partitioning at scale):
 - [`shelves/systems-architecture/data-intensive/`](../../shelves/systems-architecture/data-intensive/SKILL.md)
 
-> Note: a deeper Mastering-PostGIS distillation is staged in `STAGED-spatial-and-siege-utilities` and not included in this PR stack.
+For *Mastering PostGIS* distillation, deep dives, and the SU-PostGIS interop map:
+- [`references/mastering-postgis/`](references/mastering-postgis/index.md) — book-skill-style distillation: index + chapter-themed reference files mirroring the book's structure (Ch 1 importing data, Ch 2 data types, Ch 3 vector ops, etc.) + currency caveats
+- [`references/indexing-strategies.md`](references/indexing-strategies.md) — GIST / SP-GIST / BRIN — when to use each
+- [`references/geometry-vs-geography.md`](references/geometry-vs-geography.md) — decision rules + SRID hygiene
+- [`references/spatial-joins-performance.md`](references/spatial-joins-performance.md) — ST_DWithin / ST_Intersects / planner reads
+- [`references/query-optimization.md`](references/query-optimization.md) — EXPLAIN, parallel-safe, index hints
+- [`references/topology.md`](references/topology.md) — `postgis_topology` for shared-edge editing
+- [`references/vacuuming-and-bloat.md`](references/vacuuming-and-bloat.md) — GIST bloat is the silent ops killer
+- [`references/pitfalls.md`](references/pitfalls.md) — SRID mismatch, mixed geom types, 3D coords sneaking in
+- [`references/siege-utilities-postgis.md`](references/siege-utilities-postgis.md) — which SU PostGIS helpers to use vs. raw psycopg2
 
 Apply when writing SQL against PostgreSQL with the PostGIS extension enabled. See [reference.md](reference.md) for full query templates, extension setup, and raster operations.
 

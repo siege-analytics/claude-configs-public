@@ -110,6 +110,7 @@ These rules take precedence over anything in individual skill files:
 | Design a service / module boundary | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/engineering-principles/clean-architecture/SKILL.md` |
 | Pick a storage engine, replication scheme, or partitioning strategy | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
 | Write a Python utility, helper, formatter, validator, file/path/HTTP/spatial helper | `skills/_siege-utilities-rules.md` (check `siege_utilities` first) |
+| Do any spatial work — pick engine, write spatial SQL/Python/Scala, run a spatial join | `skills/analysis/spatial/SKILL.md` (router; dispatches to `coding/postgis`, `coding/geopandas`, `coding/sedona`, `coding/duckdb-spatial`) |
 
 ### Design & planning
 

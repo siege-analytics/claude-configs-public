@@ -31,13 +31,16 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | [`coding/scala-on-spark/SKILL.md`](coding/scala-on-spark/SKILL.md) |
 | SQL query structure, joins, window functions, Postgres performance | [`coding/sql/SKILL.md`](coding/sql/SKILL.md) |
 | PostGIS — ST_* functions, spatial indexes, spatial joins | [`coding/postgis/SKILL.md`](coding/postgis/SKILL.md) |
+| GeoPandas + Shapely — `import geopandas`, `gpd.`, `.sjoin`, raw `from shapely.geometry import` | [`coding/geopandas/SKILL.md`](coding/geopandas/SKILL.md) |
+| Apache Sedona — `from sedona`, `SedonaContext`, ST_* in Spark SQL, `%scala` Sedona | [`coding/sedona/SKILL.md`](coding/sedona/SKILL.md) |
+| DuckDB-spatial — `import duckdb` + `INSTALL spatial` / `LOAD spatial` / `ST_Read` (single-node SQL on Parquet, GDAL-less) | [`coding/duckdb-spatial/SKILL.md`](coding/duckdb-spatial/SKILL.md) |
 | QML component review — properties-in / signals-out, MuseScore plugins, Qt Quick decomposition | [`coding/qml-component-review/SKILL.md`](coding/qml-component-review/SKILL.md) |
 
 ### Analysis
 
 | Trigger | Skill |
 |---|---|
-| Geospatial data, polygons, CRS, coordinates | [`analysis/spatial/SKILL.md`](analysis/spatial/SKILL.md) |
+| Geospatial data — pick engine + GDAL-availability path, cross-engine principles | [`analysis/spatial/SKILL.md`](analysis/spatial/SKILL.md) (router; dispatches to `coding/{postgis,geopandas,sedona,duckdb-spatial}/`) |
 | Statistical modeling, regression, hypothesis tests | `analysis/statistical/SKILL.md` (if present) |
 | Graph / network analysis, entity relationships | `analysis/graph/SKILL.md` (if present) |
 | Record linkage, dedup, fuzzy matching | `analysis/entity-resolution/SKILL.md` (if present) |

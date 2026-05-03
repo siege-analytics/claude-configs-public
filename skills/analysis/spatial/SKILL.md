@@ -6,7 +6,37 @@ routed-by: analysis-methods
 
 # Spatial Analysis
 
-Apply this decision framework when facing a problem involving geographic data. See [reference.md](reference.md) for operation code examples, CRS tables, technology comparisons, and dirty-data recipes.
+Apply this decision framework when facing a problem involving geographic data. The framework below routes by data trustworthiness, accuracy needs, and scale. The **engine** axis (PostGIS / GeoPandas / Sedona / DuckDB-spatial) and the **GDAL availability** axis are documented in the per-axis references — load on demand:
+
+- [`references/engine-selection.md`](references/engine-selection.md) — given the task, pick PostGIS / GeoPandas / Sedona / DuckDB-spatial
+- [`references/gdal-availability-matrix.md`](references/gdal-availability-matrix.md) — which paths work without GDAL, per engine, with SU tier mapping
+- [`references/crs-decision-tree.md`](references/crs-decision-tree.md) — cross-engine projection rules; lat/lng vs projected for distance
+- [`references/siege-utilities-spatial.md`](references/siege-utilities-spatial.md) — what SU obviates per task category; check this before reaching for native engine APIs
+- [`references/capability-tiers.md`](references/capability-tiers.md) — `geo` / `geo-lite` / `geodjango` / `none` — adopt SU's vocabulary for environment classification
+- [`references/principles/`](references/principles/index.md) — **universal cross-engine spatial principles** (CRS-as-meaning, validate-on-ingest, bbox-pre-filter, subdivide-complex-polygons, indexing-discipline, name-by-srid). Engine-agnostic; load when you need the *why* behind the patterns
+- [`references/spatial-statistics.md`](references/spatial-statistics.md) — Moran's I, LISA, Gi*, regression, GWR, segregation, DBSCAN; per-engine matrix
+- [`references/spatial-weights.md`](references/spatial-weights.md) — the W matrix in depth; standardization; sensitivity
+- [`references/regionalization.md`](references/regionalization.md) — constrained spatial clustering (max-p / SKATER / AZP); redistricting algorithms
+- [`references/spatial-inequality.md`](references/spatial-inequality.md) — Gini, Theil, between-region vs within-region decomposition
+- [`references/spatial-feature-engineering.md`](references/spatial-feature-engineering.md) — features for spatial ML; spatial cross-validation (non-negotiable)
+- [`references/point-pattern-analysis.md`](references/point-pattern-analysis.md) — Ripley's K, KDE, CSR tests for point data
+- [`references/geographic-data-science-distilled.md`](references/geographic-data-science-distilled.md) — distillation of *Geographic Data Science with Python* (Rey, Arribas-Bel, Wolf)
+
+For operation code examples, CRS tables, dirty-data recipes, and the original technology-comparison matrix, see [`reference.md`](reference.md) (the cookbook).
+
+## Always start with: capability detection
+
+Before doing any spatial work, ask SU what the environment offers:
+
+```python
+from siege_utilities.geo.capabilities import geo_capabilities
+from siege_utilities.geo.crs import set_default_crs
+
+caps = geo_capabilities()  # detect installed packages
+set_default_crs("EPSG:4326")  # session-wide default
+```
+
+`caps["tier"]` is `"geo"` (full GDAL stack), `"geo-lite"` (Shapely + pyproj only), `"geodjango"` (full + Django GIS), or `"none"`. The tier constrains the engine choice — see [`gdal-availability-matrix.md`](references/gdal-availability-matrix.md). On Spark/Databricks, also call `siege_utilities.geo.spatial_runtime.resolve_spatial_runtime_plan()` to detect Sedona / native-spatial availability.
 
 ## Step 1: Do You Trust Your Tabular Representation?
 
@@ -84,12 +114,16 @@ If the core question is about **connections between entities** rather than **pos
 
 | Available | Use | Why |
 |-----------|-----|-----|
-| PostgreSQL with PostGIS | PostGIS | Battle-tested, rich functions, ACID |
-| Spark cluster | Sedona (GeoSpark) | Distributed spatial joins |
-| Python only | GeoPandas + Shapely | Quick analysis, prototyping |
+| PostgreSQL with PostGIS | [PostGIS](../../coding/postgis/SKILL.md) | Battle-tested, rich functions, ACID, persistent indexes |
+| Spark cluster | [Sedona](../../coding/sedona/SKILL.md) | Distributed spatial joins; PySpark + Scala scaffolding |
+| Python only, full GDAL stack | [GeoPandas](../../coding/geopandas/SKILL.md) | Pandas-style; rich I/O |
+| Python only, no GDAL (Lambda, slim images) | [DuckDB-spatial](../../coding/duckdb-spatial/SKILL.md) | Bundles GEOS/GDAL/PROJ; SQL on Parquet |
+| Single-node, want SQL idiom on Parquet | [DuckDB-spatial](../../coding/duckdb-spatial/SKILL.md) | Faster than GeoPandas for batch SQL |
 | SQLite / embedded | SpatiaLite | Zero-config, local lookups |
 | Browser / web app | Turf.js or H3 | Client-side operations |
 | Nothing — minimal deps | Haversine + bounding box | Surprisingly effective |
+
+**Routing detail:** see [`references/engine-selection.md`](references/engine-selection.md) for the full engine comparison and the decision tree by data scale × GDAL availability × workload pattern.
 
 ## Decision Tree (Linear)
 
