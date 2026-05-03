@@ -29,6 +29,26 @@ Each engine has a dedicated `siege-utilities-<engine>.md` reference describing w
 - `skills/RESOLVER.md` Analysis section: spatial row reframed to emphasize router's dispatch role
 - `RESOLVER.md` (top-level) Writing-code section: row pointing at `analysis/spatial/SKILL.md` as the entry for any spatial work
 
+### Added — Universal cross-engine spatial principles
+
+`skills/analysis/spatial/references/principles/` — 6 files articulating the spatial principles that translate across all four engines (PostGIS, GeoPandas, Sedona, DuckDB-spatial). Distinct from the engine-faithful Mastering PostGIS distillation (which is PostgreSQL-specific). Each principle file shows the principle, why it's universal, and per-engine implementation:
+
+- `index.md` — meta-index + reading order
+- `crs-is-meaning.md` — SRID as semantic layer; project before measuring
+- `validate-on-ingest.md` — repair geometry at the boundary; never silently drop
+- `bbox-pre-filter.md` — every fast spatial op = bbox pre-filter + exact predicate
+- `subdivide-complex-polygons.md` — universal 10-100× speedup; per-engine recipes
+- `spatial-indexing-discipline.md` — every spatial column gets a spatial index, always
+- `name-by-srid.md` — column-naming convention that makes CRS bugs surface at schema-validation time (load-bearing for engines without per-row CRS storage)
+
+### Updated — Mastering PostGIS chapters 3-9 added
+
+Following Ch 1-2 in the previous commit, Ch 3 (vector operations), 4 (raster), 5 (exporting), 6 (ETL), 7 (PL/pgSQL programming), 8 (web backends — `pg_tileserv` / `pg_featureserv` / MVT), 9 (pgRouting). Each is principle-level distillation with cross-links to topic refs and per-engine notes where principles transfer.
+
+### Updated — Topology framing reversed
+
+`skills/coding/postgis/references/topology.md` was framed as "rarely the right tool." Reframed to **option C (pragmatic with use cases)** centered on the load-bearing Siege use case: **point-derived boundaries** (Voronoi tessellation, alpha-shape concave hulls, kernel-density contours, regionalization output). When you produce boundaries from points, shared-edge integrity matters and topology earns its operational complexity. Concrete worked example for Voronoi + topology pipeline. Cross-engine note: topology is PostGIS-specific; other engines reconstruct meshes per operation.
+
 ### Added — *Geographic Data Science with Python* distillation + 5 topic refs
 
 Distillation of [GDSPy](https://geographicdata.science/book/intro.html) (Rey, Arribas-Bel, Wolf, 2023; CC-BY-NC-ND online edition) — the canonical modern textbook for spatial analysis on top of GeoPandas + the PySAL ecosystem. Companion to the Mastering PostGIS distillation: GDSPy is methodology-faithful (engine-agnostic math); Mastering PostGIS is engine-faithful (PostgreSQL idioms).

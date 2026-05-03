@@ -13,6 +13,7 @@ Apply this decision framework when facing a problem involving geographic data. T
 - [`references/crs-decision-tree.md`](references/crs-decision-tree.md) — cross-engine projection rules; lat/lng vs projected for distance
 - [`references/siege-utilities-spatial.md`](references/siege-utilities-spatial.md) — what SU obviates per task category; check this before reaching for native engine APIs
 - [`references/capability-tiers.md`](references/capability-tiers.md) — `geo` / `geo-lite` / `geodjango` / `none` — adopt SU's vocabulary for environment classification
+- [`references/principles/`](references/principles/index.md) — **universal cross-engine spatial principles** (CRS-as-meaning, validate-on-ingest, bbox-pre-filter, subdivide-complex-polygons, indexing-discipline, name-by-srid). Engine-agnostic; load when you need the *why* behind the patterns
 - [`references/spatial-statistics.md`](references/spatial-statistics.md) — Moran's I, LISA, Gi*, regression, GWR, segregation, DBSCAN; per-engine matrix
 - [`references/spatial-weights.md`](references/spatial-weights.md) — the W matrix in depth; standardization; sensitivity
 - [`references/regionalization.md`](references/regionalization.md) — constrained spatial clustering (max-p / SKATER / AZP); redistricting algorithms
