@@ -29,6 +29,33 @@ Each engine has a dedicated `siege-utilities-<engine>.md` reference describing w
 - `skills/RESOLVER.md` Analysis section: spatial row reframed to emphasize router's dispatch role
 - `RESOLVER.md` (top-level) Writing-code section: row pointing at `analysis/spatial/SKILL.md` as the entry for any spatial work
 
+### Added — *Geographic Data Science with Python* distillation + 5 topic refs
+
+Distillation of [GDSPy](https://geographicdata.science/book/intro.html) (Rey, Arribas-Bel, Wolf, 2023; CC-BY-NC-ND online edition) — the canonical modern textbook for spatial analysis on top of GeoPandas + the PySAL ecosystem. Companion to the Mastering PostGIS distillation: GDSPy is methodology-faithful (engine-agnostic math); Mastering PostGIS is engine-faithful (PostgreSQL idioms).
+
+- `analysis/spatial/references/geographic-data-science-distilled.md` — book intro, chapter map, currency caveat, citation
+- `analysis/spatial/references/spatial-weights.md` — the W matrix in depth; kernel/KNN/distance-band/hybrid; standardization; sensitivity (was under-weighted in `spatial-statistics.md`)
+- `analysis/spatial/references/regionalization.md` — constrained spatial clustering (max-p / SKATER / AZP); redistricting algorithms; compactness measures (Polsby-Popper, Schwartzberg, Reock); pointers to `gerrychain`
+- `analysis/spatial/references/spatial-inequality.md` — Gini, Theil, Atkinson; **Theil decomposition into between-region vs within-region inequality**; Lorenz curves
+- `analysis/spatial/references/spatial-feature-engineering.md` — neighbor-aggregate features, distance-to features, density features; **spatial cross-validation as non-negotiable** (random K-fold leaks signal across spatially-adjacent rows)
+- `analysis/spatial/references/point-pattern-analysis.md` — Ripley's K, L, G, F, J functions; KDE; CSR tests; cross-K for two-pattern association (reverses earlier "out of scope" call)
+
+### Added — Mastering PostGIS book-skill folder structure
+
+`skills/coding/postgis/references/mastering-postgis-distilled.md` (single file) promoted to `skills/coding/postgis/references/mastering-postgis/` (folder with chapter-themed reference files mirroring the book's TOC). `index.md` carries the meta-index, currency caveats, and citation; chapter files are added incrementally (Ch 1 + Ch 2 done in this PR, Ch 3-9 deferred to a follow-up).
+
+### Updated — siege-utilities-duckdb-spatial.md
+
+Added the 4th per-engine SU interop map for symmetry with the other three engines. Documents SU's currently-thin DuckDB integration (format conversion only) and the SU-1 / SU-7 / SU-9 upstream PR candidates that would close most inline-SQL gaps.
+
+### Updated — Sedona scaffolding rebalanced toward PySpark
+
+Sedona content was equal-weighted between PySpark and Scala; rebalanced to **PySpark as the default scaffolding** since most Siege Sedona work is Python. Scala variant moved to a single dedicated reference file (`scaffolding-python-vs-scala.md`).
+
+### Updated — spatial-statistics.md expanded
+
+Was ~250 lines; now ~580 lines with hotspot analysis substantially expanded (methodological choices, multiple-testing correction, edge effects), plus new use cases: empirical Bayes rate smoothing, segregation indices, 2SFCA accessibility. Per-engine implementation matrix for 11 methods. Cross-links to the new GDSPy-derived references above.
+
 ### Documentation
 
 - `README.md` — updated Router Skills table to reflect actual sub-skills; added Always-on conventions section listing all `_*-rules.md` files; added Spatial skills section with per-engine table; added Releases & versioning section; corrected stale Reference Skills entries; added pre-work-check / qml-component-review / infrastructure/ops to skill tables; added `siege_utilities` first-class section.

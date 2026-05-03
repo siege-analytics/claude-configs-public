@@ -13,7 +13,13 @@ Apply this decision framework when facing a problem involving geographic data. T
 - [`references/crs-decision-tree.md`](references/crs-decision-tree.md) — cross-engine projection rules; lat/lng vs projected for distance
 - [`references/siege-utilities-spatial.md`](references/siege-utilities-spatial.md) — what SU obviates per task category; check this before reaching for native engine APIs
 - [`references/capability-tiers.md`](references/capability-tiers.md) — `geo` / `geo-lite` / `geodjango` / `none` — adopt SU's vocabulary for environment classification
-- [`references/spatial-statistics.md`](references/spatial-statistics.md) — Moran's I, autocorrelation, cluster detection, when each applies
+- [`references/spatial-statistics.md`](references/spatial-statistics.md) — Moran's I, LISA, Gi*, regression, GWR, segregation, DBSCAN; per-engine matrix
+- [`references/spatial-weights.md`](references/spatial-weights.md) — the W matrix in depth; standardization; sensitivity
+- [`references/regionalization.md`](references/regionalization.md) — constrained spatial clustering (max-p / SKATER / AZP); redistricting algorithms
+- [`references/spatial-inequality.md`](references/spatial-inequality.md) — Gini, Theil, between-region vs within-region decomposition
+- [`references/spatial-feature-engineering.md`](references/spatial-feature-engineering.md) — features for spatial ML; spatial cross-validation (non-negotiable)
+- [`references/point-pattern-analysis.md`](references/point-pattern-analysis.md) — Ripley's K, KDE, CSR tests for point data
+- [`references/geographic-data-science-distilled.md`](references/geographic-data-science-distilled.md) — distillation of *Geographic Data Science with Python* (Rey, Arribas-Bel, Wolf)
 
 For operation code examples, CRS tables, dirty-data recipes, and the original technology-comparison matrix, see [`reference.md`](reference.md) (the cookbook).
 

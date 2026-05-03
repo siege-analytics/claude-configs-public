@@ -14,7 +14,7 @@ For storage-engine reasoning (B-tree vs GiST/BRIN indexes, partitioning at scale
 - [`shelves/systems-architecture/data-intensive/`](../../shelves/systems-architecture/data-intensive/SKILL.md)
 
 For *Mastering PostGIS* distillation, deep dives, and the SU-PostGIS interop map:
-- [`references/mastering-postgis-distilled.md`](references/mastering-postgis-distilled.md) — principle-level distillation + currency caveat (book is PostGIS 2.x; H3, GeoParquet, parallel query are post-book)
+- [`references/mastering-postgis/`](references/mastering-postgis/index.md) — book-skill-style distillation: index + chapter-themed reference files mirroring the book's structure (Ch 1 importing data, Ch 2 data types, Ch 3 vector ops, etc.) + currency caveats
 - [`references/indexing-strategies.md`](references/indexing-strategies.md) — GIST / SP-GIST / BRIN — when to use each
 - [`references/geometry-vs-geography.md`](references/geometry-vs-geography.md) — decision rules + SRID hygiene
 - [`references/spatial-joins-performance.md`](references/spatial-joins-performance.md) — ST_DWithin / ST_Intersects / planner reads

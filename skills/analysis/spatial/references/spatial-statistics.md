@@ -454,17 +454,29 @@ Moran's I tells you values cluster — not why. Hot spots may be artifacts of un
 
 **Mitigation:** Always normalize the variable (per-capita, per-area) before testing. Use spatial regression with covariates, not just unconditional clustering.
 
+## Companion references (deeper coverage)
+
+- [`spatial-weights.md`](spatial-weights.md) — the W matrix in depth (kernel / KNN / distance-band / hybrid; standardization; sensitivity)
+- [`regionalization.md`](regionalization.md) — constrained spatial clustering (max-p, SKATER, AZP); redistricting
+- [`spatial-inequality.md`](spatial-inequality.md) — Gini, Theil, decomposition into between- and within-region inequality
+- [`spatial-feature-engineering.md`](spatial-feature-engineering.md) — features for spatial ML, plus spatial cross-validation (the non-negotiable)
+- [`point-pattern-analysis.md`](point-pattern-analysis.md) — Ripley's K, KDE, CSR tests for point data
+- [`geographic-data-science-distilled.md`](geographic-data-science-distilled.md) — the GDSPy book's chapter map and how it threads through these refs
+
 ## Reference
 
 - `pysal` ecosystem docs: https://pysal.org
 - `mgwr`: https://github.com/pysal/mgwr
 - `segregation`: https://github.com/pysal/segregation
-- "Geographic Information Analysis" (O'Sullivan & Unwin) — textbook for the methods
-- "Spatial Regression Models" (Ward & Gleditsch) — deep regression treatment
+- `pointpats`: https://pysal.org/pointpats/
+- `spopt`: https://pysal.org/spopt/
+- `inequality`: https://pysal.org/inequality/
+- *Geographic Data Science with Python* (Rey, Arribas-Bel, Wolf, 2023) — https://geographicdata.science/book/intro.html (free online; the canonical modern textbook)
+- *Geographic Information Analysis* (O'Sullivan & Unwin, 3rd ed.) — textbook for the principles
+- *Spatial Regression Models* (Ward & Gleditsch) — deep regression treatment
 - ESRI's online documentation has good methodological intros (concepts are universal even though their implementations are proprietary)
 
 ## Out of scope for this skill
 
-- Spatial point process analysis (Ripley's K, kernel density estimation): see specialist refs
 - Geostatistics / kriging: out of typical Siege civic-data scope; reach for `pykrige` or R's `gstat` if needed
 - Network analysis on spatial graphs: see [`coding/postgis/`](../../coding/postgis/SKILL.md) (`pgrouting`) or future `analysis/graph/` sub-skill
