@@ -140,11 +140,11 @@ Auto-applied by Claude when relevant. Not behind a router.
 
 ### Pin to a release tag (recommended)
 
-Pin to a tagged release for stability. Latest is **[`v0.1.0`](https://github.com/siege-analytics/claude-configs-public/releases)** — see [`CHANGELOG.md`](CHANGELOG.md) for what's in each release.
+Pin to a tagged release for stability. Latest is **[`v0.2.0`](https://github.com/siege-analytics/claude-configs-public/releases)** — see [`CHANGELOG.md`](CHANGELOG.md) for what's in each release.
 
 ```bash
 git subtree add --prefix .claude/skills \
-  https://github.com/siege-analytics/claude-configs-public.git v0.1.0 --squash
+  https://github.com/siege-analytics/claude-configs-public.git v0.2.0 --squash
 ```
 
 To upgrade later:
@@ -191,6 +191,16 @@ git subtree pull --prefix .claude/skills \
 git subtree pull --prefix .claude/skills \
   https://github.com/siege-analytics/claude-configs-public.git main --squash
 ```
+
+## Spatial skills (added in v0.2.0)
+
+The spatial skill set is the largest single addition since the initial release. Four per-engine skills + a router + extensive cross-cutting principles. See the [Spatial skills](#spatial-skills) section above for the engine table; the router at [`skills/analysis/spatial/SKILL.md`](skills/analysis/spatial/SKILL.md) dispatches by data scale × GDAL availability × workload pattern.
+
+Notable distillations and references shipped in v0.2.0:
+
+- *Mastering PostGIS* (Witkowski et al., 2017) chapter-by-chapter distillation under [`skills/coding/postgis/references/mastering-postgis/`](skills/coding/postgis/references/mastering-postgis/index.md)
+- *Geographic Data Science with Python* (Rey, Arribas-Bel, Wolf, 2023) distillation under [`skills/analysis/spatial/references/geographic-data-science-distilled.md`](skills/analysis/spatial/references/geographic-data-science-distilled.md), with topic refs for spatial weights, regionalization, spatial inequality, spatial feature engineering, and point pattern analysis
+- Universal cross-engine spatial principles at [`skills/analysis/spatial/references/principles/`](skills/analysis/spatial/references/principles/index.md) — engine-agnostic patterns (CRS-as-meaning, validate-on-ingest, bbox-pre-filter, subdivide-complex-polygons, indexing-discipline, name-by-srid)
 
 ## Template Variables
 

@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+(no changes pending)
+
+## [0.2.0] — 2026-05-02
+
+Spatial skill overhaul — adds the four-engine spatial skill set (PostGIS / GeoPandas / Sedona / DuckDB-spatial), the universal cross-engine principles, two book distillations (Mastering PostGIS, Geographic Data Science with Python), and substantially expanded spatial-statistics coverage.
+
 ### Added — Spatial skill set (`feat/spatial-skill-overhaul`)
 
 A four-engine spatial skill set with capability-tier dispatch. Replaces the generic "spatial" decision skill with per-engine operational skills plus an augmented router.
@@ -151,4 +157,6 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` — DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v0.2.0
 [0.1.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v0.1.0
