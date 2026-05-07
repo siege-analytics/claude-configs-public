@@ -50,30 +50,28 @@ jobs:
 
       - name: Publish dist/nested → release/nested branch
         run: |
-          # Create a worktree for the target branch
-          git fetch origin release/nested:release/nested 2>/dev/null || true
+          # Worktree from a fresh orphan branch; force-overwrite the remote.
+          # Don't pre-fetch the remote branch — that would create a local ref
+          # that conflicts with `worktree add -B`.
           rm -rf /tmp/release-nested
+          git branch -D release/nested 2>/dev/null || true
           git worktree add --orphan -B release/nested /tmp/release-nested
-          # Wipe and replace contents
-          (cd /tmp/release-nested && git rm -rf . > /dev/null 2>&1 || true)
           rsync -a --delete --exclude='.git' dist/nested/ /tmp/release-nested/
-          # Carry top-level docs through
           cp -f README.md LICENSE CHANGELOG.md /tmp/release-nested/ 2>/dev/null || true
           cp -f THIRD_PARTY_NOTICES.md CONTRIBUTING.md /tmp/release-nested/ 2>/dev/null || true
           (cd /tmp/release-nested && git add -A && git commit -m "Publish nested layout from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
-          (cd /tmp/release-nested && git push origin release/nested --force-with-lease)
+          (cd /tmp/release-nested && git push origin release/nested --force)
 
       - name: Publish dist/flat → release/flat branch
         run: |
-          git fetch origin release/flat:release/flat 2>/dev/null || true
           rm -rf /tmp/release-flat
+          git branch -D release/flat 2>/dev/null || true
           git worktree add --orphan -B release/flat /tmp/release-flat
-          (cd /tmp/release-flat && git rm -rf . > /dev/null 2>&1 || true)
           rsync -a --delete --exclude='.git' dist/flat/ /tmp/release-flat/
           cp -f README.md LICENSE CHANGELOG.md /tmp/release-flat/ 2>/dev/null || true
           cp -f THIRD_PARTY_NOTICES.md CONTRIBUTING.md /tmp/release-flat/ 2>/dev/null || true
           (cd /tmp/release-flat && git add -A && git commit -m "Publish flat layout from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
-          (cd /tmp/release-flat && git push origin release/flat --force-with-lease)
+          (cd /tmp/release-flat && git push origin release/flat --force)
 
       - name: Tag release branches if this is a tag push
         if: startsWith(github.ref, 'refs/tags/v')
