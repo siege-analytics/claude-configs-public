@@ -14,16 +14,16 @@ Use Sedona when:
 - You need distributed spatial joins on hundreds of millions to billions of points/polygons.
 
 Don't use Sedona for:
-- Single-node datasets (< 10 GB) — use **GeoPandas** ([`coding/geopandas/`](../geopandas/SKILL.md)) or **DuckDB-spatial** ([`coding/duckdb-spatial/`](../duckdb-spatial/SKILL.md)).
-- Persistent multi-user query workloads — use **PostGIS** ([`coding/postgis/`](../postgis/SKILL.md)).
+- Single-node datasets (< 10 GB) — use **GeoPandas** ([skill:geopandas]) or **DuckDB-spatial** ([skill:duckdb-spatial]).
+- Persistent multi-user query workloads — use **PostGIS** ([skill:postgis]).
 
 ## Always-on companions
 
-- [`coding/spark/`](../spark/SKILL.md) — Siege-specific Spark patterns (medallion, catalog rules, transform shape).
-- [`coding/scala-on-spark/`](../scala-on-spark/SKILL.md) — when scaffolding is `.scala` or `%scala`.
-- [`coding/python/`](../python/SKILL.md) — when scaffolding is PySpark.
-- [`shelves/systems-architecture/data-intensive/`](../../shelves/systems-architecture/data-intensive/SKILL.md) — partitioning, replication, batch/stream theory.
-- [`_jvm-rules.md`](../../_jvm-rules.md), [`_python-rules.md`](../../_python-rules.md), [`_data-trust-rules.md`](../../_data-trust-rules.md), [`_siege-utilities-rules.md`](../../_siege-utilities-rules.md).
+- [skill:spark] — Siege-specific Spark patterns (medallion, catalog rules, transform shape).
+- [skill:scala-on-spark] — when scaffolding is `.scala` or `%scala`.
+- [skill:python] — when scaffolding is PySpark.
+- [skill:data-intensive] — partitioning, replication, batch/stream theory.
+- [rule:jvm], [rule:python], [rule:data-trust], [rule:siege-utilities].
 
 ## References
 

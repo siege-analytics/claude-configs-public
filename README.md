@@ -141,11 +141,24 @@ Auto-applied by Claude when relevant. Not behind a router.
 
 ### Pin to a release tag (recommended)
 
-Pin to a tagged release for stability. Latest is **[`v0.2.0`](https://github.com/siege-analytics/claude-configs-public/releases)** — see [`CHANGELOG.md`](CHANGELOG.md) for what's in each release.
+This repo publishes **two release-branch artifacts per tag** for two consumer runtimes — see [Distribution layouts](#distribution-layouts) below for the full explanation.
+
+For Claude Code with the resolver hook (the original target), pull from `release/nested`:
 
 ```bash
 git subtree add --prefix .claude/skills \
-  https://github.com/siege-analytics/claude-configs-public.git v0.2.0 --squash
+  https://github.com/siege-analytics/claude-configs-public.git release/nested --squash
+# Or pin: ...claude-configs-public.git v1.0.0-nested --squash
+```
+
+For Craft Agent (slash-command pane), pull from `release/flat`:
+
+```bash
+TMP=$(mktemp -d)
+git clone --depth 1 --branch release/flat \
+  https://github.com/siege-analytics/claude-configs-public.git "$TMP/repo"
+rsync -a "$TMP/repo/skills/" ~/.craft-agent/workspaces/<ws>/skills/
+rm -rf "$TMP"
 ```
 
 To upgrade later:
@@ -260,13 +273,37 @@ The PR-creation skill (`/create-pr`) gates on all five before opening; failed cr
 
 Exempt from (a)–(d) but **not** (e): typo fixes, doc-only changes, tooling chores. Even exempt changes need a ticket for the audit trail.
 
+## Distribution layouts
+
+The same source serves two consumer runtimes via a build step. Pick the layout that matches yours.
+
+| Layout | Branch / tag | Skills tree shape | Consumer |
+|---|---|---|---|
+| **nested** | `release/nested`, `vX.Y.Z-nested` | Skills under category folders (`coding/code-review/`, `git-workflow/commit/`, ...) | **Claude Code** with the resolver hook |
+| **flat** | `release/flat`, `vX.Y.Z-flat` | Leaf skills at `skills/<slug>/`; routers stay at category root | **Craft Agent** (slash-command pane) |
+
+Both layouts contain identical content; only the file-tree shape differs. The build resolves `[skill:slug]` and `[rule:slug]` tokens to layout-appropriate paths so cross-references work in both worlds without manual maintenance.
+
+`main` is the source of truth (nested layout with tokens). Build outputs are published to `release/nested` and `release/flat` by CI on every push to main and every tag. **Pin downstream consumers to a release-branch tag (`v1.0.0-nested` / `v1.0.0-flat`), not the source tag** — the source has the build infrastructure but tokens are unresolved.
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the slug-token convention, build-script details, and contributor workflow.
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short version: skills cross-reference each other by `[skill:slug]` token (not file path); the build emits two layouts; CI enforces token form on every PR.
+
 ## Releases & versioning
 
-Versions follow [SemVer](https://semver.org/). Major version bumps for incompatible resolver/router/skill-shape changes; minor for additive skills or shelves; patch for fixes inside existing skills.
+Versions follow [SemVer](https://semver.org/). Major version bumps for incompatible discovery / build / token-format changes; minor for additive skills or shelves; patch for fixes inside existing skills.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the per-version diff.
 
-Pin downstream consumers to a tag (`v0.1.0`, `v0.2.0`, …). `main` is the rolling integration branch and may include in-flight changes.
+**Tag scheme.** Each source tag (`v1.0.0` on `main`) produces two consumer-facing tags via CI:
+
+- `v1.0.0-nested` on the `release/nested` branch — pull this for Claude Code with the resolver hook
+- `v1.0.0-flat` on the `release/flat` branch — pull this for Craft Agent
+
+`main` is the rolling source-of-truth (with build infrastructure and unresolved tokens). Always pin downstream consumers to one of the resolved release-branch tags.
 
 ## Credits
 

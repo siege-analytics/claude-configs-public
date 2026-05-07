@@ -12,21 +12,21 @@ Books on designing distributed systems, choosing storage and compute primitives,
 
 | Task signal | Book to read |
 |---|---|
-| Storage engine choice (LSM vs B-tree, SQL vs NoSQL), replication, partitioning, transactions, consistency models, batch vs stream | [`data-intensive/`](data-intensive/SKILL.md) |
-| End-to-end system design — load balancers, caches, queues, capacity estimation, back-of-envelope math | [`system-design/`](system-design/SKILL.md) |
-| Service decomposition, sagas, API gateway, service discovery, distributed data patterns | [`microservices-patterns/`](microservices-patterns/SKILL.md) |
-| Production failure modes — circuit breakers, bulkheads, timeouts, capacity, "what breaks at 3am" | [`release-it/`](release-it/SKILL.md) |
-| Browser performance, latency budgets, HTTP/2/3, CDN, image optimization, critical-path render | [`high-perf-browser/`](high-perf-browser/SKILL.md) |
-| Tech-interview prep — design YouTube, Twitter, Uber, Dropbox; capacity drills | [`system-design-interview/`](system-design-interview/SKILL.md) |
+| Storage engine choice (LSM vs B-tree, SQL vs NoSQL), replication, partitioning, transactions, consistency models, batch vs stream | [skill:data-intensive] |
+| End-to-end system design — load balancers, caches, queues, capacity estimation, back-of-envelope math | [skill:system-design] |
+| Service decomposition, sagas, API gateway, service discovery, distributed data patterns | [skill:microservices-patterns] |
+| Production failure modes — circuit breakers, bulkheads, timeouts, capacity, "what breaks at 3am" | [skill:release-it] |
+| Browser performance, latency budgets, HTTP/2/3, CDN, image optimization, critical-path render | [skill:high-perf-browser] |
+| Tech-interview prep — design YouTube, Twitter, Uber, Dropbox; capacity drills | [skill:system-design-interview] |
 
 ## Books in this shelf
 
-- [`data-intensive/`](data-intensive/SKILL.md) — *Designing Data-Intensive Applications* (Kleppmann). Storage engines, replication, partitioning, transactions, batch + stream.
-- [`system-design/`](system-design/SKILL.md) — System design fundamentals: load balancing, caching, queues, capacity planning.
-- [`microservices-patterns/`](microservices-patterns/SKILL.md) — Chris Richardson. Service decomposition, sagas, distributed data, API gateway.
-- [`release-it/`](release-it/SKILL.md) — Michael Nygard. Stability and capacity patterns; production failure modes.
-- [`high-perf-browser/`](high-perf-browser/SKILL.md) — *High Performance Browser Networking* (Grigorik). Network primitives and frontend latency.
-- [`system-design-interview/`](system-design-interview/SKILL.md) — Alex Xu. Common interview design problems, walkthroughs.
+- [skill:data-intensive] — *Designing Data-Intensive Applications* (Kleppmann). Storage engines, replication, partitioning, transactions, batch + stream.
+- [skill:system-design] — System design fundamentals: load balancing, caching, queues, capacity planning.
+- [skill:microservices-patterns] — Chris Richardson. Service decomposition, sagas, distributed data, API gateway.
+- [skill:release-it] — Michael Nygard. Stability and capacity patterns; production failure modes.
+- [skill:high-perf-browser] — *High Performance Browser Networking* (Grigorik). Network primitives and frontend latency.
+- [skill:system-design-interview] — Alex Xu. Common interview design problems, walkthroughs.
 
 ## Disambiguation
 

@@ -1,0 +1,87 @@
+name: build-and-publish
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate references and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check for path-form references that should be tokens
+        run: python3 bin/sync-skill-references.py --check
+
+      - name: Validate token resolution (build --check)
+        run: python3 bin/build.py --check
+
+  publish:
+    name: Build and publish to release branches
+    needs: validate
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need history for branch operations
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build dist/nested and dist/flat
+        run: python3 bin/build.py
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Publish dist/nested → release/nested branch
+        run: |
+          # Create a worktree for the target branch
+          git fetch origin release/nested:release/nested 2>/dev/null || true
+          rm -rf /tmp/release-nested
+          git worktree add --orphan -B release/nested /tmp/release-nested
+          # Wipe and replace contents
+          (cd /tmp/release-nested && git rm -rf . > /dev/null 2>&1 || true)
+          rsync -a --delete --exclude='.git' dist/nested/ /tmp/release-nested/
+          # Carry top-level docs through
+          cp -f README.md LICENSE CHANGELOG.md /tmp/release-nested/ 2>/dev/null || true
+          cp -f THIRD_PARTY_NOTICES.md CONTRIBUTING.md /tmp/release-nested/ 2>/dev/null || true
+          (cd /tmp/release-nested && git add -A && git commit -m "Publish nested layout from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
+          (cd /tmp/release-nested && git push origin release/nested --force-with-lease)
+
+      - name: Publish dist/flat → release/flat branch
+        run: |
+          git fetch origin release/flat:release/flat 2>/dev/null || true
+          rm -rf /tmp/release-flat
+          git worktree add --orphan -B release/flat /tmp/release-flat
+          (cd /tmp/release-flat && git rm -rf . > /dev/null 2>&1 || true)
+          rsync -a --delete --exclude='.git' dist/flat/ /tmp/release-flat/
+          cp -f README.md LICENSE CHANGELOG.md /tmp/release-flat/ 2>/dev/null || true
+          cp -f THIRD_PARTY_NOTICES.md CONTRIBUTING.md /tmp/release-flat/ 2>/dev/null || true
+          (cd /tmp/release-flat && git add -A && git commit -m "Publish flat layout from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
+          (cd /tmp/release-flat && git push origin release/flat --force-with-lease)
+
+      - name: Tag release branches if this is a tag push
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          # Tag the just-published commits on the release branches
+          NESTED_SHA=$(git -C /tmp/release-nested rev-parse HEAD)
+          FLAT_SHA=$(git -C /tmp/release-flat rev-parse HEAD)
+          git tag "${TAG}-nested" "$NESTED_SHA"
+          git tag "${TAG}-flat" "$FLAT_SHA"
+          git push origin "${TAG}-nested" "${TAG}-flat"

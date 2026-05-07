@@ -17,9 +17,9 @@ Pandas-style spatial operations in-process, single-node. The default Python tool
 | Data fits in RAM, exploration, notebook work | **GeoPandas** |
 | Inputs are WKT strings or coordinate dicts, no files | **Raw Shapely** (see [`shapely-direct.md`](references/shapely-direct.md)) |
 | GDAL not available in the environment | **GeoPandas with `pyogrio` + WKB** or fall through to DuckDB-spatial — see [`no-gdal-fallbacks.md`](references/no-gdal-fallbacks.md) |
-| Data > 5 GB or persistent multi-user reads | **PostGIS** ([`coding/postgis/`](../postgis/SKILL.md)) |
-| Data > RAM, distributed compute available | **Sedona** ([`coding/sedona/`](../sedona/SKILL.md)) |
-| You have parquet, want SQL, no server | **DuckDB-spatial** ([`coding/duckdb-spatial/`](../duckdb-spatial/SKILL.md)) |
+| Data > 5 GB or persistent multi-user reads | **PostGIS** ([skill:postgis]) |
+| Data > RAM, distributed compute available | **Sedona** ([skill:sedona]) |
+| You have parquet, want SQL, no server | **DuckDB-spatial** ([skill:duckdb-spatial]) |
 
 ## References
 
@@ -34,7 +34,7 @@ Pandas-style spatial operations in-process, single-node. The default Python tool
 
 ## Always-on companions
 
-- [`_principles-rules.md`](../../_principles-rules.md), [`_python-rules.md`](../../_python-rules.md), [`_data-trust-rules.md`](../../_data-trust-rules.md), [`_siege-utilities-rules.md`](../../_siege-utilities-rules.md)
+- [rule:principles], [rule:python], [rule:data-trust], [rule:siege-utilities]
 
 ## The two-line setup
 
@@ -124,7 +124,7 @@ See [`shapely-direct.md`](references/shapely-direct.md) for the full pattern.
 
 ## What `siege_utilities` already does — use it
 
-Per [`_siege-utilities-rules.md`](../../_siege-utilities-rules.md), check SU first. For spatial Python work specifically, SU obviates:
+Per [rule:siege-utilities], check SU first. For spatial Python work specifically, SU obviates:
 
 - **Boundary sourcing** (Census TIGER, GADM, OSM) — `geo.spatial_data.get_geographic_boundaries()`
 - **Areal interpolation** between mismatched boundaries — `geo.interpolation.areal.interpolate_areal()`

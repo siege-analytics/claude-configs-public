@@ -13,17 +13,17 @@ Select and apply the appropriate coding guide based on file type and framework.
 
 | Signal | Sub-Skill | Path |
 |--------|-----------|------|
-| `*.py` with Django imports (`from django`, `django.`) | Django conventions | [django/SKILL.md](django/SKILL.md) |
-| `*.py` with PySpark imports (`from pyspark`, `import pyspark`) | PySpark patterns | [spark/SKILL.md](spark/SKILL.md) |
-| `*.py` (general) | Python style | [python/SKILL.md](python/SKILL.md) |
-| `*.py` library code, especially on re-review / CR feedback touching architecture | Python engineering patterns (DRY, dataclass discipline, interface integrity, runtime types) | [python-patterns/SKILL.md](python-patterns/SKILL.md) |
-| `try`/`except` on screen, silent-failure patterns, `except Exception: pass` | Python exception discipline | [python-exceptions/SKILL.md](python-exceptions/SKILL.md) |
-| `*.sql` or SQL in Python strings | SQL conventions | [sql/SKILL.md](sql/SKILL.md) |
-| SQL with `ST_*` functions, `geometry` / `geography` columns, PostGIS extension | PostGIS patterns | [postgis/SKILL.md](postgis/SKILL.md) |
-| `*.ts`, `*.tsx` | TypeScript style | [typescript/SKILL.md](typescript/SKILL.md) |
-| `*.tsx`, `*.jsx` with React imports | React patterns | [react/SKILL.md](react/SKILL.md) |
-| `*.go` | Go conventions | [go/SKILL.md](go/SKILL.md) |
-| `*.py` with pipeline/fetch/job/schedule context, Rundeck YAML, Airflow DAGs | Pipeline job pattern | [pipeline-jobs/SKILL.md](pipeline-jobs/SKILL.md) |
+| `*.py` with Django imports (`from django`, `django.`) | Django conventions | [skill:django] |
+| `*.py` with PySpark imports (`from pyspark`, `import pyspark`) | PySpark patterns | [skill:spark] |
+| `*.py` (general) | Python style | [skill:python] |
+| `*.py` library code, especially on re-review / CR feedback touching architecture | Python engineering patterns (DRY, dataclass discipline, interface integrity, runtime types) | [skill:python-patterns] |
+| `try`/`except` on screen, silent-failure patterns, `except Exception: pass` | Python exception discipline | [skill:python-exceptions] |
+| `*.sql` or SQL in Python strings | SQL conventions | [skill:sql] |
+| SQL with `ST_*` functions, `geometry` / `geography` columns, PostGIS extension | PostGIS patterns | [skill:postgis] |
+| `*.ts`, `*.tsx` | TypeScript style | [skill:typescript] |
+| `*.tsx`, `*.jsx` with React imports | React patterns | [skill:react] |
+| `*.go` | Go conventions | [skill:go] |
+| `*.py` with pipeline/fetch/job/schedule context, Rundeck YAML, Airflow DAGs | Pipeline job pattern | [skill:pipeline-jobs] |
 
 Not all sub-skills exist yet. If a routing table entry points to a file that doesn't exist, skip it and apply general best practices for that language.
 
@@ -34,7 +34,7 @@ Not all sub-skills exist yet. If a routing table entry points to a file that doe
 3. **Specificity wins.** When a framework sub-skill and the general language sub-skill conflict, the framework sub-skill takes precedence.
 4. **Reference files load on demand.** Each sub-skill may have a `reference.md`. Load it only when the sub-skill directs you to consult it for the current task.
 5. **Conventions always apply.** Every skill that writes a commit reads `_output-rules.md` first (at skills root).
-6. **Tests and docs ship with code.** Regardless of language, every PR that changes code also ships tests for the change and updates user-facing documentation (README, docs tree, CHANGELOG, or module guide) when public behavior changes. No "tests coming later" and no "docs coming later" PRs. See the language-specific sub-skill for format conventions and [`_definition-of-done-rules.md`](../_definition-of-done-rules.md) for the full done criteria.
+6. **Tests and docs ship with code.** Regardless of language, every PR that changes code also ships tests for the change and updates user-facing documentation (README, docs tree, CHANGELOG, or module guide) when public behavior changes. No "tests coming later" and no "docs coming later" PRs. See the language-specific sub-skill for format conventions and [rule:definition-of-done] for the full done criteria.
 
 ## Gotchas
 

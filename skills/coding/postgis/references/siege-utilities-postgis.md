@@ -139,7 +139,7 @@ If you write the same code in two projects, it likely belongs upstream. Top cand
 - **SU-1:** GeoParquet I/O without GDAL (helps Postgres-→ GeoParquet export workflows)
 - **SU-2:** CRS validation helpers (catches "I called ST_Distance on lat/lng" before it hits the DB)
 
-Apply the [`_siege-utilities-rules.md`](../../../_siege-utilities-rules.md) workflow: file an SU PR before adding the helper locally.
+Apply the [rule:siege-utilities] workflow: file an SU PR before adding the helper locally.
 
 ## Checklist when starting a PostGIS task
 

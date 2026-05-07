@@ -4,7 +4,29 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
-(no changes pending)
+### Added — Dual-layout build (slug-token references)
+
+Decouples skill identity (slug) from filesystem layout. Cross-references between skills now use `[skill:<slug>]` and `[rule:<slug>]` tokens; the build expands them to layout-appropriate paths.
+
+- `bin/build.py` — produces `dist/nested/` (mirrors source for Claude Code with the resolver hook) and `dist/flat/` (leaf skills at `skills/<slug>/` for Craft Agent's pane). Token resolution + RESOLVER generation per layout.
+- `bin/sync-skill-references.py` — mechanical converter from path-form to token-form Markdown links. Used for the one-time migration; CI runs it in `--check` mode to enforce token form on every PR.
+- `skills/RESOLVER.template.md` — slug-token version of the resolver. Build emits per-layout RESOLVER.md from this template.
+- `.github/workflows/build-and-publish.yml` — validate references on every PR; build and publish to `release/nested` and `release/flat` on every push to main; tag fan-out (`vX.Y.Z` → `vX.Y.Z-nested` + `vX.Y.Z-flat`) on tag push.
+- `CONTRIBUTING.md` — slug-token convention, contributor workflow, build commands, downstream consumer instructions.
+
+### Changed — `RESOLVER.md` is now a build artifact
+
+`skills/RESOLVER.md` removed from source; replaced by `skills/RESOLVER.template.md`. The build generates `RESOLVER.md` per layout with paths appropriate to that layout. Hand-editing the resolver now means editing the template.
+
+### Changed — Cross-references converted to tokens (mechanical)
+
+249 skill cross-references and 39 rule cross-references across 46 SKILL.md and `_*-rules.md` files converted from path-form Markdown links to `[skill:slug]` / `[rule:slug]` tokens. No content change beyond link form. Going forward, contributors use tokens; CI catches path-form references that slip in by habit.
+
+### Breaking — pin to a release-branch tag, not the source tag
+
+`main` now contains build infrastructure (tokens unresolved). Downstream consumers should pin to `v1.0.0-nested` or `v1.0.0-flat` (release-branch tags), not `v1.0.0` (source tag). See [Distribution layouts](README.md#distribution-layouts).
+
+This is a breaking change to the consumption pattern; existing v0.x consumers pulling from `main` need to update their subtree pull command. The skills themselves are unchanged.
 
 ## [0.3.0] — 2026-05-06
 

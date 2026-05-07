@@ -10,12 +10,12 @@ disable-model-invocation: false
 
 | Task signal | Book to read |
 |---|---|
-| Visual hierarchy, color, spacing, polish for non-designers (Wathan & Schoger) | [`refactoring-ui/`](refactoring-ui/SKILL.md) |
-| iOS HIG, native iOS / iPadOS app design | [`ios-hig-design/`](ios-hig-design/SKILL.md) |
-| Heuristic evaluation (Nielsen 10) | [`ux-heuristics/`](ux-heuristics/SKILL.md) |
-| Web typography — pairing, scale, vertical rhythm | [`web-typography/`](web-typography/SKILL.md) |
-| Top-down composition, design fundamentals | [`top-design/`](top-design/SKILL.md) |
-| Affordances, signifiers, mappings (Don Norman) | [`design-everyday-things/`](design-everyday-things/SKILL.md) |
-| Microinteractions — triggers, rules, feedback, loops (Saffer) | [`microinteractions/`](microinteractions/SKILL.md) |
+| Visual hierarchy, color, spacing, polish for non-designers (Wathan & Schoger) | [skill:refactoring-ui] |
+| iOS HIG, native iOS / iPadOS app design | [skill:ios-hig-design] |
+| Heuristic evaluation (Nielsen 10) | [skill:ux-heuristics] |
+| Web typography — pairing, scale, vertical rhythm | [skill:web-typography] |
+| Top-down composition, design fundamentals | [skill:top-design] |
+| Affordances, signifiers, mappings (Don Norman) | [skill:design-everyday-things] |
+| Microinteractions — triggers, rules, feedback, loops (Saffer) | [skill:microinteractions] |
 
 All wondelai/skills imports — see footers and `THIRD_PARTY_NOTICES.md`.

@@ -158,6 +158,6 @@ Refresh on a schedule. Subsequent queries are pure relational joins, no PostGIS 
 
 ## When PostGIS is the wrong tool
 
-If your spatial join is a single query against parquet files, no Postgres in the picture, consider DuckDB-spatial — see [`coding/duckdb-spatial/`](../../duckdb-spatial/SKILL.md).
+If your spatial join is a single query against parquet files, no Postgres in the picture, consider DuckDB-spatial — see [skill:duckdb-spatial].
 
-If your data is bigger than one Postgres node can hold or the join exceeds memory, move to Sedona on Spark — see [`coding/sedona/`](../../sedona/SKILL.md).
+If your data is bigger than one Postgres node can hold or the join exceeds memory, move to Sedona on Spark — see [skill:sedona].

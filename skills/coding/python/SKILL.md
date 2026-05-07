@@ -8,10 +8,10 @@ routed-by: coding-standards
 
 ## Companion shelves
 
-Always-on: [`_principles-rules.md`](../../_principles-rules.md), [`_python-rules.md`](../../_python-rules.md).
+Always-on: [rule:principles], [rule:python].
 For deeper rationale load:
-- [`shelves/languages/effective-python/`](../../shelves/languages/effective-python/SKILL.md) — canonical Python idioms.
-- [`shelves/engineering-principles/clean-code/`](../../shelves/engineering-principles/clean-code/SKILL.md) — naming, function size, error handling.
+- [skill:effective-python] — canonical Python idioms.
+- [skill:clean-code] — naming, function size, error handling.
 
 Apply these conventions when writing or reviewing Python code. See [reference.md](reference.md) for data structure selection, string formatting, logging, testing, project structure, and anti-patterns.
 
@@ -138,7 +138,7 @@ count: int = 0              # just use: count = 0
 
 ## Tests and Documentation — non-negotiable
 
-This section operationalizes criteria (b), (c), and parts of (d) from the workspace-wide [`_definition-of-done-rules.md`](../../_definition-of-done-rules.md). The rule below is the canonical Python-side enforcement; the always-on file is the cross-language summary.
+This section operationalizes criteria (b), (c), and parts of (d) from the workspace-wide [rule:definition-of-done]. The rule below is the canonical Python-side enforcement; the always-on file is the cross-language summary.
 
 Every code change ships with three things in the same PR:
 

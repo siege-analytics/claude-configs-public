@@ -479,4 +479,4 @@ Moran's I tells you values cluster — not why. Hot spots may be artifacts of un
 ## Out of scope for this skill
 
 - Geostatistics / kriging: out of typical Siege civic-data scope; reach for `pykrige` or R's `gstat` if needed
-- Network analysis on spatial graphs: see [`coding/postgis/`](../../coding/postgis/SKILL.md) (`pgrouting`) or future `analysis/graph/` sub-skill
+- Network analysis on spatial graphs: see [skill:postgis] (`pgrouting`) or future `analysis/graph/` sub-skill

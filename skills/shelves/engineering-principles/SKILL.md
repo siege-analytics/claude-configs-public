@@ -12,23 +12,23 @@ Books on writing and structuring code well. Load the book that matches your task
 
 | Task signal | Book to read |
 |---|---|
-| Naming, function size, comment discipline, code-smell vocabulary, "is this readable?" | [`clean-code/`](clean-code/SKILL.md) |
-| Service / module boundary, dependency direction, hexagonal/onion, plugin architecture | [`clean-architecture/`](clean-architecture/SKILL.md) |
-| GoF pattern selection — Factory, Strategy, Observer, Decorator, Adapter, Visitor, etc. | [`design-patterns/`](design-patterns/SKILL.md) |
-| Modeling a problem domain, aggregates, bounded contexts, ubiquitous language, event storming | [`domain-driven-design/`](domain-driven-design/SKILL.md) |
-| "How do I refactor this safely?", named refactoring catalog (Extract Method, Move Field, Replace Conditional with Polymorphism) | [`refactoring-patterns/`](refactoring-patterns/SKILL.md) |
-| Career-craft principles, DRY, orthogonality, broken-window theory, tracer bullets | [`pragmatic-programmer/`](pragmatic-programmer/SKILL.md) |
-| Module depth, complexity as cost, design for change, "is this too shallow?", red flags from Ousterhout | [`software-design-philosophy/`](software-design-philosophy/SKILL.md) |
+| Naming, function size, comment discipline, code-smell vocabulary, "is this readable?" | [skill:clean-code] |
+| Service / module boundary, dependency direction, hexagonal/onion, plugin architecture | [skill:clean-architecture] |
+| GoF pattern selection — Factory, Strategy, Observer, Decorator, Adapter, Visitor, etc. | [skill:design-patterns] |
+| Modeling a problem domain, aggregates, bounded contexts, ubiquitous language, event storming | [skill:domain-driven-design] |
+| "How do I refactor this safely?", named refactoring catalog (Extract Method, Move Field, Replace Conditional with Polymorphism) | [skill:refactoring-patterns] |
+| Career-craft principles, DRY, orthogonality, broken-window theory, tracer bullets | [skill:pragmatic-programmer] |
+| Module depth, complexity as cost, design for change, "is this too shallow?", red flags from Ousterhout | [skill:software-design-philosophy] |
 
 ## Books in this shelf
 
-- [`clean-code/`](clean-code/SKILL.md) — Robert C. Martin. Naming, small functions, error handling, comment discipline, the Boy Scout Rule.
-- [`clean-architecture/`](clean-architecture/SKILL.md) — Robert C. Martin. The Dependency Rule, layered/hexagonal architecture, screaming architecture.
-- [`design-patterns/`](design-patterns/SKILL.md) — *Head First Design Patterns* (Freeman & Robson). 23 GoF patterns with use-cases and counter-indications.
-- [`domain-driven-design/`](domain-driven-design/SKILL.md) — Eric Evans. Aggregates, bounded contexts, strategic design, event storming.
-- [`refactoring-patterns/`](refactoring-patterns/SKILL.md) — Martin Fowler. Catalog of refactorings with mechanics and code smells.
-- [`pragmatic-programmer/`](pragmatic-programmer/SKILL.md) — Hunt & Thomas. Career-spanning craft principles.
-- [`software-design-philosophy/`](software-design-philosophy/SKILL.md) — John Ousterhout. *A Philosophy of Software Design* — complexity as the central problem.
+- [skill:clean-code] — Robert C. Martin. Naming, small functions, error handling, comment discipline, the Boy Scout Rule.
+- [skill:clean-architecture] — Robert C. Martin. The Dependency Rule, layered/hexagonal architecture, screaming architecture.
+- [skill:design-patterns] — *Head First Design Patterns* (Freeman & Robson). 23 GoF patterns with use-cases and counter-indications.
+- [skill:domain-driven-design] — Eric Evans. Aggregates, bounded contexts, strategic design, event storming.
+- [skill:refactoring-patterns] — Martin Fowler. Catalog of refactorings with mechanics and code smells.
+- [skill:pragmatic-programmer] — Hunt & Thomas. Career-spanning craft principles.
+- [skill:software-design-philosophy] — John Ousterhout. *A Philosophy of Software Design* — complexity as the central problem.
 
 ## Disambiguation
 

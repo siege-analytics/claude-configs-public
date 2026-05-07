@@ -10,7 +10,7 @@ disable-model-invocation: false
 
 | Task signal | Book to read |
 |---|---|
-| Autonomy / mastery / purpose; intrinsic vs extrinsic motivation (Daniel Pink) | [`drive-motivation/`](drive-motivation/SKILL.md) |
-| Calm-company practices, six-week cycles, async by default | [`37signals-way/`](37signals-way/SKILL.md) |
+| Autonomy / mastery / purpose; intrinsic vs extrinsic motivation (Daniel Pink) | [skill:drive-motivation] |
+| Calm-company practices, six-week cycles, async by default | [skill:37signals-way] |
 
 All wondelai/skills imports — see footers and `THIRD_PARTY_NOTICES.md`.

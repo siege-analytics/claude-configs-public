@@ -176,4 +176,4 @@ payload = encode_geometry(geom)  # WKB-bytes payload, Spark-safe
 geom_back = decode_geometry(payload)
 ```
 
-See [`coding/sedona/`](../../sedona/SKILL.md) for the Spark side.
+See [skill:sedona] for the Spark side.

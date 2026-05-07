@@ -13,7 +13,7 @@ When wrapping up a session, complete these steps in order:
 
 ### 0. Definition of Done verification
 
-Before any commit/cleanup, verify all five criteria from [`_definition-of-done-rules.md`](../../_definition-of-done-rules.md) for the session's work:
+Before any commit/cleanup, verify all five criteria from [rule:definition-of-done] for the session's work:
 
 - [ ] **(a) Code-reviewed** — every behavior change reviewed (CodeRabbit on PR; self-review of diffs; human review where required)
 - [ ] **(b) Edge cases explored** — checklist applied to every behavior change

@@ -169,7 +169,7 @@ For interactive plan analysis, the Spark UI's SQL tab is more readable than text
 
 Spatial joins on data that fits in 32 GB RAM run faster in DuckDB-spatial than in Spark + Sedona. The Spark overhead (driver, scheduler, serialization) is significant; Sedona makes sense at terabyte scale, not gigabyte.
 
-If you find yourself running Sedona on a single-node Spark cluster, consider DuckDB-spatial instead — see [`coding/duckdb-spatial/`](../../duckdb-spatial/SKILL.md).
+If you find yourself running Sedona on a single-node Spark cluster, consider DuckDB-spatial instead — see [skill:duckdb-spatial].
 
 ## Checklist for slow spatial joins
 

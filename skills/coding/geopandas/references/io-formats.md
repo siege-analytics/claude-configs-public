@@ -12,7 +12,7 @@ Format selection for spatial Python work. Defaults: GeoParquet for storage, GeoJ
 | **Shapefile** | `.shp` (+ `.shx`, `.dbf`, `.prj`) | GDAL | GDAL | Legacy. Avoid for new work — column-name length limit (10 chars), no UTF-8 in attributes, multi-file. |
 | **FlatGeobuf** | `.fgb` | GDAL | GDAL | Streaming, indexed format; useful for large mapping pipelines. |
 | **CSV with WKT/WKB column** | `.csv` | none + Shapely WKT/WKB parser | manual | Easy debugging; no index; not for production storage. |
-| **PostGIS** | (database) | psycopg2 + GeoAlchemy2 or pandas+sqlalchemy | same | Persistent, indexed, multi-user. See [`coding/postgis/`](../../postgis/SKILL.md). |
+| **PostGIS** | (database) | psycopg2 + GeoAlchemy2 or pandas+sqlalchemy | same | Persistent, indexed, multi-user. See [skill:postgis]. |
 | **Iceberg/Delta with geometry column** | (table format) | spark or polars | same | Lakehouse spatial. WKB-encoded columns. |
 
 ## GeoParquet — the default

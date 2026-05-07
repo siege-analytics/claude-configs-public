@@ -24,9 +24,9 @@ DuckDB's `spatial` extension ships GEOS, GDAL, and PROJ inside a single in-proce
 
 | Situation | Use instead |
 |---|---|
-| Persistent multi-user query workload | **PostGIS** ([`coding/postgis/`](../postgis/SKILL.md)) |
-| Pandas-style operations, lots of joins with non-spatial dataframes | **GeoPandas** ([`coding/geopandas/`](../geopandas/SKILL.md)) |
-| Data > one machine's RAM × 4 (DuckDB spills but eventually fails) | **Sedona on Spark** ([`coding/sedona/`](../sedona/SKILL.md)) |
+| Persistent multi-user query workload | **PostGIS** ([skill:postgis]) |
+| Pandas-style operations, lots of joins with non-spatial dataframes | **GeoPandas** ([skill:geopandas]) |
+| Data > one machine's RAM × 4 (DuckDB spills but eventually fails) | **Sedona on Spark** ([skill:sedona]) |
 | Spatial work is one step in a larger Spark DAG | **Sedona** (don't introduce a single-node bottleneck) |
 
 ## References
@@ -39,9 +39,9 @@ DuckDB's `spatial` extension ships GEOS, GDAL, and PROJ inside a single in-proce
 
 ## Always-on companions
 
-- [`coding/sql/`](../sql/SKILL.md) — DuckDB is SQL-first
-- [`coding/python/`](../python/SKILL.md) — when scaffolding via `import duckdb`
-- [`_principles-rules.md`](../../_principles-rules.md), [`_python-rules.md`](../../_python-rules.md), [`_data-trust-rules.md`](../../_data-trust-rules.md), [`_siege-utilities-rules.md`](../../_siege-utilities-rules.md)
+- [skill:sql] — DuckDB is SQL-first
+- [skill:python] — when scaffolding via `import duckdb`
+- [rule:principles], [rule:python], [rule:data-trust], [rule:siege-utilities]
 
 ## Setup
 

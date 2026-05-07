@@ -12,29 +12,29 @@ Language-specific idiom and best-practice books. Pair these with the always-on `
 
 | Language / task | Book to read |
 |---|---|
-| Pythonic style, idioms, stdlib usage | [`effective-python/`](effective-python/SKILL.md) |
-| Async I/O in Python, `asyncio`, event loop, concurrency primitives | [`using-asyncio-python/`](using-asyncio-python/SKILL.md) |
-| HTTP scraping, parsing, anti-bot, polite crawling | [`web-scraping-python/`](web-scraping-python/SKILL.md) |
-| Java idioms — `equals`/`hashCode`, immutability, generics, exceptions | [`effective-java/`](effective-java/SKILL.md) |
-| Kotlin idioms — null safety, scope functions, DSLs, coroutines | [`effective-kotlin/`](effective-kotlin/SKILL.md) |
-| Kotlin from-the-ground-up — language features and patterns | [`kotlin-in-action/`](kotlin-in-action/SKILL.md) |
-| Spring Boot apps, autoconfiguration, starters | [`spring-boot-in-action/`](spring-boot-in-action/SKILL.md) |
-| Rust ownership, traits, lifetimes, error handling | [`programming-with-rust/`](programming-with-rust/SKILL.md) |
-| Rust applied — networking, I/O, embedded, performance | [`rust-in-action/`](rust-in-action/SKILL.md) |
-| TypeScript types, narrowing, generics, structural typing | [`effective-typescript/`](effective-typescript/SKILL.md) |
+| Pythonic style, idioms, stdlib usage | [skill:effective-python] |
+| Async I/O in Python, `asyncio`, event loop, concurrency primitives | [skill:using-asyncio-python] |
+| HTTP scraping, parsing, anti-bot, polite crawling | [skill:web-scraping-python] |
+| Java idioms — `equals`/`hashCode`, immutability, generics, exceptions | [skill:effective-java] |
+| Kotlin idioms — null safety, scope functions, DSLs, coroutines | [skill:effective-kotlin] |
+| Kotlin from-the-ground-up — language features and patterns | [skill:kotlin-in-action] |
+| Spring Boot apps, autoconfiguration, starters | [skill:spring-boot-in-action] |
+| Rust ownership, traits, lifetimes, error handling | [skill:programming-with-rust] |
+| Rust applied — networking, I/O, embedded, performance | [skill:rust-in-action] |
+| TypeScript types, narrowing, generics, structural typing | [skill:effective-typescript] |
 
 ## Books in this shelf
 
-- [`effective-python/`](effective-python/SKILL.md) — Brett Slatkin
-- [`using-asyncio-python/`](using-asyncio-python/SKILL.md) — Caleb Hattingh
-- [`web-scraping-python/`](web-scraping-python/SKILL.md) — Ryan Mitchell
-- [`effective-java/`](effective-java/SKILL.md) — Joshua Bloch
-- [`effective-kotlin/`](effective-kotlin/SKILL.md) — Marcin Moskała
-- [`kotlin-in-action/`](kotlin-in-action/SKILL.md) — Jemerov & Isakova
-- [`spring-boot-in-action/`](spring-boot-in-action/SKILL.md) — Craig Walls
-- [`programming-with-rust/`](programming-with-rust/SKILL.md) — Donis Marshall
-- [`rust-in-action/`](rust-in-action/SKILL.md) — Tim McNamara
-- [`effective-typescript/`](effective-typescript/SKILL.md) — Dan Vanderkam
+- [skill:effective-python] — Brett Slatkin
+- [skill:using-asyncio-python] — Caleb Hattingh
+- [skill:web-scraping-python] — Ryan Mitchell
+- [skill:effective-java] — Joshua Bloch
+- [skill:effective-kotlin] — Marcin Moskała
+- [skill:kotlin-in-action] — Jemerov & Isakova
+- [skill:spring-boot-in-action] — Craig Walls
+- [skill:programming-with-rust] — Donis Marshall
+- [skill:rust-in-action] — Tim McNamara
+- [skill:effective-typescript] — Dan Vanderkam
 
 ## Why JVM books matter for Python-first work
 
