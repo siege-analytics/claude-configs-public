@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+(no changes pending)
+
+## [0.3.0] — 2026-05-06
+
+Adds the Definition of Done as an always-on rule with hard enforcement, and makes `pre-work-check` and `think` slash-invokable to match their README classifications.
+
 ### Added — Definition of Done (`_definition-of-done-rules.md`)
 
 New always-on rule file `skills/_definition-of-done-rules.md`, sibling of `_principles-rules.md` and `_output-rules.md`. Five hard criteria for "done":
@@ -191,6 +197,7 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` — DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v0.3.0
 [0.2.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v0.2.0
 [0.1.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v0.1.0
