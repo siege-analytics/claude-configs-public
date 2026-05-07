@@ -11,7 +11,7 @@ Select the appropriate analysis methodology based on the problem type.
 
 ## First question: is your tabular representation trustworthy?
 
-Before routing to any methodology, apply [`_data-trust-rules.md`](../_data-trust-rules.md). In Siege civic / Census / FEC / redistricting work, the tabular representation is usually wrong, stale, or missing rows. Spatial methods exist *precisely because* the identifiers are dirty — if your join key isn't trustworthy, you don't get to skip geometry by reaching for a crosswalk. You skip the crosswalk *because* you have geometry.
+Before routing to any methodology, apply [rule:data-trust]. In Siege civic / Census / FEC / redistricting work, the tabular representation is usually wrong, stale, or missing rows. Spatial methods exist *precisely because* the identifiers are dirty — if your join key isn't trustworthy, you don't get to skip geometry by reaching for a crosswalk. You skip the crosswalk *because* you have geometry.
 
 The same premise applies to entity resolution (the names don't match, that's why you need fuzzy matching) and to graph analysis (the explicit FK relationships are missing or wrong, that's why you need to reconstruct edges). Each sub-skill assumes you've already failed the trust check on the easy path.
 
@@ -19,11 +19,11 @@ The same premise applies to entity resolution (the names don't match, that's why
 
 | Signal | Sub-Skill | Path |
 |--------|-----------|------|
-| Geographic data, coordinates, polygons, boundaries, PostGIS, spatial joins | Spatial analysis | [spatial/SKILL.md](spatial/SKILL.md) |
-| Statistical modeling, regression, hypothesis testing, distributions, sampling | Statistical methods | [statistical/SKILL.md](statistical/SKILL.md) |
-| Network/graph data, entity relationships, community detection, path finding | Graph analysis | [graph/SKILL.md](graph/SKILL.md) |
-| Record linkage, deduplication, fuzzy matching, identity resolution | Entity resolution | [entity-resolution/SKILL.md](entity-resolution/SKILL.md) |
-| Text classification, extraction, NLP, embeddings, language models | NLP methods | [nlp/SKILL.md](nlp/SKILL.md) |
+| Geographic data, coordinates, polygons, boundaries, PostGIS, spatial joins | Spatial analysis | [skill:spatial] |
+| Statistical modeling, regression, hypothesis testing, distributions, sampling | Statistical methods | [skill:statistical] |
+| Network/graph data, entity relationships, community detection, path finding | Graph analysis | [skill:graph] |
+| Record linkage, deduplication, fuzzy matching, identity resolution | Entity resolution | [skill:entity-resolution] |
+| Text classification, extraction, NLP, embeddings, language models | NLP methods | [skill:nlp] |
 
 Not all sub-skills exist yet. If a routing table entry points to a file that doesn't exist, apply general best practices for that methodology.
 

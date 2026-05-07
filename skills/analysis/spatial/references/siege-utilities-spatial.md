@@ -273,7 +273,7 @@ For the engine-specific SU-interop maps:
 
 ## The check-before-write workflow
 
-Per [`_siege-utilities-rules.md`](../../_siege-utilities-rules.md):
+Per [rule:siege-utilities]:
 
 1. **Reach for SU first.** Most spatial tasks have a SU function.
 2. **If SU almost does it but doesn't:** evaluate whether the gap is generic (every Siege project would benefit) or project-specific.

@@ -10,9 +10,9 @@ disable-model-invocation: false
 
 | Task signal | Book to read |
 |---|---|
-| Uncontested market space, value innovation, ERRC grid (Kim & Mauborgne) | [`blue-ocean-strategy/`](blue-ocean-strategy/SKILL.md) |
-| Tech-adoption lifecycle, beachhead segment, whole-product (Geoffrey Moore) | [`crossing-the-chasm/`](crossing-the-chasm/SKILL.md) |
-| EOS — Vision/Traction Organizer, Rocks, Level-10 meetings (Wickman) | [`traction-eos/`](traction-eos/SKILL.md) |
-| Positioning — context, alternatives, unique attributes (April Dunford) | [`obviously-awesome/`](obviously-awesome/SKILL.md) |
+| Uncontested market space, value innovation, ERRC grid (Kim & Mauborgne) | [skill:blue-ocean-strategy] |
+| Tech-adoption lifecycle, beachhead segment, whole-product (Geoffrey Moore) | [skill:crossing-the-chasm] |
+| EOS — Vision/Traction Organizer, Rocks, Level-10 meetings (Wickman) | [skill:traction-eos] |
+| Positioning — context, alternatives, unique attributes (April Dunford) | [skill:obviously-awesome] |
 
 All wondelai/skills imports — see footers and `THIRD_PARTY_NOTICES.md`.

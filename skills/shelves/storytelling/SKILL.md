@@ -10,7 +10,7 @@ disable-model-invocation: false
 
 | Task signal | Book to read |
 |---|---|
-| Charts, decks, presenting findings to a non-technical audience (Knaflic) | [`storytelling-with-data/`](storytelling-with-data/SKILL.md) |
-| When and how to use animation in interfaces and slides (Nabors) | [`animation-at-work/`](animation-at-work/SKILL.md) |
+| Charts, decks, presenting findings to a non-technical audience (Knaflic) | [skill:storytelling-with-data] |
+| When and how to use animation in interfaces and slides (Nabors) | [skill:animation-at-work] |
 
 All ZLStas/skills imports — see footers and `THIRD_PARTY_NOTICES.md`.

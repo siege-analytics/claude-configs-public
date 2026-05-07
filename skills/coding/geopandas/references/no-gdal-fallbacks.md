@@ -134,7 +134,7 @@ H3 is approximate (boundaries have ~50m precision at resolution 8) but doesn't n
 If you find yourself blocked on these, the choices are:
 
 1. **Pre-convert** files to GeoParquet on a machine that has GDAL; ship Parquet to the GDAL-less environment.
-2. **DuckDB-spatial** ([`coding/duckdb-spatial/`](../../duckdb-spatial/SKILL.md)) — bundles its own GEOS; reads/writes Parquet without GDAL; provides ST_* operations at SQL level. The strongest single tool for GDAL-less spatial work.
+2. **DuckDB-spatial** ([skill:duckdb-spatial]) — bundles its own GEOS; reads/writes Parquet without GDAL; provides ST_* operations at SQL level. The strongest single tool for GDAL-less spatial work.
 3. **PostGIS** — if you can stand up a tiny Postgres, push the spatial work there.
 
 ## SU-blessed no-GDAL paths

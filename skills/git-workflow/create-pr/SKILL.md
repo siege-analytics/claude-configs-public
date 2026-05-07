@@ -44,10 +44,10 @@ A PR is a narrative, not a dump of commits. The reviewer is reading the PR to de
 
 ### Definition of Done gate (mandatory)
 
-Before opening the PR, verify all five criteria from [`_definition-of-done-rules.md`](../../_definition-of-done-rules.md):
+Before opening the PR, verify all five criteria from [rule:definition-of-done]:
 
 - [ ] **(a) Code-reviewed** — at minimum, self-reviewed walking through the diff; CodeRabbit will run on push
-- [ ] **(b) Edge cases explored** — reasoned through the edge-case checklist in [`coding/code-review/SKILL.md`](../../coding/code-review/SKILL.md) §1
+- [ ] **(b) Edge cases explored** — reasoned through the edge-case checklist in [skill:code-review] §1
 - [ ] **(c) Tests written** — every behavior change has tests; no "tests later" PRs without an explicit, reviewable justification in the PR description
 - [ ] **(d) Ticket updated** — status moved (Todo → In Review), comments added for substantive changes, scope/blocker pivots captured
 - [ ] **(e) Work has a ticket** — every commit has a ticket reference (see scan below)

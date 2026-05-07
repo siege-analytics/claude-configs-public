@@ -137,7 +137,7 @@ CREATE EXTENSION h3;
 SELECT h3_lat_lng_to_cell(point::geography, 9) AS cell FROM places;
 ```
 
-Excellent for binning at scale (hexagons aren't subject to the rectangular-grid distortion problem) and for approximate joins when full PostGIS overlay is overkill. See [`../indexing-strategies.md`](../indexing-strategies.md) and [`coding/duckdb-spatial/`](../../../duckdb-spatial/SKILL.md) (DuckDB also supports H3).
+Excellent for binning at scale (hexagons aren't subject to the rectangular-grid distortion problem) and for approximate joins when full PostGIS overlay is overkill. See [`../indexing-strategies.md`](../indexing-strategies.md) and [skill:duckdb-spatial] (DuckDB also supports H3).
 
 ### `geomval` — value at a location
 

@@ -11,10 +11,10 @@ argument-hint: "[PR-number-or-path] [optional-focus-area]"
 ## Companion shelves
 
 Anchor each review dimension in:
-- [`shelves/engineering-principles/clean-code/`](../../shelves/engineering-principles/clean-code/SKILL.md) — naming, function size, comment discipline (the *why* behind most review comments).
-- [`shelves/engineering-principles/design-patterns/`](../../shelves/engineering-principles/design-patterns/SKILL.md) — when to suggest a pattern (and when not to).
-- [`shelves/engineering-principles/refactoring-patterns/`](../../shelves/engineering-principles/refactoring-patterns/SKILL.md) — name the safe transformation, don't hand-wave.
-- For Spark/JVM PRs: [`shelves/languages/effective-java/`](../../shelves/languages/effective-java/SKILL.md), [`shelves/languages/effective-kotlin/`](../../shelves/languages/effective-kotlin/SKILL.md).
+- [skill:clean-code] — naming, function size, comment discipline (the *why* behind most review comments).
+- [skill:design-patterns] — when to suggest a pattern (and when not to).
+- [skill:refactoring-patterns] — name the safe transformation, don't hand-wave.
+- For Spark/JVM PRs: [skill:effective-java], [skill:effective-kotlin].
 
 The Siege-specific catches below (catalog bypass, NULL drops, partition skew) stay here.
 
@@ -38,7 +38,7 @@ Does the code do what it claims to do?
 - For data transforms: does every row make it through, or are rows silently dropped?
 - For SQL: does the JOIN type match the intent? (INNER drops non-matches, LEFT keeps them)
 
-**Edge-case checklist** — criterion (b) of [`_definition-of-done-rules.md`](../../_definition-of-done-rules.md). Every behavior change must be reasoned through against these, and tested in code where appropriate:
+**Edge-case checklist** — criterion (b) of [rule:definition-of-done]. Every behavior change must be reasoned through against these, and tested in code where appropriate:
 
 - [ ] **Empty input** — `[]`, `""`, `None`, missing key, zero rows
 - [ ] **Boundary values** — zero, one, max, min, off-by-one neighbors

@@ -96,7 +96,7 @@ The `routed-by` field is not in Anthropic's spec — Claude ignores unknown fiel
 
 **Characteristics:**
 - Contains a routing table mapping signals (file types, imports) to sub-skill file paths
-- Loads sub-skills via relative file references: `[python/SKILL.md](python/SKILL.md)`
+- Loads sub-skills via relative file references: `[skill:python]`
 - All sub-skills under a router must share the same classification
 - Body leads with gotchas (common misrouting mistakes)
 - Description is trigger-optimized: front-loads the activation signals

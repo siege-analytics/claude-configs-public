@@ -280,7 +280,7 @@ For Census / GADM / OSM sources, don't `wget` shapefiles. SU's `geo.spatial_data
 - [`../siege-utilities-postgis.md`](../siege-utilities-postgis.md) — SU helpers for spatial data sourcing
 - [`../indexing-strategies.md`](../indexing-strategies.md) — when to drop/recreate indexes during ETL
 - [`../vacuuming-and-bloat.md`](../vacuuming-and-bloat.md) — VACUUM after every load
-- [`coding/pipeline-jobs/SKILL.md`](../../../pipeline-jobs/SKILL.md) — pipeline orchestration patterns
+- [skill:pipeline-jobs] — pipeline orchestration patterns
 
 ## Citation
 

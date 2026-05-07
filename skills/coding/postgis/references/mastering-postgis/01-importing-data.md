@@ -113,7 +113,7 @@ con.execute("""
 
 Then in Postgres, ingest the Parquet via `parquet_s3_fdw` or COPY-from-Parquet (PG 17+).
 
-See [`coding/duckdb-spatial/`](../../../duckdb-spatial/SKILL.md) for the GDAL-less path.
+See [skill:duckdb-spatial] for the GDAL-less path.
 
 ### siege_utilities for source-fetching
 
@@ -164,7 +164,7 @@ Use `ogr2ogr` when nothing else works — it's the universal fallback. Don't rea
 
 ## Cross-links
 
-- [`../../coding/duckdb-spatial/SKILL.md`](../../../duckdb-spatial/SKILL.md) — GDAL-less ingestion gateway
+- [skill:duckdb-spatial] — GDAL-less ingestion gateway
 - [`../siege-utilities-postgis.md`](../siege-utilities-postgis.md) — boundary sourcing via SU
 - [`../indexing-strategies.md`](../indexing-strategies.md) — when to create indexes during ingest
 - [`../vacuuming-and-bloat.md`](../vacuuming-and-bloat.md) — why `VACUUM ANALYZE` after bulk loads matters

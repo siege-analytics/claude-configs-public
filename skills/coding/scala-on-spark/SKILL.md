@@ -10,12 +10,12 @@ Most Scala you'll write in a Siege project is **glue around Spark**: notebook ce
 
 ## Companion shelves (load these)
 
-- [`shelves/languages/effective-java/`](../../shelves/languages/effective-java/SKILL.md) — `equals`/`hashCode`, immutability, exception handling, generics. Items map almost 1:1 to Scala case classes and `Either`-shaped APIs.
-- [`shelves/languages/effective-kotlin/`](../../shelves/languages/effective-kotlin/SKILL.md) — null-safety idioms (Scala `Option`/`Either` ≈ Kotlin nullable + `let`), DSLs, scope functions.
-- [`shelves/systems-architecture/data-intensive/`](../../shelves/systems-architecture/data-intensive/SKILL.md) — partitioning, replication, batch/stream, the *why* behind Spark's cost model.
-- [`coding/spark/`](../spark/SKILL.md) — Siege-specific Spark patterns (catalog, medallion, transform shape).
+- [skill:effective-java] — `equals`/`hashCode`, immutability, exception handling, generics. Items map almost 1:1 to Scala case classes and `Either`-shaped APIs.
+- [skill:effective-kotlin] — null-safety idioms (Scala `Option`/`Either` ≈ Kotlin nullable + `let`), DSLs, scope functions.
+- [skill:data-intensive] — partitioning, replication, batch/stream, the *why* behind Spark's cost model.
+- [skill:spark] — Siege-specific Spark patterns (catalog, medallion, transform shape).
 
-Always-on: [`_jvm-rules.md`](../../_jvm-rules.md) is loaded when JVM code is touched and applies to Scala notebook cells equally.
+Always-on: [rule:jvm] is loaded when JVM code is touched and applies to Scala notebook cells equally.
 
 ## Scala-specific quick rules
 

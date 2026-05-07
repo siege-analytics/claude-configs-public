@@ -14,17 +14,17 @@ This pattern keeps the description budget small: one slot per shelf, not one per
 
 | Shelf | When to load |
 |---|---|
-| [`engineering-principles/`](engineering-principles/SKILL.md) | Code quality, design, refactoring rationale, principles arguments |
-| [`systems-architecture/`](systems-architecture/SKILL.md) | Distributed-system design, storage choice, replication, scaling, system-design interview |
-| [`languages/`](languages/SKILL.md) | Idioms and best practices for Python, JVM (Java/Kotlin/Scala-on-Spark), TypeScript, Rust |
-| [`data-and-pipelines/`](data-and-pipelines/SKILL.md) | Pipeline design, batch/stream, scheduled jobs |
-| [`product/`](product/SKILL.md) | Discovery, JTBD, lean experimentation, retention |
-| [`marketing/`](marketing/SKILL.md) | Messaging, copy, conversion, positioning |
-| [`sales/`](sales/SKILL.md) | Pipeline, pricing, negotiation, influence |
-| [`strategy/`](strategy/SKILL.md) | Market entry, positioning, EOS, blue ocean |
-| [`design/`](design/SKILL.md) | UI, UX heuristics, typography, microinteractions |
-| [`team/`](team/SKILL.md) | Motivation, ways of working |
-| [`storytelling/`](storytelling/SKILL.md) | Communicating data, slide animation |
+| [skill:engineering-principles] | Code quality, design, refactoring rationale, principles arguments |
+| [skill:systems-architecture] | Distributed-system design, storage choice, replication, scaling, system-design interview |
+| [skill:languages] | Idioms and best practices for Python, JVM (Java/Kotlin/Scala-on-Spark), TypeScript, Rust |
+| [skill:data-and-pipelines] | Pipeline design, batch/stream, scheduled jobs |
+| [skill:product] | Discovery, JTBD, lean experimentation, retention |
+| [skill:marketing] | Messaging, copy, conversion, positioning |
+| [skill:sales] | Pipeline, pricing, negotiation, influence |
+| [skill:strategy] | Market entry, positioning, EOS, blue ocean |
+| [skill:design] | UI, UX heuristics, typography, microinteractions |
+| [skill:team] | Motivation, ways of working |
+| [skill:storytelling] | Communicating data, slide animation |
 
 ## How shelves work
 

@@ -139,8 +139,8 @@ result = ddf.sjoin(counties, predicate="within").compute()
 ```
 
 Caveat: `dask-geopandas` is alpha-quality compared to PostGIS or Sedona for large joins. For data > 10 GB, prefer:
-- **DuckDB-spatial** ([`coding/duckdb-spatial/`](../../duckdb-spatial/SKILL.md)) — single-node, in-memory + spilling, very fast
-- **Sedona** ([`coding/sedona/`](../../sedona/SKILL.md)) — distributed across a Spark cluster
+- **DuckDB-spatial** ([skill:duckdb-spatial]) — single-node, in-memory + spilling, very fast
+- **Sedona** ([skill:sedona]) — distributed across a Spark cluster
 - **PostGIS** with partitioning — persistent, indexed, multi-user
 
 Dask-GeoPandas is useful for the narrow case "I want GeoPandas semantics on a single machine but the data is 2× RAM."

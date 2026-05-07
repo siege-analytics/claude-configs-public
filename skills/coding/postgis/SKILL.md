@@ -11,7 +11,7 @@ paths: "**/*.sql,**/postgis/**,**/*.py"
 ## Companion shelves and references
 
 For storage-engine reasoning (B-tree vs GiST/BRIN indexes, partitioning at scale):
-- [`shelves/systems-architecture/data-intensive/`](../../shelves/systems-architecture/data-intensive/SKILL.md)
+- [skill:data-intensive]
 
 For *Mastering PostGIS* distillation, deep dives, and the SU-PostGIS interop map:
 - [`references/mastering-postgis/`](references/mastering-postgis/index.md) — book-skill-style distillation: index + chapter-themed reference files mirroring the book's structure (Ch 1 importing data, Ch 2 data types, Ch 3 vector ops, etc.) + currency caveats
@@ -236,4 +236,4 @@ Before running a spatial query in production:
 
 ## Attribution Policy
 
-See [`../../_output-rules.md`](../../_output-rules.md). NEVER include AI or agent attribution.
+See [rule:output]. NEVER include AI or agent attribution.

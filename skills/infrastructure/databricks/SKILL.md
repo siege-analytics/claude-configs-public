@@ -226,4 +226,4 @@ Photon adds ~15-20% to DBU cost but typically cuts runtime 2-3x on warehouse-pat
 
 ## Attribution Policy
 
-See [`../../_output-rules.md`](../../_output-rules.md). NEVER include AI or agent attribution.
+See [rule:output]. NEVER include AI or agent attribution.

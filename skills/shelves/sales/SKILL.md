@@ -10,9 +10,9 @@ disable-model-invocation: false
 
 | Task signal | Book to read |
 |---|---|
-| Outbound prospecting machine, SDR specialization (Aaron Ross) | [`predictable-revenue/`](predictable-revenue/SKILL.md) |
-| Negotiation tactics, BATNA, anchoring (Voss / Fisher) | [`negotiation/`](negotiation/SKILL.md) |
-| Influence principles — reciprocity, scarcity, authority, etc. (Cialdini) | [`influence-psychology/`](influence-psychology/SKILL.md) |
-| Constructing irresistible offers, value-stacking, pricing (Hormozi) | [`hundred-million-offers/`](hundred-million-offers/SKILL.md) |
+| Outbound prospecting machine, SDR specialization (Aaron Ross) | [skill:predictable-revenue] |
+| Negotiation tactics, BATNA, anchoring (Voss / Fisher) | [skill:negotiation] |
+| Influence principles — reciprocity, scarcity, authority, etc. (Cialdini) | [skill:influence-psychology] |
+| Constructing irresistible offers, value-stacking, pricing (Hormozi) | [skill:hundred-million-offers] |
 
 All wondelai/skills imports — see footers and `THIRD_PARTY_NOTICES.md`.

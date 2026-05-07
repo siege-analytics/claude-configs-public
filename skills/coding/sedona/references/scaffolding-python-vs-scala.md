@@ -98,7 +98,7 @@ val ds: Dataset[Point] = df.as[Point]
 // Compile-time error if df doesn't match Point schema
 ```
 
-If you don't need that safety, stay with `DataFrame` and the typing difference vanishes. For Spark/Scala typing patterns generally, see [`coding/scala-on-spark/SKILL.md`](../../scala-on-spark/SKILL.md).
+If you don't need that safety, stay with `DataFrame` and the typing difference vanishes. For Spark/Scala typing patterns generally, see [skill:scala-on-spark].
 
 ### Error handling
 
@@ -161,4 +161,4 @@ All Spark-level tuning is identical. `spark.sedona.global.partitionnum`, `broadc
 
 Treat Sedona spatial logic as **language-agnostic SQL** that you wrap in either Python or Scala scaffolding. The choice of scaffolding is a workflow / team / context decision, not a spatial-logic decision.
 
-For Scala-specific patterns around Spark generally (case classes for Dataset[T], encoder gotchas, immutability with `val`), see [`coding/scala-on-spark/SKILL.md`](../../scala-on-spark/SKILL.md).
+For Scala-specific patterns around Spark generally (case classes for Dataset[T], encoder gotchas, immutability with `val`), see [skill:scala-on-spark].
