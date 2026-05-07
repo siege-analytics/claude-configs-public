@@ -52,6 +52,7 @@ Files at the root of `skills/` named `_*-rules.md` are loaded by the resolver Co
 | [`_typescript-rules.md`](skills/_typescript-rules.md) | Effective TypeScript idioms | Touching `*.ts` / `*.tsx` |
 | [`_rust-rules.md`](skills/_rust-rules.md) | Rust idioms | Touching `*.rs` |
 | [`_siege-utilities-rules.md`](skills/_siege-utilities-rules.md) | Prefer [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) for utility-shaped problems before writing a new helper. Consider PRs upstream when the gap is generic. | Writing Python utilities |
+| [`_definition-of-done-rules.md`](skills/_definition-of-done-rules.md) | Five hard criteria for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists. | Every behavior change |
 
 ## Skills
 
@@ -242,6 +243,22 @@ The spatial skills in particular (per-engine `siege-utilities-<engine>.md` refer
 ## Works well with
 
 - [StrongAI/claude-skills](https://github.com/StrongAI/claude-skills) — `claude_init` merges both repos' skills automatically (org skills take priority)
+
+## Definition of Done
+
+Code is not finished until **all five** criteria pass. This is a gate, not a recommendation, enforced via [`skills/_definition-of-done-rules.md`](skills/_definition-of-done-rules.md):
+
+| # | Criterion | Operationalized by |
+|---|---|---|
+| a | Code-reviewed | `/code-review` |
+| b | Edge cases explored | code-review §1 (concrete checklist) |
+| c | Tests written | tests are mandatory; no infrastructure → add it first; PRs without tests must justify |
+| d | Non-trivial updates → update the ticket | `/update-ticket`, `/close-ticket` |
+| e | Work has a ticket | `/pre-work-check` |
+
+The PR-creation skill (`/create-pr`) gates on all five before opening; failed criteria → PR opens as draft. The session wrap-up skill (`/wrap-up`) verifies all five before closing. Soft rules erode — these are documented responses to specific Siege incidents.
+
+Exempt from (a)–(d) but **not** (e): typo fixes, doc-only changes, tooling chores. Even exempt changes need a ticket for the audit trail.
 
 ## Releases & versioning
 

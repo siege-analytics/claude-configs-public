@@ -4,7 +4,41 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
-(no changes pending)
+### Added — Definition of Done (`_definition-of-done-rules.md`)
+
+New always-on rule file `skills/_definition-of-done-rules.md`, sibling of `_principles-rules.md` and `_output-rules.md`. Five hard criteria for "done":
+
+- **(a) Code-reviewed** — every behavior change goes through review
+- **(b) Edge cases explored** — concrete checklist (empty / boundary / duplicate / out-of-order / very-small / very-large / mixed-types / partial-failure / null / identifier-collision)
+- **(c) Tests written** — mandatory; no test infrastructure means add it first; PRs without tests must justify in description
+- **(d) Non-trivial updates → update the ticket** — status, comments, links, final summary
+- **(e) Work has a ticket** — every behavior change starts from one
+
+Hard enforcement, not recommendations. Soft rules erode; these are documented responses to specific Siege incidents.
+
+Cross-referenced from:
+- `skills/coding/SKILL.md` Rule 6 (one-line reference)
+- `skills/coding/python/SKILL.md` "Tests and Documentation" section (paragraph reference)
+- `skills/coding/code-review/SKILL.md` §1 (edge-case checklist promoted from one bullet to 9-item explicit checklist)
+- `skills/git-workflow/create-pr/SKILL.md` ("Definition of Done gate (mandatory)" subsection — failed criteria → PR opens as draft)
+- `skills/session/wrap-up/SKILL.md` (Step 0 verification ahead of commit/cleanup)
+
+Registered in `skills/RESOLVER.md` Conventions table.
+
+### Changed — `pre-work-check` and `think` are slash-invokable
+
+Both skills already classified as user-invokable in README (Action / Analytical). Frontmatter brought into line:
+
+- `skills/planning/pre-work-check/SKILL.md` — `disable-model-invocation: true` added; now slash-invokable as `/pre-work-check`
+- `skills/thinking/think/SKILL.md` — `disable-model-invocation: true` added; now slash-invokable as `/think`
+
+Resolver-driven enforcement is unchanged. Both skills remain auto-applied gates via the resolver hook; the change adds manual invocation as an option.
+
+### Documentation
+
+- `README.md` — adds `_definition-of-done-rules.md` to Always-on conventions table; new "Definition of Done" section explaining the five criteria and PR/wrap-up gating
+
+## [0.2.0] — 2026-05-02
 
 ## [0.2.0] — 2026-05-02
 
