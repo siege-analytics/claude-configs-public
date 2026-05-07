@@ -12,7 +12,7 @@ Code is not finished until **all five** of the following are true. This is a gat
 
 Every behavior change goes through code review before merge. CodeRabbit / agent review counts as one pass; a human review is required for non-trivial changes.
 
-**Operationalized by:** [`coding/code-review/SKILL.md`](coding/code-review/SKILL.md) (slash-invokable as `/code-review`).
+**Operationalized by:** [skill:code-review] (slash-invokable as `/code-review`).
 
 ### b. Edge cases explored
 
@@ -28,7 +28,7 @@ Every behavior change has been tested mentally — and where appropriate, in tes
 - Null / NaN / NULL in tabular inputs
 - Identifier collisions (two different sources, same key)
 
-**Operationalized by:** [`coding/code-review/SKILL.md`](coding/code-review/SKILL.md) §1 ("Correctness") — explicit edge-case checklist.
+**Operationalized by:** [skill:code-review] §1 ("Correctness") — explicit edge-case checklist.
 
 ### c. Tests written
 
@@ -40,7 +40,7 @@ Every behavior change has been tested mentally — and where appropriate, in tes
 - If the project has no test infrastructure yet, **the first contribution adds the infrastructure** (test framework, runner, sample test) before any behavior change. "We don't have tests yet" is not an exception; it's the first ticket.
 - PRs without tests must explicitly justify the omission in the PR description, and the justification is subject to review. Acceptance is not assumed.
 
-**Operationalized by:** [`coding/python/SKILL.md`](coding/python/SKILL.md) "Tests and Documentation — non-negotiable" section (Python); [`coding/SKILL.md`](coding/SKILL.md) Rule 6 (language-agnostic).
+**Operationalized by:** [skill:python] "Tests and Documentation — non-negotiable" section (Python); [skill:coding] Rule 6 (language-agnostic).
 
 ### d. Non-trivial updates → update the ticket
 
@@ -52,7 +52,7 @@ What counts as a ticket update:
 - Links to commits and PRs (bidirectional — commit references ticket, ticket links commit)
 - Final summary at close (what shipped, what was deferred, validation status)
 
-**Operationalized by:** [`planning/update-ticket/SKILL.md`](planning/update-ticket/SKILL.md) (slash-invokable as `/update-ticket`); [`planning/close-ticket/SKILL.md`](planning/close-ticket/SKILL.md).
+**Operationalized by:** [skill:update-ticket] (slash-invokable as `/update-ticket`); [skill:close-ticket].
 
 ### e. Work has a ticket
 
@@ -62,9 +62,9 @@ Every behavior change starts from a ticket. Tickets exist to:
 - Surface dependency relations (what blocks this; what this unblocks)
 - Provide an audit trail tying code changes to motivating problems
 
-**Operationalized by:** [`planning/pre-work-check/SKILL.md`](planning/pre-work-check/SKILL.md) (slash-invokable as `/pre-work-check`) — runs before the first commit; verifies ticket exists, belongs to a project, has no open blockers.
+**Operationalized by:** [skill:pre-work-check] (slash-invokable as `/pre-work-check`) — runs before the first commit; verifies ticket exists, belongs to a project, has no open blockers.
 
-If you find yourself coding without a ticket, stop and write one (or invoke [`planning/create-ticket/SKILL.md`](planning/create-ticket/SKILL.md)). The ticket can be a one-liner; what matters is that it exists and is reachable from the commit.
+If you find yourself coding without a ticket, stop and write one (or invoke [skill:create-ticket]). The ticket can be a one-liner; what matters is that it exists and is reachable from the commit.
 
 ## What "done" means at each transition
 
@@ -79,15 +79,15 @@ If you find yourself coding without a ticket, stop and write one (or invoke [`pl
 
 | Criterion | Skill / file that runs it |
 |---|---|
-| (a) Code-reviewed | [`coding/code-review/SKILL.md`](coding/code-review/SKILL.md) |
-| (b) Edge cases | [`coding/code-review/SKILL.md`](coding/code-review/SKILL.md) §1 |
-| (c) Tests | [`coding/python/SKILL.md`](coding/python/SKILL.md) "Tests and Documentation" section; [`coding/SKILL.md`](coding/SKILL.md) Rule 6 |
-| (d) Ticket update | [`planning/update-ticket/SKILL.md`](planning/update-ticket/SKILL.md), [`planning/close-ticket/SKILL.md`](planning/close-ticket/SKILL.md) |
-| (e) Ticket exists | [`planning/pre-work-check/SKILL.md`](planning/pre-work-check/SKILL.md), [`planning/create-ticket/SKILL.md`](planning/create-ticket/SKILL.md) |
+| (a) Code-reviewed | [skill:code-review] |
+| (b) Edge cases | [skill:code-review] §1 |
+| (c) Tests | [skill:python] "Tests and Documentation" section; [skill:coding] Rule 6 |
+| (d) Ticket update | [skill:update-ticket], [skill:close-ticket] |
+| (e) Ticket exists | [skill:pre-work-check], [skill:create-ticket] |
 
-The PR-creation gate ([`git-workflow/create-pr/SKILL.md`](git-workflow/create-pr/SKILL.md)) checks all five before opening.
+The PR-creation gate ([skill:create-pr]) checks all five before opening.
 
-The session-end check ([`session/wrap-up/SKILL.md`](session/wrap-up/SKILL.md)) verifies all five before declaring the session complete.
+The session-end check ([skill:wrap-up]) verifies all five before declaring the session complete.
 
 ## Exceptions
 
@@ -109,4 +109,4 @@ The Definition of Done is the documented response to those incidents. Treat it a
 
 ## Attribution
 
-Defers to [`_output-rules.md`](_output-rules.md). No AI / agent attribution in commits, PRs, or comments.
+Defers to [rule:output]. No AI / agent attribution in commits, PRs, or comments.
