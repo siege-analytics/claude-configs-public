@@ -1,6 +1,7 @@
 ---
 name: pre-work-check
-description: "MANDATORY gate before starting any work that changes the state or behavior of the software. Verifies the ticket has a project/epic, all blockers are Done, and the dependency graph is clear."
+description: "MANDATORY gate before starting any work that changes the state or behavior of the software. Verifies the ticket has a project/epic, all blockers are Done, and the dependency graph is clear. Slash-invokable as /pre-work-check; also enforced via the resolver."
+disable-model-invocation: true
 allowed-tools: Read Bash
 ---
 
