@@ -138,6 +138,8 @@ count: int = 0              # just use: count = 0
 
 ## Tests and Documentation — non-negotiable
 
+This section operationalizes criteria (b), (c), and parts of (d) from the workspace-wide [`_definition-of-done-rules.md`](../../_definition-of-done-rules.md). The rule below is the canonical Python-side enforcement; the always-on file is the cross-language summary.
+
 Every code change ships with three things in the same PR:
 
 1. **Tests.** Every new function, method, or behavior change has a test. Every `raise` path has a negative test. Bug fixes ship with a regression test that fails on the previous commit. PRs without tests must explicitly justify *why* in the description (and that justification must be accepted by review, not asserted).

@@ -32,12 +32,23 @@ Does the code do what it claims to do?
 
 **Check:**
 - Does every function return what its name and docstring promise?
-- Are edge cases handled? (empty input, None, zero, negative, very large)
 - Are off-by-one errors present in loops, slices, or ranges?
 - Do conditionals cover all branches? Are there impossible else clauses?
 - Are comparisons correct? (`>=` vs `>`, `==` vs `is`, `and` vs `or`)
 - For data transforms: does every row make it through, or are rows silently dropped?
 - For SQL: does the JOIN type match the intent? (INNER drops non-matches, LEFT keeps them)
+
+**Edge-case checklist** — criterion (b) of [`_definition-of-done-rules.md`](../../_definition-of-done-rules.md). Every behavior change must be reasoned through against these, and tested in code where appropriate:
+
+- [ ] **Empty input** — `[]`, `""`, `None`, missing key, zero rows
+- [ ] **Boundary values** — zero, one, max, min, off-by-one neighbors
+- [ ] **Duplicates** — repeated keys, repeated rows, repeated coordinates
+- [ ] **Out-of-order input** — when downstream code assumes sorted
+- [ ] **Very small** (1 element) and **very large** (1M+ elements)
+- [ ] **Mixed types** where the contract claims homogeneity (string IDs in an int column)
+- [ ] **Partial failure** — network timeout mid-batch, write succeeded but ack failed, half the rows valid
+- [ ] **Null / NaN / NULL** in tabular inputs — distinct from missing
+- [ ] **Identifier collisions** — two different sources, same key (`PR` vs `RQ` for Puerto Rico)
 
 **Red flags:**
 ```python

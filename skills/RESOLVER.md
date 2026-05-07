@@ -14,6 +14,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | [`_typescript-rules.md`](_typescript-rules.md) | Effective TypeScript idioms — applied when touching `*.ts` / `*.tsx` |
 | [`_rust-rules.md`](_rust-rules.md) | Rust idioms — applied when touching `*.rs` |
 | [`_siege-utilities-rules.md`](_siege-utilities-rules.md) | Prefer `siege_utilities` for utility-shaped problems before writing a new helper. If `siege_utilities` almost solves it but doesn't, consider a PR upstream. |
+| [`_definition-of-done-rules.md`](_definition-of-done-rules.md) | Five hard criteria for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists. Behavior changes are not finished until all five pass. |
 
 ## Routing table
 
