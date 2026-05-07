@@ -34,7 +34,7 @@ Not all sub-skills exist yet. If a routing table entry points to a file that doe
 3. **Specificity wins.** When a framework sub-skill and the general language sub-skill conflict, the framework sub-skill takes precedence.
 4. **Reference files load on demand.** Each sub-skill may have a `reference.md`. Load it only when the sub-skill directs you to consult it for the current task.
 5. **Conventions always apply.** Every skill that writes a commit reads `_output-rules.md` first (at skills root).
-6. **Tests and docs ship with code.** Regardless of language, every PR that changes code also ships tests for the change and updates user-facing documentation (README, docs tree, CHANGELOG, or module guide) when public behavior changes. No "tests coming later" and no "docs coming later" PRs. See the language-specific sub-skill for format conventions.
+6. **Tests and docs ship with code.** Regardless of language, every PR that changes code also ships tests for the change and updates user-facing documentation (README, docs tree, CHANGELOG, or module guide) when public behavior changes. No "tests coming later" and no "docs coming later" PRs. See the language-specific sub-skill for format conventions and [`_definition-of-done-rules.md`](../_definition-of-done-rules.md) for the full done criteria.
 
 ## Gotchas
 
