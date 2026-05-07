@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+(no changes pending)
+
+## [1.0.0] — 2026-05-07
+
+Major release. Decouples skill identity from filesystem layout; one source serves Claude Code (resolver hook) and Craft Agent (slash-command pane) via a build step.
+
 ### Added — Dual-layout build (slug-token references)
 
 Decouples skill identity (slug) from filesystem layout. Cross-references between skills now use `[skill:<slug>]` and `[rule:<slug>]` tokens; the build expands them to layout-appropriate paths.
@@ -219,7 +225,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` — DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.0.0
 [0.3.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v0.3.0
 [0.2.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v0.2.0
 [0.1.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v0.1.0
