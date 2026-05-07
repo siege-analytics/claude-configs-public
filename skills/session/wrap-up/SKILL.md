@@ -11,6 +11,18 @@ allowed-tools: Read Grep Glob Bash Edit Write
 
 When wrapping up a session, complete these steps in order:
 
+### 0. Definition of Done verification
+
+Before any commit/cleanup, verify all five criteria from [`_definition-of-done-rules.md`](../../_definition-of-done-rules.md) for the session's work:
+
+- [ ] **(a) Code-reviewed** — every behavior change reviewed (CodeRabbit on PR; self-review of diffs; human review where required)
+- [ ] **(b) Edge cases explored** — checklist applied to every behavior change
+- [ ] **(c) Tests written** — every behavior change has tests
+- [ ] **(d) Ticket updated** — status, comments, links current
+- [ ] **(e) Work has a ticket** — no orphan commits
+
+This step does not block — it surfaces what's incomplete. If any criterion fails, log the gap explicitly in the wrap-up notes (Step 6 below) so the next session has a starting point. Don't quietly close the session over an incomplete change; the wrap-up note is the audit trail.
+
 ### 1. Commit and Deploy
 - Check `git status` in all modified repositories
 - Commit any uncommitted changes with descriptive messages
