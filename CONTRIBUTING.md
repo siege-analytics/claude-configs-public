@@ -166,6 +166,35 @@ You can also use the Craft Agent skill validator:
 mcp__session__skill_validate(skillSlug="<slug>")
 ```
 
+## How rules get promoted into this repo
+
+The `_*-rules.md` files at `skills/_*-rules.md` are **Tier 3** of a three-tier rules pipeline. Rules don't get added here based on opinion — they get promoted from evidence accumulated in downstream consumer repos.
+
+| Tier | Lives in | Owned by | Promotion gate |
+|---|---|---|---|
+| 1 — Ledger | `<consumer-repo>/LESSONS.md` | `[skill:lessons-learned]` | recurrence ≥ 3, or 1 production incident, or Critical-severity → Tier 2 |
+| 2 — Project rules | `<consumer-repo>/.claude/rules/<topic>.md` | `[skill:distill-lessons]` | appears in 2+ projects, or is language/framework-level → Tier 3 |
+| **3 — Org rules (this repo)** | `claude-configs-public/skills/_<topic>-rules.md` | **Human PR with cited evidence** | (top of pipeline) |
+
+`[skill:rules-audit]` runs the cross-tier hygiene pass that surfaces Tier-3 promotion candidates.
+
+### Opening a Tier 3 PR
+
+When you propose adding or amending a rule in any `_*-rules.md` file, the PR description must:
+
+1. **Cite at least two Tier-2 projects** that have independently arrived at the same rule (link to `.claude/rules/<topic>.md` in each).
+2. **OR** cite a single Tier-2 project plus a justification for why the rule is language/framework-level (and therefore broadly applicable beyond that one project).
+3. **List the originating Tier-1 evidence** — link to the `LESSONS.md` entries that fed each Tier-2 rule. Reviewers should be able to trace every clause back to a real incident, comment, or code-review finding.
+4. **Pass the conflict gate** — confirm the new rule does not contradict an existing rule in the same file. If it does, the PR amends or retires the conflicting rule in the same change.
+
+PRs that propose new rules without cited evidence will be asked to either gather evidence first (open a Tier-1/Tier-2 PR in the relevant consumer repo) or downgrade to a discussion issue.
+
+### Why this discipline
+
+The rules in `_*-rules.md` get loaded into every session that uses this repo. Adding a rule based on opinion means every reviewer in every project pays the cost of a rule that may not actually solve a recurring problem. Requiring evidence keeps the rules earning their slot.
+
+The reverse pipeline (Tier 3 → Tier 2 → Tier 1) doesn't exist by design: org-wide rules don't flow downstream as new evidence; they apply uniformly. Evidence flows up; rules apply down.
+
 ## Definition of Done
 
 This repo's own contributions are subject to the [Definition of Done](skills/_definition-of-done-rules.md) it ships:

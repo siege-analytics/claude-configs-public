@@ -44,6 +44,14 @@ Update or create ROADMAP.md with next steps:
 - Prioritize remaining work
 - Note any blockers or dependencies
 
+### 3.5. Check rules-audit cadence
+
+Read the `**Last audit:**` line in `<repo>/LESSONS.md`. If the date is more than **60 days** ago (or the file is missing the line entirely), print a single-line nudge:
+
+> Heads up: rules-audit hasn't run in N days. Consider `/rules-audit` before the next session.
+
+This is **not a blocker** — the user decides whether to run [skill:rules-audit]. The nudge just ensures the question gets asked.
+
 ### 4. Sweep for lessons-learned entries
 
 Before updating CLAUDE.md, sweep the session for findings worth logging in the project's `LESSONS.md` ledger (Tier 1 of the rules pipeline). Ask:
@@ -110,6 +118,7 @@ If this session changed architecture, data models, pipeline structure, or system
 - [ ] Builds/deploys triggered and healthy
 - [ ] README.md updated with current state
 - [ ] ROADMAP.md updated with next steps
+- [ ] Checked rules-audit cadence — nudged user if last audit >60 days ago
 - [ ] LESSONS.md ledger updated for any recurring patterns surfaced this session (via [skill:lessons-learned])
 - [ ] CLAUDE.md updated with session-scoped notes (durable patterns went to LESSONS.md, not here)
 - [ ] Notion updated if architecture, models, or capabilities changed
