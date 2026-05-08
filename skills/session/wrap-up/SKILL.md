@@ -1,6 +1,6 @@
 ---
 name: wrap-up
-description: End-of-session cleanup that commits changes, updates README/ROADMAP/CLAUDE.md with lessons learned. Use when finishing work.
+description: End-of-session cleanup that commits changes, sweeps for LESSONS.md ledger entries, and updates README/ROADMAP/CLAUDE.md. Use when finishing work.
 disable-model-invocation: true
 allowed-tools: Read Grep Glob Bash Edit Write
 ---
@@ -44,14 +44,31 @@ Update or create ROADMAP.md with next steps:
 - Prioritize remaining work
 - Note any blockers or dependencies
 
-### 4. Update CLAUDE.md
-Add a "Lessons Learned" or "Notes" section documenting:
-- Mistakes made during the session
-- How to do things correctly in future sessions
-- Gotchas or non-obvious behaviors discovered
-- Useful commands or patterns that worked well
+### 4. Sweep for lessons-learned entries
 
-### 5. Update Notion Knowledge Base (if architecture changed)
+Before updating CLAUDE.md, sweep the session for findings worth logging in the project's `LESSONS.md` ledger (Tier 1 of the rules pipeline). Ask:
+
+- Did any code-review finding repeat from a prior session?
+- Did any CodeRabbit thread map to a recurring pattern?
+- Did any human reviewer comment flag "we keep getting this"?
+- Did any production incident or near-miss happen during the session?
+
+For each pattern that qualifies, invoke [skill:lessons-learned] to append or bump the entry. Threshold guidance:
+
+- Critical (security, data loss): log at recurrence 1
+- Production incident: log at recurrence 1
+- Recurring style/correctness pattern: log at recurrence 2+
+- One-off bug with no pattern: skip — the commit + ticket are sufficient
+
+### 5. Update CLAUDE.md
+Use CLAUDE.md for **session-scoped** notes that don't belong in the durable Tier-1 ledger:
+- Workflow gotchas specific to this session's environment
+- Useful one-liners or commands discovered
+- Context for the next session ("currently blocked on X", "left in state Y")
+
+Durable, recurring patterns belong in `LESSONS.md` (step 4 above), not CLAUDE.md.
+
+### 6. Update Notion Knowledge Base (if architecture changed)
 
 If this session changed architecture, data models, pipeline structure, or system capabilities:
 - Run affected Notion sync jobs: `python -m sync.run roadmap dashboard automated_skills`
@@ -93,6 +110,7 @@ If this session changed architecture, data models, pipeline structure, or system
 - [ ] Builds/deploys triggered and healthy
 - [ ] README.md updated with current state
 - [ ] ROADMAP.md updated with next steps
-- [ ] CLAUDE.md updated with lessons learned
+- [ ] LESSONS.md ledger updated for any recurring patterns surfaced this session (via [skill:lessons-learned])
+- [ ] CLAUDE.md updated with session-scoped notes (durable patterns went to LESSONS.md, not here)
 - [ ] Notion updated if architecture, models, or capabilities changed
 - [ ] Architecture Update page created if significant changes were made
