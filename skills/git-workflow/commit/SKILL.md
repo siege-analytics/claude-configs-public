@@ -23,12 +23,16 @@ allowed-tools: Read Grep Glob Bash
    2. Separate unrelated changes into distinct commits
    3. Stage specific files by name -- avoid `git add -A` or `git add .` which can accidentally include secrets, build artifacts, or large binaries
    4. Never commit `.env`, credentials, tokens, or other sensitive files
-3. **Check for a ticket reference** (see Ticket enforcement below)
+3. **Run code review on the staged diff** (see Pre-review gate below)
+   1. Invoke [skill:code-review] against `git diff --cached`
+   2. Resolve every Blocker; resolve Majors or document why they're being deferred
+   3. If the user explicitly overrides, mark the commit with `[review-skip]`
+4. **Check for a ticket reference** (see Ticket enforcement below)
    1. If no ticket exists for this work, stop and create one first
    2. If the user explicitly overrides, mark the commit with `[no-ticket]`
-4. Write the commit message (see Message structure below)
-5. **Verify ticket reference is in the footer**
-6. Verify after committing
+5. Write the commit message (see Message structure below)
+6. **Verify ticket reference is in the footer**
+7. Verify after committing
    1. Run `git log -1` to confirm the message looks correct
    2. Run `git status` to confirm nothing was missed or accidentally included
 
@@ -41,6 +45,53 @@ A commit is a unit of meaning, not a unit of time. Each commit should represent 
 **Commit the why, not the what.** The diff shows what changed. The message explains why it changed. Code that is obvious from the diff does not need narration. Decisions, tradeoffs, and constraints do.
 
 **Commit often.** Small, frequent commits are easier to review, bisect, and revert than large, infrequent ones. When in doubt, commit more granularly.
+
+# Pre-review gate
+
+**Every commit gets a code-review pass before it lands.** This is the operationalization of criterion (a) of [rule:definition-of-done] at the pre-commit transition — not just at PR-open.
+
+## What runs
+
+After staging and before writing the message, invoke [skill:code-review] with the staged diff as input:
+
+```bash
+git diff --cached
+```
+
+The code-review skill walks its standard six layers (correctness, security, data integrity, performance, error handling, readability) and reports findings with severity.
+
+## Decision tree
+
+```
+Code-review finished?
+├── No Blockers, no unresolved Majors? → Proceed to ticket check
+├── Blockers exist? → STOP. Fix and re-stage. Do not commit.
+├── Majors exist?
+│   ├── Fix in this commit? → Re-stage, re-review
+│   ├── Defer to a follow-up ticket? → Create the ticket NOW, link in commit body, then commit
+│   └── User explicitly overrides? → Add [review-skip] to commit body with rationale
+└── Only Minors / Nits? → Proceed; address inline in the same commit if cheap
+```
+
+## Override syntax
+
+Override is for cases where the review surfaced a real finding but the right place to fix it is somewhere else (different commit, different repo, different sprint) — not for skipping the review itself. The review still runs; the override only acknowledges deferred Majors.
+
+```
+[review-skip] Performance finding in legacy module deferred to ELE-512 — out of scope for this commit.
+```
+
+If you find yourself reaching for `[review-skip]` more than once a week, the threshold is wrong somewhere — either the review is flagging too aggressively, or the work is being scoped too broadly. Surface it in retrospective rather than normalizing the override.
+
+## Why pre-commit, not just pre-PR
+
+Catching findings at commit time is cheaper than catching them at PR time:
+- The change is fresh in your head — context-switch cost is zero.
+- The diff is small — one commit's worth of code, not a PR's worth.
+- No collaborators are blocked — no one is waiting on the PR.
+- Findings turn into the next commit instead of a force-push.
+
+The pre-PR review (in [skill:create-pr]) still runs — it's a second pass over the cumulative diff and catches things that only emerge across multiple commits (architectural drift, accidental scope creep). The two reviews are complementary, not redundant.
 
 # Ticket enforcement
 
@@ -289,6 +340,7 @@ If it was already committed, remove it from history and rotate the credential im
 - [ ] Changes are grouped into logical, single-purpose commits
 - [ ] Files are staged by name, not with `git add -A`
 - [ ] No sensitive files (secrets, credentials, keys) are staged
+- [ ] **[skill:code-review] ran on the staged diff** — Blockers resolved, Majors addressed or deferred-with-ticket, or `[review-skip]` documented in commit body
 - [ ] Subject line: type prefix, imperative mood, under 72 chars, specific
 - [ ] Body explains the why (if the change is non-trivial)
 - [ ] **Footer references the relevant ticket(s)** — mandatory unless user overrides with `[no-ticket]`

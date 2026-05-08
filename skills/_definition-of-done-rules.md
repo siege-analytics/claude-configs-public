@@ -10,9 +10,9 @@ Code is not finished until **all five** of the following are true. This is a gat
 
 ### a. Code-reviewed
 
-Every behavior change goes through code review before merge. CodeRabbit / agent review counts as one pass; a human review is required for non-trivial changes.
+Every behavior change goes through code review at **two transitions**: pre-commit (against the staged diff, by [skill:code-review]) and pre-merge (against the cumulative PR diff, by CodeRabbit + human reviewer for non-trivial changes). The pre-commit pass catches findings while context is fresh and the diff is small; the pre-merge pass catches findings that only emerge across multiple commits.
 
-**Operationalized by:** [skill:code-review] (slash-invokable as `/code-review`).
+**Operationalized by:** [skill:code-review] (slash-invokable as `/code-review`); [skill:commit] step 3 (pre-commit gate); [skill:create-pr] (pre-PR cumulative review).
 
 ### b. Edge cases explored
 
@@ -70,7 +70,7 @@ If you find yourself coding without a ticket, stop and write one (or invoke [ski
 
 | Transition | Done check |
 |---|---|
-| Pre-commit | Tests added/updated; docstrings on new public APIs; commit message references the ticket |
+| Pre-commit | [skill:code-review] runs on the staged diff (Blockers resolved, Majors fixed-or-deferred); tests added/updated; docstrings on new public APIs; commit message references the ticket |
 | Pre-PR | All five criteria; PR description summarizes scope, links the ticket, lists what was tested |
 | Pre-merge | CodeRabbit + GitGuardian + (when relevant) human review pass; ticket is In Review status |
 | Session-end | All five criteria across all changes in the session; ticket status reflects current state; no orphan commits without ticket links |
