@@ -22,6 +22,18 @@ The Siege-specific catches below (catalog bypass, NULL drops, partition skew) st
 
 When reviewing a pull request, a diff, or code written during a session. Apply this methodology systematically — don't rely on skimming to catch issues.
 
+## Project-local rules (load first)
+
+Before applying the generic checklist below, load any **project-local Tier-2 rules**:
+
+```bash
+ls .claude/rules/*.md 2>/dev/null
+```
+
+If `.claude/rules/<topic>.md` files exist, read each one and treat its rules as a project-specific checklist appended to the generic layers below. These rules were promoted from the project's `LESSONS.md` ledger by [skill:distill-lessons] — they encode patterns this codebase has actually been bitten by, so they take priority over generic guidance when they apply.
+
+If the review surfaces a finding that maps to a recurring pattern *not* yet in the ledger, log it via [skill:lessons-learned] before closing the review. That's how the loop closes.
+
 ## Review Order
 
 Review in this order. Stop at each layer before proceeding — a correctness bug matters more than a style nit.
@@ -243,6 +255,7 @@ arbitrary SQL by submitting `'; DROP TABLE donors; --` as the search term.
 
 Before approving:
 
+- [ ] Loaded any project-local rules from `.claude/rules/*.md` and applied them
 - [ ] Read every line of the diff (not just the files you know)
 - [ ] Check that tests exist for new behavior and pass
 - [ ] Check that tests test the *right thing* (not just that they pass)
@@ -250,6 +263,7 @@ Before approving:
 - [ ] Verify no `TODO` or `FIXME` without a linked issue
 - [ ] Run the code locally if the change is non-trivial
 - [ ] Check for unintended changes (auto-formatted files, lock file churn, moved files)
+- [ ] Logged any recurring finding to `LESSONS.md` via [skill:lessons-learned]
 
 ### When to Approve vs. Request Changes
 
