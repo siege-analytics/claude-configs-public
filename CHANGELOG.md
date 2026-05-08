@@ -6,6 +6,48 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [1.1.0] — 2026-05-08
+
+Adds the lessons-learned rules pipeline: a three-tier system that turns recurring code-review findings, CodeRabbit threads, and incident lessons into durable, evidence-backed rules. Also tightens the Definition of Done by running code-review at commit time, not just at PR-open.
+
+### Added — Pre-commit code-review gate (#29)
+
+Operationalizes Definition of Done criterion (a) at the pre-commit transition. Every commit invokes `[skill:code-review]` against the staged diff. Blockers stop the commit; Majors must be fixed in the same commit or deferred to a follow-up ticket. A `[review-skip]` override exists for documented exceptions, mirroring `[no-ticket]` and `[direct-commit]`.
+
+The pre-PR review (in `[skill:create-pr]`) still runs as a second pass over the cumulative diff. The two reviews are complementary: pre-commit catches findings while context is fresh; pre-PR catches drift across multiple commits.
+
+- `skills/git-workflow/commit/SKILL.md` — new step 3 + Pre-review gate section + checklist row
+- `skills/_definition-of-done-rules.md` — criterion (a) names both transitions; transitions table updated
+
+### Added — Lessons-learned rules pipeline (#31, #33)
+
+Three-tier system for capturing, distilling, and curating durable rules:
+
+| Tier | Lives in | Owned by | Promotion gate |
+|---|---|---|---|
+| 1 — Ledger | `<repo>/LESSONS.md` | `[skill:lessons-learned]` | recurrence ≥ 3, or 1 production incident, or Critical-severity → Tier 2 |
+| 2 — Project rules | `<repo>/.claude/rules/<topic>.md` | `[skill:distill-lessons]` | appears in 2+ projects, or is language/framework-level → Tier 3 |
+| 3 — Org rules (this repo) | `claude-configs-public/skills/_*-rules.md` | Human PR with cited evidence | (top of pipeline) |
+
+**New skills:**
+- `skills/meta/lessons-learned/` (+ `template/LESSONS.md`) — Tier-1 capture. Three discipline rules: every entry has a link, rules-not-advice, recurrence counter not duplicates.
+- `skills/meta/distill-lessons/` — Tier-1 → Tier-2 promotion. One rule at a time, with a conflict gate (refuses to write a contradictory rule) and human wording confirmation.
+- `skills/meta/rules-audit/` — cross-tier hygiene pass. Four phases: Tier-1 hygiene, Tier-2 hygiene, cross-tier (Tier-2 → Tier-3 candidates, conflicts with newer evidence, stale upstream rules), coverage. Surface-only, never auto-acts.
+
+**Integration:**
+- `skills/coding/code-review/SKILL.md` — loads project `.claude/rules/*.md` at the start of every review; logs recurring findings via `[skill:lessons-learned]` at the end.
+- `skills/session/coderabbit-response/SKILL.md` — new step 8: feed the ledger for recurring CR findings.
+- `skills/session/pr-comments/SKILL.md` — new workflow step: feed the ledger for recurring human-reviewer flags.
+- `skills/session/wrap-up/SKILL.md` — sweeps for ledger entries before the CLAUDE.md update; checks rules-audit cadence and nudges (non-blocking) if >60 days since last audit; clarifies CLAUDE.md = session-scoped, LESSONS.md = durable.
+
+### Added — Tier-3 PR requirements documented (#33)
+
+`CONTRIBUTING.md` now has a "How rules get promoted into this repo" section. Adding or amending a rule in any `_*-rules.md` requires citing ≥2 Tier-2 projects (or 1 + language/framework justification), listing the originating Tier-1 evidence, and passing the conflict gate. PRs without cited evidence are asked to gather evidence first or downgrade to discussion issues.
+
+### No breaking changes
+
+All additions and additive integrations. Existing skills retain their behavior; new behavior is opt-in via the new skills. Downstream consumers can pin to `v1.1.0-nested` or `v1.1.0-flat` once published.
+
 ## [1.0.0] — 2026-05-07
 
 Major release. Decouples skill identity from filesystem layout; one source serves Claude Code (resolver hook) and Craft Agent (slash-command pane) via a build step.
@@ -225,7 +267,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` — DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.1.0
 [1.0.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.0.0
 [0.3.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v0.3.0
 [0.2.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v0.2.0
