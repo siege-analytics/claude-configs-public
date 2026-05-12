@@ -6,6 +6,35 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [1.2.0] — 2026-05-12
+
+Adds the `verify-before-execute` always-on rule: every side-effecting action must be preceded by a visible verification block grounded in same-turn evidence. Addresses the recurring observation that agents take actions without first investigating the actual state.
+
+### Added — `_verify-before-execute-rules.md` (#35)
+
+New always-on rule that requires a visible verification block before any `Write`, `Edit`, `NotebookEdit`, side-effecting `Bash`, commit, push, delete, or deploy:
+
+```
+**Verify-before-execute**
+- **Standards:** <which rules/skills/checklists apply>
+- **Intent:** <one sentence linking goal to this specific change>
+- **Evidence:** <for corrections only — observed failure + same-turn tool call>
+```
+
+The strongest constraint: for corrections, the Evidence line must reference a tool call from the **same response**, not a prior turn or memory. Files change between turns; treating prior-turn knowledge as current-turn evidence is the primary failure mode this rule addresses.
+
+The block is mandatory. The single override is `[verify-skip: <reason>]` and is itself a flag for retrospective review.
+
+The rule includes worked examples (correction with same-turn evidence, feature with omitted Evidence line, trivial action with override) and an anti-pattern catalog covering "editing a file without reading," "claiming a test passes without running it," "retrying a failed command in hope," and "treating prior-turn reads as current evidence."
+
+### Changed — commit skill wires the rule (#35)
+
+`skills/git-workflow/commit/SKILL.md` adds step 0 (verify-before-execute block before any other check) and a checklist row. Other skills (code-review, create-pr) intentionally not wired yet — observe whether the commit-skill wiring catches the failure mode in practice before broadening.
+
+### No breaking changes
+
+Additive only. Existing skills retain their behavior; the new rule loads always-on but is enforced by judgment (no CI/lint check on block format yet — kept as a possible follow-up if the discipline doesn't hold).
+
 ## [1.1.0] — 2026-05-08
 
 Adds the lessons-learned rules pipeline: a three-tier system that turns recurring code-review findings, CodeRabbit threads, and incident lessons into durable, evidence-backed rules. Also tightens the Definition of Done by running code-review at commit time, not just at PR-open.
@@ -267,7 +296,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` — DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.2.0
 [1.1.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.1.0
 [1.0.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.0.0
 [0.3.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v0.3.0
