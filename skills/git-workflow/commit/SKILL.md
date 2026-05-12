@@ -7,7 +7,9 @@ allowed-tools: Read Grep Glob Bash
 
 # Instructions
 
-0. **Branch guard — verify you are NOT on a protected branch**
+0. **Verify-before-execute** — emit the verification block from [rule:verify-before-execute] for the commit you are about to make. The Standards line must include `[skill:commit]` and the relevant project/language rules; the Intent line must summarize what the commit accomplishes; the Evidence line (if this is a fix) must reference same-turn tool calls demonstrating the bug. Skipping requires `[verify-skip: <reason>]` — and `[verify-skip]` does NOT exempt the commit from any later step in this skill.
+
+0.5. **Branch guard — verify you are NOT on a protected branch**
    1. Run `git branch --show-current` to get the current branch name
    2. If the branch is `main`, `master`, `develop`, `dev`, `development`, `staging`, `next`, or `integration` → **STOP**
    3. Inform the user: "You are on `{branch}`. Commits should go on a feature branch, not directly on a protected branch."
@@ -336,6 +338,7 @@ If it was already committed, remove it from history and rotate the credential im
 
 # Checklist
 
+- [ ] **[rule:verify-before-execute] block emitted** — Standards, Intent, and (for fixes) same-turn Evidence
 - [ ] **Not on a protected branch** (main, develop, etc.) — or user explicitly overrode with `[direct-commit]`
 - [ ] Changes are grouped into logical, single-purpose commits
 - [ ] Files are staged by name, not with `git add -A`
