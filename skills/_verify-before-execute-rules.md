@@ -15,6 +15,7 @@ The block is mandatory. It is not a private check. It is an artifact the user ca
 - **Standards:** <which rules/skills/checklists apply to this action>
 - **Intent:** <one sentence linking the goal to this specific change>
 - **Evidence:** <for corrections only — the observed failure and the same-turn tool call that demonstrated it>
+- **Design:** <for non-trivial actions — reference to the same-conversation [skill:think] workflow that produced the design this action implements>
 ```
 
 ### Standards
@@ -52,6 +53,42 @@ Unacceptable evidence:
 
 If the action is not a correction (it's a feature, a refactor, a new file, scaffolding), omit the Evidence line.
 
+### Design (non-trivial actions only)
+
+Non-trivial actions require a same-conversation `[skill:think]` workflow before the verification block. The Design line names where in this conversation the think workflow happened (turn, message, or summary), so the Standards/Intent answers can be traced back to a structured design rather than a snap judgment.
+
+**An action is non-trivial if any of these fire — they are exactly the triggers from `[skill:think]`'s "When This Skill Applies" section:**
+
+- Adding a new feature or capability
+- Refactoring existing code
+- Making architectural decisions
+- Changing data models or schemas
+- Touching more than 3 files
+- The approach is not obvious
+
+**The action is trivial (Design line omitted) if:**
+
+- It is a single-line fix (typo, obvious one-line bug)
+- The user gave detailed, specific, step-by-step instructions in the immediately preceding turns
+- It is a documentation-only edit, a git operation, a non-code task
+- It is one of the trivial actions that already qualify for `[verify-skip]` (see Skipping the block)
+
+This carve-out matches `[skill:think]`'s own exemption list deliberately. Where think exempts, verify exempts.
+
+**What "reference the think workflow" looks like:**
+
+- "Design: think workflow completed in this conversation at the message proposing options A/B/C; user selected B." — for sessions where think ran explicitly.
+- "Design: think workflow ran via extended thinking before this response; key decisions: <one or two bullets>." — when extended thinking was used in lieu of an explicit `/think` invocation.
+- "Design: per the multi-turn design discussion above, settling on approach <X> for reasons <Y>." — when the conversation itself was the think workflow and approval was given inline.
+
+**What does NOT satisfy the Design requirement:**
+
+- "I thought about it." — invisible thinking is not a design.
+- "It's the obvious approach." — if the approach is obvious, the action is trivial and the Design line is omitted; if it's not obvious, the obviousness claim is itself the failure mode.
+- A reference to a prior conversation or session. Same-conversation, like Evidence's same-response constraint, exists because designs go stale across conversation boundaries.
+
+If a non-trivial action lacks a Design line, the action stops. Run `[skill:think]` (or extended thinking) first; then return to the verification block with the Design line filled in.
+
 ## Skipping the block
 
 The verification block has exactly one override:
@@ -75,10 +112,12 @@ Use cases for the override are narrow:
 - **Trusting a memory or a prior conversation summary about file contents instead of re-reading the file.** Memories drift; files change between turns.
 - **Treating a tool call from a prior turn as evidence for an action in this turn.** Same-turn evidence is the bar. The reason is that anything older may have been invalidated by intervening actions you didn't notice.
 - **Producing a verification block that doesn't actually map to the action.** The block must reference the specific change, not a generic disclaimer. "Standards: follows project conventions" is not standards; "Standards: `[rule:python]` (no bare excepts), `[skill:commit]` checklist" is.
+- **Skipping the Design line on a non-trivial action with "it's straightforward."** If you can name a way it could go wrong, it's not straightforward — run think. If the user asks "have you thought about X?" and you have to start thinking about X *now*, you skipped the Design step.
+- **Treating a prior session's design as the Design line for this conversation.** Designs go stale. The think workflow must have happened in this conversation.
 
 ## Worked examples
 
-### Example 1 — Editing a file (correction)
+### Example 1 — Editing a file (correction, single-line fix, no Design line)
 
 > User: "The committee_id parsing is dropping the leading zero again."
 >
@@ -89,14 +128,15 @@ Use cases for the override are narrow:
 > - **Intent:** Cast committee_id to str before parsing so leading zeros survive the bronze→silver transform.
 > - **Evidence:** `Read` of `transforms/silver.py:48` (in this response) shows `committee_id = int(row["committee_id"])`; `Bash` of `pytest tests/test_silver.py::test_zero_padded_committee_id -x` (in this response) shows `assert "C00000547" == "C547"` failing on line 22.
 > ```
-> [proceeds with Edit]
+> [proceeds with Edit — single-line fix, qualifies for think exemption]
 
-### Example 2 — Writing a new file (feature, no Evidence line)
+### Example 2 — Writing a new file (feature, no Evidence line, Design required)
 
 > ```
 > **Verify-before-execute**
 > - **Standards:** `[skill:skillbuilder]` (frontmatter spec), `[rule:output]` (no AI attribution)
 > - **Intent:** Scaffold the new `lessons-learned` skill at `skills/meta/lessons-learned/SKILL.md` per the design we agreed in this conversation.
+> - **Design:** think workflow ran across the multi-turn discussion above; user selected the three-tier pipeline (Tier-1 ledger → Tier-2 project rules → Tier-3 org rules) and approved staging across PRs B, then C, then D.
 > ```
 > [proceeds with Write]
 
@@ -112,9 +152,10 @@ Use cases for the override are narrow:
 
 ## Relationship to other rules
 
+- **`[skill:think]`** is the design gate that runs *before* verify-before-execute on non-trivial actions. Where think exempts (single-line fixes, step-by-step user instructions, doc-only edits, git ops), the Design line is omitted from the verify block. Where think fires, the Design line names where in this conversation think happened. The two are paired: think produces the design; verify references it.
 - **`[rule:definition-of-done]`** is the post-hoc gate ("is this finished?"). Verify-before-execute is the pre-hoc gate ("should I take this action?"). Different cadence; both apply.
 - **`[skill:code-review]`** operates on a diff after it exists. Verify-before-execute operates on the intent before the diff exists. Both apply to the same change at different points.
-- **`[skill:commit]`** invokes verify-before-execute as part of its step 0.5 (before staging review). The rule is broader than commits; the commit skill is one consumer.
+- **`[skill:commit]`** invokes verify-before-execute as part of its step 0 (before any other check). The rule is broader than commits; the commit skill is one consumer.
 - **`[rule:output]`** governs the *content* of what you write to commits/PRs/comments. Verify-before-execute governs whether you should be writing it at all.
 
 ## Why this rule exists
