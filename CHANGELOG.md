@@ -6,6 +6,24 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [1.2.1] — 2026-05-12
+
+Tightens `[rule:verify-before-execute]` by requiring a same-conversation `[skill:think]` reference for non-trivial actions.
+
+### Changed — verify block requires Design line for non-trivial actions (#37)
+
+The verification block gains a fourth line:
+
+```
+- **Design:** <for non-trivial actions — same-conversation [skill:think] reference>
+```
+
+Triggers and exemptions are quoted from `[skill:think]`'s "When This Skill Applies" section verbatim — same triggers (new feature, refactor, architecture change, schema change, >3 files, non-obvious approach) and same exemptions (single-line fix, step-by-step user instructions, doc-only edit, git op). Cross-referencing rather than paraphrasing prevents drift.
+
+The constraint is "same-conversation," mirroring Evidence's "same-response." Designs go stale across conversation boundaries — a design from a prior session does not satisfy the Design line.
+
+Worked examples updated; two anti-patterns added (skipping Design with "it's straightforward"; treating a prior session's design as current). Relationship-to-other-rules section pairs think with verify explicitly.
+
 ## [1.2.0] — 2026-05-12
 
 Adds the `verify-before-execute` always-on rule: every side-effecting action must be preceded by a visible verification block grounded in same-turn evidence. Addresses the recurring observation that agents take actions without first investigating the actual state.
@@ -296,7 +314,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` — DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.2.1
 [1.2.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.2.0
 [1.1.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.1.0
 [1.0.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.0.0
