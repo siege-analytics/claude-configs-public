@@ -29,6 +29,13 @@ jobs:
     needs: validate
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
+    # Serialize publish runs so back-to-back triggers (e.g. a `git push origin main`
+    # immediately followed by `git push origin vX.Y.Z`) queue instead of racing.
+    # Both runs need to push to release/nested + release/flat; concurrent --force
+    # pushes lose the race with `cannot lock ref ... is at X but expected Y`.
+    concurrency:
+      group: publish-release-branches
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
