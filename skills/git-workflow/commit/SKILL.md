@@ -134,7 +134,7 @@ The `{stem}` template variable substitutes the basename without extension. Use t
 
 If a touched source file has no candidate tests under the heuristic (or the configured mapping), the agent must decide:
 
-- Write a test in the same commit (preferred; rule 7 requires it for behaviour changes anyway).
+- Write a test in the same commit (preferred; `[rule:writing-tests]` writing-tests:1 requires it for behaviour changes anyway).
 - Override with `[run-skip: <reason>]` in the commit body. Legitimate cases: pure refactor with no behaviour change, deletion of dead code, docstring-only edits to a public symbol that should also be running R-17.
 
 A missing test file is not a silent pass. The agent must surface it and the operator sees the `[run-skip]` if one is used.
@@ -149,7 +149,7 @@ Using `[run-skip]` more than once per session is a smell. The threshold is wrong
 
 ## Why this exists
 
-Rule 12 requires that code depending on a library, service, or external API exercises the real dependency before claiming the code works. The honor-system version of that rule is "I checked." The mechanical version is "the tests ran and passed in the same commit-attempt." This gate is the mechanical version.
+`[rule:writing-code]` writing-code:5 requires that code depending on a library, service, or external API exercises the real dependency before claiming the code works. The honor-system version of that rule is "I checked." The mechanical version is "the tests ran and passed in the same commit-attempt." This gate is the mechanical version.
 
 # Ticket enforcement
 
