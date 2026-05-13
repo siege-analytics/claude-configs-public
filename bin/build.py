@@ -252,6 +252,14 @@ def build_layout(layout: str, skills_src: dict[str, Path], rules_src: dict[str, 
     if template.exists():
         write_resolved(template, out_root / "RESOLVER.md", layout, skill_out_paths, rule_out_paths, Path("RESOLVER.md"))
 
+    # Copy entry-point and matrix files at skills/ root (added v2.0.0; not matched by _*-rules.md pattern).
+    # RULES.md is the human-facing entry point; _coverage.md is the queryable failure-mode matrix.
+    # Both go through token resolution since they reference [skill:X] and [rule:X] tokens.
+    for fname in ("RULES.md", "_coverage.md"):
+        src = SOURCE_SKILLS / fname
+        if src.exists():
+            write_resolved(src, out_root / fname, layout, skill_out_paths, rule_out_paths, Path(fname))
+
     # Copy top-level repo files
     for fname in ROOT_FILES:
         src = REPO_ROOT / fname
