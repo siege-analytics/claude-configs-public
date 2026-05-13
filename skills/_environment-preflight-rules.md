@@ -91,7 +91,7 @@ If skipping, say so in one sentence so the audit trail is explicit: "Skipping pr
 ## Cross-references
 
 - `[rule:verify-before-execute]` is the parent discipline. This rule extends it from "verify before code claims" to "verify before environment claims."
-- `[rule:no-ai-fingerprints]` rule 12 is the per-action application of this inventory: "you must have already verified the dependency is reachable in the target environment, and you must exercise the real dependency before claiming the code works." This rule establishes the baseline; rule 12 enforces it on every action.
+- `[rule:writing-code]` writing-code:5 is the per-action application of this inventory: "you must have already verified the dependency is reachable in the target environment, and you must exercise the real dependency before claiming the code works." This rule establishes the baseline; writing-code:5 enforces it on every action.
 - Per-repo memory entries (e.g. `reference_szsh_environment`) contain the canonical preflight result for projects already inventoried; if one is in scope, lean on it and skip step 3 onward.
 
 ## Attribution

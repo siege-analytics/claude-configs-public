@@ -57,7 +57,7 @@ If the action is not a correction (it's a feature, a refactor, a new file, scaff
 
 The same-turn evidence requirement covers factual claims made in chat to the operator, in PR bodies, in commit messages, and in agent-to-agent messages. Sending a message that says "all four engines call the validator" or "the loop is closed" or "no remaining occurrences" is itself a side-effecting action whose justification depends on a verifiable fact. The grep, the read, the test run that establishes the fact must be in the same response or the same tool sequence. A claim grounded in a prior turn's tool call is grounded in stale evidence.
 
-This is the explicit cross-rule clause for `[rule:no-ai-fingerprints]` rule 13 (countable claims must be preceded by the falsifying grep). Rule 13 names the specific failure mode (countable assertions); this clause is the underlying discipline that covers any factual claim, countable or not.
+This is the explicit cross-rule clause for `[rule:writing-claims]` writing-claims:2 (countable claims must be preceded by the falsifying grep) and writing-claims:3 (confidence calibration on unquantified completeness claims). Those rules name the specific failure modes; this clause is the underlying discipline that covers any factual claim, countable or not.
 
 State the evidence, then make the claim. The order matters because reversing it ("I'll claim it and then verify if pushed") is exactly the failure mode the rule is meant to prevent.
 

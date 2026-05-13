@@ -35,7 +35,7 @@ allowed-tools: Read Grep Glob Bash
    2. Per-repo override: if `.claude/affected-tests.toml` exists, use its source-glob to test-glob mapping instead of the default heuristic.
    3. 60-second timeout per affected-test run. Tests slower than that get marked `slow` and run at PR-open time only.
    4. Non-zero exit blocks the commit. No silent skip: if the heuristic finds no test files for a touched source file, that itself is reported and the agent decides whether to write a test or proceed with `[run-skip: <reason>]`.
-   5. Override syntax: `[run-skip: <reason>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per rule 12 escape hatch. Track override frequency; using it more than once per session is a smell.
+   5. Override syntax: `[run-skip: <reason>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per `[rule:writing-code]` writing-code:5 escape hatch. Track override frequency; using it more than once per session is a smell.
 5. **Check for a ticket reference** (see Ticket enforcement below)
    1. If no ticket exists for this work, stop and create one first
    2. If the user explicitly overrides, mark the commit with `[no-ticket]`
@@ -104,7 +104,7 @@ The pre-PR review (in [skill:create-pr]) still runs -- it's a second pass over t
 
 # Affected-tests gate
 
-Mechanical enforcement of `[rule:no-ai-fingerprints]` rule 12 (no hypothetical code). Before the commit lands, the tests that cover the touched code must be run and must pass.
+Mechanical enforcement of `[rule:writing-code]` writing-code:5 (no hypothetical code). Before the commit lands, the tests that cover the touched code must be run and must pass.
 
 ## What runs
 
@@ -267,8 +267,8 @@ Write a few sentences of plain prose covering whichever of these the change actu
 ### What to omit
 
 - Bullets and section headers. Bullets in commit bodies are a tell; the commit body is prose.
-- Self-justifying adverbs: "deliberately," "intentionally," "explicitly," "fundamentally," "essentially," "crucially," "notably." Per `[rule:no-ai-fingerprints]` rule 4.
-- Em-dashes (`--`). Use `--`, a comma, or a period. Per `[rule:no-ai-fingerprints]` rule 1.
+- Self-justifying adverbs (the seven words named in `[rule:writing-prose]` writing-prose:3); see that rule for the list.
+- Em-dashes (`--`). Use `--`, a comma, or a period. Per `[rule:writing-prose]` writing-prose:1.
 - Play-by-play of the diff ("Changed line 48 from int to str").
 - Filler ("This commit updates the code to...").
 - Attribution to tools or assistants (see Attribution policy below).

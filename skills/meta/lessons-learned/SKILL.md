@@ -17,6 +17,8 @@ This skill owns the **Tier 1** raw-observations layer of the rules pipeline. Fin
 | **2 — Project rules** | `<repo>/.claude/rules/<topic>.md` | [skill:distill-lessons] | appears in 2+ projects, or is language/framework-level → Tier 3 |
 | **3 — Org rules** | `claude-configs-public/skills/_*-rules.md` | Human PR with cited evidence | (top of pipeline) |
 
+Tier 3 files follow the per-act decomposition (`_writing-code-rules.md`, `_writing-tests-rules.md`, `_writing-claims-rules.md`, `_writing-releases-rules.md`, `_writing-prose-rules.md`). When a Tier-2 entry is ready for Tier-3 promotion, target the per-act file matching the failure-mode category. The legacy `_no-ai-fingerprints-rules.md` was the single Tier-3 file before v2.0.0; consult `_coverage.md` to confirm the current home for any pre-v2.0.0 reference.
+
 ## When to use
 
 Call this skill when a finding is **a recurring pattern**, not a one-off. Other skills invoke it as a final step:
