@@ -53,6 +53,8 @@ The session's concrete instance: `data/dataframe_engine.py` shipped a deprecatio
 
 This is the deprecation-message analogue of `[rule:writing-tests]` writing-tests:3 (skip messages name remediation): the runtime warning is the natural site to encode the commitment because that is where consumers see it. PR bodies and CHANGELOG entries are out of scope of this rule (writing-releases:1 covers them).
 
+**Scope: runtime warning calls only.** This rule covers `DeprecationWarning(...)` and `PendingDeprecationWarning(...)` call expressions. Tooling-only deprecation markers — RST `.. deprecated::` directives in docstrings, `@deprecated` decorators, Sphinx-style `.. versionchanged::` notes — are out of scope here. The composing rule that requires a tooling marker also emit a runtime warning is tracked separately as a v2.3.0 candidate; until that lands, an RST-marked deprecation with no accompanying `warnings.warn(...)` call passes this rule (because there is no runtime message to check) but fails the deprecation-completeness intent. Reviewer should catch the tooling-vs-runtime divergence by judgment until the v2.3.0 rule mechanizes it.
+
 Forward-only; existing deprecation warnings are grandfathered with a one-minor-release grace window after writing-releases:3 lands. New deprecations in any PR must comply from day one. Mechanically enforced by `[skill:detect-ai-fingerprints]` AST scanner: walks `Call` nodes whose `func.id` matches `DeprecationWarning|PendingDeprecationWarning`, flattens the message arg through implicit concat and `BinOp(Add)` of `Constant` strings, then applies the both-tokens-present check on the flattened string.
 
 ## Override
