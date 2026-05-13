@@ -6,6 +6,35 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [1.6.1] -- 2026-05-13
+
+Adds rules 19 and 20 to `[rule:no-ai-fingerprints]`. Two rules deferred from v1.6.0 with multi-round negotiation rather than time-pressure collapse. Wording for both confirmed verbatim across two `send_agent_message` rounds with parent session 260502-vital-channel before merge.
+
+### Added -- two new no-ai-fingerprints rules (#55)
+
+- Rule 19 (untested exception handlers): every `except` block in production code is exercised by a test that forces it via `pytest.raises(<ExcClass>)`, `assertRaises(<ExcClass>)`, or `with raises(<ExcClass>)`, OR via a documented inducing fixture or monkeypatch. Two carve-outs (`finally` best-effort cleanup, `__del__` / signal handlers) require a one-line comment naming why no test exists. Forward-only on existing handlers.
+- Rule 20 (conditional-import callsite hygiene): every callsite of an optionally-imported symbol checks the availability flag inline before the call, OR is inside a private helper (leading-underscore name) whose docstring asserts the flag has been checked by the caller. The guard's failure message must name the missing package and the install command. Forward-only on existing modules.
+
+### Changed -- code-review checklist gains rules 19 and 20 (#55)
+
+`skills/coding/code-review/SKILL.md` checklist adds two judgment-enforced items naming both rules. The mechanical-pre-flight scanner section is updated to describe the new judgment-only checks specific to v1.6.1.
+
+### Scanner enhancements deferred to v1.6.2
+
+Cross-file evidence detection for R-19 (handler in source file, test in test file with matching exception class) and multi-pass within-file detection for R-20 (extract flag, then re-scan for unguarded callsites) are new scan shapes that don't fit the existing line-by-line scanner. Filed as a single v1.6.2 milestone so they ship together.
+
+### Migration to v2.0.0
+
+Rule 19 lands at `writing-tests:5` in v2.0.0; rule 20 lands at `writing-code:8`. The v2.0.0 refactor PR (in side-branch drafting) folds both into their per-act files at rebase time.
+
+### Negotiation provenance
+
+Two `send_agent_message` rounds between sessions 260502-pure-vista and 260502-vital-channel. R-19 acceptance check tightened to specific patterns (`pytest.raises` / `assertRaises` / `with raises` family); R-20 deferral clause restricted to private helpers with docstring-asserted contracts. Operator delegated negotiation authority and set the binding 2026-05-20 deadline; ship landed seven days early.
+
+### No breaking changes
+
+Additive (two new rules, two checklist additions). No rule weakened or removed; no skill contract changed.
+
 ## [1.6.0] -- 2026-05-13
 
 Adds rules 16-18 to `[rule:no-ai-fingerprints]`, a new affected-tests gate as `[skill:commit]` step 4, and two scanner enhancements (countable-claims with `Verified-by:` trailer; actionable skip messages). From a parent-session retrospective on v1.5.0 coverage; the parent estimated 70% prevention, this release closes most of the gap.
@@ -467,7 +496,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` -- DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.6.1...HEAD
+[1.6.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.6.1
 [1.6.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.6.0
 [1.5.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.5.0
 [1.4.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.4.1
