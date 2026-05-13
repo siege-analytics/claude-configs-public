@@ -24,8 +24,8 @@ Each entry is a TOML table under `[[failure_mode]]` with these fields:
 
 ```toml
 [[failure_mode]]
-name = "em-dash-as-ai-tell"
-description = "Em-dashes (U+2014) in any prose are a reliable AI fingerprint."
+name = "ai-typographic-unicode"
+description = "AI-typographic Unicode characters in prose: em-dash U+2014, en-dash U+2013, arrows U+2192/U+2190/U+21D2/U+21D0, curly quotes U+2018/U+2019/U+201C/U+201D, ellipsis U+2026, middle dot U+00B7, bullet U+2022, non-breaking space U+00A0. The em/en dash kernel is the historical originating finding; the broader char class was added in v2.2.0 from the dataframe_engine.py review."
 rule_id = ["writing-prose:1"]
 enforcement = "scanner"
 tooling_status = "mechanical"
@@ -227,12 +227,37 @@ enforcement = "code-review"
 tooling_status = "judgment"
 prevention_path = "needs: multi-pass-within-file detector that extracts the optional-import flag, then re-scans for unguarded callsites (tracked at upstream issue #57 for v1.6.2)"
 originating_arc = { session-id = "260502-vital-channel", pr-number = 55, incident-name = "shapely-available-unguarded-callsites" }
+
+[[failure_mode]]
+name = "silently-dropped-parameter"
+description = "Method or function signature accepts a parameter; the implementation neither uses it, raises NotImplementedError, documents it as a no-op, nor forwards it via **kwargs. Caller's override has no effect; the API lies about its surface."
+rule_id = ["writing-code:9"]
+enforcement = "scanner"
+tooling_status = "mechanical"
+originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-utilities-dataframe-engine-hostile-review-2026-05-13" }
+
+[[failure_mode]]
+name = "capability-registry-impl-mismatch"
+description = "Module exposes a central 'supported X' registry (frozenset, dict, class attr) consumed by a validator; an implementation gated by the validator does not support every registry item; caller passes validation, then dies inside the impl with a confusing AttributeError or similar."
+rule_id = ["writing-code:10"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "judgment-only: cross-implementation tracing (validator -> registry -> consumers) requires symbolic execution or extensive AST graph-building, infeasible at scanner tier"
+originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-utilities-dataframe-engine-hostile-review-2026-05-13" }
+
+[[failure_mode]]
+name = "deprecation-without-removal-target"
+description = "DeprecationWarning or PendingDeprecationWarning message string lacks a version-or-date anchor and a removal-commitment keyword in the same string; 'in a future release' / 'next minor' / 'eventually' shipped without grep-able commitment."
+rule_id = ["writing-releases:3"]
+enforcement = "scanner"
+tooling_status = "mechanical"
+originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-utilities-dataframe-engine-hostile-review-2026-05-13" }
 ```
 
 ## Tooling-status summary
 
-- `mechanical` rows: 10 (writing-prose:1, :2, :3, :4; writing-code:2, :5; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2).
-- `judgment` rows: 13 (writing-code:1, :3, :4, :6, :7, :8; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
+- `mechanical` rows: 12 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :9; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3).
+- `judgment` rows: 14 (writing-code:1, :3, :4, :6, :7, :8, :10; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
 - `gap` rows: 1 (writing-releases:1, pending public-surface differ at upstream issue #51).
 
 The `gap` and `judgment` categories stay distinct: `gap` means no rule exists to prevent the failure mode and only operator honor catches it; `judgment` means a rule exists with defined enforcement (code review, scanner, hook) but the enforcement is judgment-bound rather than mechanical. The distinction lets the matrix answer "is this prevented at all?" separately from "is the prevention mechanized?".
