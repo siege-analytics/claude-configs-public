@@ -53,6 +53,14 @@ Unacceptable evidence:
 
 If the action is not a correction (it's a feature, a refactor, a new file, scaffolding), omit the Evidence line.
 
+### Evidence applies to claims, not only to file edits
+
+The same-turn evidence requirement covers factual claims made in chat to the operator, in PR bodies, in commit messages, and in agent-to-agent messages. Sending a message that says "all four engines call the validator" or "the loop is closed" or "no remaining occurrences" is itself a side-effecting action whose justification depends on a verifiable fact. The grep, the read, the test run that establishes the fact must be in the same response or the same tool sequence. A claim grounded in a prior turn's tool call is grounded in stale evidence.
+
+This is the explicit cross-rule clause for `[rule:no-ai-fingerprints]` rule 13 (countable claims must be preceded by the falsifying grep). Rule 13 names the specific failure mode (countable assertions); this clause is the underlying discipline that covers any factual claim, countable or not.
+
+State the evidence, then make the claim. The order matters because reversing it ("I'll claim it and then verify if pushed") is exactly the failure mode the rule is meant to prevent.
+
 ### Design (non-trivial actions only)
 
 Non-trivial actions require a same-conversation `[skill:think]` workflow before the verification block. The Design line names where in this conversation the think workflow happened (turn, message, or summary), so the Standards/Intent answers can be traced back to a structured design rather than a snap judgment.
