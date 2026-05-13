@@ -6,6 +6,73 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [2.0.0] -- 2026-05-13
+
+Major release: refactor the always-on rule set from a single accreting file into per-act rule files, plus a coverage matrix that turns "is the failure mode prevented?" from estimation into grep-able truth. Rule wording is unchanged from the v1.6.x line; placements move to per-act homes and identifiers move from flat numbering (rule 1-20) to per-file `<file-stem>:<n>`.
+
+### BREAKING
+
+`_no-ai-fingerprints-rules.md` is deleted. Rules are decomposed by act into five files: `_writing-prose-rules.md`, `_writing-code-rules.md`, `_writing-tests-rules.md`, `_writing-claims-rules.md`, `_writing-releases-rules.md`. Identifiers change from `rule N` to `<file-stem>:<n>` (e.g., `writing-prose:1` for the em-dash rule). The resolver glob `_*-rules.md` picks up the new files automatically; consumers that hard-coded the old filename must update once. Skills (commit, code-review, detect-ai-fingerprints, lessons-learned) are updated to cite the new identifiers; consumers that quote the old `rule N` form in their own documentation should update via the migration table below.
+
+### Migration table
+
+| Old | New |
+|---|---|
+| rule 1 (em-dashes) | writing-prose:1 |
+| rule 2 (Why/How blocks) | writing-prose:2 |
+| rule 3 (docstring brevity) | writing-code:1 |
+| rule 4 (banned adverbs) | writing-prose:3 |
+| rule 5 (commit-message body) | writing-prose:4 |
+| rule 6 (history refs in code comments) | writing-code:2 |
+| rule 7 (tests fail on revert + import the module) | writing-tests:1 |
+| rule 8 (no cargo-cult patterns) | writing-tests:2 |
+| rule 9 (no speculative abstractions) | writing-code:3 |
+| rule 10 (verify symbol exists) | writing-code:4 |
+| rule 11 (grep before declaring fix complete) | writing-claims:1 |
+| rule 12 (no hypothetical code) | writing-code:5 |
+| rule 13 (countable claims auditable) | writing-claims:2 |
+| rule 14 (BREAKING in changelog) | writing-releases:1 |
+| rule 15 (skip messages name remediation) | writing-tests:3 |
+| rule 16 (mock fidelity) | writing-tests:4 |
+| rule 17 (doc-edit symmetry) | writing-code:6 |
+| rule 18 (silent error swallowing) | writing-code:7 |
+| rule 19 (untested exception handlers) | writing-tests:5 |
+| rule 20 (conditional-import callsite hygiene) | writing-code:8 |
+
+Each new rule file carries an addendum at the bottom naming which old rule numbers it derives from; addendums are retained for one release cycle (v2.0.x) and removed in v2.1.0. The CHANGELOG migration table stays for the audit trail.
+
+### Added -- five per-act rule files
+
+- `_writing-prose-rules.md` (4 rules): em-dashes, structured rationale blocks, banned adverbs, commit-message body shape. For natural-language output: chat, commit/PR bodies, agent-to-agent messages, comments-as-prose.
+- `_writing-code-rules.md` (8 rules): docstring brevity, no history references in code comments, no speculative abstractions, verify symbol exists, no hypothetical code, doc-edit symmetry, silent error swallowing, conditional-import callsite hygiene. For writing production code (any `.py` outside `tests/`).
+- `_writing-tests-rules.md` (5 rules): tests fail on revert + import the module, no cargo-cult patterns, skip messages name remediation, mock fidelity (real exceptions, real-shape fixtures, `spec=` on `MagicMock`), every `except` block exercised by a test that forces it. For writing tests or fixtures.
+- `_writing-claims-rules.md` (3 rules): grep before declaring a fix complete, countable claims auditable, confidence calibration on unquantified completeness claims. For stating facts in commit/PR bodies, agent-to-agent messages, chat to the operator.
+- `_writing-releases-rules.md` (2 rules): BREAKING in CHANGELOG when public surface changes incompatibly, skip-count must not silently trend upward. For cutting releases or merging PRs that affect the public surface or test-suite skip count.
+
+### Added -- entry point at `skills/RULES.md`
+
+`RULES.md` is the single human-facing entry point. Lists the five per-act rule files plus the meta-rule files (verify-before-execute, definition-of-done, environment-preflight, output, principles, language-specific). One line per file with a one-line description and "when it applies" column.
+
+### Added -- coverage matrix at `skills/_coverage.md`
+
+Machine-readable TOML matrix mapping each known failure mode (from the originating siege_utilities arcs and subsequent retrospectives) to the rule(s) that cover it, the enforcement mechanism, the tooling status, and a `prevention_path` field naming what would mechanize judgment-only and gap rows. The `originating_arc` field is structured (session-id, pr-number, incident-name) for cross-referencing; example queries are documented at the bottom of the file. The matrix doubles as a worklist: each judgment row is a candidate ratchet target; the single gap row is the operator's worklist.
+
+### Framework articulation
+
+The boundary between writing-code and writing-claims is "family-of-enforcement-trigger" rather than "family-of-failure". Rules that fire at code-edit time (verify symbol exists, no hypothetical code, doc-edit symmetry) live in writing-code; rules that fire at claim time (grep before declaring fix complete, countable claims, completeness claims) live in writing-claims. The two share an underlying claim-grounding family that is preserved via cross-reference. This framework was articulated by parent session 260502-vital-channel during the rule-12 placement reopen and locks the writing-code/writing-claims split; the next reviewer should not have to re-derive it.
+
+### Negotiation provenance
+
+Five `send_agent_message` rounds with parent session 260502-vital-channel across approximately three hours (drafted in parallel side-branches; placement decisions reconciled to parent's table; ambiguous placements ratified individually). Operator delegated negotiation authority and weighted parent's lived-experience diagnosis heavily.
+
+### Skill updates
+
+`[skill:commit]`, `[skill:code-review]`, `[skill:detect-ai-fingerprints]` (SKILL.md and `scan.sh` emit strings), `[skill:lessons-learned]`, `[rule:verify-before-execute]`, `[rule:environment-preflight]` updated to cite the new `<file-stem>:<n>` identifiers. The detect-ai-fingerprints scanner emits `writing-prose-1-em-dash` instead of `rule-1-em-dash`, etc.
+
+### Known issues (filed as v2.0.x follow-ups)
+
+- Bash 3.2 scanner exit-code crash on the violations path (script reaches exit cleanly under `bash -x` trace mode but exits 139 without trace; all violations emit correctly before the crash, but callers that check `$?` see 139 instead of 1). Pre-existing; surfaced during v2.0.0 self-scan validation. To file post-merge.
+
 ## [1.6.1] -- 2026-05-13
 
 Adds rules 19 and 20 to `[rule:no-ai-fingerprints]`. Two rules deferred from v1.6.0 with multi-round negotiation rather than time-pressure collapse. Wording for both confirmed verbatim across two `send_agent_message` rounds with parent session 260502-vital-channel before merge.
@@ -496,7 +563,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` -- DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.6.1...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v2.0.0
 [1.6.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.6.1
 [1.6.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.6.0
 [1.5.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.5.0
