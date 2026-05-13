@@ -1,5 +1,5 @@
 ---
-description: Always-on Definition of Done. Applied to every behavior change. Five hard criteria — review, edge cases, tests, ticket update, ticket existence. No soft carve-outs.
+description: Always-on Definition of Done. Applied to every behavior change. Five hard criteria -- review, edge cases, tests, ticket update, ticket existence. No soft carve-outs.
 ---
 
 # Definition of Done
@@ -16,7 +16,7 @@ Every behavior change goes through code review at **two transitions**: pre-commi
 
 ### b. Edge cases explored
 
-Every behavior change has been tested mentally — and where appropriate, in tests — against:
+Every behavior change has been tested mentally -- and where appropriate, in tests -- against:
 
 - Empty input (`[]`, `""`, `None`, missing key)
 - Boundary values (zero, one, max, min, off-by-one neighbors)
@@ -28,7 +28,7 @@ Every behavior change has been tested mentally — and where appropriate, in tes
 - Null / NaN / NULL in tabular inputs
 - Identifier collisions (two different sources, same key)
 
-**Operationalized by:** [skill:code-review] §1 ("Correctness") — explicit edge-case checklist.
+**Operationalized by:** [skill:code-review] §1 ("Correctness") -- explicit edge-case checklist.
 
 ### c. Tests written
 
@@ -38,9 +38,9 @@ Every behavior change has been tested mentally — and where appropriate, in tes
 - Every `raise` path has a negative test.
 - Bug fixes ship with a regression test that fails on the previous commit.
 - If the project has no test infrastructure yet, **the first contribution adds the infrastructure** (test framework, runner, sample test) before any behavior change. "We don't have tests yet" is not an exception; it's the first ticket.
-- PRs without tests must explicitly justify the omission in the PR description, and the justification is subject to review. Acceptance is not assumed.
+- PRs without tests must justify the omission in the PR description, and the justification is subject to review. Acceptance is not assumed.
 
-**Operationalized by:** [skill:python] "Tests and Documentation — non-negotiable" section (Python); [skill:coding] Rule 6 (language-agnostic).
+**Operationalized by:** [skill:python] "Tests and Documentation -- non-negotiable" section (Python); [skill:coding] Rule 6 (language-agnostic).
 
 ### d. Non-trivial updates → update the ticket
 
@@ -49,7 +49,7 @@ Non-trivial work updates the ticket as it progresses. The ticket reflects the cu
 What counts as a ticket update:
 - Status transitions (Todo → In Progress → In Review → Done)
 - Comments on substantive changes (scope expansion, blocker discovery, design pivots)
-- Links to commits and PRs (bidirectional — commit references ticket, ticket links commit)
+- Links to commits and PRs (bidirectional -- commit references ticket, ticket links commit)
 - Final summary at close (what shipped, what was deferred, validation status)
 
 **Operationalized by:** [skill:update-ticket] (slash-invokable as `/update-ticket`); [skill:close-ticket].
@@ -62,7 +62,7 @@ Every behavior change starts from a ticket. Tickets exist to:
 - Surface dependency relations (what blocks this; what this unblocks)
 - Provide an audit trail tying code changes to motivating problems
 
-**Operationalized by:** [skill:pre-work-check] (slash-invokable as `/pre-work-check`) — runs before the first commit; verifies ticket exists, belongs to a project, has no open blockers.
+**Operationalized by:** [skill:pre-work-check] (slash-invokable as `/pre-work-check`) -- runs before the first commit; verifies ticket exists, belongs to a project, has no open blockers.
 
 If you find yourself coding without a ticket, stop and write one (or invoke [skill:create-ticket]). The ticket can be a one-liner; what matters is that it exists and is reachable from the commit.
 
@@ -99,7 +99,7 @@ The following are exempt from criteria (a)–(d) but **not** from (e) (ticket ex
 
 If in doubt, apply the full Definition of Done. The cost of unnecessary diligence is low; the cost of skipping diligence on a behavior change that looked trivial is high.
 
-Even exempt changes still need a ticket — the tracking serves the audit trail, not just the work-discipline.
+Even exempt changes still need a ticket -- the tracking serves the audit trail, not just the work-discipline.
 
 ## Why hard enforcement
 
