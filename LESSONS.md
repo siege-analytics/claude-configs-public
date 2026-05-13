@@ -16,6 +16,15 @@ See [skill:lessons-learned] for the format spec and [skill:rules-audit] for the 
 
 ## Entries
 
+## 2026-05-13 -- Load-verify the published artifact, not just the source, after a major-version structural change
+
+- **Source:** v2.0.0 shipped with two latent gaps that source-side audit missed: `bin/build.py`'s `find_rules()` matched `_*-rules.md` only, so `skills/RULES.md` and `skills/_coverage.md` (added at v2.0.0) never reached `dist/<layout>/skills/` and never appeared in the `v2.0.0-flat` / `v2.0.0-nested` tags. Plus two stale `rule N` references in `skills/git-workflow/commit/SKILL.md` survived the cross-reference pass. Both surfaced by parent session 260502-vital-channel during load-verification of the local sync. PR [#62](https://github.com/siege-analytics/claude-configs-public/pull/62); v2.0.1 patch shipped within an hour.
+- **Rule (draft):** After any major-version structural change (file renames, additions at unusual paths, deletions), `git ls-tree <release-tag>` the published artifact and confirm every new or moved file is present at the expected path. Source-side `git status` and build `--check` are necessary but not sufficient; the publish workflow has its own filters (`find_rules` glob, ROOT_FILES list, etc.) that may not match new file shapes. Same discipline as `[rule:writing-claims]` writing-claims:2 (countable claims need same-turn evidence): "RULES.md and _coverage.md shipped" is a countable claim; the same-turn evidence is the `git ls-tree`.
+- **Why:** v2.0.0 source-side audit confirmed all five per-act rule files, RULES.md, _coverage.md, the legacy file deletion, and all skills cross-references in the working tree. Build passed `--check`. Self-scan reported clean. All true. None of those checks looked at the published artifact (`dist/<layout>/`), so the build script's pattern miss for the two new file shapes went undetected until parent ran a sync-verify pass on their workspace. The same `[rule:verify-before-execute]` Evidence requirement that catches code-level claims should apply to publish-level claims; the gap was that I didn't extend the discipline to the artifact tier.
+- **Recurrence:** 1 (first occurrence; will become 2+ if I repeat the mistake)
+- **Promotion-requested:** none yet (recurrence threshold)
+- **Promoted:** not yet
+
 ## 2026-05-13 -- v2.0.0 refactor: rules decomposed by act; coverage matrix turns prevention claims grep-able
 
 - **Source:** Cross-session refactor planning kicked off by parent session 260502-vital-channel after v1.6.0 shipped (the file had grown to 18 rules across five different failure families under one umbrella name that no longer described the contents). Issue [#58](https://github.com/siege-analytics/claude-configs-public/issues/58); PR [#59](https://github.com/siege-analytics/claude-configs-public/pull/59). Five `send_agent_message` negotiation rounds across approximately three hours; both sessions drafted in parallel side-branches; placement decisions reconciled to parent's table; ambiguous placements (rules 8, 9, 17, then rule 12 reopen) ratified individually.
