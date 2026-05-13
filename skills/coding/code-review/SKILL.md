@@ -31,7 +31,7 @@ bash <skills-dir>/meta/detect-ai-fingerprints/scan.sh         # for staged diffs
 bash <skills-dir>/meta/detect-ai-fingerprints/scan.sh --pr 43  # for a GitHub PR
 ```
 
-The scanner catches stylistic rules 1-6 of `[rule:no-ai-fingerprints]` mechanically. Surface its findings as the first batch of review comments and fix them before opening the human review, so reviewer attention is not wasted on em-dash hunting and adverb counting. The scanner is silent on rules 7-11; those still require the judgment layer below.
+The scanner catches stylistic rules 1-6 of `[rule:no-ai-fingerprints]` mechanically, plus rules 13 and 15 (countable claims need `Verified-by:` trailer; skip messages must name remediation). Surface its findings as the first batch of review comments and fix them before opening the human review, so reviewer attention is not wasted on em-dash hunting and adverb counting. The scanner is silent on rules 7-12, 14, 16-20; those still require the judgment layer below. Two judgment-only checks specific to v1.6.1 land in the human-review pass: rule 19 (every `except` block has a test that forces it via `pytest.raises(<ExcClass>)` / `assertRaises(<ExcClass>)` / `with raises(<ExcClass>)`, or via a documented inducing fixture or monkeypatch) and rule 20 (every callsite of an optionally-imported symbol checks the availability flag, with the guard producing a clear failure message naming the missing package and the install command). Mechanical detection for both is tracked for v1.6.2.
 
 ## Project-local rules (load first)
 
@@ -271,6 +271,8 @@ Before approving:
 - [ ] Read every line of the diff (not just the files you know)
 - [ ] Check that tests exist for new behavior and pass
 - [ ] Check that tests test the *right thing* (not just that they pass)
+- [ ] **Rule 19**: every `except` block in the diff has a paired test using `pytest.raises(<ExcClass>)` / `assertRaises(<ExcClass>)` / `with raises(<ExcClass>)`, OR a documented inducing fixture or monkeypatch. The two carve-outs (`finally` best-effort, `__del__` / signal handlers) require a one-line comment naming why no test exists.
+- [ ] **Rule 20**: every callsite of an optionally-imported symbol (where the module declares a `try: import X; X_AVAILABLE = True; except: X_AVAILABLE = False` pattern or equivalent) checks the availability flag inline before the call, OR is inside a private helper (leading-underscore) whose docstring asserts the flag has been checked by the caller. The guard's failure message must name the missing package and the install command.
 - [ ] Verify no secrets, credentials, or PII in the diff
 - [ ] Verify no `TODO` or `FIXME` without a linked issue
 - [ ] Run the code locally if the change is non-trivial

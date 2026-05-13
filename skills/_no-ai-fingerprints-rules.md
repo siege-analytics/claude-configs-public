@@ -1,14 +1,14 @@
 ---
-description: Always-on. Eighteen mandatory guardrails against AI fingerprints in code, comments, commit messages, PR bodies, and chat output. From three rounds of hostile review of siege_utilities work that surfaced concrete failure modes.
+description: Always-on. Twenty mandatory guardrails against AI fingerprints in code, comments, commit messages, PR bodies, and chat output. From four rounds of hostile review and self-diagnosis of siege_utilities work that surfaced concrete failure modes.
 ---
 
 # No AI Fingerprints
 
-These eighteen rules are mandatory. The first eleven came out of an initial hostile review of siege_utilities work; rules 12-15 plus three tightenings (rules 7, 10, 11) came out of an extended siege_utilities arc where ten PRs went through six rounds of review; rules 16-18 came out of a follow-up retrospective where the agent self-diagnosed the gaps that the v1.5.0 rules did not close. The rules are organized stylistic-first (cosmetic but pervasive) and structural-second (the ones that actually cause bugs).
+These twenty rules are mandatory. The first eleven came out of an initial hostile review of siege_utilities work; rules 12-15 plus three tightenings (rules 7, 10, 11) came out of an extended siege_utilities arc where ten PRs went through six rounds of review; rules 16-18 came out of a follow-up retrospective where the agent self-diagnosed the gaps that the v1.5.0 rules did not close; rules 19-20 came out of a v1.6.0 negotiation that surfaced two failure modes too narrow for the v1.6.0 cut. The rules are organized stylistic-first (cosmetic but pervasive) and structural-second (the ones that actually cause bugs).
 
 Apply them to everything you write: code, comments, docstrings, commit messages, PR bodies, agent-to-agent messages, and chat output to the operator.
 
-## The eighteen rules
+## The twenty rules
 
 ### Stylistic
 
@@ -70,6 +70,30 @@ The session's worst case: `INVARIANTS.md` kept asserting current behaviour that 
 Patterns banned: bare `except: pass`; `except Exception: log.error(...); return None` where the docstring does not document `None` as failure; `except: continue` in loops without per-iteration audit log; `except Exception: pass  # noqa` without an inline rationale comment naming the specific reason swallowing is correct here.
 
 Forward-only on existing handlers. Existing `Optional[T]`-returning functions get a docstring update grace window of one minor release after R-18 lands; any handler edited after that grace window must comply. New handlers in any PR must comply from day one.
+
+**19. Every `except` block in production code is exercised by a test that forces it to fire.** The test must induce the exception class the handler catches (via dependency injection, monkeypatching, or a real-but-failing input), then assert on the handler's behaviour: the return value, the re-raised exception, the audit-log entry, the typed-failure result. Smoke tests that exercise only the happy path do not count.
+
+Two-line acceptance check at review time: grep for `except` in the diff; for each match, grep test files in the same PR for a test that either (i) names the same exception class via `pytest.raises(<ExcClass>)`, `assertRaises(<ExcClass>)`, or `with raises(<ExcClass>)`, or (ii) calls a fixture or monkeypatch that the test docstring or fixture body documents as inducing the handler's exception. Naming the exception class is the bar; happy-path tests that incidentally exercise the wrapped call do not count.
+
+Forward-only on existing handlers. New `except` blocks in any PR must comply from day one. Existing untested handlers are eligible for promotion to `LESSONS.md` as discovery surfaces them; bulk-backfilling is out of scope.
+
+Two carve-outs:
+(a) `except` in `finally`-cleanup code that is purely best-effort (closes a file, removes a temp directory) where the failure is documented as ignorable in the handler comment.
+(b) `except` in `__del__` or signal handlers where induction in a test is not safe.
+
+Both carve-outs require a one-line comment naming why no test exists. Without the comment, the handler counts as untested.
+
+The session's concrete instance: the gazetteer Census backend caught `requests.exceptions.RequestException` and fell back to TIGERWeb, but no test forced the Census request to fail. The fallback shape was assumed correct because the happy path returned the same data shape; in practice the fallback path returned a different schema because the TIGERWeb adapter normalised differently. Mechanical detection is partial (cross-file evidence; tracked for v1.6.2 scanner enhancement); judgment-enforced via `[skill:code-review]` from v1.6.1.
+
+**20. Every callsite of an optionally-imported symbol checks the availability flag first.** When a module declares an optional import via the `try: import X; X_AVAILABLE = True; except ImportError: X_AVAILABLE = False` pattern (or equivalent: `_HAS_X`, `HAS_X`, `X_INSTALLED`, project-defined), every callsite that uses `X` in the same module must be guarded by `if not X_AVAILABLE: <raise|skip|return>` before the call, or be inside a private helper function (leading-underscore name) whose docstring asserts the flag has been checked by the caller. Public callsites must check the flag inline; private helpers can defer to their callers only if the docstring documents the contract.
+
+The guard must produce a clear failure message naming the missing package and the install command: `raise RuntimeError("shapely required; install with: pip install shapely")` not `raise RuntimeError("dependency missing")`. Bare `if not X_AVAILABLE: return None` is acceptable only if the function's documented contract is to be a no-op when the dependency is absent.
+
+Two-line acceptance check at review time: grep for `X_AVAILABLE = False` (or the project's flag name) in the diff; for each module, grep for `X.` usages in that module; every usage outside a guarded block is a violation.
+
+Forward-only. New optional imports must comply; existing modules audited as discovery surfaces them.
+
+The session's concrete instance: both `census_gazetteer.py` and `wikidata_gazetteer.py` had `SHAPELY_AVAILABLE` flags but the geometry-construction callsites used `shapely.geometry.Polygon(...)` without guarding. The first call in an environment without shapely raised `NameError: name 'shapely' is not defined` instead of the intended clear `RuntimeError`. Cross-module re-export case (X re-exported from `__init__.py`, used in sibling module via `from .somemod import X`) is a known scanner gap; the failure mode is loud (immediate NameError) and the pattern is rare. Mechanical detection is high (multi-pass within a file; tracked for v1.6.2 scanner enhancement); judgment-enforced via `[skill:code-review]` from v1.6.1.
 
 ## Override
 
