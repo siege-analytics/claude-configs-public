@@ -6,6 +6,44 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [1.6.0] -- 2026-05-13
+
+Adds rules 16-18 to `[rule:no-ai-fingerprints]`, a new affected-tests gate as `[skill:commit]` step 4, and two scanner enhancements (countable-claims with `Verified-by:` trailer; actionable skip messages). From a parent-session retrospective on v1.5.0 coverage; the parent estimated 70% prevention, this release closes most of the gap.
+
+### Added -- three new no-ai-fingerprints rules (#53)
+
+- Rule 16 (mock fidelity): when mocking a third-party library (not stdlib), use the library's real exception classes via `from <pkg>.exceptions import X` and at least one test in the module must use a fixture built from a real captured response (committed as JSON), not a hand-rolled stub. Forward-only on existing tests.
+- Rule 17 (doc-edit symmetry): when code edits in a PR touch a public symbol, the file containing the symbol must be re-read in the same PR; documentation files referencing the symbol by name must either appear in the changeset OR the PR body must contain a `Docs-checked: <list>` trailer. Default doc-tree scope is `**/*.md` minus auto-generated paths plus the canonical names; per-repo override at `.claude/doc-paths.toml`.
+- Rule 18 (silent error swallowing): exception handlers must re-raise, return a typed-failure result, do best-effort cleanup in a `finally` block, or audit-log-plus-typed-failure. The `bare except: pass` and `except Exception: log.error(...); return None` families are banned unless the function signature is `Optional[T]` AND the docstring documents `None` as the failure indicator. Forward-only on existing handlers with a one-minor-release docstring grace window for existing `Optional[T]` functions.
+
+### Added -- affected-tests gate in commit skill (#53)
+
+`[skill:commit]` step 4 runs `pytest -x` against test files matching the touched source files in the staged diff. Default heuristic: given `<package>/X.py`, look for `tests/test_X.py`, `tests/test_X_*.py`, `tests/<package>/test_X.py`. Per-repo override at `.claude/affected-tests.toml` with a source-glob to test-glob mapping. 60-second timeout per affected-test run; tests slower than that should be marked `slow` and run at PR-open time. Non-zero exit blocks the commit; `[run-skip: <reason>]` override exists for legitimate cases (test infra under repair, dependency unavailable per rule 12 escape hatch).
+
+This is the mechanical enforcement of rule 12 (no hypothetical code). The honor-system version was "I checked"; the mechanical version is "the tests ran and passed in the same commit-attempt."
+
+### Changed -- detect-ai-fingerprints scanner gains two checks (#53)
+
+- Rule 13 mechanical enforcement: scanner detects countable-claim trigger phrases (`all N`, `all X engines/connectors/call sites`, `every (call site/engine/caller/connector)`, `no remaining`, `fully covers`, `completes the X surface`) in commit and PR message bodies. When present, the body must contain a `Verified-by: <command output excerpt>` trailer. Without the trailer, the claim line is reported as `rule-13-countable-claim-no-verified-by`. Conservative trigger set on first roll-out; tunable in v1.6.x.
+- Rule 15 mechanical enforcement: scanner detects `pytest.skip(...)`, `pytest.xfail(...)`, `@pytest.mark.skipif(...)`, `self.skipTest(...)`, `unittest.skip(...)` in `.py` files in the staged diff. The skip message must contain at least one actionable verb (`install`, `set`, `configure`, `run`, `enable`, `start`, `provide`, `export`) plus an identifier-shaped token (env var, command name, file path, package name). Without both, the line is reported as `rule-15-skip-not-actionable`.
+
+### Committed for v1.6.1 within seven days
+
+R-19 (untested exception handlers; forward-only adoption) and R-20 (conditional-import callsite hygiene; may need a paired-helper-pattern design as a separate ticket) land together in v1.6.1 with full multi-round negotiation. Missing the seven-day window is itself a LESSONS entry.
+
+### On separate tracks
+
+- Public-surface differ tooling for rule 14 stays at #51, operator-judgment enforcement until the differ ships.
+- Retrospective post-merge scan (T5) is a separate proposal post-v1.6.1.
+
+### Negotiation provenance
+
+Two `send_agent_message` rounds between sessions 260502-pure-vista and 260502-vital-channel. R-18 wording includes the parent's grace-window refinement for `Optional[T]`-returning functions; all other wording confirmed verbatim. Operator delegated negotiation authority and weighted the parent's lived-experience diagnosis heavily.
+
+### No breaking changes
+
+Additive (three new rules, one new commit-skill step, two new scanner checks). No rule weakened or removed; no skill contract removed. The commit-skill step 4 addition is new behaviour but follows the existing `[run-skip]`-style override pattern.
+
 ## [1.5.0] -- 2026-05-13
 
 Adds rules 12-15 to `[rule:no-ai-fingerprints]`, tightens rules 7, 10, and 11, and ships a new always-on sibling `[rule:environment-preflight]`. From an extended siege_utilities arc that surfaced ~40 distinct failure modes through ten PRs and six rounds of hostile review; the existing eleven rules covered roughly 60% of them.
@@ -429,7 +467,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` -- DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.6.0
 [1.5.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.5.0
 [1.4.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.4.1
 [1.4.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.4.0
