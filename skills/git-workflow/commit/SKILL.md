@@ -25,10 +25,11 @@ allowed-tools: Read Grep Glob Bash
    2. Separate unrelated changes into distinct commits
    3. Stage specific files by name -- avoid `git add -A` or `git add .` which can accidentally include secrets, build artifacts, or large binaries
    4. Never commit `.env`, credentials, tokens, or other sensitive files
-3. **Run code review on the staged diff** (see Pre-review gate below)
-   1. Invoke [skill:code-review] against `git diff --cached`
-   2. Resolve every Blocker; resolve Majors or document why they're being deferred
-   3. If the user explicitly overrides, mark the commit with `[review-skip]`
+3. **Run the AI-fingerprint scanner first, then code review** (see Pre-review gate below)
+   1. Invoke [skill:detect-ai-fingerprints] against the staged diff. Non-zero exit blocks the commit; resolve every reported violation before proceeding (no override).
+   2. Invoke [skill:code-review] against `git diff --cached` for the structural rules and the six-layer methodology.
+   3. Resolve every Blocker; resolve Majors or document why they're being deferred.
+   4. If the user overrides in writing, mark the commit with `[review-skip]`. Note: `[review-skip]` does not exempt the fingerprint scan; that scan has no override.
 4. **Check for a ticket reference** (see Ticket enforcement below)
    1. If no ticket exists for this work, stop and create one first
    2. If the user explicitly overrides, mark the commit with `[no-ticket]`
@@ -348,6 +349,7 @@ If it was already committed, remove it from history and rotate the credential im
 - [ ] Changes are grouped into logical, single-purpose commits
 - [ ] Files are staged by name, not with `git add -A`
 - [ ] No sensitive files (secrets, credentials, keys) are staged
+- [ ] **[skill:detect-ai-fingerprints] ran clean** on the staged diff and the proposed commit message (no override)
 - [ ] **[skill:code-review] ran on the staged diff** -- Blockers resolved, Majors addressed or deferred-with-ticket, or `[review-skip]` documented in commit body
 - [ ] Subject line: type prefix, imperative mood, under 72 chars, specific
 - [ ] Body explains the why (if the change is non-trivial)
