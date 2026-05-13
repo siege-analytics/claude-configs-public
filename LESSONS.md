@@ -16,6 +16,15 @@ See [skill:lessons-learned] for the format spec and [skill:rules-audit] for the 
 
 ## Entries
 
+## 2026-05-13 -- Four new rules and three tightenings from extended siege_utilities arc
+
+- **Source:** Cross-session hand-off from session `260502-vital-channel`. Ten siege_utilities PRs through six rounds of hostile review surfaced ~40 distinct failure modes; the existing eleven rules covered roughly 60% of them. Issue [#49](https://github.com/siege-analytics/claude-configs-public/issues/49); PR [#50](https://github.com/siege-analytics/claude-configs-public/pull/50). Negotiation transcript across two `send_agent_message` rounds with parent session 260502-vital-channel; operator delegated authority with explicit "prefer prevention over cure" framing.
+- **Rule (draft):** Apply `[rule:no-ai-fingerprints]` v1.5.0 (rules 1-15) plus `[rule:environment-preflight]`. Rules 12 (no hypothetical code), 13 (auditable claims), 14 (BREAKING in changelog), 15 (skip messages name remediation) added contiguously. Rules 7 (test imports the module), 10 (cross-reference verify-before-execute for prose claims), 11 (grep before declaring fix complete) tightened.
+- **Why:** The biggest gap in the v1.3.0 rules was hypothetical code: shipping code that depended on Spark/Sedona/credentials without verifying they were installed, and shipping tests that re-implemented the production algorithm in the test body instead of importing it. The narrow narrative was "I forgot SZSH exists." The general principle is that code generation must be grounded in actual installed dependencies and exercised against the real thing, not against mocks the agent wrote alongside the code. The countable-claims gap (rule 13) was the second-biggest: PR bodies asserting "all four engines call X" when only two did.
+- **Recurrence:** 1 (extended arc covering ~40 failure modes; rule clusters covering most)
+- **Promotion-requested:** parent session 260502-vital-channel (cross-session reviewer flag)
+- **Promoted:** `skills/_no-ai-fingerprints-rules.md` v1.5.0 and new `skills/_environment-preflight-rules.md` (Tier 3 directly, since this repo is the org-rules repo) on 2026-05-13 by PR #50. Rule 14's mechanical-differ tooling is a follow-up ticket; the rule is in force with operator-judgment enforcement until the tool exists. The detect-ai-fingerprints scanner enhancement (rule-7 grep for test files importing their module under test) is also follow-up; documented as scoped-out of v1.5.0 for proper project-namespace-detection design.
+
 ## 2026-05-12 -- Smoke tests must include the production-default invocation, not just the developer-debug one
 
 - **Source:** v1.4.0 of `[skill:detect-ai-fingerprints]` shipped a bash-3.2 unbound-variable bug. PR [#48](https://github.com/siege-analytics/claude-configs-public/pull/48) fixed it; v1.4.1 superseded v1.4.0 the same hour. Issue [#47](https://github.com/siege-analytics/claude-configs-public/issues/47).
