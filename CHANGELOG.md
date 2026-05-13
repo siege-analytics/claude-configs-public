@@ -6,6 +6,47 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [1.5.0] -- 2026-05-13
+
+Adds rules 12-15 to `[rule:no-ai-fingerprints]`, tightens rules 7, 10, and 11, and ships a new always-on sibling `[rule:environment-preflight]`. From an extended siege_utilities arc that surfaced ~40 distinct failure modes through ten PRs and six rounds of hostile review; the existing eleven rules covered roughly 60% of them.
+
+### Added -- four new no-ai-fingerprints rules (#50)
+
+- Rule 12 (no hypothetical code): when code or a test depends on a library, service, configuration, or external API, the dependency must be reachable in the workspace where the code is being written, in the same session, before the code is written. CI does not count. The PR-body label `untested locally; first run is CI` is a one-time escape hatch when local truly cannot reach the dependency.
+- Rule 13 (auditable countable claims): any countable claim ("all four engines," "every call site," "no remaining occurrences") must be preceded by the falsifying grep in the same response. The grep output, not the claim, is the artifact. State the count, then make the claim.
+- Rule 14 (BREAKING in changelog): any change that rejects input previously accepted, returns output previously not returned, or removes a public name gets a `### BREAKING` entry. Determination is operator-judgment with explicit checklist until the public-surface differ tool exists (tracked at #51).
+- Rule 15 (skip messages name remediation): `pytest.skip("X not installed")` is rejected; `pytest.skip("install X in this interpreter to run, see docs/setup.md")` is accepted. Same for `xfail`, `skipIf`, and conditional bypass `return`s.
+
+Drafted rules 15 and 16 from the v1.4.0 proposal collapsed into rule 12; the original draft's rule 17 became rule 15 in the final numbering. Contiguous numbering preserved per negotiation.
+
+### Changed -- three rule tightenings (#50)
+
+- Rule 7: necessary condition added that tests must import the module they claim to test. A test that re-implements the production algorithm in the test body is theater regardless of what it asserts.
+- Rule 10: cross-references `[rule:verify-before-execute]` for the broader claim-grounding discipline that covers prose claims in PR bodies, commit messages, and agent-to-agent messages. Rule 10 keeps its named hook for symbol existence (the `create_presentation_from_data` failure); the broader discipline lives in verify-before-execute.
+- Rule 11: gate moved from "before patching" to "before declaring a fix complete." The Paragraph-escape three-round failure happened because the original phrasing let the agent fix one site, declare done, and only grep when the reviewer pushed back.
+
+### Added -- `_environment-preflight-rules.md` always-on sibling (#50)
+
+New always-on rule prescribing a one-time-per-repo inventory: README environment section, interpreters and core deps, shell environment (with `ZSH_FORCE_FULL_INIT=1` if applicable), local services, credentials, CI-vs-local parity. Rule 12 (no hypothetical code) is the per-action application of the inventory this rule establishes.
+
+### Changed -- verify-before-execute claim-grounding clause (#50)
+
+`_verify-before-execute-rules.md` gains an explicit clause that the same-turn evidence requirement covers prose claims in chat to the operator, in PR bodies, in commit messages, and in agent-to-agent messages. Resolves the rule 10 vs verify-before-execute overlap per option (a) of the negotiation: rule 10 keeps its named hook, the broader discipline is documented once in verify-before-execute.
+
+### Negotiation transcript
+
+Wording on all four substantive asks (rule 12 target-environment definition, rule 13 same-turn-grep enforcement, rule 14 tooling-deferred enforcement, contiguous numbering) and the rule 10 conflict resolution was confirmed verbatim by parent session 260502-vital-channel across two `send_agent_message` rounds before merge. Operator delegated full negotiation authority with explicit "prefer prevention over cure" framing, which weighted toward stronger wording on every call.
+
+### No breaking changes
+
+Additive (four new rules) plus tightenings to existing rules. No rule weakened or removed; no skill contract changed. Downstream consumers can pin to `v1.5.0-flat` or `v1.5.0-nested` without code changes.
+
+### Follow-ups
+
+- `#51` Public-surface differ tooling for rule 14 (operator-judgment until tooling lands)
+- detect-ai-fingerprints scanner enhancement: rule-7 grep for test files importing their module under test (needs project-namespace-detection design)
+- detect-ai-fingerprints scanner enhancement: separate `--pr-body` mode that allows bullets and headers per rule 5's PR-body carve-out (current `--message-file` mode is too strict for PR bodies)
+
 ## [1.4.1] -- 2026-05-12
 
 Fixes a shipping bug in v1.4.0 where the scanner from `[skill:detect-ai-fingerprints]` would trip `unbound variable` on bash 3.2 (macOS default) when called without `--ignore`. The production gates (`[skill:commit]` step 3 and `[skill:code-review]` pre-flight) call the scanner without `--ignore`, so on a macOS workspace the gate would die before reporting any real violation. Discovered immediately after tagging v1.4.0; superseded.
@@ -388,7 +429,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` -- DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.5.0
 [1.4.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.4.1
 [1.4.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.4.0
 [1.3.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.3.0
