@@ -82,11 +82,13 @@ The trailing reminder is not decoration. It exists so a clean scan does not get 
 - **Rule 4 (banned adverbs)**: `deliberately`, `intentionally`, `explicitly`, `fundamentally`, `essentially`, `crucially`, `notably`. Every match per line is reported.
 - **Rule 5 (bullets and `##` headers)** in commit message bodies. Subject line is exempt; first blank line is skipped.
 - **Rule 6 (history references)**: `PR #N`, `Sprint X`, `vN.N.N hardening`, `issue #N`, `TICKET-N` in lines that look like code comments (start with `#` or `//`).
+- **Rule 13 (countable claims)** in commit/PR message bodies. Trigger phrases: "all N", "all X engines/connectors/call sites", "every (call site/engine/caller/connector)", "no remaining", "fully covers", "completes the X surface". When a trigger fires, the body must contain a `Verified-by: <command output excerpt>` trailer. Without the trailer, the claim line is reported.
+- **Rule 15 (skip messages)** in `.py` files. Pattern: `pytest.skip(...)`, `pytest.xfail(...)`, `@pytest.mark.skipif(...)`, `self.skipTest(...)`, `unittest.skip(...)`. The skip message must contain at least one actionable verb (`install`, `set`, `configure`, `run`, `enable`, `start`, `provide`, `export`) plus an identifier-shaped token (env var, command name, file path, package name). Without both, the line is reported.
 
 ## What the scanner does NOT cover
 
 - Rule 3 (multi-paragraph docstrings on internal helpers): requires distinguishing public from internal API, which the scanner cannot do mechanically.
-- Rules 7-11 (structural): require judgment about test fidelity, cargo-culted patterns, speculative abstractions, symbol existence, and scope-of-fix. These belong in `[skill:code-review]`.
+- Rules 7-12, 14, 16, 17, 18 (structural): require judgment about test fidelity, cargo-culted patterns, speculative abstractions, symbol existence, scope-of-fix, dependency reachability, public-surface diffs, mock fidelity, doc-edit symmetry, and silent error swallowing. These belong in `[skill:code-review]` and (for rule 12) `[skill:commit]` step 4 (the affected-tests gate).
 
 A clean scan does not mean clean code. It means the mechanical checks passed. The judgment checks still need a reviewer.
 

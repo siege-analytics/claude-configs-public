@@ -30,12 +30,18 @@ allowed-tools: Read Grep Glob Bash
    2. Invoke [skill:code-review] against `git diff --cached` for the structural rules and the six-layer methodology.
    3. Resolve every Blocker; resolve Majors or document why they're being deferred.
    4. If the user overrides in writing, mark the commit with `[review-skip]`. Note: `[review-skip]` does not exempt the fingerprint scan; that scan has no override.
-4. **Check for a ticket reference** (see Ticket enforcement below)
+4. **Run affected tests** (see Affected-tests gate below)
+   1. For each `.py` source file in the staged diff under `<package>/`, run `pytest -x tests/test_<X>.py tests/test_<X>_*.py tests/<package>/test_<X>.py` if any exist.
+   2. Per-repo override: if `.claude/affected-tests.toml` exists, use its source-glob to test-glob mapping instead of the default heuristic.
+   3. 60-second timeout per affected-test run. Tests slower than that get marked `slow` and run at PR-open time only.
+   4. Non-zero exit blocks the commit. No silent skip: if the heuristic finds no test files for a touched source file, that itself is reported and the agent decides whether to write a test or proceed with `[run-skip: <reason>]`.
+   5. Override syntax: `[run-skip: <reason>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per rule 12 escape hatch. Track override frequency; using it more than once per session is a smell.
+5. **Check for a ticket reference** (see Ticket enforcement below)
    1. If no ticket exists for this work, stop and create one first
    2. If the user explicitly overrides, mark the commit with `[no-ticket]`
-5. Write the commit message (see Message structure below)
-6. **Verify ticket reference is in the footer**
-7. Verify after committing
+6. Write the commit message (see Message structure below)
+7. **Verify ticket reference is in the footer**
+8. Verify after committing
    1. Run `git log -1` to confirm the message looks correct
    2. Run `git status` to confirm nothing was missed or accidentally included
 
@@ -95,6 +101,55 @@ Catching findings at commit time is cheaper than catching them at PR time:
 - Findings turn into the next commit instead of a force-push.
 
 The pre-PR review (in [skill:create-pr]) still runs -- it's a second pass over the cumulative diff and catches things that only emerge across multiple commits (architectural drift, accidental scope creep). The two reviews are complementary, not redundant.
+
+# Affected-tests gate
+
+Mechanical enforcement of `[rule:no-ai-fingerprints]` rule 12 (no hypothetical code). Before the commit lands, the tests that cover the touched code must be run and must pass.
+
+## What runs
+
+For each `.py` source file in `git diff --cached --name-only`, identify candidate test files using the default heuristic. Given a touched file at `<package>/X.py`, look for:
+
+- `tests/test_X.py`
+- `tests/test_X_*.py`
+- `tests/<package>/test_X.py`
+
+Run `pytest -x` against any that exist. Stop at the first failure (`-x`).
+
+Timeout: 60 seconds per affected-test run. Tests slower than that should be marked `slow` and run at PR-open time instead of commit-time.
+
+## Per-repo override
+
+If `<repo-root>/.claude/affected-tests.toml` exists, use its source-glob to test-glob mapping instead of the default heuristic. Format:
+
+```toml
+[mappings]
+"siege_utilities/connectors/*.py" = "tests/connectors/test_{stem}.py"
+"siege_utilities/spark/*.py" = "tests/spark/test_{stem}.py tests/integration/test_spark_{stem}.py"
+```
+
+The `{stem}` template variable substitutes the basename without extension. Use this when the project's test layout does not match the default `tests/test_X.py` pattern.
+
+## What happens when no test file matches
+
+If a touched source file has no candidate tests under the heuristic (or the configured mapping), the agent must decide:
+
+- Write a test in the same commit (preferred; rule 7 requires it for behaviour changes anyway).
+- Override with `[run-skip: <reason>]` in the commit body. Legitimate cases: pure refactor with no behaviour change, deletion of dead code, docstring-only edits to a public symbol that should also be running R-17.
+
+A missing test file is not a silent pass. The agent must surface it and the operator sees the `[run-skip]` if one is used.
+
+## Override
+
+```
+[run-skip: pure-rename, no behaviour change; affected tests in tests/test_old_name.py run on the next behaviour change]
+```
+
+Using `[run-skip]` more than once per session is a smell. The threshold is wrong somewhere -- either the affected-tests heuristic is mis-configured for the project, or commits are being scoped to changes that should not be committed without tests.
+
+## Why this exists
+
+Rule 12 requires that code depending on a library, service, or external API exercises the real dependency before claiming the code works. The honor-system version of that rule is "I checked." The mechanical version is "the tests ran and passed in the same commit-attempt." This gate is the mechanical version.
 
 # Ticket enforcement
 
@@ -351,6 +406,7 @@ If it was already committed, remove it from history and rotate the credential im
 - [ ] No sensitive files (secrets, credentials, keys) are staged
 - [ ] **[skill:detect-ai-fingerprints] ran clean** on the staged diff and the proposed commit message (no override)
 - [ ] **[skill:code-review] ran on the staged diff** -- Blockers resolved, Majors addressed or deferred-with-ticket, or `[review-skip]` documented in commit body
+- [ ] **Affected tests ran and passed** -- per the heuristic or `.claude/affected-tests.toml`, or `[run-skip: <reason>]` documented in commit body
 - [ ] Subject line: type prefix, imperative mood, under 72 chars, specific
 - [ ] Body explains the why (if the change is non-trivial)
 - [ ] **Footer references the relevant ticket(s)** -- mandatory unless user overrides with `[no-ticket]`

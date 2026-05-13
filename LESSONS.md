@@ -16,6 +16,15 @@ See [skill:lessons-learned] for the format spec and [skill:rules-audit] for the 
 
 ## Entries
 
+## 2026-05-13 -- Three more rules and three tooling enhancements from a self-diagnosis pass
+
+- **Source:** Cross-session hand-off from session `260502-vital-channel`. After v1.5.0 shipped, the parent ran a retrospective on whether the rules would have prevented the failures that motivated them; honest answer was 70%. Issue [#52](https://github.com/siege-analytics/claude-configs-public/issues/52); PR [#53](https://github.com/siege-analytics/claude-configs-public/pull/53). Negotiation across two `send_agent_message` rounds; operator delegated authority and weighted parent's lived-experience diagnosis heavily.
+- **Rule (draft):** Apply `[rule:no-ai-fingerprints]` v1.6.0 (rules 1-18) including R-16 (mock fidelity), R-17 (doc-edit symmetry), R-18 (silent error swallowing); the `[skill:commit]` step 4 affected-tests gate; and the scanner enhancements for rule 13 (countable claims need `Verified-by:` trailer) and rule 15 (skip messages need actionable verb plus identifier).
+- **Why:** The 30% gap was not random. It clustered in three places: honor-system rules (12/13/14/15 all depend on agent honesty about whether something was run), deferred categories from v1.5.0 (silent error swallowing, untested exception handlers, conditional-import callsite hygiene), and patterns the rules cannot catch in their current shape (mock fidelity with shape-correct stubs, asymmetric doc-edit failures). v1.6.0 closes the first two clusters mechanically (T1/T2/T3 add hard checks where rules were honor-system) and rule-text (R-16/R-17/R-18). R-19 and R-20 are committed for v1.6.1 within 7 days; T4 (public-surface differ for rule 14) is on its own track at #51.
+- **Recurrence:** 1 (parent's self-diagnosis covering ~40 failure modes from the original arc plus subsequent observations under v1.5.0)
+- **Promotion-requested:** parent session 260502-vital-channel (cross-session retrospective)
+- **Promoted:** rules 16-18 in `skills/_no-ai-fingerprints-rules.md`; affected-tests gate in `skills/git-workflow/commit/SKILL.md` step 4; rule-13 and rule-15 checks in `skills/meta/detect-ai-fingerprints/scan.sh`. All on 2026-05-13 by PR #53. R-18 wording includes the parent's grace-window refinement for `Optional[T]`-returning functions (one-minor-release window after R-18 lands; existing handlers either pass through or get a one-line docstring update at edit time).
+
 ## 2026-05-13 -- Four new rules and three tightenings from extended siege_utilities arc
 
 - **Source:** Cross-session hand-off from session `260502-vital-channel`. Ten siege_utilities PRs through six rounds of hostile review surfaced ~40 distinct failure modes; the existing eleven rules covered roughly 60% of them. Issue [#49](https://github.com/siege-analytics/claude-configs-public/issues/49); PR [#50](https://github.com/siege-analytics/claude-configs-public/pull/50). Negotiation transcript across two `send_agent_message` rounds with parent session 260502-vital-channel; operator delegated authority with explicit "prefer prevention over cure" framing.
