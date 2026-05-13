@@ -6,6 +6,30 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [1.4.0] -- 2026-05-12
+
+Adds `[skill:detect-ai-fingerprints]`, a mechanical scanner for stylistic rules 1-6 of `[rule:no-ai-fingerprints]`. Wired into `[skill:commit]` step 3 (pre-review gate) and `[skill:code-review]` start.
+
+### Added -- detect-ai-fingerprints scanner (#46)
+
+The scanner lives at `skills/meta/detect-ai-fingerprints/scan.sh`. Inputs: staged diff (default), working-tree diff (`--working`), GitHub PR diff (`--pr <n>`), commit/PR message text (`--message <text>`), or message file (`--message-file <path>`). Output: `file:line:rule-id` violations and a 0/1 exit code.
+
+Catches rules 1, 2, 4, 5, 6 mechanically. Rule 3 (multi-paragraph docstrings on internal helpers) cannot be done mechanically without distinguishing public from internal API. Rules 7-11 are judgment-bound and stay in `[skill:code-review]`.
+
+The scanner has no `[fingerprint-skip]` override. The narrow `--ignore <glob>` flag exists for ad-hoc inspection and for the bootstrap commit landing changes to the scanner; production gates do not pass it.
+
+### Changed -- commit step 3 calls the scanner before code-review (#46)
+
+`skills/git-workflow/commit/SKILL.md` step 3 invokes `[skill:detect-ai-fingerprints]` first. Non-zero exit blocks the commit; the scanner has no override. `[skill:code-review]` runs second for the structural rules and the six-layer methodology. The `[review-skip]` override applies only to code-review, not to the scanner.
+
+### Changed -- code-review runs scanner as mechanical pre-flight (#46)
+
+`skills/coding/code-review/SKILL.md` adds a "Mechanical pre-flight (run first)" section. Scanner findings prefix the six-layer human review so reviewer attention is not wasted on em-dash hunting.
+
+### No breaking changes
+
+Additive. Existing behaviour preserved; new scanner is invoked by callers but does not change their contracts.
+
 ## [1.3.0] -- 2026-05-12
 
 Adds eleven mandatory always-on rules guarding against AI fingerprints in code, comments, commit messages, PR bodies, and chat output. From a hostile review of siege_utilities work that surfaced concrete failure modes, six stylistic and five structural.
@@ -354,7 +378,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` -- DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.4.0
 [1.3.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.3.0
 [1.2.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.2.1
 [1.2.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.2.0
