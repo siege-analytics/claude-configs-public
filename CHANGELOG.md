@@ -6,6 +6,46 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [1.3.0] -- 2026-05-12
+
+Adds eleven mandatory always-on rules guarding against AI fingerprints in code, comments, commit messages, PR bodies, and chat output. From a hostile review of siege_utilities work that surfaced concrete failure modes, six stylistic and five structural.
+
+### Added -- `_no-ai-fingerprints-rules.md` (#43)
+
+The eleven rules at `skills/_no-ai-fingerprints-rules.md`:
+
+1. No em-dashes (U+2014) anywhere; use `--`, a comma, or a period.
+2. No "Why:" / "How to apply:" structured blocks in code comments or commit messages (carve-out for memory ledgers, skill files, rule files where structured rationale is the documented format).
+3. Default to no docstring or a one-liner; multi-paragraph docstrings reserved for public API.
+4. Strip self-justifying adverbs ("deliberately," "intentionally," "explicitly," "fundamentally," "essentially," "crucially," "notably").
+5. Commit messages are subject + plain-prose body; no bullets, no headers, no diff narration; length determined by what the why requires.
+6. No PR / sprint / issue references in code comments; `git log` is the history layer.
+7. Tests must fail if production behaviour breaks ("if I reverted the implementation, would this test go red?").
+8. No cargo-culted patterns across modules; each target gets tests for its actual public surface.
+9. No speculative abstractions; introduce a fixture or base class only when a second caller exists.
+10. Verify before asserting any method, class, attribute, flag, or behaviour; open the file and grep the symbol.
+11. Grep before patching, not after; scope of a bug is wider than the diff that surfaced it.
+
+The rules are mandatory. There is no `[fingerprint-skip]` override. The closest thing is the rule-2 carve-out for documentation formats.
+
+### Negotiated changes during PR review
+
+Rule 5 as originally proposed capped commit body at two sentences. The cap was rejected after counter-proposal: it would have banned legitimate multi-paragraph commit bodies in non-AI engineering practice (Linus, Postgres, Kubernetes maintainers). Replaced with structural ban (no bullets, no headers, no self-justifying adverbs, no diff narration) plus length-determined-by-what-the-why-requires guidance. Counter-proposal accepted by parent session before merge.
+
+Rule 10 trigger tightened: "before writing code, a test, or documentation that names a method, class, attribute, flag, or behaviour."
+
+### Changed -- commit skill aligned with rule 5 (#43)
+
+`skills/git-workflow/commit/SKILL.md` Body section rewritten as plain-prose guidance: no bullets, no headers, no self-justifying adverbs, no diff narration. Length determined by what the why genuinely requires.
+
+### Changed -- self-consistency sweep on rule files and root docs (#43)
+
+Em-dashes removed from all `_*-rules.md` files plus `CONTRIBUTING.md`, `CHANGELOG.md`, `README.md`, and `LESSONS.md`. Banned adverbs (rule 4) removed from the same set, except where rule 4 itself lists them as quoted examples. Skill-tree sweep (~100 `SKILL.md` files) deferred to a follow-up PR.
+
+### No breaking changes
+
+The rules are new always-on additions. The commit-skill Body section change tightens existing guidance without changing the skill's contract.
+
 ## [1.2.1] -- 2026-05-12
 
 Tightens `[rule:verify-before-execute]` by requiring a same-conversation `[skill:think]` reference for non-trivial actions.
@@ -314,7 +354,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` -- DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.3.0
 [1.2.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.2.1
 [1.2.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.2.0
 [1.1.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.1.0
