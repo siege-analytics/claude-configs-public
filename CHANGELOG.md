@@ -6,6 +6,16 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [1.4.1] -- 2026-05-12
+
+Fixes a shipping bug in v1.4.0 where the scanner from `[skill:detect-ai-fingerprints]` would trip `unbound variable` on bash 3.2 (macOS default) when called without `--ignore`. The production gates (`[skill:commit]` step 3 and `[skill:code-review]` pre-flight) call the scanner without `--ignore`, so on a macOS workspace the gate would die before reporting any real violation. Discovered immediately after tagging v1.4.0; superseded.
+
+### Fixed -- defensive expansion for empty IGNORE_GLOBS (#48)
+
+`is_ignored()` in `scan.sh` now checks `(( ${#IGNORE_GLOBS[@]} == 0 ))` before iterating. Bash 3.2 with `set -u` treats an empty array's `${arr[@]}` expansion as unbound; bash 4+ does not, which is why the bug evaded smoke tests on the development machine. The smoke tests themselves were the second mistake: they all used `--ignore` to suppress self-detection (since the scanner reports its own definition files by design), so the no-`--ignore` codepath was never exercised before release.
+
+Lesson logged to `LESSONS.md`: smoke tests must include the production-default invocation, not just the developer-debug invocation.
+
 ## [1.4.0] -- 2026-05-12
 
 Adds `[skill:detect-ai-fingerprints]`, a mechanical scanner for stylistic rules 1-6 of `[rule:no-ai-fingerprints]`. Wired into `[skill:commit]` step 3 (pre-review gate) and `[skill:code-review]` start.
@@ -378,7 +388,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` -- DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.4.1
 [1.4.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.4.0
 [1.3.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.3.0
 [1.2.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.2.1

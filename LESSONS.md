@@ -16,6 +16,15 @@ See [skill:lessons-learned] for the format spec and [skill:rules-audit] for the 
 
 ## Entries
 
+## 2026-05-12 -- Smoke tests must include the production-default invocation, not just the developer-debug one
+
+- **Source:** v1.4.0 of `[skill:detect-ai-fingerprints]` shipped a bash-3.2 unbound-variable bug. PR [#48](https://github.com/siege-analytics/claude-configs-public/pull/48) fixed it; v1.4.1 superseded v1.4.0 the same hour. Issue [#47](https://github.com/siege-analytics/claude-configs-public/issues/47).
+- **Rule (draft):** Every smoke test for a CLI tool must include the no-flags invocation that production callers actually use. Convenience flags used during development do not exercise the production codepath.
+- **Why:** During PR #46 development I tested the scanner with `--ignore 'skills/meta/detect-ai-fingerprints/*'` repeatedly to suppress its own self-detection. The flag also happened to populate the `IGNORE_GLOBS` array, so I never hit the empty-array codepath. Production gates (commit step 3, code-review pre-flight) call the scanner without `--ignore`. On bash 3.2 (macOS default) the empty-array expansion under `set -u` errors immediately. The bug shipped because the smoke tests asked "does the scanner work the way I'm calling it" instead of "does the scanner work the way callers will call it."
+- **Recurrence:** 1
+- **Promotion-requested:** none yet (recurrence threshold)
+- **Promoted:** not yet
+
 ## 2026-05-12 -- Eleven AI fingerprints from a hostile siege_utilities review
 
 - **Source:** Cross-session hand-off from session `260502-vital-channel` to session `260502-pure-vista`; eleven concrete failure modes named in the inbound message (em-dashes, "Why:" / "How to apply:" blocks, multi-paragraph docstrings on internal helpers, self-justifying adverbs, bulleted commit messages, history references in code comments, vacuous tests, cargo-culted patterns across modules, speculative abstractions, asserting non-existent symbols, single-site patches that need three rounds). Issue [#42](https://github.com/siege-analytics/claude-configs-public/issues/42); PR [#43](https://github.com/siege-analytics/claude-configs-public/pull/43).
