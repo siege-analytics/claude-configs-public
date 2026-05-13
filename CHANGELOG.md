@@ -6,6 +6,29 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [2.0.1] -- 2026-05-13
+
+Patch fixing two gaps in v2.0.0 surfaced by parent session 260502-vital-channel during load-verification of the `v2.0.0-flat` sync.
+
+### Fixed -- build script now includes RULES.md and _coverage.md (#62)
+
+`bin/build.py`'s `find_rules()` matched `_*-rules.md` only. The two new v2.0.0 files at `skills/` root (`RULES.md` entry point, `_coverage.md` matrix) did not match the pattern and were never copied to `dist/<layout>/skills/`. Consumers syncing from `v2.0.0-flat` got the per-act rule files but not the entry-point or matrix. Build extended to copy both via `write_resolved` so inline `[skill:X]` and `[rule:X]` tokens get layout-resolved.
+
+### Fixed -- two stale rule-N references in commit/SKILL.md (#62)
+
+The v2.0.0 cross-reference pass caught the top-level checklist and main section bodies but missed two inline mentions inside the Affected-tests gate subsection prose:
+
+- Line 137: `rule 7` -> `[rule:writing-tests]` writing-tests:1
+- Line 152: `Rule 12` -> `[rule:writing-code]` writing-code:5
+
+### Known stale refs (out of scope for this patch)
+
+`skills/_definition-of-done-rules.md` lines 43 and 84 reference `[skill:coding] Rule 6`. No `Rule 6` exists in `skills/coding/`. Pre-dates v2.0.0; was already broken in v1.6.x. Filing separately for triage; not a v2.0.0 regression.
+
+### Migration
+
+Consumers pinned to `v2.0.0-flat` should re-sync to `v2.0.1-flat` to pick up `skills/RULES.md` and `skills/_coverage.md`.
+
 ## [2.0.0] -- 2026-05-13
 
 Major release: refactor the always-on rule set from a single accreting file into per-act rule files, plus a coverage matrix that turns "is the failure mode prevented?" from estimation into grep-able truth. Rule wording is unchanged from the v1.6.x line; placements move to per-act homes and identifiers move from flat numbering (rule 1-20) to per-file `<file-stem>:<n>`.
@@ -563,7 +586,8 @@ Full attribution for upstream MIT-licensed skill libraries with commit pins and 
 - `README.md` -- DBrain section, shelf overview table, Credits, GBrain attribution, MIT license note.
 - This `CHANGELOG.md`.
 
-[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/siege-analytics/claude-configs-public/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v2.0.1
 [2.0.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v2.0.0
 [1.6.1]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.6.1
 [1.6.0]: https://github.com/siege-analytics/claude-configs-public/releases/tag/v1.6.0
