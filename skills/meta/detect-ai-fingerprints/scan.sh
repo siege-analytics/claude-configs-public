@@ -35,6 +35,11 @@ declare -a IGNORE_GLOBS=()
 
 is_ignored() {
     local file="$1" pat
+    # Defensive expansion: empty array under `set -u` on bash 3.2 (macOS default)
+    # would error on `${IGNORE_GLOBS[@]}` directly.
+    if (( ${#IGNORE_GLOBS[@]} == 0 )); then
+        return 1
+    fi
     for pat in "${IGNORE_GLOBS[@]}"; do
         # shellcheck disable=SC2053
         if [[ "$file" == $pat ]]; then
