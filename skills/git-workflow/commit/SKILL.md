@@ -7,9 +7,9 @@ allowed-tools: Read Grep Glob Bash
 
 # Instructions
 
-0. **Verify-before-execute** — emit the verification block from [rule:verify-before-execute] for the commit you are about to make. The Standards line must include `[skill:commit]` and the relevant project/language rules; the Intent line must summarize what the commit accomplishes; the Evidence line (if this is a fix) must reference same-turn tool calls demonstrating the bug. Skipping requires `[verify-skip: <reason>]` — and `[verify-skip]` does NOT exempt the commit from any later step in this skill.
+0. **Verify-before-execute** -- emit the verification block from [rule:verify-before-execute] for the commit you are about to make. The Standards line must include `[skill:commit]` and the relevant project/language rules; the Intent line must summarize what the commit accomplishes; the Evidence line (if this is a fix) must reference same-turn tool calls demonstrating the bug. Skipping requires `[verify-skip: <reason>]` -- and `[verify-skip]` does NOT exempt the commit from any later step in this skill.
 
-0.5. **Branch guard — verify you are NOT on a protected branch**
+0.5. **Branch guard -- verify you are NOT on a protected branch**
    1. Run `git branch --show-current` to get the current branch name
    2. If the branch is `main`, `master`, `develop`, `dev`, `development`, `staging`, `next`, or `integration` → **STOP**
    3. Inform the user: "You are on `{branch}`. Commits should go on a feature branch, not directly on a protected branch."
@@ -50,7 +50,7 @@ A commit is a unit of meaning, not a unit of time. Each commit should represent 
 
 # Pre-review gate
 
-**Every commit gets a code-review pass before it lands.** This is the operationalization of criterion (a) of [rule:definition-of-done] at the pre-commit transition — not just at PR-open.
+**Every commit gets a code-review pass before it lands.** This is the operationalization of criterion (a) of [rule:definition-of-done] at the pre-commit transition -- not just at PR-open.
 
 ## What runs
 
@@ -77,23 +77,23 @@ Code-review finished?
 
 ## Override syntax
 
-Override is for cases where the review surfaced a real finding but the right place to fix it is somewhere else (different commit, different repo, different sprint) — not for skipping the review itself. The review still runs; the override only acknowledges deferred Majors.
+Override is for cases where the review surfaced a real finding but the right place to fix it is somewhere else (different commit, different repo, different sprint) -- not for skipping the review itself. The review still runs; the override only acknowledges deferred Majors.
 
 ```
-[review-skip] Performance finding in legacy module deferred to ELE-512 — out of scope for this commit.
+[review-skip] Performance finding in legacy module deferred to ELE-512 -- out of scope for this commit.
 ```
 
-If you find yourself reaching for `[review-skip]` more than once a week, the threshold is wrong somewhere — either the review is flagging too aggressively, or the work is being scoped too broadly. Surface it in retrospective rather than normalizing the override.
+If you find yourself reaching for `[review-skip]` more than once a week, the threshold is wrong somewhere -- either the review is flagging too aggressively, or the work is being scoped too broadly. Surface it in retrospective rather than normalizing the override.
 
 ## Why pre-commit, not just pre-PR
 
 Catching findings at commit time is cheaper than catching them at PR time:
-- The change is fresh in your head — context-switch cost is zero.
-- The diff is small — one commit's worth of code, not a PR's worth.
-- No collaborators are blocked — no one is waiting on the PR.
+- The change is fresh in your head -- context-switch cost is zero.
+- The diff is small -- one commit's worth of code, not a PR's worth.
+- No collaborators are blocked -- no one is waiting on the PR.
 - Findings turn into the next commit instead of a force-push.
 
-The pre-PR review (in [skill:create-pr]) still runs — it's a second pass over the cumulative diff and catches things that only emerge across multiple commits (architectural drift, accidental scope creep). The two reviews are complementary, not redundant.
+The pre-PR review (in [skill:create-pr]) still runs -- it's a second pass over the cumulative diff and catches things that only emerge across multiple commits (architectural drift, accidental scope creep). The two reviews are complementary, not redundant.
 
 # Ticket enforcement
 
@@ -197,20 +197,25 @@ hotfix: Remove Sedona JAR reference that crashes executor pods
 
 ## Body
 
-The body is optional for trivial changes but expected for anything non-obvious. Wrap lines at 72 characters.
+The body is optional for trivial changes and expected for anything non-obvious. Wrap lines at 72 characters. Plain prose only -- no bullets, no headers, no `## Summary` / `## Why` / `## Test plan` sections (those belong in the PR body, not the commit body). Length is determined by what the why genuinely requires: a typo fix is one line, a non-obvious rewrite may be three paragraphs.
 
 ### What to include
 
-- **Why** this change was made (the motivation, not a restatement of the diff)
-- **What tradeoff** was chosen if alternatives existed
-- **What is not obvious** from the diff alone (e.g., a subtle side effect, a constraint from an external system)
-- **What was intentionally left out** if the scope was deliberately limited
+Write a few sentences of plain prose covering whichever of these the change actually requires:
+
+- The motivation for the change, where the diff alone does not make it obvious.
+- The tradeoff chosen if alternatives existed, and a sentence on why each alternative was rejected.
+- Constraints from external systems, subtle side effects, or assumptions a future reader will not see in the diff.
+- What was left out and why, if the scope was bounded.
 
 ### What to omit
 
-- Play-by-play of the diff ("Changed line 48 from int to str")
-- Filler ("This commit updates the code to...")
-- Attribution to tools or assistants (see Attribution policy below)
+- Bullets and section headers. Bullets in commit bodies are a tell; the commit body is prose.
+- Self-justifying adverbs: "deliberately," "intentionally," "explicitly," "fundamentally," "essentially," "crucially," "notably." Per `[rule:no-ai-fingerprints]` rule 4.
+- Em-dashes (`--`). Use `--`, a comma, or a period. Per `[rule:no-ai-fingerprints]` rule 1.
+- Play-by-play of the diff ("Changed line 48 from int to str").
+- Filler ("This commit updates the code to...").
+- Attribution to tools or assistants (see Attribution policy below).
 
 ### Example body
 
@@ -334,19 +339,19 @@ If it was already committed, remove it from history and rotate the credential im
 - No "Generated with Claude Code", "Made with Cursor", "Built with Codex", or any AI tool mentions
 - No `🤖`, `[bot]`, or other markers that signal AI involvement
 - No attribution to any AI assistant, code generation tool, or agent framework
-- This applies to the subject line, body, and footer — every part of the commit message
+- This applies to the subject line, body, and footer -- every part of the commit message
 
 # Checklist
 
-- [ ] **[rule:verify-before-execute] block emitted** — Standards, Intent, and (for fixes) same-turn Evidence
-- [ ] **Not on a protected branch** (main, develop, etc.) — or user explicitly overrode with `[direct-commit]`
+- [ ] **[rule:verify-before-execute] block emitted** -- Standards, Intent, and (for fixes) same-turn Evidence
+- [ ] **Not on a protected branch** (main, develop, etc.) -- or user explicitly overrode with `[direct-commit]`
 - [ ] Changes are grouped into logical, single-purpose commits
 - [ ] Files are staged by name, not with `git add -A`
 - [ ] No sensitive files (secrets, credentials, keys) are staged
-- [ ] **[skill:code-review] ran on the staged diff** — Blockers resolved, Majors addressed or deferred-with-ticket, or `[review-skip]` documented in commit body
+- [ ] **[skill:code-review] ran on the staged diff** -- Blockers resolved, Majors addressed or deferred-with-ticket, or `[review-skip]` documented in commit body
 - [ ] Subject line: type prefix, imperative mood, under 72 chars, specific
 - [ ] Body explains the why (if the change is non-trivial)
-- [ ] **Footer references the relevant ticket(s)** — mandatory unless user overrides with `[no-ticket]`
+- [ ] **Footer references the relevant ticket(s)** -- mandatory unless user overrides with `[no-ticket]`
 - [ ] Ticket exists for this work (if committable, it's ticketable)
 - [ ] No AI/agent attribution anywhere in the commit message
 - [ ] Verified with `git log -1` and `git status` after committing

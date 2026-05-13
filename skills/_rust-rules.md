@@ -26,7 +26,7 @@ Apply these principles from *Programming with Rust* (Donis Marshall) and *Rust i
 
 ## Idiomatic patterns
 
-- Use `Iterator` adapters (`map`, `filter`, `flat_map`, `collect`) over manual loops — the compiler optimizes them equally
+- Use `Iterator` adapters (`map`, `filter`, `flat_map`, `collect`) over manual loops -- the compiler optimizes them equally
 - Use `Option` methods (`map`, `unwrap_or`, `and_then`, `ok_or`) over `match` for simple transformations
 - Use `if let` for single-variant matching; use `match` for exhaustive handling
 

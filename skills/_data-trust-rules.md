@@ -4,7 +4,7 @@ Shared default assumption: **tabular data lies**. Identifiers drift, crosswalks 
 
 ## Core principle
 
-**Validate at boundaries.** Once data is inside the system, treat it as clean. At the boundary — ingestion, API response, file read, user input, third-party library return — assume nothing and check.
+**Validate at boundaries.** Once data is inside the system, treat it as clean. At the boundary -- ingestion, API response, file read, user input, third-party library return -- assume nothing and check.
 
 ## Before you join
 
@@ -17,7 +17,7 @@ Ask of every column on the join key:
 
 If any answer is uncertain, proceed with a post-join audit (below).
 
-## After every join — log loss
+## After every join -- log loss
 
 ```python
 pre = len(left)
@@ -56,10 +56,10 @@ Apply the same pattern to FIPS (leading zeros stripped by Excel), ZIP (9-digit s
 Any join involving geography, jurisdiction, or categorical code has an implicit year dimension. Pin it:
 
 ```python
-# BAD — which vintage?
+# BAD -- which vintage?
 merged = donors.merge(counties, on="county_fips")
 
-# GOOD — explicit
+# GOOD -- explicit
 counties_2020 = counties[counties.year == 2020]
 merged = donors.merge(counties_2020, on="county_fips")
 ```
@@ -72,7 +72,7 @@ When a primary lookup fails, raising is almost always better than returning a de
 
 Anti-pattern:
 ```python
-# Fails silently if tract_id is unknown — tract is dropped from output
+# Fails silently if tract_id is unknown -- tract is dropped from output
 demographics = tract_lookup.get(tract_id, {})
 ```
 
@@ -103,9 +103,9 @@ Any skill that touches:
 
 ## See also
 
-- `analysis/spatial/SKILL.md` — decision framework with Step 1 data-trust check
-- `analysis/spatial/reference.md` — dirty-data recipes section
-- `coding/python-exceptions/SKILL.md` — raise-vs-silent-default decision
+- `analysis/spatial/SKILL.md` -- decision framework with Step 1 data-trust check
+- `analysis/spatial/reference.md` -- dirty-data recipes section
+- `coding/python-exceptions/SKILL.md` -- raise-vs-silent-default decision
 
 ## Attribution Policy
 

@@ -4,7 +4,7 @@ description: Always-on pre-execution discipline. Every write/edit/commit/push/de
 
 # Verify Before Execute
 
-Before any action that modifies state — `Write`, `Edit`, `NotebookEdit`, `Bash` with side effects (anything that writes files, mutates the repo, runs migrations, calls external APIs, deploys, deletes, or commits/pushes), or destructive shell operations — produce a **visible verification block** in your response and only then take the action.
+Before any action that modifies state -- `Write`, `Edit`, `NotebookEdit`, `Bash` with side effects (anything that writes files, mutates the repo, runs migrations, calls external APIs, deploys, deletes, or commits/pushes), or destructive shell operations -- produce a **visible verification block** in your response and only then take the action.
 
 The block is mandatory. It is not a private check. It is an artifact the user can audit.
 
@@ -14,8 +14,8 @@ The block is mandatory. It is not a private check. It is an artifact the user ca
 **Verify-before-execute**
 - **Standards:** <which rules/skills/checklists apply to this action>
 - **Intent:** <one sentence linking the goal to this specific change>
-- **Evidence:** <for corrections only — the observed failure and the same-turn tool call that demonstrated it>
-- **Design:** <for non-trivial actions — reference to the same-conversation [skill:think] workflow that produced the design this action implements>
+- **Evidence:** <for corrections only -- the observed failure and the same-turn tool call that demonstrated it>
+- **Design:** <for non-trivial actions -- reference to the same-conversation [skill:think] workflow that produced the design this action implements>
 ```
 
 ### Standards
@@ -37,7 +37,7 @@ If you find yourself writing "and" twice or hedging with "should" / "probably," 
 
 ### Evidence (corrections only)
 
-A correction is any action whose justification is "fixing a bug," "making the failing thing work," "addressing the error," or similar. For corrections, the evidence line **must reference a tool call from this same response** — not a prior turn, not a memory, not a conversation summary.
+A correction is any action whose justification is "fixing a bug," "making the failing thing work," "addressing the error," or similar. For corrections, the evidence line **must reference a tool call from this same response** -- not a prior turn, not a memory, not a conversation summary.
 
 Acceptable evidence:
 - A `Read` tool call in this response that shows the file's current state, with the line number you're modifying
@@ -45,11 +45,11 @@ Acceptable evidence:
 - A `Grep` tool call in this response that demonstrates the absence of an expected symbol, the presence of an unexpected one, or the count that contradicts an assumption
 
 Unacceptable evidence:
-- "I read the file earlier in this conversation" — re-read it now; files change
-- "The user said the test was failing" — run the test in this response and quote the output
-- "I think the bug is X" — produce the tool call that confirms X
-- "Based on the conversation context" — the context is not the source of truth; the code/state is
-- "It should work" — replace with "It does work because <demonstration>" or do not make the claim
+- "I read the file earlier in this conversation" -- re-read it now; files change
+- "The user said the test was failing" -- run the test in this response and quote the output
+- "I think the bug is X" -- produce the tool call that confirms X
+- "Based on the conversation context" -- the context is not the source of truth; the code/state is
+- "It should work" -- replace with "It does work because <demonstration>" or do not make the claim
 
 If the action is not a correction (it's a feature, a refactor, a new file, scaffolding), omit the Evidence line.
 
@@ -57,7 +57,7 @@ If the action is not a correction (it's a feature, a refactor, a new file, scaff
 
 Non-trivial actions require a same-conversation `[skill:think]` workflow before the verification block. The Design line names where in this conversation the think workflow happened (turn, message, or summary), so the Standards/Intent answers can be traced back to a structured design rather than a snap judgment.
 
-**An action is non-trivial if any of these fire — they are exactly the triggers from `[skill:think]`'s "When This Skill Applies" section:**
+**An action is non-trivial if any of these fire -- they are exactly the triggers from `[skill:think]`'s "When This Skill Applies" section:**
 
 - Adding a new feature or capability
 - Refactoring existing code
@@ -73,18 +73,18 @@ Non-trivial actions require a same-conversation `[skill:think]` workflow before 
 - It is a documentation-only edit, a git operation, a non-code task
 - It is one of the trivial actions that already qualify for `[verify-skip]` (see Skipping the block)
 
-This carve-out matches `[skill:think]`'s own exemption list deliberately. Where think exempts, verify exempts.
+This carve-out is quoted from `[skill:think]`'s own exemption list. Where think exempts, verify exempts.
 
 **What "reference the think workflow" looks like:**
 
-- "Design: think workflow completed in this conversation at the message proposing options A/B/C; user selected B." — for sessions where think ran explicitly.
-- "Design: think workflow ran via extended thinking before this response; key decisions: <one or two bullets>." — when extended thinking was used in lieu of an explicit `/think` invocation.
-- "Design: per the multi-turn design discussion above, settling on approach <X> for reasons <Y>." — when the conversation itself was the think workflow and approval was given inline.
+- "Design: think workflow completed in this conversation at the message proposing options A/B/C; user selected B." -- for sessions where think ran via `/think`.
+- "Design: think workflow ran via extended thinking before this response; key decisions: <one or two bullets>." -- when extended thinking was used in lieu of an explicit `/think` invocation.
+- "Design: per the multi-turn design discussion above, settling on approach <X> for reasons <Y>." -- when the conversation itself was the think workflow and approval was given inline.
 
 **What does NOT satisfy the Design requirement:**
 
-- "I thought about it." — invisible thinking is not a design.
-- "It's the obvious approach." — if the approach is obvious, the action is trivial and the Design line is omitted; if it's not obvious, the obviousness claim is itself the failure mode.
+- "I thought about it." -- invisible thinking is not a design.
+- "It's the obvious approach." -- if the approach is obvious, the action is trivial and the Design line is omitted; if it's not obvious, the obviousness claim is itself the failure mode.
 - A reference to a prior conversation or session. Same-conversation, like Evidence's same-response constraint, exists because designs go stale across conversation boundaries.
 
 If a non-trivial action lacks a Design line, the action stops. Run `[skill:think]` (or extended thinking) first; then return to the verification block with the Design line filled in.
@@ -99,9 +99,9 @@ The verification block has exactly one override:
 
 Use cases for the override are narrow:
 - A trivial action whose correctness is self-evident from the immediately preceding context (e.g., the user just said "add a newline at the end of file X" and you are doing exactly that)
-- A read-only or query-only action that has no side effect (`Read`, `Grep`, `Glob`, `gh pr view`, etc.) — these don't require the block in the first place
+- A read-only or query-only action that has no side effect (`Read`, `Grep`, `Glob`, `gh pr view`, etc.) -- these don't require the block in the first place
 
-`[verify-skip]` is itself a flag that the action is being taken without the standard discipline. If you reach for it more than once a session, the discipline is being eroded — surface it to the user and ask whether the threshold needs adjusting, rather than normalizing the override.
+`[verify-skip]` is itself a flag that the action is being taken without the standard discipline. If you reach for it more than once a session, the discipline is being eroded -- surface it to the user and ask whether the threshold needs adjusting, rather than normalizing the override.
 
 ## Anti-patterns this rule prevents
 
@@ -112,12 +112,12 @@ Use cases for the override are narrow:
 - **Trusting a memory or a prior conversation summary about file contents instead of re-reading the file.** Memories drift; files change between turns.
 - **Treating a tool call from a prior turn as evidence for an action in this turn.** Same-turn evidence is the bar. The reason is that anything older may have been invalidated by intervening actions you didn't notice.
 - **Producing a verification block that doesn't actually map to the action.** The block must reference the specific change, not a generic disclaimer. "Standards: follows project conventions" is not standards; "Standards: `[rule:python]` (no bare excepts), `[skill:commit]` checklist" is.
-- **Skipping the Design line on a non-trivial action with "it's straightforward."** If you can name a way it could go wrong, it's not straightforward — run think. If the user asks "have you thought about X?" and you have to start thinking about X *now*, you skipped the Design step.
+- **Skipping the Design line on a non-trivial action with "it's straightforward."** If you can name a way it could go wrong, it's not straightforward -- run think. If the user asks "have you thought about X?" and you have to start thinking about X *now*, you skipped the Design step.
 - **Treating a prior session's design as the Design line for this conversation.** Designs go stale. The think workflow must have happened in this conversation.
 
 ## Worked examples
 
-### Example 1 — Editing a file (correction, single-line fix, no Design line)
+### Example 1 -- Editing a file (correction, single-line fix, no Design line)
 
 > User: "The committee_id parsing is dropping the leading zero again."
 >
@@ -128,9 +128,9 @@ Use cases for the override are narrow:
 > - **Intent:** Cast committee_id to str before parsing so leading zeros survive the bronze→silver transform.
 > - **Evidence:** `Read` of `transforms/silver.py:48` (in this response) shows `committee_id = int(row["committee_id"])`; `Bash` of `pytest tests/test_silver.py::test_zero_padded_committee_id -x` (in this response) shows `assert "C00000547" == "C547"` failing on line 22.
 > ```
-> [proceeds with Edit — single-line fix, qualifies for think exemption]
+> [proceeds with Edit -- single-line fix, qualifies for think exemption]
 
-### Example 2 — Writing a new file (feature, no Evidence line, Design required)
+### Example 2 -- Writing a new file (feature, no Evidence line, Design required)
 
 > ```
 > **Verify-before-execute**
@@ -140,13 +140,13 @@ Use cases for the override are narrow:
 > ```
 > [proceeds with Write]
 
-### Example 3 — Trivial action with override
+### Example 3 -- Trivial action with override
 
 > User: "There's a stray space at the end of line 47 in README.md, please remove it."
 >
 > Assistant:
 > ```
-> [verify-skip: trivial single-character cleanup, scope set explicitly by user in immediately preceding turn]
+> [verify-skip: trivial single-character cleanup, scope set by user in the immediately preceding turn]
 > ```
 > [proceeds with Edit]
 
@@ -160,7 +160,7 @@ Use cases for the override are narrow:
 
 ## Why this rule exists
 
-Recurring observation across multiple sessions: agents take actions without first investigating the actual state. They infer, assume, or rely on stale context — and the resulting actions have to be reverted, re-done, or apologized for. The cost of the visible verification block is small (a few lines of text per action). The cost of unverified action is large (lost work, broken state, eroded user trust).
+Recurring observation across multiple sessions: agents take actions without first investigating the actual state. They infer, assume, or rely on stale context -- and the resulting actions have to be reverted, re-done, or apologized for. The cost of the visible verification block is small (a few lines of text per action). The cost of unverified action is large (lost work, broken state, eroded user trust).
 
 This rule exists to make investigation observable. Invisible discipline decays; visible discipline is auditable. The block is the artifact that proves the discipline happened.
 

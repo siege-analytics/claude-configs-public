@@ -9,10 +9,10 @@ If you're adding a skill or editing one, the only conventions you need to know a
 Skills cross-reference each other by **slug token**, not file path:
 
 ```markdown
-<!-- YES — works in both layouts -->
+<!-- YES -- works in both layouts -->
 See [skill:code-review] for the review checklist.
 
-<!-- NO — breaks when the layout changes -->
+<!-- NO -- breaks when the layout changes -->
 See [`../../coding/code-review/SKILL.md`](../../coding/code-review/SKILL.md) for the review checklist.
 ```
 
@@ -32,7 +32,7 @@ The build expands tokens to layout-appropriate paths. You don't think about whet
 
 | Token | Resolves to | Use for |
 |---|---|---|
-| `[skill:<slug>]` | `path/to/<slug>/SKILL.md` | Any other skill — leaves, routers, shelves, books |
+| `[skill:<slug>]` | `path/to/<slug>/SKILL.md` | Any other skill -- leaves, routers, shelves, books |
 | `[rule:<slug>]` | `path/to/_<slug>-rules.md` | Always-on rules at `skills/_*-rules.md` |
 | Plain Markdown link | (unchanged) | External URLs, GitHub issues, anything outside the skill tree |
 
@@ -42,8 +42,8 @@ If you want to reference a skill that doesn't exist yet (planned, not built), us
 
 ## Adding a new skill
 
-1. **Pick a slug** — lowercase, alphanumeric + hyphens. Globally unique across all categories. Validated by build (collisions = build failure).
-2. **Decide nesting** — slot under the appropriate category (`coding/`, `git-workflow/`, `planning/`, etc.). The build flattens leaves automatically for Craft Agent; routers stay nested.
+1. **Pick a slug** -- lowercase, alphanumeric + hyphens. Globally unique across all categories. Validated by build (collisions = build failure).
+2. **Decide nesting** -- slot under the appropriate category (`coding/`, `git-workflow/`, `planning/`, etc.). The build flattens leaves automatically for Craft Agent; routers stay nested.
 3. **Write `SKILL.md`** with frontmatter:
    ```yaml
    ---
@@ -65,8 +65,8 @@ If you want to reference a skill that doesn't exist yet (planned, not built), us
 
 `bin/build.py` produces two outputs:
 
-- **`dist/nested/`** — mirrors the source layout. Skills live under category folders. The resolver hook works as designed.
-- **`dist/flat/`** — leaf skills move to `skills/<slug>/SKILL.md`. Routers stay at their category root. Craft Agent's skills pane sees every leaf as a slash command.
+- **`dist/nested/`** -- mirrors the source layout. Skills live under category folders. The resolver hook works as designed.
+- **`dist/flat/`** -- leaf skills move to `skills/<slug>/SKILL.md`. Routers stay at their category root. Craft Agent's skills pane sees every leaf as a slash command.
 
 You can build locally any time:
 
@@ -131,15 +131,15 @@ The local workspace's `UPSTREAM-UPDATE.md` documents the canonical sync flow.
 
 Versions follow [SemVer](https://semver.org/):
 
-- **Major** — breaking changes to skill discovery, slug taxonomy, frontmatter conventions, or build outputs
-- **Minor** — new skills, new shelves, new always-on rules, additive changes
-- **Patch** — fixes to existing skills, doc corrections
+- **Major** -- breaking changes to skill discovery, slug taxonomy, frontmatter conventions, or build outputs
+- **Minor** -- new skills, new shelves, new always-on rules, additive changes
+- **Patch** -- fixes to existing skills, doc corrections
 
 Every tag on `main` produces matching tags on the release branches:
 
 - `v1.0.0` (source) → `v1.0.0-nested` and `v1.0.0-flat` (release branches)
 
-Pin downstream consumers to a release-branch tag, not the source tag — the source tag is on `main`, which has the build infrastructure but not the resolved skills.
+Pin downstream consumers to a release-branch tag, not the source tag -- the source tag is on `main`, which has the build infrastructure but not the resolved skills.
 
 ## Skill design guidelines
 
@@ -149,7 +149,7 @@ When writing a new skill or editing one:
 - **Description is what the user sees.** It appears in slash-command autocomplete and the skills pane. Make it actionable.
 - **Reference other skills by slug.** Never path. The build handles paths.
 - **Keep cross-links to a minimum.** Each cross-link is a maintenance edge; only add one if loading the linked skill is genuinely useful in this skill's context.
-- **Add edge-case checks** when the skill performs work — see `[skill:code-review]` §1 for the universal edge-case checklist.
+- **Add edge-case checks** when the skill performs work -- see `[skill:code-review]` §1 for the universal edge-case checklist.
 - **No AI/agent attribution** in commits, PR descriptions, skill body, or anywhere else user-visible. See `[rule:output]`.
 
 ## Skill validation
@@ -168,13 +168,13 @@ mcp__session__skill_validate(skillSlug="<slug>")
 
 ## How rules get promoted into this repo
 
-The `_*-rules.md` files at `skills/_*-rules.md` are **Tier 3** of a three-tier rules pipeline. Rules don't get added here based on opinion — they get promoted from evidence accumulated in downstream consumer repos.
+The `_*-rules.md` files at `skills/_*-rules.md` are **Tier 3** of a three-tier rules pipeline. Rules don't get added here based on opinion -- they get promoted from evidence accumulated in downstream consumer repos.
 
 | Tier | Lives in | Owned by | Promotion gate |
 |---|---|---|---|
-| 1 — Ledger | `<consumer-repo>/LESSONS.md` | `[skill:lessons-learned]` | recurrence ≥ 3, or 1 production incident, or Critical-severity → Tier 2 |
-| 2 — Project rules | `<consumer-repo>/.claude/rules/<topic>.md` | `[skill:distill-lessons]` | appears in 2+ projects, or is language/framework-level → Tier 3 |
-| **3 — Org rules (this repo)** | `claude-configs-public/skills/_<topic>-rules.md` | **Human PR with cited evidence** | (top of pipeline) |
+| 1 -- Ledger | `<consumer-repo>/LESSONS.md` | `[skill:lessons-learned]` | recurrence ≥ 3, or 1 production incident, or Critical-severity → Tier 2 |
+| 2 -- Project rules | `<consumer-repo>/.claude/rules/<topic>.md` | `[skill:distill-lessons]` | appears in 2+ projects, or is language/framework-level → Tier 3 |
+| **3 -- Org rules (this repo)** | `claude-configs-public/skills/_<topic>-rules.md` | **Human PR with cited evidence** | (top of pipeline) |
 
 `[skill:rules-audit]` runs the cross-tier hygiene pass that surfaces Tier-3 promotion candidates.
 
@@ -184,8 +184,8 @@ When you propose adding or amending a rule in any `_*-rules.md` file, the PR des
 
 1. **Cite at least two Tier-2 projects** that have independently arrived at the same rule (link to `.claude/rules/<topic>.md` in each).
 2. **OR** cite a single Tier-2 project plus a justification for why the rule is language/framework-level (and therefore broadly applicable beyond that one project).
-3. **List the originating Tier-1 evidence** — link to the `LESSONS.md` entries that fed each Tier-2 rule. Reviewers should be able to trace every clause back to a real incident, comment, or code-review finding.
-4. **Pass the conflict gate** — confirm the new rule does not contradict an existing rule in the same file. If it does, the PR amends or retires the conflicting rule in the same change.
+3. **List the originating Tier-1 evidence** -- link to the `LESSONS.md` entries that fed each Tier-2 rule. Reviewers should be able to trace every clause back to a real incident, comment, or code-review finding.
+4. **Pass the conflict gate** -- confirm the new rule does not contradict an existing rule in the same file. If it does, the PR amends or retires the conflicting rule in the same change.
 
 PRs that propose new rules without cited evidence will be asked to either gather evidence first (open a Tier-1/Tier-2 PR in the relevant consumer repo) or downgrade to a discussion issue.
 
@@ -199,10 +199,10 @@ The reverse pipeline (Tier 3 → Tier 2 → Tier 1) doesn't exist by design: org
 
 This repo's own contributions are subject to the [Definition of Done](skills/_definition-of-done-rules.md) it ships:
 
-1. **Code-reviewed** — at least self-review of the diff; CodeRabbit on PR
-2. **Edge cases explored** — for the skill content itself: does it handle absent dependencies, partial state, alternative tools?
-3. **Tests** — for `bin/` scripts, add a smoke test if behavior is non-trivial
-4. **Ticket updated** — link the PR to the ticket; close on merge
-5. **Work has a ticket** — every PR references at least one tracked issue
+1. **Code-reviewed** -- at least self-review of the diff; CodeRabbit on PR
+2. **Edge cases explored** -- for the skill content itself: does it handle absent dependencies, partial state, alternative tools?
+3. **Tests** -- for `bin/` scripts, add a smoke test if behavior is non-trivial
+4. **Ticket updated** -- link the PR to the ticket; close on merge
+5. **Work has a ticket** -- every PR references at least one tracked issue
 
 The PR-creation skill (`/create-pr` in workspaces using this repo) gates on all five before opening. PRs that fail any criterion open as drafts with the failures listed.

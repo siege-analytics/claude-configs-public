@@ -22,7 +22,7 @@ Apply these principles from *Effective Python* (Brett Slatkin, 3rd edition) to a
 ## Functions
 
 - Use keyword-only arguments (`def f(a, *, b)`) for optional parameters that benefit from names at the call site
-- Never use mutable default arguments — use `None` and assign inside the function body
+- Never use mutable default arguments -- use `None` and assign inside the function body
 - Prefer generator expressions `(x for x in ...)` over list comprehensions when you don't need the full list in memory
 
 ## Type annotations
@@ -34,7 +34,7 @@ Apply these principles from *Effective Python* (Brett Slatkin, 3rd edition) to a
 ## Error handling
 
 - Catch specific exception types; never use bare `except:`
-- Use `contextlib.suppress(ExceptionType)` for intentionally ignored exceptions — makes the intent explicit
+- Use `contextlib.suppress(ExceptionType)` for ignored exceptions; the call documents the intent at the site
 - Use `__all__` in every module to declare its public API
 
 

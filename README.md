@@ -2,7 +2,7 @@
 
 Reusable Claude Code skills and project initialization templates.
 
-For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zshrc) or standalone. Pin to a release tag — see [Quick Start](#quick-start).
+For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zshrc) or standalone. Pin to a release tag -- see [Quick Start](#quick-start).
 
 [![Latest release](https://img.shields.io/github/v/release/siege-analytics/claude-configs-public?label=latest)](https://github.com/siege-analytics/claude-configs-public/releases) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -10,11 +10,11 @@ For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zsh
 
 | Path | Purpose |
 |---|---|
-| [`RESOLVER.md`](RESOLVER.md) | **Skill resolver** — master index mapping task patterns to required skills. Mandatory first read before any non-trivial action. |
+| [`RESOLVER.md`](RESOLVER.md) | **Skill resolver** -- master index mapping task patterns to required skills. Mandatory first read before any non-trivial action. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release notes by version. |
 | `skills/` | Categorized reusable skills for Claude Code sessions. |
-| `skills/_*-rules.md` | **Always-on conventions** — applied across every skill that touches code, data, or output. See [Conventions](#always-on-conventions). |
-| `skills/shelves/` | **DBrain book-skill library** — book-derived skills (Clean Code, DDIA, Effective Python, etc.) organized into 11 topic shelves. See [DBrain](#dbrain--book-skill-library). |
+| `skills/_*-rules.md` | **Always-on conventions** -- applied across every skill that touches code, data, or output. See [Conventions](#always-on-conventions). |
+| `skills/shelves/` | **DBrain book-skill library** -- book-derived skills (Clean Code, DDIA, Effective Python, etc.) organized into 11 topic shelves. See [DBrain](#dbrain--book-skill-library). |
 | `hooks/` | Shell hooks (PreToolUse, UserPromptSubmit) that enforce the resolver. |
 | `templates/` | Project templates (CLAUDE.md, settings.local.json). |
 
@@ -24,17 +24,17 @@ The problem this repo solves: **skills are only useful if they fire before the a
 
 [`RESOLVER.md`](RESOLVER.md) is a task-pattern → required-skill index. When Claude is about to do something (write Delta data, create a PR, author a ticket, run a spatial join), it scans the resolver, finds the matching row, and reads the mapped `SKILL.md` before acting. If no pattern matches, universal pre-action checks (catalog-first, brain-first, test-before-bulk, ticket-required, etc.) still apply.
 
-**The first gate is [`think`](skills/thinking/think/SKILL.md).** Every catalog-bypass, every premature cutover, every half-designed pipeline the resolver exists to prevent traces back to acting before thinking. The `think` skill is not one pattern among many — it is the mandatory first step before any feature, refactor, architecture change, cutover, or >30-minute task. The rest of the resolver assumes `think` has already fired.
+**The first gate is [`think`](skills/thinking/think/SKILL.md).** Every catalog-bypass, every premature cutover, every half-designed pipeline the resolver exists to prevent traces back to acting before thinking. The `think` skill is not one pattern among many -- it is the mandatory first step before any feature, refactor, architecture change, cutover, or >30-minute task. The rest of the resolver assumes `think` has already fired.
 
-**Inspired by [GBrain](https://github.com/garrytan/gbrain)'s "thin harness, fat skills" pattern** — intelligence lives in the skills, not the runtime. The resolver is the discovery layer; `think` is the gate.
+**Inspired by [GBrain](https://github.com/garrytan/gbrain)'s "thin harness, fat skills" pattern** -- intelligence lives in the skills, not the runtime. The resolver is the discovery layer; `think` is the gate.
 
 ### Enforcement
 
 Three enforcement layers keep the resolver active:
 
-1. **Session start** — every project `CLAUDE.md` references `RESOLVER.md` as the first action of any non-trivial task.
-2. **Every user turn** — [`hooks/resolver/inject-resolver.sh`](hooks/resolver/inject-resolver.sh) is a `UserPromptSubmit` hook that injects the resolver summary into active context on every prompt. Context doesn't decay by turn 20.
-3. **Pre-tool-use** — [`hooks/infrastructure/catalog-guard.sh`](hooks/infrastructure/catalog-guard.sh) is a `PreToolUse` hook on `Bash` that matches dangerous catalog-bypass patterns and blocks them with a STOP-read-skill reminder.
+1. **Session start** -- every project `CLAUDE.md` references `RESOLVER.md` as the first action of any non-trivial task.
+2. **Every user turn** -- [`hooks/resolver/inject-resolver.sh`](hooks/resolver/inject-resolver.sh) is a `UserPromptSubmit` hook that injects the resolver summary into active context on every prompt. Context doesn't decay by turn 20.
+3. **Pre-tool-use** -- [`hooks/infrastructure/catalog-guard.sh`](hooks/infrastructure/catalog-guard.sh) is a `PreToolUse` hook on `Bash` that matches dangerous catalog-bypass patterns and blocks them with a STOP-read-skill reminder.
 
 Wire the hooks by merging [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into `~/.claude/settings.json` (or project `.claude/settings.local.json`), replacing `/path/to/claude-configs-public` with the actual absolute path to this repo.
 
@@ -58,10 +58,10 @@ Files at the root of `skills/` named `_*-rules.md` are loaded by the resolver Co
 
 Skills are classified by how they're invoked:
 
-- **Reference** — Knowledge Claude applies automatically when relevant. Not a slash command.
-- **Action** — Workflows with side effects. User invokes via `/skill-name`.
-- **Analytical** — Analysis that produces findings. User invokes via `/skill-name`.
-- **Router** — Dispatches to sub-skills based on context. Saves description budget at scale.
+- **Reference** -- Knowledge Claude applies automatically when relevant. Not a slash command.
+- **Action** -- Workflows with side effects. User invokes via `/skill-name`.
+- **Analytical** -- Analysis that produces findings. User invokes via `/skill-name`.
+- **Router** -- Dispatches to sub-skills based on context. Saves description budget at scale.
 
 ### Router Skills
 
@@ -71,7 +71,7 @@ Routers cover an entire category with one description slot. Sub-skills are loade
 |--------|-----------|-------------|
 | **coding-standards** | python, python-patterns, python-exceptions, sql, postgis, spark, scala-on-spark, geopandas, sedona, duckdb-spatial, django, pipeline-jobs, code-review, qml-component-review | `*.py`, `*.sql`, `*.scala`, file imports, framework signals |
 | **analysis-methods** | spatial (router itself; dispatches to per-engine spatial skills) | Geographic data, spatial queries; future: statistical, graph, entity-resolution, NLP |
-| **shelves** (DBrain) | 11 topic shelves with 53 book skills | Engineering practice / language idioms / business / design questions — see [DBrain](#dbrain--book-skill-library) |
+| **shelves** (DBrain) | 11 topic shelves with 53 book skills | Engineering practice / language idioms / business / design questions -- see [DBrain](#dbrain--book-skill-library) |
 
 ### Spatial skills
 
@@ -82,7 +82,7 @@ Routers cover an entire category with one description slot. Sub-skills are loade
 | **PostGIS** | [`coding/postgis/`](skills/coding/postgis/SKILL.md) | Persistent multi-user; ACID; rich indexes (GIST/SP-GIST/BRIN). Includes a *Mastering PostGIS* distillation. |
 | **GeoPandas** | [`coding/geopandas/`](skills/coding/geopandas/SKILL.md) | Single-node Python, Pandas idiom. Folds raw Shapely. Has explicit no-GDAL fallbacks. |
 | **Apache Sedona** | [`coding/sedona/`](skills/coding/sedona/SKILL.md) | Distributed spatial joins on Spark. Same skill for PySpark and Scala scaffolding. Includes raster. |
-| **DuckDB-spatial** | [`coding/duckdb-spatial/`](skills/coding/duckdb-spatial/SKILL.md) | SQL on Parquet without server; bundles GEOS/GDAL/PROJ — the strongest single tool for GDAL-less environments. |
+| **DuckDB-spatial** | [`coding/duckdb-spatial/`](skills/coding/duckdb-spatial/SKILL.md) | SQL on Parquet without server; bundles GEOS/GDAL/PROJ -- the strongest single tool for GDAL-less environments. |
 
 Always start spatial work with `siege_utilities.geo.capabilities.geo_capabilities()` to detect the environment tier, then route from [`analysis/spatial/SKILL.md`](skills/analysis/spatial/SKILL.md).
 
@@ -141,7 +141,7 @@ Auto-applied by Claude when relevant. Not behind a router.
 
 ### Pin to a release tag (recommended)
 
-This repo publishes **two release-branch artifacts per tag** for two consumer runtimes — see [Distribution layouts](#distribution-layouts) below for the full explanation.
+This repo publishes **two release-branch artifacts per tag** for two consumer runtimes -- see [Distribution layouts](#distribution-layouts) below for the full explanation.
 
 For Claude Code with the resolver hook (the original target), pull from `release/nested`:
 
@@ -214,7 +214,7 @@ Notable distillations and references shipped in v0.2.0:
 
 - *Mastering PostGIS* (Witkowski et al., 2017) chapter-by-chapter distillation under [`skills/coding/postgis/references/mastering-postgis/`](skills/coding/postgis/references/mastering-postgis/index.md)
 - *Geographic Data Science with Python* (Rey, Arribas-Bel, Wolf, 2023) distillation under [`skills/analysis/spatial/references/geographic-data-science-distilled.md`](skills/analysis/spatial/references/geographic-data-science-distilled.md), with topic refs for spatial weights, regionalization, spatial inequality, spatial feature engineering, and point pattern analysis
-- Universal cross-engine spatial principles at [`skills/analysis/spatial/references/principles/`](skills/analysis/spatial/references/principles/index.md) — engine-agnostic patterns (CRS-as-meaning, validate-on-ingest, bbox-pre-filter, subdivide-complex-polygons, indexing-discipline, name-by-srid)
+- Universal cross-engine spatial principles at [`skills/analysis/spatial/references/principles/`](skills/analysis/spatial/references/principles/index.md) -- engine-agnostic patterns (CRS-as-meaning, validate-on-ingest, bbox-pre-filter, subdivide-complex-polygons, indexing-discipline, name-by-srid)
 
 ## Template Variables
 
@@ -227,9 +227,9 @@ The `CLAUDE.md` template supports:
 | `{{GIT_ROOT}}` | `~/git/siege-analytics` | Parent directory |
 | `{{CURRENT_DATE}}` | `2026-05-02` | System date |
 
-## DBrain — book-skill library
+## DBrain -- book-skill library
 
-`skills/shelves/` is a separate, larger library of book-derived skills — *DBrain*, in the spirit of [GBrain](https://github.com/garrytan/gbrain). It uses the same "thin harness, fat skills" pattern and is gated by the same resolver, but lives under its own meta-router so its description budget cost is one slot per shelf, not one per book.
+`skills/shelves/` is a separate, larger library of book-derived skills -- *DBrain*, in the spirit of [GBrain](https://github.com/garrytan/gbrain). It uses the same "thin harness, fat skills" pattern and is gated by the same resolver, but lives under its own meta-router so its description budget cost is one slot per shelf, not one per book.
 
 | Shelf | Topic |
 |---|---|
@@ -255,7 +255,7 @@ The spatial skills in particular (per-engine `siege-utilities-<engine>.md` refer
 
 ## Works well with
 
-- [StrongAI/claude-skills](https://github.com/StrongAI/claude-skills) — `claude_init` merges both repos' skills automatically (org skills take priority)
+- [StrongAI/claude-skills](https://github.com/StrongAI/claude-skills) -- `claude_init` merges both repos' skills automatically (org skills take priority)
 
 ## Definition of Done
 
@@ -269,7 +269,7 @@ Code is not finished until **all five** criteria pass. This is a gate, not a rec
 | d | Non-trivial updates → update the ticket | `/update-ticket`, `/close-ticket` |
 | e | Work has a ticket | `/pre-work-check` |
 
-The PR-creation skill (`/create-pr`) gates on all five before opening; failed criteria → PR opens as draft. The session wrap-up skill (`/wrap-up`) verifies all five before closing. Soft rules erode — these are documented responses to specific Siege incidents.
+The PR-creation skill (`/create-pr`) gates on all five before opening; failed criteria → PR opens as draft. The session wrap-up skill (`/wrap-up`) verifies all five before closing. Soft rules erode -- these are documented responses to specific Siege incidents.
 
 Exempt from (a)–(d) but **not** (e): typo fixes, doc-only changes, tooling chores. Even exempt changes need a ticket for the audit trail.
 
@@ -284,7 +284,7 @@ The same source serves two consumer runtimes via a build step. Pick the layout t
 
 Both layouts contain identical content; only the file-tree shape differs. The build resolves `[skill:slug]` and `[rule:slug]` tokens to layout-appropriate paths so cross-references work in both worlds without manual maintenance.
 
-`main` is the source of truth (nested layout with tokens). Build outputs are published to `release/nested` and `release/flat` by CI on every push to main and every tag. **Pin downstream consumers to a release-branch tag (`v1.0.0-nested` / `v1.0.0-flat`), not the source tag** — the source has the build infrastructure but tokens are unresolved.
+`main` is the source of truth (nested layout with tokens). Build outputs are published to `release/nested` and `release/flat` by CI on every push to main and every tag. **Pin downstream consumers to a release-branch tag (`v1.0.0-nested` / `v1.0.0-flat`), not the source tag** -- the source has the build infrastructure but tokens are unresolved.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the slug-token convention, build-script details, and contributor workflow.
 
@@ -300,8 +300,8 @@ See [`CHANGELOG.md`](CHANGELOG.md) for the per-version diff.
 
 **Tag scheme.** Each source tag (`v1.0.0` on `main`) produces two consumer-facing tags via CI:
 
-- `v1.0.0-nested` on the `release/nested` branch — pull this for Claude Code with the resolver hook
-- `v1.0.0-flat` on the `release/flat` branch — pull this for Craft Agent
+- `v1.0.0-nested` on the `release/nested` branch -- pull this for Claude Code with the resolver hook
+- `v1.0.0-flat` on the `release/flat` branch -- pull this for Craft Agent
 
 `main` is the rolling source-of-truth (with build infrastructure and unresolved tokens). Always pin downstream consumers to one of the resolved release-branch tags.
 
@@ -309,8 +309,8 @@ See [`CHANGELOG.md`](CHANGELOG.md) for the per-version diff.
 
 The DBrain shelves under `skills/shelves/` are integrated and adapted from two MIT-licensed upstream skill libraries:
 
-- **[ZLStas/skills](https://github.com/ZLStas/skills)** — Clean-Code reviewer agents, Effective-* language rules, and skills for Effective Python/Java/Kotlin/TypeScript, Kotlin in Action, Spring Boot, Programming Rust, Rust in Action, asyncio, web scraping, data-pipeline patterns, system-design interview, storytelling, and animation.
-- **[wondelai/skills](https://github.com/wondelai/skills)** — Deep `references/`-rich skills covering Clean Code, Clean Architecture, DDD, Refactoring, Pragmatic Programmer, Ousterhout, DDIA, system design, Release It!, HPBN, and the full product / marketing / sales / strategy / design / team shelves.
+- **[ZLStas/skills](https://github.com/ZLStas/skills)** -- Clean-Code reviewer agents, Effective-* language rules, and skills for Effective Python/Java/Kotlin/TypeScript, Kotlin in Action, Spring Boot, Programming Rust, Rust in Action, asyncio, web scraping, data-pipeline patterns, system-design interview, storytelling, and animation.
+- **[wondelai/skills](https://github.com/wondelai/skills)** -- Deep `references/`-rich skills covering Clean Code, Clean Architecture, DDD, Refactoring, Pragmatic Programmer, Ousterhout, DDIA, system design, Release It!, HPBN, and the full product / marketing / sales / strategy / design / team shelves.
 
 Inspiration for the shelves model: [GBrain](https://github.com/garrytan/gbrain).
 
@@ -320,4 +320,4 @@ See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for full attribution, com
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT -- see [`LICENSE`](LICENSE).
