@@ -22,6 +22,17 @@ The Siege-specific catches below (catalog bypass, NULL drops, partition skew) st
 
 When reviewing a pull request, a diff, or code written during a session. Apply this methodology systematically — don't rely on skimming to catch issues.
 
+## Mechanical pre-flight (run first)
+
+Before the six-layer human review, run [skill:detect-ai-fingerprints] against the diff under review:
+
+```bash
+bash <skills-dir>/meta/detect-ai-fingerprints/scan.sh         # for staged diffs
+bash <skills-dir>/meta/detect-ai-fingerprints/scan.sh --pr 43  # for a GitHub PR
+```
+
+The scanner catches stylistic rules 1-6 of `[rule:no-ai-fingerprints]` mechanically. Surface its findings as the first batch of review comments and fix them before opening the human review, so reviewer attention is not wasted on em-dash hunting and adverb counting. The scanner is silent on rules 7-11; those still require the judgment layer below.
+
 ## Project-local rules (load first)
 
 Before applying the generic checklist below, load any **project-local Tier-2 rules**:
@@ -255,6 +266,7 @@ arbitrary SQL by submitting `'; DROP TABLE donors; --` as the search term.
 
 Before approving:
 
+- [ ] **[skill:detect-ai-fingerprints] ran clean** on the diff (or every reported violation was fixed before review opened)
 - [ ] Loaded any project-local rules from `.claude/rules/*.md` and applied them
 - [ ] Read every line of the diff (not just the files you know)
 - [ ] Check that tests exist for new behavior and pass
