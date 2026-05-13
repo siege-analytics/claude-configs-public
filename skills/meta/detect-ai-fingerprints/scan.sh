@@ -29,6 +29,14 @@ EN_DASH=$'\xe2\x80\x93'   # U+2013
 ADVERBS_RE='\b(deliberately|intentionally|explicitly|fundamentally|essentially|crucially|notably)\b'
 HISTORY_RE='\b(PR #[0-9]+|Sprint [A-Za-z0-9]+|v[0-9]+\.[0-9]+\.[0-9]+ (hardening|follow-up|fix)|issue #[0-9]+|ticket [A-Z]+-[0-9]+)\b'
 WHY_BLOCK_RE='^[[:space:]]*(\*\*|##+ )?(Why|How to apply)[:\*]'
+# Rule 13: countable-claim trigger phrases. Conservative on first roll-out.
+COUNTABLE_RE='\b(all [0-9]+|all [a-z]+ engines?|all [a-z]+ connectors?|all call sites?|every (call site|engine|caller|connector)|no remaining|fully covers|completes the [a-z]+ surface)\b'
+# Rule 13: required trailer when a countable claim is present.
+VERIFIED_BY_RE='^[[:space:]]*Verified-by:[[:space:]]+'
+# Rule 15: actionable-skip-message verbs. Heuristic; tune over time.
+SKIP_VERBS_RE='\b(install|set|configure|run|enable|start|provide|export)\b'
+# Rule 15: a skip message is matched against pytest.skip / pytest.xfail / unittest skip.
+SKIP_CALL_RE='(pytest\.skip|pytest\.xfail|@pytest\.mark\.skipif|self\.skipTest|unittest\.skip)\([^)]*'
 
 violations=0
 declare -a IGNORE_GLOBS=()
@@ -102,6 +110,28 @@ scan_diff_stdin() {
                 done < <(grep -oE "$HISTORY_RE" <<< "$content")
             fi
 
+            # Rule 15: pytest.skip / xfail / skipif / skipTest must name the remediation.
+            # Heuristic: extract the call's argument string and check for an actionable
+            # verb plus an identifier-shaped token. False positives expected; tune via
+            # observed friction.
+            if [[ "$current_file" == *.py ]]; then
+                local skip_arg
+                skip_arg=$(grep -oE "$SKIP_CALL_RE" <<< "$content" | head -1)
+                if [[ -n "$skip_arg" ]]; then
+                    local skip_msg
+                    skip_msg=$(echo "$skip_arg" | sed -E 's/^[^(]+\([^"'\'']*["'\'']?//; s/["'\'']?[[:space:]]*$//')
+                    if [[ -n "$skip_msg" ]]; then
+                        local has_verb has_id
+                        has_verb=$(echo "$skip_msg" | grep -oiE "$SKIP_VERBS_RE" | head -1)
+                        # An identifier-shaped token: env var (UPPER), command name, package name, file path.
+                        has_id=$(echo "$skip_msg" | grep -oE '([A-Z][A-Z0-9_]+|[a-z][a-z0-9_-]*\.(py|sh|md)|/[a-z]|[a-z][a-z0-9_-]+/)' | head -1)
+                        if [[ -z "$has_verb" || -z "$has_id" ]]; then
+                            emit "$current_file" "$line_no" "rule-15-skip-not-actionable" "$content"
+                        fi
+                    fi
+                fi
+            fi
+
             line_no=$((line_no + 1))
             continue
         fi
@@ -116,6 +146,13 @@ scan_diff_stdin() {
 # Caller MUST invoke as scan_message_stdin "<file>" < "<file>" (or process sub).
 scan_message_stdin() {
     local virtual_file="${1:-<message>}" line_no=0 in_subject=1
+    # Rule 13 needs a pass over the whole message: collect countable-claim lines,
+    # then check whether the message contains a Verified-by: trailer. If claims
+    # are present without the trailer, each claim line gets a rule-13 violation.
+    local has_verified_by=0
+    declare -a claim_lines=()
+    declare -a claim_excerpts=()
+
     while IFS= read -r line; do
         line_no=$((line_no + 1))
 
@@ -127,6 +164,17 @@ scan_message_stdin() {
         # Skip the blank separator after subject.
         if [[ -z "$line" && "$line_no" == "2" ]]; then
             continue
+        fi
+
+        # Rule 13 trailer detection (any line in body counts).
+        if [[ "$line" =~ ^[[:space:]]*Verified-by:[[:space:]]+ ]]; then
+            has_verified_by=1
+        fi
+
+        # Rule 13 claim detection (collect for end-of-message decision).
+        if grep -qiE "$COUNTABLE_RE" <<< "$line"; then
+            claim_lines+=("$line_no")
+            claim_excerpts+=("$line")
         fi
 
         # Rule 1: em-dashes / en-dashes anywhere in the message.
@@ -160,6 +208,14 @@ scan_message_stdin() {
             emit "$virtual_file" "$line_no" "rule-5-header" "$line"
         fi
     done
+
+    # Rule 13 end-of-message decision: claims present without a Verified-by trailer.
+    if (( ${#claim_lines[@]} > 0 && has_verified_by == 0 )); then
+        local i
+        for (( i = 0; i < ${#claim_lines[@]}; i++ )); do
+            emit "$virtual_file" "${claim_lines[$i]}" "rule-13-countable-claim-no-verified-by" "${claim_excerpts[$i]}"
+        done
+    fi
 }
 
 # --- Argument dispatch.
@@ -224,12 +280,14 @@ case "$mode" in
         ;;
 esac
 
+COVERAGE_NOTE='scanned: rules 1, 2, 4, 5, 6 (stylistic); 13 (countable claims need Verified-by trailer); 15 (skip messages must name remediation). Structural rules 7-12, 14, 16, 17, 18 require [skill:code-review] judgment.'
+
 if (( violations > 0 )); then
     echo
-    echo "scanned with rules 1-6 of [rule:no-ai-fingerprints]; rules 7-11 require [skill:code-review] judgment."
+    echo "$COVERAGE_NOTE"
     echo "violations: $violations"
     exit 1
 fi
 
-echo "clean (rules 1-6); rules 7-11 still require [skill:code-review] judgment."
+echo "clean. $COVERAGE_NOTE"
 exit 0

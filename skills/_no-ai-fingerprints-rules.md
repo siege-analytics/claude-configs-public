@@ -1,14 +1,14 @@
 ---
-description: Always-on. Fifteen mandatory guardrails against AI fingerprints in code, comments, commit messages, PR bodies, and chat output. From two rounds of hostile review of siege_utilities work that surfaced concrete failure modes.
+description: Always-on. Eighteen mandatory guardrails against AI fingerprints in code, comments, commit messages, PR bodies, and chat output. From three rounds of hostile review of siege_utilities work that surfaced concrete failure modes.
 ---
 
 # No AI Fingerprints
 
-These fifteen rules are mandatory. The first eleven came out of an initial hostile review of siege_utilities work; rules 12-15 plus three tightenings (rules 7, 10, 11) came out of an extended siege_utilities arc where ten PRs went through six rounds of review and surfaced ~40 distinct failure modes. The rules are organized stylistic-first (cosmetic but pervasive) and structural-second (the ones that actually cause bugs).
+These eighteen rules are mandatory. The first eleven came out of an initial hostile review of siege_utilities work; rules 12-15 plus three tightenings (rules 7, 10, 11) came out of an extended siege_utilities arc where ten PRs went through six rounds of review; rules 16-18 came out of a follow-up retrospective where the agent self-diagnosed the gaps that the v1.5.0 rules did not close. The rules are organized stylistic-first (cosmetic but pervasive) and structural-second (the ones that actually cause bugs).
 
 Apply them to everything you write: code, comments, docstrings, commit messages, PR bodies, agent-to-agent messages, and chat output to the operator.
 
-## The fifteen rules
+## The eighteen rules
 
 ### Stylistic
 
@@ -49,6 +49,28 @@ Apply them to everything you write: code, comments, docstrings, commit messages,
 
 **15. Skip messages must name the remediation.** `pytest.skip("X not installed")` is not actionable. `pytest.skip("install X in this interpreter to run, see docs/setup.md")` is. A skip that does not tell the reader what to do to unskip is a skip the project quietly accepts forever. Same for `pytest.xfail`, `unittest.skipIf`, and any conditional `return` that bypasses a test body: name what the reader changes to make the test run.
 
+**16. Mock fidelity.** When mocking an external library (a third-party package on PyPI or equivalent registry, with its own exception hierarchy and response shapes; not `unittest.mock` of stdlib internals):
+(a) Use the library's real exception classes via `from <pkg>.exceptions import X`, not `Exception` reassignment.
+(b) At least one test in the module must use a fixture built from a real response captured from the library (recorded once, committed as JSON), not a hand-rolled stub.
+
+The session's worst case: a Facebook test fed a plain dict where the SDK returns `AbstractObject`. The test read correctly; the mock just was not the real thing, so production-only AttributeErrors did not surface. Forward-only on existing connector tests; new connector tests must comply.
+
+**17. Doc-edit symmetry.** When code edits in a PR touch a public symbol, the file containing the symbol must be re-read in the same PR (which means the symbol's docstring is re-read for free, since they are colocated). Documentation files that reference the touched symbol by name (matched by grep against the doc tree) must either appear in the same PR's changeset OR the PR body must contain a `Docs-checked: <list of doc files grepped, confirmed in sync>` trailer.
+
+The doc tree default: `**/*.md` minus auto-generated paths (`htmlcov/`, `_build/`, `node_modules/`), plus the canonical names regardless of location (`README.md`, `CHANGELOG.md`, `INVARIANTS.md`, `CONTRIBUTING.md`). Per-repo override at `.claude/doc-paths.toml` that takes a glob list. The trailer names which files were grepped so an auditor can verify post-hoc.
+
+The session's worst case: `INVARIANTS.md` kept asserting current behaviour that did not exist because the agent edited the code without going back to the doc. Aspirational documentation surviving multiple edits is the asymmetric failure rule 10 cannot catch on its own.
+
+**18. Silent error swallowing.** When catching an exception, the handler must do exactly one of:
+(a) re-raise the same or a wrapped exception;
+(b) return a typed-failure result that the caller pattern-matches on (Result / Either / Option style, or a project-defined dataclass, or `Optional[T]` when the function signature is `Optional[T]` AND the docstring documents `None` as the failure indicator);
+(c) perform best-effort cleanup in a `finally` block where the failure does not affect downstream behaviour;
+(d) audit-log the failure with full context (input that caused it, exception class, exception message) AND return a typed-failure result per (b).
+
+Patterns banned: bare `except: pass`; `except Exception: log.error(...); return None` where the docstring does not document `None` as failure; `except: continue` in loops without per-iteration audit log; `except Exception: pass  # noqa` without an inline rationale comment naming the specific reason swallowing is correct here.
+
+Forward-only on existing handlers. Existing `Optional[T]`-returning functions get a docstring update grace window of one minor release after R-18 lands; any handler edited after that grace window must comply. New handlers in any PR must comply from day one.
+
 ## Override
 
 These rules are mandatory. There is no `[fingerprint-skip]` override.
@@ -59,15 +81,15 @@ If you find yourself wanting to violate a rule for a specific case, surface it t
 
 ## Cross-references
 
-- `[rule:verify-before-execute]` is the family rule for rules 10, 11, 12, and 13. Verify-before-execute requires same-turn evidence for any side-effecting action; these four rules extend the same discipline to claims about symbols (rule 10), scope-of-fix (rule 11), dependency reachability (rule 12), and countable assertions in prose (rule 13).
+- `[rule:verify-before-execute]` is the family rule for rules 10, 11, 12, 13, and 17. Verify-before-execute requires same-turn evidence for any side-effecting action; these rules extend the same discipline to claims about symbols (rule 10), scope-of-fix (rule 11), dependency reachability (rule 12), countable assertions in prose (rule 13), and doc-symbol synchronisation (rule 17).
 - `[rule:environment-preflight]` is the one-time-per-repo inventory that establishes what is reachable. Rule 12 is the per-action application of that inventory.
-- `[skill:commit]` implements rule 5 directly. The Body section of the commit skill quotes rule 5's wording and the example body demonstrates the plain-prose style.
-- `[skill:code-review]` checklist gains rules 7 (tests fail on regression, tests import the module), 8 (no cargo-culted patterns), 12 (dependency exercised before claim), 13 (countable claims preceded by grep), and 14 (public-surface diff for BREAKING) as project-default review questions.
-- `[skill:detect-ai-fingerprints]` mechanically scans the stylistic rules (1, 2, 4, 5, 6) and a future enhancement will add the rule-7 grep (test files importing their module under test). Structural rules 7-15 require code-review judgment.
+- `[skill:commit]` implements rule 5 directly and gates on rule 12 via the affected-tests pre-commit hook (commit-skill step 4). The Body section of the commit skill quotes rule 5's wording and the example body demonstrates the plain-prose style.
+- `[skill:code-review]` checklist gains rules 7 (tests fail on regression, tests import the module), 8 (no cargo-culted patterns), 12 (dependency exercised before claim), 13 (countable claims preceded by grep), 14 (public-surface diff for BREAKING), 16 (mock fidelity), 17 (doc-edit symmetry), and 18 (no silent error swallowing) as project-default review questions.
+- `[skill:detect-ai-fingerprints]` mechanically scans the stylistic rules (1, 2, 4, 5, 6) plus rule 13 (countable-claims trigger phrases requiring `Verified-by:` trailer) and rule 15 (skip messages naming actionable remediation). A future enhancement will add the rule-7 grep (test files importing their module under test). Structural rules 7-12, 14, 16, 17, and 18 require code-review judgment.
 
 ## Why this rule exists
 
-Two rounds of hostile review of siege_utilities work surfaced concrete failure modes that all read as AI fingerprints. The cost of each individual fingerprint is small (a wordy comment, a redundant test, a self-justifying commit message, a hypothetical dependency, an unverified countable claim). The cost of the pattern is large: reviewers stop trusting the output, real bugs hide inside the noise, and the codebase accumulates the kind of low-grade slop that is hard to remove later because nothing about it is individually wrong enough to delete.
+Three rounds of hostile review of siege_utilities work surfaced concrete failure modes that all read as AI fingerprints. The cost of each individual fingerprint is small (a wordy comment, a redundant test, a self-justifying commit message, a hypothetical dependency, an unverified countable claim, a shape-correct mock that does not enforce real exception classes). The cost of the pattern is large: reviewers stop trusting the output, real bugs hide inside the noise, and the codebase accumulates the kind of low-grade slop that is hard to remove later because nothing about it is individually wrong enough to delete.
 
 The rules ship as mandatory because the alternative (soft guidance, optional discipline) is exactly what produced the original problem. Hard rules with named failure modes are easier to apply than vibes about quality. The motivation is operator-stated: prefer prevention over cure. Friction at write-time is cheap; cleanup at review-time is expensive; cleanup after merge is expensive squared.
 
