@@ -16,6 +16,15 @@ See [skill:lessons-learned] for the format spec and [skill:rules-audit] for the 
 
 ## Entries
 
+## 2026-05-13 -- Documenting a `[skill:slug]` token in chat can accidentally invoke it
+
+- **Source:** Operator reported a `Skill(s) not found: X` error popup in two consecutive sessions (parent 260502-vital-channel earlier, then this session 260502-pure-vista). Source-side audit found no literal `[skill:X]` anywhere in the workspace, hooks, or skills tree. Reproduction confirmed: writing the seven-character token `[skill:X]` in the assistant's chat reply -- even inside backticks as a syntax example -- triggers the host-app skill resolver, which tries to load skill `X`, fails to find it, and surfaces the error to the operator. The host parses the token through Markdown code-span formatting.
+- **Rule (draft):** Never write a literal `[skill:slug]` token in chat unless you actually want it invoked. When documenting the syntax, use a form the host parser cannot resolve to a slug: backslash-escape the brackets (`\[skill:NAME\]`), use angle-bracket placeholders (`[skill:<name>]` -- the `<>` makes it not a valid slug), or describe the syntax in prose ("a `skill:` prefix token in square brackets"). Same discipline for `[rule:slug]` tokens. This is `[rule:writing-prose]` territory: tokens that look like invocations are invocations from the host's perspective, regardless of whether the surrounding Markdown formatting suggests they are inert.
+- **Why:** The host's `[skill:...]` resolution is a passive scan over assistant output, not gated on a code-span check. Conventionally, content inside backticks or fenced code blocks is inert -- it is the universal Markdown signal for "this is data, not a directive." The host does not honor that convention, so any chat message that documents the skill-invocation syntax becomes a live invocation. The agent-side fix is unilateral and immediate (use forms the parser cannot resolve); the host-side fix (skip token resolution inside code spans, or require an explicit invocation gesture) is a separate filing against the host app.
+- **Recurrence:** 2 (parent session earlier; this session minutes later, both during X-error triage discussion)
+- **Promotion-requested:** none yet (recurrence threshold met; promotion needs a clean home -- candidate is `[rule:writing-prose]` since the rule governs assistant chat output, not code)
+- **Promoted:** not yet
+
 ## 2026-05-13 -- Load-verify the published artifact, not just the source, after a major-version structural change
 
 - **Source:** v2.0.0 shipped with two latent gaps that source-side audit missed: `bin/build.py`'s `find_rules()` matched `_*-rules.md` only, so `skills/RULES.md` and `skills/_coverage.md` (added at v2.0.0) never reached `dist/<layout>/skills/` and never appeared in the `v2.0.0-flat` / `v2.0.0-nested` tags. Plus two stale `rule N` references in `skills/git-workflow/commit/SKILL.md` survived the cross-reference pass. Both surfaced by parent session 260502-vital-channel during load-verification of the local sync. PR [#62](https://github.com/siege-analytics/claude-configs-public/pull/62); v2.0.1 patch shipped within an hour.
