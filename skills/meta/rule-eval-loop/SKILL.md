@@ -53,6 +53,22 @@ A Tier-3 rule should have three independent samples of evidence before it ships,
 
 Three samples is the minimum. Five (RG-7's "no silent processes" had five module-shape evidence points before ship) is better. One is not enough — single-pass evidence systematically over-fits.
 
+## Composition-conflict-resolution
+
+When designing a new Tier-3 rule, check whether complying with the new rule could force violating an existing ratified rule. The fix exercise often surfaces this: an operator applies the new rule and discovers that a fix satisfying its wording would simultaneously violate another rule's wording.
+
+**Three-part discipline:**
+
+- **Detection:** the fix exercise reveals that complying with rule A forces violating rule B in some non-trivial fraction of cases.
+- **Resolution:** the rule whose wording is being violated to comply with the other gets a body extension (or carve-out) naming the composition + override. The override clause makes the precedence explicit so future operators do not re-discover and re-litigate the conflict.
+- **Anti-pattern:** silently choosing one rule over the other without documenting the precedence. Future operators encounter the same conflict, derive different precedence, and produce inconsistent fixes across the codebase.
+
+Originating evidence (recurrence 1): v2.3.1 surfaced this during the v2.3.0 fix exercise (siege_utilities PR #487). The writing-code:11 floor menu (a)/(b)/(c)/(d) would have forced changing `_ensure_sedona`'s pre-existing `None`-return contract to satisfy the menu, which would have violated writing-releases:1 (BREAKING-when-public-surface-changes-incompatibly) for a 5%-of-cases scenario (1 of 5 functions in the fix exercise). The contract-preservation override carve-out added to writing-code:11's body in v2.3.1 names the composition explicitly: writing-code:11 yields to writing-releases:1 when the floor change would break an established contract.
+
+Empirical signal worth banking: the conflict appeared in 1 of 5 cases (20%), not as a one-off edge case. Any time a new rule's mechanical or judgment-driven application appears in a non-trivial fraction of fix-exercise cases to force a violation of another ratified rule, the override clause is required, not optional.
+
+This principle is itself a recurring discipline: when promoted by recurrence ≥ 2 across multiple rule cycles, it becomes a Tier-3 rule about rule design rather than a meta-skill body extension. For now, recurrence 1; ship as documented principle. Second instance promotes to validated discipline.
+
 ## Recurrence ledger
 
 The eval-loop discipline itself has been validated across these instances:
