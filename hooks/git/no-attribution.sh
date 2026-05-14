@@ -41,7 +41,7 @@ PATTERNS=(
 )
 
 for pattern in "${PATTERNS[@]}"; do
-    if echo "$MESSAGE_AREA" | grep -iqP "$pattern"; then
+    if echo "$MESSAGE_AREA" | grep -iqE "$pattern"; then
         cat >&2 <<HOOKEOF
 BLOCKED: Commit message contains AI/agent attribution.
 
