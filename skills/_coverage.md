@@ -294,11 +294,19 @@ enforcement = "code-review"
 tooling_status = "judgment"
 prevention_path = "needs: AST scanner for catch-all except whose body returns a different result without raise/re-raise (TC5 alternative-return-shape from sibling's writing-code:7 scanner test-case set). Tractable for v2.4.x scanner enhancement."
 originating_arc = { session-id = "260502-vital-channel", incident-name = "rg6-content-distinguishable-triangulation-2026-05-13" }
+
+[[failure_mode]]
+name = "unbounded-blocking-io"
+description = "Blocking I/O call (subprocess.run, requests.get, urllib.urlopen, socket.create_connection, sqlite3.connect, etc.) is made without a timeout kwarg. Any unbounded blocking call is a DoS primitive against the caller's process; downstream try/except wrappers do not rescue from a hang because the call never returns. Composes with writing-code:7: writing-code:15 is the upstream of writing-code:7 in the call chain (without timeout, there is nothing to swallow because the call never returns)."
+rule_id = ["writing-code:15"]
+enforcement = "scanner"
+tooling_status = "mechanical"
+originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-utilities-pass-11-jdk-hang-fce3210", pr-number = 492 }
 ```
 
 ## Tooling-status summary
 
-- `mechanical` rows: 15 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :7, :9, :12; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3, :4).
+- `mechanical` rows: 16 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :7, :9, :12, :15; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3, :4).
 - `judgment` rows: 16 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
 - `gap` rows: 1 (writing-releases:1, pending public-surface differ at upstream issue #51).
 
