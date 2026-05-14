@@ -1,5 +1,5 @@
 ---
-description: Always-on. Stylistic discipline for natural-language output -- chat, comments-as-prose, commit subject and body, PR descriptions, agent-to-agent messages. Four rules covering the prose-style fingerprints. Code-comment specifics (history references) live in `_writing-code-rules.md`; docstring discipline lives in `_writing-code-rules.md` because docstrings are code.
+description: Always-on. Stylistic discipline for natural-language output -- chat, comments-as-prose, commit subject and body, PR descriptions, agent-to-agent messages. Four rules covering the prose-style fingerprints; rule 1 covers the broader AI-typographic Unicode character class (dashes, arrows, curly quotes, ellipsis, middle dot, bullet, NBSP). Code-comment specifics (history references) live in `_writing-code-rules.md`; docstring discipline lives in `_writing-code-rules.md` because docstrings are code.
 ---
 
 # Writing Prose
@@ -10,7 +10,21 @@ For code-comment-specific rules (no PR/sprint/issue references in code comments)
 
 ## The four prose rules
 
-**writing-prose:1. No em-dashes anywhere.** The character at Unicode U+2014 (the long dash often inserted by editors and word-processors) is the single most reliable AI tell. Use `--`, a comma, or a period instead. The same applies to en-dashes (U+2013) used as separators in prose.
+**writing-prose:1. No AI-typographic Unicode characters.** Editors, word-processors, and language-model output insert a recognisable family of typographic Unicode characters that read as AI-generated when they appear in prose. Use the ASCII equivalent or rephrase. The banned characters:
+
+- **Dashes (the historical kernel):** em-dash U+2014, en-dash U+2013. Use `--`, a comma, or a period.
+- **Arrows:** U+2192 right, U+2190 left, U+21D2 right-double, U+21D0 left-double. Use `->`, `<-`, `=>`, `<=` or rephrase the prose.
+- **Curly quotes:** U+2018 left-single, U+2019 right-single, U+201C left-double, U+201D right-double. Use straight `'` and `"`.
+- **Ellipsis:** U+2026. Use three dots `...` or rephrase.
+- **Middle dot:** U+00B7. Use a comma or list separator appropriate to context.
+- **Bullet:** U+2022. Use ASCII `-` or `*` for list markers; the rendered output is identical in Markdown.
+- **Non-breaking space:** U+00A0. Use a regular space.
+
+The rule body intentionally references the banned characters by Unicode codepoint only and does not display the literal glyphs; this lets the scanner run cleanly against the rule files themselves without a special-case exemption.
+
+**Path-based whitelist for U+00A0:** legitimate inside `templates/` (HTML email and report templates where the non-breaking space prevents undesired wrapping in rendered output) and `i18n/` (string tables for languages where the non-breaking space is grammatically required). The scanner skips files matching those path globs. Other characters in the list have no path-based whitelist; the meta and marketing carve-outs already in place for the existing dash check extend to the broader char class.
+
+This rule extends what was previously a dashes-only rule. Consumers grepping LESSONS or PR bodies for "no em-dashes" should know the rule is the same identifier (writing-prose:1), the kernel still includes em-dashes and en-dashes, and the new char-class additions are the same discipline applied to a broader set of typographic Unicode that produces the same AI-generated reading. See `CHANGELOG.md` v2.2.0 for the rename callout.
 
 **writing-prose:2. No "Why:" or "How to apply:" structured blocks in code comments or commit messages.** If the rationale is non-obvious, write one sentence inline. If it is obvious, write nothing. This rule does not apply to memory ledgers, skill files, or rule files where structured rationale is the documented format.
 

@@ -8,7 +8,7 @@ These rules apply whenever the agent writes production code -- any `.py` file ou
 
 The sibling boundary in `_writing-claims-rules.md` is "verify before claiming": rules that fire when stating a fact in a commit body, PR body, or chat. The two files split the same underlying claim-grounding family by temporal trigger; consult writing-code when editing code, consult writing-claims when stating facts.
 
-## The seven code-writing rules
+## The ten code-writing rules
 
 **writing-code:1. Default to no docstring or a one-liner.** Multi-paragraph Sphinx-style docstrings are reserved for public API surface that is exported and consumed externally. Internal helpers and one-off functions get type hints and at most one sentence. Docstrings are code, not prose; the discipline lives here rather than in `[rule:writing-prose]`.
 
@@ -55,9 +55,34 @@ Forward-only. New optional imports must comply; existing modules audited as disc
 
 The session's concrete instance: both `census_gazetteer.py` and `wikidata_gazetteer.py` had `SHAPELY_AVAILABLE` flags but the geometry-construction callsites used `shapely.geometry.Polygon(...)` without guarding. The first call in an environment without shapely raised `NameError: name 'shapely' is not defined` instead of the intended clear `RuntimeError`. Cross-module re-export case (X re-exported from `__init__.py`, used in sibling module via `from .somemod import X`) is a known scanner gap; the failure mode is loud (immediate NameError) and the pattern is rare. Mechanical detection is high (multi-pass within a file; tracked at upstream issue #57 for v1.6.2); judgment-enforced via `[skill:code-review]` until the scanner enhancement lands.
 
+**writing-code:9. No silently-dropped parameters.**
+
+When a method or function signature accepts a parameter, the implementation must do exactly one of:
+
+- (a) use the parameter in the body,
+- (b) raise `NotImplementedError("<param>=<value> not supported in <ImplName>; see <central-capability-symbol> for support matrix")` when the parameter is non-default. If no central capability registry exists in the project yet, name the supporting impls inline in the message; this creates a follow-on writing-code:10 obligation to extract a registry at the next param-set change,
+- (c) document in the docstring of the **base class default** that the implementation is a no-op for that parameter and name which engines honour it. Subclasses that legitimately use the parameter need not repeat the disclaimer; the carve-out is for the abstract-base or default-impl tier where "the parameter is part of the surface but this implementation chooses not to honour it" is the documented contract,
+- (d) pass the parameter through to a delegated implementation via `**kwargs` star-arg unpacking or by name.
+
+The session's concrete instance: `load_polygons` and `load_lines` accepted `format: str = "auto"` and `geometry_col: str = "geometry"`; the default implementation called `self.read_spatial(path, crs=crs)` and ignored both. A caller passing `format="shapefile"` to recover from an auto-detection miss had no effect; the override was silently dropped. API lie: the signature claimed the parameter mattered; the implementation said otherwise.
+
+Parameters consumed by a decorator (e.g. introspected by `@validate_args` or similar) are a judgment-enforced carve-out the AST scanner cannot see. Reviewer attests in the PR body that decorator-side consumption accounts for the apparent unused parameter. The scanner consults `.claude/scanner-config.toml` if present for a project-specific decorator allow-list; default allow-list is `{functools.wraps, contextlib.contextmanager, classmethod, staticmethod, property}`.
+
+Mechanical via AST walk in `[skill:detect-ai-fingerprints]`: collect signature args (name, default), collect `Name` and `keyword` references in body, flag args with non-`None` defaults that are neither referenced by name nor forwarded via `**kwargs`. Carve-out for decorator-consumed parameters via the allow-list above.
+
+**writing-code:10. Capability declarations match implementations.**
+
+When a module exposes a central "supported X" registry (a frozenset, dict, class attribute, or module-level constant) that a validator consumes, every implementation the validator gates access to must support every item in the registry. Mismatches mean the validator passes input the implementation will reject at runtime with a confusing error.
+
+The session's concrete instance: `_SUPPORTED_AGG_NAMES` at line 68 of `dataframe_engine.py` is a frozenset of agg names the validator accepts. The pandas implementation does not implement `approx_count_distinct` (a member of the registry). A pandas caller passing `agg={"col": "approx_count_distinct"}` passes validation, then dies inside the pandas impl with `AttributeError`. The error is misleading because the validator already attested support.
+
+This is the sibling rule of writing-code:9. writing-code:9 fires per-method-signature at function-definition review time; writing-code:10 fires at architecture review when a central registry's shape is examined against each consumer. Different scanners would catch each: writing-code:9 is one-pass AST per function; writing-code:10 needs cross-implementation tracing (validator to registry to consumers) that requires symbolic execution or extensive AST graph-building, infeasible at scanner tier. Judgment-enforced via `[skill:code-review]`; coverage matrix marks `prevention_path` accordingly.
+
+When discovered, the fix has two shapes: (i) implement the missing capability in the lagging engine; (ii) narrow the registry to the intersection of what every gated impl actually supports, and add the broader names per-engine via `Engine.EXTRA_SUPPORTED` or equivalent. The choice is project-judgment; the rule's job is to surface the mismatch.
+
 ## Override
 
-These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; the other six are judgment-enforced via `[skill:code-review]` until the v1.6.2 scanner enhancement for writing-code:8 (multi-pass within file; upstream issue #57) lands.
+These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; the remaining six (writing-code:1, :3, :4, :6, :7, :10) are judgment-enforced via `[skill:code-review]`.
 
 ## Cross-references
 

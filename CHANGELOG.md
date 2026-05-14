@@ -6,6 +6,66 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [2.2.0] -- 2026-05-13
+
+Adds four rule changes from a hostile-review pass on `siege_utilities/engines/dataframe_engine.py` (lines 1-450) by sibling session 260502-vital-channel. Cross-session negotiation across four rounds of `send_agent_message` ratified per-rule wording, scanner specs, and sequencing. A second hostile-review pass on `siege_utilities/geo/spatial_data.py` (different module shape: HTTP data fetchers, 2258 lines) confirmed the four rules transfer cleanly across module shapes; cross-pass evidence aggregates 13+ writing-prose:1 hits, 2 writing-releases:3 hits (one per pass; two additional pass-2 findings are RST `.. deprecated::` markers without runtime warnings and parked as RG-5 v2.3.0 candidates per the scope split below), 3 writing-code:9 hits, 1 writing-code:10 hit. Rules are not over-fit to the originating arc.
+
+### Added -- writing-code:9 (no silently-dropped parameters)
+
+When a method or function signature accepts a parameter, the implementation must use it, raise `NotImplementedError` with the documented message format, document it as a base-class no-op (subclasses that legitimately use the parameter need no disclaimer), or pass through via `**kwargs`. Decorator-consumed parameters are a judgment-enforced carve-out the AST scanner cannot see; reviewer attests in PR body.
+
+Originating evidence: `load_polygons` and `load_lines` in `dataframe_engine.py` accepted `format: str = "auto"` and `geometry_col: str = "geometry"`; the default implementation called `self.read_spatial(path, crs=crs)` and ignored both. Caller's `format="shapefile"` override had no effect.
+
+Mechanical via AST scanner at `skills/meta/detect-ai-fingerprints/scan_ast.py`. Decorator allow-list (default `{functools.wraps, contextlib.contextmanager, classmethod, staticmethod, property}`) extensible per project via `.claude/scanner-config.toml`'s `scanner.allow_decorators` array.
+
+### Added -- writing-code:10 (capability declarations match implementations)
+
+When a module exposes a central "supported X" registry consumed by a validator, every implementation the validator gates access to must support every registry item. Sibling rule of writing-code:9: writing-code:9 fires per-method-signature; writing-code:10 fires at architecture review when a registry's shape is examined against each consumer.
+
+Originating evidence: `_SUPPORTED_AGG_NAMES` accepts `approx_count_distinct` but the pandas implementation does not implement it; pandas callers pass validation, then die with `AttributeError`.
+
+Judgment-enforced; coverage matrix carries `prevention_path = "judgment-only: cross-implementation tracing requires symbolic execution or extensive AST graph-building, infeasible at scanner tier"`.
+
+### Added -- writing-releases:3 (deprecation messages name a removal target)
+
+Every `DeprecationWarning(...)` and `PendingDeprecationWarning(...)` message string must contain BOTH a version anchor (`vN.N.N`) or date anchor (`YYYY-MM-DD`) AND a removal-commitment keyword from `{remove, removed, dropped, slated for, target, EOL}`. Both tokens must appear in the same message string. The version anchors when the removal happens; the keyword anchors what is being committed to.
+
+Originating evidence: `data/dataframe_engine.py` shipped a deprecation shim 2026-03-30 with the message "remove in the next minor release"; three releases shipped since (v3.15.0, v3.15.1, v3.16.0), shim is still present. The message had no grep-able commitment for what "next minor" meant.
+
+Scope: runtime warning calls only. RST `.. deprecated::` directives in docstrings, `@deprecated` decorators, and similar tooling-only markers are out of scope here; the composing rule that requires a tooling marker also emit a runtime warning is tracked as a v2.3.0 candidate.
+
+Mechanical via the same AST scanner. Catches three call shapes: direct construction (`DeprecationWarning(msg)`), `warnings.warn(msg, DeprecationWarning)` two-arg form, and `warnings.warn(msg, category=DeprecationWarning)` keyword form. Flattens implicit string concat (`"foo " "bar"`) and `BinOp(Add)` of string literals before checking; f-strings with all-Constant parts are flattened, dynamic f-strings are skipped. Forward-only with one-minor-release grace window for existing deprecations.
+
+### Changed -- writing-prose:1 renamed and extended (semantic rename, identifier stable)
+
+The rule formerly titled "No em-dashes anywhere" is renamed to **"No AI-typographic Unicode characters."** Same identifier (`writing-prose:1`); same kernel (em/en dashes still covered); broader char class added: arrows (U+2192 U+2190 U+21D2 U+21D0), curly quotes (U+2018 U+2019 U+201C U+201D), ellipsis (U+2026), middle dot (U+00B7), bullet (U+2022), non-breaking space (U+00A0).
+
+Audit-trail callout: consumers grepping LESSONS or PR bodies for "no em-dashes" should know the rule is the same identifier and still covers em-dashes/en-dashes as its kernel; the broader char class additions are the same discipline applied to the same family of typographic Unicode that produces the same AI-generated reading. The migration is content-level, not identifier-level -- no identifier remap, no migration table.
+
+Path-based whitelist for U+00A0 in `templates/` and `i18n/` (legitimate in HTML email templates and i18n string tables). Other characters in the list have no path-based whitelist.
+
+Per-class scanner emit IDs (`writing-prose-1-arrow-right`, `writing-prose-1-curly-squote-left`, `writing-prose-1-nbsp`, etc.) so the fixer knows the substitution to apply without re-reading the violating line. Continues the existing `writing-prose-1-em-dash` / `-en-dash` granularity.
+
+### Changed -- coverage matrix entry rename and tooling-status counts
+
+`em-dash-as-ai-tell` row renamed to `ai-typographic-unicode` and description rewritten to cover the full char class with em/en dashes named as the historical kernel and the broader additions credited to v2.2.0. Three new entries: `silently-dropped-parameter` (writing-code:9, mechanical), `capability-registry-impl-mismatch` (writing-code:10, judgment-only), `deprecation-without-removal-target` (writing-releases:3, mechanical). Tooling-status summary: mechanical 10 -> 12, judgment 13 -> 14, gap unchanged at 1.
+
+### Migration
+
+No identifier remap. Consumers do not need to update inline `[rule:writing-prose:1]` references -- the identifier and the kernel are unchanged. Consumers documenting the rule's title in their own files should update the wording from "No em-dashes" to "No AI-typographic Unicode characters" if the title is quoted; if the documentation refers to the rule by identifier only, no change.
+
+Forward-only enforcement for the new rules:
+
+- writing-code:9 mechanical from v2.2.0; existing silent-drop sites are flagged when scanned but the rule's expectation is that codebases address them as discovery surfaces them.
+- writing-code:10 judgment-enforced; reviewer applies per architecture review.
+- writing-releases:3 mechanical from v2.2.0 with one-minor-release grace window for existing deprecation warnings; new deprecations in any PR must comply day one.
+
+### Followups
+
+- Test fixtures for `scan_ast.py` (synthetic .py files exercising every carve-out + every failure case) are a v2.2.x candidate. First-cut scope ships with the rule body grace-window covering the expectation; smoke-tested in PR.
+- Three rule-gap candidates (RG-3 duplicate-imports, RG-4 inconsistent-failure-contracts, RG-5 deprecation-marker-without-runtime-warning) surfaced in pass 2 are deferred to v2.3.0 negotiation pending the v2.2.0 fix-exercise evidence.
+- Diff-line-filtering on `scan_ast.py` (report only violations whose line falls in the diff's added-line set) is a v2.2.x candidate if false-positive volume in pre-existing code becomes a problem during the fix exercise.
+
 ## [2.0.1] -- 2026-05-13
 
 Patch fixing two gaps in v2.0.0 surfaced by parent session 260502-vital-channel during load-verification of the `v2.0.0-flat` sync.
