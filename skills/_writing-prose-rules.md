@@ -13,12 +13,14 @@ For code-comment-specific rules (no PR/sprint/issue references in code comments)
 **writing-prose:1. No AI-typographic Unicode characters.** Editors, word-processors, and language-model output insert a recognisable family of typographic Unicode characters that read as AI-generated when they appear in prose. Use the ASCII equivalent or rephrase. The banned characters:
 
 - **Dashes (the historical kernel):** em-dash U+2014, en-dash U+2013. Use `--`, a comma, or a period.
-- **Arrows:** U+2192 right (→), U+2190 left (←), U+21D2 right-double (⇒), U+21D0 left-double (⇐). Use `->`, `<-`, `=>`, `<=` or rephrase the prose.
-- **Curly quotes:** U+2018 left-single (‘), U+2019 right-single (’), U+201C left-double (“), U+201D right-double (”). Use straight `'` and `"`.
-- **Ellipsis:** U+2026 (…). Use three dots `...` or rephrase.
-- **Middle dot:** U+00B7 (·). Use a comma or list separator appropriate to context.
-- **Bullet:** U+2022 (•). Use ASCII `-` or `*` for list markers; the rendered output is identical in Markdown.
+- **Arrows:** U+2192 right, U+2190 left, U+21D2 right-double, U+21D0 left-double. Use `->`, `<-`, `=>`, `<=` or rephrase the prose.
+- **Curly quotes:** U+2018 left-single, U+2019 right-single, U+201C left-double, U+201D right-double. Use straight `'` and `"`.
+- **Ellipsis:** U+2026. Use three dots `...` or rephrase.
+- **Middle dot:** U+00B7. Use a comma or list separator appropriate to context.
+- **Bullet:** U+2022. Use ASCII `-` or `*` for list markers; the rendered output is identical in Markdown.
 - **Non-breaking space:** U+00A0. Use a regular space.
+
+The rule body intentionally references the banned characters by Unicode codepoint only and does not display the literal glyphs; this lets the scanner run cleanly against the rule files themselves without a special-case exemption.
 
 **Path-based whitelist for U+00A0:** legitimate inside `templates/` (HTML email and report templates where the non-breaking space prevents undesired wrapping in rendered output) and `i18n/` (string tables for languages where the non-breaking space is grammatically required). The scanner skips files matching those path globs. Other characters in the list have no path-based whitelist; the meta and marketing carve-outs already in place for the existing dash check extend to the broader char class.
 

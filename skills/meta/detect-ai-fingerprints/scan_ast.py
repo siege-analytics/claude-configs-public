@@ -118,7 +118,7 @@ def check_writing_code_9(tree, allow_decorators):
             if has_kwarg_param and has_kwargs_spread:
                 continue
             # Carve-out (c): if the docstring mentions the parameter name, treat as
-            # documented no-op. Heuristic; loose by design — false negatives are
+            # documented no-op. Heuristic; loose by design - false negatives are
             # acceptable here and false positives are not. Tighter substring matches
             # (e.g. requiring "no-op" or "subclass" near the name) are a v2.2.x
             # candidate after fix-exercise evidence about real patterns.
