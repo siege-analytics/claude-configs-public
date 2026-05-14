@@ -98,13 +98,19 @@ When opening a new rule-set negotiation cycle:
 
 Each arc has its own stopping criterion (above). Do not block one on another.
 
-## Skipping the loop
+## Skipping the loop (tightened v2.5.0)
 
-Single-pass-only rules are acceptable when:
+**Three-samples-before-ship is mandatory. Single-pass-only is acceptable only when the candidate rule meets at least one of these carve-outs:**
 
-- The originating finding is itself cross-cutting (operator-stated principles like writing-code:11 had four-pass evidence at first negotiation; the discipline was already met).
-- The rule extends an existing well-validated rule (the writing-tests:1 retroactive-fix corollary was a body extension, not a new rule).
-- The failure mode is obvious enough that wording need not be negotiated (typo fixes, scanner pattern updates, character-class extensions).
+- (a) The originating finding is itself cross-cutting (operator-stated principles like writing-code:11 had four-pass evidence at first negotiation; the discipline was already met).
+- (b) The rule extends an existing well-validated rule via body extension (the writing-tests:1 retroactive-fix corollary was a body extension, not a new rule).
+- (c) The failure mode is obvious enough that wording need not be negotiated (typo fixes, scanner pattern updates, character-class extensions).
+
+**Anti-pattern: bundling-convenience justification.** "We're shipping a cohort, and this candidate doesn't quite have three samples but it would be nice to bundle" is not a carve-out. The v2.4.0 RG-8 case demonstrates the discipline being defended: proposed for v2.4.0 with one module shape of evidence, deferred to v2.5.0+ pending cross-pass evidence after the originating side audited their own carve-out claim and found none applied. Future cohorts should pre-empt the request rather than wait for the defense; if cross-pass evidence is not yet in hand and none of (a)/(b)/(c) applies, the candidate stays parked.
+
+**Reverse self-validation as the strongest signal.** The v2.4.0 fix exercise (siege_utilities PR #491) demonstrated reverse self-validation: two of the three writing-code:14 originating cases were already fixed by an operator who did not know the rule existed yet, with fix-shapes matching the rule's prescribed shapes independently. When candidate-rule wording matches independently-arrived-at operator decisions, the rule is capturing pre-existing operator discipline rather than imposing new constraints; this is sharper than ordinary fix-exercise validation. Watch for it: if the originating fix-exercise produces "I already did this naturally," promote that observation into the originating-arc citation; it is the cleanest possible evidence for ratification.
+
+**Tightening rationale (recurrence-3 evidence, v2.5.0).** This section was loosened-shape ("acceptable when X/Y/Z") in RD-1 v1 because the discipline was unproven at promotion time. After three cohorts shipped clean (v2.2.0/v2.3.0/v2.3.1/v2.4.0 = nine rules across four cohorts with zero wording mis-fires), the discipline is empirically validated. The carve-outs stay (the three cases are real), but the default flips: three-samples is the load-bearing rule; carve-outs are exceptions that must be claimed and defended.
 
 When in doubt, run the loop. The cost of an over-fit rule is paid by every consumer; the cost of one extra hostile-review pass is paid once.
 
