@@ -8,7 +8,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [2.2.0] -- 2026-05-13
 
-Adds four rule changes from a hostile-review pass on `siege_utilities/engines/dataframe_engine.py` (lines 1-450) by sibling session 260502-vital-channel. Cross-session negotiation across four rounds of `send_agent_message` ratified per-rule wording, scanner specs, and sequencing. A second hostile-review pass on `siege_utilities/geo/spatial_data.py` (different module shape: HTTP data fetchers, 2258 lines) confirmed the four rules transfer cleanly across module shapes; cross-pass evidence aggregates 13+ writing-prose:1 hits, 4 writing-releases:3 hits, 3 writing-code:9 hits, 1 writing-code:10 hit. Rules are not over-fit to the originating arc.
+Adds four rule changes from a hostile-review pass on `siege_utilities/engines/dataframe_engine.py` (lines 1-450) by sibling session 260502-vital-channel. Cross-session negotiation across four rounds of `send_agent_message` ratified per-rule wording, scanner specs, and sequencing. A second hostile-review pass on `siege_utilities/geo/spatial_data.py` (different module shape: HTTP data fetchers, 2258 lines) confirmed the four rules transfer cleanly across module shapes; cross-pass evidence aggregates 13+ writing-prose:1 hits, 2 writing-releases:3 hits (one per pass; two additional pass-2 findings are RST `.. deprecated::` markers without runtime warnings and parked as RG-5 v2.3.0 candidates per the scope split below), 3 writing-code:9 hits, 1 writing-code:10 hit. Rules are not over-fit to the originating arc.
 
 ### Added -- writing-code:9 (no silently-dropped parameters)
 
