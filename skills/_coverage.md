@@ -271,7 +271,7 @@ originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-
 
 [[failure_mode]]
 name = "inconsistent-failure-mode-contract"
-description = "A function declares two failure-indication mechanisms (return None for one failure shape, raise for another), OR sibling methods within a class follow different failure contracts (one raises, one returns None) without naming differentiation. Caller has to handle two failure paths or the API surface lies about its uniformity."
+description = "A function declares two failure-indication mechanisms (return None for one failure shape, raise for another), OR sibling methods within a class follow different failure contracts (one raises, one returns None) without naming differentiation. Caller has to handle two failure paths or the API surface lies about its uniformity. Empirical note (v2.4.0): rename-over-converge option in writing-code:13's body has zero-of-five firing rate across v2.3.0 + v2.3.1 fix exercises; real-world inconsistent contracts converge cleanly. Option retained for completeness; recurrence threshold set at 5+ exercises before reconsidering removal."
 rule_id = ["writing-code:13"]
 enforcement = "code-review"
 tooling_status = "judgment"
@@ -285,12 +285,21 @@ rule_id = ["writing-releases:4"]
 enforcement = "scanner"
 tooling_status = "mechanical"
 originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-utilities-spatial-data-pass-2-rst-deprecated-markers-2026-05-13" }
+
+[[failure_mode]]
+name = "exception-as-dispatch-content-distinguishable"
+description = "Function uses try/except as the dispatcher between alternative successful operations (parse-as-WKB-or-WKT, fetch-from-cache-or-source) when the input could be inspected to dispatch deterministically. Catch-all swallow returns a different valid result via alternative path; corrupt input falls through to the wrong branch and produces confusing downstream errors or silent wrong-data."
+rule_id = ["writing-code:14"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: AST scanner for catch-all except whose body returns a different result without raise/re-raise (TC5 alternative-return-shape from sibling's writing-code:7 scanner test-case set). Tractable for v2.4.x scanner enhancement."
+originating_arc = { session-id = "260502-vital-channel", incident-name = "rg6-content-distinguishable-triangulation-2026-05-13" }
 ```
 
 ## Tooling-status summary
 
 - `mechanical` rows: 15 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :7, :9, :12; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3, :4).
-- `judgment` rows: 15 (writing-code:1, :3, :4, :6, :8, :10, :11, :13; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
+- `judgment` rows: 16 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
 - `gap` rows: 1 (writing-releases:1, pending public-surface differ at upstream issue #51).
 
 The `gap` and `judgment` categories stay distinct: `gap` means no rule exists to prevent the failure mode and only operator honor catches it; `judgment` means a rule exists with defined enforcement (code review, scanner, hook) but the enforcement is judgment-bound rather than mechanical. The distinction lets the matrix answer "is this prevented at all?" separately from "is the prevention mechanized?".
