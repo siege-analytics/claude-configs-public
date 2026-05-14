@@ -31,7 +31,7 @@ Three independent arcs run in parallel during any rule-set evolution. They have 
 
 ### Library-fix arc
 
-**Owns:** resolving specific instances surfaced by audit passes — the actual code fixes against shipped rules.
+**Owns:** resolving specific instances surfaced by audit passes; the actual code fixes against shipped rules.
 
 **Closes when:** every Critical/Major finding from any audit pass is shipped or explicitly deferred to a tracked ticket. Minor findings are batch-deferred without per-instance tickets when the volume is high.
 
@@ -47,11 +47,11 @@ Operators running the loop should expect this decoupling and not hold the audit 
 
 A Tier-3 rule should have three independent samples of evidence before it ships, each from a different observation point in the loop:
 
-1. **Sample 1 — Originating finding.** The first instance that surfaced the rule. Single module shape, single failure case. Insufficient evidence to ship (the rule may over-fit the originating shape).
-2. **Sample 2 — Cross-pass transferability.** A second hostile-review pass on a different module shape (HTTP fetcher vs engine abstraction; output generator vs data source; CLI vs library). If the rule does not bite in pass 2, it is over-fit to pass 1's shape and needs broader wording. If it does bite, the wording generalizes.
-3. **Sample 3 — Fix-exercise validation.** Ratified wording applied by an operator to fix the originating findings. If the rule bites cleanly without the operator needing to interpret around the wording, the rule is well-calibrated. If the operator routinely chooses around the rule's options, the rule is too directive or too loose; the wording needs refinement.
+1. **Sample 1, originating finding.** The first instance that surfaced the rule. Single module shape, single failure case. Insufficient evidence to ship (the rule may over-fit the originating shape).
+2. **Sample 2, cross-pass transferability.** A second hostile-review pass on a different module shape (HTTP fetcher vs engine abstraction; output generator vs data source; CLI vs library). If the rule does not bite in pass 2, it is over-fit to pass 1's shape and needs broader wording. If it does bite, the wording generalizes.
+3. **Sample 3, fix-exercise validation.** Ratified wording applied by an operator to fix the originating findings. If the rule bites cleanly without the operator needing to interpret around the wording, the rule is well-calibrated. If the operator routinely chooses around the rule's options, the rule is too directive or too loose; the wording needs refinement.
 
-Three samples is the minimum. Five (RG-7's "no silent processes" had five module-shape evidence points before ship) is better. One is not enough — single-pass evidence systematically over-fits.
+Three samples is the minimum. Five (RG-7's "no silent processes" had five module-shape evidence points before ship) is better. One is not enough; single-pass evidence systematically over-fits.
 
 ## Composition-conflict-resolution
 
@@ -116,9 +116,9 @@ When in doubt, run the loop. The cost of an over-fit rule is paid by every consu
 
 ## Cross-references
 
-- `[skill:lessons-learned]` — Tier-1 ledger; eval-loop instances get filed there as evidence before being promoted into this skill.
-- `[skill:rules-audit]` — cross-tier hygiene pass; complements this skill at the maintenance level (this skill is about rule design; rules-audit is about rule consistency over time).
-- `[skill:distill-lessons]` — Tier-1 to Tier-2 promotion mechanics.
+- `[skill:lessons-learned]`: Tier-1 ledger; eval-loop instances get filed there as evidence before being promoted into this skill.
+- `[skill:rules-audit]`: cross-tier hygiene pass; complements this skill at the maintenance level (this skill is about rule design; rules-audit is about rule consistency over time).
+- `[skill:distill-lessons]`: Tier-1 to Tier-2 promotion mechanics.
 
 ## Attribution
 
