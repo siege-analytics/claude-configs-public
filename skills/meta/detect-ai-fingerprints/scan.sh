@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Mechanical scanner for AI-fingerprint rules across the per-act rule files. Covers writing-prose:1-4, writing-code:2, writing-tests:3-4, writing-claims:2-3, writing-releases:2.
+# Mechanical scanner for AI-fingerprint rules across the per-act rule files. Covers writing-prose:1-4 (broader Unicode char class as of v2.2.0), writing-code:2, writing-code:9 (via scan_ast.py), writing-tests:3-4, writing-claims:2-3, writing-releases:2, writing-releases:3 (via scan_ast.py).
 # Operates on a unified diff from stdin OR fetches the diff itself based on flags.
 # Reports violations as <file>:<line>:<rule>:<excerpt>. Exit 0 if clean, 1 if violations found.
 #
@@ -17,7 +17,7 @@
 #                                 # the scanner's own definition files, which contain the rule
 #                                 # source, regex, and worked examples by design.
 #
-# This scanner covers writing-prose:1-4, writing-code:2, writing-tests:3-4, writing-claims:2-3, writing-releases:2. The remaining rules require [skill:code-review] judgment.
+# This scanner covers writing-prose:1-4 (broader Unicode class v2.2.0), writing-code:2, writing-code:9 (via scan_ast.py for .py files), writing-tests:3-4, writing-claims:2-3, writing-releases:2, writing-releases:3 (via scan_ast.py for .py files). The remaining rules require [skill:code-review] judgment.
 
 set -uo pipefail
 
@@ -25,6 +25,60 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 EM_DASH=$'\xe2\x80\x94'   # U+2014
 EN_DASH=$'\xe2\x80\x93'   # U+2013
+# writing-prose:1 v2.2.0 broader AI-typographic Unicode class.
+ARROW_R=$'\xe2\x86\x92'           # U+2192 right
+ARROW_L=$'\xe2\x86\x90'           # U+2190 left
+ARROW_R_DBL=$'\xe2\x87\x92'       # U+21D2 right-double
+ARROW_L_DBL=$'\xe2\x87\x90'       # U+21D0 left-double
+CURLY_SQUOTE_L=$'\xe2\x80\x98'    # U+2018
+CURLY_SQUOTE_R=$'\xe2\x80\x99'    # U+2019
+CURLY_DQUOTE_L=$'\xe2\x80\x9c'    # U+201C
+CURLY_DQUOTE_R=$'\xe2\x80\x9d'    # U+201D
+ELLIPSIS=$'\xe2\x80\xa6'          # U+2026
+MIDDLE_DOT=$'\xc2\xb7'            # U+00B7
+BULLET=$'\xe2\x80\xa2'            # U+2022
+NBSP=$'\xc2\xa0'                  # U+00A0 (path-whitelisted in templates/ and i18n/)
+
+# Path-based whitelist for U+00A0 (legitimate in HTML email templates and i18n string tables).
+nbsp_whitelisted() {
+    local file="$1"
+    [[ "$file" == templates/* || "$file" == */templates/* || "$file" == i18n/* || "$file" == */i18n/* ]]
+}
+
+# Helper: check a content string for every typographic Unicode char and emit per-class violations.
+# Args: file line_no content
+check_typographic() {
+    local file="$1" line_no="$2" content="$3" count i
+    # Per-class checks. Each char class emits a distinct rule ID so the fixer
+    # knows the substitution to apply without re-reading the line.
+    for pair in \
+        "$EM_DASH:em-dash" \
+        "$EN_DASH:en-dash" \
+        "$ARROW_R:arrow-right" \
+        "$ARROW_L:arrow-left" \
+        "$ARROW_R_DBL:arrow-right-double" \
+        "$ARROW_L_DBL:arrow-left-double" \
+        "$CURLY_SQUOTE_L:curly-squote-left" \
+        "$CURLY_SQUOTE_R:curly-squote-right" \
+        "$CURLY_DQUOTE_L:curly-dquote-left" \
+        "$CURLY_DQUOTE_R:curly-dquote-right" \
+        "$ELLIPSIS:ellipsis" \
+        "$MIDDLE_DOT:middle-dot" \
+        "$BULLET:bullet"; do
+        local ch="${pair%:*}" id="${pair##*:}"
+        count=$(grep -o -- "$ch" <<< "$content" | wc -l | tr -d ' ')
+        for ((i = 0; i < count; i++)); do
+            emit "$file" "$line_no" "writing-prose-1-${id}" "$content"
+        done
+    done
+    # NBSP with path-based whitelist.
+    if ! nbsp_whitelisted "$file"; then
+        count=$(grep -o -- "$NBSP" <<< "$content" | wc -l | tr -d ' ')
+        for ((i = 0; i < count; i++)); do
+            emit "$file" "$line_no" "writing-prose-1-nbsp" "$content"
+        done
+    fi
+}
 
 ADVERBS_RE='\b(deliberately|intentionally|explicitly|fundamentally|essentially|crucially|notably)\b'
 HISTORY_RE='\b(PR #[0-9]+|Sprint [A-Za-z0-9]+|v[0-9]+\.[0-9]+\.[0-9]+ (hardening|follow-up|fix)|issue #[0-9]+|ticket [A-Z]+-[0-9]+)\b'
@@ -86,17 +140,8 @@ scan_diff_stdin() {
         if [[ "$line" == +* && "$line" != +++* ]]; then
             local content="${line:1}"
 
-            # writing-prose:1: em-dashes / en-dashes (every match per line).
-            local em_count
-            em_count=$(grep -o -- "$EM_DASH" <<< "$content" | wc -l | tr -d ' ')
-            for ((i = 0; i < em_count; i++)); do
-                emit "$current_file" "$line_no" "writing-prose-1-em-dash" "$content"
-            done
-            local en_count
-            en_count=$(grep -o -- "$EN_DASH" <<< "$content" | wc -l | tr -d ' ')
-            for ((i = 0; i < en_count; i++)); do
-                emit "$current_file" "$line_no" "writing-prose-1-en-dash" "$content"
-            done
+            # writing-prose:1: AI-typographic Unicode characters (every match per line, per class).
+            check_typographic "$current_file" "$line_no" "$content"
 
             # writing-prose:3: every banned-adverb match on the line.
             while IFS= read -r adverb; do
@@ -177,16 +222,8 @@ scan_message_stdin() {
             claim_excerpts+=("$line")
         fi
 
-        # writing-prose:1: em-dashes / en-dashes anywhere in the message.
-        local em_count en_count
-        em_count=$(grep -o -- "$EM_DASH" <<< "$line" | wc -l | tr -d ' ')
-        for ((i = 0; i < em_count; i++)); do
-            emit "$virtual_file" "$line_no" "writing-prose-1-em-dash" "$line"
-        done
-        en_count=$(grep -o -- "$EN_DASH" <<< "$line" | wc -l | tr -d ' ')
-        for ((i = 0; i < en_count; i++)); do
-            emit "$virtual_file" "$line_no" "writing-prose-1-en-dash" "$line"
-        done
+        # writing-prose:1: AI-typographic Unicode characters anywhere in the message.
+        check_typographic "$virtual_file" "$line_no" "$line"
 
         # writing-prose:2: structured rationale blocks.
         if grep -qE "$WHY_BLOCK_RE" <<< "$line"; then
@@ -280,7 +317,44 @@ case "$mode" in
         ;;
 esac
 
-COVERAGE_NOTE='scanned: writing-prose:1-4 (stylistic), writing-code:2 (history references in code comments), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable claims and completeness claims need Verified-by trailer), writing-releases:2 (skip-count trending). The rest require [skill:code-review] judgment.'
+# --- AST scanner: invoke scan_ast.py on changed .py files for writing-code:9
+# and writing-releases:3. Skipped for message modes since those are not code.
+# First-cut v2.2.0 implementation: scans the post-state file from disk,
+# reports ALL violations in the file (not diff-line-filtered). Pre-existing
+# violations are flagged along with new ones; rule grace-window text covers
+# the expectation. Diff-line filtering may land in v2.2.x.
+if [[ "$mode" == staged || "$mode" == working || "$mode" == pr ]]; then
+    py_files=""
+    case "$mode" in
+        staged)  py_files=$(git diff --cached --name-only --diff-filter=AM | grep '\.py$' || true) ;;
+        working) py_files=$(git diff --name-only --diff-filter=AM | grep '\.py$' || true) ;;
+        pr)      py_files=$(gh pr diff "$arg" --name-only 2>/dev/null | grep '\.py$' || true) ;;
+    esac
+    if [[ -n "$py_files" ]] && command -v python3 >/dev/null 2>&1; then
+        # Look for project-local scanner config relative to the git root.
+        repo_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+        config_arg=()
+        if [[ -n "$repo_root" && -f "$repo_root/.claude/scanner-config.toml" ]]; then
+            config_arg=(--config "$repo_root/.claude/scanner-config.toml")
+        fi
+        ast_files=()
+        while IFS= read -r f; do
+            [[ -z "$f" ]] && continue
+            is_ignored "$f" && continue
+            ast_files+=("$f")
+        done <<< "$py_files"
+        if (( ${#ast_files[@]} > 0 )); then
+            ast_out=$(python3 "$SCRIPT_DIR/scan_ast.py" "${config_arg[@]}" "${ast_files[@]}" 2>&1) || true
+            if [[ -n "$ast_out" ]]; then
+                echo "$ast_out"
+                ast_n=$(printf '%s\n' "$ast_out" | grep -cE ':writing-(code-9|releases-3)' || true)
+                violations=$((violations + ast_n))
+            fi
+        fi
+    fi
+fi
+
+COVERAGE_NOTE='scanned: writing-prose:1-4 (stylistic; broader Unicode class as of v2.2.0), writing-code:2 (history references in code comments), writing-code:9 (silently-dropped parameters; AST scanner), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable claims and completeness claims need Verified-by trailer), writing-releases:2 (skip-count trending), writing-releases:3 (deprecation messages name a removal target; AST scanner). The rest require [skill:code-review] judgment.'
 
 if (( violations > 0 )); then
     echo
