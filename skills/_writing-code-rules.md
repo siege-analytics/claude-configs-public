@@ -113,6 +113,18 @@ The side-effect-artifact alone (file written to disk, mutation done) does NOT sa
 
 **Contract-preservation override (v2.3.1).** When changing the floor shape from (a) to (b) or vice versa would break an established contract (existing call sites depending on the return type, or downstream tools depending on log presence), choose the additive option even if the per-process-type advisory would suggest otherwise. The session's concrete instance: `_ensure_sedona`'s pre-existing `None`-return contract made (b) log-only the right floor choice; switching to (a) return value would have broken every call site. Anti-pattern: rigidly following the advisory and inducing a breaking change to satisfy menu-style preference. The advisory is advisory; the floor is non-negotiable; the choice between floor shapes respects existing contracts.
 
+Empirical evidence from the v2.3.0 fix-exercise (siege_utilities PR #487, five functions across powerpoint, logging, databricks):
+
+| Case | Chosen floor | Per-process-type advisory predicted | Match? |
+|---|---|---|---|
+| `_ensure_sedona` | (b) log-only | (a) return value (helper) | **No — contract preserved** |
+| `runtime_secret_exists` | (a) return value | (a) return value (helper) | Yes |
+| `ensure_secret_scope` | (a)+(b) | (a)+(b) (library entry) | Yes |
+| `put_secret` | (a)+(b) | (a)+(b) (library entry) | Yes |
+| `_add_*_slide` family | (a) return value (with public-method log layered above) | (a) return value (helper) | Yes |
+
+Distribution: 4 of 5 cases matched advisory; 1 of 5 (`_ensure_sedona`) used the contract-preservation override. The override is rare-but-load-bearing: it prevents the menu from inducing breakage in 1 of 5 retroactive-fix cases. Without the override, the (a)/(b) menu would force a choice that satisfies the rule's letter but violates writing-releases:1 (BREAKING-when-public-surface-changes-incompatibly). Two rules composing to prevent each other: not what we want.
+
 **Family-of-methods scaling pattern (v2.3.1).** When writing-code:11 applies to a method family of N>5 (e.g. PowerPoint `_add_*_slide` family with 19 methods), document the convention at the enclosing class or module docstring, then per-method application can be ratchet-applied across multiple PRs without re-establishing the pattern. The class-docstring convention names the family-wide signal shape ("each `_add_*_slide` method returns the slide reference and logs `added <slide-name>` at INFO"); subsequent per-method commits cite the convention and apply it. Anti-pattern: blocking a PR on completing the full family at once, when ratchet-apply across releases is operationally cheaper and the convention itself is the load-bearing wording. The session's concrete instance: PowerPoint family applied to 4 + ratcheted at Issue #485 for the remaining 15.
 
 The session's concrete instances:
