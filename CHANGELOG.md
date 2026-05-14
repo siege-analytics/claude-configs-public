@@ -6,6 +6,56 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [2.3.1.1] -- 2026-05-13
+
+Patch adding mechanical detection for writing-code:7 (silent error swallowing). The 14-violation aggregation across 8 hostile-review passes of siege_utilities (per the v2.3.0/v2.3.1 cycle) was sibling session 260502-vital-channel's signal that judgment-only enforcement of writing-code:7 was leaving substantial leakage; mechanical detection moves the rule from "load-bearing-but-unenforced" to "load-bearing-and-enforced." Authored against sibling's test-case set at `/sessions/260502-vital-channel/plans/writing-code-7-scanner-test-cases.md`.
+
+### Changed -- writing-code:7 lands mechanical via AST scanner
+
+`skills/meta/detect-ai-fingerprints/scan_ast.py` extended with `check_writing_code_7`. Detects four banned shapes from the rule body:
+
+- `except: pass`
+- `except: return None` / `except: return False`
+- `except: continue`
+- `except: <logging-call>; return None/False/continue` (audit-log without typed-failure return)
+
+Carve-outs implemented per the rule body:
+
+- `# noqa: writing-code-7` inline opt-out on the `except` line, for project-defined Result/Either/Option-style typed failures the AST scanner cannot detect heuristically.
+- `except ImportError: <FLAG>_AVAILABLE = False` (or `_INSTALLED`, `HAS_*`, `_HAS_*`) idiom: writing-code:8 territory; explicitly silent here.
+- Enclosing function returns `Optional[T]` (or annotation contains `None`) AND docstring contains one of `{"or None if", "returns None when", "returning None if", "returning None when", "None if not found"}`. Option (b) compliance per the rule body.
+
+Per-shape emit IDs:
+
+- `writing-code-7-silent-swallow(Pass)`
+- `writing-code-7-silent-swallow(Return)`
+- `writing-code-7-silent-swallow(Continue)`
+- `writing-code-7-silent-swallow(log+Return)`
+- `writing-code-7-silent-swallow(log+Continue)`
+
+Smoke-tested against the 14-violation test-case set: 4 positive cases (TC1, TC2, TC3, TC4) flag correctly; 3 negative cases (NC1 re-raise, NC2 Optional+docstring, NC5 noqa, EC3 ImportError+flag) correctly silent.
+
+### Forward-only with one-minor-release grace window
+
+Per writing-code:7's existing rule-body forward-only clause: existing handlers grandfathered for one minor release after this patch lands. Codebases address violations as discovery surfaces them, not big-bang. Same fix-exercise pattern from v2.2.0/v2.3.0/v2.3.1 (per-rule commits citing the rule that drove the change) applies.
+
+### Coverage matrix update
+
+writing-code:7 row's `tooling_status` moves from `judgment` to `mechanical`; `prevention_path` removed (no longer needed). Tooling-status summary: mechanical 14 -> 15; judgment 16 -> 15.
+
+### Two scanner-enhancement candidates queued for v2.3.2 / v2.4.0
+
+Per sibling's spec annotations:
+
+- **TC5 catch-all-with-alternative-return-shape detection** (PostGISEngine read_parquet fall-back-to-different-result case): catch-all `except` whose body returns a different result without re-raise. Not in the four base banned shapes; rule-body spirit but scanner enhancement.
+- **TC8 catch-all-wrapping-pure-logic-body detection** (`_find_best_format` wrap-as-domain-error case): catch-all `except` wrapping a body with no I/O calls. Wrapping programming errors as domain errors hides bugs.
+
+Both queued; ship base scanner first per agreed spec.
+
+### No release tag for this patch
+
+Same merge-to-main-no-tag pattern as the RD-1 ledger-maintenance commit. Patch ships when merged; release/flat and release/nested branches update on workflow run.
+
 ## [2.3.1] -- 2026-05-13
 
 Cohort release picking up the v2.3.0 fix-exercise carve-outs plus three new rules and one corollary fold negotiated across the v2.3.0 audit cycle. Per the v2.3.0 sequencing decision, v2.3.0 shipped writing-code:11 alone to keep the eval-loop signal clean for that endemic-pattern rule; v2.3.1 picks up everything that was deferred or surfaced during that cycle.

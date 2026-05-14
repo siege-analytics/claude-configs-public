@@ -347,14 +347,14 @@ if [[ "$mode" == staged || "$mode" == working || "$mode" == pr ]]; then
             ast_out=$(python3 "$SCRIPT_DIR/scan_ast.py" "${config_arg[@]}" "${ast_files[@]}" 2>&1) || true
             if [[ -n "$ast_out" ]]; then
                 echo "$ast_out"
-                ast_n=$(printf '%s\n' "$ast_out" | grep -cE ':writing-(code-9|releases-3)' || true)
+                ast_n=$(printf '%s\n' "$ast_out" | grep -cE ':writing-(code-(7|9)|releases-3)' || true)
                 violations=$((violations + ast_n))
             fi
         fi
     fi
 fi
 
-COVERAGE_NOTE='scanned: writing-prose:1-4 (stylistic; broader Unicode class as of v2.2.0), writing-code:2 (history references in code comments), writing-code:9 (silently-dropped parameters; AST scanner), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable claims and completeness claims need Verified-by trailer), writing-releases:2 (skip-count trending), writing-releases:3 (deprecation messages name a removal target; AST scanner). The rest require [skill:code-review] judgment.'
+COVERAGE_NOTE='scanned: writing-prose:1-4 (stylistic; broader Unicode class as of v2.2.0), writing-code:2 (history references in code comments), writing-code:7 (silent error swallowing; AST scanner as of v2.3.1.1), writing-code:9 (silently-dropped parameters; AST scanner), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable claims and completeness claims need Verified-by trailer), writing-releases:2 (skip-count trending), writing-releases:3 (deprecation messages name a removal target; AST scanner). The rest require [skill:code-review] judgment.'
 
 if (( violations > 0 )); then
     echo

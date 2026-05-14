@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AST scanner for writing-code:9 and writing-releases:3.
+"""AST scanner for writing-code:7, writing-code:9 and writing-releases:3.
 
 Invoked by scan.sh for .py files in the diff. Reports violations as
 <file>:<line>:<rule>: <excerpt>. Exit 0 if clean, 1 if violations.
@@ -7,11 +7,16 @@ Invoked by scan.sh for .py files in the diff. Reports violations as
 Usage:
   scan_ast.py [--config <path>] <file> [<file> ...]
 
-This is a first-cut v2.2.0 implementation. Reports ALL violations in the
-files passed (no diff-line filtering). Pre-existing violations are
-flagged along with new ones; the rule bodies' grace-window language
-documents the expectation. A v2.2.x patch may add diff-line filtering
-if false-positive volume in pre-existing code becomes a problem.
+This is a first-cut v2.2.0 implementation extended at v2.3.1.1 to add
+writing-code:7. Reports ALL violations in the files passed (no diff-line
+filtering). Pre-existing violations are flagged along with new ones; the
+rule bodies' grace-window language documents the expectation.
+
+writing-code:7 detection covers the four base banned shapes (Pass,
+Return None/False, Continue, log.X + Return/Continue) plus carve-outs
+for Optional[T]+docstring, # noqa: writing-code-7, and ImportError +
+flag-pattern (writing-code:8 territory). The TC5 alternative-return
+and TC8 wrap-pure-logic enhancements are deferred to v2.3.2/v2.4.0.
 """
 
 import ast
@@ -220,6 +225,180 @@ def check_writing_releases_3(tree):
     return violations
 
 
+DOCSTRING_NONE_PATTERNS = (
+    "or None if",
+    "returns None when",
+    "returning None if",
+    "returning None when",
+    "None if not found",
+)
+
+LOGGING_CALL_NAMES = {"debug", "info", "warning", "warn", "error", "critical", "exception",
+                      "log_warning", "log_error", "log_info", "log_debug"}
+
+
+def is_logging_call(stmt):
+    """True if stmt is an Expr wrapping a Call to a logging-style function."""
+    if not isinstance(stmt, ast.Expr):
+        return False
+    if not isinstance(stmt.value, ast.Call):
+        return False
+    func = stmt.value.func
+    if isinstance(func, ast.Attribute):
+        return func.attr in LOGGING_CALL_NAMES
+    if isinstance(func, ast.Name):
+        return func.id in LOGGING_CALL_NAMES
+    return False
+
+
+def is_silent_terminator(stmt):
+    """True if stmt is one of the silent-terminator shapes (Pass / Return None / Return False / Continue)."""
+    if isinstance(stmt, ast.Pass):
+        return True
+    if isinstance(stmt, ast.Continue):
+        return True
+    if isinstance(stmt, ast.Return):
+        if stmt.value is None:
+            return True
+        if isinstance(stmt.value, ast.Constant) and stmt.value.value in (None, False):
+            return True
+    return False
+
+
+def import_flag_pattern(handler):
+    """True if the except handler body sets an availability flag (writing-code:8 territory).
+
+    Matches:  except ImportError: <NAME>_AVAILABLE = False  (or = True/False).
+    Body must be 1-2 simple Assign statements; carve-out for the optional-import idiom.
+    """
+    if not handler.type:
+        return False
+    type_name = ""
+    if isinstance(handler.type, ast.Name):
+        type_name = handler.type.id
+    elif isinstance(handler.type, ast.Attribute):
+        type_name = handler.type.attr
+    if type_name != "ImportError":
+        return False
+    for stmt in handler.body:
+        if not isinstance(stmt, ast.Assign):
+            return False
+        for target in stmt.targets:
+            if not isinstance(target, ast.Name):
+                return False
+            if not (target.id.endswith("_AVAILABLE") or target.id.endswith("_INSTALLED")
+                    or target.id.startswith("HAS_") or target.id.startswith("_HAS_")):
+                return False
+    return True
+
+
+def has_noqa_writing_code_7(handler, source_lines):
+    """True if the except handler line carries a `# noqa: writing-code-7` opt-out comment."""
+    if handler.lineno < 1 or handler.lineno > len(source_lines):
+        return False
+    line = source_lines[handler.lineno - 1]
+    return "noqa: writing-code-7" in line or "noqa:writing-code-7" in line
+
+
+def function_returns_optional_with_documented_none(func_node):
+    """True if function's return type is Optional/Union-with-None AND docstring documents None as outcome."""
+    if not isinstance(func_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        return False
+    rt = func_node.returns
+    if rt is None:
+        return False
+    annotation_text = ast.unparse(rt) if hasattr(ast, "unparse") else ""
+    has_optional_annotation = (
+        "Optional" in annotation_text
+        or "None" in annotation_text
+        or annotation_text.endswith("?")
+    )
+    if not has_optional_annotation:
+        return False
+    docstring = ast.get_docstring(func_node) or ""
+    return any(p in docstring for p in DOCSTRING_NONE_PATTERNS)
+
+
+def enclosing_function(tree, target_node):
+    """Find the FunctionDef/AsyncFunctionDef that contains target_node by lineno descent."""
+    candidate = None
+    for n in ast.walk(tree):
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            start = n.lineno
+            end = getattr(n, "end_lineno", None) or start
+            if start <= target_node.lineno <= end:
+                if candidate is None or start > candidate.lineno:
+                    candidate = n
+    return candidate
+
+
+def check_writing_code_7(tree, source_lines):
+    """Yield violations for writing-code:7 (silent error swallowing).
+
+    Detects four banned shapes per the rule body's banned-pattern list:
+      - Pass
+      - single Return None / Return False
+      - single Continue
+      - logging-call + Return/Continue (audit-log without typed-failure)
+
+    Carve-outs:
+      - # noqa: writing-code-7 inline opt-out on the except line
+      - except ImportError + availability-flag-set body (writing-code:8 territory)
+      - enclosing function returns Optional[T] AND docstring documents None as outcome
+    """
+    violations = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ExceptHandler):
+            continue
+        if has_noqa_writing_code_7(node, source_lines):
+            continue
+        if import_flag_pattern(node):
+            continue
+        body = node.body
+        if not body:
+            continue
+        is_silent = False
+        excerpt_shape = ""
+        if len(body) == 1 and is_silent_terminator(body[0]):
+            is_silent = True
+            excerpt_shape = type(body[0]).__name__
+        elif len(body) == 2 and is_logging_call(body[0]) and is_silent_terminator(body[1]):
+            is_silent = True
+            excerpt_shape = f"log+{type(body[1]).__name__}"
+        if not is_silent:
+            continue
+        # Optional[T]+docstring carve-out applies only to Return None shape.
+        if excerpt_shape in ("Return", "log+Return"):
+            return_stmt = body[-1]
+            if isinstance(return_stmt, ast.Return) and (
+                return_stmt.value is None
+                or (isinstance(return_stmt.value, ast.Constant) and return_stmt.value.value is None)
+            ):
+                func = enclosing_function(tree, node)
+                if func is not None and function_returns_optional_with_documented_none(func):
+                    continue
+        # Build excerpt naming the exception type and the body shape.
+        exc_name = "<bare>"
+        if node.type is not None:
+            if isinstance(node.type, ast.Name):
+                exc_name = node.type.id
+            elif isinstance(node.type, ast.Attribute):
+                exc_name = node.type.attr
+            elif isinstance(node.type, ast.Tuple):
+                exc_name = "(" + ", ".join(
+                    e.id if isinstance(e, ast.Name)
+                    else (e.attr if isinstance(e, ast.Attribute) else "?")
+                    for e in node.type.elts
+                ) + ")"
+        excerpt = f"except {exc_name}: <{excerpt_shape}>"
+        violations.append(
+            (node.lineno,
+             f"writing-code-7-silent-swallow({excerpt_shape})",
+             excerpt)
+        )
+    return violations
+
+
 def scan_file(path, allow_decorators):
     try:
         source = Path(path).read_text(encoding="utf-8")
@@ -232,7 +411,9 @@ def scan_file(path, allow_decorators):
         print(f"{path}:{e.lineno or 0}:scan-ast-syntax-error: {e.msg}",
               file=sys.stderr)
         return []
-    return (check_writing_code_9(tree, allow_decorators)
+    source_lines = source.splitlines()
+    return (check_writing_code_7(tree, source_lines)
+            + check_writing_code_9(tree, allow_decorators)
             + check_writing_releases_3(tree))
 
 

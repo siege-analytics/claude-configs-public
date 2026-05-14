@@ -109,11 +109,10 @@ originating_arc = { session-id = "260502-vital-channel", incident-name = "invari
 
 [[failure_mode]]
 name = "silent-exception-swallowing"
-description = "except Exception: pass or except Exception: log.error; return None without typed failure documented in docstring."
+description = "except Exception: pass or except Exception: log.error; return None without typed failure documented in docstring. AST scanner detects four banned shapes (Pass / Return None|False / Continue / log+terminator) with carve-outs for # noqa, ImportError+flag-pattern, and Optional[T]+docstring."
 rule_id = ["writing-code:7"]
-enforcement = "code-review"
-tooling_status = "judgment"
-prevention_path = "needs: AST-walk for bare except / except-and-discard patterns with audit-log presence check"
+enforcement = "scanner"
+tooling_status = "mechanical"
 originating_arc = { session-id = "260502-vital-channel", incident-name = "v1.6.0-retrospective" }
 
 [[failure_mode]]
@@ -290,8 +289,8 @@ originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-
 
 ## Tooling-status summary
 
-- `mechanical` rows: 14 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :9, :12; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3, :4).
-- `judgment` rows: 16 (writing-code:1, :3, :4, :6, :7, :8, :10, :11, :13; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
+- `mechanical` rows: 15 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :7, :9, :12; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3, :4).
+- `judgment` rows: 15 (writing-code:1, :3, :4, :6, :8, :10, :11, :13; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
 - `gap` rows: 1 (writing-releases:1, pending public-surface differ at upstream issue #51).
 
 The `gap` and `judgment` categories stay distinct: `gap` means no rule exists to prevent the failure mode and only operator honor catches it; `judgment` means a rule exists with defined enforcement (code review, scanner, hook) but the enforcement is judgment-bound rather than mechanical. The distinction lets the matrix answer "is this prevented at all?" separately from "is the prevention mechanized?".
