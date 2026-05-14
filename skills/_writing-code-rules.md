@@ -8,7 +8,7 @@ These rules apply whenever the agent writes production code -- any `.py` file ou
 
 The sibling boundary in `_writing-claims-rules.md` is "verify before claiming": rules that fire when stating a fact in a commit body, PR body, or chat. The two files split the same underlying claim-grounding family by temporal trigger; consult writing-code when editing code, consult writing-claims when stating facts.
 
-## The ten code-writing rules
+## The eleven code-writing rules
 
 **writing-code:1. Default to no docstring or a one-liner.** Multi-paragraph Sphinx-style docstrings are reserved for public API surface that is exported and consumed externally. Internal helpers and one-off functions get type hints and at most one sentence. Docstrings are code, not prose; the discipline lives here rather than in `[rule:writing-prose]`.
 
@@ -80,9 +80,52 @@ This is the sibling rule of writing-code:9. writing-code:9 fires per-method-sign
 
 When discovered, the fix has two shapes: (i) implement the missing capability in the lagging engine; (ii) narrow the registry to the intersection of what every gated impl actually supports, and add the broader names per-engine via `Engine.EXTRA_SUPPORTED` or equivalent. The choice is project-judgment; the rule's job is to surface the mismatch.
 
+**writing-code:11. No silent processes.**
+
+Every function, method, script, or scheduled process that performs side effects (writes to disk, hits the network, mutates external state, registers UDFs, dispatches work, modifies a database, sends a message, emits a log to a downstream sink) must produce at least one observable signal at completion. The required-minimum floor is non-negotiable; the additive shapes are encouraged for high-signal processes.
+
+**Required minimum (non-negotiable floor):** every side-effecting process must produce at least one of:
+
+- (a) an inspectable return value naming what happened (status, count, structured result, the path written, the row count affected, the slide reference added). The return value must be inspectable: `True`/`False` is acceptable when the contract is binary; `None` is not acceptable when a real signal would fit.
+- (b) a log line at INFO level or higher naming what happened (rows processed, files written, no-op reason, dependency-registered, slide-added). The log line must name the action and a unique-enough identifier for an auditor to confirm the action by greping logs.
+
+The side-effect-artifact alone (file written to disk, mutation done) does NOT satisfy the floor. A function that writes a file, returns `None`, and does not log fails the floor: an auditor cannot confirm the action happened from the function's output. The fix is either return the path (a) or log "wrote `<path>`" (b). Both is fine; one is required.
+
+**Additional shapes for high-signal processes:**
+
+- (c) a metric written to a metrics sink (counter, gauge, timer, histogram), encouraged for batch jobs, scheduled processes, library entry points where downstream wants aggregable observability.
+- (d) a side-effect with audit trail (commit on a known branch, ticket update, file in a known location with a known schema), encouraged for migrations, infrastructure changes, scheduled processes where the audit log is part of the process contract.
+
+(c) and (d) are additive to the (a)-or-(b) floor, never substitutes.
+
+**Carve-outs:**
+
+- **Pure functions with no side effects:** the return value IS the output by definition; no log line required. A pure helper that computes `f(x) -> y` already satisfies (a).
+- **Test assertions:** pytest's pass/fail dispatch is the signal; an `assert x == y` does not need a return value or log.
+- **CLI subcommands whose stdout output is the contract:** when a `cli foo bar` command's stdout output is conventionally the consumer's input (operator pipes it, greps it, parses it), the printed output IS the observability. A log line in addition is fine but not required.
+
+**Per-process-type guidance (advisory cookbook layered onto the menu):**
+
+- Internal helper -> probably (a) return value.
+- Library entry point -> probably (a) + (b).
+- Batch job / scheduled process -> probably (b) + (c) + (d).
+- Migration script -> probably (b) + (d).
+
+The session's concrete instances:
+
+- The PowerPoint `_add_*_slide` private methods (~20 instances in one file) mutate the `prs` argument and return `None`. A consumer iterating the methods to verify slides got added cannot tell from output alone whether the slide is in the deck. Floor fix: return the slide reference (a), or log "added `<slide-name>`" (b).
+- `_ensure_sedona` re-raises on ImportError (writing-code:7-correct) but on success returns `None` silently. Caller cannot tell from output whether Sedona registered, was already registered, or was skipped because `_enable_sedona=False`. Floor fix: log.debug naming the path taken (e.g. "registered Sedona", "Sedona already registered", "skipped (config)").
+- Operator-stated principle (2026-05-13 21:51 CDT): "no process should be written without output or logging. We should always be able to measure output." This rule is the formalization.
+
+**Family of discipline:** writing-code:11 is the success-side complement to writing-code:7 (silent error swallowing). writing-code:7 covers the error path: every caught exception must produce a typed-failure result, an audit log, or a re-raise. writing-code:11 covers the success path: every side-effecting completion must produce an inspectable signal. Paired along the error/success boundary, the two rules close the observable-signal failure family.
+
+Forward-only. Existing silent processes in the codebase are flagged when discovered but the rule's expectation is that codebases address them as discovery surfaces them, not big-bang. The fix-exercise pattern from v2.2.0-rc1 (each rule application becomes a per-rule commit citing the rule that drove the change) applies here.
+
+Judgment-enforced via `[skill:code-review]` at v2.3.0. Mechanical detection is tractable but non-trivial: AST-walk for side-effect detection (Call to known-side-effecting builtins like `open`, `os.write`, `subprocess.run`, plus method calls on known-mutable types), cross-reference with return type and log calls in body. Tracked for v2.3.x scanner enhancement.
+
 ## Override
 
-These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; the remaining six (writing-code:1, :3, :4, :6, :7, :10) are judgment-enforced via `[skill:code-review]`.
+These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; the remaining seven (writing-code:1, :3, :4, :6, :7, :10, :11) are judgment-enforced via `[skill:code-review]`. writing-code:11 scanner enhancement tracked for v2.3.x.
 
 ## Cross-references
 
