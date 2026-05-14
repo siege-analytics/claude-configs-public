@@ -6,7 +6,7 @@ description: Always-on. Release-act discipline. Any change rejecting previously-
 
 These rules apply at release-cut time and at PR-merge time when the change affects either the public API surface or the project's skip-site count. Release-cuts ship contracts to downstream consumers; quiet contract changes break consumers silently. Skip-site growth is the test-suite analogue: each accepted skip is a piece of coverage the project quietly accepted losing.
 
-## The three release-writing rules
+## The four release-writing rules
 
 **writing-releases:1. BREAKING in the changelog if the change is breaking.**
 
@@ -17,6 +17,8 @@ Any change that rejects input previously accepted, returns output previously not
 - Grep for new return types in functions previously returning a different shape.
 
 Tooling is a follow-up ticket (tracked at the `claude-configs-public` repo's issue #51); the rule is in force now. The session's worst case: a `groupby_agg` validator was added that rejects `median`, `sem`, and other names pandas previously accepted, shipped in a minor release with no BREAKING section.
+
+**Composition with other rules' fix exercises (v2.3.1).** When a fix exercise for a different rule (commonly `[rule:writing-code]` writing-code:11 no-silent-processes) produces a breaking-change side effect, the BREAKING-changelog entry per writing-releases:1 lands as a separate commit on the same fix-exercise PR rather than being folded into the originating rule's commit. This composes the disciplines without losing per-rule attribution: the writing-code:11 commit cites that rule and stays scoped to the floor-fix; the writing-releases:1 commit cites the BREAKING change separately and stays scoped to the changelog. Anti-pattern: bundling the BREAKING entry into the writing-code:11 commit, which loses the "one commit per rule" eval-loop signal-attribution. The session's concrete instance: pass 6 databricks `runtime_secret_exists` had its return type narrowed from `bool` to `str` to provide a richer floor signal; the writing-code:11 fix and the writing-releases:1 BREAKING entry shipped as two commits on the same PR.
 
 **writing-releases:2. Skip-count trending.**
 
@@ -57,9 +59,35 @@ This is the deprecation-message analogue of `[rule:writing-tests]` writing-tests
 
 Forward-only; existing deprecation warnings are grandfathered with a one-minor-release grace window after writing-releases:3 lands. New deprecations in any PR must comply from day one. Mechanically enforced by `[skill:detect-ai-fingerprints]` AST scanner: walks `Call` nodes whose `func.id` matches `DeprecationWarning|PendingDeprecationWarning`, flattens the message arg through implicit concat and `BinOp(Add)` of `Constant` strings, then applies the both-tokens-present check on the flattened string.
 
+**writing-releases:4. Tooling deprecation markers require runtime warning.**
+
+Functions, methods, classes, or modules marked deprecated in tooling (RST `.. deprecated::` directive in docstring, `@deprecated` decorator, Sphinx `.. versionchanged::` note, equivalent project-defined markers) must emit a `DeprecationWarning` at runtime via `warnings.warn(..., DeprecationWarning)` or equivalent. The runtime warning's message must comply with `[rule:writing-releases]` writing-releases:3 (version-or-date anchor + removal-commitment keyword in the same string).
+
+This is the composing rule with writing-releases:3:
+
+- writing-releases:3 covers the runtime-warning side: IF a runtime DeprecationWarning is emitted, the message commits to a removal target.
+- writing-releases:4 covers the tooling-vs-runtime divergence: IF a tooling marker says deprecated, the runtime ALSO emits a warning so consumers see it at the call site, not just in Sphinx-rendered docs.
+
+Composed, the two close both halves: tooling marker -> runtime warning required (writing-releases:4) -> message commits to a target (writing-releases:3).
+
+Banned shapes:
+
+- Function with `.. deprecated:: 3.15.0 use Y instead` in docstring but no `warnings.warn(...)` call in the body. Sphinx-rendered docs say deprecated; runtime says nothing; consumers using the function in a non-Sphinx context (notebook, script, REPL) see no signal.
+- `@deprecated` decorator applied without a runtime warning side-effect (the decorator's documented behavior must include emitting a warning; a marker-only decorator that does not emit fails the rule).
+
+Acceptable shapes:
+
+- Function with `.. deprecated::` in docstring AND `warnings.warn("X is deprecated since v3.15.0; will be removed in v3.17.0", DeprecationWarning)` at the body's entry.
+- `@deprecated` decorator that internally calls `warnings.warn(...)` per writing-releases:3 conventions.
+- Marker without runtime warning is acceptable ONLY for deprecated *exports from `__init__.py`* where the warning fires on import attempt rather than call (covered by Python's own `__getattr__` deprecation hook pattern); the import-time warning satisfies the "runtime signal exists" requirement.
+
+The session's concrete instances: pass 2 surfaced 2 `.. deprecated::` markers in `geo/spatial_data.py` without runtime warnings (parked at v2.2.0 ship as RG-5 candidates because writing-releases:3's scope was runtime-only).
+
+Mechanical via AST scanner: walk function/class/module docstrings for RST `.. deprecated::` patterns; walk `decorator_list` for `@deprecated` (or project-configurable equivalent names); cross-reference with body Call nodes for `warnings.warn(...)` with `DeprecationWarning`-or-subclass category. Flag any deprecated-marker without a corresponding runtime warning emission. Forward-only with one-minor-release grace window same as writing-releases:3.
+
 ## Override
 
-These rules are mandatory. No `[release-skip]` override. writing-releases:1 stays operator-judgment until the public-surface differ ships; writing-releases:2 is mechanical from v2.0.0 onward; writing-releases:3 is mechanical from v2.2.0 onward (one-minor-release grace window for existing deprecation warnings).
+These rules are mandatory. No `[release-skip]` override. writing-releases:1 stays operator-judgment until the public-surface differ ships; writing-releases:2 is mechanical from v2.0.0 onward; writing-releases:3 is mechanical from v2.2.0 onward (one-minor-release grace window for existing deprecation warnings); writing-releases:4 is mechanical from v2.3.1 onward (one-minor-release grace window for existing tooling-marker-without-runtime-warning patterns).
 
 ## Cross-references
 

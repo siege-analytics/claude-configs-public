@@ -6,6 +6,50 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [2.3.1] -- 2026-05-13
+
+Cohort release picking up the v2.3.0 fix-exercise carve-outs plus three new rules and one corollary fold negotiated across the v2.3.0 audit cycle. Per the v2.3.0 sequencing decision, v2.3.0 shipped writing-code:11 alone to keep the eval-loop signal clean for that endemic-pattern rule; v2.3.1 picks up everything that was deferred or surfaced during that cycle.
+
+Negotiated with sibling session 260502-vital-channel; cross-pass evidence from passes 2-8 of the siege_utilities hostile review (geo, vista_social, powerpoint, logging, databricks, credential_manager). All five additions have multi-instance evidence per the rule-eval-loop discipline (`[skill:rule-eval-loop]`, shipped in PR #65).
+
+### Added -- writing-code:12 (no duplicate imports at module scope)
+
+Mechanical via AST scanner. Imports must appear exactly once at module scope; aliased duplicates flagged unless both aliases are referenced. Conditional imports inside `try`/`except ImportError` blocks are availability fallbacks per writing-code:8, not duplicates. Originating evidence: `geo/spatial_data.py` had two pairs of duplicate module-level imports (`import os` twice; `import warnings` parallel to `import warnings as _warnings_mod`), slop from branch-merging linters missed.
+
+### Added -- writing-code:13 (consistent failure-mode contract)
+
+Judgment-enforced. A function declares ONE failure-indication mechanism (Optional with documented None-as-failure, OR typed exception, OR Result-style); sibling methods within a class follow the same contract or differentiate naming when the contract genuinely diverges. Originating evidence: `_get_dataset_metadata` returns None for HTTP non-2xx but raises for other failures; `PowerPointGenerator.generate_powerpoint_presentation` returns `bool` while sibling `create_*_presentation` methods raise; `credential_manager` 1Password backend mixes None-not-found and raise-transport-error without surfacing the distinction. Composes with writing-code:7 (silent error swallowing): :7 covers the per-handler choice; :13 covers the across-function and across-method consistency.
+
+### Added -- writing-releases:4 (tooling deprecation markers require runtime warning)
+
+Mechanical via AST scanner. Functions/classes/modules marked deprecated in tooling (RST `.. deprecated::`, `@deprecated` decorator, Sphinx `.. versionchanged::`) must emit `warnings.warn(..., DeprecationWarning)` at runtime; the runtime warning's message complies with writing-releases:3 (version-or-date anchor + removal-commitment keyword). Composes with writing-releases:3: :4 covers the tooling-vs-runtime divergence; :3 covers the runtime message format. Originating evidence: pass 2 surfaced 2 RST `.. deprecated::` markers in `geo/spatial_data.py` without runtime warnings (parked at v2.2.0 ship as RG-5 candidates because writing-releases:3's scope was runtime-only).
+
+### Changed -- writing-code:11 carve-outs (three additions to body)
+
+Three carve-outs surfaced during the v2.3.0 fix exercise (siege_utilities PR #487 + PR #484), all banked verbatim from sibling's eval observations:
+
+1. **Contract-preservation override** on per-process-type advisory: when changing the floor shape from (a) to (b) or vice versa would break an established contract, choose the additive option even if the advisory would suggest otherwise. Originating evidence: `_ensure_sedona`'s pre-existing `None`-return contract made (b) log-only the right floor choice.
+2. **Family-of-methods scaling pattern** for N>5 method families: document the convention at the enclosing class/module docstring, then per-method application can be ratchet-applied across multiple PRs without re-establishing the pattern. Originating evidence: PowerPoint `_add_*_slide` family (19 methods, applied to 4 + ratcheted at Issue #485).
+3. **Per-rule-commit composition with writing-releases:1** when a writing-code:11 fix produces a breaking-change side effect: the BREAKING-changelog entry per writing-releases:1 lands as a separate commit on the same fix-exercise PR, composing the disciplines without losing per-rule attribution. Lifted from databricks `bool` -> `str` return-type changes in PR #487.
+
+### Changed -- writing-releases:1 (composition discipline added to body)
+
+The third writing-code:11 carve-out belongs operationally with writing-releases:1, not writing-code:11. Body extended to name the composition pattern: when a fix exercise for writing-code:11 (or any other rule) produces a breaking-change side effect, the BREAKING entry lands as a separate commit on the same PR.
+
+### Changed -- writing-tests:1 retroactive-fix corollary (body extension, RG-9 fold)
+
+Tests that codify now-banned behaviour as feature must be renamed and have the rule citation in their docstring or commit message; do not delete. Author-time correctness != rule-time correctness; rules win. Two-instance evidence: siege_utilities PR #478 (engine-abstraction silent-swallow) + PR #484 (credential security domain silent-swallow). The corollary's three-step recipe (rename / cite rule / preserve test) was applied reproducibly across both module shapes; it was also self-validated in PR #484 against the unshipped rule, suggesting the discipline is intuitive enough that experienced operators converge on it organically.
+
+### Coverage matrix updates
+
+Three new entries: `duplicate-imports-at-module-scope` (writing-code:12, mechanical), `inconsistent-failure-mode-contract` (writing-code:13, judgment), `deprecation-marker-without-runtime-warning` (writing-releases:4, mechanical). Tooling-status summary: mechanical 12 -> 14; judgment 15 -> 16; gap unchanged at 1.
+
+### Followups
+
+- writing-code:7 mechanical scanner: queued for v2.3.1.x patch with one-minor-release grace window. Sibling will provide the test-case set from the 14-violation aggregation across 8 audit passes.
+- writing-code:11 scanner enhancement: tracked for v2.3.x.
+- v2.4.0 cohort: RG-6 (exception-as-dispatch banned when content-distinguishable) + RG-8 (method-naming consistency within a class). RG-6 has triangulated evidence from three module shapes ready to draft from.
+
 ## [2.3.0] -- 2026-05-13
 
 Adds writing-code:11 (no silent processes), the success-side complement to writing-code:7 (silent error swallowing). Operator-stated principle: "no process should be written without output or logging. We should always be able to measure output." Negotiated across two rounds with sibling session 260502-vital-channel; cross-pass evidence from four hostile-review passes (engines/dataframe_engine.py, geo/spatial_data.py, reporting/powerpoint_generator.py, core/logging.py + core/sql_safety.py) confirmed the success-side observability gap is endemic across module shapes.

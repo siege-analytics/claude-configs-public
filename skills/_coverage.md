@@ -261,12 +261,37 @@ enforcement = "code-review"
 tooling_status = "judgment"
 prevention_path = "needs: AST-walk for side-effect detection (Call to known-side-effecting builtins like open/os.write/subprocess.run, plus method calls on known-mutable types), cross-reference with return type and log calls in body. Tractable for v2.3.x scanner enhancement."
 originating_arc = { session-id = "260502-vital-channel", incident-name = "operator-directive-no-silent-processes-2026-05-13", pr-number = 478 }
+
+[[failure_mode]]
+name = "duplicate-imports-at-module-scope"
+description = "Module has duplicate `import X` statements or `from X import Y` repeated; or aliased import where the alias is never used. Slop from branch-merging that linters often miss."
+rule_id = ["writing-code:12"]
+enforcement = "scanner"
+tooling_status = "mechanical"
+originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-utilities-spatial-data-pass-2-duplicate-imports-2026-05-13" }
+
+[[failure_mode]]
+name = "inconsistent-failure-mode-contract"
+description = "A function declares two failure-indication mechanisms (return None for one failure shape, raise for another), OR sibling methods within a class follow different failure contracts (one raises, one returns None) without naming differentiation. Caller has to handle two failure paths or the API surface lies about its uniformity."
+rule_id = ["writing-code:13"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: control-flow analysis (Optional return + raise on different paths in same function); also cross-method analysis for sibling-method consistency; tractable for v2.3.x scanner enhancement"
+originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-utilities-spatial-data-pass-2-and-powerpoint-pass-4-failure-contract-2026-05-13" }
+
+[[failure_mode]]
+name = "deprecation-marker-without-runtime-warning"
+description = "Function/class/module marked deprecated in tooling (RST .. deprecated:: directive in docstring, @deprecated decorator, Sphinx versionchanged note) but body lacks corresponding runtime warnings.warn(..., DeprecationWarning) call. Sphinx-rendered docs say deprecated; runtime says nothing; consumers in non-Sphinx contexts (notebook, script, REPL) see no signal."
+rule_id = ["writing-releases:4"]
+enforcement = "scanner"
+tooling_status = "mechanical"
+originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-utilities-spatial-data-pass-2-rst-deprecated-markers-2026-05-13" }
 ```
 
 ## Tooling-status summary
 
-- `mechanical` rows: 12 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :9; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3).
-- `judgment` rows: 15 (writing-code:1, :3, :4, :6, :7, :8, :10, :11; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
+- `mechanical` rows: 14 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :9, :12; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3, :4).
+- `judgment` rows: 16 (writing-code:1, :3, :4, :6, :7, :8, :10, :11, :13; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
 - `gap` rows: 1 (writing-releases:1, pending public-surface differ at upstream issue #51).
 
 The `gap` and `judgment` categories stay distinct: `gap` means no rule exists to prevent the failure mode and only operator honor catches it; `judgment` means a rule exists with defined enforcement (code review, scanner, hook) but the enforcement is judgment-bound rather than mechanical. The distinction lets the matrix answer "is this prevented at all?" separately from "is the prevention mechanized?".

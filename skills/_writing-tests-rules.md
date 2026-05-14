@@ -16,6 +16,12 @@ Before merging any test, ask: "If I reverted the implementation, would this test
 
 Necessary condition: tests must import the module they claim to test. A test that re-implements the production algorithm in the test body is theater regardless of what it asserts. Check at PR time: grep for `from <project-namespace>` in any `test_*.py` file claiming to cover production code.
 
+**Retroactive-fix corollary (v2.3.1).** When a Tier-3 rule is applied retroactively to landed code, tests that asserted the now-banned behaviour fail and must be updated, not deleted. The author's writing-tests:1 check ("would this go red on revert?") passed at original-author time because the test was designed for the now-banned implementation; correctness against the implementation does not equal correctness against the rule. Author-time correctness != rule-time correctness; rules win on conflict.
+
+The fix-exercise commit that touches such a test must (a) rename the test to reflect the corrected assertion (`test_returns_none_on_exception` -> `test_propagates_transport_errors_instead_of_swallowing`); (b) cite the rule that drove the test change in the test docstring or commit message body, so the audit trail shows test-vs-rule resolution explicitly; (c) NOT delete the test outright. The test's intent ("behaviour X happens") becomes "rule-compliant behaviour X' happens" at the same coverage level.
+
+The corollary's three-step recipe (rename / cite rule / preserve test) has been validated reproducibly: instances at siege_utilities PR #478 (engine-abstraction silent-swallow, two test renames) and PR #484 (credential security domain silent-swallow, two test renames) confirm the discipline transfers across module shapes. Worth noting: the corollary is self-validating before it ships as a rule. Operators converged on the recipe in PR #484 against the unshipped rule, suggesting the discipline is intuitive enough that experienced operators apply it without the rule needing to exist.
+
 **writing-tests:2. No cargo-culted patterns across modules.**
 
 When writing tests for multiple similar targets (five API connectors, three storage backends), do not copy-modify the same shape across them. Look at each target's actual public surface and write tests that exercise its specific behaviour. The Vista Social retry logic deserves retry tests; the Snowflake connector does not need fake retry tests just because Vista Social had them.
