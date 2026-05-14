@@ -6,6 +6,34 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [2.5.0] -- 2026-05-14
+
+Single-item cohort: RD-1 (rule-eval-loop meta-skill) body extension tightening the skipping-the-loop carve-outs from "acceptable when X" to "mandatory three-samples; single-pass acceptable only when carve-outs apply." Triggered by the recurrence-3 milestone reached at v2.4.0 fix exercise (PR #491): nine rules across four cohorts (v2.2.0/v2.3.0/v2.3.1/v2.4.0) bitten cleanly with zero wording mis-fires.
+
+The discipline is empirically validated; the carve-out section now reflects that. Per RD-1's own self-application: the body extension extends an existing well-validated meta-skill (carve-out (b) applies), so the single-pass-only ship is admissible at recurrence 3 of the underlying discipline.
+
+Negotiated 2026-05-14 with sibling session 260502-vital-channel; one round, with sibling catching a real wording bug in the round-1 headline ("mandatory unless" parsed backwards from intent) before it landed. Fixed verbatim per sibling's (α) rephrasing.
+
+### Changed -- skills/meta/rule-eval-loop/SKILL.md "Skipping the loop" section
+
+The section's headline flips:
+
+- **Before (v2.3.1):** "Single-pass-only rules are acceptable when (a)/(b)/(c)."
+- **After (v2.5.0):** "Three-samples-before-ship is mandatory. Single-pass-only is acceptable only when (a)/(b)/(c)."
+
+Three carve-outs (a)/(b)/(c) preserved verbatim. Three additions:
+
+- **Anti-pattern named:** "bundling-convenience justification" with v2.4.0 RG-8 deferral cited as the canonical demonstration of the carve-out being defended. Future cohorts pre-empt rather than defend.
+- **Reverse self-validation framed:** v2.4.0 fix exercise produced the strongest possible signal (rule wording matches independently-arrived-at operator decisions). Captured in the section body as a watch-for pattern when running the loop.
+- **Tightening rationale:** explicit reference to recurrence-3 evidence as the empirical justification for the flip. RD-1 v1 was loose-shape because the discipline was unproven at promotion time; the discipline is now proven, so the default flips.
+
+### Followups
+
+- **RG-8 (method-naming consistency):** still parked pending pass-9 cross-pass evidence; sibling commitment stands.
+- **writing-code:14 mechanical detection (TC5 candidate):** v2.5.x.
+- **writing-code:11 / :13 mechanical detection:** v2.5.x and beyond.
+- **Pass 9+ audit work:** sibling's call; library audit at diminishing returns at 8 passes.
+
 ## [2.4.0] -- 2026-05-13
 
 Cohort release: one new rule (RG-6 / writing-code:14) plus three body extensions and a coverage matrix annotation. Smaller cohort than v2.3.1 by direct consequence of honoring `[skill:rule-eval-loop]`'s three-samples-before-ship discipline. RG-8 (method-naming consistency) was originally proposed for v2.4.0 but had only one module shape of evidence; deferred to v2.5.0+ pending cross-pass evidence per the discipline. The deferral itself was the framework working: documented as recurrence 1 of "RD-1 discipline-defense pattern" in the negotiation log.
