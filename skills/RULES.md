@@ -40,7 +40,7 @@ Read the matrix when:
 
 ## How rules get promoted into this set
 
-Three-tier pipeline. Findings start as Tier-1 entries in a consumer repo's `LESSONS.md`, get distilled into Tier-2 project rules at `<repo>/.claude/rules/<topic>.md`, and become Tier-3 rules in this directory only via human PR with cited evidence from at least two Tier-2 projects (or a language/framework justification from one). See `CONTRIBUTING.md` for the Tier-3 PR requirements. The `[skill:lessons-learned]`, `[skill:distill-lessons]`, and `[skill:rules-audit]` skills implement the pipeline.
+Three-tier pipeline. Findings start as Tier-1 entries in a consumer repo's `LESSONS.md`, get distilled into Tier-2 project rules at `<repo>/.claude/rules/<topic>.md`, and become Tier-3 rules in this directory only via human PR with cited evidence from at least two Tier-2 projects (or a language/framework justification from one). See `CONTRIBUTING.md` for the Tier-3 PR requirements. The `[skill:lessons-learned]`, `[skill:distill-lessons]`, and `[skill:rules-audit]` skills implement the pipeline. The `[skill:rule-eval-loop]` meta-skill documents the design discipline for new Tier-3 rules (three-arc framing, three-samples-before-ship, cross-pass + fix-exercise validation).
 
 ## Identifier scheme
 
