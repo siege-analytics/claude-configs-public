@@ -35,7 +35,7 @@ fi
 
 # Search the entire command for ticket reference patterns
 # #NNN, repo#NNN, owner/repo#NNN, PROJ-NNN (Jira/Linear)
-if echo "$COMMAND" | grep -qP '(#\d+|[A-Z]+-\d+)'; then
+if echo "$COMMAND" | grep -qE '(#[0-9]+|[A-Z]+-[0-9]+)'; then
     exit 0
 fi
 
