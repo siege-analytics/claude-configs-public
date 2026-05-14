@@ -302,12 +302,21 @@ rule_id = ["writing-code:15"]
 enforcement = "scanner"
 tooling_status = "mechanical"
 originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-utilities-pass-11-jdk-hang-fce3210", pr-number = 492 }
+
+[[failure_mode]]
+name = "release-not-verified-in-consumer-environment"
+description = "Release stamped final based on source-side checks (build passes, tags fanned out, scanners clean) without verifying the artifact loads correctly in its consumption environment. Recurrence-2 root pattern across LESSON 323a0f5 family: source-side quality is not consumer-side verification. Composes with writing-releases:1 (which covers communication of changes) and writing-claims:1 (which gets a release-shaped blind spot without this rule). Verification ordering: AFTER tag push, BEFORE release announcement."
+rule_id = ["writing-releases:5"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: per-consumer-shape verification scripts (e.g., scripts/verify_published_artifact.sh per repo) invoked at tag-push time by CI. Tractable but consumer-shape-specific (library vs skills vs schema vs CLI vs Docker each need different verification entry points); project-by-project rather than universal scanner. Tracked for v2.7.x."
+originating_arc = { session-id = "260502-pure-vista", incident-name = "operator-stated-verify-it-2026-05-14" }
 ```
 
 ## Tooling-status summary
 
 - `mechanical` rows: 16 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :7, :9, :12, :15; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3, :4).
-- `judgment` rows: 16 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
+- `judgment` rows: 17 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; writing-releases:5; counted with dual-coverage rows on writing-tests:4).
 - `gap` rows: 1 (writing-releases:1, pending public-surface differ at upstream issue #51).
 
 The `gap` and `judgment` categories stay distinct: `gap` means no rule exists to prevent the failure mode and only operator honor catches it; `judgment` means a rule exists with defined enforcement (code review, scanner, hook) but the enforcement is judgment-bound rather than mechanical. The distinction lets the matrix answer "is this prevented at all?" separately from "is the prevention mechanized?".

@@ -6,6 +6,57 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [2.7.0] -- 2026-05-14
+
+Single-rule cohort: writing-releases:5 (verify the published artifact loads in its consumption environment before declaring release done). Operator-stated principle 2026-05-14: "And verify it, that should be the rule." Recurrence-2 of LESSON 323a0f5 family ("Load-verify the published artifact, not just the source") cleared promotion threshold; operator reinforcement made the carve-out (a) single-pass admissible per RD-1 v2.5.0 tightening.
+
+Negotiated 2026-05-14 in one round; sibling sign-off VERBATIM with three drift-watch additions (generic fallback for shapes not enumerated; explicit verification-vs-tag ordering with failure-recovery path; cross-reference framing to writing-claims:1).
+
+### Added -- writing-releases:5 (verify the published artifact loads in its consumption environment)
+
+Build passes and source-side checks are necessary but not sufficient. A release is done when the artifact is verified end-to-end in the consumer's environment, not just in the build pipeline.
+
+**Per-consumer-shape verification:**
+- Library: pip install from published tag in fresh interpreter; import + exercise canonical use case.
+- Skills/rules: sync into fresh consumer workspace; confirm resolver/loader picks them up; exercise one rule end-to-end.
+- Schemas: deserialize in downstream consumer; round-trip canonical record.
+- Multi-consumer: verify each shape independently (e.g., flat AND nested layouts).
+- Generic fallback: install from published tag in fresh consumer environment; exercise documented entry point once.
+
+**Verification ordering:** AFTER tag push (verified artifact = canonical), BEFORE release announcement (PyPI publish, GitHub release, downstream notification). On failure, revert announcement (delete GitHub release, yank from PyPI), patch, re-stamp; tag stays since reproducible from source ref.
+
+**Carve-outs:** RC tags are pre-final-by-purpose (the RC IS the verification opportunity); patch releases with no consumer-integration change may defer with CHANGELOG citation; forward-only grandfathering.
+
+**Composes with writing-releases:1 + cross-references writing-claims:1.** writing-releases:1 covers communication of changes; writing-releases:5 covers verification that changes reach consumers correctly. Without writing-releases:5, the writing-claims:1 grep-before-declare-fix-complete discipline has a release-shaped blind spot.
+
+### Originating evidence
+
+- **Recurrence 1 (v2.0.0):** RULES.md and _coverage.md added at v2.0.0 but build's find_rules() glob missed them; never reached dist; surfaced by sibling sync-verification pass; v2.0.1 patched within an hour. Filed as LESSON 323a0f5.
+- **Recurrence 2 (v2.2.0 through v2.6.0, this session 260502-pure-vista):** every release shipped without verifying consumer-side integration. Workspace stale; resolver hook pointed at non-existent path; Craft Agent skill discovery untested. Surfaced when operator asked "have you determined how to make the resolver work"; agent had to admit no. Fixed end-to-end in this session (workspace synced, CLAUDE_RESOLVER_PATH exported, resolver hook wired into ~/.claude/settings.json). Same root pattern as recurrence 1: source-side quality is not consumer-side verification.
+- **Recurrence 3 (v3.17.0 of siege_utilities by sibling 260502-vital-channel, completed 2026-05-14):** sibling shipped siege_utilities v3.17.0 to PyPI ~20 minutes before this rule was drafted, then ran the verification per writing-releases:5's library-shape protocol. Source-side CI was 100% green (25 jobs pass on release branch; twine check passed; scan_unbounded_io.py passed; full 3.11/3.12/3.13 test matrix passed). Verification surfaced **two real consumer-side bugs that source-side CI did not catch:** (a) `scripts/` directory shipped to site-packages root creating namespace pollution with consumer's own `scripts/` package (pre-existing in v3.16.0; v3.17.0 added check_unbounded_io.py to the polluted namespace; setuptools packages-glob picked up scripts/ even without `__init__.py`); (b) `hydra` ImportError warning emitted on `siege_utilities.geo.spatial_data` import even when consumer has not opted into the optional dependency (pre-existing; likely writing-code:8 conditional-import callsite hygiene violation in config-loader path). Both bugs would have surfaced before v3.17.0 announcement if writing-releases:5 had been applied. siege_utilities v3.17.1 patch incoming for finding (a). This is exactly the gap writing-releases:5 closes.
+
+### Three framework signals banked for ledger entry 8
+
+- **Recurrence-2 of LESSON 323a0f5 promotion-ready:** recurrence threshold met independently of operator-stated reinforcement.
+- **Author-self-application during rule drafting (recurrence 1, new pattern):** sibling caught themselves shipping v3.17.0 to PyPI without verification while drafting the rule that prescribes verification. Different shape from writing-code:3 self-application during rule drafting (which was about rule's content vs another rule); this is rule's content vs its own author's recent action.
+- **Claims-grounded-source-side-only (recurrence 1, new pattern):** agent's "release shipped" claims across v2.2.0-v2.6.0 passed writing-claims:1 source-side (commits, tags, build artifacts) but failed consumer-side. New asymmetry pattern. Bank at recurrence 1.
+
+### Tooling status
+
+Judgment-enforced via `[skill:code-review]` at v2.7.0. Mechanical detection candidates: per-consumer-shape verification scripts invoked at tag-push time by CI. Tractable but consumer-shape-specific (library vs skills vs schema vs CLI vs Docker each need different verification entry points); project-by-project rather than universal scanner. Tracked for v2.7.x.
+
+### Coverage matrix
+
+One new entry: `release-not-verified-in-consumer-environment` (writing-releases:5, judgment). Tooling-status counts: mechanical 16 (unchanged); judgment 16 -> 17; gap 1 (unchanged).
+
+### Followups
+
+- RD-1 ledger entry 8 banks: recurrence-2-of-LESSON-323a0f5-promotion-ready, author-self-application-during-rule-drafting (recurrence 1, new pattern), claims-grounded-source-side-only (recurrence 1, new pattern), AND the v3.17.0 verification outcome (recurrence-3 of LESSON 323a0f5 manifesting as 2 real consumer-side bugs that source-side CI did not catch).
+- Author-self-application + claims-grounded-source-side-only patterns to watch for recurrence 2 in v2.8+.
+- Per-consumer-shape verification scripts: v2.7.x.
+- Pre-existing writing-code:11/:13/:14 mechanical detection: still queued.
+- RG-8 (method-naming consistency): still parked pending pass-9+ cross-pass evidence.
+
 ## [2.6.0] -- 2026-05-14
 
 Single-rule cohort: writing-code:15 (every blocking I/O call declares a timeout at the call site). Sibling session 260502-vital-channel proposed; cohort kept at one rule because the second candidate did not meet the three-samples-before-ship threshold. This is recurrence 2 of "discipline being defended when bundling opportunity exists" (v2.4.0 RG-8 deferral was recurrence 1); the discipline-defense pattern promotes from observation to validated meta-discipline at this release.

@@ -6,7 +6,7 @@ description: Always-on. Release-act discipline. Any change rejecting previously-
 
 These rules apply at release-cut time and at PR-merge time when the change affects either the public API surface or the project's skip-site count. Release-cuts ship contracts to downstream consumers; quiet contract changes break consumers silently. Skip-site growth is the test-suite analogue: each accepted skip is a piece of coverage the project quietly accepted losing.
 
-## The four release-writing rules
+## The five release-writing rules
 
 **writing-releases:1. BREAKING in the changelog if the change is breaking.**
 
@@ -87,9 +87,39 @@ The session's concrete instances: pass 2 surfaced 2 `.. deprecated::` markers in
 
 Mechanical via AST scanner: walk function/class/module docstrings for RST `.. deprecated::` patterns; walk `decorator_list` for `@deprecated` (or project-configurable equivalent names); cross-reference with body Call nodes for `warnings.warn(...)` with `DeprecationWarning`-or-subclass category. Flag any deprecated-marker without a corresponding runtime warning emission. Forward-only with one-minor-release grace window same as writing-releases:3.
 
+**writing-releases:5. Verify the published artifact loads in its consumption environment before declaring release done.**
+
+Build passes and source-side checks are necessary but not sufficient. A release is done when the artifact is verified end-to-end in the consumer's environment, not just in the build pipeline. The release-author MUST exercise the artifact in its consumption shape before stamping the final tag as "shipped."
+
+**Verification is per-consumer-shape:**
+
+- **Library:** `pip install` (or equivalent package-manager install) from the published tag in a fresh interpreter; import the public API; exercise one canonical use case.
+- **Skills/rules:** sync from the release tag into a fresh consumer workspace per the documented procedure; confirm the resolver/loader picks them up; exercise one rule end-to-end (e.g., scanner emits expected violation count on a known-violating file).
+- **Schemas:** deserialize a published schema-file from the release artifact in a downstream consumer; round-trip one canonical record.
+- **Multi-consumer:** verify in each documented consumer shape if the artifact has more than one (e.g., flat AND nested layouts must each be verified independently).
+- **Generic fallback:** for any artifact shape not listed above, install from the published tag in a fresh consumer environment and exercise the documented entry point once.
+
+**Verification ordering:** verification happens AFTER tag push (so the verified artifact is the canonical one) but BEFORE the release announcement (PyPI publish, GitHub release publish, downstream consumer notification). If verification fails, the release-author reverts the announcement step (delete the GitHub release, yank from PyPI), patches, and re-stamps. The tag itself stays since it is reproducible from the source ref; the failure is in the artifact-pipeline downstream of source.
+
+**Carve-outs:**
+
+- RC tags are pre-final by purpose and ship for verification purposes; the RC itself does not require consumer-side verification before stamping (the RC IS the verification opportunity).
+- Patch releases that demonstrably do not change consumer integration (CHANGELOG-only, internal-tooling-only, test-fixture-only) may defer the verification gate; the deferral MUST be cited in the patch's CHANGELOG entry naming the basis for the no-integration-change claim.
+- Forward-only: existing releases are grandfathered; the rule applies to new release stampings as discovery surfaces them.
+
+**Composes with `[rule:writing-releases]` writing-releases:1.** writing-releases:1 covers "did you communicate the change to consumers" (BREAKING entries naming public-surface changes); writing-releases:5 covers "did you verify the change reaches consumers correctly." Different halves of release discipline. A change can pass writing-releases:1 (correctly classified BREAKING with changelog entry) and fail writing-releases:5 (correct artifact built but never verified to load in consumer environment). Both rules apply together.
+
+**Cross-references `[rule:writing-claims]` writing-claims:1.** A "release done" claim made from source-side evidence alone (tags exist, build passed, scanners clean) is technically true but operationally false until consumer-side verification lands. writing-releases:5 is the verification gate that makes the writing-claims:1 "release done" claim grounded. Without writing-releases:5, the writing-claims:1 grep-before-declare-fix-complete discipline has a release-shaped blind spot; this rule fills it.
+
+**Originating evidence:** LESSON 323a0f5 (recurrence 1, v2.0.0): RULES.md and _coverage.md added at v2.0.0 but build's `find_rules()` glob missed them; never reached dist; surfaced by sibling sync-verification pass; v2.0.1 patched within an hour. Recurrence 2 (v2.2.0 through v2.6.0, this session): every release shipped without verifying consumer-side integration; workspace stale; resolver hook pointed at non-existent path; Craft Agent skill discovery untested. Same root pattern: source-side quality (build passes, scanners clean, tests green) is not consumer-side verification.
+
+Operator-stated principle (2026-05-14): "And verify it, that should be the rule."
+
+Judgment-enforced via `[skill:code-review]` at v2.7.0. Mechanical detection candidates: per-consumer-shape verification scripts (e.g., `scripts/verify_published_artifact.sh` per repo) invoked at tag-push time by CI. Tractable but consumer-shape-specific; project-by-project rather than universal scanner. Tracked for v2.7.x.
+
 ## Override
 
-These rules are mandatory. No `[release-skip]` override. writing-releases:1 stays operator-judgment until the public-surface differ ships; writing-releases:2 is mechanical from v2.0.0 onward; writing-releases:3 is mechanical from v2.2.0 onward (one-minor-release grace window for existing deprecation warnings); writing-releases:4 is mechanical from v2.3.1 onward (one-minor-release grace window for existing tooling-marker-without-runtime-warning patterns).
+These rules are mandatory. No `[release-skip]` override. writing-releases:1 stays operator-judgment until the public-surface differ ships; writing-releases:2 is mechanical from v2.0.0 onward; writing-releases:3 is mechanical from v2.2.0 onward (one-minor-release grace window for existing deprecation warnings); writing-releases:4 is mechanical from v2.3.1 onward (one-minor-release grace window for existing tooling-marker-without-runtime-warning patterns); writing-releases:5 is judgment-enforced from v2.7.0 with per-consumer-shape verification scripts as a tractable v2.7.x mechanical-enhancement candidate.
 
 ## Cross-references
 
