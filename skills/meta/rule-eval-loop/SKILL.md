@@ -98,6 +98,8 @@ When opening a new rule-set negotiation cycle:
 
 Each arc has its own stopping criterion (above). Do not block one on another.
 
+**Process-discipline addition (v2.5.x).** When running wording-review on a skill-file or rule-file PR, run `bash skills/meta/detect-ai-fingerprints/scan.sh --pr <n>` against the diff before signing off. This catches new typographic Unicode characters in added lines per writing-prose:1; pre-existing characters are out of scope (forward-only). The character-class scan is part of wording review, not separate from it: a clean wording-review pass requires both the wording substance to match negotiation AND the diff to be character-class-clean. The PR #65 / PR #70 sequence demonstrates the gap: PR #65 (RD-1 v1) shipped with eight em-dashes in added lines that neither side ran the scanner against; PR #70's self-dogfood caught them retroactively as out-of-scope finding. Even after RD-1's three-arc framing is internalized, process-level steps can drift; this addition closes the wording-review-without-scanner gap.
+
 ## Skipping the loop (tightened v2.5.0)
 
 **Three-samples-before-ship is mandatory. Single-pass-only is acceptable only when the candidate rule meets at least one of these carve-outs:**
