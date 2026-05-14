@@ -8,7 +8,7 @@ These rules apply whenever the agent writes production code -- any `.py` file ou
 
 The sibling boundary in `_writing-claims-rules.md` is "verify before claiming": rules that fire when stating a fact in a commit body, PR body, or chat. The two files split the same underlying claim-grounding family by temporal trigger; consult writing-code when editing code, consult writing-claims when stating facts.
 
-## The eleven code-writing rules
+## The thirteen code-writing rules
 
 **writing-code:1. Default to no docstring or a one-liner.** Multi-paragraph Sphinx-style docstrings are reserved for public API surface that is exported and consumed externally. Internal helpers and one-off functions get type hints and at most one sentence. Docstrings are code, not prose; the discipline lives here rather than in `[rule:writing-prose]`.
 
@@ -111,6 +111,22 @@ The side-effect-artifact alone (file written to disk, mutation done) does NOT sa
 - Batch job / scheduled process -> probably (b) + (c) + (d).
 - Migration script -> probably (b) + (d).
 
+**Contract-preservation override (v2.3.1).** When changing the floor shape from (a) to (b) or vice versa would break an established contract (existing call sites depending on the return type, or downstream tools depending on log presence), choose the additive option even if the per-process-type advisory would suggest otherwise. The session's concrete instance: `_ensure_sedona`'s pre-existing `None`-return contract made (b) log-only the right floor choice; switching to (a) return value would have broken every call site. Anti-pattern: rigidly following the advisory and inducing a breaking change to satisfy menu-style preference. The advisory is advisory; the floor is non-negotiable; the choice between floor shapes respects existing contracts.
+
+Empirical evidence from the v2.3.0 fix-exercise (siege_utilities PR #487, five functions across powerpoint, logging, databricks):
+
+| Case | Chosen floor | Per-process-type advisory predicted | Match? |
+|---|---|---|---|
+| `_ensure_sedona` | (b) log-only | (a) return value (helper) | **No — contract preserved** |
+| `runtime_secret_exists` | (a) return value | (a) return value (helper) | Yes |
+| `ensure_secret_scope` | (a)+(b) | (a)+(b) (library entry) | Yes |
+| `put_secret` | (a)+(b) | (a)+(b) (library entry) | Yes |
+| `_add_*_slide` family | (a) return value (with public-method log layered above) | (a) return value (helper) | Yes |
+
+Distribution: 4 of 5 cases matched advisory; 1 of 5 (`_ensure_sedona`) used the contract-preservation override. The override is rare-but-load-bearing: it prevents the menu from inducing breakage in 1 of 5 retroactive-fix cases. Without the override, the (a)/(b) menu would force a choice that satisfies the rule's letter but violates writing-releases:1 (BREAKING-when-public-surface-changes-incompatibly). Two rules composing to prevent each other: not what we want.
+
+**Family-of-methods scaling pattern (v2.3.1).** When writing-code:11 applies to a method family of N>5 (e.g. PowerPoint `_add_*_slide` family with 19 methods), document the convention at the enclosing class or module docstring, then per-method application can be ratchet-applied across multiple PRs without re-establishing the pattern. The class-docstring convention names the family-wide signal shape ("each `_add_*_slide` method returns the slide reference and logs `added <slide-name>` at INFO"); subsequent per-method commits cite the convention and apply it. Anti-pattern: blocking a PR on completing the full family at once, when ratchet-apply across releases is operationally cheaper and the convention itself is the load-bearing wording. The session's concrete instance: PowerPoint family applied to 4 + ratcheted at Issue #485 for the remaining 15.
+
 The session's concrete instances:
 
 - The PowerPoint `_add_*_slide` private methods (~20 instances in one file) mutate the `prs` argument and return `None`. A consumer iterating the methods to verify slides got added cannot tell from output alone whether the slide is in the deck. Floor fix: return the slide reference (a), or log "added `<slide-name>`" (b).
@@ -123,9 +139,56 @@ Forward-only. Existing silent processes in the codebase are flagged when discove
 
 Judgment-enforced via `[skill:code-review]` at v2.3.0. Mechanical detection is tractable but non-trivial: AST-walk for side-effect detection (Call to known-side-effecting builtins like `open`, `os.write`, `subprocess.run`, plus method calls on known-mutable types), cross-reference with return type and log calls in body. Tracked for v2.3.x scanner enhancement.
 
+**writing-code:12. No duplicate imports at module scope.**
+
+Imports must appear exactly once at module scope. Duplicate `import X` statements (or `from X import Y` of the same name) are slop from branch-merging that linters often miss. Aliased imports of the same module count as duplicates unless both aliases are actually used in the body.
+
+Banned shapes:
+
+- `import os` followed later by `import os` (duplicate).
+- `import warnings` followed by `import warnings as _warnings_mod` where `_warnings_mod` is never referenced (alias unused).
+- `from collections import OrderedDict` repeated in a different `from collections import` block (folded).
+
+Acceptable shapes:
+
+- `import os` once.
+- `import warnings` and `import warnings as _w` when both `warnings.warn(...)` and `_w.filterwarnings(...)` are referenced.
+- Conditional imports inside `try:` / `except ImportError:` blocks (these are not "module scope" duplicates; they are availability fallbacks per writing-code:8).
+
+The session's concrete instance: pass 2 `siege_utilities/geo/spatial_data.py` had two pairs of duplicate module-level imports (`import os` twice; `import warnings` parallel to `import warnings as _warnings_mod`). Slop from branch-merging.
+
+Mechanical via AST scanner: walk module-level `Import` and `ImportFrom` nodes; for each `Import`, collect `(name, asname)` pairs; for each `ImportFrom`, collect `(module, name, asname)`; flag any pair appearing more than once. Aliased duplicates flagged unless both aliases are referenced in the module body (Name walk). Forward-only; existing duplicates flagged when scanned.
+
+**writing-code:13. Consistent failure-mode contract within a function and across sibling methods.**
+
+A function declares ONE failure-indication mechanism. Either `Optional[T]` returns with documented `None`-as-failure, OR a typed exception, OR a Result-style structured object. Mixing return-`None` with raise-Error for distinct failure cases inside the same function is banned: the caller has to handle two failure paths for one call.
+
+Sibling methods within a class (methods sharing a name prefix or common verb) should follow the same failure-mode contract. If `create_X_presentation` raises and `create_Y_presentation` returns `None`, the API surface lies about its uniformity.
+
+Banned shapes:
+
+- `def get_dataset(...): if status != 200: return None; ... raise SpatialDataError(...)`: return-None for HTTP failure, raise for everything else. Caller has to handle both.
+- A class with `create_alpha_presentation -> Path` (raises on failure), `create_beta_presentation -> Path` (raises), `create_gamma_presentation -> Path` (raises), and `create_comprehensive_presentation -> Dict` (returns `None` on failure). Naming says one shape; impls do another.
+
+Acceptable shapes:
+
+- One mechanism per function: `Optional[T]` with docstring `"or None if not found"`, OR typed exception, OR Result/Either/Option-style.
+- Sibling methods consistent: all raise, OR all return Optional, OR all return Result.
+- Genuine shape divergence renamed: `create_*_presentation` (writes file, raises) vs `build_*_presentation_structure` (returns Dict for caller to render). Naming differentiates the contract.
+
+The session's concrete instances:
+
+- Pass 2 SP14: `_get_dataset_metadata` returns None for HTTP non-2xx, raises SpatialDataError for other failures.
+- Pass 4 PG7: `PowerPointGenerator.generate_powerpoint_presentation` returns `bool` while sibling `create_*_presentation` methods return `Path` and raise on failure. Same class, two failure-indication paradigms.
+- Pass 8 (filed as Issue #483): `credential_manager` 1Password backend returns None for "not found" and raises for transport errors, but the wrapping helpers conflate the two.
+
+Cross-rule composition: writing-code:13 closes the failure-contract gap that writing-code:7 (silent error swallowing) left open. writing-code:7 ensures every except produces a typed-failure result OR re-raise OR audit-log; writing-code:13 ensures the choice is consistent within a function and across sibling methods. Paired together, they prevent both silent swallow and inconsistent contract.
+
+Judgment-enforced via `[skill:code-review]`. Mechanical detection requires control-flow analysis (Optional return + raise on different paths in same function); tractable but non-trivial. Tracked for v2.3.x scanner enhancement.
+
 ## Override
 
-These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; the remaining seven (writing-code:1, :3, :4, :6, :7, :10, :11) are judgment-enforced via `[skill:code-review]`. writing-code:11 scanner enhancement tracked for v2.3.x.
+These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:12 (no duplicate imports) lands mechanical at v2.3.1 via AST scanner; writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; the remaining eight (writing-code:1, :3, :4, :6, :7, :10, :11, :13) are judgment-enforced via `[skill:code-review]`. writing-code:7, :11, :13 scanner enhancements tracked for v2.3.x and beyond.
 
 ## Cross-references
 
