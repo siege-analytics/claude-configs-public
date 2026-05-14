@@ -6,6 +6,53 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [2.3.0] -- 2026-05-13
+
+Adds writing-code:11 (no silent processes), the success-side complement to writing-code:7 (silent error swallowing). Operator-stated principle: "no process should be written without output or logging. We should always be able to measure output." Negotiated across two rounds with sibling session 260502-vital-channel; cross-pass evidence from four hostile-review passes (engines/dataframe_engine.py, geo/spatial_data.py, reporting/powerpoint_generator.py, core/logging.py + core/sql_safety.py) confirmed the success-side observability gap is endemic across module shapes.
+
+This release ships writing-code:11 alone per the v2.3.0 sequencing decision: the rule's blast radius (an internal-helper pattern endemic across the codebase) deserves a dedicated release-and-fix-exercise lane so eval-loop signal stays clean. v2.3.1 will pick up RG-3 (duplicate-imports), RG-4 (inconsistent failure-mode contracts), RG-5 (deprecation-marker-without-runtime-warning), plus any wording carve-outs from the v2.3.0 fix exercise.
+
+### Added -- writing-code:11 (no silent processes)
+
+Every side-effecting process must produce at least one observable signal at completion. Two-level structure:
+
+**Required minimum (non-negotiable floor):** every side-effecting process must produce at least one of (a) an inspectable return value naming what happened, OR (b) a log line at INFO level or higher naming what happened. The side-effect-artifact alone (file written, mutation done) does NOT satisfy the floor; an auditor cannot confirm the action happened from the function's output.
+
+**Additional shapes for high-signal processes:** (c) a metric written to a metrics sink, (d) a side-effect with audit trail. These are additive to the (a)-or-(b) floor, never substitutes.
+
+**Carve-outs:** pure functions with no side effects (return value IS the output); test assertions (pytest pass/fail dispatch is the signal); CLI subcommands whose stdout output is the contract (printed output IS the observability).
+
+**Per-process-type advisory:** internal helper -> probably (a); library entry point -> probably (a) + (b); batch / scheduled -> probably (b) + (c) + (d); migration -> probably (b) + (d).
+
+Originating evidence:
+
+- The PowerPoint `_add_*_slide` private methods (~20 instances in one file) mutate the `prs` argument and return `None`. Endemic mutate-and-return-None pattern across the codebase.
+- `_ensure_sedona` re-raises on ImportError (writing-code:7-correct) but on success returns `None` silently. Caller cannot tell which path was taken.
+- core/logging.py (PR #480 in siege_utilities) shipped a silent NullHandler fallback when file handler creation fails; the LOGGING module silently failing to log. Highest-irony finding of the cycle and the kind of failure writing-code:11 will catch reflexively.
+
+### Family-of-discipline framing
+
+writing-code:11 is the success-side complement to writing-code:7 (silent error swallowing). Paired along the error/success boundary, the two rules close the observable-signal failure family. Same pattern as RG-5 (v2.3.1 candidate) composing with writing-releases:3 (tooling-marker / runtime-warning halves).
+
+### Tooling status
+
+Judgment-enforced via `[skill:code-review]` at v2.3.0. Mechanical detection is tractable (AST-walk for side-effect builtins + cross-reference with return type and log calls); tracked for v2.3.x scanner enhancement.
+
+### Coverage matrix
+
+One new entry: `no-silent-process` (writing-code:11, code-review enforcement, judgment status). Tooling-status summary updated: judgment 14 -> 15.
+
+### Migration
+
+No identifier remap. Existing silent processes in any consumer codebase are flagged when discovered but the rule's expectation is that codebases address them as discovery surfaces them, not big-bang. The fix-exercise pattern from v2.2.0-rc1 (each rule application becomes a per-rule commit citing the rule that drove the change) applies here.
+
+### Followups
+
+- v2.3.1: RG-3 (duplicate-imports), RG-4 (inconsistent failure-mode contracts), RG-5 (deprecation-marker-without-runtime-warning), RG-7 wording carve-outs from v2.3.0 fix exercise, writing-tests:1 retroactive-fix corollary extension (folds RG-9).
+- v2.4.0: RG-6 (exception-as-dispatch banned when content-distinguishable), RG-8 (method-naming consistency within a class).
+- writing-code:11 scanner enhancement -> v2.3.x.
+- Rule-eval-loop meta-skill at `skills/meta/rule-eval-loop/SKILL.md` -> opens after v2.3.0 fix exercise lands (recurrence-3 promotion threshold met by LESSON 323a0f5).
+
 ## [2.2.0] -- 2026-05-13
 
 Adds four rule changes from a hostile-review pass on `siege_utilities/engines/dataframe_engine.py` (lines 1-450) by sibling session 260502-vital-channel. Cross-session negotiation across four rounds of `send_agent_message` ratified per-rule wording, scanner specs, and sequencing. A second hostile-review pass on `siege_utilities/geo/spatial_data.py` (different module shape: HTTP data fetchers, 2258 lines) confirmed the four rules transfer cleanly across module shapes; cross-pass evidence aggregates 13+ writing-prose:1 hits, 2 writing-releases:3 hits (one per pass; two additional pass-2 findings are RST `.. deprecated::` markers without runtime warnings and parked as RG-5 v2.3.0 candidates per the scope split below), 3 writing-code:9 hits, 1 writing-code:10 hit. Rules are not over-fit to the originating arc.

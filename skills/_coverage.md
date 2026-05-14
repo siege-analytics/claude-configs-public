@@ -252,12 +252,21 @@ rule_id = ["writing-releases:3"]
 enforcement = "scanner"
 tooling_status = "mechanical"
 originating_arc = { session-id = "260502-vital-channel", incident-name = "siege-utilities-dataframe-engine-hostile-review-2026-05-13" }
+
+[[failure_mode]]
+name = "no-silent-process"
+description = "Side-effecting function/method/script/scheduled-process completes without producing an inspectable signal; auditor cannot confirm the action happened from output alone. Mutate-and-return-None is the canonical shape (e.g. PowerPoint _add_*_slide methods mutate the prs argument and return None)."
+rule_id = ["writing-code:11"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: AST-walk for side-effect detection (Call to known-side-effecting builtins like open/os.write/subprocess.run, plus method calls on known-mutable types), cross-reference with return type and log calls in body. Tractable for v2.3.x scanner enhancement."
+originating_arc = { session-id = "260502-vital-channel", incident-name = "operator-directive-no-silent-processes-2026-05-13", pr-number = 478 }
 ```
 
 ## Tooling-status summary
 
 - `mechanical` rows: 12 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :9; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3).
-- `judgment` rows: 14 (writing-code:1, :3, :4, :6, :7, :8, :10; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
+- `judgment` rows: 15 (writing-code:1, :3, :4, :6, :7, :8, :10, :11; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5; writing-claims:1; counted with dual-coverage rows on writing-tests:4).
 - `gap` rows: 1 (writing-releases:1, pending public-surface differ at upstream issue #51).
 
 The `gap` and `judgment` categories stay distinct: `gap` means no rule exists to prevent the failure mode and only operator honor catches it; `judgment` means a rule exists with defined enforcement (code review, scanner, hook) but the enforcement is judgment-bound rather than mechanical. The distinction lets the matrix answer "is this prevented at all?" separately from "is the prevention mechanized?".
