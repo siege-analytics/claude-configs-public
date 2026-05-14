@@ -6,6 +6,47 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [2.4.0] -- 2026-05-13
+
+Cohort release: one new rule (RG-6 / writing-code:14) plus three body extensions and a coverage matrix annotation. Smaller cohort than v2.3.1 by direct consequence of honoring `[skill:rule-eval-loop]`'s three-samples-before-ship discipline. RG-8 (method-naming consistency) was originally proposed for v2.4.0 but had only one module shape of evidence; deferred to v2.5.0+ pending cross-pass evidence per the discipline. The deferral itself was the framework working: documented as recurrence 1 of "RD-1 discipline-defense pattern" in the negotiation log.
+
+Negotiated 2026-05-13 with sibling session 260502-vital-channel; cross-pass evidence from 8 hostile-review passes of siege_utilities. Per `[skill:rule-eval-loop]` discipline (PR #65), the new rule and both body extensions have multi-instance originating evidence.
+
+### Added -- writing-code:14 (no exception-as-dispatch when alternatives are content-distinguishable)
+
+Functions that dispatch between alternative successful operations (parse-as-X-or-Y, fetch-from-A-or-B) must inspect the input and dispatch deterministically rather than using try/except as the dispatcher. "Content-distinguishable" definition: alternatives are content-distinguishable when the input itself can be inspected (regex match, leading bytes, first-token classification, type check) to dispatch deterministically without exception flow.
+
+Carve-out: when alternatives genuinely cannot be inspected without attempting the operation (some grammar contexts, ambiguous tokenization), exception-as-dispatch is the legitimate fallback. The carve-out is "no inspection function exists that would not itself need the parse to disambiguate," not "the inspection is annoying to write."
+
+Triangulated three-shape evidence: DuckDBEngine `_parse_geom` (WKB-vs-WKT), `logging.py _create_rotating_file_handler` (ImportError-as-availability-check), `databricks.get_dbutils` (environment-detect). All three cases have a deterministic input predicate available; exception-as-dispatch was masking diagnostic information.
+
+Cross-rule composition: writing-code:14 is a specific case of writing-code:7 (silent error swallowing). writing-code:7's scanner detects the four base banned shapes; writing-code:14 detects the dispatch-shape. Both rules can apply; writing-code:14 produces a sharper diagnostic when both fire.
+
+Judgment-enforced via `[skill:code-review]` at v2.4.0. Mechanical detection candidate: TC5 alternative-return-shape from sibling's writing-code:7 scanner test-case set (catch-all `except` whose body returns a different result without re-raise). Scanner enhancement queued for v2.4.x.
+
+### Changed -- writing-releases:1 body extension (one-site-one-commit composition)
+
+Inverse case to the existing per-rule-commit-pattern composition: when the rule application AND the composing-rule application live in the same file, one commit suffices; do not split per-rule artificially. The split discipline applies when the composing impl lives in a different file. Originating evidence: PR #489 fix exercise where writing-releases:4 + writing-releases:3 composed naturally in single commits per site.
+
+### Changed -- writing-tests:1 retroactive-fix corollary self-validation strengthening
+
+Recurrence 2 of the self-validation observation now confirmed: PR #489 (v2.3.1 fix exercise) is the third independent instance of an experienced operator applying the rename / cite-rule / preserve recipe organically without consulting rule text. Three samples across three module shapes (engine-abstraction, credential-security, output-generator) cross the three-samples-before-ship threshold for the framing itself. Body extension banks the strengthened framing.
+
+### Changed -- writing-code:13 rename-option zero-frequency annotation
+
+Coverage matrix entry annotated: rename-over-converge option in writing-code:13's body has zero-of-five firing rate across v2.3.0 + v2.3.1 fix exercises; real-world inconsistent contracts converged cleanly. Option retained for completeness; recurrence threshold set at 5+ exercises before reconsidering removal in a future release. No wording change in this release; pure data observation.
+
+### Coverage matrix updates
+
+One new entry: `exception-as-dispatch-content-distinguishable` (writing-code:14, judgment). One annotation update: `inconsistent-failure-mode-contract` description appended with the rename-option zero-frequency observation. Tooling-status counts as of v2.4.0: mechanical 15 (writing-code:7 mechanized in v2.3.1.1); judgment 16 (writing-code:7 removed from judgment when mechanized; writing-code:14 added).
+
+### Followups
+
+- **RG-8 (method-naming consistency):** deferred per the discipline-defense discussion. Pass 9 will look specifically for cross-pass evidence; if found, RG-8 ships in v2.4.x or v2.5.0.
+- **writing-code:14 mechanical detection (TC5):** queued for v2.4.x.
+- **writing-code:11 / :13 mechanical detection:** still queued for v2.3.x and v2.4.x respectively.
+- **Per-rule commit composition meta-question:** the v2.4.0 and v2.3.1 writing-releases:1 body extensions together fully describe when to split commits per rule. If a third composition pattern surfaces in v2.5.0+, expect a third body extension.
+
 ## [2.3.1.1] -- 2026-05-13
 
 Patch adding mechanical detection for writing-code:7 (silent error swallowing). The 14-violation aggregation across 8 hostile-review passes of siege_utilities (per the v2.3.0/v2.3.1 cycle) was sibling session 260502-vital-channel's signal that judgment-only enforcement of writing-code:7 was leaving substantial leakage; mechanical detection moves the rule from "load-bearing-but-unenforced" to "load-bearing-and-enforced." Authored against sibling's test-case set at `/sessions/260502-vital-channel/plans/writing-code-7-scanner-test-cases.md`.

@@ -8,7 +8,7 @@ These rules apply whenever the agent writes production code -- any `.py` file ou
 
 The sibling boundary in `_writing-claims-rules.md` is "verify before claiming": rules that fire when stating a fact in a commit body, PR body, or chat. The two files split the same underlying claim-grounding family by temporal trigger; consult writing-code when editing code, consult writing-claims when stating facts.
 
-## The thirteen code-writing rules
+## The fourteen code-writing rules
 
 **writing-code:1. Default to no docstring or a one-liner.** Multi-paragraph Sphinx-style docstrings are reserved for public API surface that is exported and consumed externally. Internal helpers and one-off functions get type hints and at most one sentence. Docstrings are code, not prose; the discipline lives here rather than in `[rule:writing-prose]`.
 
@@ -186,9 +186,59 @@ Cross-rule composition: writing-code:13 closes the failure-contract gap that wri
 
 Judgment-enforced via `[skill:code-review]`. Mechanical detection requires control-flow analysis (Optional return + raise on different paths in same function); tractable but non-trivial. Tracked for v2.3.x scanner enhancement.
 
+Empirical note (v2.4.0): the rename-over-converge option of writing-code:13 has zero-of-five firing rate across v2.3.0 and v2.3.1 fix exercises; real-world inconsistent contracts converged cleanly in every case. Option retained for completeness; recurrence threshold set at 5+ exercises before reconsidering removal. Coverage matrix entry annotated.
+
+**writing-code:14. No exception-as-dispatch when alternatives are content-distinguishable.**
+
+When a function dispatches between two or more alternative successful operations (parse-as-WKB-or-WKT, fetch-from-cache-or-source, treat-as-path-or-url), do not use try/except as the dispatcher. Inspect the input and dispatch deterministically.
+
+**Definition.** Alternatives are **content-distinguishable** when the input itself can be inspected (regex match, leading bytes, first-token classification, type check, isinstance check, pure-function predicate) to dispatch deterministically without exception flow. The inspection is cheap and reliable; the exception-as-dispatch is the silent-swallow that hides bugs.
+
+Banned shape:
+
+```python
+try:
+    return shapely_wkb.loads(s, hex=True)
+except Exception:
+    return shapely_wkt.loads(s)
+```
+
+A corrupt WKB-hex string falls through to WKT, which then raises a confusing WKT parse error or silently returns garbage. The dispatcher swallows the WKB error.
+
+Acceptable shape:
+
+```python
+if all(c in HEX_CHARS for c in s[:8]):
+    return shapely_wkb.loads(s, hex=True)
+return shapely_wkt.loads(s)
+```
+
+Or:
+
+```python
+def _looks_like_wkb_hex(s: str) -> bool:
+    return bool(WKB_HEAD_RE.match(s))
+
+if _looks_like_wkb_hex(s):
+    return shapely_wkb.loads(s, hex=True)
+return shapely_wkt.loads(s)
+```
+
+**Carve-out.** When alternatives genuinely cannot be inspected without attempting the operation (some grammar contexts, ambiguous tokenization, parse-attempt-IS-the-inspection cases), exception-as-dispatch is the legitimate fallback. The carve-out is not "the inspection is annoying to write"; it is "no inspection function exists that would not itself need the parse to disambiguate." When in doubt, write the inspection helper and explicitly document that exception-as-dispatch was rejected because content was distinguishable.
+
+The session's three concrete instances (triangulated across module shapes):
+
+- DuckDBEngine `_parse_geom`: WKB-hex vs WKT dispatch via try/except. Pure-hex chars in head are the deterministic distinguisher.
+- `logging.py` `_create_rotating_file_handler`: ImportError-as-availability-check via try/except for `pwd` module. `hasattr(os, 'getuid')` (or equivalent runtime-context predicate) is the deterministic distinguisher.
+- `databricks.get_dbutils`: environment-detect via try/except chain (notebook-context vs script-context). Runtime context check (`'dbutils' in globals()` or environment variable) is the deterministic distinguisher.
+
+Cross-rule composition with writing-code:7: writing-code:14 is a specific case of writing-code:7 where the silent swallow happens via dispatch rather than via empty handler. writing-code:7's scanner detects the four base banned shapes (Pass / Return None|False / Continue / log+terminator); writing-code:14 detects the dispatch shape (catch-all returning a different valid result via alternative path). Both rules can apply; writing-code:14 is more specific and produces a sharper diagnostic.
+
+Judgment-enforced via `[skill:code-review]` at v2.4.0. Mechanical detection candidate: TC5 alternative-return-shape from sibling's writing-code:7 scanner test-case set (catch-all `except` whose body returns a different result without re-raise). Scanner enhancement queued for v2.4.x.
+
 ## Override
 
-These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:12 (no duplicate imports) lands mechanical at v2.3.1 via AST scanner; writing-code:7 (silent error swallowing) lands mechanical at v2.3.1.1 via AST scanner with carve-outs for Optional[T]+docstring, `# noqa: writing-code-7` opt-out, and the `except ImportError`+flag-pattern idiom (writing-code:8 territory); writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; the remaining seven (writing-code:1, :3, :4, :6, :10, :11, :13) are judgment-enforced via `[skill:code-review]`. writing-code:11 and :13 scanner enhancements tracked for v2.3.x and beyond. writing-code:7 scanner has two enhancement candidates queued for v2.3.2/v2.4.0: TC5 catch-all-with-alternative-return-shape and TC8 catch-all-wrapping-pure-logic-body.
+These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:12 (no duplicate imports) lands mechanical at v2.3.1 via AST scanner; writing-code:7 (silent error swallowing) lands mechanical at v2.3.1.1 via AST scanner with carve-outs for Optional[T]+docstring, `# noqa: writing-code-7` opt-out, and the `except ImportError`+flag-pattern idiom (writing-code:8 territory); writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; the remaining eight (writing-code:1, :3, :4, :6, :10, :11, :13, :14) are judgment-enforced via `[skill:code-review]`. writing-code:11, :13, :14 scanner enhancements tracked for v2.3.x and beyond. writing-code:7 scanner has two enhancement candidates queued for v2.3.2/v2.4.0: TC5 catch-all-with-alternative-return-shape (also the writing-code:14 mechanical detection candidate) and TC8 catch-all-wrapping-pure-logic-body.
 
 ## Cross-references
 
