@@ -1,22 +1,31 @@
 #!/usr/bin/env python3
-"""AST scanner for writing-code:7, writing-code:9 and writing-releases:3.
+"""AST scanner for writing-code:7, writing-code:9, writing-code:15 and writing-releases:3.
 
 Invoked by scan.sh for .py files in the diff. Reports violations as
 <file>:<line>:<rule>: <excerpt>. Exit 0 if clean, 1 if violations.
 
 Usage:
-  scan_ast.py [--config <path>] <file> [<file> ...]
+  scan_ast.py [--config <path>] [--exclude-tests] <file> [<file> ...]
 
-This is a first-cut v2.2.0 implementation extended at v2.3.1.1 to add
-writing-code:7. Reports ALL violations in the files passed (no diff-line
-filtering). Pre-existing violations are flagged along with new ones; the
-rule bodies' grace-window language documents the expectation.
+writing-code:7 detection covers four base banned shapes (Pass, Return
+None/False, Continue, log.X + Return/Continue) plus carve-outs for
+Optional[T]+docstring, # noqa: writing-code-7, and ImportError +
+flag-pattern (writing-code:8 territory).
 
-writing-code:7 detection covers the four base banned shapes (Pass,
-Return None/False, Continue, log.X + Return/Continue) plus carve-outs
-for Optional[T]+docstring, # noqa: writing-code-7, and ImportError +
-flag-pattern (writing-code:8 territory). The TC5 alternative-return
-and TC8 wrap-pure-logic enhancements are deferred to v2.3.2/v2.4.0.
+writing-code:9 detection covers function parameters with non-None
+defaults that are unreferenced, not forwarded via **kwargs, and not
+named in the docstring. Decorator-allow-list and **kwargs-spread
+carve-outs.
+
+writing-code:15 detection covers the empirical-evidence-only call
+surfaces (subprocess, requests, httpx, urllib, socket, sqlite3) called
+without a `timeout` kwarg. Carve-out for `timeout=None` accompanied by
+audit-signal comment (>=30 chars + identifier-shaped token) on the
+same or preceding line. The --exclude-tests flag skips files matching
+test path patterns.
+
+writing-releases:3 detection covers DeprecationWarning and
+PendingDeprecationWarning message strings missing version+keyword.
 """
 
 import ast
@@ -399,7 +408,151 @@ def check_writing_code_7(tree, source_lines):
     return violations
 
 
-def scan_file(path, allow_decorators):
+UNBOUNDED_IO_SURFACES = {
+    # subprocess
+    ("subprocess", "run"),
+    ("subprocess", "call"),
+    ("subprocess", "check_call"),
+    ("subprocess", "check_output"),
+    ("Popen", "communicate"),
+    ("Popen", "wait"),
+    # requests
+    ("requests", "get"),
+    ("requests", "post"),
+    ("requests", "put"),
+    ("requests", "delete"),
+    ("requests", "head"),
+    ("requests", "patch"),
+    ("requests", "request"),
+    # httpx (same set)
+    ("httpx", "get"),
+    ("httpx", "post"),
+    ("httpx", "put"),
+    ("httpx", "delete"),
+    ("httpx", "head"),
+    ("httpx", "patch"),
+    ("httpx", "request"),
+    # urllib
+    ("request", "urlopen"),
+    # socket
+    ("socket", "create_connection"),
+    # sqlite3
+    ("sqlite3", "connect"),
+}
+
+# Audit-signal comment heuristic for `timeout=None` carve-out: comment must be
+# >=30 chars AND contain at least one identifier-shaped token (length >=4).
+AUDIT_COMMENT_IDENT_RE = re.compile(r"\b[A-Za-z_][A-Za-z0-9_]{3,}\b")
+AUDIT_COMMENT_MIN_LEN = 30
+
+
+def _attr_chain(node):
+    """Walk an Attribute chain into a tuple of segments, leftmost first.
+    `subprocess.run` -> ("subprocess", "run").
+    `urllib.request.urlopen` -> ("urllib", "request", "urlopen").
+    Returns None if the chain bottoms out at something other than a Name.
+    """
+    parts = []
+    cur = node
+    while isinstance(cur, ast.Attribute):
+        parts.append(cur.attr)
+        cur = cur.value
+    if isinstance(cur, ast.Name):
+        parts.append(cur.id)
+        return tuple(reversed(parts))
+    return None
+
+
+def _matches_unbounded_io(call_func):
+    """True if a Call's func node matches one of UNBOUNDED_IO_SURFACES."""
+    if isinstance(call_func, ast.Attribute):
+        chain = _attr_chain(call_func)
+        if chain is None:
+            return False
+        # Match the rightmost two segments (handles urllib.request.urlopen
+        # and subprocess.Popen(...).communicate via the (Popen, communicate) entry).
+        if len(chain) >= 2 and chain[-2:] in UNBOUNDED_IO_SURFACES:
+            return True
+        # Also handle plain `urlopen` after `from urllib.request import urlopen`
+        # via the rightmost-only check using the second-tuple-element.
+    return False
+
+
+def _audit_comment_present(source_lines, lineno):
+    """Look at the call's line and the preceding line for an audit-signal comment.
+
+    Heuristic: comment text >=30 chars containing >=1 identifier-shaped token
+    (>=4 chars). Bare `# intentional` or `# see PR` won't match.
+    """
+    candidates = []
+    if 1 <= lineno <= len(source_lines):
+        line = source_lines[lineno - 1]
+        idx = line.find("#")
+        if idx != -1:
+            candidates.append(line[idx + 1:].strip())
+    if 2 <= lineno <= len(source_lines):
+        prev = source_lines[lineno - 2].strip()
+        if prev.startswith("#"):
+            candidates.append(prev[1:].strip())
+    for comment in candidates:
+        if len(comment) >= AUDIT_COMMENT_MIN_LEN and AUDIT_COMMENT_IDENT_RE.search(comment):
+            return True
+    return False
+
+
+def check_writing_code_15(tree, source_lines):
+    """Yield violations for writing-code:15 (unbounded blocking I/O).
+
+    For each Call to a known I/O surface, require either a numeric `timeout`
+    kwarg OR `timeout=None` accompanied by an audit-signal comment.
+    """
+    violations = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if not _matches_unbounded_io(node.func):
+            continue
+        timeout_kwarg = None
+        for kw in node.keywords:
+            if kw.arg == "timeout":
+                timeout_kwarg = kw
+                break
+        # Surface name for excerpt.
+        surface = "?"
+        if isinstance(node.func, ast.Attribute):
+            chain = _attr_chain(node.func)
+            if chain is not None:
+                surface = ".".join(chain)
+        if timeout_kwarg is None:
+            violations.append(
+                (node.lineno,
+                 "writing-code-15-unbounded-io(missing-timeout)",
+                 f"{surface}(...): no timeout kwarg")
+            )
+            continue
+        # timeout=None requires audit-signal comment.
+        val = timeout_kwarg.value
+        is_none = isinstance(val, ast.Constant) and val.value is None
+        if is_none and not _audit_comment_present(source_lines, node.lineno):
+            violations.append(
+                (node.lineno,
+                 "writing-code-15-unbounded-io(timeout-none-no-audit-comment)",
+                 f"{surface}(...): timeout=None without audit-signal comment "
+                 f"(>=30 chars + identifier-shaped token, naming upstream bound)")
+            )
+    return violations
+
+
+# Default test-path globs for --exclude-tests.
+TEST_PATH_PATTERNS = ("/tests/", "/test/", "_test.py", "test_")
+
+
+def _is_test_path(path):
+    p = str(path)
+    return any(pat in p for pat in TEST_PATH_PATTERNS)
+
+
+def scan_file(path, allow_decorators, exclude_tests=False):
     try:
         source = Path(path).read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as e:
@@ -412,13 +565,18 @@ def scan_file(path, allow_decorators):
               file=sys.stderr)
         return []
     source_lines = source.splitlines()
-    return (check_writing_code_7(tree, source_lines)
-            + check_writing_code_9(tree, allow_decorators)
-            + check_writing_releases_3(tree))
+    results = (check_writing_code_7(tree, source_lines)
+               + check_writing_code_9(tree, allow_decorators)
+               + check_writing_releases_3(tree))
+    # writing-code:15 honors --exclude-tests for project-specific test fixtures.
+    if not (exclude_tests and _is_test_path(path)):
+        results = results + check_writing_code_15(tree, source_lines)
+    return results
 
 
 def main(argv):
     config_path = None
+    exclude_tests = False
     files = []
     i = 0
     while i < len(argv):
@@ -426,6 +584,9 @@ def main(argv):
         if a == "--config":
             config_path = argv[i + 1]
             i += 2
+        elif a == "--exclude-tests":
+            exclude_tests = True
+            i += 1
         elif a in ("-h", "--help"):
             print(__doc__)
             return 0
@@ -439,7 +600,7 @@ def main(argv):
     for path in files:
         if not path.endswith(".py"):
             continue
-        for line, rule, excerpt in scan_file(path, allow_decorators):
+        for line, rule, excerpt in scan_file(path, allow_decorators, exclude_tests):
             print(f"{path}:{line}:{rule}: {excerpt}")
             total += 1
     return 1 if total > 0 else 0

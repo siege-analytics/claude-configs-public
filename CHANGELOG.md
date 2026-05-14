@@ -6,6 +6,59 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 (no changes pending)
 
+## [2.6.0] -- 2026-05-14
+
+Single-rule cohort: writing-code:15 (every blocking I/O call declares a timeout at the call site). Sibling session 260502-vital-channel proposed; cohort kept at one rule because the second candidate did not meet the three-samples-before-ship threshold. This is recurrence 2 of "discipline being defended when bundling opportunity exists" (v2.4.0 RG-8 deferral was recurrence 1); the discipline-defense pattern promotes from observation to validated meta-discipline at this release.
+
+Negotiated 2026-05-14 in three rounds; sibling sign-off VERBATIM on all four wording items in round 3.
+
+### Added -- writing-code:15 (every blocking I/O call declares a timeout)
+
+Any unbounded blocking call is a DoS primitive against the caller's process. A single broken endpoint or hung process cascades through every dependent function. Downstream `try/except Exception` wrappers do NOT rescue from a hang because the function never returns to the except clause.
+
+Empirical-evidence-only call-surface list: `subprocess.{run, call, check_call, check_output, communicate, wait}`, `requests.{get, post, put, delete, head, patch, request}` and `httpx.*` (same set), `urllib.request.urlopen`, `socket.create_connection`, `sqlite3.connect`. Forward-only ratchet: DB clients (psycopg2, asyncpg, pymongo, redis, kafka) NOT in the v2.6.0 list because they did not surface in the three scanned codebases; added when one surfaces. The ratchet is itself writing-code:3 (no speculative abstractions) self-application during rule drafting.
+
+Defaults if no project policy: subprocess <= 30s, HTTP <= 30s, socket <= 30s, sqlite3 <= 10s.
+
+Carve-outs:
+
+- `timeout=None` permitted with audit-signal comment naming the upstream bound mechanism AND the function or caller that imposes it. Bare "intentional" or "see PR" comments do not count. Scanner heuristic: comment >=30 chars containing >=1 identifier-shaped token (length >=4) on inline or preceding line.
+- Test fixtures via `--exclude-tests` scanner flag.
+
+Composes with writing-code:7 (silent-swallow) along the call-chain axis: writing-code:15 is the upstream of writing-code:7. Without the timeout the silent-swallow has nothing to swallow because the call never returns. The two rules compose to close the "process hangs forever" failure mode. writing-code:15 produces the sharper diagnostic for the timeout half; writing-code:7 catches the swallow once the call can return and raise.
+
+### Originating evidence
+
+Recurrence-3 satisfied via mechanical scanner across three independent codebases:
+
+| Codebase | Violations | Files |
+|---|---|---|
+| siege_utilities | 57 | 18 |
+| omr-leadsheet | 28 | 12 |
+| reverberator | 1 | 1 |
+
+Originating bug: pass-11 hostile review of v2.5.0 found `siege_utilities/testing/environment.py:233` with `subprocess.run(['java','-version'])` and no timeout. A hung JDK would block `check_java_version()` -> `setup_spark_environment()` -> `quick_environment_setup()` indefinitely. Pass-11 fix added `timeout=10` (siege_utilities PR #492 commit fce3210). The rule is designed backward from this concrete failure.
+
+### Mechanical detection
+
+`scan_ast.py::check_writing_code_15` walks `Call` nodes whose function matches one of the empirical-evidence call surfaces; flags missing `timeout` kwarg unless `timeout=None` accompanied by audit-signal comment. New top-level scanner flag `--exclude-tests` honors the test-fixture carve-out. AST violation counter regex extended to include writing-code-15.
+
+### Coverage matrix
+
+One new entry: `unbounded-blocking-io` (writing-code:15, scanner mechanical). Tooling-status: mechanical 15 -> 16; judgment 16 (unchanged); gap 1 (unchanged).
+
+### Two framework-signal observations banked
+
+- **Discipline-defense recurrence-2 promotes pattern to validated meta-discipline.** v2.4.0 RG-8 deferral + v2.6.0 candidate-2 deferral. Per RD-1's "second instance promotes from documented principle to validated discipline" clause in the composition-conflict-resolution body extension, the discipline-defense pattern is now empirically validated.
+- **writing-code:3 self-application during rule drafting (recurrence 1).** Round-1 wording included DB-client call surfaces with no empirical evidence; sibling caught the writing-code:3 (no speculative abstractions) violation in the rule's own design process. Different shape from reverse self-validation (which catches discipline in pre-existing operator decisions). Worth a separate framework signal for v2.7+ if recurs.
+
+### Followups
+
+- DB-client call-surface additions (psycopg2/asyncpg/pymongo/redis/kafka): forward-only ratchet; added when one surfaces in a future scanner run.
+- `.claude/io-timeout-policy.toml` project-policy override mechanism: parked v2.6.x.
+- writing-code:11/:13/:14 mechanical detection: still queued for v2.6.x and beyond.
+- RG-8 (method-naming consistency): still parked pending pass-9+ cross-pass evidence.
+
 ## [2.5.0] -- 2026-05-14
 
 Single-item cohort: RD-1 (rule-eval-loop meta-skill) body extension tightening the skipping-the-loop carve-outs from "acceptable when X" to "mandatory three-samples; single-pass acceptable only when carve-outs apply." Triggered by the recurrence-3 milestone reached at v2.4.0 fix exercise (PR #491): nine rules across four cohorts (v2.2.0/v2.3.0/v2.3.1/v2.4.0) bitten cleanly with zero wording mis-fires.

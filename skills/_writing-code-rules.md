@@ -8,7 +8,7 @@ These rules apply whenever the agent writes production code -- any `.py` file ou
 
 The sibling boundary in `_writing-claims-rules.md` is "verify before claiming": rules that fire when stating a fact in a commit body, PR body, or chat. The two files split the same underlying claim-grounding family by temporal trigger; consult writing-code when editing code, consult writing-claims when stating facts.
 
-## The fourteen code-writing rules
+## The fifteen code-writing rules
 
 **writing-code:1. Default to no docstring or a one-liner.** Multi-paragraph Sphinx-style docstrings are reserved for public API surface that is exported and consumed externally. Internal helpers and one-off functions get type hints and at most one sentence. Docstrings are code, not prose; the discipline lives here rather than in `[rule:writing-prose]`.
 
@@ -236,9 +236,47 @@ Cross-rule composition with writing-code:7: writing-code:14 is a specific case o
 
 Judgment-enforced via `[skill:code-review]` at v2.4.0. Mechanical detection candidate: TC5 alternative-return-shape from sibling's writing-code:7 scanner test-case set (catch-all `except` whose body returns a different result without re-raise). Scanner enhancement queued for v2.4.x.
 
+**writing-code:15. Every blocking I/O call declares a timeout at the call site.**
+
+Any unbounded blocking call is a DoS primitive against the caller's process. A single broken endpoint or hung process cascades through every dependent function. Downstream `try/except Exception` wrappers do NOT rescue from a hang: the function never returns to the except clause.
+
+The rule applies to these call surfaces (empirical-evidence-only list; forward-only ratchet adds new surfaces as they appear in scanner runs):
+
+- `subprocess.run`, `subprocess.call`, `subprocess.check_call`, `subprocess.check_output`, `subprocess.Popen.communicate`, `subprocess.Popen.wait`
+- `requests.{get, post, put, delete, head, patch, request}` and the `httpx` equivalents
+- `urllib.request.urlopen`
+- `socket.create_connection`
+- `sqlite3.connect`
+
+Every call to one of these surfaces MUST pass a `timeout` keyword argument with a numeric value, or `timeout=None` with the carve-out comment described below.
+
+**Sensible defaults if no project policy:** subprocess ≤ 30s, HTTP ≤ 30s, socket ≤ 30s, sqlite3 ≤ 10s. These are starting points; project-specific policy may tighten.
+
+**Carve-out: `timeout=None` permitted with audit-signal comment.** Explicit `timeout=None` is acceptable when the calling context already imposes a bound (caller passes a deadline, function runs inside an `asyncio.wait_for`, etc.). The `None` MUST be commented with a reason that names: (a) the upstream bound mechanism, AND (b) the function or caller that imposes it. Bare "intentional" or "see PR" comments do not count as audit signals.
+
+Mechanical scanner check: accept `timeout=None` when accompanied by an inline or preceding-line comment ≥ 30 characters containing at least one identifier-shaped token (matches `[A-Za-z_][A-Za-z0-9_]*` of length ≥ 4). False-positive tolerance: a comment-shaped sentence with no specific reference still passes the regex; reviewer catches the substantive miss.
+
+**Carve-out: test fixtures with `--exclude-tests`.** Test fixtures running synchronous one-shot subprocesses against trusted local binaries pass via the `--exclude-tests` scanner flag. Project-specific; not a code-level carve-out.
+
+**Composes with writing-code:7 (silent error swallowing).** A `subprocess.run(...)` wrapped in `try/except Exception: pass` produces TWO violations: writing-code:7 silent-swallow + writing-code:15 no-timeout. writing-code:15 is the upstream of writing-code:7 in the call chain: without the timeout the silent-swallow has nothing to swallow because the call never returns. The two rules compose to close the "process hangs forever" failure mode. writing-code:15 produces the sharper diagnostic for the timeout half; writing-code:7 catches the swallow once the call can return and raise.
+
+**Forward-only.** Existing unbounded calls in the codebase are flagged when discovered but the rule's expectation is that codebases address them as discovery surfaces them, not big-bang.
+
+**Originating evidence (RD-1 three-samples discipline):** mechanical scanner across three independent codebases established recurrence-3:
+
+| Codebase | Violations | Files |
+|---|---|---|
+| siege_utilities | 57 | 18 |
+| omr-leadsheet | 28 | 12 |
+| reverberator | 1 | 1 |
+
+The originating bug surfaced at pass-11 hostile review of v2.5.0: `siege_utilities/testing/environment.py:233` had `subprocess.run(['java','-version'])` with no timeout. A hung JDK would block `check_java_version()` -> `setup_spark_environment()` -> `quick_environment_setup()` indefinitely. Pass-11 fix added `timeout=10` (siege_utilities PR #492 commit fce3210). The rule is designed backward from this concrete failure.
+
+Mechanical via AST scanner (`scan_ast.py::check_writing_code_15`): walks `Call` nodes whose function matches one of the surfaces above; flags missing `timeout` kwarg unless `timeout=None` accompanied by the audit-signal comment.
+
 ## Override
 
-These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:12 (no duplicate imports) lands mechanical at v2.3.1 via AST scanner; writing-code:7 (silent error swallowing) lands mechanical at v2.3.1.1 via AST scanner with carve-outs for Optional[T]+docstring, `# noqa: writing-code-7` opt-out, and the `except ImportError`+flag-pattern idiom (writing-code:8 territory); writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; the remaining eight (writing-code:1, :3, :4, :6, :10, :11, :13, :14) are judgment-enforced via `[skill:code-review]`. writing-code:11, :13, :14 scanner enhancements tracked for v2.3.x and beyond. writing-code:7 scanner has two enhancement candidates queued for v2.3.2/v2.4.0: TC5 catch-all-with-alternative-return-shape (also the writing-code:14 mechanical detection candidate) and TC8 catch-all-wrapping-pure-logic-body.
+These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:12 (no duplicate imports) lands mechanical at v2.3.1 via AST scanner; writing-code:7 (silent error swallowing) lands mechanical at v2.3.1.1 via AST scanner with carve-outs for Optional[T]+docstring, `# noqa: writing-code-7` opt-out, and the `except ImportError`+flag-pattern idiom (writing-code:8 territory); writing-code:15 (unbounded blocking I/O) lands mechanical at v2.6.0 via AST scanner with empirical-evidence-only call-surface list and audit-signal comment carve-out for `timeout=None`; writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; the remaining eight (writing-code:1, :3, :4, :6, :10, :11, :13, :14) are judgment-enforced via `[skill:code-review]`. writing-code:11, :13, :14 scanner enhancements tracked for v2.3.x and beyond. writing-code:7 scanner has two enhancement candidates queued for v2.3.2/v2.4.0: TC5 catch-all-with-alternative-return-shape (also the writing-code:14 mechanical detection candidate) and TC8 catch-all-wrapping-pure-logic-body.
 
 ## Cross-references
 
