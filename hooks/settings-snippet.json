@@ -1,0 +1,53 @@
+{
+  "_comment_": "Unified hooks snippet. Merge into ~/.claude/settings.json or project .claude/settings.local.json. Replace the literal path segments with an absolute path to this repo — see hooks/README.md.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/inject-resolver.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/infrastructure/catalog-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/no-attribution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/ticket-required.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/no-sensitive-files.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/no-broad-staging.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
