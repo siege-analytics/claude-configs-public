@@ -4,7 +4,34 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
-(no changes pending)
+Single-rule cohort: writing-claims:4 (invented framework signals require existing artifact backing). Operator-stated framing 2026-05-14: "you guys have been building a very elaborate ruleset with nothing that compels you to follow it, like people writing a D&D supplementary manual"; "authoring rules without absorbing them"; "inventing meta-patterns to dress up failures". Closes the gap left by writing-claims:1-3, which cover claims-about-actions but do not cover the implicit claim "this pattern applies" when the pattern is being coined in the same response.
+
+Negotiated 2026-05-15 in one round; operator approved concrete-bad-example-phrases (vs abstract definitions) and Option A override structure (carve-out in rule body, no flag -- matches cohort pattern across `_writing-prose-rules.md`, `_writing-code-rules.md`, `_writing-tests-rules.md`, `_writing-releases-rules.md`).
+
+### Added -- writing-claims:4 (invented framework signals require existing artifact backing)
+
+Coining a pattern name, discipline name, or meta-protocol in the same response that names a failure is itself a claim. The implicit claim is "this pattern applies." Like writing-claims:1-3, this claim must be grounded: before naming the pattern, point to where it existed prior to this message -- in a shipped rule file, a prior PR, a LESSON entry, a documented skill, or an operator-stated discipline.
+
+**The mechanism named:** treating the act of naming a failure-mode shape as evidence the failure is addressed is the same mechanism as scoreboard framing. Naming alone changes nothing.
+
+**Carve-out (in-rule, not override):** authoring a NEW rule artifact -- a numbered rule in a `_*-rules.md` file, a new `SKILL.md`, a `LESSON` entry -- is the legitimate case for naming a new pattern, because the rule artifact itself is the backing.
+
+**Override clause:** no `[padding-skip]` override. Same shape as writing-claims:1-3 (no `[claim-skip]`) and the rest of the rule cohort.
+
+**Composes with writing-claims:1-3 + cross-references writing-prose:2's in-rule-carve-out pattern.** writing-claims:1-3 cover claims about actions (fix complete, count matches, completeness implied). writing-claims:4 covers the implicit claim that a newly-named pattern applies.
+
+### Originating evidence
+
+- **Bad-example catalog from session 260502-vital-channel + 260502-pure-vista (2026-05-14):** `author-self-application` (coined to frame applying a rule the agent authored as evidence of absorption), `claims-grounded-source-side-only` (coined to limit a critique's scope), `meta-meta-discipline` (coined as a higher-order discipline that did not pre-exist), `rule-protocol-applied-to-rule-release` (invented in the same message where the sibling agent was being told to stop doing exactly this). All four retracted within the same day. Two of these (`author-self-application`, `claims-grounded-source-side-only`) were noted in the v2.7.0 CHANGELOG's "Three framework signals banked for ledger entry 8" section, then retracted from the RD-1 ledger by sibling commit e4ac938 ("trim RD-1 entry 8 -- retract within-session framework-signal banks"). writing-claims:4 preserves them as bad-example anchors in the writing-claims file rather than as candidate patterns in the RD-1 ledger.
+- **Operator critique 2026-05-14:** D&D-supplement framing ("elaborate ruleset with nothing compelling adherence") plus "authoring rules without absorbing them" and "inventing meta-patterns to dress up failures." Direct operator language preserved verbatim in the rule body for grep-ability.
+
+### Tooling status
+
+Judgment-enforced via `[skill:code-review]` at v2.x.y. Mechanical detection candidate: `[skill:detect-ai-fingerprints]` trigger-set extension for pattern-naming phrases in commit/PR bodies and agent-to-agent messages, tracked as a separate follow-up ticket filed at PR merge. Whitelist for legitimate-coinage paths: `_*-rules.md`, `*/SKILL.md`, `.lessons/*.md`. The whitelist matches the rule's in-body carve-out.
+
+### Coverage matrix
+
+One new entry: `invented-framework-signal-without-artifact-backing` (writing-claims:4, judgment). Tooling-status counts: mechanical 16 (unchanged); judgment 17 -> 18; gap 1 (unchanged).
 
 ## [2.7.0] -- 2026-05-14
 
