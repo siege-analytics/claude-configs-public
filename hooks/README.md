@@ -23,13 +23,15 @@ behavior; the skill explains the correct behavior.
 ### 1. Make scripts executable
 
 ```bash
-chmod +x hooks/git/*.sh
+chmod +x hooks/git/*.sh hooks/agent-comms/*.sh
 ```
 
 ### 2. Add hooks to your project settings
 
-Copy the hooks block from `git/settings-snippet.json` into your
-project's `.claude/settings.json` (or `settings.local.json`).
+Copy the hooks block from the unified `settings-snippet.json` (at the
+hooks root) into your project's `.claude/settings.json` (or
+`settings.local.json`). The unified snippet wires both the `Bash`-matcher
+hooks (git/, infrastructure/) and the MCP-matcher agent-comms hook.
 
 Replace `/path/to/claude-configs-public` with the actual path:
 

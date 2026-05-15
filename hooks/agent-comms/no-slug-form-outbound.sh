@@ -31,13 +31,17 @@ if [[ -z "$BODY" ]]; then
 fi
 
 # BSD-grep compatible: -E (POSIX extended), explicit char classes (no \d, no -P).
-# Pattern matches `[skill:` or `[rule:` followed by a letter, deliberately
-# excluding the angle-bracket form `[skill:<name>]`.
-PATTERN='\[(skill|rule):[a-zA-Z][a-zA-Z0-9-]*'
+# Pattern matches `[skill:` or `[rule:` followed by a letter and a closing `]`,
+# deliberately excluding the angle-bracket form `[skill:<name>]` (the first
+# char after the colon is `<`, not a letter) and ignoring partial fragments
+# without a closing bracket.
+PATTERN='\[(skill|rule):[a-zA-Z][a-zA-Z0-9-]*\]'
 
-if echo "$BODY" | grep -oE "$PATTERN" >/tmp/.slug-form-hits.$$ 2>/dev/null && [[ -s /tmp/.slug-form-hits.$$ ]]; then
-    HITS=$(sort -u /tmp/.slug-form-hits.$$ | head -10 | sed 's/^/  /')
-    rm -f /tmp/.slug-form-hits.$$
+TMPFILE=$(mktemp -t slug-form-hits.XXXXXX) || exit 0
+trap 'rm -f "$TMPFILE"' EXIT
+
+if echo "$BODY" | grep -oE "$PATTERN" >"$TMPFILE" 2>/dev/null && [[ -s "$TMPFILE" ]]; then
+    HITS=$(sort -u "$TMPFILE" | head -10 | sed 's/^/  /')
     cat >&2 <<HOOKEOF
 BLOCKED: Outbound agent message contains literal [skill:slug] / [rule:slug] tokens.
 
@@ -55,5 +59,4 @@ HOOKEOF
     exit 2
 fi
 
-rm -f /tmp/.slug-form-hits.$$
 exit 0
