@@ -51,7 +51,7 @@ If your structural change does not appear in `dist/flat/`, the build script's pa
 python3 bin/build.py --check
 ```
 
-This validates that every `[skill:<name>]` and `[rule:<name>]` token in source files resolves to an existing skill or rule in the layout being built. (Documenting the syntax with literal slug-shaped placeholders would itself trip the resolver; the angle-bracket form prevents the resolver from treating these as real references.) New skills that are not yet referenced by other content will not produce a check failure; new tokens that reference a misspelled name will. Run this before opening the PR.
+This validates that every `[skill:<name>]` and `[rule:<name>]` token in source files resolves to an existing skill or rule in the layout being built. The angle-bracket form `[skill:<name>]` is the documentation-safe shape; literal slug-shaped placeholders are real references the resolver will try (and fail) to resolve. New skills that are not yet referenced by other content will not produce a check failure; new tokens that reference a misspelled name will. Run this before opening the PR.
 
 ### 3. PR + merge as usual
 
@@ -63,7 +63,7 @@ The PR body should explicitly note that this is a structural change requiring th
 2. **Flat-layout verification (post-merge):** after merge + tag fan-out, confirm the structural change actually appears in `release/flat`. The publish workflow should propagate it; the v2.0.0 RULES.md miss showed this is not fully trusted.
 3. **Consumer-workspace verification:** sync from the new flat tag (or `release/flat` if no tag was cut) into a fresh consumer workspace per `UPSTREAM-UPDATE.md`; confirm the change is present at the expected consumer-shape path; exercise it where exercise is meaningful (a new scanner runs; a new rule is grep-able; a new hook fires).
 
-### 4. Post-merge verification
+### 4. Post-merge verification (steps 2 + 3 commands)
 
 After the merge lands and the publish workflow completes, run from outside the repo:
 
@@ -88,7 +88,7 @@ Then run Step 3 against an actual consumer workspace per `UPSTREAM-UPDATE.md` (r
 
 ## Anti-patterns
 
-- **Trusting the workflow without local verification.** The workflow runs `bin/build.py`. If `bin/build.py` is wrong, the workflow ships wrong. Local `python3 bin/build.py` + inspect catches build-script gaps before they ship.
+- **Treating the workflow as a substitute for local `bin/build.py`.** The workflow runs `bin/build.py`. If `bin/build.py` is wrong, the workflow ships wrong. Local `python3 bin/build.py` + inspect catches build-script gaps before they ship.
 - **Patching the published artifact directly.** If `release/flat` is missing something the source has, the fix is in the build script or the publish workflow, not in the flat branch directly. The flat branch is force-overwritten on every publish; manual edits get clobbered.
 - **Declaring "shipped" before consumer-side verification.** The release is done when a consumer can sync the artifact and use it, not when the source merges or the tag pushes. Per writing-releases:5.
 
@@ -96,10 +96,10 @@ Then run Step 3 against an actual consumer workspace per `UPSTREAM-UPDATE.md` (r
 
 - `[rule:writing-releases]` writing-releases:5 — verify the published artifact loads in its consumption environment before declaring release done. This skill is the consumer-shape-specific implementation for the flat layout.
 - `[rule:writing-releases]` writing-releases:1 — BREAKING in changelog when public surface changes. Structural changes to skills/ or hooks/ that affect consumer integration may also be BREAKING (e.g., a renamed skill slug breaks consumer wiring); both rules apply.
-- `bin/build.py` — the build script itself. Its docstring documents `find_rules()`, `ROOT_FILES`, and `copy_skill_dir()` as the pattern-matching sites most likely to need updating when a structural change adds a new file shape.
+- `bin/build.py` — the build script. The `find_rules()`, `ROOT_FILES`, and `copy_skill_dir()` symbols are the pattern-matching sites most likely to need updating when a structural change adds a new file shape.
 - `.github/workflows/build-and-publish.yml` — the publish workflow that runs `bin/build.py` and rsyncs to `release/<layout>`.
 - `UPSTREAM-UPDATE.md` — the consumer-side sync procedure (rsync from the flat tag into a workspace).
-- LESSON 323a0f5 — the v2.0.0 originating instance: build glob missed `RULES.md` and `_coverage.md` added at `skills/` root; v2.0.1 patched within the hour after sibling sync-verification surfaced the gap. The whole skill exists to default the discipline that sibling's manual verification provided in that case.
+- LESSON 323a0f5 — the v2.0.0 (2026-05-13) originating instance: build glob missed `RULES.md` and `_coverage.md` added at `skills/` root; v2.0.1 patched within the hour after sibling sync-verification surfaced the gap. The whole skill exists to default the discipline that sibling's manual verification provided in that case.
 - PR #86 — the worked example of the source → flat → consumer verification chain in a real PR body. The pattern this skill formalizes was first written in that PR's body for a specific structural fix; promoting it to a skill makes it the default for future structural changes.
 
 ## Attribution
