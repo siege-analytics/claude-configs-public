@@ -20,30 +20,58 @@ behavior; the skill explains the correct behavior.
 
 ## Installation
 
+For workspace consumers (Craft Agent and similar) the canonical install
+sequence -- rsync `hooks/` from `release/flat`, then merge the snippet,
+then verify a hook fires -- is documented in the top-level
+[README "Wire and verify hooks" section](../README.md#wire-and-verify-hooks).
+Order matters: the snippet's `command` paths reference on-disk hook
+scripts, so the rsync must precede the settings.json merge.
+
+The steps below cover direct-clone installs (the historical pattern),
+where the repo is cloned to a fixed path and the snippet's
+`/path/to/claude-configs-public` placeholder is rewritten to that path.
+
 ### 1. Make scripts executable
 
 ```bash
-chmod +x hooks/git/*.sh hooks/agent-comms/*.sh
+chmod +x hooks/git/*.sh hooks/agent-comms/*.sh hooks/infrastructure/*.sh hooks/resolver/*.sh hooks/write/*.sh
 ```
 
 ### 2. Add hooks to your project settings
 
-Copy the hooks block from the unified `settings-snippet.json` (at the
+Copy the hooks block from the unified [`settings-snippet.json`](settings-snippet.json) (at the
 hooks root) into your project's `.claude/settings.json` (or
-`settings.local.json`). The unified snippet wires both the `Bash`-matcher
-hooks (git/, infrastructure/) and the MCP-matcher agent-comms hook.
+`settings.local.json`). The unified snippet wires the `UserPromptSubmit`
+resolver injector, the `Bash`-matcher hooks (catalog-guard, branch-guard,
+no-attribution, ticket-required, no-sensitive-files, no-broad-staging),
+and the `mcp__session__send_agent_message`-matcher agent-comms hook
+(no-slug-form-outbound).
 
 Replace `/path/to/claude-configs-public` with the actual path:
 
 ```bash
-# Example for electinfo
-sed 's|/path/to/claude-configs-public|/home/dheerajchand/git/electinfo/claude-configs-public|g' \
-    hooks/git/settings-snippet.json
+sed 's|/path/to/claude-configs-public|<absolute path to this repo>|g' \
+    hooks/settings-snippet.json
 ```
 
 ### 3. Or install globally
 
 Add to `~/.claude/settings.json` to enforce across all projects.
+
+### 4. Verify a hook fires
+
+```bash
+# Should print BLOCKED... and exit 2
+echo '{"tool_input":{"message":"see [skill:think]"}}' \
+  | hooks/agent-comms/no-slug-form-outbound.sh
+echo "exit=$?"
+```
+
+Exit 0 here means the script ran without finding a literal slug-form
+token (so the test input was wrong); exit 2 means the hook blocked as
+expected. To test settings.json wiring end-to-end, attempt a real
+`mcp__session__send_agent_message` call with a literal `[skill:foo]` in
+the body -- the call should be blocked with the same stderr.
 
 ## How Hooks Work
 
