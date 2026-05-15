@@ -36,7 +36,7 @@ Three enforcement layers keep the resolver active:
 2. **Every user turn** -- [`hooks/resolver/inject-resolver.sh`](hooks/resolver/inject-resolver.sh) is a `UserPromptSubmit` hook that injects the resolver summary into active context on every prompt. Context doesn't decay by turn 20.
 3. **Pre-tool-use** -- [`hooks/infrastructure/catalog-guard.sh`](hooks/infrastructure/catalog-guard.sh) is a `PreToolUse` hook on `Bash` that matches dangerous catalog-bypass patterns and blocks them with a STOP-read-skill reminder.
 
-Wire the hooks by merging [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into `~/.claude/settings.json` (or project `.claude/settings.local.json`), replacing `/path/to/claude-configs-public` with the actual absolute path to this repo.
+Wire the hooks by merging [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into `~/.claude/settings.json` (or project `.claude/settings.local.json`), replacing `/path/to/claude-configs-public` with the actual absolute path to the on-disk `hooks/` (typically a workspace path -- see [Wire and verify hooks](#wire-and-verify-hooks) for the rsync-first sequence and the canonical verify-it-fires invocation).
 
 ## Always-on conventions
 
@@ -158,8 +158,28 @@ TMP=$(mktemp -d)
 git clone --depth 1 --branch release/flat \
   https://github.com/siege-analytics/claude-configs-public.git "$TMP/repo"
 rsync -a "$TMP/repo/skills/" ~/.craft-agent/workspaces/<ws>/skills/
+rsync -a "$TMP/repo/hooks/"  ~/.craft-agent/workspaces/<ws>/hooks/
 rm -rf "$TMP"
 ```
+
+Plain `rsync -a` (no `--delete`): preserves any local files in the workspace's `skills/` or `hooks/` that aren't shipped upstream. The hooks rsync MUST run before wiring `~/.claude/settings.json` (next step), because the snippet's `command` paths reference workspace files that have to exist on disk first.
+
+### Wire and verify hooks
+
+After the workspace rsync, merge [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into `~/.claude/settings.json` (back the original up first), replacing every `/path/to/claude-configs-public` with the actual workspace path (e.g. `~/.craft-agent/workspaces/<ws>`).
+
+The snippet ships every hook the repo provides: `UserPromptSubmit` (resolver injection) and `PreToolUse` matchers for `Bash` (catalog-guard, branch-guard, no-attribution, ticket-required, no-sensitive-files, no-broad-staging) and `mcp__session__send_agent_message` (no-slug-form-outbound parser-drop guard). Adding new hooks upstream means re-rsync + re-merge.
+
+Verify a hook fires after wiring:
+
+```bash
+# Should print BLOCKED... and exit 2
+echo '{"tool_input":{"message":"see [skill:think]"}}' \
+  | ~/.craft-agent/workspaces/<ws>/hooks/agent-comms/no-slug-form-outbound.sh
+echo "exit=$?"
+```
+
+If exit is 0 instead of 2, the hook is on disk but not executable -- run `chmod +x ~/.craft-agent/workspaces/<ws>/hooks/agent-comms/*.sh ~/.craft-agent/workspaces/<ws>/hooks/git/*.sh ~/.craft-agent/workspaces/<ws>/hooks/infrastructure/*.sh ~/.craft-agent/workspaces/<ws>/hooks/resolver/*.sh`. If the hook never fires from a real `mcp__session__send_agent_message` call, settings.json is malformed -- validate with `python3 -c 'import json; json.load(open("~/.claude/settings.json"))'`.
 
 To upgrade later:
 
