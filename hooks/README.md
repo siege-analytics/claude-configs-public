@@ -16,19 +16,22 @@ behavior; the skill explains the correct behavior.
 | `git/no-attribution.sh` | commit (attribution policy), all CLAUDE.md | Commits with AI/agent attribution |
 | `git/no-sensitive-files.sh` | commit (sensitive files) | Staging .env, credentials, keys |
 | `git/no-broad-staging.sh` | commit (staging patterns) | `git add -A`, `git add .`, `git add --all` |
+| `agent-comms/no-slug-form-outbound.sh` | parser-drop guard (LESSON 323a0f5) | `mcp__session__send_agent_message` calls whose body contains `[skill:slug]` or `[rule:slug]` literal forms (host parser silently drops the carrier message). Use the angle-bracket form `[skill:<name>]` instead. |
 
 ## Installation
 
 ### 1. Make scripts executable
 
 ```bash
-chmod +x hooks/git/*.sh
+chmod +x hooks/git/*.sh hooks/agent-comms/*.sh
 ```
 
 ### 2. Add hooks to your project settings
 
-Copy the hooks block from `git/settings-snippet.json` into your
-project's `.claude/settings.json` (or `settings.local.json`).
+Copy the hooks block from the unified `settings-snippet.json` (at the
+hooks root) into your project's `.claude/settings.json` (or
+`settings.local.json`). The unified snippet wires both the `Bash`-matcher
+hooks (git/, infrastructure/) and the MCP-matcher agent-comms hook.
 
 Replace `/path/to/claude-configs-public` with the actual path:
 

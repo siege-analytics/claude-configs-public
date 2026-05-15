@@ -47,6 +47,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "mcp__session__send_agent_message",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/agent-comms/no-slug-form-outbound.sh",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }
