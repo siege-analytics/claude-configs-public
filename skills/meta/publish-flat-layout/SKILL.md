@@ -57,7 +57,7 @@ This validates that every `[skill:<name>]` and `[rule:<name>]` token in source f
 
 The publish workflow (`.github/workflows/build-and-publish.yml`) runs `python3 bin/build.py` on push to `main` and on tag push. On main pushes the workflow rsyncs `dist/nested/` to `release/nested` and `dist/flat/` to `release/flat`. On tag pushes (`v*`) the workflow additionally tags those branches as `vX.Y.Z-nested` and `vX.Y.Z-flat`.
 
-The PR body should explicitly note that this is a structural change requiring the source → flat → consumer verification chain (per PR #86's worked example). Three steps spelled out in the PR body:
+The PR body should explicitly note that this is a structural change requiring the source-to-flat-to-consumer verification chain (per PR #86's worked example). Three steps spelled out in the PR body:
 
 1. **Source-side fix:** the change in this PR. Cite the local `python3 bin/build.py` output as evidence.
 2. **Flat-layout verification (post-merge):** after merge + tag fan-out, confirm the structural change actually appears in `release/flat`. The publish workflow should propagate it; the v2.0.0 RULES.md miss showed this is not fully trusted.
@@ -94,13 +94,13 @@ Then run Step 3 against an actual consumer workspace per `UPSTREAM-UPDATE.md` (r
 
 ## Cross-references
 
-- `[rule:writing-releases]` writing-releases:5 — verify the published artifact loads in its consumption environment before declaring release done. This skill is the consumer-shape-specific implementation for the flat layout.
-- `[rule:writing-releases]` writing-releases:1 — BREAKING in changelog when public surface changes. Structural changes to skills/ or hooks/ that affect consumer integration may also be BREAKING (e.g., a renamed skill slug breaks consumer wiring); both rules apply.
-- `bin/build.py` — the build script. The `find_rules()`, `ROOT_FILES`, and `copy_skill_dir()` symbols are the pattern-matching sites most likely to need updating when a structural change adds a new file shape.
-- `.github/workflows/build-and-publish.yml` — the publish workflow that runs `bin/build.py` and rsyncs to `release/<layout>`.
-- `UPSTREAM-UPDATE.md` — the consumer-side sync procedure (rsync from the flat tag into a workspace).
-- LESSON 323a0f5 — the v2.0.0 (2026-05-13) originating instance: build glob missed `RULES.md` and `_coverage.md` added at `skills/` root; v2.0.1 patched within the hour after sibling sync-verification surfaced the gap. The whole skill exists to default the discipline that sibling's manual verification provided in that case.
-- PR #86 — the worked example of the source → flat → consumer verification chain in a real PR body. The pattern this skill formalizes was first written in that PR's body for a specific structural fix; promoting it to a skill makes it the default for future structural changes.
+- `[rule:writing-releases]` writing-releases:5: verify the published artifact loads in its consumption environment before declaring release done. This skill is the consumer-shape-specific implementation for the flat layout.
+- `[rule:writing-releases]` writing-releases:1: BREAKING in changelog when public surface changes. Structural changes to skills/ or hooks/ that affect consumer integration may also be BREAKING (e.g., a renamed skill slug breaks consumer wiring); both rules apply.
+- `bin/build.py`: the build script. The `find_rules()`, `ROOT_FILES`, and `copy_skill_dir()` symbols are the pattern-matching sites most likely to need updating when a structural change adds a new file shape.
+- `.github/workflows/build-and-publish.yml`: the publish workflow that runs `bin/build.py` and rsyncs to `release/<layout>`.
+- `UPSTREAM-UPDATE.md`: the consumer-side sync procedure (rsync from the flat tag into a workspace).
+- LESSON 323a0f5: the v2.0.0 (2026-05-13) originating instance: build glob missed `RULES.md` and `_coverage.md` added at `skills/` root; v2.0.1 patched within the hour after sibling sync-verification surfaced the gap. The whole skill exists to default the discipline that sibling's manual verification provided in that case.
+- PR #86: the worked example of the source-to-flat-to-consumer verification chain in a real PR body. The pattern this skill formalizes was first written in that PR's body for a specific structural fix; promoting it to a skill makes it the default for future structural changes.
 
 ## Attribution
 
