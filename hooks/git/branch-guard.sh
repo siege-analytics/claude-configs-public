@@ -13,8 +13,13 @@ INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || true)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null || true)
 
-# Only check git commit commands
-if ! echo "$COMMAND" | grep -qE '^git commit\b'; then
+# Match `git commit` anywhere in the command, not just at the start, so
+# forms like `cd /tmp/foo && git commit ...` and `bash -c "git commit ..."`
+# don't slip through. Known limitations (see issues #97, #98): commands
+# that invoke a script which itself runs git commit (`bash wrapper.sh`)
+# are not inspected; `git -C <path> commit` without a leading `cd` is not
+# parsed for its target path.
+if ! echo "$COMMAND" | grep -qE '\bgit commit\b'; then
     exit 0
 fi
 
@@ -22,7 +27,38 @@ if [[ -z "$CWD" ]]; then
     exit 0  # Can't determine directory, allow
 fi
 
-BRANCH=$(git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+# When the command starts with `cd <path>` (followed by `&&` / `;` / EOL),
+# the effective commit target is <path>, not $CWD. If that target is in a
+# different git repo than $CWD, we can't safely verify the branch from
+# this hook's vantage -- yield rather than apply a check that may be
+# checking the wrong repo.
+EFFECTIVE_CWD="$CWD"
+if [[ "$COMMAND" =~ ^[[:space:]]*cd[[:space:]]+([^[:space:];&]+) ]]; then
+    CD_TARGET="${BASH_REMATCH[1]}"
+    # Strip surrounding single/double quotes if present
+    CD_TARGET="${CD_TARGET%\"}"; CD_TARGET="${CD_TARGET#\"}"
+    CD_TARGET="${CD_TARGET%\'}"; CD_TARGET="${CD_TARGET#\'}"
+    # Resolve relative paths against $CWD
+    case "$CD_TARGET" in
+        /*) ;;
+        *) CD_TARGET="$CWD/$CD_TARGET" ;;
+    esac
+    if [[ -d "$CD_TARGET" ]]; then
+        OUTER_TOP=$(git -C "$CWD" rev-parse --show-toplevel 2>/dev/null || echo "")
+        TARGET_TOP=$(git -C "$CD_TARGET" rev-parse --show-toplevel 2>/dev/null || echo "")
+        if [[ -z "$TARGET_TOP" ]]; then
+            exit 0  # cd target isn't a git repo we can read; yield
+        fi
+        if [[ "$OUTER_TOP" != "$TARGET_TOP" ]]; then
+            exit 0  # cross-repo case; can't safely verify, yield
+        fi
+        EFFECTIVE_CWD="$CD_TARGET"
+    else
+        exit 0  # cd target doesn't exist; yield rather than block on $CWD's branch
+    fi
+fi
+
+BRANCH=$(git -C "$EFFECTIVE_CWD" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
 
 if [[ -z "$BRANCH" ]]; then
     exit 0  # Not a git repo, allow
