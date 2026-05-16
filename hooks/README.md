@@ -16,6 +16,7 @@ behavior; the skill explains the correct behavior.
 | `git/no-attribution.sh` | commit (attribution policy), all CLAUDE.md | Commits with AI/agent attribution |
 | `git/no-sensitive-files.sh` | commit (sensitive files) | Staging .env, credentials, keys |
 | `git/no-broad-staging.sh` | commit (staging patterns) | `git add -A`, `git add .`, `git add --all` |
+| `git/self-review.sh` | `skills/self-review/SKILL.md`, `feedback_self_code_review` memory | `git push`, `gh pr create`, `gh pr merge` when latest commit lacks `Self-Review:` / `Self-Review-Source:` trailers, or the source artifact lacks required sections. v1 mechanical checks; v2 follow-ups tracked in the skill. |
 | `agent-comms/no-slug-form-outbound.sh` | parser-drop guard (LESSON 323a0f5) | `mcp__session__send_agent_message` calls whose body contains `[skill:slug]` or `[rule:slug]` literal forms (host parser silently drops the carrier message). Use the angle-bracket form `[skill:<name>]` instead. |
 
 ## Installation
