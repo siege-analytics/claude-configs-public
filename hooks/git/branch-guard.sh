@@ -27,6 +27,19 @@ if [[ -z "$CWD" ]]; then
     exit 0  # Can't determine directory, allow
 fi
 
+# Multi-statement-with-cd yield: the leading-cd parser below only handles
+# a single cd at the start. If the command contains more than one cd OR
+# contains any of newline/semicolon/`||` together with at least one cd,
+# the effective cwd at the point `git commit` runs may differ from what
+# the leading-cd parser captures. Yield rather than risk a false-positive
+# block or false-negative pass. See issue #101 for the characterization.
+CD_COUNT=$(echo "$COMMAND" | grep -oE '\bcd[[:space:]]' 2>/dev/null | wc -l | tr -d ' ')
+if [[ "$CD_COUNT" -gt 0 ]]; then
+    if [[ "$CD_COUNT" -gt 1 ]] || echo "$COMMAND" | grep -qE $'\n|;|\\|\\|'; then
+        exit 0
+    fi
+fi
+
 # When the command starts with `cd <path>` (followed by `&&` / `;` / EOL),
 # the effective commit target is <path>, not $CWD. If that target is in a
 # different git repo than $CWD, we can't safely verify the branch from
