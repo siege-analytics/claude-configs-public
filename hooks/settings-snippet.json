@@ -45,6 +45,11 @@
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/git/no-broad-staging.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/self-review.sh",
+            "timeout": 10
           }
         ]
       },
