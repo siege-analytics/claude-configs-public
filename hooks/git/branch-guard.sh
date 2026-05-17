@@ -19,7 +19,9 @@ CWD=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null || true)
 # that invoke a script which itself runs git commit (`bash wrapper.sh`)
 # are not inspected; `git -C <path> commit` without a leading `cd` is not
 # parsed for its target path.
-if ! echo "$COMMAND" | grep -qE '\bgit commit\b'; then
+# Word boundaries via portable character-class form (not BSD-incompatible `\b`);
+# see issue #106 (same fix that landed for self-review.sh in same PR).
+if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'; then
     exit 0
 fi
 
@@ -33,7 +35,7 @@ fi
 # the effective cwd at the point `git commit` runs may differ from what
 # the leading-cd parser captures. Yield rather than risk a false-positive
 # block or false-negative pass. See issue #101 for the characterization.
-CD_COUNT=$(echo "$COMMAND" | grep -oE '\bcd[[:space:]]' 2>/dev/null | wc -l | tr -d ' ')
+CD_COUNT=$(echo "$COMMAND" | grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null | wc -l | tr -d ' ')
 if [[ "$CD_COUNT" -gt 0 ]]; then
     if [[ "$CD_COUNT" -gt 1 ]] || echo "$COMMAND" | grep -qE $'\n|;|\\|\\|'; then
         exit 0
