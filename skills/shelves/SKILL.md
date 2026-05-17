@@ -1,6 +1,6 @@
 ---
 name: shelves
-description: Meta-router for the DBrain book-skill library. Dispatches to one of 11 topic shelves (engineering-principles, systems-architecture, languages, data-and-pipelines, product, marketing, sales, strategy, design, team, storytelling). Read this before consulting any individual book skill.
+description: Meta-router for the DBrain book-skill library. Dispatches to one of 12 topic shelves (engineering-principles, systems-architecture, languages, data-and-pipelines, product, marketing, sales, strategy, design, team, storytelling, geospatial). Read this before consulting any individual book skill.
 disable-model-invocation: false
 ---
 
@@ -25,6 +25,7 @@ This pattern keeps the description budget small: one slot per shelf, not one per
 | [skill:design] | UI, UX heuristics, typography, microinteractions |
 | [skill:team] | Motivation, ways of working |
 | [skill:storytelling] | Communicating data, slide animation |
+| [skill:shelf-geospatial] | CRS / spatial joins / MAUP / areal interpolation / spatial statistics — geographic analysis grounded in methodology |
 
 ## How shelves work
 
