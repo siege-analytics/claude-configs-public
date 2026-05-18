@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AST scanner for writing-code:7, writing-code:9, writing-code:15 and writing-releases:3.
+"""AST scanner for writing-code:4 (Django ORM kwargs), :7, :9, :15 and writing-releases:3.
 
 Invoked by scan.sh for .py files in the diff. Reports violations as
 <file>:<line>:<rule>: <excerpt>. Exit 0 if clean, 1 if violations.
@@ -543,6 +543,187 @@ def check_writing_code_15(tree, source_lines):
     return violations
 
 
+# --- writing-code:4 — Django ORM kwarg validation (v1: same-file models only) ---
+
+# ORM methods whose kwargs (or `defaults={...}` dict literal) are field-name -> value.
+ORM_FIELD_KWARG_METHODS = {
+    "create", "get_or_create", "update_or_create",
+    "filter", "exclude", "get", "update",
+}
+
+# Methods where `defaults=` carries a dict literal of field -> value.
+ORM_DEFAULTS_METHODS = {"get_or_create", "update_or_create"}
+
+# Django field class name suffix that identifies a field declaration.
+_DJANGO_FIELD_SUFFIX = "Field"
+
+# Common Manager-method kwargs that are NOT field names. Kept conservative.
+_NON_FIELD_KWARGS = {
+    "using", "for_update", "select_for_update", "skip_locked",
+    "negate", "defaults", "create_defaults",
+}
+
+# Lookup suffixes that decompose `field__lookup` -> field. List is the union
+# of Django's built-in lookups; matched as the trailing segment of __-split.
+_DJANGO_LOOKUPS = {
+    "exact", "iexact", "contains", "icontains", "in", "gt", "gte", "lt", "lte",
+    "startswith", "istartswith", "endswith", "iendswith", "range", "date",
+    "year", "iso_year", "month", "day", "week", "week_day", "iso_week_day",
+    "quarter", "time", "hour", "minute", "second", "isnull", "regex", "iregex",
+    "search", "overlap", "contained_by", "len", "intersects", "within",
+    "distance_lte", "distance_gte", "dwithin", "covers", "covered_by",
+    "crosses", "disjoint", "equals", "touches", "relate", "left", "right",
+    "strictly_above", "strictly_below", "bbcontains", "bboverlaps",
+}
+
+
+def _is_django_field_call(value_node):
+    """True if an assignment RHS looks like a Django field call (e.g. CharField(...))."""
+    if not isinstance(value_node, ast.Call):
+        return False
+    func = value_node.func
+    if isinstance(func, ast.Name):
+        return func.id.endswith(_DJANGO_FIELD_SUFFIX)
+    if isinstance(func, ast.Attribute):
+        return func.attr.endswith(_DJANGO_FIELD_SUFFIX)
+    return False
+
+
+def _collect_django_models(tree):
+    """Map of <ClassName> -> set of declared field names, for Django models
+    defined IN THE FILE. A class is treated as a Django model if any class-body
+    assignment looks like `name = <X>Field(...)`.
+    """
+    models = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        fields = set()
+        for stmt in node.body:
+            # Plain assignment: name = Field(...)
+            if isinstance(stmt, ast.Assign):
+                if not _is_django_field_call(stmt.value):
+                    continue
+                for tgt in stmt.targets:
+                    if isinstance(tgt, ast.Name):
+                        fields.add(tgt.id)
+            # Annotated assignment: name: T = Field(...)
+            elif isinstance(stmt, ast.AnnAssign) and stmt.value is not None:
+                if not _is_django_field_call(stmt.value):
+                    continue
+                if isinstance(stmt.target, ast.Name):
+                    fields.add(stmt.target.id)
+        if fields:
+            # Implicit pk + standard auto-fields Django adds.
+            fields.update({"id", "pk"})
+            models[node.name] = fields
+    return models
+
+
+def _orm_call_target(call_node):
+    """If `call_node` is `<Model>.objects.<method>(...)`, return (ModelName, method).
+    Otherwise return None.
+    """
+    func = call_node.func
+    if not isinstance(func, ast.Attribute):
+        return None
+    method = func.attr
+    if method not in ORM_FIELD_KWARG_METHODS:
+        return None
+    # func.value should be `<Model>.objects`
+    objects_attr = func.value
+    if not isinstance(objects_attr, ast.Attribute) or objects_attr.attr != "objects":
+        return None
+    model_node = objects_attr.value
+    if not isinstance(model_node, ast.Name):
+        return None
+    return (model_node.id, method)
+
+
+def _field_root(kwarg_name):
+    """Decompose `field__lookup__sub` -> `field` if the trailing segments are
+    known Django lookups; otherwise return the leading segment as-is.
+    Returns None for things that obviously aren't field references (starts with _).
+    """
+    if not kwarg_name or kwarg_name.startswith("_"):
+        return None
+    parts = kwarg_name.split("__")
+    # Strip trailing known-lookup segments; the leftmost remaining is the field.
+    while len(parts) > 1 and parts[-1] in _DJANGO_LOOKUPS:
+        parts.pop()
+    return parts[0]
+
+
+def _check_keys_against_model(model_name, declared, keys_with_lineno, file_excerpt):
+    """For each (key, lineno) pair, yield a violation if the root field is not
+    in `declared`. `file_excerpt` is the prefix used in the message.
+    """
+    out = []
+    for key, lineno in keys_with_lineno:
+        if key in _NON_FIELD_KWARGS:
+            continue
+        root = _field_root(key)
+        if root is None:
+            continue
+        if root not in declared:
+            out.append(
+                (lineno,
+                 "writing-code-4-django-orm-kwarg(unknown-field)",
+                 f"{file_excerpt}: unknown field {root!r} on model {model_name!r} "
+                 f"(declared fields: {sorted(declared)})")
+            )
+    return out
+
+
+def check_writing_code_4_django_orm(tree):
+    """Yield violations for ORM kwargs that don't map to declared model fields.
+
+    v1 scope: same-file model resolution only. Calls referencing models defined
+    in other files / apps are silently skipped (no false positives from missing
+    cross-file resolution).
+    """
+    models = _collect_django_models(tree)
+    if not models:
+        return []
+    violations = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        target = _orm_call_target(node)
+        if target is None:
+            continue
+        model_name, method = target
+        if model_name not in models:
+            continue
+        declared = models[model_name]
+        # Direct kwargs on the call.
+        direct_keys = [(kw.arg, kw.lineno) for kw in node.keywords if kw.arg]
+        violations.extend(
+            _check_keys_against_model(
+                model_name, declared, direct_keys,
+                f"{model_name}.objects.{method}(...)",
+            )
+        )
+        # `defaults={"field": value, ...}` dict literal.
+        if method in ORM_DEFAULTS_METHODS:
+            for kw in node.keywords:
+                if kw.arg != "defaults":
+                    continue
+                if not isinstance(kw.value, ast.Dict):
+                    continue
+                dict_keys = []
+                for k in kw.value.keys:
+                    if isinstance(k, ast.Constant) and isinstance(k.value, str):
+                        dict_keys.append((k.value, k.lineno))
+                violations.extend(
+                    _check_keys_against_model(
+                        model_name, declared, dict_keys,
+                        f"{model_name}.objects.{method}(defaults={{...}})",
+                    )
+                )
+    return violations
+
+
 # Default test-path globs for --exclude-tests.
 TEST_PATH_PATTERNS = ("/tests/", "/test/", "_test.py", "test_")
 
@@ -567,6 +748,7 @@ def scan_file(path, allow_decorators, exclude_tests=False):
     source_lines = source.splitlines()
     results = (check_writing_code_7(tree, source_lines)
                + check_writing_code_9(tree, allow_decorators)
+               + check_writing_code_4_django_orm(tree)
                + check_writing_releases_3(tree))
     # writing-code:15 honors --exclude-tests for project-specific test fixtures.
     if not (exclude_tests and _is_test_path(path)):
