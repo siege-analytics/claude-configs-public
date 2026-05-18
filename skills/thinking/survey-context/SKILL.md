@@ -1,29 +1,30 @@
 ---
 name: survey-context
-description: "Author-time enforcement of entity-shape verification. Before writing or modifying code that references existing entities (models, tables, functions, files, APIs, env vars), produce a structured Context Survey naming what was verified, what was assumed, and what's unknown. Pairs with the static scanner (claude-configs-public#114) as the pre-write counterpart. Composes with `think` Step 1 (Context)."
+description: "Author-time entity-shape verification through documentation. Before writing or modifying code that references existing entities (models, tables, functions, files, APIs, env vars), consult the project's entity docs, diff the live model against what the docs say, and surface drift as a finding. Shape changes in code carry a Definition-of-Done requirement to update the corresponding doc page. Composes with `think` Step 1 (Context) and the static scanner."
 user-invocable: true
 allowed-tools: Read Grep Glob Bash
 ---
 
 # Survey Context Before Writing
 
-Before you write or modify code that touches existing entities, **survey those entities first.** Produce a Context Survey artifact naming what shape each entity actually has, what your task assumes about that shape, and which assumptions remain unverified.
+Before you write or modify code that touches existing entities, **consult the entity's doc page first**, **diff what's there against the live model**, and **update the doc when your change alters shape**. Docs are the canonical record of entity shape; the survey is the moment when drift surfaces; the work that follows includes keeping the docs honest.
 
-This is the counterpart to the static scanner at `claude-configs-public#114`: the scanner catches what shipped; this skill prevents the original miss.
+This is the counterpart to the static scanner: the scanner catches code-vs-model drift at write time; this skill catches doc-vs-model drift at author time and prevents both from accumulating.
 
 ## Why
 
 A recurring failure shape: code references entities — imports, model fields, table columns, function names, env vars — that don't exist or have a different shape than the author assumed. The reference looks plausible. CI doesn't exercise the path. The bug ships.
 
-Observed instances (all same shape, different surface):
+Without a canonical doc layer, every author re-pays the introspection cost on every task, and drift between author-mental-model and reality goes undetected until it ships. With a doc layer, the survey becomes a cheap diff against committed truth, and drift becomes a tracked finding instead of a per-task surprise.
+
+Observed instances grounding this skill (writing-claims:6, N≥9):
 
 - `assign_boundaries.py` referenced `models.Q(...)` without importing `models`.
-- `swh/census.py` imported `PostGISConnector` from a non-existent `siege_utilities.connectors` module.
+- `swh/census.py` imported `PostGISConnector` from a non-existent module.
 - `dimension_loader.py` called `DimTime.objects.update_or_create(defaults={...})` with 6 keys that aren't fields on DimTime.
-- `boundary_detail` applied `@method_decorator(cache_page, name="dispatch")` — class-based-view shape — on a function-based DRF view with no `dispatch` attribute.
-- A reviewer (this skill's own author) declared `DemographicSnapshot.object_id` was an integer PK without checking; it's a CharField geoid-key.
-
-Per writing-claims:6, N≥5 same-shape failures crosses the threshold for systemic intervention. **This skill is that intervention at the author side.**
+- `dimension_loader.py` did the same for `DimRedistrictingCycle`.
+- `boundary_detail` applied class-based-view decorator shape on a function-based DRF view.
+- A reviewer declared `DemographicSnapshot.object_id` was an integer PK without checking; it's a CharField geoid-key.
 
 ## When to survey
 
@@ -31,126 +32,137 @@ Required before:
 - Adding a new caller of an existing model, function, or table.
 - Changing the shape (signature, schema, field set) of any entity with callers elsewhere.
 - Wiring a new endpoint, command, or job to existing infrastructure.
-- Writing a decorator, mixin, or generic-FK reference (the shape errors above are over-represented here).
-
-Optional but recommended:
-- Reviewing code that does any of the above (the survey doubles as the verification step in a hostile review).
+- Writing a decorator, mixin, or generic-FK reference.
 
 Trivial-change escape: pure typographical, docs, or single-line literal changes do not require a survey.
 
-## Artifact format
+## The loop
+
+```
+        +-----------------------------+
+        |  Entity docs (canonical)    |
+        |  e.g. /docs/entities/*.md   |
+        +--------------+--------------+
+                       |
+        consult        |        update (if work changed shape)
+                       v
++---------------+  +--------------------+  +------------------+
+| Task touches  |->| Survey artifact    |->| DoD: doc touched |
+| entity X      |  | = diff(docs, model)|  | iff shape changed|
++---------------+  +----------+---------+  +------------------+
+                              |
+                              | drift detected (docs != model)
+                              v
+                  +---------------------------+
+                  |  Drift finding / ticket   |
+                  +---------------------------+
+```
+
+Three outcomes per entity touched:
+
+- **Match.** Live introspection agrees with docs. Survey notes the consult; task proceeds.
+- **Drift.** Live introspection disagrees with docs. Survey records a Drift finding; operator decides whether the doc is wrong (update) or the model is wrong (fix).
+- **No doc page.** Skill offers to seed one from live introspection; task proceeds with a Survey-Seed deliverable that updates the project's entity catalog.
+
+## Project-skill contract
+
+The global skill defines the loop. **Each project provides the local layer** at `.agents/skills/survey-context/`:
+
+```
+<repo>/.agents/skills/survey-context/
+  config.md              <- entity catalog, doc root, conventions
+  templates/entity.md    <- doc-page template
+  entities/<name>.md     <- per-entity doc pages (the canonical record)
+  recipes/<class>.md     <- project-specific surveyor recipes (optional)
+```
+
+`config.md` must declare:
+- **Doc root** — where entity pages live (absolute repo path).
+- **Entity catalog** — list of entities tracked (name, type, doc-page path).
+- **Ownership** — who reviews drift findings.
+- **Recipe extensions** — project-specific surveyor recipes beyond the universal set.
+
+If `.agents/skills/survey-context/` does not exist in the project, the skill falls back to v1 behavior: produce a per-task Survey artifact from live introspection only, no doc-consult / no DoD enforcement. A consult-warning is emitted so the operator knows the project hasn't adopted the doc layer.
+
+See `PROJECT_SKILL_TEMPLATE.md` for the project-layer skeleton.
+
+## Survey artifact format
 
 ```
 ## Survey
 Task: <one-line description>
+Project skill: <path-to-project-config-or-"none-(v1-fallback)">
 Touched entities: <list>
 Referenced entities: <list>
 
 ### Entity: <name> (<type>, <namespace>)
-- Definition: <file:line>
-- Surveyed at: <timestamp> via <command-or-tool>
-- Verified attributes: <list of fields / signatures / methods actually present>
-- Constraints: <unique_together, indexes, FK targets, type system>
-- Callers (grep): <files referencing this entity>
+- Doc page: <path-to-doc-or-"none-(will-seed)">
+- Live introspection at: <timestamp> via <command-or-tool>
+- Diff vs docs: MATCH | DRIFT | NO-DOC
+- If DRIFT: <what disagrees; doc-say vs model-say>
 - ASSUMPTIONS my task makes about this entity: <named explicitly>
 - VERIFICATION STATUS: VERIFIED | ASSUMED | UNKNOWN
 
-### Gaps
-For each UNKNOWN: what would resolve it, and why proceeding without it is acceptable (or not).
+### Drift findings
+For each DRIFT: doc location, what's stale, recommended owner action.
+Each drift gets a ticket (or named decision to defer) before the task proceeds.
+
+### Doc updates required
+For each shape-changing modification in this task: doc page that must be
+updated in the same PR (or sibling PR with an explicit link).
 ```
 
-The artifact is the durable thing. The survey activity is ephemeral. If the artifact is missing or unstructured, the survey didn't happen.
+## Surveyor recipes (universal)
 
-## Surveyor recipes
-
-Each entity class has a canonical way to introspect its actual shape. The list below is the starting set; recipes grow with the codebase.
+Each entity class has a canonical introspection. Project skills extend this set.
 
 | Entity class | Surveyor |
 |---|---|
-| Django model | `Model._meta.get_fields()`; `python manage.py inspectdb` for raw DB shape; migration history walk |
-| Django model field type | `Model._meta.get_field("name").get_internal_type()` — confirms CharField vs IntegerField, etc. |
-| Django decorator shape | Check whether the view is function-based (`@api_view`) or class-based; `method_decorator(..., name="dispatch")` only applies to classes |
-| Database table | `\d+ table_name` (psql); `SHOW CREATE TABLE` (mysql); `PRAGMA table_info` (sqlite); INFORMATION_SCHEMA |
+| Django model | `Model._meta.get_fields()`; field-type via `_meta.get_field("name").get_internal_type()` |
+| Django decorator shape | function- vs class-based view; method_decorator(name="dispatch") only applies to classes |
+| Database table | `\d+` (psql); `SHOW CREATE TABLE` (mysql); INFORMATION_SCHEMA |
 | Spark DataFrame | `df.printSchema()`, `df.explain()`, `df.rdd.getNumPartitions()` |
 | Spark catalog table | `spark.catalog.listColumns(tableName)` |
-| Python function/class | Read the source; `inspect.signature`; grep callers |
-| Python module/import | `python -c "import X; print(X.__file__)"`; grep for actual exported names in `__init__.py` |
-| File on disk | `ls -la`, `head`, `wc -l`, `file` for format sniff |
-| HTTP API | WebFetch / curl + inspect response shape, status code, headers |
-| Environment variable | grep config files + dump from target environment |
+| Python function/class | Read source; `inspect.signature`; grep callers |
+| Python module/import | `python -c "import X; print(X.__file__)"`; grep `__all__` |
+| File on disk | `ls -la`, `head`, `wc -l`, `file` |
+| HTTP API | WebFetch / curl + response shape, status, headers |
+| Environment variable | grep config + dump from target environment |
 | FK / cross-app reference | `_meta.get_fields()` filtered to ForeignKey types |
 | ContentType / generic FK | Check `object_id` field type — int PK vs string-keyed differ in semantics |
 
-When a recipe for the entity class isn't listed, add one. The library grows by use.
+## Definition of Done (shape-change → doc-touch)
 
-## Worked example (the api/geo views case)
+When the work changes entity shape (adds/removes/renames a field; changes a function signature; alters a decorator shape that callers rely on), the same PR must update the corresponding entity doc page.
 
-Task: fix `boundary_detail` decorator and `_forward_geocode` / `_reverse_geocode` exception handling.
-
-```
-## Survey
-Task: A1+A3 fix in socialwarehouse/api/geo/views.py
-Touched entities: views.boundary_detail, views._forward_geocode, views._reverse_geocode
-Referenced entities: cache_page (Django), api_view (DRF), method_decorator (Django),
-                     siege_utilities.geo.geocoding.get_coordinates, geopy.geocoders.Nominatim
-
-### Entity: cache_page (Django decorator)
-- Definition: django/views/decorators/cache.py (verified via python -c)
-- Surveyed at: 2026-05-18 via Read + Django docs
-- Verified attributes: applies as @cache_page(seconds); wraps a callable (request -> response)
-- ASSUMPTIONS: works as plain decorator on function-based @api_view views
-- VERIFICATION STATUS: VERIFIED — Django docs + existing SW usage in other endpoints
-
-### Entity: method_decorator (Django util)
-- Definition: django/utils/decorators.py
-- Surveyed at: 2026-05-18 via Django source
-- Verified attributes: name="dispatch" references the class's dispatch method
-- ASSUMPTIONS: requires the wrapped object to have an attribute named by `name=`
-- VERIFICATION STATUS: VERIFIED — function-based views have no dispatch attribute, so
-  @method_decorator(..., name="dispatch") silently no-ops or raises. The original code's
-  cache was non-functional.
-
-### Entity: boundary_detail
-- Definition: socialwarehouse/api/geo/views.py:247
-- Surveyed at: 2026-05-18 via Read
-- Verified attributes: function-based, @api_view(["GET"]), takes (request, boundary_type, geoid)
-- ASSUMPTIONS: no class-based-view machinery; no dispatch attribute
-- VERIFICATION STATUS: VERIFIED — fix replaces method_decorator wrapper with bare @cache_page
-
-### Entity: DemographicSnapshot (NOT touched, but originally implicated by A2/#113)
-- Definition: siege_utilities/geo/django/models/demographics.py:157
-- Surveyed at: 2026-05-18 via Read
-- Verified attributes: object_id is CharField(max_length=20), geoid-keyed
-- ASSUMPTIONS the original review made: object_id was IntegerField (WRONG)
-- VERIFICATION STATUS: VERIFIED — A2 retracted as false positive; survey would have prevented
-  authoring the false review in the first place
-```
-
-The DemographicSnapshot row is the load-bearing one: had this skill been run **on the review itself** (treating "produce a review claim about object_id type" as the task that references DemographicSnapshot), the false positive in #113 would not have been authored.
+The companion hook (`survey-context.sh`, see Known Limitations) enforces this when present. Without the hook the rule is operator-auditable: the Survey artifact's "Doc updates required" section names what must change; the PR's diff is checked against that list at self-review time.
 
 ## Composition with existing primitives
 
-- **`brain-first` universal check** (resolver) — this skill IS its full expansion for "do I know the shape of what I'm touching?"
-- **`think` Step 1 (Context)** — this skill systematizes Step 1 with per-entity recipes and a structured artifact.
-- **writing-code:4 (verify symbol exists)** — same shape applied per-symbol; this skill batches across all symbols a task references.
-- **writing-code:5 (no hypothetical code)** — runtime version; this skill is the static / pre-write counterpart.
-- **self-review SKILL.md `Goal source:` field** — names external context; the survey populates it.
-- **scan_ast.py extension (#114)** — runtime / review-time enforcement; this skill is author-time. Together = belt + suspenders.
+- **`brain-first` universal check** — this skill IS its full expansion for entity shape.
+- **`think` Step 1 (Context)** — survey systematizes Step 1 with per-entity recipes + a doc-consult step.
+- **writing-code:4 (verify symbol exists)** — survey batches across all symbols a task references.
+- **writing-code:5 (no hypothetical code)** — runtime version; survey is the static / pre-write counterpart.
+- **self-review `Goal source:` field** — survey populates it.
+- **scan_ast.py Django ORM check** — runtime enforcement of the field-name shape; survey is the author-time complement that also catches doc drift.
 
-## Hard parts (acknowledged, not solved)
+## Hard parts (acknowledged)
 
-- **Coverage gap.** A survey of entities X, Y, Z doesn't catch that W is also load-bearing. Mitigation: the "Referenced entities" field forces enumeration; the `_writing-claims-rules.md` discipline applies — declare what you didn't survey.
-- **Survey paralysis.** Exhaustive survey kills throughput. Mitigation: depth heuristics — DEEP for touched entities, SHALLOW (definition + verified attributes) for referenced, SKIP for transitively-pulled-in dependencies that the diff doesn't engage.
-- **Stale recipes.** Surveyor recipes for Spark 3 vs 4, Django 4 vs 5, FastAPI vs Flask differ. The recipe table is open for amendment; PRs adding recipes are the maintenance path.
-- **Domain expertise required.** Each surveyor recipe encodes what's worth checking in that domain. The library grows from the operator's accumulated expertise + observed failure shapes.
+- **Doc-layer bootstrap cost.** N existing entities × hand-written doc page is a real one-time cost. Mitigation: skill's no-doc → seed path lets coverage grow organically; a separate bootstrap tool can mass-seed from introspection.
+- **Doc-rot.** Without the shape-change → doc-touch DoD enforced by hook, docs decay. The skill makes the requirement visible; the hook (v2.1 follow-up) makes it enforced.
+- **Coverage gap.** A survey of entities X, Y, Z doesn't catch that W is also load-bearing. Mitigation: the artifact's "Referenced entities" field forces enumeration.
+- **Survey paralysis.** Exhaustive survey kills throughput. Mitigation: depth heuristics — DEEP for touched entities (full doc + introspection + diff), SHALLOW for referenced (doc citation only), SKIP for transitively-pulled-in dependencies that the diff doesn't engage.
+- **Recipe staleness.** Surveyor recipes for Spark 3 vs 4, Django 4 vs 5 differ. Universal recipes live in this skill; project-specific recipes live in the project skill's `recipes/`.
 
 ## Hard rules
 
-**No survey = no write.** If the entities in your task touch existing infrastructure and the survey artifact does not exist, do not author the code.
+**No survey = no write** for non-trivial entity-touching work. The Survey artifact's existence is the floor.
 
-**ASSUMED status counts as a finding.** Mark assumptions explicitly. A survey with no assumptions is a survey that didn't actually examine the entity's shape.
+**Drift is not invisible.** A DRIFT outcome must produce a ticket or a named-and-justified decision to defer. Silent drift is a writing-claims:5 violation.
 
-**UNKNOWN must be resolved or named.** Either close the gap (run the recipe) or declare in the Gaps section why proceeding without resolution is acceptable.
+**Shape change = doc change.** When work changes entity shape, the doc page is updated in the same PR (or a sibling PR with an explicit link). No PR opened with stale docs on touched entities.
+
+**Project-skill absence is noisy.** When `.agents/skills/survey-context/` is missing, the skill emits a consult-warning and runs v1-fallback. Don't silently degrade — the operator should know the project hasn't adopted the doc layer.
 
 ## Trigger conditions
 
@@ -160,6 +172,7 @@ The DemographicSnapshot row is the load-bearing one: had this skill been run **o
 
 ## Known limitations
 
-- The skill does not (yet) automate recipe execution. Authors run the recipes themselves and write up findings. A future tooling layer could partially automate the Django-model and Python-import recipes.
-- The artifact format is not yet hook-enforced. The self-review hook checks for `Goal source:`; a future hook extension could check for a `Survey:` trailer pointing at a Survey artifact for non-trivial diffs.
-- Coverage of the survey itself is operator-auditable, not automated. The scanner at #114 catches a subset of survey-misses; together they're complementary, not redundant.
+- **Hook enforcement deferred** to v2.1. The shape-change → doc-touch DoD is operator-auditable for now; a future `survey-context.sh` will block pushes that miss the doc update.
+- **Bootstrap tool deferred.** Mass-seeding entity docs from introspection across a repo is its own scope, filed separately.
+- **Drift-ticket auto-filing deferred.** Currently the survey records drift; the operator files the ticket manually. Future tooling can auto-file.
+- **Doc-page rendering / search deferred.** Docs are plain markdown; readable in repo. A search UI is not in scope.
