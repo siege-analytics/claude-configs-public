@@ -32,14 +32,16 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-# Trigger on git push, gh pr create, gh pr merge.
-TRIGGERS='\b(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge))\b'
+# Trigger on git push, gh pr create, gh pr merge. Word boundaries via portable
+# character-class form (not BSD-incompatible `\b`); see issue #106.
+TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
 if ! echo "$COMMAND" | grep -qE "$TRIGGERS"; then
     exit 0
 fi
 
 # Multi-statement-with-cd yield (mirrors branch-guard.sh discipline, issue #101).
-CD_COUNT=$(echo "$COMMAND" | grep -oE '\bcd[[:space:]]' 2>/dev/null | wc -l | tr -d ' ')
+# Portable word boundary (leading), same reason as TRIGGERS above.
+CD_COUNT=$(echo "$COMMAND" | grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null | wc -l | tr -d ' ')
 if [[ "$CD_COUNT" -gt 0 ]]; then
     if [[ "$CD_COUNT" -gt 1 ]] || echo "$COMMAND" | grep -qE $'\n|;|\\|\\|'; then
         exit 0
@@ -165,6 +167,41 @@ design-note path, or quoted user-request paragraph) so the review is
 not a restatement of the diff's own commit subject.
 HOOKEOF
         exit 2
+    fi
+
+    # v1.1: Goal-source artifact-mtime sanity check.
+    # If the Goal source value looks like a file path, verify that file's
+    # mtime is not NEWER than the artifact itself (which would suggest
+    # the goal was written AFTER the work — the substantive-empty failure
+    # mode the Goal-source field was designed to prevent).
+    # Uses file mtime, which is a heuristic (touch can defeat it); a stronger
+    # check would inspect git history for the goal source, but session-scoped
+    # plans/ files aren't in any git repo, so mtime is the v1.1 floor.
+    # Caveats inside the source file are unblocked: ticket-shaped sources
+    # (#NNN) and quoted-user-request goal-sources skip this check.
+    GOAL_SOURCE_VALUE=$(grep -E '^Goal source:[[:space:]]+' "$SOURCE_PATH" | head -1 | sed -E 's/^Goal source:[[:space:]]+//')
+    if [[ "$GOAL_SOURCE_VALUE" =~ \.(md|txt|json|yaml|yml|sh|py|sql)$ ]] || [[ "$GOAL_SOURCE_VALUE" == /* ]] || [[ "$GOAL_SOURCE_VALUE" == ./* ]]; then
+        case "$GOAL_SOURCE_VALUE" in
+            /*) GOAL_SOURCE_PATH="$GOAL_SOURCE_VALUE" ;;
+            *)  GOAL_SOURCE_PATH="$EFFECTIVE_CWD/$GOAL_SOURCE_VALUE" ;;
+        esac
+        if [[ -f "$GOAL_SOURCE_PATH" ]]; then
+            GOAL_MTIME=$(stat -f %m "$GOAL_SOURCE_PATH" 2>/dev/null || stat -c %Y "$GOAL_SOURCE_PATH" 2>/dev/null || echo "")
+            ARTIFACT_MTIME=$(stat -f %m "$SOURCE_PATH" 2>/dev/null || stat -c %Y "$SOURCE_PATH" 2>/dev/null || echo "")
+            if [[ -n "$GOAL_MTIME" && -n "$ARTIFACT_MTIME" && "$GOAL_MTIME" -gt "$ARTIFACT_MTIME" ]]; then
+                cat >&2 <<HOOKEOF
+BLOCKED: Goal source ($GOAL_SOURCE_PATH) has mtime newer than the review
+artifact ($SOURCE_PATH). The Goal source should pre-date the work it
+grounds; a Goal source written AFTER the artifact suggests post-hoc
+justification rather than a pre-existing target to verify against.
+
+If this is legitimate (e.g., you updated the design note after starting
+work and the artifact captures that updated design), touch the artifact
+to refresh its mtime, then retry.
+HOOKEOF
+                exit 2
+            fi
+        fi
     fi
 
     # Assumptions section must name at least one role. Use the canonical

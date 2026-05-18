@@ -206,6 +206,9 @@ the claim must be grounded.
 - If the source value is a file path: file exists, has the three
   required section headers (`## Assumptions`, `## Peer review`,
   `## Lead review`), has a non-empty `Goal source:` line.
+- **v1.1**: If `Goal source:` value is itself a file path, its mtime
+  must not be newer than the review artifact's mtime (catches goal-
+  source-written-after-the-work post-hoc-justification pattern).
 - Assumptions section names at least one role from the canonical
   set (software engineer / tech lead / data engineer / data analyst /
   geospatial).
@@ -215,10 +218,15 @@ the claim must be grounded.
 
 **v2 follow-up to enforce mechanically:**
 
-- Goal source does NOT point at the commit being pushed (currently
-  operator-auditable; mechanizing the "doesn't point at" check is
-  non-trivial -- could be a SHA, a commit subject quote, a ticket
-  filed before vs after the commit timestamp).
+- Goal source does NOT point at the commit being pushed AND was filed
+  before the commit timestamp. **v1.1 lands the partial mtime-based
+  check** for file-path-shaped goal sources (block if goal-source mtime
+  > review-artifact mtime — catches post-hoc-justification patterns).
+  Heuristic: `touch` defeats it; stronger check needs git history which
+  session-scoped plans/ files don't have. **v2 still owed:** ticket-
+  shaped sources (`#NNN`) validated via `gh issue view --json createdAt`
+  against the commit timestamp; SHA / commit-subject-quote source
+  detection.
 - Lead section's role-tagged affirmative-standard format
   (`As <role>: <standard> holds because <evidence>`).
 - `detect-ai-fingerprints` scan against the source artifact.
@@ -239,6 +247,37 @@ false-positive data from v1 has informed the v2 check shapes.
 The hook cannot verify quality of the content; that remains
 operator-auditable in both v1 and v2. But absence is enforceable, and
 the structural questions are impossible to skip.
+
+## Known limitations (recoverable, document-the-workaround posture)
+
+The hook fires at PreToolUse — BEFORE the bash command runs — and inspects
+the latest commit at that moment. This produces several documented false
+positives the agent can recover from by adjusting invocation shape:
+
+- **Chained `git commit -m "..." && git push`.** The hook sees `git push`
+  in the command and inspects HEAD. At that moment HEAD is the PRE-commit
+  HEAD (the in-flight commit hasn't happened yet), so the trailer pair
+  from the imminent commit isn't visible. The hook blocks. **Workaround:**
+  split into two separate Bash invocations — first `git commit -m "..."`,
+  then `git push origin <branch>` as a separate call. Once the commit
+  lands on HEAD, the push's hook check sees the trailers. Issue #107.
+- **`echo` / `printf` / heredoc strings containing the literal substrings
+  `git push`, `gh pr create`, `gh pr merge`.** The substring matcher
+  fires on the text regardless of whether the agent is actually invoking
+  the command. **Workaround:** for test scripts that need to demonstrate
+  the substring, write them to `/tmp/` (outside any git repo where the
+  hook's branch detection applies), or reformulate to avoid the literal
+  substring. Same posture as branch-guard's well-documented
+  `bash wrapper.sh` limitation (#98).
+- **Multi-statement commands with `cd`.** Mirrors branch-guard discipline
+  (#101): if the command has more than one `cd` OR contains chained
+  statements (newline / `;` / `||`) with at least one `cd`, the hook
+  yields rather than risk evaluating the wrong repo. Same workaround:
+  split into separate Bash invocations.
+
+These are conservative-bias trade-offs. The hook prefers a recoverable
+false positive over a silent false negative; "split into separate calls"
+is the standard recovery pattern across the hook family.
 
 ## Three-layer separation
 
