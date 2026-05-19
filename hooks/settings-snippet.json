@@ -55,6 +55,11 @@
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/git/survey-context.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/detect-ai-fingerprints.sh",
+            "timeout": 15
           }
         ]
       },
