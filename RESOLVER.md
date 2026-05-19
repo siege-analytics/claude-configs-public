@@ -160,17 +160,19 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
 2. **Brain-first** (borrowed from GBrain): before calling any external API or running any mutation, check if we have the answer / target already. Re-use before recreating.
 
-3. **Test-before-bulk**: any batch operation (≥20 items) runs on 3–5 items first, verifies, then scales.
+3. **Verify-failure-premise**: before debugging a reported failure (someone else's report OR your own non-zero exit), confirm the work actually didn't happen. Look at substantive evidence — output files, DB rows, audit tables — NOT just the failure signal. If evidence says the work succeeded, the reporter is the bug; investigate the signal layer (wrapper, post-success cleanup, exit-code instrumentation), not the work layer. See `skills/thinking/verify-failure-premise/SKILL.md`. Iron law: state the evidence verdict (did-happen / didn't-happen / ambiguous) explicitly before picking an investigation layer.
 
-4. **Ticket-required + Epic-in-project + Dependency-clear**: Any work that creates a change in state or behavior of the software that will impact the product requires a ticket. Typographical corrections with no functional effect are exempt. That ticket must belong to a project or epic — unprojected tickets are not worked. All blocking upstream tickets must be Done before you start. Include the ticket reference in every commit. Read `skills/planning/pre-work-check/SKILL.md` before starting any such work.
+4. **Test-before-bulk**: any batch operation (≥20 items) runs on 3–5 items first, verifies, then scales.
 
-5. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write. The PR base is `develop` (or its synonym — `dev`, `development`, `staging`, `next`, `integration`, `trunk`), NOT `main`. **Invariant:** `main` is a subset of `develop`. If `develop` is missing or stale, STOP and ask the user — do not silently create develop and do not silently fall back to main. See `skills/git-workflow/develop-guard/SKILL.md`.
+5. **Ticket-required + Epic-in-project + Dependency-clear**: Any work that creates a change in state or behavior of the software that will impact the product requires a ticket. Typographical corrections with no functional effect are exempt. That ticket must belong to a project or epic — unprojected tickets are not worked. All blocking upstream tickets must be Done before you start. Include the ticket reference in every commit. Read `skills/planning/pre-work-check/SKILL.md` before starting any such work.
 
-6. **Dual-mirror check** (for dual-tracked repos electinfo↔gitlab): after acting on one side, mirror to the other.
+6. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write. The PR base is `develop` (or its synonym — `dev`, `development`, `staging`, `next`, `integration`, `trunk`), NOT `main`. **Invariant:** `main` is a subset of `develop`. If `develop` is missing or stale, STOP and ask the user — do not silently create develop and do not silently fall back to main. See `skills/git-workflow/develop-guard/SKILL.md`.
 
-7. **No-attribution**: never add Claude/AI attribution to commits, PRs, or public-facing content.
+7. **Dual-mirror check** (for dual-tracked repos electinfo↔gitlab): after acting on one side, mirror to the other.
 
-8. **Measure twice, cut once**: for destructive or irreversible actions (drops, deletes, force-push, hard-reset), confirm scope first.
+8. **No-attribution**: never add Claude/AI attribution to commits, PRs, or public-facing content.
+
+9. **Measure twice, cut once**: for destructive or irreversible actions (drops, deletes, force-push, hard-reset), confirm scope first.
 
 ---
 
