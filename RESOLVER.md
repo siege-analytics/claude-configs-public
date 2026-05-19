@@ -169,7 +169,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
 4. **Ticket-required + Epic-in-project + Dependency-clear**: Any work that creates a change in state or behavior of the software that will impact the product requires a ticket. Typographical corrections with no functional effect are exempt. That ticket must belong to a project or epic — unprojected tickets are not worked. All blocking upstream tickets must be Done before you start. Include the ticket reference in every commit. Read `skills/planning/pre-work-check/SKILL.md` before starting any such work.
 
-5. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write.
+5. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write. The PR base is `develop` (or its synonym — `dev`, `development`, `staging`, `next`, `integration`, `trunk`), NOT `main`. **Invariant:** `main` is a subset of `develop`. If `develop` is missing or stale, STOP and ask the user — do not silently create develop and do not silently fall back to main. See `skills/git-workflow/develop-guard/SKILL.md`.
 
 6. **Dual-mirror check** (for dual-tracked repos electinfo↔gitlab): after acting on one side, mirror to the other.
 
