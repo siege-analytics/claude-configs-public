@@ -48,7 +48,7 @@ Universal checks (always):
 - Brain-first: check existing state before recreating
 - Test-before-bulk: ≥20 items runs a 3–5 item test first
 - Ticket-required: non-trivial work has a ticket
-- Branch-correct: write on feature branch, never main/master/develop
+- Branch-correct: write on feature branch, never main/master/develop. PR base is `develop` (or synonym: dev/development/staging/next/integration/trunk), NOT main. Invariant: main is a subset of develop. If develop is missing or stale, STOP and ask the user.
 - No-attribution: never add Claude/AI attribution to commits or public content
 - Measure-twice: confirm destructive actions before running
 

@@ -14,8 +14,10 @@ argument-hint: "[type/descriptive_string]"
    3. If no ticket exists, create one first -- if the work is branchable, it is ticketable
 2. Choose the base branch
    1. Branch from `develop` (or its synonym -- see Develop detection below)
-   2. If no `develop` branch exists, create one from `main` before branching (see Develop guard below)
-   3. **Never** branch directly from `main` for feature or task work
+   2. If no `develop` branch exists, **ASK the user** before creating one (see develop-guard skill — no silent creation)
+   3. If `develop` exists but is **behind `main`**, **STOP** and surface a sync decision before branching. Branches built from a stale develop carry the divergence forward.
+   4. **Never** branch directly from `main` for feature or task work
+   5. **Invariant:** `main` is always a subset of `develop`. If you discover that's not currently true, that's a sync ticket, not a license to branch from main.
 3. Create the branch with the correct naming convention
 4. Push the branch to the remote
 
@@ -115,7 +117,7 @@ git branch -a | grep -iE '(develop|dev|development|staging|next|integration)$'
 
 | Canonical | Synonyms |
 |-----------|----------|
-| `develop` | `dev`, `development`, `staging`, `next`, `integration` |
+| `develop` | `dev`, `development`, `staging`, `next`, `integration`, `trunk` (when used as integration) |
 
 If found, use the existing branch as the integration branch. If none exists, see the Develop guard skill -- create `develop` from `main` before proceeding.
 
@@ -164,7 +166,8 @@ Never delete branches that haven't been merged without confirming with the user.
 - [ ] Branch type matches the work being done (bugfix, feature, task, chore, hotfix)
 - [ ] Descriptive string is specific, snake_case, under 60 chars total
 - [ ] Branched from `develop` (not `main`) unless this is a hotfix
-- [ ] If no develop branch existed, one was created first
+- [ ] Confirmed `develop` is a superset of `main` (`git log origin/develop..origin/main` is empty); otherwise surfaced sync decision
+- [ ] If no develop branch existed, **asked the user** before creating one (no silent creation)
 - [ ] Ticket exists for this work (if branchable, it's ticketable)
 - [ ] Branch pushed to remote with tracking (`-u`)
 - [ ] Ticket updated with branch name and status set to In Progress
