@@ -46,9 +46,10 @@ Universal checks (always):
 - THINK FIRST (the non-negotiable)
 - Catalog-first: action on catalog-managed data goes through the catalog
 - Brain-first: check existing state before recreating
+- Verify-failure-premise: before debugging a reported failure, confirm the work didn't durably commit — look at durable-commit evidence (fsync / COMMIT / ACK / downstream-observable), NOT the failure signal. If evidence says the work succeeded, the reporter is the bug; trace the causal path from commit-point to signal-point (enumerate, bisect). See skills/thinking/verify-failure-premise/SKILL.md.
 - Test-before-bulk: ≥20 items runs a 3–5 item test first
 - Ticket-required: non-trivial work has a ticket
-- Branch-correct: write on feature branch, never main/master/develop
+- Branch-correct: write on feature branch, never main/master/develop. Invariant (mode-agnostic): main is the curated best of all work — never upstream of unblessed work. Detect mode by sampling recent merged PR bases (Gitflow: PRs target develop → branch from develop; GitHub Flow: PRs target main → branch from main). If develop exists but recent PRs target main, the repo is aspirational-Gitflow operating as GitHub Flow — STOP and ask the user.
 - No-attribution: never add Claude/AI attribution to commits or public content
 - Measure-twice: confirm destructive actions before running
 

@@ -12,10 +12,12 @@ argument-hint: "[type/descriptive_string]"
    1. Read the ticket or task that motivates this branch
    2. Map the work to a branch type (see Branch types below)
    3. If no ticket exists, create one first -- if the work is branchable, it is ticketable
-2. Choose the base branch
-   1. Branch from `develop` (or its synonym -- see Develop detection below)
-   2. If no `develop` branch exists, create one from `main` before branching (see Develop guard below)
-   3. **Never** branch directly from `main` for feature or task work
+2. Choose the base branch per the repo's **workflow mode** (detect via develop-guard before branching — sample recent merged PR bases)
+   1. **Gitflow** (recent merged PRs target develop): branch from `develop` (or synonym).
+   2. **GitHub Flow / Trunk-based** (recent merged PRs target main): branch from `main`. The PR review is the curation gate.
+   3. **Gitflow with missing/stale develop**: STOP and ask the user — onboarding the repo to Gitflow or accepting GitHub Flow is a decision the user owns.
+   4. **Mixed history**: STOP and ask which mode the repo should be in.
+   5. **Invariant** (mode-agnostic): `main` is the curated best of all work — never upstream of unblessed work, never bypassed by work that hasn't passed the bar. Integration surface and curation gate flex by mode; the curation invariant doesn't.
 3. Create the branch with the correct naming convention
 4. Push the branch to the remote
 
@@ -115,7 +117,7 @@ git branch -a | grep -iE '(develop|dev|development|staging|next|integration)$'
 
 | Canonical | Synonyms |
 |-----------|----------|
-| `develop` | `dev`, `development`, `staging`, `next`, `integration` |
+| `develop` | `dev`, `development`, `staging`, `next`, `integration`, `trunk` (when used as integration) |
 
 If found, use the existing branch as the integration branch. If none exists, see the Develop guard skill -- create `develop` from `main` before proceeding.
 
@@ -163,8 +165,10 @@ Never delete branches that haven't been merged without confirming with the user.
 
 - [ ] Branch type matches the work being done (bugfix, feature, task, chore, hotfix)
 - [ ] Descriptive string is specific, snake_case, under 60 chars total
-- [ ] Branched from `develop` (not `main`) unless this is a hotfix
-- [ ] If no develop branch existed, one was created first
+- [ ] Detected the repo's workflow mode (Gitflow vs GitHub Flow) by sampling recent merged PR bases
+- [ ] Branched per the detected mode (develop in Gitflow; main in GitHub Flow); did not insist on a develop layer the repo doesn't use
+- [ ] *Gitflow only*: confirmed develop is a superset of main; otherwise surfaced sync decision (including "reconsider mode" option)
+- [ ] *Gitflow only*: if develop missing/stale, **asked the user** before creating / syncing (no silent action)
 - [ ] Ticket exists for this work (if branchable, it's ticketable)
 - [ ] Branch pushed to remote with tracking (`-u`)
 - [ ] Ticket updated with branch name and status set to In Progress
