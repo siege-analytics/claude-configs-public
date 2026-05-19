@@ -46,6 +46,7 @@ Universal checks (always):
 - THINK FIRST (the non-negotiable)
 - Catalog-first: action on catalog-managed data goes through the catalog
 - Brain-first: check existing state before recreating
+- Verify-failure-premise: before debugging a reported failure, confirm the work didn't happen — look at substantive evidence (output files, DB rows, audit tables), not just the failure signal. If evidence says the work succeeded, the reporter is the bug. See skills/thinking/verify-failure-premise/SKILL.md.
 - Test-before-bulk: ≥20 items runs a 3–5 item test first
 - Ticket-required: non-trivial work has a ticket
 - Branch-correct: write on feature branch, never main/master/develop. PR base is `develop` (or synonym: dev/development/staging/next/integration/trunk), NOT main. Invariant: main is a subset of develop. If develop is missing or stale, STOP and ask the user.
