@@ -167,6 +167,22 @@ If still BLOCKED, check:
 - Required status checks (CI) failing
 - Branch behind base
 
+### 8. Feed the lessons-learned ledger
+
+For each FIXed thread, ask: "is this a recurring pattern, or a one-off?" If recurring (you've seen it before in this repo, or it points at a project-wide invariant), invoke [skill:lessons-learned] to log or bump the corresponding entry in `LESSONS.md`.
+
+Heuristic — log when **any** of these are true:
+
+- The same CR rule has fired on 2+ prior PRs in this repo
+- The fix touches a hot file (one with frequent CR findings)
+- The finding is 🔴 Critical (security, data loss) — log even at recurrence 1
+- Your own intuition says "we keep getting this"
+
+Do NOT log:
+- 🔵 Trivial style nits
+- One-off bugs with no underlying pattern
+- Findings already covered by an existing ledger entry — bump that entry's recurrence instead
+
 ## When you disagree with CR
 
 Reply once, substantively, with the reason. Then resolve. Example:

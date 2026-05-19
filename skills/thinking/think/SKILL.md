@@ -1,6 +1,7 @@
 ---
 name: think
-description: "MANDATORY design-first gate. AUTO-TRIGGER: before implementing any feature, refactor, or architecture change. Enforces structured design before any code is written. Do NOT skip this skill."
+description: "MANDATORY design-first gate. Enforces structured design before any code is written for a feature, refactor, or architecture change. Slash-invokable as /think; also enforced via the resolver before any non-trivial implementation. Do NOT skip this skill."
+disable-model-invocation: true
 allowed-tools: Read Grep Glob
 ---
 

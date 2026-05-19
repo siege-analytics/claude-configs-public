@@ -7,27 +7,34 @@ paths: "**/*.py,**/*.geojson,**/*.shp,**/*.gpkg,**/*.parquet"
 
 # Analysis Methods Router
 
-Select the appropriate analysis methodology based on the problem type. **First question: is your tabular representation trustworthy? If not, you need geometry precisely because the identifiers are dirty — skip crosswalk shortcuts.** See `_data-trust-rules.md` at skills root.
+Select the appropriate analysis methodology based on the problem type.
+
+## First question: is your tabular representation trustworthy?
+
+Before routing to any methodology, apply [rule:data-trust]. In Siege civic / Census / FEC / redistricting work, the tabular representation is usually wrong, stale, or missing rows. Spatial methods exist *precisely because* the identifiers are dirty — if your join key isn't trustworthy, you don't get to skip geometry by reaching for a crosswalk. You skip the crosswalk *because* you have geometry.
+
+The same premise applies to entity resolution (the names don't match, that's why you need fuzzy matching) and to graph analysis (the explicit FK relationships are missing or wrong, that's why you need to reconstruct edges). Each sub-skill assumes you've already failed the trust check on the easy path.
 
 ## Routing Table
 
 | Signal | Sub-Skill | Path |
 |--------|-----------|------|
-| Geographic data, coordinates, polygons, boundaries, PostGIS, spatial joins | Spatial analysis | [spatial/SKILL.md](spatial/SKILL.md) |
-| Statistical modeling, regression, hypothesis testing, distributions, sampling | Statistical methods | [statistical/SKILL.md](statistical/SKILL.md) |
-| Network/graph data, entity relationships, community detection, path finding | Graph analysis | [graph/SKILL.md](graph/SKILL.md) |
-| Record linkage, deduplication, fuzzy matching, identity resolution | Entity resolution | [entity-resolution/SKILL.md](entity-resolution/SKILL.md) |
-| Text classification, extraction, NLP, embeddings, language models | NLP methods | [nlp/SKILL.md](nlp/SKILL.md) |
+| Geographic data, coordinates, polygons, boundaries, PostGIS, spatial joins | Spatial analysis | [skill:spatial] |
+| Statistical modeling, regression, hypothesis testing, distributions, sampling | Statistical methods | [skill:statistical] |
+| Network/graph data, entity relationships, community detection, path finding | Graph analysis | [skill:graph] |
+| Record linkage, deduplication, fuzzy matching, identity resolution | Entity resolution | [skill:entity-resolution] |
+| Text classification, extraction, NLP, embeddings, language models | NLP methods | [skill:nlp] |
 
 Not all sub-skills exist yet. If a routing table entry points to a file that doesn't exist, apply general best practices for that methodology.
 
 ## Rules
 
-1. **Consult the decision framework before loading.** The spatial sub-skill leads with "do you trust your tabular representation?" — real-world civic / census / redistricting data is usually dirty, which is the reason spatial methods exist. The older question "do you need geometry?" is Step 2.
-2. **Load only the relevant methodology.** Most analysis tasks need exactly one sub-skill.
-3. **Stack rarely.** Entity resolution + graph analysis may combine for network deduplication. Spatial + statistical may combine for geographic modeling. But the default is one sub-skill.
-4. **Reference files load on demand.** Each sub-skill may have a `reference.md`. Load it only when directed.
-5. **Conventions always apply.** `_data-trust-rules.md` applies to any skill that ingests or joins external data. `_output-rules.md` applies to anything that produces output.
+1. **Trust check first.** Apply `_data-trust-rules.md` before routing. If your join key is dirty, you're choosing the methodology that *handles* the dirt (geometry, fuzzy matching, graph reconstruction), not the one that pretends the dirt isn't there.
+2. **Consult the decision framework inside each sub-skill.** The spatial sub-skill, having confirmed the trust premise, then asks "given that I have to use geometry, which engine and which path?" Many spatial-sounding problems are still graph or string-lookup problems — but only after the trust check.
+3. **Load only the relevant methodology.** Most analysis tasks need exactly one sub-skill.
+4. **Stack rarely.** Entity resolution + graph analysis may combine for network deduplication. Spatial + statistical may combine for geographic modeling. But the default is one sub-skill.
+5. **`_data-trust-rules.md` applies to any skill that ingests or joins external data.** It's an always-on convention, not a sub-skill — sibling of `_output-rules.md`. Load it once at session start.
+6. **Reference files load on demand.** Each sub-skill may have a `reference.md` or per-axis references under `references/`. Load on demand, not eagerly.
 
 ## Gotchas
 
