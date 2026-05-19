@@ -40,7 +40,7 @@ Where would the work's *durable* output be if it succeeded?
 
 The pivot is **durability, not return-value**. A function that returned without raising but whose write hasn't been fsynced/committed/ACKed has not yet succeeded.
 
-If you can't name where the durable evidence would be, you do not yet understand the system well enough to debug it. Read the code that does the work; find the *commit-point* (next section); come back.
+If you can't name where the durable evidence would be, you do not yet understand the system well enough to debug it. Read the code that does the work; find the line at which durability happens (the COMMIT, the fsync, the ACK); come back. (Step 4 defines this **commit-point** vocabulary in more detail.)
 
 ### Step 2: Compare evidence to the failure claim
 
@@ -88,7 +88,7 @@ When the evidence verdict is **did-happen**, the bug lives somewhere on the caus
 | SQL script | Statement, ON-COMMIT trigger, deferred-constraint check, transaction-scope cleanup |
 | Shell script | Command, redirection, EXIT/ERR trap, subshell exit, `set -e`-driven abort |
 | Spark / distributed job | Action's executor-side cleanup, driver-side post-action work, JDBC driver close, session/context stop, shutdown hook, JVM shutdown |
-| Container | Process exit code → wrapper interpretation → STOPSIGNAL handling → post-stop hooks → container-runtime exit code |
+| Container | STOPSIGNAL handling → process exit → post-stop hooks → container-runtime exit code → wrapper / orchestrator interpretation |
 | Wrapper / orchestrator | Wrapper's post-process check (probe, status query), exit-code interpretation, alerting rule, monitor-side check |
 
 **Trace procedure**:
@@ -96,7 +96,7 @@ When the evidence verdict is **did-happen**, the bug lives somewhere on the caus
 1. **Locate the commit-point precisely.** File + line, or query + clause, or command + redirection — whatever pins durability in this substrate. If you can't pin it, you can't use this method; say so and stop until you can.
 2. **Locate the signal-point precisely.** The actual source of the FAILED status, not where it was observed. Walk back observers: who set this badge → reading what value → from which subprocess → whose return code.
 3. **Enumerate the path.** Every step between commit-point and signal-point in this substrate. Hooks, triggers, traps, cleanup handlers, and wrapper observers all count. Write the list down — guessing about completeness defeats the method.
-4. **Rank suspects.** Likelihood-of-throw factors: recent changes (`git blame` the path), known-flaky steps (Spark Connect lifecycle, kubectl probes, anything network), external-dependency steps, steps that touch the durable store after commit (re-reads, fresh queries, downstream FKs).
+4. **Rank suspects.** Likelihood-of-throw factors: recent changes (`git blame` the path), known-flaky steps (Spark Connect lifecycle, kubectl probes, network-touching steps generally), external-dependency steps, steps that touch the durable store after commit (re-reads, fresh queries, downstream FKs).
 5. **Bisect.** Pick the highest-likelihood suspect; instrument it (log line, breakpoint, intermediate state query). Each negative narrows the path; do not skip the instrumentation in favor of guessing further.
 
 **Strong recommendation, not a hard gate.** The hard gate is the premise verification (Steps 1-3 above). Step 4 is the methodology *given* you're past the gate. Hard-gating "you must enumerate every hook" invites malicious compliance; the discipline is the named-pivots + enumerate-then-bisect shape, not a checklist.
@@ -126,7 +126,7 @@ This skill is **MANDATORY** when:
 
 - The substantive evidence is the same thing as the failure signal (e.g., compiler reports a syntax error AND there is no compiled output to check — the report IS the substantive truth).
 - Trivial failures where the evidence and the claim are obviously the same (e.g., `command not found` — there's no work to have happened).
-- The user has already done step 1 and 2 and tells you which layer to investigate.
+- The user has already done Steps 1–3 and tells you which layer to investigate (or, given that layer is the signal layer, has already named the suspect step on the causal path).
 
 ## Iron Laws
 
