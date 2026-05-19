@@ -245,6 +245,7 @@ When invoked, run this workflow:
 4. **Detect** handoff signals (agent-ready, PTAL, LGTM, etc.)
 5. **Report** the structured summary to the user
 6. **Recommend** next action: fix blocking items, respond to questions, merge, or wait
+7. **Feed the lessons-learned ledger** — for any human-reviewer comment that flags a recurring pattern (the reviewer says "again," "always," "we keep doing this," or you recognize the pattern from prior PRs), invoke [skill:lessons-learned] to log or bump the entry in `LESSONS.md`. Skip one-off bugs and pure style preferences.
 
 # Attribution policy
 

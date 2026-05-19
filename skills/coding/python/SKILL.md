@@ -6,6 +6,13 @@ routed-by: coding-standards
 
 # Python Style
 
+## Companion shelves
+
+Always-on: [rule:principles], [rule:python].
+For deeper rationale load:
+- [skill:effective-python] — canonical Python idioms.
+- [skill:clean-code] — naming, function size, error handling.
+
 Apply these conventions when writing or reviewing Python code. See [reference.md](reference.md) for data structure selection, string formatting, logging, testing, project structure, and anti-patterns.
 
 ## Language Version
@@ -130,6 +137,8 @@ count: int = 0              # just use: count = 0
 - Complex types get a `TypeAlias`: `Coordinate: TypeAlias = tuple[float, float]`
 
 ## Tests and Documentation — non-negotiable
+
+This section operationalizes criteria (b), (c), and parts of (d) from the workspace-wide [rule:definition-of-done]. The rule below is the canonical Python-side enforcement; the always-on file is the cross-language summary.
 
 Every code change ships with three things in the same PR:
 

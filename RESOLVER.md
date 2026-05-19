@@ -46,6 +46,8 @@ Before ANY of the following, you MUST read `skills/thinking/think/SKILL.md` and 
 
 The `think` gate is not a pattern-match entry below — it is the **first gate**. Every other pattern in this resolver assumes `think` has already fired.
 
+**Companion gate: `survey-context`.** When the task references existing entities (models, tables, functions, files, APIs, env vars), `skills/thinking/survey-context/SKILL.md` is the author-time counterpart to the static scanner. Run it before authoring code that touches existing infrastructure. Pairs with `think` Step 1 (Context) and self-review's `Goal source:` field.
+
 ---
 
 ## How to use
@@ -107,6 +109,11 @@ These rules take precedence over anything in individual skill files:
 | Write a Rundeck job YAML | `electinfo_claude_skills/skills/rundeck-job/SKILL.md` |
 | Review existing code (yours or others') | `skills/coding/code-review/SKILL.md` |
 | Review an extracted QML component (properties-in / signals-out, MuseScore plugins) | `skills/coding/qml-component-review/SKILL.md` |
+| Write Scala on Databricks notebooks, `.scala` files, `Dataset[T]` Spark code | `skills/coding/scala-on-spark/SKILL.md` (delegates to `shelves/languages/effective-java/`, `effective-kotlin/`, and `coding/spark/`) |
+| Design a service / module boundary | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/engineering-principles/clean-architecture/SKILL.md` |
+| Pick a storage engine, replication scheme, or partitioning strategy | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
+| Write a Python utility, helper, formatter, validator, file/path/HTTP/spatial helper | `skills/_siege-utilities-rules.md` (check `siege_utilities` first) |
+| Do any spatial work — pick engine, write spatial SQL/Python/Scala, run a spatial join | `skills/analysis/spatial/SKILL.md` (router; dispatches to `coding/postgis`, `coding/geopandas`, `coding/sedona`, `coding/duckdb-spatial`) |
 
 ### Design & planning
 
@@ -166,7 +173,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
 5. **Ticket-required + Epic-in-project + Dependency-clear**: Any work that creates a change in state or behavior of the software that will impact the product requires a ticket. Typographical corrections with no functional effect are exempt. That ticket must belong to a project or epic — unprojected tickets are not worked. All blocking upstream tickets must be Done before you start. Include the ticket reference in every commit. Read `skills/planning/pre-work-check/SKILL.md` before starting any such work.
 
-6. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write. The PR base is `develop` (or its synonym — `dev`, `development`, `staging`, `next`, `integration`, `trunk`), NOT `main`. **Invariant:** `main` is a subset of `develop`. If `develop` is missing or stale, STOP and ask the user — do not silently create develop and do not silently fall back to main. See `skills/git-workflow/develop-guard/SKILL.md`.
+6. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write. The PR base is `develop` (or its synonym — `dev`, `development`, `staging`, `next`, `integration`, `trunk`), NOT `main`. **Invariant:** develop is the origin of all work. `main` is downstream of develop, never upstream of unblessed work. Recurring stale-develop is workflow drift to *repair*, not a workflow to *accept*. If `develop` is missing or stale, STOP and ask the user — do not silently create develop, do not silently fall back to main, and do not patch the rule to accommodate the violation. See `skills/git-workflow/develop-guard/SKILL.md`.
 
 7. **Dual-mirror check** (for dual-tracked repos electinfo↔gitlab): after acting on one side, mirror to the other.
 

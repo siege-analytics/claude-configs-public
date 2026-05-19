@@ -29,7 +29,7 @@ Body rules:
 - Wrap at 72 chars
 - Say *why*, not *what* (the diff shows what)
 - Reference issues / PRs by number
-- No AI attribution — see Attribution above
+- No AI attribution -- see Attribution above
 
 ## Docstrings (Python)
 
@@ -68,11 +68,11 @@ Public functions and methods must be annotated (arguments + return). Use modern 
 def f(x: int | None = None) -> dict[str, list[Coordinate]]:
 ```
 
-Not `Optional[int]`, not `Dict[str, List[Tuple[float, float]]]` — those are legacy typing module forms.
+Not `Optional[int]`, not `Dict[str, List[Tuple[float, float]]]` -- those are legacy typing module forms.
 
 ## Comments
 
-Default to no comment. Write one only when the *why* is non-obvious: a hidden constraint, a workaround for a bug, an invariant. Don't narrate *what* the code does — the code already does.
+Default to no comment. Write one only when the *why* is non-obvious: a hidden constraint, a workaround for a bug, an invariant. Don't narrate *what* the code does -- the code already does.
 
 Never reference the current task in a comment (`# added for issue #123`). That rots. Put context in the commit message.
 

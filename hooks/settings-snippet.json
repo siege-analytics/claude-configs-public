@@ -18,6 +18,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/bash/destructive-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "/path/to/claude-configs-public/hooks/infrastructure/catalog-guard.sh",
             "timeout": 10
           },
@@ -44,6 +49,61 @@
           {
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/git/no-broad-staging.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/self-review.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/survey-context.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/detect-ai-fingerprints.sh",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/write-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/write-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__session__send_agent_message",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/agent-comms/no-slug-form-outbound.sh",
             "timeout": 10
           }
         ]

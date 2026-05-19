@@ -8,6 +8,16 @@ paths: "**/*.py"
 
 # Python Engineering Patterns
 
+## Companion shelves
+
+Tier A delegation. The deep rationale lives in:
+- [skill:effective-python] — Pythonic structure.
+- [skill:using-asyncio-python] — async patterns.
+- [skill:clean-code] — DRY, function discipline.
+- [skill:design-patterns] — GoF in Python.
+
+Use the rules below for Siege-specific conventions; load the shelf books for principle-level reasoning.
+
 Apply these to library code — things imported and called by other modules. See [reference.md](reference.md) for specific before/after refactors and the Geographic Data Science with Python ESDA patterns.
 
 ## DRY — extract when duplication is real
@@ -265,4 +275,4 @@ Any linter catches this. Still worth naming because it comes up in review.
 
 ## Attribution Policy
 
-See [`../../_output-rules.md`](../../_output-rules.md). NEVER include AI or agent attribution.
+See [rule:output]. NEVER include AI or agent attribution.

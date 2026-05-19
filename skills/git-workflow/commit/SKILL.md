@@ -7,7 +7,9 @@ allowed-tools: Read Grep Glob Bash
 
 # Instructions
 
-0. **Branch guard — verify you are NOT on a protected branch**
+0. **Verify-before-execute** -- emit the verification block from [rule:verify-before-execute] for the commit you are about to make. The Standards line must include `[skill:commit]` and the relevant project/language rules; the Intent line must summarize what the commit accomplishes; the Evidence line (if this is a fix) must reference same-turn tool calls demonstrating the bug. Skipping requires `[verify-skip: <reason>]` -- and `[verify-skip]` does NOT exempt the commit from any later step in this skill.
+
+0.5. **Branch guard -- verify you are NOT on a protected branch**
    1. Run `git branch --show-current` to get the current branch name
    2. If the branch is `main`, `master`, `develop`, `dev`, `development`, `staging`, `next`, or `integration` → **STOP**
    3. Inform the user: "You are on `{branch}`. Commits should go on a feature branch, not directly on a protected branch."
@@ -23,12 +25,23 @@ allowed-tools: Read Grep Glob Bash
    2. Separate unrelated changes into distinct commits
    3. Stage specific files by name -- avoid `git add -A` or `git add .` which can accidentally include secrets, build artifacts, or large binaries
    4. Never commit `.env`, credentials, tokens, or other sensitive files
-3. **Check for a ticket reference** (see Ticket enforcement below)
+3. **Run the AI-fingerprint scanner first, then code review** (see Pre-review gate below)
+   1. Invoke [skill:detect-ai-fingerprints] against the staged diff. Non-zero exit blocks the commit; resolve every reported violation before proceeding (no override).
+   2. Invoke [skill:code-review] against `git diff --cached` for the structural rules and the six-layer methodology.
+   3. Resolve every Blocker; resolve Majors or document why they're being deferred.
+   4. If the user overrides in writing, mark the commit with `[review-skip]`. Note: `[review-skip]` does not exempt the fingerprint scan; that scan has no override.
+4. **Run affected tests** (see Affected-tests gate below)
+   1. For each `.py` source file in the staged diff under `<package>/`, run `pytest -x tests/test_<X>.py tests/test_<X>_*.py tests/<package>/test_<X>.py` if any exist.
+   2. Per-repo override: if `.claude/affected-tests.toml` exists, use its source-glob to test-glob mapping instead of the default heuristic.
+   3. 60-second timeout per affected-test run. Tests slower than that get marked `slow` and run at PR-open time only.
+   4. Non-zero exit blocks the commit. No silent skip: if the heuristic finds no test files for a touched source file, that itself is reported and the agent decides whether to write a test or proceed with `[run-skip: <reason>]`.
+   5. Override syntax: `[run-skip: <reason>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per `[rule:writing-code]` writing-code:5 escape hatch. Track override frequency; using it more than once per session is a smell.
+5. **Check for a ticket reference** (see Ticket enforcement below)
    1. If no ticket exists for this work, stop and create one first
    2. If the user explicitly overrides, mark the commit with `[no-ticket]`
-4. Write the commit message (see Message structure below)
-5. **Verify ticket reference is in the footer**
-6. Verify after committing
+6. Write the commit message (see Message structure below)
+7. **Verify ticket reference is in the footer**
+8. Verify after committing
    1. Run `git log -1` to confirm the message looks correct
    2. Run `git status` to confirm nothing was missed or accidentally included
 
@@ -41,6 +54,102 @@ A commit is a unit of meaning, not a unit of time. Each commit should represent 
 **Commit the why, not the what.** The diff shows what changed. The message explains why it changed. Code that is obvious from the diff does not need narration. Decisions, tradeoffs, and constraints do.
 
 **Commit often.** Small, frequent commits are easier to review, bisect, and revert than large, infrequent ones. When in doubt, commit more granularly.
+
+# Pre-review gate
+
+**Every commit gets a code-review pass before it lands.** This is the operationalization of criterion (a) of [rule:definition-of-done] at the pre-commit transition -- not just at PR-open.
+
+## What runs
+
+After staging and before writing the message, invoke [skill:code-review] with the staged diff as input:
+
+```bash
+git diff --cached
+```
+
+The code-review skill walks its standard six layers (correctness, security, data integrity, performance, error handling, readability) and reports findings with severity.
+
+## Decision tree
+
+```
+Code-review finished?
+├── No Blockers, no unresolved Majors? → Proceed to ticket check
+├── Blockers exist? → STOP. Fix and re-stage. Do not commit.
+├── Majors exist?
+│   ├── Fix in this commit? → Re-stage, re-review
+│   ├── Defer to a follow-up ticket? → Create the ticket NOW, link in commit body, then commit
+│   └── User explicitly overrides? → Add [review-skip] to commit body with rationale
+└── Only Minors / Nits? → Proceed; address inline in the same commit if cheap
+```
+
+## Override syntax
+
+Override is for cases where the review surfaced a real finding but the right place to fix it is somewhere else (different commit, different repo, different sprint) -- not for skipping the review itself. The review still runs; the override only acknowledges deferred Majors.
+
+```
+[review-skip] Performance finding in legacy module deferred to ELE-512 -- out of scope for this commit.
+```
+
+If you find yourself reaching for `[review-skip]` more than once a week, the threshold is wrong somewhere -- either the review is flagging too aggressively, or the work is being scoped too broadly. Surface it in retrospective rather than normalizing the override.
+
+## Why pre-commit, not just pre-PR
+
+Catching findings at commit time is cheaper than catching them at PR time:
+- The change is fresh in your head -- context-switch cost is zero.
+- The diff is small -- one commit's worth of code, not a PR's worth.
+- No collaborators are blocked -- no one is waiting on the PR.
+- Findings turn into the next commit instead of a force-push.
+
+The pre-PR review (in [skill:create-pr]) still runs -- it's a second pass over the cumulative diff and catches things that only emerge across multiple commits (architectural drift, accidental scope creep). The two reviews are complementary, not redundant.
+
+# Affected-tests gate
+
+Mechanical enforcement of `[rule:writing-code]` writing-code:5 (no hypothetical code). Before the commit lands, the tests that cover the touched code must be run and must pass.
+
+## What runs
+
+For each `.py` source file in `git diff --cached --name-only`, identify candidate test files using the default heuristic. Given a touched file at `<package>/X.py`, look for:
+
+- `tests/test_X.py`
+- `tests/test_X_*.py`
+- `tests/<package>/test_X.py`
+
+Run `pytest -x` against any that exist. Stop at the first failure (`-x`).
+
+Timeout: 60 seconds per affected-test run. Tests slower than that should be marked `slow` and run at PR-open time instead of commit-time.
+
+## Per-repo override
+
+If `<repo-root>/.claude/affected-tests.toml` exists, use its source-glob to test-glob mapping instead of the default heuristic. Format:
+
+```toml
+[mappings]
+"siege_utilities/connectors/*.py" = "tests/connectors/test_{stem}.py"
+"siege_utilities/spark/*.py" = "tests/spark/test_{stem}.py tests/integration/test_spark_{stem}.py"
+```
+
+The `{stem}` template variable substitutes the basename without extension. Use this when the project's test layout does not match the default `tests/test_X.py` pattern.
+
+## What happens when no test file matches
+
+If a touched source file has no candidate tests under the heuristic (or the configured mapping), the agent must decide:
+
+- Write a test in the same commit (preferred; `[rule:writing-tests]` writing-tests:1 requires it for behaviour changes anyway).
+- Override with `[run-skip: <reason>]` in the commit body. Legitimate cases: pure refactor with no behaviour change, deletion of dead code, docstring-only edits to a public symbol that should also be running R-17.
+
+A missing test file is not a silent pass. The agent must surface it and the operator sees the `[run-skip]` if one is used.
+
+## Override
+
+```
+[run-skip: pure-rename, no behaviour change; affected tests in tests/test_old_name.py run on the next behaviour change]
+```
+
+Using `[run-skip]` more than once per session is a smell. The threshold is wrong somewhere -- either the affected-tests heuristic is mis-configured for the project, or commits are being scoped to changes that should not be committed without tests.
+
+## Why this exists
+
+`[rule:writing-code]` writing-code:5 requires that code depending on a library, service, or external API exercises the real dependency before claiming the code works. The honor-system version of that rule is "I checked." The mechanical version is "the tests ran and passed in the same commit-attempt." This gate is the mechanical version.
 
 # Ticket enforcement
 
@@ -144,20 +253,25 @@ hotfix: Remove Sedona JAR reference that crashes executor pods
 
 ## Body
 
-The body is optional for trivial changes but expected for anything non-obvious. Wrap lines at 72 characters.
+The body is optional for trivial changes and expected for anything non-obvious. Wrap lines at 72 characters. Plain prose only -- no bullets, no headers, no `## Summary` / `## Why` / `## Test plan` sections (those belong in the PR body, not the commit body). Length is determined by what the why genuinely requires: a typo fix is one line, a non-obvious rewrite may be three paragraphs.
 
 ### What to include
 
-- **Why** this change was made (the motivation, not a restatement of the diff)
-- **What tradeoff** was chosen if alternatives existed
-- **What is not obvious** from the diff alone (e.g., a subtle side effect, a constraint from an external system)
-- **What was intentionally left out** if the scope was deliberately limited
+Write a few sentences of plain prose covering whichever of these the change actually requires:
+
+- The motivation for the change, where the diff alone does not make it obvious.
+- The tradeoff chosen if alternatives existed, and a sentence on why each alternative was rejected.
+- Constraints from external systems, subtle side effects, or assumptions a future reader will not see in the diff.
+- What was left out and why, if the scope was bounded.
 
 ### What to omit
 
-- Play-by-play of the diff ("Changed line 48 from int to str")
-- Filler ("This commit updates the code to...")
-- Attribution to tools or assistants (see Attribution policy below)
+- Bullets and section headers. Bullets in commit bodies are a tell; the commit body is prose.
+- Self-justifying adverbs (the seven words named in `[rule:writing-prose]` writing-prose:3); see that rule for the list.
+- Em-dashes (`--`). Use `--`, a comma, or a period. Per `[rule:writing-prose]` writing-prose:1.
+- Play-by-play of the diff ("Changed line 48 from int to str").
+- Filler ("This commit updates the code to...").
+- Attribution to tools or assistants (see Attribution policy below).
 
 ### Example body
 
@@ -281,17 +395,21 @@ If it was already committed, remove it from history and rotate the credential im
 - No "Generated with Claude Code", "Made with Cursor", "Built with Codex", or any AI tool mentions
 - No `🤖`, `[bot]`, or other markers that signal AI involvement
 - No attribution to any AI assistant, code generation tool, or agent framework
-- This applies to the subject line, body, and footer — every part of the commit message
+- This applies to the subject line, body, and footer -- every part of the commit message
 
 # Checklist
 
-- [ ] **Not on a protected branch** (main, develop, etc.) — or user explicitly overrode with `[direct-commit]`
+- [ ] **[rule:verify-before-execute] block emitted** -- Standards, Intent, and (for fixes) same-turn Evidence
+- [ ] **Not on a protected branch** (main, develop, etc.) -- or user explicitly overrode with `[direct-commit]`
 - [ ] Changes are grouped into logical, single-purpose commits
 - [ ] Files are staged by name, not with `git add -A`
 - [ ] No sensitive files (secrets, credentials, keys) are staged
+- [ ] **[skill:detect-ai-fingerprints] ran clean** on the staged diff and the proposed commit message (no override)
+- [ ] **[skill:code-review] ran on the staged diff** -- Blockers resolved, Majors addressed or deferred-with-ticket, or `[review-skip]` documented in commit body
+- [ ] **Affected tests ran and passed** -- per the heuristic or `.claude/affected-tests.toml`, or `[run-skip: <reason>]` documented in commit body
 - [ ] Subject line: type prefix, imperative mood, under 72 chars, specific
 - [ ] Body explains the why (if the change is non-trivial)
-- [ ] **Footer references the relevant ticket(s)** — mandatory unless user overrides with `[no-ticket]`
+- [ ] **Footer references the relevant ticket(s)** -- mandatory unless user overrides with `[no-ticket]`
 - [ ] Ticket exists for this work (if committable, it's ticketable)
 - [ ] No AI/agent attribution anywhere in the commit message
 - [ ] Verified with `git log -1` and `git status` after committing
