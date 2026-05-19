@@ -64,6 +64,20 @@ Both carve-outs require a one-line comment naming why no test exists. Without th
 
 The session's concrete instance: the gazetteer Census backend caught `requests.exceptions.RequestException` and fell back to TIGERWeb, but no test forced the Census request to fail. The fallback shape was assumed correct because the happy path returned the same data shape; in practice the fallback path returned a different schema. Mechanical detection is partial (cross-file evidence; tracked at upstream issue #56 for v1.6.2); judgment-enforced via `[skill:code-review]` until the scanner enhancement lands. Pairs with `[rule:writing-code]` writing-code:7 (silent error swallowing): writing-code:7 requires a defined handler shape; writing-tests:5 requires a test that proves the handler does what the shape claims.
 
+**writing-tests:6. Inspection tests are acceptable for inspection-detectable bugs only; behavioral bugs need behavior tests.**
+
+A source-grep regression test (e.g. `inspect.getsource(fn)` or a file-text read followed by `assert pattern in src`) satisfies writing-tests:1 (goes red on revert) but only when the bug under test is itself inspection-detectable: a missing import, a wrong decorator name, a deleted line, a removed conditional. For behavioral bugs (wrong return value, silent exception swallowing, logic error, schema mismatch), inspection tests are insufficient -- they assert the code LOOKS a certain way, not that it BEHAVES a certain way. The test must exercise the code path under realistic conditions.
+
+Two practical corollaries from the failure cases that drove this rule:
+
+(a) **Inspection-based source-greps must strip comments before matching when the production code might contain explanatory comments quoting the pre-fix shape.** Comments that document "pre-fix this was X" routinely false-positive `assert X not in src` checks. Either strip comments in the test (`line.split("#", 1)[0]`) or use AST-based introspection. Concretely: a test for the post-fix `os.environ["X"]` shape must not match the comment `# pre-fix used os.environ.get("X", "")` as a violation.
+
+(b) **`inspect.getsource(decorated_fn)` returns the decorator's wrapper closure, not the decorated function.** Tests that assert on the source of a `@api_view`, `@click.command`, `@pytest.fixture` -decorated function (or any decorator that returns a closure) will read the wrapper's `def view(request, *args, **kwargs): self.dispatch(...)`, not the function the test author intended. Read the file as text instead; or call `inspect.unwrap(fn)` first when the decorator preserves `__wrapped__`.
+
+Forward-only. Existing inspection tests are eligible for promotion to behavior tests when the surrounding code is next touched; bulk-rewriting is out of scope.
+
+The session's concrete instances: two PRs in the same session shipped source-grep tests that read DRF decorator wrappers instead of the decorated functions (PR #122 boundary_detail decorator; PR #153 helper-call assertions). Both had to be rewritten to read the file as text. A third PR (#157) shipped a source-grep that matched its own explanatory comment in the production file; rewritten with comment-stripping.
+
 ## Override
 
 These rules are mandatory. No `[test-skip]` override. The rule-7 grep ("test files importing their module under test") and the rule-15 skip-message check land in `[skill:detect-ai-fingerprints]` as mechanical enforcement; the mock-fidelity rule lands as `[skill:code-review]` judgment until project-namespace detection for the mechanical check is built.

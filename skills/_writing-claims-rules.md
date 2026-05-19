@@ -47,6 +47,23 @@ Bad-example catalog (sessions 260502-vital-channel + 260502-pure-vista, 2026-05-
 
 Carve-out: operator-stated-importance can collapse N=3 to N=1. When operator explicitly names something as "this should be a rule," the operator's statement IS the sample-of-importance; ship the rule. Operator's "I think this is right" + "all three" on the shelf-recommendations doc was operator-promotion of the priority list without N=3 of identical work; operator authority wins.
 
+**writing-claims:7. Verify finding-text against live source before scoping work from it.**
+
+When acting on a claim from a prior ticket, postmortem, design note, review, or any artifact authored at-an-earlier-state of the code, verify the artifact's factual claims against the current live source before scoping the work. The artifact records what was true at authoring time; the work happens against what is true now. Treating prior-artifact text as ground truth produces wrong-scoped fixes.
+
+Same shape as writing-claims:1 (grep before declaring a fix complete) and writing-claims:5 (verify before recommending an external resource), applied to internal artifacts. Survey-context-skill's consult step handles this implicitly when the artifact is an entity doc page; this rule covers the broader surface of acting on findings, tickets, and reviews.
+
+Operationalization: before writing the first line of a fix, re-read the relevant source files and confirm:
+(a) the count or enumeration in the finding-text matches what exists ("duplicated across 4 endpoints" -> grep the actual count; if it is 3, the helper extraction has different scope).
+(b) the type/shape claims in the finding-text match what is declared ("object_id is integer PK" -> read the model definition; if it is CharField, the proposed fix is the wrong shape).
+(c) the file paths, line numbers, and symbol names still exist post any landed fixes between the artifact's authoring date and now.
+
+Bad-example catalog from sessions 260502-vital-channel + sibling (2026-05-18):
+- A2/SW#113 retraction: review asserted `DemographicSnapshot.object_id` was IntegerField PK without checking the source. Source showed CharField geoid-string. The retraction cost a closed ticket + author embarrassment; the rule firing on its own author in PR #113's review was the moment that shaped survey-context skill design.
+- A6/SW#117: finding-text said "duplicated across 4 endpoints"; live source had 3 error-responding sites + 2 loop sites with different semantics. The intended helper would have over-generalized had the author scoped from finding-text alone.
+
+The artifact is authored-at-a-prior-state. The work is against current-state. The reconciliation is the rule.
+
 ## Override
 
 These rules are mandatory. No `[claim-skip]` override and no `[padding-skip]` override. The same-turn-evidence constraint and the artifact-backing requirement are the entire point; an override defeats the rule. The writing-claims:4 carve-out for new-rule-authoring is in the rule, not an override. `[skill:detect-ai-fingerprints]` trigger-set extension for writing-claims:4 pattern-naming detection is tracked as a v2.x.y follow-up.

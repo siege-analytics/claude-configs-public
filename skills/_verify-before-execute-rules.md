@@ -158,6 +158,23 @@ Use cases for the override are narrow:
 > ```
 > [proceeds with Edit]
 
+## Test-before-bulk (sub-rule)
+
+**Any batch operation that touches >= 20 distinct items (tickets, files, records, API calls, rows) MUST run on 3-5 items first, the result MUST be verified manually, and only then may the full batch proceed.**
+
+Operationalization: build the operation as a parameterized script with a `--limit N` (or equivalent) flag. Run with `--limit 3` (or 5 for higher variance). Inspect every output. If correct, re-run without the limit. If wrong, fix the script and repeat the limited run; do not scale wrong code.
+
+This was a memory-tier discipline (Craft Agent operator memory; resolver universal-check list). Promoted to per-act rule status because the discipline failed to fire in scope multiple times across recent sessions:
+
+- Prior session: bash array indexing bug caused 13 garbage tickets to be filed in a single batch run; all 13 had to be closed manually with explanatory comments and re-filed.
+- Session 260502-vital-channel: filed 16 E1 delta/swh tickets in one Python-subprocess batch, then 13 more settings/mgmt tickets in a second batch. Neither tested 3-5 first. Got lucky; the bash-bug shape did not reproduce.
+
+Memory-tier rules are discoverable only by agents who have loaded the relevant memory file; per-act rules are discoverable via the resolver's writing-* shelf-pattern and via skill cross-reference. The shelf surface is more reliable.
+
+Carve-out: batches of identical-shape, side-effect-free reads (e.g. 100 `gh issue view` calls in a status sweep) do not require the 3-5-sample test. The rule applies when the batch is a write surface where mistakes are visible to others or hard to reverse: ticket creates, PR creates, file generates, API mutations, DB writes.
+
+Same shape as `[rule:writing-claims]` writing-claims:1 (grep before declaring a fix complete): both demand a falsifying check before declaring success. Test-before-bulk demands the same check before COMMITTING to scale.
+
 ## Relationship to other rules
 
 - **`[skill:think]`** is the design gate that runs *before* verify-before-execute on non-trivial actions. Where think exempts (single-line fixes, step-by-step user instructions, doc-only edits, git ops), the Design line is omitted from the verify block. Where think fires, the Design line names where in this conversation think happened. The two are paired: think produces the design; verify references it.
