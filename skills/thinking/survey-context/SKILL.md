@@ -170,9 +170,30 @@ The companion hook (`survey-context.sh`, see Known Limitations) enforces this wh
 - Triggered by entity-naming in the task description.
 - Operator-invokable as `/survey-context`.
 
+## v2.2: optional Watched paths (evidence-collection minimal)
+
+Entity doc pages may declare an optional `**Watched paths:**` field listing glob patterns (relative to repo root, backtick-quoted, comma-separated). When the pushed diff touches a file matching any of these patterns, the same doc-touch DoD applies as for the Definition file. Use this to extend protection to important callers, sibling modules, or related infrastructure that doesn't live at the entity's Definition.
+
+Format:
+
+```
+**Definition:** `socialwarehouse/warehouse/models/dimensions.py:218`
+**Watched paths:** `socialwarehouse/warehouse/services/dimension_loader*.py`, `socialwarehouse/warehouse/migrations/*.py`
+```
+
+Globs use bash's `case`-pattern syntax (`*` `?` `[]`; no `**`). Per-pattern backtick-quoted; the parser walks the line and extracts every `pattern` token. Order does not matter. Empty / missing field → no watched paths, v2.1 behavior unchanged.
+
+v2.2 is an **evidence-collection minimal** — operator-curated glob patterns rather than mechanical caller-discovery. The BLOCK message distinguishes `[v2.1 definition-file match]` from `[v2.2 watched-path match]` so the firing log can separate the two trigger families. Use v2.2 firings over the next several sessions to evaluate whether caller-side enforcement is justified at higher coverage, or whether the file-based shape is the right ceiling.
+
+Carve-outs for v2.2 watched paths:
+- Patterns are operator-declared per-entity. No automatic caller discovery.
+- Test files / generated files / vendored code can be excluded by simply not listing them.
+- No AST awareness. Touching the file in any way (including unrelated edits to other functions in the same file) counts as a watched-path touch. Bigger granularity tradeoff than file-based mechanical detection would require if v2.3 brings it.
+
 ## Known limitations
 
-- **Hook enforcement deferred** to v2.1. The shape-change → doc-touch DoD is operator-auditable for now; a future `survey-context.sh` will block pushes that miss the doc update.
+- **Hook enforcement** for v2.1 (definition-file match) shipped at `hooks/git/survey-context.sh`. v2.2 extends the same hook with Watched-path glob matching as of this skill's v2.2 revision.
+- **Caller-side enforcement coverage** is bounded by what operators put in Watched paths. v2.3 (symbol-based AST detection) is deferred until evidence from v2.2 firings either justifies the broader scope or argues it would over-cover.
 - **Bootstrap tool deferred.** Mass-seeding entity docs from introspection across a repo is its own scope, filed separately.
 - **Drift-ticket auto-filing deferred.** Currently the survey records drift; the operator files the ticket manually. Future tooling can auto-file.
 - **Doc-page rendering / search deferred.** Docs are plain markdown; readable in repo. A search UI is not in scope.

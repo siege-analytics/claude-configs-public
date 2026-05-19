@@ -43,6 +43,7 @@ List project-specific surveyor recipes in `recipes/`. Examples:
 # <Entity name> (<type>, <namespace>)
 
 **Definition:** <file:line>
+**Watched paths:** `<glob1>`, `<glob2>`  <!-- Optional v2.2 field. Backtick-quoted comma-separated globs (bash `case`-pattern; no `**`). Hook fires if any diff file matches. Use sparingly; intended for important callers that should track contract changes. Leave the field absent if not needed. -->
 **Surveyed at:** <YYYY-MM-DD>
 **Owner:** <team / role>
 
