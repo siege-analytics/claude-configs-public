@@ -165,7 +165,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
 2. **Brain-first** (borrowed from GBrain): before calling any external API or running any mutation, check if we have the answer / target already. Re-use before recreating.
 
-3. **Verify-failure-premise**: before debugging a reported failure (someone else's report OR your own non-zero exit), confirm the work actually didn't happen. Look at substantive evidence — output files, DB rows, audit tables — NOT just the failure signal. If evidence says the work succeeded, the reporter is the bug; investigate the signal layer (wrapper, post-success cleanup, exit-code instrumentation), not the work layer. See `skills/thinking/verify-failure-premise/SKILL.md`. Iron law: state the evidence verdict (did-happen / didn't-happen / ambiguous) explicitly before picking an investigation layer.
+3. **Verify-failure-premise**: before debugging a reported failure (someone else's report OR your own non-zero exit), confirm the work actually didn't durably commit. Look at **durable-commit evidence** (fsync / COMMIT / ACK / downstream-observable in a fresh transaction or process), NOT the failure signal. If evidence says the work succeeded, the reporter is the bug — trace the **causal path** from commit-point to signal-point (enumerate every step between durability and the FAILED status; bisect by instrumentation, not hunch). See `skills/thinking/verify-failure-premise/SKILL.md`. Iron law: state the evidence verdict (did-happen / didn't-happen / ambiguous) explicitly before picking an investigation layer; pin both pivots before tracing.
 
 4. **Test-before-bulk**: any batch operation (≥20 items) runs on 3–5 items first, verifies, then scales.
 
