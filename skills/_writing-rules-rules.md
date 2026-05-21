@@ -158,7 +158,71 @@ Falsification: A getattr-based callsite or test discovers the old name
 
 If the observable named in Falsification later surfaces, the original Trivial-change declaration is itself the artifact that needs revising — it claimed the change couldn't produce errors, but it did. The post-error response is to file a ticket retroactively, citing the failed block, and document the revision in a `## Post-error revision` section on that ticket. If a whole category keeps falsifying (e.g., `private-rename` claims keep producing errors because of dynamic dispatch the agent missed), the category itself comes off the trivial-safe list — the controlled vocabulary gets revised.
 
-The full post-error-revision discipline is a separate follow-up; this rule ships the substrate.
+The full post-error-revision discipline is writing-rules:6 below.
+
+**writing-rules:6. After a failure contradicts a documented Assumption, the originating ticket gets a Post-error revision block before the fix or revert PR lands.**
+
+writing-rules:5 ships the substrate (Cannot-produce-error claims with Falsification observables). writing-rules:6 ships the back-edge: when one of those observables surfaces — or any documented Assumption is contradicted by empirical evidence — the originating ticket gets a structured revision block. Engineering knowledge then compounds on the ticket instead of being re-discovered by the next agent who reads the same wrong Assumption.
+
+### When the loop fires (six triggers)
+
+| Trigger | What it looks like | Where the revision goes |
+|---|---|---|
+| Runtime failure (any deployed env) | Page, customer report, bad data, exception in dev/staging/prod logs, failed smoke test on a preview deploy, repro on a developer's local end-to-end stack | Originating ticket of the failed-Assumption work |
+| CI regression | Test that wasn't catching the regression now catches it; OR new test fails against pre-fix code | Originating ticket of the work that introduced the regression |
+| Post-merge code-review finding | Reviewer of a later PR identifies a contradiction with an earlier PR's stated invariants | The earlier PR's originating ticket |
+| Revert PR | Any revert is itself evidence the original change was wrong | The originating ticket of the reverted change |
+| Trivial-change Falsification surface | The observable named in a Trivial-change block's Falsification field surfaces | A new ticket filed retroactively, citing the failed block as Goal source |
+| Cross-ticket contradiction | A new ticket's investigation falsifies an Assumption documented on a closed ticket | The closed ticket gets the revision; the new ticket cross-links it |
+
+**Not a trigger:** in-loop test failures during the agent's own iteration cycle (write → test → fail → fix, pre-commit). The Assumption being falsified there is one the agent formed minutes ago, not one durably documented on a ticket / self-review artifact / Trivial-change block. The trigger fires only when the falsified belief was already written down somewhere durable.
+
+### Block format
+
+```
+## Post-error revision
+
+Triggered by: <PR # / commit SHA / incident link / failed Trivial-change block path>
+Observed: <empirical evidence of the failure — log line, test output,
+          user report, production incident link, surfaced Falsification
+          observable>
+Falsified assumption: <quote the specific Assumption from the original
+                      ticket / self-review artifact that this evidence
+                      contradicts. If no Assumption was documented, that
+                      absence is itself the falsified belief.>
+Revised model: <what the system actually does, in falsifiable terms —
+               the corrected version of the Assumption>
+Implication: <what changes — file paths edited, docs updated, Assumptions
+             on future tickets, Trivial-change category to remove>
+```
+
+### The discipline
+
+When a trigger fires:
+
+1. Walk failure → commit → PR → ticket. If the chain breaks (no ticket — e.g., a Trivial-change escape), file the missing ticket FIRST, then proceed.
+2. Re-read the originating ticket's Assumptions block. Find the specific belief the failure contradicts.
+3. Append a `## Post-error revision` block to that ticket with the five required fields.
+4. Update the ticket's Assumptions block. The original wrong Assumption is NOT deleted — it is preserved with a `(superseded by Post-error revision YYYY-MM-DD)` annotation, and the revised Assumption is added alongside. The original-wrong + revised-correct pair documents the learning explicitly.
+5. THEN draft the fix or revert PR. Reference the Post-error revision in the PR body via `Refs: <originating ticket> Post-error revision`.
+
+### The Cannot-produce-error → Post-error revision pipeline
+
+writing-rules:5 + writing-rules:6 are a closed loop:
+
+- writing-rules:5: each Trivial-change declaration names a falsifiable Cannot-produce-error claim with an observable Falsification.
+- writing-rules:6: when that observable surfaces, the originating ticket (or a retroactively-filed ticket) gets the revision block.
+- When ≥3 Post-error revisions blame the same Trivial-change Category, the controlled vocabulary itself is revised — the Category comes off the trivial-safe list. v1 does this manually (the agent encountering the third instance files a writing-rules:5 meta-ticket); v2 will automate the count via a CI scanner.
+
+### Enforcement
+
+- **v1 (this rule):** Hook on revert / fix-PR drafts requires `Refs: <originating ticket>` + `Post-error-revision: <link>` trailers in the commit body. The hook delegates to `scripts/discipline/check-post-error-revision.sh` for the block-structure check on the referenced ticket.
+- **v2 (deferred):** CI scanner walks the diff: for any commit whose message contains `fix(...): regression` / `revert`, verifies the referenced ticket has a Post-error revision block dated on or after the commit's authored-date.
+
+Canonical implementations:
+- Prose / template — `post-error-revision/SKILL.md` (the discipline + worked example).
+- Script — `scripts/discipline/check-post-error-revision.sh` (block-structure validation).
+- Hook — `hooks/git/post-error-revision-required.sh` (trailer requirement on revert / regression-fix commits).
 
 ## When this file applies
 
