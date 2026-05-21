@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Systematic code review methodology. Covers correctness, security, performance, readability, and how to prioritize findings.
+description: "MANDATORY review gate for any PR / diff / session-end code. Pre-review (run first): evaluate-ticket against the PR's linked ticket; produce Reviewer Assumptions block (Working as / Reading for / Failure shapes). THEN: mechanical pre-flight scanner + six-layer review (correctness, security, data integrity, performance, readability, ticket-discipline). Reciprocal of self-review's author-side discipline. Do NOT skip this skill; reviewing a diff without first reading the ticket reviews against the reviewer's mental model, not the author's intent."
 disable-model-invocation: true
 allowed-tools: Read Grep Glob
 argument-hint: "[PR-number-or-path] [optional-focus-area]"
