@@ -124,12 +124,13 @@ These rules take precedence over anything in individual skill files:
 
 ### Failure handling
 
-The auto-trigger language in `verify-failure-premise` and `post-error-revision` is honor-system on the agent unless the resolver surfaces it. These rows make that routing explicit.
+The auto-trigger language in `verify-failure-premise` and `post-error-revision` is honor-system on the agent unless the resolver surfaces it. These rows make that routing explicit. **The first action on any failure is the Pre-fix pause, not the fix.**
 
 | Encountering… | Read first |
 |---|---|
-| Failure reported (user, CI, monitor, log, customer); non-zero exit; FAILED badge; unexpected exception or panic | `skills/thinking/verify-failure-premise/SKILL.md` — verify the premise BEFORE debugging the cause; pin commit-point + signal-point; route by did-happen / didn't-happen / ambiguous |
-| `verify-failure-premise` resolved AND the failure contradicts an Assumption documented on a ticket, self-review artifact, or Trivial-change block | `skills/post-error-revision/SKILL.md` — writing-rules:6 back-edge; append the five-field block to the originating ticket BEFORE drafting the fix or revert PR |
+| **ANY failure** — non-zero exit, push-hook block, CI red, FAILED badge, runtime exception, blocked merge, customer report, monitor alert | **Pre-fix pause** (writing-rules:6, post-error-revision Step 0): before attempting a fix, ask "what did I believe that this evidence contradicts?" If the answer names a durable artifact (skill / rule / ticket / hook / docstring / Trivial-change block), the contradiction is a writing-rules:6 trigger — route to the next two rows in order. If the answer is "nothing durable — I formed this belief minutes ago," note in-loop+no-contract explicitly and continue. |
+| Pre-fix pause found a durable contradiction OR the failure shape is unambiguous (production incident, CI regression caught by a test, revert PR being drafted) | `skills/thinking/verify-failure-premise/SKILL.md` — verify the premise BEFORE debugging the cause; pin commit-point + signal-point; route by did-happen / didn't-happen / ambiguous |
+| `verify-failure-premise` resolved AND the failure contradicts an Assumption documented on a ticket, self-review artifact, hook contract, or Trivial-change block | `skills/post-error-revision/SKILL.md` — writing-rules:6 back-edge; append the five-field block to the originating ticket BEFORE drafting the fix or revert PR |
 
 ### Git & tickets
 

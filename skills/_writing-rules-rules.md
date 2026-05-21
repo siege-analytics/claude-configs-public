@@ -175,7 +175,19 @@ writing-rules:5 ships the substrate (Cannot-produce-error claims with Falsificat
 | Trivial-change Falsification surface | The observable named in a Trivial-change block's Falsification field surfaces | A new ticket filed retroactively, citing the failed block as Goal source |
 | Cross-ticket contradiction | A new ticket's investigation falsifies an Assumption documented on a closed ticket | The closed ticket gets the revision; the new ticket cross-links it |
 
-**Not a trigger:** in-loop test failures during the agent's own iteration cycle (write → test → fail → fix, pre-commit). The Assumption being falsified there is one the agent formed minutes ago, not one durably documented on a ticket / self-review artifact / Trivial-change block. The trigger fires only when the falsified belief was already written down somewhere durable.
+**Not a trigger — but only when BOTH conditions hold:** (a) the failure is in the agent's own iteration cycle (write → test → fail → fix, pre-commit), AND (b) NO durably-documented contract is being contradicted anywhere. "Durably documented" includes: hook contracts in `hooks/**`, SKILL.md prose, rule files (`_*-rules.md`), ticket Assumptions blocks, self-review artifacts, Trivial-change blocks, and source-code docstrings on the function being touched.
+
+If a push hook blocks the commit, that's a contract documented in the hook's SKILL.md being contradicted — condition (b) fails, so the carve-out does NOT apply, even though the agent is in their own loop. Same for: a CI lint blocking on a rule the agent's code violates; a type checker rejecting a function signature the agent wrote against a docstring; a downstream consumer flagging a schema change the agent didn't see documented.
+
+The first version of this rule was too generous on the carve-out — three real-time triggers were missed in the rule's own dogfood (siege-analytics/claude-configs-public#169, #178, #181) because "I'm in my own fix loop" was treated as sufficient. It is not. The contradiction can be durably documented even when the agent is mid-iteration.
+
+### Pre-fix pause (the gate)
+
+The first action when ANY failure fires — push-hook block, CI red, runtime exception, blocked merge, customer report — is **not the fix**. It is one sentence, out loud or in chat:
+
+> "What did I believe that this evidence contradicts?"
+
+If the answer names a durable artifact (skill / rule / ticket / hook / docstring / Trivial-change block), the Post-error revision block comes before the fix. If the answer is "nothing durable — I formed this belief minutes ago," the carve-out applies and the fix continues. The pause is the discipline; the documentation step only kicks in if the pause finds a durable contract.
 
 ### Block format
 

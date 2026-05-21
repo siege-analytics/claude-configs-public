@@ -24,11 +24,25 @@ The trigger fires when **a durably-documented Assumption is contradicted by empi
 | Trivial-change Falsification surface | The observable named in a Trivial-change block's Falsification field surfaces | A new ticket filed retroactively, citing the failed block as Goal source |
 | Cross-ticket contradiction | A new ticket's investigation falsifies an Assumption documented on a closed ticket | The closed ticket gets the revision; the new ticket cross-links it |
 
-**Not a trigger:** in-loop test failures during the agent's own iteration cycle (write -> test -> fail -> fix, pre-commit). The Assumption being falsified there is one the agent formed minutes ago, not one documented on a ticket / self-review artifact / Trivial-change block. The trigger fires only when the falsified belief was durably documented somewhere.
+**Not a trigger — but only when BOTH conditions hold:** (a) the failure is in the agent's own iteration cycle (write -> test -> fail -> fix, pre-commit), AND (b) no durably-documented contract is being contradicted anywhere. "Durably documented" includes hook contracts in `hooks/**`, SKILL.md prose, rule files (`_*-rules.md`), ticket Assumptions blocks, self-review artifacts, Trivial-change blocks, and source-code docstrings on the function being touched.
 
-If you're unsure whether something counts: was the belief written down BEFORE the failure surfaced? If yes, the trigger fires. If no, finish your debug loop normally.
+A push hook blocking the commit IS a trigger — the hook's SKILL.md contract is the documented belief being contradicted, even though the agent is in their own loop. Same for: CI lint blocking on a violated rule, type checker rejecting against a docstring, downstream consumer flagging an undocumented schema change.
+
+The first version of this rule (claude-configs-public#168) had a more generous carve-out. Three real-time triggers were missed during its own dogfood (#169, #178, #181) because "I'm in my own fix loop" was treated as sufficient. Tightened in #184.
 
 ## Procedure
+
+### Step 0 — Pre-fix pause (the gate)
+
+The first action when ANY failure fires is **not the fix**. It is one sentence:
+
+> "What did I believe that this evidence contradicts?"
+
+If the answer names a durable artifact (skill / rule / ticket / hook / docstring / Trivial-change block), proceed to Step 1 — the Post-error revision block comes before the fix.
+
+If the answer is "nothing durable — I formed this belief minutes ago," the carve-out applies. Note that out loud or in chat as an explicit no-op ("in-loop, no documented contract; continuing fix"), and proceed to fix.
+
+The pause itself is the discipline; the documentation steps (1-5 below) only kick in when the pause finds a durable contract. Skipping the pause is the writing-rules:6 failure mode that #184 was filed to correct.
 
 ### 1. Identify the originating ticket
 
