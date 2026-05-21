@@ -17,6 +17,27 @@ Code written without a design is a draft disguised as a solution. It commits you
 
 ## Design Workflow
 
+### Step 0: Verify the ticket is fit
+
+Before producing the design note, verify the ticket the work cites is structurally fit for execution:
+
+```bash
+bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>
+```
+
+(Path: `scripts/discipline/evaluate-ticket.sh` in the `claude-configs-public` repo; the skill that documents the rubric is `evaluate-ticket/SKILL.md`.)
+
+**PASS** → proceed to Step 1.
+
+**BLOCK** → two acceptable responses:
+
+1. **Fix the ticket** to address the listed gaps. This is the default. Edit the ticket body to add the missing sections (Context / Goal / Acceptance / Assumptions / `/think` link / falsification for behavior-change tickets) and re-run `evaluate-ticket`.
+2. **Paste an exemption block** in your eventual self-review artifact per `_writing-rules-rules.md` writing-rules:4. The exemption requires Reason / Evidence / Falsification fields; the self-review hook validates via `scripts/discipline/check-trivial-claim.sh`.
+
+"Just ignore the BLOCK" is not acceptable. The self-review hook re-runs `evaluate-ticket` against the cited Goal source and refuses the push if it BLOCKs and no exemption block is present.
+
+**Trivial-change exception:** if the work is genuinely too small to warrant a full ticket (typo fix, doc-only edit, single-character revert), you may skip Step 0 by including a `## Trivial-change declaration` block in your self-review artifact per the format in `self-review/SKILL.md`. The declaration itself requires evidence; "this is trivial" without a falsifiable basis is not an acceptable declaration.
+
 ### Step 1: Context
 
 Understand what exists and what's changing.
