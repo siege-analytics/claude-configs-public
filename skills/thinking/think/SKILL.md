@@ -49,6 +49,19 @@ Understand what exists and what's changing.
 
 Read the relevant files. Don't guess about the current state.
 
+#### Sibling-grep gate (mandatory when designing a fix)
+
+When the task is designing a fix — not designing a new feature — Step 1 MUST include a sibling-grep before any proposal in Step 3. Grep the codebase for siblings of the symptom we're fixing, using at least the following queries:
+
+- **Same import path:** grep for other call sites of the failing function / class / module.
+- **Same decorator or fixture:** grep for the decorator (`@dp.materialized_view`, `@retry`, `@cached_property`) across the repo; list every site.
+- **Same filter / call shape:** grep for the syntactic pattern that bracketed the failure (`filter(...).partition_cols=(...)`, `except SpecificClass:`, `if config.get('x')`).
+- **Same failure signature:** if the failure has a known exception class or error string, grep for other handlers that catch the same shape.
+
+Paste the sibling-set in Step 1's Context block. If the sibling-set is N≥2, the bug is a class — design the fix at the class level, not per-instance. Per writing-rules:7, N≥3 in one session is a hard gate: produce the audit matrix or revert to investigation.
+
+Bug class is the unit; per-instance design is fragile. The Spark Connect guard sequence that motivated this gate had five same-shape PRs over hours because nobody grep'd for siblings before designing the second fix. One PR with an audit matrix would have replaced all five.
+
 ### Step 2: Questions
 
 Identify what's unclear or ambiguous before proposing anything.
