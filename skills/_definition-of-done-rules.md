@@ -102,7 +102,12 @@ Per `_writing-rules-rules.md` writing-rules:4, claiming the exemption is itself 
 ```
 ## Trivial-change declaration
 
-Reason: <one of "typo fix" / "doc-only" / "tooling chore" — be specific>
+Category: <token from the writing-rules:5 controlled vocabulary —
+           e.g. `prose-only-docs` for a doc-only edit;
+           `commit-msg-only` for an --amend>
+Cannot produce error: <one sentence stating the falsifiable claim that
+                       this change cannot generate empirical evidence
+                       contradicting the agent's model>
 Evidence: <command output supporting the claim — e.g. `git diff --stat`
           showing 1 file changed in docs/ only; `grep -l "def\|class" $(git diff --name-only)`
           returning empty for non-code change>
