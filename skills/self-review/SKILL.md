@@ -1,6 +1,7 @@
 ---
 name: self-review
-description: "Always-on. Self code-review before any push / PR-open / PR-merge. Produce a structured artifact with assumptions (including roles), peer review against the shelves, and lead review naming affirmative standards from outside the shelves. The pre-push hook enforces presence of the trailers and structural completeness; quality of content remains operator-auditable."
+description: "MANDATORY pre-push / pre-PR-open / pre-PR-merge gate. Produce a structured artifact with Assumptions (including roles + Goal source verification via evaluate-ticket + Evidence-predates-work block), Peer review against the shelves, and Lead review naming affirmative standards. The pre-push hook enforces trailer presence, structural completeness, artifact-predates-work, and the writing-rules:4 evidence-chain on any Trivial-change / Exemption blocks. Do NOT skip this skill; the form is checkable but the discipline is what binds."
+disable-model-invocation: true
 user-invocable: true
 ---
 
