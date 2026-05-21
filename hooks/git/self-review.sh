@@ -73,12 +73,19 @@ if [[ -z "$COMMIT_MSG" ]]; then
     exit 0
 fi
 
-# Parse trailers via git's native parser (proper trailer-block awareness;
-# rejects trailer keywords that appear in the subject or body proper).
-TRAILERS=$(echo "$COMMIT_MSG" | git -C "$EFFECTIVE_CWD" interpret-trailers --parse --no-divider 2>/dev/null || true)
-
-REVIEW_LINE=$(echo "$TRAILERS" | grep -E '^Self-Review:[[:space:]]+\S' | head -1)
-SOURCE_LINES=$(echo "$TRAILERS" | grep -cE '^Self-Review-Source:[[:space:]]+\S')
+# Scan the full commit message for the trailer lines. This is intentionally
+# looser than `git interpret-trailers --parse`, which only recognizes the
+# LAST contiguous trailer block (separated from the body by a blank line,
+# with no blank lines between trailers). Multiple trailer-block-shaped
+# sections separated by blank lines are silently invisible to that parser
+# -- caused a commit-and-amend cycle in claude-configs-public#180.
+#
+# The hook's contract is "the artifact-pointing trailer is PRESENT in the
+# commit," not "the message adheres to RFC-2822 trailer syntax." Grep at
+# line-start enforces presence; ordering / contiguity is left to the
+# agent's discretion.
+REVIEW_LINE=$(echo "$COMMIT_MSG" | grep -E '^Self-Review:[[:space:]]+\S' | head -1)
+SOURCE_LINES=$(echo "$COMMIT_MSG" | grep -cE '^Self-Review-Source:[[:space:]]+\S')
 
 if [[ -z "$REVIEW_LINE" ]]; then
     cat >&2 <<HOOKEOF
@@ -117,7 +124,7 @@ HOOKEOF
     exit 2
 fi
 
-SOURCE_VALUE=$(echo "$TRAILERS" | grep -E '^Self-Review-Source:[[:space:]]+' | head -1 | sed -E 's/^Self-Review-Source:[[:space:]]+//')
+SOURCE_VALUE=$(echo "$COMMIT_MSG" | grep -E '^Self-Review-Source:[[:space:]]+' | head -1 | sed -E 's/^Self-Review-Source:[[:space:]]+//')
 
 # If source looks like a path, run the structural checks against the file.
 # Ticket references (e.g. "#123") are accepted but not yet validated --
