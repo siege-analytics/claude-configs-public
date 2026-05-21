@@ -73,6 +73,93 @@ Canonical implementations:
 - Script — `scripts/discipline/check-trivial-claim.sh` enforces the three-field structure and the Evidence-token requirement.
 - Hook — `hooks/git/self-review.sh` delegates to the script when an artifact contains `## Trivial-change declaration` or `## Exemption:` blocks.
 
+**writing-rules:5. Trivial = cannot produce a future error. Trivial-claim categories are a controlled vocabulary.**
+
+The Trivial-change declaration block (writing-rules:4 template) is the explicit claim that a change cannot generate empirical evidence that contradicts the agent's model of the system. "I claim, in falsifiable terms, that this change cannot produce a future error." If the claim turns out wrong, the block itself becomes the post-error revision trigger.
+
+The block requires a `Category:` field naming which trivial-safe category the claim falls under. Free-text categories are not allowed — categories are a controlled vocabulary. Adding a new category is a writing-rules:5 edit + a `check-trivial-claim.sh` constant edit, both reviewable in one PR.
+
+### Controlled vocabulary (v1)
+
+**Trivial-safe** (Evidence-shape demonstrably proves cannot-error):
+
+- `prose-only-docs` — Pure narrative documentation that doesn't describe behavior, contracts, or invariants. Evidence: grep for `behavior|invariant|contract|API|returns|raises|MUST|SHOULD` finds no hits in the changed regions.
+- `comments-only` — Comment-line-only changes in code files. Evidence: `git diff -G '^[^#/* ]'` returns empty (no non-comment lines changed).
+- `whitespace-only` — Whitespace-only formatting in non-significant-whitespace files. Evidence: `git diff -w` returns empty AND file extension is NOT in `{.py .yml .yaml .Makefile .sass .coffee .mk}` (significant-whitespace languages).
+- `commit-msg-only` — `git commit --amend -m` that touches no files. Evidence: `git diff HEAD@{1} HEAD --stat` returns empty.
+
+**Borderline** (conditionally trivial-safe with specific Evidence):
+
+- `private-rename` — Renaming a private (leading-underscore or scoped) symbol. Evidence: `grep -rn '<old-name>' . --exclude-dir=.git` returns ONLY the rename site. The category does NOT apply if the codebase uses dynamic-dispatch patterns (`getattr`, `__getattr__`, `import_string`, runtime introspection).
+- `descriptive-docstring-fix` — Docstring fix where the docstring describes actual current behavior (not aspirational). Evidence: quote-and-line-citation of the function body matching the docstring's behavior claim. If the docstring described aspirational behavior, the fix is a behavior claim and requires a full ticket.
+- `fixed-string-correction` — Correcting a typo in a string literal that is NOT a symbol name, command, file path, URL, or anything machine-consumed. Evidence: consumers of the string grep'd; confirmed human-readers only.
+
+**Never trivial** (always require a ticket; no Trivial-change block is acceptable):
+
+- Any change to runtime-executed code paths.
+- Config / env / secrets / dependency changes (anything affecting what runs).
+- Build / CI / deploy scripts.
+- Migrations, fixtures, seed data, raw SQL.
+- API signatures, type declarations, schema files.
+- Test additions / deletions / modifications (changing what gets caught is itself a change to error-detection behavior).
+- Skill / rule / hook files (these change agent behavior, which IS runtime).
+
+### Block format
+
+```
+## Trivial-change declaration
+
+Category: <token from the controlled vocabulary above>
+Cannot produce error: <one sentence stating the claim that this change
+                       cannot generate empirical evidence contradicting
+                       the agent's model of the system — falsifiable>
+Evidence: <command output proving the category's Evidence-shape
+          requirement>
+Falsification: <observable that would prove the Cannot-produce-error
+                claim wrong; if this observable later surfaces, this
+                block is the post-error revision trigger>
+```
+
+### Worked examples
+
+For `prose-only-docs`:
+
+```
+Category: prose-only-docs
+Cannot produce error: The change is one paragraph clarifying intent in
+                      docs/architecture.md; no behavior, invariant, or
+                      API contract is described in the modified text.
+Evidence: git diff --stat shows 1 file (docs/architecture.md), 4 insertions, 0 deletions.
+          grep -E 'behavior|invariant|contract|API|returns|raises|MUST|SHOULD' docs/architecture.md
+          finds 17 matches; none are in the changed lines 142-145.
+Falsification: A future agent reads this paragraph and acts on it as a
+                behavior specification — surfaces as a PR whose Goal source
+                cites docs/architecture.md and whose work contradicts the
+                actual implementation.
+```
+
+For `private-rename`:
+
+```
+Category: private-rename
+Cannot produce error: Renaming `_fetch_inner` to `_fetch_pages` in
+                      socialwarehouse/services/api.py; private symbol with
+                      no external callers.
+Evidence: grep -rn '_fetch_inner' . --exclude-dir=.git returns 1 hit, the
+          function definition itself. No dynamic-dispatch patterns
+          (getattr / __getattr__ / import_string) found in the codebase.
+Falsification: A getattr-based callsite or test discovers the old name
+                via runtime introspection — surfaces as AttributeError
+                in production or a test failure pointing at the renamed
+                symbol.
+```
+
+### The Falsification field is the post-error revision trigger
+
+If the observable named in Falsification later surfaces, the original Trivial-change declaration is itself the artifact that needs revising — it claimed the change couldn't produce errors, but it did. The post-error response is to file a ticket retroactively, citing the failed block, and document the revision in a `## Post-error revision` section on that ticket. If a whole category keeps falsifying (e.g., `private-rename` claims keep producing errors because of dynamic dispatch the agent missed), the category itself comes off the trivial-safe list — the controlled vocabulary gets revised.
+
+The full post-error-revision discipline is a separate follow-up; this rule ships the substrate.
+
 ## When this file applies
 
 - About to add a new memory entry of the form "always do X" / "never do Y"
