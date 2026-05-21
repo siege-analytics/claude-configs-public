@@ -236,6 +236,31 @@ Canonical implementations:
 - Script — `scripts/discipline/check-post-error-revision.sh` (block-structure validation).
 - Hook — `hooks/git/post-error-revision-required.sh` (trailer requirement on revert / regression-fix commits).
 
+**writing-rules:7. Rules apply at session-scale, not just per-action invocation. `Pairs with` relationships are dependencies, not hints.**
+
+Always-on rules become wallpaper when the agent reads them once at session-start and never re-consults them at decision points. Per-action rules pass individually while a per-session pattern is silently violated — five PRs of the same fix-shape can each pass every rule and still represent a class-audit failure the rules were meant to prevent.
+
+### The session-scale corollary
+
+When N actions of the same shape ship in one session (same scope tag, same file family, same fix pattern, same failure signature), the rules apply to the pattern across actions, not just to each instance. The agent's job, until the wrap-up classifier and same-shape-detection hook automate it (sibling tickets to #186):
+
+- **N≥2 of the same shape** — warn. Run the family-grep before the second instance lands, paste the sibling-set in the PR body.
+- **N≥3 of the same shape** — hard gate. The third instance requires a class-audit artifact in the PR body, NOT a fresh per-instance fix. If you cannot produce the audit, you do not yet understand the bug; revert to `/think` with a sibling-grep on the symptom.
+
+Sibling rule references that gain a session-scale extension under this rule: writing-code:5 (no hypothetical pattern across multiple actions), writing-code:13 (family-level consistency), writing-claims:1 (grep before downstream re-run that depends on class-completeness), writing-claims:3 (multi-PR confidence calibration).
+
+### Pairs-with are dependencies
+
+Skill files frequently have a "Pairs with" section listing related skills and rules. Until this rule, "Pairs with" read as a polite suggestion — the agent invokes skill A and "should" consult paired rule B. In practice, that read meant the agent ran skill A's procedure and never touched B.
+
+`Pairs with` is now a dependency, not a hint. Invoking skill A requires consulting paired rule B before completing A's workflow. If `verify-failure-premise` pairs with `writing-claims`, then running `verify-failure-premise` Step 4 (causal-path trace) requires running writing-claims:1 (grep for the bug-class) inside that step, not after. The pairing is part of A's contract.
+
+Skill authors maintaining `Pairs with` sections must verify the paired rule is actually consulted by A's procedure. A `Pairs with` entry whose paired rule is never invoked inside A's body is a stale reference — fix or remove it.
+
+### The motivating evidence
+
+The Spark Connect guard sequence in session 260502-vital-channel (sibling workspace, 2026-05-21): five PRs shipped same-shape `pyspark.errors.exceptions.captured.AnalysisException` guards before the class audit ran. Each PR individually passed writing-code:5, writing-code:7, writing-code:13, writing-claims:1, and writing-claims:3 — because every rule was read per-action. The session-scale pattern (five same-shape PRs in one session) was invisible. Filed and corrected via #186.
+
 ## When this file applies
 
 - About to add a new memory entry of the form "always do X" / "never do Y"
