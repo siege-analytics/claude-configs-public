@@ -43,6 +43,7 @@ Working as: <role(s)>
 Peer review needed from: <role(s)>
 Lead review needed from: <role(s)>
 Goal source: <ticket #N | design-note path | quoted user-request paragraph>
+Goal source verification: <paste the PASS line from `bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>`>
 Plan reference: <path-or-link to the design note this diff implements>
 
 ## Peer review (mechanics, correctness, craft floor)
@@ -57,7 +58,59 @@ explicitly, with the role-context.
   E.g.: "As data engineer: the load is idempotent because <evidence>."
 Approach-fit verdict. Blast radius declared. Sequencing assumption
 that has to hold for this to be the right move.
+
+## Evidence-predates-work
+Artifact: <path to this artifact>
+First-added commit: <paste output of `git log -1 --diff-filter=A --follow --format=%H -- <artifact-path>`>
+Work commit: <paste `git rev-parse HEAD`>
+Verification: <paste output of `git merge-base --is-ancestor <first-added> <work-commit>; echo $?` — must be 0>
 ```
+
+## Trivial-change declaration (when no ticket cited)
+
+If the work is genuinely too small to warrant a ticket — typo fix,
+doc-only edit, single-character revert — the artifact may include
+this block in place of `Goal source verification`. The block itself
+requires the same evidence chain as any "this doesn't apply" claim
+(`_writing-rules-rules.md` writing-rules:4):
+
+```
+## Trivial-change declaration
+
+Reason: <one sentence stating WHY this is trivial in falsifiable terms>
+Evidence: <paste output of a command that supports the trivial claim,
+          e.g. `git diff --stat` showing 1 file, 1 line; or `wc -l`
+          on the diff showing N lines; or `git log -p` showing the
+          change is a comment edit>
+Falsification: <one sentence stating what observable would make this
+               NOT trivial — e.g. "NOT trivial if any file outside
+               docs/ changes" or "NOT trivial if any test count changes">
+```
+
+The local hook (`hooks/git/self-review.sh`) and the canonical script
+(`scripts/discipline/check-trivial-claim.sh`) validate that all three
+fields are present and that the Evidence field contains a verifiable
+observation token (command output, file path with extension, fenced
+code block, stat/count, or URL). Free-text assertions like "obviously
+trivial" or "minor cleanup" fail.
+
+## Exemption blocks
+
+When a specific `evaluate-ticket` criterion doesn't apply to your
+work (e.g., a docs-only ticket can't state a falsification criterion
+in the writing-tests:1 shape), paste an exemption block per criterion:
+
+```
+## Exemption: <criterion-name>
+
+Reason: <why this criterion doesn't apply>
+Evidence: <command output or verifiable observation supporting the
+          exemption — e.g. `git diff --stat | grep -v '\.md$'` returns
+          no rows, proving no non-doc files changed>
+Falsification: <observable that would make this exemption wrong>
+```
+
+Same validation as Trivial-change declaration. Same enforcement path.
 
 ## Roles
 
@@ -209,12 +262,26 @@ the claim must be grounded.
 - **v1.1**: If `Goal source:` value is itself a file path, its mtime
   must not be newer than the review artifact's mtime (catches goal-
   source-written-after-the-work post-hoc-justification pattern).
+- **v2 (claude-configs-public#146)**: If the artifact file lives in a
+  git repo, the artifact's first-added commit must be an ancestor of
+  the work commit being pushed (`git log --diff-filter=A --follow` +
+  `git merge-base --is-ancestor`). Closes the retroactive-trailer
+  loophole that lets agents push first, write the artifact later, and
+  satisfy the form check while bypassing the discipline. Defense in
+  depth alongside v1.1's mtime check; this one is touch-resistant.
+- **v2 (claude-configs-public#146)**: If the artifact contains a
+  `## Trivial-change declaration` or `## Exemption:` block, each block
+  must have all three fields (Reason / Evidence / Falsification) AND
+  the Evidence field must contain a verifiable observation token
+  (fenced code block, file path with extension, git command, stat/
+  count, or URL). Free-text assertions fail. Delegated to
+  `scripts/discipline/check-trivial-claim.sh`.
 - Assumptions section names at least one role from the canonical
   set (software engineer / tech lead / data engineer / data analyst /
   geospatial).
 - Peer review section cites at least one shelf
   (writing-code / writing-tests / writing-claims / writing-prose /
-  writing-releases).
+  writing-releases / writing-rules).
 
 **v2 follow-up to enforce mechanically:**
 
