@@ -101,6 +101,19 @@ When the evidence verdict is **did-happen**, the bug lives somewhere on the caus
 
 **Strong recommendation, not a hard gate.** The hard gate is the premise verification (Steps 1-3 above). Step 4 is the methodology *given* you're past the gate. Hard-gating "you must enumerate every hook" invites malicious compliance; the discipline is the named-pivots + enumerate-then-bisect shape, not a checklist.
 
+### Step 5: When the diagnosis falsifies a documented Assumption
+
+Once Step 4 names the actual cause, check whether that cause contradicts a belief that was *durably documented* before the failure surfaced — on the originating ticket's Assumptions block, a self-review artifact, or a Trivial-change declaration's Cannot-produce-error claim. If yes, the writing-rules:6 trigger has fired and the response is **not** to just write the fix:
+
+1. Walk the chain (failure → commit → PR → ticket). If the chain breaks, file the missing ticket retroactively.
+2. Append a `## Post-error revision` block (five fields: Triggered by / Observed / Falsified assumption / Revised model / Implication) to that ticket. Use the diagnosis from Steps 1–4 as the `Observed:` and `Revised model:` content.
+3. Preserve-and-annotate the original wrong Assumption alongside the revised one.
+4. THEN draft the fix or revert PR with `Refs:` + `Post-error-revision:` trailers.
+
+See `skills/post-error-revision/SKILL.md` for the full procedure and worked example. The `scripts/discipline/check-post-error-revision.sh` script validates the block; `hooks/git/post-error-revision-required.sh` enforces the trailer pair on `git revert` / `git commit … : regression` / `gh pr create --title "Revert …"`.
+
+If the failure does NOT contradict any documented Assumption (the agent was in an in-loop write-test-fail-fix cycle with no durably-written belief), writing-rules:6 does not fire. Continue with the fix.
+
 ## Failure modes this prevents
 
 - "Why did the JDBC write fail?" investigation that ignores 111 successful rows already in the destination table.
@@ -142,7 +155,8 @@ This skill is **MANDATORY** when:
 
 - `writing-claims` — failure reports are claims; same verification discipline.
 - `think` — once diagnosis identifies the right layer (and the causal-path trace identifies the suspect step), design the fix at that step per the think gate.
-- `brain-first` — checking durable-commit evidence first is the diagnosis-shaped version of "check existing state before recreating."
+- `brain-first` (universal check — NOT a separate skill) — checking durable-commit evidence first is the diagnosis-shaped version of the resolver's "check existing state before recreating" universal check. The label appears in the resolver's always-applied checks block, not in `skills/`.
+- `post-error-revision` — writing-rules:6 back-edge; activated by Step 5 when the diagnosis falsifies a documented Assumption.
 
 ## Vocabulary
 

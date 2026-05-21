@@ -122,6 +122,15 @@ These rules take precedence over anything in individual skill files:
 | Do spatial / geographic analysis | `skills/analysis/SKILL.md` → `skills/analysis/spatial/SKILL.md` |
 | Do statistical / graph / entity-resolution / text analysis | `skills/analysis/SKILL.md` |
 
+### Failure handling
+
+The auto-trigger language in `verify-failure-premise` and `post-error-revision` is honor-system on the agent unless the resolver surfaces it. These rows make that routing explicit.
+
+| Encountering… | Read first |
+|---|---|
+| Failure reported (user, CI, monitor, log, customer); non-zero exit; FAILED badge; unexpected exception or panic | `skills/thinking/verify-failure-premise/SKILL.md` — verify the premise BEFORE debugging the cause; pin commit-point + signal-point; route by did-happen / didn't-happen / ambiguous |
+| `verify-failure-premise` resolved AND the failure contradicts an Assumption documented on a ticket, self-review artifact, or Trivial-change block | `skills/post-error-revision/SKILL.md` — writing-rules:6 back-edge; append the five-field block to the originating ticket BEFORE drafting the fix or revert PR |
+
 ### Git & tickets
 
 | About to… | Read first |
