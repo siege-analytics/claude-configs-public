@@ -1,22 +1,27 @@
 ---
 name: develop-guard
-description: Ensure a develop branch exists before feature branches. Create from main if missing. Prevent direct merges to main.
+description: Enforce the curation invariant — main-role (main, master, prod, production, trunk, stable, release) is the project's best, ready-to-use work; develop-role (develop, dev, development, next, integration, staging, develop-next) is the origin where experiments compete for main. Detect repo mode (Gitflow vs GitHub Flow). Prevent direct feature-PRs to main-role when develop-role is the workflow.
 disable-model-invocation: true
 allowed-tools: Bash
 ---
 
 # Core invariant
 
-> **`main` is the curated best of all work done.**
+> **`main` (or its synonym) is the subset of work the project believes is its best, ready for downstream consumers. `develop` (or its synonym) is the origin where experiments converge and compete for promotion to main.**
 >
-> Whatever the integration surface is in this repository — `develop`, a synonym (`dev`/`development`/`staging`/`next`/`integration`/`trunk`), or `main` itself in GitHub Flow / trunk-based repos — `main` is downstream of work that has been *blessed*. `main` is never upstream of unblessed work, and `main` is never bypassed by work that hasn't passed the bar.
+> Both names are roles, not literal strings. Many repos use synonyms; the role each branch plays is what matters.
+>
+> - **Main-role** ("best work, ready to use"): `main`, `master`, `prod`, `production`, `trunk` (when used as the release line), `stable`, `release`.
+> - **Develop-role** ("origin of experiments competing for main"): `develop`, `dev`, `development`, `next`, `integration`, `staging`, `develop-next`, `trunk` (when used as the integration line — context-dependent).
+>
+> Whatever the integration surface is in this repository, the main-role branch is downstream of work that has been *blessed*. The main-role branch is never upstream of unblessed work, and is never bypassed by work that hasn't passed the bar.
 >
 > Two repo modes both satisfy this:
 >
-> | Mode | Integration surface | What "main is the curated best" means here |
+> | Mode | Integration surface | What "main-role is the curated best" means here |
 > |---|---|---|
-> | **Gitflow** (develop exists; recent merged PRs target develop) | `develop` (or synonym) | Feature/task/bugfix branches merge to develop; main only receives commits via promotion from develop or back-merged hotfix. `main` ⊆ `develop`. |
-> | **GitHub Flow / Trunk-based** (no develop, or develop is decorative; recent merged PRs target main) | `main` itself | Feature/task/bugfix branches merge to main via PR; the PR review is the curation gate. Only blessed work lands on main; half-baked work stays on its feature branch. |
+> | **Gitflow** (a develop-role branch exists; recent merged PRs target it) | the develop-role branch | Feature/task/bugfix branches merge to the develop-role branch; the main-role branch only receives commits via promotion from develop-role or back-merged hotfix. `main-role` ⊆ `develop-role`. |
+> | **GitHub Flow / Trunk-based** (no develop-role branch, or it is decorative; recent merged PRs target main-role) | the main-role branch itself | Feature/task/bugfix branches merge to main-role via PR; the PR review is the curation gate. Only blessed work lands; half-baked work stays on its feature branch. |
 >
 > **Don't fight the repo's actual workflow.** Detect which mode the repo is in (next section); apply the rule's substantive shape (curate, don't bypass), not its surface (literal branch name).
 
@@ -31,27 +36,30 @@ This skill is a guardrail that runs before branching or merging. It enforces the
 3. **If Gitflow but `develop` is missing or stale relative to main** — STOP. Ask the user before creating develop OR before doing a sync. Do not silently create the branch or silently fall through to main. The recurring stale-develop pattern is itself a signal that the repo may actually be GitHub Flow with an aspirational develop; surface that observation.
 4. **Before any merge to main, verify the user intended it** (Gitflow: this is a release event; GitHub Flow: this is the standard PR merge — still confirm scope on first PR open per session).
 
-# Develop branch detection
+# Develop-role branch detection
 
-Check for the integration branch by scanning both local and remote branches:
+Check for the develop-role branch by scanning both local and remote branches:
 
 ```bash
 # Check local branches
-git branch | grep -iE '^\*?\s*(develop|dev|development|staging|next|integration)$'
+git branch | grep -iE '^\*?\s*(develop|dev|development|staging|next|integration|develop-next)$'
 
 # Check remote branches
-git branch -r | grep -iE '(develop|dev|development|staging|next|integration)$'
+git branch -r | grep -iE '(develop|dev|development|staging|next|integration|develop-next)$'
 ```
 
 ## Synonym table
 
-| Canonical | Synonyms |
+| Role | Synonyms |
 |-----------|----------|
-| `develop` | `dev`, `development`, `staging`, `next`, `integration`, `trunk` (when used as integration, not as main-equivalent) |
+| **main-role** ("best work, ready to use") | `main`, `master`, `prod`, `production`, `trunk` (when used as the release line), `stable`, `release` |
+| **develop-role** ("origin of experiments competing for main") | `develop`, `dev`, `development`, `next`, `integration`, `staging`, `develop-next`, `trunk` (when used as the integration line — context-dependent) |
 
-If any synonym is found, use it as the integration branch. Do not rename it -- adopt the repository's existing convention.
+`trunk` is ambiguous: in trunk-based-development repos it plays the main-role; in some legacy-Subversion-influenced repos it plays the develop-role. Detect by which of develop-role / main-role is missing — `trunk` is whichever role isn't otherwise filled.
 
-If multiple synonyms exist (e.g., both `dev` and `staging`), ask the user which is the primary integration branch.
+If any synonym is found, use it as the integration branch. Do not rename it — adopt the repository's existing convention.
+
+If multiple develop-role synonyms exist (e.g., both `dev` and `staging`), ask the user which is the primary integration branch.
 
 ## Stale-develop detection (Gitflow repos only)
 
@@ -184,6 +192,14 @@ Some feature branches may already target main. When you encounter this:
 ## Forked repositories
 
 If working on a fork, develop is local to the fork. Upstream typically only has main. This is fine -- the fork's develop serves as the integration branch before opening a PR to upstream.
+
+# Pair with automated enforcement
+
+This skill is the prose layer. Per `writing-rules:1`, prose alone reaches only the agent that reads it; tool defaults (`gh pr create` defaults to the repo's default branch, often main-role) reach every actor. Every Gitflow repo that depends on this skill should also ship a CI workflow that fails feature-PRs whose base is main-role.
+
+A reference implementation lives at [siege-analytics/socialwarehouse `.github/workflows/pr-base-guard.yml`](https://github.com/siege-analytics/socialwarehouse/blob/develop/.github/workflows/pr-base-guard.yml). It honors the synonym tables above; allows `develop`/`dev`/`next`/`integration`/`staging`/`develop-next` as heads; allows `promote/*` / `release/*` / `hotfix/*` branch naming; and accepts an explicit `hotfix-direct-to-main` bypass label for emergency cases.
+
+When this skill fires on a Gitflow repo missing the guard, propose adding it — that's how the rule binds actors who don't share the agent's memory.
 
 # Attribution policy
 
