@@ -101,6 +101,18 @@ observation token (command output, file path with extension, fenced
 code block, stat/count, or URL). Free-text assertions like "obviously
 trivial" or "minor cleanup" fail.
 
+### When the Falsification observable surfaces
+
+The Falsification field is the writing-rules:6 trigger. If the observable named there later surfaces — an `AttributeError` matching the renamed symbol, a behavior claim acted on from prose-only-docs, a non-comment line changed by what was claimed comments-only — the Trivial-change declaration was wrong, and the response is **not** to just fix the bug.
+
+Per writing-rules:6 (and [skill:post-error-revision]):
+
+1. File a ticket retroactively, citing the failed Trivial-change block as Goal source.
+2. Append a `## Post-error revision` block to the new ticket with the five required fields (Triggered by / Observed / Falsified assumption / Revised model / Implication).
+3. THEN draft the fix PR with a `Refs:` + `Post-error-revision:` trailer pair.
+
+Skipping this and just pushing the fix re-runs the same Assumption on the next change. The Trivial-change Falsification field exists to make the trigger explicit; ignoring it when it fires defeats the whole writing-rules:5 -> writing-rules:6 loop.
+
 ## Exemption blocks
 
 When a specific `evaluate-ticket` criterion doesn't apply to your
