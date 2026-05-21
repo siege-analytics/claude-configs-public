@@ -9,11 +9,16 @@
 # Design notes:
 # - Output format: a plain text block that Claude sees as part of the
 #   conversation. Not a tool result — just raw injection.
-# - Keep it short: we only inject the resolver's task-pattern table + the
-#   universal checks, not the full document. The agent can `cat` the full
-#   RESOLVER.md if needed.
-# - Fail-open: if the file is missing, emit a warning but don't block the
-#   prompt.
+# - The universal checks list and the Failure handling routing rows are
+#   EXTRACTED LIVE from RESOLVER.md at every hook invocation, not hard-
+#   coded. This closes the divergence loophole from claude-configs-public#192:
+#   if RESOLVER.md gains a new universal check or a new failure-handling
+#   row, the hook output reflects it on the next UserPromptSubmit without
+#   a hook edit.
+# - The intro (think gate + 1/2/3 instructions) stays static — it names
+#   the hook's contract with the agent, not the resolver's content.
+# - Fail-open: if RESOLVER.md is missing, emit a warning but don't block
+#   the prompt.
 
 set -euo pipefail
 
@@ -23,6 +28,24 @@ if [ ! -f "$RESOLVER" ]; then
   echo "[resolver-hook] RESOLVER.md not found at $RESOLVER — skills enforcement not injected." >&2
   exit 0
 fi
+
+# Extract the "Universal pre-action checks" section, line by line.
+# Section is delimited: starts at the heading, ends at the next "---"
+# horizontal rule per the canonical RESOLVER.md structure.
+UNIVERSAL_CHECKS=$(awk '
+    /^## Universal pre-action checks/ { flag=1; next }
+    /^---/ && flag                    { flag=0 }
+    flag && /^[0-9]+\. /              { print }
+' "$RESOLVER")
+
+# Extract the "Failure handling" task-pattern routing rows (the table body).
+# Section is delimited by "### Failure handling" -> next "### " heading.
+# Strip the heading + intro paragraph; keep the table content.
+FAILURE_HANDLING=$(awk '
+    /^### Failure handling/ { flag=1; next }
+    /^### /                 { if (flag) flag=0 }
+    flag                    { print }
+' "$RESOLVER")
 
 cat <<EOF
 <skill-resolver>
@@ -42,16 +65,11 @@ For the task itself:
 2. If a pattern matches, READ the mapped SKILL.md in full before acting
 3. Apply the universal pre-action checks regardless
 
-Universal checks (always):
-- THINK FIRST (the non-negotiable)
-- Catalog-first: action on catalog-managed data goes through the catalog
-- Brain-first: check existing state before recreating
-- Verify-failure-premise: before debugging a reported failure, confirm the work didn't durably commit — look at durable-commit evidence (fsync / COMMIT / ACK / downstream-observable), NOT the failure signal. If evidence says the work succeeded, the reporter is the bug; trace the causal path from commit-point to signal-point (enumerate, bisect). See skills/thinking/verify-failure-premise/SKILL.md.
-- Test-before-bulk: ≥20 items runs a 3–5 item test first
-- Ticket-required: non-trivial work has a ticket. Before think Step 1, the cited ticket must pass `bash scripts/discipline/evaluate-ticket.sh <ticket-ref>` (six-criterion fitness rubric: title shape, required sections, investigated facts, /think link, Assumptions block, falsification for behavior-change tickets). BLOCK → fix the ticket OR paste an exemption block per writing-rules:4 with Reason / Evidence / Falsification fields. "Just ignore the BLOCK" is not acceptable. See skills/evaluate-ticket/SKILL.md.
-- Branch-correct: write on feature branch, never main/master/develop. Invariant (mode-agnostic): main is the curated best of all work — never upstream of unblessed work. Detect mode by sampling recent merged PR bases (Gitflow: PRs target develop → branch from develop; GitHub Flow: PRs target main → branch from main). If develop exists but recent PRs target main, the repo is aspirational-Gitflow operating as GitHub Flow — STOP and ask the user.
-- No-attribution: never add Claude/AI attribution to commits or public content
-- Measure-twice: confirm destructive actions before running
+Universal pre-action checks (extracted live from $RESOLVER):
+$UNIVERSAL_CHECKS
+
+Failure handling (extracted live from $RESOLVER):
+$FAILURE_HANDLING
 
 Full resolver: cat $RESOLVER
 Skills: ls ~/git/electinfo/claude-configs-public/skills/ and ~/git/electinfo/electinfo_claude_skills/skills/
