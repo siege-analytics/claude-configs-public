@@ -78,14 +78,20 @@ requires the same evidence chain as any "this doesn't apply" claim
 ```
 ## Trivial-change declaration
 
-Reason: <one sentence stating WHY this is trivial in falsifiable terms>
-Evidence: <paste output of a command that supports the trivial claim,
-          e.g. `git diff --stat` showing 1 file, 1 line; or `wc -l`
-          on the diff showing N lines; or `git log -p` showing the
-          change is a comment edit>
-Falsification: <one sentence stating what observable would make this
-               NOT trivial — e.g. "NOT trivial if any file outside
-               docs/ changes" or "NOT trivial if any test count changes">
+Category: <token from the writing-rules:5 controlled vocabulary —
+           prose-only-docs | comments-only | whitespace-only |
+           commit-msg-only | private-rename |
+           descriptive-docstring-fix | fixed-string-correction>
+Cannot produce error: <one sentence stating the claim that this change
+                       cannot generate empirical evidence contradicting
+                       the agent's model of the system — falsifiable>
+Evidence: <command output proving the Category's Evidence-shape
+          requirement per writing-rules:5 — e.g. for `prose-only-docs`,
+          the grep showing no behavior tokens in changed regions; for
+          `private-rename`, the grep showing only-the-rename-site>
+Falsification: <observable that would prove the Cannot-produce-error
+                claim wrong; if this observable later surfaces, this
+                block is the post-error revision trigger>
 ```
 
 The local hook (`hooks/git/self-review.sh`) and the canonical script
