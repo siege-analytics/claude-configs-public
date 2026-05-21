@@ -49,6 +49,30 @@ When promoting a discipline from memory to a rule, ask:
 
 Memory entries that capture these promoted rules should reference where the rule actually lives (`see skills/X` / `see .github/workflows/Y.yml`) rather than restating the rule's body, so the rule has a single source of truth and the memory entry is a discoverability shortcut.
 
+**writing-rules:4. Every "this doesn't apply" claim requires the same evidence chain as a "this happened" claim.**
+
+When a rule has an escape clause (trivial change, exempt because, doesn't apply here, this category doesn't fit, untested because, skipped because, verify-skip), the agent invoking the escape must paste an evidence chain in the same artifact where the escape is claimed:
+
+```
+Reason: <one sentence stating WHY the escape applies, in falsifiable terms>
+Evidence: <command output or verifiable observation that supports the
+          claim — fenced code block, file path with extension, git
+          command output, stat/count, or URL>
+Falsification: <one sentence stating what observable would make this
+               escape wrong>
+```
+
+Free-text assertions ("obviously trivial," "minor cleanup," "doesn't matter here") do NOT satisfy the rule — they have no falsifiable observation a later auditor can check.
+
+Silent escapes accumulate. A rule with escapes-without-evidence is indistinguishable from a rule without enforcement; over time the rule trends toward optional.
+
+**Retrofit obligation.** When this rule lands or evolves, every existing escape clause in the rule set must be retrofitted to the evidence-chain format. The retrofit is the canonical example of the rule applying to itself.
+
+Canonical implementations:
+- Prose / template — `self-review/SKILL.md` Trivial-change declaration block.
+- Script — `scripts/discipline/check-trivial-claim.sh` enforces the three-field structure and the Evidence-token requirement.
+- Hook — `hooks/git/self-review.sh` delegates to the script when an artifact contains `## Trivial-change declaration` or `## Exemption:` blocks.
+
 ## When this file applies
 
 - About to add a new memory entry of the form "always do X" / "never do Y"
