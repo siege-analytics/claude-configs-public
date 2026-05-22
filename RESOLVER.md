@@ -211,8 +211,8 @@ This resolver is surfaced into every session via:
 - **Every user turn**: injected via `UserPromptSubmit` hook (`hooks/resolver/inject-resolver.sh`) so it stays in active context.
 - **Pre-tool-use**: `PreToolUse` hooks on `Bash` match dangerous catalog/data-write patterns and block with a STOP-read-skill reminder (`hooks/infrastructure/catalog-guard.sh`). The git / PR hook stack is also enforced at `PreToolUse`:
   - `hooks/git/branch-guard.sh` blocks direct commits to protected branches.
-  - `hooks/git/pr-base-guard.sh` blocks PR-create commands whose effective base is a main-role branch when the head is not develop-role / `release/*` / `promote/*` / `hotfix/*` (or carries the `hotfix-direct-to-main` bypass label). This is the local mechanical enforcement of `skills/git-workflow/develop-guard/SKILL.md` — the skill is the prose layer; the hook closes the gap when the agent treats PR-create as procedural and never consults the skill.
-  - `hooks/git/self-review.sh` blocks push / PR-create / PR-merge without Self-Review trailers.
+  - `hooks/git/pr-base-guard.sh` blocks PR/MR-create commands whose effective base is a main-role branch when the head is not develop-role / `release/*` / `promote/*` / `hotfix/*` (or carries the `hotfix-direct-to-main` bypass label). Catches both GitHub (`gh pr create --base`) and GitLab (`glab mr create --target-branch`); see CCP#201 for the GitLab-parity addition. This is the local mechanical enforcement of `skills/git-workflow/develop-guard/SKILL.md` — the skill is the prose layer; the hook closes the gap when the agent treats PR/MR-create as procedural and never consults the skill.
+  - `hooks/git/self-review.sh` blocks push / PR/MR-create / PR/MR-merge without Self-Review trailers (both `gh pr create|merge` and `glab mr create|merge`).
 
 Skills collection paths (all relative to their repo roots):
 

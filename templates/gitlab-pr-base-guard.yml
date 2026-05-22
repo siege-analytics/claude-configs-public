@@ -1,0 +1,70 @@
+# GitLab CI reference job: enforce develop-first base for MRs.
+# Mirrors the GitHub Actions `pr-base-guard.yml` job (SW#234) for GitLab repos.
+#
+# Usage in a consumer's `.gitlab-ci.yml`:
+#
+#     include:
+#       - remote: 'https://raw.githubusercontent.com/siege-analytics/claude-configs-public/main/templates/gitlab-pr-base-guard.yml'
+#
+# (Or vendor the YAML in-repo if you prefer not to depend on a remote URL.)
+#
+# Same intent as the local `hooks/git/pr-base-guard.sh` hook: fail MRs
+# whose target is a main-role branch unless the source is a develop-role
+# branch, matches `promote/*` / `release/*` / `hotfix/*`, or carries the
+# `hotfix-direct-to-main` label (explicit maintainer bypass, audit
+# trail visible in the MR's label history).
+
+enforce-base:
+  stage: test
+  image: alpine:3.20
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  before_script:
+    - apk add --no-cache bash grep
+  script:
+    - |
+      bash -euo pipefail <<'GUARD'
+      TARGET="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-}"
+      SOURCE="${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-}"
+      LABELS="${CI_MERGE_REQUEST_LABELS:-}"
+
+      # Main-role synonyms — keep in sync with skills/git-workflow/develop-guard/SKILL.md.
+      case "$TARGET" in
+        main|master|prod|production|trunk|stable|release) ;;
+        *)
+          echo "OK: target '$TARGET' is not a main-role branch; no enforcement."
+          exit 0
+          ;;
+      esac
+
+      # Develop-role synonyms.
+      case "$SOURCE" in
+        develop|dev|next|integration|staging|develop-next)
+          echo "OK: source '$SOURCE' is a develop-role branch (canonical promote)."
+          exit 0
+          ;;
+      esac
+
+      # promote/release/hotfix branch-name conventions.
+      case "$SOURCE" in
+        promote/*|release/*|hotfix/*)
+          echo "OK: source '$SOURCE' matches promote/release/hotfix convention."
+          exit 0
+          ;;
+      esac
+
+      # Explicit bypass label (audit trail in the MR's label history).
+      # GitLab joins labels with commas; check for the literal token.
+      if echo ",$LABELS," | grep -q ',hotfix-direct-to-main,'; then
+        echo "OK: 'hotfix-direct-to-main' label present (maintainer bypass)."
+        exit 0
+      fi
+
+      echo "::error::MR target '$TARGET' is a main-role branch but source '$SOURCE'"
+      echo "::error::is not develop-role / promote / release / hotfix and the MR is"
+      echo "::error::not labeled 'hotfix-direct-to-main'. Per the curation invariant,"
+      echo "::error::feature/fix MRs must target a develop-role branch (develop, dev,"
+      echo "::error::next, integration, staging, develop-next). Re-target the MR base,"
+      echo "::error::or apply the 'hotfix-direct-to-main' label if this is a deliberate hotfix."
+      exit 1
+      GUARD
