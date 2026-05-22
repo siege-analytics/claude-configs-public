@@ -95,6 +95,29 @@ expect_pass "(t) gh pr merge (not pr create)" "$HOOK" \
 expect_pass "(u) chained command with newline yields" "$HOOK" \
     "$(make_payload $'cd /tmp\ngh pr create --base main' 'feature/foo')"
 
+# --- GitLab parity (CCP#201): glab mr create ---
+
+expect_block "(v) glab feature/foo -> main (--target-branch)" "$HOOK" \
+    "$(make_payload 'glab mr create --target-branch main --title x' 'feature/foo')"
+expect_block "(w) glab feature/foo -> main (--target-branch=)" "$HOOK" \
+    "$(make_payload 'glab mr create --target-branch=main --title x' 'feature/foo')"
+expect_block "(x) glab feature/foo -> master (--target-branch)" "$HOOK" \
+    "$(make_payload 'glab mr create --target-branch master --title x' 'feature/foo')"
+expect_block "(y) glab feature/foo -> main with -b short" "$HOOK" \
+    "$(make_payload 'glab mr create -b main --title x' 'feature/foo')"
+expect_pass "(z) glab develop -> main" "$HOOK" \
+    "$(make_payload 'glab mr create --target-branch main --title x' 'develop')"
+expect_pass "(aa) glab release/v1 -> main" "$HOOK" \
+    "$(make_payload 'glab mr create --target-branch main --title x' 'release/v1')"
+expect_pass "(ab) glab promote/develop-to-main -> main" "$HOOK" \
+    "$(make_payload 'glab mr create --target-branch main --title x' 'promote/develop-to-main')"
+expect_pass "(ac) glab feature/foo -> main WITH hotfix-direct-to-main label" "$HOOK" \
+    "$(make_payload 'glab mr create --target-branch main --title x --label hotfix-direct-to-main' 'feature/foo')"
+expect_pass "(ad) glab feature/foo -> develop" "$HOOK" \
+    "$(make_payload 'glab mr create --target-branch develop --title x' 'feature/foo')"
+expect_pass "(ae) glab mr list (not mr create)" "$HOOK" \
+    "$(make_payload 'glab mr list --target-branch main' 'feature/foo')"
+
 if [[ "${_HARNESS_FAIL:-0}" -gt 0 ]]; then
     printf '\nFAIL: %d test(s) failed.\n' "$_HARNESS_FAIL" >&2
     exit 1

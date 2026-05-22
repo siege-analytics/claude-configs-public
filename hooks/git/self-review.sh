@@ -32,9 +32,10 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-# Trigger on git push, gh pr create, gh pr merge. Word boundaries via portable
-# character-class form (not BSD-incompatible `\b`); see issue #106.
-TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
+# Trigger on git push, gh pr create / merge (GitHub), or glab mr create / merge
+# (GitLab). Word boundaries via portable character-class form (not
+# BSD-incompatible `\b`); see issue #106. CCP#201 added the GitLab forms.
+TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge)|glab[[:space:]]+mr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
 if ! echo "$COMMAND" | grep -qE "$TRIGGERS"; then
     exit 0
 fi
