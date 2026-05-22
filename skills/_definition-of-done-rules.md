@@ -91,11 +91,32 @@ The session-end check ([skill:wrap-up]) verifies all five before declaring the s
 
 ## Exceptions
 
-The following are exempt from criteria (a)–(d) but **not** from (e) (ticket existence):
+The following categories are exempt from criteria (a)–(d) but **not** from (e) (ticket existence):
 
 - **Typo fixes** with no functional effect (the same word, spelled correctly)
 - **Doc-only changes** that don't reframe API contracts
 - **Tooling / CI / build chores** that don't change runtime behavior
+
+Per `_writing-rules-rules.md` writing-rules:4, claiming the exemption is itself a "this doesn't apply" claim and requires the evidence chain. The exemption goes in the self-review artifact (or the commit body if no artifact) as:
+
+```
+## Trivial-change declaration
+
+Category: <token from the writing-rules:5 controlled vocabulary —
+           e.g. `prose-only-docs` for a doc-only edit;
+           `commit-msg-only` for an --amend>
+Cannot produce error: <one sentence stating the falsifiable claim that
+                       this change cannot generate empirical evidence
+                       contradicting the agent's model>
+Evidence: <command output supporting the claim — e.g. `git diff --stat`
+          showing 1 file changed in docs/ only; `grep -l "def\|class" $(git diff --name-only)`
+          returning empty for non-code change>
+Falsification: <observable that would make this exemption wrong —
+               e.g. "NOT exempt if any non-docs/ file changes" or
+               "NOT exempt if test count changes">
+```
+
+Validated by `scripts/discipline/check-trivial-claim.sh` when the artifact is parsed by the self-review hook. Free-text assertions ("obviously a typo," "minor cleanup") fail.
 
 If in doubt, apply the full Definition of Done. The cost of unnecessary diligence is low; the cost of skipping diligence on a behavior change that looked trivial is high.
 

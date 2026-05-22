@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Systematic code review methodology. Covers correctness, security, performance, readability, and how to prioritize findings.
+description: "MANDATORY review gate for any PR / diff / session-end code. Pre-review (run first): evaluate-ticket against the PR's linked ticket; produce Reviewer Assumptions block (Working as / Reading for / Failure shapes). THEN: mechanical pre-flight scanner + six-layer review (correctness, security, data integrity, performance, readability, ticket-discipline). Reciprocal of self-review's author-side discipline. Do NOT skip this skill; reviewing a diff without first reading the ticket reviews against the reviewer's mental model, not the author's intent."
 disable-model-invocation: true
 allowed-tools: Read Grep Glob
 argument-hint: "[PR-number-or-path] [optional-focus-area]"
@@ -21,6 +21,46 @@ The Siege-specific catches below (catalog bypass, NULL drops, partition skew) st
 ## When to Use This Skill
 
 When reviewing a pull request, a diff, or code written during a session. Apply this methodology systematically — don't rely on skimming to catch issues.
+
+## Pre-review: ticket + reviewer assumptions (before everything else)
+
+Per claude-configs-public#146, the reviewer side of the discipline mirrors the author side: ground the review in the author's stated intent BEFORE judging the diff. Two steps, in this order.
+
+### 1. Verify the ticket the PR cites is fit
+
+```bash
+bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>
+```
+
+(Path: `scripts/discipline/evaluate-ticket.sh` in claude-configs-public; rubric documented in `evaluate-ticket/SKILL.md`.)
+
+**PASS** → proceed to step 2.
+
+**BLOCK** → your **first review comment** is the gap list from the script's output. Do NOT review the diff until either (a) the author fixes the ticket and re-runs evaluate-ticket, or (b) the author pastes an exemption block in their self-review artifact per `_writing-rules-rules.md` writing-rules:4.
+
+Reviewing a diff against an unfit ticket reviews against the reviewer's mental model, not the author's stated intent. That's where reviewer / author drift starts.
+
+### 2. Produce a Reviewer Assumptions block
+
+Before reading the diff, write (in the PR review body, or in a reviewer-side artifact alongside the PR):
+
+```
+## Reviewer Assumptions
+Working as: <reviewer role(s)>
+Reading for: <intent restated in your own words from the ticket — NOT from
+              the PR body. If you can't restate the intent from the ticket
+              alone, that's evidence the ticket is unfit; loop back to step 1.>
+Failure shapes I would flag before reading the diff: <list 2-3 concrete
+              observable failures a bad version of this would exhibit —
+              e.g. "regression in the X test suite," "silent data drop in
+              the Y branch," "race condition on Z").
+```
+
+The Reading-for restatement is the equivalent of the author's `Goal source verification`: it forces the reviewer to read the ticket, not just the PR body. The failure-shapes prediction exposes the reviewer's mental model up front, so when the review surfaces a finding the contrast with the predicted shape is auditable.
+
+### 3. THEN run the mechanical pre-flight + 6-layer review below
+
+The existing scanner + judgement layers fire after the ticket and Reviewer Assumptions are settled.
 
 ## Mechanical pre-flight (run first)
 

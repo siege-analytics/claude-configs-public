@@ -102,12 +102,20 @@ If a non-trivial action lacks a Design line, the action stops. Run `[skill:think
 The verification block has exactly one override:
 
 ```
-[verify-skip: <one-sentence reason>]
+[verify-skip: Reason=<one sentence> | Evidence=<verifiable observation> | Falsification=<what would make this wrong>]
 ```
+
+Per `_writing-rules-rules.md` writing-rules:4, `[verify-skip]` is itself a "this doesn't apply" claim and requires the three-field evidence chain. Free-text reasons ("obvious," "trivial") do NOT satisfy the rule.
 
 Use cases for the override are narrow:
 - A trivial action whose correctness is self-evident from the immediately preceding context (e.g., the user just said "add a newline at the end of file X" and you are doing exactly that)
 - A read-only or query-only action that has no side effect (`Read`, `Grep`, `Glob`, `gh pr view`, etc.) -- these don't require the block in the first place
+
+Example with evidence chain:
+
+```
+[verify-skip: Reason=trivial single-character cleanup, scope set by user in immediately preceding turn | Evidence=user's last turn said "remove the trailing space on line 47 of README.md"; `git diff --stat` will show 1 file, 1 line | Falsification=NOT trivial if the diff touches any line other than 47 or any file other than README.md]
+```
 
 `[verify-skip]` is itself a flag that the action is being taken without the standard discipline. If you reach for it more than once a session, the discipline is being eroded -- surface it to the user and ask whether the threshold needs adjusting, rather than normalizing the override.
 

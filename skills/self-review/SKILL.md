@@ -1,6 +1,7 @@
 ---
 name: self-review
-description: "Always-on. Self code-review before any push / PR-open / PR-merge. Produce a structured artifact with assumptions (including roles), peer review against the shelves, and lead review naming affirmative standards from outside the shelves. The pre-push hook enforces presence of the trailers and structural completeness; quality of content remains operator-auditable."
+description: "MANDATORY pre-push / pre-PR-open / pre-PR-merge gate. Produce a structured artifact with Assumptions (including roles + Goal source verification via evaluate-ticket + Evidence-predates-work block), Peer review against the shelves, and Lead review naming affirmative standards. The pre-push hook enforces trailer presence, structural completeness, artifact-predates-work, and the writing-rules:4 evidence-chain on any Trivial-change / Exemption blocks. Do NOT skip this skill; the form is checkable but the discipline is what binds."
+disable-model-invocation: true
 user-invocable: true
 ---
 
@@ -43,6 +44,7 @@ Working as: <role(s)>
 Peer review needed from: <role(s)>
 Lead review needed from: <role(s)>
 Goal source: <ticket #N | design-note path | quoted user-request paragraph>
+Goal source verification: <paste the PASS line from `bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>`>
 Plan reference: <path-or-link to the design note this diff implements>
 
 ## Peer review (mechanics, correctness, craft floor)
@@ -57,7 +59,77 @@ explicitly, with the role-context.
   E.g.: "As data engineer: the load is idempotent because <evidence>."
 Approach-fit verdict. Blast radius declared. Sequencing assumption
 that has to hold for this to be the right move.
+
+## Evidence-predates-work
+Artifact: <path to this artifact>
+First-added commit: <paste output of `git log -1 --diff-filter=A --follow --format=%H -- <artifact-path>`>
+Work commit: <paste `git rev-parse HEAD`>
+Verification: <paste output of `git merge-base --is-ancestor <first-added> <work-commit>; echo $?` — must be 0>
 ```
+
+## Trivial-change declaration (when no ticket cited)
+
+If the work is genuinely too small to warrant a ticket — typo fix,
+doc-only edit, single-character revert — the artifact may include
+this block in place of `Goal source verification`. The block itself
+requires the same evidence chain as any "this doesn't apply" claim
+(`_writing-rules-rules.md` writing-rules:4):
+
+```
+## Trivial-change declaration
+
+Category: <token from the writing-rules:5 controlled vocabulary —
+           prose-only-docs | comments-only | whitespace-only |
+           commit-msg-only | private-rename |
+           descriptive-docstring-fix | fixed-string-correction>
+Cannot produce error: <one sentence stating the claim that this change
+                       cannot generate empirical evidence contradicting
+                       the agent's model of the system — falsifiable>
+Evidence: <command output proving the Category's Evidence-shape
+          requirement per writing-rules:5 — e.g. for `prose-only-docs`,
+          the grep showing no behavior tokens in changed regions; for
+          `private-rename`, the grep showing only-the-rename-site>
+Falsification: <observable that would prove the Cannot-produce-error
+                claim wrong; if this observable later surfaces, this
+                block is the post-error revision trigger>
+```
+
+The local hook (`hooks/git/self-review.sh`) and the canonical script
+(`scripts/discipline/check-trivial-claim.sh`) validate that all three
+fields are present and that the Evidence field contains a verifiable
+observation token (command output, file path with extension, fenced
+code block, stat/count, or URL). Free-text assertions like "obviously
+trivial" or "minor cleanup" fail.
+
+### When the Falsification observable surfaces
+
+The Falsification field is the writing-rules:6 trigger. If the observable named there later surfaces — an `AttributeError` matching the renamed symbol, a behavior claim acted on from prose-only-docs, a non-comment line changed by what was claimed comments-only — the Trivial-change declaration was wrong, and the response is **not** to just fix the bug.
+
+Per writing-rules:6 (and [skill:post-error-revision]):
+
+1. File a ticket retroactively, citing the failed Trivial-change block as Goal source.
+2. Append a `## Post-error revision` block to the new ticket with the five required fields (Triggered by / Observed / Falsified assumption / Revised model / Implication).
+3. THEN draft the fix PR with a `Refs:` + `Post-error-revision:` trailer pair.
+
+Skipping this and just pushing the fix re-runs the same Assumption on the next change. The Trivial-change Falsification field exists to make the trigger explicit; ignoring it when it fires defeats the whole writing-rules:5 -> writing-rules:6 loop.
+
+## Exemption blocks
+
+When a specific `evaluate-ticket` criterion doesn't apply to your
+work (e.g., a docs-only ticket can't state a falsification criterion
+in the writing-tests:1 shape), paste an exemption block per criterion:
+
+```
+## Exemption: <criterion-name>
+
+Reason: <why this criterion doesn't apply>
+Evidence: <command output or verifiable observation supporting the
+          exemption — e.g. `git diff --stat | grep -v '\.md$'` returns
+          no rows, proving no non-doc files changed>
+Falsification: <observable that would make this exemption wrong>
+```
+
+Same validation as Trivial-change declaration. Same enforcement path.
 
 ## Roles
 
@@ -209,12 +281,26 @@ the claim must be grounded.
 - **v1.1**: If `Goal source:` value is itself a file path, its mtime
   must not be newer than the review artifact's mtime (catches goal-
   source-written-after-the-work post-hoc-justification pattern).
+- **v2 (claude-configs-public#146)**: If the artifact file lives in a
+  git repo, the artifact's first-added commit must be an ancestor of
+  the work commit being pushed (`git log --diff-filter=A --follow` +
+  `git merge-base --is-ancestor`). Closes the retroactive-trailer
+  loophole that lets agents push first, write the artifact later, and
+  satisfy the form check while bypassing the discipline. Defense in
+  depth alongside v1.1's mtime check; this one is touch-resistant.
+- **v2 (claude-configs-public#146)**: If the artifact contains a
+  `## Trivial-change declaration` or `## Exemption:` block, each block
+  must have all three fields (Reason / Evidence / Falsification) AND
+  the Evidence field must contain a verifiable observation token
+  (fenced code block, file path with extension, git command, stat/
+  count, or URL). Free-text assertions fail. Delegated to
+  `scripts/discipline/check-trivial-claim.sh`.
 - Assumptions section names at least one role from the canonical
   set (software engineer / tech lead / data engineer / data analyst /
   geospatial).
 - Peer review section cites at least one shelf
   (writing-code / writing-tests / writing-claims / writing-prose /
-  writing-releases).
+  writing-releases / writing-rules).
 
 **v2 follow-up to enforce mechanically:**
 

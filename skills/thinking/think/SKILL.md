@@ -17,6 +17,27 @@ Code written without a design is a draft disguised as a solution. It commits you
 
 ## Design Workflow
 
+### Step 0: Verify the ticket is fit
+
+Before producing the design note, verify the ticket the work cites is structurally fit for execution:
+
+```bash
+bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>
+```
+
+(Path: `scripts/discipline/evaluate-ticket.sh` in the `claude-configs-public` repo; the skill that documents the rubric is `evaluate-ticket/SKILL.md`.)
+
+**PASS** → proceed to Step 1.
+
+**BLOCK** → two acceptable responses:
+
+1. **Fix the ticket** to address the listed gaps. This is the default. Edit the ticket body to add the missing sections (Context / Goal / Acceptance / Assumptions / `/think` link / falsification for behavior-change tickets) and re-run `evaluate-ticket`.
+2. **Paste an exemption block** in your eventual self-review artifact per `_writing-rules-rules.md` writing-rules:4. The exemption requires Reason / Evidence / Falsification fields; the self-review hook validates via `scripts/discipline/check-trivial-claim.sh`.
+
+"Just ignore the BLOCK" is not acceptable. The self-review hook re-runs `evaluate-ticket` against the cited Goal source and refuses the push if it BLOCKs and no exemption block is present.
+
+**Trivial-change exception:** if the work is genuinely too small to warrant a full ticket (typo fix, doc-only edit, single-character revert), you may skip Step 0 by including a `## Trivial-change declaration` block in your self-review artifact per the format in `self-review/SKILL.md`. The declaration itself requires evidence; "this is trivial" without a falsifiable basis is not an acceptable declaration.
+
 ### Step 1: Context
 
 Understand what exists and what's changing.
@@ -27,6 +48,19 @@ Understand what exists and what's changing.
 - What is the scope boundary? (What is explicitly NOT part of this work)
 
 Read the relevant files. Don't guess about the current state.
+
+#### Sibling-grep gate (mandatory when designing a fix)
+
+When the task is designing a fix — not designing a new feature — Step 1 MUST include a sibling-grep before any proposal in Step 3. Grep the codebase for siblings of the symptom we're fixing, using at least the following queries:
+
+- **Same import path:** grep for other call sites of the failing function / class / module.
+- **Same decorator or fixture:** grep for the decorator (`@dp.materialized_view`, `@retry`, `@cached_property`) across the repo; list every site.
+- **Same filter / call shape:** grep for the syntactic pattern that bracketed the failure (`filter(...).partition_cols=(...)`, `except SpecificClass:`, `if config.get('x')`).
+- **Same failure signature:** if the failure has a known exception class or error string, grep for other handlers that catch the same shape.
+
+Paste the sibling-set in Step 1's Context block. If the sibling-set is N≥2, the bug is a class — design the fix at the class level, not per-instance. Per writing-rules:7, N≥3 in one session is a hard gate: produce the audit matrix or revert to investigation.
+
+Bug class is the unit; per-instance design is fragile. The Spark Connect guard sequence that motivated this gate had five same-shape PRs over hours because nobody grep'd for siblings before designing the second fix. One PR with an audit matrix would have replaced all five.
 
 ### Step 2: Questions
 
