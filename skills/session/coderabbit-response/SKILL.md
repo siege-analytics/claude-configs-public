@@ -10,6 +10,8 @@ argument-hint: [pr-number]
 
 Use this skill to triage a CodeRabbit (or similar bot) review on a pull request. See [reference.md](reference.md) for GraphQL command templates and GitHub review-decision rules.
 
+**Platform scope**: CodeRabbit is GitHub-specific (operates on GitHub PR + reviewDecision semantics). GitLab repos use different review-bot ecosystems (CodeClimate, GitGuardian, custom MR-bot integrations); the triage *posture* in this skill — fix / reply / dismiss; manage stale-review-blocks-merge — generalizes, but the GraphQL + `gh api` commands below are GitHub-only. For GitLab MR review triage, treat this skill as conceptual guidance and adapt the API surface to GitLab's MR / discussion / approval endpoints.
+
 ## When to Use
 
 After CodeRabbit posts CHANGES_REQUESTED on a PR and you need to decide: fix, reply, or dismiss.

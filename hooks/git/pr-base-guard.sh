@@ -27,9 +27,12 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-# Match `gh pr create` anywhere in the command. Portable word-boundary
-# form (BSD grep does not support `\b`); see issue #106 fix for self-review.
-TRIGGER='(^|[^[:alnum:]])gh[[:space:]]+pr[[:space:]]+create([^[:alnum:]]|$)'
+# Match `gh pr create` (GitHub) or `glab mr create` (GitLab) anywhere in
+# the command. Portable word-boundary form (BSD grep does not support
+# `\b`); see issue #106 fix for self-review. Both platforms use the same
+# develop-first rule (CCP#201); the parser below switches on which CLI
+# matched to handle the per-CLI flag shapes (--base vs --target-branch).
+TRIGGER='(^|[^[:alnum:]])(gh[[:space:]]+pr[[:space:]]+create|glab[[:space:]]+mr[[:space:]]+create)([^[:alnum:]]|$)'
 if ! echo "$COMMAND" | grep -qE "$TRIGGER"; then
     exit 0
 fi
@@ -71,26 +74,44 @@ if [[ -z "$EFFECTIVE_CWD" ]]; then
     exit 0
 fi
 
-# Extract --base / -B value from the command. Handles `--base main`,
-# `--base=main`, `-B main`. We only need the next bare word; gh accepts
-# branch names with no special characters in the role synonyms we care
-# about.
+# Extract the PR/MR target branch from the command. Both CLIs have
+# their own flag shape:
+#   gh pr create:   --base / --base= / -B  (GitHub)
+#   glab mr create: --target-branch / --target-branch= / -b  (GitLab)
+# We only need the next bare word; both CLIs accept branch names with
+# no special characters in the role synonyms we care about.
 PR_BASE=""
-if [[ "$COMMAND" =~ --base[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
-    PR_BASE="${BASH_REMATCH[1]}"
-elif [[ "$COMMAND" =~ --base=([A-Za-z0-9_/.-]+) ]]; then
-    PR_BASE="${BASH_REMATCH[1]}"
-elif [[ "$COMMAND" =~ (^|[[:space:]])-B[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
-    PR_BASE="${BASH_REMATCH[2]}"
-fi
-
-# If --base was not specified, gh pr create falls back to the repo's
-# default branch. Query gh for it; if gh is unavailable or the query
-# fails, yield rather than guess.
-if [[ -z "$PR_BASE" ]]; then
-    PR_BASE=$(cd "$EFFECTIVE_CWD" && gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name' 2>/dev/null || echo "")
+if echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])glab[[:space:]]+mr[[:space:]]+create([^[:alnum:]]|$)'; then
+    # GitLab path
+    if [[ "$COMMAND" =~ --target-branch[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+        PR_BASE="${BASH_REMATCH[1]}"
+    elif [[ "$COMMAND" =~ --target-branch=([A-Za-z0-9_/.-]+) ]]; then
+        PR_BASE="${BASH_REMATCH[1]}"
+    elif [[ "$COMMAND" =~ (^|[[:space:]])-b[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+        PR_BASE="${BASH_REMATCH[2]}"
+    fi
+    # Fall back to glab's default-branch query.
     if [[ -z "$PR_BASE" ]]; then
-        exit 0
+        PR_BASE=$(cd "$EFFECTIVE_CWD" && glab repo view --output json 2>/dev/null | jq -r '.default_branch // empty' 2>/dev/null || echo "")
+        if [[ -z "$PR_BASE" ]]; then
+            exit 0
+        fi
+    fi
+else
+    # GitHub path (default)
+    if [[ "$COMMAND" =~ --base[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+        PR_BASE="${BASH_REMATCH[1]}"
+    elif [[ "$COMMAND" =~ --base=([A-Za-z0-9_/.-]+) ]]; then
+        PR_BASE="${BASH_REMATCH[1]}"
+    elif [[ "$COMMAND" =~ (^|[[:space:]])-B[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+        PR_BASE="${BASH_REMATCH[2]}"
+    fi
+    # Fall back to gh's default-branch query.
+    if [[ -z "$PR_BASE" ]]; then
+        PR_BASE=$(cd "$EFFECTIVE_CWD" && gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name' 2>/dev/null || echo "")
+        if [[ -z "$PR_BASE" ]]; then
+            exit 0
+        fi
     fi
 fi
 
@@ -134,23 +155,33 @@ esac
 # Block. Print the develop-guard skill's remediation; the message is
 # the operator-facing surface for this hook and must point at the
 # canonical skill, not just complain.
+# Detect which CLI matched to surface the right remediation flag name.
+if echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])glab[[:space:]]+mr[[:space:]]+create([^[:alnum:]]|$)'; then
+    REMEDIATION_FLAG="--target-branch develop"
+    CLI_LABEL="glab mr create"
+else
+    REMEDIATION_FLAG="--base develop"
+    CLI_LABEL="gh pr create"
+fi
+
 cat >&2 <<EOF
-BLOCKED: gh pr create targets main-role branch '$PR_BASE' but head '$HEAD_BRANCH'
+BLOCKED: $CLI_LABEL targets main-role branch '$PR_BASE' but head '$HEAD_BRANCH'
 is not develop-role / promote / release / hotfix, and the command does
 not carry the 'hotfix-direct-to-main' label.
 
 Per skills/git-workflow/develop-guard/SKILL.md (the curation invariant):
 main-role is the curated best of all work; develop-role is the origin
-where experiments compete for promotion. Feature/task/bugfix PRs target
-the develop-role branch, not main.
+where experiments compete for promotion. Feature/task/bugfix PRs/MRs
+target the develop-role branch, not main.
 
 Remediation:
-  - Re-target the PR: \`--base develop\` (or your repo's develop-role synonym).
+  - Re-target the PR/MR: \`$REMEDIATION_FLAG\` (or your repo's develop-role synonym).
   - If this is a deliberate release/promote/hotfix shape, rename the head
     branch to match \`release/*\` / \`promote/*\` / \`hotfix/*\`.
   - If this is a deliberate hotfix that must bypass develop, add
-    \`--label hotfix-direct-to-main\` (audit trail in the PR's label
-    history; matches the server-side guard in pr-base-guard.yml).
+    \`--label hotfix-direct-to-main\` (audit trail in the PR/MR's label
+    history; matches the server-side guard in pr-base-guard.yml and
+    templates/gitlab-pr-base-guard.yml).
 
 See develop-guard/SKILL.md for the full decision tree.
 EOF
