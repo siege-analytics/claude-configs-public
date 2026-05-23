@@ -1,5 +1,5 @@
 ---
-description: Always-on. Investigation-as-deliverable discipline for code, config, and commands whose runtime behavior depends on the state of an external resource. The author must read the inputs (ticket, epic, documentation), measure the contact-point surfaces (rules 1-5), and record the findings in the ticket itself (rule 6) before authoring. Sibling to writing-code (verify-before-touching-code) and writing-claims (verify-before-claiming) -- this file covers verify-the-external-state-before-writing-against-it and the requirement that the verification artifact lives in the ticket, not in chat.
+description: Always-on. Investigation-as-deliverable discipline for code, config, and commands whose runtime behavior depends on the state of an external resource. The author must read the inputs (ticket, epic, documentation), measure the contact-point surfaces (rules 1-5), record the findings in the ticket itself, and state the falsifiable truth-functional hypothesis the code will implement (rule 6), before authoring. Sibling to writing-code (verify-before-touching-code) and writing-claims (verify-before-claiming) -- this file covers verify-the-external-state-before-writing-against-it and the requirement that both the verification artifact and the spec the code is to satisfy live in the ticket, not in chat.
 ---
 
 # Authoring Against State
@@ -10,7 +10,7 @@ The existing shelves treat the diff as the unit of work. `[rule:writing-code]` v
 
 Tonight's failure mode (recurring across electinfo/enterprise#2076-#2093 between 2026-05-22 and 2026-05-23): correctly-written code, shipped under correctness-shaped review, that assumed a runtime reality which had drifted from the author's mental model. The diff was right relative to imagined state. It was wrong relative to measured state. Six distinct production failures in one backfill cycle, each preventable by a one-line measurement command run before the code was written.
 
-These rules close that category by making the measurement compulsory at write time, **with the output retained in the ticket so the next author doesn't have to re-discover.** The shelf has two layers: rules 1-5 specify WHAT to measure (the contact-point categories); rule 6 specifies HOW the act is performed (read the inputs first; apply rules 1-5; record findings) and WHERE the record lives (in the ticket body, not in chat, not in agent memory). Rules 1-5 without rule 6 reduce to "the author measured something then forgot it"; rule 6 without rules 1-5 reduces to "the author wrote a section header in the ticket and called it done." Both layers are required.
+These rules close that category by making the measurement compulsory at write time, **with the output retained in the ticket so the next author doesn't have to re-discover.** The shelf has two layers: rules 1-5 specify WHAT to measure (the contact-point categories); rule 6 specifies HOW the act is performed (read the inputs first; apply rules 1-5; record findings; state a falsifiable hypothesis of what the code will implement) and WHERE the record lives (in the ticket body, not in chat, not in agent memory). Rules 1-5 without rule 6 reduce to "the author measured something then forgot it"; rule 6 without its inventory clause reduces to "the author wrote a section header in the ticket and called it done"; rule 6 without its hypothesis clause reduces to "the author recorded what was true but never wrote what they intended to make true, so the reviewer has nothing to check the diff against." All three pieces -- inventory of measured state, inventory of other surfaces, and falsifiable hypothesis of intended end-state -- are required.
 
 ## Scope: cross-platform
 
@@ -166,6 +166,14 @@ Before authoring a runtime artifact that triggers any of rules 1-5, the author m
 
 5. **State explicitly what was NOT measured.** If a contact-point rule fired but the author chose not to measure (e.g. via Trivial-against-state declaration), state that in the inventory section and cross-reference the Trivial-against-state Reason / Evidence / Falsification. Silence is not equivalent to "doesn't apply."
 
+6. **State the falsifiable, truth-functional hypothesis the code will implement.** In the same `## Pre-author inventory` section, write a declarative statement of what the new code, config, or command will do. Use `{placeholders}` for values surfaced in the inventory above -- this grounds the hypothesis in measured state rather than assumed state. Each clause must be independently checkable against the resulting implementation. Each conditional ("if X then Y, else Z") is a separate falsifiable predicate; the resulting code must either handle both branches or explicitly state which branch is not handled and why. The hypothesis is what the reviewer (and future-you, in the next session) verifies the diff against -- without it, the only spec is whatever the author was thinking, which doesn't survive the session. The inventory tells the reader what is true now; the hypothesis tells the reader what the code is going to make true. Both belong in the ticket; neither is optional.
+
+Worked example for the "put county shapefile in PSQL" case the rule is framed around:
+
+> "The county shapefile at `{path}` is to be added to `{spatial_database}`, reached with `{credentials}` or `{method}`, using `{function}`. This will create a new table named for the human-legible version of the geography if it is not already in existence and make the year of the shapefile's release the value of `{vintage_column}`. If the table exists, it will append these records, using the year of the shapefile's release as the value of the `{vintage_column}`, and deduplicate."
+
+Each placeholder resolves to a value the inventory surfaced (path from "Inputs read", spatial_database from "Surface areas inventoried", function from "Surface areas inventoried", vintage_column from the existing schema if applicable). Each conditional ("if not already in existence", "if the table exists") is a separate predicate the implementation must handle.
+
 **Inventory template** (one block per contact-point category that triggered; expand for other surfaces touched):
 
 ```markdown
@@ -194,9 +202,32 @@ Before authoring a runtime artifact that triggers any of rules 1-5, the author m
  - Downstream consumers reading the table (any that pin schema?)
 ]
 
+### Hypothesis (what the code will implement; falsifiable)
+[A declarative statement of what the new code/config does. Use
+ `{placeholders}` for values surfaced in the inventory above so the
+ hypothesis is grounded in measured state. Each clause must be
+ independently checkable against the resulting implementation. Each
+ conditional ("if X then Y, else Z") is a separate falsifiable
+ predicate; the code must either handle both branches or state
+ explicitly which branch is not handled and why.
+
+ Worked example (the "put county shapefile in PSQL" case the rule is
+ framed around):
+
+ "The county shapefile at `{path}` is to be added to `{spatial_database}`,
+  reached with `{credentials}` or `{method}`, using `{function}`. This will
+  create a new table named for the human-legible version of the geography
+  if it is not already in existence and make the year of the shapefile's
+  release the value of `{vintage_column}`. If the table exists, it will
+  append these records, using the year of the shapefile's release as the
+  value of the `{vintage_column}`, and deduplicate."
+]
+
 ### Conclusions
 [One sentence per axis: is the assumed state consistent with measured state?
- If not, what's the gap, and how does the planned change handle it?]
+ If not, what's the gap, and how does the planned change handle it?
+ Is the hypothesis above achievable given the inventory, or does any clause
+ conflict with measured state? Resolve conflicts before authoring, not after.]
 ```
 
 **Trigger:** any change that triggers ANY of rules 1-5 (the contact-point rules). Rule 6 is the meta-rule that wraps them: the 5 rules dictate WHAT to measure; rule 6 dictates WHERE the measurement record lives and WHICH inputs frame the measurement.
