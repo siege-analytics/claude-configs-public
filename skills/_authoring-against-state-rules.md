@@ -12,6 +12,10 @@ Tonight's failure mode (recurring across electinfo/enterprise#2076-#2093 between
 
 These rules close that category by making the measurement compulsory at write time, with the output retained in the authoring artifact so the next author doesn't have to re-discover.
 
+## Scope: cross-platform
+
+The concrete examples in each rule's "Concrete measurements" block come from the Spark / Kubernetes / Rundeck / Unity Catalog stack the shelf was forged against (the electinfo incident chain). They are illustrative, not definitive. The *act* of measure-before-write applies regardless of platform: any contact category that maps to "code or config whose behavior depends on a measurable external state the author has not just inventoried" triggers the rule. A consumer working in a different stack (e.g. a Go service against PostgreSQL + Redis, a frontend against a REST API, an embedded device against a hardware bus) reads the contact category, identifies the analogous measurement, and runs that.
+
 ## The rules
 
 **authoring-against-state:1. Data-shape contact -- measure the actual data before writing code that consumes it.**
@@ -142,20 +146,33 @@ The measurement output goes in the authoring artifact AND in the rule's required
 
 **Trigger:** adding or renaming a public symbol (top-level def, class, module-level constant) in a package that is on a shared PYTHONPATH, IS used by multiple consumers, or HAS sibling installations on the same runtime.
 
-**This rule supersedes writing-code:16 in scope.** writing-code:16 in the electinfo_claude_skills downstream covered the same failure mode (cross-project shadow audit) at edit time. authoring-against-state:5 is the same rule promoted to this shelf with the same trigger but explicit framing as a state-measurement act.
+**This rule supersedes writing-code:16 in scope.** writing-code:16 in the electinfo_claude_skills downstream covered the same failure mode (cross-project shadow audit) at edit time. authoring-against-state:5 is the same rule promoted to this shelf with the same trigger but explicit framing as a state-measurement act. Resolution of the downstream supersession is tracked in electinfo/electinfo_claude_skills#23.
 
 **Empirical evidence:** electinfo/enterprise#2079 (2026-05-22). Symbol `verify_known_families_lockfile` was added to `enterprise/rundeck/pipelines/utilities/fec_hydra_schema.py`. The EE pipeline at runtime resolved `utilities.fec_hydra_schema` to a sibling Rundeck project's older copy lacking the new function. Bronze stage hit ImportError 4 hours after the merge.
 
 ## Trivial-change declaration
 
-A change that does not introduce a new authoring-against-state contact-point trigger may be declared trivial in the commit body via a `Trivial-against-state:` line. Acceptable reasons:
+A change that does not introduce a new authoring-against-state contact-point trigger may be declared trivial in the commit body, but the declaration is itself a `[rule:writing-rules]` writing-rules:4 claim ("this doesn't apply") and requires the same evidence chain as a "this happened" claim.
 
-- Pure documentation change (no code touched).
-- Comment-only change to existing code.
-- Change to a code path that does not run under shared cluster state (local script, fixture, test).
-- Change to a code path whose behavior depends only on inputs the author just verified in the same response.
+Format:
 
-The trivial declaration is operator-auditable. A change that includes the declaration but actually does touch a contact-point category is itself a violation -- it asserts triviality without grounding.
+```
+Trivial-against-state: <category from the controlled list below>
+Reason: <one-sentence statement of why the change does not touch a contact-point trigger>
+Evidence: <grep output, file paths, command output, or other same-turn evidence proving the Reason>
+Falsification: <the observation that would prove the Reason wrong, e.g. "if `grep -rn 'spark.read' <files>` returns a match, this declaration is incorrect">
+```
+
+Acceptable Reason categories (controlled list per `[rule:writing-rules]` writing-rules:5):
+
+- `docs-only` -- pure documentation change, no code touched. Falsification: `git diff --name-only HEAD~1 | grep -v -E '\.(md|rst|txt)$'` returns nothing.
+- `comment-only` -- comment-only change to existing code. Falsification: `git diff HEAD~1` shows only added/removed lines beginning with `#` (Python), `//` (JS), or equivalent comment markers; no executable code lines changed.
+- `local-only` -- change to a code path that does not run under shared cluster state (local script, fixture, test). Falsification: the path is not imported by any code under `<deployed-paths>` (project-local list).
+- `inputs-already-measured` -- change to a code path whose behavior depends only on inputs the author just verified in the same response. Falsification: the inventory commands from rules 1-5 do not return a different result than what the author recorded in the same response.
+
+A `Trivial-against-state:` declaration that omits Reason / Evidence / Falsification (or names a category outside the controlled list) is itself a `writing-rules:4` violation. The trivial declaration is operator-auditable; the evidence chain makes the auditability mechanical.
+
+A change that includes the declaration but actually does touch a contact-point category is a `writing-rules:5` violation -- "trivial" means "cannot produce a future error," and a contact-point touch can always produce a future error per the empirical evidence in each rule.
 
 ## Post-error revision
 
