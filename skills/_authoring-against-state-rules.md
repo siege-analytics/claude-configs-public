@@ -213,13 +213,13 @@ The shape is identical to the Spark/PSQL example -- inputs, enumerated questions
 ```markdown
 ## Pre-author inventory
 
-### Inputs read
+### Inputs read (step 1)
 - Ticket: <link or paste of the load-bearing requirements>
 - Epic: <link or paste of the load-bearing constraints>
 - Documentation consulted: <links>
 - Standing rules / skills consulted: <rule IDs or skill names>
 
-### Knowledge requirements (what we need to know in order to do this work)
+### Knowledge requirements (step 2 — what we need to know in order to do this work)
 [The open questions whose answers determine HOW the code is written.
  Each question is a measurement target the inventory below must answer
  (or explicitly defer under "What was NOT measured"). For the
@@ -235,14 +235,14 @@ The shape is identical to the Spark/PSQL example -- inputs, enumerated questions
  - Are there downstream consumers that pin the table's schema?
 ]
 
-### Contact-point measurements (per rules 1-5)
+### Contact-point measurements (step 3 — per rules 1-5)
 - **data-shape (authoring-against-state:1):** [measurement output OR `N/A` with Trivial-against-state cross-reference]
 - **config-state (authoring-against-state:2):** [measurement output OR `N/A`]
 - **topology (authoring-against-state:3):** [measurement output OR `N/A`]
 - **plan-shape (authoring-against-state:4):** [measurement output OR `N/A`]
 - **version-resolution (authoring-against-state:5):** [measurement output OR `N/A`]
 
-### Surface areas inventoried beyond rules 1-5
+### Surface areas inventoried beyond rules 1-5 (step 4)
 [Free-form list. For "put county shapefile in PSQL" this might include:
  - DB connection string + credentials path
  - Target table existence + schema (or note "table does not exist; will create")
@@ -252,7 +252,7 @@ The shape is identical to the Spark/PSQL example -- inputs, enumerated questions
  - Downstream consumers reading the table (any that pin schema?)
 ]
 
-### Hypothesis (what the code will implement; falsifiable)
+### Hypothesis (step 7 — what the code will implement; falsifiable)
 [A declarative statement of what the new code/config does. Use
  `{placeholders}` for values surfaced in the inventory above so the
  hypothesis is grounded in measured state. Each clause must be
@@ -273,7 +273,7 @@ The shape is identical to the Spark/PSQL example -- inputs, enumerated questions
   value of the `{vintage_column}`, and deduplicate."
 ]
 
-### Conclusions
+### Conclusions (steps 5+6 — write into the ticket; state explicitly what was NOT measured)
 [One sentence per axis: is the assumed state consistent with measured state?
  If not, what's the gap, and how does the planned change handle it?
  Is the hypothesis above achievable given the inventory, or does any clause
@@ -314,6 +314,8 @@ What this means concretely:
 - **A multi-table DLT MV body change that triggers data-shape + plan-shape + config-state:** Pre-author inventory still required. Inputs read = ticket + epic + DLT docs + at least one sibling MV. Knowledge requirements = a dozen open questions. Contact-point measurements = a `count()` per upstream + a `unionByName` depth count + a Spark Connect server `grep`. Other surfaces = the GitOps catalog config + downstream subscribers + materialization target schema. Hypothesis = a multi-clause statement with several conditional predicates. An hour of work, properly.
 
 The rule is inviolable in form: every section of the Pre-author inventory template appears in every triggering PR. The rule is proportionate in content: each section's depth flexes with what the change actually touches.
+
+The depth flex described here is the *form-side* scale knob; step 7's hypothesis-scaling rule (single-axis change = one-sentence hypothesis; multi-axis change = one predicate per axis) is the *content-side* scale knob. Together they're the rule's two-sided proportionality: the form is fixed but flexes in depth, and the hypothesis content is fixed in structure but flexes in predicate count. A reader applying the rule to a small change consults both — the depth-flex tells them how short each inventory section can be; the hypothesis-scaling tells them whether their one-sentence spec is calibration or hand-waving.
 
 Why "the agent decides per change" doesn't work as the carve-out: the agent is the wrong actor to decide what's small enough to skip a step. Every one of #2094's smoke-cycle iterations started from a change the author thought was small. The author's perception of small != actual blast radius; the inventory IS the act of measuring whether the author's perception matches reality. Skipping the inventory because the change feels small is the perception itself talking.
 
