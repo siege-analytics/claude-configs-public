@@ -1,5 +1,5 @@
 ---
-description: Always-on. Measure-before-write discipline for code, config, and commands whose runtime behavior depends on the state of an external resource. Sibling to writing-code (verify-before-touching-code) and writing-claims (verify-before-claiming) -- this file covers verify-the-external-state-before-writing-against-it. Triggers at edit time when the author is producing an artifact that will run against shared state the author did not just inventory.
+description: Always-on. Investigation-as-deliverable discipline for code, config, and commands whose runtime behavior depends on the state of an external resource. The author must read the inputs (ticket, epic, documentation), measure the contact-point surfaces (rules 1-5), and record the findings in the ticket itself (rule 6) before authoring. Sibling to writing-code (verify-before-touching-code) and writing-claims (verify-before-claiming) -- this file covers verify-the-external-state-before-writing-against-it and the requirement that the verification artifact lives in the ticket, not in chat.
 ---
 
 # Authoring Against State
@@ -10,7 +10,7 @@ The existing shelves treat the diff as the unit of work. `[rule:writing-code]` v
 
 Tonight's failure mode (recurring across electinfo/enterprise#2076-#2093 between 2026-05-22 and 2026-05-23): correctly-written code, shipped under correctness-shaped review, that assumed a runtime reality which had drifted from the author's mental model. The diff was right relative to imagined state. It was wrong relative to measured state. Six distinct production failures in one backfill cycle, each preventable by a one-line measurement command run before the code was written.
 
-These rules close that category by making the measurement compulsory at write time, with the output retained in the authoring artifact so the next author doesn't have to re-discover.
+These rules close that category by making the measurement compulsory at write time, **with the output retained in the ticket so the next author doesn't have to re-discover.** The shelf has two layers: rules 1-5 specify WHAT to measure (the contact-point categories); rule 6 specifies HOW the act is performed (read the inputs first; apply rules 1-5; record findings) and WHERE the record lives (in the ticket body, not in chat, not in agent memory). Rules 1-5 without rule 6 reduce to "the author measured something then forgot it"; rule 6 without rules 1-5 reduces to "the author wrote a section header in the ticket and called it done." Both layers are required.
 
 ## Scope: cross-platform
 
@@ -149,6 +149,73 @@ The measurement output goes in the authoring artifact AND in the rule's required
 **This rule supersedes writing-code:16 in scope.** writing-code:16 in the electinfo_claude_skills downstream covered the same failure mode (cross-project shadow audit) at edit time. authoring-against-state:5 is the same rule promoted to this shelf with the same trigger but explicit framing as a state-measurement act. Resolution of the downstream supersession is tracked in electinfo/electinfo_claude_skills#23.
 
 **Empirical evidence:** electinfo/enterprise#2079 (2026-05-22). Symbol `verify_known_families_lockfile` was added to `enterprise/rundeck/pipelines/utilities/fec_hydra_schema.py`. The EE pipeline at runtime resolved `utilities.fec_hydra_schema` to a sibling Rundeck project's older copy lacking the new function. Bronze stage hit ImportError 4 hours after the merge.
+
+**authoring-against-state:6. Investigation-as-deliverable -- the inventory IS the ticket.**
+
+Rules 1-5 specify what to measure. Rule 6 specifies how the measurement act is performed, and where the record lives.
+
+Before authoring a runtime artifact that triggers any of rules 1-5, the author must:
+
+1. **Read all inputs.** The work-item ticket. Any parent epic. Any standing rules or skills that govern this area. Any documentation for the resources being touched. Don't infer the requirements from the ticket title alone; the body and the epic typically carry the load-bearing constraints (format requirements, partition shape, target catalog, downstream consumer expectations). A ticket that says "put county shapefile in PSQL" without naming the target table, the connection, the existing schema, the SRID, or the load function is incomplete input -- the agent must read the epic and the docs and the existing code to fill that in, then write the fill-in into the ticket.
+
+2. **Inventory the contact points listed in rules 1-5.** For each rule that triggers -- data-shape, config-state, topology, plan-shape, version-resolution -- run the rule's "Concrete measurements" against the actual current state. Memory of state from a prior session is stale by default; the same-turn evidence requirement of writing-claims:1 applies.
+
+3. **Inventory other surface areas of contact, not just the five rule categories.** Rules 1-5 are the categories the originating arcs hardened against. Real systems have more contact surfaces: existing tables to add to, existing functions to reuse, connection strings, credentials providers, file system layouts, schema registries, downstream subscribers, GitOps configs. The author scans every surface the change will touch -- not just the five categorized rules -- and records what's there. The five rules are the floor of the inventory, not the ceiling.
+
+4. **Write the findings into the ticket itself.** The investigation is a deliverable, not an internal scratchpad. The agent updates the ticket body, appends a comment, or attaches a structured `## Pre-author inventory` section (template below) BEFORE the authoring step begins. The next reader of the ticket -- including future-you -- must be able to see what was measured without re-discovering it. A measurement done in chat is invisible to anyone who joins after the chat is compacted.
+
+5. **State explicitly what was NOT measured.** If a contact-point rule fired but the author chose not to measure (e.g. via Trivial-against-state declaration), state that in the inventory section and cross-reference the Trivial-against-state Reason / Evidence / Falsification. Silence is not equivalent to "doesn't apply."
+
+**Inventory template** (one block per contact-point category that triggered; expand for other surfaces touched):
+
+```markdown
+## Pre-author inventory
+
+### Inputs read
+- Ticket: <link or paste of the load-bearing requirements>
+- Epic: <link or paste of the load-bearing constraints>
+- Documentation consulted: <links>
+- Standing rules / skills consulted: <rule IDs or skill names>
+
+### Contact-point measurements (per rules 1-5)
+- **data-shape (authoring-against-state:1):** [measurement output OR `N/A` with Trivial-against-state cross-reference]
+- **config-state (authoring-against-state:2):** [measurement output OR `N/A`]
+- **topology (authoring-against-state:3):** [measurement output OR `N/A`]
+- **plan-shape (authoring-against-state:4):** [measurement output OR `N/A`]
+- **version-resolution (authoring-against-state:5):** [measurement output OR `N/A`]
+
+### Surface areas inventoried beyond rules 1-5
+[Free-form list. For "put county shapefile in PSQL" this might include:
+ - DB connection string + credentials path
+ - Target table existence + schema (or note "table does not exist; will create")
+ - Existing loader function in `utilities/<thing>.py` (or note "none; will write")
+ - SRID of source shapefile vs SRID of target column
+ - Indexes the table already has
+ - Downstream consumers reading the table (any that pin schema?)
+]
+
+### Conclusions
+[One sentence per axis: is the assumed state consistent with measured state?
+ If not, what's the gap, and how does the planned change handle it?]
+```
+
+**Trigger:** any change that triggers ANY of rules 1-5 (the contact-point rules). Rule 6 is the meta-rule that wraps them: the 5 rules dictate WHAT to measure; rule 6 dictates WHERE the measurement record lives and WHICH inputs frame the measurement.
+
+**Composes with `[rule:writing-claims]` writing-claims:1 + writing-claims:2.** writing-claims:1 says "grep before declaring fix complete." Rule 6 says "and write the grep output into the ticket so it survives the session." writing-claims:2 says "countable claims need same-turn evidence." Rule 6 says "and the evidence belongs in the ticket, not in a chat-window message that will be compacted away."
+
+**Composes with `[rule:definition-of-done]`.** Definition-of-done already requires the ticket exists and gets updated. Rule 6 specifies what the *initial* update looks like (the inventory section) -- before any authoring -- and treats it as a precondition to authoring rather than a closeout step.
+
+**Composes with `[rule:writing-rules]` writing-rules:3.** Memory entries are correction layers, not enforcement substitutes. Rule 6 acknowledges that: the inventory cannot live in agent memory across sessions, because that's invisible to the next actor. The ticket is the durable record.
+
+**Empirical evidence:** electinfo/enterprise#2094 silver_exp.sb Delta-format regression (2026-05-23). The work was authored without inventorying:
+
+- the actual format (parquet vs Delta) of the existing silver_exp.* tables -- the epic implied Delta but didn't say it explicitly, the docs were silent, and the running tables were parquet because PR #2067 had silently regressed them. A pre-author inventory of `DESCRIBE EXTENDED` output on silver_exp.sa would have surfaced `Provider = parquet` and made the regression visible before the smoke test was designed.
+- the V1 mirror stub state in `spark_catalog.silver_exp.*`. A pre-author inventory of `SHOW TABLES IN spark_catalog.silver_exp` would have surfaced stale stubs from prior runs with incompatible partition schemas; without it, the stubs collided with the new DLT registration and failed the smoke at minute 4.
+- the Spark Connect server's catalog binding + `spark.sql.extensions` list. A pre-author inventory of `kubectl exec spark-connect-server -- grep -E '(catalog.fec_filings_enterprise_experimental|sql.extensions)' /opt/spark/conf/spark-defaults.conf` would have surfaced `PatchedUCSingleCatalog` (not Delta) and `SedonaSqlExtensions` only (no Delta), making the cluster-side gap visible before the pipeline yaml was edited.
+
+Each missing inventory cost one or more smoke-cycle iterations. Each could have been recorded in the parent ticket (#2094) at the investigation stage, in a `## Pre-author inventory` section, and the next author would have started from that record instead of from a chat history that the next session can't see.
+
+The session's retrospective on "why did investigation + epic documentation not surface this?" identified four contributing layers: (a) the epic implicit on Delta requirement, (b) PR #2067's "no functional change" claim went unchallenged in review, (c) memory entry mis-distilled from #2067's commit body, (d) the shelf had rules 1-5 but no rule that mandated reading the inputs + writing findings into the ticket. Rule 6 closes layer (d). The other layers reduce to layer (d) once rule 6 is in place: if the inventory section had been required, the agent would have read the epic (catching layer a), noticed the format drift (catching layer b), and updated the memory (catching layer c) at investigation time.
 
 ## Trivial-change declaration
 
