@@ -18,6 +18,14 @@ This repository (the "DBrain" book-skill library under `skills/shelves/`) incorp
 - **Imported at commit:** `7c71a845071e8f994253db0d26c7e36fa90e2b5e`
 - **Copyright:** © Wondel.ai sp. z o.o. and contributors
 
+### caylent/tufte-data-viz
+
+- **Repository:** https://github.com/caylent/tufte-data-viz
+- **License:** MIT
+- **Imported at commit:** `ae7ca0de7819db83241b24a2618810d5f1171145` (2026-02-19)
+- **Copyright:** © 2026 Caylent
+- **Scope:** `SKILL.md` (universal rules 1-22, library quick reference, chart-type guidance, color quick reference, anti-pattern detection, validation checklist) vendored at `skills/shelves/storytelling/tufte-data-viz/SKILL.md`. Per-library `rules/*.md` implementation files NOT vendored — linked to upstream from the skill's "Source + license" footer.
+
 ## Per-skill attribution
 
 Each book skill under `skills/shelves/<shelf>/<book>/` carries an attribution footer in its `SKILL.md` naming the source repo and commit. The mapping below is a single source of truth and is filled in incrementally as each shelf PR lands.
@@ -87,6 +95,7 @@ Each book skill under `skills/shelves/<shelf>/<book>/` carries an attribution fo
 | team | 37signals-way | wondelai/skills |
 | storytelling | storytelling-with-data | ZLStas/skills |
 | storytelling | animation-at-work | ZLStas/skills |
+| storytelling | tufte-data-viz | caylent/tufte-data-viz |
 
 ## Fair-use note
 
