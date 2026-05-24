@@ -372,6 +372,58 @@ Each callout produced an inventory comment on the ticket; each comment was follo
 
 The five rationalizations are saved as named anti-patterns so the next author -- including future-the-same-author across sessions -- catches them at write time. Recognition is the first defense; the form-fixed / depth-flexible discipline above is the second.
 
+## Inheriting brokenness: prior failures, prior follow-ups, prior latent bugs
+
+Rule 6's seven-step procedure presumes the author can enumerate the surfaces the change will touch. When the change is **a wrapper around an existing artifact** — a DAG wrapping a pipeline, a function wrapping a library, a script kicking a known runtime — the enumeration must include the wrapped artifact's known-broken state, not just the wrapper's own diff. The wrapper inherits every failure mode of what it wraps; treating the wrapped as a black box is the failure mode this section exists to prevent.
+
+Three concrete shapes the inherited-brokenness inventory must cover:
+
+**a. Wrapper authoring: the wrapped artifact's state is your state.**
+
+When the artifact being authored is a wrapper that invokes pre-existing code at runtime (an Airflow DAG that runs `run_pipeline.py`, a CLI that calls a third-party SDK, a CI step that invokes a vendored test harness), the pre-author inventory must include the wrapped artifact's known failure surface:
+
+- What modules will the wrapped artifact load at register/import time?
+- What enumerative calls (`listTables`, `glob`, `os.walk`, `pkg_resources.iter_entry_points`) will fire?
+- What environmental assumptions will it make?
+- What prior failures of the wrapped artifact are recorded in memory or in prior tickets?
+
+Concrete measurement: read the wrapped artifact's entry point + scan one level deep for module imports, glob loads, and catalog enumerations. The wrapper's behavior includes every failure mode of the things it triggers.
+
+Empirical: electinfo/enterprise#2094 (2026-05-24). Gold attempt 2 failed in 2 seconds because `pipeline-gold.yml`'s `libraries: - glob: include: ../utilities/**` loaded `utilities/entity_match_stats.py` which has a bare `from create_entity_match_tables import ...` that depends on filesystem glob order. The author's pre-flight for the wrapping DAG (PR electinfo/airflow#55) checked the DAG file but not the wrapped pipeline's load path. The bare-import bug was known from prior smoke cycle 15 of the same arc — captured in memory as a follow-up but not brought forward as a blocker for the wrapper-shipping work.
+
+**b. After a class-bug fires, grep the class before fixing the instance.**
+
+When a failure exposes a specific instance of a recognizable bug class (a bare import that depends on glob order, a `listTables` that fan-fails on an orphan, a write that assumes a column type the upstream table doesn't have), the response is to scan for ALL instances of the class, not to fix the one that fired. The fix-and-retrigger loop produces longer time-to-green than the grep-the-class-once approach, because each retrigger reveals the next instance of the same class.
+
+Concrete measurement (per class):
+
+```bash
+# Bare imports of sibling-module symbols (the entity_match_stats class)
+grep -rEn "^from [a-z_]+ import" <utility-tree>/ | grep -v "from \(stdlib\|known-stable\) import"
+
+# listTables fan-failures (the sf_delta_test orphan class)
+grep -rEn "listTables\(" <transformation-tree>/
+
+# Hardcoded paths whose existence is assumed (the path-orphan class)
+grep -rEn "['\"]s3a?://[^'\"]+['\"]" <transformation-tree>/
+```
+
+Empirical: same arc, gold attempts 2 + 3. After attempt 2's entity_match_stats failure, the right reflex was `grep "^from [a-z_]+ import" utilities/` to find the other three files with the same shape (audit_quicksilver_catalog, reset_entity_match_tables, validate_tier_quality). Instead the response was a 1-line fix + retrigger queued. The class-scan happened only after operator callout.
+
+**c. Carry-forward of prior-session follow-ups: not backlog, blockers.**
+
+When a memory entry, comment, or ticket marks a known issue as "follow-up" or "later" or "tracking" — and the work now being authored will execute the code path that issue affects — the issue is NOT backlog. It is a blocker for the new work.
+
+The pre-author inventory must include: search prior memory entries, ticket comments, and PR notes for known issues affecting the authoring path. Each known issue is either (a) resolved before authoring, or (b) explicitly declared in the inventory as `Deferred-known-broken: will fail on <observable>; fix planned after <event>` with the observable specified. Silent carry-forward of follow-ups is the cheat-shape that produces the "I already documented this but didn't fix it" failure mode.
+
+Empirical: the memory entry cross-referencing the entity_match_stats bug was created during smoke cycle 15 (2026-05-23). PR electinfo/airflow#55 (2026-05-24 ~03:13 UTC) shipped DAGs that wrap pipeline-gold.yml. The known-broken entity_match_stats.py was not surfaced as a blocker; the DAGs shipped; gold attempt 2 hit the known bug 2 seconds in.
+
+**Trigger:** any pre-author inventory for work that (a) authors a wrapper around an existing artifact, OR (b) follows a failure of the same artifact within the same session/arc, OR (c) touches a code path with prior-session known-broken memory entries. The trigger fires at the inventory step (rule 6 step 4), not at the diff that adds the wrapper.
+
+**Composes with rule 6 step 4.** Step 4 already says "inventory other surface areas of contact, not just the five rule categories." This section names the inherited-brokenness surface as one such category that's empirically high-frequency for wrapper authoring. The starter "Common surfaces by stack" table in step 4 gains a new row applicable to all stacks: "wrapper / vendored artifact authoring → known-broken state of the wrapped artifact (prior incident comments, follow-up-marked memory entries, unresolved tickets touching the path)."
+
+**Composes with the cheat-shapes above.** Cheat-shape 2 ("I already have all the context from the last cycle") describes the temptation; this section describes the discipline that resists it. Cheat-shape 1 ("one-line fix") frames why grepping the class matters — the one-line fix that ships the wrong instance produces a second one-line fix on retrigger.
+
 ## Trivial-change declaration
 
 A change that does not introduce a new authoring-against-state contact-point trigger may be declared trivial in the commit body, but the declaration is itself a `[rule:writing-rules]` writing-rules:4 claim ("this doesn't apply") and requires the same evidence chain as a "this happened" claim.
