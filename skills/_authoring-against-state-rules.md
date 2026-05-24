@@ -326,6 +326,52 @@ Two operator-auditable signals that the inventory's depth was wrong:
 
 Heaviness is the price of inviolability. The shelf is honest about that rather than pretending the form is light.
 
+## Common rationalizations to refuse
+
+Scale of investigation above describes the form / depth discipline at the abstract level. Empirically, rule 6 fails along five specific rationalization shapes. Each looks reasonable in the moment; each is the author talking themselves out of the rule. Naming them so the author catches the cheat at write time:
+
+**1. "This is a one-line fix; the inventory is bigger than the fix."**
+
+The form is the requirement, not the depth. A one-line fix gets a one-line inventory entry, not zero. The cheat is treating fix-size as a proxy for inventory-need; Scale of investigation above explicitly rejects that proxy. Empirically, the smallest fixes are the ones whose underlying causes were three layers deep -- a Java type name (one character), a session-default check (one boolean), a sibling-class instance check (one type). Each "one line" sat on top of a missing inventory of how the surrounding system actually resolved a request.
+
+Refutation: produce an inventory entry. Three bullets is fine. The point is the act of writing it, which forces the surface scan that would otherwise be skipped.
+
+**2. "I already have all the context from the last cycle; the inventory would be repetitive."**
+
+The inventory for cycle N is a *delta* from the inventory for cycle N-1, not a restatement. Cite the previous inventory by link. Write only what's new: the new measurement, the assumption that just got revised, the new question. The cheat is letting "I have the context" stand in for "the record has the context"; only the latter survives the session, and only the latter is what the next reader (including future-the-same-author after compaction) will see.
+
+Refutation: write the inventory as `## Cycle N inventory (delta from cycle N-1: <link>)` with new measurements + revised assumptions + new questions only. Short is fine; absent is not.
+
+**3. "Time is tight; let me push and document later."**
+
+There is no "document later." Documentation in the past tense is post-mortem, not pre-author inventory. Rule 6's inventory IS the gate to action; without the artifact, the action is blocked. "Later" never comes -- the next failure repeats the same uninvestigated gap, and the author repeats the same time-tight rationalization on the next retrigger.
+
+Refutation: the action waits for the inventory. If time is genuinely tight, the inventory is short. If the inventory is genuinely impossible (cluster on fire, operator needs an answer in 30 seconds), write an explicit `Inventory deferred for emergency response, see incident <link>` entry. That stub IS the inventory record and forces the post-incident follow-up.
+
+**4. "The operator just said 'yes' -- that's authorization."**
+
+Operator authorization is granted ON TOP OF the rule, not in lieu of it. A fast `yes` means the operator trusts the author's judgment on the proposal; it does not mean the operator wants the rule skipped. The cheat is laundering operator-trust into rule-skip-license -- using the operator's velocity as a substitute for the author's discipline.
+
+Refutation: the operator `yes` authorizes the *plan*. The inventory remains a precondition to executing the plan. If the operator wants the rule waived for a specific action, that requires explicit `[rule:authoring-against-state]:6 waived for <reason>` in the ticket -- not implied by an unmarked `yes`. Operator latitude does not include skip-the-rule unless the operator says skip-the-rule.
+
+**5. "Retrigger isn't authoring."**
+
+Retriggering a runtime artifact that already failed once IS a triggering of a state-touching action under rule 6's trigger scope (a "kick" per the rule body). Specifically, any kick of code that previously failed in this session requires inventory of *what changed since the last failure*. If nothing changed, the conclusion in the inventory is "expected to fail again; not retriggering" -- which itself prevents the wasted cycle and breaks the fix-and-retrigger loop.
+
+Refutation: every retrigger gets an inventory, even if the inventory is one sentence ("Same as cycle N-1 inventory: <link>; no changes since; conclusion: not retriggering, breaking the loop"). The inventory either justifies the action or refuses it.
+
+### Where these were empirically observed
+
+electinfo/enterprise#2094 (2026-05-23). The author of rule 6 itself hit all five rationalizations in five consecutive cycles handled with the diagnose / fix / retrigger loop instead of the inventory loop. The operator called the pattern out three times within the same arc:
+
+- "more smoke bugs are really tedious" (frustration with reactive arc)
+- "It's starting to look deeply reactive again, rather than investigative and measured, which should be compelled by rules"
+- "Every failure should be resulting in an inventory and assumption revision. I don't know why it hasn't."
+
+Each callout produced an inventory comment on the ticket; each comment was followed by more fix-and-retrigger cycles without inventories. The pattern only broke when the rationalizations themselves got named in writing. This section is the writing-down.
+
+The five rationalizations are saved as named anti-patterns so the next author -- including future-the-same-author across sessions -- catches them at write time. Recognition is the first defense; the form-fixed / depth-flexible discipline above is the second.
+
 ## Trivial-change declaration
 
 A change that does not introduce a new authoring-against-state contact-point trigger may be declared trivial in the commit body, but the declaration is itself a `[rule:writing-rules]` writing-rules:4 claim ("this doesn't apply") and requires the same evidence chain as a "this happened" claim.
