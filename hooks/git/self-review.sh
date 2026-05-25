@@ -15,11 +15,21 @@
 #     section headers, has a non-empty Goal source line, the Assumptions
 #     section names at least one role, the Peer section cites at least
 #     one shelf
+# v1.2 (this version):
+#   - Pre-author-inventory: field present and non-empty in Assumptions
+#     section (structural check only; content quality is operator-auditable).
+#     NONE is accepted only when a Trivial-against-state: declaration
+#     is also present in the artifact.
 # v2 scope (deferred follow-ups, tracked in SKILL.md):
 #   - Goal source does not point at the commit being pushed
 #   - Lead section's role-tagged affirmative standard format
 #   - detect-ai-fingerprints scan against the source
 #   - Verified-by: trailers on countable claims inside the source
+#
+# Surface limitation: this hook fires only in Claude Code sessions via
+# PreToolUse in settings.json. Craft Agent sessions use a separate tool-
+# call surface and this hook does not fire for them. Enforcement in Craft
+# sessions is operator-auditable only. See SKILL.md Known limitations.
 
 set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
@@ -97,7 +107,8 @@ Add to the commit message's trailer block (after the last paragraph):
   Self-Review-Source: <path-or-ticket pointing at the review artifact>
 
 The review artifact must follow skills/self-review/SKILL.md:
-  - ## Assumptions (with Goal source: from outside the diff, role(s) named)
+  - ## Assumptions (with Goal source: from outside the diff, role(s) named,
+                    Pre-author-inventory: pointing at the investigation record)
   - ## Peer review (shelf checks with grep/test-output evidence)
   - ## Lead review (role-tagged affirmative standards)
 
@@ -125,7 +136,7 @@ HOOKEOF
     exit 2
 fi
 
-SOURCE_VALUE=$(echo "$COMMIT_MSG" | grep -E '^Self-Review-Source:[[:space:]]+' | head -1 | sed -E 's/^Self-Review-Source:[[:space:]]+//')
+SOURCE_VALUE=$(echo "$COMMIT_MSG" | grep -E '^Self-Review-Source:[[:space:]]+' | head -1 | sed -E 's/^Self-Review-Source:[[:space:]]+'//)
 
 # If source looks like a path, run the structural checks against the file.
 # Ticket references (e.g. "#123") are accepted but not yet validated --
@@ -180,14 +191,14 @@ HOOKEOF
     # v1.1: Goal-source artifact-mtime sanity check.
     # If the Goal source value looks like a file path, verify that file's
     # mtime is not NEWER than the artifact itself (which would suggest
-    # the goal was written AFTER the work — the substantive-empty failure
+    # the goal was written AFTER the work -- the substantive-empty failure
     # mode the Goal-source field was designed to prevent).
     # Uses file mtime, which is a heuristic (touch can defeat it); a stronger
     # check would inspect git history for the goal source, but session-scoped
     # plans/ files aren't in any git repo, so mtime is the v1.1 floor.
     # Caveats inside the source file are unblocked: ticket-shaped sources
     # (#NNN) and quoted-user-request goal-sources skip this check.
-    GOAL_SOURCE_VALUE=$(grep -E '^Goal source:[[:space:]]+' "$SOURCE_PATH" | head -1 | sed -E 's/^Goal source:[[:space:]]+//')
+    GOAL_SOURCE_VALUE=$(grep -E '^Goal source:[[:space:]]+' "$SOURCE_PATH" | head -1 | sed -E 's/^Goal source:[[:space:]]+'//)
     if [[ "$GOAL_SOURCE_VALUE" =~ \.(md|txt|json|yaml|yml|sh|py|sql)$ ]] || [[ "$GOAL_SOURCE_VALUE" == /* ]] || [[ "$GOAL_SOURCE_VALUE" == ./* ]]; then
         case "$GOAL_SOURCE_VALUE" in
             /*) GOAL_SOURCE_PATH="$GOAL_SOURCE_VALUE" ;;
@@ -224,6 +235,47 @@ Expected at least one of: software engineer, tech lead, data engineer,
 data analyst, geospatial. See skills/self-review/SKILL.md.
 HOOKEOF
         exit 2
+    fi
+
+    # v1.2: Pre-author-inventory field must be present and non-empty.
+    # Points at the ## Pre-author inventory section in the ticket or plan,
+    # per _authoring-against-state-rules.md:6. NONE is accepted only when
+    # paired with a Trivial-against-state: declaration in the artifact.
+    INVENTORY_VALUE=$(grep -E '^Pre-author-inventory:[[:space:]]+\S' "$SOURCE_PATH" | head -1 | sed -E 's/^Pre-author-inventory:[[:space:]]+'// || true)
+    if [[ -z "$INVENTORY_VALUE" ]]; then
+        # Field entirely missing or empty -- block regardless of Trivial-against-state.
+        cat >&2 <<HOOKEOF
+BLOCKED: Self-Review-Source: $SOURCE_PATH is missing 'Pre-author-inventory:'
+in the Assumptions section.
+
+Per _authoring-against-state-rules.md:6, a pre-author inventory must be
+completed BEFORE authoring and recorded in the ticket. Point at it here:
+
+  Pre-author-inventory: enterprise#2094#pre-author-inventory
+  Pre-author-inventory: plans/feature-x/pre-author-inventory.md
+
+If the change genuinely does not trigger any authoring-against-state
+contact category, use NONE and include a Trivial-against-state:
+declaration in the artifact (see SKILL.md).
+HOOKEOF
+        exit 2
+    fi
+
+    if [[ "$INVENTORY_VALUE" == "NONE" ]]; then
+        # NONE is allowed only when a Trivial-against-state declaration exists.
+        if ! grep -qF 'Trivial-against-state:' "$SOURCE_PATH"; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Pre-author-inventory: is NONE in $SOURCE_PATH but no
+Trivial-against-state: declaration is present.
+
+NONE is accepted only when the change does not trigger any authoring-
+against-state contact category. That claim requires a
+Trivial-against-state: declaration per the usual evidence-chain
+requirements (writing-rules:4). Add the declaration or provide
+a real inventory link.
+HOOKEOF
+            exit 2
+        fi
     fi
 
     # Peer review section must cite at least one shelf.
