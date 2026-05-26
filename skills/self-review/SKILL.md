@@ -72,7 +72,7 @@ Verification: <paste output of `git merge-base --is-ancestor <first-added> <work
 
 The `Pre-author-inventory:` field in the Assumptions section is a **required
 composability link** between this skill and
-[`_authoring-against-state-rules.md`](_authoring-against-state-rules.md):6.
+[rule:authoring-against-state]:6.
 
 Before authoring any runtime artifact whose contact points trigger rules 1-5 of
 that shelf, the agent must complete a pre-author investigation and record its
