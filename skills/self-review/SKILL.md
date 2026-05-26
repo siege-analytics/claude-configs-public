@@ -1,6 +1,6 @@
 ---
 name: self-review
-description: "MANDATORY pre-push / pre-PR-open / pre-PR-merge gate. Produce a structured artifact with Assumptions (including roles + Goal source verification via evaluate-ticket + Evidence-predates-work block), Peer review against the shelves, and Lead review naming affirmative standards. The pre-push hook enforces trailer presence, structural completeness, artifact-predates-work, and the writing-rules:4 evidence-chain on any Trivial-change / Exemption blocks. Do NOT skip this skill; the form is checkable but the discipline is what binds."
+description: "MANDATORY pre-push / pre-PR-open / pre-PR-merge gate. Produce a structured artifact with Assumptions (including roles + Goal source verification via evaluate-ticket + Pre-author-inventory link + Evidence-predates-work block), Peer review against the shelves, and Lead review naming affirmative standards. The pre-push hook enforces trailer presence, structural completeness, artifact-predates-work, and the writing-rules:4 evidence-chain on any Trivial-change / Exemption blocks. Do NOT skip this skill; the form is checkable but the discipline is what binds."
 disable-model-invocation: true
 user-invocable: true
 ---
@@ -46,6 +46,7 @@ Lead review needed from: <role(s)>
 Goal source: <ticket #N | design-note path | quoted user-request paragraph>
 Goal source verification: <paste the PASS line from `bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>`>
 Plan reference: <path-or-link to the design note this diff implements>
+Pre-author-inventory: <ticket-link#pre-author-inventory | plans/path.md#pre-author-inventory | NONE>
 
 ## Peer review (mechanics, correctness, craft floor)
 For each applicable shelf: what was checked, what was found.
@@ -66,6 +67,46 @@ First-added commit: <paste output of `git log -1 --diff-filter=A --follow --form
 Work commit: <paste `git rev-parse HEAD`>
 Verification: <paste output of `git merge-base --is-ancestor <first-added> <work-commit>; echo $?` — must be 0>
 ```
+
+## Pre-author-inventory field
+
+The `Pre-author-inventory:` field in the Assumptions section is a **required
+composability link** between this skill and
+[rule:authoring-against-state]:6.
+
+Before authoring any runtime artifact whose contact points trigger rules 1-5 of
+that shelf, the agent must complete a pre-author investigation and record its
+findings in the ticket (a `## Pre-author inventory` section per the template in
+the shelf). The self-review artifact must then point at that record:
+
+```
+Pre-author-inventory: enterprise#2094#pre-author-inventory
+```
+
+or for session-local plan files:
+
+```
+Pre-author-inventory: plans/2094-silver-exp/pre-author-inventory.md
+```
+
+This makes the omission structurally visible: an agent that skipped the
+pre-investigation cannot populate this field without fabricating a link, and a
+fabricated link fails the first spot check.
+
+**When NONE is acceptable:** if the change does not trigger any of the five
+authoring-against-state contact categories (data-shape, config-state, topology,
+plan-shape, version-resolution), the field may be `NONE` — but only when a
+`Trivial-against-state:` declaration is also present in the artifact. The
+hook checks for the declaration; absence of the declaration with a NONE value
+is a block.
+
+**The field is NOT a quality gate on the inventory itself.** The hook checks
+structural presence (field exists, value non-empty or NONE+declaration). Content
+quality — whether the inventory actually covered the relevant surfaces, whether
+the hypothesis was falsifiable, whether the seven steps were followed — remains
+operator-auditable. The field's purpose is to make the composability explicit
+and to block the pattern where a structurally-complete self-review was written
+without any pre-investigation at all.
 
 ## Trivial-change declaration (when no ticket cited)
 
@@ -281,6 +322,9 @@ the claim must be grounded.
 - **v1.1**: If `Goal source:` value is itself a file path, its mtime
   must not be newer than the review artifact's mtime (catches goal-
   source-written-after-the-work post-hoc-justification pattern).
+- **v1.2 (this PR)**: `Pre-author-inventory:` field present and non-empty
+  in the Assumptions section. `NONE` accepted only when a
+  `Trivial-against-state:` declaration is also present.
 - **v2 (claude-configs-public#146)**: If the artifact file lives in a
   git repo, the artifact's first-added commit must be an ancestor of
   the work commit being pushed (`git log --diff-filter=A --follow` +
@@ -307,7 +351,7 @@ the claim must be grounded.
 - Goal source does NOT point at the commit being pushed AND was filed
   before the commit timestamp. **v1.1 lands the partial mtime-based
   check** for file-path-shaped goal sources (block if goal-source mtime
-  > review-artifact mtime — catches post-hoc-justification patterns).
+  > review-artifact mtime -- catches post-hoc-justification patterns).
   Heuristic: `touch` defeats it; stronger check needs git history which
   session-scoped plans/ files don't have. **v2 still owed:** ticket-
   shaped sources (`#NNN`) validated via `gh issue view --json createdAt`
@@ -318,6 +362,7 @@ the claim must be grounded.
 - `detect-ai-fingerprints` scan against the source artifact.
 - `Verified-by:` trailers (or grep-output equivalents) for any
   countable / completeness claim made inside the source artifact.
+  (Tracked as separate issue — see PR body for link.)
 - Ticket-reference source values (e.g. `#123`) validated against the
   issue tracker (currently passes as-is; only file-path sources are
   structurally checked).
@@ -344,7 +389,7 @@ positives the agent can recover from by adjusting invocation shape:
   in the command and inspects HEAD. At that moment HEAD is the PRE-commit
   HEAD (the in-flight commit hasn't happened yet), so the trailer pair
   from the imminent commit isn't visible. The hook blocks. **Workaround:**
-  split into two separate Bash invocations — first `git commit -m "..."`,
+  split into two separate Bash invocations -- first `git commit -m "..."`,
   then `git push origin <branch>` as a separate call. Once the commit
   lands on HEAD, the push's hook check sees the trailers. Issue #107.
 - **`echo` / `printf` / heredoc strings containing the literal substrings
@@ -360,6 +405,15 @@ positives the agent can recover from by adjusting invocation shape:
   statements (newline / `;` / `||`) with at least one `cd`, the hook
   yields rather than risk evaluating the wrong repo. Same workaround:
   split into separate Bash invocations.
+- **Craft Agent sessions.** The hook fires via `PreToolUse` wiring in
+  Claude Code's `settings.json`. Craft Agent sessions run their own
+  tool-call surface and do not share Claude Code's hook mechanism --
+  this hook does not fire for Craft Agent push/PR operations. Craft
+  Agent sessions must apply self-review discipline manually; the
+  artifact requirement and trailer format remain identical but
+  enforcement is operator-auditable rather than mechanical. Downstream
+  projects using Craft as their primary agent surface should note this
+  gap in their workspace `CLAUDE.md` so sessions are aware.
 
 These are conservative-bias trade-offs. The hook prefers a recoverable
 false positive over a silent false negative; "split into separate calls"

@@ -326,6 +326,104 @@ Two operator-auditable signals that the inventory's depth was wrong:
 
 Heaviness is the price of inviolability. The shelf is honest about that rather than pretending the form is light.
 
+## Common rationalizations to refuse
+
+Scale of investigation above describes the form / depth discipline at the abstract level. Empirically, rule 6 fails along five specific rationalization shapes. Each looks reasonable in the moment; each is the author talking themselves out of the rule. Naming them so the author catches the cheat at write time:
+
+**1. "This is a one-line fix; the inventory is bigger than the fix."**
+
+The form is the requirement, not the depth. A one-line fix gets a one-line inventory entry, not zero. The cheat is treating fix-size as a proxy for inventory-need; Scale of investigation above explicitly rejects that proxy. Empirically, the smallest fixes are the ones whose underlying causes were three layers deep -- a Java type name (one character), a session-default check (one boolean), a sibling-class instance check (one type). Each "one line" sat on top of a missing inventory of how the surrounding system actually resolved a request.
+
+Refutation: produce an inventory entry. Three bullets is fine. The point is the act of writing it, which forces the surface scan that would otherwise be skipped.
+
+**2. "I already have all the context from the last cycle; the inventory would be repetitive."**
+
+The inventory for cycle N is a *delta* from the inventory for cycle N-1, not a restatement. Cite the previous inventory by link. Write only what's new: the new measurement, the assumption that just got revised, the new question. The cheat is letting "I have the context" stand in for "the record has the context"; only the latter survives the session, and only the latter is what the next reader (including future-the-same-author after compaction) will see.
+
+Refutation: write the inventory as `## Cycle N inventory (delta from cycle N-1: <link>)` with new measurements + revised assumptions + new questions only. Short is fine; absent is not.
+
+**3. "Time is tight; let me push and document later."**
+
+There is no "document later." Documentation in the past tense is post-mortem, not pre-author inventory. Rule 6's inventory IS the gate to action; without the artifact, the action is blocked. "Later" never comes -- the next failure repeats the same uninvestigated gap, and the author repeats the same time-tight rationalization on the next retrigger.
+
+Refutation: the action waits for the inventory. If time is genuinely tight, the inventory is short. If the inventory is genuinely impossible (cluster on fire, operator needs an answer in 30 seconds), write an explicit `Inventory deferred for emergency response, see incident <link>` entry. That stub IS the inventory record and forces the post-incident follow-up.
+
+**4. "The operator just said 'yes' -- that's authorization."**
+
+Operator authorization is granted ON TOP OF the rule, not in lieu of it. A fast `yes` means the operator trusts the author's judgment on the proposal; it does not mean the operator wants the rule skipped. The cheat is laundering operator-trust into rule-skip-license -- using the operator's velocity as a substitute for the author's discipline.
+
+Refutation: the operator `yes` authorizes the *plan*. The inventory remains a precondition to executing the plan. If the operator wants the rule waived for a specific action, that requires explicit `[rule:authoring-against-state]:6 waived for <reason>` in the ticket -- not implied by an unmarked `yes`. Operator latitude does not include skip-the-rule unless the operator says skip-the-rule.
+
+**5. "Retrigger isn't authoring."**
+
+Retriggering a runtime artifact that already failed once IS a triggering of a state-touching action under rule 6's trigger scope (a "kick" per the rule body). Specifically, any kick of code that previously failed in this session requires inventory of *what changed since the last failure*. If nothing changed, the conclusion in the inventory is "expected to fail again; not retriggering" -- which itself prevents the wasted cycle and breaks the fix-and-retrigger loop.
+
+Refutation: every retrigger gets an inventory, even if the inventory is one sentence ("Same as cycle N-1 inventory: <link>; no changes since; conclusion: not retriggering, breaking the loop"). The inventory either justifies the action or refuses it.
+
+### Where these were empirically observed
+
+electinfo/enterprise#2094 (2026-05-23). The author of rule 6 itself hit all five rationalizations in five consecutive cycles handled with the diagnose / fix / retrigger loop instead of the inventory loop. The operator called the pattern out three times within the same arc:
+
+- "more smoke bugs are really tedious" (frustration with reactive arc)
+- "It's starting to look deeply reactive again, rather than investigative and measured, which should be compelled by rules"
+- "Every failure should be resulting in an inventory and assumption revision. I don't know why it hasn't."
+
+Each callout produced an inventory comment on the ticket; each comment was followed by more fix-and-retrigger cycles without inventories. The pattern only broke when the rationalizations themselves got named in writing. This section is the writing-down.
+
+The five rationalizations are saved as named anti-patterns so the next author -- including future-the-same-author across sessions -- catches them at write time. Recognition is the first defense; the form-fixed / depth-flexible discipline above is the second.
+
+## Inheriting brokenness: prior failures, prior follow-ups, prior latent bugs
+
+Rule 6's seven-step procedure presumes the author can enumerate the surfaces the change will touch. When the change is **a wrapper around an existing artifact** — a DAG wrapping a pipeline, a function wrapping a library, a script kicking a known runtime — the enumeration must include the wrapped artifact's known-broken state, not just the wrapper's own diff. The wrapper inherits every failure mode of what it wraps; treating the wrapped as a black box is the failure mode this section exists to prevent.
+
+Three concrete shapes the inherited-brokenness inventory must cover:
+
+**a. Wrapper authoring: the wrapped artifact's state is your state.**
+
+When the artifact being authored is a wrapper that invokes pre-existing code at runtime (an Airflow DAG that runs `run_pipeline.py`, a CLI that calls a third-party SDK, a CI step that invokes a vendored test harness), the pre-author inventory must include the wrapped artifact's known failure surface:
+
+- What modules will the wrapped artifact load at register/import time?
+- What enumerative calls (`listTables`, `glob`, `os.walk`, `pkg_resources.iter_entry_points`) will fire?
+- What environmental assumptions will it make?
+- What prior failures of the wrapped artifact are recorded in memory or in prior tickets?
+
+Concrete measurement: read the wrapped artifact's entry point + scan one level deep for module imports, glob loads, and catalog enumerations. The wrapper's behavior includes every failure mode of the things it triggers.
+
+Empirical: electinfo/enterprise#2094 (2026-05-24). Gold attempt 2 failed in 2 seconds because `pipeline-gold.yml`'s `libraries: - glob: include: ../utilities/**` loaded `utilities/entity_match_stats.py` which has a bare `from create_entity_match_tables import ...` that depends on filesystem glob order. The author's pre-flight for the wrapping DAG (PR electinfo/airflow#55) checked the DAG file but not the wrapped pipeline's load path. The bare-import bug was known from prior smoke cycle 15 of the same arc — captured in memory as a follow-up but not brought forward as a blocker for the wrapper-shipping work.
+
+**b. After a class-bug fires, grep the class before fixing the instance.**
+
+When a failure exposes a specific instance of a recognizable bug class (a bare import that depends on glob order, a `listTables` that fan-fails on an orphan, a write that assumes a column type the upstream table doesn't have), the response is to scan for ALL instances of the class, not to fix the one that fired. The fix-and-retrigger loop produces longer time-to-green than the grep-the-class-once approach, because each retrigger reveals the next instance of the same class.
+
+Concrete measurement (per class):
+
+```bash
+# Bare imports of sibling-module symbols (the entity_match_stats class)
+grep -rEn "^from [a-z_]+ import" <utility-tree>/ | grep -v "from \(stdlib\|known-stable\) import"
+
+# listTables fan-failures (the sf_delta_test orphan class)
+grep -rEn "listTables\(" <transformation-tree>/
+
+# Hardcoded paths whose existence is assumed (the path-orphan class)
+grep -rEn "['\"]s3a?://[^'\"]+['\"]" <transformation-tree>/
+```
+
+Empirical: same arc, gold attempts 2 + 3. After attempt 2's entity_match_stats failure, the right reflex was `grep "^from [a-z_]+ import" utilities/` to find the other three files with the same shape (audit_quicksilver_catalog, reset_entity_match_tables, validate_tier_quality). Instead the response was a 1-line fix + retrigger queued. The class-scan happened only after operator callout.
+
+**c. Carry-forward of prior-session follow-ups: not backlog, blockers.**
+
+When a memory entry, comment, or ticket marks a known issue as "follow-up" or "later" or "tracking" — and the work now being authored will execute the code path that issue affects — the issue is NOT backlog. It is a blocker for the new work.
+
+The pre-author inventory must include: search prior memory entries, ticket comments, and PR notes for known issues affecting the authoring path. Each known issue is either (a) resolved before authoring, or (b) explicitly declared in the inventory as `Deferred-known-broken: will fail on <observable>; fix planned after <event>` with the observable specified. Silent carry-forward of follow-ups is the cheat-shape that produces the "I already documented this but didn't fix it" failure mode.
+
+Empirical: the memory entry cross-referencing the entity_match_stats bug was created during smoke cycle 15 (2026-05-23). PR electinfo/airflow#55 (2026-05-24 ~03:13 UTC) shipped DAGs that wrap pipeline-gold.yml. The known-broken entity_match_stats.py was not surfaced as a blocker; the DAGs shipped; gold attempt 2 hit the known bug 2 seconds in.
+
+**Trigger:** any pre-author inventory for work that (a) authors a wrapper around an existing artifact, OR (b) follows a failure of the same artifact within the same session/arc, OR (c) touches a code path with prior-session known-broken memory entries. The trigger fires at the inventory step (rule 6 step 4), not at the diff that adds the wrapper.
+
+**Composes with rule 6 step 4.** Step 4 already says "inventory other surface areas of contact, not just the five rule categories." This section names the inherited-brokenness surface as one such category that's empirically high-frequency for wrapper authoring. The starter "Common surfaces by stack" table in step 4 gains a new row applicable to all stacks: "wrapper / vendored artifact authoring → known-broken state of the wrapped artifact (prior incident comments, follow-up-marked memory entries, unresolved tickets touching the path)."
+
+**Composes with the cheat-shapes above.** Cheat-shape 2 ("I already have all the context from the last cycle") describes the temptation; this section describes the discipline that resists it. Cheat-shape 1 ("one-line fix") frames why grepping the class matters — the one-line fix that ships the wrong instance produces a second one-line fix on retrigger.
+
 ## Trivial-change declaration
 
 A change that does not introduce a new authoring-against-state contact-point trigger may be declared trivial in the commit body, but the declaration is itself a `[rule:writing-rules]` writing-rules:4 claim ("this doesn't apply") and requires the same evidence chain as a "this happened" claim.
