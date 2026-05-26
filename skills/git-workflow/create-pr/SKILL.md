@@ -348,6 +348,23 @@ If a PR is large, explain in the description why it can't be split and suggest a
 - No attribution to any AI assistant, code generation tool, or agent framework
 - This applies to the title, description body, commit table, and any comments on the PR
 
+# Platform support: GitHub vs GitLab
+
+This skill is written GitHub-shaped (`gh` CLI, "pull request"). On GitLab, the same workflow + structural requirements apply with these substitutions:
+
+| GitHub | GitLab |
+|---|---|
+| `gh pr create --base <branch>` | `glab mr create --target-branch <branch>` (short: `-b`) |
+| `gh pr edit <n> --add-reviewer <u>` | `glab mr update <n> --assignee <u> --reviewer <u>` |
+| `gh pr view <n>` | `glab mr view <n>` |
+| `gh pr ready <n>` | `glab mr update <n> --ready` |
+| `gh issue comment <n>` | `glab issue note <n>` |
+| `gh pr create --draft` | `glab mr create --draft` (same flag name) |
+| "pull request" terminology | "merge request (MR)" terminology |
+| `defaultBranchRef.name` (gh repo view) | `default_branch` (glab repo view --output json) |
+
+The structural requirements (commit-table, ticket-references, Testing section, bidirectional ticket linking, no AI attribution) bind both platforms identically. The `pr-base-guard.sh` hook (CCP#198/#201) enforces target-branch shape on both `gh pr create` and `glab mr create`.
+
 # Checklist
 
 - [ ] All commits pushed to remote

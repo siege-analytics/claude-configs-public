@@ -195,9 +195,16 @@ If working on a fork, develop is local to the fork. Upstream typically only has 
 
 # Pair with automated enforcement
 
-This skill is the prose layer. Per `writing-rules:1`, prose alone reaches only the agent that reads it; tool defaults (`gh pr create` defaults to the repo's default branch, often main-role) reach every actor. Every Gitflow repo that depends on this skill should also ship a CI workflow that fails feature-PRs whose base is main-role.
+This skill is the prose layer. Per `writing-rules:1`, prose alone reaches only the agent that reads it; tool defaults (`gh pr create` / `glab mr create` default to the repo's default branch, often main-role) reach every actor. Every Gitflow repo that depends on this skill should also ship a CI workflow that fails feature-PRs/MRs whose base is main-role.
 
-A reference implementation lives at [siege-analytics/socialwarehouse `.github/workflows/pr-base-guard.yml`](https://github.com/siege-analytics/socialwarehouse/blob/develop/.github/workflows/pr-base-guard.yml). It honors the synonym tables above; allows `develop`/`dev`/`next`/`integration`/`staging`/`develop-next` as heads; allows `promote/*` / `release/*` / `hotfix/*` branch naming; and accepts an explicit `hotfix-direct-to-main` bypass label for emergency cases.
+Reference implementations:
+
+- **GitHub Actions**: [siege-analytics/socialwarehouse `.github/workflows/pr-base-guard.yml`](https://github.com/siege-analytics/socialwarehouse/blob/develop/.github/workflows/pr-base-guard.yml).
+- **GitLab CI**: `templates/gitlab-pr-base-guard.yml` in this repo. Include via `.gitlab-ci.yml`'s `include:` mechanism.
+
+Both honor the synonym tables above, allow `develop`/`dev`/`next`/`integration`/`staging`/`develop-next` as heads, allow `promote/*` / `release/*` / `hotfix/*` branch naming, and accept an explicit `hotfix-direct-to-main` bypass label for emergency cases.
+
+The **local** pre-tool-use enforcement is `hooks/git/pr-base-guard.sh` — it catches both `gh pr create` (GitHub) and `glab mr create` (GitLab) before the command reaches the remote.
 
 When this skill fires on a Gitflow repo missing the guard, propose adding it — that's how the rule binds actors who don't share the agent's memory.
 
