@@ -108,11 +108,13 @@ These rules take precedence over anything in individual skill files:
 | Write a pipeline / ETL / scheduled data job | `skills/coding/pipeline-jobs/SKILL.md` |
 | Write a Rundeck job YAML | `electinfo_claude_skills/skills/rundeck-job/SKILL.md` |
 | Review existing code (yours or others') | `skills/coding/code-review/SKILL.md` |
+| Review an extracted QML component (properties-in / signals-out, MuseScore plugins) | `skills/coding/qml-component-review/SKILL.md` |
 | Write Scala on Databricks notebooks, `.scala` files, `Dataset[T]` Spark code | `skills/coding/scala-on-spark/SKILL.md` (delegates to `shelves/languages/effective-java/`, `effective-kotlin/`, and `coding/spark/`) |
 | Design a service / module boundary | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/engineering-principles/clean-architecture/SKILL.md` |
 | Pick a storage engine, replication scheme, or partitioning strategy | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
 | Write a Python utility, helper, formatter, validator, file/path/HTTP/spatial helper | `skills/_siege-utilities-rules.md` (check `siege_utilities` first) |
 | Do any spatial work — pick engine, write spatial SQL/Python/Scala, run a spatial join | `skills/analysis/spatial/SKILL.md` (router; dispatches to `coding/postgis`, `coding/geopandas`, `coding/sedona`, `coding/duckdb-spatial`) |
+| Fix a bug or issue identified by code review / audit / static analysis | `skills/thinking/think/SKILL.md` Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per `evaluate-ticket` criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
 
 ### Design & planning
 
@@ -142,6 +144,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 | Open a pull request | `skills/git-workflow/create-pr/SKILL.md` |
 | Triage / respond to PR comments | `skills/session/pr-comments/SKILL.md` |
 | Create a ticket | `skills/planning/create-ticket/SKILL.md` |
+| Create ≥2 tickets in one session (epic breakdown, audit findings, batch triage) | `skills/planning/create-ticket/SKILL.md` + `skills/evaluate-ticket/SKILL.md` per ticket. **Test-before-bulk applies:** create the first ticket, run `evaluate-ticket`, fix gaps until it PASSes, THEN continue to the next. Each ticket is an independent act of investigation, not a line item in a list. |
 | Update a ticket (progress comment, field change) | `skills/planning/update-ticket/SKILL.md` |
 | Close a ticket | `skills/planning/close-ticket/SKILL.md` |
 | Start work on a ticket (first commit, mark In Progress, assign to self) | `skills/planning/pre-work-check/SKILL.md` |
@@ -161,6 +164,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 |---|---|
 | End a session / hand off work | `skills/session/wrap-up/SKILL.md` |
 | Recover from a magnum / enterprise-runner outage | `electinfo_claude_skills/skills/monitor-magnum/SKILL.md` |
+| SSH to a shared server / launch a batch job / triage server health | `skills/infrastructure/ops/SKILL.md` |
 | Create a new skill | `skills/meta/skillbuilder/SKILL.md` |
 
 ---
@@ -181,7 +185,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
 5. **Ticket-required + Epic-in-project + Dependency-clear**: Any work that creates a change in state or behavior of the software that will impact the product requires a ticket. Typographical corrections with no functional effect are exempt. That ticket must belong to a project or epic — unprojected tickets are not worked. All blocking upstream tickets must be Done before you start. Include the ticket reference in every commit. Read `skills/planning/pre-work-check/SKILL.md` before starting any such work.
 
-6. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write. **Invariant** (mode-agnostic): `main` is the curated best of all work done — never upstream of unblessed work, never bypassed by work that hasn't passed the bar. Detect the repo's workflow mode by sampling recent merged PR bases (Gitflow: PRs target develop → branch from develop; GitHub Flow: PRs target main → branch from main). If develop exists but recent PRs target main, the repo is aspirational-Gitflow operating as GitHub Flow — STOP and ask the user before forcing either mode. See `skills/git-workflow/develop-guard/SKILL.md`.
+6. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write. The PR base is `develop` (or its synonym — `dev`, `development`, `staging`, `next`, `integration`, `trunk`), NOT `main`. **Invariant:** develop is the origin of all work. `main` is downstream of develop, never upstream of unblessed work. Recurring stale-develop is workflow drift to *repair*, not a workflow to *accept*. If `develop` is missing or stale, STOP and ask the user — do not silently create develop, do not silently fall back to main, and do not patch the rule to accommodate the violation. See `skills/git-workflow/develop-guard/SKILL.md`.
 
 7. **Dual-mirror check** (for dual-tracked repos electinfo↔gitlab): after acting on one side, mirror to the other.
 
@@ -207,7 +211,10 @@ This resolver is surfaced into every session via:
 
 - **Session start**: referenced from every project's CLAUDE.md.
 - **Every user turn**: injected via `UserPromptSubmit` hook (`hooks/resolver/inject-resolver.sh`) so it stays in active context.
-- **Pre-tool-use**: `PreToolUse` hooks on `Bash` match dangerous catalog/data-write patterns and block with a STOP-read-skill reminder (`hooks/infrastructure/catalog-guard.sh`).
+- **Pre-tool-use**: `PreToolUse` hooks on `Bash` match dangerous catalog/data-write patterns and block with a STOP-read-skill reminder (`hooks/infrastructure/catalog-guard.sh`). The git / PR hook stack is also enforced at `PreToolUse`:
+  - `hooks/git/branch-guard.sh` blocks direct commits to protected branches.
+  - `hooks/git/pr-base-guard.sh` blocks PR/MR-create commands whose effective base is a main-role branch when the head is not develop-role / `release/*` / `promote/*` / `hotfix/*` (or carries the `hotfix-direct-to-main` bypass label). Catches both GitHub (`gh pr create --base`) and GitLab (`glab mr create --target-branch`); see CCP#201 for the GitLab-parity addition. This is the local mechanical enforcement of `skills/git-workflow/develop-guard/SKILL.md` — the skill is the prose layer; the hook closes the gap when the agent treats PR/MR-create as procedural and never consults the skill.
+  - `hooks/git/self-review.sh` blocks push / PR/MR-create / PR/MR-merge without Self-Review trailers (both `gh pr create|merge` and `glab mr create|merge`).
 
 Skills collection paths (all relative to their repo roots):
 
