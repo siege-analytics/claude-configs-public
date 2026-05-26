@@ -146,7 +146,7 @@ trivial" or "minor cleanup" fail.
 
 The Falsification field is the writing-rules:6 trigger. If the observable named there later surfaces — an `AttributeError` matching the renamed symbol, a behavior claim acted on from prose-only-docs, a non-comment line changed by what was claimed comments-only — the Trivial-change declaration was wrong, and the response is **not** to just fix the bug.
 
-Per writing-rules:6 (and [skill:post-error-revision]):
+Per writing-rules:6 (and [`post-error-revision`](../post-error-revision/SKILL.md)):
 
 1. File a ticket retroactively, citing the failed Trivial-change block as Goal source.
 2. Append a `## Post-error revision` block to the new ticket with the five required fields (Triggered by / Observed / Falsified assumption / Revised model / Implication).
@@ -405,15 +405,22 @@ positives the agent can recover from by adjusting invocation shape:
   statements (newline / `;` / `||`) with at least one `cd`, the hook
   yields rather than risk evaluating the wrong repo. Same workaround:
   split into separate Bash invocations.
-- **Craft Agent sessions.** The hook fires via `PreToolUse` wiring in
-  Claude Code's `settings.json`. Craft Agent sessions run their own
-  tool-call surface and do not share Claude Code's hook mechanism --
-  this hook does not fire for Craft Agent push/PR operations. Craft
-  Agent sessions must apply self-review discipline manually; the
-  artifact requirement and trailer format remain identical but
-  enforcement is operator-auditable rather than mechanical. Downstream
-  projects using Craft as their primary agent surface should note this
-  gap in their workspace `CLAUDE.md` so sessions are aware.
+- **Craft Agent sessions (compensating control required).** The hook
+  fires via `PreToolUse` wiring in Claude Code's `settings.json`.
+  Craft Agent sessions run their own tool-call surface and do not
+  share Claude Code's hook mechanism -- this hook does not fire for
+  Craft Agent push/PR operations. **The hook gap makes self-invocation
+  MORE important, not less.** Before each push/PR-create/PR-merge in a
+  Craft Agent session, the agent MUST: (1) run `evaluate-ticket`
+  against the cited ticket and paste the PASS/BLOCK result in the
+  artifact's `Goal source verification:` field, (2) produce the full
+  self-review artifact with all required sections, (3) include both
+  `Self-Review:` and `Self-Review-Source:` trailers in the commit.
+  Omitting any of these because "the hook isn't there to enforce it"
+  is the exact failure mode this control exists to prevent — the
+  absence of mechanical enforcement is a reason for more discipline,
+  not less. Downstream projects using Craft as their primary agent
+  surface should note this gap in their workspace `CLAUDE.md`.
 
 These are conservative-bias trade-offs. The hook prefers a recoverable
 false positive over a silent false negative; "split into separate calls"

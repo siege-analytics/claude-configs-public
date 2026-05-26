@@ -36,6 +36,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Apache Sedona — `from sedona`, `SedonaContext`, ST_* in Spark SQL, `%scala` Sedona | [skill:sedona] |
 | DuckDB-spatial — `import duckdb` + `INSTALL spatial` / `LOAD spatial` / `ST_Read` (single-node SQL on Parquet, GDAL-less) | [skill:duckdb-spatial] |
 | QML component review — properties-in / signals-out, MuseScore plugins, Qt Quick decomposition | [skill:qml-component-review] |
+| Fix a bug or issue identified by code review / audit / static analysis | [skill:think] Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per [skill:evaluate-ticket] criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
 
 ### Analysis
 
@@ -81,6 +82,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Close a ticket | [skill:close-ticket] |
 | "What should I work on next?", opportunity surfacing | [skill:im-feeling-lucky] |
 | Starting work on a ticket — claim it, mark in-progress, branch, then code | [skill:pre-work-check] |
+| Create ≥2 tickets in one session (epic breakdown, audit findings, batch triage) | [skill:create-ticket] + [skill:evaluate-ticket] per ticket. **Test-before-bulk applies:** create the first ticket, run `evaluate-ticket`, fix gaps until it PASSes, THEN continue to the next. Each ticket is an independent act of investigation, not a line item in a list. |
 
 ### Documentation
 
