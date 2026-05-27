@@ -79,7 +79,7 @@ Verification: <paste output of `git merge-base --is-ancestor <first-added> <work
 
 The `Pre-author-inventory:` field in the Assumptions section is a **required
 composability link** between this skill and
-[`authoring-against-state`](../_authoring-against-state-rules.md):6.
+[rule:authoring-against-state]:6.
 
 Before authoring any runtime artifact whose contact points trigger rules 1-5 of
 that shelf, the agent must complete a pre-author investigation and record its
@@ -153,7 +153,7 @@ trivial" or "minor cleanup" fail.
 
 The Falsification field is the writing-rules:6 trigger. If the observable named there later surfaces — an `AttributeError` matching the renamed symbol, a behavior claim acted on from prose-only-docs, a non-comment line changed by what was claimed comments-only — the Trivial-change declaration was wrong, and the response is **not** to just fix the bug.
 
-Per writing-rules:6 (and [`post-error-revision`](../post-error-revision/SKILL.md)):
+Per writing-rules:6 (and [skill:post-error-revision]):
 
 1. File a ticket retroactively, citing the failed Trivial-change block as Goal source.
 2. Append a `## Post-error revision` block to the new ticket with the five required fields (Triggered by / Observed / Falsified assumption / Revised model / Implication).
