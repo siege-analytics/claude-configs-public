@@ -1,5 +1,5 @@
 ---
-description: Always-on. Code-authoring discipline. Docstring brevity, no history references in code comments, no speculative abstractions, verify symbols exist before naming them, verify dependencies are reachable before writing code that uses them, doc-edit symmetry, no silent error swallowing. Test-writing rules live in `_writing-tests-rules.md`; claim-grounding (commit/PR-body claims) lives in `_writing-claims-rules.md`.
+description: Always-on. Code-authoring discipline. Docstring brevity, no history references in code comments, no speculative abstractions, verify symbols exist before naming them, verify dependencies are reachable before writing code that uses them, doc-edit symmetry, no silent error swallowing, migration completeness (old-path grep must return zero), deprecation shims require companion follow-up tickets. Test-writing rules live in `_writing-tests-rules.md`; claim-grounding (commit/PR-body claims) lives in `_writing-claims-rules.md`.
 ---
 
 # Writing Code
@@ -8,7 +8,7 @@ These rules apply whenever the agent writes production code -- any `.py` file ou
 
 The sibling boundary in `_writing-claims-rules.md` is "verify before claiming": rules that fire when stating a fact in a commit body, PR body, or chat. The two files split the same underlying claim-grounding family by temporal trigger; consult writing-code when editing code, consult writing-claims when stating facts.
 
-## The fifteen code-writing rules
+## The seventeen code-writing rules
 
 **writing-code:1. Default to no docstring or a one-liner.** Multi-paragraph Sphinx-style docstrings are reserved for public API surface that is exported and consumed externally. Internal helpers and one-off functions get type hints and at most one sentence. Docstrings are code, not prose; the discipline lives here rather than in `[rule:writing-prose]`.
 
@@ -280,9 +280,57 @@ The originating bug surfaced at pass-11 hostile review of v2.5.0: `siege_utiliti
 
 Mechanical via AST scanner (`scan_ast.py::check_writing_code_15`): walks `Call` nodes whose function matches one of the surfaces above; flags missing `timeout` kwarg unless `timeout=None` accompanied by the audit-signal comment.
 
+**writing-code:16. Migration completeness: grep for the old path must return zero hits.**
+
+When moving or renaming a module, class, function, or import path, the migration is complete when `grep -r "old_path" . --include="*.py"` returns zero hits across the entire repository — production code AND test code AND documentation AND configuration. Updating production code while leaving test files, scripts, notebooks, or docs pointing at the deprecated path is not a migration; it is a migration with invisible deferred work.
+
+**The scope is the repo, not the directory.** The common failure mode is: agent updates all imports in `src/` but leaves `tests/`, `docs/`, `scripts/`, and `notebooks/` untouched. The deprecation shim masks the gap — tests pass, CI is green — but the migration is incomplete. When the shim is removed, every un-migrated site breaks at once, and the breakage lands on whoever removes the shim, not whoever left the sites behind.
+
+Operationalization: after completing all import-path changes in a migration PR, run:
+
+```bash
+grep -rn "old_module_path" . --include="*.py" | grep -v __pycache__
+```
+
+If the output is non-empty, either (a) update the remaining sites in this PR, or (b) file a follow-up ticket listing every remaining site with an explicit dependency on the shim's removal milestone (see writing-code:17). Option (b) is acceptable only when the remaining sites are in test fixtures or third-party-facing code where the change requires separate review. Option (b) without the ticket is the banned shape — it turns deferred work into invisible work.
+
+**Interaction with deprecation shims.** A shim that re-exports from the new location makes the old path continue to work. The shim is a grace period, not a substitute for migration. The shim's removal target (e.g. "v4.0.0") is a deadline; every import site still using the old path at that deadline is a breakage. writing-code:16 requires that the set of sites depending on the shim is enumerated and tracked at shim-creation time, not discovered at shim-removal time.
+
+Bad-example catalog from session 260526-true-coral (siege_utilities Epic #572):
+- PR #584 moved `census_registry.py` and `nces_constants.py` from `config/` to `geo/`, updated 15 source files in `geo/`, created 3 deprecation shims with v4.0.0 removal target. But 11 test files containing 28 import lines still reference the old `config.*` paths. No follow-up ticket was filed. The 28 lines will break when the shims are removed, and nothing tracks their existence. The PR body claimed "Updated all 15 internal import sites in geo/" — true but misleadingly scoped. The migration is incomplete.
+
+Forward-only. Existing incomplete migrations are flagged when discovered; the rule's expectation is that new migrations comply from the first PR.
+
+**writing-code:17. Deprecation shims require a companion follow-up ticket.**
+
+Creating a deprecation shim (a module that re-exports from a new location with a `DeprecationWarning` and a stated removal version) requires a companion ticket that:
+
+(a) Lists every remaining consumer of the deprecated path (the output of the grep from writing-code:16).
+(b) States the removal version or milestone.
+(c) Is linked to the removal milestone in the issue tracker.
+
+The shim without the ticket is deferred work disguised as completed work. The shim provides backward compatibility; the ticket provides accountability. A shim with a removal target but no ticket tracking who depends on it will either be removed and break consumers (because nobody knew they existed) or never be removed (because nobody wants to find out).
+
+**The ticket is filed at shim-creation time, not at shim-removal time.** The information about remaining consumers is freshest when the shim is created — the agent just ran the migration and knows exactly which sites were not updated. Deferring the ticket to removal time means reconstructing this information from scratch, usually under time pressure.
+
+Operationalization: in the same PR that creates the deprecation shim, include a comment in the PR body:
+
+```
+Follow-up: #<ticket-number> — migrate <N> remaining consumers before <removal-version>
+```
+
+The ticket body lists each file and line number. The ticket is assigned to the removal milestone.
+
+**Carve-out: zero remaining consumers.** If the grep from writing-code:16 returns zero hits (all consumers already migrated), the shim exists only for external/downstream backward compatibility. In this case, the follow-up ticket is still required but may be scoped to "remove shim at <version>" without a consumer list — there are no internal consumers to migrate.
+
+Bad-example catalog from session 260526-true-coral (siege_utilities Epic #572):
+- PR #584 created 3 deprecation shims with v4.0.0 removal target. No companion ticket was filed. 28 import lines across 11 test files depend on the shims. When v4.0.0 arrives, whoever removes the shims must discover these 28 lines by running the grep that should have been run at creation time.
+
+Cross-rule composition: writing-code:16 (migration completeness) produces the consumer list; writing-code:17 (shim follow-up ticket) ensures the list is tracked. writing-code:16 without :17 produces a known-incomplete migration with no accountability; :17 without :16 produces a ticket that might miss consumers. The two compose to close the deferred-migration failure class.
+
 ## Override
 
-These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:12 (no duplicate imports) lands mechanical at v2.3.1 via AST scanner; writing-code:7 (silent error swallowing) lands mechanical at v2.3.1.1 via AST scanner with carve-outs for Optional[T]+docstring, `# noqa: writing-code-7` opt-out, and the `except ImportError`+flag-pattern idiom (writing-code:8 territory); writing-code:15 (unbounded blocking I/O) lands mechanical at v2.6.0 via AST scanner with empirical-evidence-only call-surface list and audit-signal comment carve-out for `timeout=None`; writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; the remaining eight (writing-code:1, :3, :4, :6, :10, :11, :13, :14) are judgment-enforced via `[skill:code-review]`. writing-code:11, :13, :14 scanner enhancements tracked for v2.3.x and beyond. writing-code:7 scanner has two enhancement candidates queued for v2.3.2/v2.4.0: TC5 catch-all-with-alternative-return-shape (also the writing-code:14 mechanical detection candidate) and TC8 catch-all-wrapping-pure-logic-body.
+These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:12 (no duplicate imports) lands mechanical at v2.3.1 via AST scanner; writing-code:7 (silent error swallowing) lands mechanical at v2.3.1.1 via AST scanner with carve-outs for Optional[T]+docstring, `# noqa: writing-code-7` opt-out, and the `except ImportError`+flag-pattern idiom (writing-code:8 territory); writing-code:15 (unbounded blocking I/O) lands mechanical at v2.6.0 via AST scanner with empirical-evidence-only call-surface list and audit-signal comment carve-out for `timeout=None`; writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; writing-code:16 (migration completeness) and writing-code:17 (deprecation shim follow-up ticket) are judgment-enforced via `[skill:code-review]` and `[skill:self-review]`; the remaining eight (writing-code:1, :3, :4, :6, :10, :11, :13, :14) are judgment-enforced via `[skill:code-review]`. writing-code:11, :13, :14 scanner enhancements tracked for v2.3.x and beyond. writing-code:7 scanner has two enhancement candidates queued for v2.3.2/v2.4.0: TC5 catch-all-with-alternative-return-shape (also the writing-code:14 mechanical detection candidate) and TC8 catch-all-wrapping-pure-logic-body.
 
 ## Cross-references
 

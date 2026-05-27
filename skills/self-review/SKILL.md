@@ -61,6 +61,14 @@ explicitly, with the role-context.
 Approach-fit verdict. Blast radius declared. Sequencing assumption
 that has to hold for this to be the right move.
 
+## Quantified claims
+For every specific count stated in this PR's body, commit messages,
+or this artifact itself, paste the command and output that produced it.
+Format:
+  - "<quoted claim>" — `<command>` → <output>
+An empty section when the PR body contains specific counts is a
+writing-claims:8 violation visible to anyone reading the artifact.
+
 ## Evidence-predates-work
 Artifact: <path to this artifact>
 First-added commit: <paste output of `git log -1 --diff-filter=A --follow --format=%H -- <artifact-path>`>
@@ -220,7 +228,7 @@ Run each applicable shelf against the diff at review time:
 - `_writing-claims-rules.md` -- grep before declaring complete, countable
   claims grounded in same-turn evidence, unquantified completeness
   claims grounded too, invented framework signals require existing
-  artifact backing.
+  artifact backing, specific counts cite the command that produced them.
 - `_writing-prose-rules.md` -- no AI-typographic Unicode, no "Why:" /
   "How to apply:" structured blocks in code comments or commit
   messages, no header stacking in commit bodies.
@@ -271,6 +279,30 @@ This recursion prevents the artifact from becoming theater. An empty
 "no concerns" verdict is itself a writing-claims violation, visible
 to anyone reading the artifact.
 
+## Quantified claims section is structural enforcement
+
+The `## Quantified claims` section makes writing-claims:8 structurally
+visible in the artifact. Every specific count in the PR body or commit
+messages ("21 subpackages," "15 import sites," "all 4 engines") must
+appear in this section with the command that produced the number.
+
+The section catches two failure modes:
+
+1. **Fabricated counts.** The agent recalls "about 20" and writes "21"
+   without running `ls | wc -l`. The section forces the command to run.
+   When the command returns 25, the claim must be revised before stating
+   it.
+
+2. **Scoping errors from wrong counts.** A migration PR claims "Updated
+   all 15 internal import sites" — true for source files, but the grep
+   that produced 15 excluded test files. The section forces the full
+   grep to appear, making the scope visible: "15 source sites updated;
+   28 test-file sites remain (tracked in #NNN)."
+
+An empty Quantified claims section is acceptable only when the PR body
+and commit messages contain no specific integer counts. The hook
+validates section presence; content completeness is operator-auditable.
+
 ## Goal source is load-bearing
 
 If the goal field is sourced from the diff itself (PR title, commit
@@ -316,9 +348,10 @@ the claim must be grounded.
   grep -- rejects trailer keywords that appear in the subject or body).
 - Exactly one `Self-Review-Source:` value (multiple = ambiguous,
   blocked).
-- If the source value is a file path: file exists, has the three
+- If the source value is a file path: file exists, has the four
   required section headers (`## Assumptions`, `## Peer review`,
-  `## Lead review`), has a non-empty `Goal source:` line.
+  `## Lead review`, `## Quantified claims`), has a non-empty
+  `Goal source:` line.
 - **v1.1**: If `Goal source:` value is itself a file path, its mtime
   must not be newer than the review artifact's mtime (catches goal-
   source-written-after-the-work post-hoc-justification pattern).
