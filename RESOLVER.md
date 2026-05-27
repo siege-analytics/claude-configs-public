@@ -148,6 +148,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 | Update a ticket (progress comment, field change) | `skills/planning/update-ticket/SKILL.md` |
 | Close a ticket | `skills/planning/close-ticket/SKILL.md` |
 | Start work on a ticket (first commit, mark In Progress, assign to self) | `skills/planning/pre-work-check/SKILL.md` |
+| Execute >=2 tickets in one session (epic work, audit remediation, batch fixes) | `skills/thinking/think/SKILL.md` per ticket (not per epic). Each ticket is a discrete action: own design note, own branch, own self-review. Universal check #10 (batch-execution-is-not-one-action) is the enforcement. The `think` gate fires N times, not once. |
 
 ### Documentation
 
@@ -192,6 +193,12 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 8. **No-attribution**: never add Claude/AI attribution to commits, PRs, or public-facing content.
 
 9. **Measure twice, cut once**: for destructive or irreversible actions (drops, deletes, force-push, hard-reset), confirm scope first.
+
+10. **Batch-execution is not one action**: when executing multiple tickets, issues, or tasks in sequence (epic breakdown, audit remediation, batch triage fixes), each ticket is a separate non-trivial action. Each gets its own `think` gate (design note), its own branch, its own self-review artifact. "I'm doing 8 tickets" is 8 actions, not 1 action done 8 times. No amortization of investigation, design, or review across tickets. The agent will take any excuse to skip per-ticket discipline during batch work — speed, momentum, "they're all similar," "I already understand the pattern." These are the Junior's rationalizations. The gates exist precisely for the moments when skipping them feels efficient.
+
+    **Mechanical test:** if you are about to commit work for ticket N+1 without having produced a design note for ticket N+1 specifically (not "the epic design note that covers all of them"), you are violating this check. Stop and produce the note.
+
+    **Interaction with test-before-bulk (#4):** test-before-bulk applies to batch data operations (20+ items). This check applies to batch ticket execution (2+ tickets). They are complementary: test-before-bulk prevents data damage from untested batch operations; batch-execution-is-not-one-action prevents quality damage from uninvestigated batch implementations. Both fire when the agent is doing "many of something."
 
 ---
 

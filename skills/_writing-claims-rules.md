@@ -1,16 +1,16 @@
 ---
-description: Always-on. Claim-grounding discipline. Grep before declaring a fix complete; ground countable claims in same-turn evidence; ground unquantified completeness claims (loop closed, ready to ship) in the same evidence shape; ground invented framework signals (new pattern names, coined disciplines) in existing artifacts; verify external-resource recommendations (URLs, file paths, tickets, free-vs-paid) at recommendation time; require three samples before promoting a pattern to a rule. Applies whenever the agent states a fact in a commit body, PR body, agent-to-agent message, or chat to the operator. Fact-grounding at code-edit time (verify symbol exists, doc-edit symmetry, dependency reachable) lives in `_writing-code-rules.md`.
+description: Always-on. Claim-grounding discipline. Grep before declaring a fix complete; ground countable claims in same-turn evidence; ground unquantified completeness claims (loop closed, ready to ship) in the same evidence shape; ground invented framework signals (new pattern names, coined disciplines) in existing artifacts; verify external-resource recommendations (URLs, file paths, tickets, free-vs-paid) at recommendation time; require three samples before promoting a pattern to a rule; verify finding-text against live source before scoping work; specific counts must cite the command that produced them. Applies whenever the agent states a fact in a commit body, PR body, agent-to-agent message, or chat to the operator. Fact-grounding at code-edit time (verify symbol exists, doc-edit symmetry, dependency reachable) lives in `_writing-code-rules.md`.
 ---
 
 # Writing Claims
 
-These four rules apply whenever the agent states a fact in a commit body, PR body, agent-to-agent message, or chat to the operator. The unifying boundary is "verify before claiming": the rules fire at claim time, after the action that the claim is about has happened.
+These rules apply whenever the agent states a fact in a commit body, PR body, agent-to-agent message, or chat to the operator. The unifying boundary is "verify before claiming": the rules fire at claim time, after the action that the claim is about has happened.
 
 The sibling boundary in `_writing-code-rules.md` is "verify before touching code": rules that fire at code-edit time (verify the symbol exists before naming it, verify the dependency is reachable before depending on it, re-read docs that reference the symbol you just edited). The two files split the same underlying claim-grounding family by temporal trigger; consult writing-code when editing code, consult writing-claims when stating facts.
 
-The parent discipline is `[rule:verify-before-execute]` Evidence clause: same-turn tool calls back factual claims. These four rules are specific shapes of that discipline applied at claim time.
+The parent discipline is `[rule:verify-before-execute]` Evidence clause: same-turn tool calls back factual claims. These rules are specific shapes of that discipline applied at claim time.
 
-## The six claim-grounding rules
+## The eight claim-grounding rules
 
 **writing-claims:1. Grep before declaring a fix complete.** When fixing one call site of a problem, search the whole codebase for the same pattern before writing the commit body, the PR title, or the chat update that says the fix is done. The Paragraph-escape fix that needed three rounds (one site, then CodeRabbit pointing out five more, then a follow-up) is the canonical failure mode: the gate moved from "before writing the patch" to "before claiming the patch is complete" because the original phrasing let the agent fix one site, declare done, and only grep when the reviewer pushed back. Same applies to renames, signature changes, and security fixes: scope of the bug is always wider than the diff that surfaced it.
 
@@ -68,6 +68,33 @@ Bad-example catalog from sessions 260502-vital-channel + sibling (2026-05-18):
 
 The artifact is authored-at-a-prior-state. The work is against current-state. The reconciliation is the rule.
 
+**writing-claims:8. Specific counts must cite the command that produced them.**
+
+Any claim containing a specific integer count ("21 subpackages," "15 import sites," "4 stale shims," "all 29 public symbols") must be immediately preceded or followed by the command output that produced the number. A count without a command is an estimate presented as a fact. The agent's memory of "about 20" is not evidence that the number is 21; the difference between 21 and 25 is four missed items.
+
+This rule is the quantitative strengthening of writing-claims:2. writing-claims:2 requires the falsifying grep for countable claims; writing-claims:8 requires the producing command for the count itself. The two compose: the count comes from a command (writing-claims:8), and the claim that the count covers the full class comes from a falsifying grep (writing-claims:2).
+
+Operationalization: before writing a sentence containing a specific number, run the command that would produce that number. Paste the command and its output. Then write the sentence. The command is the artifact; the number is the conclusion.
+
+Banned shapes:
+
+- "All 21 subpackages define `__all__`" without `ls -d pkg/*/ | wc -l` or equivalent showing 21.
+- "Updated all 15 internal import sites" without `grep -r "old_path" --include="*.py" | wc -l` showing 15.
+- "Only 16 imports use the top-level path" without the grep that counted 16.
+
+Acceptable shapes:
+
+- `` `ls -d siege_utilities/*/ | wc -l` → 25 `` followed by "All 25 subpackages define `__all__`."
+- `` `grep -rn "from old_path" --include="*.py" | wc -l` → 15 `` followed by "Updated all 15 internal import sites."
+
+The command output anchors the claim to reality. When the agent's recalled count disagrees with the command's count, the command wins and the claim must be revised before stating it.
+
+Bad-example catalog from session 260526-true-coral (siege_utilities Epic #572):
+- PR #586 claimed "Verified all 21 subpackages already define `__all__`." Actual count: 25 subpackages, 4 of which (`conf`, `economic`, `education`, `reference`) lack `__all__`. The number 21 was fabricated from memory; no `ls` or `find` command was run. The false count shaped the PR's conclusion that no action was needed — the conclusion was wrong because the count was wrong.
+- PR #584 claimed "only 16 internal imports use `from siege_utilities import X` vs 1408 using subpackage paths." Actual grep on non-test files: 2 top-level imports, not 16. The ratio was even more extreme than claimed, but the specific number was still wrong.
+
+Mechanical enforcement candidate: `[skill:detect-ai-fingerprints]` trigger-set extension for integer-count phrases ("all N," "N files," "N subpackages," "N import sites") requiring a `Verified-by:` or inline command-output block. Tracked for v2.x.y.
+
 ## Override
 
 These rules are mandatory. No `[claim-skip]` override and no `[padding-skip]` override. The same-turn-evidence constraint and the artifact-backing requirement are the entire point; an override defeats the rule. The writing-claims:4 carve-out for new-rule-authoring is in the rule, not an override. `[skill:detect-ai-fingerprints]` trigger-set extension for writing-claims:4 pattern-naming detection is tracked as a v2.x.y follow-up.
@@ -78,6 +105,7 @@ These rules are mandatory. No `[claim-skip]` override and no `[padding-skip]` ov
 - `[rule:writing-code]` writing-code:4 (verify symbol exists), writing-code:5 (no hypothetical code), and writing-code:6 (doc-edit symmetry) are the action-side counterparts. The boundary: writing-code rules fire when editing code; writing-claims rules fire when stating facts in commit/PR bodies or chat. The same operator workflow may invoke both -- edit code (writing-code rules apply), then write the commit body (writing-claims rules apply).
 - `[skill:detect-ai-fingerprints]` mechanically enforces writing-claims:2 and writing-claims:3 trigger detection in commit/PR message bodies; the `Verified-by:` trailer is the required pairing. writing-claims:4 trigger-set extension (pattern-naming phrases) is queued as a v2.x.y follow-up.
 - `[skill:code-review]` checks writing-claims:1 (scope-of-fix across the codebase) and writing-claims:4 (pattern-naming groundedness) at PR time.
+- `[skill:self-review]` Quantified Claims section requires writing-claims:8 evidence inline for every specific count stated in the PR body or commit message.
 
 ## Migration note (v2.0.x only)
 
