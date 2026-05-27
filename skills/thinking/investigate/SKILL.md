@@ -1,0 +1,211 @@
+---
+name: investigate
+description: "Evidentiary fact-finding gate. Before implementation begins, verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations, impact chain, and environmental readiness. The Fact Sheet is the single source of truth referenced by design, self-review, and post-mortem. Do NOT skip this skill; assumptions that bypass investigation are the #1 cause of shipped bugs."
+disable-model-invocation: true
+user-invocable: true
+allowed-tools: Read Grep Glob Bash
+---
+
+# Investigate
+
+Evidentiary fact-finding. Before implementation begins, verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations and an impact chain tracing upstream → task → downstream.
+
+## Why
+
+The recurring failure shape: the agent knows what it wants to build, skips straight to code, and discovers at review time (or never) that the entities it referenced don't have the shape it assumed. Investigation is the evidentiary counterpart to think's strategic framing. Think asks "what approach?" — investigate asks "what are the actual facts?"
+
+Grounding incidents (SU#632-636 batch, N=5):
+
+- `codification_summary.py` mapped `self.urbanicity.category_distribution` — the field is `distribution`, not `category_distribution`. Never read the dataclass.
+- `precinct_vtd.py` used `[^a-z0-9\s]` to normalize names — deletes accented characters. Never considered non-ASCII input data.
+- `precinct_vtd.py` keyed merge by `(precinct_id, vtd_geoid)` pairs — official and spatial can both appear for the same precinct. Never traced the downstream consumer's expectation.
+- `plan_lifecycle.py` created a `by_id` dict in `build_lineage()` that is dead code. Never traced callers.
+- Test `test_urbanicity_section` masks the field-mapping bug by asserting the wrong expectation. Test verified the assumption, not reality.
+
+All five are the same class: **the agent assumed a data shape instead of reading it**.
+
+## When to investigate
+
+Required before implementation when any of these are true:
+
+- The task references existing entities (models, functions, tables, APIs, env vars).
+- The task changes data flow between components.
+- The task adds a new consumer of existing data.
+- The task modifies behavior that downstream code depends on.
+
+**Trivial-change escape:** Pure typo fixes, doc-only edits, and single-line literal changes do not require investigation. The escape must be declared in the self-review artifact per the existing trivial-change protocol.
+
+## Relationship to other skills
+
+```
+think (strategic: "what approach?")
+  │
+  │  think produces: approach selection, scope boundary
+  │  think does NOT produce: verified facts about existing code
+  │
+  ▼
+investigate (evidentiary: "what are the actual facts?")
+  │
+  │  investigate produces: Fact Sheet with file:line evidence
+  │  investigate updates: ticket with impact chain, hypothesis, falsification
+  │
+  ▼
+pre-mortem (adversarial: "if this ships and fails, why?")
+  │
+  │  pre-mortem consumes: investigated facts (Tigers must cite Fact Sheet)
+  │
+  ▼
+implementation (grounded in verified facts)
+```
+
+Investigation consumes the approach from think and produces the evidentiary basis for pre-mortem and implementation. It is not a planning skill — it does not decide what to build. It determines what is true.
+
+## The investigation loop
+
+### Phase 1: Impact Chain
+
+Before reading any code, map the impact chain for the task:
+
+```
+## Impact Chain
+Task: <one-line description>
+Ticket: <reference>
+
+### Upstream (what feeds into the code this task touches)
+For each upstream entity:
+- Entity: <name> (<type>)
+- Location: <file:line>
+- What it provides: <data shape, contract, or behavior>
+- How I verified: <Read/Grep command and result>
+
+### This Task (what changes)
+- Files touched: <list with line ranges>
+- Entities modified: <list>
+- New entities created: <list>
+- Contracts changed: <before → after, with evidence>
+
+### Downstream (what consumes the output of this code)
+For each downstream consumer:
+- Entity: <name> (<type>)
+- Location: <file:line>
+- What it expects: <data shape, contract, or behavior>
+- How I verified: <Read/Grep command and result>
+- Impact of this task's changes: <what changes for this consumer>
+```
+
+The impact chain is documented in the ticket. It is not optional. The chain is what makes the investigation traceable — without it, the Fact Sheet is a collection of disconnected observations.
+
+### Phase 2: Data Shape Verification
+
+For every entity the task touches or references, read the actual definition and record its shape:
+
+| What to verify | How to verify | What to record |
+|---|---|---|
+| Dataclass/model fields | Read the source file; `_meta.get_fields()` for Django | Field names, types, defaults — verbatim from source |
+| Function signatures | Read the source file; `inspect.signature` if needed | Parameters, types, defaults, return type |
+| Database columns | `\d+` (psql) or INFORMATION_SCHEMA | Column names, types, constraints, indexes |
+| API response shapes | Curl/WebFetch a real endpoint or read the schema | Field names, types, nesting, optional vs required |
+| Import paths | `python -c "import X; print(X.__file__)"` or grep | Exact module path, verify symbol exists in `__all__` or module scope |
+| Env vars / config | Read config files, `.env.example`, deployment manifests | Variable names, expected types, default values |
+
+**Hard rule:** Do not write a field name, function parameter, or import path from memory. Read it from the source file and record the file:line where you found it. If you cannot read it (e.g., external API with no local schema), record UNVERIFIED and flag it as a risk.
+
+### Phase 3: Logic Tracing
+
+For non-trivial logic the task modifies or depends on:
+
+1. **Read the actual code path.** Follow the execution from entry point to output. Record what happens, not what you think happens.
+2. **Identify branch conditions.** What values cause which branches? Are there edge cases the task's approach doesn't handle?
+3. **Record concrete values.** Not "the function filters by state" — instead: "line 47 filters `assignments` where `a.state == state_fips`, so if `state_fips` is None, no filtering occurs and all states are returned."
+4. **Trace error paths.** What exceptions can be raised? What happens on empty input? What happens on None?
+
+### Phase 4: Environmental Readiness
+
+Before implementation can begin, verify:
+
+- [ ] All imports resolve (grep for the symbol in the source module).
+- [ ] Test infrastructure is available (pytest runs, fixtures exist).
+- [ ] If the task uses external data: sample data exists or can be constructed.
+- [ ] If the task uses credentials: they are available in the target environment.
+- [ ] If the task creates new files: the target directory exists and naming follows conventions.
+
+Record each check with evidence. "Imports resolve" is not evidence. "`PostGISConnector` exists at `siege_utilities/geo/connectors.py:14`" is evidence.
+
+### Phase 5: Hypothesis and Falsification
+
+Based on the verified facts, state:
+
+```
+## Hypothesis
+<What this implementation will achieve, stated as a testable claim>
+
+## Falsification criteria
+<What evidence would prove the hypothesis wrong>
+<Specific test cases that, if they fail, indicate the implementation is wrong>
+```
+
+The hypothesis and falsification criteria are documented in the ticket. They are not optional. They are what the self-review and post-mortem evaluate against.
+
+## Fact Sheet artifact format
+
+```
+## Investigation Fact Sheet
+Task: <one-line description>
+Ticket: <reference>
+Investigated: <timestamp>
+Approach: <reference to think design note>
+
+### Impact Chain
+<Phase 1 output — full upstream/task/downstream chain>
+
+### Verified Shapes
+For each entity:
+- **<Entity name>** (<type>, <file:line>)
+  - Fields/signature: <verbatim from source>
+  - Verified at: <file:line>
+  - Assumptions my task makes: <named explicitly>
+  - Verification status: VERIFIED | UNVERIFIED (with reason)
+
+### Logic Trace
+<Phase 3 output — concrete execution paths with values>
+
+### Environmental Readiness
+<Phase 4 checklist with evidence>
+
+### Hypothesis and Falsification
+<Phase 5 output>
+
+### Open Questions
+<Anything that could not be verified, with why and what the risk is>
+
+### Findings
+For each issue discovered during investigation:
+- **Finding <N>:** <description>
+  - Severity: HIGH | MEDIUM | LOW
+  - Evidence: <file:line, concrete values>
+  - Impact: <what breaks, who is affected>
+  - Recommendation: <fix, defer with justification, or accept with rationale>
+```
+
+## Composition with existing skills
+
+- **survey-context** already verifies entity shapes against doc pages. Investigation extends this to: (a) entities without doc pages, (b) logic tracing beyond shape, (c) impact chain mapping, (d) environmental readiness. When survey-context exists for the project, investigation consults its entity docs as a starting point but does not trust them without live verification.
+- **think Step 1 (Context)** currently says "Read the relevant files. Don't guess about the current state." Investigation systematizes this: instead of a reminder, it produces a checkable artifact with file:line evidence.
+- **self-review** references the Fact Sheet in its `Goal source` and `Pre-author-inventory` fields. The Lead's adversarial pass checks whether the implementation matches the investigated facts.
+- **pre-mortem** requires Tigers to cite the Fact Sheet. A Tiger that isn't grounded in investigated facts is a Paper Tiger (speculation, not evidence).
+
+## Hard rules
+
+1. **No implementation before investigation** for non-trivial entity-touching work. The Fact Sheet's existence is the floor.
+2. **File:line or it didn't happen.** Every claim about existing code must cite the source location. "The model has a `name` field" is not evidence. "`name: str` at `models.py:42`" is evidence.
+3. **Read, don't recall.** Do not write entity shapes from memory or from a previous conversation. Read the current source file. Every time.
+4. **Impact chain is mandatory.** Upstream and downstream must be traced for every task that modifies shared entities. "I don't think anything depends on this" is not acceptable without a grep to prove it.
+5. **Findings are not optional.** If investigation discovers issues, they are recorded. Suppressing findings to avoid scope creep is a self-review violation.
+6. **The ticket gets the chain.** Impact chain, hypothesis, and falsification are documented in the ticket — not just in the Fact Sheet. The ticket is the spine; the Fact Sheet is the evidence appendix.
+
+## What investigation is NOT
+
+- **Not a design skill.** Investigation does not decide what to build. It determines what is true. The approach comes from think; investigation verifies whether the approach is grounded.
+- **Not a planning skill.** Investigation does not break work into tasks. It produces facts that inform task breakdown.
+- **Not exhaustive.** Investigation traces the entities and logic the task actually touches. It does not audit the entire codebase. Depth heuristics from survey-context apply: DEEP for touched entities, SHALLOW for referenced entities, SKIP for transitive dependencies the diff doesn't engage.
+- **Not a substitute for tests.** Investigation verifies pre-conditions. Tests verify post-conditions. Both are required.
