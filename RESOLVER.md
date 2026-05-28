@@ -122,7 +122,7 @@ Items marked **[build-enforced]** are validated by `bin/build.py`. Items marked 
 
 | Project | Repo | Rules | Skills |
 |---|---|---|---|
-| `siege-utilities` | `siege-analytics/siege_utilities` | `siege-utilities--rules` | `siege-utilities--hostile-review`, `siege-utilities--notebook-impact` |
+| `siege-utilities` | `siege-analytics/siege_utilities` | `siege-utilities--rules` | `siege-utilities--hostile-review`, `siege-utilities--notebook-impact`, `siege-utilities--error-path-tests` |
 
 ### siege-utilities-specific routing
 
@@ -132,6 +132,8 @@ These triggers apply only when the working directory matches `siege-analytics/si
 |---|---|
 | Any PR or code review in siege_utilities | `siege-utilities--hostile-review` |
 | Any change to a function signature, return type, or exception contract | `siege-utilities--notebook-impact` |
+| Adding or backfilling error-path tests, SU-4b compliance | `siege-utilities--error-path-tests` |
+| Auditing error-path test coverage for any module | `test-coverage-audit` |
 | `except Exception: pass` or `except: pass` anywhere | Bug — see `siege-utilities--rules` (SU-1) |
 | Function returns empty DataFrame/list/dict/string on error path | Bug — see `siege-utilities--rules` (SU-1) |
 | Code under `examples/` or `notebooks/` | Held to library standard — see `siege-utilities--rules` (SU-3) |

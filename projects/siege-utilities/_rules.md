@@ -46,15 +46,33 @@ Code under `examples/`, `notebooks/`, and demo scripts ships with the package. U
 - No silent fallbacks that hide broken dependencies
 - Error messages must be actionable ("install X" not "something went wrong")
 
-### Rule SU-4: Notebook coverage invariant
+### Rule SU-4: Coverage invariant
+
+Tests and notebooks are the feedback surface. Code without error-path tests and without notebook coverage is untested speculation that happened to compile.
+
+#### SU-4a: Notebook coverage
 
 The `notebooks/` directory demonstrates library capabilities. When a library function's contract changes (new parameter, changed return type, new exception, removed default), the review must check whether any notebook calls that function.
 
 - If a notebook calls the changed function → update the notebook or file a ticket
 - If no notebook calls the changed function → note the gap; this is drift between the library and its documentation surface
-- If the change adds a new capability → consider whether a notebook should demonstrate it
+- If the change adds a new public module → at least one notebook cell must demonstrate it, including an error-path cell that shows what happens on bad input
 
-This rule is enforced by the `notebook-impact` skill, which must run on every fix or feature PR.
+This sub-rule is enforced by the `notebook-impact` skill, which must run on every fix or feature PR.
+
+#### SU-4b: Error-path test coverage
+
+Every public function that can fail must have at least one test exercising the failure path. "Failure path" means: exception raised, error logged, sentinel returned, or degraded result produced. Mocking all dependencies to always succeed is not testing — it is confirming that the happy path compiles.
+
+Specific requirements:
+- Every `except` block must be exercised by at least one test that triggers the exception
+- Every `raise` statement must be exercised by a test that asserts the exception type and message
+- Every "return empty on error" path (even documented ones) must have a test proving the caller can distinguish it from "no data found"
+- Provider-based modules (overlays, geocoders, data clients) must test: provider is None, provider raises, provider returns unexpected shape
+
+**Incident justification:** Round 7 hostile review (2026-05-28) found 10 real bugs that survived 6 prior review rounds because 90% of the 380-test suite only exercised happy paths. The bugs were in error paths that no test ever reached. Mocked-to-success tests gave false confidence that the code worked.
+
+**Mechanical test:** if `pytest --co` lists N tests for a module with M except/raise sites, and fewer than M tests have "error", "fail", "invalid", "missing", or "raises" in their name, the module fails this rule.
 
 ## Branch and merge conventions
 
