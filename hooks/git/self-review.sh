@@ -52,9 +52,20 @@ fi
 
 # Multi-statement-with-cd yield (mirrors branch-guard.sh discipline, issue #101).
 # Portable word boundary (leading), same reason as TRIGGERS above.
+#
+# Statement-separator detection uses a shell-builtin `case` rather than grep so
+# the test is unambiguously portable across BSD (macOS) and GNU greps. The
+# earlier single-regex form ($'\n|;|\\|\\|') triggered BSD grep's "empty
+# (sub)expression" error on macOS because BSD ERE treats `\|` as just `|`,
+# which then parses as adjacent empty alternations. The case approach also
+# avoids the `echo "$cmd" | grep -qF $'\n'` false-positive from echo's trailing
+# newline.
 CD_COUNT=$(echo "$COMMAND" | grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null | wc -l | tr -d ' ')
 if [[ "$CD_COUNT" -gt 0 ]]; then
-    if [[ "$CD_COUNT" -gt 1 ]] || echo "$COMMAND" | grep -qE $'\n|;|\\|\\|'; then
+    case "$COMMAND" in
+        *$'\n'*|*';'*|*'||'*) exit 0 ;;
+    esac
+    if [[ "$CD_COUNT" -gt 1 ]]; then
         exit 0
     fi
 fi

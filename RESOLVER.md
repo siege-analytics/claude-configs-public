@@ -124,6 +124,7 @@ These rules take precedence over anything in individual skill files:
 | Pick a storage engine, replication scheme, or partitioning strategy | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
 | Write a Python utility, helper, formatter, validator, file/path/HTTP/spatial helper | `skills/_siege-utilities-rules.md` (check `siege_utilities` first) |
 | Do any spatial work — pick engine, write spatial SQL/Python/Scala, run a spatial join | `skills/analysis/spatial/SKILL.md` (router; dispatches to `coding/postgis`, `coding/geopandas`, `coding/sedona`, `coding/duckdb-spatial`) |
+| Fix a bug or issue identified by code review / audit / static analysis | `skills/thinking/think/SKILL.md` Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per `evaluate-ticket` criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
 
 ### Design & planning
 
@@ -154,6 +155,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 | Open a pull request | `skills/git-workflow/create-pr/SKILL.md` |
 | Triage / respond to PR comments | `skills/session/pr-comments/SKILL.md` |
 | Create a ticket | `skills/planning/create-ticket/SKILL.md` |
+| Create ≥2 tickets in one session (epic breakdown, audit findings, batch triage) | `skills/planning/create-ticket/SKILL.md` + `skills/evaluate-ticket/SKILL.md` per ticket. **Test-before-bulk applies:** create the first ticket, run `evaluate-ticket`, fix gaps until it PASSes, THEN continue to the next. Each ticket is an independent act of investigation, not a line item in a list. |
 | Update a ticket (progress comment, field change) | `skills/planning/update-ticket/SKILL.md` |
 | Close a ticket | `skills/planning/close-ticket/SKILL.md` |
 | Start work on a ticket (first commit, mark In Progress, assign to self) | `skills/planning/pre-work-check/SKILL.md` |

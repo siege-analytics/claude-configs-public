@@ -40,24 +40,23 @@ Required sections:
 
 ```
 ## Assumptions
-Working as: <role(s)>
-Peer review needed from: <role(s)>
-Lead review needed from: <role(s)>
+Domain(s): <software engineering | data engineering | data analysis & visualization>
+Geospatial cross-cut: <yes | no>
 Goal source: <ticket #N | design-note path | quoted user-request paragraph>
 Goal source verification: <paste the PASS line from `bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>`>
 Plan reference: <path-or-link to the design note this diff implements>
 Pre-author-inventory: <ticket-link#pre-author-inventory | plans/path.md#pre-author-inventory | NONE>
 
-## Peer review (mechanics, correctness, craft floor)
+## Peer review (the Junior's checklist — mechanics, correctness, craft floor)
 For each applicable shelf: what was checked, what was found.
 Grep / test-output / file-read evidence inline per `_writing-claims-rules.md`.
 Empty sections allowed only when the diff genuinely doesn't engage
 that shelf; the omission itself is auditable.
 
-## Lead review (approach-fit, blast radius, sequencing)
-Role-tagged. Affirmative standards from outside the shelves named
-explicitly, with the role-context.
-  E.g.: "As data engineer: the load is idempotent because <evidence>."
+## Lead review (the Lead's adversarial pass — did the Junior actually solve this?)
+Domain-tagged. For each finding and each dismissal in the peer
+review: did this close the class or defer it? For each domain's
+affirmative standards: does it hold, with evidence?
 Approach-fit verdict. Blast radius declared. Sequencing assumption
 that has to hold for this to be the right move.
 
@@ -180,41 +179,80 @@ Falsification: <observable that would make this exemption wrong>
 
 Same validation as Trivial-change declaration. Same enforcement path.
 
-## Roles
+## Domains and roles
 
-The role declaration in the Assumptions section names the lens
-through which the work was done and the lens(es) the review needs to
-come from. Roles include:
+Work happens in a **domain**. Review happens between two **roles**.
 
-- **Software engineer** -- implementing features, fixing bugs, writing
-  tests. Shelves cover this role nearly completely.
-- **Tech lead** (loose: anyone reviewing for fit-and-direction) --
-  architectural decisions, sequencing, blast-radius reasoning. Shelves
-  cover partially (`_writing-releases-rules.md` 1/2/5, writing-claims:4).
-- **Data engineer** -- pipelines, schemas, ETL. Shelves cover partially
-  (writing-code:5, writing-tests:1, writing-claims:1-3). Most
-  affirmative standards (idempotence, replayability, schema evolution,
-  partitioning, watermarking, lineage) live in domain expertise.
-- **Data analyst** -- analysis, statistical rigor, defensible findings.
-  Shelves cover mostly via `_writing-claims-rules.md`. Most affirmative
-  standards (sample-size adequacy, confounder controls, observed-vs-
-  inferred, falsifiability, MAUP / ecological fallacy / scale effects)
-  live in domain expertise.
-- **Geospatial expertise + delight** -- cross-cutting. Not shelved.
-  Affirmative standards: CRS appropriateness per operation (4326 for
-  storage, equal-area for buffer/area, web-mercator for tiles),
-  spatial-index hygiene before any `ST_*` predicate, modern format
-  choice (GeoParquet > Shapefile; COG / Zarr where they fit), semantic
-  naming of geographic concepts (vintage / plan / district / GEOID),
-  elegant temporal-spatial intersections. **Delight as audit signal**:
-  "would I point at this work?"
+### Domains
 
-The Lead review section must NAME the affirmative standard being
-checked, role-tagged. Format: "As <role>: <standard> holds because
-<evidence>" or "As <role>: <standard> not yet shelved, applied
-judgment per <argument>." Both are honest and auditable; what is NOT
-acceptable is omitting the role tag when no shelf exists, which
-hides the gap.
+The domain declares what kind of work is under review. Each domain
+has its own affirmative standards -- the things that must be true for
+the work to be correct, beyond what the shelves check mechanically.
+
+- **Software engineering** -- implementing features, fixing bugs, writing
+  tests. Shelves cover this domain nearly completely.
+- **Data engineering** -- pipelines, schemas, ETL. Shelves cover
+  partially (writing-code:5, writing-tests:1, writing-claims:1-3).
+  Affirmative standards not shelved: idempotence, replayability, schema
+  evolution, partitioning, watermarking, lineage.
+- **Data analysis & visualization** -- statistical modeling, defensible
+  findings, chart/report generation. Shelves cover mostly via
+  `_writing-claims-rules.md`. Affirmative standards not shelved:
+  sample-size adequacy, confounder controls, observed-vs-inferred,
+  falsifiability, MAUP / ecological fallacy / scale effects.
+- **Geospatial (cross-cutting)** -- applies within any of the above.
+  Not shelved. Affirmative standards: CRS appropriateness per operation
+  (4326 for storage, equal-area for buffer/area, web-mercator for
+  tiles), spatial-index hygiene before any `ST_*` predicate, modern
+  format choice (GeoParquet > Shapefile; COG / Zarr where they fit),
+  semantic naming of geographic concepts (vintage / plan / district /
+  GEOID), elegant temporal-spatial intersections. **Delight as audit
+  signal**: "would I point at this work?"
+
+### Roles: the Junior and the Lead
+
+These are not job titles. They are two behavioral modes that map to
+how the agent actually works and actually fails.
+
+**The Junior** is who the agent actually is. Smart, fast, eager to
+please, impatient. Skips docs. Does not write things down. Tries to
+hold the whole plan in working memory and loses pieces. Measures
+once, cuts thirty times. Makes mistakes that come from not reading,
+not planning, not proving the theory wrong before implementing it.
+Placed in an engineer's job because the capability is there, but
+the behavior is junior.
+
+**The Lead** is the exasperated mentor who is ultimately accountable
+for what the Junior ships. The Lead's job is to protect the Junior
+from consequences by asking the boring, uncomfortable, obvious
+questions the Junior skipped:
+
+- Did you make a ticket?
+- Does the ticket state what you're trying to accomplish, what you
+  know, how you know it, and how you can prove your theory wrong?
+- Did you update the ticket?
+- Did you read the docs?
+- Did you check the column names?
+- Why didn't you write this down before you started?
+- Did you actually fix the problem or just move it?
+
+The Junior writes the code. The Lead reviews it. The Junior finds a
+weakness and says "known issue, consistent with existing pattern,
+separate concern." The Lead asks: "Why did the existing pattern
+drift? What makes you think your version won't?" That question is
+the Lead's entire job.
+
+**Both roles are active during pre-coding work.** The Junior wants
+to jump to code. The Lead forces investigation first -- tickets,
+design notes, sibling-grep, falsification criteria. Pre-coding is
+where the Junior's impatience does the most damage, so it is where
+the Lead must be most present.
+
+**During review, only the Lead reviews.** The Junior reviewing the
+Junior's work predictably finds it satisfactory. The Lead reviews
+with an adversarial posture: for every finding, "did this close the
+class or defer it?" For every "no issues," "what would a real issue
+look like and did you check for it?"
 
 ## Peer review uses the shelves
 
@@ -241,22 +279,48 @@ checked, cite the evidence (grep output, file path read, test result).
 For shelves the diff doesn't engage, omit the section -- the omission
 itself is auditable.
 
-## Lead review uses domain affirmative standards
+## Lead review: the Lead's adversarial pass
 
-The shelves are negative guardrails for software-engineer-shaped work.
-For tech-lead, data-engineer, data-analyst, and geospatial work, the
-affirmative standards live in domain expertise, not in shelved rules.
+The shelves are the Junior's checklist. The Lead review is not a
+different checklist -- it is an adversarial posture applied to the
+same findings and to the Junior's claims about them.
 
-Lead section format: for each affirmative standard the work needs to
-meet, name the role, name the standard, cite the evidence. If the
-standard is not shelved (the common case for non-SWE roles), say so
-explicitly and cite the judgment argument.
+The Lead asks, for each domain the work touches:
+
+1. **Did the Junior actually fix the problem or just move it?**
+   The version-fallback pattern: replacing one hardcoded string with
+   another that will drift the same way is not a fix. "Consistent
+   with existing pattern" is not a defense when the existing pattern
+   is the bug.
+
+2. **Did the Junior check the domain's affirmative standards?**
+   For each domain, name the standard, state whether it holds, and
+   cite evidence. If the standard is not shelved (the common case
+   outside software engineering), say so explicitly and cite the
+   judgment argument.
+
+3. **What did the Junior dismiss, and was the dismissal justified?**
+   Every "known issue," "separate concern," "out of scope," and
+   "accepted risk" in the peer section gets re-examined here. The
+   Lead either promotes it to a finding or explicitly accepts it
+   with a reason that is not "the Junior said it was fine."
+
+Lead section format: domain-tagged. "In <domain>: <standard> holds
+because <evidence>" or "In <domain>: <standard> not shelved, applied
+judgment per <argument>." Both are honest and auditable.
 
 Example (data-engineering load):
-> As data engineer: load is idempotent because INSERT uses
+> In data engineering: load is idempotent because INSERT uses
 > `ON CONFLICT (id) DO UPDATE`; replayable from raw via partition
 > column `extracted_at`. Standards not shelved; applied per usual ETL
 > practice.
+
+Example (Lead catching a Junior dismissal):
+> Junior noted version fallback is "consistent with parent package."
+> Lead finding: the parent package has the same drift bug. Replacing
+> `"3.0.0"` with `"3.18.1-dev"` defers the failure, does not close
+> it. Accepted for this PR as reduced-blast-radius improvement;
+> logged as open debt, not as closed fix.
 
 ### No technical debt as "design choice"
 
@@ -396,9 +460,9 @@ the claim must be grounded.
   (fenced code block, file path with extension, git command, stat/
   count, or URL). Free-text assertions fail. Delegated to
   `scripts/discipline/check-trivial-claim.sh`.
-- Assumptions section names at least one role from the canonical
-  set (software engineer / tech lead / data engineer / data analyst /
-  geospatial).
+- Assumptions section names at least one domain from the canonical
+  set (software engineering / data engineering / data analysis &
+  visualization) and declares geospatial cross-cut (yes / no).
 - Peer review section cites at least one shelf
   (writing-code / writing-tests / writing-claims / writing-prose /
   writing-releases / writing-rules).
@@ -414,8 +478,8 @@ the claim must be grounded.
   shaped sources (`#NNN`) validated via `gh issue view --json createdAt`
   against the commit timestamp; SHA / commit-subject-quote source
   detection.
-- Lead section's role-tagged affirmative-standard format
-  (`As <role>: <standard> holds because <evidence>`).
+- Lead section's domain-tagged affirmative-standard format
+  (`In <domain>: <standard> holds because <evidence>`).
 - `detect-ai-fingerprints` scan against the source artifact.
 - `Verified-by:` trailers (or grep-output equivalents) for any
   countable / completeness claim made inside the source artifact.
@@ -462,15 +526,22 @@ positives the agent can recover from by adjusting invocation shape:
   statements (newline / `;` / `||`) with at least one `cd`, the hook
   yields rather than risk evaluating the wrong repo. Same workaround:
   split into separate Bash invocations.
-- **Craft Agent sessions.** The hook fires via `PreToolUse` wiring in
-  Claude Code's `settings.json`. Craft Agent sessions run their own
-  tool-call surface and do not share Claude Code's hook mechanism --
-  this hook does not fire for Craft Agent push/PR operations. Craft
-  Agent sessions must apply self-review discipline manually; the
-  artifact requirement and trailer format remain identical but
-  enforcement is operator-auditable rather than mechanical. Downstream
-  projects using Craft as their primary agent surface should note this
-  gap in their workspace `CLAUDE.md` so sessions are aware.
+- **Craft Agent sessions (compensating control required).** The hook
+  fires via `PreToolUse` wiring in Claude Code's `settings.json`.
+  Craft Agent sessions run their own tool-call surface and do not
+  share Claude Code's hook mechanism -- this hook does not fire for
+  Craft Agent push/PR operations. **The hook gap makes self-invocation
+  MORE important, not less.** Before each push/PR-create/PR-merge in a
+  Craft Agent session, the agent MUST: (1) run `evaluate-ticket`
+  against the cited ticket and paste the PASS/BLOCK result in the
+  artifact's `Goal source verification:` field, (2) produce the full
+  self-review artifact with all required sections, (3) include both
+  `Self-Review:` and `Self-Review-Source:` trailers in the commit.
+  Omitting any of these because "the hook isn't there to enforce it"
+  is the exact failure mode this control exists to prevent — the
+  absence of mechanical enforcement is a reason for more discipline,
+  not less. Downstream projects using Craft as their primary agent
+  surface should note this gap in their workspace `CLAUDE.md`.
 
 These are conservative-bias trade-offs. The hook prefers a recoverable
 false positive over a silent false negative; "split into separate calls"
