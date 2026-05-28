@@ -36,6 +36,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Apache Sedona — `from sedona`, `SedonaContext`, ST_* in Spark SQL, `%scala` Sedona | [skill:sedona] |
 | DuckDB-spatial — `import duckdb` + `INSTALL spatial` / `LOAD spatial` / `ST_Read` (single-node SQL on Parquet, GDAL-less) | [skill:duckdb-spatial] |
 | QML component review — properties-in / signals-out, MuseScore plugins, Qt Quick decomposition | [skill:qml-component-review] |
+| Auditing error-path test coverage, writing-tests:5 compliance | [skill:test-coverage-audit] |
 | Fix a bug or issue identified by code review / audit / static analysis | [skill:think] Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per [skill:evaluate-ticket] criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
 
 ### Analysis
@@ -161,7 +162,7 @@ Items marked **[build-enforced]** are validated by `bin/build.py`. Items marked 
 
 | Project | Repo | Rules | Skills |
 |---|---|---|---|
-| `siege-utilities` | `siege-analytics/siege_utilities` | [rule:siege-utilities--rules] | [skill:siege-utilities--hostile-review], [skill:siege-utilities--notebook-impact] |
+| `siege-utilities` | `siege-analytics/siege_utilities` | [rule:siege-utilities--rules] | [skill:siege-utilities--hostile-review], [skill:siege-utilities--notebook-impact], [skill:siege-utilities--error-path-tests] |
 
 ### siege-utilities-specific routing
 
@@ -171,6 +172,8 @@ These triggers apply only when the working directory matches `siege-analytics/si
 |---|---|
 | Any PR or code review in siege_utilities | [skill:siege-utilities--hostile-review] |
 | Any change to a function signature, return type, or exception contract | [skill:siege-utilities--notebook-impact] |
+| Adding or backfilling error-path tests, SU-4b compliance | [skill:siege-utilities--error-path-tests] |
+| Auditing error-path test coverage for any module | [skill:test-coverage-audit] |
 | `except Exception: pass` or `except: pass` anywhere | Bug — see [rule:siege-utilities--rules] (SU-1) |
 | Function returns empty DataFrame/list/dict/string on error path | Bug — see [rule:siege-utilities--rules] (SU-1) |
 | Code under `examples/` or `notebooks/` | Held to library standard — see [rule:siege-utilities--rules] (SU-3) |
