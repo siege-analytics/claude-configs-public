@@ -93,14 +93,41 @@ The invariants below come from [rule:siege-utilities--rules].
 
 If a project skill references a **general** skill or rule, use the unprefixed slug as normal: `[skill:think]`, `[rule:output]`.
 
+## Enforcement surface
+
+The build script (`bin/build.py`) is the only mechanical enforcement point. It validates some invariants at build time; others are author conventions that the build cannot check. The table below distinguishes the two.
+
+### Build-enforced (fails the build)
+
+| Invariant | Check |
+|---|---|
+| PROJECT.md has required frontmatter (`name`, `description`, `repo`, `owners`) | `parse_project_manifest()` raises `BuildError` on missing fields |
+| `status:` is one of `active`, `archived`, `retired` | `parse_project_manifest()` validates against `VALID_STATUSES` |
+| No two projects claim the same `repo:` (even across archived projects) | `validate_project_manifests()` enforces uniqueness |
+| Only `active` projects are published to `dist/` | `validate_project_manifests()` partitions by status; archived/retired are excluded |
+| Project slug does not contain `--` | `find_project_skills()` raises `BuildError` |
+| Skill slug does not contain `--` | `find_project_skills()` raises `BuildError` |
+| Project skill flat slug does not collide with a general skill slug | `build_layout()` raises `BuildError` on overlap |
+| Project rule flat slug does not collide with a general rule slug | `build_layout()` raises `BuildError` on overlap |
+| `[skill:...]` and `[rule:...]` tokens reference existing slugs | Unresolved tokens rendered as `` `<slug>` (planned) `` and listed in forward-looking-references summary (warning, not hard failure) |
+| Retired projects without `successor:` field | Warning printed (not hard failure) |
+| Nested `SKILL.md` inside a project skill directory | `copy_project_skill_dir()` raises `BuildError` |
+
+### Author conventions (not mechanically enforced)
+
+| Convention | Why enforcement is impractical |
+|---|---|
+| `repo:` field matches a real GitHub repository | Build runs offline; no GitHub API access |
+| `scope:` globs match actual paths in the target repo | Build doesn't have the target repo checked out |
+| Overrides table in `_rules.md` declares all weakenings | Semantic analysis of rule weakening requires natural-language understanding |
+| Routing entries in RESOLVER match `PROJECT.md` scope | Routing is authored prose; the build resolves tokens but can't validate trigger semantics |
+| `retired_at:` is a valid date | Minimal YAML parser; not worth adding date validation for a rare field |
+| `owners:` entries are valid email addresses | Not worth the regex; checked at PR review time |
+| Project rules cite incidents or audit findings as justification | Prose quality; humans review this |
+
 ## Validation
 
-Run `python3 bin/build.py --check` before opening a PR. The build fails if:
-
-- A project slug or skill slug contains `--`.
-- A project skill's flat slug (`<project>--<skill>`) collides with a general skill slug.
-- A project rule's flat slug (`<project>--rules`) collides with a general rule slug.
-- A `[skill:...]` or `[rule:...]` token references a slug that doesn't exist (rendered as `` `<slug>` (planned) `` and listed in the build's forward-looking-references summary).
+Run `python3 bin/build.py --check` before opening a PR. The build fails on any build-enforced invariant above. Additionally, it reports forward-looking references (unresolved `[skill:...]` or `[rule:...]` tokens) as warnings.
 
 ## PR checklist
 

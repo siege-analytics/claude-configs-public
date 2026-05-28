@@ -149,11 +149,13 @@ Tokens use the prefixed slug directly: `[skill:siege-utilities--hostile-review]`
 
 ### Precedence model
 
-1. **Routing entries are conditional.** The agent only invokes a `<project>--<skill>` skill when the routing entry that references it is in scope — typically when the working directory matches the project's `repo:` field.
-2. **No implicit shadowing.** A project skill with the same base name as a general skill (e.g., `projects/siege-utilities/skills/self-review/` and `skills/<category>/self-review/`) produces two distinct flat slugs (`siege-utilities--self-review` and `self-review`). Which one fires is set by the routing entry, not by precedence rules at load time.
-3. **Weakening overrides must be declared.** If a project rule weakens a general rule (permits something the general rule prohibits), it must appear in the project's Overrides table in `_rules.md`. An undeclared weakening is void — the general rule wins.
-4. **No cross-project inheritance.** Project B cannot reference or import Project A's rules. Each project is a self-contained overlay on the general set.
-5. **Scope is repo-bound.** Project rules and the conditional routing entries below activate when the working directory matches the `repo` field in `PROJECT.md`. The prefixed slugs remain visible in the catalog regardless — they're addressable but not invoked out of scope.
+Items marked **[build-enforced]** are validated by `bin/build.py`. Items marked **[convention]** are author-discipline; the build cannot check them.
+
+1. **Routing entries are conditional.** [convention] The agent only invokes a `<project>--<skill>` skill when the routing entry that references it is in scope — typically when the working directory matches the project's `repo:` field. The build validates that token references resolve to existing slugs, but cannot validate trigger semantics.
+2. **No implicit shadowing.** [build-enforced] A project skill with the same base name as a general skill (e.g., `projects/siege-utilities/skills/self-review/` and `skills/<category>/self-review/`) produces two distinct flat slugs (`siege-utilities--self-review` and `self-review`). The build rejects collisions between project and general slugs. Which one fires is set by the routing entry, not by precedence rules at load time.
+3. **Weakening overrides must be declared.** [convention] If a project rule weakens a general rule (permits something the general rule prohibits), it must appear in the project's Overrides table in `_rules.md`. An undeclared weakening is void — the general rule wins. The build cannot detect semantic weakening; this is enforced at PR review.
+4. **No cross-project inheritance.** [convention] Project B cannot reference or import Project A's rules. Each project is a self-contained overlay on the general set.
+5. **Scope is repo-bound.** [convention] Project rules and the conditional routing entries below activate when the working directory matches the `repo` field in `PROJECT.md`. The build validates that `repo:` is present and unique across projects, but does not verify that the repo exists or that the working directory matches at runtime. The prefixed slugs remain visible in the catalog regardless — they're addressable but not invoked out of scope.
 
 ### Active projects
 
