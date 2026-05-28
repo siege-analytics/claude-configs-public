@@ -125,7 +125,7 @@ Present the design to the user. Wait for explicit approval before writing any co
 
 If the user suggests changes, revise the design and present again.
 
-### Step 7: Downstream Routing
+### Step 7: Downstream Routing (hard gate)
 
 After user approval of the design, before implementation begins:
 
@@ -134,6 +134,18 @@ After user approval of the design, before implementation begins:
 - [ ] **survey-context:** Entity doc consultation required? (YES if project has doc layer)
 
 Investigation runs first. Pre-mortem runs after investigation completes. Implementation begins only after all required downstream skills have produced their artifacts.
+
+**This is a hard gate, not a checklist.** Checking "YES" and proceeding
+to code without producing the artifact is a self-review violation. The
+`self-review` artifact's `Investigate-artifact:` and
+`Pre-mortem-artifact:` fields (v1.3) enforce artifact existence at push
+time. If you answer YES here but have no artifact to cite in
+self-review, the push is blocked.
+
+**Escape hatch:** If the work is genuinely trivial enough to skip
+investigation (single-line fix, doc-only, config-only), answer NO and
+include a `## Trivial-investigation declaration` in the self-review
+artifact with falsifiable evidence for why investigation was unnecessary.
 
 ### Investigation Dependencies
 
