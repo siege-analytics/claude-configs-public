@@ -1,6 +1,6 @@
 ---
 name: "CI Billing-Failure Merge Override"
-description: "Authorizes admin-merge of PRs when all CI checks fail solely due to GitHub Actions org-level billing failure, provided the PR meets the substitute-review criteria. Two tiers: pre-authorized for non-runtime PRs (docs, read-only tooling); per-merge operator-approved (conditional tier) for runtime-adjacent paths like recon SQL. Workaround until billing is restored."
+description: "Authorizes admin-merge of PRs when all CI checks fail solely due to GitHub Actions org-level billing failure, provided the PR meets the substitute-review criteria. Two tiers: pre-authorized for non-runtime PRs (docs, read-only tooling); per-merge operator-approved (conditional tier) for runtime-adjacent paths like recon SQL."
 alwaysAllow:
   - "Bash"
 ---
@@ -41,7 +41,6 @@ Some PR scopes that the pre-authorization does NOT cover CAN be merged under thi
 **Conditional-scope PRs** (require operator approval per merge):
 - `airflow/vendor/ee_pipelines/recon/**/*.sql` -- recon SQL files. These are read-only `SELECT`-only falsification queries run on-demand by the recon DAG. They are git-sync'd into the worker pod, not baked into the image, so a broken query breaks the recon DAG run but not the worker image build itself.
 - `enterprise/rundeck/pipelines/recon/**/*.sql` -- equivalent recon SQL for the Rundeck side.
-- Pre-staged PRs that were operator-reviewed at the design stage but not yet at the diff stage (e.g., PR drafts in `plans/pr-draft-*.md` that the operator green-lit conceptually before billing failed).
 
 **Per-merge operator approval mechanism:**
 
@@ -58,7 +57,11 @@ Some PR scopes that the pre-authorization does NOT cover CAN be merged under thi
 
 ## Merge mechanics
 
-1. **Verify the trigger.** Use `gh api repos/{owner}/{repo}/commits/{sha}/check-runs` to confirm all failing checks finished in 1-3 seconds and have the billing annotation. If ANY check ran for longer, the failure may be a real defect -- do NOT use this override.
+1. **Verify the trigger (automated).** Run the verification script:
+   ```bash
+   bash scripts/ci/verify-billing-block.sh <owner> <repo> <PR#>
+   ```
+   The script queries `gh api repos/{owner}/{repo}/commits/{sha}/check-runs`, confirms ALL failing checks completed in 1-3 seconds, and checks each annotation for the billing failure string. It exits 0 (pass) or 1 (fail) and prints the evidence. If ANY check ran for longer or has a different failure annotation, the script rejects the override. Do NOT bypass the script with a manual check -- the script IS the trigger gate.
 2. **Verify substitute-review criteria.** Walk through the 5 criteria above. Refuse the override if any fails.
 3. **Determine tier.** If pre-authorized scope: proceed to step 5. If conditional scope: get operator approval per the mechanism above before proceeding.
 4. **Choose merge mode.** Default to repo convention (look at recent merges on the target branch -- `git log --oneline --merges origin/develop -5`). Common conventions:
@@ -81,6 +84,6 @@ Each time this skill is invoked, the agent reports to the operator:
 
 ## Lifecycle
 
-This skill is a **workaround**. When the operator confirms the GitHub Actions billing is restored, this skill should be retired (delete the directory or mark deprecated). Until then, it's the documented merge path for billing-blocked PRs.
+GitHub Actions org-level billing is not coming back any time soon, which is why this skill was created. This is the documented merge path for billing-blocked PRs for the foreseeable future.
 
-Operator clears the billing issue via the organization's GitHub billing settings (e.g., `https://github.com/organizations/{org}/settings/billing`).
+If the operator ever restores billing, this skill should be retired (delete the directory or mark deprecated). Operator clears the billing issue via the organization's GitHub billing settings (e.g., `https://github.com/organizations/{org}/settings/billing`).
