@@ -47,15 +47,23 @@ Red flags:
 - Error messages that don't tell the user what to do
 - Silent fallbacks that mask missing dependencies
 
-### Priority 4: Notebook drift (SU-4 violations)
+### Priority 4: Coverage gaps (SU-4 violations)
 
-When reviewing changes to library code, check whether affected functions appear in any notebook.
+When reviewing changes to library code, check test AND notebook coverage.
 
-Red flags:
+#### SU-4a: Notebook drift
 - Function signature changed but notebook still uses old calling convention
 - Function removed but notebook still imports it
-- New capability added with no notebook demonstrating it
+- New public module with no notebook demonstrating it
 - Notebook catches exceptions that the function no longer raises
+
+#### SU-4b: Error-path test coverage
+For every module under review, cross-reference its `except`/`raise`/error-return sites against tests:
+- Count `except` blocks in the module → each needs at least one test that triggers the exception
+- Count `raise` statements → each needs a test asserting the exception type
+- Count error-return paths → each needs a test proving callers can distinguish error from empty
+- Provider-based modules → need tests for: provider=None, provider raises, provider returns bad shape
+- If the test file only has happy-path tests (no test names containing "error", "fail", "invalid", "missing", "raises"), flag it as a P2 finding
 
 ## Findings format
 
