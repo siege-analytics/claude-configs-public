@@ -22,7 +22,14 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_SKILLS = REPO_ROOT / "skills"
+SOURCE_PROJECTS = REPO_ROOT / "projects"
 DIST = REPO_ROOT / "dist"
+
+# Separator joining project slug and skill/rule slug in the prefix-flatten convention.
+# Project skill `hostile-review` in project `siege-utilities` becomes flat slug
+# `siege-utilities--hostile-review`. Project rules file becomes `<project>--rules`
+# (rendered to `_<project>--rules.md` at the flat skills root).
+PROJECT_SEP = "--"
 
 # Categories that hold leaf skills (not the meta-router itself)
 SKILL_CATEGORIES = (
@@ -49,12 +56,13 @@ ROOT_FILES = (
     "CONTRIBUTING.md",
 )
 
-# Rules files at skills/ root
-RULE_PATTERN = re.compile(r"^_(?P<slug>[a-z-]+)-rules\.md$")
+# Rules files at skills/ root. Slug may contain the project separator (e.g.
+# `siege-utilities--rules` for a flattened project rules file).
+RULE_PATTERN = re.compile(r"^_(?P<slug>[a-z][a-z0-9-]*?)-rules\.md$")
 
-# Token patterns
+# Token patterns. Slugs may contain `--` to address prefix-flattened project content.
 SKILL_TOKEN = re.compile(r"\[skill:(?P<slug>[a-z0-9-]+)\]")
-RULE_TOKEN = re.compile(r"\[rule:(?P<slug>[a-z-]+)\]")
+RULE_TOKEN = re.compile(r"\[rule:(?P<slug>[a-z0-9-]+)\]")
 
 
 class BuildError(Exception):
@@ -64,6 +72,11 @@ class BuildError(Exception):
 # Track unknown slug references for warnings (per build run)
 UNKNOWN_SKILLS: dict[str, set[str]] = {}
 UNKNOWN_RULES: dict[str, set[str]] = {}
+
+# {prefixed_slug: project_slug} — set by find_project_skills/find_project_rules so
+# build_layout knows which entries in skills_src/rules_src came from projects/.
+PROJECT_SKILLS: dict[str, str] = {}
+PROJECT_RULES: dict[str, str] = {}
 
 
 def find_skills(source: Path) -> dict[str, Path]:
@@ -107,6 +120,84 @@ def find_rules(source: Path) -> dict[str, Path]:
             continue
         rules[m.group("slug")] = rule_path.relative_to(source)
     return rules
+
+
+def find_project_skills(projects_root: Path) -> dict[str, Path]:
+    """Walk projects/<project>/skills/<skill>/SKILL.md, return {prefixed_slug: src_path_relative_to_repo}.
+
+    Prefixed slug is `<project>{PROJECT_SEP}<skill>`. Populates PROJECT_SKILLS as a side
+    effect so build_layout can tell which slugs came from projects/.
+    """
+    skills: dict[str, Path] = {}
+    if not projects_root.exists():
+        return skills
+    for project_dir in sorted(projects_root.iterdir()):
+        if not project_dir.is_dir():
+            continue
+        project_slug = project_dir.name
+        if PROJECT_SEP in project_slug:
+            raise BuildError(
+                f"Project slug must not contain the project separator '{PROJECT_SEP}': {project_slug}"
+            )
+        project_skills_dir = project_dir / "skills"
+        if not project_skills_dir.exists():
+            continue
+        for skill_md in project_skills_dir.rglob("SKILL.md"):
+            skill_slug = skill_md.parent.name
+            if PROJECT_SEP in skill_slug:
+                raise BuildError(
+                    f"Skill slug must not contain the project separator '{PROJECT_SEP}': "
+                    f"{skill_md.parent.relative_to(REPO_ROOT)}"
+                )
+            prefixed = f"{project_slug}{PROJECT_SEP}{skill_slug}"
+            if prefixed in skills:
+                raise BuildError(
+                    f"Project skill collision on '{prefixed}':\n"
+                    f"  {skills[prefixed]}\n"
+                    f"  {skill_md.parent.relative_to(REPO_ROOT)}"
+                )
+            skills[prefixed] = skill_md.parent.relative_to(REPO_ROOT)
+            PROJECT_SKILLS[prefixed] = project_slug
+    return skills
+
+
+def find_project_rules(projects_root: Path) -> dict[str, Path]:
+    """Walk projects/<project>/_rules.md, return {prefixed_slug: src_path_relative_to_repo}.
+
+    Prefixed slug is `<project>{PROJECT_SEP}rules`. Rendered to `_<project>--rules.md`
+    at the flat skills root. Populates PROJECT_RULES as a side effect.
+    """
+    rules: dict[str, Path] = {}
+    if not projects_root.exists():
+        return rules
+    for project_dir in sorted(projects_root.iterdir()):
+        if not project_dir.is_dir():
+            continue
+        rules_path = project_dir / "_rules.md"
+        if not rules_path.exists():
+            continue
+        prefixed = f"{project_dir.name}{PROJECT_SEP}rules"
+        rules[prefixed] = rules_path.relative_to(REPO_ROOT)
+        PROJECT_RULES[prefixed] = project_dir.name
+    return rules
+
+
+def inject_project_frontmatter(content: str, project_slug: str) -> str:
+    """Add `project: <slug>` to YAML frontmatter of a SKILL.md, idempotently.
+
+    If no frontmatter exists, do nothing (the SKILL.md is malformed; build will surface
+    that elsewhere). If `project:` already present, leave as-is.
+    """
+    if not content.startswith("---\n"):
+        return content
+    end = content.find("\n---\n", 4)
+    if end == -1:
+        return content
+    frontmatter = content[4:end]
+    if re.search(r"(?m)^project:\s*", frontmatter):
+        return content
+    new_frontmatter = frontmatter.rstrip() + f"\nproject: {project_slug}\n"
+    return "---\n" + new_frontmatter + content[end + 1:]
 
 
 def resolve_tokens(content: str, layout: str, skill_paths: dict[str, str], rule_paths: dict[str, str], from_path: Path) -> str:
@@ -206,8 +297,63 @@ def copy_skill_dir(
             shutil.copy2(src, dst)
 
 
-def build_layout(layout: str, skills_src: dict[str, Path], rules_src: dict[str, Path]) -> dict[str, str]:
-    """Build a single layout. Returns {slug: output-path-from-dist-root} for skills."""
+def copy_project_skill_dir(
+    src_dir: Path,
+    dst_dir: Path,
+    layout: str,
+    skill_paths: dict[str, str],
+    rule_paths: dict[str, str],
+    output_skill_relpath: str,
+    project_slug: str,
+) -> None:
+    """Like copy_skill_dir, but injects `project: <slug>` frontmatter into the SKILL.md.
+
+    Project skills never have nested child skills, so we don't replicate the
+    is-other-skill-dir filtering. If a project skill ever contains a nested SKILL.md
+    that's a design break — surface it loudly.
+    """
+    if dst_dir.exists():
+        shutil.rmtree(dst_dir)
+    dst_dir.mkdir(parents=True, exist_ok=True)
+    for src in src_dir.rglob("*"):
+        rel = src.relative_to(src_dir)
+        if src.is_dir():
+            (dst_dir / rel).mkdir(parents=True, exist_ok=True)
+            continue
+        if src.name == "SKILL.md" and src.parent != src_dir:
+            raise BuildError(
+                f"Nested SKILL.md inside a project skill is not supported: {src.relative_to(REPO_ROOT)}"
+            )
+        dst = dst_dir / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if src.suffix.lower() == ".md":
+            content = src.read_text()
+            if src.name == "SKILL.md":
+                content = inject_project_frontmatter(content, project_slug)
+            output_rel = Path(output_skill_relpath) / rel
+            resolved = resolve_tokens(content, layout, skill_paths, rule_paths, output_rel)
+            dst.write_text(resolved)
+        else:
+            shutil.copy2(src, dst)
+
+
+def build_layout(
+    layout: str,
+    skills_src: dict[str, Path],
+    rules_src: dict[str, Path],
+    project_skills_src: dict[str, Path] | None = None,
+    project_rules_src: dict[str, Path] | None = None,
+) -> dict[str, str]:
+    """Build a single layout. Returns {slug: output-path-from-dist-root} for skills.
+
+    Project skills (under projects/<project>/skills/<skill>/) are prefix-flattened
+    to skills/<project>--<skill>/ in BOTH layouts — projects don't have categories,
+    so there's no "nested" project layout. Project rules become _<project>--rules.md
+    at the flat skills root. PROJECT.md files travel to dist/<layout>/projects/<project>/.
+    """
+    project_skills_src = project_skills_src or {}
+    project_rules_src = project_rules_src or {}
+
     out_root = DIST / layout / "skills"
     if out_root.exists():
         shutil.rmtree(out_root)
@@ -233,19 +379,66 @@ def build_layout(layout: str, skills_src: dict[str, Path], rules_src: dict[str, 
     else:
         raise BuildError(f"Unknown layout: {layout}")
 
-    rule_out_paths = {slug: str(src) for slug, src in rules_src.items()}
+    # Project skills: always flat-named (<project>--<skill>) in both layouts.
+    for prefixed_slug in project_skills_src:
+        if prefixed_slug in skill_out_paths:
+            raise BuildError(
+                f"Project skill slug collides with general skill slug: '{prefixed_slug}'. "
+                f"Choose a different skill name within the project."
+            )
+        skill_out_paths[prefixed_slug] = prefixed_slug
 
-    # Copy skills with token resolution
+    rule_out_paths = {slug: str(src) for slug, src in rules_src.items()}
+    # Project rules: always at flat skills root as _<project>--rules.md in both layouts.
+    # The prefixed slug already ends in `--rules`, so the filename does NOT re-add `-rules.md`.
+    for prefixed_slug in project_rules_src:
+        if prefixed_slug in rule_out_paths:
+            raise BuildError(
+                f"Project rule slug collides with general rule slug: '{prefixed_slug}'."
+            )
+        rule_out_paths[prefixed_slug] = f"_{prefixed_slug}.md"
+
+    # Copy general skills with token resolution
     for slug, src_rel in skills_src.items():
         src_dir = SOURCE_SKILLS / src_rel
         dst_dir = out_root / skill_out_paths[slug]
         copy_skill_dir(src_dir, dst_dir, layout, skill_out_paths, rule_out_paths, skill_out_paths[slug])
 
-    # Copy rules with token resolution
+    # Copy project skills with token resolution + frontmatter injection
+    for prefixed_slug, src_rel in project_skills_src.items():
+        project_slug = PROJECT_SKILLS[prefixed_slug]
+        src_dir = REPO_ROOT / src_rel
+        dst_dir = out_root / skill_out_paths[prefixed_slug]
+        copy_project_skill_dir(
+            src_dir, dst_dir, layout, skill_out_paths, rule_out_paths,
+            skill_out_paths[prefixed_slug], project_slug,
+        )
+
+    # Copy general rules with token resolution
     for slug, rule_rel in rules_src.items():
         src = SOURCE_SKILLS / rule_rel
         dst = out_root / rule_rel
         write_resolved(src, dst, layout, skill_out_paths, rule_out_paths, rule_rel)
+
+    # Copy project rules with token resolution
+    for prefixed_slug, src_rel in project_rules_src.items():
+        src = REPO_ROOT / src_rel
+        dst = out_root / rule_out_paths[prefixed_slug]
+        write_resolved(src, dst, layout, skill_out_paths, rule_out_paths, Path(rule_out_paths[prefixed_slug]))
+
+    # Copy PROJECT.md verbatim per project to dist/<layout>/projects/<project>/.
+    # PROJECT.md is documentation; token resolution would need different relative-link
+    # math (the file sits outside skills/) and is deferred to a follow-up.
+    if SOURCE_PROJECTS.exists():
+        for project_dir in sorted(SOURCE_PROJECTS.iterdir()):
+            if not project_dir.is_dir():
+                continue
+            project_md = project_dir / "PROJECT.md"
+            if not project_md.exists():
+                continue
+            dst = DIST / layout / "projects" / project_dir.name / "PROJECT.md"
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(project_md, dst)
 
     # Generate RESOLVER.md from RESOLVER.template.md
     template = SOURCE_SKILLS / "RESOLVER.template.md"
@@ -307,7 +500,22 @@ def main() -> int:
     print(f"Source: {SOURCE_SKILLS}")
     skills_src = find_skills(SOURCE_SKILLS)
     rules_src = find_rules(SOURCE_SKILLS)
-    print(f"Discovered {len(skills_src)} leaf skills, {len(rules_src)} rules")
+    project_skills_src = find_project_skills(SOURCE_PROJECTS)
+    project_rules_src = find_project_rules(SOURCE_PROJECTS)
+    print(
+        f"Discovered {len(skills_src)} leaf skills, {len(rules_src)} rules, "
+        f"{len(project_skills_src)} project skills, {len(project_rules_src)} project rules"
+    )
+    # Project-skill collision is checked inside build_layout (per-layout), but catch
+    # it once here too so --check fails fast before doing any output work.
+    overlap = set(skills_src) & set(project_skills_src)
+    if overlap:
+        print(f"BUILD ERROR: project skill slug collides with general skill: {sorted(overlap)}", file=sys.stderr)
+        return 1
+    overlap = set(rules_src) & set(project_rules_src)
+    if overlap:
+        print(f"BUILD ERROR: project rule slug collides with general rule: {sorted(overlap)}", file=sys.stderr)
+        return 1
 
     if args.check:
         # Build to a tmp dir to validate tokens, then discard
@@ -316,7 +524,7 @@ def main() -> int:
         DIST = Path(tempfile.mkdtemp(prefix="claude-configs-build-check-"))
         try:
             for layout in ("nested", "flat"):
-                build_layout(layout, skills_src, rules_src)
+                build_layout(layout, skills_src, rules_src, project_skills_src, project_rules_src)
             warn_unknown()
             print("Build check complete.")
             return 0
@@ -329,8 +537,8 @@ def main() -> int:
     layouts = ("nested", "flat") if args.layout == "both" else (args.layout,)
     for layout in layouts:
         print(f"\nBuilding {layout}...")
-        skill_out_paths = build_layout(layout, skills_src, rules_src)
-        write_build_info(layout, skills_src, skill_out_paths)
+        skill_out_paths = build_layout(layout, skills_src, rules_src, project_skills_src, project_rules_src)
+        write_build_info(layout, {**skills_src, **project_skills_src}, skill_out_paths)
         print(f"  → dist/{layout}/")
 
     warn_unknown()

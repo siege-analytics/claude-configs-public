@@ -96,40 +96,52 @@ These rules take precedence over anything in individual skill files:
 
 ## Project-specific rules and skills
 
-Some repositories have project-specific rules and skills that supplement (and can override) the general set. These live under `projects/<project-slug>/` in this repo.
+Some repositories have project-specific rules and skills that supplement (and can override) the general set. Project source lives under `projects/<project-slug>/`. When published, **project skills and rules are prefix-flattened so the slug fully encodes the project** — no shadowing, no per-context disambiguation at load time. See [projects/CONTRIBUTING.md](projects/CONTRIBUTING.md) for the authoring convention.
+
+### Naming convention (prefix-flatten)
+
+| Source path | Flat slug | Flat file |
+|---|---|---|
+| `projects/<project>/skills/<skill>/SKILL.md` | `<project>--<skill>` | `skills/<project>--<skill>/SKILL.md` |
+| `projects/<project>/_rules.md` | `<project>--rules` | `skills/_<project>--rules.md` |
+| `projects/<project>/PROJECT.md` | (not a routing target) | `projects/<project>/PROJECT.md` |
+
+Tokens use the prefixed slug directly: `[skill:siege-utilities--hostile-review]`, `[rule:siege-utilities--rules]`.
 
 ### Precedence model
 
-1. **Project-specific rules checked first.** When working in a repository that has a project definition (`projects/<slug>/PROJECT.md`), its `_rules.md` and skills take precedence over general rules.
-2. **Fall back to general.** For any situation not described in the project rules, the general rules in `skills/RULES.md` apply as normal.
-3. **Weakening overrides must be declared.** If a project rule weakens a general rule (permits something the general rule prohibits), it must appear in the project's Overrides table. An undeclared weakening is void — the general rule wins.
+1. **Routing entries are conditional.** The agent only invokes a `<project>--<skill>` skill when the routing entry that references it is in scope — typically when the working directory matches the project's `repo:` field.
+2. **No implicit shadowing.** A project skill with the same base name as a general skill produces two distinct flat slugs (e.g., `siege-utilities--self-review` and `self-review`). Which one fires is set by the routing entry, not by precedence rules at load time.
+3. **Weakening overrides must be declared.** If a project rule weakens a general rule (permits something the general rule prohibits), it must appear in the project's Overrides table in `_rules.md`. An undeclared weakening is void — the general rule wins.
 4. **No cross-project inheritance.** Project B cannot reference or import Project A's rules. Each project is a self-contained overlay on the general set.
-5. **Scope is repo-bound.** Project rules activate when the working directory matches the `repo` field in `PROJECT.md`. Outside that repo, the project rules do not exist.
+5. **Scope is repo-bound.** Project rules and the conditional routing entries below activate when the working directory matches the `repo` field in `PROJECT.md`. The prefixed slugs remain visible in the catalog regardless — they're addressable but not invoked out of scope.
 
 ### Active projects
 
 | Project | Repo | Rules | Skills |
 |---|---|---|---|
-| `siege-utilities` | `siege-analytics/siege_utilities` | `projects/siege-utilities/_rules.md` | `hostile-review`, `notebook-impact` |
+| `siege-utilities` | `siege-analytics/siege_utilities` | `siege-utilities--rules` | `siege-utilities--hostile-review`, `siege-utilities--notebook-impact` |
 
 ### siege-utilities-specific routing
 
-These triggers apply only when working in the `siege-analytics/siege_utilities` repo.
+These triggers apply only when the working directory matches `siege-analytics/siege_utilities`.
 
 | Trigger | Skill |
 |---|---|
-| Any PR or code review in siege_utilities | `projects/siege-utilities/skills/hostile-review/SKILL.md` |
-| Any change to a function signature, return type, or exception contract | `projects/siege-utilities/skills/notebook-impact/SKILL.md` |
-| `except Exception: pass` or `except: pass` anywhere | Bug — see project rule SU-1 |
-| Function returns empty DataFrame/list/dict/string on error path | Bug — see project rule SU-1 |
-| Code under `examples/` or `notebooks/` | Held to library standard — see project rule SU-3 |
+| Any PR or code review in siege_utilities | `siege-utilities--hostile-review` |
+| Any change to a function signature, return type, or exception contract | `siege-utilities--notebook-impact` |
+| `except Exception: pass` or `except: pass` anywhere | Bug — see `siege-utilities--rules` (SU-1) |
+| Function returns empty DataFrame/list/dict/string on error path | Bug — see `siege-utilities--rules` (SU-1) |
+| Code under `examples/` or `notebooks/` | Held to library standard — see `siege-utilities--rules` (SU-3) |
 
 ### How to add a project
+
+See [projects/CONTRIBUTING.md](projects/CONTRIBUTING.md) for the full authoring workflow. Short version:
 
 1. Create `projects/<slug>/PROJECT.md` with name, repo, scope, owners, and key invariants.
 2. Create `projects/<slug>/_rules.md` with project-specific rules and an Overrides table (even if empty).
 3. Add project-specific skills under `projects/<slug>/skills/<skill-name>/SKILL.md`.
-4. Add the project to the Active projects table above.
+4. Add the project to the Active projects table above and create a project-specific routing subsection beneath it.
 5. PR to this repo with evidence for why the rules exist (at minimum: one incident or audit finding per rule).
 
 ---

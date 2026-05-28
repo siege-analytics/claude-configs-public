@@ -133,6 +133,46 @@ DBrain book-skill library. Each shelf is itself a router — load the shelf, it 
 | Unity Catalog permissioning specifics (standalone) | [skill:unity-catalog] |
 | Operating shared infra — cyberpower, K8s, Rundeck — process and concurrency limits | [skill:ops] |
 
+## Project-specific rules and skills
+
+Some repositories have project-specific rules and skills that supplement (and can override) the general set. Project source lives under `projects/<project-slug>/` in this repo; when published, **project skills and rules are prefix-flattened so the slug fully encodes the project** (no shadowing, no per-context disambiguation). See [`projects/CONTRIBUTING.md`](../projects/CONTRIBUTING.md) for the authoring convention.
+
+### Naming convention (prefix-flatten)
+
+| Source path | Flat slug | Flat file |
+|---|---|---|
+| `projects/<project>/skills/<skill>/SKILL.md` | `<project>--<skill>` | `skills/<project>--<skill>/SKILL.md` |
+| `projects/<project>/_rules.md` | `<project>--rules` | `skills/_<project>--rules.md` |
+| `projects/<project>/PROJECT.md` | (not a routing target) | `projects/<project>/PROJECT.md` |
+
+Tokens use the prefixed slug directly: `[skill:siege-utilities--hostile-review]`, `[rule:siege-utilities--rules]`.
+
+### Precedence model
+
+1. **Routing entries are conditional.** The agent only invokes a `<project>--<skill>` skill when the routing entry that references it is in scope — typically when the working directory matches the project's `repo:` field.
+2. **No implicit shadowing.** A project skill with the same base name as a general skill (e.g., `projects/siege-utilities/skills/self-review/` and `skills/<category>/self-review/`) produces two distinct flat slugs (`siege-utilities--self-review` and `self-review`). Which one fires is set by the routing entry, not by precedence rules at load time.
+3. **Weakening overrides must be declared.** If a project rule weakens a general rule (permits something the general rule prohibits), it must appear in the project's Overrides table in `_rules.md`. An undeclared weakening is void — the general rule wins.
+4. **No cross-project inheritance.** Project B cannot reference or import Project A's rules. Each project is a self-contained overlay on the general set.
+5. **Scope is repo-bound.** Project rules and the conditional routing entries below activate when the working directory matches the `repo` field in `PROJECT.md`. The prefixed slugs remain visible in the catalog regardless — they're addressable but not invoked out of scope.
+
+### Active projects
+
+| Project | Repo | Rules | Skills |
+|---|---|---|---|
+| `siege-utilities` | `siege-analytics/siege_utilities` | [rule:siege-utilities--rules] | [skill:siege-utilities--hostile-review], [skill:siege-utilities--notebook-impact] |
+
+### siege-utilities-specific routing
+
+These triggers apply only when the working directory matches `siege-analytics/siege_utilities`.
+
+| Trigger | Skill |
+|---|---|
+| Any PR or code review in siege_utilities | [skill:siege-utilities--hostile-review] |
+| Any change to a function signature, return type, or exception contract | [skill:siege-utilities--notebook-impact] |
+| `except Exception: pass` or `except: pass` anywhere | Bug — see [rule:siege-utilities--rules] (SU-1) |
+| Function returns empty DataFrame/list/dict/string on error path | Bug — see [rule:siege-utilities--rules] (SU-1) |
+| Code under `examples/` or `notebooks/` | Held to library standard — see [rule:siege-utilities--rules] (SU-3) |
+
 ## Disambiguation rules
 
 1. **Prefer the most specific skill.** `coderabbit-response` beats `code-review` when a bot posted the review. `python-exceptions` beats general `python` when the task is `except` refactoring.
