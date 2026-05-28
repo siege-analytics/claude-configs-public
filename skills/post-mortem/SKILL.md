@@ -154,6 +154,16 @@ For each action:
   - Acceptance criteria: <testable condition>
   - Closes the class: <yes/no — if no, what's the residual risk?>
 
+### Codebase sweep
+
+Pattern grep'd: `<exact bad string or regex>`
+Scope: `<directories or repo root>`
+Hits found:
+  - <file>:<line> — <disposition: fixed in this PR / flagged separately as #NNN / annotated as stale / false positive>
+
+If zero hits: state the grep command and "0 hits confirmed."
+If hits exist: every hit must have a disposition. "Fixed in this PR" means the fix is in the same changeset. "Flagged separately" means a ticket number. No hit may be left undispositioned.
+
 ### What Went Well
 <What worked correctly or limited the blast radius>
 
@@ -177,3 +187,4 @@ For each action:
 4. **Post-mortems update skills, not just code.** The code fix is necessary but not sufficient.
 5. **Post-mortems are documented in the ticket.** The ticket gets a link to the post-mortem artifact.
 6. **"What went well" is required.** Prevents the post-mortem from being purely punitive.
+7. **Codebase sweep is required.** The post-mortem artifact is rejected if the `### Codebase sweep` section is missing or empty. The sweep grep must cover the entire scope where the bad pattern could recur, not just the file where the failure was discovered. A post-mortem that fixes one instance without grepping for siblings is incomplete — the next instance will produce the same post-mortem.

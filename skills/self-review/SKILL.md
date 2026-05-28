@@ -46,6 +46,8 @@ Goal source: <ticket #N | design-note path | quoted user-request paragraph>
 Goal source verification: <paste the PASS line from `bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>`>
 Plan reference: <path-or-link to the design note this diff implements>
 Pre-author-inventory: <ticket-link#pre-author-inventory | plans/path.md#pre-author-inventory | NONE>
+Investigate-artifact: <plans/investigate-*.md path | TRIVIAL (with declaration below)>
+Pre-mortem-artifact: <plans/pre-mortem-*.md path | TRIVIAL (with declaration below)>
 
 ## Peer review (the Junior's checklist — mechanics, correctness, craft floor)
 For each applicable shelf: what was checked, what was found.
@@ -114,6 +116,56 @@ the hypothesis was falsifiable, whether the seven steps were followed — remain
 operator-auditable. The field's purpose is to make the composability explicit
 and to block the pattern where a structurally-complete self-review was written
 without any pre-investigation at all.
+
+## Investigate-artifact and Pre-mortem-artifact fields
+
+The `Investigate-artifact:` and `Pre-mortem-artifact:` fields in the
+Assumptions section are **required composability links** between this
+skill and the `investigate` → `pre-mortem` → implementation pipeline
+defined in `think` Step 7.
+
+For any non-trivial work that touches existing entities, modifies data
+flow, or changes behavior that downstream code depends on, the agent
+must produce an investigate artifact (`plans/investigate-*.md`) and a
+pre-mortem artifact (`plans/pre-mortem-*.md`) before writing code. The
+self-review artifact must then point at those records.
+
+**When TRIVIAL is acceptable:** if the work is a single-line fix, typo,
+doc-only edit, or pure research that does not touch existing entities or
+modify behavior, the fields may be `TRIVIAL` — but only when a
+`## Trivial-investigation declaration` block is also present in the
+artifact. The block follows the same format as Trivial-change
+declaration (Category / Cannot produce error / Evidence / Falsification).
+
+```
+## Trivial-investigation declaration
+
+Category: <single-line-fix | doc-only | config-only | test-only>
+Cannot produce error: <one sentence stating why investigation would not
+                       have surfaced additional context>
+Evidence: <command output proving no entity-touching changes — e.g.
+          `git diff --stat` showing only test files changed>
+Falsification: <observable that would prove skipping investigation was
+                wrong — e.g. "a downstream consumer breaks because of
+                an assumption I didn't verify">
+```
+
+**The enforcement mechanism:** the hook checks structural presence of
+both fields. A missing or empty field blocks the push. `TRIVIAL` without
+the declaration block also blocks. Content quality — whether the
+investigate artifact actually traces the impact chain, whether the
+pre-mortem actually classifies risks — remains operator-auditable. The
+fields exist to make the omission structurally visible and to block the
+pattern where agents skip `investigate` and `pre-mortem` and go straight
+from `think` to implementation.
+
+**Why this works where the think Step 7 checklist didn't:** Think Step 7
+is a mental checklist inside the design workflow. The agent checks the
+boxes and moves on. Self-review is a pre-push gate with hook
+enforcement. By requiring the artifact paths in self-review, the
+enforcement happens at the push boundary — the agent cannot push without
+either producing the artifacts or explicitly declaring the work trivial
+with falsifiable evidence.
 
 ## Trivial-change declaration (when no ticket cited)
 
@@ -443,9 +495,15 @@ the claim must be grounded.
 - **v1.1**: If `Goal source:` value is itself a file path, its mtime
   must not be newer than the review artifact's mtime (catches goal-
   source-written-after-the-work post-hoc-justification pattern).
-- **v1.2 (this PR)**: `Pre-author-inventory:` field present and non-empty
+- **v1.2**: `Pre-author-inventory:` field present and non-empty
   in the Assumptions section. `NONE` accepted only when a
   `Trivial-against-state:` declaration is also present.
+- **v1.3 (claude-configs-public#239)**: `Investigate-artifact:` and
+  `Pre-mortem-artifact:` fields present and non-empty in the Assumptions
+  section. `TRIVIAL` accepted only when a
+  `## Trivial-investigation declaration` block is also present with all
+  four required fields (Category / Cannot produce error / Evidence /
+  Falsification). If the value is a file path, the file must exist.
 - **v2 (claude-configs-public#146)**: If the artifact file lives in a
   git repo, the artifact's first-added commit must be an ancestor of
   the work commit being pushed (`git log --diff-filter=A --follow` +
