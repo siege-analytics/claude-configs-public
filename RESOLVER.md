@@ -48,6 +48,16 @@ The `think` gate is not a pattern-match entry below — it is the **first gate**
 
 **Companion gate: `survey-context`.** When the task references existing entities (models, tables, functions, files, APIs, env vars), `skills/thinking/survey-context/SKILL.md` is the author-time counterpart to the static scanner. Run it before authoring code that touches existing infrastructure. Pairs with `think` Step 1 (Context) and self-review's `Goal source:` field.
 
+**Post-think pipeline: `investigate` → `pre-mortem`.** After think produces a design note and the user approves, the investigation and risk gates fire before implementation:
+
+1. **`investigate`** (`skills/thinking/investigate/SKILL.md`): Evidentiary fact-finding. Produces a Fact Sheet with file:line citations, impact chain (upstream → task → downstream), data shape verification, and hypothesis/falsification. The Fact Sheet is the single source of truth referenced by design, self-review, and post-mortem. Hard rule: "File:line or it didn't happen."
+
+2. **`pre-mortem`** (`skills/thinking/pre-mortem/SKILL.md`): Adversarial risk classification using Tiger / Paper Tiger / Elephant framework. Operates on the Fact Sheet — not speculation. Launch-Blocking Tigers halt implementation until mitigated. Paper Tigers must cite their mitigation. Elephants are named with deferral rationale.
+
+3. **`post-mortem`** (`skills/post-mortem/SKILL.md`): Triggered by confirmed failures (shipped bug, materialized Tiger, misclassified Paper Tiger). Traces backward through the skill pipeline to identify where the failure could have been caught. Action items must be testable, must pass the Allspaw test, and must update skills — not just code.
+
+The full pipeline: think → investigate → pre-mortem → implementation → self-review → (on failure) post-mortem.
+
 ---
 
 ## How to use
@@ -120,7 +130,8 @@ These rules take precedence over anything in individual skill files:
 
 | About to… | Read first |
 |---|---|
-| Implement a new feature, refactor, or architecture change | `skills/thinking/think/SKILL.md` (MANDATORY before any code) |
+| Implement a new feature, refactor, or architecture change | `skills/thinking/think/SKILL.md` (MANDATORY before any code) → `skills/thinking/investigate/SKILL.md` (Fact Sheet before implementation) → `skills/thinking/pre-mortem/SKILL.md` (Tiger/Paper Tiger/Elephant before implementation) |
+| Fix a shipped bug (post-merge, found by user/reviewer/CI) | `skills/post-mortem/SKILL.md` (trace failure through skill pipeline) → then `skills/thinking/think/SKILL.md` for the fix |
 | Do spatial / geographic analysis | `skills/analysis/SKILL.md` → `skills/analysis/spatial/SKILL.md` |
 | Do statistical / graph / entity-resolution / text analysis | `skills/analysis/SKILL.md` |
 

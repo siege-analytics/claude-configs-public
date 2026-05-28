@@ -125,6 +125,29 @@ Present the design to the user. Wait for explicit approval before writing any co
 
 If the user suggests changes, revise the design and present again.
 
+### Step 7: Downstream Routing
+
+After user approval of the design, before implementation begins:
+
+- [ ] **investigate:** Fact Sheet required? (YES for any entity-touching work)
+- [ ] **pre-mortem:** Risk classification required? (YES for non-trivial work)
+- [ ] **survey-context:** Entity doc consultation required? (YES if project has doc layer)
+
+Investigation runs first. Pre-mortem runs after investigation completes. Implementation begins only after all required downstream skills have produced their artifacts.
+
+### Investigation Dependencies
+
+The design note must include a section naming what `investigate` must verify before implementation can proceed:
+
+```
+### Investigation Dependencies
+For each entity or assumption the design depends on:
+- <Entity/assumption>: requires investigation verification of <what>
+- If investigation falsifies: design must be revised (specifically: <which part>)
+```
+
+This makes the design's dependence on investigated facts explicit and traceable. If investigation finds something unexpected, the design note tells you which part of the design is affected.
+
 ## When This Skill Applies
 
 This skill is **MANDATORY**. It auto-triggers whenever you are about to:

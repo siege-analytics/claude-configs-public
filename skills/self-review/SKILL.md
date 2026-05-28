@@ -322,6 +322,30 @@ Example (Lead catching a Junior dismissal):
 > it. Accepted for this PR as reduced-blast-radius improvement;
 > logged as open debt, not as closed fix.
 
+### No technical debt as "design choice"
+
+"Debatable design choice," "acceptable trade-off," "existing pattern,"
+and "logged error" are descriptions of what the code does, not arguments
+for why it should do that. A design choice requires a design argument:
+what alternatives were considered, why this one was chosen, and what
+invariant makes it safe. If you cannot state the invariant, the choice
+is an accident being rationalized.
+
+**Errors are not data.** A function that returns a valid-shaped empty
+result on failure (empty DataFrame, empty list, zero, None) is lying to
+its caller. The Lead must verify EITHER (a) the docstring documents this
+behavior AND at least one caller checks for it, OR (b) the function
+raises instead. Logging the error is necessary but not sufficient; the
+caller must be able to distinguish failure from empty-result without
+reading logs.
+
+The Lead's verdict on any "design choice" dismissal must be one of:
+- **Closed**: the invariant holds, with evidence.
+- **Debt**: the invariant does not hold; file a ticket and cite it.
+- **Bug**: there is no invariant; promote to finding.
+
+"Debatable" is not a verdict.
+
 ## Recursion
 
 The artifact makes claims about the diff ("no regressions," "all sites
