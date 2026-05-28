@@ -80,6 +80,22 @@ Specific requirements:
 - `main` is downstream of `develop` — never merge unblessed work directly to `main`
 - CI billing is currently disabled on this repo; merges may require `--admin` flag
 
+## Bookshelf cross-reference
+
+SU-1 through SU-4 were written from first principles during hostile review. These bookshelf sources provide the established foundations:
+
+| Rule | Bookshelf concept | Source |
+|---|---|---|
+| SU-1 (Errors are not data) | Fail fast; invariant enforcement; making illegitimate states unrepresentable | `_robustness-rules.md` (Viafore) |
+| SU-1 | Exceptions over error codes; handle errors at the appropriate abstraction level | `_principles-rules.md` (Martin) |
+| SU-2 (Does it do what it says?) | Protocol-based dispatch; type safety as communication; constraining interfaces | `_robustness-rules.md` (Viafore) |
+| SU-2 | Intention-revealing names; functions do one thing | `_principles-rules.md` (Martin) |
+| SU-3 (No demo exemptions) | No undeclared dependencies; entry points over scripts | `_packaging-rules.md` (PyPA) |
+| SU-3 | Deprecation warnings must name the replacement | `_scipy-spec-rules.md` (SPEC 4) |
+| SU-4a (Notebook coverage) | Lazy registry must stay in sync; test the registry in CI | `_scipy-spec-rules.md` (SPEC 6) |
+| SU-4b (Error-path coverage) | Round-trip properties; no-crash invariants; oracle comparison | `_property-testing-rules.md` (Hypothesis) |
+| SU-4b | Test business logic against fakes, not mocks of the ORM | `_architecture-patterns-rules.md` (Percival & Gregory) |
+
 ## Review standards
 
 Every PR to this repository must pass the `hostile-review` skill before merge. The hostile review specifically checks for the error-handling philosophy violations above (SU-1 through SU-4) in addition to standard code review criteria.
