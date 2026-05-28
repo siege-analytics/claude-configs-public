@@ -33,6 +33,11 @@
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/git/pr-base-guard.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/self-review.sh",
+            "timeout": 10
           }
         ]
       }
