@@ -234,6 +234,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 |---|---|
 | End a session / hand off work | `skills/session/wrap-up/SKILL.md` |
 | Spawn sub-sessions / delegate work to parallel agents | Universal check #11 (spawn-protocol). Requires: worktree isolation, checkpoint-and-wait in prompt, artifact attachment to tickets, Phase 0 read instruction. |
+| Receive a standing "work until X" instruction from user | Universal check #12 (standing-order continuity). Maintain running agents + ScheduleWakeup at all times. Never go idle with pending work. |
 | Recover from a magnum / enterprise-runner outage | `electinfo_claude_skills/skills/monitor-magnum/SKILL.md` |
 | SSH to a shared server / launch a batch job / triage server health | `skills/infrastructure/ops/SKILL.md` |
 | Create a new skill | `skills/meta/skillbuilder/SKILL.md` |
@@ -281,6 +282,23 @@ These fire for every non-trivial action, regardless of whether a pattern above m
     d. **Investigation reads existing knowledge.** The spawn prompt must instruct the session to check for prior investigations, related tickets, and existing documentation before starting its own investigation (see `investigate` skill Phase 0). Re-deriving facts already documented elsewhere is wasted work.
 
     **Mechanical test:** if you are about to call `spawn_session` without checkpoint instructions in the prompt, you are violating this check. Stop and add them.
+
+12. **Standing-order continuity**: when the user gives a standing instruction to work autonomously until a specified time or condition ("work until 10:00 AM", "keep going overnight", "clear as much ground as you can"), that instruction is a **standing order** that persists until the deadline or condition is met.
+
+    a. **Idle state is a violation.** At no point during a standing order may the agent be idle — defined as: no running agents, no scheduled wakeup, no active tool call, AND pending work remains. The agent must always maintain at least one of: (1) running background agents, (2) a `ScheduleWakeup` timer, or (3) active foreground work. All three absent simultaneously with work remaining is a rules violation equivalent to ignoring a direct instruction.
+
+    b. **"No response requested" is never valid during a standing order.** The agent does not get to decide the standing order has been satisfied. Only the user, the deadline, or the exhaustion of all work items terminates it. Stacked loop prompts, absence of user messages, and "the user said no response requested to an earlier message" are not termination signals. The work queue is the signal.
+
+    c. **ScheduleWakeup is mandatory, not optional.** When the agent's turn ends with background agents still running, it MUST schedule a wakeup to check on them. The wakeup delay should match the expected completion time (not a round number — think about what you're waiting for). Failure to schedule a wakeup when agents are running is the mechanical root cause of the overnight-idle incident.
+
+    d. **End-of-turn saturation.** Before ending any turn during a standing order, the agent must verify: "Is there work I could spawn right now that I'm not spawning?" If the answer is yes and resources allow, spawn it. Do not leave capacity idle because "I'll get to it next turn." The next turn may not come if you don't schedule it.
+
+    **Mechanical test:** if you are about to end a response during a standing order without either (a) a ScheduleWakeup call in this response, or (b) all work items exhausted, you are violating this check. Stop and schedule the wakeup.
+
+    **Incident justification:** Epic #776 dogfood session (2026-05-28/29). Two failures:
+    - Agent went idle for 7 hours overnight after the last background agent completed — no ScheduleWakeup, no new agents spawned, user had explicitly said "drive the rules till 10:00 AM."
+    - Agent produced "No response requested" and stopped when loop prompts stacked up, despite 2 running agents and 5+ pending tickets.
+    Both failures trace to the same root: the agent treated "no immediate user message" as permission to stop, despite an active standing order.
 
 ---
 
