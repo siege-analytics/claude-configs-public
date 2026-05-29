@@ -607,11 +607,9 @@ is the standard recovery pattern across the hook family.
 
 ## Artifact destination
 
-The self-review artifact's canonical location depends on its `Self-Review-Source:` trailer:
+**If the work has a ticket, the self-review goes on the ticket. This is not optional.**
 
-1. **Preferred:** commit the artifact to the repo (e.g., `plans/self-review-<ticket>.md` or alongside the PR). The `Self-Review-Source:` trailer points to the repo path. This survives branch deletion and session expiry.
-2. **Acceptable:** post the artifact (or a structured summary) as a comment on the ticket. The `Self-Review-Source:` trailer points to the comment URL.
-3. **Last resort:** session plans folder. If the artifact only lives in a session plans folder, it disappears when the session ends. This is acceptable during the review pass itself but the artifact must be committed or posted before push.
+Post the self-review artifact as a comment on the ticket, or commit it to the repo and link from the ticket. The `Self-Review-Source:` trailer must point to the durable location (ticket comment URL or repo path), not a session plans folder. The local file is a working draft; the ticket is the canonical home.
 
 The self-review is evidence that the work was reviewed. Evidence that can't be found from the ticket is evidence that doesn't exist.
 

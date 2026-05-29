@@ -188,14 +188,13 @@ You MUST complete the full design workflow and receive user approval before writ
 
 ## Artifact destination
 
-The design note is a working document during the conversation, but the ticket is its durable home.
+**If the work has a ticket, the design note goes on the ticket. This is not optional.**
 
-1. **Write the design note locally** (session plans folder or repo `plans/` directory) as a working copy.
-2. **Post the design note to the ticket** as a comment before proceeding to investigation or implementation. The ticket comment is the canonical copy; the local file is the draft.
-3. **If the design note is too long for a comment** (rare), commit it to the repo (e.g., `docs/design-notes/<ticket>.md`) and link from the ticket.
-4. **If there is no ticket** (exploratory work), the local file is sufficient. Mark it `propagation-deferred: no ticket, exploratory` in frontmatter.
+Post the design note as a comment on the ticket before proceeding to investigation or implementation. The local file (session plans folder or repo `plans/` directory) is a working draft. The ticket comment is the canonical copy. If the design note is too long for a comment, commit it to the repo and link from the ticket.
 
-The next agent who touches this code must be able to find the design note from the ticket without re-deriving it. If the design note only exists in a session plans folder, it disappears when the session ends.
+If there is no ticket (exploratory work only), mark the local file `propagation-deferred: no ticket, exploratory` in frontmatter.
+
+The same rule applies to every artifact this skill produces: if a ticket exists, the artifact goes there. A design note that only exists in a session plans folder is a design note that doesn't exist — it disappears when the session ends, and the next agent re-derives it from scratch.
 
 ## Attribution Policy
 
