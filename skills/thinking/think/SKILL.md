@@ -181,7 +181,15 @@ You MUST complete the full design workflow and receive user approval before writ
 - Single-line fixes (typos, obvious bugs with a clear one-line fix)
 - Tasks where the user has given detailed, specific, step-by-step instructions
 - Pure research or exploration (use the Explore agent instead)
-- Git operations, documentation-only edits, and other non-code tasks
+- Git operations and other non-code tasks that do not change behavior
+
+**Not exempt — highest-stakes edits that require the full pipeline:**
+- Skill files (`skills/**/SKILL.md`) — these change the behavior of every future task
+- Hook scripts (`hooks/**/*.sh`) — these change what the pipeline enforces
+- Rule files (`_*-rules.md`) — these change the standards the pipeline evaluates against
+- CLAUDE.md and project conventions — these change how agents interpret the codebase
+
+"Documentation-only edit" does NOT include skill/hook/rule edits. Changing a skill is changing the pipeline's behavior — it requires think, investigate, and pre-mortem like any behavioral change. The recursive case (the pipeline editing itself) is the highest-stakes change because a broken skill silently degrades all future work.
 
 ## Iron Laws
 

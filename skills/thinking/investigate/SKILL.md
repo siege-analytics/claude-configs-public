@@ -32,6 +32,8 @@ Think of investigation as flashing an ID to get into a bar. You do not get to cr
 
 **Trivial-change escape (the ONLY exemptions):** Pure typo fixes, doc-only edits with no behavioral change, and single-line literal changes. Each requires a Trivial-investigation declaration in the self-review artifact with falsifiable evidence for why investigation was unnecessary. "This is simple" is not falsifiable evidence.
 
+**The recursive case — pipeline editing itself:** Edits to skills (`skills/**/SKILL.md`), hooks (`hooks/**/*.sh`), and rule files (`_*-rules.md`) are never trivial. They change the behavior of the pipeline that governs all future work. A broken skill silently degrades every task that invokes it. Investigation for pipeline edits must trace: (1) which other skills consume this skill's output, (2) which hooks enforce this skill's requirements, (3) what changes for downstream tasks if this edit ships. The "doc-only edit" exemption does not apply to skills, hooks, or rules — these are behavioral artifacts, not documentation.
+
 ## Relationship to other skills
 
 ```
@@ -230,6 +232,50 @@ For each issue discovered during investigation:
   - Impact: <what breaks, who is affected>
   - Recommendation: <fix, defer with justification, or accept with rationale>
 ```
+
+## Scaled Fact Sheet for low-impact tasks
+
+The full Fact Sheet format has 10+ sections because high-impact tasks need them. But a single-function bug fix that touches one file and has no downstream consumers doesn't need an impact chain with upstream/downstream mapping — that's compliance overhead that incentivizes skipping investigation entirely.
+
+**Two tiers:**
+
+| Tier | When | Required sections |
+|---|---|---|
+| **Full** | Touches 3+ files, modifies shared interfaces, changes data shapes, or crosses module boundaries | All sections (Prior Knowledge through Findings) |
+| **Focused** | Touches 1-2 files, modifies internal logic only, no interface changes, no downstream impact beyond the file | Prior Knowledge, Knowledge Loci, Verified Shapes, Hypothesis and Falsification |
+
+The Focused tier is NOT a lower standard — it still requires file:line citations, shape verification, and a falsifiable hypothesis. It drops the sections that genuinely have nothing to say: impact chain (nothing upstream/downstream), logic trace (the change is the logic), environmental readiness (no new dependencies).
+
+**Focused Fact Sheet format:**
+
+```
+## Investigation Fact Sheet (Focused)
+Task: <one-line description>
+Ticket: <reference>
+Investigated: <timestamp>
+Scope justification: <why Focused tier — must name: files touched (1-2),
+                      no interface changes, no downstream consumers beyond
+                      this file. If any of these don't hold, use Full.>
+
+### Prior Knowledge (Phase 0)
+- Ticket body read: YES/NO — <key findings>
+- Post-error revisions found: <citation or "none found">
+- Recent git history: <notable commits or "no recent changes">
+
+### Knowledge Loci
+- **<Entity>**: knowledge locus is <location>
+  - Will this task invalidate it: YES / NO
+
+### Verified Shapes
+- **<Entity name>** (<type>, <file:line>)
+  - Fields/signature: <verbatim from source>
+  - Verification status: VERIFIED | UNVERIFIED
+
+### Hypothesis and Falsification
+<testable claim and what would prove it wrong>
+```
+
+**Escalation rule:** If at any point during a Focused investigation you discover a downstream consumer, an interface change, or a cross-module dependency, escalate to Full. The Focused tier is not a commitment — it's a starting point that must yield to evidence.
 
 ## Composition with existing skills
 
