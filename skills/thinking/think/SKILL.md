@@ -146,11 +146,13 @@ Present the design to the user. Wait for explicit approval before writing any co
 
 If the user suggests changes, revise the design and present again.
 
-### Step 7: Post to ticket (hard gate)
+### Step 7: Post to ticket and continue (hard gate)
 
-If this work has a ticket, post the design note to the ticket NOW — before proceeding to investigation or any downstream gate. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy. Do not proceed to Step 8 until the design note is on the ticket.
+If this work has a ticket, post the design note to the ticket NOW. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy. Do not proceed to Step 8 until the design note is on the ticket.
 
-If no ticket exists (exempt per pre-action check 5), skip this step.
+If no ticket exists (exempt per pre-action check 5), skip the post.
+
+**Then continue autonomously to Step 8.** Do not wait for parent approval, operator acknowledgement, or external signal to proceed. The pipeline is self-driving: each gate produces an artifact, posts it, and advances to the next gate. Stopping between gates to ask "should I continue?" defeats the purpose of having a pipeline — it turns autonomous execution into supervised step-by-step work.
 
 ### Step 8: Downstream Routing (hard gate)
 

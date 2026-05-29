@@ -487,11 +487,11 @@ An empty Quantified claims section is acceptable only when the PR body
 and commit messages contain no specific integer counts. The hook
 validates section presence; content completeness is operator-auditable.
 
-## Post to ticket (hard gate)
+## Post to ticket and continue (hard gate)
 
-When the self-review artifact is complete — before pushing or creating a PR — post it to the ticket. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy.
+When the self-review artifact is complete, post it to the ticket NOW. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy.
 
-Do not push until the self-review is on the ticket. This is a gate between review and push, not a footnote at the end of the file.
+Do not push until the self-review is on the ticket. **Then push and create the PR.** The pipeline is self-driving: produce the artifact, post it, advance. Do not wait for external approval to push — the self-review IS the approval gate.
 
 ## Cross-environment enforcement
 
