@@ -212,6 +212,10 @@ v2 (deferred): CI scanner walks the `## Post-error revision` blocks across the r
 - **Treating in-loop test failures as triggers.** The agent's own write -> fail -> fix iteration cycle is not the trigger. Triggers fire only when the falsified belief was durably written down.
 - **Skipping the ticket-creation step when the chain breaks.** If the failed work used a Trivial-change escape (no originating ticket), the response is to file the ticket retroactively, not to skip the revision because there's "nowhere to put it."
 
+## Artifact destination
+
+**If the work has a ticket, the Post-error revision block goes on the ticket. This is not optional.** The block is appended to the originating ticket (Step 3) — this is inherent to the procedure, not a separate step. But if investigation also produced a Fact Sheet with a Knowledge Loci section, the corrections from Step 4.5 go to each designated knowledge locus as well. A Post-error revision that only updates the ticket's Assumptions block while leaving a docstring or CLAUDE.md section describing the falsified behavior is an incomplete revision.
+
 ## Cross-references
 
 - writing-rules:4 — every "this doesn't apply" claim requires the same evidence chain as a "this happened" claim. The `Observed:` field inherits this requirement.

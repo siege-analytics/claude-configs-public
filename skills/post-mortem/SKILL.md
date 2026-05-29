@@ -178,6 +178,8 @@ If hits exist: every hit must have a disposition. "Fixed in this PR" means the f
 - **think** is evaluated: did the approach selection consider this failure mode?
 - **self-review** is evaluated: did the Junior or Lead catch this?
 - **Skills themselves are the primary action target.** If a post-mortem's action items only fix code and add tests, it missed the systemic layer.
+- **post-error-revision** handles the immediate correction (ticket Assumptions + knowledge loci). Post-mortem handles the systemic response (why was the wrong assumption possible, what gate failed). Both are required when a shipped failure contradicts a documented Assumption.
+- **Knowledge loci** identified in the Fact Sheet must be checked during the post-mortem. If a locus (docstring, CLAUDE.md section, notebook) still describes the falsified behavior, updating it is an action item.
 
 ## Hard rules
 
@@ -185,6 +187,7 @@ If hits exist: every hit must have a disposition. "Fixed in this PR" means the f
 2. **Action items are testable.** Every action item has acceptance criteria. "Improve review quality" is not testable.
 3. **The Allspaw test applies.** Would the operator find this fair, accurate, and useful?
 4. **Post-mortems update skills, not just code.** The code fix is necessary but not sufficient.
-5. **Post-mortems are documented in the ticket.** The ticket gets a link to the post-mortem artifact.
-6. **"What went well" is required.** Prevents the post-mortem from being purely punitive.
-7. **Codebase sweep is required.** The post-mortem artifact is rejected if the `### Codebase sweep` section is missing or empty. The sweep grep must cover the entire scope where the bad pattern could recur, not just the file where the failure was discovered. A post-mortem that fixes one instance without grepping for siblings is incomplete — the next instance will produce the same post-mortem.
+5. **If the work has a ticket, the post-mortem goes on the ticket. This is not optional.** Post the post-mortem artifact (or a structured summary) as a comment on the ticket. If the artifact is too long for a comment, commit it to the repo and link from the ticket. A post-mortem that only exists in a session plans folder is a post-mortem that doesn't exist.
+6. **Action items update knowledge loci, not just code.** If the Fact Sheet identified designated knowledge loci for the entities involved in the failure, and the post-mortem finds those loci describe the falsified behavior, updating them is an action item. The code fix alone is insufficient if the docstring, CLAUDE.md section, or notebook still describes the old (wrong) behavior.
+7. **"What went well" is required.** Prevents the post-mortem from being purely punitive.
+8. **Codebase sweep is required.** The post-mortem artifact is rejected if the `### Codebase sweep` section is missing or empty. The sweep grep must cover the entire scope where the bad pattern could recur, not just the file where the failure was discovered. A post-mortem that fixes one instance without grepping for siblings is incomplete — the next instance will produce the same post-mortem.

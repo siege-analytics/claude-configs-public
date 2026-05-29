@@ -109,7 +109,7 @@ For each of these, state what changes and where the update goes:
 - **Tickets:** which tickets need updating with the new design, findings, or status?
 - **External docs:** API docs, wiki pages, knowledge base articles, guide.md files — anything outside the repo that describes the behavior.
 
-If investigation (Phase 0 or Phase 2) surfaced documentation that describes the current behavior, and your design changes that behavior, the documentation update is a required output of this task. A PR that changes behavior without updating the docs that describe it ships a lie.
+These are the **designated knowledge loci** for the entities this task touches. Investigation Phase 0 identifies them in the Fact Sheet's "Knowledge Loci" section. If investigation found loci that describe behavior this task will change, updating those loci is a required deliverable — not a follow-up. A PR that changes behavior without updating the knowledge loci that describe it ships a lie.
 
 ### Step 6: Implementation Gate
 
