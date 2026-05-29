@@ -28,6 +28,12 @@ SOURCE_SKILLS = REPO_ROOT / "skills"
 SOURCE_PROJECTS = REPO_ROOT / "projects"
 DIST = REPO_ROOT / "dist"
 
+CRAFT_WORKSPACE = Path.home() / ".craft-agent" / "workspaces" / "my-workspace"
+
+# Frontmatter keys that Craft Agent misinterprets (e.g. as a hide signal).
+# Stripped during --deploy. Matches electinfo_claude_skills/scripts/build.py.
+CRAFT_INCOMPATIBLE_KEYS = {"disable-model-invocation", "argument-hint"}
+
 # Separator joining project slug and skill/rule slug in the prefix-flatten convention.
 # Project skill `hostile-review` in project `siege-utilities` becomes flat slug
 # `siege-utilities--hostile-review`. Project rules file becomes `<project>--rules`
@@ -674,10 +680,77 @@ def write_build_info(
 # Entry point
 # ---------------------------------------------------------------------------
 
+def strip_craft_incompatible_keys(text: str) -> str:
+    """Remove frontmatter keys that Craft Agent misinterprets.
+
+    Matches electinfo_claude_skills/scripts/build.py pattern.
+    """
+    lines = text.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return text
+    result = [lines[0]]
+    closed = False
+    for line in lines[1:]:
+        if not closed:
+            if line.strip() == "---":
+                closed = True
+                result.append(line)
+                continue
+            key = line.split(":")[0].strip() if ":" in line else ""
+            if key in CRAFT_INCOMPATIBLE_KEYS:
+                continue
+        result.append(line)
+    return "".join(result)
+
+
+def deploy_to_workspace() -> None:
+    """Sync flat layout to the Craft Agent workspace.
+
+    Copies dist/flat/skills/ → ~/.craft-agent/workspaces/my-workspace/skills/
+    and RESOLVER.md → ~/.craft-agent/workspaces/my-workspace/RESOLVER.md.
+    Strips Craft-incompatible frontmatter keys from .md files during copy.
+    """
+    ws_skills = CRAFT_WORKSPACE / "skills"
+    flat_skills = DIST / "flat" / "skills"
+    if not flat_skills.exists():
+        raise BuildError("dist/flat/skills/ does not exist — run build first")
+    if not CRAFT_WORKSPACE.exists():
+        print(f"  Workspace not found at {CRAFT_WORKSPACE}, skipping deploy")
+        return
+    if ws_skills.exists():
+        shutil.rmtree(ws_skills)
+
+    stripped_count = 0
+    for src_path in flat_skills.rglob("*"):
+        rel = src_path.relative_to(flat_skills)
+        dst_path = ws_skills / rel
+        if src_path.is_dir():
+            dst_path.mkdir(parents=True, exist_ok=True)
+            continue
+        dst_path.parent.mkdir(parents=True, exist_ok=True)
+        if src_path.suffix.lower() == ".md":
+            original = src_path.read_text()
+            processed = strip_craft_incompatible_keys(original)
+            dst_path.write_text(processed)
+            if processed != original:
+                stripped_count += 1
+        else:
+            shutil.copy2(src_path, dst_path)
+
+    resolver_src = REPO_ROOT / "RESOLVER.md"
+    if resolver_src.exists():
+        original = resolver_src.read_text()
+        (CRAFT_WORKSPACE / "RESOLVER.md").write_text(
+            strip_craft_incompatible_keys(original)
+        )
+    print(f"  Deployed to {CRAFT_WORKSPACE}/ ({stripped_count} files stripped)")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Validate tokens; do not write output")
     parser.add_argument("--layout", choices=("nested", "flat", "both"), default="both")
+    parser.add_argument("--deploy", action="store_true", help="After building, sync flat layout to Craft Agent workspace")
     args = parser.parse_args()
 
     # Phase 1: Validate project manifests (repo uniqueness, required fields, status).
@@ -745,6 +818,18 @@ def main() -> int:
 
     warn_unknown()
     print(f"\nDone. Output: {DIST}/")
+
+    if args.deploy:
+        print("\nDeploying to Craft Agent workspace...")
+        if "flat" not in layouts:
+            print("  Building flat layout for deploy...")
+            build_layout(
+                "flat", skills_src, rules_src,
+                project_skills_src, project_rules_src,
+                skill_provenance, active_projects,
+            )
+        deploy_to_workspace()
+
     return 0
 
 

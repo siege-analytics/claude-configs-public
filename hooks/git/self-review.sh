@@ -289,6 +289,77 @@ HOOKEOF
         fi
     fi
 
+    # v1.3: Investigate-artifact and Pre-mortem-artifact fields must be
+    # present and non-empty. TRIVIAL is accepted only when a
+    # ## Trivial-investigation declaration block is also present with
+    # all four required fields (Category / Cannot produce error / Evidence /
+    # Falsification). If the value looks like a file path, the file must exist.
+    for FIELD_NAME in "Investigate-artifact" "Pre-mortem-artifact"; do
+        FIELD_VALUE=$(grep -E "^${FIELD_NAME}:[[:space:]]+\\S" "$SOURCE_PATH" | head -1 | sed -E "s/^${FIELD_NAME}:[[:space:]]+'*//" || true)
+        if [[ -z "$FIELD_VALUE" ]]; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Self-Review-Source: $SOURCE_PATH is missing '${FIELD_NAME}:'
+in the Assumptions section.
+
+Investigation is non-discretionary. Provide one of:
+  ${FIELD_NAME}: <ticket-comment-link>
+  ${FIELD_NAME}: <committed-file-path>
+  ${FIELD_NAME}: plans/investigate-*.md
+  ${FIELD_NAME}: TRIVIAL (with ## Trivial-investigation declaration below)
+
+See skills/self-review/SKILL.md and skills/thinking/investigate/SKILL.md.
+HOOKEOF
+            exit 2
+        fi
+
+        if [[ "$FIELD_VALUE" == "TRIVIAL" ]]; then
+            if ! grep -qF '## Trivial-investigation declaration' "$SOURCE_PATH"; then
+                cat >&2 <<HOOKEOF
+BLOCKED: ${FIELD_NAME}: is TRIVIAL in $SOURCE_PATH but no
+## Trivial-investigation declaration block is present.
+
+TRIVIAL requires a declaration with all four fields:
+  Category / Cannot produce error / Evidence / Falsification
+
+"This is simple" is not falsifiable evidence. See SKILL.md.
+HOOKEOF
+                exit 2
+            fi
+            # Validate declaration has the four required fields.
+            DECL_BLOCK=$(awk '/^## Trivial-investigation declaration/{flag=1; next} /^## /{flag=0} flag' "$SOURCE_PATH")
+            for DECL_FIELD in "Category:" "Cannot produce error:" "Evidence:" "Falsification:"; do
+                if ! echo "$DECL_BLOCK" | grep -qF "$DECL_FIELD"; then
+                    cat >&2 <<HOOKEOF
+BLOCKED: ## Trivial-investigation declaration in $SOURCE_PATH is missing
+required field: $DECL_FIELD
+
+All four fields are required: Category / Cannot produce error / Evidence /
+Falsification. See skills/self-review/SKILL.md.
+HOOKEOF
+                    exit 2
+                fi
+            done
+        elif [[ "$FIELD_VALUE" =~ \.(md|txt)$ ]] || [[ "$FIELD_VALUE" == /* ]] || [[ "$FIELD_VALUE" == ./* ]]; then
+            # Value looks like a file path — verify the file exists.
+            case "$FIELD_VALUE" in
+                /*) FIELD_PATH="$FIELD_VALUE" ;;
+                *)  FIELD_PATH="$EFFECTIVE_CWD/$FIELD_VALUE" ;;
+            esac
+            if [[ ! -f "$FIELD_PATH" ]]; then
+                cat >&2 <<HOOKEOF
+BLOCKED: ${FIELD_NAME}: points at $FIELD_VALUE which does not exist
+at $FIELD_PATH.
+
+Either fix the path, produce the artifact, or post it to the ticket
+and use the ticket comment link instead.
+HOOKEOF
+                exit 2
+            fi
+        fi
+        # Ticket-comment-links (URLs, #NNN references) are accepted but
+        # not yet validated against the ticket API — v2 follow-up.
+    done
+
     # Peer review section must cite at least one shelf.
     SHELF_RE='writing-(code|tests|claims|prose|releases):'
     # Extract Peer review section content (between '## Peer review' header
@@ -304,6 +375,33 @@ Empty Peer sections are allowed ONLY if the diff genuinely doesn't engage
 any shelf, but the section must then explicitly state that.
 HOOKEOF
         exit 2
+    fi
+
+    # v1.4: Post-mortem awareness check. If the commit message indicates
+    # a revert or regression fix, the self-review should acknowledge
+    # post-mortem applicability. This is a WARNING, not a block — the
+    # post-error-revision-required hook handles the hard gate for trailers.
+    # But the self-review artifact should show awareness.
+    if echo "$COMMIT_MSG" | grep -qiE 'revert|regression|fix\([^)]+\):[[:space:]]+regression'; then
+        if ! grep -qiE 'post-mortem|postmortem' "$SOURCE_PATH"; then
+            cat >&2 <<HOOKEOF
+WARNING: Commit message suggests a revert or regression fix, but the
+self-review artifact at $SOURCE_PATH does not mention post-mortem.
+
+Per skills/post-mortem/SKILL.md, a post-mortem is required when:
+  - A shipped implementation contradicts its ticket hypothesis
+  - A pre-mortem Tiger materializes
+  - A test failure reveals a shipped bug that passed self-review
+
+If this is a revert or regression fix for shipped code, a post-mortem
+should be triggered. Add a note to the Lead review section acknowledging
+post-mortem applicability (or explaining why it doesn't apply).
+
+This is a warning, not a block. The post-error-revision-required hook
+enforces the Refs: + Post-error-revision: trailers.
+HOOKEOF
+            # WARNING only — do not exit 2
+        fi
     fi
 fi
 

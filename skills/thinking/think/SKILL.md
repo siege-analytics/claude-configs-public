@@ -99,14 +99,17 @@ The design should be detailed enough that someone else could implement it withou
 
 ### Step 5: Documentation Plan
 
-Before writing code, decide what documentation will need updating:
+If the design changes documented behavior, the documentation update is part of the deliverable — not a follow-up. "We'll document it later" means never.
 
-- Which files need docstring/comment updates?
-- Does the README or CLAUDE.md need changes?
-- Are there tickets to create or update?
-- Will this affect downstream documentation (API docs, wiki, knowledge base)?
+For each of these, state what changes and where the update goes:
 
-This prevents the common failure mode of "we'll document it later" (which means never).
+- **Docstrings and comments:** which functions or classes have docstrings that describe the behavior you're changing?
+- **README or CLAUDE.md:** does the project's top-level documentation describe the feature or convention you're modifying?
+- **Notebooks:** does any notebook demonstrate the function or workflow you're changing? (See the notebook coverage invariant in CLAUDE.md for siege_utilities.)
+- **Tickets:** which tickets need updating with the new design, findings, or status?
+- **External docs:** API docs, wiki pages, knowledge base articles, guide.md files — anything outside the repo that describes the behavior.
+
+These are the **designated knowledge loci** for the entities this task touches. Investigation Phase 0 identifies them in the Fact Sheet's "Knowledge Loci" section. If investigation found loci that describe behavior this task will change, updating those loci is a required deliverable — not a follow-up. A PR that changes behavior without updating the knowledge loci that describe it ships a lie.
 
 ### Step 6: Implementation Gate
 
@@ -129,11 +132,11 @@ If the user suggests changes, revise the design and present again.
 
 After user approval of the design, before implementation begins:
 
-- [ ] **investigate:** Fact Sheet required? (YES for any entity-touching work)
+- [ ] **investigate:** Fact Sheet required? (Default: **YES**. NO requires a Trivial-investigation declaration with falsifiable evidence in the self-review artifact.)
 - [ ] **pre-mortem:** Risk classification required? (YES for non-trivial work)
 - [ ] **survey-context:** Entity doc consultation required? (YES if project has doc layer)
 
-Investigation runs first. Pre-mortem runs after investigation completes. Implementation begins only after all required downstream skills have produced their artifacts.
+Investigation is non-discretionary. It runs first. Pre-mortem runs after investigation completes. Implementation begins only after all required downstream skills have produced their artifacts and posted them to the designated knowledge locus (ticket, doc page, etc.).
 
 **This is a hard gate, not a checklist.** Checking "YES" and proceeding
 to code without producing the artifact is a self-review violation. The
@@ -142,10 +145,12 @@ to code without producing the artifact is a self-review violation. The
 time. If you answer YES here but have no artifact to cite in
 self-review, the push is blocked.
 
-**Escape hatch:** If the work is genuinely trivial enough to skip
-investigation (single-line fix, doc-only, config-only), answer NO and
-include a `## Trivial-investigation declaration` in the self-review
-artifact with falsifiable evidence for why investigation was unnecessary.
+**Escape hatch (the ONLY acceptable NO):** If the work is genuinely trivial
+enough to skip investigation (single-line fix, doc-only with no behavioral
+change, single-line literal change), answer NO and include a
+`## Trivial-investigation declaration` in the self-review artifact with
+falsifiable evidence for why investigation was unnecessary. "This is
+simple" is not falsifiable evidence.
 
 ### Investigation Dependencies
 
@@ -176,7 +181,15 @@ You MUST complete the full design workflow and receive user approval before writ
 - Single-line fixes (typos, obvious bugs with a clear one-line fix)
 - Tasks where the user has given detailed, specific, step-by-step instructions
 - Pure research or exploration (use the Explore agent instead)
-- Git operations, documentation-only edits, and other non-code tasks
+- Git operations and other non-code tasks that do not change behavior
+
+**Not exempt — highest-stakes edits that require the full pipeline:**
+- Skill files (`skills/**/SKILL.md`) — these change the behavior of every future task
+- Hook scripts (`hooks/**/*.sh`) — these change what the pipeline enforces
+- Rule files (`_*-rules.md`) — these change the standards the pipeline evaluates against
+- CLAUDE.md and project conventions — these change how agents interpret the codebase
+
+"Documentation-only edit" does NOT include skill/hook/rule edits. Changing a skill is changing the pipeline's behavior — it requires think, investigate, and pre-mortem like any behavioral change. The recursive case (the pipeline editing itself) is the highest-stakes change because a broken skill silently degrades all future work.
 
 ## Iron Laws
 
@@ -185,6 +198,16 @@ You MUST complete the full design workflow and receive user approval before writ
 3. **2-3 proposals, not 1.** If there's only one way to do it, you haven't thought hard enough. If there are more than 3, you're overthinking it.
 4. **State your assumptions.** Every unstated assumption is a future bug.
 5. **The user decides.** Present options with tradeoffs. Don't make the decision for them unless they ask you to.
+
+## Artifact destination
+
+**If the work has a ticket, the design note goes on the ticket. This is not optional.**
+
+Post the design note as a comment on the ticket before proceeding to investigation or implementation. The local file (session plans folder or repo `plans/` directory) is a working draft. The ticket comment is the canonical copy. If the design note is too long for a comment, commit it to the repo and link from the ticket.
+
+If there is no ticket (exploratory work only), mark the local file `propagation-deferred: no ticket, exploratory` in frontmatter.
+
+The same rule applies to every artifact this skill produces: if a ticket exists, the artifact goes there. A design note that only exists in a session plans folder is a design note that doesn't exist — it disappears when the session ends, and the next agent re-derives it from scratch.
 
 ## Attribution Policy
 

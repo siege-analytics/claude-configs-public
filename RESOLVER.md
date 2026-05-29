@@ -50,11 +50,13 @@ The `think` gate is not a pattern-match entry below — it is the **first gate**
 
 **Post-think pipeline: `investigate` → `pre-mortem`.** After think produces a design note and the user approves, the investigation and risk gates fire before implementation:
 
-1. **`investigate`** (`skills/thinking/investigate/SKILL.md`): Evidentiary fact-finding. Produces a Fact Sheet with file:line citations, impact chain (upstream → task → downstream), data shape verification, and hypothesis/falsification. The Fact Sheet is the single source of truth referenced by design, self-review, and post-mortem. Hard rule: "File:line or it didn't happen."
+1. **`investigate`** (`skills/thinking/investigate/SKILL.md`): Evidentiary fact-finding. Produces a Fact Sheet with file:line citations, impact chain (upstream → task → downstream), data shape verification, coherence check, and hypothesis/falsification. Investigation is non-discretionary — it gates ALL artifact CRUD, not just code files. Skill/hook/rule edits are the highest-stakes class (the recursive case) and are never exempt. Two tiers: Full (all sections) for cross-module work, Focused (4 sections) for 1-2 file changes with no interface impact. Hard rule: "File:line or it didn't happen."
 
-2. **`pre-mortem`** (`skills/thinking/pre-mortem/SKILL.md`): Adversarial risk classification using Tiger / Paper Tiger / Elephant framework. Operates on the Fact Sheet — not speculation. Launch-Blocking Tigers halt implementation until mitigated. Paper Tigers must cite their mitigation. Elephants are named with deferral rationale.
+2. **`pre-mortem`** (`skills/thinking/pre-mortem/SKILL.md`): Adversarial risk classification using Tiger / Paper Tiger / Elephant framework. Operates on the Fact Sheet — not speculation. Each scenario must pass a coherence check (does it logically follow from the evidence it cites?) before classification. Launch-Blocking Tigers halt implementation until mitigated. Paper Tigers must cite their mitigation. Elephants are named with deferral rationale.
 
-3. **`post-mortem`** (`skills/post-mortem/SKILL.md`): Triggered by confirmed failures (shipped bug, materialized Tiger, misclassified Paper Tiger). Traces backward through the skill pipeline to identify where the failure could have been caught. Action items must be testable, must pass the Allspaw test, and must update skills — not just code.
+3. **`post-mortem`** (`skills/post-mortem/SKILL.md`): Triggered by confirmed failures (shipped bug, materialized Tiger, misclassified Paper Tiger). Traces backward through the skill pipeline to identify where the failure could have been caught — including whether coherence checks ran at each gate. When root cause is a skill/hook/rule deficiency, action items must fix the pipeline artifact (the recursive case). Action items must be testable, must pass the Allspaw test, and must update skills — not just code.
+
+**Coherence is checked at every stage:** investigate Phase 5 (do the findings agree with each other?), pre-mortem Step 3 (does each scenario follow from its cited evidence?), self-review Lead Phase A (do the artifacts form a consistent logical structure?). Internal coherence first, then external verification.
 
 The full pipeline: think → investigate → pre-mortem → implementation → self-review → (on failure) post-mortem.
 

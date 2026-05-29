@@ -1,6 +1,6 @@
 ---
 name: investigate
-description: "Evidentiary fact-finding gate. Before implementation begins, verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations, impact chain, and environmental readiness. The Fact Sheet is the single source of truth referenced by design, self-review, and post-mortem. Do NOT skip this skill; assumptions that bypass investigation are the #1 cause of shipped bugs."
+description: "Non-discretionary evidentiary gate. Required before any artifact is created, modified, or deleted. Verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations, impact chain, knowledge loci, and environmental readiness. The Fact Sheet is the single source of truth referenced by design, self-review, and post-mortem. Do NOT skip this skill; assumptions that bypass investigation are the #1 cause of shipped bugs."
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read Grep Glob Bash
@@ -8,7 +8,7 @@ allowed-tools: Read Grep Glob Bash
 
 # Investigate
 
-Evidentiary fact-finding. Before implementation begins, verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations and an impact chain tracing upstream → task → downstream.
+Evidentiary fact-finding. Before any artifact is created, modified, or deleted, verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations, knowledge loci, and an impact chain tracing upstream → task → downstream.
 
 ## Why
 
@@ -26,14 +26,13 @@ All five are the same class: **the agent assumed a data shape instead of reading
 
 ## When to investigate
 
-Required before implementation when any of these are true:
+Investigation is required before any artifact is created, modified, or deleted. This is non-discretionary — the default is YES. The only artifacts exempt from this gate are the investigation artifact itself and its supporting reads (Phase 0–5 outputs).
 
-- The task references existing entities (models, functions, tables, APIs, env vars).
-- The task changes data flow between components.
-- The task adds a new consumer of existing data.
-- The task modifies behavior that downstream code depends on.
+Think of investigation as flashing an ID to get into a bar. You do not get to create, modify, or delete anything — code, config, skills, hooks, docs, anything — until you have shown evidence of knowledge gathering.
 
-**Trivial-change escape:** Pure typo fixes, doc-only edits, and single-line literal changes do not require investigation. The escape must be declared in the self-review artifact per the existing trivial-change protocol.
+**Trivial-change escape (the ONLY exemptions):** Pure typo fixes, doc-only edits with no behavioral change, and single-line literal changes. Each requires a Trivial-investigation declaration in the self-review artifact with falsifiable evidence for why investigation was unnecessary. "This is simple" is not falsifiable evidence.
+
+**The recursive case — pipeline editing itself:** Edits to skills (`skills/**/SKILL.md`), hooks (`hooks/**/*.sh`), and rule files (`_*-rules.md`) are never trivial. They change the behavior of the pipeline that governs all future work. A broken skill silently degrades every task that invokes it. Investigation for pipeline edits must trace: (1) which other skills consume this skill's output, (2) which hooks enforce this skill's requirements, (3) what changes for downstream tasks if this edit ships. The "doc-only edit" exemption does not apply to skills, hooks, or rules — these are behavioral artifacts, not documentation.
 
 ## Relationship to other skills
 
@@ -70,11 +69,17 @@ Before investigating code, read what already exists about the entities you're ab
 |---|---|---|
 | **Ticket body** | Prior investigation links, referenced issues, acceptance criteria, assumptions | Read the ticket you're working on — don't just rely on the task prompt's summary |
 | **Linked/related tickets** | Prior Fact Sheets, sibling-grep results, post-mortem findings about the same code | `gh issue list` with label/search filters; check the epic's issue list |
-| **Existing documentation** | Module-level docstrings, CLAUDE.md sections, README, architecture docs | `Read` the file's module docstring; grep for the module name in docs/ |
+| **Existing documentation** | Module-level docstrings, CLAUDE.md sections, README, architecture docs, notebooks that demo the function | `Read` the file's module docstring; grep for the module name in docs/ and notebooks/ |
 | **Git blame / recent commits** | Recent changes to the files you'll touch, especially reverts or fix-ups | `git log --oneline -10 <file>` for each file in scope |
 | **Prior investigation artifacts** | Fact Sheets from earlier sessions that touched the same code | Check the ticket for linked Fact Sheets; grep PR bodies for "Investigation Fact Sheet" |
+| **Post-error revisions** | Revised models from prior errors in the same code area — what was wrong and what the corrected understanding is | Search tickets and linked tickets for `## Post-error revision` sections; check git log for commits with `Post-error-revision:` trailers touching the same files |
+| **Knowledge locus for each entity** | Where the canonical understanding of this entity lives — the place someone would go to learn how it works | For each entity touched: identify whether the locus is a ticket, doc page, CLAUDE.md section, module docstring, wiki article, or notebook. Record it — this is where corrections go when errors surface. The Fact Sheet is NOT a valid knowledge locus — it is an investigation artifact, not a canonical knowledge source. |
 
 **Hard rule:** If a prior investigation exists for the same code entity and is less than 30 days old, start from its findings — don't re-derive from scratch. Cite it in your Fact Sheet's "Prior art" section. If it's stale, note what changed.
+
+**Post-error revision rule:** If Phase 0 finds a post-error revision for code this task touches, the Fact Sheet's Prior Knowledge section MUST incorporate the revised model. An investigation that repeats a falsified assumption from a prior post-error revision is a Phase 0 failure — the learning was recorded and you ignored it.
+
+**Knowledge locus rule:** For each entity the task touches, identify where the canonical knowledge about that entity lives. Record each locus in the Fact Sheet's "Knowledge Loci" section. This serves two purposes: (1) if this task will invalidate what the locus says, updating the locus is a required deliverable (feeds think Step 5); (2) if a future error falsifies what this investigation found, the correction goes to the designated locus, not to a fixed artifact type.
 
 Record Phase 0 results at the top of the Fact Sheet under `### Prior Knowledge`.
 
@@ -149,11 +154,26 @@ Before implementation can begin, verify:
 
 Record each check with evidence. "Imports resolve" is not evidence. "`PostGISConnector` exists at `siege_utilities/geo/connectors.py:14`" is evidence.
 
-### Phase 5: Hypothesis and Falsification
+### Phase 5: Coherence Check, Hypothesis, and Falsification
 
-Based on the verified facts, state:
+Before stating the hypothesis, check the Fact Sheet's own internal coherence. The findings from Phases 1–4 are a set of claims — do they agree with each other?
+
+**Internal coherence questions:**
+- Does the impact chain's "upstream provides X" match the verified shape of X in Phase 2?
+- Does "this task changes Y" produce output that matches what "downstream expects Z" needs?
+- Do the knowledge loci's "current state" descriptions match the verified shapes?
+- If Phase 3 traced a logic path, does it use the field names and types from Phase 2 — or different ones?
+- Are there assumptions in one phase that contradict findings in another?
+
+An internally incoherent Fact Sheet means one of the phases got something wrong. Resolve the contradiction before proceeding — the hypothesis cannot be sound if the evidence it rests on contradicts itself.
+
+**Then** state the hypothesis, grounded in the now-coherent findings:
 
 ```
+## Coherence
+<One sentence: are the findings from Phases 1-4 internally consistent?
+ If a contradiction was found and resolved, state what it was and how.>
+
 ## Hypothesis
 <What this implementation will achieve, stated as a testable claim>
 
@@ -162,7 +182,7 @@ Based on the verified facts, state:
 <Specific test cases that, if they fail, indicate the implementation is wrong>
 ```
 
-The hypothesis and falsification criteria are documented in the ticket. They are not optional. They are what the self-review and post-mortem evaluate against.
+The coherence statement, hypothesis, and falsification criteria are documented in the ticket. They are not optional. They are what the self-review and post-mortem evaluate against.
 
 ## Fact Sheet artifact format
 
@@ -179,6 +199,22 @@ Approach: <reference to think design note>
 - Prior investigations for this code: <link/citation, or "none found">
 - Recent git history for touched files: <notable commits, or "no recent changes">
 - Existing documentation: <module docstrings, docs/ pages, or "none">
+- Post-error revisions found: <ticket#, date, revised model — or "none found">
+
+### Knowledge Loci
+For each entity this task touches:
+- **<Entity>**: knowledge locus is <location> (ticket / doc page / docstring / CLAUDE.md / wiki / notebook / etc.)
+  - Current state: <what the locus says now>
+  - Will this task invalidate it: YES / NO
+  - If YES: update is a required deliverable (feeds think Step 5)
+
+### Revised Facts (from post-error revisions)
+For each post-error revision found in Phase 0:
+- **Revision source:** <ticket#, date>
+- **Falsified assumption:** <what was wrong>
+- **Revised model:** <what's actually true>
+- **Impact on this task:** <how this changes our approach>
+(If none found, record "No post-error revisions found for this code area.")
 
 ### Impact Chain
 <Phase 1 output — full upstream/task/downstream chain>
@@ -197,8 +233,11 @@ For each entity:
 ### Environmental Readiness
 <Phase 4 checklist with evidence>
 
+### Coherence
+<Phase 5 coherence statement — are Phases 1-4 internally consistent?>
+
 ### Hypothesis and Falsification
-<Phase 5 output>
+<Phase 5 hypothesis and falsification criteria>
 
 ### Open Questions
 <Anything that could not be verified, with why and what the risk is>
@@ -212,6 +251,53 @@ For each issue discovered during investigation:
   - Recommendation: <fix, defer with justification, or accept with rationale>
 ```
 
+## Scaled Fact Sheet for low-impact tasks
+
+The full Fact Sheet format has 10+ sections because high-impact tasks need them. But a single-function bug fix that touches one file and has no downstream consumers doesn't need an impact chain with upstream/downstream mapping — that's compliance overhead that incentivizes skipping investigation entirely.
+
+**Two tiers:**
+
+| Tier | When | Required sections |
+|---|---|---|
+| **Full** | Touches 3+ files, modifies shared interfaces, changes data shapes, or crosses module boundaries | All sections (Prior Knowledge through Findings) |
+| **Focused** | Touches 1-2 files, modifies internal logic only, no interface changes, no downstream impact beyond the file | Prior Knowledge, Knowledge Loci, Verified Shapes, Hypothesis and Falsification |
+
+The Focused tier is NOT a lower standard — it still requires file:line citations, shape verification, and a falsifiable hypothesis. It drops the sections that genuinely have nothing to say: impact chain (nothing upstream/downstream), logic trace (the change is the logic), environmental readiness (no new dependencies).
+
+**Focused Fact Sheet format:**
+
+```
+## Investigation Fact Sheet (Focused)
+Task: <one-line description>
+Ticket: <reference>
+Investigated: <timestamp>
+Scope justification: <why Focused tier — must name: files touched (1-2),
+                      no interface changes, no downstream consumers beyond
+                      this file. If any of these don't hold, use Full.>
+
+### Prior Knowledge (Phase 0)
+- Ticket body read: YES/NO — <key findings>
+- Post-error revisions found: <citation or "none found">
+- Recent git history: <notable commits or "no recent changes">
+
+### Knowledge Loci
+- **<Entity>**: knowledge locus is <location>
+  - Will this task invalidate it: YES / NO
+
+### Verified Shapes
+- **<Entity name>** (<type>, <file:line>)
+  - Fields/signature: <verbatim from source>
+  - Verification status: VERIFIED | UNVERIFIED
+
+### Coherence
+<Do the prior knowledge, loci, and verified shapes agree with each other?>
+
+### Hypothesis and Falsification
+<testable claim and what would prove it wrong>
+```
+
+**Escalation rule:** If at any point during a Focused investigation you discover a downstream consumer, an interface change, or a cross-module dependency, escalate to Full. If the coherence check reveals contradictions between sections, that is also an escalation signal — contradictions in a Focused investigation often indicate the task has more surface area than the Focused tier assumed.
+
 ## Composition with existing skills
 
 - **survey-context** already verifies entity shapes against doc pages. Investigation extends this to: (a) entities without doc pages, (b) logic tracing beyond shape, (c) impact chain mapping, (d) environmental readiness. When survey-context exists for the project, investigation consults its entity docs as a starting point but does not trust them without live verification.
@@ -221,13 +307,13 @@ For each issue discovered during investigation:
 
 ## Hard rules
 
-1. **No implementation before investigation** for non-trivial entity-touching work. The Fact Sheet's existence is the floor.
+1. **No artifact CRUD before investigation.** Investigation is required before any artifact is created, modified, or deleted — not just implementation files. The Fact Sheet's existence is the floor.
 2. **File:line or it didn't happen.** Every claim about existing code must cite the source location. "The model has a `name` field" is not evidence. "`name: str` at `models.py:42`" is evidence.
 3. **Read, don't recall.** Do not write entity shapes from memory or from a previous conversation. Read the current source file. Every time.
 4. **Impact chain is mandatory.** Upstream and downstream must be traced for every task that modifies shared entities. "I don't think anything depends on this" is not acceptable without a grep to prove it.
 5. **Findings are not optional.** If investigation discovers issues, they are recorded. Suppressing findings to avoid scope creep is a self-review violation.
 6. **The ticket gets the chain.** Impact chain, hypothesis, and falsification are documented in the ticket — not just in the Fact Sheet. The ticket is the spine; the Fact Sheet is the evidence appendix.
-7. **Fact Sheets are attached to tickets, not just sessions.** When the investigation is complete, post the Fact Sheet (or a link to it) as a comment on the ticket. Session-scoped plan files are ephemeral — they disappear when the session ends. The ticket is the durable home. If the Fact Sheet is too long for a comment, commit it to the repo (e.g., `docs/investigations/<module>-<ticket>.md`) and link from the ticket. The next agent who touches this code must be able to find the investigation without re-deriving it.
+7. **If the work has a ticket, the Fact Sheet goes on the ticket. This is not optional.** Post the Fact Sheet (or a link to it) as a comment on the ticket when the investigation is complete. Session-scoped plan files are working drafts — they disappear when the session ends. If the Fact Sheet is too long for a comment, commit it to the repo (e.g., `docs/investigations/<module>-<ticket>.md`) and link from the ticket. A Fact Sheet that only exists in a session plans folder is a Fact Sheet that doesn't exist.
 8. **Phase 0 is not optional.** Reading existing knowledge before investigating is as mandatory as reading code before writing code. An investigation that re-derives facts already documented in a prior Fact Sheet or ticket is wasted work and a signal that the agent skipped Phase 0.
 
 ## What investigation is NOT
