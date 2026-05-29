@@ -144,7 +144,13 @@ Present the design to the user. Wait for explicit approval before writing any co
 
 If the user suggests changes, revise the design and present again.
 
-### Step 7: Downstream Routing (hard gate)
+### Step 7: Post to ticket (hard gate)
+
+If this work has a ticket, post the design note to the ticket NOW — before proceeding to investigation or any downstream gate. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy. Do not proceed to Step 8 until the design note is on the ticket.
+
+If no ticket exists (exempt per pre-action check 5), skip this step.
+
+### Step 8: Downstream Routing (hard gate)
 
 After user approval of the design, before implementation begins:
 

@@ -487,6 +487,12 @@ An empty Quantified claims section is acceptable only when the PR body
 and commit messages contain no specific integer counts. The hook
 validates section presence; content completeness is operator-auditable.
 
+## Post to ticket (hard gate)
+
+When the self-review artifact is complete — before pushing or creating a PR — post it to the ticket. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy.
+
+Do not push until the self-review is on the ticket. This is a gate between review and push, not a footnote at the end of the file.
+
 ## Cross-environment enforcement
 
 The hooks in `hooks/git/self-review.sh` and `hooks/settings-snippet.json` enforce the pipeline mechanically in Claude Code sessions. Not all execution environments support PreToolUse hooks — Craft Agent sessions, spawned subagents, and CI/CD pipelines do not wire them.

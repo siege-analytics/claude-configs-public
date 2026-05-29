@@ -298,6 +298,12 @@ Scope justification: <why Focused tier — must name: files touched (1-2),
 
 **Escalation rule:** If at any point during a Focused investigation you discover a downstream consumer, an interface change, or a cross-module dependency, escalate to Full. If the coherence check reveals contradictions between sections, that is also an escalation signal — contradictions in a Focused investigation often indicate the task has more surface area than the Focused tier assumed.
 
+## Post to ticket (hard gate)
+
+When the Fact Sheet is complete — before proceeding to pre-mortem, implementation, or any downstream gate — post it to the ticket. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy.
+
+Do not proceed past investigation until the Fact Sheet is on the ticket. This is not a suggestion at the end of a list — it is a gate between investigation and the next pipeline step. An investigation that stays in the session is an investigation that doesn't exist.
+
 ## Composition with existing skills
 
 - **survey-context** already verifies entity shapes against doc pages. Investigation extends this to: (a) entities without doc pages, (b) logic tracing beyond shape, (c) impact chain mapping, (d) environmental readiness. When survey-context exists for the project, investigation consults its entity docs as a starting point but does not trust them without live verification.

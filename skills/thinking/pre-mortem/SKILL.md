@@ -154,6 +154,12 @@ The original Tiger/Paper Tiger/Elephant framework is designed for team brainstor
 - **Confirmation bias is the default.** The agent wants to confirm its approach works. The pre-mortem's job is to find evidence it won't.
 - **Time pressure tempts shortcuts.** A 5-minute pre-mortem that catches a Launch-Blocking Tiger saves hours of debugging. A skipped pre-mortem that misses a Tiger costs the user's trust.
 
+## Post to ticket (hard gate)
+
+When the pre-mortem artifact is complete — before proceeding to implementation — post it to the ticket. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy.
+
+Do not proceed to implementation until the pre-mortem is on the ticket. This is a gate, not a footnote.
+
 ## Composition with other skills
 
 - **investigate** produces the evidence base. Pre-mortem consumes it. A pre-mortem without a Fact Sheet is speculation.
