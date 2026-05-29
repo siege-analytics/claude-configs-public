@@ -182,6 +182,17 @@ If hits exist: every hit must have a disposition. "Fixed in this PR" means the f
 - **post-error-revision** handles the immediate correction (ticket Assumptions + knowledge loci). Post-mortem handles the systemic response (why was the wrong assumption possible, what gate failed). Both are required when a shipped failure contradicts a documented Assumption.
 - **Knowledge loci** identified in the Fact Sheet must be checked during the post-mortem. If a locus (docstring, CLAUDE.md section, notebook) still describes the falsified behavior, updating it is an action item.
 
+## The recursive case: pipeline failures
+
+When a post-mortem's root cause is a skill, hook, or rule deficiency, the action items must fix the pipeline artifact — not just the code. This is the most important class of post-mortem because it compounds: a broken skill silently degrades every future task that invokes it.
+
+Pipeline post-mortems have additional requirements:
+- The **Skill Pipeline Trace-Back** must include the skill/hook/rule that failed as both a gate that missed AND a contributing factor.
+- Action items that modify skills, hooks, or rules are themselves subject to the full pipeline (think → investigate → pre-mortem → implement → self-review). The recursive case — the pipeline fixing itself — is the highest-stakes change.
+- The **Codebase sweep** must grep for the same class of deficiency across all skills/hooks/rules, not just the one where the failure surfaced.
+
+The post-mortem for the SU#632-636 batch is the worked example: the root cause was "the agent assumed data shapes instead of reading them." The action item was not "be more careful" — it was "create the investigate skill with mandatory data-shape verification." That action item was itself a pipeline edit that required the full pipeline.
+
 ## Hard rules
 
 1. **Blameless means systemic.** "I should have checked" is not a finding. "The investigation skill doesn't require character-set verification for string normalization" is a finding.
