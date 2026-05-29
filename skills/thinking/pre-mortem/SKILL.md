@@ -82,10 +82,11 @@ For each failure scenario identified:
 
 1. **Name it** — one sentence describing the failure
 2. **Ground it** — cite the Fact Sheet finding or entity that makes this plausible (file:line required for Tigers)
-3. **Classify it** — Tiger, Paper Tiger, or Elephant
-4. **For Tigers:** assign urgency tier and propose mitigation
-5. **For Paper Tigers:** cite the existing mitigation (file:line required)
-6. **For Elephants:** state why it's being deferred and what the deferral costs
+3. **Coherence check** — does the scenario logically follow from the cited evidence? A Tiger that cites "field X at file:line" but whose trigger scenario assumes a different field, type, or behavior is internally incoherent — the scenario is not grounded in the evidence it claims. Resolve the contradiction: either the scenario is wrong (reclassify or discard) or the citation is wrong (find the real evidence). Do not classify an incoherent scenario.
+4. **Classify it** — Tiger, Paper Tiger, or Elephant
+5. **For Tigers:** assign urgency tier and propose mitigation
+6. **For Paper Tigers:** cite the existing mitigation (file:line required)
+7. **For Elephants:** state why it's being deferred and what the deferral costs
 
 ### Step 4: Launch-Blocking gate
 
@@ -110,8 +111,8 @@ The ticket receives:
 ## Pre-Mortem
 Task: <one-line description>
 Ticket: <reference>
-Fact Sheet: <path to investigation artifact>
-Design note: <path to think artifact>
+Fact Sheet: <ticket-comment-link | committed-file-path | plans/investigate-*.md>
+Design note: <ticket-comment-link | committed-file-path | plans/think-*.md>
 
 ### Tigers
 
@@ -168,3 +169,4 @@ The original Tiger/Paper Tiger/Elephant framework is designed for team brainstor
 4. **Elephants are named, not hidden.** The agent's natural tendency is to scope-exclude uncomfortable truths. Deferral is acceptable; invisibility is not.
 5. **Pre-mortem runs after investigation.** Not before, not in parallel, not "I'll investigate as I go." The evidence base must exist before the adversarial pass begins.
 6. **The ticket gets the Tigers.** Tigers and Elephants are documented in the ticket. The pre-mortem artifact is the detailed record; the ticket is the durable summary.
+7. **If the work has a ticket, the pre-mortem goes on the ticket. This is not optional.** Post the pre-mortem artifact (or a structured summary with Tigers, Paper Tigers, and Elephants) as a comment on the ticket before implementation begins. The session plans folder is a working draft, not the canonical home. If the artifact is too long for a comment, commit it to the repo and link from the ticket. A pre-mortem that only exists in a session plans folder is a pre-mortem that doesn't exist.

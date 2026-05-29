@@ -86,12 +86,13 @@ For each contributing factor, trace backward:
 | Gate | Should have caught? | Did it run? | Why it missed (or was skipped) |
 |---|---|---|---|
 | think | Would Step 1 (Context) have surfaced this? | Yes/No/Skipped | <reason> |
-| investigate | Would data shape verification have caught this? | Yes/No/Skipped | <reason> |
-| pre-mortem | Would this have been classified as a Tiger? | Yes/No/Skipped | <reason> |
-| self-review | Did the Junior or Lead check this? | Yes/No | <reason> |
+| investigate | Would data shape verification have caught this? Were knowledge loci identified? Did the Phase 5 coherence check run — would it have caught a contradiction between findings? | Yes/No/Skipped | <reason> |
+| pre-mortem | Would this have been classified as a Tiger? Did the Step 3 coherence check catch incoherent scenarios? | Yes/No/Skipped | <reason> |
+| self-review | Did the Lead's Phase A (internal coherence) catch contradictions between artifacts? Did Phase B (external verification) check the domain standards? Did Lead question 4 (knowledge loci updates) fire? | Yes/No | <reason> |
+| post-error-revision | Were knowledge loci updated with the correction? | Yes/No/N/A | <reason> |
 | survey-context | Would entity doc consultation have helped? | Yes/No/N/A | <reason> |
 
-The trace-back identifies the earliest point where the failure could have been caught. That's where the systemic fix belongs.
+The trace-back identifies the earliest point where the failure could have been caught. That's where the systemic fix belongs. The trace-back also identifies whether the correction was routed to the designated knowledge loci — if it wasn't, a future agent will repeat the same false assumption.
 
 ### Phase 4: Action items
 
@@ -154,6 +155,16 @@ For each action:
   - Acceptance criteria: <testable condition>
   - Closes the class: <yes/no — if no, what's the residual risk?>
 
+### Codebase sweep
+
+Pattern grep'd: `<exact bad string or regex>`
+Scope: `<directories or repo root>`
+Hits found:
+  - <file>:<line> — <disposition: fixed in this PR / flagged separately as #NNN / annotated as stale / false positive>
+
+If zero hits: state the grep command and "0 hits confirmed."
+If hits exist: every hit must have a disposition. "Fixed in this PR" means the fix is in the same changeset. "Flagged separately" means a ticket number. No hit may be left undispositioned.
+
 ### What Went Well
 <What worked correctly or limited the blast radius>
 
@@ -168,6 +179,19 @@ For each action:
 - **think** is evaluated: did the approach selection consider this failure mode?
 - **self-review** is evaluated: did the Junior or Lead catch this?
 - **Skills themselves are the primary action target.** If a post-mortem's action items only fix code and add tests, it missed the systemic layer.
+- **post-error-revision** handles the immediate correction (ticket Assumptions + knowledge loci). Post-mortem handles the systemic response (why was the wrong assumption possible, what gate failed). Both are required when a shipped failure contradicts a documented Assumption.
+- **Knowledge loci** identified in the Fact Sheet must be checked during the post-mortem. If a locus (docstring, CLAUDE.md section, notebook) still describes the falsified behavior, updating it is an action item.
+
+## The recursive case: pipeline failures
+
+When a post-mortem's root cause is a skill, hook, or rule deficiency, the action items must fix the pipeline artifact — not just the code. This is the most important class of post-mortem because it compounds: a broken skill silently degrades every future task that invokes it.
+
+Pipeline post-mortems have additional requirements:
+- The **Skill Pipeline Trace-Back** must include the skill/hook/rule that failed as both a gate that missed AND a contributing factor.
+- Action items that modify skills, hooks, or rules are themselves subject to the full pipeline (think → investigate → pre-mortem → implement → self-review). The recursive case — the pipeline fixing itself — is the highest-stakes change.
+- The **Codebase sweep** must grep for the same class of deficiency across all skills/hooks/rules, not just the one where the failure surfaced.
+
+The post-mortem for the SU#632-636 batch is the worked example: the root cause was "the agent assumed data shapes instead of reading them." The action item was not "be more careful" — it was "create the investigate skill with mandatory data-shape verification." That action item was itself a pipeline edit that required the full pipeline.
 
 ## Hard rules
 
@@ -175,5 +199,7 @@ For each action:
 2. **Action items are testable.** Every action item has acceptance criteria. "Improve review quality" is not testable.
 3. **The Allspaw test applies.** Would the operator find this fair, accurate, and useful?
 4. **Post-mortems update skills, not just code.** The code fix is necessary but not sufficient.
-5. **Post-mortems are documented in the ticket.** The ticket gets a link to the post-mortem artifact.
-6. **"What went well" is required.** Prevents the post-mortem from being purely punitive.
+5. **If the work has a ticket, the post-mortem goes on the ticket. This is not optional.** Post the post-mortem artifact (or a structured summary) as a comment on the ticket. If the artifact is too long for a comment, commit it to the repo and link from the ticket. A post-mortem that only exists in a session plans folder is a post-mortem that doesn't exist.
+6. **Action items update knowledge loci, not just code.** If the Fact Sheet identified designated knowledge loci for the entities involved in the failure, and the post-mortem finds those loci describe the falsified behavior, updating them is an action item. The code fix alone is insufficient if the docstring, CLAUDE.md section, or notebook still describes the old (wrong) behavior.
+7. **"What went well" is required.** Prevents the post-mortem from being purely punitive.
+8. **Codebase sweep is required.** The post-mortem artifact is rejected if the `### Codebase sweep` section is missing or empty. The sweep grep must cover the entire scope where the bad pattern could recur, not just the file where the failure was discovered. A post-mortem that fixes one instance without grepping for siblings is incomplete — the next instance will produce the same post-mortem.

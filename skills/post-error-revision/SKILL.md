@@ -98,6 +98,20 @@ Example:
   config and the method. (revised 2026-05-22)
 ```
 
+### 4.5. Update the designated knowledge locus
+
+The ticket's Assumptions block (Step 4) is one place the correction lives. But knowledge about this entity may also live in other locations — a module docstring, a CLAUDE.md section, a doc page, a wiki article, a notebook. These are the **designated knowledge loci** for the entity.
+
+If an Investigation Fact Sheet exists for the code area this error touches, its "Knowledge Loci" section identifies where canonical knowledge lives. Route the correction to each locus that described the falsified behavior:
+
+- **Module docstring** describes the old behavior → update the docstring with the revised model.
+- **CLAUDE.md / README** describes the old convention → update the section.
+- **Notebook** demonstrates the old behavior → update or file a ticket for the notebook.
+- **Doc page / wiki** describes the old interface → update the page.
+- **Prior Fact Sheet** records the falsified assumption → add a pointer to this post-error revision in the Fact Sheet's Prior Knowledge section.
+
+If no Fact Sheet exists (the original work skipped investigation), note which loci you identified and updated in the `Implication:` field of the Post-error revision block. The next investigation for this code area will pick these up via Phase 0's post-error-revision and knowledge-locus reads.
+
 ### 5. Draft the fix or revert PR
 
 Reference the Post-error revision in the commit body:
@@ -197,6 +211,10 @@ v2 (deferred): CI scanner walks the `## Post-error revision` blocks across the r
 - **Free-text `Observed:` field.** "It broke" / "there was an error" — same failure mode as free-text Trivial-change Evidence. The `Observed:` field carries the writing-rules:4 evidence-token requirement: paste a log line, a test output, a stat, a URL.
 - **Treating in-loop test failures as triggers.** The agent's own write -> fail -> fix iteration cycle is not the trigger. Triggers fire only when the falsified belief was durably written down.
 - **Skipping the ticket-creation step when the chain breaks.** If the failed work used a Trivial-change escape (no originating ticket), the response is to file the ticket retroactively, not to skip the revision because there's "nowhere to put it."
+
+## Artifact destination
+
+**If the work has a ticket, the Post-error revision block goes on the ticket. This is not optional.** The block is appended to the originating ticket (Step 3) — this is inherent to the procedure, not a separate step. But if investigation also produced a Fact Sheet with a Knowledge Loci section, the corrections from Step 4.5 go to each designated knowledge locus as well. A Post-error revision that only updates the ticket's Assumptions block while leaving a docstring or CLAUDE.md section describing the falsified behavior is an incomplete revision.
 
 ## Cross-references
 

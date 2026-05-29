@@ -46,6 +46,8 @@ Goal source: <ticket #N | design-note path | quoted user-request paragraph>
 Goal source verification: <paste the PASS line from `bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>`>
 Plan reference: <path-or-link to the design note this diff implements>
 Pre-author-inventory: <ticket-link#pre-author-inventory | plans/path.md#pre-author-inventory | NONE>
+Investigate-artifact: <ticket-comment-link | committed-file-path | plans/investigate-*.md | TRIVIAL (with declaration below)>
+Pre-mortem-artifact: <ticket-comment-link | committed-file-path | plans/pre-mortem-*.md | TRIVIAL (with declaration below)>
 
 ## Peer review (the Junior's checklist — mechanics, correctness, craft floor)
 For each applicable shelf: what was checked, what was found.
@@ -114,6 +116,56 @@ the hypothesis was falsifiable, whether the seven steps were followed — remain
 operator-auditable. The field's purpose is to make the composability explicit
 and to block the pattern where a structurally-complete self-review was written
 without any pre-investigation at all.
+
+## Investigate-artifact and Pre-mortem-artifact fields
+
+The `Investigate-artifact:` and `Pre-mortem-artifact:` fields in the
+Assumptions section are **required composability links** between this
+skill and the `investigate` → `pre-mortem` → implementation pipeline
+defined in `think` Step 7.
+
+For any non-trivial work, the agent must produce an investigate artifact
+and a pre-mortem artifact before any artifact CRUD. Investigation is
+non-discretionary (see `investigate/SKILL.md`). The artifacts live on the
+ticket (preferred), in a committed repo file, or as a last resort in the
+session plans folder. The self-review artifact must point at those records.
+
+**When TRIVIAL is acceptable:** if the work is a single-line fix, typo,
+doc-only edit, or pure research that does not touch existing entities or
+modify behavior, the fields may be `TRIVIAL` — but only when a
+`## Trivial-investigation declaration` block is also present in the
+artifact. The block follows the same format as Trivial-change
+declaration (Category / Cannot produce error / Evidence / Falsification).
+
+```
+## Trivial-investigation declaration
+
+Category: <single-line-fix | doc-only | config-only | test-only>
+Cannot produce error: <one sentence stating why investigation would not
+                       have surfaced additional context>
+Evidence: <command output proving no entity-touching changes — e.g.
+          `git diff --stat` showing only test files changed>
+Falsification: <observable that would prove skipping investigation was
+                wrong — e.g. "a downstream consumer breaks because of
+                an assumption I didn't verify">
+```
+
+**The enforcement mechanism:** the hook checks structural presence of
+both fields. A missing or empty field blocks the push. `TRIVIAL` without
+the declaration block also blocks. Content quality — whether the
+investigate artifact actually traces the impact chain, whether the
+pre-mortem actually classifies risks — remains operator-auditable. The
+fields exist to make the omission structurally visible and to block the
+pattern where agents skip `investigate` and `pre-mortem` and go straight
+from `think` to implementation.
+
+**Why this works where the think Step 7 checklist didn't:** Think Step 7
+is a mental checklist inside the design workflow. The agent checks the
+boxes and moves on. Self-review is a pre-push gate with hook
+enforcement. By requiring the artifact paths in self-review, the
+enforcement happens at the push boundary — the agent cannot push without
+either producing the artifacts or explicitly declaring the work trivial
+with falsifiable evidence.
 
 ## Trivial-change declaration (when no ticket cited)
 
@@ -285,7 +337,43 @@ The shelves are the Junior's checklist. The Lead review is not a
 different checklist -- it is an adversarial posture applied to the
 same findings and to the Junior's claims about them.
 
-The Lead asks, for each domain the work touches:
+The Lead's review proceeds in two phases: **internal coherence first,
+then external verification.** Internal coherence asks whether the
+Junior's own claims agree with each other — this is checkable without
+reading any code. External verification asks whether the coherent
+claims match reality. There is no point checking correspondence with
+the world if the claims contradict themselves.
+
+### Phase A: Internal coherence
+
+The Lead checks whether the pipeline's artifacts form a consistent
+logical structure:
+
+- Does the **design note's approach** follow from the **Fact Sheet's
+  findings**? If the Fact Sheet says "downstream expects shape X" and
+  the design note proposes producing shape Y, that is an internal
+  contradiction detectable without reading any code.
+- Does the **implementation** (the diff) match the **design note's
+  stated approach**? If the design note says "add a fallback for None"
+  and the diff adds a type check instead, that is a coherence gap —
+  it might be fine, but the Lead must name it.
+- Does the **pre-mortem's "no Launch-Blocking Tigers"** actually hold
+  given the Fact Sheet's findings? Or did the pre-mortem dismiss a
+  scenario that the Fact Sheet's own evidence supports?
+- Do the **self-review's peer findings** agree with the **Fact Sheet's
+  verified shapes**? If the peer review says "all callers updated" but
+  the Fact Sheet's impact chain names a caller not in the diff, that
+  is an internal contradiction.
+
+If Phase A finds contradictions, the Lead must resolve them before
+proceeding. A contradiction means either the artifact is wrong or the
+implementation is wrong — either way, the review cannot pass.
+
+### Phase B: External verification
+
+With internal coherence established, the Lead asks whether the
+coherent claims match the actual state of the world. For each domain
+the work touches:
 
 1. **Did the Junior actually fix the problem or just move it?**
    The version-fallback pattern: replacing one hardcoded string with
@@ -304,6 +392,14 @@ The Lead asks, for each domain the work touches:
    "accepted risk" in the peer section gets re-examined here. The
    Lead either promotes it to a finding or explicitly accepts it
    with a reason that is not "the Junior said it was fine."
+
+4. **Did the Junior update the designated knowledge loci?**
+   If the Fact Sheet's Knowledge Loci section identified loci that
+   this task would invalidate (docstrings, CLAUDE.md sections,
+   notebooks, doc pages), did the diff actually update them? A diff
+   that changes behavior without updating the knowledge loci that
+   describe it ships a lie — think Step 5 makes this a required
+   deliverable, and the Lead must verify it was delivered.
 
 Lead section format: domain-tagged. "In <domain>: <standard> holds
 because <evidence>" or "In <domain>: <standard> not shelved, applied
@@ -391,6 +487,22 @@ An empty Quantified claims section is acceptable only when the PR body
 and commit messages contain no specific integer counts. The hook
 validates section presence; content completeness is operator-auditable.
 
+## Cross-environment enforcement
+
+The hooks in `hooks/git/self-review.sh` and `hooks/settings-snippet.json` enforce the pipeline mechanically in Claude Code sessions. Not all execution environments support PreToolUse hooks — Craft Agent sessions, spawned subagents, and CI/CD pipelines do not wire them.
+
+~~**The self-review artifact is the environment-independent backstop.**~~ (superseded by Post-error revision 2026-05-28)
+
+**In non-Claude-Code environments, enforcement is currently zero — not degraded, zero.** Craft Agent sessions do not load PreToolUse hooks, do not fire the self-review hook at push time (Craft Agent's git push does not route through Claude Code's Bash hook surface), and do not enforce skill prose mechanically. The claim that enforcement "degrades from blocked-before-write to blocked-before-push" was falsified in the same session that wrote it: 8 commits modifying 6 skill/hook files were pushed without any pipeline artifacts. (See Post-error revision on #245, dated 2026-05-28.)
+
+**The only enforcement that works across all environments** is a native git pre-push hook installed in each repo (Layer 3 on #245) or GitHub branch protection rules (Layer 4). Neither is shipped yet. Until one of them ships:
+
+- Craft Agent sessions have no mechanical enforcement.
+- Spawned subagents have no mechanical enforcement.
+- Any push source other than a Claude Code terminal session with hooks installed has no mechanical enforcement.
+
+Skill prose and the resolver are the only remaining defenses, and they failed 8 consecutive times in a single session. **Layer 3 (native git pre-push hook) is the priority fix.** It fires for all push sources regardless of execution environment, requires no configuration per session, and cannot be bypassed by the agent's execution runtime.
+
 ## Goal source is load-bearing
 
 If the goal field is sourced from the diff itself (PR title, commit
@@ -443,9 +555,15 @@ the claim must be grounded.
 - **v1.1**: If `Goal source:` value is itself a file path, its mtime
   must not be newer than the review artifact's mtime (catches goal-
   source-written-after-the-work post-hoc-justification pattern).
-- **v1.2 (this PR)**: `Pre-author-inventory:` field present and non-empty
+- **v1.2**: `Pre-author-inventory:` field present and non-empty
   in the Assumptions section. `NONE` accepted only when a
   `Trivial-against-state:` declaration is also present.
+- **v1.3 (claude-configs-public#239)**: `Investigate-artifact:` and
+  `Pre-mortem-artifact:` fields present and non-empty in the Assumptions
+  section. `TRIVIAL` accepted only when a
+  `## Trivial-investigation declaration` block is also present with all
+  four required fields (Category / Cannot produce error / Evidence /
+  Falsification). If the value is a file path, the file must exist.
 - **v2 (claude-configs-public#146)**: If the artifact file lives in a
   git repo, the artifact's first-added commit must be an ancestor of
   the work commit being pushed (`git log --diff-filter=A --follow` +
@@ -546,6 +664,14 @@ positives the agent can recover from by adjusting invocation shape:
 These are conservative-bias trade-offs. The hook prefers a recoverable
 false positive over a silent false negative; "split into separate calls"
 is the standard recovery pattern across the hook family.
+
+## Artifact destination
+
+**If the work has a ticket, the self-review goes on the ticket. This is not optional.**
+
+Post the self-review artifact as a comment on the ticket, or commit it to the repo and link from the ticket. The `Self-Review-Source:` trailer must point to the durable location (ticket comment URL or repo path), not a session plans folder. The local file is a working draft; the ticket is the canonical home.
+
+The self-review is evidence that the work was reviewed. Evidence that can't be found from the ticket is evidence that doesn't exist.
 
 ## Three-layer separation
 

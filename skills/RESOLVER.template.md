@@ -189,6 +189,8 @@ These skills fire automatically before non-trivial work, regardless of which rou
 | Branch correctness | [skill:develop-guard] | Before any branch creation or merge that touches `develop` / `main` |
 | Ticket destination exists | [skill:ticket-guard] | Before non-trivial work begins (once per session, memoized). Ensures strategic decisions have a durable, human-visible home. |
 | Strategic decisions surfaced | [skill:decision-to-ticket] | When making scope, architecture, sequencing, deferral, standing approval, or completion claim decisions. Fires in real time during work, not at session end. Includes a completion guard that prevents scope-reduction rationalization. |
+| Evidentiary fact-finding | [skill:investigate] | After think Step 7 approves, before implementation begins. Required for any work that touches existing entities, modifies data flow, or changes downstream behavior. Produces a Fact Sheet artifact with file:line citations. Self-review enforces artifact reference at push time (v1.3). |
+| Adversarial risk classification | [skill:pre-mortem] | After investigate completes, before implementation begins. Classifies failure scenarios as Tiger/Paper Tiger/Elephant. Launch-Blocking Tigers halt implementation. Self-review enforces artifact reference at push time (v1.3). |
 
 ## Disambiguation rules
 
