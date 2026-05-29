@@ -237,6 +237,7 @@ You MUST complete the full design workflow and receive user approval before writ
 3. **2-3 proposals, not 1.** If there's only one way to do it, you haven't thought hard enough. If there are more than 3, you're overthinking it.
 4. **State your assumptions.** Every unstated assumption is a future bug.
 5. **The user decides.** Present options with tradeoffs. Don't make the decision for them unless they ask you to.
+6. **Measure twice, cut once.** The Junior optimizes for speed of one task. The Lead optimizes for speed of the project. Every 2-second check the Junior skips costs the human operator hours of rework. The agent's seconds are cheap; the human's hours are not. This is not caution -- it is resource allocation.
 
 ## Artifact destination
 
