@@ -132,11 +132,11 @@ If the user suggests changes, revise the design and present again.
 
 After user approval of the design, before implementation begins:
 
-- [ ] **investigate:** Fact Sheet required? (YES for any entity-touching work)
+- [ ] **investigate:** Fact Sheet required? (Default: **YES**. NO requires a Trivial-investigation declaration with falsifiable evidence in the self-review artifact.)
 - [ ] **pre-mortem:** Risk classification required? (YES for non-trivial work)
 - [ ] **survey-context:** Entity doc consultation required? (YES if project has doc layer)
 
-Investigation runs first. Pre-mortem runs after investigation completes. Implementation begins only after all required downstream skills have produced their artifacts.
+Investigation is non-discretionary. It runs first. Pre-mortem runs after investigation completes. Implementation begins only after all required downstream skills have produced their artifacts and posted them to the designated knowledge locus (ticket, doc page, etc.).
 
 **This is a hard gate, not a checklist.** Checking "YES" and proceeding
 to code without producing the artifact is a self-review violation. The
@@ -145,10 +145,12 @@ to code without producing the artifact is a self-review violation. The
 time. If you answer YES here but have no artifact to cite in
 self-review, the push is blocked.
 
-**Escape hatch:** If the work is genuinely trivial enough to skip
-investigation (single-line fix, doc-only, config-only), answer NO and
-include a `## Trivial-investigation declaration` in the self-review
-artifact with falsifiable evidence for why investigation was unnecessary.
+**Escape hatch (the ONLY acceptable NO):** If the work is genuinely trivial
+enough to skip investigation (single-line fix, doc-only with no behavioral
+change, single-line literal change), answer NO and include a
+`## Trivial-investigation declaration` in the self-review artifact with
+falsifiable evidence for why investigation was unnecessary. "This is
+simple" is not falsifiable evidence.
 
 ### Investigation Dependencies
 

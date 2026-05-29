@@ -98,6 +98,20 @@ Example:
   config and the method. (revised 2026-05-22)
 ```
 
+### 4.5. Update the designated knowledge locus
+
+The ticket's Assumptions block (Step 4) is one place the correction lives. But knowledge about this entity may also live in other locations — a module docstring, a CLAUDE.md section, a doc page, a wiki article, a notebook. These are the **designated knowledge loci** for the entity.
+
+If an Investigation Fact Sheet exists for the code area this error touches, its "Knowledge Loci" section identifies where canonical knowledge lives. Route the correction to each locus that described the falsified behavior:
+
+- **Module docstring** describes the old behavior → update the docstring with the revised model.
+- **CLAUDE.md / README** describes the old convention → update the section.
+- **Notebook** demonstrates the old behavior → update or file a ticket for the notebook.
+- **Doc page / wiki** describes the old interface → update the page.
+- **Prior Fact Sheet** records the falsified assumption → add a pointer to this post-error revision in the Fact Sheet's Prior Knowledge section.
+
+If no Fact Sheet exists (the original work skipped investigation), note which loci you identified and updated in the `Implication:` field of the Post-error revision block. The next investigation for this code area will pick these up via Phase 0's post-error-revision and knowledge-locus reads.
+
 ### 5. Draft the fix or revert PR
 
 Reference the Post-error revision in the commit body:

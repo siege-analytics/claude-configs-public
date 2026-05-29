@@ -26,14 +26,11 @@ All five are the same class: **the agent assumed a data shape instead of reading
 
 ## When to investigate
 
-Required before implementation when any of these are true:
+Investigation is required before any artifact is created, modified, or deleted. This is non-discretionary — the default is YES. The only artifacts exempt from this gate are the investigation artifact itself and its supporting reads (Phase 0–5 outputs).
 
-- The task references existing entities (models, functions, tables, APIs, env vars).
-- The task changes data flow between components.
-- The task adds a new consumer of existing data.
-- The task modifies behavior that downstream code depends on.
+Think of investigation as flashing an ID to get into a bar. You do not get to create, modify, or delete anything — code, config, skills, hooks, docs, anything — until you have shown evidence of knowledge gathering.
 
-**Trivial-change escape:** Pure typo fixes, doc-only edits, and single-line literal changes do not require investigation. The escape must be declared in the self-review artifact per the existing trivial-change protocol.
+**Trivial-change escape (the ONLY exemptions):** Pure typo fixes, doc-only edits with no behavioral change, and single-line literal changes. Each requires a Trivial-investigation declaration in the self-review artifact with falsifiable evidence for why investigation was unnecessary. "This is simple" is not falsifiable evidence.
 
 ## Relationship to other skills
 
@@ -73,10 +70,14 @@ Before investigating code, read what already exists about the entities you're ab
 | **Existing documentation** | Module-level docstrings, CLAUDE.md sections, README, architecture docs, notebooks that demo the function | `Read` the file's module docstring; grep for the module name in docs/ and notebooks/ |
 | **Git blame / recent commits** | Recent changes to the files you'll touch, especially reverts or fix-ups | `git log --oneline -10 <file>` for each file in scope |
 | **Prior investigation artifacts** | Fact Sheets from earlier sessions that touched the same code | Check the ticket for linked Fact Sheets; grep PR bodies for "Investigation Fact Sheet" |
+| **Post-error revisions** | Revised models from prior errors in the same code area — what was wrong and what the corrected understanding is | Search tickets and linked tickets for `## Post-error revision` sections; check git log for commits with `Post-error-revision:` trailers touching the same files |
+| **Knowledge locus for each entity** | Where the canonical understanding of this entity lives — the place someone would go to learn how it works | For each entity touched: identify whether the locus is a ticket, doc page, CLAUDE.md section, module docstring, wiki article, notebook, or Fact Sheet. Record it — this is where corrections go when errors surface. |
 
 **Hard rule:** If a prior investigation exists for the same code entity and is less than 30 days old, start from its findings — don't re-derive from scratch. Cite it in your Fact Sheet's "Prior art" section. If it's stale, note what changed.
 
-**Documentation-at-risk rule:** If Phase 0 finds documentation (docstrings, README sections, notebooks, wiki pages) that describes behavior the planned work will change, record it in the Fact Sheet's "Documentation at risk" field with file:line. This feeds directly into think Step 5 (Documentation Plan) — a doc that describes the old behavior and isn't updated ships a lie.
+**Post-error revision rule:** If Phase 0 finds a post-error revision for code this task touches, the Fact Sheet's Prior Knowledge section MUST incorporate the revised model. An investigation that repeats a falsified assumption from a prior post-error revision is a Phase 0 failure — the learning was recorded and you ignored it.
+
+**Knowledge locus rule:** For each entity the task touches, identify where the canonical knowledge about that entity lives. Record each locus in the Fact Sheet's "Knowledge Loci" section. This serves two purposes: (1) if this task will invalidate what the locus says, updating the locus is a required deliverable (feeds think Step 5); (2) if a future error falsifies what this investigation found, the correction goes to the designated locus, not to a fixed artifact type.
 
 Record Phase 0 results at the top of the Fact Sheet under `### Prior Knowledge`.
 
@@ -182,6 +183,22 @@ Approach: <reference to think design note>
 - Recent git history for touched files: <notable commits, or "no recent changes">
 - Existing documentation: <module docstrings, docs/ pages, or "none">
 - Documentation at risk: <docs that describe behavior this task will change, with file:line — or "none">
+- Post-error revisions found: <ticket#, date, revised model — or "none found">
+
+### Knowledge Loci
+For each entity this task touches:
+- **<Entity>**: knowledge locus is <location> (ticket / doc page / docstring / CLAUDE.md / wiki / notebook / etc.)
+  - Current state: <what the locus says now>
+  - Will this task invalidate it: YES / NO
+  - If YES: update is a required deliverable (feeds think Step 5)
+
+### Revised Facts (from post-error revisions)
+For each post-error revision found in Phase 0:
+- **Revision source:** <ticket#, date>
+- **Falsified assumption:** <what was wrong>
+- **Revised model:** <what's actually true>
+- **Impact on this task:** <how this changes our approach>
+(If none found, record "No post-error revisions found for this code area.")
 
 ### Impact Chain
 <Phase 1 output — full upstream/task/downstream chain>
