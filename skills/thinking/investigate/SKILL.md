@@ -130,6 +130,15 @@ For every entity the task touches or references, read the actual definition and 
 | API response shapes | Curl/WebFetch a real endpoint or read the schema | Field names, types, nesting, optional vs required |
 | Import paths | `python -c "import X; print(X.__file__)"` or grep | Exact module path, verify symbol exists in `__all__` or module scope |
 | Env vars / config | Read config files, `.env.example`, deployment manifests | Variable names, expected types, default values |
+| Existing tests | Read the test file; check what's mocked vs. what's live | What's asserted, what's mocked, mock-layer validity |
+
+**Absence verification rule:** Before claiming an entity does not exist, run ≥2 distinct searches using different strategies (e.g., grep for the class name, grep for a unique method, search `__init__.py` exports, check the target branch with `git show origin/develop:path/to/file`). A single grep returning no results is not sufficient evidence of absence — the entity may exist under a different name, in a recently-merged file, or in a module you didn't search. Record each search attempt and its result. "Not found" requires evidence of a thorough search, not evidence of a single failed lookup.
+
+**Tests as verified shapes:** Existing tests for the entities this task touches are first-class investigation targets. For each relevant test file:
+- Read the test and record what it actually asserts (not what you assume it tests)
+- Verify the mock/fixture layer: does the test mock at the right boundary, or does it mock away the behavior the task is changing?
+- Record: test file:line, what it asserts, what it mocks, whether the mock is still valid after this task's changes
+A test that mocks the layer you're changing is a test that will pass regardless of whether your change is correct. Flag it in the Fact Sheet as a verification gap.
 
 **Hard rule:** Do not write a field name, function parameter, or import path from memory. Read it from the source file and record the file:line where you found it. If you cannot read it (e.g., external API with no local schema), record UNVERIFIED and flag it as a risk.
 
