@@ -168,3 +168,4 @@ The original Tiger/Paper Tiger/Elephant framework is designed for team brainstor
 4. **Elephants are named, not hidden.** The agent's natural tendency is to scope-exclude uncomfortable truths. Deferral is acceptable; invisibility is not.
 5. **Pre-mortem runs after investigation.** Not before, not in parallel, not "I'll investigate as I go." The evidence base must exist before the adversarial pass begins.
 6. **The ticket gets the Tigers.** Tigers and Elephants are documented in the ticket. The pre-mortem artifact is the detailed record; the ticket is the durable summary.
+7. **Artifact destination is the ticket.** Post the pre-mortem artifact (or a structured summary with Tigers, Paper Tigers, and Elephants) as a comment on the ticket before implementation begins. The session plans folder is a working copy, not the canonical home. If the artifact is too long for a comment, commit it to the repo and link from the ticket.

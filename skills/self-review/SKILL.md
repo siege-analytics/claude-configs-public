@@ -605,6 +605,16 @@ These are conservative-bias trade-offs. The hook prefers a recoverable
 false positive over a silent false negative; "split into separate calls"
 is the standard recovery pattern across the hook family.
 
+## Artifact destination
+
+The self-review artifact's canonical location depends on its `Self-Review-Source:` trailer:
+
+1. **Preferred:** commit the artifact to the repo (e.g., `plans/self-review-<ticket>.md` or alongside the PR). The `Self-Review-Source:` trailer points to the repo path. This survives branch deletion and session expiry.
+2. **Acceptable:** post the artifact (or a structured summary) as a comment on the ticket. The `Self-Review-Source:` trailer points to the comment URL.
+3. **Last resort:** session plans folder. If the artifact only lives in a session plans folder, it disappears when the session ends. This is acceptable during the review pass itself but the artifact must be committed or posted before push.
+
+The self-review is evidence that the work was reviewed. Evidence that can't be found from the ticket is evidence that doesn't exist.
+
 ## Three-layer separation
 
 - **Hook says WHAT.** The pre-push hook enforces presence of the

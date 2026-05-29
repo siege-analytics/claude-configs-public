@@ -186,6 +186,17 @@ You MUST complete the full design workflow and receive user approval before writ
 4. **State your assumptions.** Every unstated assumption is a future bug.
 5. **The user decides.** Present options with tradeoffs. Don't make the decision for them unless they ask you to.
 
+## Artifact destination
+
+The design note is a working document during the conversation, but the ticket is its durable home.
+
+1. **Write the design note locally** (session plans folder or repo `plans/` directory) as a working copy.
+2. **Post the design note to the ticket** as a comment before proceeding to investigation or implementation. The ticket comment is the canonical copy; the local file is the draft.
+3. **If the design note is too long for a comment** (rare), commit it to the repo (e.g., `docs/design-notes/<ticket>.md`) and link from the ticket.
+4. **If there is no ticket** (exploratory work), the local file is sufficient. Mark it `propagation-deferred: no ticket, exploratory` in frontmatter.
+
+The next agent who touches this code must be able to find the design note from the ticket without re-deriving it. If the design note only exists in a session plans folder, it disappears when the session ends.
+
 ## Attribution Policy
 
 NEVER include AI or agent attribution in designs, documentation, or any output.
