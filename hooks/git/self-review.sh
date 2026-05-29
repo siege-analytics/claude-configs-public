@@ -289,6 +289,77 @@ HOOKEOF
         fi
     fi
 
+    # v1.3: Investigate-artifact and Pre-mortem-artifact fields must be
+    # present and non-empty. TRIVIAL is accepted only when a
+    # ## Trivial-investigation declaration block is also present with
+    # all four required fields (Category / Cannot produce error / Evidence /
+    # Falsification). If the value looks like a file path, the file must exist.
+    for FIELD_NAME in "Investigate-artifact" "Pre-mortem-artifact"; do
+        FIELD_VALUE=$(grep -E "^${FIELD_NAME}:[[:space:]]+\\S" "$SOURCE_PATH" | head -1 | sed -E "s/^${FIELD_NAME}:[[:space:]]+'*//" || true)
+        if [[ -z "$FIELD_VALUE" ]]; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Self-Review-Source: $SOURCE_PATH is missing '${FIELD_NAME}:'
+in the Assumptions section.
+
+Investigation is non-discretionary. Provide one of:
+  ${FIELD_NAME}: <ticket-comment-link>
+  ${FIELD_NAME}: <committed-file-path>
+  ${FIELD_NAME}: plans/investigate-*.md
+  ${FIELD_NAME}: TRIVIAL (with ## Trivial-investigation declaration below)
+
+See skills/self-review/SKILL.md and skills/thinking/investigate/SKILL.md.
+HOOKEOF
+            exit 2
+        fi
+
+        if [[ "$FIELD_VALUE" == "TRIVIAL" ]]; then
+            if ! grep -qF '## Trivial-investigation declaration' "$SOURCE_PATH"; then
+                cat >&2 <<HOOKEOF
+BLOCKED: ${FIELD_NAME}: is TRIVIAL in $SOURCE_PATH but no
+## Trivial-investigation declaration block is present.
+
+TRIVIAL requires a declaration with all four fields:
+  Category / Cannot produce error / Evidence / Falsification
+
+"This is simple" is not falsifiable evidence. See SKILL.md.
+HOOKEOF
+                exit 2
+            fi
+            # Validate declaration has the four required fields.
+            DECL_BLOCK=$(awk '/^## Trivial-investigation declaration/{flag=1; next} /^## /{flag=0} flag' "$SOURCE_PATH")
+            for DECL_FIELD in "Category:" "Cannot produce error:" "Evidence:" "Falsification:"; do
+                if ! echo "$DECL_BLOCK" | grep -qF "$DECL_FIELD"; then
+                    cat >&2 <<HOOKEOF
+BLOCKED: ## Trivial-investigation declaration in $SOURCE_PATH is missing
+required field: $DECL_FIELD
+
+All four fields are required: Category / Cannot produce error / Evidence /
+Falsification. See skills/self-review/SKILL.md.
+HOOKEOF
+                    exit 2
+                fi
+            done
+        elif [[ "$FIELD_VALUE" =~ \.(md|txt)$ ]] || [[ "$FIELD_VALUE" == /* ]] || [[ "$FIELD_VALUE" == ./* ]]; then
+            # Value looks like a file path — verify the file exists.
+            case "$FIELD_VALUE" in
+                /*) FIELD_PATH="$FIELD_VALUE" ;;
+                *)  FIELD_PATH="$EFFECTIVE_CWD/$FIELD_VALUE" ;;
+            esac
+            if [[ ! -f "$FIELD_PATH" ]]; then
+                cat >&2 <<HOOKEOF
+BLOCKED: ${FIELD_NAME}: points at $FIELD_VALUE which does not exist
+at $FIELD_PATH.
+
+Either fix the path, produce the artifact, or post it to the ticket
+and use the ticket comment link instead.
+HOOKEOF
+                exit 2
+            fi
+        fi
+        # Ticket-comment-links (URLs, #NNN references) are accepted but
+        # not yet validated against the ticket API — v2 follow-up.
+    done
+
     # Peer review section must cite at least one shelf.
     SHELF_RE='writing-(code|tests|claims|prose|releases):'
     # Extract Peer review section content (between '## Peer review' header
