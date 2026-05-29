@@ -8,6 +8,11 @@
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/resolver/inject-resolver.sh",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/standing-order-guard.sh",
+            "timeout": 5
           }
         ]
       }
