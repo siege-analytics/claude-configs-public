@@ -11,7 +11,7 @@ This skill governs ALL interactions with shared infrastructure — servers, clus
 
 ## Core Principle
 
-**Measure twice, cut once.** Research before executing. One thing at a time. Use established tools. Rules are constraints, not guidelines.
+**Measure twice, cut once.** Research before executing. One thing at a time. Use established tools. Rules are constraints, not guidelines. The Junior optimizes for speed of one task; the Lead optimizes for speed of the project. In infrastructure, the cost asymmetry is extreme: a 2-second verification prevents hours of incident response. The agent's seconds are cheap; the human's hours are not.
 
 ---
 

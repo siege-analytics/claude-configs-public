@@ -263,7 +263,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
 8. **No-attribution**: never add Claude/AI attribution to commits, PRs, or public-facing content.
 
-9. **Measure twice, cut once**: for destructive or irreversible actions (drops, deletes, force-push, hard-reset), confirm scope first.
+9. **Measure twice, cut once**: for destructive or irreversible actions (drops, deletes, force-push, hard-reset), confirm scope first. More broadly: the Junior optimizes for speed of one task; the Lead optimizes for speed of the project. Every 2-second check the agent skips costs the human operator hours of rework. The agent's seconds are cheap; the human's hours are not. This is not caution — it is resource allocation.
 
 10. **Batch-execution is not one action**: when executing multiple tickets, issues, or tasks in sequence (epic breakdown, audit remediation, batch triage fixes), each ticket is a separate non-trivial action. Each gets its own `think` gate (design note), its own branch, its own self-review artifact. "I'm doing 8 tickets" is 8 actions, not 1 action done 8 times. No amortization of investigation, design, or review across tickets. The agent will take any excuse to skip per-ticket discipline during batch work — speed, momentum, "they're all similar," "I already understand the pattern." These are the Junior's rationalizations. The gates exist precisely for the moments when skipping them feels efficient.
 

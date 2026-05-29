@@ -177,7 +177,7 @@ The original Tiger/Paper Tiger/Elephant framework is designed for team brainstor
 - **There is no room full of perspectives.** Adopt adversarial stance deliberately. The prompt: "If I were reviewing someone else's plan and looking for reasons it would fail, what would I find?"
 - **The agent's blind spots are systematic.** The SU#632-636 audit shows the agent consistently assumes data shapes match its mental model. Specifically stress-test data shape assumptions against the Fact Sheet.
 - **Confirmation bias is the default.** The agent wants to confirm its approach works. The pre-mortem's job is to find evidence it won't.
-- **Time pressure tempts shortcuts.** A 5-minute pre-mortem that catches a Launch-Blocking Tiger saves hours of debugging. A skipped pre-mortem that misses a Tiger costs the user's trust.
+- **Time pressure tempts shortcuts.** The Junior optimizes for speed of one task — it wants to skip the pre-mortem because "I already know what to build." The Lead optimizes for speed of the project — it knows a 5-minute pre-mortem that catches a Launch-Blocking Tiger saves the human hours of debugging rework. The agent's seconds are cheap; the human's hours are not.
 
 ## Post to ticket and continue (hard gate)
 
