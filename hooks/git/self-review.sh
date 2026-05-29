@@ -28,8 +28,9 @@
 #
 # Surface limitation: this hook fires only in Claude Code sessions via
 # PreToolUse in settings.json. Craft Agent sessions use a separate tool-
-# call surface and this hook does not fire for them. Enforcement in Craft
-# sessions is operator-auditable only. See SKILL.md Known limitations.
+# call surface and this hook does not fire for them. Partial mitigation:
+# pre-action-guard.sh (UserPromptSubmit) injects branch/ticket warnings
+# in Craft Agent sessions. See #261.
 
 set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
@@ -403,6 +404,25 @@ HOOKEOF
             # WARNING only — do not exit 2
         fi
     fi
+fi
+
+# v1.5: Design-Note-Source trailer check.
+# Non-trivial commits should reference the design note that authorized
+# the work. WARNING only (not a block) — the trailer is new (#262).
+# Promotes to a block in v2 after adoption stabilizes.
+DESIGN_NOTE_LINE=$(echo "$COMMIT_MSG" | grep -cE '^Design-Note-Source:[[:space:]]+\S')
+if [[ "$DESIGN_NOTE_LINE" -eq 0 ]]; then
+    cat >&2 <<HOOKEOF
+WARNING: Latest commit has no Design-Note-Source: trailer.
+
+Non-trivial commits should reference the design note that authorized
+the work:
+  Design-Note-Source: https://github.com/org/repo/issues/N#issuecomment-...
+  Design-Note-Source: #N (ticket with design note in comments)
+
+This is a warning, not a block. See #262.
+HOOKEOF
+    # WARNING only — do not exit 2
 fi
 
 # v1 checks passed.

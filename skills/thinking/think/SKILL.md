@@ -15,6 +15,14 @@ This is not a suggestion. It is a hard gate.
 
 Code written without a design is a draft disguised as a solution. It commits you to an approach before you've considered alternatives, understood constraints, or identified risks. The cost of designing first is minutes. The cost of redesigning after implementation is hours or days.
 
+## Accumulated Knowledge
+
+The purpose of accumulating knowledge of facts and failures on a ticket is to provide a framework for what we know, what we've tried, what has failed and why it's failed, to produce better outcomes.
+
+Every ticket accumulates knowledge over its lifetime: design notes, investigation findings, what was tried, what failed and why. This accumulated knowledge exists to be consumed. Your first act on any ticket is reading that history — not re-deriving understanding from source code. The ticket is the briefing document. Code reading verifies the ticket's claims; it does not replace them.
+
+This principle governs the entire workflow below. Steps that gather context (Step 1) start from accumulated knowledge. Steps that produce knowledge (Steps 7, 8) write for the next consumer. An agent that satisfies every structural gate while ignoring accumulated knowledge has defeated the purpose of the pipeline.
+
 ## Design Workflow
 
 ### Step 0: Verify the ticket is fit
@@ -42,8 +50,9 @@ bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>
 
 ### Step 1: Context
 
-Understand what exists and what's changing.
+Understand what exists and what's changing. Start from the ticket's accumulated knowledge, not from code.
 
+- **Read the ticket first** — the body is the specification (context, goal, acceptance criteria). The comments are the accumulated knowledge (design notes, investigation findings, what was tried, what failed and why). Read both before reading any code. The ticket is the briefing document; code reading verifies the ticket's claims, it does not replace them.
 - What code, systems, or data are involved?
 - What works today that must keep working?
 - What prompted this change? (Bug, feature request, tech debt, new requirement)
@@ -150,6 +159,8 @@ If the user suggests changes, revise the design and present again.
 
 If this work has a ticket, post the design note to the ticket NOW. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy. Do not proceed to Step 8 until the design note is on the ticket.
 
+Knowledge you produce here will be consumed by the next agent working this ticket. Write for that reader. The test: would a technical worker reading this quickly understand what you are describing and find it useful, or would they call it muddy prose overlaying nothing of substance? A design note that only records the decision without recording the reasoning is half a design note.
+
 If no ticket exists (exempt per pre-action check 5), skip the post.
 
 **Then continue autonomously to Step 8.** Do not wait for parent approval, operator acknowledgement, or external signal to proceed. The pipeline is self-driving: each gate produces an artifact, posts it, and advances to the next gate. Stopping between gates to ask "should I continue?" defeats the purpose of having a pipeline — it turns autonomous execution into supervised step-by-step work.
@@ -163,6 +174,8 @@ After user approval of the design, before implementation begins:
 - [ ] **survey-context:** Entity doc consultation required? (YES if project has doc layer)
 
 Investigation is non-discretionary. It runs first. Pre-mortem runs after investigation completes. Implementation begins only after all required downstream skills have produced their artifacts and posted them to the designated knowledge locus (ticket, doc page, etc.).
+
+Investigation and pre-mortem artifacts posted to tickets become part of the accumulated knowledge. They exist to be read and built upon by the next agent, not to satisfy a checkbox. Apply the same quality test: would a technical worker find this useful, or is it muddy prose overlaying nothing of substance?
 
 **This is a hard gate, not a checklist.** Checking "YES" and proceeding
 to code without producing the artifact is a self-review violation. The
@@ -224,6 +237,7 @@ You MUST complete the full design workflow and receive user approval before writ
 3. **2-3 proposals, not 1.** If there's only one way to do it, you haven't thought hard enough. If there are more than 3, you're overthinking it.
 4. **State your assumptions.** Every unstated assumption is a future bug.
 5. **The user decides.** Present options with tradeoffs. Don't make the decision for them unless they ask you to.
+6. **Measure twice, cut once.** The Junior optimizes for speed of one task. The Lead optimizes for speed of the project. Every 2-second check the Junior skips costs the human operator hours of rework. The agent's seconds are cheap; the human's hours are not. This is not caution -- it is resource allocation.
 
 ## Artifact destination
 

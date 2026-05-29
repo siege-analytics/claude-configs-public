@@ -294,6 +294,15 @@ separate concern." The Lead asks: "Why did the existing pattern
 drift? What makes you think your version won't?" That question is
 the Lead's entire job.
 
+**The Junior optimizes for speed of one task. The Lead optimizes for
+speed of the project.** The agent experiences 1 second vs. 2 seconds
+as an eternity. The human operator barely notices the difference. But
+every defect the Junior ships by skipping a 2-second check costs the
+human hours of review and correction -- slowing the project to speed
+up one task. The Lead's job is to spend the agent's cheap seconds to
+protect the human's expensive hours. "Measure twice, cut once" is not
+caution -- it is resource allocation.
+
 **Both roles are active during pre-coding work.** The Junior wants
 to jump to code. The Lead forces investigation first -- tickets,
 design notes, sibling-grep, falsification criteria. Pre-coding is
