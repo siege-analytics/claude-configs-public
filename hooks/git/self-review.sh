@@ -376,6 +376,33 @@ any shelf, but the section must then explicitly state that.
 HOOKEOF
         exit 2
     fi
+
+    # v1.4: Post-mortem awareness check. If the commit message indicates
+    # a revert or regression fix, the self-review should acknowledge
+    # post-mortem applicability. This is a WARNING, not a block — the
+    # post-error-revision-required hook handles the hard gate for trailers.
+    # But the self-review artifact should show awareness.
+    if echo "$COMMIT_MSG" | grep -qiE 'revert|regression|fix\([^)]+\):[[:space:]]+regression'; then
+        if ! grep -qiE 'post-mortem|postmortem' "$SOURCE_PATH"; then
+            cat >&2 <<HOOKEOF
+WARNING: Commit message suggests a revert or regression fix, but the
+self-review artifact at $SOURCE_PATH does not mention post-mortem.
+
+Per skills/post-mortem/SKILL.md, a post-mortem is required when:
+  - A shipped implementation contradicts its ticket hypothesis
+  - A pre-mortem Tiger materializes
+  - A test failure reveals a shipped bug that passed self-review
+
+If this is a revert or regression fix for shipped code, a post-mortem
+should be triggered. Add a note to the Lead review section acknowledging
+post-mortem applicability (or explaining why it doesn't apply).
+
+This is a warning, not a block. The post-error-revision-required hook
+enforces the Refs: + Post-error-revision: trailers.
+HOOKEOF
+            # WARNING only — do not exit 2
+        fi
+    fi
 fi
 
 # v1 checks passed.
