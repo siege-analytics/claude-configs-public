@@ -52,16 +52,18 @@ Understand what exists and what's changing.
 
 Read the relevant files. Don't guess about the current state.
 
-#### Ticket-vs-HEAD reality check (mandatory)
+#### Ticket-vs-target reality check (mandatory)
 
-Before designing a solution, verify that the ticket's description of the current state matches what's actually on the branch you'll work from. Tickets go stale — PRs land between filing and execution, descriptions reference code that was refactored, or claimed behavior was never merged.
+Before designing a solution, verify that the ticket's description of the current state matches what's actually on **the PR target branch** (usually `develop`), not your current feature branch. Run `git fetch origin develop` (or whatever the target is) and check against `origin/develop`, not local HEAD.
+
+Why the target branch, not your current branch: your feature branch may be days or weeks behind. PRs that landed since you branched change the code the ticket describes. A Fact Sheet built against a stale feature branch produces confidently wrong findings — and if you post that to the ticket (per the post-to-ticket gate), you've published misinformation. This happened in dogfood session 260528-proud-birch: the agent verified claims against its stale branch, concluded the ticket was wrong, posted that conclusion, and only discovered the ticket was right when it fetched develop to create a new branch.
 
 For each factual claim the ticket makes about the current code (e.g., "function X returns None," "class Y doesn't exist," "PR #NNN added a try/except wrapper"):
-- Grep or read the actual code on HEAD
-- If the claim matches: note "verified" and move on
-- If the claim doesn't match: STOP. Note the discrepancy in Step 2 (Questions). The design must be based on what HEAD actually looks like, not what the ticket says it looks like.
+- Grep or read the actual code on `origin/<target-branch>` (e.g., `git show origin/develop:path/to/file.py`)
+- If the claim matches: note "verified against origin/develop at <commit>" and move on
+- If the claim doesn't match: STOP. Note the discrepancy in Step 2 (Questions). The design must be based on what the target branch actually looks like, not what the ticket says OR what your stale local branch says.
 
-A design based on a stale ticket description is a design based on fiction. This check takes 30 seconds and prevents hours of rework.
+A design based on a stale branch is a design based on fiction. This check takes 30 seconds and prevents hours of rework — or worse, a wrong Fact Sheet posted to the ticket.
 
 #### Sibling-grep gate (mandatory when designing a fix)
 
