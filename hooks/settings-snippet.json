@@ -80,6 +80,11 @@
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
           }
         ]
       },
@@ -94,6 +99,11 @@
           {
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/ticket-propagation-guard.sh",
             "timeout": 10
           }
         ]
