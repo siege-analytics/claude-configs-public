@@ -12,7 +12,9 @@ Evidentiary fact-finding. Before any artifact is created, modified, or deleted, 
 
 ## Why
 
-The recurring failure shape: the agent knows what it wants to build, skips straight to code, and discovers at review time (or never) that the entities it referenced don't have the shape it assumed. Investigation is the evidentiary counterpart to think's strategic framing. Think asks "what approach?" — investigate asks "what are the actual facts?"
+The recurring failure shape: the agent knows what it wants to build, skips straight to code, and discovers at review time (or never) that the entities it referenced don't have the shape it assumed. The Junior optimizes for speed of one task — it wants to ship this ticket fast, so it skips the 2-second shape verification. The Lead optimizes for speed of the project — it knows that one unverified assumption costs the human hours of debugging rework. Investigation is the Lead's gate: spend the agent's cheap seconds to protect the human's expensive hours.
+
+Investigation is the evidentiary counterpart to think's strategic framing. Think asks "what approach?" — investigate asks "what are the actual facts?"
 
 Grounding incidents (SU#632-636 batch, N=5):
 
