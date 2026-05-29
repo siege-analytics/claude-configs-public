@@ -1,6 +1,6 @@
 ---
 name: investigate
-description: "Evidentiary fact-finding gate. Before implementation begins, verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations, impact chain, and environmental readiness. The Fact Sheet is the single source of truth referenced by design, self-review, and post-mortem. Do NOT skip this skill; assumptions that bypass investigation are the #1 cause of shipped bugs."
+description: "Non-discretionary evidentiary gate. Required before any artifact is created, modified, or deleted. Verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations, impact chain, knowledge loci, and environmental readiness. The Fact Sheet is the single source of truth referenced by design, self-review, and post-mortem. Do NOT skip this skill; assumptions that bypass investigation are the #1 cause of shipped bugs."
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read Grep Glob Bash
@@ -182,7 +182,6 @@ Approach: <reference to think design note>
 - Prior investigations for this code: <link/citation, or "none found">
 - Recent git history for touched files: <notable commits, or "no recent changes">
 - Existing documentation: <module docstrings, docs/ pages, or "none">
-- Documentation at risk: <docs that describe behavior this task will change, with file:line — or "none">
 - Post-error revisions found: <ticket#, date, revised model — or "none found">
 
 ### Knowledge Loci
@@ -241,7 +240,7 @@ For each issue discovered during investigation:
 
 ## Hard rules
 
-1. **No implementation before investigation** for non-trivial entity-touching work. The Fact Sheet's existence is the floor.
+1. **No artifact CRUD before investigation.** Investigation is required before any artifact is created, modified, or deleted — not just implementation files. The Fact Sheet's existence is the floor.
 2. **File:line or it didn't happen.** Every claim about existing code must cite the source location. "The model has a `name` field" is not evidence. "`name: str` at `models.py:42`" is evidence.
 3. **Read, don't recall.** Do not write entity shapes from memory or from a previous conversation. Read the current source file. Every time.
 4. **Impact chain is mandatory.** Upstream and downstream must be traced for every task that modifies shared entities. "I don't think anything depends on this" is not acceptable without a grep to prove it.

@@ -46,8 +46,8 @@ Goal source: <ticket #N | design-note path | quoted user-request paragraph>
 Goal source verification: <paste the PASS line from `bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>`>
 Plan reference: <path-or-link to the design note this diff implements>
 Pre-author-inventory: <ticket-link#pre-author-inventory | plans/path.md#pre-author-inventory | NONE>
-Investigate-artifact: <plans/investigate-*.md path | TRIVIAL (with declaration below)>
-Pre-mortem-artifact: <plans/pre-mortem-*.md path | TRIVIAL (with declaration below)>
+Investigate-artifact: <ticket-comment-link | committed-file-path | plans/investigate-*.md | TRIVIAL (with declaration below)>
+Pre-mortem-artifact: <ticket-comment-link | committed-file-path | plans/pre-mortem-*.md | TRIVIAL (with declaration below)>
 
 ## Peer review (the Junior's checklist — mechanics, correctness, craft floor)
 For each applicable shelf: what was checked, what was found.
@@ -124,11 +124,11 @@ Assumptions section are **required composability links** between this
 skill and the `investigate` → `pre-mortem` → implementation pipeline
 defined in `think` Step 7.
 
-For any non-trivial work that touches existing entities, modifies data
-flow, or changes behavior that downstream code depends on, the agent
-must produce an investigate artifact (`plans/investigate-*.md`) and a
-pre-mortem artifact (`plans/pre-mortem-*.md`) before writing code. The
-self-review artifact must then point at those records.
+For any non-trivial work, the agent must produce an investigate artifact
+and a pre-mortem artifact before any artifact CRUD. Investigation is
+non-discretionary (see `investigate/SKILL.md`). The artifacts live on the
+ticket (preferred), in a committed repo file, or as a last resort in the
+session plans folder. The self-review artifact must point at those records.
 
 **When TRIVIAL is acceptable:** if the work is a single-line fix, typo,
 doc-only edit, or pure research that does not touch existing entities or
