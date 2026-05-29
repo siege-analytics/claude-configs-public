@@ -273,15 +273,77 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
 11. **Spawn-protocol**: when spawning sub-sessions (via `spawn_session`, `Agent`, or any delegation mechanism) for work that writes code or creates commits:
 
-    a. **Worktree isolation is required.** Parallel sessions sharing a single working tree cause stash collisions, branch drift, and commits landing on wrong branches. Use `isolation: "worktree"` or equivalent. If the tool doesn't support isolation, serialize — do not run parallel sessions on a shared checkout. (Incident: siege_utilities #800 session had its uncommitted edits stashed by sibling session #801; commit later landed on wrong branch via checkout race.)
+    a. **Check for existing WIP and prior resolution before spawning.** Before creating a session for ticket N, perform two checks:
 
-    b. **Checkpoint-and-wait in the initial prompt.** Every spawned session's prompt must include explicit checkpoints where the session stops and routes its work back to the coordinator for review before proceeding. The checkpoints are: (1) design note, (2) investigation findings, (3) implementation complete (no PR yet), (4) self-review artifact. At each checkpoint: "send to coordinator via `send_agent_message` and WAIT for reply before proceeding." Do NOT rely on a follow-up message to redirect an already-running session — the redirect arrives too late. (Incident: all three siege_utilities sessions in the #776 batch ran autonomously before the checkpoint redirect arrived.)
+       **Check 1 — branch exists?** `git branch -r --list "origin/fix/*N*" "origin/feat/*N*"`. If found, inspect (commits ahead of develop, PR state via `gh pr list --head`):
+       - Branch exists + PR already open → do NOT spawn; review the PR instead.
+       - Branch exists + no PR → inspect commits; decide whether to push+PR (work complete) or resume (work incomplete).
+       - No branch → proceed to Check 2.
 
-    c. **Attach artifacts to tickets, not just session plans.** Session-scoped plan files are ephemeral. The coordinator must ensure that investigation Fact Sheets and self-review artifacts are posted to the ticket as comments (or committed to the repo and linked from the ticket) before the session is dismissed. The next agent who works on related code must be able to find these artifacts without re-deriving them.
+       **Check 2 — already resolved on develop?** `git log origin/develop --oneline --grep="N"` (where N is the ticket number). If a fix commit is already merged:
+       - Verify the ticket is closed or the code matches the fix description.
+       - If resolved → do NOT spawn; close the ticket if still open and move on.
+       - If ambiguous → spawn with explicit instruction to verify-before-implementing.
 
-    d. **Investigation reads existing knowledge.** The spawn prompt must instruct the session to check for prior investigations, related tickets, and existing documentation before starting its own investigation (see `investigate` skill Phase 0). Re-deriving facts already documented elsewhere is wasted work.
+       (Incidents: (1) successor session spawned agent for #692 which was already committed and PR'd. (2) Spawned agents for #690 and #689 which were already fixed on develop — agents correctly identified this but wasted startup time re-deriving what a 2-second `git log --grep` would have shown.)
 
-    **Mechanical test:** if you are about to call `spawn_session` without checkpoint instructions in the prompt, you are violating this check. Stop and add them.
+    b. **Worktree isolation is required.** Parallel sessions sharing a single working tree cause stash collisions, branch drift, and commits landing on wrong branches. Use `isolation: "worktree"` or equivalent. If the tool doesn't support isolation (e.g., `spawn_session` has no worktree parameter), instruct agents to create their own worktree in the prompt: `git worktree add /tmp/fix-NNN origin/develop && cd /tmp/fix-NNN`. If worktrees are impractical, serialize — do not run parallel sessions on a shared checkout. (Incident: siege_utilities #800 session had its uncommitted edits stashed by sibling session #801; commit later landed on wrong branch via checkout race.)
+
+    c. **Supervised vs unsupervised determines checkpoint behavior.**
+       - **Supervised** (coordinator session is actively monitoring — has ScheduleWakeup or is in interactive mode with user): agents run self-driving. They post artifacts to tickets and continue without waiting. The coordinator reviews asynchronously and sends corrections via `send_agent_message` if needed.
+       - **Unsupervised** (spawning into an unmonitored window — overnight, fire-and-forget): use checkpoint-and-wait. The prompt must include explicit checkpoints where the session stops and routes work back to the coordinator before proceeding. Checkpoints: (1) design note, (2) investigation findings, (3) implementation complete (no PR yet), (4) self-review artifact. At each: "send to coordinator via `send_agent_message` and WAIT for reply before proceeding." Do NOT rely on follow-up messages to redirect — they arrive too late.
+       (Incident rationale: self-driving was validated for supervised sessions in the #776 batch. Checkpoint-and-wait prevents runaway agents in unmonitored windows. Both are correct — in different contexts.)
+
+    d. **Attach artifacts to tickets, not just session plans.** Session-scoped plan files are ephemeral. The coordinator must ensure that investigation Fact Sheets and self-review artifacts are posted to the ticket as comments (or committed to the repo and linked from the ticket) before the session is dismissed. The next agent who works on related code must be able to find these artifacts without re-deriving them.
+
+    e. **Investigation reads existing knowledge.** The spawn prompt must instruct the session to check for prior investigations, related tickets, and existing documentation before starting its own investigation (see `investigate` skill Phase 0). Re-deriving facts already documented elsewhere is wasted work.
+
+    **Mechanical test:** if you are about to call `spawn_session` without (a) checking for existing WIP branches AND (b) either checkpoint instructions (unsupervised) or ticket-posting instructions (supervised) in the prompt, you are violating this check.
+
+12. **Standing-order continuity**: when the user gives a standing instruction to work autonomously until a specified time or condition ("work until 10:00 AM", "keep going overnight", "clear as much ground as you can"), that instruction is a **standing order**. Think of it as shift work: you know what you are supposed to be doing, do it according to the rules, and only ask for help when it becomes necessary.
+
+    ### Signal file
+
+    Standing orders are mechanically enforced via a signal file at `<workspace>/standing-order.json`. The `standing-order-guard.sh` hook reads this file on every `UserPromptSubmit` and injects the shift directive. This means **even loop prompts and stacked messages** carry the standing order.
+
+    **Lifecycle:**
+    - **Activation:** When you receive a standing order, write the signal file:
+      ```json
+      {
+        "active": true,
+        "deadline": "2026-05-29T10:00:00-05:00",
+        "directive": "Work Epic #776 tickets using the skills pipeline",
+        "work_queue": ["#816", "#768"]
+      }
+      ```
+    - **Update:** Keep `work_queue` current as items complete.
+    - **Deactivation:** When the deadline passes, all work exhausts, or the user cancels, delete the file or set `"active": false`.
+
+    ### Rules of the shift
+
+    a. **Idle state is a violation.** At no point during a standing order may the agent be idle — defined as: no running agents, no scheduled wakeup, no active tool call, AND pending work remains. All three absent simultaneously with work remaining is equivalent to ignoring a direct instruction.
+
+    b. **"No response requested" is never valid during a standing order.** The standing order IS the request. Only the user, the deadline, or the exhaustion of all work items terminates it. Stacked loop prompts, absence of user messages, and "the user said no response requested to an earlier message" are not termination signals.
+
+    c. **ScheduleWakeup is mandatory, not optional.** When the agent's turn ends with background agents still running, it MUST schedule a wakeup. Failure to schedule a wakeup when agents are running is the mechanical root cause of the overnight-idle incident.
+
+    d. **End-of-turn saturation.** Before ending any turn during a standing order, verify: "Is there work I could spawn right now that I'm not spawning?" If the answer is yes and resources allow, spawn it.
+
+    ### Mandatory loop prompt template
+
+    When scheduling a ScheduleWakeup during a standing order, the `prompt` field MUST be a directive, not a description. Use this template:
+
+    ```
+    Standing order active — [DIRECTIVE]. Check on running agents, spawn
+    new work for any completed items, update the signal file work queue.
+    Do not stop until the deadline or all work is exhausted.
+    ```
+
+    Do NOT use prompts like "check on progress" or "continue if needed" — these create an off-ramp the agent will take.
+
+    **Mechanical test:** if you are about to end a response during a standing order without either (a) a ScheduleWakeup call in this response, or (b) all work items exhausted, you are violating this check. The `standing-order-guard.sh` hook will remind you on the next turn, but you should not need the reminder.
+
+    **Incident justification:** Epic #776 dogfood session (2026-05-28/29). Agent went idle 7 hours overnight (no ScheduleWakeup after last agent completed) and produced "No response requested" twice when loop prompts stacked up. Root cause: rules alone don't prevent the agent from rationalizing inaction. The signal file + hook injection makes the standing order mechanically persistent — it cannot be "forgotten" or rationalized away because it is re-injected on every turn.
 
 12. **Standing-order continuity**: when the user gives a standing instruction to work autonomously until a specified time or condition ("work until 10:00 AM", "keep going overnight", "clear as much ground as you can"), that instruction is a **standing order**. Think of it as shift work: you know what you are supposed to be doing, do it according to the rules, and only ask for help when it becomes necessary.
 
