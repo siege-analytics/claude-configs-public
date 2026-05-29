@@ -231,6 +231,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 | About to… | Read first |
 |---|---|
 | End a session / hand off work | `skills/session/wrap-up/SKILL.md` |
+| Spawn sub-sessions / delegate work to parallel agents | Universal check #11 (spawn-protocol). Requires: worktree isolation, checkpoint-and-wait in prompt, artifact attachment to tickets, Phase 0 read instruction. |
 | Recover from a magnum / enterprise-runner outage | `electinfo_claude_skills/skills/monitor-magnum/SKILL.md` |
 | SSH to a shared server / launch a batch job / triage server health | `skills/infrastructure/ops/SKILL.md` |
 | Create a new skill | `skills/meta/skillbuilder/SKILL.md` |
@@ -266,6 +267,18 @@ These fire for every non-trivial action, regardless of whether a pattern above m
     **Mechanical test:** if you are about to commit work for ticket N+1 without having produced a design note for ticket N+1 specifically (not "the epic design note that covers all of them"), you are violating this check. Stop and produce the note.
 
     **Interaction with test-before-bulk (#4):** test-before-bulk applies to batch data operations (20+ items). This check applies to batch ticket execution (2+ tickets). They are complementary: test-before-bulk prevents data damage from untested batch operations; batch-execution-is-not-one-action prevents quality damage from uninvestigated batch implementations. Both fire when the agent is doing "many of something."
+
+11. **Spawn-protocol**: when spawning sub-sessions (via `spawn_session`, `Agent`, or any delegation mechanism) for work that writes code or creates commits:
+
+    a. **Worktree isolation is required.** Parallel sessions sharing a single working tree cause stash collisions, branch drift, and commits landing on wrong branches. Use `isolation: "worktree"` or equivalent. If the tool doesn't support isolation, serialize — do not run parallel sessions on a shared checkout. (Incident: siege_utilities #800 session had its uncommitted edits stashed by sibling session #801; commit later landed on wrong branch via checkout race.)
+
+    b. **Checkpoint-and-wait in the initial prompt.** Every spawned session's prompt must include explicit checkpoints where the session stops and routes its work back to the coordinator for review before proceeding. The checkpoints are: (1) design note, (2) investigation findings, (3) implementation complete (no PR yet), (4) self-review artifact. At each checkpoint: "send to coordinator via `send_agent_message` and WAIT for reply before proceeding." Do NOT rely on a follow-up message to redirect an already-running session — the redirect arrives too late. (Incident: all three siege_utilities sessions in the #776 batch ran autonomously before the checkpoint redirect arrived.)
+
+    c. **Attach artifacts to tickets, not just session plans.** Session-scoped plan files are ephemeral. The coordinator must ensure that investigation Fact Sheets and self-review artifacts are posted to the ticket as comments (or committed to the repo and linked from the ticket) before the session is dismissed. The next agent who works on related code must be able to find these artifacts without re-deriving them.
+
+    d. **Investigation reads existing knowledge.** The spawn prompt must instruct the session to check for prior investigations, related tickets, and existing documentation before starting its own investigation (see `investigate` skill Phase 0). Re-deriving facts already documented elsewhere is wasted work.
+
+    **Mechanical test:** if you are about to call `spawn_session` without checkpoint instructions in the prompt, you are violating this check. Stop and add them.
 
 ---
 
