@@ -706,7 +706,8 @@ def strip_craft_incompatible_keys(text: str) -> str:
 def deploy_to_workspace() -> None:
     """Sync flat layout to the Craft Agent workspace.
 
-    Copies dist/flat/skills/ → ~/.craft-agent/workspaces/my-workspace/skills/
+    Copies dist/flat/skills/ → ~/.craft-agent/workspaces/my-workspace/skills/,
+    dist/flat/hooks/ → ~/.craft-agent/workspaces/my-workspace/hooks/,
     and RESOLVER.md → ~/.craft-agent/workspaces/my-workspace/RESOLVER.md.
     Strips Craft-incompatible frontmatter keys from .md files during copy.
     """
@@ -743,6 +744,17 @@ def deploy_to_workspace() -> None:
         (CRAFT_WORKSPACE / "RESOLVER.md").write_text(
             strip_craft_incompatible_keys(original)
         )
+
+    # Sync hooks/ to workspace (closes #261: hooks were missing from deploy).
+    src_hooks = DIST / "flat" / "hooks"
+    ws_hooks = CRAFT_WORKSPACE / "hooks"
+    if src_hooks.exists():
+        if ws_hooks.exists():
+            shutil.rmtree(ws_hooks)
+        shutil.copytree(src_hooks, ws_hooks)
+        hooks_count = sum(1 for _ in ws_hooks.rglob("*.sh"))
+        print(f"  Synced {hooks_count} hook script(s) to {ws_hooks}/")
+
     print(f"  Deployed to {CRAFT_WORKSPACE}/ ({stripped_count} files stripped)")
 
 
