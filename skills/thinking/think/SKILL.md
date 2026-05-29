@@ -99,14 +99,17 @@ The design should be detailed enough that someone else could implement it withou
 
 ### Step 5: Documentation Plan
 
-Before writing code, decide what documentation will need updating:
+If the design changes documented behavior, the documentation update is part of the deliverable — not a follow-up. "We'll document it later" means never.
 
-- Which files need docstring/comment updates?
-- Does the README or CLAUDE.md need changes?
-- Are there tickets to create or update?
-- Will this affect downstream documentation (API docs, wiki, knowledge base)?
+For each of these, state what changes and where the update goes:
 
-This prevents the common failure mode of "we'll document it later" (which means never).
+- **Docstrings and comments:** which functions or classes have docstrings that describe the behavior you're changing?
+- **README or CLAUDE.md:** does the project's top-level documentation describe the feature or convention you're modifying?
+- **Notebooks:** does any notebook demonstrate the function or workflow you're changing? (See the notebook coverage invariant in CLAUDE.md for siege_utilities.)
+- **Tickets:** which tickets need updating with the new design, findings, or status?
+- **External docs:** API docs, wiki pages, knowledge base articles, guide.md files — anything outside the repo that describes the behavior.
+
+If investigation (Phase 0 or Phase 2) surfaced documentation that describes the current behavior, and your design changes that behavior, the documentation update is a required output of this task. A PR that changes behavior without updating the docs that describe it ships a lie.
 
 ### Step 6: Implementation Gate
 
