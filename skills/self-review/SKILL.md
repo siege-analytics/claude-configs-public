@@ -357,6 +357,14 @@ The Lead asks, for each domain the work touches:
    Lead either promotes it to a finding or explicitly accepts it
    with a reason that is not "the Junior said it was fine."
 
+4. **Did the Junior update the designated knowledge loci?**
+   If the Fact Sheet's Knowledge Loci section identified loci that
+   this task would invalidate (docstrings, CLAUDE.md sections,
+   notebooks, doc pages), did the diff actually update them? A diff
+   that changes behavior without updating the knowledge loci that
+   describe it ships a lie — think Step 5 makes this a required
+   deliverable, and the Lead must verify it was delivered.
+
 Lead section format: domain-tagged. "In <domain>: <standard> holds
 because <evidence>" or "In <domain>: <standard> not shelved, applied
 judgment per <argument>." Both are honest and auditable.

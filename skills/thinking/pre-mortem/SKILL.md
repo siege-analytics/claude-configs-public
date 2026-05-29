@@ -110,8 +110,8 @@ The ticket receives:
 ## Pre-Mortem
 Task: <one-line description>
 Ticket: <reference>
-Fact Sheet: <path to investigation artifact>
-Design note: <path to think artifact>
+Fact Sheet: <ticket-comment-link | committed-file-path | plans/investigate-*.md>
+Design note: <ticket-comment-link | committed-file-path | plans/think-*.md>
 
 ### Tigers
 
