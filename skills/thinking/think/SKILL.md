@@ -29,6 +29,8 @@ bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>
 
 **PASS** → proceed to Step 1.
 
+**If evaluate-ticket.sh is unavailable** (e.g., running outside claude-configs-public, in Craft Agent, or in a spawned session without access to the scripts/ directory): apply the rubric manually. The ticket must have: Context (what exists), Goal (what changes), Acceptance criteria (how to verify), and Assumptions (what you're taking on faith). If any are missing, fix the ticket or note the gap. Do not skip structural verification because the script isn't available.
+
 **BLOCK** → two acceptable responses:
 
 1. **Fix the ticket** to address the listed gaps. This is the default. Edit the ticket body to add the missing sections (Context / Goal / Acceptance / Assumptions / `/think` link / falsification for behavior-change tickets) and re-run `evaluate-ticket`.
@@ -46,8 +48,22 @@ Understand what exists and what's changing.
 - What works today that must keep working?
 - What prompted this change? (Bug, feature request, tech debt, new requirement)
 - What is the scope boundary? (What is explicitly NOT part of this work)
+- **Public API blast radius:** does this change a return type, add/remove a parameter, or change the contract of a public function? If yes, note who calls it and what breaks.
 
 Read the relevant files. Don't guess about the current state.
+
+#### Ticket-vs-target reality check (mandatory)
+
+Before designing a solution, verify that the ticket's description of the current state matches what's actually on **the PR target branch** (usually `develop`), not your current feature branch. Run `git fetch origin develop` (or whatever the target is) and check against `origin/develop`, not local HEAD.
+
+Why the target branch, not your current branch: your feature branch may be days or weeks behind. PRs that landed since you branched change the code the ticket describes. A Fact Sheet built against a stale feature branch produces confidently wrong findings — and if you post that to the ticket (per the post-to-ticket gate), you've published misinformation. This happened in dogfood session 260528-proud-birch: the agent verified claims against its stale branch, concluded the ticket was wrong, posted that conclusion, and only discovered the ticket was right when it fetched develop to create a new branch.
+
+For each factual claim the ticket makes about the current code (e.g., "function X returns None," "class Y doesn't exist," "PR #NNN added a try/except wrapper"):
+- Grep or read the actual code on `origin/<target-branch>` (e.g., `git show origin/develop:path/to/file.py`)
+- If the claim matches: note "verified against origin/develop at <commit>" and move on
+- If the claim doesn't match: STOP. Note the discrepancy in Step 2 (Questions). The design must be based on what the target branch actually looks like, not what the ticket says OR what your stale local branch says.
+
+A design based on a stale branch is a design based on fiction. This check takes 30 seconds and prevents hours of rework — or worse, a wrong Fact Sheet posted to the ticket.
 
 #### Sibling-grep gate (mandatory when designing a fix)
 
@@ -76,6 +92,8 @@ If you have questions for the user, ask them now. Do not proceed with unresolved
 ### Step 3: Proposals
 
 Present 2-3 approaches with tradeoffs. Not 1 (no comparison). Not 5 (decision paralysis).
+
+**Precedent exception:** If a prior ticket in the same repo established a pattern for this exact class of fix (e.g., "ticket #801 already introduced `GeocodingError` for this shape of SU-1 violation"), you may present 1 proposal that follows the precedent plus a brief note explaining why alternatives would diverge from the established pattern. The point of multiple proposals is to ensure you've considered the space — when the space has already been explored and a convention chosen, re-exploring it is ceremony.
 
 For each approach:
 - **What:** One-sentence summary
@@ -128,7 +146,15 @@ Present the design to the user. Wait for explicit approval before writing any co
 
 If the user suggests changes, revise the design and present again.
 
-### Step 7: Downstream Routing (hard gate)
+### Step 7: Post to ticket and continue (hard gate)
+
+If this work has a ticket, post the design note to the ticket NOW. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy. Do not proceed to Step 8 until the design note is on the ticket.
+
+If no ticket exists (exempt per pre-action check 5), skip the post.
+
+**Then continue autonomously to Step 8.** Do not wait for parent approval, operator acknowledgement, or external signal to proceed. The pipeline is self-driving: each gate produces an artifact, posts it, and advances to the next gate. Stopping between gates to ask "should I continue?" defeats the purpose of having a pipeline — it turns autonomous execution into supervised step-by-step work.
+
+### Step 8: Downstream Routing (hard gate)
 
 After user approval of the design, before implementation begins:
 

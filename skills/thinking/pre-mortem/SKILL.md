@@ -66,6 +66,16 @@ Inputs required:
 - Think design note (approach selection)
 - Ticket (goal, hypothesis, falsification criteria)
 
+### Step 1b: Fact Sheet correction check
+
+If the Fact Sheet was revised during investigation (e.g., stale branch data corrected, entity discovered to exist when initially reported absent), verify that the design note from think is still valid against the corrected facts. For each correction in the Fact Sheet:
+
+- Does the design depend on the assumption that was corrected?
+- If yes: the design must be re-derived before pre-mortem can proceed. A pre-mortem that stress-tests an invalidated design is wasted work.
+- If no: note "design unaffected by correction" and proceed.
+
+This is not a soft check. The dogfood incident that motivated this rule: the agent corrected its Fact Sheet (entity existed on develop, not absent as initially claimed) but proceeded with pre-mortem against the original design that assumed the entity was absent. The pre-mortem found no Tigers because it was stress-testing a plan built on falsified premises.
+
 ### Step 2: Failure brainstorm
 
 For each node in the impact chain (upstream, this task, downstream), ask:
@@ -75,6 +85,7 @@ For each node in the impact chain (upstream, this task, downstream), ask:
 - **What could change between investigation and deployment?** (Schema migration, dependency update, config change, data migration)
 - **What does the test suite NOT cover?** (Integration paths, error paths, edge cases named in the logic trace)
 - **What would a user (or downstream system) experience if this fails?** (Silent corruption is worse than a loud error)
+- **Does the test mock the layer being changed?** (A test that mocks the function you're modifying will pass regardless of your change — it's testing the mock, not the code. See the "Test-fragility" named Tiger pattern below.)
 
 ### Step 3: Classify each scenario
 
@@ -87,6 +98,20 @@ For each failure scenario identified:
 5. **For Tigers:** assign urgency tier and propose mitigation
 6. **For Paper Tigers:** cite the existing mitigation (file:line required)
 7. **For Elephants:** state why it's being deferred and what the deferral costs
+
+### Named Tiger patterns
+
+These are recurring failure shapes identified through dogfooding. Check for each explicitly during the brainstorm.
+
+#### Test-fragility Tiger (wrong mock layer)
+
+**Pattern:** The implementation changes function F, but the existing test for F mocks F itself (or mocks the layer F calls in a way that bypasses the changed code path). The test passes before and after the change — it's testing the mock, not the behavior.
+
+**How to detect:** The Fact Sheet's "Tests as verified shapes" section (investigate Phase 2) records what each test mocks. If a test mocks at or above the layer being changed, flag it.
+
+**Classification:** Fast-Follow Tiger. The implementation is correct, but the test suite provides false confidence. Mitigation: write or fix the test to exercise the actual code path, not the mock.
+
+**Grounding incident:** Dogfood session on #836 — the agent wrote a test that mocked `_load_credential_backends()`, the exact function the fix modified. The test asserted the new error was raised, but the assertion was against the mock's behavior, not the real credential-loading logic. A regression in the real function would pass the test.
 
 ### Step 4: Launch-Blocking gate
 
@@ -153,6 +178,14 @@ The original Tiger/Paper Tiger/Elephant framework is designed for team brainstor
 - **The agent's blind spots are systematic.** The SU#632-636 audit shows the agent consistently assumes data shapes match its mental model. Specifically stress-test data shape assumptions against the Fact Sheet.
 - **Confirmation bias is the default.** The agent wants to confirm its approach works. The pre-mortem's job is to find evidence it won't.
 - **Time pressure tempts shortcuts.** A 5-minute pre-mortem that catches a Launch-Blocking Tiger saves hours of debugging. A skipped pre-mortem that misses a Tiger costs the user's trust.
+
+## Post to ticket and continue (hard gate)
+
+When the pre-mortem artifact is complete, post it to the ticket NOW. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy.
+
+Do not proceed to implementation until the pre-mortem is on the ticket.
+
+**Then continue autonomously to implementation.** Do not wait for parent approval or operator acknowledgement. The pipeline is self-driving: produce the artifact, post it, advance. If a Tiger is Launch-Blocking, mitigate it as part of implementation — that's what the pre-mortem is for.
 
 ## Composition with other skills
 
