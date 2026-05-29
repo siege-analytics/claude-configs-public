@@ -60,6 +60,24 @@ implementation (grounded in verified facts)
 
 Investigation consumes the approach from think and produces the evidentiary basis for pre-mortem and implementation. It is not a planning skill — it does not decide what to build. It determines what is true.
 
+## Phase 0: Read existing knowledge
+
+Before investigating code, read what already exists about the entities you're about to touch. The most common investigation failure is re-deriving context that was already documented — by a prior investigation, a ticket, a doc page, or a prior session's design note.
+
+**Required reads (check each; record "N/A" or "read at <location>" for every item):**
+
+| Source | What to look for | How to find it |
+|---|---|---|
+| **Ticket body** | Prior investigation links, referenced issues, acceptance criteria, assumptions | Read the ticket you're working on — don't just rely on the task prompt's summary |
+| **Linked/related tickets** | Prior Fact Sheets, sibling-grep results, post-mortem findings about the same code | `gh issue list` with label/search filters; check the epic's issue list |
+| **Existing documentation** | Module-level docstrings, CLAUDE.md sections, README, architecture docs | `Read` the file's module docstring; grep for the module name in docs/ |
+| **Git blame / recent commits** | Recent changes to the files you'll touch, especially reverts or fix-ups | `git log --oneline -10 <file>` for each file in scope |
+| **Prior investigation artifacts** | Fact Sheets from earlier sessions that touched the same code | Check the ticket for linked Fact Sheets; grep PR bodies for "Investigation Fact Sheet" |
+
+**Hard rule:** If a prior investigation exists for the same code entity and is less than 30 days old, start from its findings — don't re-derive from scratch. Cite it in your Fact Sheet's "Prior art" section. If it's stale, note what changed.
+
+Record Phase 0 results at the top of the Fact Sheet under `### Prior Knowledge`.
+
 ## The investigation loop
 
 ### Phase 1: Impact Chain
@@ -155,6 +173,13 @@ Ticket: <reference>
 Investigated: <timestamp>
 Approach: <reference to think design note>
 
+### Prior Knowledge (Phase 0)
+- Ticket body read: YES/NO — <key findings from ticket>
+- Related tickets consulted: <list with numbers, or "none found">
+- Prior investigations for this code: <link/citation, or "none found">
+- Recent git history for touched files: <notable commits, or "no recent changes">
+- Existing documentation: <module docstrings, docs/ pages, or "none">
+
 ### Impact Chain
 <Phase 1 output — full upstream/task/downstream chain>
 
@@ -202,6 +227,8 @@ For each issue discovered during investigation:
 4. **Impact chain is mandatory.** Upstream and downstream must be traced for every task that modifies shared entities. "I don't think anything depends on this" is not acceptable without a grep to prove it.
 5. **Findings are not optional.** If investigation discovers issues, they are recorded. Suppressing findings to avoid scope creep is a self-review violation.
 6. **The ticket gets the chain.** Impact chain, hypothesis, and falsification are documented in the ticket — not just in the Fact Sheet. The ticket is the spine; the Fact Sheet is the evidence appendix.
+7. **Fact Sheets are attached to tickets, not just sessions.** When the investigation is complete, post the Fact Sheet (or a link to it) as a comment on the ticket. Session-scoped plan files are ephemeral — they disappear when the session ends. The ticket is the durable home. If the Fact Sheet is too long for a comment, commit it to the repo (e.g., `docs/investigations/<module>-<ticket>.md`) and link from the ticket. The next agent who touches this code must be able to find the investigation without re-deriving it.
+8. **Phase 0 is not optional.** Reading existing knowledge before investigating is as mandatory as reading code before writing code. An investigation that re-derives facts already documented in a prior Fact Sheet or ticket is wasted work and a signal that the agent skipped Phase 0.
 
 ## What investigation is NOT
 
