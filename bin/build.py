@@ -28,6 +28,8 @@ SOURCE_SKILLS = REPO_ROOT / "skills"
 SOURCE_PROJECTS = REPO_ROOT / "projects"
 DIST = REPO_ROOT / "dist"
 
+CRAFT_WORKSPACE = Path.home() / ".craft-agent" / "workspaces" / "my-workspace"
+
 # Separator joining project slug and skill/rule slug in the prefix-flatten convention.
 # Project skill `hostile-review` in project `siege-utilities` becomes flat slug
 # `siege-utilities--hostile-review`. Project rules file becomes `<project>--rules`
@@ -674,10 +676,33 @@ def write_build_info(
 # Entry point
 # ---------------------------------------------------------------------------
 
+def deploy_to_workspace() -> None:
+    """Sync flat layout to the Craft Agent workspace.
+
+    Copies dist/flat/skills/ → ~/.craft-agent/workspaces/my-workspace/skills/
+    and RESOLVER.md → ~/.craft-agent/workspaces/my-workspace/RESOLVER.md.
+    """
+    ws_skills = CRAFT_WORKSPACE / "skills"
+    flat_skills = DIST / "flat" / "skills"
+    if not flat_skills.exists():
+        raise BuildError("dist/flat/skills/ does not exist — run build first")
+    if not CRAFT_WORKSPACE.exists():
+        print(f"  Workspace not found at {CRAFT_WORKSPACE}, skipping deploy")
+        return
+    if ws_skills.exists():
+        shutil.rmtree(ws_skills)
+    shutil.copytree(flat_skills, ws_skills)
+    resolver_src = REPO_ROOT / "RESOLVER.md"
+    if resolver_src.exists():
+        shutil.copy2(resolver_src, CRAFT_WORKSPACE / "RESOLVER.md")
+    print(f"  Deployed to {CRAFT_WORKSPACE}/")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Validate tokens; do not write output")
     parser.add_argument("--layout", choices=("nested", "flat", "both"), default="both")
+    parser.add_argument("--deploy", action="store_true", help="After building, sync flat layout to Craft Agent workspace")
     args = parser.parse_args()
 
     # Phase 1: Validate project manifests (repo uniqueness, required fields, status).
@@ -745,6 +770,18 @@ def main() -> int:
 
     warn_unknown()
     print(f"\nDone. Output: {DIST}/")
+
+    if args.deploy:
+        print("\nDeploying to Craft Agent workspace...")
+        if "flat" not in layouts:
+            print("  Building flat layout for deploy...")
+            build_layout(
+                "flat", skills_src, rules_src,
+                project_skills_src, project_rules_src,
+                skill_provenance, active_projects,
+            )
+        deploy_to_workspace()
+
     return 0
 
 
