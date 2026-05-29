@@ -28,8 +28,9 @@
 #
 # Surface limitation: this hook fires only in Claude Code sessions via
 # PreToolUse in settings.json. Craft Agent sessions use a separate tool-
-# call surface and this hook does not fire for them. Enforcement in Craft
-# sessions is operator-auditable only. See SKILL.md Known limitations.
+# call surface and this hook does not fire for them. Partial mitigation:
+# pre-action-guard.sh (UserPromptSubmit) injects branch/ticket warnings
+# in Craft Agent sessions. See #261.
 
 set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
