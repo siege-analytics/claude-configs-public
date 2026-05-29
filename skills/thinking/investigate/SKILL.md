@@ -70,11 +70,13 @@ Before investigating code, read what already exists about the entities you're ab
 |---|---|---|
 | **Ticket body** | Prior investigation links, referenced issues, acceptance criteria, assumptions | Read the ticket you're working on — don't just rely on the task prompt's summary |
 | **Linked/related tickets** | Prior Fact Sheets, sibling-grep results, post-mortem findings about the same code | `gh issue list` with label/search filters; check the epic's issue list |
-| **Existing documentation** | Module-level docstrings, CLAUDE.md sections, README, architecture docs | `Read` the file's module docstring; grep for the module name in docs/ |
+| **Existing documentation** | Module-level docstrings, CLAUDE.md sections, README, architecture docs, notebooks that demo the function | `Read` the file's module docstring; grep for the module name in docs/ and notebooks/ |
 | **Git blame / recent commits** | Recent changes to the files you'll touch, especially reverts or fix-ups | `git log --oneline -10 <file>` for each file in scope |
 | **Prior investigation artifacts** | Fact Sheets from earlier sessions that touched the same code | Check the ticket for linked Fact Sheets; grep PR bodies for "Investigation Fact Sheet" |
 
 **Hard rule:** If a prior investigation exists for the same code entity and is less than 30 days old, start from its findings — don't re-derive from scratch. Cite it in your Fact Sheet's "Prior art" section. If it's stale, note what changed.
+
+**Documentation-at-risk rule:** If Phase 0 finds documentation (docstrings, README sections, notebooks, wiki pages) that describes behavior the planned work will change, record it in the Fact Sheet's "Documentation at risk" field with file:line. This feeds directly into think Step 5 (Documentation Plan) — a doc that describes the old behavior and isn't updated ships a lie.
 
 Record Phase 0 results at the top of the Fact Sheet under `### Prior Knowledge`.
 
@@ -179,6 +181,7 @@ Approach: <reference to think design note>
 - Prior investigations for this code: <link/citation, or "none found">
 - Recent git history for touched files: <notable commits, or "no recent changes">
 - Existing documentation: <module docstrings, docs/ pages, or "none">
+- Documentation at risk: <docs that describe behavior this task will change, with file:line — or "none">
 
 ### Impact Chain
 <Phase 1 output — full upstream/task/downstream chain>
