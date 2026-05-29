@@ -8,7 +8,7 @@ allowed-tools: Read Grep Glob Bash
 
 # Investigate
 
-Evidentiary fact-finding. Before implementation begins, verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations and an impact chain tracing upstream → task → downstream.
+Evidentiary fact-finding. Before any artifact is created, modified, or deleted, verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations, knowledge loci, and an impact chain tracing upstream → task → downstream.
 
 ## Why
 
