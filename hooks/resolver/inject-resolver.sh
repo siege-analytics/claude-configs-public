@@ -75,3 +75,47 @@ Full resolver: cat $RESOLVER
 Skills: ls ~/git/electinfo/claude-configs-public/skills/ and ~/git/electinfo/electinfo_claude_skills/skills/
 </skill-resolver>
 EOF
+
+# --- Pipeline status: scan for plan artifacts and warn on incomplete chains ---
+# Scan locations: CRAFT_AGENT_PLANS_PATH (session plans) and CWD/plans/ (repo plans).
+# Only emit the warning if think-*.md files exist (no noise otherwise).
+
+PLANS_DIRS=""
+[[ -n "${CRAFT_AGENT_PLANS_PATH:-}" ]] && [[ -d "$CRAFT_AGENT_PLANS_PATH" ]] && PLANS_DIRS="$CRAFT_AGENT_PLANS_PATH"
+[[ -d "plans" ]] && PLANS_DIRS="$PLANS_DIRS${PLANS_DIRS:+ }plans"
+
+if [[ -n "$PLANS_DIRS" ]]; then
+    # shellcheck disable=SC2086
+    THINK_FILES=$(find $PLANS_DIRS -maxdepth 1 -name 'think-*.md' 2>/dev/null | head -10)
+
+    if [[ -n "$THINK_FILES" ]]; then
+        # Check for downstream artifacts (any, not ticket-matched — v1)
+        # shellcheck disable=SC2086
+        HAS_INVESTIGATE=$(find $PLANS_DIRS -maxdepth 1 -name 'investigate-*.md' 2>/dev/null | head -1)
+        # shellcheck disable=SC2086
+        HAS_PREMORTEM=$(find $PLANS_DIRS -maxdepth 1 \( -name 'pre-mortem-*.md' -o -name 'premortem-*.md' \) 2>/dev/null | head -1)
+        # shellcheck disable=SC2086
+        HAS_SELFREVIEW=$(find $PLANS_DIRS -maxdepth 1 -name 'self-review-*.md' 2>/dev/null | head -1)
+
+        MISSING=""
+        [[ -z "$HAS_INVESTIGATE" ]] && MISSING="${MISSING}  [!] investigate artifact: MISSING — produce Fact Sheet before implementation\n"
+        [[ -z "$HAS_PREMORTEM" ]] && MISSING="${MISSING}  [!] pre-mortem artifact: MISSING — classify risks before implementation\n"
+
+        if [[ -n "$MISSING" ]]; then
+            THINK_LIST=$(echo "$THINK_FILES" | sed 's/^/  /')
+            cat <<PIPELINE
+
+>>> PIPELINE STATUS (think Step 7 enforcement) <<<
+Design note(s) found:
+$THINK_LIST
+
+Downstream artifacts incomplete:
+$(printf '%b' "$MISSING")
+DO NOT proceed to implementation until investigate and pre-mortem
+are complete. Post each artifact to the ticket before the next stage.
+The self-review hook will block your push if these are missing.
+
+PIPELINE
+        fi
+    fi
+fi
