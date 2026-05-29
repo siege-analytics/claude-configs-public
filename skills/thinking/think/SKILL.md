@@ -29,6 +29,8 @@ bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>
 
 **PASS** → proceed to Step 1.
 
+**If evaluate-ticket.sh is unavailable** (e.g., running outside claude-configs-public, in Craft Agent, or in a spawned session without access to the scripts/ directory): apply the rubric manually. The ticket must have: Context (what exists), Goal (what changes), Acceptance criteria (how to verify), and Assumptions (what you're taking on faith). If any are missing, fix the ticket or note the gap. Do not skip structural verification because the script isn't available.
+
 **BLOCK** → two acceptable responses:
 
 1. **Fix the ticket** to address the listed gaps. This is the default. Edit the ticket body to add the missing sections (Context / Goal / Acceptance / Assumptions / `/think` link / falsification for behavior-change tickets) and re-run `evaluate-ticket`.
@@ -46,8 +48,20 @@ Understand what exists and what's changing.
 - What works today that must keep working?
 - What prompted this change? (Bug, feature request, tech debt, new requirement)
 - What is the scope boundary? (What is explicitly NOT part of this work)
+- **Public API blast radius:** does this change a return type, add/remove a parameter, or change the contract of a public function? If yes, note who calls it and what breaks.
 
 Read the relevant files. Don't guess about the current state.
+
+#### Ticket-vs-HEAD reality check (mandatory)
+
+Before designing a solution, verify that the ticket's description of the current state matches what's actually on the branch you'll work from. Tickets go stale — PRs land between filing and execution, descriptions reference code that was refactored, or claimed behavior was never merged.
+
+For each factual claim the ticket makes about the current code (e.g., "function X returns None," "class Y doesn't exist," "PR #NNN added a try/except wrapper"):
+- Grep or read the actual code on HEAD
+- If the claim matches: note "verified" and move on
+- If the claim doesn't match: STOP. Note the discrepancy in Step 2 (Questions). The design must be based on what HEAD actually looks like, not what the ticket says it looks like.
+
+A design based on a stale ticket description is a design based on fiction. This check takes 30 seconds and prevents hours of rework.
 
 #### Sibling-grep gate (mandatory when designing a fix)
 
@@ -76,6 +90,8 @@ If you have questions for the user, ask them now. Do not proceed with unresolved
 ### Step 3: Proposals
 
 Present 2-3 approaches with tradeoffs. Not 1 (no comparison). Not 5 (decision paralysis).
+
+**Precedent exception:** If a prior ticket in the same repo established a pattern for this exact class of fix (e.g., "ticket #801 already introduced `GeocodingError` for this shape of SU-1 violation"), you may present 1 proposal that follows the precedent plus a brief note explaining why alternatives would diverge from the established pattern. The point of multiple proposals is to ensure you've considered the space — when the space has already been explored and a convention chosen, re-exploring it is ceremony.
 
 For each approach:
 - **What:** One-sentence summary
