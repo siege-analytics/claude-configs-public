@@ -154,11 +154,26 @@ Before implementation can begin, verify:
 
 Record each check with evidence. "Imports resolve" is not evidence. "`PostGISConnector` exists at `siege_utilities/geo/connectors.py:14`" is evidence.
 
-### Phase 5: Hypothesis and Falsification
+### Phase 5: Coherence Check, Hypothesis, and Falsification
 
-Based on the verified facts, state:
+Before stating the hypothesis, check the Fact Sheet's own internal coherence. The findings from Phases 1–4 are a set of claims — do they agree with each other?
+
+**Internal coherence questions:**
+- Does the impact chain's "upstream provides X" match the verified shape of X in Phase 2?
+- Does "this task changes Y" produce output that matches what "downstream expects Z" needs?
+- Do the knowledge loci's "current state" descriptions match the verified shapes?
+- If Phase 3 traced a logic path, does it use the field names and types from Phase 2 — or different ones?
+- Are there assumptions in one phase that contradict findings in another?
+
+An internally incoherent Fact Sheet means one of the phases got something wrong. Resolve the contradiction before proceeding — the hypothesis cannot be sound if the evidence it rests on contradicts itself.
+
+**Then** state the hypothesis, grounded in the now-coherent findings:
 
 ```
+## Coherence
+<One sentence: are the findings from Phases 1-4 internally consistent?
+ If a contradiction was found and resolved, state what it was and how.>
+
 ## Hypothesis
 <What this implementation will achieve, stated as a testable claim>
 
@@ -167,7 +182,7 @@ Based on the verified facts, state:
 <Specific test cases that, if they fail, indicate the implementation is wrong>
 ```
 
-The hypothesis and falsification criteria are documented in the ticket. They are not optional. They are what the self-review and post-mortem evaluate against.
+The coherence statement, hypothesis, and falsification criteria are documented in the ticket. They are not optional. They are what the self-review and post-mortem evaluate against.
 
 ## Fact Sheet artifact format
 
@@ -218,8 +233,11 @@ For each entity:
 ### Environmental Readiness
 <Phase 4 checklist with evidence>
 
+### Coherence
+<Phase 5 coherence statement — are Phases 1-4 internally consistent?>
+
 ### Hypothesis and Falsification
-<Phase 5 output>
+<Phase 5 hypothesis and falsification criteria>
 
 ### Open Questions
 <Anything that could not be verified, with why and what the risk is>
@@ -271,11 +289,14 @@ Scope justification: <why Focused tier — must name: files touched (1-2),
   - Fields/signature: <verbatim from source>
   - Verification status: VERIFIED | UNVERIFIED
 
+### Coherence
+<Do the prior knowledge, loci, and verified shapes agree with each other?>
+
 ### Hypothesis and Falsification
 <testable claim and what would prove it wrong>
 ```
 
-**Escalation rule:** If at any point during a Focused investigation you discover a downstream consumer, an interface change, or a cross-module dependency, escalate to Full. The Focused tier is not a commitment — it's a starting point that must yield to evidence.
+**Escalation rule:** If at any point during a Focused investigation you discover a downstream consumer, an interface change, or a cross-module dependency, escalate to Full. If the coherence check reveals contradictions between sections, that is also an escalation signal — contradictions in a Focused investigation often indicate the task has more surface area than the Focused tier assumed.
 
 ## Composition with existing skills
 

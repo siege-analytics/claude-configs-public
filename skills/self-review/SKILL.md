@@ -337,7 +337,43 @@ The shelves are the Junior's checklist. The Lead review is not a
 different checklist -- it is an adversarial posture applied to the
 same findings and to the Junior's claims about them.
 
-The Lead asks, for each domain the work touches:
+The Lead's review proceeds in two phases: **internal coherence first,
+then external verification.** Internal coherence asks whether the
+Junior's own claims agree with each other — this is checkable without
+reading any code. External verification asks whether the coherent
+claims match reality. There is no point checking correspondence with
+the world if the claims contradict themselves.
+
+### Phase A: Internal coherence
+
+The Lead checks whether the pipeline's artifacts form a consistent
+logical structure:
+
+- Does the **design note's approach** follow from the **Fact Sheet's
+  findings**? If the Fact Sheet says "downstream expects shape X" and
+  the design note proposes producing shape Y, that is an internal
+  contradiction detectable without reading any code.
+- Does the **implementation** (the diff) match the **design note's
+  stated approach**? If the design note says "add a fallback for None"
+  and the diff adds a type check instead, that is a coherence gap —
+  it might be fine, but the Lead must name it.
+- Does the **pre-mortem's "no Launch-Blocking Tigers"** actually hold
+  given the Fact Sheet's findings? Or did the pre-mortem dismiss a
+  scenario that the Fact Sheet's own evidence supports?
+- Do the **self-review's peer findings** agree with the **Fact Sheet's
+  verified shapes**? If the peer review says "all callers updated" but
+  the Fact Sheet's impact chain names a caller not in the diff, that
+  is an internal contradiction.
+
+If Phase A finds contradictions, the Lead must resolve them before
+proceeding. A contradiction means either the artifact is wrong or the
+implementation is wrong — either way, the review cannot pass.
+
+### Phase B: External verification
+
+With internal coherence established, the Lead asks whether the
+coherent claims match the actual state of the world. For each domain
+the work touches:
 
 1. **Did the Junior actually fix the problem or just move it?**
    The version-fallback pattern: replacing one hardcoded string with

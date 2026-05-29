@@ -82,10 +82,11 @@ For each failure scenario identified:
 
 1. **Name it** — one sentence describing the failure
 2. **Ground it** — cite the Fact Sheet finding or entity that makes this plausible (file:line required for Tigers)
-3. **Classify it** — Tiger, Paper Tiger, or Elephant
-4. **For Tigers:** assign urgency tier and propose mitigation
-5. **For Paper Tigers:** cite the existing mitigation (file:line required)
-6. **For Elephants:** state why it's being deferred and what the deferral costs
+3. **Coherence check** — does the scenario logically follow from the cited evidence? A Tiger that cites "field X at file:line" but whose trigger scenario assumes a different field, type, or behavior is internally incoherent — the scenario is not grounded in the evidence it claims. Resolve the contradiction: either the scenario is wrong (reclassify or discard) or the citation is wrong (find the real evidence). Do not classify an incoherent scenario.
+4. **Classify it** — Tiger, Paper Tiger, or Elephant
+5. **For Tigers:** assign urgency tier and propose mitigation
+6. **For Paper Tigers:** cite the existing mitigation (file:line required)
+7. **For Elephants:** state why it's being deferred and what the deferral costs
 
 ### Step 4: Launch-Blocking gate
 

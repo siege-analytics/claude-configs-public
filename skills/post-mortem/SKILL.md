@@ -86,9 +86,9 @@ For each contributing factor, trace backward:
 | Gate | Should have caught? | Did it run? | Why it missed (or was skipped) |
 |---|---|---|---|
 | think | Would Step 1 (Context) have surfaced this? | Yes/No/Skipped | <reason> |
-| investigate | Would data shape verification have caught this? Were knowledge loci identified? | Yes/No/Skipped | <reason> |
-| pre-mortem | Would this have been classified as a Tiger? | Yes/No/Skipped | <reason> |
-| self-review | Did the Junior or Lead check this? Did Lead question 4 (knowledge loci updates) fire? | Yes/No | <reason> |
+| investigate | Would data shape verification have caught this? Were knowledge loci identified? Did the Phase 5 coherence check run — would it have caught a contradiction between findings? | Yes/No/Skipped | <reason> |
+| pre-mortem | Would this have been classified as a Tiger? Did the Step 3 coherence check catch incoherent scenarios? | Yes/No/Skipped | <reason> |
+| self-review | Did the Lead's Phase A (internal coherence) catch contradictions between artifacts? Did Phase B (external verification) check the domain standards? Did Lead question 4 (knowledge loci updates) fire? | Yes/No | <reason> |
 | post-error-revision | Were knowledge loci updated with the correction? | Yes/No/N/A | <reason> |
 | survey-context | Would entity doc consultation have helped? | Yes/No/N/A | <reason> |
 
