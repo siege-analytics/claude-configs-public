@@ -491,11 +491,17 @@ validates section presence; content completeness is operator-auditable.
 
 The hooks in `hooks/git/self-review.sh` and `hooks/settings-snippet.json` enforce the pipeline mechanically in Claude Code sessions. Not all execution environments support PreToolUse hooks — Craft Agent sessions, spawned subagents, and CI/CD pipelines do not wire them.
 
-**The self-review artifact is the environment-independent backstop.** Regardless of where the work executes, the self-review artifact must exist before code pushes, and its structural requirements (trailers, required sections, Investigate-artifact/Pre-mortem-artifact fields) are verified at push time by the pre-push hook — which fires in any git-based environment.
+~~**The self-review artifact is the environment-independent backstop.**~~ (superseded by Post-error revision 2026-05-28)
 
-For non-Claude-Code environments, the pipeline's enforcement degrades from "blocked before you write the file" to "blocked before you push the commit." This is a real gap: an agent in Craft Agent can skip investigation, write code, attempt to push, get blocked by self-review.sh, and then retrofit a self-review artifact. The retrofitting is detectable via the Evidence-predates-work section (the artifact's first-added commit must predate the work commit), but only in v2.
+**In non-Claude-Code environments, enforcement is currently zero — not degraded, zero.** Craft Agent sessions do not load PreToolUse hooks, do not fire the self-review hook at push time (Craft Agent's git push does not route through Claude Code's Bash hook surface), and do not enforce skill prose mechanically. The claim that enforcement "degrades from blocked-before-write to blocked-before-push" was falsified in the same session that wrote it: 8 commits modifying 6 skill/hook files were pushed without any pipeline artifacts. (See Post-error revision on #245, dated 2026-05-28.)
 
-**Until v2 ships, agents in non-hook environments must self-enforce the pipeline order.** This is not "honor system as an acceptable alternative" — it is a known gap with a concrete fix (v2 artifact-predates-work enforcement) and a clear residual risk (retrofitted artifacts in the interim). The skill prose is the last line of defense: if you're reading this skill, you know investigation and pre-mortem come before implementation, regardless of whether a hook stopped you.
+**The only enforcement that works across all environments** is a native git pre-push hook installed in each repo (Layer 3 on #245) or GitHub branch protection rules (Layer 4). Neither is shipped yet. Until one of them ships:
+
+- Craft Agent sessions have no mechanical enforcement.
+- Spawned subagents have no mechanical enforcement.
+- Any push source other than a Claude Code terminal session with hooks installed has no mechanical enforcement.
+
+Skill prose and the resolver are the only remaining defenses, and they failed 8 consecutive times in a single session. **Layer 3 (native git pre-push hook) is the priority fix.** It fires for all push sources regardless of execution environment, requires no configuration per session, and cannot be bypassed by the agent's execution runtime.
 
 ## Goal source is load-bearing
 
