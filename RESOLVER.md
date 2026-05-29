@@ -245,7 +245,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 
 These fire for every non-trivial action, regardless of whether a pattern above matched:
 
-0. **THINK FIRST** (the non-negotiable gate): for anything beyond a trivial mechanical change, read `skills/thinking/think/SKILL.md` and write a design note. If you can't state what you're about to do, why, what could go wrong, and what the rollback looks like — you are not ready to act. Every serious failure in this session traces back to skipping this.
+0. **THINK FIRST** (the non-negotiable gate): for anything beyond a trivial mechanical change, read `skills/thinking/think/SKILL.md` and write a design note. If you can't state what you're about to do, why, what could go wrong, and what the rollback looks like — you are not ready to act. Every serious failure in this session traces back to skipping this. **Signal file:** after producing the design note, write `<workspace>/think-gate.json` with falsifiable claims encoding design premises. The `think-gate-guard.sh` hook verifies claims every turn; stale claims force re-examination. When encountering a stale signal file from a prior task, read the referenced design note, post a disposition comment on the prior ticket, then update or delete the signal file. See #262.
 
 1. **Catalog-first**: if the action touches data that lives under a catalog (Unity Catalog, Hive Metastore), go through the catalog. Never write raw paths to bucket locations the catalog manages. Confirm the table's registered location BEFORE writing.
 

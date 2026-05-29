@@ -406,5 +406,24 @@ HOOKEOF
     fi
 fi
 
+# v1.5: Design-Note-Source trailer check.
+# Non-trivial commits should reference the design note that authorized
+# the work. WARNING only (not a block) — the trailer is new (#262).
+# Promotes to a block in v2 after adoption stabilizes.
+DESIGN_NOTE_LINE=$(echo "$COMMIT_MSG" | grep -cE '^Design-Note-Source:[[:space:]]+\S')
+if [[ "$DESIGN_NOTE_LINE" -eq 0 ]]; then
+    cat >&2 <<HOOKEOF
+WARNING: Latest commit has no Design-Note-Source: trailer.
+
+Non-trivial commits should reference the design note that authorized
+the work:
+  Design-Note-Source: https://github.com/org/repo/issues/N#issuecomment-...
+  Design-Note-Source: #N (ticket with design note in comments)
+
+This is a warning, not a block. See #262.
+HOOKEOF
+    # WARNING only — do not exit 2
+fi
+
 # v1 checks passed.
 exit 0
