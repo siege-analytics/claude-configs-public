@@ -86,12 +86,13 @@ For each contributing factor, trace backward:
 | Gate | Should have caught? | Did it run? | Why it missed (or was skipped) |
 |---|---|---|---|
 | think | Would Step 1 (Context) have surfaced this? | Yes/No/Skipped | <reason> |
-| investigate | Would data shape verification have caught this? | Yes/No/Skipped | <reason> |
+| investigate | Would data shape verification have caught this? Were knowledge loci identified? | Yes/No/Skipped | <reason> |
 | pre-mortem | Would this have been classified as a Tiger? | Yes/No/Skipped | <reason> |
-| self-review | Did the Junior or Lead check this? | Yes/No | <reason> |
+| self-review | Did the Junior or Lead check this? Did Lead question 4 (knowledge loci updates) fire? | Yes/No | <reason> |
+| post-error-revision | Were knowledge loci updated with the correction? | Yes/No/N/A | <reason> |
 | survey-context | Would entity doc consultation have helped? | Yes/No/N/A | <reason> |
 
-The trace-back identifies the earliest point where the failure could have been caught. That's where the systemic fix belongs.
+The trace-back identifies the earliest point where the failure could have been caught. That's where the systemic fix belongs. The trace-back also identifies whether the correction was routed to the designated knowledge loci — if it wasn't, a future agent will repeat the same false assumption.
 
 ### Phase 4: Action items
 
