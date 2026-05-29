@@ -84,6 +84,18 @@ Specific requirements:
 
 **Mechanical test:** if `pytest --co` lists N tests for a module with M except/raise sites, and fewer than M tests have "error", "fail", "invalid", "missing", or "raises" in their name, the module fails this rule.
 
+### Rule SU-5: Parse verification for batch changes
+
+When a change touches more than 3 files (batch refactors, sweeps, linter-driven fixes), every modified `.py` file must be verified to parse before commit:
+
+```python
+python3 -c "import ast; ast.parse(open('path/to/file.py').read())"
+```
+
+**Incident justification:** The SU-1 broad-except sweep (commit 31286bf, 2026-05-28) replaced a clean `return` statement with dead code after a `raise`, creating an orphaned `except` clause in `geocoding.py`. The file became unparseable — `import siege_utilities.geo.geocoding` crashes with `SyntaxError`. This shipped to `develop` and was not caught until hostile review round 9 (2026-05-29). The fix was trivial (1 line changed, 10 deleted), but the damage — a broken module on develop for 24+ hours — was not.
+
+**Required:** for any PR touching >3 files, the commit hook or self-review must include parse verification of all modified `.py` files. A batch change that introduces a SyntaxError is worse than the problem it was fixing.
+
 ## Branch and merge conventions
 
 - All work branches from `develop`, PRs target `develop`
