@@ -1,9 +1,10 @@
 #!/bin/bash
 # UserPromptSubmit hook — inject standing-order directive when active.
 #
-# Checks for ~/.claude/standing-order.json. If present and active,
-# injects a shift-work directive into every turn — including loop
-# prompts, stacked messages, and "no response requested" situations.
+# Checks for standing-order.json in the workspace root (co-located with
+# the hook). If present and active, injects a shift-work directive into
+# every turn — including loop prompts, stacked messages, and "no
+# response requested" situations.
 #
 # The signal file is written by the agent when it receives a standing
 # order and deleted when the order ends. Format:
@@ -15,11 +16,17 @@
 #     "work_queue": ["#816", "#768"]
 #   }
 #
+# Location: <workspace>/standing-order.json, derived from the script's
+# own path (hooks/resolver/standing-order-guard.sh → ../../).
+# Override: CLAUDE_STANDING_ORDER env var.
+#
 # Fail-open: if the file doesn't exist, emit nothing and exit 0.
 
 set -euo pipefail
 
-SIGNAL_FILE="${CLAUDE_STANDING_ORDER:-$HOME/.claude/standing-order.json}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+SIGNAL_FILE="${CLAUDE_STANDING_ORDER:-$WORKSPACE_ROOT/standing-order.json}"
 
 if [ ! -f "$SIGNAL_FILE" ]; then
   exit 0

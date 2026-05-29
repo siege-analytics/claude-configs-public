@@ -287,7 +287,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     ### Signal file
 
-    Standing orders are mechanically enforced via a signal file at `~/.claude/standing-order.json`. The `standing-order-guard.sh` hook reads this file on every `UserPromptSubmit` and injects the shift directive. This means **even loop prompts and stacked messages** carry the standing order.
+    Standing orders are mechanically enforced via a signal file at `<workspace>/standing-order.json`. The `standing-order-guard.sh` hook reads this file on every `UserPromptSubmit` and injects the shift directive. This means **even loop prompts and stacked messages** carry the standing order.
 
     **Lifecycle:**
     - **Activation:** When you receive a standing order, write the signal file:
