@@ -77,6 +77,28 @@ Work commit: <paste `git rev-parse HEAD`>
 Verification: <paste output of `git merge-base --is-ancestor <first-added> <work-commit>; echo $?` — must be 0>
 ```
 
+## Mechanical verification floor
+
+Before the self-review artifact is considered complete, **every modified
+file must pass its language's syntax check.** This is the non-negotiable
+minimum — a file that doesn't parse is worse than the bug it was fixing.
+
+For Python changes:
+```bash
+git diff --name-only HEAD~1 | grep '\.py$' | xargs -I{} python3 -c "import ast; ast.parse(open('{}').read())"
+```
+
+For batch changes (>3 files), run this on ALL modified files, not just
+the ones you think you changed meaningfully. Paste the output (or
+"all N files parse") in the Peer review section.
+
+**Incident justification:** The SU-1 broad-except sweep (commit 31286bf,
+2026-05-28) introduced a SyntaxError in `geocoding.py` that broke the
+module's import. The self-review artifact existed, the trailers were
+present, but nobody asked "does it parse?" The file was broken on develop
+for 24+ hours. This floor exists because the most basic mechanical check
+is also the most commonly skipped.
+
 ## Pre-author-inventory field
 
 The `Pre-author-inventory:` field in the Assumptions section is a **required

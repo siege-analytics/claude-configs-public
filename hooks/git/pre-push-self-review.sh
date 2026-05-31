@@ -19,6 +19,11 @@
 # Scope: commits being pushed, not all commits on the branch. Uses the
 # git pre-push protocol: stdin receives lines of
 #   <local ref> <local sha> <remote ref> <remote sha>
+#
+# Rebase handling: after a rebase, the old remote SHA is no longer an
+# ancestor of the local SHA. The hook detects this and falls back to
+# --not --remotes (same as new-branch logic) so only branch-unique
+# commits are checked, not the upstream commits that got rebased in.
 
 set -uo pipefail
 
@@ -34,6 +39,11 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
     # Determine commit range
     if [[ "$REMOTE_SHA" == "0000000000000000000000000000000000000000" ]]; then
         # New branch: check all commits not on any remote branch
+        RANGE="$LOCAL_SHA --not --remotes"
+    elif ! git merge-base --is-ancestor "$REMOTE_SHA" "$LOCAL_SHA" 2>/dev/null; then
+        # Force push (rebase): old remote tip is no longer an ancestor.
+        # Fall back to --not --remotes so we only check branch-unique
+        # commits, not the upstream commits that got rebased in.
         RANGE="$LOCAL_SHA --not --remotes"
     else
         RANGE="$REMOTE_SHA..$LOCAL_SHA"

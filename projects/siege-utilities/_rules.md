@@ -27,6 +27,14 @@ Functions must not return valid-shaped empty results on failure. The following r
 
 **Required:** raise an exception, log a warning/error, or return a documented sentinel that callers can distinguish from success. "Return empty on error" is a bug class, not a per-instance judgment call.
 
+**Enforcement tiers:**
+
+1. **Tier 1 — exception type breadth** (automated: `check_broad_except.py`): bare `except:` and `except Exception` handlers. These are caught by the linter.
+2. **Tier 2 — return value on error** (hostile review): narrowed except blocks that still return `[]`, `{}`, `""`, `0.0`, or `None`. The linter passes these because the exception type is specific, but they still violate SU-1. Hostile review must scan for `return` statements inside `except` blocks.
+3. **Tier 3 — non-error paths returning wrong types** (hostile review): functions that compute a value but return the wrong thing (e.g., computing `rowcount` then returning an empty DataFrame). These are logic bugs, not error-handling bugs, but they produce the same symptom: the caller cannot distinguish success from failure.
+
+Tiers 2 and 3 are not currently lintable. Until a linter exists, every hostile-review pass must include a grep for `return []`, `return {}`, `return ""`, `return 0`, `return 0.0`, and `return None` inside except blocks.
+
 ### Rule SU-2: Does it do what it says?
 
 If a function's name, docstring, or type signature claims generality, the implementation must match. Specific failure modes:
@@ -34,8 +42,10 @@ If a function's name, docstring, or type signature claims generality, the implem
 - Function accepts `crs: Any` but only works for EPSG codes → document the restriction or handle the full domain
 - Function says "spatial database" but only works with PostGIS → name it `postgis_*` or handle SpatiaLite/DuckDB-spatial
 - `except Exception: pass` anywhere → the function claims to handle all errors but actually discards them
+- Function docstring lists N valid values for a parameter but the code only checks a subset — invalid values silently fall through to a default code path
+- Return type annotation says `Union[X, Y]` but only X is ever returned
 
-**Required:** either narrow the claim (rename, restrict type signature, document limitations) or widen the implementation.
+**Required:** either narrow the claim (rename, restrict type signature, document limitations) or widen the implementation. For enumerated parameter values, validate at the top of the function and raise `ValueError` for unrecognized inputs.
 
 ### Rule SU-3: No demo exemptions
 
@@ -73,6 +83,18 @@ Specific requirements:
 **Incident justification:** Round 7 hostile review (2026-05-28) found 10 real bugs that survived 6 prior review rounds because 90% of the 380-test suite only exercised happy paths. The bugs were in error paths that no test ever reached. Mocked-to-success tests gave false confidence that the code worked.
 
 **Mechanical test:** if `pytest --co` lists N tests for a module with M except/raise sites, and fewer than M tests have "error", "fail", "invalid", "missing", or "raises" in their name, the module fails this rule.
+
+### Rule SU-5: Parse verification for batch changes
+
+When a change touches more than 3 files (batch refactors, sweeps, linter-driven fixes), every modified `.py` file must be verified to parse before commit:
+
+```python
+python3 -c "import ast; ast.parse(open('path/to/file.py').read())"
+```
+
+**Incident justification:** The SU-1 broad-except sweep (commit 31286bf, 2026-05-28) replaced a clean `return` statement with dead code after a `raise`, creating an orphaned `except` clause in `geocoding.py`. The file became unparseable — `import siege_utilities.geo.geocoding` crashes with `SyntaxError`. This shipped to `develop` and was not caught until hostile review round 9 (2026-05-29). The fix was trivial (1 line changed, 10 deleted), but the damage — a broken module on develop for 24+ hours — was not.
+
+**Required:** for any PR touching >3 files, the commit hook or self-review must include parse verification of all modified `.py` files. A batch change that introduces a SyntaxError is worse than the problem it was fixing.
 
 ## Branch and merge conventions
 
