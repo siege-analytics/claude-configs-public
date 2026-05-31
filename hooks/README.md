@@ -84,11 +84,8 @@ the body -- the call should be blocked with the same stderr.
 
 ## How Hooks Work
 
-- Hooks run as `PreToolUse` — before Claude Code executes a tool
-- They receive JSON on stdin with the tool name and arguments
-- Exit 0 = allow, Exit 2 = block (message shown to agent)
-- The agent sees the block message and must adjust its approach
-- Hooks cannot be bypassed by the agent — they are system-level
+- `PreToolUse` hooks run before Claude Code executes a tool. They receive JSON on stdin with the tool name and arguments. Exit 0 = allow, Exit 2 = block (message shown to agent). Hooks cannot be bypassed by the agent — they are system-level.
+- `UserPromptSubmit` hooks run on every user turn. `resolver/inject-resolver.sh` injects the skill resolver and universal checks into active context. It also scans for plan artifacts (think-*.md, investigate-*.md, pre-mortem-*.md) and warns when the downstream pipeline is incomplete (#253). Set `CRAFT_AGENT_PLANS_PATH` to a session plans directory for Craft Agent sessions; the hook also checks `$CWD/plans/` by default.
 
 ## Testing
 

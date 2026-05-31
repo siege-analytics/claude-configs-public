@@ -15,6 +15,12 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | [rule:rust] | Rust idioms — applied when touching `*.rs` |
 | [rule:siege-utilities] | Prefer `siege_utilities` for utility-shaped problems before writing a new helper. If `siege_utilities` almost solves it but doesn't, consider a PR upstream. |
 | [rule:definition-of-done] | Five hard criteria for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists. Behavior changes are not finished until all five pass. |
+| [rule:robustness] | Robust Python (Viafore) — type safety, invariant enforcement, fail fast, constrain mutability. Applied when writing or reviewing Python code. |
+| [rule:architecture-patterns] | Architecture Patterns with Python (Percival & Gregory) — repository pattern, service layer, dependency inversion. Applied when designing service layers or data-access boundaries. |
+| [rule:property-testing] | Hypothesis property-testing patterns — strategies, round-trip/invariant/oracle properties. Applied when writing tests for functions with numeric, string, or collection inputs. |
+| [rule:scipy-spec] | Scientific Python SPECs 0, 4, 6 — version support, deprecation timelines, lazy loading. Applied when managing dependency versions or API lifecycle in library packages. |
+| [rule:packaging] | PyPA Packaging Guide — pyproject.toml, dependency spec, version management. Applied when modifying pyproject.toml, managing dependencies, or publishing packages. |
+| [rule:security-scanning] | Bandit/OWASP security standards — injection prevention, credential handling, TLS, serialization safety. Applied when writing code that handles user input, credentials, shell commands, or network requests. |
 
 ## Routing table
 
