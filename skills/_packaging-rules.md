@@ -1,5 +1,5 @@
 ---
-description: Always-on packaging standards from the PyPA Packaging Guide. Apply when modifying pyproject.toml, managing dependencies, or publishing packages.
+description: Packaging standards from the PyPA Packaging Guide. Apply when modifying pyproject.toml, managing dependencies, or publishing Python packages. Not applicable to application code that only consumes packages.
 ---
 
 # PyPA Packaging Standards

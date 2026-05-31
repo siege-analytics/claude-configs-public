@@ -1,5 +1,5 @@
 ---
-description: Always-on standards from Scientific Python SPECs 0, 4, and 6. Apply when managing dependency versions, deprecation timelines, or lazy-loading conventions.
+description: Standards from Scientific Python SPECs 0, 4, and 6. Apply when managing dependency versions, deprecation timelines, or lazy-loading conventions in library packages. Not applicable to application code that does not publish a Python package.
 ---
 
 # Scientific Python SPEC Standards
