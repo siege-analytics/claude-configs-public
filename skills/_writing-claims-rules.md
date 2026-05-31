@@ -1,5 +1,5 @@
 ---
-description: Always-on. Claim-grounding discipline. Grep before declaring a fix complete; ground countable claims in same-turn evidence; ground unquantified completeness claims (loop closed, ready to ship) in the same evidence shape; ground invented framework signals (new pattern names, coined disciplines) in existing artifacts; verify external-resource recommendations (URLs, file paths, tickets, free-vs-paid) at recommendation time; require three samples before promoting a pattern to a rule; verify finding-text against live source before scoping work; specific counts must cite the command that produced them. Applies whenever the agent states a fact in a commit body, PR body, agent-to-agent message, or chat to the operator. Fact-grounding at code-edit time (verify symbol exists, doc-edit symmetry, dependency reachable) lives in `_writing-code-rules.md`.
+description: Always-on. Claim-grounding discipline. Grep before declaring a fix complete; ground countable claims in same-turn evidence; ground unquantified completeness claims (loop closed, ready to ship) in the same evidence shape; ground invented framework signals (new pattern names, coined disciplines) in existing artifacts; verify external-resource recommendations (URLs, file paths, tickets, free-vs-paid) at recommendation time; require three samples before promoting a pattern to a rule; verify finding-text against live source before scoping work; specific counts must cite the command that produced them; gate present/past-tense causal claims about production state behind a same-turn falsification probe or explicit Hypothesis label; before claiming a change to runtime-loaded code took effect, verify the consuming path matches the edited path. Applies whenever the agent states a fact in a commit body, PR body, agent-to-agent message, or chat to the operator. Fact-grounding at code-edit time (verify symbol exists, doc-edit symmetry, dependency reachable) lives in `_writing-code-rules.md`. Future-tense action commitments live in writing-prose:5.
 ---
 
 # Writing Claims
@@ -10,7 +10,7 @@ The sibling boundary in `_writing-code-rules.md` is "verify before touching code
 
 The parent discipline is `[rule:verify-before-execute]` Evidence clause: same-turn tool calls back factual claims. These rules are specific shapes of that discipline applied at claim time.
 
-## The eight claim-grounding rules
+## The ten claim-grounding rules
 
 **writing-claims:1. Grep before declaring a fix complete.** When fixing one call site of a problem, search the whole codebase for the same pattern before writing the commit body, the PR title, or the chat update that says the fix is done. The Paragraph-escape fix that needed three rounds (one site, then CodeRabbit pointing out five more, then a follow-up) is the canonical failure mode: the gate moved from "before writing the patch" to "before claiming the patch is complete" because the original phrasing let the agent fix one site, declare done, and only grep when the reviewer pushed back. Same applies to renames, signature changes, and security fixes: scope of the bug is always wider than the diff that surfaced it.
 
@@ -95,6 +95,46 @@ Bad-example catalog from session 260526-true-coral (siege_utilities Epic #572):
 
 Mechanical enforcement candidate: `[skill:detect-ai-fingerprints]` trigger-set extension for integer-count phrases ("all N," "N files," "N subpackages," "N import sites") requiring a `Verified-by:` or inline command-output block. Tracked for v2.x.y.
 
+**writing-claims:9. Present/past-tense causal claims about production state require a same-turn falsification probe.** A statement that asserts *why* something happened or *with what effect* — "Phase 3 took effect," "the DAG produces Z," "bulk-collapse drives the F3 gap," "the MV now reflects the new rule" — is a causal claim about production state and must be paired in the same response with the probe that would falsify it. State the probe (the grep, the query, the row-level inspection) and the result together. If the probe didn't run, label the claim explicitly: `Hypothesis:` or `Untested:`.
+
+**Scope (causal vs descriptive).** The rule fires when the claim asserts *why* something happened or *with what effect*, not when it asserts *what was observed at a specific surface*. A timestamp lookup is descriptive; a claim that the timestamp implies a particular cause is causal. The cheap test: if a colleague could ask "how do you know?" and the honest answer is "I inferred it from X," the claim is causal and needs a falsification probe. Descriptive observations are out of scope and don't need probes.
+
+**Reference form (acceptable substitute for inline probe).** When the verifying probe ran in a *prior* turn or lives in a *linked* artifact, the claim may cite the artifact instead of restating the probe — but the citation must be precise enough that a reader can locate the probe without searching. Acceptable forms: a PR/issue comment URL, a `#<NNN>` ticket reference, a `memory:<file>` path, a prior session-turn timestamp. Vague references ("per my earlier investigation," "as established last week") do not satisfy the rule — they shift the audit burden to the reader without naming the artifact.
+
+Acceptable shapes:
+
+- *Inline:* "Phase 3 took effect — grep result: 0 empty-cand-FEC-ID edges in gold_edges (was 3,469)."
+- *Inline:* "Hypothesis: bulk-collapse drives the F3 gap. Probe: top-5 donor row inspection — `SELECT donor_name, contribution_amount FROM ...` → top-5 are committees, not bulk-collapsed lines → hypothesis falsified."
+- *Referenced:* "Phase 3 took effect (verified at electinfo/enterprise#2210 comment 2026-05-30 10:45 CDT — probe inlined there)."
+
+Banned shapes:
+
+- "Phase 3 took effect." (causal claim with no probe and no reference)
+- "Phase 3 took effect (per my earlier investigation)." (reference too vague — no artifact pointer)
+- "The DAG produces the 68.34% baseline." (causal claim about runtime output without a same-turn probe of the actual DAG run)
+
+**Incident justification.** Operator-observed recurrence pattern (2026-05-31, claude-configs-public#268): six wrong causal claims stated as fact in one ~6h session, each falsified after the fact at half-hour-or-more cost per incident — bulk-collapse-as-F3-driver, Pass 3 closing residual gaps, silver_part2 phantom DAG fail, Phase 3 taking effect after re-mat, bronze/fec_filings.py bidirectional drift, 68.34%-within-±5% as DAG output. Every existing verify-before-X rule gates an *action* (Edit / Write / Bash). Verbal claims happen at the LLM-output layer, which no PreToolUse hook intercepts. This rule gates *claims*, not actions, and lives at the speech-time enforcement surface alongside writing-prose:5.
+
+**Detection markers for Phase 2 scanner** (case-insensitive; intended for a future `hooks/resolver/post-claim-guard.sh` Stop-hook scanner, same re-injection pattern as `standing-order-guard.sh`):
+
+- `(took effect|kicked in|landed|propagated|rolled out|fired|completed successfully)`
+- `(is now|now (has|shows|reflects)|currently (contains|produces))`
+- `(produces|outputs|emits) (the|a) <noun>`
+- `(is|was) (the|a) (cause|reason|driver) of`
+- `(verified|confirmed|validated)\s+(that|the)` -- often precedes verification claims the agent did not perform
+- `after \w+ the (MV|DAG|job|table)( now| has)` -- temporal-causal pattern common in re-mat / re-deploy claims
+- `the (DAG|MV|job|table|hook) (ran|fired|executed) with`
+
+Non-regex flag (LLM-eval for Phase 2 tuning, not a regex trigger): `(because|since|due to) <causal clause without same-turn probe>` — the causal-clause boundary isn't matchable end-to-end without natural-language understanding; tracked as an LLM-eval candidate, not as a regex marker.
+
+Scanner flagging policy: flag any causal-marker hit without (a) inline probe in the same response, or (b) a URL / `#<NNN>` / `memory:<file>` / `session:<id>` reference within ±200 characters of the claim. Conservative default; operator-tunable false-positive rate.
+
+**writing-claims:10. Before claiming a change to runtime-loaded code took effect, verify the consuming path matches the edited path.** Any deployment topology with separate write surfaces (worker-image-baked vs git-sync; vendored vs upstream; baked container vs config-loaded; Lambda zip vs source; CDN-cached vs source; firmware-baked vs config-loaded) has at least two paths only one of which the runtime loads. The path you edited and the path the runtime reads are not the same claim until the inspection matches on both. Verification probe must target the consuming path explicitly — e.g., `kubectl exec <runtime-pod> -- grep <pattern> <consuming-path>`, `ls -la /opt/ee_pipelines/...` on the worker, equivalent inspection of the loaded artifact.
+
+This is the operational core of the writing-claims:9 failure mode for runtime-loaded code: agent edits source path A, runtime loads source path B, agent claims the change took effect, runtime never saw it. The cheap test is grepping the consuming path before stating the claim.
+
+**Incident justification.** Two silent no-ops in the same 2026-05-31 session: Phase 3 gold MVs (claimed effective; runtime continued reading the worker-image-baked path; required unblocker electinfo/airflow#137) and PR #2212 recon SQL (claimed running; the scheduled DAG was reading stale vendor SQL, not the edited path; required unblocker electinfo/airflow#138). Both came from the same shape — editing the wrong of two equivalent-looking paths. The generalization to non-Kubernetes topologies (Lambda, CDN, vendored deps, firmware) makes this a writing-claims:9 special-case worth promoting to its own line so the failure mode names itself.
+
 ## Override
 
 These rules are mandatory. No `[claim-skip]` override and no `[padding-skip]` override. The same-turn-evidence constraint and the artifact-backing requirement are the entire point; an override defeats the rule. The writing-claims:4 carve-out for new-rule-authoring is in the rule, not an override. `[skill:detect-ai-fingerprints]` trigger-set extension for writing-claims:4 pattern-naming detection is tracked as a v2.x.y follow-up.
@@ -103,7 +143,8 @@ These rules are mandatory. No `[claim-skip]` override and no `[padding-skip]` ov
 
 - `[rule:verify-before-execute]` Evidence clause is the parent discipline; these rules extend it to specific claim shapes.
 - `[rule:writing-code]` writing-code:4 (verify symbol exists), writing-code:5 (no hypothetical code), and writing-code:6 (doc-edit symmetry) are the action-side counterparts. The boundary: writing-code rules fire when editing code; writing-claims rules fire when stating facts in commit/PR bodies or chat. The same operator workflow may invoke both -- edit code (writing-code rules apply), then write the commit body (writing-claims rules apply).
-- `[skill:detect-ai-fingerprints]` mechanically enforces writing-claims:2 and writing-claims:3 trigger detection in commit/PR message bodies; the `Verified-by:` trailer is the required pairing. writing-claims:4 trigger-set extension (pattern-naming phrases) is queued as a v2.x.y follow-up.
+- `[rule:writing-prose]` writing-prose:5 is the future-tense sibling of writing-claims:9. writing-claims:9 grounds present/past-tense causal claims about production state ("the DAG produces Z"); writing-prose:5 grounds future-tense commitments to action ("I'll monitor the DAG"). Same speech-time enforcement surface, same Phase 1 (rule) / Phase 2 (Stop-hook scanner) staging.
+- `[skill:detect-ai-fingerprints]` mechanically enforces writing-claims:2 and writing-claims:3 trigger detection in commit/PR message bodies; the `Verified-by:` trailer is the required pairing. writing-claims:4 trigger-set extension (pattern-naming phrases) is queued as a v2.x.y follow-up. writing-claims:9 detection-markers are outside the scanner's current scope because they target live assistant-response text rather than staged diffs; the Phase 2 follow-up is a separate Stop-hook scanner.
 - `[skill:code-review]` checks writing-claims:1 (scope-of-fix across the codebase) and writing-claims:4 (pattern-naming groundedness) at PR time.
 - `[skill:self-review]` Quantified Claims section requires writing-claims:8 evidence inline for every specific count stated in the PR body or commit message.
 
