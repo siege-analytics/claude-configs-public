@@ -425,5 +425,59 @@ HOOKEOF
     # WARNING only — do not exit 2
 fi
 
-# v1 checks passed.
+# v1.6: Pre-ship-dry-run check for transformation code.
+# If the diff touches transformation-code patterns, require a
+# Pre-ship-dry-run: trailer pointing at behavioral verification evidence.
+# Level 3 of the investigation enforcement ladder (#255, #275).
+DIFF_FILES=$(git -C "$EFFECTIVE_CWD" diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true)
+
+TRANSFORM_FILE_RE='\.(sql|sql\.j2)$'
+IS_TRANSFORM=false
+
+if [ -n "$DIFF_FILES" ]; then
+    if echo "$DIFF_FILES" | grep -qE "$TRANSFORM_FILE_RE" 2>/dev/null; then
+        IS_TRANSFORM=true
+    fi
+
+    # Also check file contents for transformation patterns
+    if [ "$IS_TRANSFORM" = "false" ]; then
+        TRANSFORM_CONTENT_RE='(CREATE[[:space:]]+TABLE|INSERT[[:space:]]+INTO|UNION[[:space:]]+ALL|\.write\.|\.saveAsTable|\.to_sql)'
+        for f in $DIFF_FILES; do
+            FULL_PATH="$EFFECTIVE_CWD/$f"
+            if [ -f "$FULL_PATH" ] && grep -qlE "$TRANSFORM_CONTENT_RE" "$FULL_PATH" 2>/dev/null; then
+                IS_TRANSFORM=true
+                break
+            fi
+        done
+    fi
+fi
+
+if [ "$IS_TRANSFORM" = "true" ]; then
+    DRYRUN_LINE=$(echo "$COMMIT_MSG" | grep -E '^Pre-ship-dry-run:[[:space:]]+\S' | head -1)
+    if [ -z "$DRYRUN_LINE" ]; then
+        cat >&2 <<HOOKEOF
+BLOCKED: Diff touches transformation code but commit is missing
+Pre-ship-dry-run: trailer.
+
+Transformation code (SQL, DataFrame pipelines, write operations) requires
+behavioral verification before shipping. Add to the commit trailer block:
+
+  Pre-ship-dry-run: <URL or path to dry-run evidence>
+
+Evidence must be one of:
+  - EXPLAIN output showing query plan and estimated rows
+  - LIMIT-N materialization with row counts
+  - .printSchema() / .show(N) output on a sample
+  - Rendered template output with concrete values
+
+The evidence must be posted to the ticket or committed to the repo.
+"I checked and it looks fine" is not evidence.
+
+Ref: #255 (Level 3 enforcement), #275 (transformation code dry-run)
+HOOKEOF
+        exit 2
+    fi
+fi
+
+# All checks passed.
 exit 0
