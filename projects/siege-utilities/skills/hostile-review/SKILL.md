@@ -31,19 +31,19 @@ Temporal awareness is first-class. Redistricting plans have effective dates. Con
 
 1. **Geo is the gravitational center.** All domain modules produce events that need space-time location before they become analytically useful. Changes to geo propagate everywhere.
 
-2. **Engine-agnostic DataFrame.** Same analysis at different scales without rewriting: pandas for exploration, DuckDB for medium scale, Spark for distribution, PostGIS for persistence. If an engine claims to support an operation, it must actually support it.
+2. **Engine-agnostic DataFrame.** Same analysis at different scales without rewriting: pandas for exploration, DuckDB for medium scale, Spark for distribution, PostGIS for persistence. If an engine claims to support an operation, it must actually support it. The abstraction serves the general case; when you must drop to native (Spark SQL, raw pandas), use that engine's idioms. Do not create single-consumer abstractions.
 
-3. **OSGeo preferred, alternatives when constrained.** GDAL/OGR, PROJ, GEOS via Shapely, Fiona, rasterio are the default geospatial stack. When the deployment target cannot run C libraries (Databricks, Lambda, serverless), use Sedona, DuckDB-spatial, or pure-Python paths. The constraint must be explicit, not a silent fallback.
+3. **OSGeo preferred, alternatives when constrained.** GDAL/OGR, PROJ, GEOS via Shapely, Fiona, rasterio are the default geospatial stack. When the deployment target cannot run C libraries (Databricks, Lambda, serverless), use Sedona, DuckDB-spatial, or pure-Python paths. The constraint must be explicit, not a silent fallback. A missing non-GDAL path is a gap to fill, not a design choice to accept.
 
 4. **Databricks and Snowflake are first-class targets.** Azure Databricks cannot install GDAL. The `databricks/` bridge pattern (Spark -> driver-side GeoPandas -> back to Spark) is an architectural choice. Snowflake's geography type and Trino federation are parallel vendor paths.
 
 5. **Pluggable providers with shared contracts.** Boundary providers (Census TIGER, GADM, RDH), geocoders, data sources -- all pluggable so callers compose without knowing which provider is active. Provider contracts must be consistent: same failure mode, same return shape, same column names.
 
-6. **Lazy loading by design.** PEP 562 `__getattr__` because the dependency tree is enormous. You must be able to import one piece in a Lambda or notebook without pulling the whole library.
+6. **Lazy loading by design.** PEP 562 `__getattr__` because the dependency tree is enormous. You must be able to import one piece in a Lambda or notebook without pulling the whole library. Lazy loading defers *when* errors surface, not *whether* they surface: `__getattr__` must never catch `ImportError` and return a stub -- let it propagate. Any `__getattr__` that catches and returns a value instead of re-raising is an SU-1 Tier 2 violation.
 
 7. **Credential management via external tools.** 1Password CLI (`op`), environment variables, Databricks secret scopes. siege_zsh sets up the shell environment (paths, credentials, tooling) that siege_utilities expects. Code should degrade gracefully when siege_zsh is not present but leverage it when available.
 
-8. **Fuzzy matching at seams is expected.** Precinct names from three vendors with different conventions (uppercase, codes, typos). Entity resolution across systems is a core capability, not an edge case.
+8. **Fuzzy matching at seams is expected.** Precinct names from three vendors with different conventions (uppercase, codes, typos). The library provides the fuzzy-matching *mechanism* (canonicalization, normalization, scoring); heavy entity resolution belongs in downstream applications. The library administers the capability but does not perform the analysis.
 
 ### Tactical principles (how to build)
 
@@ -53,11 +53,11 @@ Temporal awareness is first-class. Redistricting plans have effective dates. Con
 
 3. **Logging is a primary concern.** Every side-effecting process must produce observable output (writing-code:11). Progress indicators for long-running operations. The operator must always be able to see what is happening and measure output.
 
-4. **Functional approaches preferred.** Prefer pure functions, immutable data, composition over mutation. This may lead to recursion over iteration. When it does: prioritize legibility over elegance at smaller scales, elegance at higher scales.
+4. **Functional approaches preferred.** Prefer composition and immutability over mutation, not strict purity (logging wraps pure cores). This may lead to recursion over iteration. When it does: prioritize legibility over elegance at smaller scales (within a function -- each case obvious to a cold reader), elegance at higher scales (across modules -- minimal, orthogonal protocols). The boundary is the module boundary.
 
-5. **Notebooks are rewritable; foundations are not.** The notebooks demonstrate capacity and can be redistributed. The foundations (user architecture, Spark Connect, credential management, engine abstraction) must be solid because everything composes on top of them.
+5. **Notebooks demonstrate intent; foundations are not negotiable.** Notebooks demonstrate current library capabilities and should be rewritten when functions change (SU-4a). They are disposable in form but must reflect current state. The foundations (user architecture, Spark Connect, credential management, engine abstraction) must be solid because everything composes on top of them.
 
-6. **Reuse siege_zsh when available.** Shell environment setup (paths, credentials, virtual environments, tool availability) should leverage siege_zsh conventions. Code should detect and use them but not hard-fail without them.
+6. **Reuse siege_zsh when available.** siege_zsh is a reference architecture -- it shows the frameworks and tooling siege_utilities is built for (as does socialwarehouse). Code should detect and leverage siege_zsh conventions but not hard-fail without them. The Adversary checks: does the "graceful degradation" path actually work, or is it a documented aspiration with no test?
 
 ### What composition means here
 
