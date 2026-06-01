@@ -20,15 +20,11 @@ set -uo pipefail
 
 INPUT=$(cat)
 
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+EXTRACT="$HOOK_DIR/../lib/extract-json.py"
+
 # --- Parse file_path ---
-if command -v jq >/dev/null 2>&1; then
-    FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.path // empty' 2>/dev/null || echo "")
-else
-    FILE_PATH=$(printf '%s' "$INPUT" \
-        | node -e \
-        'const d=JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")); process.stdout.write((d.tool_input?.file_path||d.tool_input?.path||""))' \
-        2>/dev/null || echo "")
-fi
+FILE_PATH=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.file_path tool_input.path 2>/dev/null || echo "")
 
 [[ -z "$FILE_PATH" ]] && exit 0
 
@@ -53,7 +49,7 @@ esac
 # --- Extract content ---
 # For Write: tool_input.content
 # For Edit: read existing file from disk (frontmatter may already exist)
-TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null || echo "")
+TOOL_NAME=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_name 2>/dev/null || echo "")
 
 if [[ "$TOOL_NAME" == "Edit" ]]; then
     # For Edit, read the file from disk to check existing frontmatter.
@@ -66,14 +62,7 @@ if [[ "$TOOL_NAME" == "Edit" ]]; then
     fi
 else
     # Write tool: extract content from tool_input
-    if command -v jq >/dev/null 2>&1; then
-        CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty' 2>/dev/null || echo "")
-    else
-        CONTENT=$(printf '%s' "$INPUT" \
-            | node -e \
-            'const d=JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")); process.stdout.write(d.tool_input?.content||"")' \
-            2>/dev/null || echo "")
-    fi
+    CONTENT=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.content 2>/dev/null || echo "")
 fi
 
 [[ -z "$CONTENT" ]] && exit 0

@@ -10,7 +10,9 @@ set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
 
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || true)
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+EXTRACT="$HOOK_DIR/../lib/extract-json.py"
+COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 
 if [[ -z "$COMMAND" ]]; then
     exit 0

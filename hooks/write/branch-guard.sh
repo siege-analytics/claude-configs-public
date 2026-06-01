@@ -29,20 +29,10 @@ export PATH="/home/craftagents/bin:$PATH"
 
 INPUT=$(cat)
 
-# JSON parse: prefer jq if available, fall back to node (matches write-guard.sh).
-if command -v jq >/dev/null 2>&1; then
-    FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.path // empty' 2>/dev/null || echo "")
-    CWD=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null || echo "")
-else
-    FILE_PATH=$(printf '%s' "$INPUT" \
-        | /usr/local/bun-node-fallback-bin/node -e \
-        'const d=JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")); process.stdout.write((d.tool_input?.file_path||d.tool_input?.path||""))' \
-        2>/dev/null || echo "")
-    CWD=$(printf '%s' "$INPUT" \
-        | /usr/local/bun-node-fallback-bin/node -e \
-        'const d=JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")); process.stdout.write(d.cwd||"")' \
-        2>/dev/null || echo "")
-fi
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+EXTRACT="$HOOK_DIR/../lib/extract-json.py"
+FILE_PATH=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.file_path tool_input.path 2>/dev/null || echo "")
+CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || echo "")
 
 [[ -z "$FILE_PATH" ]] && exit 0
 
