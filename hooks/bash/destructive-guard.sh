@@ -143,7 +143,7 @@ for entry in "${DENY_PATTERNS[@]}"; do
     fi
 done
 
-[[ "${#MATCHED_BLOCKS[@]:-0}" -eq 0 ]] && exit 0
+[[ ${#MATCHED_BLOCKS[@]} -eq 0 ]] && exit 0
 
 {
     echo "BLOCKED: command matches one or more destructive-bash patterns."
