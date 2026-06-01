@@ -10,8 +10,10 @@ set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
 
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || true)
-CWD=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null || true)
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+EXTRACT="$HOOK_DIR/../lib/extract-json.py"
+COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
+CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 
 # Match `git commit` anywhere in the command, not just at the start, so
 # forms like `cd /tmp/foo && git commit ...` and `bash -c "git commit ..."`

@@ -17,13 +17,16 @@ export PATH="/home/craftagents/bin:$PATH:/usr/local/bin:/opt/homebrew/bin"
 
 INPUT=$(cat)
 
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+EXTRACT="$HOOK_DIR/../lib/extract-json.py"
+
 # Extract the message body. The exact field name on
 # mcp__session__send_agent_message is `message`; fall back to scanning the
 # entire tool_input JSON if the field is absent so the hook fails open
 # rather than silently passing on a future schema change.
-BODY=$(echo "$INPUT" | jq -r '.tool_input.message // .tool_input.body // .tool_input.text // empty' 2>/dev/null || true)
+BODY=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.message tool_input.body tool_input.text 2>/dev/null || true)
 if [[ -z "$BODY" ]]; then
-    BODY=$(echo "$INPUT" | jq -r '.tool_input // empty' 2>/dev/null || true)
+    BODY=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input 2>/dev/null || true)
 fi
 
 if [[ -z "$BODY" ]]; then
