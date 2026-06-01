@@ -104,7 +104,7 @@ echo "Exit: $?"
 ## Adding New Hooks
 
 1. Create a script in the appropriate subdirectory (`git/`, or a new category)
-2. Follow the pattern: read JSON from stdin, parse with jq, exit 0 or 2
+2. Follow the pattern: read JSON from stdin, parse with `hooks/lib/extract-json.py` (NOT jq -- not universally installed), exit 0 or 2
 3. Document which skill(s) it enforces in the header comment
 4. Add to `settings-snippet.json`
 5. Update this README

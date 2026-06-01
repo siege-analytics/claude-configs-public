@@ -20,8 +20,10 @@ set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
 
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || true)
-CWD=$(echo "$INPUT" | jq -r '.cwd // empty' 2>/dev/null || true)
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+EXTRACT="$HOOK_DIR/../lib/extract-json.py"
+COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
+CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 
 if [[ -z "$COMMAND" ]]; then
     exit 0
@@ -92,7 +94,7 @@ if echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])glab[[:space:]]+mr[[:space:]]+cre
     fi
     # Fall back to glab's default-branch query.
     if [[ -z "$PR_BASE" ]]; then
-        PR_BASE=$(cd "$EFFECTIVE_CWD" && glab repo view --output json 2>/dev/null | jq -r '.default_branch // empty' 2>/dev/null || echo "")
+        PR_BASE=$(cd "$EFFECTIVE_CWD" && glab repo view --output json 2>/dev/null | python3 "$EXTRACT" default_branch 2>/dev/null || echo "")
         if [[ -z "$PR_BASE" ]]; then
             exit 0
         fi
