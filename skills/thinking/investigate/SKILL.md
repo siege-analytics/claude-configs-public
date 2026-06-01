@@ -309,11 +309,58 @@ Scope justification: <why Focused tier — must name: files touched (1-2),
 
 **Escalation rule:** If at any point during a Focused investigation you discover a downstream consumer, an interface change, or a cross-module dependency, escalate to Full. If the coherence check reveals contradictions between sections, that is also an escalation signal — contradictions in a Focused investigation often indicate the task has more surface area than the Focused tier assumed.
 
-## Post to ticket and continue (hard gate)
+## Post to ticket, write signal file, and continue (hard gate)
 
 When the Fact Sheet is complete, post it to the ticket NOW. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy.
 
 Do not proceed past investigation until the Fact Sheet is on the ticket. An investigation that stays in the session is an investigation that doesn't exist.
+
+### Write investigate-gate.json (mechanical enforcement)
+
+After posting the Fact Sheet to the ticket, write `<workspace>/investigate-gate.json`. This signal file is checked by `investigate-gate-guard.sh` on every turn. Without it, the guard injects a blocking directive reminding you that investigation is incomplete.
+
+```json
+{
+  "ticket": "#NNN",
+  "factSheetLocation": "https://github.com/.../issues/NNN#issuecomment-...",
+  "timestamp": "2026-06-01T18:00:00Z",
+  "tier": "full",
+  "verifiedShapes": [
+    {
+      "entity": "human-readable entity name",
+      "file": "relative/path/to/source.py",
+      "line": 42,
+      "grep": "pattern found at that line",
+      "status": "VERIFIED"
+    }
+  ],
+  "designNote": "plans/design-note.md or ticket URL"
+}
+```
+
+**verifiedShapes requirements:**
+
+- One entry per entity verified in Phase 2 (Verified Shapes).
+- `file` and `line` must point at the actual source location you read.
+- `grep` must contain a substring that appears at or near that line — the guard hook spot-checks these citations by grepping the file. Fabricated citations are caught mechanically.
+- `status` is `VERIFIED` (you read the source) or `UNVERIFIED` (external API, no local schema — flagged as risk in the Fact Sheet). UNVERIFIED shapes are skipped by the spot-check but their presence is tracked.
+
+The guard performs three checks:
+1. **Existence** — investigate-gate.json must exist when think-gate.json exists.
+2. **Freshness** — investigate-gate.json must be newer than think-gate.json (design changes after investigation require re-investigation).
+3. **Citation spot-check** — each verifiedShape with `file` + `line` + `grep` is grepped against the actual file to confirm the citation isn't fabricated.
+
+### Transformation code: dry-run evidence required
+
+When the task involves transformation code (SQL templates, DataFrame pipelines, CREATE/INSERT/UNION statements, `.write.` or `.saveAsTable` calls), the Fact Sheet must include a **dry-run artifact** in addition to shape verification:
+
+- **SQL**: EXPLAIN output, or LIMIT-N materialization with row counts
+- **DataFrame**: `.printSchema()` on a sample, or `.show(5)` output
+- **Template**: rendered template output with concrete values substituted
+
+The dry-run artifact proves behavioral correctness, not just structural correctness. "The columns match" (structural) is necessary but not sufficient — "the query returns 47 rows from the expected partition, not 44.59M rows from the whole table" (behavioral) is what prevents production incidents.
+
+At push time, `self-review.sh` checks for a `Pre-ship-dry-run:` trailer on commits touching transformation-code patterns. The trailer points at the dry-run evidence (ticket comment URL or committed file).
 
 **Then continue autonomously to the next pipeline gate** (pre-mortem, per the RESOLVER). Do not wait for parent approval or operator acknowledgement to proceed. The pipeline is self-driving: produce the artifact, post it, advance.
 

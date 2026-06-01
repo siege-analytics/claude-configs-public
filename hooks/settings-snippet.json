@@ -23,6 +23,11 @@
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/resolver/think-gate-guard.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/investigate-gate-guard.sh",
+            "timeout": 10
           }
         ]
       }
