@@ -357,9 +357,11 @@ fi
 COVERAGE_NOTE='scanned: writing-prose:1-4 (stylistic; broader Unicode class as of v2.2.0), writing-code:2 (history references in code comments), writing-code:7 (silent error swallowing; AST scanner as of v2.3.1.1), writing-code:9 (silently-dropped parameters; AST scanner), writing-code:15 (unbounded blocking I/O; AST scanner as of v2.6.0), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable claims and completeness claims need Verified-by trailer), writing-releases:2 (skip-count trending), writing-releases:3 (deprecation messages name a removal target; AST scanner). The rest require [skill:code-review] judgment.'
 
 if (( violations > 0 )); then
-    echo
-    echo "$COVERAGE_NOTE"
-    echo "violations: $violations"
+    # Summary to stderr to avoid bash 3.2 SIGSEGV on stdout buffer flush
+    # at exit time when many violations are buffered. See issue #60.
+    echo >&2
+    echo "$COVERAGE_NOTE" >&2
+    echo "violations: $violations" >&2
     exit 1
 fi
 
