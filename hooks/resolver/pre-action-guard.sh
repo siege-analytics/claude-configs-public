@@ -60,4 +60,40 @@ EOF
     exit 0
 fi
 
+# Workaround tally check — reads the tally file written by
+# hooks/bash/workaround-tally.sh and warns when patterns exceed threshold.
+# Covers Craft Agent sessions where PreToolUse doesn't fire.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+TALLY_FILE="${WORKSPACE_ROOT}/workaround-tally.json"
+THRESHOLD=3
+
+if [ -f "$TALLY_FILE" ]; then
+    TALLY_WARN=$(python3 -c "
+import json, sys
+try:
+    tally = json.load(open('$TALLY_FILE'))
+except:
+    sys.exit(0)
+alerts = []
+for sig, entry in tally.get('patterns', {}).items():
+    if entry.get('count', 0) >= $THRESHOLD:
+        alerts.append(f\"  {entry['label']}: {entry['count']}x (e.g., {entry['first_command'][:80]})\")
+if alerts:
+    print('Repeated workaround patterns detected:')
+    for a in alerts:
+        print(a)
+    print()
+    print('These patterns suggest a bug being masked by workarounds.')
+    print('File a ticket for the root cause instead of repeating the fix.')
+" 2>/dev/null || true)
+    if [ -n "$TALLY_WARN" ]; then
+        cat <<EOF
+<pre-action-guard>
+$TALLY_WARN
+</pre-action-guard>
+EOF
+    fi
+fi
+
 exit 0
