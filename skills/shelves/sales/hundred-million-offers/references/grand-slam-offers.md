@@ -145,19 +145,19 @@ You can use this deliberately by making the middle tier your ideal customer outc
 Present your offer as a stack of individually valuable components:
 
 ```
-CORE OFFER: [Name] — $[Value]
+CORE OFFER: [Name] -- $[Value]
   [Description of the main deliverable]
 
-BONUS 1: [Name] — $[Value]
+BONUS 1: [Name] -- $[Value]
   [Description addressing Objection #1]
 
-BONUS 2: [Name] — $[Value]
+BONUS 2: [Name] -- $[Value]
   [Description addressing Objection #2]
 
-BONUS 3: [Name] — $[Value]
+BONUS 3: [Name] -- $[Value]
   [Description addressing Objection #3]
 
-BONUS 4: [Name] — $[Value]
+BONUS 4: [Name] -- $[Value]
   [Description addressing Objection #4]
 
 GUARANTEE: [Named Guarantee]

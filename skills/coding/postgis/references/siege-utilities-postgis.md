@@ -1,6 +1,6 @@
-# siege_utilities + PostGIS — Interop Map
+# siege_utilities + PostGIS -- Interop Map
 
-When working with PostGIS in Siege projects, [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) helps with the *upstream* of getting data into Postgres (boundary sourcing, Census data, GEOID wrangling) and the *Django/ORM* side of querying it. It does **not** wrap raw ST_* operations — that's bring-your-own-psycopg2.
+When working with PostGIS in Siege projects, [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) helps with the *upstream* of getting data into Postgres (boundary sourcing, Census data, GEOID wrangling) and the *Django/ORM* side of querying it. It does **not** wrap raw ST_* operations -- that's bring-your-own-psycopg2.
 
 This file is the per-task map of what SU gives you vs. what you write directly.
 
@@ -83,7 +83,7 @@ counties_in_tx = County.objects.filter(state=texas)
 
 over hand-rolled `psycopg2.execute("SELECT ... FROM counties WHERE state_fips = '48'")`.
 
-## What SU does **not** do — write directly
+## What SU does **not** do -- write directly
 
 ### Raw ST_* spatial queries
 
@@ -104,7 +104,7 @@ with psycopg2.connect(dsn) as conn, conn.cursor() as cur:
     rows = cur.fetchall()
 ```
 
-If you find yourself writing the same wrapper twice, that's a candidate **siege_utilities PR** — see the upstream backlog (item SU-5: PostGIS query-builder layer).
+If you find yourself writing the same wrapper twice, that's a candidate **siege_utilities PR** -- see the upstream backlog (item SU-5: PostGIS query-builder layer).
 
 ### COPY-based bulk loads
 
@@ -147,4 +147,4 @@ Apply the [rule:siege-utilities] workflow: file an SU PR before adding the helpe
 - [ ] Source boundary data via SU providers (don't shapefile-curl by hand).
 - [ ] Set the default CRS via SU at session start.
 - [ ] Use GeoDjango models if the data fits SU's catalog; psycopg2 for queries beyond ORM scope.
-- [ ] Spatial indexing, ST_* operations, EXPLAIN tuning — all SQL, no SU.
+- [ ] Spatial indexing, ST_* operations, EXPLAIN tuning -- all SQL, no SU.

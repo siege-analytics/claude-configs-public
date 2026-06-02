@@ -1,6 +1,6 @@
 # Target Customer Analysis
 
-Defining your best-fit target customer is the step that makes positioning actionable. Without a tight target, your positioning is a strategic exercise that lives on a whiteboard. With a clear target, every team — sales, marketing, product, customer success — knows exactly who to focus on. This reference provides frameworks for identifying, defining, and validating your best-fit customer segment.
+Defining your best-fit target customer is the step that makes positioning actionable. Without a tight target, your positioning is a strategic exercise that lives on a whiteboard. With a clear target, every team -- sales, marketing, product, customer success -- knows exactly who to focus on. This reference provides frameworks for identifying, defining, and validating your best-fit customer segment.
 
 ## Best-Fit Customers vs. Total Addressable Market
 
@@ -12,7 +12,7 @@ This distinction is critical and frequently misunderstood:
 | **Serviceable Addressable Market (SAM)** | All customers who could reasonably use and benefit from your product | Medium-term growth planning, investment decisions | All B2B companies with a sales team of 10+ using any CRM |
 | **Total Addressable Market (TAM)** | Every potential customer if you had unlimited resources | Investor presentations, long-term vision | Every company that sells to other businesses |
 
-**The positioning paradox:** The tighter your best-fit customer definition, the more effective your positioning — and counterintuitively, the faster you grow. By dominating a narrow segment, you build proof points, word-of-mouth, and credibility that naturally expand outward.
+**The positioning paradox:** The tighter your best-fit customer definition, the more effective your positioning -- and counterintuitively, the faster you grow. By dominating a narrow segment, you build proof points, word-of-mouth, and credibility that naturally expand outward.
 
 ### The Bowling Alley Strategy
 
@@ -25,7 +25,7 @@ The mistake is trying to hit all the pins simultaneously. That's a gutter ball.
 
 ## Actionable Segmentation Criteria
 
-Best-fit customer characteristics must be **actionable** — meaning your sales and marketing teams can identify these customers before talking to them. This is the fundamental constraint that separates useful segmentation from academic segmentation.
+Best-fit customer characteristics must be **actionable** -- meaning your sales and marketing teams can identify these customers before talking to them. This is the fundamental constraint that separates useful segmentation from academic segmentation.
 
 ### The Actionability Test
 
@@ -113,9 +113,9 @@ Look at your worst customers (high churn, low engagement, long sales cycles) and
 
 | Characteristic | Best Customers | Worst Customers |
 |----------------|---------------|-----------------|
-| Industry | B2B SaaS (90%) | Mixed — manufacturing, retail |
+| Industry | B2B SaaS (90%) | Mixed -- manufacturing, retail |
 | Dedicated RevOps | Yes (100%) | No (80%) |
-| CRM | Salesforce (95%) | Various — HubSpot, Pipedrive, none |
+| CRM | Salesforce (95%) | Various -- HubSpot, Pipedrive, none |
 | Company size | 100-500 employees | Either <50 or >5000 |
 | Trigger event | Recent growth event (85%) | No clear trigger |
 
@@ -160,10 +160,10 @@ As you grow, you'll naturally expand beyond your best-fit segment. Understanding
 
 | Ring | Segment | Positioning Approach | Expected Metrics |
 |------|---------|---------------------|------------------|
-| **Core (best-fit)** | RevOps at B2B SaaS, 100-500 employees, Salesforce | Primary positioning — purpose-built for them | Fastest sales cycle, highest retention, most referrals |
+| **Core (best-fit)** | RevOps at B2B SaaS, 100-500 employees, Salesforce | Primary positioning -- purpose-built for them | Fastest sales cycle, highest retention, most referrals |
 | **Adjacent 1** | RevOps at B2B SaaS, 500-2000 employees | Same positioning + enterprise features messaging | Slightly longer sales cycle, may need enterprise security/compliance |
-| **Adjacent 2** | Sales Operations at non-SaaS B2B companies | Adapted positioning — emphasize general RevOps value, not SaaS-specific | Longer sales cycle, need more education, may require different integrations |
-| **Stretch** | Marketing Operations teams | Different positioning — repurpose as marketing analytics | Requires significant product adaptation, essentially a new market |
+| **Adjacent 2** | Sales Operations at non-SaaS B2B companies | Adapted positioning -- emphasize general RevOps value, not SaaS-specific | Longer sales cycle, need more education, may require different integrations |
+| **Stretch** | Marketing Operations teams | Different positioning -- repurpose as marketing analytics | Requires significant product adaptation, essentially a new market |
 
 ## Validating Your Target Customer Definition
 
@@ -171,11 +171,11 @@ As you grow, you'll naturally expand beyond your best-fit segment. Understanding
 
 | Test | Pass Criteria | If Fail |
 |------|--------------|---------|
-| **The List Test** | You can build a list of 100+ target accounts from public data | Criteria aren't actionable enough — use more observable characteristics |
-| **The Ad Test** | You could target these people with LinkedIn or Google ads | Criteria are too subjective — translate to targetable attributes |
-| **The Sales Test** | Sales team can identify if a lead is best-fit in under 2 minutes | Definition is too complex — simplify to 3-5 key criteria |
-| **The Pattern Test** | 80%+ of your best customers match the definition | Definition is too narrow or wrong — re-analyze best customer data |
-| **The Negative Test** | Less than 20% of churned customers match the definition | Definition isn't discriminating enough — add more criteria |
+| **The List Test** | You can build a list of 100+ target accounts from public data | Criteria aren't actionable enough -- use more observable characteristics |
+| **The Ad Test** | You could target these people with LinkedIn or Google ads | Criteria are too subjective -- translate to targetable attributes |
+| **The Sales Test** | Sales team can identify if a lead is best-fit in under 2 minutes | Definition is too complex -- simplify to 3-5 key criteria |
+| **The Pattern Test** | 80%+ of your best customers match the definition | Definition is too narrow or wrong -- re-analyze best customer data |
+| **The Negative Test** | Less than 20% of churned customers match the definition | Definition isn't discriminating enough -- add more criteria |
 
 ### Ongoing Validation
 

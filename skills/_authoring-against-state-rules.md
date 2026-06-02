@@ -219,7 +219,7 @@ The shape is identical to the Spark/PSQL example -- inputs, enumerated questions
 - Documentation consulted: <links>
 - Standing rules / skills consulted: <rule IDs or skill names>
 
-### Knowledge requirements (step 2 — what we need to know in order to do this work)
+### Knowledge requirements (step 2 -- what we need to know in order to do this work)
 [The open questions whose answers determine HOW the code is written.
  Each question is a measurement target the inventory below must answer
  (or explicitly defer under "What was NOT measured"). For the
@@ -235,7 +235,7 @@ The shape is identical to the Spark/PSQL example -- inputs, enumerated questions
  - Are there downstream consumers that pin the table's schema?
 ]
 
-### Contact-point measurements (step 3 — per rules 1-5)
+### Contact-point measurements (step 3 -- per rules 1-5)
 - **data-shape (authoring-against-state:1):** [measurement output OR `N/A` with Trivial-against-state cross-reference]
 - **config-state (authoring-against-state:2):** [measurement output OR `N/A`]
 - **topology (authoring-against-state:3):** [measurement output OR `N/A`]
@@ -252,7 +252,7 @@ The shape is identical to the Spark/PSQL example -- inputs, enumerated questions
  - Downstream consumers reading the table (any that pin schema?)
 ]
 
-### Hypothesis (step 7 — what the code will implement; falsifiable)
+### Hypothesis (step 7 -- what the code will implement; falsifiable)
 [A declarative statement of what the new code/config does. Use
  `{placeholders}` for values surfaced in the inventory above so the
  hypothesis is grounded in measured state. Each clause must be
@@ -273,7 +273,7 @@ The shape is identical to the Spark/PSQL example -- inputs, enumerated questions
   value of the `{vintage_column}`, and deduplicate."
 ]
 
-### Conclusions (steps 5+6 — write into the ticket; state explicitly what was NOT measured)
+### Conclusions (steps 5+6 -- write into the ticket; state explicitly what was NOT measured)
 [One sentence per axis: is the assumed state consistent with measured state?
  If not, what's the gap, and how does the planned change handle it?
  Is the hypothesis above achievable given the inventory, or does any clause
@@ -315,7 +315,7 @@ What this means concretely:
 
 The rule is inviolable in form: every section of the Pre-author inventory template appears in every triggering PR. The rule is proportionate in content: each section's depth flexes with what the change actually touches.
 
-The depth flex described here is the *form-side* scale knob; step 7's hypothesis-scaling rule (single-axis change = one-sentence hypothesis; multi-axis change = one predicate per axis) is the *content-side* scale knob. Together they're the rule's two-sided proportionality: the form is fixed but flexes in depth, and the hypothesis content is fixed in structure but flexes in predicate count. A reader applying the rule to a small change consults both — the depth-flex tells them how short each inventory section can be; the hypothesis-scaling tells them whether their one-sentence spec is calibration or hand-waving.
+The depth flex described here is the *form-side* scale knob; step 7's hypothesis-scaling rule (single-axis change = one-sentence hypothesis; multi-axis change = one predicate per axis) is the *content-side* scale knob. Together they're the rule's two-sided proportionality: the form is fixed but flexes in depth, and the hypothesis content is fixed in structure but flexes in predicate count. A reader applying the rule to a small change consults both -- the depth-flex tells them how short each inventory section can be; the hypothesis-scaling tells them whether their one-sentence spec is calibration or hand-waving.
 
 Why "the agent decides per change" doesn't work as the carve-out: the agent is the wrong actor to decide what's small enough to skip a step. Every one of #2094's smoke-cycle iterations started from a change the author thought was small. The author's perception of small != actual blast radius; the inventory IS the act of measuring whether the author's perception matches reality. Skipping the inventory because the change feels small is the perception itself talking.
 
@@ -374,7 +374,7 @@ The five rationalizations are saved as named anti-patterns so the next author --
 
 ## Inheriting brokenness: prior failures, prior follow-ups, prior latent bugs
 
-Rule 6's seven-step procedure presumes the author can enumerate the surfaces the change will touch. When the change is **a wrapper around an existing artifact** — a DAG wrapping a pipeline, a function wrapping a library, a script kicking a known runtime — the enumeration must include the wrapped artifact's known-broken state, not just the wrapper's own diff. The wrapper inherits every failure mode of what it wraps; treating the wrapped as a black box is the failure mode this section exists to prevent.
+Rule 6's seven-step procedure presumes the author can enumerate the surfaces the change will touch. When the change is **a wrapper around an existing artifact** -- a DAG wrapping a pipeline, a function wrapping a library, a script kicking a known runtime -- the enumeration must include the wrapped artifact's known-broken state, not just the wrapper's own diff. The wrapper inherits every failure mode of what it wraps; treating the wrapped as a black box is the failure mode this section exists to prevent.
 
 Three concrete shapes the inherited-brokenness inventory must cover:
 
@@ -389,7 +389,7 @@ When the artifact being authored is a wrapper that invokes pre-existing code at 
 
 Concrete measurement: read the wrapped artifact's entry point + scan one level deep for module imports, glob loads, and catalog enumerations. The wrapper's behavior includes every failure mode of the things it triggers.
 
-Empirical: electinfo/enterprise#2094 (2026-05-24). Gold attempt 2 failed in 2 seconds because `pipeline-gold.yml`'s `libraries: - glob: include: ../utilities/**` loaded `utilities/entity_match_stats.py` which has a bare `from create_entity_match_tables import ...` that depends on filesystem glob order. The author's pre-flight for the wrapping DAG (PR electinfo/airflow#55) checked the DAG file but not the wrapped pipeline's load path. The bare-import bug was known from prior smoke cycle 15 of the same arc — captured in memory as a follow-up but not brought forward as a blocker for the wrapper-shipping work.
+Empirical: electinfo/enterprise#2094 (2026-05-24). Gold attempt 2 failed in 2 seconds because `pipeline-gold.yml`'s `libraries: - glob: include: ../utilities/**` loaded `utilities/entity_match_stats.py` which has a bare `from create_entity_match_tables import ...` that depends on filesystem glob order. The author's pre-flight for the wrapping DAG (PR electinfo/airflow#55) checked the DAG file but not the wrapped pipeline's load path. The bare-import bug was known from prior smoke cycle 15 of the same arc -- captured in memory as a follow-up but not brought forward as a blocker for the wrapper-shipping work.
 
 **b. After a class-bug fires, grep the class before fixing the instance.**
 
@@ -412,7 +412,7 @@ Empirical: same arc, gold attempts 2 + 3. After attempt 2's entity_match_stats f
 
 **c. Carry-forward of prior-session follow-ups: not backlog, blockers.**
 
-When a memory entry, comment, or ticket marks a known issue as "follow-up" or "later" or "tracking" — and the work now being authored will execute the code path that issue affects — the issue is NOT backlog. It is a blocker for the new work.
+When a memory entry, comment, or ticket marks a known issue as "follow-up" or "later" or "tracking" -- and the work now being authored will execute the code path that issue affects -- the issue is NOT backlog. It is a blocker for the new work.
 
 The pre-author inventory must include: search prior memory entries, ticket comments, and PR notes for known issues affecting the authoring path. Each known issue is either (a) resolved before authoring, or (b) explicitly declared in the inventory as `Deferred-known-broken: will fail on <observable>; fix planned after <event>` with the observable specified. Silent carry-forward of follow-ups is the cheat-shape that produces the "I already documented this but didn't fix it" failure mode.
 
@@ -422,7 +422,7 @@ Empirical: the memory entry cross-referencing the entity_match_stats bug was cre
 
 **Composes with rule 6 step 4.** Step 4 already says "inventory other surface areas of contact, not just the five rule categories." This section names the inherited-brokenness surface as one such category that's empirically high-frequency for wrapper authoring. The starter "Common surfaces by stack" table in step 4 gains a new row applicable to all stacks: "wrapper / vendored artifact authoring → known-broken state of the wrapped artifact (prior incident comments, follow-up-marked memory entries, unresolved tickets touching the path)."
 
-**Composes with the cheat-shapes above.** Cheat-shape 2 ("I already have all the context from the last cycle") describes the temptation; this section describes the discipline that resists it. Cheat-shape 1 ("one-line fix") frames why grepping the class matters — the one-line fix that ships the wrong instance produces a second one-line fix on retrigger.
+**Composes with the cheat-shapes above.** Cheat-shape 2 ("I already have all the context from the last cycle") describes the temptation; this section describes the discipline that resists it. Cheat-shape 1 ("one-line fix") frames why grepping the class matters -- the one-line fix that ships the wrong instance produces a second one-line fix on retrigger.
 
 ## Trivial-change declaration
 

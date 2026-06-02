@@ -4,7 +4,7 @@ description: Router for language-idiom book skills. Dispatches to Effective Pyth
 disable-model-invocation: false
 ---
 
-# Languages — Shelf
+# Languages -- Shelf
 
 Language-specific idiom and best-practice books. Pair these with the always-on `_<lang>-rules.md` files (loaded by the resolver) for full coverage: rules give you the short maxims, books give you the deep rationale.
 
@@ -15,30 +15,30 @@ Language-specific idiom and best-practice books. Pair these with the always-on `
 | Pythonic style, idioms, stdlib usage | [skill:effective-python] |
 | Async I/O in Python, `asyncio`, event loop, concurrency primitives | [skill:using-asyncio-python] |
 | HTTP scraping, parsing, anti-bot, polite crawling | [skill:web-scraping-python] |
-| Java idioms — `equals`/`hashCode`, immutability, generics, exceptions | [skill:effective-java] |
-| Kotlin idioms — null safety, scope functions, DSLs, coroutines | [skill:effective-kotlin] |
-| Kotlin from-the-ground-up — language features and patterns | [skill:kotlin-in-action] |
+| Java idioms -- `equals`/`hashCode`, immutability, generics, exceptions | [skill:effective-java] |
+| Kotlin idioms -- null safety, scope functions, DSLs, coroutines | [skill:effective-kotlin] |
+| Kotlin from-the-ground-up -- language features and patterns | [skill:kotlin-in-action] |
 | Spring Boot apps, autoconfiguration, starters | [skill:spring-boot-in-action] |
 | Rust ownership, traits, lifetimes, error handling | [skill:programming-with-rust] |
-| Rust applied — networking, I/O, embedded, performance | [skill:rust-in-action] |
+| Rust applied -- networking, I/O, embedded, performance | [skill:rust-in-action] |
 | TypeScript types, narrowing, generics, structural typing | [skill:effective-typescript] |
 
 ## Books in this shelf
 
-- [skill:effective-python] — Brett Slatkin
-- [skill:using-asyncio-python] — Caleb Hattingh
-- [skill:web-scraping-python] — Ryan Mitchell
-- [skill:effective-java] — Joshua Bloch
-- [skill:effective-kotlin] — Marcin Moskała
-- [skill:kotlin-in-action] — Jemerov & Isakova
-- [skill:spring-boot-in-action] — Craig Walls
-- [skill:programming-with-rust] — Donis Marshall
-- [skill:rust-in-action] — Tim McNamara
-- [skill:effective-typescript] — Dan Vanderkam
+- [skill:effective-python] -- Brett Slatkin
+- [skill:using-asyncio-python] -- Caleb Hattingh
+- [skill:web-scraping-python] -- Ryan Mitchell
+- [skill:effective-java] -- Joshua Bloch
+- [skill:effective-kotlin] -- Marcin Moskała
+- [skill:kotlin-in-action] -- Jemerov & Isakova
+- [skill:spring-boot-in-action] -- Craig Walls
+- [skill:programming-with-rust] -- Donis Marshall
+- [skill:rust-in-action] -- Tim McNamara
+- [skill:effective-typescript] -- Dan Vanderkam
 
 ## Why JVM books matter for Python-first work
 
-Spark on Databricks runs on the JVM. PySpark calls execute through JVM Spark, the cost model is JVM, the failures (Kryo serialization, partition skew, executor OOM) are JVM failures. Effective Java's items on `equals`/`hashCode`, immutability, and exception handling apply directly to Spark UDFs and Dataset code. Effective Kotlin applies to any Scala you touch — Scala's `Option`/`Either` ≈ Kotlin's nullable-with-let. The new `coding/scala-on-spark/` skill (PR 8) delegates here.
+Spark on Databricks runs on the JVM. PySpark calls execute through JVM Spark, the cost model is JVM, the failures (Kryo serialization, partition skew, executor OOM) are JVM failures. Effective Java's items on `equals`/`hashCode`, immutability, and exception handling apply directly to Spark UDFs and Dataset code. Effective Kotlin applies to any Scala you touch -- Scala's `Option`/`Either` ≈ Kotlin's nullable-with-let. The new `coding/scala-on-spark/` skill (PR 8) delegates here.
 
 ## Disambiguation
 

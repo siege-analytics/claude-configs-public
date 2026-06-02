@@ -2,10 +2,10 @@ name: build-and-publish
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     tags: ['v*']
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
   validate:
@@ -27,7 +27,7 @@ jobs:
   publish:
     name: Build and publish to release branches
     needs: validate
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     # Serialize publish runs so back-to-back triggers (e.g. a `git push origin main`
     # immediately followed by `git push origin vX.Y.Z`) queue instead of racing.

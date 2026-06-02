@@ -1,4 +1,4 @@
-# Ch 5 — Exporting Spatial Data
+# Ch 5 -- Exporting Spatial Data
 
 The book covers `ST_AsText`, `ST_AsBinary`, `ST_AsGeoJSON`, and `ogr2ogr` for export. Modern PostGIS adds `ST_AsMVT` (vector tiles) and FDW-based read-only exposure.
 
@@ -19,8 +19,8 @@ SELECT ST_AsLatLonText(point)  FROM features;  -- "DD MM SS.S N/S, DD MM SS.S E/
 ```
 
 For most modern work, **WKB and GeoJSON are the only two that matter**:
-- **WKB** — efficient binary format for inter-system transfer (Postgres → DuckDB, Postgres → GeoPandas via `psycopg2`)
-- **GeoJSON** — human-readable, widely supported, the standard for HTTP APIs
+- **WKB** -- efficient binary format for inter-system transfer (Postgres → DuckDB, Postgres → GeoPandas via `psycopg2`)
+- **GeoJSON** -- human-readable, widely supported, the standard for HTTP APIs
 
 WKT is fine for debugging but verbose. KML and GML are largely legacy.
 
@@ -29,8 +29,8 @@ WKT is fine for debugging but verbose. KML and GML are largely legacy.
 PostGIS extends standard WKT with embedded SRID:
 
 ```sql
-SELECT ST_AsText(geom)   FROM features;  -- "POINT(-98 30)" — no SRID
-SELECT ST_AsEWKT(geom)   FROM features;  -- "SRID=4326;POINT(-98 30)" — with SRID
+SELECT ST_AsText(geom)   FROM features;  -- "POINT(-98 30)" -- no SRID
+SELECT ST_AsEWKT(geom)   FROM features;  -- "SRID=4326;POINT(-98 30)" -- with SRID
 ```
 
 **EWKT round-trips losslessly through PostGIS.** Standard WKT loses the SRID. If you're piping geometry to a non-PostGIS system, decide:
@@ -40,7 +40,7 @@ SELECT ST_AsEWKT(geom)   FROM features;  -- "SRID=4326;POINT(-98 30)" — with S
 
 The book's strongest take: **don't lose the SRID at the export boundary.** Whatever happens downstream, the receiver needs to know what coordinates mean.
 
-## ST_AsMVT — vector tiles (post-book; load-bearing)
+## ST_AsMVT -- vector tiles (post-book; load-bearing)
 
 The single most important addition since the book. Mapbox Vector Tiles (MVT) are the modern web-mapping standard:
 
@@ -68,9 +68,9 @@ Returns a binary MVT blob ready to serve to a web client. Combined with `pg_tile
 
 Pre-MVT, the book era required pre-rendering tiles (raster) or generating client-side from GeoJSON (slow on large data). MVT solved both.
 
-## Foreign Data Wrappers — read-only export
+## Foreign Data Wrappers -- read-only export
 
-A different shape of "export" — letting other systems query Postgres without ingesting:
+A different shape of "export" -- letting other systems query Postgres without ingesting:
 
 ```sql
 -- On the consumer side
@@ -169,16 +169,16 @@ The book's `ogr2ogr`-as-default answer covers the bottom-half rows. The top-half
 ## Pitfalls
 
 - **Losing SRID at export.** Use `ST_AsEWKT`/`ST_AsEWKB` if the consumer understands it; otherwise carry SRID in a sidecar.
-- **`ST_AsGeoJSON` without `precision`** — default precision is 15 decimals, which is GPS-survey-equipment precision. For most uses, 6 decimals (≈ 10cm at the equator) is enough and produces 30% smaller output. Use `ST_AsGeoJSON(geom, 6)`.
-- **Exporting raw geometry without transforming to a target CRS** — consumer may expect WGS 84 always.
-- **Forgetting to filter before `ST_AsMVT`** — generating a tile from a 10M-row table is slow. Always pre-filter with `geom && ST_TileEnvelope(...)`.
+- **`ST_AsGeoJSON` without `precision`** -- default precision is 15 decimals, which is GPS-survey-equipment precision. For most uses, 6 decimals (≈ 10cm at the equator) is enough and produces 30% smaller output. Use `ST_AsGeoJSON(geom, 6)`.
+- **Exporting raw geometry without transforming to a target CRS** -- consumer may expect WGS 84 always.
+- **Forgetting to filter before `ST_AsMVT`** -- generating a tile from a 10M-row table is slow. Always pre-filter with `geom && ST_TileEnvelope(...)`.
 - **`ogr2ogr` to shapefile** truncates column names to 10 chars, drops UTF-8. Use GPKG when the target tool supports it.
 
 ## Cross-links
 
-- [`08-web-backends.md`](08-web-backends.md) — `pg_tileserv` + `ST_AsMVT` for serving tiles
-- [`coding/duckdb-spatial/references/geoparquet-without-gdal.md`](../../../duckdb-spatial/references/geoparquet-without-gdal.md) — DuckDB as the GeoParquet bridge
-- [`../siege-utilities-postgis.md`](../siege-utilities-postgis.md) — SU helpers for PostGIS round-trips
+- [`08-web-backends.md`](08-web-backends.md) -- `pg_tileserv` + `ST_AsMVT` for serving tiles
+- [`coding/duckdb-spatial/references/geoparquet-without-gdal.md`](../../../duckdb-spatial/references/geoparquet-without-gdal.md) -- DuckDB as the GeoParquet bridge
+- [`../siege-utilities-postgis.md`](../siege-utilities-postgis.md) -- SU helpers for PostGIS round-trips
 
 ## Citation
 

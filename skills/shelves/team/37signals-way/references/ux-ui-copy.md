@@ -13,9 +13,9 @@
 
 ## Design Philosophy
 
-The 37signals design philosophy rests on a single conviction: design is not decoration. Design is how it works. Every pixel, every word, every interaction is a product decision. The goal is not to make software that looks beautiful in a screenshot — it is to make software that feels obvious in use.
+The 37signals design philosophy rests on a single conviction: design is not decoration. Design is how it works. Every pixel, every word, every interaction is a product decision. The goal is not to make software that looks beautiful in a screenshot -- it is to make software that feels obvious in use.
 
-This means design starts with the problem, not the screen. Before asking "What should this look like?", ask "What is the user trying to do, and what is the fastest path to doing it?" The answer shapes everything: the layout, the copy, the interactions, and — critically — what is not on the screen.
+This means design starts with the problem, not the screen. Before asking "What should this look like?", ask "What is the user trying to do, and what is the fastest path to doing it?" The answer shapes everything: the layout, the copy, the interactions, and -- critically -- what is not on the screen.
 
 **The three design principles:**
 
@@ -32,9 +32,9 @@ Every screen in the product should serve a clear purpose connected to the user's
 **The one-screen test:** Can you describe what the user does on this screen in one sentence? If you need two sentences, the screen is doing too much. Split it or simplify it.
 
 **Examples:**
-- "The user sees all their projects and opens one." (Projects list — clear purpose)
-- "The user writes a message to their team." (Message composer — clear purpose)
-- "The user sees their dashboard with activity feed, upcoming deadlines, team status, notifications, and quick actions." (Dashboard — doing too much; simplify)
+- "The user sees all their projects and opens one." (Projects list -- clear purpose)
+- "The user writes a message to their team." (Message composer -- clear purpose)
+- "The user sees their dashboard with activity feed, upcoming deadlines, team status, notifications, and quick actions." (Dashboard -- doing too much; simplify)
 
 ### Reduce to the Essence
 
@@ -53,7 +53,7 @@ For every element on the screen, ask: "If I remove this, does the user fail at t
 
 ### Design for the Happy Path First
 
-Design the screen for the most common scenario first. Get that working perfectly. Then handle edge cases, empty states, and error states. Most users will experience the happy path most of the time — invest your design energy proportionally.
+Design the screen for the most common scenario first. Get that working perfectly. Then handle edge cases, empty states, and error states. Most users will experience the happy path most of the time -- invest your design energy proportionally.
 
 **Priority order for design attention:**
 1. The happy path (80% of user time)
@@ -64,13 +64,13 @@ Design the screen for the most common scenario first. Get that working perfectly
 
 ### Make Navigation Obvious
 
-Users should always know where they are, how they got there, and how to get back. This sounds basic because it is — and yet most software fails at it. The 37signals approach: use clear breadcrumbs, descriptive page titles, and consistent navigation patterns. Never make the user guess where they are.
+Users should always know where they are, how they got there, and how to get back. This sounds basic because it is -- and yet most software fails at it. The 37signals approach: use clear breadcrumbs, descriptive page titles, and consistent navigation patterns. Never make the user guess where they are.
 
 ## UI Design Approach
 
 ### Build in the Browser
 
-The 37signals approach to UI design is to build in the browser from day one. This means HTML and CSS, not Figma or Sketch. The browser is the final medium — designing in an intermediate tool and then translating is waste.
+The 37signals approach to UI design is to build in the browser from day one. This means HTML and CSS, not Figma or Sketch. The browser is the final medium -- designing in an intermediate tool and then translating is waste.
 
 **Why browser-first design works:**
 
@@ -79,30 +79,30 @@ The 37signals approach to UI design is to build in the browser from day one. Thi
 - **Real content.** Using real data instead of lorem ipsum reveals length issues, truncation needs, and content hierarchy problems.
 - **No handoff.** The "design" and the "implementation" are the same artifact. Nothing is lost in translation.
 
-**What this does not mean:** It does not mean the designer must write production-quality code. It means the designer works in HTML/CSS (possibly with a programmer pairing) to create the real interface. The code may be rough — it gets refined during the cycle.
+**What this does not mean:** It does not mean the designer must write production-quality code. It means the designer works in HTML/CSS (possibly with a programmer pairing) to create the real interface. The code may be rough -- it gets refined during the cycle.
 
 ### Visual Hierarchy Through Weight, Not Decoration
 
-The 37signals UI style relies on content hierarchy achieved through font weight, size, color contrast, and whitespace — not through borders, backgrounds, shadows, or decorative elements.
+The 37signals UI style relies on content hierarchy achieved through font weight, size, color contrast, and whitespace -- not through borders, backgrounds, shadows, or decorative elements.
 
 **Hierarchy tools (in order of preference):**
 
 1. **Font size.** Bigger = more important. Simple and universal.
-2. **Font weight.** Bold = emphasis. Use sparingly — if everything is bold, nothing is.
+2. **Font weight.** Bold = emphasis. Use sparingly -- if everything is bold, nothing is.
 3. **Color contrast.** High contrast (black text) = primary. Low contrast (gray text) = secondary. One accent color for interactive elements.
-4. **Whitespace.** Generous spacing groups related elements and separates unrelated ones. Whitespace is not empty space — it is a design element.
+4. **Whitespace.** Generous spacing groups related elements and separates unrelated ones. Whitespace is not empty space -- it is a design element.
 5. **Position.** Top-left is where the eye goes first (in LTR languages). Put the most important thing there.
 
 **What to avoid:**
 
-- Excessive borders and dividers — use whitespace to separate instead
-- Background colors on every section — reserve background color for meaningful distinction
-- Shadow on every card — use shadow sparingly to create meaningful depth
-- Icon overuse — icons without labels are ambiguous; use text labels
+- Excessive borders and dividers -- use whitespace to separate instead
+- Background colors on every section -- reserve background color for meaningful distinction
+- Shadow on every card -- use shadow sparingly to create meaningful depth
+- Icon overuse -- icons without labels are ambiguous; use text labels
 
 ### Responsive as Reduction
 
-When designing for smaller screens, the 37signals approach is not "rearrange everything to fit" but "remove what is not essential at this size." A mobile interface is not a shrunk desktop interface — it is a simpler interface that serves the most common mobile use cases.
+When designing for smaller screens, the 37signals approach is not "rearrange everything to fit" but "remove what is not essential at this size." A mobile interface is not a shrunk desktop interface -- it is a simpler interface that serves the most common mobile use cases.
 
 **Mobile reduction principles:**
 
@@ -110,11 +110,11 @@ When designing for smaller screens, the 37signals approach is not "rearrange eve
 - Use full-screen flows instead of modals or sidebars
 - Reduce navigation to essential items only
 - Prioritize reading and quick actions over complex editing
-- Accept that some features are desktop-only — that is okay
+- Accept that some features are desktop-only -- that is okay
 
 ### Use Standard Components
 
-Do not invent custom UI components when standard ones exist. A standard dropdown, a standard checkbox, a standard text input — users already know how these work. Custom components carry a learning cost.
+Do not invent custom UI components when standard ones exist. A standard dropdown, a standard checkbox, a standard text input -- users already know how these work. Custom components carry a learning cost.
 
 **When custom components are justified:**
 - The standard component genuinely cannot serve the use case (rare)
@@ -122,13 +122,13 @@ Do not invent custom UI components when standard ones exist. A standard dropdown
 - The custom component is used repeatedly throughout the product (worth the investment)
 
 **When custom components are not justified:**
-- "It looks cooler" — users do not care about cool; they care about familiar
-- "It matches our brand" — brand is expressed through content and tone, not through reinventing checkboxes
-- "The designer wanted it" — design serves users, not designers' portfolios
+- "It looks cooler" -- users do not care about cool; they care about familiar
+- "It matches our brand" -- brand is expressed through content and tone, not through reinventing checkboxes
+- "The designer wanted it" -- design serves users, not designers' portfolios
 
 ## Copywriting as Product Design
 
-At 37signals, interface copy is not an afterthought — it is a core design element. The words on the screen shape user expectations, guide behavior, and build (or erode) trust. Copy is written by the people who design and build the product, not by a separate copywriting team.
+At 37signals, interface copy is not an afterthought -- it is a core design element. The words on the screen shape user expectations, guide behavior, and build (or erode) trust. Copy is written by the people who design and build the product, not by a separate copywriting team.
 
 ### The Copy Rules
 
@@ -166,7 +166,7 @@ At 37signals, interface copy is not an afterthought — it is a core design elem
 
 ### Error Messages as Conversations
 
-Error messages are the most neglected and most important copy in any application. A user encountering an error is frustrated — the error message is your chance to help them or abandon them.
+Error messages are the most neglected and most important copy in any application. A user encountering an error is frustrated -- the error message is your chance to help them or abandon them.
 
 **The error message formula:**
 
@@ -185,7 +185,7 @@ Error messages are the most neglected and most important copy in any application
 
 ### Empty States as Onboarding
 
-An empty state (a screen with no content yet) is not an error — it is an opportunity. It is the user's first encounter with a feature, and it should teach them what to do next.
+An empty state (a screen with no content yet) is not an error -- it is an opportunity. It is the user's first encounter with a feature, and it should teach them what to do next.
 
 **Good empty state pattern:**
 
@@ -205,7 +205,7 @@ The design process at 37signals integrates design thinking into every phase of t
 
 - The shaper uses breadboards to map the core interaction flow
 - Fat marker sketches establish the general layout approach
-- Copy is drafted for key screens — labels, button text, primary messages
+- Copy is drafted for key screens -- labels, button text, primary messages
 - No pixel-level design work happens yet
 
 **During building (the cycle):**
@@ -239,7 +239,7 @@ Instead of showing a success toast or modal ("Item saved!"), make the result of 
 
 ### One Primary Action per Screen
 
-Every screen should have one primary action — the thing the user is most likely to do. Make it visually prominent. Secondary actions can exist but should be visually subordinate.
+Every screen should have one primary action -- the thing the user is most likely to do. Make it visually prominent. Secondary actions can exist but should be visually subordinate.
 
 **How to implement:**
 - One button with the primary style (colored, prominent)

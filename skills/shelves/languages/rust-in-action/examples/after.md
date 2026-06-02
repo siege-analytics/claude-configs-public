@@ -1,6 +1,6 @@
 # After: Rust in Action
 
-The same utility rewritten with idiomatic systems Rust — explicit endianness, buffered I/O, a domain error type, checksum validation, thread pool, and safe shared state.
+The same utility rewritten with idiomatic systems Rust -- explicit endianness, buffered I/O, a domain error type, checksum validation, thread pool, and safe shared state.
 
 ```rust
 use std::fmt;
@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::mpsc;
 use std::thread;
 
-// Domain error type — wraps all downstream errors (Ch 3, 8)
+// Domain error type -- wraps all downstream errors (Ch 3, 8)
 #[derive(Debug)]
 pub enum LogError {
     Io(std::io::Error),
@@ -37,7 +37,7 @@ impl From<std::io::Error> for LogError {
 }
 
 // BufReader for batched I/O syscalls; &Path for type-safe path (Ch 7)
-// Returns Result — caller decides how to handle failure (Ch 3)
+// Returns Result -- caller decides how to handle failure (Ch 3)
 fn read_log(path: &Path) -> Result<Vec<u8>, LogError> {
     let file = File::open(path)?;  // ? converts io::Error → LogError (Ch 8)
     let mut reader = BufReader::new(file);  // batched reads (Ch 7)
@@ -46,7 +46,7 @@ fn read_log(path: &Path) -> Result<Vec<u8>, LogError> {
     Ok(buf)
 }
 
-// Explicit little-endian — deterministic across all hosts (Ch 5, 7)
+// Explicit little-endian -- deterministic across all hosts (Ch 5, 7)
 fn parse_record_id(bytes: &[u8], offset: usize) -> Result<u32, LogError> {
     bytes.get(offset..offset + 4)
         .ok_or(LogError::InvalidRecord { offset, reason: "not enough bytes for id" })
@@ -80,7 +80,7 @@ fn read_record(buf: &[u8]) -> Result<(u32, &[u8]), LogError> {
     Ok((id, payload))
 }
 
-// Thread pool via channel — no unbounded thread spawning (Ch 10)
+// Thread pool via channel -- no unbounded thread spawning (Ch 10)
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
 struct Pool {
@@ -96,7 +96,7 @@ impl Pool {
             thread::spawn(move || loop {
                 match rx.lock().expect("mutex poisoned").recv() {
                     Ok(job) => job(),
-                    Err(_) => break,  // sender dropped — shut down
+                    Err(_) => break,  // sender dropped -- shut down
                 }
             });
         }
@@ -127,7 +127,7 @@ fn main() -> Result<(), LogError> {
     let pool = Pool::new(4);
     let errors = make_error_counter();
 
-    // move — closure owns record + error counter clone (Ch 10)
+    // move -- closure owns record + error counter clone (Ch 10)
     let record = bytes.clone();
     let err_counter = Arc::clone(&errors);
     pool.submit(move || {
@@ -146,11 +146,11 @@ fn main() -> Result<(), LogError> {
 ```
 
 **Key improvements:**
-- `LogError` wraps all downstream errors with `From` impls — `?` converts automatically (Ch 3, 8)
-- `BufReader` batches file I/O syscalls — essential for large files (Ch 7)
-- `u32::from_le_bytes()` / `to_le_bytes()` — explicit endianness, correct across all hosts (Ch 5)
-- Checksum appended and verified on read — corruption is detectable (Ch 7)
-- Thread pool via `mpsc::channel` + `Arc<Mutex<Receiver>>` — bounded concurrency (Ch 10)
-- `Arc<Mutex<u32>>` replaces `unsafe static mut` — safe shared mutable state (Ch 6, 10)
-- `move` closures transfer ownership into threads — required for `'static` bound (Ch 10)
-- `&Path` instead of `String` for file path — type-safe, works with literals (Ch 7)
+- `LogError` wraps all downstream errors with `From` impls -- `?` converts automatically (Ch 3, 8)
+- `BufReader` batches file I/O syscalls -- essential for large files (Ch 7)
+- `u32::from_le_bytes()` / `to_le_bytes()` -- explicit endianness, correct across all hosts (Ch 5)
+- Checksum appended and verified on read -- corruption is detectable (Ch 7)
+- Thread pool via `mpsc::channel` + `Arc<Mutex<Receiver>>` -- bounded concurrency (Ch 10)
+- `Arc<Mutex<u32>>` replaces `unsafe static mut` -- safe shared mutable state (Ch 6, 10)
+- `move` closures transfer ownership into threads -- required for `'static` bound (Ch 10)
+- `&Path` instead of `String` for file path -- type-safe, works with literals (Ch 7)

@@ -40,11 +40,11 @@ Journalists have used the inverted pyramid for over a century. The most importan
 ### Structure
 
 ```
-[CORE MESSAGE — the one thing]
-   [Supporting detail #1 — most important context]
-      [Supporting detail #2 — helpful but not essential]
-         [Supporting detail #3 — nice to have]
-            [Background — for the deeply interested]
+[CORE MESSAGE -- the one thing]
+   [Supporting detail #1 -- most important context]
+      [Supporting detail #2 -- helpful but not essential]
+         [Supporting detail #3 -- nice to have]
+            [Background -- for the deeply interested]
 ```
 
 ### Why the Inverted Pyramid Works
@@ -60,7 +60,7 @@ Journalists have used the inverted pyramid for over a century. The most importan
 > "After extensive research spanning 18 months across 4 countries, involving 2,300 participants and using a novel AI-based methodology, our team discovered that the average enterprise customer spends 40% of their workday on tasks that could be fully automated."
 
 **After (inverted pyramid):**
-> "Your team wastes 40% of their workday on tasks a machine could handle. We proved it across 2,300 employees in 4 countries over 18 months — and we built the tool that fixes it."
+> "Your team wastes 40% of their workday on tasks a machine could handle. We proved it across 2,300 employees in 4 countries over 18 months -- and we built the tool that fixes it."
 
 ## Simplification Techniques
 
@@ -83,9 +83,9 @@ Analogies let you borrow someone else's schema. Instead of explaining your new i
 
 ### Generative Metaphor
 
-A generative metaphor is more powerful than a regular analogy because it does not just explain — it generates behavior. It tells people what to do in novel situations.
+A generative metaphor is more powerful than a regular analogy because it does not just explain -- it generates behavior. It tells people what to do in novel situations.
 
-**Example:** "Names, names, names" — This was the motto of a local newspaper editor. When reporters had to decide whether to cover a story, what angle to take, or what photo to run, the answer was always: prioritize local names. It was generative because it guided thousands of micro-decisions.
+**Example:** "Names, names, names" -- This was the motto of a local newspaper editor. When reporters had to decide whether to cover a story, what angle to take, or what photo to run, the answer was always: prioritize local names. It was generative because it guided thousands of micro-decisions.
 
 | Generative Metaphor | Organization | Decisions It Drives |
 |---------------------|-------------|---------------------|
@@ -117,9 +117,9 @@ People do not learn from scratch. They attach new information to existing mental
 
 | Strategy | Example |
 |----------|---------|
-| **Build on existing knowledge** | "It's a CRM, but for recruiting" — CRM is a known schema |
+| **Build on existing knowledge** | "It's a CRM, but for recruiting" -- CRM is a known schema |
 | **Start with the familiar** | "You know how Excel lets you sort data? Now imagine it sorted itself." |
-| **Use universally understood concepts** | Time, money, family, health — everyone has schemas for these |
+| **Use universally understood concepts** | Time, money, family, health -- everyone has schemas for these |
 | **Tap into professional schemas** | For developers: "It's like git, but for database migrations" |
 
 ### When Schemas Backfire
@@ -203,16 +203,16 @@ Write the newspaper headline for your product. You have 8 words maximum. What ma
 ### Exercise 4: The "So What?" Ladder
 
 1. Start with your current message
-2. Ask "So what?" — write the answer
-3. Ask "So what?" again — write the answer
+2. Ask "So what?" -- write the answer
+3. Ask "So what?" again -- write the answer
 4. Keep going until you hit something emotionally resonant
 5. That is your core message
 
 **Example:**
-- "We use AI to analyze sales calls" — So what?
-- "Managers see which reps need coaching" — So what?
-- "Reps close more deals" — So what?
-- "Your team hits quota every quarter" — That is the core.
+- "We use AI to analyze sales calls" -- So what?
+- "Managers see which reps need coaching" -- So what?
+- "Reps close more deals" -- So what?
+- "Your team hits quota every quarter" -- That is the core.
 
 ### Exercise 5: The Forced Tradeoff
 
@@ -232,7 +232,7 @@ List every message you want to communicate. Now imagine you can only afford a bi
 
 ## Testing Simplicity with Outsiders
 
-The final test for simplicity is not your opinion — it is whether outsiders understand it.
+The final test for simplicity is not your opinion -- it is whether outsiders understand it.
 
 ### The 5-Person Test
 
@@ -260,7 +260,7 @@ Before publishing any message, verify:
 - [ ] A smart 12-year-old could understand it
 - [ ] It uses concrete language, not abstractions
 - [ ] It helps someone make a decision or take action
-- [ ] It is compact — every word earns its place
+- [ ] It is compact -- every word earns its place
 - [ ] It uses analogy or schema to connect to existing knowledge
 - [ ] It passes the 5-Person Test
-- [ ] It is simple, not simplistic — it retains depth and meaning
+- [ ] It is simple, not simplistic -- it retains depth and meaning

@@ -1,8 +1,8 @@
 # PostGIS Query Optimization
 
-Beyond indexes — planner reads, parallelism, materialization, and parameter tuning.
+Beyond indexes -- planner reads, parallelism, materialization, and parameter tuning.
 
-## EXPLAIN — what to read
+## EXPLAIN -- what to read
 
 Always `EXPLAIN (ANALYZE, BUFFERS)`, never bare `EXPLAIN`. ANALYZE actually runs; BUFFERS shows I/O.
 
@@ -15,11 +15,11 @@ WHERE d.amount > 1000;
 
 What to look for, in order of importance:
 
-1. **Seq Scan on a big table when the WHERE is selective** — index missing or unused. Fix by adding/repairing index, then re-running `ANALYZE`.
-2. **Estimated rows ≠ actual rows by >10×** — stats are stale or correlated columns are confusing the planner. `ANALYZE` first; consider `CREATE STATISTICS` for multivariate stats.
-3. **Sort spilling to disk** — appears as `external merge` or `Sort Method: external merge Disk: ...`. Bump `work_mem` for the session, or break the query into smaller pieces.
-4. **Hash joins on huge tables** — sometimes a Nested Loop with the right index is dramatically faster. Plan-hint with `enable_hashjoin = off` for the session to compare.
-5. **Lots of `Heap Blocks: lossy=...`** — `effective_cache_size` may be undersized; planner is over-using bitmap fallback.
+1. **Seq Scan on a big table when the WHERE is selective** -- index missing or unused. Fix by adding/repairing index, then re-running `ANALYZE`.
+2. **Estimated rows ≠ actual rows by >10×** -- stats are stale or correlated columns are confusing the planner. `ANALYZE` first; consider `CREATE STATISTICS` for multivariate stats.
+3. **Sort spilling to disk** -- appears as `external merge` or `Sort Method: external merge Disk: ...`. Bump `work_mem` for the session, or break the query into smaller pieces.
+4. **Hash joins on huge tables** -- sometimes a Nested Loop with the right index is dramatically faster. Plan-hint with `enable_hashjoin = off` for the session to compare.
+5. **Lots of `Heap Blocks: lossy=...`** -- `effective_cache_size` may be undersized; planner is over-using bitmap fallback.
 
 ## Hot session settings
 
@@ -72,7 +72,7 @@ $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 For batch work, do everything in one query rather than fetching candidates and re-querying. Common anti-pattern in Python:
 
 ```python
-# BAD — N+1 round trips
+# BAD -- N+1 round trips
 for donor_id in donor_ids:
     cur.execute("SELECT district_id FROM districts WHERE ST_Contains(geom, %s)", [point])
 ```
@@ -100,7 +100,7 @@ INSERT INTO features SELECT * FROM features_staging;
 DROP TABLE features_staging;
 ```
 
-`UNLOGGED` skips WAL — much faster for staging that you don't need crash-safe. The final `INSERT` is logged.
+`UNLOGGED` skips WAL -- much faster for staging that you don't need crash-safe. The final `INSERT` is logged.
 
 For repeatable bulk loads (nightly), keep the table partitioned by ingest date and DROP/CREATE individual partitions instead of UPDATE.
 
@@ -120,7 +120,7 @@ Clusters all `'TX'` rows together on disk. Subsequent queries fetch them in sequ
 
 PostGIS queries with large result sets benefit from server-side cursors (Python: `cursor.itersize` in psycopg2; SQLAlchemy: `stream_results=True`). Pulling 10M rows in one fetch crashes both client and server.
 
-For application code, pool connections (`pgbouncer` in transaction mode) — PostGIS extension load is per-connection and expensive on connection churn.
+For application code, pool connections (`pgbouncer` in transaction mode) -- PostGIS extension load is per-connection and expensive on connection churn.
 
 ## Track slow queries
 

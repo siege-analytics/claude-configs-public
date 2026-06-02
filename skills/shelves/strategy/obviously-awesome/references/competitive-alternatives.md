@@ -1,6 +1,6 @@
 # Competitive Alternatives Analysis
 
-Understanding your true competitive alternatives is the essential first step in positioning. Most companies make the mistake of defining competitors as the companies that look most like them. But customers don't think in terms of product categories — they think in terms of solutions to their problems. Your real competitive alternatives include anything a customer might use, hire, build, or accept instead of buying your product.
+Understanding your true competitive alternatives is the essential first step in positioning. Most companies make the mistake of defining competitors as the companies that look most like them. But customers don't think in terms of product categories -- they think in terms of solutions to their problems. Your real competitive alternatives include anything a customer might use, hire, build, or accept instead of buying your product.
 
 ## Why Competitive Alternatives Come First
 
@@ -138,7 +138,7 @@ Different customer segments may have different primary alternatives:
 
 ## The "Do Nothing" Analysis
 
-"Do nothing" deserves special attention because it's often the most common alternative and the hardest to beat. Customers don't choose "do nothing" because they're lazy — they choose it because the perceived cost of change exceeds the perceived cost of the problem.
+"Do nothing" deserves special attention because it's often the most common alternative and the hardest to beat. Customers don't choose "do nothing" because they're lazy -- they choose it because the perceived cost of change exceeds the perceived cost of the problem.
 
 ### Understanding the "Do Nothing" Decision
 
@@ -153,10 +153,10 @@ Different customer segments may have different primary alternatives:
 ### Countering "Do Nothing"
 
 Your positioning must address "do nothing" by:
-1. **Quantifying the cost of inaction** — "Companies like yours lose an average of $X per quarter to this problem"
-2. **Reducing perceived switching cost** — "Live in 2 weeks, not 6 months"
-3. **Demonstrating social proof** — "450 companies like yours already made the switch"
-4. **Creating urgency** — "This problem compounds over time" or tie to a trend ("as regulations tighten...")
+1. **Quantifying the cost of inaction** -- "Companies like yours lose an average of $X per quarter to this problem"
+2. **Reducing perceived switching cost** -- "Live in 2 weeks, not 6 months"
+3. **Demonstrating social proof** -- "450 companies like yours already made the switch"
+4. **Creating urgency** -- "This problem compounds over time" or tie to a trend ("as regulations tighten...")
 
 ## Competitive Alternative Mapping Exercise
 
@@ -200,6 +200,6 @@ After completing the exercise, verify your competitive alternatives list:
 |---------|---------------|-----------------|
 | Only listing direct competitors | Founder bias toward products similar to theirs | Always ask "what did you use BEFORE" not "who did you compare us to" |
 | Ignoring "do nothing" | Assumption that customers already want to buy something | Track how many deals end in "no decision" |
-| Relying on team assumptions | Interviews seem time-consuming | Commit to 15-20 interviews — the insights are irreplaceable |
+| Relying on team assumptions | Interviews seem time-consuming | Commit to 15-20 interviews -- the insights are irreplaceable |
 | Listing too many alternatives | Every possible option seems relevant | Focus on the 3-5 most common. If an alternative is mentioned by only 1 customer, it's an edge case |
 | Not updating the list | Competitive landscape changes | Revisit competitive alternatives quarterly or when win rates shift |

@@ -1,11 +1,11 @@
 # Before: Programming with Rust
 
-A user service with common Rust anti-patterns — ownership misuse, panic-prone error handling, unnecessary cloning, and poor trait design.
+A user service with common Rust anti-patterns -- ownership misuse, panic-prone error handling, unnecessary cloning, and poor trait design.
 
 ```rust
 use std::collections::HashMap;
 
-// No custom error type — callers can't match on failures
+// No custom error type -- callers can't match on failures
 fn load_config(path: String) -> String {  // takes owned String unnecessarily
     std::fs::read_to_string(path).unwrap()  // panics on any I/O error
 }
@@ -15,7 +15,7 @@ fn get_user(users: HashMap<String, String>, name: String) -> String {
     let users_copy = users.clone();  // unnecessary clone of the whole map
     match users_copy.get(&name) {
         Some(user) => user.clone(),
-        None => String::from("unknown"),  // silently returns fallback — hides missing users
+        None => String::from("unknown"),  // silently returns fallback -- hides missing users
     }
 }
 
@@ -35,7 +35,7 @@ static mut COUNTER: u32 = 0;
 
 fn increment() {
     unsafe {
-        COUNTER += 1;  // data race — undefined behavior in concurrent code
+        COUNTER += 1;  // data race -- undefined behavior in concurrent code
     }
 }
 
@@ -51,7 +51,7 @@ fn main() {
     let mut users = HashMap::new();
     users.insert(String::from("alice"), String::from("admin"));
 
-    // Moves users into get_user — can't use it after
+    // Moves users into get_user -- can't use it after
     let name = get_user(users, String::from("alice"));
     println!("{}", name);
     // println!("{:?}", users);  // would fail: users was moved

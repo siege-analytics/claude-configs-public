@@ -6,7 +6,7 @@ An immutable `ShippingAddress` value class built with a fluent Builder, validate
 public final class ShippingAddress {
     private final String recipientName;
     private final String streetLine1;
-    private final String streetLine2;   // nullable — optional field
+    private final String streetLine2;   // nullable -- optional field
     private final String city;
     private final String stateCode;
     private final String postalCode;
@@ -29,7 +29,7 @@ public final class ShippingAddress {
         return new Builder(recipientName, streetLine1, city, postalCode, countryCode);
     }
 
-    // Accessors only — no setters
+    // Accessors only -- no setters
     public String recipientName() { return recipientName; }
     public String streetLine1()   { return streetLine1; }
     public Optional<String> streetLine2() { return Optional.ofNullable(streetLine2); }
@@ -67,7 +67,7 @@ public final class ShippingAddress {
     }
 }
 
-// Usage — required fields enforced; optional fields have readable names
+// Usage -- required fields enforced; optional fields have readable names
 ShippingAddress addr = ShippingAddress
     .builder("Jane Doe", "742 Evergreen Terrace", "Springfield", "62701", "US")
     .stateCode("IL")
@@ -76,8 +76,8 @@ ShippingAddress addr = ShippingAddress
 ```
 
 Key improvements:
-- Builder pattern eliminates the telescoping constructor problem — required fields are in the builder constructor, optional fields use fluent setters (Item 2: Builder when many parameters)
-- All fields are `private final` — the class is immutable after construction (Item 17: Minimize mutability)
-- `Objects.requireNonNull` validates all required fields at construction time — corrupt objects are impossible to create (Item 49: Validate parameters)
+- Builder pattern eliminates the telescoping constructor problem -- required fields are in the builder constructor, optional fields use fluent setters (Item 2: Builder when many parameters)
+- All fields are `private final` -- the class is immutable after construction (Item 17: Minimize mutability)
+- `Objects.requireNonNull` validates all required fields at construction time -- corrupt objects are impossible to create (Item 49: Validate parameters)
 - `Optional<String>` return type for `streetLine2` explicitly signals to callers that this value may be absent (Item 55: Return Optional judiciously)
 - `final` class prevents subclasses from breaking immutability guarantees (Item 17)

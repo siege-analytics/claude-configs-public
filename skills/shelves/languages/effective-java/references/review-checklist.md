@@ -1,7 +1,7 @@
 # Effective Java Code Review Checklist
 
 Use this checklist when reviewing Java code. Work through each section and flag any
-violations. Not every section applies to every review — skip sections that aren't
+violations. Not every section applies to every review -- skip sections that aren't
 relevant to the code under review.
 
 ---
@@ -78,7 +78,7 @@ wildcards on API parameters that accept subtypes.
 ## 5. Enums and Annotations
 
 - [ ] Enums used instead of `int` or `String` constants
-- [ ] Enum values don't derive from `ordinal()` — instance fields used instead
+- [ ] Enum values don't derive from `ordinal()` -- instance fields used instead
 - [ ] `EnumSet` used instead of bit fields
 - [ ] `EnumMap` used instead of ordinal-indexed arrays
 - [ ] `@Override` annotation present on all overriding methods

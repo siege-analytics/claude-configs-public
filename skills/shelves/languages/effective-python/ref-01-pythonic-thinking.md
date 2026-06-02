@@ -42,7 +42,7 @@ def to_str(data):
         return data.decode('utf-8')
     return data
 
-# GOOD — be explicit about encoding
+# GOOD -- be explicit about encoding
 def to_str(bytes_or_str):
     if isinstance(bytes_or_str, bytes):
         value = bytes_or_str.decode('utf-8')
@@ -63,13 +63,13 @@ def to_bytes(bytes_or_str):
 
 ## Item 4: Prefer Interpolated F-Strings Over C-style Format Strings and str.format
 ```python
-# BAD — C-style
+# BAD -- C-style
 'Hello, %s. You are %d.' % (name, age)
 
-# BAD — str.format
+# BAD -- str.format
 'Hello, {}. You are {}.'.format(name, age)
 
-# GOOD — f-string
+# GOOD -- f-string
 f'Hello, {name}. You are {age}.'
 
 # F-strings support expressions
@@ -152,7 +152,7 @@ for name, count in zip_longest(names, counts, fillvalue=0):
 ```
 
 - `zip` truncates to shortest iterator (use `itertools.zip_longest` if needed)
-- zip is lazy — produces one tuple at a time
+- zip is lazy -- produces one tuple at a time
 
 ## Item 9: Avoid else Blocks After for and while Loops
 - `else` on loops runs when the loop completes *without* `break`
@@ -160,14 +160,14 @@ for name, count in zip_longest(names, counts, fillvalue=0):
 - Instead, use a helper function with early return:
 
 ```python
-# BAD — confusing else on loop
+# BAD -- confusing else on loop
 for i in range(n):
     if condition(i):
         break
 else:
     handle_no_break()
 
-# GOOD — helper function
+# GOOD -- helper function
 def find_match(n):
     for i in range(n):
         if condition(i):
@@ -181,12 +181,12 @@ if result is None:
 
 ## Item 10: Prevent Repetition with Assignment Expressions (Walrus Operator)
 ```python
-# BAD — repeated call or extra variable
+# BAD -- repeated call or extra variable
 count = fresh_fruit.get('lemon', 0)
 if count:
     make_lemonade(count)
 
-# GOOD — walrus operator
+# GOOD -- walrus operator
 if count := fresh_fruit.get('lemon', 0):
     make_lemonade(count)
 
@@ -199,4 +199,4 @@ result = [y for x in data if (y := f(x)) is not None]
 ```
 
 - Use `:=` when you need to both assign and test a value
-- Don't overuse — only when it clearly reduces repetition
+- Don't overuse -- only when it clearly reduces repetition

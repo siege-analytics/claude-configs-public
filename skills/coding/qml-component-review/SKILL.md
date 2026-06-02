@@ -17,7 +17,7 @@ Review QML components extracted from ChordLibrary.qml for conformance with the p
 | Layer | Django Equivalent | QML Equivalent |
 |-------|------------------|----------------|
 | Data | `models.py` | State QtObjects (`libraryState`, `tuningState`, `calcState`) |
-| Logic | `views.py` | ChordLibrary.qml (the router — startup, signal handling, function dispatch) |
+| Logic | `views.py` | ChordLibrary.qml (the router -- startup, signal handling, function dispatch) |
 | Presentation | `templates/` | `ui/*.qml` panels (properties in, signals out, no direct state mutation) |
 
 ### Why not singletons?
@@ -57,20 +57,20 @@ Item {  // or ColumnLayout, Flickable, etc.
 ```
 
 **Rules:**
-- Properties are READ-ONLY from the component's perspective — never assign to `library.voicingsData` from within the panel
+- Properties are READ-ONLY from the component's perspective -- never assign to `library.voicingsData` from within the panel
 - Signals use past-tense or requested-suffix naming: `insertRequested`, `tuningChanged`, `presetLoaded`
 - Internal properties are prefixed with `_` (underscore)
-- No `import "model/SomeModule.js"` — JS module calls happen in ChordLibrary.qml's signal handlers, not in the panel
+- No `import "model/SomeModule.js"` -- JS module calls happen in ChordLibrary.qml's signal handlers, not in the panel
 
 ### 2. No Direct State Mutation
 
 ```qml
-// WRONG — panel directly modifies parent state:
+// WRONG -- panel directly modifies parent state:
 Button {
     onClicked: library.voicingsData = newData  // NEVER
 }
 
-// CORRECT — panel emits signal, parent handles it:
+// CORRECT -- panel emits signal, parent handles it:
 Button {
     onClicked: panelName.rebuildRequested()
 }
@@ -81,10 +81,10 @@ The ONLY place that mutates state is ChordLibrary.qml's signal handlers.
 ### 3. No JS Module Imports
 
 ```qml
-// WRONG — panel imports JS modules directly:
+// WRONG -- panel imports JS modules directly:
 import "model/IRealParser.js" as IRealParser
 
-// CORRECT — parent wires the result via properties or signal handlers
+// CORRECT -- parent wires the result via properties or signal handlers
 // The panel just emits: importRequested(text)
 // ChordLibrary.qml handles: IRealParser.parseUrl(text) in the signal handler
 ```
@@ -175,7 +175,7 @@ QtObject {
 Every extracted panel must have a header comment:
 
 ```qml
-// ImportPanel.qml — Import tab UI for the Chord Library plugin.
+// ImportPanel.qml -- Import tab UI for the Chord Library plugin.
 // Extracted from ChordLibrary.qml (Phase A2, #75).
 //
 // Input state groups: library, tuning, theme
@@ -190,18 +190,18 @@ Since `plugin/` is self-contained and `deploy.sh` uses `rsync`, new QML files in
 
 ## Common Mistakes
 
-1. **Passing `voicingsData` directly instead of `libraryState`** — pass the state group object, not individual properties
-2. **Calling functions from parent** — `parent.loadTuningVoicings()` is wrong; emit a signal instead
-3. **Inline JS business logic** — keep logic in ChordLibrary.qml's signal handlers or JS modules, not in the panel
-4. **Missing `visible` binding** — every panel needs `visible: currentTab === N`
-5. **Forgetting Layout properties** — panels need `Layout.fillWidth: true; Layout.fillHeight: true`
+1. **Passing `voicingsData` directly instead of `libraryState`** -- pass the state group object, not individual properties
+2. **Calling functions from parent** -- `parent.loadTuningVoicings()` is wrong; emit a signal instead
+3. **Inline JS business logic** -- keep logic in ChordLibrary.qml's signal handlers or JS modules, not in the panel
+4. **Missing `visible` binding** -- every panel needs `visible: currentTab === N`
+5. **Forgetting Layout properties** -- panels need `Layout.fillWidth: true; Layout.fillHeight: true`
 
 ## Verification Steps
 
 After extracting a panel:
 
-1. `python3 -m pytest tests/ -v` — all tests must pass (pure refactor, no behavior change)
-2. `bash deploy.sh` — deploy to MuseScore
-3. Quit and relaunch MuseScore — QML caching requires full restart
+1. `python3 -m pytest tests/ -v` -- all tests must pass (pure refactor, no behavior change)
+2. `bash deploy.sh` -- deploy to MuseScore
+3. Quit and relaunch MuseScore -- QML caching requires full restart
 4. Open the plugin, navigate to the extracted tab, verify all functionality works
 5. Check the console for QML errors: `View > Developer Console` in MuseScore

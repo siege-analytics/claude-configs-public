@@ -15,7 +15,7 @@ A systematic approach to building a scalable, predictable B2B sales machine. Pio
 
 **Predictable lead generation drives predictable revenue.** The biggest mistake in sales is having the same people prospect AND close. Specialization creates a repeatable, scalable machine.
 
-**The foundation:** Cold calling is dead. Cold Calling 2.0 — mass, personalized cold emails that generate referrals to the right person — is the new outbound. Combined with sales role specialization, this creates predictable, scalable revenue.
+**The foundation:** Cold calling is dead. Cold Calling 2.0 -- mass, personalized cold emails that generate referrals to the right person -- is the new outbound. Combined with sales role specialization, this creates predictable, scalable revenue.
 
 ## Scoring
 

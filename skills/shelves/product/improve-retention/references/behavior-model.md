@@ -1,6 +1,6 @@
 # The Fogg Behavior Model (B=MAP)
 
-The Fogg Behavior Model is the foundation of behavior design. Every behavior — from clicking a button to forming a daily habit — follows the same equation: B=MAP.
+The Fogg Behavior Model is the foundation of behavior design. Every behavior -- from clicking a button to forming a daily habit -- follows the same equation: B=MAP.
 
 ## The Equation
 
@@ -30,14 +30,14 @@ X marks below the line: behavior fails regardless of prompt.
 
 ## The Action Line
 
-The Action Line is the curve that separates success from failure. It is not a straight line — it curves because motivation and ability compensate for each other.
+The Action Line is the curve that separates success from failure. It is not a straight line -- it curves because motivation and ability compensate for each other.
 
 ### How the Curve Works
 
 - **High motivation + low ability:** Behavior can still happen (people do hard things when motivated enough)
 - **Low motivation + high ability:** Behavior can still happen (people do easy things even when unmotivated)
-- **Low motivation + low ability:** Below the Action Line — no prompt works
-- **High motivation + high ability:** Well above the line — almost any prompt triggers action
+- **Low motivation + low ability:** Below the Action Line -- no prompt works
+- **High motivation + high ability:** Well above the line -- almost any prompt triggers action
 
 ### Design Implications
 
@@ -69,7 +69,7 @@ Behaviors you want to happen repeatedly:
 - Use the collaboration tool
 - Log activity
 
-**Design approach:** Make it tiny, anchor it, celebrate it. Habitual behaviors cannot depend on motivation — they must survive the trough. This is where the Ability Chain and Tiny Habits method are critical.
+**Design approach:** Make it tiny, anchor it, celebrate it. Habitual behaviors cannot depend on motivation -- they must survive the trough. This is where the Ability Chain and Tiny Habits method are critical.
 
 ### Stop Behaviors
 
@@ -88,7 +88,7 @@ When a target behavior isn't happening, diagnose using B=MAP:
 
 ### Step 1: Is there a Prompt?
 
-If the user never receives a prompt, behavior won't happen — regardless of motivation and ability.
+If the user never receives a prompt, behavior won't happen -- regardless of motivation and ability.
 
 **Check:**
 - Is there a visible CTA?
@@ -142,12 +142,12 @@ For any product, identify and map these behaviors:
 
 For each key behavior:
 
-1. **Describe the behavior** — Be specific: "User opens the dashboard and checks their top metric"
-2. **Rate Motivation (1-5)** — How motivated is the user at the moment of the prompt?
-3. **Rate Ability (1-5)** — How easy is the behavior? Which Ability Chain factor is weakest?
-4. **Rate Prompt (1-5)** — Is the prompt present, well-timed, and clear?
-5. **Action Line assessment** — Is the combined M+A above the threshold?
-6. **Fix priority** — Address the weakest element first (usually Ability)
+1. **Describe the behavior** -- Be specific: "User opens the dashboard and checks their top metric"
+2. **Rate Motivation (1-5)** -- How motivated is the user at the moment of the prompt?
+3. **Rate Ability (1-5)** -- How easy is the behavior? Which Ability Chain factor is weakest?
+4. **Rate Prompt (1-5)** -- Is the prompt present, well-timed, and clear?
+5. **Action Line assessment** -- Is the combined M+A above the threshold?
+6. **Fix priority** -- Address the weakest element first (usually Ability)
 
 ---
 
@@ -159,8 +159,8 @@ Fogg's model is the scientific foundation that Nir Eyal's Hook Model builds upon
 
 - **Trigger** (Hook) = **Prompt** (Fogg)
 - **Action** (Hook) = **Behavior** (Fogg), governed by B=MAT/B=MAP
-- **Variable Reward** (Hook) = **Motivation booster** (Fogg) — increases motivation for next cycle
-- **Investment** (Hook) = **Ability builder** (Fogg) — makes product easier/more personalized over time
+- **Variable Reward** (Hook) = **Motivation booster** (Fogg) -- increases motivation for next cycle
+- **Investment** (Hook) = **Ability builder** (Fogg) -- makes product easier/more personalized over time
 
 Use Fogg for diagnosis (why isn't this behavior happening?). Use the Hook Model for loop design (how do we create a self-reinforcing cycle?).
 

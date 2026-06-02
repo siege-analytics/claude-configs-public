@@ -39,7 +39,7 @@ for proc in procs:
 ```python
 import threading
 
-# Threads for I/O parallelism — GOOD
+# Threads for I/O parallelism -- GOOD
 def download(url):
     resp = urllib.request.urlopen(url)
     return resp.read()
@@ -71,7 +71,7 @@ class Counter:
 ```
 
 - The GIL does NOT prevent data races on Python objects
-- Operations like `+=` are not atomic — they involve read + modify + write
+- Operations like `+=` are not atomic -- they involve read + modify + write
 - Always use `Lock` when multiple threads modify shared state
 - Use `with lock:` context manager for clean acquire/release
 
@@ -192,9 +192,9 @@ def sync_function():
 - Never call blocking functions directly in async code (it blocks the event loop)
 
 ## Item 63: Avoid Blocking the asyncio Event Loop to Maximize Responsiveness
-- Never use `time.sleep()` in async code — use `await asyncio.sleep()`
-- Never do CPU-heavy work in coroutines — use `run_in_executor`
-- Never use blocking I/O calls — use async equivalents (aiohttp, aiofiles, etc.)
+- Never use `time.sleep()` in async code -- use `await asyncio.sleep()`
+- Never do CPU-heavy work in coroutines -- use `run_in_executor`
+- Never use blocking I/O calls -- use async equivalents (aiohttp, aiofiles, etc.)
 - Profile with `asyncio.get_event_loop().slow_callback_duration`
 
 ## Item 64: Consider concurrent.futures for True Parallelism
@@ -210,4 +210,4 @@ with ProcessPoolExecutor() as executor:
 
 - `ProcessPoolExecutor` bypasses the GIL for true CPU parallelism
 - Data is serialized between processes (use for independent tasks)
-- Same API as `ThreadPoolExecutor` — easy to switch
+- Same API as `ThreadPoolExecutor` -- easy to switch

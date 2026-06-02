@@ -3,17 +3,17 @@ name: causal-inference-what-if
 description: 'Canonical modern treatment of causal inference using the potential-outcomes / counterfactuals framework. Use when the user mentions "causal inference", "counterfactual", "potential outcomes", "ATE / ATT / CATE", "g-methods", "g-computation", "g-estimation", "marginal structural models", "IPW", "inverse probability weighting", "Hernan", "Robins", "What If book", "exchangeability", "positivity", or "consistency assumption". Also trigger when reasoning about whether an observational study can identify a causal effect, designing a target trial, picking between regression / matching / IPW / g-methods, or distinguishing association from causation. Heavier on theory and identification assumptions than the applied causal-inference-mixtape; pair them. For pure prediction / non-causal modeling see think-stats.'
 license: 'Free PDF from authors (non-commercial; attribution required)'
 metadata:
-  source: 'miguelhernan.org/whatifbook — free PDF at /s/hernanrobins_WhatIf_21nov25.pdf (Hernán & Robins, Harvard / MIT). CRC Press / Chapman & Hall publishes paid print edition.'
+  source: 'miguelhernan.org/whatifbook -- free PDF at /s/hernanrobins_WhatIf_21nov25.pdf (Hernán & Robins, Harvard / MIT). CRC Press / Chapman & Hall publishes paid print edition.'
   coverage: 'Full book, freely downloadable PDF, current revision dated 21 Nov 2025. Verified 2026-05-17 via WebFetch.'
 ---
 
-# Causal Inference: What If — Framework
+# Causal Inference: What If -- Framework
 
 Modern canonical treatment of causal inference from a clinical-epidemiology lineage. The book teaches the disciplines that distinguish "X is correlated with Y" from "X causes Y," and the specific identification assumptions you must check (and the methods that work) when trying to estimate causal effects from observational data.
 
 ## Core Principle
 
-**A causal effect is the difference between potential outcomes under different treatments, only one of which is observed for any individual.** Identification — going from observed associations to causal effects — requires explicit assumptions about exchangeability (no unmeasured confounding given measured covariates), positivity (all relevant treatment-covariate combinations have positive probability), and consistency (the observed outcome equals the potential outcome under the actually-taken treatment). If any of these assumptions fails, the standard regression / matching / weighting machinery produces numbers that look like causal estimates but aren't.
+**A causal effect is the difference between potential outcomes under different treatments, only one of which is observed for any individual.** Identification -- going from observed associations to causal effects -- requires explicit assumptions about exchangeability (no unmeasured confounding given measured covariates), positivity (all relevant treatment-covariate combinations have positive probability), and consistency (the observed outcome equals the potential outcome under the actually-taken treatment). If any of these assumptions fails, the standard regression / matching / weighting machinery produces numbers that look like causal estimates but aren't.
 
 **The foundation:** causal claims are claims about what *would* have happened under a different action. The data you have only shows what *did* happen. Bridging that gap requires assumptions that must be named, justified, and checked. The book's central discipline: never make a causal claim without identifying which assumption you're relying on and stating the sensitivity of the conclusion to that assumption.
 
@@ -33,9 +33,9 @@ Every causal estimate from observational data depends on these three. Check each
 
 | Assumption | What it means | How it fails |
 |---|---|---|
-| **Exchangeability** | Treated and untreated groups are comparable on all confounders (conditional on measured covariates) | Unmeasured confounding — a variable that affects both treatment and outcome was not collected |
+| **Exchangeability** | Treated and untreated groups are comparable on all confounders (conditional on measured covariates) | Unmeasured confounding -- a variable that affects both treatment and outcome was not collected |
 | **Positivity** | Every covariate stratum has both treated and untreated individuals | Some patient types are never given the treatment (no overlap); estimates rely on extrapolation, not data |
-| **Consistency** | The observed outcome under treatment T equals the potential outcome had treatment been set to T | "Treatment" is not well-defined (e.g., "weight loss" — by what means? surgery vs diet have different effects) |
+| **Consistency** | The observed outcome under treatment T equals the potential outcome had treatment been set to T | "Treatment" is not well-defined (e.g., "weight loss" -- by what means? surgery vs diet have different effects) |
 
 Without all three holding (or being explicitly relaxed via sensitivity analysis), you do not have causal identification.
 
@@ -89,24 +89,24 @@ The collider-bias intuition is the most counterintuitive: "controlling for X" ca
 
 ## When this skill does NOT apply
 
-- **Prediction questions** (will Y happen?) — causal inference is overkill; standard ML / regression is the right tool. See think-stats for applied prediction work.
-- **Pure description / exploration** — causal framing is premature.
-- **Randomized trial analysis** — the assumptions are guaranteed by randomization; standard methods are unbiased. Causal-inference machinery is most needed for observational data.
-- **Applied econometrics / RD / IV / DiD** — see causal-inference-mixtape (Cunningham) which covers these designs in more applied detail. What If is the theoretical-foundations book; Mixtape is the applied-methods book. They compose.
+- **Prediction questions** (will Y happen?) -- causal inference is overkill; standard ML / regression is the right tool. See think-stats for applied prediction work.
+- **Pure description / exploration** -- causal framing is premature.
+- **Randomized trial analysis** -- the assumptions are guaranteed by randomization; standard methods are unbiased. Causal-inference machinery is most needed for observational data.
+- **Applied econometrics / RD / IV / DiD** -- see causal-inference-mixtape (Cunningham) which covers these designs in more applied detail. What If is the theoretical-foundations book; Mixtape is the applied-methods book. They compose.
 
 ## Companions
 
-- `causal-inference-mixtape` — applied complement (DAGs, RD, IV, DiD, synthetic control). Same shelf.
-- `think-stats` — for non-causal applied statistics (description, prediction, hypothesis testing). Same shelf.
-- `statistical-rethinking-course` — for Bayesian framing; What If is largely frequentist but the framework is compatible.
-- `spatial-data-science` — for spatial-statistics edge cases where causal inference meets autocorrelation.
+- `causal-inference-mixtape` -- applied complement (DAGs, RD, IV, DiD, synthetic control). Same shelf.
+- `think-stats` -- for non-causal applied statistics (description, prediction, hypothesis testing). Same shelf.
+- `statistical-rethinking-course` -- for Bayesian framing; What If is largely frequentist but the framework is compatible.
+- `spatial-data-science` -- for spatial-statistics edge cases where causal inference meets autocorrelation.
 
 ## Source + license
 
 - **Source:** miguelhernan.org/whatifbook → free PDF at `/s/hernanrobins_WhatIf_21nov25.pdf` (Miguel Hernán + James Robins, Harvard School of Public Health).
 - **License:** free download for personal / educational use; attribution required. The paid CRC Press print edition is the same content.
-- **Verified:** WebFetch 2026-05-17 confirmed the PDF download link on miguelhernan.org/whatifbook; current version dated 21 Nov 2025 (the book is actively maintained — the authors update revisions periodically and post the latest PDF freely).
+- **Verified:** WebFetch 2026-05-17 confirmed the PDF download link on miguelhernan.org/whatifbook; current version dated 21 Nov 2025 (the book is actively maintained -- the authors update revisions periodically and post the latest PDF freely).
 
 ## See also
 
-- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` — context on why causal-inference-what-if is the canonical-causal-rigor entry on the statistical-inference shelf. Operator wanted "all three" statistical flavors; this is the rigorous-foundation flavor.
+- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` -- context on why causal-inference-what-if is the canonical-causal-rigor entry on the statistical-inference shelf. Operator wanted "all three" statistical flavors; this is the rigorous-foundation flavor.

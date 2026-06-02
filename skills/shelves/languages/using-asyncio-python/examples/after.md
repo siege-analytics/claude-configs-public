@@ -60,9 +60,9 @@ if __name__ == "__main__":
 ```
 
 Key improvements:
-- `aiohttp.ClientSession` replaces `requests.get` — HTTP calls are non-blocking and never stall the event loop (Ch 4: aiohttp; Ch 2-3: Never block the event loop)
-- `asyncio.gather` inside `build_product_entry` fetches product, inventory, and pricing for one SKU concurrently — three sequential blocking calls become one concurrent async fan-out (Ch 3: gather for fan-out)
+- `aiohttp.ClientSession` replaces `requests.get` -- HTTP calls are non-blocking and never stall the event loop (Ch 4: aiohttp; Ch 2-3: Never block the event loop)
+- `asyncio.gather` inside `build_product_entry` fetches product, inventory, and pricing for one SKU concurrently -- three sequential blocking calls become one concurrent async fan-out (Ch 3: gather for fan-out)
 - The outer `asyncio.gather(*tasks)` processes all product IDs concurrently instead of sequentially in a for loop (Ch 3: create_task / gather)
 - `asyncio.Semaphore(10)` limits the number of simultaneous in-flight requests, preventing connection pool exhaustion on the upstream APIs (Ch 3: Semaphore for concurrency control)
 - `aiohttp.ClientTimeout(total=30)` ensures no request hangs indefinitely (Ch 3: use timeouts everywhere)
-- A single `aiohttp.ClientSession` is reused across all requests for connection pooling — the `async with` context manager ensures it is closed on exit (Ch 4: Use async with for resources)
+- A single `aiohttp.ClientSession` is reused across all requests for connection pooling -- the `async with` context manager ensures it is closed on exit (Ch 4: Use async with for resources)

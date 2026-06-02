@@ -18,7 +18,7 @@ Deep methodology for mapping, analyzing, and optimizing conversion funnels.
 
 ## Funnel Philosophy
 
-A funnel isn't just a visualization—it's a diagnostic tool. Every business has a funnel, whether they've mapped it or not. The question is: where is it leaking?
+A funnel isn't just a visualization--it's a diagnostic tool. Every business has a funnel, whether they've mapped it or not. The question is: where is it leaking?
 
 **Core insight:** Most businesses focus on the top of the funnel (traffic) when the biggest wins are often in the middle (conversion) or bottom (retention/expansion).
 
@@ -68,7 +68,7 @@ List every step a customer takes from first touch to desired outcome:
 
 ## Blocked Arteries
 
-A "blocked artery" is a high-traffic path with underperformance—a point where lots of visitors enter but few progress.
+A "blocked artery" is a high-traffic path with underperformance--a point where lots of visitors enter but few progress.
 
 ### How to Find Blocked Arteries
 
@@ -314,7 +314,7 @@ Product Page (3,000 visitors)
 └─→ Contact support: 100 (3%)
 ```
 
-**Insight:** 50% exit from product page—that's the primary leak to investigate.
+**Insight:** 50% exit from product page--that's the primary leak to investigate.
 
 ---
 

@@ -1,10 +1,10 @@
 # Emotion: Engineering High-Arousal Feelings That Drive Sharing
 
-When we care, we share. But not all emotions are created equal. High-arousal emotions — both positive and negative — drive sharing, while low-arousal emotions suppress it. The difference between content that spreads and content that dies is not whether it makes people feel good or bad, but whether it fires them up or brings them down.
+When we care, we share. But not all emotions are created equal. High-arousal emotions -- both positive and negative -- drive sharing, while low-arousal emotions suppress it. The difference between content that spreads and content that dies is not whether it makes people feel good or bad, but whether it fires them up or brings them down.
 
 ## The Arousal Framework
 
-The critical distinction is not positive vs. negative, but high-arousal vs. low-arousal. Arousal is a state of physiological activation — elevated heart rate, tightened muscles, a sense of readiness for action. High-arousal states create a need to share, talk, and act. Low-arousal states create withdrawal, passivity, and silence.
+The critical distinction is not positive vs. negative, but high-arousal vs. low-arousal. Arousal is a state of physiological activation -- elevated heart rate, tightened muscles, a sense of readiness for action. High-arousal states create a need to share, talk, and act. Low-arousal states create withdrawal, passivity, and silence.
 
 ### The Emotion-Sharing Matrix
 
@@ -18,9 +18,9 @@ The critical distinction is not positive vs. negative, but high-arousal vs. low-
 Most marketers think of emotion as a simple positive/negative spectrum. They assume positive = shareable and negative = avoid. This is wrong.
 
 **Counter-intuitive truths:**
-- Sad content (positive intent, like charity ads) often fails to spread because sadness is low-arousal — people feel deflated and withdrawn, not activated
-- Angry content (negative valence) often spreads widely because anger is high-arousal — people feel fired up and compelled to act
-- Content that makes people feel content and satisfied generates almost no sharing — there's no urgency to act
+- Sad content (positive intent, like charity ads) often fails to spread because sadness is low-arousal -- people feel deflated and withdrawn, not activated
+- Angry content (negative valence) often spreads widely because anger is high-arousal -- people feel fired up and compelled to act
+- Content that makes people feel content and satisfied generates almost no sharing -- there's no urgency to act
 - Awe-inspiring content is the single most shared type because awe is both positive and extremely high-arousal
 
 ### Detailed Emotion Profiles
@@ -40,7 +40,7 @@ Most marketers think of emotion as a simple positive/negative spectrum. They ass
 
 ## Awe Engineering
 
-Awe is the most powerful sharing emotion. It is the feeling of being in the presence of something vast that transcends your current frame of reference. Awe makes people feel small in the best way — connected to something larger than themselves — and that feeling is so powerful they need to share it.
+Awe is the most powerful sharing emotion. It is the feeling of being in the presence of something vast that transcends your current frame of reference. Awe makes people feel small in the best way -- connected to something larger than themselves -- and that feeling is so powerful they need to share it.
 
 ### What Triggers Awe
 
@@ -75,7 +75,7 @@ Awe is the most powerful sharing emotion. It is the feeling of being in the pres
 
 ## Humor Design Principles
 
-Humor is a high-arousal positive emotion and a powerful sharing driver. But humor is also risky — failed humor is worse than no humor. Here are principles for designing humor that works.
+Humor is a high-arousal positive emotion and a powerful sharing driver. But humor is also risky -- failed humor is worse than no humor. Here are principles for designing humor that works.
 
 ### Types of Humor That Drive Sharing
 
@@ -90,7 +90,7 @@ Humor is a high-arousal positive emotion and a powerful sharing driver. But humo
 
 ### Humor Design Rules
 
-**Rule 1: The humor must serve the message.** If people laugh but can't remember the product, the humor failed. The funny element should be inseparable from the product benefit. Blendtec's "Will It Blend?" is funny *because* of the blender's power — the humor and the product claim are one.
+**Rule 1: The humor must serve the message.** If people laugh but can't remember the product, the humor failed. The funny element should be inseparable from the product benefit. Blendtec's "Will It Blend?" is funny *because* of the blender's power -- the humor and the product claim are one.
 
 **Rule 2: Punch up, not down.** Humor at the expense of vulnerable groups generates backlash, not shares. Punch up at powerful targets (big competitors, universal frustrations, absurd industry norms).
 
@@ -104,14 +104,14 @@ Humor is a high-arousal positive emotion and a powerful sharing driver. But humo
 
 | Product Context | Humor Approach | Example |
 |----------------|---------------|---------|
-| Boring industry | Relief humor — make the mundane funny | Dollar Shave Club "Our blades are f***ing great" |
-| Technical product | Absurdity — show extreme use cases | Blendtec blending everything imaginable |
-| Premium brand | Self-deprecation — show you don't take yourself too seriously | Luxury brands poking fun at their own exclusivity |
-| Commodity product | Observational — "we all know this is true" | Old Spice absurdist takes on deodorant marketing |
+| Boring industry | Relief humor -- make the mundane funny | Dollar Shave Club "Our blades are f***ing great" |
+| Technical product | Absurdity -- show extreme use cases | Blendtec blending everything imaginable |
+| Premium brand | Self-deprecation -- show you don't take yourself too seriously | Luxury brands poking fun at their own exclusivity |
+| Commodity product | Observational -- "we all know this is true" | Old Spice absurdist takes on deodorant marketing |
 
 ## Emotional Framing
 
-The same information can be presented in ways that evoke different emotions — and therefore different sharing behaviors. Emotional framing is the art of choosing which emotion to activate.
+The same information can be presented in ways that evoke different emotions -- and therefore different sharing behaviors. Emotional framing is the art of choosing which emotion to activate.
 
 ### Framing the Same Story
 
@@ -155,8 +155,8 @@ Watch, read, or experience the content. What emotion do you feel most strongly? 
 | Anger, outrage | Very high | Will be shared with urgency |
 | Anxiety, concern | High | Will be shared as warning |
 | Surprise | High | Will be shared as "Did you see this?" |
-| Contentment | Low | Will not be shared — no urgency |
-| Sadness | Low | Will not be shared — people withdraw |
+| Contentment | Low | Will not be shared -- no urgency |
+| Sadness | Low | Will not be shared -- people withdraw |
 | Indifference | None | Dead on arrival |
 
 ### Step 3: If Low Arousal, Reframe

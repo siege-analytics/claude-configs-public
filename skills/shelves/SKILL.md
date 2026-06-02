@@ -4,7 +4,7 @@ description: Meta-router for the DBrain book-skill library. Dispatches to one of
 disable-model-invocation: false
 ---
 
-# DBrain — Book-Skill Library
+# DBrain -- Book-Skill Library
 
 Each shelf is a router that dispatches to individual book skills. Load the shelf for the topic, the shelf names the right book, you read the book in full.
 
@@ -25,8 +25,8 @@ This pattern keeps the description budget small: one slot per shelf, not one per
 | [skill:design] | UI, UX heuristics, typography, microinteractions |
 | [skill:team] | Motivation, ways of working |
 | [skill:storytelling] | Communicating data, slide animation |
-| [skill:shelf-geospatial] | CRS / spatial joins / MAUP / areal interpolation / spatial statistics — geographic analysis grounded in methodology |
-| [skill:shelf-statistical-inference] | Causal inference (theory + applied), Bayesian / multilevel, applied EDA / hypothesis testing — analytical rigor for any statistical claim |
+| [skill:shelf-geospatial] | CRS / spatial joins / MAUP / areal interpolation / spatial statistics -- geographic analysis grounded in methodology |
+| [skill:shelf-statistical-inference] | Causal inference (theory + applied), Bayesian / multilevel, applied EDA / hypothesis testing -- analytical rigor for any statistical claim |
 
 ## How shelves work
 
@@ -35,7 +35,7 @@ Each shelf's `SKILL.md` is a thin router (≤ 2 KB) with:
 1. A trigger table mapping task signals to the book to load.
 2. A list of book skills in the shelf with one-line descriptions.
 
-Books themselves (`shelves/<shelf>/<book>/SKILL.md`) are fat — they carry their full `references/` knowledge bank from the upstream source.
+Books themselves (`shelves/<shelf>/<book>/SKILL.md`) are fat -- they carry their full `references/` knowledge bank from the upstream source.
 
 ## Sources
 
@@ -48,4 +48,4 @@ See [`THIRD_PARTY_NOTICES.md`](../../THIRD_PARTY_NOTICES.md) for the per-book ma
 
 ## Status
 
-Shelves are populated incrementally via the `feat/dbrain-*` PR stack. Until a given shelf merges, its router link from this meta-router will 404 — that is expected and resolves as each PR lands.
+Shelves are populated incrementally via the `feat/dbrain-*` PR stack. Until a given shelf merges, its router link from this meta-router will 404 -- that is expected and resolves as each PR lands.

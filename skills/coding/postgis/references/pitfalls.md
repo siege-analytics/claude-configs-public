@@ -24,10 +24,10 @@ USING ST_Transform(geom, 4326);
 `geometry` columns without a type constraint accept anything. Then `ST_Area(geom)` returns 0 for the points hiding in the column, and you spend an afternoon debugging.
 
 ```sql
--- BAD — accepts any geometry type
+-- BAD -- accepts any geometry type
 CREATE TABLE features (id SERIAL, geom geometry);
 
--- GOOD — typed
+-- GOOD -- typed
 CREATE TABLE features (id SERIAL, geom geometry(Polygon, 4326));
 ```
 
@@ -39,7 +39,7 @@ Some shapefile loaders add a Z dimension as 0:
 
 ```sql
 SELECT ST_NDims(geom) FROM features LIMIT 1;
--- Returns 3 instead of 2 — you have Z coords you didn't ask for
+-- Returns 3 instead of 2 -- you have Z coords you didn't ask for
 ```
 
 Most operations work but a few quietly produce wrong results, and storage is bigger. Strip:
@@ -62,14 +62,14 @@ For "which polygon does this point fall in," `ST_Contains` *misses* points that 
 ## ST_Transform on the indexed column
 
 ```sql
--- BAD — transforms every row, blocks the index
+-- BAD -- transforms every row, blocks the index
 SELECT * FROM features WHERE ST_Transform(geom, 5070) && bbox_5070;
 ```
 
 Transform the query input instead:
 
 ```sql
--- GOOD — transforms once
+-- GOOD -- transforms once
 SELECT * FROM features WHERE geom && ST_Transform(bbox_5070, 4326);
 ```
 
@@ -78,7 +78,7 @@ Or store both SRIDs as separate columns and index both.
 ## Computing area in degrees
 
 ```sql
--- Returns a meaningless number — degrees squared
+-- Returns a meaningless number -- degrees squared
 SELECT ST_Area(geom) FROM districts WHERE state = 'TX';
 ```
 
@@ -104,7 +104,7 @@ Either project both sides, use `ST_Distance(a.geom::geography, b.geom::geography
 ## Bounding box with no SRID
 
 ```sql
--- ST_MakeEnvelope without SRID returns SRID 0 — won't match indexed columns
+-- ST_MakeEnvelope without SRID returns SRID 0 -- won't match indexed columns
 SELECT * FROM features WHERE geom && ST_MakeEnvelope(-100, 30, -97, 32);
 
 -- Fix
@@ -116,7 +116,7 @@ The 5th argument is the SRID. Without it, the bounding box has no projection and
 ## Subdividing in the WHERE clause
 
 ```sql
--- BAD — does the subdivision per query
+-- BAD -- does the subdivision per query
 SELECT * FROM districts WHERE ST_Contains(ST_Subdivide(geom, 256), $1);
 ```
 

@@ -15,10 +15,10 @@ A well-qualified pipeline has higher win rates, shorter sales cycles, and more p
 
 | Criteria | Core Question | What You Are Really Asking |
 |----------|--------------|---------------------------|
-| **A** — Authority | Can this person make or influence the decision? | Will I be talking to someone who can actually say yes? |
-| **N** — Need | Do they have the problem we solve? | Is there a real, painful problem driving this? |
-| **U** — Urgency | When do they need to solve it? | Will they act now, or is this a "nice to have" for someday? |
-| **M** — Money | Can they afford our solution? | Is there budget, and is our price within range? |
+| **A** -- Authority | Can this person make or influence the decision? | Will I be talking to someone who can actually say yes? |
+| **N** -- Need | Do they have the problem we solve? | Is there a real, painful problem driving this? |
+| **U** -- Urgency | When do they need to solve it? | Will they act now, or is this a "nice to have" for someday? |
+| **M** -- Money | Can they afford our solution? | Is there budget, and is our price within range? |
 
 ### Why ANUM Orders It This Way
 
@@ -70,9 +70,9 @@ For deals involving multiple stakeholders (common in mid-market and enterprise):
 
 | Level | Example | Quality |
 |-------|---------|---------|
-| Surface | "We need better reporting." | Weak — could be nice-to-have |
-| Functional | "We cannot track pipeline by SDR, so we do not know who is underperforming." | Moderate — specific but not emotional |
-| Impact | "Because we cannot see SDR performance, we have lost two good reps who felt unrecognized, and our pipeline dropped 30% last quarter." | Strong — pain is real, consequences are clear |
+| Surface | "We need better reporting." | Weak -- could be nice-to-have |
+| Functional | "We cannot track pipeline by SDR, so we do not know who is underperforming." | Moderate -- specific but not emotional |
+| Impact | "Because we cannot see SDR performance, we have lost two good reps who felt unrecognized, and our pipeline dropped 30% last quarter." | Strong -- pain is real, consequences are clear |
 
 Always dig to the impact level. Surface needs do not close deals.
 

@@ -101,7 +101,7 @@ See: [references/monday.md](references/monday.md) for detailed Monday exercises 
 - Look at competitors and analogous products
 - 3-minute demos: "Here's what I found, here's why it's interesting"
 - Capture good ideas on whiteboard
-- Don't limit to your industry—borrow from anywhere
+- Don't limit to your industry--borrow from anywhere
 
 **Exercise: Divide or swarm**
 - Divide: If map has multiple parts, different people tackle different sections
@@ -307,14 +307,14 @@ See: [references/thursday.md](references/thursday.md) for prototyping tools and 
 **Act 3: Introduce the Prototype (5 min)**
 - Show landing page or entry point
 - "What's this? What do you think it's for?"
-- Don't explain—let them interpret
+- Don't explain--let them interpret
 - Note: Do they get it?
 
 **Act 4: Tasks and Nudges (15 min)**
 - Give open-ended task: "Go ahead and explore"
 - Follow with specific tasks from storyboard: "Try to [complete action]"
 - Use nudges when stuck: "What would you do next?" or "What's going through your mind?"
-- Don't help—watch them struggle
+- Don't help--watch them struggle
 - Encourage thinking aloud
 
 **Act 5: Debrief (5 min)**

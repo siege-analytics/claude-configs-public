@@ -9,7 +9,7 @@ metadata:
 
 # Behavior Design Framework
 
-Framework for designing products that reliably change behavior. Based on a fundamental truth: behavior is not about willpower or motivation—it is a design problem with a predictable equation.
+Framework for designing products that reliably change behavior. Based on a fundamental truth: behavior is not about willpower or motivation--it is a design problem with a predictable equation.
 
 ## Core Principle
 
@@ -40,17 +40,17 @@ Framework for designing products that reliably change behavior. Based on a funda
 
 ### 1. Motivation
 
-**Core concept:** Motivation is the energy for action. It has three core motivators, each with two sides: Sensation (pleasure/pain), Anticipation (hope/fear), and Belonging (acceptance/rejection). Motivation is powerful but unreliable — it fluctuates like waves.
+**Core concept:** Motivation is the energy for action. It has three core motivators, each with two sides: Sensation (pleasure/pain), Anticipation (hope/fear), and Belonging (acceptance/rejection). Motivation is powerful but unreliable -- it fluctuates like waves.
 
 **Why it works:** Motivation explains why people want to act, but it is the least reliable element in behavior design. It spikes (New Year's resolutions, product launches) and crashes (day 3, week 2). Products that depend on high motivation fail when the wave recedes. The best designs work even when motivation is at a trough.
 
 **Key insights:**
 - Three core motivators: Sensation (pleasure/pain), Anticipation (hope/fear), Belonging (acceptance/rejection)
-- Motivation comes in waves — it is not a stable resource you can count on
+- Motivation comes in waves -- it is not a stable resource you can count on
 - Design for low-motivation moments, not peak motivation
-- "Motivation is unreliable. Ability is not." — BJ Fogg
+- "Motivation is unreliable. Ability is not." -- BJ Fogg
 - Motivation-first strategies (inspiring videos, aspirational messaging) produce spikes, not sustained behavior
-- Match the required motivation level to the behavior's difficulty — hard behaviors need high motivation
+- Match the required motivation level to the behavior's difficulty -- hard behaviors need high motivation
 
 **Product applications:**
 
@@ -67,7 +67,7 @@ Framework for designing products that reliably change behavior. Based on a funda
 - "Join 50,000 teams who..." (belonging motivator)
 - "See your progress instantly" (anticipation/hope motivator)
 - "Don't lose your 7-day streak" (anticipation/fear motivator)
-- Avoid motivation-heavy copy for routine actions — save it for hard asks
+- Avoid motivation-heavy copy for routine actions -- save it for hard asks
 
 **Ethical boundary:** Never manufacture false hope or exploit fear to inflate motivation. Motivation tactics should connect users to genuine outcomes, not create anxiety that drives compulsive usage.
 
@@ -75,17 +75,17 @@ See: [references/motivation-waves.md](references/motivation-waves.md) for deep d
 
 ### 2. Ability
 
-**Core concept:** Ability is the capacity to do the behavior. It is a function of the scarcest resource across six factors — the Ability Chain. If any single link is too weak (too expensive, too time-consuming, too confusing), the behavior breaks. Simplicity is not a single dimension — it is always relative to the person and context.
+**Core concept:** Ability is the capacity to do the behavior. It is a function of the scarcest resource across six factors -- the Ability Chain. If any single link is too weak (too expensive, too time-consuming, too confusing), the behavior breaks. Simplicity is not a single dimension -- it is always relative to the person and context.
 
 **Why it works:** Making behaviors easier is the most reliable strategy in behavior design. Unlike motivation, ability can be systematically engineered. Every field you remove, every step you eliminate, every default you set moves the behavior to the right on the Fogg Behavior Model, crossing the Action Line even at low motivation. The Ability Chain provides a diagnostic: find the weakest link and fix it.
 
 **Key insights:**
 - The Ability Chain has six factors: Time, Money, Physical Effort, Mental Effort, Social Deviance, Non-Routine
-- Simplicity is a function of the scarcest resource — find the bottleneck
-- "Simplicity changes behavior" — BJ Fogg
+- Simplicity is a function of the scarcest resource -- find the bottleneck
+- "Simplicity changes behavior" -- BJ Fogg
 - A friction audit finds the weakest link in the Ability Chain for each key behavior
 - Starter Steps: shrink the behavior to the tiniest version (2 minutes → 30 seconds → one field)
-- Default settings are the most powerful ability tool — users rarely change defaults
+- Default settings are the most powerful ability tool -- users rarely change defaults
 
 **Product applications:**
 
@@ -101,7 +101,7 @@ See: [references/motivation-waves.md](references/motivation-waves.md) for deep d
 - "One click to get started" (time + physical effort)
 - "Free forever for small teams" (money)
 - "No technical skills needed" (mental effort)
-- "Used by teams at Google, Stripe, and Shopify" (social deviance — it's normal)
+- "Used by teams at Google, Stripe, and Shopify" (social deviance -- it's normal)
 - "Works just like tools you already use" (non-routine)
 
 **Ethical boundary:** Reducing friction should make genuinely valuable behaviors easier. Never reduce friction on harmful actions (e.g., making it too easy to overspend, over-share, or delete important data without confirmation).
@@ -110,9 +110,9 @@ See: [references/ability-chain.md](references/ability-chain.md) for the six fact
 
 ### 3. Prompt
 
-**Core concept:** The prompt is the call to action — the thing that says "do it now." Without a prompt, behavior doesn't happen regardless of motivation and ability. Three types: Person Prompts (internal reminders), Context Prompts (environmental cues), and Action Prompts (designed triggers from the product).
+**Core concept:** The prompt is the call to action -- the thing that says "do it now." Without a prompt, behavior doesn't happen regardless of motivation and ability. Three types: Person Prompts (internal reminders), Context Prompts (environmental cues), and Action Prompts (designed triggers from the product).
 
-**Why it works:** Prompts are the most overlooked element. Many product teams assume that if motivation and ability are present, behavior will happen. It won't — not without a well-timed prompt. The key insight: prompts only work above the Action Line. Sending a push notification to someone who lacks ability or motivation is spam. The best prompts arrive when motivation and ability are already sufficient.
+**Why it works:** Prompts are the most overlooked element. Many product teams assume that if motivation and ability are present, behavior will happen. It won't -- not without a well-timed prompt. The key insight: prompts only work above the Action Line. Sending a push notification to someone who lacks ability or motivation is spam. The best prompts arrive when motivation and ability are already sufficient.
 
 **Key insights:**
 - Three prompt types: Person (internal thought), Context (environmental cue), Action (designed notification/CTA)
@@ -120,7 +120,7 @@ See: [references/ability-chain.md](references/ability-chain.md) for the six fact
 - A prompt at the wrong moment is noise; a prompt at the right moment is magic
 - Anchor moments: tie new behaviors to existing routines ("After I open Slack, I will...")
 - The best Action Prompts feel like helpful reminders, not interruptions
-- Prompt fatigue is real — every unnecessary prompt degrades the value of future prompts
+- Prompt fatigue is real -- every unnecessary prompt degrades the value of future prompts
 
 **Product applications:**
 
@@ -133,7 +133,7 @@ See: [references/ability-chain.md](references/ability-chain.md) for the six fact
 | **Feature discovery** | Prompt when motivation and ability align | Show feature tour when user encounters the problem it solves |
 
 **Copy patterns:**
-- "Your weekly report is ready" (context prompt — tied to real event)
+- "Your weekly report is ready" (context prompt -- tied to real event)
 - "After you finish your coffee, take 30 seconds to..." (anchor prompt)
 - "One thing left to complete your setup" (action prompt with progress)
 - "Your team is waiting for your input" (social context prompt)
@@ -155,13 +155,13 @@ After I [ANCHOR MOMENT], I will [TINY BEHAVIOR], then I [CELEBRATION].
 
 **Anchor Moment:** An existing routine that reliably happens (opening an app, finishing a meeting, morning coffee).
 
-**Tiny Behavior:** The smallest version of the target behavior — so small it's almost impossible to skip. Not "write a report" but "open the report template." Not "review analytics" but "glance at one metric."
+**Tiny Behavior:** The smallest version of the target behavior -- so small it's almost impossible to skip. Not "write a report" but "open the report template." Not "review analytics" but "glance at one metric."
 
-**Celebration:** An immediate positive emotion after doing the behavior. Celebration wires the habit. Without it, repetition alone isn't enough — you need the feeling of success.
+**Celebration:** An immediate positive emotion after doing the behavior. Celebration wires the habit. Without it, repetition alone isn't enough -- you need the feeling of success.
 
 ### Starter Steps
 
-Every target behavior has a Starter Step — the tiniest meaningful version:
+Every target behavior has a Starter Step -- the tiniest meaningful version:
 
 | Target Behavior | Starter Step | Why It Works |
 |----------------|--------------|--------------|
@@ -180,7 +180,7 @@ Once the tiny behavior is wired, it naturally grows:
 3. **Expands** → User customizes the dashboard
 4. **Habit formed** → User checks dashboard every morning automatically
 
-The key: never force scaling. Let motivation and momentum drive expansion. The tiny version is not a failure — it is the foundation.
+The key: never force scaling. Let motivation and momentum drive expansion. The tiny version is not a failure -- it is the foundation.
 
 See: [references/tiny-habits.md](references/tiny-habits.md) for the full Tiny Habits recipe, celebration techniques, and scaling patterns.
 
@@ -189,15 +189,15 @@ See: [references/tiny-habits.md](references/tiny-habits.md) for the full Tiny Ha
 Fogg's systematic process for creating lasting behavior change:
 
 ### Step 1: Clarify the Aspiration
-What outcome does the user want? Not the product's goal — the user's aspiration.
+What outcome does the user want? Not the product's goal -- the user's aspiration.
 - "I want to stay on top of my team's progress" (not "increase DAU")
 - "I want to feel confident about my finances" (not "drive feature adoption")
 
 ### Step 2: Explore Behavior Options
-List all possible behaviors that could achieve the aspiration. Be exhaustive — don't commit to one behavior yet.
+List all possible behaviors that could achieve the aspiration. Be exhaustive -- don't commit to one behavior yet.
 
 ### Step 3: Match Behaviors
-For each behavior, assess: Does the user have enough motivation? Is it easy enough? Use the Focus Mapping technique — plot behaviors on a 2×2 of impact vs. feasibility.
+For each behavior, assess: Does the user have enough motivation? Is it easy enough? Use the Focus Mapping technique -- plot behaviors on a 2×2 of impact vs. feasibility.
 
 ### Step 4: Start Tiny
 Take the best-matched behavior and shrink it to its Starter Step. Design the prompt. Add celebration.
@@ -245,11 +245,11 @@ Map B=MAP to product metrics:
 
 | Mistake | Why It Fails | Fix |
 |---------|-------------|------|
-| **Relying on motivation to drive retention** | Motivation is a wave — it always recedes. Products that need high motivation fail at the trough | Design for low-motivation moments; make behaviors tiny enough to survive motivation dips |
+| **Relying on motivation to drive retention** | Motivation is a wave -- it always recedes. Products that need high motivation fail at the trough | Design for low-motivation moments; make behaviors tiny enough to survive motivation dips |
 | **Ignoring the Ability Chain bottleneck** | You optimized time but the real barrier is mental effort or social deviance | Audit all six factors; fix the scarcest resource, not the most obvious one |
 | **Sending prompts below the Action Line** | Push notifications to unmotivated users who lack ability is spam, not engagement | Only prompt when motivation + ability are sufficient; use event-based triggers |
 | **Skipping celebration in onboarding** | Without positive emotion, repetition alone doesn't wire habits | Add immediate feedback, success states, and micro-celebrations after key actions |
-| **Making the first action too ambitious** | "Complete your profile" is a project, not a behavior. Users abandon before starting | Shrink to Starter Step: "Add your name" or "Upload a photo" — one field, one action |
+| **Making the first action too ambitious** | "Complete your profile" is a project, not a behavior. Users abandon before starting | Shrink to Starter Step: "Add your name" or "Upload a photo" -- one field, one action |
 | **Copying successful products without diagnosing B=MAP** | What works for a high-motivation audience fails for yours if ability or prompts differ | Always diagnose your specific users' motivation, ability, and prompt context first |
 
 ## Quick Diagnostic

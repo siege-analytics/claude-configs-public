@@ -17,7 +17,7 @@ SaaS products face a predictable motivation pattern:
 
 | Behavior | Motivation | Ability Bottleneck | Prompt Strategy |
 |----------|-----------|-------------------|-----------------|
-| **Complete signup** | High | Time, mental effort | Immediate — on landing page |
+| **Complete signup** | High | Time, mental effort | Immediate -- on landing page |
 | **First core action** | High but fragile | Mental effort (what do I do?) | In-app guided action |
 | **Day-2 return** | Moderate | Non-routine (not habitual yet) | Event-based email ("Your project is ready") |
 | **Invite teammates** | Low-moderate | Social deviance (is this tool good enough to recommend?) | After user experiences value, not before |
@@ -28,10 +28,10 @@ SaaS products face a predictable motivation pattern:
 ### SaaS Onboarding Recipe
 
 ```
-1. Reduce signup to one click (SSO) — maximize Ability
-2. Deliver first value in < 60 seconds — beat the motivation clock
-3. Create one Tiny Habit — anchor to existing workflow
-4. Send event-based prompts for Day 2-7 — don't spam
+1. Reduce signup to one click (SSO) -- maximize Ability
+2. Deliver first value in < 60 seconds -- beat the motivation clock
+3. Create one Tiny Habit -- anchor to existing workflow
+4. Send event-based prompts for Day 2-7 -- don't spam
 5. By Day 14, user should have a habit or you've lost them
 ```
 
@@ -120,7 +120,7 @@ Health products face the most extreme motivation waves:
 
 | Behavior | Challenge | B=MAP Strategy |
 |----------|----------|----------------|
-| **Daily exercise** | Motivation crashes after week 1 | Tiny Habit: "After I pour coffee, I do 2 pushups" — grow from there |
+| **Daily exercise** | Motivation crashes after week 1 | Tiny Habit: "After I pour coffee, I do 2 pushups" -- grow from there |
 | **Meal logging** | Mental effort (what did I eat?) | Photo-based logging, barcode scan, recent meals |
 | **Medication tracking** | Non-routine (easy to forget) | Anchor to existing routine + alarm prompt |
 | **Weekly check-in** | Motivation drops without visible progress | Show progress visualization, body measurements graph |
@@ -170,7 +170,7 @@ Duolingo is the gold standard for learning retention because it systematically o
 - **Ability:** 5-minute lessons, tap-to-answer, no typing required for beginners
 - **Prompt:** Daily notification ("Don't lose your streak!"), streak widget, perfectly timed
 
-**Critical insight:** Duolingo's streak is not primarily a motivation tool — it's a prompt tool. "Don't break your streak" is an internal Person Prompt that fires every day at the same time.
+**Critical insight:** Duolingo's streak is not primarily a motivation tool -- it's a prompt tool. "Don't break your streak" is an internal Person Prompt that fires every day at the same time.
 
 ---
 

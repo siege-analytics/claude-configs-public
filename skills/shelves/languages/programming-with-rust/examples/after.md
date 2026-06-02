@@ -1,13 +1,13 @@
 # After: Programming with Rust
 
-The same service rewritten with idiomatic Rust — proper ownership, Result-based error handling, borrowing over cloning, iterator adapters, and trait bounds.
+The same service rewritten with idiomatic Rust -- proper ownership, Result-based error handling, borrowing over cloning, iterator adapters, and trait bounds.
 
 ```rust
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::{Arc, Mutex};
 
-// Custom error type — callers can match on variants (Ch 12)
+// Custom error type -- callers can match on variants (Ch 12)
 #[derive(Debug)]
 pub enum ConfigError {
     Io(std::io::Error),
@@ -31,14 +31,14 @@ impl From<std::io::Error> for ConfigError {
     }
 }
 
-// &str instead of String — works with both literals and String via deref coercion (Ch 4)
-// Returns Result — caller decides how to handle failure (Ch 12)
+// &str instead of String -- works with both literals and String via deref coercion (Ch 4)
+// Returns Result -- caller decides how to handle failure (Ch 12)
 fn load_config(path: &str) -> Result<String, ConfigError> {
     let content = std::fs::read_to_string(path)?;  // ? propagates I/O error (Ch 12)
     Ok(content)
 }
 
-// Borrows the map — no clone, caller retains ownership (Ch 8, 10)
+// Borrows the map -- no clone, caller retains ownership (Ch 8, 10)
 fn get_user<'a>(users: &'a HashMap<String, String>, name: &str) -> Result<&'a str, ConfigError> {
     users
         .get(name)
@@ -65,7 +65,7 @@ fn increment(counter: &Arc<Mutex<u32>>) {
     *count += 1;
 }
 
-// Trait bound instead of concrete type — accepts anything Display (Ch 14, 17)
+// Trait bound instead of concrete type -- accepts anything Display (Ch 14, 17)
 fn print_item(item: &impl fmt::Display) {
     println!("{item}");
 }
@@ -77,10 +77,10 @@ fn main() -> Result<(), ConfigError> {
     let mut users = HashMap::new();
     users.insert(String::from("alice"), String::from("admin"));
 
-    // Borrow users — still usable after the call (Ch 8)
+    // Borrow users -- still usable after the call (Ch 8)
     let role = get_user(&users, "alice")?;
     println!("{role}");
-    println!("{users:?}");  // still valid — was only borrowed
+    println!("{users:?}");  // still valid -- was only borrowed
 
     let items = vec![
         (String::from("alice"), true),

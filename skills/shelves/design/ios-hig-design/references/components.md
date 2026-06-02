@@ -35,11 +35,11 @@ Lists are fundamental to iOS design. Configure each row with:
 - Tertiary text (if needed)
 
 **Right side** (choose one):
-- Chevron (→) — navigates to detail screen
-- Text + Chevron — shows current value, tappable to change
-- Checkmark (✓) — single selection from list
-- Switch — toggle on/off
-- Text button — action link
+- Chevron (→) -- navigates to detail screen
+- Text + Chevron -- shows current value, tappable to change
+- Checkmark (✓) -- single selection from list
+- Switch -- toggle on/off
+- Text button -- action link
 
 ## Input Controls
 
@@ -88,7 +88,7 @@ Menu("Options") {
 
 ### Minimum Touch Target
 
-**44 × 44 points** — This is non-negotiable for all interactive elements.
+**44 × 44 points** -- This is non-negotiable for all interactive elements.
 
 ```swift
 Button("Tap") {

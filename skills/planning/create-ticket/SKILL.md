@@ -105,10 +105,10 @@ Fill out as many of the ticket fields exist. Ensure that all information is prec
     * project manager
     * senior technical lead
     * junior engineer/analyst
-* Every ticket MUST begin with a **plain-language summary** — a short paragraph at the very top, before any technical sections, that explains:
+* Every ticket MUST begin with a **plain-language summary** -- a short paragraph at the very top, before any technical sections, that explains:
   * **What this task does** in one sentence a non-technical person can understand
-  * **Why we need it** — the business reason, not the technical reason
-  * **What it relates to** — which part of the product or pipeline this belongs to
+  * **Why we need it** -- the business reason, not the technical reason
+  * **What it relates to** -- which part of the product or pipeline this belongs to
   * This summary is for the project manager (who may not be technical) to understand what this work is about so she can plan sprints, set priorities, and ask informed questions. It should be written at a 5th-grade reading level. No jargon. No acronyms without explanation.
 * After the summary, each ticket should contain the following sections, using this template:
 
@@ -184,7 +184,7 @@ to integer before writing to Delta Lake. This strips leading zeros, which are
 significant in FEC identifiers (they encode registration era).
 
 ## Known blockers
-None — this can be fixed independently.
+None -- this can be fixed independently.
 
 ## Observed current outcome
 Silver table has 6.8M records but ~12K committees have mismatched IDs when
@@ -219,7 +219,7 @@ which collides with `C00000000547` (a different entity).
 - [ ] Epics created first, sub-tickets linked to parent
 - [ ] Ticket fields are correctly populated
 - [ ] Ticket begins with a plain-language summary (no jargon, 5th-grade reading level)
-- [ ] Summary explains what, why, and what part of the system — readable by a non-technical PM
+- [ ] Summary explains what, why, and what part of the system -- readable by a non-technical PM
 - [ ] Ticket body follows the template and is well written
 - [ ] No AI/agent attribution anywhere in the ticket (no "Generated with", no "Made with", no tool mentions)
 - [ ] The above have all been reviewed and iterated upon

@@ -7,7 +7,7 @@
 | **GIST** | Always create one on every geometry column you'll filter or join on. | General-purpose; handles geometry, geography, polygons, lines, points, tsvector. Default choice. |
 | **SP-GIST** | Point-heavy datasets with uniform spatial distribution. Static tables you build once. | Faster point-in-polygon for points; smaller index size. Slower to build than GIST. |
 | **BRIN** | Geometries clustered on disk by ingest order (time-ordered events with locally clustered locations). | Tiny index; only useful when physical row order correlates with spatial location. |
-| **B-tree on attributes** | Compound filtering — spatial + temporal + categorical. | Spatial filter narrows candidates; B-tree on `(state, event_date)` finishes the job. Plan for both. |
+| **B-tree on attributes** | Compound filtering -- spatial + temporal + categorical. | Spatial filter narrows candidates; B-tree on `(state, event_date)` finishes the job. Plan for both. |
 
 ## Always-create
 
@@ -34,7 +34,7 @@ CREATE INDEX events_geom_spgist ON events USING SPGIST (geom);
 
 Build cost is higher than GIST but query time on `ST_Contains(polygon, point)` against this index can be 30-50% faster on a uniform points table. Test both with `EXPLAIN ANALYZE` on representative queries.
 
-## BRIN — when it actually helps
+## BRIN -- when it actually helps
 
 BRIN is a "summary of summaries." Each block-range entry summarizes the geometry bounding box of N pages. Useful only when:
 
@@ -50,7 +50,7 @@ CLUSTER features USING features_geohash_btree;
 CREATE INDEX features_geom_brin ON features USING BRIN (geom);
 ```
 
-If you don't `CLUSTER` first, BRIN is useless on geometry — block ranges contain bounding boxes covering the entire dataset.
+If you don't `CLUSTER` first, BRIN is useless on geometry -- block ranges contain bounding boxes covering the entire dataset.
 
 ## Index size and bloat
 
@@ -75,12 +75,12 @@ REINDEX INDEX CONCURRENTLY features_geom_idx;
 
 `CONCURRENTLY` is critical in production. See [`vacuuming-and-bloat.md`](vacuuming-and-bloat.md).
 
-## Functional indexes — usually a smell
+## Functional indexes -- usually a smell
 
 Tempting but slow:
 
 ```sql
--- BAD — index unused; ST_Transform on the indexed column blocks index use
+-- BAD -- index unused; ST_Transform on the indexed column blocks index use
 CREATE INDEX bad ON features USING GIST (ST_Transform(geom, 5070));
 ```
 
@@ -118,6 +118,6 @@ WHERE state = 'TX';
 | Build (100M rows) | hour+ | hours | minutes |
 | Query (point lookup) | fast | faster (uniform points) | slow unless clustered |
 | Query (polygon range) | fast | comparable | slow unless clustered |
-| Update (per-row) | per-row index update | comparable | bulk-recalculates the affected page range — cheap |
+| Update (per-row) | per-row index update | comparable | bulk-recalculates the affected page range -- cheap |
 
-In ETL pipelines that rebuild tables nightly, BRIN can be appealing for the build cost alone — but only if the access pattern matches.
+In ETL pipelines that rebuild tables nightly, BRIN can be appealing for the build cost alone -- but only if the access pattern matches.

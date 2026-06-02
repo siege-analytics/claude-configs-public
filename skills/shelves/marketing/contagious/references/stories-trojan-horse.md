@@ -1,10 +1,10 @@
 # Stories as Trojan Horses: Embedding Your Brand in Narrative
 
-People don't share information — they tell stories. Stories are the vessels that carry ideas, morals, and brand messages through populations. The most effective word-of-mouth strategy isn't to get people to share your product information directly; it's to embed your brand inside a story so compelling that people retell it — and your brand comes along for the ride.
+People don't share information -- they tell stories. Stories are the vessels that carry ideas, morals, and brand messages through populations. The most effective word-of-mouth strategy isn't to get people to share your product information directly; it's to embed your brand inside a story so compelling that people retell it -- and your brand comes along for the ride.
 
 ## The Trojan Horse Principle
 
-A Trojan Horse story is a narrative that carries your brand message inside it, hidden within entertainment, emotion, or intrigue. The listener absorbs the brand message while being transported by the story — just as the Greeks entered Troy hidden inside a gift.
+A Trojan Horse story is a narrative that carries your brand message inside it, hidden within entertainment, emotion, or intrigue. The listener absorbs the brand message while being transported by the story -- just as the Greeks entered Troy hidden inside a gift.
 
 **The critical requirement:** The brand must be so integral to the story that you cannot retell the story without mentioning the brand. If the brand can be swapped out or removed and the story still works, the Trojan Horse has failed.
 
@@ -16,9 +16,9 @@ This is the single most important test for any branded story:
 
 | Answer | Verdict | Example |
 |--------|---------|---------|
-| **No — the brand is essential** | Story passes. Brand is integral. | "Blendtec blended an iPhone" — you can't tell this without saying "Blendtec" |
-| **Yes — the brand is incidental** | Story fails. Brand is a footnote. | A funny Super Bowl ad — people retell the joke but forget the brand |
-| **Yes — but the brand adds detail** | Partial pass. Brand is mentioned but forgettable. | "Some company did a cool stunt" — brand isn't essential to the narrative |
+| **No -- the brand is essential** | Story passes. Brand is integral. | "Blendtec blended an iPhone" -- you can't tell this without saying "Blendtec" |
+| **Yes -- the brand is incidental** | Story fails. Brand is a footnote. | A funny Super Bowl ad -- people retell the joke but forget the brand |
+| **Yes -- but the brand adds detail** | Partial pass. Brand is mentioned but forgettable. | "Some company did a cool stunt" -- brand isn't essential to the narrative |
 
 ### Why Most Branded Stories Fail
 
@@ -41,7 +41,7 @@ This is the gold standard for Trojan Horse storytelling.
 
 ### What They Did
 
-Tom Dickson, founder of Blendtec, created a YouTube series where he blended increasingly extreme objects in his company's blender — iPhones, golf balls, glow sticks, a rake handle, marbles, even a Justin Bieber CD.
+Tom Dickson, founder of Blendtec, created a YouTube series where he blended increasingly extreme objects in his company's blender -- iPhones, golf balls, glow sticks, a rake handle, marbles, even a Justin Bieber CD.
 
 ### Why It's a Perfect Trojan Horse
 
@@ -92,7 +92,7 @@ Barclay Prime, a new Philadelphia restaurant, needed buzz. In a city obsessed wi
 - The extreme price (vs. the $5 norm) creates remarkability
 - You can't retell "I had a $100 cheesesteak" without saying "at Barclay Prime"
 - It activated Social Currency (insider dining experience) + Stories (retellable narrative)
-- Every food blogger, journalist, and diner had a story to tell — and Barclay Prime was always in it
+- Every food blogger, journalist, and diner had a story to tell -- and Barclay Prime was always in it
 
 ### Template 3: The Origin Story
 
@@ -131,12 +131,12 @@ Barclay Prime, a new Philadelphia restaurant, needed buzz. In a city obsessed wi
 
 **Cause:** Story entertainment value is decoupled from brand relevance.
 
-**Fix:** Restructure so the brand is the protagonist, the tool, or the punchline — not just the sponsor.
+**Fix:** Restructure so the brand is the protagonist, the tool, or the punchline -- not just the sponsor.
 
 | Failing Version | Fixed Version |
 |----------------|--------------|
 | "This hilarious ad showed a man riding a horse backward" (brand: ???) | "Old Spice showed the man your man could smell like" (brand: Old Spice) |
-| "There was a great video of babies roller skating" (brand: ???) | No easy fix — the babies ARE the story, not the water |
+| "There was a great video of babies roller skating" (brand: ???) | No easy fix -- the babies ARE the story, not the water |
 | "A company did a funny Super Bowl ad" (brand: ???) | Make the product the source of the humor, not the backdrop |
 
 ### Anti-Pattern 2: The Brand Hijacks the Story
@@ -157,7 +157,7 @@ Barclay Prime, a new Philadelphia restaurant, needed buzz. In a city obsessed wi
 
 **The one-sentence test:**
 - "Blendtec blended an iPhone in their blender." (Pass)
-- "This restaurant in Philly sells a $100 cheesesteak." (Pass — "which restaurant?" leads to brand mention)
+- "This restaurant in Philly sells a $100 cheesesteak." (Pass -- "which restaurant?" leads to brand mention)
 - "There's this 7-minute video about a guy who travels the world and encounters various challenges and ultimately realizes that the real journey was inside him and also the airline was really great." (Fail)
 
 ### Anti-Pattern 4: The Story Is Not True

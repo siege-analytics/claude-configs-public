@@ -44,11 +44,11 @@ Dropbox built its early growth almost entirely on Seeds. Their referral program 
 - Asking for referrals too early (before the customer has seen value)
 - No structured referral program (relying on organic only)
 - Not tracking referral sources to understand which customers refer best
-- Ignoring Seeds because they "just happen" — they need cultivation
+- Ignoring Seeds because they "just happen" -- they need cultivation
 
 ## Nets: Inbound Marketing Campaigns
 
-Nets are marketing-generated leads that come from casting a wide net — content marketing, paid ads, SEO, webinars, events. They produce medium-quality leads at medium cost.
+Nets are marketing-generated leads that come from casting a wide net -- content marketing, paid ads, SEO, webinars, events. They produce medium-quality leads at medium cost.
 
 ### Net Channel Strategies
 
@@ -89,15 +89,15 @@ Not all inbound leads are ready for sales. The MDR (Market Development Rep) role
 
 ## Spears: Outbound Prospecting
 
-Spears are targeted outbound efforts — specific accounts and contacts pursued through Cold Calling 2.0. They are the most predictable lead type because you control the volume.
+Spears are targeted outbound efforts -- specific accounts and contacts pursued through Cold Calling 2.0. They are the most predictable lead type because you control the volume.
 
 ### Why Spears Create Predictability
 
-1. **You choose the targets** — no waiting for leads to find you
-2. **Volume is controllable** — hire more SDRs, send more emails
-3. **Pipeline math works** — conversion rates stabilize over time
+1. **You choose the targets** -- no waiting for leads to find you
+2. **Volume is controllable** -- hire more SDRs, send more emails
+3. **Pipeline math works** -- conversion rates stabilize over time
 4. **You reach companies that don't know they need you yet**
-5. **Faster market feedback** — you learn what resonates quickly
+5. **Faster market feedback** -- you learn what resonates quickly
 
 ### Systematic Spear Approach
 
@@ -232,7 +232,7 @@ Use this template to plan your lead type strategy for the next quarter.
 - [ ] Schedule QBRs with referral asks
 
 **Nets:**
-- [ ] Audit channel ROI — double down on top 2 channels
+- [ ] Audit channel ROI -- double down on top 2 channels
 - [ ] Kill or reduce spend on lowest-performing channel
 - [ ] Ensure MDR is qualifying inbound effectively
 - [ ] Set up lead scoring to route high-intent leads faster

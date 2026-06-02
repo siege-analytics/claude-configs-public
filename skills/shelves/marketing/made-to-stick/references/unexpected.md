@@ -1,6 +1,6 @@
 # Unexpected: Breaking Patterns and Creating Curiosity
 
-The Unexpected principle serves two distinct purposes: getting attention and holding it. Surprise breaks through the noise and grabs attention. Curiosity gaps sustain it long enough for your message to land. Without the unexpected, your message is wallpaper — present but invisible.
+The Unexpected principle serves two distinct purposes: getting attention and holding it. Surprise breaks through the noise and grabs attention. Curiosity gaps sustain it long enough for your message to land. Without the unexpected, your message is wallpaper -- present but invisible.
 
 ## The Two Tasks of Unexpectedness
 
@@ -9,7 +9,7 @@ The Unexpected principle serves two distinct purposes: getting attention and hol
 | **Get attention** | Surprise | Instant (seconds) | Break the pattern, interrupt autopilot |
 | **Hold attention** | Curiosity | Sustained (minutes to hours) | Keep them engaged until the payoff |
 
-Both are necessary. Surprise without curiosity is a firecracker — loud but forgotten. Curiosity without surprise never gets the chance to work because no one is paying attention in the first place.
+Both are necessary. Surprise without curiosity is a firecracker -- loud but forgotten. Curiosity without surprise never gets the chance to work because no one is paying attention in the first place.
 
 ## Getting Attention: Pattern-Breaking Surprise
 
@@ -24,7 +24,7 @@ The human brain runs on patterns. We predict what comes next based on what came 
 
 ### The Critical Step Most People Miss
 
-Surprise alone is not sticky. The surprise must serve the core message. A dancing monkey in your presentation gets attention but teaches nothing. The resolution of the surprise — the "aha" moment — is where stickiness happens.
+Surprise alone is not sticky. The surprise must serve the core message. A dancing monkey in your presentation gets attention but teaches nothing. The resolution of the surprise -- the "aha" moment -- is where stickiness happens.
 
 ### Surprise Mechanics: A Three-Step Process
 
@@ -41,7 +41,7 @@ Lead with the pattern violation. Then resolve it with your core message.
 
 | Core Message | Counterintuitive Aspect | Surprise Communication |
 |-------------|------------------------|----------------------|
-| Movie popcorn is unhealthy | People think popcorn is a light snack | "Your bag of movie popcorn has more saturated fat than a bacon-and-eggs breakfast, a Big Mac with fries, AND a steak dinner — combined." |
+| Movie popcorn is unhealthy | People think popcorn is a light snack | "Your bag of movie popcorn has more saturated fat than a bacon-and-eggs breakfast, a Big Mac with fries, AND a steak dinner -- combined." |
 | Our product saves time | People assume setup takes forever | "Most tools promise to save time after weeks of setup. Ours saves time during setup." |
 | Customer support matters | Companies invest in acquisition, not retention | "You spend $50 to acquire a customer and $0 to keep them. We flip that math." |
 | Simplicity wins | People equate features with value | "We removed 60% of our features. Revenue went up 40%." |
@@ -54,10 +54,10 @@ Curiosity is the intellectual need to close an open gap in knowledge. Psychologi
 
 Loewenstein's research established four key principles:
 
-1. **Curiosity arises from a gap in knowledge** — not from a complete absence of knowledge. You need to know something to realize what you do not know.
-2. **The gap must feel closeable** — if the answer seems unknowable, curiosity dies. If it seems within reach, curiosity intensifies.
-3. **Curiosity is aversive** — it is a form of intellectual discomfort. People are motivated to close the gap to relieve the discomfort.
-4. **Curiosity increases as you get closer to the answer** — partial information fuels more curiosity, not less.
+1. **Curiosity arises from a gap in knowledge** -- not from a complete absence of knowledge. You need to know something to realize what you do not know.
+2. **The gap must feel closeable** -- if the answer seems unknowable, curiosity dies. If it seems within reach, curiosity intensifies.
+3. **Curiosity is aversive** -- it is a form of intellectual discomfort. People are motivated to close the gap to relieve the discomfort.
+4. **Curiosity increases as you get closer to the answer** -- partial information fuels more curiosity, not less.
 
 ### Practical Implication
 
@@ -126,7 +126,7 @@ State something your audience believes, then reveal it is wrong.
 > "Hi [Name], I wanted to reach out to introduce our platform that helps companies improve their sales process."
 
 **After (Unexpected):**
-> "Hi [Name], your last three job postings all mention 'data-driven sales culture.' But I noticed your team is still using spreadsheets to forecast. There is a disconnect — and it is costing you about $200K a year."
+> "Hi [Name], your last three job postings all mention 'data-driven sales culture.' But I noticed your team is still using spreadsheets to forecast. There is a disconnect -- and it is costing you about $200K a year."
 
 ### Pricing Page
 
@@ -134,7 +134,7 @@ State something your audience believes, then reveal it is wrong.
 > "Choose the plan that is right for you. Basic: $29/mo. Pro: $99/mo. Enterprise: Contact us."
 
 **After (Unexpected):**
-> "83% of our customers choose Pro. But 40% of them do not need it. Take our 2-minute quiz to find out which plan actually fits — we would rather you save money and stay for years."
+> "83% of our customers choose Pro. But 40% of them do not need it. Take our 2-minute quiz to find out which plan actually fits -- we would rather you save money and stay for years."
 
 ### Onboarding Welcome Screen
 
@@ -217,7 +217,7 @@ If a journalist were writing about your product, what angle would make it newswo
 
 ### Exercise 5: The Outsider Perspective
 
-Show your message to someone outside your industry. Ask them what surprises them about it. Often, what feels obvious to insiders is genuinely surprising to outsiders — and that surprise is the angle you should lead with.
+Show your message to someone outside your industry. Ask them what surprises them about it. Often, what feels obvious to insiders is genuinely surprising to outsiders -- and that surprise is the angle you should lead with.
 
 ## Curiosity Gap Checklist
 
@@ -227,7 +227,7 @@ Before finalizing any message, verify:
 - [ ] The surprise violates a specific expectation (not just generic "wow")
 - [ ] A curiosity gap is opened early and resolved with a satisfying payoff
 - [ ] The audience has enough context to feel the gap (not too much, not too little)
-- [ ] The unexpected element is not gimmicky — it deepens understanding
+- [ ] The unexpected element is not gimmicky -- it deepens understanding
 - [ ] The payoff delivers on the promise of the surprise
 - [ ] You have tested it on at least one person who did not see it coming
 

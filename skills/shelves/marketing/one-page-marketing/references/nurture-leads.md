@@ -78,7 +78,7 @@ After the welcome sequence, transition to a weekly or bi-weekly cadence that edu
 | Week 2 | Teaching | "The 3 biggest mistakes [target market] makes with [topic]" |
 | Week 3 | Framework | "Our [named framework] for [achieving result]" |
 | Week 4 | Social proof | "Case study: [Client name] achieved [specific result]" |
-| Week 5 | Myth-busting | "Why [common belief] is actually wrong — and what to do instead" |
+| Week 5 | Myth-busting | "Why [common belief] is actually wrong -- and what to do instead" |
 | Week 6 | How-to | "Step-by-step: How to [solve a specific problem they have]" |
 
 ### Sequence 3: Case Study Sequence (Targeted)
@@ -99,11 +99,11 @@ Used for time-limited promotions, launches, or when you want to drive conversion
 
 | Email | Timing | Purpose |
 |-------|--------|---------|
-| Email 1 | Day 1 | Announce the offer — what it is, who it is for, why now |
-| Email 2 | Day 2 | Social proof — testimonials, case studies, results |
-| Email 3 | Day 3 | Objection handling — address the top 3 reasons people hesitate |
-| Email 4 | Day 4 | Bonus or incentive — add extra value for fast action |
-| Email 5 | Day 5 (final) | Last chance — deadline reminder, urgency, final CTA |
+| Email 1 | Day 1 | Announce the offer -- what it is, who it is for, why now |
+| Email 2 | Day 2 | Social proof -- testimonials, case studies, results |
+| Email 3 | Day 3 | Objection handling -- address the top 3 reasons people hesitate |
+| Email 4 | Day 4 | Bonus or incentive -- add extra value for fast action |
+| Email 5 | Day 5 (final) | Last chance -- deadline reminder, urgency, final CTA |
 
 ## Content Cadence
 
@@ -140,10 +140,10 @@ Email is the backbone, but the most effective nurture systems use multiple chann
 
 | Channel | Role in Nurture | Cadence | Integration |
 |---------|----------------|---------|-------------|
-| Email | Primary nurture — education, stories, offers | 1-3x per week | Foundation of all nurture |
+| Email | Primary nurture -- education, stories, offers | 1-3x per week | Foundation of all nurture |
 | Retargeting ads | Reinforce key messages to engaged leads | Ongoing for 30-90 days | Show ads to email openers and website visitors |
 | Social media | Build familiarity and social proof | Daily posts, weekly engagement | Share email content in social format |
-| SMS | High-urgency or time-sensitive communications | Sparingly — 1-2x per month max | Event reminders, deadline alerts, exclusive offers |
+| SMS | High-urgency or time-sensitive communications | Sparingly -- 1-2x per month max | Event reminders, deadline alerts, exclusive offers |
 | Direct mail | High-impact touchpoint for high-value leads | 1x per quarter for VIP segments | Personalized cards, printed resources, lumpy mail |
 | Phone/Video | Personal connection for sales-ready leads | As triggered by lead score | Sales follow-up, check-in calls |
 | Podcast/Video content | Deep authority building | Weekly or bi-weekly | Reference in emails, repurpose as social content |
@@ -210,7 +210,7 @@ Automation makes nurture scalable without sacrificing personalization. Here are 
 ### Automation Best Practices
 
 - **Start simple.** Build the welcome sequence first. Add complexity only after the basics are working.
-- **Always have an exit.** Every automated sequence should have conditions to stop — for example, stop the nurture sequence if the lead becomes a customer.
+- **Always have an exit.** Every automated sequence should have conditions to stop -- for example, stop the nurture sequence if the lead becomes a customer.
 - **Monitor performance.** Review open rates, click rates, and unsubscribe rates monthly. Declining metrics signal content fatigue.
 - **Personalize meaningfully.** Use first name, reference their lead magnet, mention their industry or role. Avoid fake personalization that feels creepy.
 - **Test subject lines.** The subject line determines whether the email gets opened. A/B test every subject line when your list is large enough (100+ per variant).

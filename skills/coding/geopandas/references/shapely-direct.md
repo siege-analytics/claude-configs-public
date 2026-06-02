@@ -1,4 +1,4 @@
-# Shapely Directly — When GeoDataFrame is Overkill
+# Shapely Directly -- When GeoDataFrame is Overkill
 
 GeoPandas builds on Shapely. When inputs are dicts/WKT/coordinate pairs (not files, not tables), drop directly to Shapely. Faster, fewer dependencies, simpler code.
 
@@ -116,7 +116,7 @@ Shapely geometries don't carry CRS. You must track it externally:
 ```python
 # Fragile
 geom = Point(-98, 30)
-area = geom.buffer(0.01).area  # in square degrees — meaningless
+area = geom.buffer(0.01).area  # in square degrees -- meaningless
 
 # Better
 SRID = "EPSG:4326"
@@ -125,7 +125,7 @@ geom = Point(-98, 30)
 area_m2 = transform(Transformer.from_crs(SRID, "EPSG:5070", always_xy=True).transform, geom).area
 ```
 
-This is the main reason to use GeoDataFrame even for small datasets — it tracks `.crs`. If you stay direct-Shapely, document the CRS in variable names: `point_4326 = Point(...)`.
+This is the main reason to use GeoDataFrame even for small datasets -- it tracks `.crs`. If you stay direct-Shapely, document the CRS in variable names: `point_4326 = Point(...)`.
 
 ### 2. Coordinate axis order
 
@@ -145,7 +145,7 @@ buffered = point.buffer(0.1)  # new geometry; original unchanged
 empty = wkt.loads("POINT EMPTY")
 empty.is_empty   # True
 empty.area       # 0.0
-empty.bounds     # () — empty tuple, not (0, 0, 0, 0)
+empty.bounds     # () -- empty tuple, not (0, 0, 0, 0)
 empty.contains(point)  # False (everything is False against empty)
 ```
 
@@ -154,7 +154,7 @@ Test `g.is_empty` before predicate calls if your data may have empties.
 ### 5. Validity
 
 ```python
-poly = Polygon([(0, 0), (2, 2), (0, 2), (2, 0), (0, 0)])  # bowtie — invalid
+poly = Polygon([(0, 0), (2, 2), (0, 2), (2, 0), (0, 0)])  # bowtie -- invalid
 poly.is_valid  # False
 poly.area      # may give wrong number; many ops silently broken on invalid
 
@@ -162,7 +162,7 @@ from shapely.validation import make_valid
 poly_fixed = make_valid(poly)  # MultiPolygon of two triangles
 ```
 
-Validate at the boundary — when reading from a source you don't control.
+Validate at the boundary -- when reading from a source you don't control.
 
 ## Integration with siege_utilities
 

@@ -24,7 +24,7 @@ Apply these rules whenever a `try`/`except` is on screen. See [reference.md](ref
 2. Log and re-raise (`raise` or `raise NewError(...) from e`).
 3. Translate to a more useful exception type (`raise DomainError(...) from e`).
 
-Silently swallowing an exception — returning `None`, `{}`, `""`, or an error-string — is never option 4. Callers who get back a pretend-valid value debug the wrong problem.
+Silently swallowing an exception -- returning `None`, `{}`, `""`, or an error-string -- is never option 4. Callers who get back a pretend-valid value debug the wrong problem.
 
 ## Decision tree
 
@@ -51,10 +51,10 @@ START: I need to wrap risky code in try/except
 
 | Catching | When it's right | When it's wrong |
 |---|---|---|
-| `except SpecificError` (e.g., `KeyError`, `ValueError`, `requests.Timeout`) | Default choice — name what you expect | Never — if nothing matches, nothing is caught |
+| `except SpecificError` (e.g., `KeyError`, `ValueError`, `requests.Timeout`) | Default choice -- name what you expect | Never -- if nothing matches, nothing is caught |
 | `except (ErrA, ErrB)` tuple | Multiple known failure modes, same handling | Mixing unrelated errors into one branch |
 | `except Exception` | Boundary handler (CLI/HTTP/job) that must log and not crash the process | Library code masquerading as convenience |
-| `except BaseException` | Almost never — catches `KeyboardInterrupt`, `SystemExit` | Anywhere outside explicit signal handlers |
+| `except BaseException` | Almost never -- catches `KeyboardInterrupt`, `SystemExit` | Anywhere outside explicit signal handlers |
 | `except:` (bare) | Never in production code | Always |
 
 ## Anti-patterns
@@ -63,7 +63,7 @@ START: I need to wrap risky code in try/except
 |---|---|---|
 | `except Exception: return {}` | Caller can't distinguish success-empty from failure | Raise; document the exception |
 | `except Exception: return f"failed: {e}"` | String return type leaks failure into success channel | Raise `DomainError` from `e` |
-| `except Exception: return None` (in library) | Ambiguous — `None` might be a valid result | Raise; reserve `None` for documented "not found" |
+| `except Exception: return None` (in library) | Ambiguous -- `None` might be a valid result | Raise; reserve `None` for documented "not found" |
 | `except Exception: pass` | Hides everything, including bugs you haven't discovered | Catch specific; if you really need silence, comment WHY |
 | `except Exception as e: raise Exception(str(e))` | Destroys type; `from` clause missing | `raise` alone, or `raise New(...) from e` |
 | `raise Exception("bad")` | No type to catch on | Use specific / custom class |
@@ -112,7 +112,7 @@ except (ValueError, KeyError) as e:
 Rules:
 - Don't log and re-raise twice (once is enough; the traceback carries the rest).
 - At system boundaries, use `logger.exception()` to capture the traceback automatically.
-- Never log secrets/PII — names, addresses, tokens don't belong in error messages.
+- Never log secrets/PII -- names, addresses, tokens don't belong in error messages.
 
 ## Boundary handlers
 
@@ -133,18 +133,18 @@ This is the exception (pun intended) to the "never `except Exception`" rule. Doc
 
 ## Gotchas
 
-- `NotImplementedError` is not a placeholder — callers catching `Exception` will skip it. Use `raise NotImplementedError(...)` only when a caller should know to fall back.
+- `NotImplementedError` is not a placeholder -- callers catching `Exception` will skip it. Use `raise NotImplementedError(...)` only when a caller should know to fall back.
 - `OSError` is a union of `FileNotFoundError`, `PermissionError`, `ConnectionError`, and a dozen others. Catch it when you genuinely mean "any filesystem or I/O failure"; otherwise narrow.
 - `asyncio.CancelledError` inherits from `BaseException` in 3.8+. Never swallow it in async code.
 - `pandas.errors.*` are the right catches for DataFrame operations, not generic `Exception`.
-- In test code, use `pytest.raises(DomainError)` to pin the expected type — `pytest.raises(Exception)` passes on any error and misses regressions.
+- In test code, use `pytest.raises(DomainError)` to pin the expected type -- `pytest.raises(Exception)` passes on any error and misses regressions.
 
 ## When CodeRabbit flags this
 
 CR typically flags three patterns:
-1. `except Exception: return <sentinel>` — "silent swallow." Fix: raise or translate.
-2. `except Exception: pass` — "bare swallow." Fix: narrow OR document why silence is correct.
-3. `raise Exception(...)` — "vanilla raise." Fix: specific / domain class.
+1. `except Exception: return <sentinel>` -- "silent swallow." Fix: raise or translate.
+2. `except Exception: pass` -- "bare swallow." Fix: narrow OR document why silence is correct.
+3. `raise Exception(...)` -- "vanilla raise." Fix: specific / domain class.
 
 All three are 5–10 line edits. Resolve with a commit, not a reply.
 

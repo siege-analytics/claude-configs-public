@@ -84,7 +84,7 @@ Spatial query, distributed, > 100 GB or in Spark pipeline?
 
 ## A useful side-by-side
 
-The same task — count donations per county — in each tool:
+The same task -- count donations per county -- in each tool:
 
 **GeoPandas:**
 ```python

@@ -4,7 +4,7 @@ description: Router for sales book skills. Dispatches to predictable-revenue, ne
 disable-model-invocation: false
 ---
 
-# Sales — Shelf
+# Sales -- Shelf
 
 ## Trigger table
 
@@ -12,7 +12,7 @@ disable-model-invocation: false
 |---|---|
 | Outbound prospecting machine, SDR specialization (Aaron Ross) | [skill:predictable-revenue] |
 | Negotiation tactics, BATNA, anchoring (Voss / Fisher) | [skill:negotiation] |
-| Influence principles — reciprocity, scarcity, authority, etc. (Cialdini) | [skill:influence-psychology] |
+| Influence principles -- reciprocity, scarcity, authority, etc. (Cialdini) | [skill:influence-psychology] |
 | Constructing irresistible offers, value-stacking, pricing (Hormozi) | [skill:hundred-million-offers] |
 
-All wondelai/skills imports — see footers and `THIRD_PARTY_NOTICES.md`.
+All wondelai/skills imports -- see footers and `THIRD_PARTY_NOTICES.md`.

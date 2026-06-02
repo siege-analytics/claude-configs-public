@@ -1,11 +1,11 @@
-# Effective Python — All 90 Items Quick Reference
+# Effective Python -- All 90 Items Quick Reference
 
 Complete reference table for all 90 items from *Effective Python: 90 Specific Ways
 to Write Better Python* (2nd Edition) by Brett Slatkin.
 
 ---
 
-## Chapter 1 — Pythonic Thinking (Items 1–10)
+## Chapter 1 -- Pythonic Thinking (Items 1–10)
 
 | Item | Name | Chapter | Summary |
 |------|------|---------|---------|
@@ -22,7 +22,7 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 
 ---
 
-## Chapter 2 — Lists and Dicts (Items 11–18)
+## Chapter 2 -- Lists and Dicts (Items 11–18)
 
 | Item | Name | Chapter | Summary |
 |------|------|---------|---------|
@@ -37,7 +37,7 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 
 ---
 
-## Chapter 3 — Functions (Items 19–26)
+## Chapter 3 -- Functions (Items 19–26)
 
 | Item | Name | Chapter | Summary |
 |------|------|---------|---------|
@@ -52,7 +52,7 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 
 ---
 
-## Chapter 4 — Comprehensions and Generators (Items 27–36)
+## Chapter 4 -- Comprehensions and Generators (Items 27–36)
 
 | Item | Name | Chapter | Summary |
 |------|------|---------|---------|
@@ -69,7 +69,7 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 
 ---
 
-## Chapter 5 — Classes and Interfaces (Items 37–43)
+## Chapter 5 -- Classes and Interfaces (Items 37–43)
 
 | Item | Name | Chapter | Summary |
 |------|------|---------|---------|
@@ -83,7 +83,7 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 
 ---
 
-## Chapter 6 — Metaclasses and Attributes (Items 44–51)
+## Chapter 6 -- Metaclasses and Attributes (Items 44–51)
 
 | Item | Name | Chapter | Summary |
 |------|------|---------|---------|
@@ -98,7 +98,7 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 
 ---
 
-## Chapter 7 — Concurrency and Parallelism (Items 52–64)
+## Chapter 7 -- Concurrency and Parallelism (Items 52–64)
 
 | Item | Name | Chapter | Summary |
 |------|------|---------|---------|
@@ -118,7 +118,7 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 
 ---
 
-## Chapter 8 — Robustness and Performance (Items 65–79)
+## Chapter 8 -- Robustness and Performance (Items 65–79)
 
 | Item | Name | Chapter | Summary |
 |------|------|---------|---------|
@@ -140,7 +140,7 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 
 ---
 
-## Chapter 9 — Testing and Debugging (Items 80–85)
+## Chapter 9 -- Testing and Debugging (Items 80–85)
 
 | Item | Name | Chapter | Summary |
 |------|------|---------|---------|
@@ -153,7 +153,7 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 
 ---
 
-## Chapter 10 — Collaboration (Items 86–90)
+## Chapter 10 -- Collaboration (Items 86–90)
 
 | Item | Name | Chapter | Summary |
 |------|------|---------|---------|
@@ -169,22 +169,22 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 
 | Chapter | Items | Core Theme |
 |---------|-------|-----------|
-| 1 — Pythonic Thinking | 1–10 | Follow PEP 8, use f-strings, unpacking, enumerate, zip, walrus |
-| 2 — Lists and Dicts | 11–18 | Slicing, sorting with key=, defaultdict, __missing__ |
-| 3 — Functions | 19–26 | Exceptions over None, closures, *args, keyword-only args, functools.wraps |
-| 4 — Comprehensions & Generators | 27–36 | Comprehensions over map/filter, generators with yield, itertools |
-| 5 — Classes & Interfaces | 37–43 | Compose classes, @classmethod, super(), mix-ins, collections.abc |
-| 6 — Metaclasses & Attributes | 44–51 | Plain attributes, @property, descriptors, __init_subclass__, class decorators |
-| 7 — Concurrency & Parallelism | 52–64 | subprocess, threads for I/O only, Lock, Queue, asyncio coroutines |
-| 8 — Robustness & Performance | 65–79 | try/except/else/finally, datetime, Decimal, profiling, deque, heapq |
-| 9 — Testing & Debugging | 80–85 | pdb, tracemalloc, type annotations, docstrings, packages |
-| 10 — Collaboration | 86–90 | Root exceptions, circular imports, warnings, static analysis |
+| 1 -- Pythonic Thinking | 1–10 | Follow PEP 8, use f-strings, unpacking, enumerate, zip, walrus |
+| 2 -- Lists and Dicts | 11–18 | Slicing, sorting with key=, defaultdict, __missing__ |
+| 3 -- Functions | 19–26 | Exceptions over None, closures, *args, keyword-only args, functools.wraps |
+| 4 -- Comprehensions & Generators | 27–36 | Comprehensions over map/filter, generators with yield, itertools |
+| 5 -- Classes & Interfaces | 37–43 | Compose classes, @classmethod, super(), mix-ins, collections.abc |
+| 6 -- Metaclasses & Attributes | 44–51 | Plain attributes, @property, descriptors, __init_subclass__, class decorators |
+| 7 -- Concurrency & Parallelism | 52–64 | subprocess, threads for I/O only, Lock, Queue, asyncio coroutines |
+| 8 -- Robustness & Performance | 65–79 | try/except/else/finally, datetime, Decimal, profiling, deque, heapq |
+| 9 -- Testing & Debugging | 80–85 | pdb, tracemalloc, type annotations, docstrings, packages |
+| 10 -- Collaboration | 86–90 | Root exceptions, circular imports, warnings, static analysis |
 
 ---
 
 ## Highest-Impact Items by Priority
 
-### Critical — Correctness and Safety
+### Critical -- Correctness and Safety
 
 | Item | Name | Why Critical |
 |------|------|-------------|
@@ -195,7 +195,7 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 | 54 | Use Lock for thread safety | Compound operations are not atomic without a Lock |
 | 65 | Use try/except/else/finally correctly | Overly broad try blocks catch unintended exceptions |
 
-### Important — Maintainability
+### Important -- Maintainability
 
 | Item | Name | Why Important |
 |------|------|--------------|
@@ -206,7 +206,7 @@ to Write Better Python* (2nd Edition) by Brett Slatkin.
 | 44 | Plain attributes over getters/setters | Pythonic API that can migrate to @property transparently |
 | 84 | Docstrings for all public APIs | Enables tooling, onboarding, and API stability |
 
-### Suggestions — Polish and Optimization
+### Suggestions -- Polish and Optimization
 
 | Item | Name | Why Useful |
 |------|------|-----------|

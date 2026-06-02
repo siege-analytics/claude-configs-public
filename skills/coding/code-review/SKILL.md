@@ -11,16 +11,16 @@ argument-hint: "[PR-number-or-path] [optional-focus-area]"
 ## Companion shelves
 
 Anchor each review dimension in:
-- [skill:clean-code] — naming, function size, comment discipline (the *why* behind most review comments).
-- [skill:design-patterns] — when to suggest a pattern (and when not to).
-- [skill:refactoring-patterns] — name the safe transformation, don't hand-wave.
+- [skill:clean-code] -- naming, function size, comment discipline (the *why* behind most review comments).
+- [skill:design-patterns] -- when to suggest a pattern (and when not to).
+- [skill:refactoring-patterns] -- name the safe transformation, don't hand-wave.
 - For Spark/JVM PRs: [skill:effective-java], [skill:effective-kotlin].
 
 The Siege-specific catches below (catalog bypass, NULL drops, partition skew) stay here.
 
 ## When to Use This Skill
 
-When reviewing a pull request, a diff, or code written during a session. Apply this methodology systematically — don't rely on skimming to catch issues.
+When reviewing a pull request, a diff, or code written during a session. Apply this methodology systematically -- don't rely on skimming to catch issues.
 
 ## Pre-review: ticket + reviewer assumptions (before everything else)
 
@@ -47,11 +47,11 @@ Before reading the diff, write (in the PR review body, or in a reviewer-side art
 ```
 ## Reviewer Assumptions
 Working as: <reviewer role(s)>
-Reading for: <intent restated in your own words from the ticket — NOT from
+Reading for: <intent restated in your own words from the ticket -- NOT from
               the PR body. If you can't restate the intent from the ticket
               alone, that's evidence the ticket is unfit; loop back to step 1.>
 Failure shapes I would flag before reading the diff: <list 2-3 concrete
-              observable failures a bad version of this would exhibit —
+              observable failures a bad version of this would exhibit --
               e.g. "regression in the X test suite," "silent data drop in
               the Y branch," "race condition on Z").
 ```
@@ -81,13 +81,13 @@ Before applying the generic checklist below, load any **project-local Tier-2 rul
 ls .claude/rules/*.md 2>/dev/null
 ```
 
-If `.claude/rules/<topic>.md` files exist, read each one and treat its rules as a project-specific checklist appended to the generic layers below. These rules were promoted from the project's `LESSONS.md` ledger by [skill:distill-lessons] — they encode patterns this codebase has actually been bitten by, so they take priority over generic guidance when they apply.
+If `.claude/rules/<topic>.md` files exist, read each one and treat its rules as a project-specific checklist appended to the generic layers below. These rules were promoted from the project's `LESSONS.md` ledger by [skill:distill-lessons] -- they encode patterns this codebase has actually been bitten by, so they take priority over generic guidance when they apply.
 
 If the review surfaces a finding that maps to a recurring pattern *not* yet in the ledger, log it via [skill:lessons-learned] before closing the review. That's how the loop closes.
 
 ## Review Order
 
-Review in this order. Stop at each layer before proceeding — a correctness bug matters more than a style nit.
+Review in this order. Stop at each layer before proceeding -- a correctness bug matters more than a style nit.
 
 ### 1. Correctness
 
@@ -101,17 +101,17 @@ Does the code do what it claims to do?
 - For data transforms: does every row make it through, or are rows silently dropped?
 - For SQL: does the JOIN type match the intent? (INNER drops non-matches, LEFT keeps them)
 
-**Edge-case checklist** — criterion (b) of [rule:definition-of-done]. Every behavior change must be reasoned through against these, and tested in code where appropriate:
+**Edge-case checklist** -- criterion (b) of [rule:definition-of-done]. Every behavior change must be reasoned through against these, and tested in code where appropriate:
 
-- [ ] **Empty input** — `[]`, `""`, `None`, missing key, zero rows
-- [ ] **Boundary values** — zero, one, max, min, off-by-one neighbors
-- [ ] **Duplicates** — repeated keys, repeated rows, repeated coordinates
-- [ ] **Out-of-order input** — when downstream code assumes sorted
+- [ ] **Empty input** -- `[]`, `""`, `None`, missing key, zero rows
+- [ ] **Boundary values** -- zero, one, max, min, off-by-one neighbors
+- [ ] **Duplicates** -- repeated keys, repeated rows, repeated coordinates
+- [ ] **Out-of-order input** -- when downstream code assumes sorted
 - [ ] **Very small** (1 element) and **very large** (1M+ elements)
 - [ ] **Mixed types** where the contract claims homogeneity (string IDs in an int column)
-- [ ] **Partial failure** — network timeout mid-batch, write succeeded but ack failed, half the rows valid
-- [ ] **Null / NaN / NULL** in tabular inputs — distinct from missing
-- [ ] **Identifier collisions** — two different sources, same key (`PR` vs `RQ` for Puerto Rico)
+- [ ] **Partial failure** -- network timeout mid-batch, write succeeded but ack failed, half the rows valid
+- [ ] **Null / NaN / NULL** in tabular inputs -- distinct from missing
+- [ ] **Identifier collisions** -- two different sources, same key (`PR` vs `RQ` for Puerto Rico)
 
 **Red flags:**
 ```python
@@ -120,12 +120,12 @@ df = df.filter(F.col("amount").isNotNull())
 # Ask: is dropping NULLs the right behavior? Should they be zero? Logged?
 
 # Wrong comparison
-if status == "active" or "pending":    # always True — "pending" is truthy
+if status == "active" or "pending":    # always True -- "pending" is truthy
 if status == "active" or status == "pending":  # correct
 if status in ("active", "pending"):            # better
 
 # Off-by-one
-for i in range(1, len(items)):  # skips first item — intentional?
+for i in range(1, len(items)):  # skips first item -- intentional?
 ```
 
 ### 2. Security
@@ -175,11 +175,11 @@ df.write.format("delta").mode("append").saveAsTable(table)
 
 # Overwriting bronze
 df.write.format("delta").mode("overwrite").saveAsTable("main.bronze.filings")
-# Bronze is the audit trail — never overwrite it.
+# Bronze is the audit trail -- never overwrite it.
 
 # Schema drift
 df.write.option("mergeSchema", "true")
-# New columns silently added — will downstream jobs handle them?
+# New columns silently added -- will downstream jobs handle them?
 ```
 
 ### 4. Performance

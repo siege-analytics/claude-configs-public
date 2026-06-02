@@ -1,6 +1,6 @@
 # Typeface Pairing Strategies
 
-How to successfully combine typefaces—and when to use just one.
+How to successfully combine typefaces--and when to use just one.
 
 ## The Fundamental Rule
 

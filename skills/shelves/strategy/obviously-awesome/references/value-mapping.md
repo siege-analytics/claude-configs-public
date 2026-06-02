@@ -1,6 +1,6 @@
 # Value Mapping Framework
 
-Value mapping is the bridge between what your product does (unique attributes) and what your customers care about (outcomes). Customers never buy features — they buy the results those features enable. This reference provides a systematic process for translating unique attributes into compelling value statements and organizing them into themes that drive your positioning narrative.
+Value mapping is the bridge between what your product does (unique attributes) and what your customers care about (outcomes). Customers never buy features -- they buy the results those features enable. This reference provides a systematic process for translating unique attributes into compelling value statements and organizing them into themes that drive your positioning narrative.
 
 ## The "So What?" Chain Technique
 
@@ -11,15 +11,15 @@ The "So what?" chain is the fundamental tool for value mapping. Starting from a 
 | Level | Question | Answer Type | Example |
 |-------|----------|-------------|---------|
 | **Attribute** | What is the unique feature or capability? | Technical fact | "Our platform processes data from 200+ sources in real-time" |
-| **Advantage** | "So what?" — What does this enable? | Functional benefit | "Finance teams see consolidated numbers instantly instead of waiting for batch updates" |
-| **Value** | "So what?" — Why does that matter? | Business outcome | "Companies close their books 3 days faster each quarter, freeing the finance team for analysis instead of data wrangling" |
-| **Strategic Value** | "So what?" — What's the bigger impact? | Strategic outcome | "CFOs make better decisions because they have real-time visibility instead of relying on month-old data" |
+| **Advantage** | "So what?" -- What does this enable? | Functional benefit | "Finance teams see consolidated numbers instantly instead of waiting for batch updates" |
+| **Value** | "So what?" -- Why does that matter? | Business outcome | "Companies close their books 3 days faster each quarter, freeing the finance team for analysis instead of data wrangling" |
+| **Strategic Value** | "So what?" -- What's the bigger impact? | Strategic outcome | "CFOs make better decisions because they have real-time visibility instead of relying on month-old data" |
 
 ### Rules for the "So What?" Chain
 
 1. **Keep going until you reach something the buyer cares about.** If the answer still sounds technical, ask "So what?" again.
 2. **Use the customer's language, not yours.** If you find yourself using jargon, translate it.
-3. **Stop when you reach a universally obvious benefit.** "Save money," "save time," "reduce risk," "grow revenue" — these are usually too generic. Stop one level before universal and stay at the specific, measurable business outcome.
+3. **Stop when you reach a universally obvious benefit.** "Save money," "save time," "reduce risk," "grow revenue" -- these are usually too generic. Stop one level before universal and stay at the specific, measurable business outcome.
 4. **Each chain should be 2-4 levels deep.** If it takes more than 4 "So what?"s, the attribute may not be strongly connected to customer value.
 5. **The chain must be logically sound.** Each step should follow naturally from the previous one. If there's a logical leap, you've skipped a step.
 
@@ -33,7 +33,7 @@ The "So what?" chain is the fundamental tool for value mapping. Starting from a 
 | "So what?" | Operations teams get alerted to problems in minutes instead of discovering them in weekly reports |
 | "So what?" | Issues are resolved before they impact customers, reducing support tickets by 40% |
 | "So what?" | Customer satisfaction scores improve and churn decreases, directly impacting revenue |
-| **Value statement** | "Catch and fix problems before your customers notice them — our customers see 40% fewer support tickets within 90 days" |
+| **Value statement** | "Catch and fix problems before your customers notice them -- our customers see 40% fewer support tickets within 90 days" |
 
 **Example 2: HR Software**
 
@@ -42,7 +42,7 @@ The "So what?" chain is the fundamental tool for value mapping. Starting from a 
 | Attribute | Built-in compliance engine that auto-updates for all 50 US states |
 | "So what?" | HR teams don't need to manually track changing labor laws across jurisdictions |
 | "So what?" | Companies avoid costly compliance violations and reduce legal spend |
-| **Value statement** | "Stay compliant in all 50 states automatically — no more tracking regulations manually or worrying about fines" |
+| **Value statement** | "Stay compliant in all 50 states automatically -- no more tracking regulations manually or worrying about fines" |
 
 **Example 3: Project Management Tool**
 
@@ -55,7 +55,7 @@ The "So what?" chain is the fundamental tool for value mapping. Starting from a 
 
 ## Identifying Value Themes
 
-Individual "So what?" chains produce individual value statements. The next step is grouping related value statements into value themes — the 2-4 big reasons customers choose your product.
+Individual "So what?" chains produce individual value statements. The next step is grouping related value statements into value themes -- the 2-4 big reasons customers choose your product.
 
 ### The Clustering Process
 
@@ -101,7 +101,7 @@ Order value themes by how much they influence purchase decisions. The primary th
 
 ## Creating Proof Points
 
-Every value claim must be supported by proof. Unsubstantiated value claims are just marketing fluff. Customers are skeptical — they've heard big promises before.
+Every value claim must be supported by proof. Unsubstantiated value claims are just marketing fluff. Customers are skeptical -- they've heard big promises before.
 
 ### Proof Point Types
 
@@ -109,7 +109,7 @@ Every value claim must be supported by proof. Unsubstantiated value claims are j
 |------------|----------|---------|-------------|
 | **Customer metric** | Very strong | "Acme Corp reduced support tickets by 43% in 90 days" | When you have measurable customer outcomes |
 | **Case study** | Strong | Detailed story of customer transformation | When the story is compelling and relatable to prospects |
-| **Testimonial/quote** | Moderate-strong | "This is the first tool that actually works for distributed teams" — VP Eng, Series C startup | When the person is credible and specific |
+| **Testimonial/quote** | Moderate-strong | "This is the first tool that actually works for distributed teams" -- VP Eng, Series C startup | When the person is credible and specific |
 | **Third-party validation** | Strong | G2 Leader, Gartner mention, industry award | When prospects trust the source |
 | **Demo/proof of concept** | Strong | Live demo showing the capability | When seeing is believing |
 | **Data/benchmark** | Strong | "Our platform processes 10x more data sources than the next-closest alternative" | When the data is verifiable |
@@ -182,11 +182,11 @@ Value themes are internal strategic decisions. Messaging is the external express
 | Mistake | Example | Fix |
 |---------|---------|-----|
 | Stopping at the feature level | "We have AI anomaly detection" | Ask "So what?" at least twice more |
-| Jumping to generic value | "Save time and money" | Stay one level above generic — be specific about HOW you save time and money |
+| Jumping to generic value | "Save time and money" | Stay one level above generic -- be specific about HOW you save time and money |
 | Claiming value without proof | "Reduce churn by 50%" with no data | Only claim values you can substantiate with evidence |
 | Too many value themes | Six different reasons to buy | Consolidate to 2-3 themes. If a value doesn't clearly differentiate, it's table stakes. |
 | Value themes that don't connect to unique attributes | "Great customer support" (but competitors also have great support) | Every value theme must trace back to a unique attribute via the "So what?" chain |
-| Using internal jargon | "Multi-tenant architecture enables horizontal scalability" | Translate: "Your account scales automatically as your team grows — no migrations, no downtime" |
+| Using internal jargon | "Multi-tenant architecture enables horizontal scalability" | Translate: "Your account scales automatically as your team grows -- no migrations, no downtime" |
 
 ## Exercise: Complete Value Mapping
 

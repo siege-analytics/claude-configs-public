@@ -15,7 +15,7 @@ Comprehensive WCAG 2.1 AA compliance checklist with practical implementation gui
 
 ## Accessibility Philosophy
 
-Accessibility isn't just compliance—it improves UX for everyone:
+Accessibility isn't just compliance--it improves UX for everyone:
 - Keyboard navigation helps power users
 - Good contrast helps in bright sunlight
 - Clear focus states help everyone understand what's selected

@@ -187,7 +187,7 @@ sent you a case study from a similar company while you consider?"
 #### "It's too expensive."
 
 **Explore:**
-"Help me understand—too expensive compared to what?"
+"Help me understand--too expensive compared to what?"
 
 **Reframe options:**
 - Cost of the problem: "What's this problem costing you now?"
@@ -256,7 +256,7 @@ Establish the cost of the problem before presenting price:
 ```
 "You mentioned this problem is costing you about $50,000 annually in
 lost revenue. To solve it and capture that revenue, the investment
-is $12,000 per year—less than 25% of what you're currently losing."
+is $12,000 per year--less than 25% of what you're currently losing."
 ```
 
 ### Payment Options
@@ -336,7 +336,7 @@ Any questions I can answer? Happy to schedule another call if helpful.
 
 ```
 "Hi [Name], this is [You] from [Company]. I know I'm calling out of the
-blue—do you have 30 seconds?
+blue--do you have 30 seconds?
 
 [If yes]
 
@@ -352,7 +352,7 @@ valuable to see if we can help. Are you open to that?
 
 [If hesitant]
 
-No obligation—worst case, you get some ideas you can use regardless.
+No obligation--worst case, you get some ideas you can use regardless.
 How's [specific time]?"
 ```
 
@@ -370,7 +370,7 @@ Should I send over the agreement so you can review it?"
 ### Handling "Send Me Information"
 
 ```
-"Happy to. So I send you the right thing—what specifically would be
+"Happy to. So I send you the right thing--what specifically would be
 most useful? Is it [pricing/case studies/technical specs]?
 
 And once you've reviewed it, would you be open to a quick call to

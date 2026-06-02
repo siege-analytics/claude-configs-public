@@ -42,7 +42,7 @@ Jobs worth pursuing are often invisible because:
 - "What have you tried that didn't work?"
 - "If you could wave a magic wand, what would change?"
 
-**Example:** Milkshake study discovered people "hiring" milkshakes for morning commutes—a workaround for boredom and hunger that bananas and bagels couldn't solve.
+**Example:** Milkshake study discovered people "hiring" milkshakes for morning commutes--a workaround for boredom and hunger that bananas and bagels couldn't solve.
 
 #### 2. Non-Consumption
 
@@ -67,7 +67,7 @@ Jobs worth pursuing are often invisible because:
 - "What would make you try something in this area?"
 - "What have you heard about [category] that put you off?"
 
-**Example:** Southern New Hampshire University found millions of adults who wanted degrees but couldn't attend traditional college—a massive non-consumption opportunity.
+**Example:** Southern New Hampshire University found millions of adults who wanted degrees but couldn't attend traditional college--a massive non-consumption opportunity.
 
 #### 3. Negative Emotions
 
@@ -85,7 +85,7 @@ Jobs worth pursuing are often invisible because:
 - "Is there anything you avoid or dread?"
 - "What keeps you up at night about [area]?"
 
-**Example:** SNHU discovered adult students' real struggle wasn't academics—it was fear of failure and embarrassment about going back to school.
+**Example:** SNHU discovered adult students' real struggle wasn't academics--it was fear of failure and embarrassment about going back to school.
 
 #### 4. Unusual Uses and Surprising Customers
 
@@ -102,7 +102,7 @@ Jobs worth pursuing are often invisible because:
 - "What were you using before? What was wrong with it?"
 - "What job are you really hiring us to do?"
 
-**Example:** Arm & Hammer discovered baking soda was being "hired" for odor absorption, carpet cleaning, and toothpaste—jobs far beyond baking.
+**Example:** Arm & Hammer discovered baking soda was being "hired" for odor absorption, carpet cleaning, and toothpaste--jobs far beyond baking.
 
 #### 5. Moments of Struggle
 
@@ -158,7 +158,7 @@ Customer is actively shopping for a solution.
 - Focus on differentiation
 - Demonstrate superior job completion
 
-**Key insight:** The best customers are often passive seekers whose jobs you've awakened. They're not shopping—they're discovering they have a need.
+**Key insight:** The best customers are often passive seekers whose jobs you've awakened. They're not shopping--they're discovering they have a need.
 
 ---
 
@@ -234,7 +234,7 @@ Don't test in a vacuum. Recreate the context where the job arises.
 
 **3. Test the full experience**
 
-Not just the core product—test the entire "hiring" and "using" experience:
+Not just the core product--test the entire "hiring" and "using" experience:
 - Finding and understanding the product
 - Purchasing/signing up
 - First use
@@ -341,7 +341,7 @@ Return to customers:
 
 ### The Technology-First Trap
 
-**Symptom:** "We built this cool AI—let's find a use case."
+**Symptom:** "We built this cool AI--let's find a use case."
 
 **Fix:** Start with jobs, then ask if your technology serves them better.
 
@@ -364,7 +364,7 @@ Return to customers:
 
 ### Opening (5 min)
 
-"I'd love to understand how you came to use [product]. Not to sell you anything—just to learn about your experience."
+"I'd love to understand how you came to use [product]. Not to sell you anything--just to learn about your experience."
 
 ### First Thought (10 min)
 

@@ -23,7 +23,7 @@ SELECT * FROM events WHERE data @> '{"type": "donation"}';
 ### Use timestamptz, Not timestamp
 
 ```sql
--- timestamp: no timezone, ambiguous — "2024-03-15 14:00:00" in which timezone?
+-- timestamp: no timezone, ambiguous -- "2024-03-15 14:00:00" in which timezone?
 -- timestamptz: stores UTC, converts to session timezone on display
 ALTER TABLE donations ADD COLUMN created_at TIMESTAMPTZ DEFAULT NOW();
 ```
@@ -33,11 +33,11 @@ ALTER TABLE donations ADD COLUMN created_at TIMESTAMPTZ DEFAULT NOW();
 ### Use Cursor Pagination, Not OFFSET
 
 ```sql
--- BAD: OFFSET scans and discards rows — O(n) for page n
+-- BAD: OFFSET scans and discards rows -- O(n) for page n
 SELECT * FROM donations ORDER BY id LIMIT 20 OFFSET 10000;
 -- Scans 10,020 rows to return 20
 
--- GOOD: Cursor pagination — O(1) regardless of page depth
+-- GOOD: Cursor pagination -- O(1) regardless of page depth
 SELECT * FROM donations WHERE id > :last_seen_id ORDER BY id LIMIT 20;
 -- Seeks directly to the cursor position via index
 ```
@@ -140,7 +140,7 @@ CREATE INDEX ON boundaries USING GIST (geom);
 - Index columns you filter on (`WHERE`), join on (`ON`), or sort on (`ORDER BY`)
 - Composite indexes: put equality columns first, range columns last
 - Don't index columns with very low cardinality (boolean, status with 3 values) unless it's a partial index
-- Drop unused indexes — they slow writes and waste space (`pg_stat_user_indexes.idx_scan = 0`)
+- Drop unused indexes -- they slow writes and waste space (`pg_stat_user_indexes.idx_scan = 0`)
 
 ## PostgreSQL Transactions and Locking
 
@@ -252,7 +252,7 @@ FROM district_boundaries;
 | Array access | `array[1]` (1-based) | `array[0]` (0-based) |
 | JSON field | `data->>'key'` | `data.key` (struct) or `get_json_object()` |
 | Temp tables | `CREATE TEMP TABLE` | `CREATE OR REPLACE TEMP VIEW` |
-| Sequences | `SERIAL` / `GENERATED` | Not supported — use UUID or monotonically_increasing_id() |
+| Sequences | `SERIAL` / `GENERATED` | Not supported -- use UUID or monotonically_increasing_id() |
 
 ## SparkSQL Performance
 
@@ -287,19 +287,19 @@ SELECT * FROM main.silver.donations WHERE state = 'NJ';
 ```
 
 
-# Addendum to coding/sql/reference.md — PostgreSQL Performance
+# Addendum to coding/sql/reference.md -- PostgreSQL Performance
 
 Append this section after the existing dialect-specific content. Scoped to PostgreSQL specifically (PostGIS lives in its own sub-skill).
 
 Draws from:
-- **Markus Winand — *SQL Performance Explained* + use-the-index-luke.com** (the index discipline canon)
-- **depesz.com (Hubert Lubaczewski) + explain.depesz.com** — EXPLAIN plan reading
-- **Laurenz Albe (Cybertec)** — partitioning, isolation, replication
-- **Bruce Momjian** — talks on MVCC, VACUUM, streaming replication
+- **Markus Winand -- *SQL Performance Explained* + use-the-index-luke.com** (the index discipline canon)
+- **depesz.com (Hubert Lubaczewski) + explain.depesz.com** -- EXPLAIN plan reading
+- **Laurenz Albe (Cybertec)** -- partitioning, isolation, replication
+- **Bruce Momjian** -- talks on MVCC, VACUUM, streaming replication
 
 ---
 
-## Indexes — the main lever
+## Indexes -- the main lever
 
 ### Pick the index type
 
@@ -309,7 +309,7 @@ Draws from:
 | **Hash** | Equality only, and only when you're sure. Usually B-tree is just as fast. |
 | **GIN** | `jsonb`, array, full-text search (`tsvector`) |
 | **GiST** | Geometric data (PostGIS), ranges, full-text |
-| **SP-GiST** | Space-partitioning — phone numbers, IP addresses, non-uniform data |
+| **SP-GiST** | Space-partitioning -- phone numbers, IP addresses, non-uniform data |
 | **BRIN** | Huge tables physically sorted by the indexed column (time-series ingest). Tiny on disk. |
 
 ### Composite index ordering (Winand's key insight)
@@ -336,9 +336,9 @@ CREATE INDEX donations_donor_idx
     INCLUDE (amount, contribution_date);
 ```
 
-Makes the index itself satisfy `SELECT amount, contribution_date WHERE contributor_id = ?` — no heap fetch. Powerful for hot-path queries but adds to index bloat; profile before enabling.
+Makes the index itself satisfy `SELECT amount, contribution_date WHERE contributor_id = ?` -- no heap fetch. Powerful for hot-path queries but adds to index bloat; profile before enabling.
 
-### Partial indexes — a free win for lopsided data
+### Partial indexes -- a free win for lopsided data
 
 ```sql
 -- 99% of donations aren't flagged; index only the 1%
@@ -359,7 +359,7 @@ Tiny index, instant seeks on the common query. Works for any predicate.
 | Too many indexes (>10 per table) | Write amplification. Audit with `pg_stat_user_indexes` and drop unused |
 | Index on a column with 2 distinct values | Useless. Planner reverts to Seq Scan |
 
-## EXPLAIN — read the plan, always
+## EXPLAIN -- read the plan, always
 
 ```sql
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) SELECT ...;
@@ -374,7 +374,7 @@ Paste the output into **explain.depesz.com** for a visual breakdown. Look for:
 | **"rows removed by filter"** | Index didn't narrow enough; add a better predicate to the index |
 | **External merge/sort** | `work_mem` too small; query sorts to disk |
 | **Bitmap Index Scan** + **Bitmap Heap Scan** | Fine for many matches; inefficient for a handful |
-| **"actual time" >> "estimated cost"** | Planner statistics are stale — `ANALYZE` the table |
+| **"actual time" >> "estimated cost"** | Planner statistics are stale -- `ANALYZE` the table |
 
 `BUFFERS` shows actual I/O. If "shared read" is high, you're hitting disk; if "shared hit" is high, cache is warm.
 
@@ -393,7 +393,7 @@ ALTER TABLE donations SET (
 
 Auto-vacuum defaults are right for low-write tables, too timid for high-write ones. Monitor `pg_stat_user_tables.n_dead_tup` and `last_autovacuum`.
 
-## Partitioning — when and how
+## Partitioning -- when and how
 
 Partition when:
 - Table > 100M rows AND
@@ -420,7 +420,7 @@ CREATE INDEX ON donations_2025 (contributor_id);
 
 Gotchas:
 - Foreign keys from a partitioned table to another table work; FKs pointing *into* a partitioned table have restrictions pre-PG12
-- Default partition catches unrouted rows — ALWAYS create one, even if it's empty: `FOR VALUES WITH (MODULUS 1, REMAINDER 0)` or `DEFAULT`
+- Default partition catches unrouted rows -- ALWAYS create one, even if it's empty: `FOR VALUES WITH (MODULUS 1, REMAINDER 0)` or `DEFAULT`
 - `pg_partman` automates rolling partitions (drop oldest monthly, etc.)
 
 ## MVCC and VACUUM (Momjian's territory)
@@ -438,21 +438,21 @@ ORDER BY dead_pct DESC;
 
 If `dead_pct > 20%`, autovacuum is losing. Options:
 - Increase autovacuum aggressiveness (per-table settings above)
-- `VACUUM (FULL, ANALYZE) donations;` — exclusive lock, rewrites the whole table. Offline maintenance only.
-- `pg_repack` extension — does VACUUM FULL's work without the exclusive lock. Production-safe.
+- `VACUUM (FULL, ANALYZE) donations;` -- exclusive lock, rewrites the whole table. Offline maintenance only.
+- `pg_repack` extension -- does VACUUM FULL's work without the exclusive lock. Production-safe.
 
-## Isolation levels — pick deliberately
+## Isolation levels -- pick deliberately
 
 | Level | Default? | Use for |
 |---|---|---|
-| Read Uncommitted | No (not actually supported — acts as Read Committed) | Never |
+| Read Uncommitted | No (not actually supported -- acts as Read Committed) | Never |
 | **Read Committed** | **Yes** | Default; each statement sees a fresh snapshot |
 | Repeatable Read | No | Multi-statement analytical queries that need a consistent view |
 | Serializable | No | Financial-grade consistency; adds serialization-error retries |
 
-Serializable is not a free lunch — `SQLSTATE 40001` retries become the norm. Don't enable it casually.
+Serializable is not a free lunch -- `SQLSTATE 40001` retries become the norm. Don't enable it casually.
 
-## Locking — know the footguns
+## Locking -- know the footguns
 
 ```sql
 -- This locks the whole table for the duration of ALTER
@@ -470,7 +470,7 @@ ALTER TABLE donations ALTER COLUMN reviewed SET NOT NULL;
 
 Postgres 11+ added `DEFAULT` without table rewrite for new rows, but `NOT NULL` still requires the rewrite. Laurenz Albe's posts on this are the reference.
 
-## CTEs — no longer an optimization fence (PG12+)
+## CTEs -- no longer an optimization fence (PG12+)
 
 Pre-PG12: CTEs materialized, creating planner boundaries. Post-PG12: CTEs are inlined by default (exceptions: recursive CTEs, `WITH ... AS MATERIALIZED`, CTEs with side effects).
 
@@ -506,10 +506,10 @@ Session vs transaction vs statement pooling:
 
 ## References
 
-- **Markus Winand** — *SQL Performance Explained* + use-the-index-luke.com (indexing canon)
-- **depesz.com** — Hubert Lubaczewski's blog + explain.depesz.com (EXPLAIN plans)
-- **Laurenz Albe** — Cybertec PostgreSQL Blog (internals, performance)
-- **Bruce Momjian** — momjian.us (lectures on MVCC, VACUUM)
-- **PostgreSQL docs + release notes** — postgresql.org/docs (primary reference)
-- **`pgTune`** — pgtune.leopard.in.ua (baseline configuration)
-- **`pg_stat_statements`** extension — always enable; the single best introspection tool
+- **Markus Winand** -- *SQL Performance Explained* + use-the-index-luke.com (indexing canon)
+- **depesz.com** -- Hubert Lubaczewski's blog + explain.depesz.com (EXPLAIN plans)
+- **Laurenz Albe** -- Cybertec PostgreSQL Blog (internals, performance)
+- **Bruce Momjian** -- momjian.us (lectures on MVCC, VACUUM)
+- **PostgreSQL docs + release notes** -- postgresql.org/docs (primary reference)
+- **`pgTune`** -- pgtune.leopard.in.ua (baseline configuration)
+- **`pg_stat_statements`** extension -- always enable; the single best introspection tool

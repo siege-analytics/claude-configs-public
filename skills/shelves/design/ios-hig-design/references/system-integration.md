@@ -425,4 +425,4 @@ Text("Content")
 | Spotlight | Index valuable, non-sensitive content |
 | Focus | Respect user's notification preferences |
 
-**Universal principle:** System integrations should feel seamless—users shouldn't think about which device or app they're using.
+**Universal principle:** System integrations should feel seamless--users shouldn't think about which device or app they're using.

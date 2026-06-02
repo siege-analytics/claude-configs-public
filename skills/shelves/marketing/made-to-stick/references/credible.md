@@ -1,6 +1,6 @@
 # Credible: Making People Believe Your Idea
 
-An idea can be simple, surprising, concrete, and emotional — but if people do not believe it, none of that matters. Credibility is what turns an interesting claim into a convincing one. There are two types of credibility: external (borrowed from authorities) and internal (built into the message itself). The most powerful sticky ideas use both.
+An idea can be simple, surprising, concrete, and emotional -- but if people do not believe it, none of that matters. Credibility is what turns an interesting claim into a convincing one. There are two types of credibility: external (borrowed from authorities) and internal (built into the message itself). The most powerful sticky ideas use both.
 
 ## External Credibility
 
@@ -21,7 +21,7 @@ An authority is someone with recognized expertise or status. When an authority e
 **Limitations of authority credibility:**
 - Audiences are increasingly skeptical of celebrity endorsements
 - The authority must be relevant to your claim (a dentist endorsing a car feels wrong)
-- Authority alone is not enough — it must be paired with substance
+- Authority alone is not enough -- it must be paired with substance
 
 ### Anti-Authorities
 
@@ -39,7 +39,7 @@ An anti-authority is the opposite of a traditional expert. It is a real person w
 | A small business owner | "I was drowning in spreadsheets until I found this tool" | Shared pain, practical credibility |
 | A burned-out developer | "I was working 80-hour weeks. This tool gave me my weekends back" | Emotional resonance through shared experience |
 
-**The power of the anti-authority:** Pam Laffin, a 29-year-old smoker with emphysema, was far more persuasive in anti-smoking campaigns than any surgeon general. She was not an expert — she was a cautionary example. Her credibility came from lived consequence.
+**The power of the anti-authority:** Pam Laffin, a 29-year-old smoker with emphysema, was far more persuasive in anti-smoking campaigns than any surgeon general. She was not an expert -- she was a cautionary example. Her credibility came from lived consequence.
 
 ### Credentials
 
@@ -55,7 +55,7 @@ Credentials are verifiable facts about your track record, qualifications, or ach
 
 ## Internal Credibility
 
-Internal credibility is built into the message itself. It does not rely on external sources — it makes the audience believe through the structure and specificity of the claim. Internal credibility is often more powerful than external credibility because it feels earned rather than borrowed.
+Internal credibility is built into the message itself. It does not rely on external sources -- it makes the audience believe through the structure and specificity of the claim. Internal credibility is often more powerful than external credibility because it feels earned rather than borrowed.
 
 ### Vivid Details
 
@@ -65,11 +65,11 @@ Specific, vivid details make claims feel true. When someone says "On a Tuesday a
 |-----------------------|----------------------|
 | "A company improved their metrics" | "Acme Corp's support team in Phoenix reduced ticket resolution time from 4.2 hours to 47 minutes" |
 | "We helped a client grow" | "We helped BrightPath go from $400K ARR to $2.1M ARR in 11 months" |
-| "Our users are happy" | "Last Thursday, a user named Marcus sent us a screenshot of his team celebrating — they had closed their first deal in 3 minutes flat using our tool" |
+| "Our users are happy" | "Last Thursday, a user named Marcus sent us a screenshot of his team celebrating -- they had closed their first deal in 3 minutes flat using our tool" |
 
 ### Statistics
 
-Statistics can be powerful — but only if presented correctly. Most statistics fail because they are too abstract, too large, or too disconnected from human experience.
+Statistics can be powerful -- but only if presented correctly. Most statistics fail because they are too abstract, too large, or too disconnected from human experience.
 
 **The problem with raw statistics:**
 - "37 grams of saturated fat" means nothing to most people
@@ -82,11 +82,11 @@ The key to sticky statistics is making them relatable. Translate numbers into th
 
 | Raw Statistic | Human-Scale Version | Technique Used |
 |--------------|--------------------|-|
-| "37 grams of saturated fat" | "More saturated fat than a bacon-and-eggs breakfast, a Big Mac with fries, and a steak dinner — combined" | **Comparison to known quantities** |
+| "37 grams of saturated fat" | "More saturated fat than a bacon-and-eggs breakfast, a Big Mac with fries, and a steak dinner -- combined" | **Comparison to known quantities** |
 | "10 TB of storage" | "Every book ever written in every language, stored 100 times over" | **Familiar reference point** |
 | "2.5 million data points per second" | "Imagine every person in Chicago sending you a message at the same time. We handle that, every second." | **Population analogy** |
 | "$1.2M in savings" | "That is 8 new full-time hires, or a new office, or 3 years of your marketing budget" | **Alternative uses** |
-| "99.99% uptime" | "Less than 53 minutes of downtime per year — you probably lose more time making coffee" | **Time translation** |
+| "99.99% uptime" | "Less than 53 minutes of downtime per year -- you probably lose more time making coffee" | **Time translation** |
 
 **Rules for sticky statistics:**
 
@@ -97,7 +97,7 @@ The key to sticky statistics is making them relatable. Translate numbers into th
 
 ### The Sinatra Test
 
-"If I can make it there, I can make it anywhere." The Sinatra Test is a single example so impressive that it handles all objections. It is proof by intimidation — one reference that makes further questions unnecessary.
+"If I can make it there, I can make it anywhere." The Sinatra Test is a single example so impressive that it handles all objections. It is proof by intimidation -- one reference that makes further questions unnecessary.
 
 **How the Sinatra Test works:**
 If you catered a White House dinner, you can cater anything. If you handled security for the Olympics, you can handle security for anyone. The one example is so extreme that every lesser challenge is implicitly covered.
@@ -118,7 +118,7 @@ If you catered a White House dinner, you can cater anything. If you handled secu
 
 ### Testable Credentials
 
-A testable credential invites the audience to verify the claim themselves. It says "Don't take my word for it — see for yourself."
+A testable credential invites the audience to verify the claim themselves. It says "Don't take my word for it -- see for yourself."
 
 | Testable Credential | Why It Works |
 |--------------------|-|
@@ -131,7 +131,7 @@ A testable credential invites the audience to verify the claim themselves. It sa
 **Why testable credentials are so powerful:**
 - They demonstrate confidence in the product
 - They transfer the burden of proof to the audience
-- They feel fair and honest — you are not hiding anything
+- They feel fair and honest -- you are not hiding anything
 - Even if most people never test it, the invitation itself builds trust
 
 ## Building Credibility for New Products and Startups
@@ -192,10 +192,10 @@ New companies face a credibility gap. They have no track record, no famous custo
 ### Product Page Testimonial
 
 **Before:**
-> "'Great product!' — Happy Customer"
+> "'Great product!' -- Happy Customer"
 
 **After:**
-> "'We were spending 6 hours a week on reporting. Now it is automated. I literally got a promotion because of the time I saved.' — Maria Torres, Head of Ops at Acme Corp"
+> "'We were spending 6 hours a week on reporting. Now it is automated. I literally got a promotion because of the time I saved.' -- Maria Torres, Head of Ops at Acme Corp"
 
 ### Pricing Page
 
@@ -214,7 +214,7 @@ Before publishing any claim, verify:
 - [ ] Statistics are human-scale and compared to something the audience understands
 - [ ] Specific numbers are used instead of vague quantities ("2,347" not "thousands")
 - [ ] Testimonials include the person's full name, title, and company
-- [ ] Claims are verifiable — the audience could check them if they wanted to
+- [ ] Claims are verifiable -- the audience could check them if they wanted to
 - [ ] There is a Sinatra Test candidate: one example so strong it covers all objections
 - [ ] A testable credential is offered: "See for yourself" in some form
 - [ ] Credibility sources are relevant to the specific claim being made

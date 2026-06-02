@@ -4,7 +4,7 @@ description: Router for strategy book skills. Dispatches to blue-ocean-strategy,
 disable-model-invocation: false
 ---
 
-# Strategy — Shelf
+# Strategy -- Shelf
 
 ## Trigger table
 
@@ -12,7 +12,7 @@ disable-model-invocation: false
 |---|---|
 | Uncontested market space, value innovation, ERRC grid (Kim & Mauborgne) | [skill:blue-ocean-strategy] |
 | Tech-adoption lifecycle, beachhead segment, whole-product (Geoffrey Moore) | [skill:crossing-the-chasm] |
-| EOS — Vision/Traction Organizer, Rocks, Level-10 meetings (Wickman) | [skill:traction-eos] |
-| Positioning — context, alternatives, unique attributes (April Dunford) | [skill:obviously-awesome] |
+| EOS -- Vision/Traction Organizer, Rocks, Level-10 meetings (Wickman) | [skill:traction-eos] |
+| Positioning -- context, alternatives, unique attributes (April Dunford) | [skill:obviously-awesome] |
 
-All wondelai/skills imports — see footers and `THIRD_PARTY_NOTICES.md`.
+All wondelai/skills imports -- see footers and `THIRD_PARTY_NOTICES.md`.

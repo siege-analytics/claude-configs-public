@@ -110,7 +110,7 @@ Map groups on two axes: Price (low to high) and a key performance dimension.
             Group C      |      Group A
          (Niche premium) |   (Full premium)
                          |
-   LOW PRICE ————————————+———————————— HIGH PRICE
+   LOW PRICE ------------------------+------------------------ HIGH PRICE
                          |
             Group D      |      Group B
          (Basic/budget)  |   (Mid-range)

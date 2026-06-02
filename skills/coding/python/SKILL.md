@@ -10,8 +10,8 @@ routed-by: coding-standards
 
 Always-on: [rule:principles], [rule:python].
 For deeper rationale load:
-- [skill:effective-python] — canonical Python idioms.
-- [skill:clean-code] — naming, function size, error handling.
+- [skill:effective-python] -- canonical Python idioms.
+- [skill:clean-code] -- naming, function size, error handling.
 
 Apply these conventions when writing or reviewing Python code. See [reference.md](reference.md) for data structure selection, string formatting, logging, testing, project structure, and anti-patterns.
 
@@ -108,8 +108,8 @@ except requests.HTTPError as e:
 ```
 
 **Rules:**
-- Never use bare `except:` — catches `SystemExit` and `KeyboardInterrupt`
-- Never use `except Exception: pass` — at minimum log the error
+- Never use bare `except:` -- catches `SystemExit` and `KeyboardInterrupt`
+- Never use `except Exception: pass` -- at minimum log the error
 - Catch the most specific exception possible
 - Let unexpected exceptions propagate
 - Use `raise X from Y` to chain exceptions
@@ -136,7 +136,7 @@ count: int = 0              # just use: count = 0
 - Use `list[X]`, `dict[K, V]`, `tuple[X, Y]` (lowercase, 3.9+)
 - Complex types get a `TypeAlias`: `Coordinate: TypeAlias = tuple[float, float]`
 
-## Tests and Documentation — non-negotiable
+## Tests and Documentation -- non-negotiable
 
 This section operationalizes criteria (b), (c), and parts of (d) from the workspace-wide [rule:definition-of-done]. The rule below is the canonical Python-side enforcement; the always-on file is the cross-language summary.
 
@@ -148,7 +148,7 @@ Every code change ships with three things in the same PR:
 
 When writing code:
 - Start the test file and source file together. Don't defer tests to a follow-up PR.
-- When a test can't be written cheaply (network, GPU, proprietary data), write a *fake-module success path* test that verifies the orchestration with a stub dependency — still better than no test.
+- When a test can't be written cheaply (network, GPU, proprietary data), write a *fake-module success path* test that verifies the orchestration with a stub dependency -- still better than no test.
 - Update docs as you go. A stale README is a bug report waiting to happen.
 
 When reviewing code:

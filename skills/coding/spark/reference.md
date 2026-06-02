@@ -6,7 +6,7 @@ Detailed code templates, Delta Lake operations, and performance tuning patterns.
 
 ### Bronze (Raw)
 
-Raw data, as received from the source. Minimal transformation — just enough to make it queryable.
+Raw data, as received from the source. Minimal transformation -- just enough to make it queryable.
 
 ```python
 def bronze_ingest(spark: SparkSession, source_path: str, table: str) -> None:
@@ -28,14 +28,14 @@ def bronze_ingest(spark: SparkSession, source_path: str, table: str) -> None:
     (
         df.write
         .format("delta")
-        .mode("append")          # never overwrite bronze — it's the audit trail
+        .mode("append")          # never overwrite bronze -- it's the audit trail
         .saveAsTable(table)
     )
 ```
 
 **Bronze rules:**
 - All columns are strings (no type coercion at this stage)
-- Append-only — never delete or overwrite raw data
+- Append-only -- never delete or overwrite raw data
 - Add `_source_file` and `_ingested_at` metadata columns
 - Partitioned by ingestion date or source if the table grows large
 
@@ -114,7 +114,7 @@ def gold_donor_summary(spark: SparkSession) -> None:
 
 **Gold rules:**
 - Named for the business concept, not the source (`donor_summary`, not `donations_aggregated`)
-- Joins are resolved — no foreign keys left for consumers to chase
+- Joins are resolved -- no foreign keys left for consumers to chase
 - Aggregation levels are clear from the table name
 - Optimized for read patterns (partitioned by common filter columns)
 
@@ -200,7 +200,7 @@ table.vacuum(168)  # hours
 - Fewer than 1000 distinct values
 - Queries almost always filter on this column
 - Each partition has at least 100MB of data
-- If in doubt, don't partition — use Z-ORDER instead
+- If in doubt, don't partition -- use Z-ORDER instead
 
 ### Broadcast Joins
 
@@ -342,14 +342,14 @@ DESCRIBE HISTORY main.silver.donations;
 ```
 
 
-# Addendum to coding/spark/reference.md — High-Performance Spark
+# Addendum to coding/spark/reference.md -- High-Performance Spark
 
 Append this section after the existing Delta / medallion content.
 
 Draws from:
-- **Holden Karau et al. — *High Performance Spark*** — the tuning canon
-- **Jacek Laskowski — "Mastering Apache Spark SQL" gitbook** (jaceklaskowski.gitbooks.io) — deepest public internals walkthrough
-- **Sandy Ryza et al. — *Advanced Analytics with Spark* 2nd ed** — pattern catalog
+- **Holden Karau et al. -- *High Performance Spark*** -- the tuning canon
+- **Jacek Laskowski -- "Mastering Apache Spark SQL" gitbook** (jaceklaskowski.gitbooks.io) -- deepest public internals walkthrough
+- **Sandy Ryza et al. -- *Advanced Analytics with Spark* 2nd ed** -- pattern catalog
 
 ---
 
@@ -357,8 +357,8 @@ Draws from:
 
 Every Spark performance problem is eventually one of these:
 
-1. **Shuffle** — data crossing executors (join, groupBy, distinct, repartition). Disk I/O + network.
-2. **Skew** — one partition has 10x the data of others; one task stalls while others finish.
+1. **Shuffle** -- data crossing executors (join, groupBy, distinct, repartition). Disk I/O + network.
+2. **Skew** -- one partition has 10x the data of others; one task stalls while others finish.
 
 Everything else (CPU, JVM GC, spill) is downstream of these two.
 
@@ -366,8 +366,8 @@ Everything else (CPU, JVM GC, spill) is downstream of these two.
 
 | Tool | Use |
 |---|---|
-| Spark UI — Stages tab | Per-stage duration, shuffle read/write, skew |
-| Spark UI — SQL tab | Physical plan with row counts and timings |
+| Spark UI -- Stages tab | Per-stage duration, shuffle read/write, skew |
+| Spark UI -- SQL tab | Physical plan with row counts and timings |
 | `df.explain(mode="formatted")` | Plan from code |
 | `df.explain(mode="cost")` | CBO estimates (3.2+) |
 | `spark.sql.adaptive.enabled=true` | Let AQE handle skew automatically |
@@ -391,7 +391,7 @@ AQE at runtime:
 
 Before AQE, these required manual hints. AQE handles 80% of cases correctly; the rest need targeted intervention.
 
-## Skew — the most common silent killer
+## Skew -- the most common silent killer
 
 Symptoms:
 - Spark UI shows one task taking 10x the median
@@ -458,7 +458,7 @@ small_df.write.mode("overwrite").partitionBy("key").saveAsTable("staging.small_p
 
 Subsequent reads of a single key are O(1) file lookups.
 
-## Shuffle — reduce it
+## Shuffle -- reduce it
 
 Shuffles happen at:
 - `join` (unless one side is broadcast)
@@ -484,13 +484,13 @@ Constraint: both sides must be bucketed identically. Works for Hive-style tables
 # Naive
 df.groupBy("region").agg(F.sum("amount"))
 
-# With pre-aggregation (manual — usually Catalyst does this automatically)
+# With pre-aggregation (manual -- usually Catalyst does this automatically)
 # Only relevant if you're using RDD or custom aggregations
 ```
 
 Catalyst usually does this for built-in aggregates. Custom UDAFs miss out; prefer built-ins.
 
-**Use `reduceByKey` over `groupByKey`.** `reduceByKey` combines per-partition before shuffle; `groupByKey` ships all values. RDD-era advice — in the DataFrame world this maps to preferring built-in aggregates over `collect_list + post-process`.
+**Use `reduceByKey` over `groupByKey`.** `reduceByKey` combines per-partition before shuffle; `groupByKey` ships all values. RDD-era advice -- in the DataFrame world this maps to preferring built-in aggregates over `collect_list + post-process`.
 
 ## Caching and persistence
 
@@ -512,14 +512,14 @@ df.count()  # materialize the cache
 ```
 
 Levels (from `StorageLevel`):
-- `MEMORY_ONLY` — fastest; OOM if it doesn't fit
-- `MEMORY_AND_DISK` — default; spills to disk. Use this.
-- `MEMORY_AND_DISK_SER` — serialized; smaller but slower to deserialize. Rarely worth it with modern Spark.
-- `DISK_ONLY` — not faster than recomputing unless the computation is very expensive
+- `MEMORY_ONLY` -- fastest; OOM if it doesn't fit
+- `MEMORY_AND_DISK` -- default; spills to disk. Use this.
+- `MEMORY_AND_DISK_SER` -- serialized; smaller but slower to deserialize. Rarely worth it with modern Spark.
+- `DISK_ONLY` -- not faster than recomputing unless the computation is very expensive
 
 Always `unpersist()` when done to reclaim memory.
 
-## File layout — Parquet/Delta tuning
+## File layout -- Parquet/Delta tuning
 
 | Setting | Why | Target |
 |---|---|---|
@@ -527,18 +527,18 @@ Always `unpersist()` when done to reclaim memory.
 | File size | Too small = metadata overhead; too big = can't parallelize | 100 MB – 1 GB per file |
 | Column encoding | Dictionary encoding for low-cardinality strings | Default is usually right |
 
-For Delta tables: run `OPTIMIZE` (or enable predictive optimization) to compact small files. The magic threshold is `spark.databricks.delta.optimize.maxFileSize` — default 1 GB, often fine.
+For Delta tables: run `OPTIMIZE` (or enable predictive optimization) to compact small files. The magic threshold is `spark.databricks.delta.optimize.maxFileSize` -- default 1 GB, often fine.
 
 ## Columnar projection and predicate pushdown
 
 Spark's Catalyst optimizer pushes projection (column selection) and predicates (WHERE clauses) into the file reader. This means:
 
 ```python
-# BAD — reads all columns, then drops
+# BAD -- reads all columns, then drops
 df = spark.table("wide_table").drop("huge_unused_col1", "huge_unused_col2")
 df.filter(F.col("date") > "2024-01-01")
 
-# GOOD — Catalyst pushes the select and filter into Parquet
+# GOOD -- Catalyst pushes the select and filter into Parquet
 df = spark.table("wide_table").select("date", "id", "amount").filter(F.col("date") > "2024-01-01")
 ```
 
@@ -546,19 +546,19 @@ Parquet reads only the columns and row groups that survive. On a 200-column wide
 
 Gotchas:
 - Predicates on derived columns (UDF outputs) can't be pushed down
-- Predicates on partition columns are pushed at partition-pruning time (before file open) — always partition-or-cluster on common filter columns
+- Predicates on partition columns are pushed at partition-pruning time (before file open) -- always partition-or-cluster on common filter columns
 
-## UDFs — last resort
+## UDFs -- last resort
 
 Python UDFs crash Catalyst optimization (black-box function). Order of preference:
 
 1. **Built-in functions** (`pyspark.sql.functions.*`)
 2. **SQL expressions via `F.expr("...")`**
-3. **Pandas UDF (vectorized, `@pandas_udf`)** — 10-100x faster than scalar UDF
-4. **Scalar Python UDF** — last resort
+3. **Pandas UDF (vectorized, `@pandas_udf`)** -- 10-100x faster than scalar UDF
+4. **Scalar Python UDF** -- last resort
 
 ```python
-# Pandas UDF — vectorized
+# Pandas UDF -- vectorized
 from pyspark.sql.functions import pandas_udf
 
 @pandas_udf("double")
@@ -612,8 +612,8 @@ If you're writing Structured Streaming:
 
 ## References
 
-- **Holden Karau, Rachel Warren — *High Performance Spark*** (tuning canon)
-- **Jacek Laskowski** — jaceklaskowski.gitbooks.io/mastering-spark-sql (deepest public internals)
-- **Sandy Ryza, Uri Laserson, Sean Owen, Josh Wills** — *Advanced Analytics with Spark* 2nd ed
-- **Databricks engineering blog** — databricks.com/blog (AQE, Photon, Delta performance posts)
-- **Spark UI's SQL and Stages tabs** — the only reliable source of truth
+- **Holden Karau, Rachel Warren -- *High Performance Spark*** (tuning canon)
+- **Jacek Laskowski** -- jaceklaskowski.gitbooks.io/mastering-spark-sql (deepest public internals)
+- **Sandy Ryza, Uri Laserson, Sean Owen, Josh Wills** -- *Advanced Analytics with Spark* 2nd ed
+- **Databricks engineering blog** -- databricks.com/blog (AQE, Photon, Delta performance posts)
+- **Spark UI's SQL and Stages tabs** -- the only reliable source of truth

@@ -1,14 +1,14 @@
-# Ch 8 — PostGIS as a Web Backend
+# Ch 8 -- PostGIS as a Web Backend
 
-The book covers Postgres as the data layer for web maps and APIs — pre-MVT, mostly via GeoJSON endpoints and pre-rendered tiles. The 2026 landscape is dramatically different: vector tiles via `pg_tileserv` + `ST_AsMVT` is now the default web pattern.
+The book covers Postgres as the data layer for web maps and APIs -- pre-MVT, mostly via GeoJSON endpoints and pre-rendered tiles. The 2026 landscape is dramatically different: vector tiles via `pg_tileserv` + `ST_AsMVT` is now the default web pattern.
 
 ## What's changed since the book
 
 Three major additions:
 
-1. **`ST_AsMVT`** (PostGIS 2.4+, 2017 — released same year as book) — server-side vector tile generation
-2. **`pg_tileserv`** (Crunchy Data, ~2019) — auto-publishing PostGIS tables as MVT tile services
-3. **`pg_featureserv`** (Crunchy Data, ~2019) — auto-publishing as OGC Features API (REST GeoJSON)
+1. **`ST_AsMVT`** (PostGIS 2.4+, 2017 -- released same year as book) -- server-side vector tile generation
+2. **`pg_tileserv`** (Crunchy Data, ~2019) -- auto-publishing PostGIS tables as MVT tile services
+3. **`pg_featureserv`** (Crunchy Data, ~2019) -- auto-publishing as OGC Features API (REST GeoJSON)
 
 Combined, these obviate most of the book's web-backend code. You no longer write Flask endpoints for GeoJSON; you point `pg_featureserv` at your database and it serves the API. You no longer pre-render tiles; you query with `ST_AsMVT` on demand.
 
@@ -39,7 +39,7 @@ Returns a binary MVT blob. The browser-side library (Mapbox GL, MapLibre) decode
 
 Critical detail: **filter with `&&` against the tile envelope before `ST_AsMVTGeom`**. Without it, you process the whole table per tile. With it, only features intersecting the tile.
 
-### `pg_tileserv` — automatic tile services
+### `pg_tileserv` -- automatic tile services
 
 Install once, point at your Postgres:
 
@@ -86,7 +86,7 @@ $$ LANGUAGE plpgsql STABLE PARALLEL SAFE;
 http://localhost:7800/public.features_by_state/{z}/{x}/{y}.pbf?state=TX
 ```
 
-## `pg_featureserv` — REST GeoJSON
+## `pg_featureserv` -- REST GeoJSON
 
 For when the consumer wants OGC Features API (most modern GIS clients) instead of vector tiles:
 
@@ -131,9 +131,9 @@ The `WHERE geom &&` uses GIST. Without it, every tile request is a full table sc
 
 For tables > 1M rows, also consider:
 
-- **Materialized vector tile cache** — a separate table with pre-rendered MVTs at common zoom levels
-- **Generalization at low zoom** — `ST_Simplify(geom, tolerance)` based on zoom; show coarser geometries when zoomed out
-- **Database-level cache** — Redis or CDN in front of the tile service
+- **Materialized vector tile cache** -- a separate table with pre-rendered MVTs at common zoom levels
+- **Generalization at low zoom** -- `ST_Simplify(geom, tolerance)` based on zoom; show coarser geometries when zoomed out
+- **Database-level cache** -- Redis or CDN in front of the tile service
 
 `pg_tileserv` doesn't cache by default. Production deployments put a CDN in front.
 
@@ -182,13 +182,13 @@ CREATE INDEX features_geom_simp_idx ON features USING GIST (geom_simplified_z8);
 
 Trades storage for query speed. Almost always worth it for tile-serving workloads.
 
-## Modern alternatives — when not to use postgis_web
+## Modern alternatives -- when not to use postgis_web
 
 For very large or static datasets:
 
-- **PMTiles** — static vector tile bundles served from S3. No database in the request path. Fastest possible web rendering for static data.
-- **MapTiler / Mapbox / similar** — managed vector-tile services. No infrastructure.
-- **Tegola** — Go-based tile server, alternative to `pg_tileserv` (handles non-Postgres sources too).
+- **PMTiles** -- static vector tile bundles served from S3. No database in the request path. Fastest possible web rendering for static data.
+- **MapTiler / Mapbox / similar** -- managed vector-tile services. No infrastructure.
+- **Tegola** -- Go-based tile server, alternative to `pg_tileserv` (handles non-Postgres sources too).
 
 Postgres-as-tile-source is the right pattern when:
 - Data updates frequently (live precinct results, real-time traffic)
@@ -199,20 +199,20 @@ Static reference layers (state boundaries, tract geometries) belong in PMTiles, 
 
 ## Pitfalls
 
-- **`ST_AsMVT` without `&&` filter** — every tile is a full table scan.
-- **No GIST index on the geometry column** — same problem.
-- **Using GeoJSON for high-volume tile rendering** — MVT is 5-10× smaller and renders 10-100× faster in the browser.
-- **No CDN in front of the tile service** — every browser request hits Postgres.
-- **Generalization tolerance too small at low zoom** — tiles are huge and slow; client struggles to render.
-- **Generalization tolerance too large at high zoom** — features look chunky and wrong.
-- **Mixing MVT and GeoJSON endpoints in one app** — code duplication; pick one per use case (web map vs API).
-- **`pg_tileserv` exposed publicly without auth** — anyone can query any spatial table. Always front with auth + rate limiting.
+- **`ST_AsMVT` without `&&` filter** -- every tile is a full table scan.
+- **No GIST index on the geometry column** -- same problem.
+- **Using GeoJSON for high-volume tile rendering** -- MVT is 5-10× smaller and renders 10-100× faster in the browser.
+- **No CDN in front of the tile service** -- every browser request hits Postgres.
+- **Generalization tolerance too small at low zoom** -- tiles are huge and slow; client struggles to render.
+- **Generalization tolerance too large at high zoom** -- features look chunky and wrong.
+- **Mixing MVT and GeoJSON endpoints in one app** -- code duplication; pick one per use case (web map vs API).
+- **`pg_tileserv` exposed publicly without auth** -- anyone can query any spatial table. Always front with auth + rate limiting.
 
 ## Cross-links
 
-- [`05-exporting-data.md`](05-exporting-data.md) — `ST_AsMVT` covered there too; this file is the web-backend specifics
-- [`07-plpgsql-programming.md`](07-plpgsql-programming.md) — `PARALLEL SAFE` annotation for tile functions
-- [`../query-optimization.md`](../query-optimization.md) — query performance basics that matter here
+- [`05-exporting-data.md`](05-exporting-data.md) -- `ST_AsMVT` covered there too; this file is the web-backend specifics
+- [`07-plpgsql-programming.md`](07-plpgsql-programming.md) -- `PARALLEL SAFE` annotation for tile functions
+- [`../query-optimization.md`](../query-optimization.md) -- query performance basics that matter here
 
 ## Citation
 

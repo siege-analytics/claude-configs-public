@@ -12,9 +12,9 @@ Build and maintain Claude Code skills that conform to Anthropic's specification.
 
 ## Commands
 
-- `/skillbuilder create <name>` — scaffold a new skill with correct structure
-- `/skillbuilder audit [path]` — audit one skill or all skills in a directory
-- `/skillbuilder fix <path>` — fix a skill's compliance issues
+- `/skillbuilder create <name>` -- scaffold a new skill with correct structure
+- `/skillbuilder audit [path]` -- audit one skill or all skills in a directory
+- `/skillbuilder fix <path>` -- fix a skill's compliance issues
 
 ## Skill Classification
 
@@ -22,7 +22,7 @@ Every skill is one of three types, plus an optional structural pattern (Router).
 
 ### Reference
 
-Knowledge Claude should absorb automatically when relevant. Not invoked as a slash command — Claude applies it when the context matches.
+Knowledge Claude should absorb automatically when relevant. Not invoked as a slash command -- Claude applies it when the context matches.
 
 **Examples:** coding style, SQL conventions, spatial decision frameworks, API design patterns.
 
@@ -33,9 +33,9 @@ user-invocable: false
 
 **Characteristics:**
 - Describes *how to think* about a domain, not *steps to execute*
-- No side effects — purely informational
+- No side effects -- purely informational
 - Claude auto-invokes when it detects relevant work (writing Python, reviewing SQL, etc.)
-- The `description` field is critical — it's how Claude decides when to load the skill
+- The `description` field is critical -- it's how Claude decides when to load the skill
 - The `paths` field helps scope activation (e.g., `paths: "**/*.py"` for Python style)
 
 ### Action
@@ -77,7 +77,7 @@ allowed-tools: Read Grep Glob
 
 ### Router (Structural Pattern)
 
-A skill that selects and loads sub-skills based on context signals. Routers are a structural pattern applied to Reference skills — they sit at a category level and dispatch to language- or methodology-specific sub-skills.
+A skill that selects and loads sub-skills based on context signals. Routers are a structural pattern applied to Reference skills -- they sit at a category level and dispatch to language- or methodology-specific sub-skills.
 
 **Examples:** coding-standards (routes to python, sql, spark, etc.), analysis-methods (routes to spatial, statistical, graph, etc.).
 
@@ -92,7 +92,7 @@ paths: "<broad glob covering all sub-skill file types>"
 routed-by: <router-name>
 ```
 
-The `routed-by` field is not in Anthropic's spec — Claude ignores unknown fields. It serves as documentation for humans and for audit checks.
+The `routed-by` field is not in Anthropic's spec -- Claude ignores unknown fields. It serves as documentation for humans and for audit checks.
 
 **Characteristics:**
 - Contains a routing table mapping signals (file types, imports) to sub-skill file paths
@@ -100,7 +100,7 @@ The `routed-by` field is not in Anthropic's spec — Claude ignores unknown fiel
 - All sub-skills under a router must share the same classification
 - Body leads with gotchas (common misrouting mistakes)
 - Description is trigger-optimized: front-loads the activation signals
-- Sub-skills have NO `user-invocable` or `disable-model-invocation` — they exist only to be loaded by the router
+- Sub-skills have NO `user-invocable` or `disable-model-invocation` -- they exist only to be loaded by the router
 
 **Classification rule:** A router and all its sub-skills must be the same type. If a category contains skills of different types (e.g., coding/ has Reference sub-skills + an Analytical code-review skill), the different-type skill stays flat alongside the router.
 
@@ -127,16 +127,16 @@ skill-name/
 |-------|------|-----|---------|
 | `name` | string | 64 chars | Slash command name. Lowercase, hyphens, numbers only. |
 | `description` | string | 250 chars | What it does and when to use it. Claude uses this for auto-invocation decisions. **Front-load the key use case.** |
-| `disable-model-invocation` | boolean | — | `true` = user-only. Set for Action and Analytical skills. |
-| `user-invocable` | boolean | — | `false` = Claude-only. Set for Reference skills. |
-| `allowed-tools` | string/list | — | Tools Claude can use without asking. Space-separated. |
-| `argument-hint` | string | — | Shown in autocomplete. E.g., `[issue-number]` |
-| `paths` | string/list | — | Glob patterns limiting auto-activation scope. |
-| `context` | string | — | `fork` to run in isolated subagent context. |
-| `agent` | string | — | Subagent type when `context: fork`. |
-| `model` | string | — | Model override when skill is active. |
-| `effort` | string | — | `low`, `medium`, `high`, `max`. |
-| `routed-by` | string | — | Name of the router skill that loads this sub-skill. Informational; not in Anthropic spec. |
+| `disable-model-invocation` | boolean | -- | `true` = user-only. Set for Action and Analytical skills. |
+| `user-invocable` | boolean | -- | `false` = Claude-only. Set for Reference skills. |
+| `allowed-tools` | string/list | -- | Tools Claude can use without asking. Space-separated. |
+| `argument-hint` | string | -- | Shown in autocomplete. E.g., `[issue-number]` |
+| `paths` | string/list | -- | Glob patterns limiting auto-activation scope. |
+| `context` | string | -- | `fork` to run in isolated subagent context. |
+| `agent` | string | -- | Subagent type when `context: fork`. |
+| `model` | string | -- | Model override when skill is active. |
+| `effort` | string | -- | `low`, `medium`, `high`, `max`. |
+| `routed-by` | string | -- | Name of the router skill that loads this sub-skill. Informational; not in Anthropic spec. |
 
 ### Hard Constraints
 

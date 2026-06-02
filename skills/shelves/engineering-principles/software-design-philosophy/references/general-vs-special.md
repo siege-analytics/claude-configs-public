@@ -18,7 +18,7 @@ One of the most important design decisions is how general-purpose or special-pur
 ## The Spectrum
 
 ```
-Too Special ←————————————————————————→ Too General
+Too Special ←------------------------------------------------→ Too General
   (bloated     (sweet spot:              (wasted effort,
   with         "somewhat                  unnecessary
   special      general-purpose")          abstraction)

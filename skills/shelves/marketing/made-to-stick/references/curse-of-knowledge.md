@@ -1,16 +1,16 @@
 # The Curse of Knowledge: The Silent Killer of Communication
 
-The Curse of Knowledge is the single most important concept in "Made to Stick." It is not one of the six SUCCESs principles — it is the villain that all six principles are designed to defeat. Once you know something, you cannot imagine not knowing it. This gap between what you know and what your audience knows is where communication goes to die.
+The Curse of Knowledge is the single most important concept in "Made to Stick." It is not one of the six SUCCESs principles -- it is the villain that all six principles are designed to defeat. Once you know something, you cannot imagine not knowing it. This gap between what you know and what your audience knows is where communication goes to die.
 
 ## What the Curse of Knowledge Is
 
-The Curse of Knowledge is a cognitive bias: when you possess knowledge, you unconsciously assume others possess it too. You skip steps, use shorthand, rely on jargon, and abstract away details — because to you, those details are obvious. To your audience, they are invisible.
+The Curse of Knowledge is a cognitive bias: when you possess knowledge, you unconsciously assume others possess it too. You skip steps, use shorthand, rely on jargon, and abstract away details -- because to you, those details are obvious. To your audience, they are invisible.
 
 **The core problem:** Experts communicate like experts, to an audience of non-experts. The more you know about a subject, the harder it is to communicate it clearly to someone who does not.
 
 ### Why It Is So Dangerous
 
-The Curse of Knowledge is uniquely dangerous because it is invisible to the person afflicted by it. You do not know you are skipping context. You do not realize your jargon is opaque. You genuinely believe you are being clear — because from inside your head, you are.
+The Curse of Knowledge is uniquely dangerous because it is invisible to the person afflicted by it. You do not know you are skipping context. You do not realize your jargon is opaque. You genuinely believe you are being clear -- because from inside your head, you are.
 
 | What You Think You Said | What Your Audience Heard |
 |------------------------|-------------------------|
@@ -33,7 +33,7 @@ In 1990, Elizabeth Newton conducted a simple experiment at Stanford that became 
 
 ### Why the Gap Is So Large
 
-When tappers tapped, they heard the full song in their heads — melody, lyrics, instruments. They could not believe the listeners could not hear it too. But listeners heard only a series of disconnected taps. Rhythmic Morse code with no melody.
+When tappers tapped, they heard the full song in their heads -- melody, lyrics, instruments. They could not believe the listeners could not hear it too. But listeners heard only a series of disconnected taps. Rhythmic Morse code with no melody.
 
 ### What This Means for Communication
 
@@ -60,7 +60,7 @@ Using specialized vocabulary that feels natural to you but is foreign to your au
 | "Our SaaS platform leverages NLP for CRM optimization" | "Our software reads your customer emails and tells you who needs attention" |
 | "We reduce CAC through LTV-optimized retention loops" | "We help you keep customers longer so you spend less finding new ones" |
 | "Deploy containerized microservices via our CI/CD pipeline" | "Push a button and your code goes live in 60 seconds" |
-| "HIPAA-compliant PHI management with role-based ACLs" | "Patient records stay private — only authorized staff can see them" |
+| "HIPAA-compliant PHI management with role-based ACLs" | "Patient records stay private -- only authorized staff can see them" |
 
 ### Pattern 2: Skipped Context
 
@@ -78,7 +78,7 @@ Using high-level concepts when specific, concrete examples would be clearer.
 
 | Over-Abstracted | Concrete |
 |----------------|----------|
-| "We enable digital transformation" | "We moved their paper forms to a mobile app — 10,000 fewer pieces of paper per month" |
+| "We enable digital transformation" | "We moved their paper forms to a mobile app -- 10,000 fewer pieces of paper per month" |
 | "We drive operational excellence" | "Their warehouse team finds items in 30 seconds instead of 10 minutes" |
 | "We facilitate collaboration" | "Designers and engineers comment on the same file instead of emailing screenshots back and forth" |
 
@@ -141,7 +141,7 @@ Count the marks. That is your Curse of Knowledge score. Aim for zero.
 The most reliable cure is to show your communication to people who are NOT inside your bubble.
 
 **Who to test with:**
-- New employees (first 30 days — they still remember what confusion feels like)
+- New employees (first 30 days -- they still remember what confusion feels like)
 - Customers who recently evaluated your product (they remember the learning curve)
 - Friends and family who work in different industries
 - Interns or junior team members
@@ -241,7 +241,7 @@ Technical writers are often the most deeply cursed. They know the product so wel
 
 ### Exercise 1: The Jargon Jar
 
-For one week, every time someone in your team uses a jargon word in customer-facing communication, they put a dollar in the jargon jar. At the end of the week, count the money. Buy the team lunch with the proceeds. The point is not punishment — it is awareness.
+For one week, every time someone in your team uses a jargon word in customer-facing communication, they put a dollar in the jargon jar. At the end of the week, count the money. Buy the team lunch with the proceeds. The point is not punishment -- it is awareness.
 
 ### Exercise 2: The Blank Slate Review
 
@@ -254,7 +254,7 @@ If fewer than 4 out of 5 answer correctly, you are cursed.
 
 ### Exercise 3: The Reverse Explainer
 
-Ask a new customer to explain your product to someone else. Record what they say. Their explanation — in their words, with their framing — is probably better than yours. It is certainly more understandable to other non-experts.
+Ask a new customer to explain your product to someone else. Record what they say. Their explanation -- in their words, with their framing -- is probably better than yours. It is certainly more understandable to other non-experts.
 
 ### Exercise 4: The Abstraction Detector
 

@@ -9,7 +9,7 @@ metadata:
 
 # StoryBrand Messaging Framework
 
-Framework for clarifying your message so customers will listen. Based on a fundamental truth: customers don't buy the best products—they buy the ones they can understand the fastest.
+Framework for clarifying your message so customers will listen. Based on a fundamental truth: customers don't buy the best products--they buy the ones they can understand the fastest.
 
 ## Core Principle
 
@@ -27,14 +27,14 @@ Every compelling story follows the same pattern. Use this structure for all mess
 
 **Core concept:** The customer wants something. Every story begins with a hero who wants something. In your brand's story, the customer is the hero and your job is to define what they want. Be specific about that one desire.
 
-**Why it works:** Opening a story gap — the distance between where a character is and where they want to be — creates tension that demands resolution. When you name a customer's desire clearly, they lean in because they feel understood and want to know how the gap gets closed.
+**Why it works:** Opening a story gap -- the distance between where a character is and where they want to be -- creates tension that demands resolution. When you name a customer's desire clearly, they lean in because they feel understood and want to know how the gap gets closed.
 
 **Key insights:**
 - Open a story gap (desire creates tension that pulls people into the narrative)
-- Focus on ONE desire per message (not a list — multiple desires dilute the story gap)
+- Focus on ONE desire per message (not a list -- multiple desires dilute the story gap)
 - The desire should relate to survival (physical, financial, relational, or spiritual)
 - Aspirational identity is powerful ("become the leader everyone respects")
-- Different segments may have different primary desires — create separate messaging for different roles, stages, and pain intensities
+- Different segments may have different primary desires -- create separate messaging for different roles, stages, and pain intensities
 
 **Product applications:**
 
@@ -50,21 +50,21 @@ Every compelling story follows the same pattern. Use this structure for all mess
 - "What if you could [single clear outcome]?"
 - "You deserve [survival-level desire]..."
 
-**Ethical boundary:** Never fabricate desires the customer does not actually hold. Ground the desire in real research, interviews, or observed behavior — not manufactured aspiration.
+**Ethical boundary:** Never fabricate desires the customer does not actually hold. Ground the desire in real research, interviews, or observed behavior -- not manufactured aspiration.
 
 See: [references/brand-script.md](references/brand-script.md)
 
 ### 2. Has a Problem
 
-**Core concept:** The hero faces a problem that stands in the way of getting what they want. Every story needs conflict. Define the problem at three levels — external, internal, and philosophical — and personify it with a villain that gives the problem a face.
+**Core concept:** The hero faces a problem that stands in the way of getting what they want. Every story needs conflict. Define the problem at three levels -- external, internal, and philosophical -- and personify it with a villain that gives the problem a face.
 
-**Why it works:** Companies tend to sell solutions to external problems, but customers buy solutions to internal problems. When you name how the problem makes them feel — confused, overwhelmed, embarrassed — you tap into the emotional driver that actually motivates purchasing decisions.
+**Why it works:** Companies tend to sell solutions to external problems, but customers buy solutions to internal problems. When you name how the problem makes them feel -- confused, overwhelmed, embarrassed -- you tap into the emotional driver that actually motivates purchasing decisions.
 
 **Key insights:**
 - External problems are tangible and surface-level ("my investments are scattered")
 - Internal problems are emotional ("I feel confused and overwhelmed")
 - Philosophical problems frame the injustice ("People shouldn't have to be experts to retire well")
-- The villain personifies the problem — a good villain is specific and relatable, not abstract
+- The villain personifies the problem -- a good villain is specific and relatable, not abstract
 - Most brands only address external problems, missing the internal problems that truly drive purchases
 - Bad villain: "complexity" (abstract); Good villain: "Wall Street jargon designed to confuse you"
 
@@ -88,15 +88,15 @@ See: [references/brand-script.md](references/brand-script.md)
 
 ### 3. And Meets a Guide
 
-**Core concept:** Enter the guide — a character who has empathy AND authority. Your brand is the guide, not the hero. You demonstrate empathy by understanding the customer's pain, and authority by proving you can actually solve it. The balance of both is what earns trust.
+**Core concept:** Enter the guide -- a character who has empathy AND authority. Your brand is the guide, not the hero. You demonstrate empathy by understanding the customer's pain, and authority by proving you can actually solve it. The balance of both is what earns trust.
 
-**Why it works:** Customers are not looking for another hero — they are looking for a guide. Think Yoda, not Luke. When a brand expresses empathy, the customer feels seen. When the brand demonstrates authority (testimonials, logos, statistics), the customer feels safe. Together, these two qualities create the trust needed for a customer to engage.
+**Why it works:** Customers are not looking for another hero -- they are looking for a guide. Think Yoda, not Luke. When a brand expresses empathy, the customer feels seen. When the brand demonstrates authority (testimonials, logos, statistics), the customer feels safe. Together, these two qualities create the trust needed for a customer to engage.
 
 **Key insights:**
 - Empathy without authority makes you seem weak; authority without empathy makes you seem arrogant
 - Demonstrate empathy with "we understand" language and by accurately describing their frustration
 - Demonstrate authority with testimonials, client logos, statistics, awards, and years of experience
-- Never tell your origin story as the centerpiece — that is hero behavior
+- Never tell your origin story as the centerpiece -- that is hero behavior
 - Brief, relevant credentials are fine; a multi-paragraph "our journey" story loses the customer
 
 **Product applications:**
@@ -105,7 +105,7 @@ See: [references/brand-script.md](references/brand-script.md)
 |---------|-------------|---------|
 | About page | Lead with empathy, then show credentials | "We know what it's like to feel lost in financial jargon. That's why 10,000 families trust us." |
 | Homepage social proof | Combine empathy headline with authority logos | "You're not alone. Join 5,000+ teams who found clarity." + client logos |
-| Sales call | Open with empathy, close with authority | "I hear you — that sounds frustrating. Here's what we've seen work for teams like yours." |
+| Sales call | Open with empathy, close with authority | "I hear you -- that sounds frustrating. Here's what we've seen work for teams like yours." |
 
 **Copy patterns:**
 - "We understand what it's like to [empathy statement]..."
@@ -121,12 +121,12 @@ See: [references/sales-conversations.md](references/sales-conversations.md)
 
 **Core concept:** The guide gives the hero a plan. Plans create clarity and reduce the fear of doing business with you. There are two types: a Process Plan (3-4 steps showing how to work with you) and an Agreement Plan (commitments you make to remove risk).
 
-**Why it works:** Customers feel uncertain before making a purchase. A clear, simple plan acts as stepping stones across a creek — it shows them exactly how to get from where they are to where they want to be. Without a plan, the path feels murky and they stall. Plans reduce cognitive load and perceived risk.
+**Why it works:** Customers feel uncertain before making a purchase. A clear, simple plan acts as stepping stones across a creek -- it shows them exactly how to get from where they are to where they want to be. Without a plan, the path feels murky and they stall. Plans reduce cognitive load and perceived risk.
 
 **Key insights:**
 - Process Plan: 3-4 numbered steps to work with you (e.g., "1. Schedule a call. 2. Get a custom plan. 3. Start seeing results.")
 - Agreement Plan: commitments that remove fear (e.g., "100% satisfaction guaranteed", "Cancel anytime", "We'll never pressure you")
-- Limit to 3-4 steps maximum — more than that overwhelms
+- Limit to 3-4 steps maximum -- more than that overwhelms
 - Use action verbs for each step
 - Number the steps to imply order and ease
 - Give each step a simple, memorable name
@@ -137,7 +137,7 @@ See: [references/sales-conversations.md](references/sales-conversations.md)
 |---------|-------------|---------|
 | Website plan section | Show 3-step process with icons | "1. Book a demo. 2. Get onboarded. 3. See results in 30 days." |
 | Pricing page | Add agreement plan to reduce purchase anxiety | "No contracts. Cancel anytime. 30-day money-back guarantee." |
-| Email CTA | Reference the plan to simplify next steps | "Getting started is simple — just three steps." |
+| Email CTA | Reference the plan to simplify next steps | "Getting started is simple -- just three steps." |
 
 **Copy patterns:**
 - "Here's how it works: Step 1... Step 2... Step 3..."
@@ -153,11 +153,11 @@ See: [references/brand-script.md](references/brand-script.md)
 
 **Core concept:** The guide calls the hero to action. If you don't ask, they won't act. There are two types: a Direct CTA (the primary action you want them to take) and a Transitional CTA (a lower-commitment alternative for those not yet ready).
 
-**Why it works:** Customers do not take action unless they are challenged to take action. A clear, repeated, visually prominent call to action tells the customer exactly what to do next. The transitional CTA captures people who aren't ready to buy but are willing to engage — keeping them in your story until they are ready.
+**Why it works:** Customers do not take action unless they are challenged to take action. A clear, repeated, visually prominent call to action tells the customer exactly what to do next. The transitional CTA captures people who aren't ready to buy but are willing to engage -- keeping them in your story until they are ready.
 
 **Key insights:**
-- Direct CTA: "Buy Now", "Schedule a Call", "Get Started" — the primary conversion action
-- Transitional CTA: "Download Free Guide", "Watch Demo", "Take the Quiz" — lower commitment
+- Direct CTA: "Buy Now", "Schedule a Call", "Get Started" -- the primary conversion action
+- Transitional CTA: "Download Free Guide", "Watch Demo", "Take the Quiz" -- lower commitment
 - Use a button (not a text link) for the Direct CTA
 - Make the Direct CTA stand out visually (contrasting color)
 - Repeat the Direct CTA multiple times on the page
@@ -176,7 +176,7 @@ See: [references/brand-script.md](references/brand-script.md)
 - "Get [desired result] now."
 - "Start your free [trial/demo/assessment] today."
 - "Download your free [lead magnet]."
-- "Schedule a [time-bound commitment] — it's free."
+- "Schedule a [time-bound commitment] -- it's free."
 
 **Ethical boundary:** Never disguise a purchase as a free action. CTAs must honestly represent what happens when the customer clicks.
 
@@ -184,12 +184,12 @@ See: [references/website-wireframe.md](references/website-wireframe.md)
 
 ### 6. That Helps Them Avoid Failure
 
-**Core concept:** Paint a picture of what happens if the customer does not act. Without stakes, there is no story. Failure gives the narrative tension and urgency — it shows the cost of inaction.
+**Core concept:** Paint a picture of what happens if the customer does not act. Without stakes, there is no story. Failure gives the narrative tension and urgency -- it shows the cost of inaction.
 
-**Why it works:** Humans are loss-averse. The fear of losing something is more motivating than the promise of gaining something. A taste of what could go wrong — not a full scare campaign — creates the emotional stakes needed for a customer to move from "interested" to "committed."
+**Why it works:** Humans are loss-averse. The fear of losing something is more motivating than the promise of gaining something. A taste of what could go wrong -- not a full scare campaign -- creates the emotional stakes needed for a customer to move from "interested" to "committed."
 
 **Key insights:**
-- Don't overdo fear — just a taste of the negative consequence is enough
+- Don't overdo fear -- just a taste of the negative consequence is enough
 - Be honest about real consequences, not hypothetical catastrophes
 - Focus on opportunity cost, not punishment ("another year of feeling stuck")
 - Use "what if you don't" framing to make inaction feel costly
@@ -216,9 +216,9 @@ See: [references/brand-script.md](references/brand-script.md)
 
 ### 7. And Ends in Success
 
-**Core concept:** Paint a vivid picture of what life looks like after the customer works with you. Success is the resolution of the story — it closes the story gap opened in Element 1. Define success in terms of status, completeness, and self-realization.
+**Core concept:** Paint a vivid picture of what life looks like after the customer works with you. Success is the resolution of the story -- it closes the story gap opened in Element 1. Define success in terms of status, completeness, and self-realization.
 
-**Why it works:** People need to see the destination before they start the journey. A clear success picture gives customers something concrete to desire. When you show the transformation — not just the features — customers can place themselves in that future and feel the emotional pull toward it.
+**Why it works:** People need to see the destination before they start the journey. A clear success picture gives customers something concrete to desire. When you show the transformation -- not just the features -- customers can place themselves in that future and feel the emotional pull toward it.
 
 **Key insights:**
 - Status: How will they be perceived? ("Become the go-to expert in your field")
@@ -232,15 +232,15 @@ See: [references/brand-script.md](references/brand-script.md)
 
 | Context | Application | Example |
 |---------|-------------|---------|
-| Homepage success section | Paint the after picture with specifics | "Imagine opening your inbox to qualified leads every morning — no cold outreach required." |
+| Homepage success section | Paint the after picture with specifics | "Imagine opening your inbox to qualified leads every morning -- no cold outreach required." |
 | Case study | Show before/after transformation with numbers | "Before: 2% conversion rate. After: 11% in 90 days." |
-| Testimonial placement | Let customers describe their own success | "I finally feel like I know where every dollar is going." — real customer quote |
+| Testimonial placement | Let customers describe their own success | "I finally feel like I know where every dollar is going." -- real customer quote |
 
 **Copy patterns:**
 - "Imagine [specific success picture]..."
 - "Join [number] [customers] who now [success outcome]..."
 - "What would it mean for you to [self-realization outcome]?"
-- "Finally, [completeness outcome] — without [old frustration]."
+- "Finally, [completeness outcome] -- without [old frustration]."
 
 **Ethical boundary:** Never promise results you cannot substantiate. Success pictures must reflect realistic outcomes, and testimonials must represent genuine customer experiences.
 
@@ -326,7 +326,7 @@ Ask these questions about any marketing asset:
 6. [ ] Is there one obvious CTA?
 7. [ ] Do you show success AND failure stakes?
 
-If any answer is "no" — that's your problem.
+If any answer is "no" -- that's your problem.
 
 ## About the Author
 

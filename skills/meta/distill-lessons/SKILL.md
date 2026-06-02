@@ -8,7 +8,7 @@ argument-hint: "[--all | --entry <date-or-title>]"
 
 # Distill Lessons (Tier 1 → Tier 2 promotion)
 
-This skill promotes a single eligible Tier-1 entry from `LESSONS.md` into a Tier-2 project rule at `<repo>/.claude/rules/<topic>.md`. It is intentionally **one rule at a time** — distillation is a high-stakes act that benefits from focused attention, not batch processing.
+This skill promotes a single eligible Tier-1 entry from `LESSONS.md` into a Tier-2 project rule at `<repo>/.claude/rules/<topic>.md`. It is intentionally **one rule at a time** -- distillation is a high-stakes act that benefits from focused attention, not batch processing.
 
 For the source ledger spec, see [skill:lessons-learned]. For cross-tier hygiene and finding what to promote, see [skill:rules-audit].
 
@@ -17,9 +17,9 @@ For the source ledger spec, see [skill:lessons-learned]. For cross-tier hygiene 
 Run after [skill:rules-audit] surfaces a "promotion overdue" worklist, or directly when you know a specific entry is ready (e.g., a 🔴 Critical finding logged once that needs immediate codification).
 
 Do **not** use this skill for:
-- Promoting from Tier 2 → Tier 3 — that's always a human PR with cited evidence
-- Capturing a new lesson — that's [skill:lessons-learned]
-- Auditing the system as a whole — that's [skill:rules-audit]
+- Promoting from Tier 2 → Tier 3 -- that's always a human PR with cited evidence
+- Capturing a new lesson -- that's [skill:lessons-learned]
+- Auditing the system as a whole -- that's [skill:rules-audit]
 
 ## Eligibility
 
@@ -32,7 +32,7 @@ An entry is eligible when **any** of:
 | Critical-severity finding (security, data loss) | ≥ 1 |
 | Explicit reviewer flag (`**Promotion-requested:**`) | always |
 
-Eligibility is informational on the Tier-1 entry itself — this skill verifies it before proceeding.
+Eligibility is informational on the Tier-1 entry itself -- this skill verifies it before proceeding.
 
 ## Workflow
 
@@ -52,7 +52,7 @@ Determine the appropriate `<topic>.md` under `<repo>/.claude/rules/`:
 
 - Read the entry's content and identify the topic (e.g., "data-types", "idempotency", "auth", "spark-write-modes").
 - If a matching file exists, that's the target.
-- If no matching file exists, propose a name to the user before creating it. **Do not invent a topic file silently** — topic taxonomy is a long-lived design choice.
+- If no matching file exists, propose a name to the user before creating it. **Do not invent a topic file silently** -- topic taxonomy is a long-lived design choice.
 - The `.claude/rules/` directory is created if missing.
 
 ### 4. Conflict gate (mandatory)
@@ -64,7 +64,7 @@ Read the existing rules in the target file (and adjacent `.claude/rules/*.md` fi
 3. Ask the user to resolve: amend one, retire one, or merge them. Soft coexistence is rejected.
 4. Only proceed once the conflict is explicitly resolved.
 
-This gate exists because contradictory rule files are worse than missing rules — they make every review a judgment call rather than a check.
+This gate exists because contradictory rule files are worse than missing rules -- they make every review a judgment call rather than a check.
 
 ### 5. Draft the rule (with user confirmation)
 
@@ -73,16 +73,16 @@ Distill the Tier-1 entry into a Tier-2 rule entry:
 ```markdown
 ## <imperative-one-liner>
 
-**Why:** <one paragraph — the underlying invariant; cite the original incident if any>
+**Why:** <one paragraph -- the underlying invariant; cite the original incident if any>
 
 **How to apply:** <when this rule fires; what the violating pattern looks like; what the compliant pattern looks like>
 
-**Code-checkable?** <yes / no — and if yes, name the lint rule, pre-commit check, or CI test that would enforce it (or note "not yet — TODO")>
+**Code-checkable?** <yes / no -- and if yes, name the lint rule, pre-commit check, or CI test that would enforce it (or note "not yet -- TODO")>
 
-**Evidence:** [LESSONS.md entry: `<date> — <title>`](../../LESSONS.md#<anchor>)
+**Evidence:** [LESSONS.md entry: `<date> -- <title>`](../../LESSONS.md#<anchor>)
 ```
 
-**Show the draft to the user before writing.** Distillation is the moment when phrasing matters most — the rule will be read by every future reviewer in this repo. Iterate on wording with the user before committing.
+**Show the draft to the user before writing.** Distillation is the moment when phrasing matters most -- the rule will be read by every future reviewer in this repo. Iterate on wording with the user before committing.
 
 ### 6. Write the rule
 
@@ -94,7 +94,7 @@ Once the user confirms wording:
 
 ### 7. Suggest enforcement
 
-If the rule is code-checkable, propose the enforcement mechanism (lint rule config, pre-commit hook, CI test) as a follow-up ticket. **Do not write the enforcement here** — that's a separate piece of work with its own review.
+If the rule is code-checkable, propose the enforcement mechanism (lint rule config, pre-commit hook, CI test) as a follow-up ticket. **Do not write the enforcement here** -- that's a separate piece of work with its own review.
 
 If the rule is not code-checkable, ensure it's wired into [skill:code-review] by updating the project's `.claude/rules/<topic>.md` (which `code-review` reads at the top of every review).
 
@@ -125,7 +125,7 @@ For the promotion process, see [skill:distill-lessons]. For the source ledger, s
 
 ## <rule 1>
 
-(rule body — see step 5 format)
+(rule body -- see step 5 format)
 
 ## <rule 2>
 

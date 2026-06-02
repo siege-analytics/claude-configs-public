@@ -1,6 +1,6 @@
 # Point Pattern Analysis
 
-When the data is a set of point locations and the question is **about the pattern of the points themselves** — are they clustered, random, or dispersed? — point pattern analysis is the right toolset.
+When the data is a set of point locations and the question is **about the pattern of the points themselves** -- are they clustered, random, or dispersed? -- point pattern analysis is the right toolset.
 
 GDSPy Chapter 8 reverses my earlier "out of scope" call. For donor-cluster questions, polling-place placement, event-location work, and surveillance-of-rare-events, the methods below are concise and load-bearing.
 
@@ -18,7 +18,7 @@ The distinction from clustering algorithms (DBSCAN): clustering *groups* the poi
 
 ## Ripley's K function
 
-The canonical point-pattern test. For each point, count how many other points are within distance `r`. Average across all points. Compare to what you'd expect under Complete Spatial Randomness (CSR — points placed independently and uniformly).
+The canonical point-pattern test. For each point, count how many other points are within distance `r`. Average across all points. Compare to what you'd expect under Complete Spatial Randomness (CSR -- points placed independently and uniformly).
 
 ```python
 from pointpats import PointPattern, k_test
@@ -37,7 +37,7 @@ print(k_result)
 - If observed K < expected K → points are **dispersed** (regular spacing) at scale r
 - If observed K ≈ expected K → consistent with CSR
 
-The output is a function — clustering at small distances, randomness at large distances is the most common pattern (donations cluster within a city; cities are roughly random).
+The output is a function -- clustering at small distances, randomness at large distances is the most common pattern (donations cluster within a city; cities are roughly random).
 
 ### Visualizing K
 
@@ -59,7 +59,7 @@ plt.legend()
 
 The envelope is the 99% range of K under simulated CSR. Observed K outside the envelope = significant deviation from random.
 
-## L function — variance-stabilized K
+## L function -- variance-stabilized K
 
 K grows quadratically with distance, which makes the plot hard to read. The L function transforms K to be linear under CSR:
 
@@ -74,13 +74,13 @@ plt.plot(l_result.support, l_result.statistic - l_result.support, label="L(r) - 
 
 L is the more common version for inspection.
 
-## Nearest-neighbor distance — the F, G, J functions
+## Nearest-neighbor distance -- the F, G, J functions
 
 | Function | What it measures |
 |---|---|
 | **G(r)** | Distribution of nearest-neighbor distances (point-to-point) |
 | **F(r)** | Distribution of empty-space distances (random-location-to-point) |
-| **J(r)** | (1 - G) / (1 - F) — combines both; J=1 under CSR |
+| **J(r)** | (1 - G) / (1 - F) -- combines both; J=1 under CSR |
 
 ```python
 from pointpats import g_test, f_test, j_test
@@ -116,13 +116,13 @@ plt.imshow(density, extent=[x_grid.min(), x_grid.max(), y_grid.min(), y_grid.max
 Or use `scipy.stats.gaussian_kde` for a quick alternative.
 
 **Bandwidth choice** dominates everything else. Too small → lumpy noise. Too large → blurred to uselessness. Common defaults:
-- **Silverman's rule** — automatic, conservative
-- **Scott's rule** — automatic, moderate
-- **Cross-validation** — optimal but expensive
+- **Silverman's rule** -- automatic, conservative
+- **Scott's rule** -- automatic, moderate
+- **Cross-validation** -- optimal but expensive
 
 Try several bandwidths; the right one looks "right" visually for the substantive question.
 
-## Cross-K — relating two point patterns
+## Cross-K -- relating two point patterns
 
 When you have two point types and want to know if they cluster *together*:
 
@@ -142,12 +142,12 @@ If observed cross-K > expected → the two patterns are spatially associated (do
 
 When you want to **model** the point pattern as a generative process:
 
-- **Homogeneous Poisson process** — CSR; the null model
-- **Inhomogeneous Poisson process** — intensity varies with covariates (population density, road network)
-- **Cluster process (Neyman-Scott, Matern)** — points cluster around unobserved parents
-- **Hardcore process** — points avoid each other (regular spacing; e.g., trees in a managed forest)
+- **Homogeneous Poisson process** -- CSR; the null model
+- **Inhomogeneous Poisson process** -- intensity varies with covariates (population density, road network)
+- **Cluster process (Neyman-Scott, Matern)** -- points cluster around unobserved parents
+- **Hardcore process** -- points avoid each other (regular spacing; e.g., trees in a managed forest)
 
-For Siege civic work, fitting these is rare — the testing tools (Ripley's K, KDE) are usually sufficient. For deep modeling, R's `spatstat` package is the canonical tool; Python equivalents are limited.
+For Siege civic work, fitting these is rare -- the testing tools (Ripley's K, KDE) are usually sufficient. For deep modeling, R's `spatstat` package is the canonical tool; Python equivalents are limited.
 
 ## Bandwidth and edge effects
 
@@ -170,11 +170,11 @@ Pick the smallest bandwidth that still looks coherent (not noisy).
 
 ### Edge correction (Ripley's K)
 
-Points near the boundary have fewer neighbors than they "should" — leading to underestimated K at short distances. Edge corrections:
+Points near the boundary have fewer neighbors than they "should" -- leading to underestimated K at short distances. Edge corrections:
 
-- **Ripley's edge correction** — weights neighbors by the proportion of their search annulus that lies inside the study area
-- **Border method** — exclude points within distance r of the edge
-- **Toroidal** — treat the study area as a torus (rare in real geography)
+- **Ripley's edge correction** -- weights neighbors by the proportion of their search annulus that lies inside the study area
+- **Border method** -- exclude points within distance r of the edge
+- **Toroidal** -- treat the study area as a torus (rare in real geography)
 
 ```python
 k_result = k_test(pp, support=20, method="ripley")
@@ -186,22 +186,22 @@ For tightly-bounded study areas (a single county), edge correction matters subst
 
 | Engine | Point pattern support |
 |---|---|
-| **GeoPandas + pointpats** | Native — Ripley's K, L, G, F, J, KDE. **Default.** |
+| **GeoPandas + pointpats** | Native -- Ripley's K, L, G, F, J, KDE. **Default.** |
 | **PostGIS** | Manual SQL for K (recursive `ST_DWithin` aggregation). KDE via grid + density join. Plausible for large datasets. |
-| **DuckDB-spatial** | Same as PostGIS — manual SQL with `ST_DWithin`. KDE one-shot. |
+| **DuckDB-spatial** | Same as PostGIS -- manual SQL with `ST_DWithin`. KDE one-shot. |
 | **Sedona** | Distributed K function via spatial join + aggregate. KDE via grid join. Good for billions of points. |
 
 For the K-function family, the **distance computation is the bottleneck**, and engines do it well. **Significance testing via simulation is single-node Python** (run 99 simulated CSR patterns; pull statistics back to compare). Hybrid: PostGIS / Sedona compute observed K; Python runs the simulation envelope.
 
 ## Pitfalls
 
-- **Forgot to project** — running K on lat/lng gives K in degrees. Project to meters first.
-- **No edge correction in a small study area** — K underestimates at small r; clustering looks weaker than it is.
-- **Wrong null model** — CSR assumes uniform intensity. If your study area has population-density structure, an inhomogeneous Poisson null is more appropriate.
-- **Bandwidth too small (KDE)** — produces noise that looks like structure.
-- **Treating individual high-density blobs as significant** — KDE is descriptive; it doesn't test significance. Combine with K function or scan statistics for inference.
-- **Comparing observed K to "expected" without simulating** — `pointpats` simulates by default; if you compute K manually, run 99+ CSR realizations for the envelope.
-- **Point thinning to fit memory** — random thinning preserves CSR but distorts cluster patterns. Use the full data or stratified subsamples, not random.
+- **Forgot to project** -- running K on lat/lng gives K in degrees. Project to meters first.
+- **No edge correction in a small study area** -- K underestimates at small r; clustering looks weaker than it is.
+- **Wrong null model** -- CSR assumes uniform intensity. If your study area has population-density structure, an inhomogeneous Poisson null is more appropriate.
+- **Bandwidth too small (KDE)** -- produces noise that looks like structure.
+- **Treating individual high-density blobs as significant** -- KDE is descriptive; it doesn't test significance. Combine with K function or scan statistics for inference.
+- **Comparing observed K to "expected" without simulating** -- `pointpats` simulates by default; if you compute K manually, run 99+ CSR realizations for the envelope.
+- **Point thinning to fit memory** -- random thinning preserves CSR but distorts cluster patterns. Use the full data or stratified subsamples, not random.
 
 ## Use cases for civic / Census work
 
@@ -215,9 +215,9 @@ For the K-function family, the **distance computation is the bottleneck**, and e
 
 ## Cross-links
 
-- [`spatial-statistics.md`](spatial-statistics.md) §7 — DBSCAN clustering (the "group the points" alternative to point pattern analysis's "characterize the pattern")
-- [`spatial-statistics.md`](spatial-statistics.md) §1–§3 — Moran's I / Gi* on aggregated point counts (the polygon-aggregated alternative)
-- [`spatial-weights.md`](spatial-weights.md) — distance-band weights are conceptually similar to K function bands
+- [`spatial-statistics.md`](spatial-statistics.md) §7 -- DBSCAN clustering (the "group the points" alternative to point pattern analysis's "characterize the pattern")
+- [`spatial-statistics.md`](spatial-statistics.md) §1–§3 -- Moran's I / Gi* on aggregated point counts (the polygon-aggregated alternative)
+- [`spatial-weights.md`](spatial-weights.md) -- distance-band weights are conceptually similar to K function bands
 
 ## Citation
 

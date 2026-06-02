@@ -18,7 +18,7 @@ vary based on input parameters.
 
 **Anti-pattern**:
 ```java
-// Direct constructor — no name, always creates new instance
+// Direct constructor -- no name, always creates new instance
 BigInteger prime = new BigInteger("7");
 ```
 
@@ -211,7 +211,7 @@ Document the format (or state that it's unspecified).
 ### Item 13: Override clone judiciously
 
 Prefer copy constructors or copy factory methods to `Cloneable`. The `Cloneable` interface
-is deeply flawed — it modifies `Object.clone()` behavior via an extralinguistic mechanism.
+is deeply flawed -- it modifies `Object.clone()` behavior via an extralinguistic mechanism.
 
 **Prefer**:
 ```java
@@ -233,7 +233,7 @@ private static final Comparator<PhoneNumber> COMPARATOR =
               .thenComparingInt(pn -> pn.lineNum);
 ```
 
-**Never** use difference-based comparators (e.g., `return o1.x - o2.x`) — they can overflow.
+**Never** use difference-based comparators (e.g., `return o1.x - o2.x`) -- they can overflow.
 
 ---
 
@@ -249,7 +249,7 @@ Instance fields should never be public. Public static final fields are OK only f
 
 ### Item 16: In public classes, use accessor methods, not public fields
 
-Don't expose fields directly — use getters (and setters only if mutable).
+Don't expose fields directly -- use getters (and setters only if mutable).
 Exception: package-private or private nested classes can expose fields.
 
 ---
@@ -270,7 +270,7 @@ Immutable classes are simpler, thread-safe, and can be shared freely. Rules:
 Inheritance across package boundaries is fragile. Use the decorator pattern:
 a forwarding class that wraps the existing class and delegates all method calls.
 
-**Anti-pattern**: `class InstrumentedHashSet<E> extends HashSet<E>` — breaks if `HashSet.addAll` calls `add`.
+**Anti-pattern**: `class InstrumentedHashSet<E> extends HashSet<E>` -- breaks if `HashSet.addAll` calls `add`.
 
 **Correct**: `class InstrumentedSet<E> extends ForwardingSet<E>` wrapping any `Set<E>`.
 
@@ -293,7 +293,7 @@ Use skeletal implementation classes (e.g., `AbstractList`) as optional companion
 ### Item 21: Design interfaces for posterity
 
 Default methods can break existing implementations. Think carefully before adding
-default methods to existing interfaces — they may violate invariants of existing implementations.
+default methods to existing interfaces -- they may violate invariants of existing implementations.
 
 ---
 
@@ -478,7 +478,7 @@ you don't need the type.
 
 Lambdas are more concise than anonymous classes for functional interface implementations.
 Keep lambdas short (1-3 lines). If a lambda is long, extract it to a method.
-Lambdas lack names and documentation — if a computation isn't self-explanatory, don't use one.
+Lambdas lack names and documentation -- if a computation isn't self-explanatory, don't use one.
 
 ---
 
@@ -535,7 +535,7 @@ collection backed by computation.
 
 Parallelizing a stream is easy to do but can cause incorrect results or poor performance.
 Performance gains are best with `ArrayList`, `HashMap`, `HashSet`, `ConcurrentHashMap`,
-arrays, `int` ranges, and `long` ranges — data structures that can be cheaply split.
+arrays, `int` ranges, and `long` ranges -- data structures that can be cheaply split.
 Avoid parallelizing pipelines backed by `Stream.iterate` or `limit`.
 
 ---
@@ -554,7 +554,7 @@ Use `assert` for non-public methods. Document restrictions with `@throws` Javado
 When receiving mutable objects from clients, make defensive copies in the constructor
 (before validation). When returning mutable internal state, return copies.
 
-**Critical**: Copy first, validate the copy — prevents TOCTOU attacks.
+**Critical**: Copy first, validate the copy -- prevents TOCTOU attacks.
 
 ```java
 public Period(Date start, Date end) {
@@ -571,7 +571,7 @@ public Period(Date start, Date end) {
 
 - Choose method names carefully (consistent, understandable)
 - Don't go overboard with convenience methods
-- Avoid long parameter lists (max 4) — use helper classes, Builder, or break into multiple methods
+- Avoid long parameter lists (max 4) -- use helper classes, Builder, or break into multiple methods
 - Prefer interfaces over classes for parameter types
 - Prefer two-element enum types to boolean parameters
 
@@ -582,7 +582,7 @@ public Period(Date start, Date end) {
 Overloading selection is static (compile-time), not dynamic (runtime). Avoid overloading
 methods with the same number of parameters. Use different method names instead.
 
-**Dangerous**: `List.remove(int)` vs `List.remove(Object)` — autoboxing creates confusion.
+**Dangerous**: `List.remove(int)` vs `List.remove(Object)` -- autoboxing creates confusion.
 
 ---
 
@@ -749,13 +749,13 @@ instead or splitting the method.
 ### Item 72: Favor the use of standard exceptions
 
 Common reusable exceptions:
-- `IllegalArgumentException` — non-null parameter value is inappropriate
-- `IllegalStateException` — object state is inappropriate for invocation
-- `NullPointerException` — parameter is null where prohibited
-- `IndexOutOfBoundsException` — index parameter out of range
-- `UnsupportedOperationException` — object doesn't support method
-- `ConcurrentModificationException` — concurrent modification detected
-- `ArithmeticException` — arithmetic error
+- `IllegalArgumentException` -- non-null parameter value is inappropriate
+- `IllegalStateException` -- object state is inappropriate for invocation
+- `NullPointerException` -- parameter is null where prohibited
+- `IndexOutOfBoundsException` -- index parameter out of range
+- `UnsupportedOperationException` -- object doesn't support method
+- `ConcurrentModificationException` -- concurrent modification detected
+- `ArithmeticException` -- arithmetic error
 
 ---
 
@@ -853,11 +853,11 @@ synchronized (obj) {
 ### Item 82: Document thread safety
 
 Document the thread safety level of every class:
-- **Immutable** — Instances are constant (`String`, `Long`, `BigInteger`)
-- **Unconditionally thread-safe** — Mutable but with internal synchronization (`AtomicLong`, `ConcurrentHashMap`)
-- **Conditionally thread-safe** — Some methods require external synchronization (`Collections.synchronized` wrappers)
-- **Not thread-safe** — Must surround each method invocation with external sync (`ArrayList`, `HashMap`)
-- **Thread-hostile** — Unsafe even with external sync (rare)
+- **Immutable** -- Instances are constant (`String`, `Long`, `BigInteger`)
+- **Unconditionally thread-safe** -- Mutable but with internal synchronization (`AtomicLong`, `ConcurrentHashMap`)
+- **Conditionally thread-safe** -- Some methods require external synchronization (`Collections.synchronized` wrappers)
+- **Not thread-safe** -- Must surround each method invocation with external sync (`ArrayList`, `HashMap`)
+- **Thread-hostile** -- Unsafe even with external sync (rare)
 
 Use `@ThreadSafe`, `@NotThreadSafe`, `@Immutable` annotations (JSR 305).
 
@@ -894,7 +894,7 @@ restructure the application so they don't run.
 
 ### Item 85: Prefer alternatives to Java serialization
 
-Java serialization is dangerous — it enables remote code execution attacks via gadget chains.
+Java serialization is dangerous -- it enables remote code execution attacks via gadget chains.
 Prefer cross-platform structured-data representations: JSON or protobuf.
 Never deserialize untrusted data. If you must use serialization, use object deserialization
 filtering (`java.io.ObjectInputFilter`).
@@ -921,7 +921,7 @@ Mark fields that are derivable from other state as `transient`.
 
 ### Item 88: Write readObject methods defensively
 
-`readObject` is effectively a public constructor — it must validate parameters and make
+`readObject` is effectively a public constructor -- it must validate parameters and make
 defensive copies of mutable components, just like any other constructor.
 
 ---

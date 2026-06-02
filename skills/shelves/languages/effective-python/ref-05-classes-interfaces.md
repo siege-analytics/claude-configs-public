@@ -2,12 +2,12 @@
 
 ## Item 37: Compose Classes Instead of Nesting Many Levels of Built-in Types
 ```python
-# BAD — deeply nested built-in types
+# BAD -- deeply nested built-in types
 grades = {}  # dict of dict of list of tuples
 grades['Math'] = {}
 grades['Math']['test'] = [(95, 0.4), (87, 0.6)]
 
-# GOOD — compose with named classes
+# GOOD -- compose with named classes
 from dataclasses import dataclass
 from collections import namedtuple
 
@@ -56,7 +56,7 @@ result = defaultdict(counter, current_data)  # uses __call__
 print(counter.added)
 ```
 
-- Functions are first-class in Python — use them as interfaces
+- Functions are first-class in Python -- use them as interfaces
 - For stateful behavior, define `__call__` on a class
 - Simpler than defining full interface classes
 
@@ -87,12 +87,12 @@ class PathInputData(InputData):
 
 ## Item 40: Initialize Parent Classes with super()
 ```python
-# BAD — direct call to parent
+# BAD -- direct call to parent
 class Child(Parent):
     def __init__(self):
         Parent.__init__(self)  # breaks with multiple inheritance
 
-# GOOD — always use super()
+# GOOD -- always use super()
 class Child(Parent):
     def __init__(self):
         super().__init__()
@@ -132,12 +132,12 @@ json_str = rack.to_json()
 
 ## Item 42: Prefer Public Attributes Over Private Ones
 ```python
-# BAD — private attributes (__name mangling)
+# BAD -- private attributes (__name mangling)
 class MyObject:
     def __init__(self):
         self.__private_field = 10  # name-mangled to _MyObject__private_field
 
-# GOOD — protected with convention
+# GOOD -- protected with convention
 class MyObject:
     def __init__(self):
         self._protected_field = 10  # convention: internal use
@@ -147,7 +147,7 @@ obj = MyObject()
 obj._protected_field  # works, but callers know it's internal
 ```
 
-- `__double_underscore` causes name mangling — don't use it
+- `__double_underscore` causes name mangling -- don't use it
 - Use `_single_underscore` for protected/internal attributes
 - Python philosophy: "We're all consenting adults"
 - Name mangling breaks subclass access and makes debugging harder

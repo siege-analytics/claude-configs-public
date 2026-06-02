@@ -1,6 +1,6 @@
 # Resolving Heuristic Conflicts
 
-When usability principles contradict each other—frameworks for making trade-off decisions.
+When usability principles contradict each other--frameworks for making trade-off decisions.
 
 ## The Nature of Conflicts
 

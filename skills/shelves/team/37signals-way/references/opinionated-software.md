@@ -13,7 +13,7 @@
 
 ## What Opinionated Software Means
 
-Opinionated software makes choices on behalf of the user. Instead of offering 15 configuration options, it picks the best one and ships it as the default — or the only option. Instead of supporting every possible workflow, it supports one workflow well and says "this is how we think it should be done."
+Opinionated software makes choices on behalf of the user. Instead of offering 15 configuration options, it picks the best one and ships it as the default -- or the only option. Instead of supporting every possible workflow, it supports one workflow well and says "this is how we think it should be done."
 
 This is the opposite of the "platform" mindset, where the goal is maximum flexibility. The 37signals mindset is: flexibility is complexity. Every option you add is a decision the user must make. Every configuration is a potential source of confusion. Opinionated software trades flexibility for clarity.
 
@@ -27,18 +27,18 @@ This is the opposite of the "platform" mindset, where the goal is maximum flexib
 | File organization | Flat list with search | Folder hierarchies, tagging systems, metadata |
 | Reporting | Built-in views that answer the most common questions | Custom report builder, query language, data export scheduler |
 
-**The cost of having no opinion:** Software without opinions becomes a configuration puzzle. Users spend more time setting up the tool than using it. Support teams answer the same questions about which settings to use. And the product loses its identity — it becomes a generic platform rather than a tool that stands for something.
+**The cost of having no opinion:** Software without opinions becomes a configuration puzzle. Users spend more time setting up the tool than using it. Support teams answer the same questions about which settings to use. And the product loses its identity -- it becomes a generic platform rather than a tool that stands for something.
 
 ## Defaults Over Preferences
 
-Every preference in your software represents a decision your team did not make. Some of these are legitimate — users genuinely have different needs. But most preferences exist because the team could not decide, or because one vocal user requested an option, or because "we'll just make it configurable" felt easier than choosing.
+Every preference in your software represents a decision your team did not make. Some of these are legitimate -- users genuinely have different needs. But most preferences exist because the team could not decide, or because one vocal user requested an option, or because "we'll just make it configurable" felt easier than choosing.
 
 **The preference audit:**
 
 For each preference or setting in your product, ask:
 
 1. **What percentage of users change this from the default?** If it is less than 5%, remove the preference and keep the default.
-2. **Is there a single best answer?** If yes, pick it and remove the option. Users do not want to choose — they want it to work.
+2. **Is there a single best answer?** If yes, pick it and remove the option. Users do not want to choose -- they want it to work.
 3. **Does this preference exist because of a vocal minority?** One customer's request is not a mandate. Solve their specific problem differently.
 4. **Does this preference create downstream complexity?** If a setting changes behavior in ways that affect other features, the complexity cost is high. Remove it.
 5. **Would removing this break a significant use case?** If yes, keep it. If no, remove it.
@@ -50,7 +50,7 @@ For each preference or setting in your product, ask:
 - **Choose the simple option.** When both options are safe, choose the one that requires less explanation.
 - **Match user expectations.** What would a new user expect this to do without reading documentation? Do that.
 
-**Example: Timezone settings.** Most software asks users to set their timezone. 37signals approach: detect the timezone from the browser. If you are wrong, the user can change it — but you should not make every user manually configure something that can be detected automatically.
+**Example: Timezone settings.** Most software asks users to set their timezone. 37signals approach: detect the timezone from the browser. If you are wrong, the user can change it -- but you should not make every user manually configure something that can be detected automatically.
 
 ## The Epicycle Trap
 
@@ -64,7 +64,7 @@ An epicycle is a feature added to fix a problem caused by an earlier feature. Th
 6. Users are now confused about the interaction between frequency settings and priority overrides
 7. You add a documentation page explaining the notification system (epicycle 3)
 
-Each epicycle makes the original problem worse by adding complexity. The 37signals solution: remove the root cause. If bulk notifications are noisy, fix the notification logic — do not add settings to let users manage the noise themselves.
+Each epicycle makes the original problem worse by adding complexity. The 37signals solution: remove the root cause. If bulk notifications are noisy, fix the notification logic -- do not add settings to let users manage the noise themselves.
 
 **How to spot epicycles:**
 
@@ -83,7 +83,7 @@ Each epicycle makes the original problem worse by adding complexity. The 37signa
 
 ## The Art of Saying No
 
-Saying no is the most important skill in product development. Every feature request, no matter how reasonable, competes with simplicity. The default answer to any request must be no — not because the idea is bad, but because the cost of yes is always higher than it appears.
+Saying no is the most important skill in product development. Every feature request, no matter how reasonable, competes with simplicity. The default answer to any request must be no -- not because the idea is bad, but because the cost of yes is always higher than it appears.
 
 **The hidden costs of yes:**
 
@@ -103,7 +103,7 @@ Saying no is the most important skill in product development. Every feature requ
 - **Do not promise a future.** "Not now" implies "later." If you mean no, say no.
 - **Acknowledge the need.** "I understand this would be useful for your workflow" shows empathy without creating commitment.
 
-**When to say yes:** Say yes when a request solves a problem that many users share, aligns with the product's opinion, can be built simply, and fits within a cycle's appetite. That combination is rare — which is why no is the default.
+**When to say yes:** Say yes when a request solves a problem that many users share, aligns with the product's opinion, can be built simply, and fits within a cycle's appetite. That combination is rare -- which is why no is the default.
 
 **The "few vocal users" problem:** A small number of power users generate a disproportionate amount of feature requests. Their needs are real but not representative. Building for vocal power users at the expense of the quiet majority is a common product mistake. The check: how many users does this actually affect?
 
@@ -119,7 +119,7 @@ The 37signals approach to copy is an extension of their product philosophy: simp
 
 **3. Be specific.** "Fast" is vague. "Loads in under 2 seconds" is specific. "Easy to use" is vague. "Set up in 3 steps" is specific. Specificity builds trust; vagueness erodes it.
 
-**4. Be honest about limitations.** If your product does not do something, say so. "Basecamp is not for everyone. Here's who it's for." This honesty attracts the right customers and repels the wrong ones — both good outcomes.
+**4. Be honest about limitations.** If your product does not do something, say so. "Basecamp is not for everyone. Here's who it's for." This honesty attracts the right customers and repels the wrong ones -- both good outcomes.
 
 **5. Error messages are a product.** Every error message is a conversation with a frustrated user. "An unexpected error occurred" is abandoning that user. "We couldn't send that email. Check the address and try again." is helping them.
 
@@ -158,14 +158,14 @@ This does not mean ignoring new technology. It means building on a stable founda
 
 ## Out-Teach the Competition
 
-37signals publishes books, blog posts, conference talks, and free resources about how they work. This is not charity — it is strategy. Teaching your methods openly attracts customers who share your values, establishes authority in your space, and creates a relationship with potential customers long before they buy.
+37signals publishes books, blog posts, conference talks, and free resources about how they work. This is not charity -- it is strategy. Teaching your methods openly attracts customers who share your values, establishes authority in your space, and creates a relationship with potential customers long before they buy.
 
 **What teaching looks like:**
 
-- **Books.** Getting Real, Rework, Remote, It Doesn't Have to Be Crazy at Work, Shape Up — all share 37signals' methods openly.
+- **Books.** Getting Real, Rework, Remote, It Doesn't Have to Be Crazy at Work, Shape Up -- all share 37signals' methods openly.
 - **Blog posts.** Signal v. Noise (now HEY World) publishes opinions about product development, business, and technology regularly.
-- **Open source.** Ruby on Rails is the ultimate "sell your by-products" example — a tool built for internal use, released to the world, creating a massive community that feeds back into 37signals' reputation.
-- **Transparent practices.** Open salaries, public positions on remote work, published decision frameworks — transparency builds trust.
+- **Open source.** Ruby on Rails is the ultimate "sell your by-products" example -- a tool built for internal use, released to the world, creating a massive community that feeds back into 37signals' reputation.
+- **Transparent practices.** Open salaries, public positions on remote work, published decision frameworks -- transparency builds trust.
 
 **Why teaching works as marketing:**
 
@@ -176,7 +176,7 @@ This does not mean ignoring new technology. It means building on a stable founda
 
 ## Sell Your By-Products
 
-Every business produces by-products — knowledge, processes, tools, and methods created along the way to the main product. Most companies ignore these. 37signals sells them.
+Every business produces by-products -- knowledge, processes, tools, and methods created along the way to the main product. Most companies ignore these. 37signals sells them.
 
 **37signals by-products:**
 
@@ -202,4 +202,4 @@ Every business produces by-products — knowledge, processes, tools, and methods
 - Speak about your decisions (conferences, podcasts, interviews)
 - Share your templates (pitch templates, hiring processes, team structures)
 
-By-products are already paid for — the cost of creating them was absorbed by the main product. Selling them is nearly pure upside.
+By-products are already paid for -- the cost of creating them was absorbed by the main product. Selling them is nearly pure upside.

@@ -25,7 +25,7 @@ else:
 
 - Module-level code executes once at import time
 - Use it for deployment configuration, feature flags
-- Keep it minimal — complex logic at import time slows startup
+- Keep it minimal -- complex logic at import time slows startup
 - Prefer environment variables over hardcoded conditions
 
 ## Item 87: Define a Root Exception to Insulate Callers from APIs
@@ -63,7 +63,7 @@ except Exception:
 
 ## Item 88: Know How to Break Circular Dependencies
 ```python
-# BAD — circular import
+# BAD -- circular import
 # module_a.py
 from module_b import B
 class A:
@@ -76,17 +76,17 @@ class B:
     def use_a(self):
         return A()
 
-# FIX 1 — import at function call time
+# FIX 1 -- import at function call time
 # module_a.py
 class A:
     def use_b(self):
         from module_b import B  # lazy import
         return B()
 
-# FIX 2 — restructure to remove the cycle
+# FIX 2 -- restructure to remove the cycle
 # Move shared code to a third module
 
-# FIX 3 — use import module, not from module import
+# FIX 3 -- use import module, not from module import
 import module_b
 class A:
     def use_b(self):
@@ -94,9 +94,9 @@ class A:
 ```
 
 **Strategies (in order of preference):**
-1. **Restructure** — move shared code to a common module
-2. **Import at use time** — put import inside the function
-3. **Import the module** — use `import module` instead of `from module import name`
+1. **Restructure** -- move shared code to a common module
+2. **Import at use time** -- put import inside the function
+3. **Import the module** -- use `import module` instead of `from module import name`
 
 ## Item 89: Consider warnings to Refactor and Migrate Usage
 ```python

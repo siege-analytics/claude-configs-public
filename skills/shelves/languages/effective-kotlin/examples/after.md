@@ -28,9 +28,9 @@ class UserReportGenerator(
 ```
 
 Key improvements:
-- Constructor parameters replace mutable properties (Item 1: Limit Mutability) — the generator is now immutable after construction
+- Constructor parameters replace mutable properties (Item 1: Limit Mutability) -- the generator is now immutable after construction
 - `users: List<User>` and `reportTitle: String` are non-null types; nullability would only be meaningful if absence were valid (Item 8: Handle Nulls Properly)
-- `filter`, `map`, and `buildString` replace the manual `while` index loop — idiomatic stdlib use (Item 20: Use stdlib algorithms)
+- `filter`, `map`, and `buildString` replace the manual `while` index loop -- idiomatic stdlib use (Item 20: Use stdlib algorithms)
 - `user.role?.let { append(" - $it") }` replaces the null-check `if` block with a safe-call chain (Item 8)
 - `includeInactive = false` as a default parameter eliminates the need for an overloaded constructor (Item 34: Consider named and optional args)
-- `generateSummary()` returns `String` (non-null) — the empty report is a valid empty string, not `null` (Item 7: Prefer null or Failure over exceptions for expected failures)
+- `generateSummary()` returns `String` (non-null) -- the empty report is a valid empty string, not `null` (Item 7: Prefer null or Failure over exceptions for expected failures)

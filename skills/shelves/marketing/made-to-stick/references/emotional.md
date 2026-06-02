@@ -1,10 +1,10 @@
 # Emotional: Making People Care
 
-People act on feelings, not facts. Research consistently shows that emotional processing drives decisions, and rational analysis follows to justify them. The Emotional principle is about making your audience feel something — not manipulating them, but connecting your idea to things they already care about. An idea that makes people feel is an idea that moves people to act.
+People act on feelings, not facts. Research consistently shows that emotional processing drives decisions, and rational analysis follows to justify them. The Emotional principle is about making your audience feel something -- not manipulating them, but connecting your idea to things they already care about. An idea that makes people feel is an idea that moves people to act.
 
 ## The Mother Teresa Principle
 
-"If I look at the mass, I will never act. If I look at the one, I will." — Mother Teresa
+"If I look at the mass, I will never act. If I look at the one, I will." -- Mother Teresa
 
 This is not just a poetic sentiment. It is backed by research. In a landmark study, researchers gave participants one of two charity appeals:
 
@@ -24,7 +24,7 @@ Participants who read Rokia's story donated more than twice as much as those who
 | Feel abstract and distant | Feel personal and immediate |
 | Overwhelm ("I can't solve 3 million") | Feel actionable ("I can help Rokia") |
 | Activate the rational mind | Activate the emotional mind |
-| Create "psychic numbing" — larger numbers = less feeling | Create identification — one face = deep feeling |
+| Create "psychic numbing" -- larger numbers = less feeling | Create identification -- one face = deep feeling |
 
 ### Applying the Mother Teresa Principle
 
@@ -36,7 +36,7 @@ Participants who read Rokia's story donated more than twice as much as those who
 
 ## Self-Interest: WIIFM
 
-"What's In It For Me?" is the most powerful question in communication. Every audience member — consciously or not — is asking it. Your job is to answer it explicitly.
+"What's In It For Me?" is the most powerful question in communication. Every audience member -- consciously or not -- is asking it. Your job is to answer it explicitly.
 
 ### The WIIFM Ladder
 
@@ -85,7 +85,7 @@ The solution: Appeal to their identity as Texans. "Don't Mess with Texas" refram
 | "I'm data-driven" | "For people who demand evidence" | "Every recommendation comes with the data behind it" |
 | "I'm a maker" | "Built by builders, for builders" | "We wrote our first version in a weekend. You'll have yours running in an hour." |
 | "I'm a caring professional" | "For people who put customers first" | "The support tool for teams that believe every ticket is a person" |
-| "I'm scrappy and resourceful" | "For teams doing more with less" | "Enterprise power at a startup price — no sales calls required" |
+| "I'm scrappy and resourceful" | "For teams doing more with less" | "Enterprise power at a startup price -- no sales calls required" |
 
 ## Maslow's Hierarchy Applied to Messaging
 
@@ -111,7 +111,7 @@ Abraham Maslow's hierarchy of needs provides a framework for understanding which
 
 ## The Semantic Stretch Problem
 
-The "semantic stretch" happens when you over-abstract an emotional appeal until it loses all power. It is the opposite of concreteness — and it kills emotional resonance.
+The "semantic stretch" happens when you over-abstract an emotional appeal until it loses all power. It is the opposite of concreteness -- and it kills emotional resonance.
 
 ### How Semantic Stretch Works
 
@@ -161,7 +161,7 @@ B2C messaging can be more directly emotional, but must avoid manipulation.
 
 ### Nonprofit Audiences
 
-Nonprofit messaging lives or dies on emotional appeal — but faces unique challenges around donor fatigue and the Mother Teresa effect.
+Nonprofit messaging lives or dies on emotional appeal -- but faces unique challenges around donor fatigue and the Mother Teresa effect.
 
 | Emotional Need | Message Approach | Example |
 |---------------|-----------------|---------|
@@ -195,24 +195,24 @@ Nonprofit messaging lives or dies on emotional appeal — but faces unique chall
 > "We need to improve our NPS score by 15 points this quarter to meet strategic objectives."
 
 **After:**
-> "Last week, a customer named James wrote us a one-star review. He said, 'I wanted to love this product, but you made it impossible.' I want us to make it possible for James — and the 200 other customers who feel the same way."
+> "Last week, a customer named James wrote us a one-star review. He said, 'I wanted to love this product, but you made it impossible.' I want us to make it possible for James -- and the 200 other customers who feel the same way."
 
 ## Exercises: Finding the Emotional Core
 
 ### Exercise 1: The "Why Do You Care?" Chain
 
 Ask "Why do you care about this?" five times, going deeper each time:
-1. "We want to increase conversion rates." — Why do you care?
-2. "Because we need more revenue." — Why do you care?
-3. "Because if we do not grow, we will have to lay people off." — Why do you care?
-4. "Because these people trust us and depend on us." — Why do you care?
+1. "We want to increase conversion rates." -- Why do you care?
+2. "Because we need more revenue." -- Why do you care?
+3. "Because if we do not grow, we will have to lay people off." -- Why do you care?
+4. "Because these people trust us and depend on us." -- Why do you care?
 5. "Because I believe you should fight for the people who fight for you."
 
 That last answer is the emotional core.
 
 ### Exercise 2: The Single Person Test
 
-Take your message. Now imagine delivering it to one specific person — a real customer with a real name, face, and story. Does your message change? It should become more personal, more specific, more emotional.
+Take your message. Now imagine delivering it to one specific person -- a real customer with a real name, face, and story. Does your message change? It should become more personal, more specific, more emotional.
 
 ### Exercise 3: The Identity Map
 
@@ -222,7 +222,7 @@ Take your message. Now imagine delivering it to one specific person — a real c
 
 ### Exercise 4: The Emotional Audit
 
-Read your message and mark every word that triggers a feeling. If you have fewer than 3 emotional triggers in a paragraph, rewrite. If you have more than 5, you risk manipulation — dial it back.
+Read your message and mark every word that triggers a feeling. If you have fewer than 3 emotional triggers in a paragraph, rewrite. If you have more than 5, you risk manipulation -- dial it back.
 
 ## Ethical Boundaries of Emotional Appeal
 
@@ -238,7 +238,7 @@ Emotional appeal is a tool, not a weapon. The line between persuasion and manipu
 
 ### Guidelines for Ethical Emotional Appeal
 
-- [ ] The emotion is grounded in truth — the pain, joy, or aspiration is real
+- [ ] The emotion is grounded in truth -- the pain, joy, or aspiration is real
 - [ ] The audience would not feel deceived if they saw behind the curtain
 - [ ] The emotional appeal leads to a decision that genuinely benefits the audience
 - [ ] You would be comfortable if your messaging strategy were made public

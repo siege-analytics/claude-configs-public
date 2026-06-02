@@ -4,15 +4,15 @@ Social currency is the idea that people share things that make them look good to
 
 ## Why Social Currency Drives Sharing
 
-People are fundamentally self-interested communicators. Research shows that over 40% of what people talk about is their personal experiences and opinions. Why? Because sharing personal opinions activates the brain's reward centers — the same areas associated with food, money, and other primary rewards. Talking about ourselves and our discoveries literally feels good.
+People are fundamentally self-interested communicators. Research shows that over 40% of what people talk about is their personal experiences and opinions. Why? Because sharing personal opinions activates the brain's reward centers -- the same areas associated with food, money, and other primary rewards. Talking about ourselves and our discoveries literally feels good.
 
-This means people don't share your product because they want to help you. They share it because sharing it makes *them* look good — smart, funny, in-the-know, generous, ahead of the curve. Your job is to make sharing your product a form of self-enhancement.
+This means people don't share your product because they want to help you. They share it because sharing it makes *them* look good -- smart, funny, in-the-know, generous, ahead of the curve. Your job is to make sharing your product a form of self-enhancement.
 
 Three mechanisms drive social currency:
 
-1. **Remarkability** — sharing something surprising makes you seem interesting
-2. **Game mechanics** — sharing achievements makes you seem accomplished
-3. **Exclusivity** — sharing insider knowledge makes you seem connected
+1. **Remarkability** -- sharing something surprising makes you seem interesting
+2. **Game mechanics** -- sharing achievements makes you seem accomplished
+3. **Exclusivity** -- sharing insider knowledge makes you seem connected
 
 ## Remarkability: Violating Expectations
 
@@ -20,7 +20,7 @@ Remarkable things are, by definition, things worth remarking on. They violate ex
 
 ### How to Find the Remarkable Angle
 
-The key insight is that remarkability is not an inherent property of the product — it is a property of the framing. Even mundane products can become remarkable with the right angle.
+The key insight is that remarkability is not an inherent property of the product -- it is a property of the framing. Even mundane products can become remarkable with the right angle.
 
 **The Remarkability Matrix:**
 
@@ -46,7 +46,7 @@ Ask yourself: Can a customer start a sentence with "Did you know...?" or "You wo
 
 Every product has an inner remarkability waiting to be found. Use this exercise to uncover it.
 
-**Step 1: List 10 facts about your product or company.** Include manufacturing details, origin stories, ingredient sourcing, engineering decisions, team backgrounds, customer results — anything.
+**Step 1: List 10 facts about your product or company.** Include manufacturing details, origin stories, ingredient sourcing, engineering decisions, team backgrounds, customer results -- anything.
 
 **Step 2: For each fact, rate it on the "surprise scale"** (1 = everyone knows this, 10 = nobody would guess this).
 
@@ -56,14 +56,14 @@ Every product has an inner remarkability waiting to be found. Use this exercise 
 
 | Product | Mundane Description | Remarkable Reframe |
 |---------|--------------------|--------------------|
-| Cloud storage | "We store your files online" | "We have more data than the Library of Congress — and it's all yours" |
+| Cloud storage | "We store your files online" | "We have more data than the Library of Congress -- and it's all yours" |
 | Running shoes | "Comfortable performance footwear" | "Each shoe is made from 11 recycled plastic bottles" |
 | Accounting software | "Track your business expenses" | "Our users find an average of $4,200 in missed tax deductions" |
 | Coffee brand | "Premium single-origin coffee" | "Our beans are aged in whiskey barrels for 30 days" |
 
 ## Game Mechanics: Leaderboards, Badges, and Status
 
-Game mechanics tap into our innate desire for achievement, status, and comparison. They make internal accomplishments externally visible — and therefore shareable.
+Game mechanics tap into our innate desire for achievement, status, and comparison. They make internal accomplishments externally visible -- and therefore shareable.
 
 ### Core Game Mechanics for Social Currency
 
@@ -88,7 +88,7 @@ Game mechanics tap into our innate desire for achievement, status, and compariso
 
 ### The Spotify Wrapped Effect
 
-Spotify Wrapped is perhaps the most successful modern example of game mechanics driving social currency. Every December, Spotify gives each user a personalized summary of their listening habits — top artists, total minutes, genres, and quirky insights.
+Spotify Wrapped is perhaps the most successful modern example of game mechanics driving social currency. Every December, Spotify gives each user a personalized summary of their listening habits -- top artists, total minutes, genres, and quirky insights.
 
 **Why it works:**
 - It's personalized (unique to each user)
@@ -107,7 +107,7 @@ Spotify Wrapped is perhaps the most successful modern example of game mechanics 
 
 ## Exclusivity and Scarcity: The Insider Effect
 
-People value things more when access is restricted. But more importantly for word-of-mouth, exclusivity gives people something special to talk about — insider knowledge that others don't have.
+People value things more when access is restricted. But more importantly for word-of-mouth, exclusivity gives people something special to talk about -- insider knowledge that others don't have.
 
 ### Three Types of Exclusivity
 
@@ -119,7 +119,7 @@ People value things more when access is restricted. But more importantly for wor
 
 ### The Paradox of Exclusivity
 
-Exclusivity only generates word-of-mouth if people can talk about it. A truly secret product generates zero WOM. The key is creating the *feeling* of exclusivity while still allowing — even encouraging — people to talk about their insider status.
+Exclusivity only generates word-of-mouth if people can talk about it. A truly secret product generates zero WOM. The key is creating the *feeling* of exclusivity while still allowing -- even encouraging -- people to talk about their insider status.
 
 **Design pattern:** Make the *access* exclusive but the *knowledge* of its existence public. Everyone should know about the speakeasy; only a few should be able to get in. That imbalance drives conversation.
 

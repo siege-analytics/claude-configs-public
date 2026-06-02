@@ -42,7 +42,7 @@ Specialization fixes both problems by giving each function to a dedicated role.
 |-------|---------------|
 | **Writing** | Cold Calling 2.0 lives and dies by email quality |
 | **Research** | Must quickly understand target accounts and find the right contacts |
-| **Resilience** | 85-90% of outreach gets no response — thick skin is essential |
+| **Resilience** | 85-90% of outreach gets no response -- thick skin is essential |
 | **Organization** | Managing hundreds of accounts across different sequence stages |
 | **Curiosity** | Asking great discovery questions during qualification calls |
 | **Coachability** | Must rapidly absorb feedback and iterate on approach |

@@ -1,6 +1,6 @@
 # Before
 
-A pie chart specification used to compare customer support ticket volume across seven categories over three time periods — a chart type that cannot support this data relationship.
+A pie chart specification used to compare customer support ticket volume across seven categories over three time periods -- a chart type that cannot support this data relationship.
 
 ```
 CHART SPECIFICATION: Support Ticket Distribution

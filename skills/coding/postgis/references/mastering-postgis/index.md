@@ -1,4 +1,4 @@
-# Mastering PostGIS — Distilled
+# Mastering PostGIS -- Distilled
 
 Principle-level distillation of *Mastering PostGIS* (Krzysztof Witkowski, Bartosz Chojnacki, Michał Mackiewicz; Packt Publishing, 2017). The book targets PostGIS 2.x; this distillation marks what's still current in PostGIS 3.x and what's been superseded.
 
@@ -23,8 +23,8 @@ The reference files mirror the book's table of contents. Each is a principle-lev
 ## What the book gets very right (still current)
 
 - **Conceptual treatment of CRS and SRIDs.** Even with newer EPSG codes, the book's framing of "what does a coordinate mean" is the right mental model. See [`02-data-types.md`](02-data-types.md).
-- **Index strategy.** GIST tradeoffs, when to use functional indexes, when to add covering columns — still current. See task-faithful coverage at [`../indexing-strategies.md`](../indexing-strategies.md).
-- **Spatial join recipes.** The book's worked examples — `ST_Subdivide`, bounding-box pre-filter, partition-and-conquer — remain the canonical patterns. PostGIS internals haven't fundamentally changed. See [`../spatial-joins-performance.md`](../spatial-joins-performance.md).
+- **Index strategy.** GIST tradeoffs, when to use functional indexes, when to add covering columns -- still current. See task-faithful coverage at [`../indexing-strategies.md`](../indexing-strategies.md).
+- **Spatial join recipes.** The book's worked examples -- `ST_Subdivide`, bounding-box pre-filter, partition-and-conquer -- remain the canonical patterns. PostGIS internals haven't fundamentally changed. See [`../spatial-joins-performance.md`](../spatial-joins-performance.md).
 - **Validity discipline.** `ST_MakeValid` on ingest; `CHECK` constraints; symptomatic debugging of invalid geometry. See [`../pitfalls.md`](../pitfalls.md).
 - **Raster + vector cross-cutting.** The book's `ST_MapAlgebra` + zonal-statistics worked examples are still valid PostGIS 3.x.
 
@@ -37,7 +37,7 @@ The reference files mirror the book's table of contents. Each is a principle-lev
 - **Declarative partitioning.** Partition-wise joins/aggregations (PG 11+) and partitioned indexes are critical for 100M+ row spatial tables. Book uses inheritance-based partitioning (now legacy). See [`06-etl-patterns.md`](06-etl-patterns.md).
 - **Modern observability.** `pg_stat_statements`, `auto_explain`, `pg_stat_io` (PG 16) are all post-book quality-of-life. Always install. See [`07-plpgsql-programming.md`](07-plpgsql-programming.md).
 - **MVT generation native.** `ST_AsMVT` (PostGIS 2.4+) and PG-server-side vector tile generation post-date the book's web chapter. See [`08-web-backends.md`](08-web-backends.md).
-- **FDWs for cloud spatial data.** `postgres_fdw` to remote Postgres, `parquet_s3_fdw` for cloud parquet — the modern way to read spatial data from external sources without `shp2pgsql` round-trips. See [`05-exporting-data.md`](05-exporting-data.md).
+- **FDWs for cloud spatial data.** `postgres_fdw` to remote Postgres, `parquet_s3_fdw` for cloud parquet -- the modern way to read spatial data from external sources without `shp2pgsql` round-trips. See [`05-exporting-data.md`](05-exporting-data.md).
 
 ## What the book gets wrong or has aged badly
 
@@ -49,7 +49,7 @@ The reference files mirror the book's table of contents. Each is a principle-lev
 
 - For **principles and rationale**, read this distillation. Each chapter file frames the book's argument in PostGIS-3.x-current terms.
 - For **operational recipes** (specific SQL, index commands, EXPLAIN reads), use the sibling files in `skills/coding/postgis/references/`. The chapter files cross-link.
-- For **the canonical reference**, buy the book — paraphrase here is not a substitute for the original treatment.
+- For **the canonical reference**, buy the book -- paraphrase here is not a substitute for the original treatment.
 
 ## Citation
 

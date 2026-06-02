@@ -1,6 +1,6 @@
-# Ch 9 — pgRouting
+# Ch 9 -- pgRouting
 
-The book introduces `pgRouting` — a separate extension that adds graph-on-spatial-network capabilities to PostGIS. Shortest paths, isochrones, traveling salesman, vehicle routing.
+The book introduces `pgRouting` -- a separate extension that adds graph-on-spatial-network capabilities to PostGIS. Shortest paths, isochrones, traveling salesman, vehicle routing.
 
 `pgRouting` has matured significantly since the book. The book's introductory treatment is still valid; the modern landscape adds parallel routing, contraction hierarchies, and integration with OSM data via `osm2pgrouting`.
 
@@ -47,7 +47,7 @@ SELECT pgr_createTopology('roads', 0.00001, 'geom', 'gid');
 -- After this, roads has source/target columns identifying nodes
 ```
 
-## Shortest path — `pgr_dijkstra`
+## Shortest path -- `pgr_dijkstra`
 
 ```sql
 SELECT * FROM pgr_dijkstra(
@@ -71,7 +71,7 @@ SELECT ST_LineMerge(ST_Union(r.geom)) AS path_geom, SUM(p.cost) AS total_seconds
 FROM path p JOIN roads r ON p.edge = r.gid;
 ```
 
-## Isochrones — `pgr_drivingDistance`
+## Isochrones -- `pgr_drivingDistance`
 
 "What can you reach within X minutes from here?"
 
@@ -102,9 +102,9 @@ FROM (
 ) AS nodes;
 ```
 
-`pgr_alphaShape` produces a concave hull around reachable nodes — the isochrone polygon.
+`pgr_alphaShape` produces a concave hull around reachable nodes -- the isochrone polygon.
 
-## Travel-time matrix — `pgr_dijkstraCost`
+## Travel-time matrix -- `pgr_dijkstraCost`
 
 For "how long does it take from each origin to each destination":
 
@@ -117,7 +117,7 @@ SELECT * FROM pgr_dijkstraCost(
 );
 ```
 
-Returns an N×M cost matrix. Useful for accessibility analysis (2SFCA, gravity models — see [`../../analysis/spatial/references/spatial-statistics.md`](../../../../analysis/spatial/references/spatial-statistics.md) §9).
+Returns an N×M cost matrix. Useful for accessibility analysis (2SFCA, gravity models -- see [`../../analysis/spatial/references/spatial-statistics.md`](../../../../analysis/spatial/references/spatial-statistics.md) §9).
 
 ## Cost models
 
@@ -137,9 +137,9 @@ The book covers basic distance and time costs. Modern routing engines (OSRM, Val
 
 For production routing at scale, **purpose-built routing engines outperform pgRouting**:
 
-- **OSRM** (Open Source Routing Machine) — C++; pre-builds contraction hierarchies; very fast for distance-matrix queries
-- **Valhalla** — Mapbox's open-source engine; multi-modal (driving, walking, cycling, transit); JSON-RPC API
-- **GraphHopper** — Java-based; strong for elevation-aware routing
+- **OSRM** (Open Source Routing Machine) -- C++; pre-builds contraction hierarchies; very fast for distance-matrix queries
+- **Valhalla** -- Mapbox's open-source engine; multi-modal (driving, walking, cycling, transit); JSON-RPC API
+- **GraphHopper** -- Java-based; strong for elevation-aware routing
 
 When to stick with pgRouting:
 - Routing is one part of a larger PostGIS pipeline (OD matrix joins to demographic data)
@@ -151,7 +151,7 @@ When to switch to OSRM / Valhalla:
 - Network is OSM-scale (continental)
 - Need vehicle-specific routing (truck weight/height restrictions)
 
-For Siege accessibility analysis, **`siege_utilities.geo.isochrones.OpenRouteServiceProvider`** wraps a hosted routing service (OpenRouteService / Valhalla) — usually the right answer over standing up pgRouting:
+For Siege accessibility analysis, **`siege_utilities.geo.isochrones.OpenRouteServiceProvider`** wraps a hosted routing service (OpenRouteService / Valhalla) -- usually the right answer over standing up pgRouting:
 
 ```python
 from siege_utilities.geo.isochrones import get_isochrone, OpenRouteServiceProvider
@@ -169,20 +169,20 @@ See [`coding/geopandas/references/siege-utilities-geopandas.md`](../../../geopan
 
 ## Pitfalls
 
-- **`pgr_createTopology` tolerance too small** — fragments edges that should connect. Too large — merges nodes that shouldn't.
-- **Cost = `ST_Length` on EPSG:4326** — degrees, not meters. Project first or use `geography` length.
-- **Forgot `directed := true`** for one-way streets — paths run wrong direction.
-- **Network has unconnected components** — Dijkstra returns no path silently. Check with `pgr_analyzeGraph` before serving routes.
-- **Using pgRouting for OSM-scale continental routing** — slow. Use OSRM / Valhalla.
-- **Live traffic in cost column updated per query** — recomputes contraction hierarchies. pgRouting doesn't support live updates well; use specialized engines.
-- **`pgr_alphaShape` with too-small alpha** — produces fragmented isochrone polygons.
-- **Routing without a CRS-projected geometry column** — distance costs in degrees corrupt results.
+- **`pgr_createTopology` tolerance too small** -- fragments edges that should connect. Too large -- merges nodes that shouldn't.
+- **Cost = `ST_Length` on EPSG:4326** -- degrees, not meters. Project first or use `geography` length.
+- **Forgot `directed := true`** for one-way streets -- paths run wrong direction.
+- **Network has unconnected components** -- Dijkstra returns no path silently. Check with `pgr_analyzeGraph` before serving routes.
+- **Using pgRouting for OSM-scale continental routing** -- slow. Use OSRM / Valhalla.
+- **Live traffic in cost column updated per query** -- recomputes contraction hierarchies. pgRouting doesn't support live updates well; use specialized engines.
+- **`pgr_alphaShape` with too-small alpha** -- produces fragmented isochrone polygons.
+- **Routing without a CRS-projected geometry column** -- distance costs in degrees corrupt results.
 
 ## Cross-links
 
-- [`../../analysis/spatial/references/spatial-statistics.md`](../../../../analysis/spatial/references/spatial-statistics.md) §9 — 2SFCA accessibility uses routing costs
-- [`coding/geopandas/references/siege-utilities-geopandas.md`](../../../geopandas/references/siege-utilities-geopandas.md) — SU isochrone helpers (alternative path)
-- [`../indexing-strategies.md`](../indexing-strategies.md) — index patterns for routing tables (source/target B-tree indexes)
+- [`../../analysis/spatial/references/spatial-statistics.md`](../../../../analysis/spatial/references/spatial-statistics.md) §9 -- 2SFCA accessibility uses routing costs
+- [`coding/geopandas/references/siege-utilities-geopandas.md`](../../../geopandas/references/siege-utilities-geopandas.md) -- SU isochrone helpers (alternative path)
+- [`../indexing-strategies.md`](../indexing-strategies.md) -- index patterns for routing tables (source/target B-tree indexes)
 
 ## Citation
 

@@ -81,7 +81,7 @@ def scrape_jobs(base_url: str, num_pages: int) -> list[JobListing]:
             logger.error("HTTP error on page %d: %s", page, exc)
             break
         except requests.RequestException as exc:
-            logger.error("Request failed on page %d: %s — stopping", page, exc)
+            logger.error("Request failed on page %d: %s -- stopping", page, exc)
             break
 
         page_jobs = parse_job_listings(response.text)
@@ -101,9 +101,9 @@ if __name__ == "__main__":
 ```
 
 Key improvements:
-- `requests.Session` with `HTTPAdapter` reuses TCP connections and retries on transient server errors — one session for all pages instead of a new connection per request (Ch 1, 14: Session reuse and retry)
-- `BeautifulSoup` with CSS selectors replaces regex HTML parsing — correct, readable, and resilient to attribute ordering changes (Ch 2: Use BeautifulSoup, not regex, for HTML)
-- `parse_job_listings` is a pure function that takes an HTML string and returns typed `JobListing` dataclasses — easily unit-tested with saved HTML fixtures (Ch 15: Testing scrapers)
+- `requests.Session` with `HTTPAdapter` reuses TCP connections and retries on transient server errors -- one session for all pages instead of a new connection per request (Ch 1, 14: Session reuse and retry)
+- `BeautifulSoup` with CSS selectors replaces regex HTML parsing -- correct, readable, and resilient to attribute ordering changes (Ch 2: Use BeautifulSoup, not regex, for HTML)
+- `parse_job_listings` is a pure function that takes an HTML string and returns typed `JobListing` dataclasses -- easily unit-tested with saved HTML fixtures (Ch 15: Testing scrapers)
 - `None` checks on each element before `.get_text()` prevent `AttributeError` when elements are missing (Ch 2: Defensive parsing)
 - `time.sleep(REQUEST_DELAY_SECONDS)` between pages respects the server; `USER_AGENT` identifies the bot with a contact address (Ch 14, 18: Rate limiting and identification)
-- Specific `requests.HTTPError` and `requests.RequestException` replace the bare `except` — errors are logged with page context and the crawl stops gracefully (Ch 1, 14: Error handling)
+- Specific `requests.HTTPError` and `requests.RequestException` replace the bare `except` -- errors are logged with page context and the crawl stops gracefully (Ch 1, 14: Error handling)

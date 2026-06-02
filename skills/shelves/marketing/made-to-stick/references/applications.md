@@ -1,6 +1,6 @@
 # Applications: Applying SUCCESs Across Contexts
 
-The SUCCESs framework is not theoretical — it is a practical toolkit that can be applied to any communication context. This reference provides step-by-step guidance for applying all six principles to landing pages, product demos, onboarding flows, presentations, email campaigns, internal communications, and documentation. Each section includes templates, checklists, and before/after examples.
+The SUCCESs framework is not theoretical -- it is a practical toolkit that can be applied to any communication context. This reference provides step-by-step guidance for applying all six principles to landing pages, product demos, onboarding flows, presentations, email campaigns, internal communications, and documentation. Each section includes templates, checklists, and before/after examples.
 
 ## Applying SUCCESs to Landing Pages
 
@@ -20,8 +20,8 @@ A landing page has one job: convert a visitor into a lead or customer. Each SUCC
 ### Landing Page Template
 
 ```
-[HEADLINE: Simple — one core value proposition in under 10 words]
-[SUBHEADLINE: Unexpected — counterintuitive claim or surprising angle]
+[HEADLINE: Simple -- one core value proposition in under 10 words]
+[SUBHEADLINE: Unexpected -- counterintuitive claim or surprising angle]
 
 [HERO SECTION]
 - Concrete outcome #1 (specific number)
@@ -112,7 +112,7 @@ Onboarding is where most products lose users. A sticky onboarding flow guides us
 | **Welcome** | Unexpected + Emotional | Not "Welcome to [Product]." Instead: "In the next 3 minutes, you will see [specific surprising outcome]." |
 | **Quick Win (Step 1)** | Simple + Concrete | One action. Show the result immediately. Use real data if possible. |
 | **Progress** | Credible | "You are already ahead of 70% of new users who skip this step." |
-| **Core Value (Step 2-3)** | Concrete + Unexpected | Deliver the "aha moment" — the thing that makes them say "Oh, THAT is what this does." |
+| **Core Value (Step 2-3)** | Concrete + Unexpected | Deliver the "aha moment" -- the thing that makes them say "Oh, THAT is what this does." |
 | **Social Proof** | Credible + Stories | "[Name] at [Company] got to this point and never looked back. Here is what they built." |
 | **Celebration** | Emotional | Celebrate the first success. Make them feel accomplished. |
 | **Next Step** | Simple | One clear next action. Not a menu of 10 options. |
@@ -143,7 +143,7 @@ Presentations fail when they are information dumps. A sticky presentation is str
 
 ### Presentation Checklist
 
-- [ ] The first slide has no logo, no agenda, no "About Us" — just the hook
+- [ ] The first slide has no logo, no agenda, no "About Us" -- just the hook
 - [ ] There is ONE core message (say it in 10 words or fewer)
 - [ ] At least one moment will make the audience say "I did not know that"
 - [ ] Every statistic is human-scale and compared to something familiar
@@ -170,7 +170,7 @@ Email is the most competitive attention environment. Your message competes with 
 |--------------|-----------|----------------|
 | **Subject line** | Unexpected + Simple | Pattern-breaking curiosity gap in under 8 words |
 | **First sentence** | Concrete + Emotional | A specific, vivid pain or aspiration they can picture |
-| **Body** | Stories + Credible | One story or proof point — not a catalog of features |
+| **Body** | Stories + Credible | One story or proof point -- not a catalog of features |
 | **CTA** | Simple | One action. Not "Learn more, sign up, or reply." Just one. |
 
 ### Email Templates

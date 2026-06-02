@@ -2,7 +2,7 @@
 
 ## Item 44: Use Plain Attributes Instead of Setter and Getter Methods
 ```python
-# BAD — Java-style getters/setters
+# BAD -- Java-style getters/setters
 class OldResistor:
     def __init__(self, ohms):
         self._ohms = ohms
@@ -13,7 +13,7 @@ class OldResistor:
     def set_ohms(self, ohms):
         self._ohms = ohms
 
-# GOOD — plain attributes
+# GOOD -- plain attributes
 class Resistor:
     def __init__(self, ohms):
         self.ohms = ohms
@@ -45,7 +45,7 @@ class Bucket:
 
 - Use `@property` to add validation, logging, or computed behavior
 - Keeps backward-compatible API (attribute access syntax)
-- Don't do too much work in property getters — keep them fast
+- Don't do too much work in property getters -- keep them fast
 - If a property is getting complex, refactor to a normal method
 
 ## Item 46: Use Descriptors for Reusable @property Methods
@@ -86,7 +86,7 @@ class Grade:
 
 ## Item 47: Use __getattr__, __getattribute__, and __setattr__ for Lazy Attributes
 ```python
-# __getattr__ — called only when attribute not found normally
+# __getattr__ -- called only when attribute not found normally
 class LazyRecord:
     def __init__(self):
         self.exists = 5
@@ -96,14 +96,14 @@ class LazyRecord:
         setattr(self, name, value)  # cache it
         return value
 
-# __getattribute__ — called for EVERY attribute access
+# __getattribute__ -- called for EVERY attribute access
 class ValidatingRecord:
     def __getattribute__(self, name):
         value = super().__getattribute__(name)
         # validate or log every access
         return value
 
-# __setattr__ — called for EVERY attribute assignment
+# __setattr__ -- called for EVERY attribute assignment
 class SavingRecord:
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
@@ -185,7 +185,7 @@ class Customer:
 
 ## Item 51: Prefer Class Decorators Over Metaclasses for Composable Class Extensions
 ```python
-# Class decorator — simple and composable
+# Class decorator -- simple and composable
 def my_class_decorator(cls):
     # modify or wrap cls
     original_init = cls.__init__

@@ -1,6 +1,6 @@
 # Case Studies: Sticky Ideas Analyzed Through the SUCCESs Framework
 
-The best way to understand the SUCCESs framework is to see it in action. This reference analyzes real-world sticky ideas — messages, campaigns, stories, and legends that have endured for years or decades. Each case study breaks down which principles made the idea stick and what lessons you can extract for your own communication.
+The best way to understand the SUCCESs framework is to see it in action. This reference analyzes real-world sticky ideas -- messages, campaigns, stories, and legends that have endured for years or decades. Each case study breaks down which principles made the idea stick and what lessons you can extract for your own communication.
 
 ## Case Study 1: JFK's Moonshot Speech (1961)
 
@@ -16,12 +16,12 @@ This single sentence mobilized an entire nation, directed billions of dollars in
 
 | Principle | Present? | How It Was Used |
 |-----------|----------|----------------|
-| **Simple** | Yes | One goal. Not "advance our space capabilities" — land a man on the moon. Commander's Intent at its purest. |
+| **Simple** | Yes | One goal. Not "advance our space capabilities" -- land a man on the moon. Commander's Intent at its purest. |
 | **Unexpected** | Yes | In 1961, the U.S. was behind the Soviet Union in space. Committing to the moon was audaciously counterintuitive. |
 | **Concrete** | Yes | "Landing a man on the moon and returning him safely." Not "space exploration leadership." You can picture a person standing on the moon. |
 | **Credible** | Yes | The President of the United States, speaking before Congress, staking his presidency on the claim. |
 | **Emotional** | Yes | National pride, Cold War urgency, the spirit of exploration. "We choose to go to the moon not because it is easy, but because it is hard." |
-| **Stories** | Partial | The speech itself was not a story, but it launched a decade of stories — every mission, every astronaut, every triumph and failure became part of the narrative. |
+| **Stories** | Partial | The speech itself was not a story, but it launched a decade of stories -- every mission, every astronaut, every triumph and failure became part of the narrative. |
 
 ### Lessons
 
@@ -46,7 +46,7 @@ Subway's advertising agency initially rejected the story. Too simple, too weird,
 | **Simple** | Yes | The core message is effortless: eat Subway, lose weight. No calorie counting, no complex diet plans. |
 | **Unexpected** | Yes | Fast food that helps you lose weight? That is a direct violation of expectations about fast food. |
 | **Concrete** | Yes | 425 pounds to 180 pounds. Pants with a 60-inch waist held up as a prop. Two specific sandwiches (6-inch turkey, 12-inch veggie). |
-| **Credible** | Yes | Anti-authority credibility. Jared was not a doctor or a nutritionist — he was a regular guy who did it himself. His old pants were the testable credential. |
+| **Credible** | Yes | Anti-authority credibility. Jared was not a doctor or a nutritionist -- he was a regular guy who did it himself. His old pants were the testable credential. |
 | **Emotional** | Yes | Jared's transformation was deeply personal. Anyone who has struggled with weight could identify with him. |
 | **Stories** | Yes | This IS a story. Character (Jared, a struggling college student), problem (extreme obesity), journey (ate Subway for a year), outcome (lost 245 pounds, got his life back). |
 
@@ -54,7 +54,7 @@ Subway's advertising agency initially rejected the story. Too simple, too weird,
 
 - Anti-authorities (regular people) are more persuasive than experts for personal transformation stories
 - Concrete proof props (the old pants) are more memorable than any statistic
-- Stories that seem too simple or too good often are the stickiest — if they are true
+- Stories that seem too simple or too good often are the stickiest -- if they are true
 - The Sinatra Test: if Subway could help someone lose 245 pounds, it can probably help you eat healthier
 
 ## Case Study 3: "Don't Mess with Texas" Anti-Littering Campaign
@@ -71,9 +71,9 @@ Previous anti-littering campaigns in Texas used guilt and environmental messagin
 
 | Principle | Present? | How It Was Used |
 |-----------|----------|----------------|
-| **Simple** | Yes | Four words. One message. Do not litter — because you are Texan. |
+| **Simple** | Yes | Four words. One message. Do not litter -- because you are Texan. |
 | **Unexpected** | Yes | An anti-littering campaign that never mentions the environment, guilt, or civic responsibility. Instead, it appeals to state pride. |
-| **Concrete** | Yes | "Mess with" is vivid and physical. You can picture someone throwing trash on the ground — and picture a Texan being angry about it. |
+| **Concrete** | Yes | "Mess with" is vivid and physical. You can picture someone throwing trash on the ground -- and picture a Texan being angry about it. |
 | **Credible** | Yes | Endorsed by Texas celebrities (Dallas Cowboys players, Willie Nelson, Stevie Ray Vaughan). But the real credibility was identity-based: Texans trust other Texans. |
 | **Emotional** | Yes | Pure identity appeal. Not "you should not litter" but "Texans do not litter." It tapped into fierce state pride. |
 | **Stories** | Partial | The campaign featured Texas icons in TV spots, each telling a mini-story about Texas pride. |
@@ -82,7 +82,7 @@ Previous anti-littering campaigns in Texas used guilt and environmental messagin
 
 - Identity-based messaging ("what would someone like me do?") is more powerful than rational argument
 - Understanding your audience's identity is more important than understanding their logic
-- The best campaigns do not tell people what to do — they tell people who they are
+- The best campaigns do not tell people what to do -- they tell people who they are
 - Simple, memorable language becomes a cultural artifact: "Don't Mess with Texas" is now on license plates, t-shirts, and bumper stickers decades later
 
 ## Case Study 4: The Nordstrom Tire Refund Legend
@@ -93,7 +93,7 @@ A customer walked into a Nordstrom store and asked to return a set of tires. Nor
 
 ### Why It Stuck
 
-This story has been told and retold inside and outside Nordstrom for decades. It may or may not be literally true, but it perfectly encapsulates Nordstrom's commitment to customer service. It is a generative story — it tells every Nordstrom employee how to behave in ambiguous situations.
+This story has been told and retold inside and outside Nordstrom for decades. It may or may not be literally true, but it perfectly encapsulates Nordstrom's commitment to customer service. It is a generative story -- it tells every Nordstrom employee how to behave in ambiguous situations.
 
 ### SUCCESs Analysis
 
@@ -108,7 +108,7 @@ This story has been told and retold inside and outside Nordstrom for decades. It
 
 ### Lessons
 
-- Stories do not need to be literally true to be organizationally true — they encode values
+- Stories do not need to be literally true to be organizationally true -- they encode values
 - The more extreme the example, the stronger the behavioral guidance it provides
 - One concrete story is worth a thousand pages of company values documents
 - Generative stories teach people what to do in situations they have never encountered
@@ -121,7 +121,7 @@ A man wakes up in a bathtub full of ice in a hotel room. A note tells him to cal
 
 ### Why It Stuck
 
-This story has circulated in various forms since the 1990s across dozens of countries. It has never been verified as true. Yet it persists because it is perfectly engineered — not by design, but by the evolutionary pressure of retelling. Versions that are stickier survive; versions that are not die out.
+This story has circulated in various forms since the 1990s across dozens of countries. It has never been verified as true. Yet it persists because it is perfectly engineered -- not by design, but by the evolutionary pressure of retelling. Versions that are stickier survive; versions that are not die out.
 
 ### SUCCESs Analysis
 
@@ -136,16 +136,16 @@ This story has circulated in various forms since the 1990s across dozens of coun
 
 ### Lessons
 
-- Ideas that use all six principles tend to survive across time and cultures — even without intentional design
+- Ideas that use all six principles tend to survive across time and cultures -- even without intentional design
 - Urban legends are naturally selected for stickiness: the versions that spread best are the versions that survive
 - Concrete sensory details (the ice, the bathtub, the note) are what make the story retellable
-- Emotional ideas spread faster than rational ones — fear is one of the most powerful drivers
+- Emotional ideas spread faster than rational ones -- fear is one of the most powerful drivers
 
-## Case Study 6: "Names, Names, Names" — Local Newspaper Motto
+## Case Study 6: "Names, Names, Names" -- Local Newspaper Motto
 
 ### The Idea
 
-Horace Greeley, a local newspaper editor, told his reporters that the secret to a successful local paper was "names, names, names" — publish as many local names as possible.
+Horace Greeley, a local newspaper editor, told his reporters that the secret to a successful local paper was "names, names, names" -- publish as many local names as possible.
 
 ### Why It Stuck
 
@@ -160,7 +160,7 @@ This three-word motto guided decades of editorial decisions. When reporters wond
 | **Concrete** | Yes | "Names" is concrete. Not "community engagement" or "local relevance." Names. You can count them. |
 | **Credible** | Yes | Came from a successful editor with a proven track record. The paper's popularity was the proof. |
 | **Emotional** | Partial | People love seeing their names in print. The motto tapped into that universal human desire for recognition. |
-| **Stories** | No | This is not a story — it is a generative principle. But it generated thousands of stories. |
+| **Stories** | No | This is not a story -- it is a generative principle. But it generated thousands of stories. |
 
 ### Lessons
 
@@ -185,9 +185,9 @@ Competing MP3 players advertised storage capacity in megabytes and gigabytes. No
 |-----------|----------|----------------|
 | **Simple** | Yes | Six words. One idea. No technical jargon. |
 | **Unexpected** | Yes | In 2001, carrying 1,000 songs was genuinely surprising. Music collections lived on shelves and in CD binders, not in pockets. |
-| **Concrete** | Yes | "1,000 songs" — you can picture your music library. "In your pocket" — you can feel it. Two concrete images in six words. |
+| **Concrete** | Yes | "1,000 songs" -- you can picture your music library. "In your pocket" -- you can feel it. Two concrete images in six words. |
 | **Credible** | Yes | It was Steve Jobs on stage with the physical product. You could hold it. |
-| **Emotional** | Yes | Freedom, joy, personal identity. Your music — all of it — with you everywhere. Music is deeply emotional to most people. |
+| **Emotional** | Yes | Freedom, joy, personal identity. Your music -- all of it -- with you everywhere. Music is deeply emotional to most people. |
 | **Stories** | Partial | Not a narrative, but it implies a story: imagine walking down the street with your entire music collection. |
 
 ### Lessons
@@ -204,11 +204,11 @@ Analyzing these cases together reveals patterns that apply to any sticky idea:
 
 ### Pattern 1: Concreteness Is Non-Negotiable
 
-Every single case study uses concrete language. This is not a coincidence. Abstraction is the most common reason ideas fail to stick. Tires, bathtubs, the moon, 1,000 songs — these are images that lodge in memory.
+Every single case study uses concrete language. This is not a coincidence. Abstraction is the most common reason ideas fail to stick. Tires, bathtubs, the moon, 1,000 songs -- these are images that lodge in memory.
 
 ### Pattern 2: Emotional Resonance Drives Sharing
 
-Ideas spread when they make people feel something. Fear (kidney heist), pride (Don't Mess with Texas), inspiration (JFK), aspiration (Jared), delight (iPod). The feeling does not need to be positive — it needs to be strong.
+Ideas spread when they make people feel something. Fear (kidney heist), pride (Don't Mess with Texas), inspiration (JFK), aspiration (Jared), delight (iPod). The feeling does not need to be positive -- it needs to be strong.
 
 ### Pattern 3: Simple Does Not Mean Short
 

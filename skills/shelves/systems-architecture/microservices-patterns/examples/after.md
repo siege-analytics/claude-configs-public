@@ -1,6 +1,6 @@
 # After
 
-`InventoryService` owns its own read model, populated by consuming `OrderLineItemAdded` domain events published by the Order Service — no shared database access.
+`InventoryService` owns its own read model, populated by consuming `OrderLineItemAdded` domain events published by the Order Service -- no shared database access.
 
 ```java
 // --- Order Service publishes domain events (its own codebase) ---
@@ -21,7 +21,7 @@ orderEventPublisher.publish(new OrderLineItemAdded(
 
 // --- Inventory Service: owns its own read model, no shared DB ---
 
-// Private denormalized table — owned exclusively by Inventory Service
+// Private denormalized table -- owned exclusively by Inventory Service
 @Entity @Table(name = "product_weekly_sales")
 public class ProductWeeklySales {
     @Id private String productId;
@@ -46,7 +46,7 @@ public class InventoryController {
 
     @GetMapping("/reorder-candidates")
     public List<ReorderItem> getReorderCandidates() {
-        // Queries Inventory Service's OWN database — no cross-service DB access
+        // Queries Inventory Service's OWN database -- no cross-service DB access
         return weeklySalesRepository.findAll().stream()
             .filter(sales -> {
                 int stockLevel = stockRepository.getLevel(sales.getProductId());
@@ -62,8 +62,8 @@ public class InventoryController {
 ```
 
 Key improvements:
-- Each service owns its database — `InventoryService` never touches the `orders` schema (Database per Service pattern)
+- Each service owns its database -- `InventoryService` never touches the `orders` schema (Database per Service pattern)
 - `OrderLineItemAdded` domain event decouples the services; Order Service does not know Inventory Service exists
-- `ProductWeeklySales` is a denormalized read model maintained by consuming events — a lightweight CQRS view
+- `ProductWeeklySales` is a denormalized read model maintained by consuming events -- a lightweight CQRS view
 - The Kafka consumer is idempotent: events outside the 7-day window are skipped, making re-delivery safe
 - Deleting the coupling to `sharedDataSource` eliminates the risk that a schema change in Order Service breaks Inventory Service at runtime

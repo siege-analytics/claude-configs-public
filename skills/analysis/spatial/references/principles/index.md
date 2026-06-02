@@ -1,6 +1,6 @@
 # Universal Spatial Principles
 
-Principles that apply across **every** engine in the spatial set — PostGIS, GeoPandas, Sedona, DuckDB-spatial. Each principle gets a dedicated file with engine-specific implementation patterns.
+Principles that apply across **every** engine in the spatial set -- PostGIS, GeoPandas, Sedona, DuckDB-spatial. Each principle gets a dedicated file with engine-specific implementation patterns.
 
 These are *separate* from the engine-faithful Mastering PostGIS distillation: that one is PostgreSQL-specific (VACUUM discipline, GIST tradeoffs, planner internals). This one is engine-agnostic.
 
@@ -19,14 +19,14 @@ These are *separate* from the engine-faithful Mastering PostGIS distillation: th
 
 PostgreSQL-specific patterns belong in `coding/postgis/references/` (or its `mastering-postgis/` subfolder), not here:
 
-- `VACUUM` discipline — Postgres-only
-- GIST vs SP-GIST vs BRIN tradeoffs — Postgres-only
-- `EXPLAIN (ANALYZE, BUFFERS)` reading — Postgres-only
-- `pg_stat_statements` — Postgres-only
-- `parallel_safe` function annotations — Postgres-only
-- `postgis_topology` — PostGIS-only feature
-- FDW patterns — Postgres-only
-- COPY / `\copy` / UNLOGGED tables — Postgres-only
+- `VACUUM` discipline -- Postgres-only
+- GIST vs SP-GIST vs BRIN tradeoffs -- Postgres-only
+- `EXPLAIN (ANALYZE, BUFFERS)` reading -- Postgres-only
+- `pg_stat_statements` -- Postgres-only
+- `parallel_safe` function annotations -- Postgres-only
+- `postgis_topology` -- PostGIS-only feature
+- FDW patterns -- Postgres-only
+- COPY / `\copy` / UNLOGGED tables -- Postgres-only
 
 GeoPandas-, Sedona-, and DuckDB-specific patterns belong in their respective engine SKILL.md and references/.
 
@@ -47,18 +47,18 @@ Engine skills go deep on engine-specific operations. Principles files cut across
 
 ## Reading order
 
-1. **`crs-is-meaning.md`** — first principle; everything else assumes CRS hygiene
-2. **`validate-on-ingest.md`** — second; everything downstream depends on valid geometry
-3. **`spatial-indexing-discipline.md`** — third; performance principle that gates everything at scale
-4. **`bbox-pre-filter.md`** — fourth; the implementation pattern indices enable
-5. **`subdivide-complex-polygons.md`** — fifth; specific high-leverage optimization
-6. **`name-by-srid.md`** — sixth; defensive convention for multi-stage pipelines
+1. **`crs-is-meaning.md`** -- first principle; everything else assumes CRS hygiene
+2. **`validate-on-ingest.md`** -- second; everything downstream depends on valid geometry
+3. **`spatial-indexing-discipline.md`** -- third; performance principle that gates everything at scale
+4. **`bbox-pre-filter.md`** -- fourth; the implementation pattern indices enable
+5. **`subdivide-complex-polygons.md`** -- fifth; specific high-leverage optimization
+6. **`name-by-srid.md`** -- sixth; defensive convention for multi-stage pipelines
 
 In practice, agents load these on demand, not in sequence. The reading order is for humans onboarding to the principles.
 
 ## Cross-links
 
-- [`../engine-selection.md`](../engine-selection.md) — picking the engine; principles below apply once chosen
-- [`../gdal-availability-matrix.md`](../gdal-availability-matrix.md) — engine availability constrains principle implementation
-- [`../crs-decision-tree.md`](../crs-decision-tree.md) — operationalizes the CRS principle into specific projection choices
-- [`../../coding/postgis/references/mastering-postgis/`](../../../coding/postgis/references/mastering-postgis/) — engine-faithful PostGIS distillation (book-flavored)
+- [`../engine-selection.md`](../engine-selection.md) -- picking the engine; principles below apply once chosen
+- [`../gdal-availability-matrix.md`](../gdal-availability-matrix.md) -- engine availability constrains principle implementation
+- [`../crs-decision-tree.md`](../crs-decision-tree.md) -- operationalizes the CRS principle into specific projection choices
+- [`../../coding/postgis/references/mastering-postgis/`](../../../coding/postgis/references/mastering-postgis/) -- engine-faithful PostGIS distillation (book-flavored)

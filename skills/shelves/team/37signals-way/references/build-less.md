@@ -18,7 +18,7 @@ Most software fails not because it does too little, but because it does too much
 
 This is not minimalism for its own sake. It is a strategic choice rooted in the reality of building products with small teams and limited resources. When you build less, you can build better. When you maintain less, you can move faster. When users have fewer choices, they make decisions more confidently.
 
-Getting Real calls this "less software." Rework calls it "underdoing the competition." Both mean the same thing: the constraint of less is not a limitation — it is the competitive advantage.
+Getting Real calls this "less software." Rework calls it "underdoing the competition." Both mean the same thing: the constraint of less is not a limitation -- it is the competitive advantage.
 
 ## Underdo the Competition
 
@@ -32,13 +32,13 @@ The instinct when facing a competitor with more features is to match them. This 
 
 Underdoing is not laziness. It requires harder decisions than overdoing. You must understand which 20% of functionality delivers 80% of the value, and have the discipline to ship only that.
 
-**The psychology of underdoing:** Users experience feature overload as anxiety. A product with fewer, better features feels more trustworthy than one with dozens of half-implemented ones. Simplicity signals confidence — it says "we know what matters."
+**The psychology of underdoing:** Users experience feature overload as anxiety. A product with fewer, better features feels more trustworthy than one with dozens of half-implemented ones. Simplicity signals confidence -- it says "we know what matters."
 
 **When underdoing fails:** Underdoing fails when you cut core functionality, not peripheral features. The key is understanding the essential job your product does. A project management tool can skip Gantt charts but cannot skip task assignment. Know the job, then strip everything that does not directly serve it.
 
 ## Solve Your Own Problem
 
-The surest way to build something valuable is to build something you need yourself. When you are your own user, you understand the problem intimately. You do not need extensive user research to know if a feature works — you use it every day. You do not need a PM to prioritize — your own frustration tells you what matters.
+The surest way to build something valuable is to build something you need yourself. When you are your own user, you understand the problem intimately. You do not need extensive user research to know if a feature works -- you use it every day. You do not need a PM to prioritize -- your own frustration tells you what matters.
 
 **Why self-use matters:**
 
@@ -53,7 +53,7 @@ Basecamp was built because 37signals needed a project management tool for their 
 
 ## Embrace Constraints
 
-Constraints — limited time, limited budget, limited people — are typically viewed as obstacles. The 37signals philosophy treats them as creative fuel. When you cannot do everything, you must find the essential version. When you have three people instead of thirty, you cannot afford unnecessary complexity. When you have six weeks instead of six months, you must cut to what matters.
+Constraints -- limited time, limited budget, limited people -- are typically viewed as obstacles. The 37signals philosophy treats them as creative fuel. When you cannot do everything, you must find the essential version. When you have three people instead of thirty, you cannot afford unnecessary complexity. When you have six weeks instead of six months, you must cut to what matters.
 
 **Types of constraints and their creative benefits:**
 
@@ -65,11 +65,11 @@ Constraints — limited time, limited budget, limited people — are typically v
 | No dedicated PM role | Team owns decisions | No telephone game between decision-makers and builders |
 | Simple technology stack | Cannot over-engineer | Solutions are maintainable and debuggable by the whole team |
 
-**The paradox of constraints:** Teams with unlimited resources often ship slower and worse than teams with tight constraints. Abundance breeds indecision — when you can do anything, you debate endlessly about what to do. Scarcity breeds action — when you can only do one thing, you pick it and move.
+**The paradox of constraints:** Teams with unlimited resources often ship slower and worse than teams with tight constraints. Abundance breeds indecision -- when you can do anything, you debate endlessly about what to do. Scarcity breeds action -- when you can only do one thing, you pick it and move.
 
 ## Be a Curator
 
-Building software requires a curator — someone who decides what stays and what goes. Like a museum curator who selects which pieces belong in an exhibit, a product curator decides which features belong in the product. The curator's most important tool is the word "no."
+Building software requires a curator -- someone who decides what stays and what goes. Like a museum curator who selects which pieces belong in an exhibit, a product curator decides which features belong in the product. The curator's most important tool is the word "no."
 
 **What curators do:**
 
@@ -127,19 +127,19 @@ Periodically audit your product to identify features that no longer earn their p
 
 | Feature State | Usage | Maintenance Cost | Action |
 |--------------|-------|-----------------|--------|
-| Core — defines the product | High | Any | Keep and invest |
-| Useful — supports the core job | Moderate | Low | Keep |
-| Useful — supports the core job | Moderate | High | Simplify or rebuild |
-| Marginal — nice-to-have | Low | Low | Keep for now, monitor |
-| Marginal — nice-to-have | Low | High | Remove |
-| Legacy — served a past need | Minimal | Any | Remove |
-| Epicycle — fixes problems from other features | Any | Any | Remove root cause instead |
+| Core -- defines the product | High | Any | Keep and invest |
+| Useful -- supports the core job | Moderate | Low | Keep |
+| Useful -- supports the core job | Moderate | High | Simplify or rebuild |
+| Marginal -- nice-to-have | Low | Low | Keep for now, monitor |
+| Marginal -- nice-to-have | Low | High | Remove |
+| Legacy -- served a past need | Minimal | Any | Remove |
+| Epicycle -- fixes problems from other features | Any | Any | Remove root cause instead |
 
 **How to run the audit:**
 
 1. List every feature in the product
 2. Classify each by usage level and maintenance cost
-3. Identify epicycles — features that exist only because of other features
+3. Identify epicycles -- features that exist only because of other features
 4. Propose removals and simplifications
 5. Ship the leaner version and measure impact
 
@@ -151,4 +151,4 @@ Periodically audit your product to identify features that no longer earn their p
 
 **For engineers:** Resist the urge to build for hypothetical future requirements. Build what is needed now, build it well, and trust that you can extend it later if the need materializes. The best code is code you do not write.
 
-**For founders:** Your competitive advantage is not features — it is focus. The company with fewer features and a clearer opinion will always out-execute the company trying to be everything to everyone.
+**For founders:** Your competitive advantage is not features -- it is focus. The company with fewer features and a clearer opinion will always out-execute the company trying to be everything to everyone.

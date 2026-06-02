@@ -1,6 +1,6 @@
 # The Ability Chain
 
-Ability in the Fogg Behavior Model is not a single dimension. It is a chain of six factors — and the chain is only as strong as its weakest link.
+Ability in the Fogg Behavior Model is not a single dimension. It is a chain of six factors -- and the chain is only as strong as its weakest link.
 
 ## The Six Simplicity Factors
 
@@ -61,7 +61,7 @@ Simplicity is always relative to the person and context. A behavior is "easy" wh
 - Place primary actions in thumb-reach zones on mobile
 - Use swipe gestures for frequent actions
 - Support voice input, camera input, and autocomplete
-- Minimize typing — use selectors, toggles, and pickers
+- Minimize typing -- use selectors, toggles, and pickers
 
 **Audit question:** How many taps, clicks, or physical actions are required?
 
@@ -80,10 +80,10 @@ Simplicity is always relative to the person and context. A behavior is "easy" wh
 **Simplification strategies:**
 - Set smart defaults (users rarely change them)
 - Provide templates and examples
-- Use progressive disclosure — show complexity only when needed
+- Use progressive disclosure -- show complexity only when needed
 - Reduce choices (Hick's Law: more options = slower decisions)
-- Use familiar patterns — don't make users learn new conventions
-- Label everything clearly — no jargon, no ambiguity
+- Use familiar patterns -- don't make users learn new conventions
+- Label everything clearly -- no jargon, no ambiguity
 
 **Audit question:** Does the user need to think, decide, or figure anything out?
 
@@ -163,9 +163,9 @@ For each key product behavior, rate each factor 1-5:
 |--------|--------|-------|-----|
 | Time | 3 | Takes 4 minutes, too many fields | Pre-fill with smart defaults, reduce to 3 fields |
 | Money | 5 | Free tier, no card needed | None needed |
-| Physical Effort | 4 | Desktop form, reasonable | Minor — add keyboard shortcuts |
-| Mental Effort | 2 | User must name project, choose settings, understand terminology | **BOTTLENECK** — Add templates, explain terms, set defaults |
-| Social Deviance | 4 | Common tool category | Minor — add social proof |
+| Physical Effort | 4 | Desktop form, reasonable | Minor -- add keyboard shortcuts |
+| Mental Effort | 2 | User must name project, choose settings, understand terminology | **BOTTLENECK** -- Add templates, explain terms, set defaults |
+| Social Deviance | 4 | Common tool category | Minor -- add social proof |
 | Non-Routine | 3 | New tool, unfamiliar UI | Mirror competitor patterns, add guided tour |
 
 **Priority fix:** Mental effort is the bottleneck. Add project templates ("Start with a template") and smart defaults that eliminate decisions.
@@ -176,10 +176,10 @@ For each key product behavior, rate each factor 1-5:
 
 ### Universal Strategies (Help All Factors)
 
-1. **Shrink the behavior** — Make it smaller (Starter Step)
-2. **Set defaults** — Eliminate decisions
-3. **Progressive disclosure** — Start simple, reveal complexity later
-4. **Pre-fill with data** — Use what you know about the user
+1. **Shrink the behavior** -- Make it smaller (Starter Step)
+2. **Set defaults** -- Eliminate decisions
+3. **Progressive disclosure** -- Start simple, reveal complexity later
+4. **Pre-fill with data** -- Use what you know about the user
 
 ### The Simplicity Ladder
 

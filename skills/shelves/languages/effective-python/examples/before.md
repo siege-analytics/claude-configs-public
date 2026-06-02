@@ -7,7 +7,7 @@ import json
 import requests
 
 def fetch_orders(api_url, filters={}):
-    # filters dict persists across calls — mutable default arg bug
+    # filters dict persists across calls -- mutable default arg bug
     filters['status'] = 'completed'
     try:
         response = requests.get(api_url, params=filters)

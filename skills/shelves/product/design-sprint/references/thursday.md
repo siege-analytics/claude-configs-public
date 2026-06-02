@@ -56,9 +56,9 @@ The prototype must sit in a narrow quality band. Too rough, and customers cannot
 
 ### The Test: Show a screen to someone outside the team for 5 seconds
 
-- If they say "Is this a wireframe?" — too low
-- If they say "When did you build this?" — too high (or just right)
-- If they say "Oh, interesting, what is this?" — just right
+- If they say "Is this a wireframe?" -- too low
+- If they say "When did you build this?" -- too high (or just right)
+- If they say "Oh, interesting, what is this?" -- just right
 
 ## Role Assignments
 
