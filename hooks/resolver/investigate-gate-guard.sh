@@ -8,6 +8,10 @@
 # Level 1: Gate existence — blocks implementation when investigation is missing.
 # Level 2: Citation spot-check — greps file:line claims in verifiedShapes
 #          to confirm cited content exists at cited locations.
+# Level 3: Disposition validation — checks that verifiedShapes entries include
+#          a dispositions array with PROBED/ATTESTED/SKIPPED entries per the
+#          Sagan assumption universe format. V1 signal files (no dispositions)
+#          get a warning, not a block.
 #
 # Signal file schema:
 #   {
@@ -21,7 +25,19 @@
 #         "file": "relative/path/to/file",
 #         "line": 42,
 #         "grep": "pattern expected at that line",
-#         "status": "VERIFIED" | "UNVERIFIED"
+#         "status": "VERIFIED" | "UNVERIFIED",
+#         "dispositions": [            // v2 schema — optional for backward compat
+#           {
+#             "layer": "schematic",    // physical|schematic|semantic|operational|correctness
+#             "assumption": "takes 2 positional args",
+#             "disposition": "PROBED", // PROBED|ATTESTED|SKIPPED
+#             "probe": "grep ...",     // PROBED: command run
+#             "result": "...",         // PROBED: output
+#             "threshold": "PASS"      // PROBED: PASS|FAIL
+#             // ATTESTED: "source" + "value"
+#             // SKIPPED: "skipReason" (>=20 chars, no trivial phrases)
+#           }
+#         ]
 #       }
 #     ],
 #     "designNote": "path or URL to think design note"
@@ -224,6 +240,137 @@ if [ -n "$RESULT" ]; then
     cat <<EOF
 <investigate-gate>
 $RESULT
+</investigate-gate>
+EOF
+fi
+
+# Level 3: Disposition validation (Sagan assumption universe enforcement).
+# Checks that verifiedShapes entries include a dispositions array with
+# valid PROBED/ATTESTED/SKIPPED entries. V1 signal files (no dispositions
+# on any entry) get a warning, not a block.
+DISP_RESULT=$(python3 -c "
+import json, sys, os
+
+try:
+    data = json.load(open('$INVESTIGATE_GATE'))
+except Exception as e:
+    print(f'WARN: investigate-gate.json malformed: {e}')
+    sys.exit(0)
+
+shapes = data.get('verifiedShapes', [])
+if not shapes:
+    sys.exit(0)
+
+VALID_LAYERS = {'physical', 'schematic', 'semantic', 'operational', 'correctness'}
+VALID_DISPOSITIONS = {'PROBED', 'ATTESTED', 'SKIPPED'}
+CODE_EXTENSIONS = {'.py', '.sql', '.sh', '.js', '.ts', '.jsx', '.tsx', '.java', '.scala', '.go', '.rs', '.rb'}
+TRIVIAL_SKIP_PHRASES = {
+    '', 'n/a', 'na', 'n.a.', 'n.a',
+    'not applicable', 'not relevant', 'not needed',
+    'trivial', 'obvious', 'skip', 'skipped', 'no',
+}
+MIN_SKIP_REASON_LEN = 20
+
+has_any_dispositions = False
+v1_count = 0
+errors = []
+warnings = []
+
+for shape in shapes:
+    entity = shape.get('entity', '(unnamed)')
+    filepath = shape.get('file', '')
+    disps = shape.get('dispositions')
+
+    if disps is None:
+        v1_count += 1
+        continue
+
+    has_any_dispositions = True
+
+    if not isinstance(disps, list) or len(disps) == 0:
+        errors.append(f'{entity}: dispositions must be a non-empty array')
+        continue
+
+    is_code = any(filepath.endswith(ext) for ext in CODE_EXTENSIONS) if filepath else False
+    layers_present = set()
+    has_probed_or_attested = False
+
+    for i, d in enumerate(disps):
+        layer = d.get('layer', '')
+        disposition = d.get('disposition', '')
+        prefix = f'{entity}[{i}]'
+
+        if layer not in VALID_LAYERS:
+            errors.append(f'{prefix}: invalid layer {layer!r} (expected one of {sorted(VALID_LAYERS)})')
+        else:
+            layers_present.add(layer)
+
+        if disposition not in VALID_DISPOSITIONS:
+            errors.append(f'{prefix}: invalid disposition {disposition!r} (expected one of {sorted(VALID_DISPOSITIONS)})')
+            continue
+
+        if disposition == 'PROBED':
+            has_probed_or_attested = True
+            for field in ('probe', 'result', 'threshold'):
+                if not d.get(field):
+                    errors.append(f'{prefix}: PROBED requires {field!r} field')
+
+        elif disposition == 'ATTESTED':
+            has_probed_or_attested = True
+            for field in ('source', 'value'):
+                if not d.get(field):
+                    errors.append(f'{prefix}: ATTESTED requires {field!r} field')
+
+        elif disposition == 'SKIPPED':
+            reason = (d.get('skipReason') or '').strip()
+            if reason.lower() in TRIVIAL_SKIP_PHRASES:
+                errors.append(f'{prefix}: SKIPPED reason {reason!r} is in the trivial-phrases blocklist')
+            elif len(reason) < MIN_SKIP_REASON_LEN:
+                errors.append(f'{prefix}: SKIPPED reason ({len(reason)} chars) < {MIN_SKIP_REASON_LEN} char minimum')
+
+    if not has_probed_or_attested:
+        errors.append(f'{entity}: all dispositions are SKIPPED -- at least one must be PROBED or ATTESTED')
+
+    if is_code:
+        for required in ('schematic', 'semantic'):
+            if required not in layers_present:
+                errors.append(f'{entity}: code entity missing required {required!r} layer')
+
+# If ALL entries are v1 (no dispositions anywhere), warn but don't block.
+if v1_count == len(shapes):
+    print(f'WARN: signal file uses v1 schema (no dispositions on any of {len(shapes)} entries).')
+    print('Disposition enforcement skipped. Update to v2 schema for full Sagan enforcement.')
+    sys.exit(0)
+
+# Mixed v1/v2 entries: warn about v1 entries.
+if v1_count > 0:
+    warnings.append(f'{v1_count} of {len(shapes)} entries have no dispositions (v1 schema)')
+
+if errors:
+    print(f'DISPOSITION ERRORS ({len(errors)}):')
+    for e in errors:
+        print(f'  {e}')
+    print()
+    print('Expected disposition shape:')
+    print('  PROBED:   {\"layer\": \"...\", \"disposition\": \"PROBED\", \"assumption\": \"...\", \"probe\": \"<cmd>\", \"result\": \"<output>\", \"threshold\": \"PASS\"}')
+    print('  ATTESTED: {\"layer\": \"...\", \"disposition\": \"ATTESTED\", \"assumption\": \"...\", \"source\": \"<file:line>\", \"value\": \"<verbatim>\"}')
+    print('  SKIPPED:  {\"layer\": \"...\", \"disposition\": \"SKIPPED\", \"assumption\": \"...\", \"skipReason\": \"<>=20 chars, non-trivial>\"}')
+    print()
+    print('Rules:')
+    print('  - Every entity needs at least one PROBED or ATTESTED disposition')
+    print('  - Code entities (.py/.sql/.sh/etc) require schematic + semantic layers')
+    print('  - SKIPPED reasons must be >= 20 chars and not in the trivial-phrases list')
+    print(f'  - Trivial phrases: {sorted(TRIVIAL_SKIP_PHRASES - {\"\"})}')
+
+if warnings:
+    for w in warnings:
+        print(f'WARN: {w}')
+" 2>&1)
+
+if [ -n "$DISP_RESULT" ]; then
+    cat <<EOF
+<investigate-gate>
+$DISP_RESULT
 </investigate-gate>
 EOF
 fi

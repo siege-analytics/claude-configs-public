@@ -362,7 +362,30 @@ After posting the Fact Sheet to the ticket, write `<workspace>/investigate-gate.
       "file": "relative/path/to/source.py",
       "line": 42,
       "grep": "pattern found at that line",
-      "status": "VERIFIED"
+      "status": "VERIFIED",
+      "dispositions": [
+        {
+          "layer": "schematic",
+          "assumption": "takes exactly 2 positional args",
+          "disposition": "PROBED",
+          "probe": "grep -n 'def function_name' path/to/file.py",
+          "result": "def function_name(self, geoid, vintage):",
+          "threshold": "PASS"
+        },
+        {
+          "layer": "semantic",
+          "assumption": "vintage is a 4-digit year string",
+          "disposition": "ATTESTED",
+          "source": "path/to/file.py:55",
+          "value": "vintage: str  # e.g. '2020'"
+        },
+        {
+          "layer": "operational",
+          "assumption": "called at most once per request",
+          "disposition": "SKIPPED",
+          "skipReason": "function is a batch utility, not request-scoped; call frequency is caller-determined"
+        }
+      ]
     }
   ],
   "designNote": "plans/design-note.md or ticket URL"
@@ -376,10 +399,24 @@ After posting the Fact Sheet to the ticket, write `<workspace>/investigate-gate.
 - `grep` must contain a substring that appears at or near that line -- the guard hook spot-checks these citations by grepping the file. Fabricated citations are caught mechanically.
 - `status` is `VERIFIED` (you read the source) or `UNVERIFIED` (external API, no local schema -- flagged as risk in the Fact Sheet). UNVERIFIED shapes are skipped by the spot-check but their presence is tracked.
 
-The guard performs three checks:
+**dispositions requirements (v2 schema):**
+
+Each verifiedShape entry should include a `dispositions` array encoding the assumption universe for that entity. The guard validates:
+
+- Every disposition has a valid `layer` (physical, schematic, semantic, operational, correctness) and `disposition` (PROBED, ATTESTED, SKIPPED).
+- **PROBED** entries require `probe` (shell command), `result` (output), `threshold` (PASS/FAIL).
+- **ATTESTED** entries require `source` (file:line or URL), `value` (verbatim from source).
+- **SKIPPED** entries require `skipReason` (>= 20 characters, not in the trivial-phrases blocklist: "n/a", "not applicable", "trivial", "obvious", etc.).
+- Code entities (`.py`, `.sql`, `.sh`, etc.) must have at least `schematic` and `semantic` layers.
+- At least one disposition per entity must be PROBED or ATTESTED. An all-SKIPPED entity is an entity that was not investigated.
+
+Signal files without dispositions (v1 schema) produce a warning, not a block, for backward compatibility. New investigations should always use the v2 schema.
+
+The guard performs four checks:
 1. **Existence** -- investigate-gate.json must exist when think-gate.json exists.
 2. **Freshness** -- investigate-gate.json must be newer than think-gate.json (design changes after investigation require re-investigation).
 3. **Citation spot-check** -- each verifiedShape with `file` + `line` + `grep` is grepped against the actual file to confirm the citation isn't fabricated.
+4. **Disposition validation** -- each verifiedShape with a `dispositions` array is checked for completeness, quality (no trivial skip reasons), and layer coverage (code entities need schematic + semantic).
 
 ### Transformation code: dry-run evidence required
 
