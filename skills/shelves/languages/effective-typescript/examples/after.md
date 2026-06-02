@@ -16,14 +16,14 @@ interface User {
 // Branded type prevents passing a raw string where a UserId is expected (Item 37)
 type UserId = string & { readonly __brand: 'UserId' };
 
-// Tagged union — only valid states are representable (Item 28, 32)
+// Tagged union -- only valid states are representable (Item 28, 32)
 // Impossible: { status: 'loading', data: [...] } or { status: 'success', error: '...' }
 type RequestState<T> =
   | { status: 'loading' }
   | { status: 'success'; data: T }
   | { status: 'error'; message: string };
 
-// Return unknown from untrusted sources — callers must narrow (Item 42)
+// Return unknown from untrusted sources -- callers must narrow (Item 42)
 async function getUser(id: UserId): Promise<User> {
   const response = await fetch(`/api/users/${id}`);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -35,9 +35,9 @@ async function getUser(id: UserId): Promise<User> {
 // Type declaration, not assertion (Item 9)
 const userIdInput: HTMLInputElement | null = document.getElementById('user-id') as HTMLInputElement | null;
 
-// Null pushed to the perimeter — caller handles it once (Item 31)
+// Null pushed to the perimeter -- caller handles it once (Item 31)
 function processUser(user: User): string {
-  return user.name.toUpperCase(); // safe — name: string, not string | null
+  return user.name.toUpperCase(); // safe -- name: string, not string | null
 }
 
 // String literal union, not plain string (Item 33)
@@ -46,14 +46,14 @@ function setDirection(direction: Direction) {
   // TypeScript rejects "sideways" at compile time
 }
 
-// async/await over callbacks — types flow naturally (Item 25)
+// async/await over callbacks -- types flow naturally (Item 25)
 async function fetchProfile(id: UserId): Promise<User> {
   const response = await fetch(`/api/profiles/${id}`);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   return response.json() as User;
 }
 
-// Named type used in all three functions — DRY (Item 14)
+// Named type used in all three functions -- DRY (Item 14)
 function renderAdmin(user: User): void {}
 function updateAdmin(user: User): void {}
 function deleteAdmin(user: User): void {}

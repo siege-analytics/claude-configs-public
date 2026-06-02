@@ -1,10 +1,10 @@
 # Customer Experience
 
-The sale is not the finish line — it is the starting line. The AFTER phase begins the moment someone becomes a customer. Delivering a world-class experience turns a one-time buyer into a loyal advocate who stays longer, buys more, and brings others. Customer experience is the ultimate competitive moat because it cannot be easily copied.
+The sale is not the finish line -- it is the starting line. The AFTER phase begins the moment someone becomes a customer. Delivering a world-class experience turns a one-time buyer into a loyal advocate who stays longer, buys more, and brings others. Customer experience is the ultimate competitive moat because it cannot be easily copied.
 
 ## Moments of Truth Framework
 
-A "moment of truth" is any interaction that disproportionately shapes a customer's perception of your business. Not every touchpoint is equal — some carry far more emotional weight than others. Your job is to identify these critical moments and design them intentionally.
+A "moment of truth" is any interaction that disproportionately shapes a customer's perception of your business. Not every touchpoint is equal -- some carry far more emotional weight than others. Your job is to identify these critical moments and design them intentionally.
 
 ### Identifying Moments of Truth
 
@@ -109,7 +109,7 @@ The "wow factor" does not have to be expensive. It has to be unexpected and pers
 
 ### Systematizing Surprise and Delight
 
-Surprises should not be random — they should be triggered by specific events or milestones:
+Surprises should not be random -- they should be triggered by specific events or milestones:
 
 | Trigger | Surprise | Owner |
 |---------|----------|-------|
@@ -127,9 +127,9 @@ Customers who experience a problem that is resolved excellently often become mor
 **Service recovery framework:**
 1. **Acknowledge** the problem immediately and sincerely
 2. **Apologize** without excuses or blame-shifting
-3. **Act** — fix the problem faster than the customer expects
-4. **Add** — do something extra to make up for the inconvenience
-5. **Ask** — follow up to confirm the issue is fully resolved
+3. **Act** -- fix the problem faster than the customer expects
+4. **Add** -- do something extra to make up for the inconvenience
+5. **Ask** -- follow up to confirm the issue is fully resolved
 
 ## Tribes and Community Building
 
@@ -187,7 +187,7 @@ A world-class experience cannot depend on individual heroics. It must be systema
 
 ### Exercise 1: Moments of Truth Map
 
-Map your complete customer journey from purchase to ongoing use. Identify every touchpoint. Mark the 3-5 moments of truth — the interactions that most shape perception. For each, complete the Designing Moments of Truth template.
+Map your complete customer journey from purchase to ongoing use. Identify every touchpoint. Mark the 3-5 moments of truth -- the interactions that most shape perception. For each, complete the Designing Moments of Truth template.
 
 ### Exercise 2: NPS Implementation
 

@@ -18,7 +18,7 @@ Structured template for conducting heuristic evaluations. Use this to systematic
 
 | Rating | Severity | Priority | Description |
 |--------|----------|----------|-------------|
-| 0 | Not a problem | — | Cosmetic or disagreement |
+| 0 | Not a problem | -- | Cosmetic or disagreement |
 | 1 | Cosmetic | Low | Minor annoyance |
 | 2 | Minor | Medium | Delays or frustrates |
 | 3 | Major | High | Significant task failure |

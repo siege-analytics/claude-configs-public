@@ -32,7 +32,7 @@ A well-designed typeface has consistent visual rhythm:
 - Full ASCII (A-Z, a-z, 0-9, basic punctuation)
 - Common accented characters (é, ñ, ü, etc.)
 - Proper typographic quotes ("" '' vs "" '')
-- Em dash (—), en dash (–), minus (−)
+- Em dash (--), en dash (–), minus (−)
 - Euro (€), pound (£), other needed currency
 
 **Better:**
@@ -276,7 +276,7 @@ When choosing between finalists:
 2. View at 100%, 150%, and 50% zoom
 3. Check on phone and desktop
 4. Read a full paragraph with each (actually read it)
-5. Look away, then look back—which is more inviting?
+5. Look away, then look back--which is more inviting?
 6. Check file sizes and loading impact
 7. Verify all needed characters exist
 

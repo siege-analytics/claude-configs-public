@@ -1,4 +1,4 @@
-# Ch 6 — ETL with PostGIS
+# Ch 6 -- ETL with PostGIS
 
 The book's ETL chapter covers staging tables, bulk loads, and pipeline patterns for spatial data flowing into Postgres. Largely current; modern additions include declarative partitioning (PG 10+) and FDW-based ELT.
 
@@ -6,13 +6,13 @@ The book's ETL chapter covers staging tables, bulk loads, and pipeline patterns 
 
 Every spatial ETL pipeline has three responsibilities:
 
-1. **Land the data** — read external source, validate, normalize.
-2. **Transform** — reproject, repair geometry, join to canonical IDs.
-3. **Promote** — atomic move from staging to production with index/constraint integrity.
+1. **Land the data** -- read external source, validate, normalize.
+2. **Transform** -- reproject, repair geometry, join to canonical IDs.
+3. **Promote** -- atomic move from staging to production with index/constraint integrity.
 
 The book's prescription: keep the three steps separate. Don't transform during ingest; don't ingest into the production table; don't promote until the data passes validation.
 
-## Stage 1 — Landing
+## Stage 1 -- Landing
 
 Load into an unindexed `UNLOGGED` staging table:
 
@@ -27,9 +27,9 @@ CREATE UNLOGGED TABLE features_staging (
 ```
 
 Why unlogged + unindexed:
-- **`UNLOGGED`** skips WAL — much faster for ephemeral data
-- **No indexes** — index updates per-insert kill bulk-load speed
-- **`loaded_at`** — for incremental pipelines; lets you `WHERE loaded_at > $last_run`
+- **`UNLOGGED`** skips WAL -- much faster for ephemeral data
+- **No indexes** -- index updates per-insert kill bulk-load speed
+- **`loaded_at`** -- for incremental pipelines; lets you `WHERE loaded_at > $last_run`
 
 Bulk load via COPY:
 
@@ -40,7 +40,7 @@ FROM '/path/to/file.csv' WITH CSV HEADER;
 
 For 10M+ row loads, `\copy` is the fastest path. `INSERT ... VALUES` per row is 100-1000x slower.
 
-## Stage 2 — Transformation
+## Stage 2 -- Transformation
 
 Validate and normalize in SQL:
 
@@ -65,13 +65,13 @@ SELECT COUNT(*) AS n_null FROM features_staging WHERE geom IS NULL;
 ```
 
 If counts are non-zero, decide:
-- **Drop the bad rows** (with logging) — common for civic data
+- **Drop the bad rows** (with logging) -- common for civic data
 - **Repair** (most cases handled by `ST_MakeValid`)
-- **Halt the pipeline** — for authoritative data where you can't drop silently
+- **Halt the pipeline** -- for authoritative data where you can't drop silently
 
 The book emphasizes: **never silently drop rows.** Always log what you removed and why.
 
-## Stage 3 — Promotion
+## Stage 3 -- Promotion
 
 Atomic move from staging to production:
 
@@ -138,7 +138,7 @@ ON CONFLICT (src_id) DO UPDATE
 UPDATE features SET deleted_at = now() WHERE NOT seen_in_run AND deleted_at IS NULL;
 ```
 
-Preferable to hard delete in civic work — you can recover from a bad source-data run.
+Preferable to hard delete in civic work -- you can recover from a bad source-data run.
 
 ## Incremental loads
 
@@ -261,26 +261,26 @@ Six months later, when someone asks "why did county count go from 3,143 to 3,141
 
 ## Pitfalls
 
-- **Transforming in the production table during INSERT** — index updates per row are catastrophic.
-- **Forgetting `VACUUM ANALYZE` after promotion** — planner uses stale stats; queries get bad plans for hours.
-- **No transaction around promotion** — partial failure leaves production in an inconsistent state.
-- **No idempotency guarantee** — re-running the pipeline duplicates rows (no UPSERT) or corrupts (hard delete + load).
-- **Silent row drop during validation** — six months later, no record of what was discarded or why.
-- **`ST_Equals` for change detection on float-coord geometries** — float drift makes everything "changed." Use `ST_HausdorffDistance` with a tolerance.
-- **Per-run TRUNCATE + re-load** — slow, breaks foreign keys, no atomic transition. Use UPSERT instead.
-- **Loading raw shapefile via `ogr2ogr` directly to production** — no staging means no validation step. Always stage first.
+- **Transforming in the production table during INSERT** -- index updates per row are catastrophic.
+- **Forgetting `VACUUM ANALYZE` after promotion** -- planner uses stale stats; queries get bad plans for hours.
+- **No transaction around promotion** -- partial failure leaves production in an inconsistent state.
+- **No idempotency guarantee** -- re-running the pipeline duplicates rows (no UPSERT) or corrupts (hard delete + load).
+- **Silent row drop during validation** -- six months later, no record of what was discarded or why.
+- **`ST_Equals` for change detection on float-coord geometries** -- float drift makes everything "changed." Use `ST_HausdorffDistance` with a tolerance.
+- **Per-run TRUNCATE + re-load** -- slow, breaks foreign keys, no atomic transition. Use UPSERT instead.
+- **Loading raw shapefile via `ogr2ogr` directly to production** -- no staging means no validation step. Always stage first.
 
-## SU helpers — `siege_utilities` for source fetching
+## SU helpers -- `siege_utilities` for source fetching
 
 For Census / GADM / OSM sources, don't `wget` shapefiles. SU's `geo.spatial_data.get_geographic_boundaries()` returns a GeoDataFrame ready to push to PostGIS via `gdf.to_postgis(...)`. See [`../siege-utilities-postgis.md`](../siege-utilities-postgis.md) for the per-task map.
 
 ## Cross-links
 
-- [`01-importing-data.md`](01-importing-data.md) — bulk-load tools (`shp2pgsql`, `ogr2ogr`, COPY, FDW)
-- [`../siege-utilities-postgis.md`](../siege-utilities-postgis.md) — SU helpers for spatial data sourcing
-- [`../indexing-strategies.md`](../indexing-strategies.md) — when to drop/recreate indexes during ETL
-- [`../vacuuming-and-bloat.md`](../vacuuming-and-bloat.md) — VACUUM after every load
-- [skill:pipeline-jobs] — pipeline orchestration patterns
+- [`01-importing-data.md`](01-importing-data.md) -- bulk-load tools (`shp2pgsql`, `ogr2ogr`, COPY, FDW)
+- [`../siege-utilities-postgis.md`](../siege-utilities-postgis.md) -- SU helpers for spatial data sourcing
+- [`../indexing-strategies.md`](../indexing-strategies.md) -- when to drop/recreate indexes during ETL
+- [`../vacuuming-and-bloat.md`](../vacuuming-and-bloat.md) -- VACUUM after every load
+- [skill:pipeline-jobs] -- pipeline orchestration patterns
 
 ## Citation
 

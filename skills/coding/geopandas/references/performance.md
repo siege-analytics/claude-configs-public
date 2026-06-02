@@ -18,10 +18,10 @@ Reads are 5-10× faster on large shapefiles. `pyogrio` wheels are smaller (still
 Shapely 2.x (released 2022) vectorizes operations through `shapely.STRtree` and pygeos-style C bindings. GeoPandas builds on this when available.
 
 ```python
-# Vectorized — fast
+# Vectorized -- fast
 gdf["area_m2"] = gdf.to_crs("EPSG:5070").geometry.area
 
-# Per-row apply — slow
+# Per-row apply -- slow
 gdf["area_m2"] = gdf.apply(lambda r: project_then_area(r.geometry), axis=1)
 ```
 
@@ -82,10 +82,10 @@ Reproject is O(N) per-row math. Caching pays off after the second use.
 ## 7. Avoid `apply` for spatial ops
 
 ```python
-# Slow — apply iterates row-by-row
+# Slow -- apply iterates row-by-row
 gdf["centroid"] = gdf.apply(lambda r: r.geometry.centroid, axis=1)
 
-# Fast — vectorized
+# Fast -- vectorized
 gdf["centroid"] = gdf.geometry.centroid
 ```
 
@@ -139,9 +139,9 @@ result = ddf.sjoin(counties, predicate="within").compute()
 ```
 
 Caveat: `dask-geopandas` is alpha-quality compared to PostGIS or Sedona for large joins. For data > 10 GB, prefer:
-- **DuckDB-spatial** ([skill:duckdb-spatial]) — single-node, in-memory + spilling, very fast
-- **Sedona** ([skill:sedona]) — distributed across a Spark cluster
-- **PostGIS** with partitioning — persistent, indexed, multi-user
+- **DuckDB-spatial** ([skill:duckdb-spatial]) -- single-node, in-memory + spilling, very fast
+- **Sedona** ([skill:sedona]) -- distributed across a Spark cluster
+- **PostGIS** with partitioning -- persistent, indexed, multi-user
 
 Dask-GeoPandas is useful for the narrow case "I want GeoPandas semantics on a single machine but the data is 2× RAM."
 

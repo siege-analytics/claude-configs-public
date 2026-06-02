@@ -9,11 +9,11 @@ allowed-tools: Read Bash
 
 **When this applies:** Any work that creates a change in state or behavior of the software that will impact the product. Typographical corrections with no functional effect are the only exempt class.
 
-Before you mark a ticket In Progress, assign it to yourself, or write the first commit — run this checklist in full. Do not start until every item passes.
+Before you mark a ticket In Progress, assign it to yourself, or write the first commit -- run this checklist in full. Do not start until every item passes.
 
 ## Why
 
-Work done outside a project drifts from the roadmap and is never deprioritized correctly. Work that starts with open blockers produces rework when the blocker resolves and changes requirements. The dependency graph exists precisely to show the order things must happen in — ignoring it builds on an unstable foundation.
+Work done outside a project drifts from the roadmap and is never deprioritized correctly. Work that starts with open blockers produces rework when the blocker resolves and changes requirements. The dependency graph exists precisely to show the order things must happen in -- ignoring it builds on an unstable foundation.
 
 ## Checklist
 

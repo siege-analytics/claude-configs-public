@@ -1,6 +1,6 @@
 # Objection/Counter-Objection (O/CO) Framework
 
-The core CRE technique for increasing conversions. Don't guess objections—research them. Then systematically counter each one.
+The core CRE technique for increasing conversions. Don't guess objections--research them. Then systematically counter each one.
 
 ## The O/CO Table
 
@@ -54,18 +54,18 @@ Create a two-column table:
 ## Types of Objections
 
 ### Explicit objections
-Easy to address—visitors state them clearly:
+Easy to address--visitors state them clearly:
 - "Too expensive"
 - "No free trial"
 - "Requires credit card"
 
 ### Implicit objections
-Harder to identify—visitors won't admit them:
+Harder to identify--visitors won't admit them:
 - "I'm lazy and don't want to do the work"
 - "I'm not sure I'll follow through"
 - "This seems too good to be true"
 
-**Technique for implicit objections**: Use "CO Only" approach—address the objection without stating it.
+**Technique for implicit objections**: Use "CO Only" approach--address the objection without stating it.
 
 Bad: "Worried you're too lazy to learn a language?"
 Good: "Let the audio do the work for you."

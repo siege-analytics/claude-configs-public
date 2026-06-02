@@ -5,13 +5,13 @@
 a = [1, 2, 3, 4, 5, 6, 7, 8]
 
 # Basic slicing
-a[:4]   # [1, 2, 3, 4] — first 4
-a[-3:]  # [6, 7, 8] — last 3
+a[:4]   # [1, 2, 3, 4] -- first 4
+a[-3:]  # [6, 7, 8] -- last 3
 a[3:5]  # [4, 5]
 
 # Don't use 0 for start or len for end
 a[:5]   # GOOD
-a[0:5]  # BAD — redundant 0
+a[0:5]  # BAD -- redundant 0
 
 # Slicing makes a new list (shallow copy)
 b = a[:]  # copy of a
@@ -22,11 +22,11 @@ a[2:4] = [10, 11]  # can be different length
 
 ## Item 12: Avoid Striding and Slicing in a Single Expression
 ```python
-# BAD — confusing stride + slice
+# BAD -- confusing stride + slice
 x = a[2::2]    # skip start, stride by 2
 x = a[-2::-2]  # reverse with stride
 
-# GOOD — separate steps
+# GOOD -- separate steps
 y = a[::2]     # stride first
 z = y[1:3]     # then slice
 
@@ -36,11 +36,11 @@ x = a[::-1]    # OK for simple reversal, but avoid combining with slicing
 
 ## Item 13: Prefer Catch-All Unpacking Over Slicing
 ```python
-# BAD — manual slicing
+# BAD -- manual slicing
 oldest = ages[0]
 rest = ages[1:]
 
-# GOOD — starred expression
+# GOOD -- starred expression
 oldest, *rest = ages
 oldest, second, *rest = ages
 first, *middle, last = ages
@@ -59,7 +59,7 @@ first, second, *rest = it
 tools = [Tool('drill', 4), Tool('saw', 2)]
 tools.sort(key=lambda x: x.weight)
 
-# Multiple criteria — use tuple
+# Multiple criteria -- use tuple
 tools.sort(key=lambda x: (x.name, x.weight))
 
 # Reverse one criterion using negation (numeric)
@@ -70,7 +70,7 @@ tools.sort(key=lambda x: x.name)             # secondary first
 tools.sort(key=lambda x: x.weight, reverse=True)  # primary last
 ```
 
-- Python sort is stable — equal elements maintain relative order
+- Python sort is stable -- equal elements maintain relative order
 - Use `operator.attrgetter` for attribute access as key
 
 ## Item 15: Be Cautious When Relying on dict Insertion Order
@@ -92,21 +92,21 @@ class MyDB:
 
 ## Item 16: Prefer get Over in and KeyError to Handle Missing Dictionary Keys
 ```python
-# BAD — check then access
+# BAD -- check then access
 if key in counters:
     count = counters[key]
 else:
     count = 0
 counters[key] = count + 1
 
-# BAD — try/except
+# BAD -- try/except
 try:
     count = counters[key]
 except KeyError:
     count = 0
 counters[key] = count + 1
 
-# GOOD — use get
+# GOOD -- use get
 count = counters.get(key, 0)
 counters[key] = count + 1
 
@@ -117,11 +117,11 @@ counters[key] = count + 1
 ```python
 from collections import defaultdict
 
-# BAD — setdefault (confusing API)
+# BAD -- setdefault (confusing API)
 visits = {}
 visits.setdefault('France', []).append('Paris')
 
-# GOOD — defaultdict
+# GOOD -- defaultdict
 visits = defaultdict(list)
 visits['France'].append('Paris')
 ```

@@ -15,9 +15,9 @@
 
 ## What Shaping Is
 
-Shaping is the work you do before the work. It happens at the intersection of product strategy, design thinking, and technical reality. The goal is to take a raw idea — a customer request, a business opportunity, a nagging problem — and transform it into something a small team can build in a fixed amount of time.
+Shaping is the work you do before the work. It happens at the intersection of product strategy, design thinking, and technical reality. The goal is to take a raw idea -- a customer request, a business opportunity, a nagging problem -- and transform it into something a small team can build in a fixed amount of time.
 
-Shaping is not writing a spec. Specs are too detailed — they remove the team's ability to make creative decisions. Shaping is not writing a user story. User stories are too vague — they leave too many open questions for the team to resolve under time pressure. Shaping sits in between: detailed enough that the main approach is clear, rough enough that the team has room to work out the specifics.
+Shaping is not writing a spec. Specs are too detailed -- they remove the team's ability to make creative decisions. Shaping is not writing a user story. User stories are too vague -- they leave too many open questions for the team to resolve under time pressure. Shaping sits in between: detailed enough that the main approach is clear, rough enough that the team has room to work out the specifics.
 
 **What shaping replaces:**
 
@@ -33,11 +33,11 @@ Shaping is not writing a spec. Specs are too detailed — they remove the team's
 
 Shaped work has three essential properties. If any one is missing, the work is not ready to bet on.
 
-**1. Rough.** The solution is sketched at the right level of abstraction. There are no wireframes, no pixel-level designs, no detailed task lists. The team has room to interpret the solution and make their own design and technical decisions. Roughness is intentional — it signals to the team that they own the details.
+**1. Rough.** The solution is sketched at the right level of abstraction. There are no wireframes, no pixel-level designs, no detailed task lists. The team has room to interpret the solution and make their own design and technical decisions. Roughness is intentional -- it signals to the team that they own the details.
 
-**2. Solved.** Despite being rough, the main elements of the solution are worked out. The shaper has thought through the core flow, identified the key interactions, and resolved the biggest design questions. The team should not have to figure out the fundamental approach — that is the shaper's job. They should figure out the details within that approach.
+**2. Solved.** Despite being rough, the main elements of the solution are worked out. The shaper has thought through the core flow, identified the key interactions, and resolved the biggest design questions. The team should not have to figure out the fundamental approach -- that is the shaper's job. They should figure out the details within that approach.
 
-**3. Bounded.** The scope is explicitly limited. The appetite sets a time boundary. No-gos set feature boundaries. Rabbit holes are identified and addressed. The team knows what they are building and — just as importantly — what they are not building.
+**3. Bounded.** The scope is explicitly limited. The appetite sets a time boundary. No-gos set feature boundaries. Rabbit holes are identified and addressed. The team knows what they are building and -- just as importantly -- what they are not building.
 
 **How to tell if work is properly shaped:**
 
@@ -75,11 +75,11 @@ There is no "3-week appetite" or "4-month appetite." The constraint of fixed siz
 
 A breadboard is an interaction design sketch that uses only words and arrows. No layout, no visual design, no color, no images. Just three elements:
 
-**Places** — screens, dialogs, or pages the user can navigate to. Written as nouns.
+**Places** -- screens, dialogs, or pages the user can navigate to. Written as nouns.
 
-**Affordances** — things the user can interact with at each place. Written as verbs or interactive elements (buttons, fields, links).
+**Affordances** -- things the user can interact with at each place. Written as verbs or interactive elements (buttons, fields, links).
 
-**Connection lines** — arrows showing how affordances lead to other places.
+**Connection lines** -- arrows showing how affordances lead to other places.
 
 **Example breadboard: "User invites a teammate"**
 
@@ -104,20 +104,20 @@ A breadboard is an interaction design sketch that uses only words and arrows. No
 - They are fast to create and easy to change
 - They prevent premature conversations about visual design
 - They reveal missing steps and edge cases in the interaction
-- Anyone can read them — no design tools required
+- Anyone can read them -- no design tools required
 
 **When not to use breadboards:** When the challenge is primarily visual (a new data visualization, a complex responsive layout), a fat marker sketch is more appropriate.
 
 ## Fat Marker Sketches
 
-A fat marker sketch is a visual sketch drawn at low fidelity — as if you were using a thick marker on a whiteboard. The thick line prevents you from drawing details like specific fonts, exact spacing, or precise button sizes. It forces you to think about arrangement and emphasis rather than polish.
+A fat marker sketch is a visual sketch drawn at low fidelity -- as if you were using a thick marker on a whiteboard. The thick line prevents you from drawing details like specific fonts, exact spacing, or precise button sizes. It forces you to think about arrangement and emphasis rather than polish.
 
 **Rules for fat marker sketches:**
 
-1. Draw on paper or a tablet with a thick brush — never in a design tool
-2. No text labels (or very few) — use blocks and shapes to represent content areas
-3. No color — grayscale only
-4. No precise alignment — rough positioning is the point
+1. Draw on paper or a tablet with a thick brush -- never in a design tool
+2. No text labels (or very few) -- use blocks and shapes to represent content areas
+3. No color -- grayscale only
+4. No precise alignment -- rough positioning is the point
 5. Show the most important element prominently; let everything else recede
 
 **What fat marker sketches communicate:**
@@ -139,7 +139,7 @@ This intentional vagueness is a feature. It gives the building team freedom to d
 
 ## The Pitch Format
 
-A pitch is the shaped work packaged for the betting table. It is a written document — not a slide deck, not a verbal presentation — because writing forces clarity and allows asynchronous review.
+A pitch is the shaped work packaged for the betting table. It is a written document -- not a slide deck, not a verbal presentation -- because writing forces clarity and allows asynchronous review.
 
 **Five elements of a pitch:**
 
@@ -147,13 +147,13 @@ A pitch is the shaped work packaged for the betting table. It is a written docum
 
 **2. Appetite.** How much time is this worth? Small batch (1-2 weeks) or large batch (6 weeks). This is a strategic decision, not a technical estimate.
 
-**3. Solution.** The shaped solution, presented with breadboards and/or fat marker sketches. Show the core flow and key interactions. Keep it rough — enough to understand the approach, not enough to copy pixel-by-pixel.
+**3. Solution.** The shaped solution, presented with breadboards and/or fat marker sketches. Show the core flow and key interactions. Keep it rough -- enough to understand the approach, not enough to copy pixel-by-pixel.
 
 **4. Rabbit holes.** Known risks and complexities that could blow up the scope. For each rabbit hole, explain how the solution addresses it or avoids it. If a rabbit hole cannot be mitigated, it may mean the pitch is not ready.
 
 **5. No-gos.** Explicit statements about what the solution will not include. These prevent scope creep by making boundaries visible and non-negotiable. "We will not support bulk invitations in this version" is a no-go.
 
-**Pitch length:** A pitch should take 5-10 minutes to read. If it takes longer, the solution is probably not shaped well enough — it is either too detailed or too complex.
+**Pitch length:** A pitch should take 5-10 minutes to read. If it takes longer, the solution is probably not shaped well enough -- it is either too detailed or too complex.
 
 ## Identifying Rabbit Holes
 
@@ -173,7 +173,7 @@ Rabbit holes are the parts of a project that look simple on the surface but cont
 
 1. Walk through the solution step by step and ask "What could go wrong here?"
 2. For each interaction, ask "Is there a simpler version that achieves 80% of the value?"
-3. Look for words like "just," "simply," or "obviously" in your own thinking — they often mask complexity
+3. Look for words like "just," "simply," or "obviously" in your own thinking -- they often mask complexity
 4. Ask an engineer to review the pitch for technical rabbit holes
 5. Ask a designer to review for interaction rabbit holes
 
@@ -186,15 +186,15 @@ No-gos are explicit boundaries that prevent scope creep during the build. They s
 - They prevent the building team from expanding scope based on their own good judgment
 - They make trade-offs visible to the betting table
 - They give teams permission to not build something without feeling like they are cutting corners
-- They make the appetite honest — the solution fits the time budget because these things are excluded
+- They make the appetite honest -- the solution fits the time budget because these things are excluded
 
 **Good no-go examples:**
 
-- "No bulk operations in v1 — users invite one person at a time"
-- "No custom notification schedules — we pick a sensible default"
-- "No mobile-responsive version for this feature — desktop only"
-- "No CSV import — users enter data manually or use the API"
-- "No undo — actions are confirmed before execution"
+- "No bulk operations in v1 -- users invite one person at a time"
+- "No custom notification schedules -- we pick a sensible default"
+- "No mobile-responsive version for this feature -- desktop only"
+- "No CSV import -- users enter data manually or use the API"
+- "No undo -- actions are confirmed before execution"
 
 **Bad no-go examples (too vague):**
 
@@ -208,7 +208,7 @@ No-gos must be specific and concrete. A team member should be able to look at a 
 
 Shaping is a senior role. The shaper needs to understand the business context (which problems are worth solving), the user perspective (what workflows look like), and the technical landscape (what is easy and what is hard to build). This rare combination usually means shaping is done by a founder, a senior product person, or a senior designer who is technically fluent.
 
-**Shaping is not a committee activity.** One or two people shape a pitch. They may consult others — an engineer for technical feasibility, a support person for common complaints — but the shaping itself is done by a small number of people who can hold the whole picture in their head.
+**Shaping is not a committee activity.** One or two people shape a pitch. They may consult others -- an engineer for technical feasibility, a support person for common complaints -- but the shaping itself is done by a small number of people who can hold the whole picture in their head.
 
 **Shaping is not the building team's job.** If the team doing the building also does the shaping, they end up shaping during the build, which defeats the purpose. The building team's job is to take a shaped pitch and figure out the implementation details. The shaper's job is to make sure the pitch is ready for that.
 
@@ -218,7 +218,7 @@ Shaping is a senior role. The shaper needs to understand the business context (w
 
 **Step 2: Narrow the problem.** Move from a broad problem ("reporting is bad") to a specific scenario ("managers need to know which projects are behind schedule this week"). The narrower the problem, the easier it is to shape a bounded solution.
 
-**Step 3: Sketch the solution.** Use breadboards for flow-heavy problems and fat marker sketches for layout-heavy problems. Work quickly — if the sketch takes more than 30 minutes, the problem might need more narrowing.
+**Step 3: Sketch the solution.** Use breadboards for flow-heavy problems and fat marker sketches for layout-heavy problems. Work quickly -- if the sketch takes more than 30 minutes, the problem might need more narrowing.
 
 **Step 4: Identify rabbit holes.** Walk through the solution and flag anything that could blow up. Address each one: simplify, exclude, or find a workaround.
 

@@ -19,7 +19,7 @@ Creating effective color themes and implementing dark mode correctly.
 
 ## Dark Mode Philosophy
 
-Dark mode isn't just inverting colors—it requires deliberate design decisions to maintain usability, hierarchy, and aesthetics.
+Dark mode isn't just inverting colors--it requires deliberate design decisions to maintain usability, hierarchy, and aesthetics.
 
 ### Why Dark Mode Matters
 

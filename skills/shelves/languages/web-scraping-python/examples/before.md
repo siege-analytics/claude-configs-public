@@ -16,10 +16,10 @@ def scrape_jobs(base_url, num_pages):
             response = urllib.request.urlopen(url)
             html = response.read().decode("utf-8")
         except:
-            # Swallows every error — silent failures
+            # Swallows every error -- silent failures
             continue
 
-        # Parsing HTML with regex — fragile and incorrect
+        # Parsing HTML with regex -- fragile and incorrect
         titles = re.findall(r'<h2 class="job-title">(.*?)</h2>', html)
         companies = re.findall(r'<span class="company">(.*?)</span>', html)
         salaries = re.findall(r'<div class="salary">(.*?)</div>', html)

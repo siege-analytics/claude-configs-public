@@ -39,7 +39,7 @@ The famous milkshake study revealed:
 - **Assumed competitors:** Other fast food beverages, breakfast items
 - **Actual competitors:** Bananas, bagels, donuts, boredom itself
 
-The job wasn't "consume breakfast"—it was "make my commute tolerable and keep me full until lunch."
+The job wasn't "consume breakfast"--it was "make my commute tolerable and keep me full until lunch."
 
 ### Mapping Your Competition
 

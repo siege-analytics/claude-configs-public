@@ -2,10 +2,10 @@
 
 ## Item 19: Never Unpack More Than Three Variables When Functions Return Multiple Values
 ```python
-# BAD — too many unpacked values, confusing
+# BAD -- too many unpacked values, confusing
 minimum, maximum, average, median, count = get_stats(data)
 
-# GOOD — return a lightweight class or namedtuple
+# GOOD -- return a lightweight class or namedtuple
 from collections import namedtuple
 
 Stats = namedtuple('Stats', ['minimum', 'maximum', 'average', 'median', 'count'])
@@ -28,7 +28,7 @@ print(result.average)
 
 ## Item 20: Prefer Raising Exceptions to Returning None
 ```python
-# BAD — None is ambiguous
+# BAD -- None is ambiguous
 def careful_divide(a, b):
     try:
         return a / b
@@ -39,14 +39,14 @@ def careful_divide(a, b):
 result = careful_divide(0, 5)  # returns 0.0
 if not result:  # BUG: treats 0.0 as failure
 
-# GOOD — raise an exception
+# GOOD -- raise an exception
 def careful_divide(a, b):
     try:
         return a / b
     except ZeroDivisionError as e:
         raise ValueError('Invalid inputs') from e
 
-# ALSO GOOD — type hints with Never-None return
+# ALSO GOOD -- type hints with Never-None return
 def careful_divide(a: float, b: float) -> float:
     """Raises ValueError on invalid inputs."""
     if b == 0:
@@ -112,11 +112,11 @@ flow_rate(1, 2, 3600)  # TypeError!
 
 ## Item 24: Use None and Docstrings to Specify Dynamic Default Arguments
 ```python
-# BAD — mutable default is shared across calls!
+# BAD -- mutable default is shared across calls!
 def log(message, when=datetime.now()):  # BUG: evaluated once at import
     print(f'{when}: {message}')
 
-# GOOD — use None sentinel
+# GOOD -- use None sentinel
 def log(message, when=None):
     """Log a message with a timestamp.
 
@@ -163,7 +163,7 @@ def safe_division(numerator, denominator, /,
 ```python
 from functools import wraps
 
-# BAD — decorator hides original function metadata
+# BAD -- decorator hides original function metadata
 def trace(func):
     def wrapper(*args, **kwargs):
         result = func(*args, **kwargs)
@@ -171,7 +171,7 @@ def trace(func):
         return result
     return wrapper
 
-# GOOD — preserves function metadata
+# GOOD -- preserves function metadata
 def trace(func):
     @wraps(func)
     def wrapper(*args, **kwargs):

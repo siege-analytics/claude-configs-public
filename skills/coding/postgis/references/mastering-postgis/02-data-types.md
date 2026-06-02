@@ -1,4 +1,4 @@
-# Ch 2 — Spatial Data Types
+# Ch 2 -- Spatial Data Types
 
 The book's chapter on "Structures that Make up Spatial Data" covers `geometry`, `geography`, `box*`, and `raster`. The conceptual treatment is timeless; the operational details are stable through PostGIS 3.x.
 
@@ -6,7 +6,7 @@ For the operational decision rules between `geometry` and `geography`, see [`../
 
 ## The mental model the book gets right
 
-A **geometry** is coordinates plus a meaning. The meaning is the SRID — without it, a coordinate is a number with no relationship to physical space. The book hammers this point repeatedly, and it's the first thing every PostGIS user gets wrong.
+A **geometry** is coordinates plus a meaning. The meaning is the SRID -- without it, a coordinate is a number with no relationship to physical space. The book hammers this point repeatedly, and it's the first thing every PostGIS user gets wrong.
 
 ```
 Point(-98, 30)        ← could be anywhere
@@ -17,19 +17,19 @@ The SRID changes every spatial operation's interpretation. `ST_Distance` on EPSG
 
 ## The four type families
 
-### `geometry` — planar coordinates in any CRS
+### `geometry` -- planar coordinates in any CRS
 
 The default. Every operation (`ST_Distance`, `ST_Area`, `ST_Buffer`) treats coordinates as planar (Euclidean) within the column's SRID.
 
 Subtypes worth knowing:
-- `geometry(Point, 4326)` — typed and SRID-constrained
-- `geometry(MultiPolygon, 4326)` — for boundaries that may have islands or holes
-- `geometry(LineString, 4326)` — for routes / streets
-- `geometry(GeometryCollection, 4326)` — heterogeneous; rare in practice
+- `geometry(Point, 4326)` -- typed and SRID-constrained
+- `geometry(MultiPolygon, 4326)` -- for boundaries that may have islands or holes
+- `geometry(LineString, 4326)` -- for routes / streets
+- `geometry(GeometryCollection, 4326)` -- heterogeneous; rare in practice
 
 **Always type the column.** `geometry geometry` (untyped) accepts anything; you'll discover months later that someone inserted points into your polygon column and `ST_Area` returns 0 for those rows.
 
-### `geography` — coordinates on a spheroid
+### `geography` -- coordinates on a spheroid
 
 Stores in WGS 84 always. Operations use spheroidal math (great-circle distance, geodesic area). Returns meters / square meters always.
 
@@ -43,7 +43,7 @@ Cost: spheroidal math is per-row expensive. Use for one-off queries or where pro
 
 The book's point: `geography` isn't "more accurate." It's a different coordinate space with a different cost model. Choose deliberately.
 
-### `box2d` / `box3d` — bounding boxes
+### `box2d` / `box3d` -- bounding boxes
 
 Lightweight rectangles used internally by GIST and the `&&` operator. Almost never directly instantiated by users; commonly returned from `ST_Envelope(geom)` and `ST_3DEnvelope(geom)`.
 
@@ -53,9 +53,9 @@ Useful for spatial pre-filters when you want bounding-box-only tests:
 SELECT * FROM features WHERE geom && ST_MakeEnvelope(-100, 30, -97, 32, 4326);
 ```
 
-`&&` returns true if bounding boxes intersect — much cheaper than `ST_Intersects` (which does the full predicate). Sometimes the right answer is "approximately intersects."
+`&&` returns true if bounding boxes intersect -- much cheaper than `ST_Intersects` (which does the full predicate). Sometimes the right answer is "approximately intersects."
 
-### `raster` — pixel grids
+### `raster` -- pixel grids
 
 A `raster` is a tiled pixel grid with georeferencing. Lives in `postgis_raster`, a separate extension as of PostGIS 3.x.
 
@@ -64,15 +64,15 @@ CREATE EXTENSION postgis_raster;
 CREATE TABLE elevation (id BIGSERIAL, rast raster);
 ```
 
-For raster operations, see [`04-raster-operations.md`](04-raster-operations.md). For most Siege civic work, raster is rarely the right tool — vector polygons + Census tabular data carry the analysis.
+For raster operations, see [`04-raster-operations.md`](04-raster-operations.md). For most Siege civic work, raster is rarely the right tool -- vector polygons + Census tabular data carry the analysis.
 
-## Dimensions — XY / XYZ / XYM / XYZM
+## Dimensions -- XY / XYZ / XYM / XYZM
 
 PostGIS supports up to 4D coordinates:
-- **XY** — normal 2D. Default.
-- **XYZ** — adds Z (elevation, building height, depth).
-- **XYM** — adds M (linear measure, mile-marker distance).
-- **XYZM** — both.
+- **XY** -- normal 2D. Default.
+- **XYZ** -- adds Z (elevation, building height, depth).
+- **XYM** -- adds M (linear measure, mile-marker distance).
+- **XYZM** -- both.
 
 Most operations work transparently in all dimensions, but a few quirks:
 
@@ -89,11 +89,11 @@ SELECT DISTINCT ST_NDims(geom) FROM features;
 UPDATE features SET geom = ST_Force2D(geom);
 ```
 
-## SRIDs — the meaning layer
+## SRIDs -- the meaning layer
 
 The book's strongest contribution: SRIDs aren't an annoyance, they're the *semantic layer* that turns numbers into geography.
 
-### `spatial_ref_sys` — the catalog
+### `spatial_ref_sys` -- the catalog
 
 PostGIS ships with the EPSG catalog in `spatial_ref_sys`. ~7000 SRIDs. Look one up:
 
@@ -103,7 +103,7 @@ SELECT srid, auth_name, srtext FROM spatial_ref_sys WHERE srid = 4326;
 
 If you need a non-EPSG CRS (custom local grid, historical projection), insert it into `spatial_ref_sys` with a SRID > 900000 (the "user-defined" range).
 
-### Choosing an SRID — the book's advice, current
+### Choosing an SRID -- the book's advice, current
 
 For US work specifically, the book recommends:
 - **Storage:** EPSG:4326 (WGS 84, lat/lng) for interoperability
@@ -124,9 +124,9 @@ SELECT Find_SRID('public', 'features', 'geom');
 SELECT UpdateGeometrySRID('public', 'features', 'geom', 4326);
 ```
 
-`UpdateGeometrySRID` is `ST_SetSRID` for the whole column — same caveat: it labels, doesn't reproject.
+`UpdateGeometrySRID` is `ST_SetSRID` for the whole column -- same caveat: it labels, doesn't reproject.
 
-## What the book is missing — modern type additions
+## What the book is missing -- modern type additions
 
 ### H3 hexagonal cells
 
@@ -139,7 +139,7 @@ SELECT h3_lat_lng_to_cell(point::geography, 9) AS cell FROM places;
 
 Excellent for binning at scale (hexagons aren't subject to the rectangular-grid distortion problem) and for approximate joins when full PostGIS overlay is overkill. See [`../indexing-strategies.md`](../indexing-strategies.md) and [skill:duckdb-spatial] (DuckDB also supports H3).
 
-### `geomval` — value at a location
+### `geomval` -- value at a location
 
 PostGIS 3.x added `geomval`, a record type pairing a geometry with a value. Useful for raster zonal statistics:
 
@@ -154,20 +154,20 @@ The book predates this. See [`04-raster-operations.md`](04-raster-operations.md)
 
 ### `topology` types
 
-`postgis_topology` adds `topogeometry` and a structured topology layer. Covered separately in [`../topology.md`](../topology.md). Rarely the right tool — see that file.
+`postgis_topology` adds `topogeometry` and a structured topology layer. Covered separately in [`../topology.md`](../topology.md). Rarely the right tool -- see that file.
 
 ## Pitfalls
 
-- **Untyped `geometry` column** — accepts anything; mixed types break `ST_Area` etc. Always type: `geometry(Polygon, 4326)`.
-- **SRID 0** — geometry has no projection metadata; spatial operations against indexed columns may not match. Validate on ingest.
-- **Z dimension drift** — silent contamination from shapefile loaders. `ST_Force2D` to scrub.
-- **`geometry::geography` casts in hot loops** — per-row spheroidal conversion is expensive. Materialize a `geography` column or pre-project `geometry`.
-- **Mixing dimensions** — `ST_Distance(point_2d, point_3d)` returns 2D distance; the Z is silently dropped.
-- **Custom SRID that pyproj doesn't understand** — PostGIS can use it via the `proj4text` column, but downstream tools (GeoPandas, QGIS, browsers) may fail. Convert to a standard EPSG before exporting.
+- **Untyped `geometry` column** -- accepts anything; mixed types break `ST_Area` etc. Always type: `geometry(Polygon, 4326)`.
+- **SRID 0** -- geometry has no projection metadata; spatial operations against indexed columns may not match. Validate on ingest.
+- **Z dimension drift** -- silent contamination from shapefile loaders. `ST_Force2D` to scrub.
+- **`geometry::geography` casts in hot loops** -- per-row spheroidal conversion is expensive. Materialize a `geography` column or pre-project `geometry`.
+- **Mixing dimensions** -- `ST_Distance(point_2d, point_3d)` returns 2D distance; the Z is silently dropped.
+- **Custom SRID that pyproj doesn't understand** -- PostGIS can use it via the `proj4text` column, but downstream tools (GeoPandas, QGIS, browsers) may fail. Convert to a standard EPSG before exporting.
 
 ## Cross-links
 
-- [`../geometry-vs-geography.md`](../geometry-vs-geography.md) — full operational decision tree
-- [`../pitfalls.md`](../pitfalls.md) — SRID mismatch debugging
-- [`../indexing-strategies.md`](../indexing-strategies.md) — index choice by data type
-- [`04-raster-operations.md`](04-raster-operations.md) — raster type details
+- [`../geometry-vs-geography.md`](../geometry-vs-geography.md) -- full operational decision tree
+- [`../pitfalls.md`](../pitfalls.md) -- SRID mismatch debugging
+- [`../indexing-strategies.md`](../indexing-strategies.md) -- index choice by data type
+- [`04-raster-operations.md`](04-raster-operations.md) -- raster type details

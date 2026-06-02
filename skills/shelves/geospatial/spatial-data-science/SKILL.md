@@ -1,9 +1,9 @@
 ---
 name: spatial-data-science
-description: 'Methodological foundation of spatial data science — the WHY behind CRS / projections / support / data cubes. Use when the user mentions "support (spatial)", "MAUP", "modifiable areal unit problem", "ecological fallacy", "data cubes", "spatial statistics", "geostatistics", "areal interpolation", "spatial regression", "Pebesma", "Bivand", or asks "what does this spatial concept actually mean". Also trigger when modeling spatial phenomena (not just transforming data), debating CRS choice from first principles, reasoning about scale effects in geographic analysis, or designing a spatial-temporal data model. Heavier on theory than geocomputation-with-r (which is applied); pair them. For engine-specific code see postgis / geopandas / sedona / duckdb-spatial.'
+description: 'Methodological foundation of spatial data science -- the WHY behind CRS / projections / support / data cubes. Use when the user mentions "support (spatial)", "MAUP", "modifiable areal unit problem", "ecological fallacy", "data cubes", "spatial statistics", "geostatistics", "areal interpolation", "spatial regression", "Pebesma", "Bivand", or asks "what does this spatial concept actually mean". Also trigger when modeling spatial phenomena (not just transforming data), debating CRS choice from first principles, reasoning about scale effects in geographic analysis, or designing a spatial-temporal data model. Heavier on theory than geocomputation-with-r (which is applied); pair them. For engine-specific code see postgis / geopandas / sedona / duckdb-spatial.'
 license: CC-BY-NC-ND
 metadata:
-  source: 'r-spatial.org/book — full free online edition of Spatial Data Science: With Applications in R (Pebesma & Bivand, 2025). CRC Press / Routledge also publishes paid print edition.'
+  source: 'r-spatial.org/book -- full free online edition of Spatial Data Science: With Applications in R (Pebesma & Bivand, 2025). CRC Press / Routledge also publishes paid print edition.'
   coverage: 'Full book (17+ chapters across 3 parts) freely readable inline at r-spatial.org/book. Verified 2026-05-17 via WebFetch.'
 ---
 
@@ -13,7 +13,7 @@ The methodological / theoretical foundation that makes spatial analysis non-frau
 
 ## Core Principle
 
-**Support matters when manipulating spatial data.** Pebesma & Bivand's central conceptual claim: every attribute attached to a geometry has *support* — the spatial unit the attribute applies to. Is the value a point measurement? A polygon average? A density per area? An aggregate across a region? Pretending support doesn't exist (treating polygon averages as point values, mixing polygon attributes with raster pixel values without aggregation) produces analyses that are formally correct but substantively meaningless.
+**Support matters when manipulating spatial data.** Pebesma & Bivand's central conceptual claim: every attribute attached to a geometry has *support* -- the spatial unit the attribute applies to. Is the value a point measurement? A polygon average? A density per area? An aggregate across a region? Pretending support doesn't exist (treating polygon averages as point values, mixing polygon attributes with raster pixel values without aggregation) produces analyses that are formally correct but substantively meaningless.
 
 **The foundation:** spatial data is not just geometry-plus-attributes. It's geometry-plus-attributes-plus-support-plus-time-plus-CRS-plus-datum. Each of these can be wrong independently. The discipline is making each explicit before any analytical operation.
 
@@ -29,7 +29,7 @@ The methodological / theoretical foundation that makes spatial analysis non-frau
 
 ## The Three Parts of the Book
 
-### Part 1 — Spatial Data (chapters 1-6)
+### Part 1 -- Spatial Data (chapters 1-6)
 
 The conceptual foundation: coordinates, geometries, attributes, support, data cubes.
 
@@ -39,27 +39,27 @@ The conceptual foundation: coordinates, geometries, attributes, support, data cu
 
 **Key concept: Data cubes.** Multidimensional arrays organizing spatial + temporal + categorical dimensions. The right abstraction for satellite time series, climate model output, or any data with regular structure across time + space. R's `stars` package implements this; Python equivalents include `xarray` + `xcube`.
 
-### Part 2 — R for Spatial Data Science (chapters 7-9)
+### Part 2 -- R for Spatial Data Science (chapters 7-9)
 
 The tooling: `sf` for vector, `stars` for raster + data cubes, modern cloud-native approaches.
 
 This part overlaps with Geocomputation-with-R but is denser methodologically. Where Lovelace shows you `st_intersection`, Pebesma & Bivand explain why GEOS gives one answer and S2 gives another on the same data.
 
-### Part 3 — Models for Spatial Data (chapters 10-17)
+### Part 3 -- Models for Spatial Data (chapters 10-17)
 
 This is the methodologically-distinctive content: actual spatial statistics, not just spatial data manipulation.
 
-**Areal interpolation** — converting attribute data from one spatial framework to another (e.g., census tracts to school districts). Critical for civic / redistricting / demographic work where source and target geographies don't align.
+**Areal interpolation** -- converting attribute data from one spatial framework to another (e.g., census tracts to school districts). Critical for civic / redistricting / demographic work where source and target geographies don't align.
 
-**Geostatistics (kriging)** — modeling spatial autocorrelation; interpolating point measurements to a continuous surface; quantifying uncertainty at unmeasured locations.
+**Geostatistics (kriging)** -- modeling spatial autocorrelation; interpolating point measurements to a continuous surface; quantifying uncertainty at unmeasured locations.
 
-**Spatial regression** — when observations are spatially autocorrelated, OLS assumptions break. Spatial lag models, spatial error models, spatial Durbin models handle this explicitly.
+**Spatial regression** -- when observations are spatially autocorrelated, OLS assumptions break. Spatial lag models, spatial error models, spatial Durbin models handle this explicitly.
 
-**Point pattern analysis** — for event data (crimes, disease cases), the question is whether the pattern is random / clustered / dispersed and how to test that.
+**Point pattern analysis** -- for event data (crimes, disease cases), the question is whether the pattern is random / clustered / dispersed and how to test that.
 
 ## The Methodological Hazards (the disciplines this skill names)
 
-### MAUP — Modifiable Areal Unit Problem
+### MAUP -- Modifiable Areal Unit Problem
 
 The same underlying phenomenon can produce dramatically different statistical results depending on how spatial units are defined. Aggregating to counties vs tracts vs block groups can flip the sign of a correlation. There is NO neutral choice of spatial unit; the choice IS analytical.
 
@@ -85,7 +85,7 @@ Spatial analyses near the edge of the study area have less neighborhood data, bi
 
 ### Neighbor-definition sensitivity
 
-Spatial weights matrices (used in autocorrelation tests, spatial regression) require choosing neighbors. Queen (any shared boundary), rook (shared edge only), k-nearest (k=3 vs k=5 vs k=10), distance-band (1km vs 5km) — each gives different results.
+Spatial weights matrices (used in autocorrelation tests, spatial regression) require choosing neighbors. Queen (any shared boundary), rook (shared edge only), k-nearest (k=3 vs k=5 vs k=10), distance-band (1km vs 5km) -- each gives different results.
 
 **Implication:** test multiple neighbor definitions; report sensitivity. Single-spec results without sensitivity analysis are not robust.
 
@@ -105,25 +105,25 @@ For civic / electoral work: think census vintages as a time dimension on a data 
 
 ## When this skill does NOT apply
 
-- **Pure code questions** (how do I read a Shapefile, how do I buffer in PostGIS) — those are `geocomputation-with-r` or engine-specific skills.
-- **Visualization craft** — see `storytelling/storytelling-with-data` or the `coding/spatial` map-making skills.
-- **Pre-spatial data work** — if your data has no geometry yet, this skill doesn't apply yet.
+- **Pure code questions** (how do I read a Shapefile, how do I buffer in PostGIS) -- those are `geocomputation-with-r` or engine-specific skills.
+- **Visualization craft** -- see `storytelling/storytelling-with-data` or the `coding/spatial` map-making skills.
+- **Pre-spatial data work** -- if your data has no geometry yet, this skill doesn't apply yet.
 
 ## Companions
 
-- `geocomputation-with-r` — shelf-mate; applied / code-first counterpart to this theory-first book.
-- `coding/postgis` — for SQL-backed geostatistics at database scale.
-- `coding/sedona` — distributed compute when data outgrows a single machine; data-cube thinking benefits from distributed array engines.
-- `coding/geopandas` — Python sister to sf; data-cube equivalent is `xarray`.
-- `_data-trust-rules.md` (always-on) — pairs naturally; spatial analysis with bad attribute trust is doubly broken.
+- `geocomputation-with-r` -- shelf-mate; applied / code-first counterpart to this theory-first book.
+- `coding/postgis` -- for SQL-backed geostatistics at database scale.
+- `coding/sedona` -- distributed compute when data outgrows a single machine; data-cube thinking benefits from distributed array engines.
+- `coding/geopandas` -- Python sister to sf; data-cube equivalent is `xarray`.
+- `_data-trust-rules.md` (always-on) -- pairs naturally; spatial analysis with bad attribute trust is doubly broken.
 
 ## Source + license
 
-- **Source:** r-spatial.org/book — *Spatial Data Science: With Applications in R* (Edzer Pebesma & Roger Bivand).
+- **Source:** r-spatial.org/book -- *Spatial Data Science: With Applications in R* (Edzer Pebesma & Roger Bivand).
 - **License:** Creative Commons (CC BY-NC-ND equivalent) for the online edition. Routledge / CRC Press publishes the print edition (January 2025) for purchase.
 - **Verified:** WebFetch 2026-05-17 on `r-spatial.org/book/01-hello.html` and `02-Spaces.html` confirms full chapters readable inline with substantial content beyond TOC.
 
 ## See also
 
-- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` — context on why Spatial Data Science is the methodological-depth complement to Geocomputation with R.
-- Self-review SKILL.md role table — the cross-cutting geospatial affirmative standards (CRS hygiene, spatial-index discipline, modern formats, semantic naming, MAUP / ecological fallacy / scale effects) are the same ones this book grounds.
+- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` -- context on why Spatial Data Science is the methodological-depth complement to Geocomputation with R.
+- Self-review SKILL.md role table -- the cross-cutting geospatial affirmative standards (CRS hygiene, spatial-index discipline, modern formats, semantic naming, MAUP / ecological fallacy / scale effects) are the same ones this book grounds.

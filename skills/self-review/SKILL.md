@@ -49,13 +49,13 @@ Pre-author-inventory: <ticket-link#pre-author-inventory | plans/path.md#pre-auth
 Investigate-artifact: <ticket-comment-link | committed-file-path | plans/investigate-*.md | TRIVIAL (with declaration below)>
 Pre-mortem-artifact: <ticket-comment-link | committed-file-path | plans/pre-mortem-*.md | TRIVIAL (with declaration below)>
 
-## Peer review (the Junior's checklist — mechanics, correctness, craft floor)
+## Peer review (the Junior's checklist -- mechanics, correctness, craft floor)
 For each applicable shelf: what was checked, what was found.
 Grep / test-output / file-read evidence inline per `_writing-claims-rules.md`.
 Empty sections allowed only when the diff genuinely doesn't engage
 that shelf; the omission itself is auditable.
 
-## Lead review (the Lead's adversarial pass — did the Junior actually solve this?)
+## Lead review (the Lead's adversarial pass -- did the Junior actually solve this?)
 Domain-tagged. For each finding and each dismissal in the peer
 review: did this close the class or defer it? For each domain's
 affirmative standards: does it hold, with evidence?
@@ -66,7 +66,7 @@ that has to hold for this to be the right move.
 For every specific count stated in this PR's body, commit messages,
 or this artifact itself, paste the command and output that produced it.
 Format:
-  - "<quoted claim>" — `<command>` → <output>
+  - "<quoted claim>" -- `<command>` → <output>
 An empty section when the PR body contains specific counts is a
 writing-claims:8 violation visible to anyone reading the artifact.
 
@@ -74,14 +74,14 @@ writing-claims:8 violation visible to anyone reading the artifact.
 Artifact: <path to this artifact>
 First-added commit: <paste output of `git log -1 --diff-filter=A --follow --format=%H -- <artifact-path>`>
 Work commit: <paste `git rev-parse HEAD`>
-Verification: <paste output of `git merge-base --is-ancestor <first-added> <work-commit>; echo $?` — must be 0>
+Verification: <paste output of `git merge-base --is-ancestor <first-added> <work-commit>; echo $?` -- must be 0>
 ```
 
 ## Mechanical verification floor
 
 Before the self-review artifact is considered complete, **every modified
 file must pass its language's syntax check.** This is the non-negotiable
-minimum — a file that doesn't parse is worse than the bug it was fixing.
+minimum -- a file that doesn't parse is worse than the bug it was fixing.
 
 For Python changes:
 ```bash
@@ -126,15 +126,15 @@ fabricated link fails the first spot check.
 
 **When NONE is acceptable:** if the change does not trigger any of the five
 authoring-against-state contact categories (data-shape, config-state, topology,
-plan-shape, version-resolution), the field may be `NONE` — but only when a
+plan-shape, version-resolution), the field may be `NONE` -- but only when a
 `Trivial-against-state:` declaration is also present in the artifact. The
 hook checks for the declaration; absence of the declaration with a NONE value
 is a block.
 
 **The field is NOT a quality gate on the inventory itself.** The hook checks
 structural presence (field exists, value non-empty or NONE+declaration). Content
-quality — whether the inventory actually covered the relevant surfaces, whether
-the hypothesis was falsifiable, whether the seven steps were followed — remains
+quality -- whether the inventory actually covered the relevant surfaces, whether
+the hypothesis was falsifiable, whether the seven steps were followed -- remains
 operator-auditable. The field's purpose is to make the composability explicit
 and to block the pattern where a structurally-complete self-review was written
 without any pre-investigation at all.
@@ -154,7 +154,7 @@ session plans folder. The self-review artifact must point at those records.
 
 **When TRIVIAL is acceptable:** if the work is a single-line fix, typo,
 doc-only edit, or pure research that does not touch existing entities or
-modify behavior, the fields may be `TRIVIAL` — but only when a
+modify behavior, the fields may be `TRIVIAL` -- but only when a
 `## Trivial-investigation declaration` block is also present in the
 artifact. The block follows the same format as Trivial-change
 declaration (Category / Cannot produce error / Evidence / Falsification).
@@ -165,18 +165,18 @@ declaration (Category / Cannot produce error / Evidence / Falsification).
 Category: <single-line-fix | doc-only | config-only | test-only>
 Cannot produce error: <one sentence stating why investigation would not
                        have surfaced additional context>
-Evidence: <command output proving no entity-touching changes — e.g.
+Evidence: <command output proving no entity-touching changes -- e.g.
           `git diff --stat` showing only test files changed>
 Falsification: <observable that would prove skipping investigation was
-                wrong — e.g. "a downstream consumer breaks because of
+                wrong -- e.g. "a downstream consumer breaks because of
                 an assumption I didn't verify">
 ```
 
 **The enforcement mechanism:** the hook checks structural presence of
 both fields. A missing or empty field blocks the push. `TRIVIAL` without
-the declaration block also blocks. Content quality — whether the
+the declaration block also blocks. Content quality -- whether the
 investigate artifact actually traces the impact chain, whether the
-pre-mortem actually classifies risks — remains operator-auditable. The
+pre-mortem actually classifies risks -- remains operator-auditable. The
 fields exist to make the omission structurally visible and to block the
 pattern where agents skip `investigate` and `pre-mortem` and go straight
 from `think` to implementation.
@@ -185,14 +185,14 @@ from `think` to implementation.
 is a mental checklist inside the design workflow. The agent checks the
 boxes and moves on. Self-review is a pre-push gate with hook
 enforcement. By requiring the artifact paths in self-review, the
-enforcement happens at the push boundary — the agent cannot push without
+enforcement happens at the push boundary -- the agent cannot push without
 either producing the artifacts or explicitly declaring the work trivial
 with falsifiable evidence.
 
 ## Trivial-change declaration (when no ticket cited)
 
-If the work is genuinely too small to warrant a ticket — typo fix,
-doc-only edit, single-character revert — the artifact may include
+If the work is genuinely too small to warrant a ticket -- typo fix,
+doc-only edit, single-character revert -- the artifact may include
 this block in place of `Goal source verification`. The block itself
 requires the same evidence chain as any "this doesn't apply" claim
 (`_writing-rules-rules.md` writing-rules:4):
@@ -200,15 +200,15 @@ requires the same evidence chain as any "this doesn't apply" claim
 ```
 ## Trivial-change declaration
 
-Category: <token from the writing-rules:5 controlled vocabulary —
+Category: <token from the writing-rules:5 controlled vocabulary --
            prose-only-docs | comments-only | whitespace-only |
            commit-msg-only | private-rename |
            descriptive-docstring-fix | fixed-string-correction>
 Cannot produce error: <one sentence stating the claim that this change
                        cannot generate empirical evidence contradicting
-                       the agent's model of the system — falsifiable>
+                       the agent's model of the system -- falsifiable>
 Evidence: <command output proving the Category's Evidence-shape
-          requirement per writing-rules:5 — e.g. for `prose-only-docs`,
+          requirement per writing-rules:5 -- e.g. for `prose-only-docs`,
           the grep showing no behavior tokens in changed regions; for
           `private-rename`, the grep showing only-the-rename-site>
 Falsification: <observable that would prove the Cannot-produce-error
@@ -225,7 +225,7 @@ trivial" or "minor cleanup" fail.
 
 ### When the Falsification observable surfaces
 
-The Falsification field is the writing-rules:6 trigger. If the observable named there later surfaces — an `AttributeError` matching the renamed symbol, a behavior claim acted on from prose-only-docs, a non-comment line changed by what was claimed comments-only — the Trivial-change declaration was wrong, and the response is **not** to just fix the bug.
+The Falsification field is the writing-rules:6 trigger. If the observable named there later surfaces -- an `AttributeError` matching the renamed symbol, a behavior claim acted on from prose-only-docs, a non-comment line changed by what was claimed comments-only -- the Trivial-change declaration was wrong, and the response is **not** to just fix the bug.
 
 Per writing-rules:6 (and [skill:post-error-revision]):
 
@@ -246,7 +246,7 @@ in the writing-tests:1 shape), paste an exemption block per criterion:
 
 Reason: <why this criterion doesn't apply>
 Evidence: <command output or verifiable observation supporting the
-          exemption — e.g. `git diff --stat | grep -v '\.md$'` returns
+          exemption -- e.g. `git diff --stat | grep -v '\.md$'` returns
           no rows, proving no non-doc files changed>
 Falsification: <observable that would make this exemption wrong>
 ```
@@ -370,7 +370,7 @@ same findings and to the Junior's claims about them.
 
 The Lead's review proceeds in two phases: **internal coherence first,
 then external verification.** Internal coherence asks whether the
-Junior's own claims agree with each other — this is checkable without
+Junior's own claims agree with each other -- this is checkable without
 reading any code. External verification asks whether the coherent
 claims match reality. There is no point checking correspondence with
 the world if the claims contradict themselves.
@@ -386,7 +386,7 @@ logical structure:
   contradiction detectable without reading any code.
 - Does the **implementation** (the diff) match the **design note's
   stated approach**? If the design note says "add a fallback for None"
-  and the diff adds a type check instead, that is a coherence gap —
+  and the diff adds a type check instead, that is a coherence gap --
   it might be fine, but the Lead must name it.
 - Does the **pre-mortem's "no Launch-Blocking Tigers"** actually hold
   given the Fact Sheet's findings? Or did the pre-mortem dismiss a
@@ -398,7 +398,7 @@ logical structure:
 
 If Phase A finds contradictions, the Lead must resolve them before
 proceeding. A contradiction means either the artifact is wrong or the
-implementation is wrong — either way, the review cannot pass.
+implementation is wrong -- either way, the review cannot pass.
 
 ### Phase B: External verification
 
@@ -429,7 +429,7 @@ the work touches:
    this task would invalidate (docstrings, CLAUDE.md sections,
    notebooks, doc pages), did the diff actually update them? A diff
    that changes behavior without updating the knowledge loci that
-   describe it ships a lie — think Step 5 makes this a required
+   describe it ships a lie -- think Step 5 makes this a required
    deliverable, and the Lead must verify it was delivered.
 
 Lead section format: domain-tagged. "In <domain>: <standard> holds
@@ -509,7 +509,7 @@ The section catches two failure modes:
    it.
 
 2. **Scoping errors from wrong counts.** A migration PR claims "Updated
-   all 15 internal import sites" — true for source files, but the grep
+   all 15 internal import sites" -- true for source files, but the grep
    that produced 15 excluded test files. The section forces the full
    grep to appear, making the scope visible: "15 source sites updated;
    28 test-file sites remain (tracked in #NNN)."
@@ -522,15 +522,15 @@ validates section presence; content completeness is operator-auditable.
 
 When the self-review artifact is complete, post it to the ticket NOW. Use `gh issue comment <number> --body "..."` or equivalent. The session copy is a working draft; the ticket comment is the canonical copy.
 
-Do not push until the self-review is on the ticket. **Then push and create the PR.** The pipeline is self-driving: produce the artifact, post it, advance. Do not wait for external approval to push — the self-review IS the approval gate.
+Do not push until the self-review is on the ticket. **Then push and create the PR.** The pipeline is self-driving: produce the artifact, post it, advance. Do not wait for external approval to push -- the self-review IS the approval gate.
 
 ## Cross-environment enforcement
 
-The hooks in `hooks/git/self-review.sh` and `hooks/settings-snippet.json` enforce the pipeline mechanically in Claude Code sessions. Not all execution environments support PreToolUse hooks — Craft Agent sessions, spawned subagents, and CI/CD pipelines do not wire them.
+The hooks in `hooks/git/self-review.sh` and `hooks/settings-snippet.json` enforce the pipeline mechanically in Claude Code sessions. Not all execution environments support PreToolUse hooks -- Craft Agent sessions, spawned subagents, and CI/CD pipelines do not wire them.
 
 ~~**The self-review artifact is the environment-independent backstop.**~~ (superseded by Post-error revision 2026-05-28)
 
-**In non-Claude-Code environments, enforcement is currently zero — not degraded, zero.** Craft Agent sessions do not load PreToolUse hooks, do not fire the self-review hook at push time (Craft Agent's git push does not route through Claude Code's Bash hook surface), and do not enforce skill prose mechanically. The claim that enforcement "degrades from blocked-before-write to blocked-before-push" was falsified in the same session that wrote it: 8 commits modifying 6 skill/hook files were pushed without any pipeline artifacts. (See Post-error revision on #245, dated 2026-05-28.)
+**In non-Claude-Code environments, enforcement is currently zero -- not degraded, zero.** Craft Agent sessions do not load PreToolUse hooks, do not fire the self-review hook at push time (Craft Agent's git push does not route through Claude Code's Bash hook surface), and do not enforce skill prose mechanically. The claim that enforcement "degrades from blocked-before-write to blocked-before-push" was falsified in the same session that wrote it: 8 commits modifying 6 skill/hook files were pushed without any pipeline artifacts. (See Post-error revision on #245, dated 2026-05-28.)
 
 **The only enforcement that works across all environments** is a native git pre-push hook installed in each repo (Layer 3 on #245) or GitHub branch protection rules (Layer 4). Neither is shipped yet. Until one of them ships:
 
@@ -638,7 +638,7 @@ the claim must be grounded.
 - `detect-ai-fingerprints` scan against the source artifact.
 - `Verified-by:` trailers (or grep-output equivalents) for any
   countable / completeness claim made inside the source artifact.
-  (Tracked as separate issue — see PR body for link.)
+  (Tracked as separate issue -- see PR body for link.)
 - Ticket-reference source values (e.g. `#123`) validated against the
   issue tracker (currently passes as-is; only file-path sources are
   structurally checked).
@@ -657,7 +657,7 @@ the structural questions are impossible to skip.
 
 ## Known limitations (recoverable, document-the-workaround posture)
 
-The hook fires at PreToolUse — BEFORE the bash command runs — and inspects
+The hook fires at PreToolUse -- BEFORE the bash command runs -- and inspects
 the latest commit at that moment. This produces several documented false
 positives the agent can recover from by adjusting invocation shape:
 
@@ -693,7 +693,7 @@ positives the agent can recover from by adjusting invocation shape:
   self-review artifact with all required sections, (3) include both
   `Self-Review:` and `Self-Review-Source:` trailers in the commit.
   Omitting any of these because "the hook isn't there to enforce it"
-  is the exact failure mode this control exists to prevent — the
+  is the exact failure mode this control exists to prevent -- the
   absence of mechanical enforcement is a reason for more discipline,
   not less. Downstream projects using Craft as their primary agent
   surface should note this gap in their workspace `CLAUDE.md`.

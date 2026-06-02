@@ -1,4 +1,4 @@
-# Capability Tiers — Vocabulary
+# Capability Tiers -- Vocabulary
 
 `siege_utilities` defines four tiers describing the spatial capabilities available in an environment. Adopt this vocabulary across the spatial skills so the conversation about "what can we use here?" is consistent.
 

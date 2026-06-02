@@ -12,13 +12,13 @@ skills/shelves/<shelf>/<book-slug>/SKILL.md
 ```
 
 Optional supplementary files in the same directory:
-- `references/` — deeper distilled material from the book (chapter notes,
+- `references/` -- deeper distilled material from the book (chapter notes,
   pattern catalogs, etc.). Optional; populate later if useful.
 
 If the book introduces a new shelf, also create:
-- `skills/shelves/<shelf>/SKILL.md` — the shelf router with trigger
+- `skills/shelves/<shelf>/SKILL.md` -- the shelf router with trigger
   table + book list + disambiguation.
-- Update `skills/shelves/SKILL.md` — the top-level meta-router; add the
+- Update `skills/shelves/SKILL.md` -- the top-level meta-router; add the
   new shelf to the trigger table + bump the shelf count in the
   description.
 
@@ -34,7 +34,7 @@ description: '<trigger-phrase-rich description. Use when the user mentions
   <other-skill>. For [adjacent topic] see <other-skill>.>'
 license: <license string; CC-BY-NC, MIT, "Free PDF from authors", etc.>
 metadata:
-  source: '<canonical URL or attribution. e.g. r.geocompx.org — full
+  source: '<canonical URL or attribution. e.g. r.geocompx.org -- full
     free online edition of Geocomputation with R (authors). CRC Press
     also publishes paid print edition.>'
   coverage: '<FULL or PARTIAL. If PARTIAL, name exactly what is and
@@ -62,24 +62,24 @@ metadata:
 Mirror existing entries (clean-code, drive-motivation as canonical
 references). Required sections:
 
-1. **Title heading** — `# <Book name> Framework` (or similar).
-2. **Intro paragraph** — 2-4 sentences naming what the book is and when
+1. **Title heading** -- `# <Book name> Framework` (or similar).
+2. **Intro paragraph** -- 2-4 sentences naming what the book is and when
    to load it.
-3. **Core Principle** — bold the central claim of the book. 1-2 paragraphs.
-4. **Scoring** — 10-point rubric tied to the book's framework. Required
+3. **Core Principle** -- bold the central claim of the book. 1-2 paragraphs.
+4. **Scoring** -- 10-point rubric tied to the book's framework. Required
    format: "Goal: 10/10. When evaluating X, rate 0-10 on Y." Then
    define what 9-10 / 7-8 / 5-6 / 3-4 / 1-2 look like.
-5. **Framework sections** — 3-7 numbered sections distilling the book's
+5. **Framework sections** -- 3-7 numbered sections distilling the book's
    load-bearing concepts. Each section: core concept + why it works +
    key insights + anti-patterns where applicable.
-6. **When this skill does NOT apply** — boundary conditions; cross-
+6. **When this skill does NOT apply** -- boundary conditions; cross-
    references to adjacent skills that handle the out-of-scope cases.
-7. **Companions** — list of related skills + how this composes with
+7. **Companions** -- list of related skills + how this composes with
    them.
-8. **Source + license** — explicit URL, author attribution, license
+8. **Source + license** -- explicit URL, author attribution, license
    string, verification date. For partial coverage, name what was
    absorbed vs what waits for procurement.
-9. **See also** — optional. References to other skills, the originating
+9. **See also** -- optional. References to other skills, the originating
    recommendations doc, etc.
 
 Existing entries vary in depth (drive-motivation is ~338 lines;
@@ -103,7 +103,7 @@ When adding a book to an existing shelf:
 ## Books in this shelf
 
 - ... existing entries ...
-- [skill:<book-slug>] — <author>. <book title>. <one-line summary>. <source note>.
+- [skill:<book-slug>] -- <author>. <book title>. <one-line summary>. <source note>.
 
 ## Disambiguation
 
@@ -156,7 +156,7 @@ straight, etc.
 - One book per PR when feasible. Multi-book PRs (e.g. two complementary
   books that establish a new shelf together) are acceptable when the
   bundling is justified.
-- Title: `feat(shelves/<shelf>): <action — title>` matching existing
+- Title: `feat(shelves/<shelf>): <action -- title>` matching existing
   PR title patterns.
 - Body: name the gap the entry closes, the coverage state (FULL / PARTIAL
   with explicit caveats), the verification done, the test plan, and the
@@ -174,9 +174,9 @@ consensus (a Wikipedia / well-known-textbook-list cross-check is the
 minimum bar).
 
 Bad-example catalog (session 260502-vital-channel, 2026-05-17):
-- "lethain.com hosts An Elegant Puzzle freely" — WebFetch showed
+- "lethain.com hosts An Elegant Puzzle freely" -- WebFetch showed
   promotional landing page only; book is paid. Recommendation retracted.
-- "py.geocompx.org hosts Geocomputation with Python freely" — WebFetch
+- "py.geocompx.org hosts Geocomputation with Python freely" -- WebFetch
   showed landing page; full chapters not yet online; R version at
   r.geocompx.org was the canonical free reference. Recommendation
   re-pointed.
@@ -195,12 +195,12 @@ starting point.
 
 ## See also
 
-- `skills/shelves/SKILL.md` — the meta-router; the top-level entry point
+- `skills/shelves/SKILL.md` -- the meta-router; the top-level entry point
   for any shelf navigation.
-- `skills/distill-lessons/SKILL.md` — DIFFERENT skill (promotes Tier-1
+- `skills/distill-lessons/SKILL.md` -- DIFFERENT skill (promotes Tier-1
   lessons to Tier-2 rules); not used for book absorption.
-- `skills/self-review/SKILL.md` — required for every shelf absorption PR.
-- `_writing-claims-rules.md` — writing-claims:5 grounds the verify-
+- `skills/self-review/SKILL.md` -- required for every shelf absorption PR.
+- `_writing-claims-rules.md` -- writing-claims:5 grounds the verify-
   before-recommending discipline that gates book proposals.
 - Example entries with strong frontmatter / coverage-caveat hygiene:
   `team/staff-engineer/SKILL.md` (PARTIAL coverage),

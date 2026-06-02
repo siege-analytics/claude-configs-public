@@ -1,4 +1,4 @@
-# Programming with Rust — Practices Catalog
+# Programming with Rust -- Practices Catalog
 
 Deep before/after examples for the most critical Rust idioms from each chapter group.
 
@@ -17,7 +17,7 @@ fn print_names(names: Vec<String>) {  // consumes the Vec
 ```
 **After:**
 ```rust
-fn print_names(names: &[String]) {  // borrows a slice — Vec<String> derefs to &[String]
+fn print_names(names: &[String]) {  // borrows a slice -- Vec<String> derefs to &[String]
     for name in names {
         println!("{name}");
     }
@@ -38,11 +38,11 @@ println!("{s1}");      // compile error: s1 was moved
 **After:**
 ```rust
 let s1 = String::from("hello");
-let s2 = s1.clone();   // explicit deep copy — both valid
+let s2 = s1.clone();   // explicit deep copy -- both valid
 println!("{s1} {s2}"); // both valid
 
 // Or: borrow instead of cloning
-let s3 = &s1;          // borrow — s1 still owns the data
+let s3 = &s1;          // borrow -- s1 still owns the data
 println!("{s1} {s3}");
 ```
 
@@ -80,13 +80,13 @@ fn first_word(s: &str) -> &str {  // compiler infers output lifetime = input lif
 
 **Annotation required (multiple inputs, ambiguous output):**
 ```rust
-// Without annotation — compiler can't tell which input the output borrows from
+// Without annotation -- compiler can't tell which input the output borrows from
 fn longer<'a>(s1: &'a str, s2: &'a str) -> &'a str {
     if s1.len() > s2.len() { s1 } else { s2 }
 }
 ```
 
-**Struct holding a reference — must annotate:**
+**Struct holding a reference -- must annotate:**
 ```rust
 struct Excerpt<'a> {
     text: &'a str,  // struct can't outlive the string it borrows
@@ -161,9 +161,9 @@ fn parse_port(s: &str) -> Result<u16, AppError> {
 
 ## Traits: Static vs Dynamic Dispatch (Ch 17)
 
-**Static dispatch — zero cost, preferred:**
+**Static dispatch -- zero cost, preferred:**
 ```rust
-// Monomorphized at compile time — no runtime overhead
+// Monomorphized at compile time -- no runtime overhead
 fn notify(item: &impl Summary) {
     println!("Breaking news! {}", item.summarize());
 }
@@ -174,9 +174,9 @@ fn notify<T: Summary>(item: &T) {
 }
 ```
 
-**Dynamic dispatch — use only for heterogeneous collections or plugins:**
+**Dynamic dispatch -- use only for heterogeneous collections or plugins:**
 ```rust
-// Vtable lookup at runtime — small overhead, but enables mixed types
+// Vtable lookup at runtime -- small overhead, but enables mixed types
 fn notify_all(items: &[Box<dyn Summary>]) {
     for item in items {
         println!("{}", item.summarize());
@@ -225,7 +225,7 @@ println!("{p:?}");                  // uses Debug
 let opt: Option<i32> = get_value();
 match opt {
     Some(x) => println!("{x}"),
-    _ => {}  // silently ignores None — intent unclear
+    _ => {}  // silently ignores None -- intent unclear
 }
 ```
 **After:**
@@ -257,7 +257,7 @@ let handle = std::thread::spawn(|| {
 ```rust
 let name = String::from("Alice");
 let handle = std::thread::spawn(move || {
-    println!("{name}");  // name is moved into the closure — safe
+    println!("{name}");  // name is moved into the closure -- safe
 });
 handle.join().unwrap();
 ```
@@ -329,7 +329,7 @@ pub mod api {           // public module
     fn internal_helper() { }           // private to module
 }
 
-mod storage {           // private module — not part of public API
+mod storage {           // private module -- not part of public API
     pub(super) fn save() { }  // accessible to parent module only
 }
 ```

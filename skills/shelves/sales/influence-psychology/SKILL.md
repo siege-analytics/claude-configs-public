@@ -13,7 +13,7 @@ Framework for applying the science of persuasion ethically and effectively. Base
 
 ## Core Principle
 
-People don't make decisions rationally. They use mental shortcuts (heuristics) that can be triggered to influence behavior. These shortcuts evolved because they're usually reliable—but they can also be exploited.
+People don't make decisions rationally. They use mental shortcuts (heuristics) that can be triggered to influence behavior. These shortcuts evolved because they're usually reliable--but they can also be exploited.
 
 **The foundation:** Understanding the psychological triggers that drive human compliance allows you to design products, messaging, and experiences that naturally align with how people actually make decisions.
 
@@ -331,7 +331,7 @@ The most powerful persuasion uses multiple principles together.
 - **Authority:** "Built by ex-Stripe engineers" (credentials)
 - **Social proof:** "Trusted by 5,000+ companies" (wisdom of crowds)
 - **Liking:** Friendly, warm copy and design
-- **Scarcity:** "Join the beta—limited spots available"
+- **Scarcity:** "Join the beta--limited spots available"
 - **Reciprocity:** "Start free, no credit card required"
 - **Unity:** "For founders who move fast"
 

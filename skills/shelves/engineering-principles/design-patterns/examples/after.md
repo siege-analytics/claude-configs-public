@@ -3,12 +3,12 @@
 Each payment method is extracted into its own `PaymentStrategy` implementation behind a common interface, making it trivial to add new methods without touching existing code.
 
 ```kotlin
-// Strategy interface — the contract every payment method must fulfill
+// Strategy interface -- the contract every payment method must fulfill
 interface PaymentStrategy {
     fun process(order: Order): PaymentResult
 }
 
-// One class per payment method — focused, testable, replaceable
+// One class per payment method -- focused, testable, replaceable
 class CreditCardPaymentStrategy : PaymentStrategy {
     override fun process(order: Order): PaymentResult {
         val token = CreditCardGateway.tokenize(order.cardNumber)
@@ -39,13 +39,13 @@ class PaymentProcessor(private val strategy: PaymentStrategy) {
     fun process(order: Order): PaymentResult = strategy.process(order)
 }
 
-// Usage — caller selects strategy; PaymentProcessor is unaware of the type
+// Usage -- caller selects strategy; PaymentProcessor is unaware of the type
 val processor = PaymentProcessor(CreditCardPaymentStrategy())
 val result = processor.process(order)
 ```
 
 Key improvements:
-- If/else chain replaced with Strategy pattern — adding a new payment method requires a new class only, no changes to `PaymentProcessor` (Open-Closed Principle)
+- If/else chain replaced with Strategy pattern -- adding a new payment method requires a new class only, no changes to `PaymentProcessor` (Open-Closed Principle)
 - Each strategy is independently testable with a mock `Order`
 - `PaymentProcessor` depends on the `PaymentStrategy` abstraction, not concrete gateway classes (Dependency Inversion Principle)
 - Responsibility for "how to pay" is encapsulated inside each strategy class (Encapsulate What Varies)

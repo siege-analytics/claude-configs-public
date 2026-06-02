@@ -1,4 +1,4 @@
-# DuckDB Spatial Extension — Cookbook
+# DuckDB Spatial Extension -- Cookbook
 
 Common operations as recipes. Assumes `con.load_extension("spatial")` already called.
 
@@ -49,13 +49,13 @@ SELECT * FROM features WHERE ST_Contains(boundary, geom);
 SELECT * FROM features WHERE ST_Disjoint(a.geom, b.geom);
 ```
 
-## Distance — choose your units
+## Distance -- choose your units
 
 ```sql
 -- In CRS units (meaningless for lat/lng)
 SELECT ST_Distance(a.geom, b.geom) FROM places a JOIN places b ON a.id < b.id;
 
--- Spheroidal meters (great-circle on WGS84) — for lat/lng coords
+-- Spheroidal meters (great-circle on WGS84) -- for lat/lng coords
 SELECT ST_Distance_Sphere(a.geom, b.geom) FROM places a JOIN places b ON a.id < b.id;
 
 -- Project first, then plain distance for projected meters
@@ -77,7 +77,7 @@ FROM points p JOIN counties c ON ST_Within(p.geom, c.geom);
 
 For ad-hoc queries, DuckDB builds an in-memory R-tree implicitly when it sees `ST_Within`/`ST_Intersects` in a join condition. The explicit `CREATE INDEX` makes it persistent for repeated queries.
 
-## ST_Read — legacy formats without GDAL on host
+## ST_Read -- legacy formats without GDAL on host
 
 ```sql
 SELECT * FROM ST_Read('input.shp');
@@ -152,7 +152,7 @@ For H3 hexagonal indexing, install the H3 extension separately (`INSTALL h3 FROM
 ## Distance-within with index
 
 ```sql
--- ST_DWithin equivalent — DuckDB doesn't have a dedicated function, use ST_Distance_Sphere
+-- ST_DWithin equivalent -- DuckDB doesn't have a dedicated function, use ST_Distance_Sphere
 SELECT a.id, b.id
 FROM places a JOIN places b ON a.id < b.id
 WHERE ST_Distance_Sphere(a.geom, b.geom) < 5000;  -- 5 km
@@ -163,7 +163,7 @@ Index assistance is more limited than PostGIS's `ST_DWithin`. For high-volume di
 ## Spatial join across files (without loading)
 
 ```sql
--- DuckDB reads both files, joins, returns result — never materializes intermediate
+-- DuckDB reads both files, joins, returns result -- never materializes intermediate
 COPY (
     SELECT p.id, c.geoid
     FROM 'donations.parquet' p
@@ -189,7 +189,7 @@ DuckDB pushes filters into the Parquet reader; only matching row groups are down
 ## Batch processing many files
 
 ```sql
--- Glob pattern — reads all matching files
+-- Glob pattern -- reads all matching files
 SELECT *, ST_Centroid(geom) AS centroid
 FROM read_parquet('s3://bucket/donations/*.parquet');
 

@@ -46,11 +46,11 @@ A PR is a narrative, not a dump of commits. The reviewer is reading the PR to de
 
 Before opening the PR, verify all five criteria from [rule:definition-of-done]:
 
-- [ ] **(a) Code-reviewed** — at minimum, self-reviewed walking through the diff; CodeRabbit will run on push
-- [ ] **(b) Edge cases explored** — reasoned through the edge-case checklist in [skill:code-review] §1
-- [ ] **(c) Tests written** — every behavior change has tests; no "tests later" PRs without an explicit, reviewable justification in the PR description
-- [ ] **(d) Ticket updated** — status moved (Todo → In Review), comments added for substantive changes, scope/blocker pivots captured
-- [ ] **(e) Work has a ticket** — every commit has a ticket reference (see scan below)
+- [ ] **(a) Code-reviewed** -- at minimum, self-reviewed walking through the diff; CodeRabbit will run on push
+- [ ] **(b) Edge cases explored** -- reasoned through the edge-case checklist in [skill:code-review] §1
+- [ ] **(c) Tests written** -- every behavior change has tests; no "tests later" PRs without an explicit, reviewable justification in the PR description
+- [ ] **(d) Ticket updated** -- status moved (Todo → In Review), comments added for substantive changes, scope/blocker pivots captured
+- [ ] **(e) Work has a ticket** -- every commit has a ticket reference (see scan below)
 
 If **any** criterion fails: open the PR as a draft, list the failing criteria explicitly in the description under a `## Definition of Done` section, and surface to the user before requesting review.
 

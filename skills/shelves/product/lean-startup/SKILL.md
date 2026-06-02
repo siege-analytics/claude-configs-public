@@ -13,7 +13,7 @@ A systematic approach to building startups and launching new products that short
 
 ## Core Principle
 
-**Entrepreneurship is a form of management.** Success doesn't require a perfect plan or brilliant insight—it requires a systematic process for testing assumptions, learning from customers, and iterating rapidly.
+**Entrepreneurship is a form of management.** Success doesn't require a perfect plan or brilliant insight--it requires a systematic process for testing assumptions, learning from customers, and iterating rapidly.
 
 **The foundation:** Most startups fail not because they couldn't build what they planned, but because they built the wrong thing. The Lean Startup methodology applies scientific experimentation to eliminate waste and accelerate validated learning.
 

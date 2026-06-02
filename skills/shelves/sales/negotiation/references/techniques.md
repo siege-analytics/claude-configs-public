@@ -96,7 +96,7 @@ Complete breakdown of tactical negotiation techniques from Chris Voss's "Never S
 - **How:** Friendly, warm, light-hearted, with a genuine smile
 - **Effect:** Signals comfort and likability; encourages cooperation
 
-**Key insight:** Never use a high-pitched or rapid voice in negotiations—it signals anxiety or aggression.
+**Key insight:** Never use a high-pitched or rapid voice in negotiations--it signals anxiety or aggression.
 
 ---
 
@@ -178,7 +178,7 @@ Now you have their real concern.
 
 ## 9. Triggering "That's Right"
 
-**What it is:** Summarize their position—their facts, emotions, and concerns—so accurately that they respond with "That's right."
+**What it is:** Summarize their position--their facts, emotions, and concerns--so accurately that they respond with "That's right."
 
 **Psychological trigger:** "That's right" signals complete understanding and creates genuine rapport. It's the moment they feel truly heard.
 
@@ -192,7 +192,7 @@ Now you have their real concern.
 > "Let me make sure I have this: You need a solution that doesn't overrun budget, and you're concerned that our timeline could put your team in a tough spot. On top of that, you've been burned by vendors who overpromised before."
 > Counterpart: "That's right."
 
-**Warning:** "You're right" is different—it often means they're dismissing you. Keep working until you get "That's right."
+**Warning:** "You're right" is different--it often means they're dismissing you. Keep working until you get "That's right."
 
 ---
 
@@ -225,7 +225,7 @@ Now you have their real concern.
 
 **Example sequence:**
 > "So we're agreed on the $50K budget?" → "Yes."
-> "Just to make sure I understand—you'll allocate $50K with delivery in Q3?" → "That's right."
+> "Just to make sure I understand--you'll allocate $50K with delivery in Q3?" → "That's right."
 > "Great. How will you communicate this to your finance team?" → "I'll send them the PO tomorrow."
 
 ---
@@ -255,7 +255,7 @@ Now you have their real concern.
 
 ### Scenario 1: "We just want what's fair"
 - **What they mean:** Making you feel guilty; implying you've been unfair
-- **Response:** "Absolutely, I want to be fair too. Let's pause—have I done something unfair? Let's talk about it."
+- **Response:** "Absolutely, I want to be fair too. Let's pause--have I done something unfair? Let's talk about it."
 
 ### Scenario 2: "This is a fair offer"
 - **What they mean:** Anchoring; don't ask for more
@@ -303,11 +303,11 @@ Step-by-step monetary negotiation system:
 | 1 | Set your target price | Your real goal |
 | 2 | Open at **65%** of target | Extreme but not insulting anchor |
 | 3 | First raise to **85%** | Decreasing increment signals limit |
-| 4 | Second raise to **95%** | Even smaller—they feel they're squeezing you |
+| 4 | Second raise to **95%** | Even smaller--they feel they're squeezing you |
 | 5 | Final offer at **100%** | Use precise number ($97,350 not $97,000) |
 | 6 | Add non-monetary item | "...and I'll include a 1-year warranty" |
 
-**Why precise numbers work:** Non-round numbers ($47,235 vs $47,000) feel calculated and final—as if you've truly pushed to your limit.
+**Why precise numbers work:** Non-round numbers ($47,235 vs $47,000) feel calculated and final--as if you've truly pushed to your limit.
 
 **Why the final gift:** A small non-monetary add-on signals you're at your absolute maximum and makes it psychologically harder for them to ask for more.
 
@@ -315,13 +315,13 @@ Step-by-step monetary negotiation system:
 
 ## 16. Leverage Types
 
-Leverage is power in negotiation—often perception, not reality.
+Leverage is power in negotiation--often perception, not reality.
 
 | Type | Definition | How to use |
 |------|------------|------------|
 | **Positive** | You have something they want | Remind them of what they gain by dealing with you |
 | **Negative** | You can cause them pain | Mention consequences of no deal (use carefully) |
-| **Normative** | Using their beliefs/values against them | "You've always said quality matters most—would cutting corners align with that?" |
+| **Normative** | Using their beliefs/values against them | "You've always said quality matters most--would cutting corners align with that?" |
 
 **Key question:** "Who feels they have more to lose if this falls apart?"
 
@@ -343,7 +343,7 @@ Leverage is power in negotiation—often perception, not reality.
 **How to find them:**
 - Stay curious; ask calibrated questions
 - Use tactical empathy to make them comfortable
-- Watch for anomalies—odd reactions signal hidden factors
+- Watch for anomalies--odd reactions signal hidden factors
 - Listen in unguarded moments (before/after meetings)
 
 **Effect:** Discovering a Black Swan can turn a stalemate into a breakthrough.
@@ -360,7 +360,7 @@ Leverage is power in negotiation—often perception, not reality.
 ### Accommodator
 - **Traits:** Amiable, relationship-focused, values personal connection, avoids conflict
 - **Fears:** Confrontation, damaging relationships
-- **Adapt:** Build rapport, make small talk, be friendly—but ensure you pin down specifics (they may agree too quickly just to please)
+- **Adapt:** Build rapport, make small talk, be friendly--but ensure you pin down specifics (they may agree too quickly just to please)
 
 ### Assertive
 - **Traits:** Direct, time-conscious, wants to win, speaks fast, comfortable saying no
@@ -398,7 +398,7 @@ Leverage is power in negotiation—often perception, not reality.
 
 **What it is:** Deliberate, extended pauses after key statements or questions.
 
-**Psychological trigger:** Silence creates a vacuum people instinctively fill—often with information, concessions, or their internal reasoning.
+**Psychological trigger:** Silence creates a vacuum people instinctively fill--often with information, concessions, or their internal reasoning.
 
 **How to use:**
 - Make your statement or ask your question
@@ -427,6 +427,6 @@ Leverage is power in negotiation—often perception, not reality.
 
 **How to use this:**
 - If they use "I" heavily, ask: "How does your team/leadership weigh in on this?"
-- If they use "we" heavily, they may have authority—but verify
+- If they use "we" heavily, they may have authority--but verify
 
 **Humanize yourself:** Use your name and their name throughout. "Look, Sarah, I really want to make this work" is more disarming than "I want to make this work."

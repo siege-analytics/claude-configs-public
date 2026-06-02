@@ -9,11 +9,11 @@ metadata:
 
 # Design of Everyday Things Framework
 
-Foundational design principles for creating products that are intuitive, discoverable, and understandable. The "bible of UX" — applicable to physical products, software, and any human-designed system.
+Foundational design principles for creating products that are intuitive, discoverable, and understandable. The "bible of UX" -- applicable to physical products, software, and any human-designed system.
 
 ## Core Principle
 
-**Good design is actually a lot harder to notice than poor design, in part because good designs fit our needs so well that the design is invisible.** When something works well, we take it for granted. When it fails, we blame ourselves — but the fault is almost always in the design.
+**Good design is actually a lot harder to notice than poor design, in part because good designs fit our needs so well that the design is invisible.** When something works well, we take it for granted. When it fails, we blame ourselves -- but the fault is almost always in the design.
 
 **The foundation:** Design must bridge the gap between what people want to do and what the product allows them to do. The best designs are discoverable (you can figure out what to do) and understandable (you can figure out what happened).
 
@@ -67,7 +67,7 @@ USER                                    PRODUCT
 - Meaningful error messages
 - Progress indicators
 
-**Design goal:** Make both gulfs as narrow as possible. The ideal design requires zero bridging — action and understanding are immediate.
+**Design goal:** Make both gulfs as narrow as possible. The ideal design requires zero bridging -- action and understanding are immediate.
 
 See: [references/two-gulfs.md](references/two-gulfs.md) for gulf analysis exercises.
 

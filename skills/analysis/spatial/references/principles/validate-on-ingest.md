@@ -9,7 +9,7 @@ The rule: **repair at the boundary, not in the middle of a pipeline.**
 Different engines / standards have slightly different definitions, but the canonical OGC Simple Features rules:
 
 - **Polygon rings must close** (first and last point identical)
-- **Ring orientation matters** (exterior ring CCW, interior rings CW — though many implementations are forgiving)
+- **Ring orientation matters** (exterior ring CCW, interior rings CW -- though many implementations are forgiving)
 - **No self-intersections within a ring** (no figure-eight polygons)
 - **Interior rings must be inside the exterior ring**
 - **Interior rings can't intersect each other**
@@ -19,7 +19,7 @@ Real-world data violates these constantly:
 - Census TIGER occasionally ships polygons with float-precision self-intersections
 - Hand-digitized boundaries have drift between adjacent vertices
 - Conversion from KML / shapefile / GeoJSON sometimes drops the closing vertex
-- "Bowtie" polygons — `[(0,0), (2,2), (0,2), (2,0), (0,0)]` — a single ring that crosses itself
+- "Bowtie" polygons -- `[(0,0), (2,2), (0,2), (2,0), (0,0)]` -- a single ring that crosses itself
 
 ## Per-engine implementation
 
@@ -93,9 +93,9 @@ If validation happens at ingest, every downstream step has a clean foundation. I
 
 When validation finds invalid rows, three responses:
 
-1. **Repair** — `ST_MakeValid` and continue. Fine when the repair is safe (most simple cases) and you're OK with the changed geometry.
-2. **Drop** — exclude invalid rows from production. Fine for civic data where the missing rows are noise, *if you log them*.
-3. **Halt** — fail the pipeline; require human review. Right answer for authoritative data where you can't drop silently.
+1. **Repair** -- `ST_MakeValid` and continue. Fine when the repair is safe (most simple cases) and you're OK with the changed geometry.
+2. **Drop** -- exclude invalid rows from production. Fine for civic data where the missing rows are noise, *if you log them*.
+3. **Halt** -- fail the pipeline; require human review. Right answer for authoritative data where you can't drop silently.
 
 **Never silently drop.** Always log:
 
@@ -123,7 +123,7 @@ ALTER TABLE features ADD CONSTRAINT features_geom_valid CHECK (ST_IsValid(geom))
 
 This makes invalid INSERTs fail fast. Useful in production tables; less useful in staging tables (you want to land the data and validate, not error during landing).
 
-GeoPandas has no built-in constraint mechanism — validate explicitly at write boundary. For PostgreSQL-backed projects, prefer the database-side constraint as the safety net.
+GeoPandas has no built-in constraint mechanism -- validate explicitly at write boundary. For PostgreSQL-backed projects, prefer the database-side constraint as the safety net.
 
 ## Validity vs emptiness vs nullness
 
@@ -178,7 +178,7 @@ For point data, validation is essentially free.
 
 - **No validation step in the ingest pipeline.** The default failure mode.
 - **Validating only at ingest, never on update.** If the production table accepts updates, every update can re-introduce invalid geometry. Use the `CHECK` constraint.
-- **Treating `make_valid` as idempotent.** It's not always — bowtie polygons get split into MultiPolygons; a column typed `geometry(Polygon)` will reject the result. Either widen the type to `geometry(MultiPolygon)` or test with `ST_GeometryType` after repair.
+- **Treating `make_valid` as idempotent.** It's not always -- bowtie polygons get split into MultiPolygons; a column typed `geometry(Polygon)` will reject the result. Either widen the type to `geometry(MultiPolygon)` or test with `ST_GeometryType` after repair.
 - **Not logging dropped rows.** "We discarded 17 rows" with no record of which ones is irrecoverable.
 - **`ST_Buffer(geom, 0)` instead of `ST_MakeValid(geom)`.** Cheaper, lossier; can collapse parts of the geometry. Avoid unless you understand the loss.
 - **Validating in Python after pulling from a database that already validated.** Wasted work; trust the boundary.
@@ -186,8 +186,8 @@ For point data, validation is essentially free.
 
 ## Cross-links
 
-- [`crs-is-meaning.md`](crs-is-meaning.md) — pairs: validate CRS *and* geometry at the boundary
-- [`bbox-pre-filter.md`](bbox-pre-filter.md) — invalid geometries can have wrong bounding boxes; pre-filter results may be wrong
-- [`../../coding/postgis/references/pitfalls.md`](../../../coding/postgis/references/pitfalls.md) — PostGIS-specific validity debugging
-- [`../../coding/geopandas/references/pitfalls.md`](../../../coding/geopandas/references/pitfalls.md) — GeoPandas equivalent
-- [`../../coding/sedona/references/pitfalls.md`](../../../coding/sedona/references/pitfalls.md) — Sedona equivalent
+- [`crs-is-meaning.md`](crs-is-meaning.md) -- pairs: validate CRS *and* geometry at the boundary
+- [`bbox-pre-filter.md`](bbox-pre-filter.md) -- invalid geometries can have wrong bounding boxes; pre-filter results may be wrong
+- [`../../coding/postgis/references/pitfalls.md`](../../../coding/postgis/references/pitfalls.md) -- PostGIS-specific validity debugging
+- [`../../coding/geopandas/references/pitfalls.md`](../../../coding/geopandas/references/pitfalls.md) -- GeoPandas equivalent
+- [`../../coding/sedona/references/pitfalls.md`](../../../coding/sedona/references/pitfalls.md) -- Sedona equivalent

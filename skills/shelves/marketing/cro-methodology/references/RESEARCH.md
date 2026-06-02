@@ -85,7 +85,7 @@ Don't guess why visitors don't convert. Use these methods to discover the truth.
 1. Ask ONE question (max 2-3)
 2. Open-ended > multiple choice for discovery
 3. Time triggers thoughtfully
-4. Don't annoy—limit frequency
+4. Don't annoy--limit frequency
 5. Incentivize for longer surveys
 
 ## Usability Testing

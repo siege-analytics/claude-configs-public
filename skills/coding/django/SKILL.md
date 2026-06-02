@@ -11,15 +11,15 @@ paths: "**/*.py,**/settings/*.py"
 ## Companion shelves
 
 For service-boundary and modeling rationale:
-- [skill:clean-architecture] — keep frameworks at the edges, not in the domain.
-- [skill:domain-driven-design] — aggregates, bounded contexts when the app grows.
+- [skill:clean-architecture] -- keep frameworks at the edges, not in the domain.
+- [skill:domain-driven-design] -- aggregates, bounded contexts when the app grows.
 
 Apply when editing code that imports `django.*`. See [reference.md](reference.md) for deployment, security hardening, and recipe-style snippets.
 
 Draws from:
-- Greenfeld & Greenfeld — *Two Scoops of Django 3.x* (the "fat models, thin views" canon)
-- Will Vincent — *Django for Professionals* (Django 5.x, test-first approach)
-- Adam Johnson's blog (adamj.eu) — continuously updated patterns
+- Greenfeld & Greenfeld -- *Two Scoops of Django 3.x* (the "fat models, thin views" canon)
+- Will Vincent -- *Django for Professionals* (Django 5.x, test-first approach)
+- Adam Johnson's blog (adamj.eu) -- continuously updated patterns
 
 ## Decision tree
 
@@ -73,7 +73,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DATABASE_URL = env.db_url("DATABASE_URL")
 ```
 
-## Models — fat, with intent
+## Models -- fat, with intent
 
 ```python
 class Donation(models.Model):
@@ -116,9 +116,9 @@ class Donation(models.Model):
 - `on_delete` explicit (PROTECT or CASCADE, not SET_NULL unless you mean it)
 - Indexes defined in `Meta.indexes`, not as `db_index=True` on fields (easier to audit)
 - Check constraints at the DB level, not just Python (they survive direct SQL writes)
-- `save(update_fields=...)` when you're only changing specific fields — avoids race conditions and unnecessary signal firing
+- `save(update_fields=...)` when you're only changing specific fields -- avoids race conditions and unnecessary signal firing
 
-## QuerySet / Manager methods — the real interface
+## QuerySet / Manager methods -- the real interface
 
 Logic that filters, annotates, or aggregates belongs on a custom QuerySet:
 
@@ -141,16 +141,16 @@ class PublishedDonationManager(models.Manager):
         return DonationQuerySet(self.model, using=self._db).filter(published=True)
 
 
-# Usage — composable in views
+# Usage -- composable in views
 Donation.published.for_cycle(2024).over_limit().with_contributor_totals()
 ```
 
 A view that reaches for `Donation.objects.filter(...)` with complex conditions is a missed QuerySet method.
 
-## Views — thin
+## Views -- thin
 
 ```python
-# BAD — business logic in view
+# BAD -- business logic in view
 def donor_report(request, donor_id):
     donor = Contributor.objects.get(id=donor_id)
     donations = Donation.objects.filter(contributor=donor, published=True)
@@ -158,7 +158,7 @@ def donor_report(request, donor_id):
     over = [d for d in donations if d.amount > 2900]
     return render(request, "donor_report.html", {"donor": donor, "total": total, "over": over})
 
-# GOOD — view orchestrates
+# GOOD -- view orchestrates
 def donor_report(request, donor_id):
     donor = get_object_or_404(Contributor, id=donor_id)
     return render(request, "donor_report.html", {
@@ -177,7 +177,7 @@ Class-based views are fine when inheritance genuinely helps. Function-based view
 - **Check for long locks.** Adding a NOT NULL column with a default on a 50M-row table locks for minutes. Two-step migration: add nullable → backfill → set NOT NULL.
 - **Test the rollback.** If you can't roll a migration back (or forward over the rolled-back state), it's a one-way door.
 
-## Forms — where input validation lives
+## Forms -- where input validation lives
 
 ```python
 class DonationForm(forms.ModelForm):
@@ -200,9 +200,9 @@ class DonationForm(forms.ModelForm):
         return cleaned
 ```
 
-Don't duplicate validation on both the form AND the model `save()` — pick one layer. Generally form for user input, model for API / programmatic writes.
+Don't duplicate validation on both the form AND the model `save()` -- pick one layer. Generally form for user input, model for API / programmatic writes.
 
-## Signals — almost always wrong
+## Signals -- almost always wrong
 
 Greenfield rule from *Two Scoops*: **don't use signals for new code.** Instead:
 
@@ -232,7 +232,7 @@ If you already have signals (migrating from old code), document them in the mode
 
 ## Performance
 
-- **`select_related`** for ForeignKey followers. **`prefetch_related`** for reverse relations and ManyToMany. Profile before optimizing — Django Debug Toolbar shows the query count.
+- **`select_related`** for ForeignKey followers. **`prefetch_related`** for reverse relations and ManyToMany. Profile before optimizing -- Django Debug Toolbar shows the query count.
 - **Bulk operations** beat loops:
   ```python
   Donation.objects.bulk_create(new_donations, batch_size=1000)
@@ -246,7 +246,7 @@ If you already have signals (migrating from old code), document them in the mode
 - **WSGI**: Gunicorn (battle-tested) or uWSGI (older but fine). Not `runserver` in production.
 - **ASGI**: Uvicorn + Gunicorn worker class for async views.
 - **Static files**: WhiteNoise (simplest) or S3/CloudFront via django-storages. `collectstatic` at deploy time.
-- **Health endpoint**: `/healthz` returning 200 — probes should pass only when the DB connection is healthy, not just `HttpResponse("ok")`.
+- **Health endpoint**: `/healthz` returning 200 -- probes should pass only when the DB connection is healthy, not just `HttpResponse("ok")`.
 - **Logging**: structlog or Python's stdlib `logging` with JSON output to stdout (12-factor). Do NOT write to files in containerized environments.
 
 ## Anti-patterns (Two Scoops's list + current)
@@ -266,11 +266,11 @@ If you already have signals (migrating from old code), document them in the mode
 
 ## References
 
-- Greenfeld & Greenfeld — *Two Scoops of Django 3.x* (principal source for doctrine)
-- Will Vincent — *Django for Professionals* 5.x (current, test-first)
-- Adam Johnson — adamj.eu (continuously updated; the current canonical blog)
-- Django docs — docs.djangoproject.com/en/stable/ (always newer than any book)
-- `django-upgrade` — automated migration tool between Django versions
+- Greenfeld & Greenfeld -- *Two Scoops of Django 3.x* (principal source for doctrine)
+- Will Vincent -- *Django for Professionals* 5.x (current, test-first)
+- Adam Johnson -- adamj.eu (continuously updated; the current canonical blog)
+- Django docs -- docs.djangoproject.com/en/stable/ (always newer than any book)
+- `django-upgrade` -- automated migration tool between Django versions
 
 ## Attribution Policy
 

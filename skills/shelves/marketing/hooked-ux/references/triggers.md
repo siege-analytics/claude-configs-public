@@ -1,6 +1,6 @@
 # Triggers in the Hook Model
 
-Triggers are the actuators of behavior—the spark plugs of the Hook Model. Without a trigger, there is no action.
+Triggers are the actuators of behavior--the spark plugs of the Hook Model. Without a trigger, there is no action.
 
 ## External Triggers
 
@@ -58,7 +58,7 @@ For each external trigger you send, verify:
 
 ## Internal Triggers
 
-Internal triggers are cues from within the user—emotions, routines, situations, or places.
+Internal triggers are cues from within the user--emotions, routines, situations, or places.
 
 ### The Goal
 

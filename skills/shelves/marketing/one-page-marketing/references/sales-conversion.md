@@ -1,10 +1,10 @@
 # Sales Conversion
 
-Sales conversion is where nurtured leads become paying customers. This is not about manipulation or pressure — it is about removing friction, overcoming legitimate concerns, building trust through proof, and making it as easy as possible for the right people to say yes.
+Sales conversion is where nurtured leads become paying customers. This is not about manipulation or pressure -- it is about removing friction, overcoming legitimate concerns, building trust through proof, and making it as easy as possible for the right people to say yes.
 
 ## Pricing Psychology
 
-Price is not just a number — it is a signal. How you price, frame, and present your offer dramatically affects conversion rates. Most businesses underprice out of fear, sending the wrong signal to the market.
+Price is not just a number -- it is a signal. How you price, frame, and present your offer dramatically affects conversion rates. Most businesses underprice out of fear, sending the wrong signal to the market.
 
 ### The Price-Value Perception Matrix
 
@@ -32,7 +32,7 @@ When a prospect asks "how much?" before understanding the value, deflect with a 
 
 **"Before I can give you an accurate price, I need to understand your situation. Can I ask a few questions?"**
 
-This reframes the conversation from price to value and gives you the information to present the price in context. Never lead with price — lead with the problem, the impact, and the solution.
+This reframes the conversation from price to value and gives you the information to present the price in context. Never lead with price -- lead with the problem, the impact, and the solution.
 
 ### Raising Prices
 
@@ -56,9 +56,9 @@ Every purchase involves risk. The buyer risks their money, time, and reputation.
 | Guarantee Type | How It Works | Strength |
 |---------------|-------------|----------|
 | Money-back guarantee | Full refund within a time period | Standard (expected in many industries) |
-| Conditional guarantee | Refund if specific conditions are met | Stronger — tied to commitment |
+| Conditional guarantee | Refund if specific conditions are met | Stronger -- tied to commitment |
 | Better-than-money-back | Refund plus additional compensation | Very strong signal of confidence |
-| Performance guarantee | You guarantee a specific measurable result | Strongest — you put skin in the game |
+| Performance guarantee | You guarantee a specific measurable result | Strongest -- you put skin in the game |
 | "Ride along" guarantee | You guarantee the process/experience, not just the outcome | Good for services where outcomes vary |
 
 ### Guarantee Examples
@@ -81,7 +81,7 @@ Most businesses resist strong guarantees because they fear getting taken advanta
 
 ## Overcoming Common Objections
 
-Every market has predictable objections. Address them proactively in your sales materials — do not wait for the prospect to raise them.
+Every market has predictable objections. Address them proactively in your sales materials -- do not wait for the prospect to raise them.
 
 ### The 5 Universal Objections
 
@@ -101,7 +101,7 @@ A classic framework for handling objections empathetically:
 2. **Felt:** "Many of our best customers felt the same way before they started."
 3. **Found:** "What they found was [how the concern was resolved and what result they achieved]."
 
-Example: "I completely understand your concern about the investment. Several of our clients felt the same way — $5,000 for a marketing audit seemed steep. What they found was that the audit identified $40,000 in wasted ad spend in the first month, so it paid for itself eight times over."
+Example: "I completely understand your concern about the investment. Several of our clients felt the same way -- $5,000 for a marketing audit seemed steep. What they found was that the audit identified $40,000 in wasted ad spend in the first month, so it paid for itself eight times over."
 
 ## Discovery and Sales Call Structure
 
@@ -132,7 +132,7 @@ A structured sales conversation increases close rates by keeping the conversatio
 
 ## Closing Techniques
 
-Closing is not a trick — it is a natural conclusion to a well-run sales process. If you have done the discovery properly and presented a relevant solution, the close should feel like the logical next step.
+Closing is not a trick -- it is a natural conclusion to a well-run sales process. If you have done the discovery properly and presented a relevant solution, the close should feel like the logical next step.
 
 ### Effective Closes
 
@@ -161,7 +161,7 @@ For service businesses and B2B sales, the proposal is often the final document b
 
 | Section | Purpose | Content |
 |---------|---------|---------|
-| 1. Executive summary | Show you understand their situation | Restate their problem, goals, and what success looks like — in their words |
+| 1. Executive summary | Show you understand their situation | Restate their problem, goals, and what success looks like -- in their words |
 | 2. Proposed solution | Explain what you will do and why it will work | Your approach, methodology, and how it addresses their specific situation |
 | 3. Deliverables and timeline | Concrete list of what they get and when | Itemized deliverables with dates or milestones |
 | 4. Social proof | Build confidence | 2-3 relevant case studies, testimonials, or results |
@@ -172,10 +172,10 @@ For service businesses and B2B sales, the proposal is often the final document b
 ### Proposal Best Practices
 
 - **Send within 24 hours** of the sales conversation while the discussion is fresh
-- **Personalize heavily** — never send a template that reads like a template
+- **Personalize heavily** -- never send a template that reads like a template
 - **Include three options** (Good/Better/Best) to leverage anchoring and give them a choice of "which" rather than "whether"
-- **Keep it short** — 3-5 pages maximum for most engagements
-- **Follow up** — If no response in 48 hours, follow up. Do not assume silence means no.
+- **Keep it short** -- 3-5 pages maximum for most engagements
+- **Follow up** -- If no response in 48 hours, follow up. Do not assume silence means no.
 
 ## Exercises
 

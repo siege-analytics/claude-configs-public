@@ -4,7 +4,7 @@ description: Router for design book skills. Dispatches to refactoring-ui, ios-hi
 disable-model-invocation: false
 ---
 
-# Design — Shelf
+# Design -- Shelf
 
 ## Trigger table
 
@@ -13,9 +13,9 @@ disable-model-invocation: false
 | Visual hierarchy, color, spacing, polish for non-designers (Wathan & Schoger) | [skill:refactoring-ui] |
 | iOS HIG, native iOS / iPadOS app design | [skill:ios-hig-design] |
 | Heuristic evaluation (Nielsen 10) | [skill:ux-heuristics] |
-| Web typography — pairing, scale, vertical rhythm | [skill:web-typography] |
+| Web typography -- pairing, scale, vertical rhythm | [skill:web-typography] |
 | Top-down composition, design fundamentals | [skill:top-design] |
 | Affordances, signifiers, mappings (Don Norman) | [skill:design-everyday-things] |
-| Microinteractions — triggers, rules, feedback, loops (Saffer) | [skill:microinteractions] |
+| Microinteractions -- triggers, rules, feedback, loops (Saffer) | [skill:microinteractions] |
 
-All wondelai/skills imports — see footers and `THIRD_PARTY_NOTICES.md`.
+All wondelai/skills imports -- see footers and `THIRD_PARTY_NOTICES.md`.

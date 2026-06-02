@@ -26,17 +26,17 @@ If **any** of the above is true, this skill is mandatory reading before you act.
 
 The catalog (UC in this environment) is the source of truth for:
 
-- Table identity — the name downstream consumers reference.
-- Storage location — the physical path the catalog delegates reads/writes to.
-- Schema — column names, types, nullability.
-- Format — Delta, Parquet, Iceberg.
-- Access control — which identities can read/write.
+- Table identity -- the name downstream consumers reference.
+- Storage location -- the physical path the catalog delegates reads/writes to.
+- Schema -- column names, types, nullability.
+- Format -- Delta, Parquet, Iceberg.
+- Access control -- which identities can read/write.
 
 Writing directly to `s3a://...` bypasses all of it. Downstream readers querying `SELECT * FROM catalog.schema.table` will not see your data because the catalog points elsewhere. You will either:
 
-1. **Be invisible** — your output lives at a path nobody queries; Consumer sees stale data.
-2. **Corrupt state** — you overwrite a path that another process manages, causing schema/format drift.
-3. **Orphan data** — storage fills up with writes nobody owns and nobody cleans.
+1. **Be invisible** -- your output lives at a path nobody queries; Consumer sees stale data.
+2. **Corrupt state** -- you overwrite a path that another process manages, causing schema/format drift.
+3. **Orphan data** -- storage fills up with writes nobody owns and nobody cleans.
 
 All three have happened. The fix is always the same: use the catalog.
 
@@ -77,7 +77,7 @@ df.write.format("delta").save("s3a://hive-warehouse/enterprise_bulk/individual_c
 # WRONG: same bucket, same bypass
 df.write.parquet("s3a://silver/enterprise_bulk/individual_contributions")
 
-# WRONG: raw Delta path write "for testing" — this is how orphans start
+# WRONG: raw Delta path write "for testing" -- this is how orphans start
 df.write.format("delta").mode("overwrite").save("s3a://hive-warehouse/enterprise_bulk_v2/...")
 ```
 
@@ -97,11 +97,11 @@ curl -sS "http://app-unity-catalog.electinfo.svc.cluster.local:8080/api/2.1/unit
 
 For each target table confirm:
 
-1. **Exists** — if not, schema needs creation or the name is wrong.
-2. **`table_type`** — MANAGED (UC chooses storage) vs EXTERNAL (points to a fixed location). Write accordingly.
-3. **`data_source_format`** — DELTA, PARQUET, ICEBERG. Match your writer's format. Mixing Parquet writes onto a Delta table corrupts it.
-4. **`storage_location`** — sanity check it matches what UC's storage credential covers. If UC can't generate creds for the location (`FAILED_PRECONDITION` on `generateTemporaryTableCredentials`), the table is broken at the registration level and needs re-registration before any write.
-5. **`columns`** — non-empty, schema matches what you're writing. A table registered with 0 columns is broken.
+1. **Exists** -- if not, schema needs creation or the name is wrong.
+2. **`table_type`** -- MANAGED (UC chooses storage) vs EXTERNAL (points to a fixed location). Write accordingly.
+3. **`data_source_format`** -- DELTA, PARQUET, ICEBERG. Match your writer's format. Mixing Parquet writes onto a Delta table corrupts it.
+4. **`storage_location`** -- sanity check it matches what UC's storage credential covers. If UC can't generate creds for the location (`FAILED_PRECONDITION` on `generateTemporaryTableCredentials`), the table is broken at the registration level and needs re-registration before any write.
+5. **`columns`** -- non-empty, schema matches what you're writing. A table registered with 0 columns is broken.
 
 If any of these fail, **stop and fix the registration before writing**.
 
@@ -119,7 +119,7 @@ spark.sql.catalog.spark_catalog.uc-catalog=electinfo
 
 This is already set on `spark-connect-server` (see `spark-on-kubernetes/manifests/spark-connect/base/spark-connect-server.yaml`). For `SparkApplication` CRDs (Spark Operator), add those three `sparkConf` keys to the driver + executor config.
 
-Spark Connect clients get the UC catalog automatically when they remote into the configured server — no extra config needed.
+Spark Connect clients get the UC catalog automatically when they remote into the configured server -- no extra config needed.
 
 ---
 
@@ -157,7 +157,7 @@ Verify afterwards via the UC REST API that the table landed with the columns you
 - [ ] Does the Spark session have the UC catalog configured? (Spark Connect: yes by default. Spark Operator: check the CRD `sparkConf`.)
 - [ ] Have I confirmed with the user that the schema / location decision is what they want, for anything downstream consumers depend on?
 
-If any answer is "no" or "I don't know" — stop and resolve it before writing.
+If any answer is "no" or "I don't know" -- stop and resolve it before writing.
 
 ---
 
@@ -167,17 +167,17 @@ Symptoms: `generateTemporaryTableCredentials` returns 400 `FAILED_PRECONDITION`,
 
 - **Do not work around by writing to a raw path.** That creates orphans and doesn't solve the downstream-read problem.
 - **Diagnose**: query UC REST directly to see the registration state. Check whether the `storage_location` bucket is covered by UC's storage credentials (`s3.bucketPath.N` in `app-unity-catalog` configmap).
-- **Coordinate**: if UC needs a new storage credential binding or the table needs re-registration, this is a config/ops change — surface it as a ticket and get confirmation before touching UC's configuration.
+- **Coordinate**: if UC needs a new storage credential binding or the table needs re-registration, this is a config/ops change -- surface it as a ticket and get confirmation before touching UC's configuration.
 - **Do not re-register existing production tables without explicit authorization.** They may be referenced by consumers, views, or jobs you don't know about.
 
 ---
 
 ## Related
 
-- `skills/coding/spark/SKILL.md` — broader Spark patterns
-- `skills/coding/pipeline-jobs/SKILL.md` — pipeline orchestration
-- `electinfo_claude_skills/skills/pipeline-guard/SKILL.md` — don't bypass Spark Operator for batch jobs
-- `electinfo_claude_skills/skills/rundeck-job/SKILL.md` — Rundeck YAML for pipeline jobs
+- `skills/coding/spark/SKILL.md` -- broader Spark patterns
+- `skills/coding/pipeline-jobs/SKILL.md` -- pipeline orchestration
+- `electinfo_claude_skills/skills/pipeline-guard/SKILL.md` -- don't bypass Spark Operator for batch jobs
+- `electinfo_claude_skills/skills/rundeck-job/SKILL.md` -- Rundeck YAML for pipeline jobs
 
 ---
 

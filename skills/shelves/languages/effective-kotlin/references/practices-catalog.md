@@ -1,4 +1,4 @@
-# Effective Kotlin — Practices Catalog
+# Effective Kotlin -- Practices Catalog
 
 Complete catalog of all 52 items from *Effective Kotlin* (2nd Edition) by Marcin Moskała,
 organized by part and chapter.
@@ -11,7 +11,7 @@ organized by part and chapter.
 
 #### Item 1: Limit Mutability
 
-**Category:** Safety — Mutability Control
+**Category:** Safety -- Mutability Control
 
 **Core Practice:** Prefer read-only properties (val), immutable collections, and data class
 copy() over mutable state. Mutable state makes reasoning about code harder, introduces
@@ -25,7 +25,7 @@ concurrency risks, and increases the surface for bugs.
 - For shared mutable state, use synchronization or concurrent data structures
 - Prefer `Sequence` or `Flow` (which produce new elements) over mutable accumulation
 
-**When to Apply:** Always — this is the default stance. Only introduce mutability when
+**When to Apply:** Always -- this is the default stance. Only introduce mutability when
 there's a clear performance or API need.
 
 **Anti-Pattern:** Public `var` properties, returning `MutableList` from functions, using
@@ -35,7 +35,7 @@ mutable collections as class properties without encapsulation.
 
 #### Item 2: Minimize the Scope of Variables
 
-**Category:** Safety — Scope Control
+**Category:** Safety -- Scope Control
 
 **Core Practice:** Declare variables in the tightest scope possible and prefer defining
 variables close to their first usage. Use `if`, `when`, `let`, and `run` to tighten scope.
@@ -48,7 +48,7 @@ variables close to their first usage. Use `if`, `when`, `let`, and `run` to tigh
 - For loops, prefer `for` with a narrow iteration variable over external counters
 - Prefer `val` with conditional initialization over `var` with later reassignment
 
-**When to Apply:** Always — every variable declaration should be as close to first use and
+**When to Apply:** Always -- every variable declaration should be as close to first use and
 as narrow in scope as possible.
 
 **Anti-Pattern:** Declaring all variables at the top of a function; using `var` initialized
@@ -58,7 +58,7 @@ to a default and reassigned in a branch.
 
 #### Item 3: Eliminate Platform Types as Soon as Possible
 
-**Category:** Safety — Null Safety at Boundaries
+**Category:** Safety -- Null Safety at Boundaries
 
 **Core Practice:** When calling Java code, the return types are "platform types" (noted as
 `Type!`) where nullability is unknown. Specify nullability explicitly at the call site to
@@ -67,7 +67,7 @@ prevent NPEs from propagating through Kotlin code.
 **Key Techniques:**
 - Annotate Java code with `@Nullable`/`@NotNull` (JSR-305, JetBrains, AndroidX annotations)
 - When consuming Java APIs, declare the expected nullability explicitly: `val name: String? = javaObj.getName()`
-- Never let platform types leak into public Kotlin APIs — always resolve them
+- Never let platform types leak into public Kotlin APIs -- always resolve them
 - Write wrapper functions around Java APIs with explicit nullability
 
 **When to Apply:** At every Java/Kotlin boundary. Critical for Android development and
@@ -80,7 +80,7 @@ assuming Java return values are non-null without verification.
 
 #### Item 4: Do Not Expose Inferred Types
 
-**Category:** Safety — Type Clarity
+**Category:** Safety -- Type Clarity
 
 **Core Practice:** When a public function or property's type is inferred, changes to the
 implementation can inadvertently change the public type. Always specify types explicitly for
@@ -90,27 +90,27 @@ public/protected API members.
 - Explicit return types on all public/protected functions and properties
 - Explicit types for all public constants and companion object properties
 - Allow inference only for local variables and private members where the type is obvious
-- Be especially careful with factory functions — the inferred return type may be too specific
+- Be especially careful with factory functions -- the inferred return type may be too specific
 
 **When to Apply:** For all public API surfaces. Local variables and private members can
 use inference when the type is obvious from context.
 
-**Anti-Pattern:** `fun createAnimal() = Dog()` — infers `Dog` instead of desired `Animal`.
+**Anti-Pattern:** `fun createAnimal() = Dog()` -- infers `Dog` instead of desired `Animal`.
 
 ---
 
 #### Item 5: Specify Your Expectations on Arguments and State
 
-**Category:** Safety — Preconditions and Contracts
+**Category:** Safety -- Preconditions and Contracts
 
 **Core Practice:** Use `require()`, `check()`, and `assert()` to document and enforce
 expectations at function boundaries. Fail fast with clear messages.
 
 **Key Techniques:**
-- `require(condition) { "message" }` — for argument validation; throws `IllegalArgumentException`
-- `check(condition) { "message" }` — for state validation; throws `IllegalStateException`
-- `assert(condition)` — for assertions checked only in testing (-ea flag)
-- `requireNotNull(value) { "message" }` and `checkNotNull(value) { "message" }` — for null checks that smart-cast
+- `require(condition) { "message" }` -- for argument validation; throws `IllegalArgumentException`
+- `check(condition) { "message" }` -- for state validation; throws `IllegalStateException`
+- `assert(condition)` -- for assertions checked only in testing (-ea flag)
+- `requireNotNull(value) { "message" }` and `checkNotNull(value) { "message" }` -- for null checks that smart-cast
 - Place preconditions at the top of functions, before any logic
 - Use the `contract` mechanism for custom smart-cast functions
 
@@ -124,7 +124,7 @@ with unclear errors; custom exception types where standard ones suffice.
 
 #### Item 6: Prefer Standard Errors to Custom Ones
 
-**Category:** Safety — Error Types
+**Category:** Safety -- Error Types
 
 **Core Practice:** Use standard Kotlin/Java exception types (`IllegalArgumentException`,
 `IllegalStateException`, `UnsupportedOperationException`, `ConcurrentModificationException`,
@@ -132,8 +132,8 @@ with unclear errors; custom exception types where standard ones suffice.
 hierarchies for common error conditions.
 
 **Key Techniques:**
-- `require` throws `IllegalArgumentException` — use for argument validation
-- `check` throws `IllegalStateException` — use for state validation
+- `require` throws `IllegalArgumentException` -- use for argument validation
+- `check` throws `IllegalStateException` -- use for state validation
 - Custom exceptions only when callers need to catch and handle specific error types differently
 - In library code, document which exceptions can be thrown
 
@@ -147,7 +147,7 @@ the caller needs to distinguish between different error conditions programmatica
 
 #### Item 7: Prefer Null or Failure Result When Lack of Result Is Possible
 
-**Category:** Safety — Expected Failure Handling
+**Category:** Safety -- Expected Failure Handling
 
 **Core Practice:** For functions where failure is expected (not exceptional), return `null`
 or a `Result`/sealed class instead of throwing exceptions. Reserve exceptions for truly
@@ -171,18 +171,18 @@ calls, user input validation. NOT for programming errors (those should throw).
 
 #### Item 8: Handle Nulls Properly
 
-**Category:** Safety — Null Handling
+**Category:** Safety -- Null Handling
 
 **Core Practice:** Kotlin's null-safety system is powerful but must be used correctly.
 Prefer safe calls, smart casting, Elvis operator, and `let` over force-unwrapping (`!!`).
 
 **Key Techniques:**
-- Safe call: `user?.name` — returns null if user is null
-- Elvis operator: `user?.name ?: "Unknown"` — provides default for null
-- Smart casting: `if (user != null) { user.name }` — compiler tracks non-null
+- Safe call: `user?.name` -- returns null if user is null
+- Elvis operator: `user?.name ?: "Unknown"` -- provides default for null
+- Smart casting: `if (user != null) { user.name }` -- compiler tracks non-null
 - `let` for null-safe scoping: `user?.let { sendEmail(it) }`
 - `lateinit` for properties that can't be initialized in constructor but are set before use
-- `Delegates.notNull<T>()` — alternative to lateinit for primitives
+- `Delegates.notNull<T>()` -- alternative to lateinit for primitives
 - Avoid `!!` except where you can prove the value is non-null and want to fail fast
 
 **When to Apply:** Every time you encounter a nullable type. Default to safe handling.
@@ -194,15 +194,15 @@ checking for null then using `!!` in the next line.
 
 #### Item 9: Close Resources with use
 
-**Category:** Safety — Resource Management
+**Category:** Safety -- Resource Management
 
 **Core Practice:** Use the `use` extension function (Kotlin's equivalent of try-with-resources)
 for any `Closeable`/`AutoCloseable` resource to ensure proper cleanup.
 
 **Key Techniques:**
 - `FileReader(path).use { reader -> reader.readText() }`
-- `BufferedReader(reader).use { it.readLine() }` — `it` reference in simple cases
-- `File(path).useLines { lines -> lines.filter { ... }.toList() }` — for line-by-line processing
+- `BufferedReader(reader).use { it.readLine() }` -- `it` reference in simple cases
+- `File(path).useLines { lines -> lines.filter { ... }.toList() }` -- for line-by-line processing
 - `use` works with any `Closeable`: streams, connections, database cursors
 - Nest `use` calls for multiple resources, or use extension functions to flatten
 
@@ -216,7 +216,7 @@ in error paths; using `readLines()` for large files instead of `useLines()`.
 
 #### Item 10: Write Unit Tests
 
-**Category:** Safety — Testing
+**Category:** Safety -- Testing
 
 **Core Practice:** Unit tests are the primary mechanism for verifying correctness and
 preventing regressions. Write tests for all non-trivial business logic.
@@ -243,7 +243,7 @@ tests tightly coupled to implementation; testing only the happy path.
 
 #### Item 11: Design for Readability
 
-**Category:** Readability — General
+**Category:** Readability -- General
 
 **Core Practice:** Code is read far more often than it is written. Optimize for the reader,
 not the writer. Prefer clear, obvious code over clever, concise code.
@@ -254,7 +254,7 @@ not the writer. Prefer clear, obvious code over clever, concise code.
 - Keep functions short and focused on a single level of abstraction
 - Use intermediate variables with descriptive names to break complex expressions
 - Prefer `if`/`when` expressions with clear branches over complex ternary-style logic
-- Code should read like well-written prose — a developer should understand it on first read
+- Code should read like well-written prose -- a developer should understand it on first read
 
 **When to Apply:** Always. Every code decision should consider "will the next reader
 understand this immediately?"
@@ -266,7 +266,7 @@ excessively compact code that requires mental unpacking.
 
 #### Item 12: Operator Meaning Should Be Consistent with Its Function Name
 
-**Category:** Readability — Operators
+**Category:** Readability -- Operators
 
 **Core Practice:** Kotlin allows operator overloading, but each operator has a conventional
 meaning tied to its function name (`plus`, `times`, `contains`, etc.). Don't overload
@@ -291,7 +291,7 @@ using `invoke` for operations that aren't conceptually "calling" the object.
 
 #### Item 13: Avoid Returning or Operating on Unit?
 
-**Category:** Readability — Return Types
+**Category:** Readability -- Return Types
 
 **Core Practice:** `Unit?` has only two values: `Unit` and `null`, making it essentially
 a boolean but far less clear. Avoid functions that return `Unit?` or use `Unit?` in
@@ -311,7 +311,7 @@ conditional logic.
 
 #### Item 14: Specify the Variable Type When It Is Not Clear
 
-**Category:** Readability — Type Clarity
+**Category:** Readability -- Type Clarity
 
 **Core Practice:** Kotlin's type inference is powerful, but when the type isn't obvious
 from the right-hand side, specify it explicitly for readability.
@@ -325,13 +325,13 @@ from the right-hand side, specify it explicitly for readability.
 **When to Apply:** Whenever the reader would need to navigate to the function definition
 to understand the type. When in doubt, be explicit.
 
-**Anti-Pattern:** `val data = repository.getData()` — what type is `data`?
+**Anti-Pattern:** `val data = repository.getData()` -- what type is `data`?
 
 ---
 
 #### Item 15: Consider Referencing Receivers Explicitly
 
-**Category:** Readability — Scope Clarity
+**Category:** Readability -- Scope Clarity
 
 **Core Practice:** In nested scope functions or classes with multiple receivers (this, outer
 class, extension receiver), use explicit receiver references (`this@ClassName`,
@@ -354,7 +354,7 @@ DSL builders that accidentally access outer scope receivers.
 
 #### Item 16: Properties Should Represent State, Not Behavior
 
-**Category:** Readability — Properties vs Functions
+**Category:** Readability -- Properties vs Functions
 
 **Core Practice:** Properties should represent the state of an object. If an operation is
 computationally expensive, has side effects, or conceptually does something rather than
@@ -365,19 +365,19 @@ returns something, use a function instead.
 - Function: `fun calculateTotal(): BigDecimal`, `fun findUser(id: String): User?`
 - Properties should be O(1) or at most O(n) with caching expectations
 - Properties should not throw exceptions (except for lazy initialization)
-- Properties should be idempotent — same result on consecutive calls (no side effects)
+- Properties should be idempotent -- same result on consecutive calls (no side effects)
 - Custom getters are fine for derived state: `val fullName: String get() = "$first $last"`
 
 **When to Apply:** For every decision between `val x: T get() = ...` and `fun x(): T`.
 
-**Anti-Pattern:** `val users: List<User> get() = database.query("SELECT * FROM users")` —
+**Anti-Pattern:** `val users: List<User> get() = database.query("SELECT * FROM users")` --
 this is behavior masquerading as state.
 
 ---
 
 #### Item 17: Consider Naming Arguments
 
-**Category:** Readability — Named Arguments
+**Category:** Readability -- Named Arguments
 
 **Core Practice:** Use named arguments for parameters where the meaning isn't clear from
 context, especially for booleans, numbers, strings, and functions with multiple parameters
@@ -394,13 +394,13 @@ of the same type.
 **When to Apply:** Whenever the argument's purpose isn't obvious from its type and position.
 Especially for boolean parameters, same-typed parameters, and numeric parameters.
 
-**Anti-Pattern:** `createRect(0, 0, 100, 50, true, false)` — what do these mean?
+**Anti-Pattern:** `createRect(0, 0, 100, 50, true, false)` -- what do these mean?
 
 ---
 
 #### Item 18: Respect Coding Conventions
 
-**Category:** Readability — Conventions
+**Category:** Readability -- Conventions
 
 **Core Practice:** Follow Kotlin's official coding conventions and the project's style guide.
 Consistency across a codebase is more important than any individual preference.
@@ -427,7 +427,7 @@ for functions, Hungarian notation); tabs-vs-spaces debates without tooling enfor
 
 #### Item 19: Do Not Repeat Knowledge
 
-**Category:** Reusability — DRY Principle
+**Category:** Reusability -- DRY Principle
 
 **Core Practice:** Every piece of knowledge should have a single, unambiguous representation
 in the system. Duplication leads to inconsistency when one copy is updated but others aren't.
@@ -451,7 +451,7 @@ duplicated across files; copy-pasted algorithm with slight variations.
 
 #### Item 20: Do Not Repeat Common Algorithms
 
-**Category:** Reusability — Standard Library Usage
+**Category:** Reusability -- Standard Library Usage
 
 **Core Practice:** Kotlin's standard library provides a rich set of collection operations,
 scope functions, and utility functions. Use them instead of writing custom implementations.
@@ -475,16 +475,16 @@ of `buildString`/`joinToString`, reimplementing `groupBy` or `associate`.
 
 #### Item 21: Use Property Delegation to Extract Common Property Patterns
 
-**Category:** Reusability — Delegation
+**Category:** Reusability -- Delegation
 
 **Core Practice:** Kotlin's property delegation (`by` keyword) lets you extract common
 property patterns like lazy initialization, observable changes, and map-backed properties.
 
 **Key Techniques:**
-- `by lazy { }` — lazy initialization (thread-safe by default)
-- `by Delegates.observable(initial) { prop, old, new -> }` — react to changes
-- `by Delegates.vetoable(initial) { prop, old, new -> condition }` — validate changes
-- `by map` — delegate to a map for dynamic property lookup
+- `by lazy { }` -- lazy initialization (thread-safe by default)
+- `by Delegates.observable(initial) { prop, old, new -> }` -- react to changes
+- `by Delegates.vetoable(initial) { prop, old, new -> condition }` -- validate changes
+- `by map` -- delegate to a map for dynamic property lookup
 - Custom delegates: implement `ReadOnlyProperty` or `ReadWriteProperty`
 - Use custom delegates for cross-cutting concerns: logging, validation, caching, preferences
 
@@ -498,7 +498,7 @@ backing fields; repeated boilerplate property patterns across classes.
 
 #### Item 22: Use Generics When Implementing Common Algorithms
 
-**Category:** Reusability — Generics
+**Category:** Reusability -- Generics
 
 **Core Practice:** When extracting common algorithms, use generics to make them work
 with any type rather than duplicating for specific types.
@@ -521,7 +521,7 @@ functions that do the same thing with different types.
 
 #### Item 23: Avoid Shadowing Type Parameters
 
-**Category:** Reusability — Generic Safety
+**Category:** Reusability -- Generic Safety
 
 **Core Practice:** Don't declare a type parameter on a function that shadows a type parameter
 from the enclosing class. This creates confusing independent type parameters that look related.
@@ -533,14 +533,14 @@ from the enclosing class. This creates confusing independent type parameters tha
 
 **When to Apply:** When writing generic member functions in generic classes.
 
-**Anti-Pattern:** `class Box<T> { fun <T> add(item: T) }` — the function's `T` shadows and
+**Anti-Pattern:** `class Box<T> { fun <T> add(item: T) }` -- the function's `T` shadows and
 is independent from the class's `T`.
 
 ---
 
 #### Item 24: Consider Variance for Generic Types
 
-**Category:** Reusability — Variance
+**Category:** Reusability -- Variance
 
 **Core Practice:** Use declaration-site variance (`in`/`out` modifiers) to specify whether a
 generic type is a producer (covariant, `out`) or consumer (contravariant, `in`), enabling
@@ -563,7 +563,7 @@ requiring exact type matches where subtype relationships should work.
 
 #### Item 25: Reuse Between Different Platforms
 
-**Category:** Reusability — Multiplatform
+**Category:** Reusability -- Multiplatform
 
 **Core Practice:** Kotlin Multiplatform allows sharing code between JVM, JS, Native, and
 other targets. Put platform-independent logic in common modules.
@@ -574,7 +574,7 @@ other targets. Put platform-independent logic in common modules.
 - Platform modules for: UI, platform APIs, file system, networking specifics
 - Share serialization models with kotlinx.serialization
 - Share coroutine-based async code with kotlinx.coroutines
-- Use `expect`/`actual` sparingly — prefer interfaces with platform-specific DI
+- Use `expect`/`actual` sparingly -- prefer interfaces with platform-specific DI
 
 **When to Apply:** When building applications that target multiple platforms (mobile,
 web, server). Put as much business logic as possible in common code.
@@ -588,7 +588,7 @@ in code that could be platform-independent.
 
 #### Item 26: Each Function Should Be Written in Terms of a Single Level of Abstraction
 
-**Category:** Abstraction — Function Design
+**Category:** Abstraction -- Function Design
 
 **Core Practice:** A function should operate at one consistent level of abstraction. Don't
 mix high-level operations (business logic) with low-level details (string parsing, I/O).
@@ -610,7 +610,7 @@ a function that alternates between business-meaningful operations and mechanical
 
 #### Item 27: Use Abstraction to Protect Code Against Changes
 
-**Category:** Abstraction — Change Protection
+**Category:** Abstraction -- Change Protection
 
 **Core Practice:** Introduce abstractions (interfaces, abstract classes, function types)
 at boundaries where change is expected. Abstractions isolate the impact of changes.
@@ -632,14 +632,14 @@ hardcoding database queries in business logic; no abstraction around third-party
 
 #### Item 28: Specify API Stability
 
-**Category:** Abstraction — API Lifecycle
+**Category:** Abstraction -- API Lifecycle
 
 **Core Practice:** Communicate the stability of your API elements so consumers know what's
 safe to depend on. Use annotations and versioning conventions.
 
 **Key Techniques:**
-- `@Deprecated("message", replaceWith = ReplaceWith("newFunction()"))` — for removed APIs
-- `@OptIn(ExperimentalApi::class)` / `@RequiresOptIn` — for experimental/unstable APIs
+- `@Deprecated("message", replaceWith = ReplaceWith("newFunction()"))` -- for removed APIs
+- `@OptIn(ExperimentalApi::class)` / `@RequiresOptIn` -- for experimental/unstable APIs
 - Semantic versioning: major for breaking changes, minor for additions, patch for fixes
 - Mark internal implementation details as `internal` or `private`
 - Document stability guarantees in KDoc
@@ -655,7 +655,7 @@ opt-in annotation; no versioning strategy.
 
 #### Item 29: Consider Wrapping External APIs
 
-**Category:** Abstraction — Dependency Isolation
+**Category:** Abstraction -- Dependency Isolation
 
 **Core Practice:** Wrap third-party libraries and external APIs behind your own interfaces
 to isolate your code from their changes, enable testing, and allow swapping implementations.
@@ -678,7 +678,7 @@ code due to tight coupling with external libraries.
 
 #### Item 30: Minimize Elements' Visibility
 
-**Category:** Abstraction — Encapsulation
+**Category:** Abstraction -- Encapsulation
 
 **Core Practice:** Use the most restrictive visibility modifier that works. Less visibility
 means less API surface, fewer invariants to maintain, and more freedom to refactor.
@@ -689,7 +689,7 @@ means less API surface, fewer invariants to maintain, and more freedom to refact
 - Use `internal` for module-internal APIs that shouldn't be exposed to consumers
 - Properties: prefer `private set` with public getter if external mutation isn't needed
 - Classes: prefer `private` nested classes or `internal` top-level classes
-- In interfaces, keep the surface minimal — don't expose implementation helpers
+- In interfaces, keep the surface minimal -- don't expose implementation helpers
 
 **When to Apply:** For every class, function, and property declaration. Start `private`
 and widen only with justification.
@@ -701,7 +701,7 @@ that expose implementation; mutable properties without restricted setters.
 
 #### Item 31: Define Contract with Documentation
 
-**Category:** Abstraction — Documentation
+**Category:** Abstraction -- Documentation
 
 **Core Practice:** Use KDoc to document the contract of public API elements: what the function
 does, what it expects, what it returns, and what exceptions it may throw.
@@ -726,7 +726,7 @@ when the behavior isn't obvious from the name and signature.
 
 #### Item 32: Respect Abstraction Contracts
 
-**Category:** Abstraction — Contract Compliance
+**Category:** Abstraction -- Contract Compliance
 
 **Core Practice:** When implementing an interface or extending a class, respect the contract
 defined by the supertype. Violating contracts leads to bugs in code that depends on the
@@ -736,7 +736,7 @@ documented behavior (Liskov Substitution Principle).
 - Read and follow the documented contracts of interfaces you implement
 - Maintain postconditions: if the contract says "returns non-empty list," ensure it
 - Maintain invariants: if the contract says "thread-safe," ensure thread safety
-- `equals`, `hashCode`, `compareTo`, `toString` all have well-defined contracts — respect them
+- `equals`, `hashCode`, `compareTo`, `toString` all have well-defined contracts -- respect them
 - When overriding, the subclass behavior should be substitutable for the superclass
 - Don't throw unexpected exceptions from overridden methods
 
@@ -752,7 +752,7 @@ well-known contracts like `Collection`, `Comparable`, `Iterable`.
 
 #### Item 33: Consider Factory Functions Instead of Constructors
 
-**Category:** Object Creation — Factory Patterns
+**Category:** Object Creation -- Factory Patterns
 
 **Core Practice:** Factory functions offer naming, caching, return-type flexibility,
 and can return subtypes. Use them when constructors are limiting.
@@ -760,7 +760,7 @@ and can return subtypes. Use them when constructors are limiting.
 **Key Techniques:**
 - Companion object factory: `User.create(name)` or `User(name)` (invoke operator)
 - Top-level factory: `listOf()`, `mapOf()`, `buildString { }`
-- Extension factory: `String.toUser()` — conversion factory as extension
+- Extension factory: `String.toUser()` -- conversion factory as extension
 - Fake constructors: companion `invoke` operator for constructor-like syntax with factory benefits
 - Factory functions can: have descriptive names, cache instances, return subtypes, hide implementation
 - Kotlin stdlib examples: `listOf()`, `mutableListOf()`, `lazy { }`, `coroutineScope { }`
@@ -775,7 +775,7 @@ computation; inability to name construction scenarios; no caching opportunity.
 
 #### Item 34: Consider a Primary Constructor with Named Optional Arguments
 
-**Category:** Object Creation — Constructor Design
+**Category:** Object Creation -- Constructor Design
 
 **Core Practice:** Kotlin's primary constructor with default parameter values and named
 arguments often eliminates the need for the Builder pattern, telescoping constructors,
@@ -799,7 +799,7 @@ constructor overloads; multiple factory functions that differ only in defaults.
 
 #### Item 35: Consider Defining a DSL for Complex Object Creation
 
-**Category:** Object Creation — DSLs
+**Category:** Object Creation -- DSLs
 
 **Core Practice:** For complex, hierarchical object creation, Kotlin's type-safe builders
 (DSLs with lambda receivers) provide the most readable syntax.
@@ -824,7 +824,7 @@ code for what is naturally a declarative structure.
 
 #### Item 36: Prefer Composition over Inheritance
 
-**Category:** Class Design — Composition vs Inheritance
+**Category:** Class Design -- Composition vs Inheritance
 
 **Core Practice:** Use composition (HAS-A) with delegation over inheritance (IS-A) when
 the goal is code reuse. Inheritance creates tight coupling and fragile hierarchies.
@@ -846,13 +846,13 @@ overriding methods in ways that break superclass assumptions; "inheritance for c
 
 #### Item 37: Use the Data Modifier to Represent a Bundle of Data
 
-**Category:** Class Design — Data Classes
+**Category:** Class Design -- Data Classes
 
 **Core Practice:** Use `data class` for classes whose primary purpose is holding data.
 They automatically generate `equals`, `hashCode`, `toString`, `copy`, and destructuring.
 
 **Key Techniques:**
-- `data class User(val name: String, val email: String)` — auto-generated methods
+- `data class User(val name: String, val email: String)` -- auto-generated methods
 - `copy()` for creating modified copies: `user.copy(name = "New Name")`
 - Destructuring: `val (name, email) = user`
 - Properties in the primary constructor participate in equals/hashCode/toString/copy
@@ -870,7 +870,7 @@ holders; mutable data classes with var properties (breaks hash-based collections
 
 #### Item 38: Use Function Types or Functional Interfaces to Pass Behaviors
 
-**Category:** Class Design — Behavioral Abstraction
+**Category:** Class Design -- Behavioral Abstraction
 
 **Core Practice:** Instead of interfaces with a single method (SAM interfaces in Java), use
 Kotlin function types `(A) -> B` or `fun interface` for passing behavior.
@@ -893,7 +893,7 @@ syntax; verbose callback interfaces where a lambda would suffice.
 
 #### Item 39: Prefer Class Hierarchies Instead of Tagged Classes
 
-**Category:** Class Design — Sealed Hierarchies
+**Category:** Class Design -- Sealed Hierarchies
 
 **Core Practice:** Replace "tagged classes" (classes with a type enum and conditional logic)
 with sealed class hierarchies. Each variant becomes its own class with type-specific behavior.
@@ -914,7 +914,7 @@ blocks checking that type, nullable fields that are only relevant for some types
 
 #### Item 40: Respect the Contract of equals
 
-**Category:** Class Design — Equality
+**Category:** Class Design -- Equality
 
 **Core Practice:** `equals` must satisfy: reflexive (a == a), symmetric (a == b ↔ b == a),
 transitive (a == b && b == c → a == c), consistent (same result on repeated calls),
@@ -938,7 +938,7 @@ between parent and child; mutable properties in `equals` computation.
 
 #### Item 41: Respect the Contract of hashCode
 
-**Category:** Class Design — Hashing
+**Category:** Class Design -- Hashing
 
 **Core Practice:** `hashCode` must be consistent with `equals`: if `a == b`, then
 `a.hashCode() == b.hashCode()`. Objects used as hash map keys or set elements MUST
@@ -962,7 +962,7 @@ hashCode; hashCode that returns a constant (legal but destroys performance).
 
 #### Item 42: Respect the Contract of compareTo
 
-**Category:** Class Design — Ordering
+**Category:** Class Design -- Ordering
 
 **Core Practice:** `compareTo` (and `Comparable` interface) must be: antisymmetric
 (a > b implies b < a), transitive (a > b && b > c implies a > c), and consistent
@@ -985,7 +985,7 @@ inconsistent ordering that isn't transitive.
 
 #### Item 43: Consider Extracting Non-Essential Parts of Your API into Extensions
 
-**Category:** Class Design — Extension Functions
+**Category:** Class Design -- Extension Functions
 
 **Core Practice:** Keep classes focused on their core responsibility. Move non-essential
 operations (convenience methods, formatting, integration utilities) to extension functions.
@@ -993,7 +993,7 @@ operations (convenience methods, formatting, integration utilities) to extension
 **Key Techniques:**
 - Core API in the class: essential operations that need access to private state
 - Extensions for: convenience overloads, format conversions, integration with other libraries
-- Extensions can be imported selectively — unlike members which are always available
+- Extensions can be imported selectively -- unlike members which are always available
 - Extensions improve discoverability through IDE completion based on receiver type
 - Extension properties for derived state that doesn't need private access:
   `val String.isPalindrome: Boolean get() = this == reversed()`
@@ -1008,14 +1008,14 @@ that clutter the core API; methods that could work with only the public interfac
 
 #### Item 44: Avoid Member Extensions
 
-**Category:** Class Design — Extension Placement
+**Category:** Class Design -- Extension Placement
 
 **Core Practice:** Extensions defined as members of another class have confusing dispatch
 behavior (static for the extension receiver, virtual for the dispatch receiver). Prefer
 top-level extensions or local extensions.
 
 **Key Techniques:**
-- Top-level extensions: `fun String.toCamelCase(): String` — clear and predictable
+- Top-level extensions: `fun String.toCamelCase(): String` -- clear and predictable
 - Local extensions (inside a function): limited scope, good for one-off utilities
 - Member extensions have two receivers (`this` and the extension receiver), creating confusion
 - Member extensions can't be used outside the class they're defined in
@@ -1035,7 +1035,7 @@ using member extensions when a top-level extension or regular method would be cl
 
 #### Item 45: Avoid Unnecessary Object Creation
 
-**Category:** Efficiency — Allocation
+**Category:** Efficiency -- Allocation
 
 **Core Practice:** Object creation has a cost (allocation, initialization, GC pressure).
 In performance-sensitive code, reuse objects, use primitives, and avoid unnecessary allocation.
@@ -1050,7 +1050,7 @@ In performance-sensitive code, reuse objects, use primitives, and avoid unnecess
 - Known costly operations: `Regex` creation (compile once, reuse), date formatter creation
 
 **When to Apply:** In performance-critical paths: tight loops, hot functions, frequently
-called code. Don't over-optimize cold paths — readability matters more there.
+called code. Don't over-optimize cold paths -- readability matters more there.
 
 **Anti-Pattern:** Creating `Regex` in every function call; string concatenation in loops;
 nullable primitives where non-null works; creating temporary objects per iteration.
@@ -1059,18 +1059,18 @@ nullable primitives where non-null works; creating temporary objects per iterati
 
 #### Item 46: Use Inline Modifier for Functions with Functional Parameters
 
-**Category:** Efficiency — Inline Functions
+**Category:** Efficiency -- Inline Functions
 
 **Core Practice:** Lambda parameters create anonymous class instances and add invocation
 overhead. The `inline` modifier copies the lambda body at the call site, eliminating
 this overhead.
 
 **Key Techniques:**
-- `inline fun <T> Iterable<T>.myFilter(predicate: (T) -> Boolean): List<T>` — no lambda object created
+- `inline fun <T> Iterable<T>.myFilter(predicate: (T) -> Boolean): List<T>` -- no lambda object created
 - Most stdlib collection functions (`map`, `filter`, `forEach`, `let`, `apply`, etc.) are already inline
 - `noinline` for lambda parameters that shouldn't be inlined (stored, passed elsewhere)
 - `crossinline` for lambdas used in other contexts (coroutines, nested lambdas)
-- `reified` type parameters: only work with `inline` — allow `T::class` usage
+- `reified` type parameters: only work with `inline` -- allow `T::class` usage
 - Inline functions support non-local returns from lambdas
 
 **When to Apply:** For higher-order functions that are called frequently, especially
@@ -1083,13 +1083,13 @@ functions with minimal lambda parameters (code bloat for little benefit).
 
 #### Item 47: Consider Using Inline Value Classes
 
-**Category:** Efficiency — Value Classes
+**Category:** Efficiency -- Value Classes
 
 **Core Practice:** Inline value classes (`@JvmInline value class`) wrap a single value
-with type safety but are erased to the underlying type at runtime — zero allocation overhead.
+with type safety but are erased to the underlying type at runtime -- zero allocation overhead.
 
 **Key Techniques:**
-- `@JvmInline value class UserId(val id: Long)` — type-safe wrapper, compiled to `Long` at runtime
+- `@JvmInline value class UserId(val id: Long)` -- type-safe wrapper, compiled to `Long` at runtime
 - Use for: IDs, quantities with units, validated strings, domain primitives
 - Prevents mixing up parameters of the same type: `fun assign(userId: UserId, taskId: TaskId)`
 - Can have methods, implement interfaces, and have init blocks
@@ -1106,7 +1106,7 @@ using full classes for simple wrappers adding GC pressure in hot paths.
 
 #### Item 48: Eliminate Obsolete Object References
 
-**Category:** Efficiency — Memory Management
+**Category:** Efficiency -- Memory Management
 
 **Core Practice:** Even with garbage collection, memory leaks occur when objects hold
 references to other objects that are no longer needed. Null out references, use weak
@@ -1133,10 +1133,10 @@ unregistered; closures capturing Activity/Fragment references on Android.
 
 #### Item 49: Prefer Sequence for Big Collections with More Than One Processing Step
 
-**Category:** Efficiency — Lazy Processing
+**Category:** Efficiency -- Lazy Processing
 
-**Core Practice:** Standard collection operations (`map`, `filter`, etc.) are eager — each
-step creates an intermediate collection. `Sequence` is lazy — elements are processed one
+**Core Practice:** Standard collection operations (`map`, `filter`, etc.) are eager -- each
+step creates an intermediate collection. `Sequence` is lazy -- elements are processed one
 at a time through the entire pipeline, with no intermediate collections.
 
 **Key Techniques:**
@@ -1157,21 +1157,21 @@ larger the collection and the more operations, the bigger the benefit.
 
 #### Item 50: Limit the Number of Operations
 
-**Category:** Efficiency — Operation Optimization
+**Category:** Efficiency -- Operation Optimization
 
 **Core Practice:** Choose the right collection function to minimize the number of operations.
 Many common patterns have single-function equivalents that avoid unnecessary work.
 
 **Key Techniques:**
-- `any { }` instead of `filter { }.isNotEmpty()` — short-circuits on first match
-- `none { }` instead of `filter { }.isEmpty()` — short-circuits on first match
-- `firstOrNull { }` instead of `filter { }.firstOrNull()` — stops at first match
-- `count { }` instead of `filter { }.count()` — avoids intermediate list
-- `mapNotNull { }` instead of `map { }.filterNotNull()` — single pass
-- `maxByOrNull { }` instead of `sortedBy { }.last()` — O(n) instead of O(n log n)
-- `associateBy { }` instead of `map { it.key to it }.toMap()` — direct construction
-- `flatMap { }` instead of `map { }.flatten()` — single pass
-- `sumOf { }` instead of `map { }.sum()` — avoids intermediate list
+- `any { }` instead of `filter { }.isNotEmpty()` -- short-circuits on first match
+- `none { }` instead of `filter { }.isEmpty()` -- short-circuits on first match
+- `firstOrNull { }` instead of `filter { }.firstOrNull()` -- stops at first match
+- `count { }` instead of `filter { }.count()` -- avoids intermediate list
+- `mapNotNull { }` instead of `map { }.filterNotNull()` -- single pass
+- `maxByOrNull { }` instead of `sortedBy { }.last()` -- O(n) instead of O(n log n)
+- `associateBy { }` instead of `map { it.key to it }.toMap()` -- direct construction
+- `flatMap { }` instead of `map { }.flatten()` -- single pass
+- `sumOf { }` instead of `map { }.sum()` -- avoids intermediate list
 
 **When to Apply:** Every time you chain collection operations. Check if a single function
 can replace two chained ones.
@@ -1183,19 +1183,19 @@ can replace two chained ones.
 
 #### Item 51: Consider Arrays with Primitives for Performance-Critical Processing
 
-**Category:** Efficiency — Primitive Arrays
+**Category:** Efficiency -- Primitive Arrays
 
 **Core Practice:** `Array<Int>` boxes each element as `Integer`. For performance-critical
 numeric processing, use `IntArray`, `LongArray`, `DoubleArray`, etc. which map to JVM
 primitive arrays.
 
 **Key Techniques:**
-- `IntArray(size)`, `intArrayOf(1, 2, 3)` — JVM `int[]`, no boxing
+- `IntArray(size)`, `intArrayOf(1, 2, 3)` -- JVM `int[]`, no boxing
 - `LongArray`, `DoubleArray`, `FloatArray`, `BooleanArray`, `ByteArray`, etc.
 - Significant performance difference in tight loops and large arrays
 - `IntArray` uses ~4 bytes per element; `Array<Int>` uses ~16 bytes per element (object + reference)
 - Can convert: `list.toIntArray()`, `intArray.toList()`
-- Standard operations work: `intArray.map { }`, `intArray.filter { }`, but these return `List<Int>` — for staying in primitive land, use indices and manual loops or specialized libraries
+- Standard operations work: `intArray.map { }`, `intArray.filter { }`, but these return `List<Int>` -- for staying in primitive land, use indices and manual loops or specialized libraries
 
 **When to Apply:** For numeric processing with large arrays: scientific computing,
 image processing, financial calculations, game engines, data analysis.
@@ -1207,14 +1207,14 @@ image processing, financial calculations, game engines, data analysis.
 
 #### Item 52: Consider Using Mutable Collections
 
-**Category:** Efficiency — Collection Mutability for Performance
+**Category:** Efficiency -- Collection Mutability for Performance
 
 **Core Practice:** Immutable collections are preferred for safety, but in performance-critical
 local scopes, mutable collections with in-place operations can be significantly faster
 than immutable chains that create new collections at each step.
 
 **Key Techniques:**
-- Local mutability: `buildList { }`, `buildMap { }`, `buildSet { }` — mutable inside, immutable result
+- Local mutability: `buildList { }`, `buildMap { }`, `buildSet { }` -- mutable inside, immutable result
 - `mutableListOf<T>()` + `add()` instead of `list + element` in a loop (avoiding O(n) copies)
 - In-place sorting: `list.sort()` (mutates) vs `list.sorted()` (creates new list)
 - For accumulation: `mutableMapOf<K, MutableList<V>>()` + `getOrPut { mutableListOf() }.add()`

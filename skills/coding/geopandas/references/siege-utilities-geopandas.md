@@ -1,4 +1,4 @@
-# siege_utilities + GeoPandas — Interop Map
+# siege_utilities + GeoPandas -- Interop Map
 
 When working in GeoPandas/Shapely in Siege projects, [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) covers a large chunk of the typical pipeline (sourcing, CRS, Census plumbing, choropleth) and explicitly supports GDAL-less environments via its capability tiers.
 
@@ -16,7 +16,7 @@ set_default_crs("EPSG:4326")
 
 `caps["tier"]` is `"geo"` (full), `"geo-lite"` (Shapely+pyproj only), `"geodjango"` (geo + Django GIS), or `"none"`.
 
-## Boundary sourcing — use SU
+## Boundary sourcing -- use SU
 
 Don't `requests.get()` a TIGER shapefile by hand:
 
@@ -47,18 +47,18 @@ p = GADMProvider()
 mexico_admin1 = p.fetch(country_iso="MEX", level=1)
 ```
 
-## CRS — use SU
+## CRS -- use SU
 
 ```python
 from siege_utilities.geo.crs import reproject_if_needed
 
-# Idempotent — no-op if already correct
+# Idempotent -- no-op if already correct
 gdf = reproject_if_needed(gdf, "EPSG:4326")
 ```
 
 Skip writing your own check-then-reproject blocks.
 
-## Census API — use SU
+## Census API -- use SU
 
 Don't roll your own Census API client:
 
@@ -79,7 +79,7 @@ gdf = client.get_census_data_with_geometry(
 )
 ```
 
-## Census dataset selection — use SU
+## Census dataset selection -- use SU
 
 For the meta-question "which Census dataset is right for my analysis?":
 
@@ -95,9 +95,9 @@ best = get_best_dataset_for_analysis(
 print(best.dataset_id, best.confidence_score, best.rationale)
 ```
 
-This is SU's recommendation engine — saves a half-day of API/documentation slogging per project.
+This is SU's recommendation engine -- saves a half-day of API/documentation slogging per project.
 
-## GEOID manipulation — use SU
+## GEOID manipulation -- use SU
 
 ```python
 from siege_utilities.geo.geoid_utils import (
@@ -108,12 +108,12 @@ from siege_utilities.geo.geoid_utils import (
 normalize_geoid("48", "01", "0003")  # "48010003" (correctly zero-padded)
 extract_parent_geoid("481010003001", level="tract")  # "48101000300"
 geoid_to_slug("48101000300")  # "us-tx-tract-101000300"
-validate_geoid("12345")  # False — not a recognized FIPS shape
+validate_geoid("12345")  # False -- not a recognized FIPS shape
 ```
 
 Don't write FIPS regex by hand.
 
-## Areal interpolation — use SU
+## Areal interpolation -- use SU
 
 For "redistribute population from 2010 tracts to 2020 tracts based on area overlap":
 
@@ -131,7 +131,7 @@ result.target  # GeoDataFrame with allocated values
 
 (Per upstream PR candidate **SU-8**, this should also return coverage metrics; until then, validate manually.)
 
-## Choropleth maps — use SU
+## Choropleth maps -- use SU
 
 ```python
 from siege_utilities.geo.choropleth import create_choropleth, create_bivariate_choropleth
@@ -154,7 +154,7 @@ fig = create_bivariate_choropleth(
 )
 ```
 
-## Isochrones — use SU
+## Isochrones -- use SU
 
 For "all areas reachable within 30 minutes by car from this point":
 
@@ -174,7 +174,7 @@ gdf = get_isochrone(
 
 Or `ValhallaProvider` if you have a Valhalla server.
 
-## Crosswalks — use SU
+## Crosswalks -- use SU
 
 For "given 2010-vintage census data, allocate to 2020 boundaries":
 
@@ -200,9 +200,9 @@ reallocated = apply_crosswalk(
 )
 ```
 
-This is pure pandas — works in geo-lite tier.
+This is pure pandas -- works in geo-lite tier.
 
-## H3 indexing — use SU
+## H3 indexing -- use SU
 
 For approximate spatial joins without GeoPandas:
 
@@ -222,9 +222,9 @@ polys_indexed = h3_index_polygon(polys_df, geom_col="geometry", resolution=res)
 joined = h3_spatial_join(points_indexed, polys_indexed)
 ```
 
-H3 doesn't need GDAL — works at geo-lite tier. Approximate but fast.
+H3 doesn't need GDAL -- works at geo-lite tier. Approximate but fast.
 
-## Geocoding — use SU
+## Geocoding -- use SU
 
 ```python
 from siege_utilities.geo.geocoding import (
@@ -239,9 +239,9 @@ Or `geo.providers.census_geocoder.geocode_batch_chunked()` for the (free, fast) 
 
 ## What SU doesn't yet do
 
-(Upstream PR candidates — pending the other agent's tickets.)
+(Upstream PR candidates -- pending the other agent's tickets.)
 
-- **SU-1:** `read_geoparquet()` / `write_geoparquet()` without GDAL — major gap for cloud GDAL-less environments.
+- **SU-1:** `read_geoparquet()` / `write_geoparquet()` without GDAL -- major gap for cloud GDAL-less environments.
 - **SU-2:** CRS validation helpers (`crs_distance_operations_safe`, `crs_to_projection_family`).
 - **SU-3:** Geometry validation tier (`validate_geometry`, `simplify_geometry`, `fix_invalid_geometries`).
 - **SU-7:** `csv_to_geoparquet(csv_path, lat_col, lon_col, output_path)`.

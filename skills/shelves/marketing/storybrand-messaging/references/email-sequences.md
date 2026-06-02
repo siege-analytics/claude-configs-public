@@ -16,7 +16,7 @@ Structured email nurture sequences that move subscribers through the SB7 framewo
 
 ## The Philosophy of Nurture Emails
 
-Email isn't about broadcasting—it's about building a relationship with a potential customer who has a problem you can solve. Every email should:
+Email isn't about broadcasting--it's about building a relationship with a potential customer who has a problem you can solve. Every email should:
 
 1. **Provide value** (not just ask for things)
 2. **Position you as the guide** (empathy + authority)
@@ -26,7 +26,7 @@ Email isn't about broadcasting—it's about building a relationship with a poten
 
 ## The Welcome Sequence (5-Email Foundation)
 
-Triggered when someone joins your email list. This sequence is critical—50%+ of your email engagement happens here.
+Triggered when someone joins your email list. This sequence is critical--50%+ of your email engagement happens here.
 
 ### Email 1: Deliver and Welcome (Day 0)
 
@@ -174,7 +174,7 @@ Over the past week, I've shared:
 
 Now you have two choices:
 
-1. Try to figure this out on your own (totally valid—I've given you the roadmap)
+1. Try to figure this out on your own (totally valid--I've given you the roadmap)
 
 2. Let us help you [achieve outcome faster/with less struggle/guaranteed]
 
@@ -369,7 +369,7 @@ If [achieving outcome] is a priority for you, now's the time.
 - 40-50 characters optimal (mobile preview)
 - Test personalization vs. no personalization
 - Avoid spam triggers (FREE!!!, $$$, excessive caps)
-- Preview text is part of the subject—use it
+- Preview text is part of the subject--use it
 
 ---
 
@@ -409,7 +409,7 @@ Hi [Name],
 
 I noticed you haven't opened my emails lately.
 
-I get it—inbox overwhelm is real.
+I get it--inbox overwhelm is real.
 
 But before you go, I wanted to check: Is [topic] still relevant to you?
 
@@ -450,7 +450,7 @@ Hi [Name],
 
 This is my last email if I don't hear from you.
 
-I'll remove inactive subscribers to keep my list healthy—and to respect your inbox.
+I'll remove inactive subscribers to keep my list healthy--and to respect your inbox.
 
 If you still want to receive [content type about topic], click here:
 

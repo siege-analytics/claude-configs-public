@@ -7,7 +7,7 @@ paths: "**/*.sh,**/*.yaml,**/*.yml"
 
 # Infrastructure Operations Skill
 
-This skill governs ALL interactions with shared infrastructure — servers, clusters, batch systems. It exists because a prior incident (2026-03-13) overloaded cyberpower to load avg 69 and filled disk to 100% due to unconstrained parallel execution.
+This skill governs ALL interactions with shared infrastructure -- servers, clusters, batch systems. It exists because a prior incident (2026-03-13) overloaded cyberpower to load avg 69 and filled disk to 100% due to unconstrained parallel execution.
 
 ## Core Principle
 
@@ -18,16 +18,16 @@ This skill governs ALL interactions with shared infrastructure — servers, clus
 ## SSH to Shared Servers
 
 ### NEVER do:
-- `nohup ssh server 'long-running-command' &` — no backgrounded long-running processes via SSH
+- `nohup ssh server 'long-running-command' &` -- no backgrounded long-running processes via SSH
 - Multiple parallel SSH sessions to the same server
-- Ad-hoc Spark/Python batch jobs via SSH — that's what Rundeck is for
+- Ad-hoc Spark/Python batch jobs via SSH -- that's what Rundeck is for
 - Monitoring loops (`while true; ssh server 'ps aux'; sleep 5; done`)
 
 ### ALWAYS do:
-- **One SSH command at a time** — run it, read the full result, then decide the next action
-- **State your purpose before each SSH** — "I'm checking load average because X"
-- **Use Rundeck for batch work** — download, parse, load, register jobs all go through Rundeck
-- **Check server health first** — `uptime && df -h /` before launching any work
+- **One SSH command at a time** -- run it, read the full result, then decide the next action
+- **State your purpose before each SSH** -- "I'm checking load average because X"
+- **Use Rundeck for batch work** -- download, parse, load, register jobs all go through Rundeck
+- **Check server health first** -- `uptime && df -h /` before launching any work
 
 ### SSH command template:
 ```
@@ -47,10 +47,10 @@ Wait for the result. Read it. Then decide whether to run another.
 
 ### ALWAYS do:
 - **Use Rundeck** for all batch jobs (Rundeck API token and project are configured)
-- **One job at a time** — wait for completion before starting the next
-- **Use enterprise storage paths** — S3 buckets, not local filesystem
+- **One job at a time** -- wait for completion before starting the next
+- **Use enterprise storage paths** -- S3 buckets, not local filesystem
 - **Set `multipleExecutions: false`** in Rundeck job definitions
-- **Monitor via Rundeck API** — not ad-hoc SSH polling
+- **Monitor via Rundeck API** -- not ad-hoc SSH polling
 
 ---
 
@@ -59,7 +59,7 @@ Wait for the result. Read it. Then decide whether to run another.
 ### Before launching ANY process on a shared server:
 1. Check current load: `uptime`
 2. Check disk: `df -h /`
-3. If load > 2x core count OR disk > 90%, **STOP** — do not add more work
+3. If load > 2x core count OR disk > 90%, **STOP** -- do not add more work
 
 ### If something goes wrong:
 1. Run ONE diagnostic command

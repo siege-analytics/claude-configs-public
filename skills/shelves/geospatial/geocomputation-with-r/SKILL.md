@@ -3,19 +3,19 @@ name: geocomputation-with-r
 description: 'Practical, applied geospatial computing using open-source tools. Use when the user mentions "spatial join", "reproject", "CRS", "geocomputation", "sf package", "terra package", "raster vs vector", "spatial operations", "geographic data I/O", "make a map in R", "Lovelace", "geocompx", or general GIS-in-R workflows. Also trigger when reasoning about CRS choice for an operation, picking between vector and raster representations, debugging projection issues, designing spatial analysis pipelines, or onboarding to spatial work in R. R-flavored but the principles (CRS hygiene, vector / raster choice, spatial-index discipline, reproducible workflows) transfer directly to Python / PostGIS / other engines. Pairs with spatial-data-science for deeper methodology. For Python-specific code see geopandas / postgis / duckdb-spatial skills.'
 license: CC-BY-NC-ND-4.0
 metadata:
-  source: 'r.geocompx.org — full free online edition of Geocomputation with R (Lovelace, Nowosad, Muenchow). CRC Press also publishes paid print edition.'
+  source: 'r.geocompx.org -- full free online edition of Geocomputation with R (Lovelace, Nowosad, Muenchow). CRC Press also publishes paid print edition.'
   coverage: 'Full book (16 chapters) freely readable inline at r.geocompx.org. Open license; verified 2026-05-17 via WebFetch.'
 ---
 
 # Geocomputation with R Framework
 
-A grounded, practical framework for doing real geographic work with open-source tooling. The book teaches a range of spatial skills — reading / writing / manipulating geographic file formats; making static and interactive maps; applying geocomputation to support evidence-based decision-making across transport, ecosystems, and other geographic phenomena.
+A grounded, practical framework for doing real geographic work with open-source tooling. The book teaches a range of spatial skills -- reading / writing / manipulating geographic file formats; making static and interactive maps; applying geocomputation to support evidence-based decision-making across transport, ecosystems, and other geographic phenomena.
 
 ## Core Principle
 
 **Geospatial work is reproducible computation, not GUI clicking.** The shift from GUI-based GIS (ArcGIS, QGIS) to command-line geocomputation is the same shift that statistics made when moving from SPSS to R: enabling reproducibility, version control, code review, and integration with the broader scientific workflow. Spatial operations are just operations; the data model has geometry alongside attributes, but the discipline of writing code that another person (or future-you) can re-run is the same.
 
-**The foundation:** every spatial operation has assumptions baked in — about what CRS the data is in, what coordinate system the operation expects, whether the answer should be in degrees or meters, whether a "distance" is Euclidean or great-circle. Most spatial bugs come from CRS / datum / unit mismatches that the code silently coerces. Geocomputation discipline names these assumptions explicitly.
+**The foundation:** every spatial operation has assumptions baked in -- about what CRS the data is in, what coordinate system the operation expects, whether the answer should be in degrees or meters, whether a "distance" is Euclidean or great-circle. Most spatial bugs come from CRS / datum / unit mismatches that the code silently coerces. Geocomputation discipline names these assumptions explicitly.
 
 ## Scoring
 
@@ -41,9 +41,9 @@ Geographic data lives in two representations. Knowing which fits the question is
 | **Memory model** | In-memory tabular | Can stream from disk (terra supports tile-based access) |
 
 **The `sf` simple-feature object** combines three components:
-- `sfg` — individual geometries
-- `sfc` — geometry columns (sets of geometries)
-- `sf` — full spatial data frames (attributes + geometry column)
+- `sfg` -- individual geometries
+- `sfc` -- geometry columns (sets of geometries)
+- `sf` -- full spatial data frames (attributes + geometry column)
 
 This composition makes spatial data a data-frame with spatial extensions, integrating cleanly with dplyr / tidyverse pipelines. The same conceptual shape exists in Python's geopandas.
 
@@ -67,14 +67,14 @@ If a file has both a proj-string and a WKT representation, the WKT wins. Modern 
 - **Projected data:** GEOS (Cartesian geometry; fast)
 - **Geographic data (lon/lat):** S2 spherical geometry (handles antimeridian, polar regions correctly)
 
-Forcing GEOS on geographic data is a common bug — it treats degrees as Cartesian, producing distorted distances elongated along the north-south axis.
+Forcing GEOS on geographic data is a common bug -- it treats degrees as Cartesian, producing distorted distances elongated along the north-south axis.
 
 ### Common CRS choices
 
 | CRS | EPSG | Use for |
 |---|---|---|
 | WGS84 (geographic) | 4326 | Storage; web mapping; GPS data |
-| Web Mercator (projected) | 3857 | Web tiles only — distorts area badly outside ±60° latitude |
+| Web Mercator (projected) | 3857 | Web tiles only -- distorts area badly outside ±60° latitude |
 | UTM (projected, zone-specific) | 32601-32760 (north), 32701-32760 (south) | Distance / area calculations within a single zone |
 | Lambert Conformal Conic / Albers Equal Area | various national/regional codes | Country-scale equal-area maps (Albers) or shape-preserving (Lambert) |
 | US National Atlas Equal Area | 2163 | US-wide equal-area work |
@@ -146,20 +146,20 @@ The book's overall stance: spatial work is real research; it should be version-c
 
 ## Companions
 
-- `spatial-data-science` — same shelf; deeper methodological book that complements this applied one.
-- `coding/postgis` — for SQL-backed spatial work at scale.
-- `coding/geopandas` — Python equivalent of the sf workflow.
-- `coding/sedona` — distributed spatial compute (Spark) when the data outgrows a single machine.
-- `coding/duckdb-spatial` — in-process columnar spatial for medium-sized analytical work.
+- `spatial-data-science` -- same shelf; deeper methodological book that complements this applied one.
+- `coding/postgis` -- for SQL-backed spatial work at scale.
+- `coding/geopandas` -- Python equivalent of the sf workflow.
+- `coding/sedona` -- distributed spatial compute (Spark) when the data outgrows a single machine.
+- `coding/duckdb-spatial` -- in-process columnar spatial for medium-sized analytical work.
 
 ## Source + license
 
-- **Source:** r.geocompx.org — full free online edition of *Geocomputation with R* (Robin Lovelace, Jakub Nowosad, Jannes Muenchow).
+- **Source:** r.geocompx.org -- full free online edition of *Geocomputation with R* (Robin Lovelace, Jakub Nowosad, Jannes Muenchow).
 - **License:** Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0) for the online edition. CRC Press print edition is paid.
 - **Verified:** WebFetch 2026-05-17 on `r.geocompx.org` confirms the table of contents is the full 16 chapters and chapter pages (verified Chapter 2 "Spatial Class" + Chapter 7 "Reprojecting Geographic Data") have full content readable inline.
 
 ## See also
 
-- The Python equivalent *Geocomputation with Python* at `py.geocompx.org` is in development — at the time of absorption (2026-05-17), `py.geocompx.org` is primarily a landing page with chapter content not yet fully online; the R version is the canonical free reference.
+- The Python equivalent *Geocomputation with Python* at `py.geocompx.org` is in development -- at the time of absorption (2026-05-17), `py.geocompx.org` is primarily a landing page with chapter content not yet fully online; the R version is the canonical free reference.
 - `spatial-data-science` shelf-mate for theory depth.
-- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` — context on why Geocomputation with R is the chosen geospatial-shelf-floor entry.
+- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` -- context on why Geocomputation with R is the chosen geospatial-shelf-floor entry.

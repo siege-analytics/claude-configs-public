@@ -21,7 +21,7 @@ Stories are the oldest technology for transferring knowledge. They predate writi
 
 Stories achieve two things that no other communication format can match:
 
-1. **Simulation:** Stories are mental flight simulators. They let people rehearse situations without real-world risk. A customer success story teaches prospects how to evaluate, buy, implement, and succeed — all without lifting a finger.
+1. **Simulation:** Stories are mental flight simulators. They let people rehearse situations without real-world risk. A customer success story teaches prospects how to evaluate, buy, implement, and succeed -- all without lifting a finger.
 
 2. **Inspiration:** Stories move people to act. Not through logic ("you should do this") but through modeling ("look what happened when someone like you did this"). The listener thinks, "If they can do it, maybe I can too."
 
@@ -50,15 +50,15 @@ Research into folk tales, urban legends, and viral narratives reveals that stick
 
 **Examples:**
 - The startup that was rejected by 50 investors before finding one who believed
-- The customer who was about to cancel their contract but gave the product one more try — and it changed everything
+- The customer who was about to cancel their contract but gave the product one more try -- and it changed everything
 - The engineer who stayed up for three days straight to fix the bug before the launch
 
 **Template:**
-> "[Character] was facing [specific, daunting challenge]. Everyone told them [conventional wisdom]. Instead, they [unexpected action]. It was hard — [specific struggle]. But then [turning point]. Today, [concrete outcome]."
+> "[Character] was facing [specific, daunting challenge]. Everyone told them [conventional wisdom]. Instead, they [unexpected action]. It was hard -- [specific struggle]. But then [turning point]. Today, [concrete outcome]."
 
 ### 2. The Connection Plot
 
-**Structure:** A relationship bridges a gap — between people, groups, cultures, or perspectives.
+**Structure:** A relationship bridges a gap -- between people, groups, cultures, or perspectives.
 
 **Emotional response:** Warmth, empathy, belonging, trust.
 
@@ -115,7 +115,7 @@ Character → Problem → Journey → Solution → Outcome
 > "Last year, three of her best reps quit within two months. Exit interviews revealed the same thing: they were drowning in manual reporting. Every week, each rep spent 6 hours pulling data from four different tools, copying it into spreadsheets, and writing updates. Maria knew it was killing morale, but she had no budget for a new tool."
 
 **Journey:**
-> "She tried building a Google Sheets automation. It broke every other week. She asked engineering for help — they had a 6-month backlog. She even considered hiring a part-time data analyst, but the math did not work. Then her VP of Sales mentioned a tool his team had been piloting."
+> "She tried building a Google Sheets automation. It broke every other week. She asked engineering for help -- they had a 6-month backlog. She even considered hiring a part-time data analyst, but the math did not work. Then her VP of Sales mentioned a tool his team had been piloting."
 
 **Solution:**
 > "Maria signed up for a free trial on a Tuesday afternoon. By Thursday, the tool was pulling data from all four sources automatically. Each rep got a personalized dashboard that updated in real time. The weekly report that took 6 hours now generated itself in 3 minutes."
@@ -125,7 +125,7 @@ Character → Problem → Journey → Solution → Outcome
 
 ## Spotting Stories in the Wild
 
-The best product stories already exist — you just need to find them. They are hiding in places you probably do not check.
+The best product stories already exist -- you just need to find them. They are hiding in places you probably do not check.
 
 ### Where to Find Stories
 
@@ -141,7 +141,7 @@ The best product stories already exist — you just need to find them. They are 
 
 ### Story Signals to Watch For
 
-Listen for these phrases — they are the beginning of a story:
+Listen for these phrases -- they are the beginning of a story:
 
 - "You will not believe what happened..."
 - "I almost gave up, but then..."
@@ -189,7 +189,7 @@ Create a shared document or database where anyone in the organization can submit
 ### Case Study Template (800-1200 words)
 
 ```
-1. Headline: [Outcome] — How [Company] [achieved result]
+1. Headline: [Outcome] -- How [Company] [achieved result]
 2. Summary: 2-3 sentence overview
 3. The Challenge: What problem did they face? (3-4 paragraphs)
 4. The Solution: How did they implement our product? (2-3 paragraphs)
@@ -213,10 +213,10 @@ Now let me show you how this would work with YOUR data..."
 
 ```
 "I want to tell you about [Name].
-[One sentence about who they are — relatable detail].
+[One sentence about who they are -- relatable detail].
 [Name] had a problem: [specific, vivid description].
 They tried [what they tried first]. It did not work because [reason].
-Then [turning point — discovery of your product/idea].
+Then [turning point -- discovery of your product/idea].
 The result? [Concrete, measurable outcome].
 But here is what [Name] said that stuck with me: '[emotional quote]'.
 That is what this is about."
@@ -233,7 +233,7 @@ Their words: '[short quote]'.
 
 ## Mental Simulation: Stories as Flight Simulators
 
-Stories do not just inform — they train. When an audience hears a well-constructed story, they mentally rehearse the decisions, actions, and outcomes. This is why:
+Stories do not just inform -- they train. When an audience hears a well-constructed story, they mentally rehearse the decisions, actions, and outcomes. This is why:
 
 - Medical students learn from case studies, not just textbooks
 - Pilots train in simulators before they fly
@@ -244,7 +244,7 @@ Stories do not just inform — they train. When an audience hears a well-constru
 1. **Include decision points:** Show where the character had to choose, so the listener rehearses choosing
 2. **Include obstacles:** Show what went wrong, so the listener rehearses problem-solving
 3. **Include sensory details:** The more vivid the story, the more realistic the simulation
-4. **Include the "how":** Do not skip the implementation steps — those are what the listener needs to rehearse
+4. **Include the "how":** Do not skip the implementation steps -- those are what the listener needs to rehearse
 
 ## Stories for Inspiration vs. Stories for Instruction
 
@@ -274,7 +274,7 @@ Use inspiration stories to motivate. Use instruction stories to enable.
 > "Q3 results: 15% revenue growth, 200 new customers, NPS increased from 42 to 51."
 
 **After (Story):**
-> "At the start of Q3, we had a problem. Our biggest customer told us they were evaluating competitors. Their exact words: 'We love your product, but your onboarding is killing us.' So we rebuilt onboarding from scratch. That customer not only stayed — they upgraded. And they were not the only ones. 200 new customers joined this quarter. Revenue grew 15%. NPS jumped from 42 to 51. But the number I care about most is this: zero customers left because of onboarding."
+> "At the start of Q3, we had a problem. Our biggest customer told us they were evaluating competitors. Their exact words: 'We love your product, but your onboarding is killing us.' So we rebuilt onboarding from scratch. That customer not only stayed -- they upgraded. And they were not the only ones. 200 new customers joined this quarter. Revenue grew 15%. NPS jumped from 42 to 51. But the number I care about most is this: zero customers left because of onboarding."
 
 ## Building an Organizational Story Library
 

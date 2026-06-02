@@ -2,8 +2,8 @@
 
 Every fast spatial operation decomposes into two steps:
 
-1. **Cheap pre-filter** using bounding-box intersection (`a.bbox && b.bbox`) — index-aware
-2. **Exact predicate** test (`ST_Within`, `ST_Intersects`, etc.) — per-vertex cost
+1. **Cheap pre-filter** using bounding-box intersection (`a.bbox && b.bbox`) -- index-aware
+2. **Exact predicate** test (`ST_Within`, `ST_Intersects`, etc.) -- per-vertex cost
 
 Make the pre-filter explicit (or trust your engine to generate it), and ensure it can use a spatial index. **The exact predicate without a pre-filter is a Cartesian product.**
 
@@ -13,8 +13,8 @@ A naive `WHERE ST_Within(a.geom, b.geom)` on two large tables tests every row pa
 
 The same query *with* a bounding-box pre-filter:
 
-1. The bounding-box of `b.geom` is checked against the bounding-box of `a.geom` using the spatial index — O(log n) per row, returns a small candidate set
-2. `ST_Within` runs only on the candidates — exact but limited to a manageable subset
+1. The bounding-box of `b.geom` is checked against the bounding-box of `a.geom` using the spatial index -- O(log n) per row, returns a small candidate set
+2. `ST_Within` runs only on the candidates -- exact but limited to a manageable subset
 
 The total cost is dominated by the pre-filter (cheap) rather than the exact test (expensive).
 
@@ -48,7 +48,7 @@ FROM points p JOIN counties c ON ST_Within(p.geom, c.geom);
 When the predicate doesn't auto-generate the pre-filter, use `&&` explicitly:
 
 ```sql
--- ST_Distance doesn't use index — won't pre-filter
+-- ST_Distance doesn't use index -- won't pre-filter
 SELECT * FROM features WHERE ST_Distance(a.geom, b.geom) < 1000;  -- BAD
 
 -- Make the pre-filter explicit via ST_DWithin (uses index expansion)
@@ -92,7 +92,7 @@ result = sedona.sql("""
 # EXPLAIN shows RangeJoin (which uses bbox + spatial partitioning)
 ```
 
-If the optimizer generates a `CartesianProduct` instead of `RangeJoin`, the predicate isn't being recognized — usually because it's inside a UDF or in `WHERE` instead of `ON`. Refactor to expose the spatial predicate directly.
+If the optimizer generates a `CartesianProduct` instead of `RangeJoin`, the predicate isn't being recognized -- usually because it's inside a UDF or in `WHERE` instead of `ON`. Refactor to expose the spatial predicate directly.
 
 ### DuckDB-spatial
 
@@ -113,7 +113,7 @@ For repeated queries against the same right-side, materialize:
 CREATE INDEX counties_geom_idx ON counties USING RTREE (geom);
 ```
 
-## Diagnostic — is the pre-filter happening?
+## Diagnostic -- is the pre-filter happening?
 
 **PostGIS:** `EXPLAIN (ANALYZE, BUFFERS)`. Look for `Bitmap Index Scan on <table>_geom_idx`. If you see `Seq Scan` instead, the index isn't being used.
 
@@ -127,10 +127,10 @@ CREATE INDEX counties_geom_idx ON counties USING RTREE (geom);
 
 Some workloads can't use bbox pre-filter effectively:
 
-- **Many-to-many full overlay** (`ST_Intersection` of two large polygon sets) — the bbox pre-filter narrows candidates, but the exact intersection is still expensive per pair.
-- **Predicates with no bbox interpretation** — `ST_Equals`, exact-coordinate matching.
-- **Distance threshold larger than bbox dimensions** — pre-filter returns most of the right-side.
-- **Right-side too small to benefit from index** (< ~1000 rows) — sequential scan is faster than building/querying the index.
+- **Many-to-many full overlay** (`ST_Intersection` of two large polygon sets) -- the bbox pre-filter narrows candidates, but the exact intersection is still expensive per pair.
+- **Predicates with no bbox interpretation** -- `ST_Equals`, exact-coordinate matching.
+- **Distance threshold larger than bbox dimensions** -- pre-filter returns most of the right-side.
+- **Right-side too small to benefit from index** (< ~1000 rows) -- sequential scan is faster than building/querying the index.
 
 For these cases, accept that the workload is expensive and move it to a more capable engine (Sedona for distributed) or pre-aggregate.
 
@@ -138,25 +138,25 @@ For these cases, accept that the workload is expensive and move it to a more cap
 
 The bbox pre-filter assumes the bbox is correct. It can be wrong if:
 
-- **Geometry is invalid** — bowtie polygons may have a bbox that doesn't enclose the geometry's true extent
-- **Geometry has 3D / M dimensions** — bbox might be 2D-only, missing the Z extent
-- **Mixed SRIDs** — bboxes from different CRSs don't compare meaningfully
+- **Geometry is invalid** -- bowtie polygons may have a bbox that doesn't enclose the geometry's true extent
+- **Geometry has 3D / M dimensions** -- bbox might be 2D-only, missing the Z extent
+- **Mixed SRIDs** -- bboxes from different CRSs don't compare meaningfully
 
 All three trace back to the [`validate-on-ingest`](validate-on-ingest.md) and [`crs-is-meaning`](crs-is-meaning.md) principles. Pre-filter assumes prior hygiene.
 
 ## Pitfalls
 
-- **`WHERE ST_Distance(...) < d`** instead of `ST_DWithin(...)` — no pre-filter, full table scan.
-- **Function on the indexed column** — `ST_Transform(geom, 5070)` blocks the index because the bbox is for the original SRID, not the transformed one. Materialize the transformed geometry as a separate column.
-- **`ST_Subdivide` on a complex polygon at query time** — recomputes per query; no useful index. Pre-process; see [`subdivide-complex-polygons.md`](subdivide-complex-polygons.md).
-- **Spatial join predicate inside a UDF** — optimizer can't see inside; falls back to nested loop.
-- **`OR` in spatial predicates** — `ON ST_Within(a, b) OR ST_Within(b, a)` — the optimizer handles this with mixed success across engines. Split into two queries with `UNION` if performance suffers.
-- **Tiny right side, building the index doesn't pay** — < 1000 rows; just sequential.
-- **Trusting bbox on invalid geometry** — see above; fix geometry first.
+- **`WHERE ST_Distance(...) < d`** instead of `ST_DWithin(...)` -- no pre-filter, full table scan.
+- **Function on the indexed column** -- `ST_Transform(geom, 5070)` blocks the index because the bbox is for the original SRID, not the transformed one. Materialize the transformed geometry as a separate column.
+- **`ST_Subdivide` on a complex polygon at query time** -- recomputes per query; no useful index. Pre-process; see [`subdivide-complex-polygons.md`](subdivide-complex-polygons.md).
+- **Spatial join predicate inside a UDF** -- optimizer can't see inside; falls back to nested loop.
+- **`OR` in spatial predicates** -- `ON ST_Within(a, b) OR ST_Within(b, a)` -- the optimizer handles this with mixed success across engines. Split into two queries with `UNION` if performance suffers.
+- **Tiny right side, building the index doesn't pay** -- < 1000 rows; just sequential.
+- **Trusting bbox on invalid geometry** -- see above; fix geometry first.
 
 ## Cross-links
 
-- [`spatial-indexing-discipline.md`](spatial-indexing-discipline.md) — bbox pre-filter requires the index; this principle is what indices enable
-- [`subdivide-complex-polygons.md`](subdivide-complex-polygons.md) — large polygons make the exact predicate expensive even with pre-filter; subdivision is the further optimization
-- [`../../coding/postgis/references/spatial-joins-performance.md`](../../../coding/postgis/references/spatial-joins-performance.md) — PostGIS-specific deep dive on join performance
-- [`../../coding/sedona/references/spatial-joins-at-scale.md`](../../../coding/sedona/references/spatial-joins-at-scale.md) — Sedona equivalent
+- [`spatial-indexing-discipline.md`](spatial-indexing-discipline.md) -- bbox pre-filter requires the index; this principle is what indices enable
+- [`subdivide-complex-polygons.md`](subdivide-complex-polygons.md) -- large polygons make the exact predicate expensive even with pre-filter; subdivision is the further optimization
+- [`../../coding/postgis/references/spatial-joins-performance.md`](../../../coding/postgis/references/spatial-joins-performance.md) -- PostGIS-specific deep dive on join performance
+- [`../../coding/sedona/references/spatial-joins-at-scale.md`](../../../coding/sedona/references/spatial-joins-at-scale.md) -- Sedona equivalent

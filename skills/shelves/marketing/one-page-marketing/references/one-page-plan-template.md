@@ -108,7 +108,7 @@ TaskFlow is a project management SaaS built specifically for creative agencies (
 │ Creative       │ USP: "The only    │ Primary: Google Ads     │
 │ agencies       │ project mgmt tool │ (search: "project       │
 │ (design, ad,   │ built for creative│ management for          │
-│ production)    │ workflows — not   │ agencies")              │
+│ production)    │ workflows -- not   │ agencies")              │
 │ 10-50 people   │ IT sprints"       │                         │
 │ $1M-$10M rev   │                   │ Secondary: LinkedIn     │
 │                │ Elevator pitch:   │ ads targeting agency    │
@@ -203,7 +203,7 @@ SparkleHome is a residential cleaning company in Austin, Texas. They focus on pr
 │ professional   │ cleaning service  │ ("house cleaning        │
 │ households in  │ in Austin with a  │ Austin," "maid service  │
 │ Austin, TX     │ 200% satisfaction │ Austin")                │
-│ Income $150K+  │ guarantee — if    │                         │
+│ Income $150K+  │ guarantee -- if    │                         │
 │ Homes 2,000+   │ you're not happy, │ Secondary: Nextdoor     │
 │ sq ft          │ we re-clean free  │ + neighborhood          │
 │ Value time     │ AND refund you"   │ Facebook groups +       │
@@ -240,7 +240,7 @@ SparkleHome is a residential cleaning company in Austin, Texas. They focus on pr
 │ Alt: Free      │ Ongoing: Bi-weekly│ you book recurring      │
 │ estimate       │ cleaning and home │                         │
 │ (in-home or    │ tips email        │ Guarantee: 200%         │
-│ virtual)       │                   │ satisfaction — re-clean  │
+│ virtual)       │                   │ satisfaction -- re-clean  │
 │                │ Content: Seasonal │ free AND full refund    │
 │ Opt-in:        │ cleaning tips,    │                         │
 │ sparklehome    │ home org advice,  │ Top objections:         │
@@ -298,7 +298,7 @@ SparkleHome is a residential cleaning company in Austin, Texas. They focus on pr
 
 ## Planning Exercise Guide
 
-Use this guided exercise to complete your own 1-Page Marketing Plan. Block 2-3 hours of uninterrupted time. Work through each square in order — they build on each other.
+Use this guided exercise to complete your own 1-Page Marketing Plan. Block 2-3 hours of uninterrupted time. Work through each square in order -- they build on each other.
 
 ### Phase 1: BEFORE (60 minutes)
 

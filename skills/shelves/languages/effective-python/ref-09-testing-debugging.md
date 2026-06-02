@@ -78,13 +78,13 @@ mock.side_effect = [1, 2, 3]  # returns different values each call
 
 ## Item 79: Encapsulate Dependencies to Facilitate Mocking and Testing
 ```python
-# BAD — hard-coded dependency
+# BAD -- hard-coded dependency
 class DataProcessor:
     def process(self):
         data = requests.get('https://api.example.com/data').json()
         return transform(data)
 
-# GOOD — inject dependency
+# GOOD -- inject dependency
 class DataProcessor:
     def __init__(self, data_fetcher):
         self._fetcher = data_fetcher
@@ -118,16 +118,16 @@ def complex_function(data):
 ```
 
 **Key pdb commands:**
-- `n` (next) — execute next line
-- `s` (step) — step into function call
-- `c` (continue) — continue execution until next breakpoint
-- `p expr` — print expression
-- `pp expr` — pretty-print expression
-- `l` (list) — show current code context
-- `w` (where) — show call stack
-- `b line` — set breakpoint at line
-- `r` (return) — run until current function returns
-- `q` (quit) — quit debugger
+- `n` (next) -- execute next line
+- `s` (step) -- step into function call
+- `c` (continue) -- continue execution until next breakpoint
+- `p expr` -- print expression
+- `pp expr` -- pretty-print expression
+- `l` (list) -- show current code context
+- `w` (where) -- show call stack
+- `b line` -- set breakpoint at line
+- `r` (return) -- run until current function returns
+- `q` (quit) -- quit debugger
 
 - Use `breakpoint()` (Python 3.7+) instead of `import pdb; pdb.set_trace()`
 - Use `PYTHONBREAKPOINT=0` environment variable to disable all breakpoints

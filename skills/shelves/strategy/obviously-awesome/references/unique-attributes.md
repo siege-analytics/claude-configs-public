@@ -1,12 +1,12 @@
 # Unique Attributes Discovery
 
-Unique attributes are the objective, verifiable facts about your product that no competitive alternative can claim. They are the raw material of differentiation — without genuine unique attributes, positioning becomes a messaging exercise built on nothing. This reference guides you through a rigorous process for identifying, verifying, and clustering your unique attributes.
+Unique attributes are the objective, verifiable facts about your product that no competitive alternative can claim. They are the raw material of differentiation -- without genuine unique attributes, positioning becomes a messaging exercise built on nothing. This reference guides you through a rigorous process for identifying, verifying, and clustering your unique attributes.
 
 ## What Counts as a Unique Attribute
 
 A unique attribute must pass two tests:
 
-1. **The Uniqueness Test:** "Only we [attribute]." If a competitive alternative can make the same claim, it's not unique — it's table stakes.
+1. **The Uniqueness Test:** "Only we [attribute]." If a competitive alternative can make the same claim, it's not unique -- it's table stakes.
 2. **The Truth Test:** The attribute must be objectively verifiable. If it requires subjective judgment ("we're the easiest to use"), it needs to be backed by measurable evidence.
 
 ### Attribute Categories
@@ -69,12 +69,12 @@ Ask each participant to come prepared with answers to:
 
 **Phase 1: Brainstorm (25 minutes)**
 
-Each participant writes attributes on sticky notes — one attribute per note. Encourage quantity over quality at this stage. Use the attribute categories table above as prompts.
+Each participant writes attributes on sticky notes -- one attribute per note. Encourage quantity over quality at this stage. Use the attribute categories table above as prompts.
 
 Facilitation tips:
 - Go around the room and have each person share one attribute at a time
-- Build on each other's ideas — "That reminds me, we also..."
-- No evaluation during this phase — capture everything
+- Build on each other's ideas -- "That reminds me, we also..."
+- No evaluation during this phase -- capture everything
 - Prompt with questions: "What about our architecture? Our team? Our data? Our business model?"
 
 **Phase 2: Uniqueness Verification (25 minutes)**
@@ -91,7 +91,7 @@ For each attribute, apply the Uniqueness Test:
 **Process:**
 1. Read each attribute aloud
 2. The group debates: "Can [alternative A] claim this? What about [alternative B]?"
-3. If even one competitive alternative can make the claim, it's not unique — move it to a "table stakes" list
+3. If even one competitive alternative can make the claim, it's not unique -- move it to a "table stakes" list
 4. If the group isn't sure, mark it for follow-up research
 
 **Phase 3: Evidence Collection (15 minutes)**
@@ -142,9 +142,9 @@ Ask 5 customers: "Is [attribute] something you can get from [alternative]?" If c
 
 ### Technique 3: The Time Horizon Test
 How long would it take a well-funded competitor to replicate this attribute?
-- Less than 6 months: Fragile advantage — not reliable for positioning
-- 6-18 months: Moderate advantage — position on it but watch for competitor moves
-- 18+ months or structural: Strong advantage — this is a durable differentiator
+- Less than 6 months: Fragile advantage -- not reliable for positioning
+- 6-18 months: Moderate advantage -- position on it but watch for competitor moves
+- 18+ months or structural: Strong advantage -- this is a durable differentiator
 
 ### Technique 4: The Sales Test
 Ask your sales team: "When we win deals, what specific capabilities do customers cite?" and "When we lose, what do they say we're missing?" The attributes that show up in wins but not losses are your strongest differentiators.

@@ -6,7 +6,7 @@
 
 You have it if:
 
-- **You estimate boundaries from points** — Voronoi tessellation, alpha-shape concave hulls, kernel-density contours, regionalization output. The polygons are *yours*; the shared-edge structure between adjacent polygons matters and shouldn't drift as inputs change.
+- **You estimate boundaries from points** -- Voronoi tessellation, alpha-shape concave hulls, kernel-density contours, regionalization output. The polygons are *yours*; the shared-edge structure between adjacent polygons matters and shouldn't drift as inputs change.
 - You're editing a polygon mesh where moving one vertex must move all adjacent edges (parcel maps, precinct maps under revision, redistricting plans during the drawing phase).
 - You need to enforce that polygons share edges exactly (no slivers from independently-traced boundaries).
 - You're doing topological queries (which polygons are neighbors, which polygons share an edge of length > X) at scale where adjacency-via-`ST_Touches` is too slow.
@@ -22,7 +22,7 @@ If you're:
 
 ## The point-derived boundary use case (the load-bearing one for Siege work)
 
-When you generate polygons from points — the common Siege pattern — topology earns its complexity. Three reasons:
+When you generate polygons from points -- the common Siege pattern -- topology earns its complexity. Three reasons:
 
 1. **Adjacent polygons should share edges exactly.** Naïve Voronoi from a point set produces polygons that *should* share edges, but floating-point drift can leave 0.001m slivers between neighbors. Downstream `ST_Within` joins miss points falling in the slivers; spatial joins double-count points on the shared boundary.
 2. **Inputs shift as data improves.** Add 100 more donor points, the Voronoi tessellation re-computes; without topology, every adjacent boundary edge gets drawn independently, producing new sliver risk per re-computation. Topology preserves shared-edge identity across edits.
@@ -79,7 +79,7 @@ The whole point. Move a node and adjacent polygons' edges follow:
 -- Move node 42 (a shared vertex between three precincts)
 SELECT topology.ST_MoveNode('precincts_topo', 42, ST_SetSRID(ST_Point(-98.001, 30.0), 4326));
 
--- All three precincts that share node 42 now have updated boundaries — automatically
+-- All three precincts that share node 42 now have updated boundaries -- automatically
 ```
 
 Without topology: you'd UPDATE three different polygons' geometry, hope you got the same coordinate in all three, and accumulate drift over edits.
@@ -170,7 +170,7 @@ SELECT topology.DropTopology('precincts_topo');
 
 Drops the topology *schema* and all its layers. Does **not** drop the user tables that referenced it; they're left with orphan `TopoGeometry` columns. Drop those columns explicitly first if you want a clean removal.
 
-## Cost — be honest
+## Cost -- be honest
 
 Topology adds operational complexity:
 
@@ -211,12 +211,12 @@ PostGIS becomes the topology authority; the other engines are computation layers
 
 ## Cross-links
 
-- [`mastering-postgis/03-vector-operations.md`](mastering-postgis/03-vector-operations.md) — the alternative (plain `geometry` + ST_* operations)
-- [`../../analysis/spatial/references/regionalization.md`](../../../analysis/spatial/references/regionalization.md) — regionalization output is one of the canonical "boundaries from points" workflows
-- [`../../analysis/spatial/references/point-pattern-analysis.md`](../../../analysis/spatial/references/point-pattern-analysis.md) — point pattern analysis often produces the points that get tessellated into boundaries
+- [`mastering-postgis/03-vector-operations.md`](mastering-postgis/03-vector-operations.md) -- the alternative (plain `geometry` + ST_* operations)
+- [`../../analysis/spatial/references/regionalization.md`](../../../analysis/spatial/references/regionalization.md) -- regionalization output is one of the canonical "boundaries from points" workflows
+- [`../../analysis/spatial/references/point-pattern-analysis.md`](../../../analysis/spatial/references/point-pattern-analysis.md) -- point pattern analysis often produces the points that get tessellated into boundaries
 
 ## Further reading
 
 - PostGIS docs: https://postgis.net/docs/Topology.html
-- The topology section in *Mastering PostGIS* (see [`mastering-postgis/index.md`](mastering-postgis/index.md)) — book content here is largely still current; the API hasn't changed.
+- The topology section in *Mastering PostGIS* (see [`mastering-postgis/index.md`](mastering-postgis/index.md)) -- book content here is largely still current; the API hasn't changed.
 - TerragiS topology workshop materials: https://terragis.net/docs (background on tolerance tuning)

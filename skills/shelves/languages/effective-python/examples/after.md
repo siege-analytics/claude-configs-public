@@ -49,8 +49,8 @@ def summarize(orders: list[Order]) -> float:
 
 Key improvements:
 - `filters: dict | None = None` with `filters or {}` fixes the mutable default argument bug (Item 24: Use None as a default for mutable default arguments)
-- Specific exceptions `HTTPError`, `ConnectionError`, `Timeout` replace the bare `except` clause — errors propagate appropriately and `KeyboardInterrupt` is no longer swallowed (Item 65: Handle exceptions specifically)
+- Specific exceptions `HTTPError`, `ConnectionError`, `Timeout` replace the bare `except` clause -- errors propagate appropriately and `KeyboardInterrupt` is no longer swallowed (Item 65: Handle exceptions specifically)
 - `response.raise_for_status()` replaces silent failure on bad HTTP responses
 - List comprehension with inline `if` replaces the manual `append` loop (Item 27: Use Comprehensions Instead of map and filter)
-- `@dataclass` replaces a raw `dict` for the order structure — typed, readable, and self-documenting (Item 37: Compose Classes Instead of Nesting Many Levels of Built-in Types)
+- `@dataclass` replaces a raw `dict` for the order structure -- typed, readable, and self-documenting (Item 37: Compose Classes Instead of Nesting Many Levels of Built-in Types)
 - `sum(order.total for order in orders)` in `summarize` is a single idiomatic expression, no intermediate list needed

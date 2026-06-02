@@ -1,19 +1,19 @@
-# Sedona Raster — When and How
+# Sedona Raster -- When and How
 
 Sedona supports raster operations (Sedona 1.4+). When the task is "scale up raster work to a Spark cluster," it's the right tool. When it's "I have one COG and need to read it once," it's overkill.
 
 ## When raster on Sedona makes sense
 
-- **Big raster, distributed compute** — terabyte-scale satellite imagery, climate data cubes, NLDAS time series.
-- **Raster + vector at scale** — joining millions of polygons against pixel statistics (e.g., "average NDVI per Census tract over a year of Landsat scenes").
-- **Pipelines already on Spark** — adding raster to an existing Spark job; avoiding cross-system data movement.
+- **Big raster, distributed compute** -- terabyte-scale satellite imagery, climate data cubes, NLDAS time series.
+- **Raster + vector at scale** -- joining millions of polygons against pixel statistics (e.g., "average NDVI per Census tract over a year of Landsat scenes").
+- **Pipelines already on Spark** -- adding raster to an existing Spark job; avoiding cross-system data movement.
 
 ## When raster on Sedona doesn't make sense
 
-- **One-off COG read** — use `rasterio` directly.
-- **Raster with no vector cross-cutting** — `rasterio` or `xarray` on a single node is faster.
-- **Web-tile generation** — `rio-tiler` + cloud-native raster (COG on S3) is the right shape.
-- **Climate data cubes** — `xarray` + `dask` is the dominant ecosystem; only move to Sedona if the join with vector boundaries is the bottleneck.
+- **One-off COG read** -- use `rasterio` directly.
+- **Raster with no vector cross-cutting** -- `rasterio` or `xarray` on a single node is faster.
+- **Web-tile generation** -- `rio-tiler` + cloud-native raster (COG on S3) is the right shape.
+- **Climate data cubes** -- `xarray` + `dask` is the dominant ecosystem; only move to Sedona if the join with vector boundaries is the bottleneck.
 
 ## Setup
 
@@ -32,7 +32,7 @@ config = (
 sedona = SedonaContext.create(config)
 ```
 
-Sedona's raster ops require the GeoTools wrapper — it provides format readers (GeoTIFF, NetCDF, etc.) under the hood.
+Sedona's raster ops require the GeoTools wrapper -- it provides format readers (GeoTIFF, NetCDF, etc.) under the hood.
 
 ## Read raster
 
@@ -44,7 +44,7 @@ df = df.select("path", "rast")
 
 `binaryFile` reads each file as a row with `content` (binary) and `path` columns. `RS_FromGeoTiff` parses the binary into a Sedona raster object.
 
-For Cloud-Optimized GeoTIFFs (COG), reads stream the relevant byte ranges — efficient for large files.
+For Cloud-Optimized GeoTIFFs (COG), reads stream the relevant byte ranges -- efficient for large files.
 
 ## Raster operations
 
@@ -151,12 +151,12 @@ result.write.format("parquet").save("s3://output/zonal_stats.parquet")
 
 - Sedona docs: https://sedona.apache.org/latest-snapshot/api/sql/Raster-loader/
 
-The function set is smaller than `ST_*` (raster is newer in Sedona) — check what's available before assuming.
+The function set is smaller than `ST_*` (raster is newer in Sedona) -- check what's available before assuming.
 
 ## Honest assessment
 
 Sedona raster works but isn't yet as battle-tested as the vector side. For Siege work in 2026:
 
 - **Use it when** vector ops are already in Sedona and you need to add raster cross-cutting at scale.
-- **Skip it when** raster is the only spatial work — `xarray` + `dask` or `rio-tiler` are more mature.
+- **Skip it when** raster is the only spatial work -- `xarray` + `dask` or `rio-tiler` are more mature.
 - **Avoid for now** as the *primary* raster path in a new pipeline; revisit as Sedona raster matures.

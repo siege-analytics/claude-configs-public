@@ -15,13 +15,13 @@ When wrapping up a session, complete these steps in order:
 
 Before any commit/cleanup, verify all five criteria from [rule:definition-of-done] for the session's work:
 
-- [ ] **(a) Code-reviewed** — every behavior change reviewed (CodeRabbit on PR; self-review of diffs; human review where required)
-- [ ] **(b) Edge cases explored** — checklist applied to every behavior change
-- [ ] **(c) Tests written** — every behavior change has tests
-- [ ] **(d) Ticket updated** — status, comments, links current
-- [ ] **(e) Work has a ticket** — no orphan commits
+- [ ] **(a) Code-reviewed** -- every behavior change reviewed (CodeRabbit on PR; self-review of diffs; human review where required)
+- [ ] **(b) Edge cases explored** -- checklist applied to every behavior change
+- [ ] **(c) Tests written** -- every behavior change has tests
+- [ ] **(d) Ticket updated** -- status, comments, links current
+- [ ] **(e) Work has a ticket** -- no orphan commits
 
-This step does not block — it surfaces what's incomplete. If any criterion fails, log the gap explicitly in the wrap-up notes (Step 6 below) so the next session has a starting point. Don't quietly close the session over an incomplete change; the wrap-up note is the audit trail.
+This step does not block -- it surfaces what's incomplete. If any criterion fails, log the gap explicitly in the wrap-up notes (Step 6 below) so the next session has a starting point. Don't quietly close the session over an incomplete change; the wrap-up note is the audit trail.
 
 ### 1. Commit and Deploy
 - Check `git status` in all modified repositories
@@ -50,7 +50,7 @@ Read the `**Last audit:**` line in `<repo>/LESSONS.md`. If the date is more than
 
 > Heads up: rules-audit hasn't run in N days. Consider `/rules-audit` before the next session.
 
-This is **not a blocker** — the user decides whether to run [skill:rules-audit]. The nudge just ensures the question gets asked.
+This is **not a blocker** -- the user decides whether to run [skill:rules-audit]. The nudge just ensures the question gets asked.
 
 ### 4. Sweep for lessons-learned entries
 
@@ -66,7 +66,7 @@ For each pattern that qualifies, invoke [skill:lessons-learned] to append or bum
 - Critical (security, data loss): log at recurrence 1
 - Production incident: log at recurrence 1
 - Recurring style/correctness pattern: log at recurrence 2+
-- One-off bug with no pattern: skip — the commit + ticket are sufficient
+- One-off bug with no pattern: skip -- the commit + ticket are sufficient
 
 ### 5. Update CLAUDE.md
 Use CLAUDE.md for **session-scoped** notes that don't belong in the durable Tier-1 ledger:
@@ -80,7 +80,7 @@ Durable, recurring patterns belong in `LESSONS.md` (step 4 above), not CLAUDE.md
 
 If this session changed architecture, data models, pipeline structure, or system capabilities:
 - Run affected Notion sync jobs: `python -m sync.run roadmap dashboard automated_skills`
-- Create an "Architecture Update — YYYY-MM-DD" page under Telemetry describing what changed and why, at 5th-grade reading level
+- Create an "Architecture Update -- YYYY-MM-DD" page under Telemetry describing what changed and why, at 5th-grade reading level
 - Update the Project Roadmap if project status or dependencies changed
 - Update the Automated Skills page if new skills or automation were added
 
@@ -91,7 +91,7 @@ If this session changed architecture, data models, pipeline structure, or system
 - After creating an agent page, add it to `CONTENT_REGISTRY` in `sync/config/__init__.py` with `"type": "agent"`
 - If the page needs human follow-up (e.g., creating a form, configuring a DB), add an entry to `PENDING_HUMAN_ACTIONS` in `content_registry.py`
 
-**Trigger:** Ask yourself — "Would Leena or a new team member need to know about this?" If yes, it belongs in Notion.
+**Trigger:** Ask yourself -- "Would Leena or a new team member need to know about this?" If yes, it belongs in Notion.
 
 ## Example CLAUDE.md Addition
 
@@ -118,7 +118,7 @@ If this session changed architecture, data models, pipeline structure, or system
 - [ ] Builds/deploys triggered and healthy
 - [ ] README.md updated with current state
 - [ ] ROADMAP.md updated with next steps
-- [ ] Checked rules-audit cadence — nudged user if last audit >60 days ago
+- [ ] Checked rules-audit cadence -- nudged user if last audit >60 days ago
 - [ ] LESSONS.md ledger updated for any recurring patterns surfaced this session (via [skill:lessons-learned])
 - [ ] CLAUDE.md updated with session-scoped notes (durable patterns went to LESSONS.md, not here)
 - [ ] Notion updated if architecture, models, or capabilities changed

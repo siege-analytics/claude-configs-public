@@ -23,7 +23,7 @@ Overcoming resistance, building jobs-oriented organizations, and avoiding the fe
 **The reality:** You know what customers *say* they want and what they *do*. You may not know *why* they do it.
 
 **Counter:**
-- "Great—let's validate that knowledge. If we're right, research will confirm it quickly."
+- "Great--let's validate that knowledge. If we're right, research will confirm it quickly."
 - "When was the last time we talked to customers about their struggles, not our product?"
 - "Do we know why customers choose competitors, or why non-customers don't buy?"
 
@@ -31,7 +31,7 @@ Overcoming resistance, building jobs-oriented organizations, and avoiding the fe
 
 **The objection:** "This sounds like academic theory. We need practical action."
 
-**The reality:** JTBD is extremely practical—it tells you what to build and how to market.
+**The reality:** JTBD is extremely practical--it tells you what to build and how to market.
 
 **Counter:**
 - "Let me show you a job statement for our product. Does this match how we talk about it?"
@@ -64,7 +64,7 @@ Overcoming resistance, building jobs-oriented organizations, and avoiding the fe
 
 **The objection:** "Leadership has already decided what we're building."
 
-**The reality:** JTBD doesn't change what you build—it changes how you build and position it.
+**The reality:** JTBD doesn't change what you build--it changes how you build and position it.
 
 **Counter:**
 - "Let's use jobs thinking to make sure we build [planned feature] the right way."
@@ -303,7 +303,7 @@ Start small to prove value:
 
 ### From Product Managers
 
-**Concern:** "I don't have time for research—I need to ship."
+**Concern:** "I don't have time for research--I need to ship."
 
 **Response:**
 - Five interviews take less time than one failed feature

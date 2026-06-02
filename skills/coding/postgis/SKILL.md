@@ -14,23 +14,23 @@ For storage-engine reasoning (B-tree vs GiST/BRIN indexes, partitioning at scale
 - [skill:data-intensive]
 
 For *Mastering PostGIS* distillation, deep dives, and the SU-PostGIS interop map:
-- [`references/mastering-postgis/`](references/mastering-postgis/index.md) — book-skill-style distillation: index + chapter-themed reference files mirroring the book's structure (Ch 1 importing data, Ch 2 data types, Ch 3 vector ops, etc.) + currency caveats
-- [`references/indexing-strategies.md`](references/indexing-strategies.md) — GIST / SP-GIST / BRIN — when to use each
-- [`references/geometry-vs-geography.md`](references/geometry-vs-geography.md) — decision rules + SRID hygiene
-- [`references/spatial-joins-performance.md`](references/spatial-joins-performance.md) — ST_DWithin / ST_Intersects / planner reads
-- [`references/query-optimization.md`](references/query-optimization.md) — EXPLAIN, parallel-safe, index hints
-- [`references/topology.md`](references/topology.md) — `postgis_topology` for shared-edge editing
-- [`references/vacuuming-and-bloat.md`](references/vacuuming-and-bloat.md) — GIST bloat is the silent ops killer
-- [`references/pitfalls.md`](references/pitfalls.md) — SRID mismatch, mixed geom types, 3D coords sneaking in
-- [`references/siege-utilities-postgis.md`](references/siege-utilities-postgis.md) — which SU PostGIS helpers to use vs. raw psycopg2
+- [`references/mastering-postgis/`](references/mastering-postgis/index.md) -- book-skill-style distillation: index + chapter-themed reference files mirroring the book's structure (Ch 1 importing data, Ch 2 data types, Ch 3 vector ops, etc.) + currency caveats
+- [`references/indexing-strategies.md`](references/indexing-strategies.md) -- GIST / SP-GIST / BRIN -- when to use each
+- [`references/geometry-vs-geography.md`](references/geometry-vs-geography.md) -- decision rules + SRID hygiene
+- [`references/spatial-joins-performance.md`](references/spatial-joins-performance.md) -- ST_DWithin / ST_Intersects / planner reads
+- [`references/query-optimization.md`](references/query-optimization.md) -- EXPLAIN, parallel-safe, index hints
+- [`references/topology.md`](references/topology.md) -- `postgis_topology` for shared-edge editing
+- [`references/vacuuming-and-bloat.md`](references/vacuuming-and-bloat.md) -- GIST bloat is the silent ops killer
+- [`references/pitfalls.md`](references/pitfalls.md) -- SRID mismatch, mixed geom types, 3D coords sneaking in
+- [`references/siege-utilities-postgis.md`](references/siege-utilities-postgis.md) -- which SU PostGIS helpers to use vs. raw psycopg2
 
 Apply when writing SQL against PostgreSQL with the PostGIS extension enabled. See [reference.md](reference.md) for full query templates, extension setup, and raster operations.
 
 Draws from:
-- **Paul Ramsey's blog (blog.cleverelephant.ca)** — PostGIS co-founder; de facto canonical for modern patterns
-- **Obe & Hsu — *PostGIS in Action* 3rd ed (2021)** — the authoritative book
+- **Paul Ramsey's blog (blog.cleverelephant.ca)** -- PostGIS co-founder; de facto canonical for modern patterns
+- **Obe & Hsu -- *PostGIS in Action* 3rd ed (2021)** -- the authoritative book
 - **Crunchy Data "Postgres for Geospatial"** (crunchydata.com/learn/postgres-geospatial)
-- **García & Vergara — *pgRouting* (2022)** — for network-on-geography work
+- **García & Vergara -- *pgRouting* (2022)** -- for network-on-geography work
 
 ## Decision tree
 
@@ -80,9 +80,9 @@ CREATE INDEX ON donations_2024 USING GIST (geom);
 ```
 
 Index types for spatial data:
-- **GIST** — general purpose geometry/geography
-- **SP-GIST** — better for point-heavy datasets and uniform distributions
-- **BRIN** — when geometries are physically clustered on disk (time-ordered ingest)
+- **GIST** -- general purpose geometry/geography
+- **SP-GIST** -- better for point-heavy datasets and uniform distributions
+- **BRIN** -- when geometries are physically clustered on disk (time-ordered ingest)
 
 Check usage:
 ```sql
@@ -94,7 +94,7 @@ WHERE ST_Contains(d.geom, ST_SetSRID(ST_Point(-98, 30), 4326));
 
 If the plan shows `Seq Scan`, the index isn't being used (usually CRS mismatch, function on the indexed column, or the table is too small to matter).
 
-## Operator-based queries — use the index
+## Operator-based queries -- use the index
 
 ```sql
 -- Nearest neighbor (index-aware)
@@ -109,9 +109,9 @@ FROM features
 WHERE geom && ST_MakeEnvelope(-100, 30, -97, 32, 4326);
 ```
 
-The `<->` operator triggers KNN with spatial index. The `&&` operator is bounding-box intersect — always used under the hood by `ST_Intersects` / `ST_Contains` for pre-filtering.
+The `<->` operator triggers KNN with spatial index. The `&&` operator is bounding-box intersect -- always used under the hood by `ST_Intersects` / `ST_Contains` for pre-filtering.
 
-## Spatial joins — the expensive ones
+## Spatial joins -- the expensive ones
 
 For large many-to-many spatial joins:
 
@@ -157,10 +157,10 @@ Then parallel jobs touch different partitions without contention.
 Explicit CRS on every geometry:
 
 ```sql
--- BAD — SRID 0, no projection info
+-- BAD -- SRID 0, no projection info
 SELECT ST_Point(-98, 30);
 
--- GOOD — explicit
+-- GOOD -- explicit
 SELECT ST_SetSRID(ST_Point(-98, 30), 4326);
 
 -- Transform when needed (for area/distance in meters)
@@ -185,16 +185,16 @@ WHERE NOT ST_IsValid(geom);
 ALTER TABLE features ADD CONSTRAINT features_geom_valid CHECK (ST_IsValid(geom));
 ```
 
-`ST_MakeValid` preserves dimensionality (polygons stay polygons). `ST_Buffer(geom, 0)` is a cheaper but lossier legacy fix — avoid unless you understand the failure modes.
+`ST_MakeValid` preserves dimensionality (polygons stay polygons). `ST_Buffer(geom, 0)` is a cheaper but lossier legacy fix -- avoid unless you understand the failure modes.
 
 ## Extensions you'll actually want
 
 | Extension | Use |
 |---|---|
-| `postgis` | Core — always |
+| `postgis` | Core -- always |
 | `postgis_raster` | Raster analytics (tiles, pixel operations) |
 | `postgis_topology` | Shared-edge editing of polygons |
-| `h3` | Hexagonal indexing (Uber's library) — great for binning at scale |
+| `h3` | Hexagonal indexing (Uber's library) -- great for binning at scale |
 | `pgrouting` | Shortest path / isochrones on road networks |
 | `pg_stat_statements` | Query performance introspection (not geo-specific but always install) |
 
@@ -228,11 +228,11 @@ Before running a spatial query in production:
 
 ## References
 
-- **Paul Ramsey blog** — blog.cleverelephant.ca (primary modern source)
-- **Obe & Hsu** — *PostGIS in Action* 3rd ed (2021)
-- **Crunchy Data Geospatial Hub** — crunchydata.com/learn/postgres-geospatial
-- **PostGIS docs** — postgis.net/docs/ (reference, not tutorial)
-- **PostGIS workshop materials** — postgis.net/workshops/postgis-intro/
+- **Paul Ramsey blog** -- blog.cleverelephant.ca (primary modern source)
+- **Obe & Hsu** -- *PostGIS in Action* 3rd ed (2021)
+- **Crunchy Data Geospatial Hub** -- crunchydata.com/learn/postgres-geospatial
+- **PostGIS docs** -- postgis.net/docs/ (reference, not tutorial)
+- **PostGIS workshop materials** -- postgis.net/workshops/postgis-intro/
 
 ## Attribution Policy
 

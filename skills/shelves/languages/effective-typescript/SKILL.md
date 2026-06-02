@@ -16,14 +16,14 @@ Apply the 62 items from Dan Vanderkam's "Effective TypeScript" to review existin
 
 This skill includes categorized reference files covering all 62 items:
 
-- `ref-01-getting-to-know-ts.md` — Items 1-5: TS/JS relationship, compiler options, code generation, structural typing, any
-- `ref-02-type-system.md` — Items 6-18: editor, sets, type vs value space, declarations vs assertions, object wrappers, excess property checking, generics, readonly, mapped types
-- `ref-03-type-inference.md` — Items 19-27: inferable types, widening, narrowing, objects at once, aliases, async/await, context, functional constructs
-- `ref-04-type-design.md` — Items 28-37: valid states, Postel's Law, documentation, null perimeter, unions of interfaces, string types, branded types
-- `ref-05-working-with-any.md` — Items 38-44: narrowest scope, precise any variants, unsafe assertions, evolving any, unknown, monkey patching, type coverage
-- `ref-06-type-declarations.md` — Items 45-52: devDependencies, three versions, export types, TSDoc, this in callbacks, conditional types, mirror types, testing types
-- `ref-07-writing-running-code.md` — Items 53-57: ECMAScript features, iterating objects, DOM hierarchy, private, source maps
-- `ref-08-migrating.md` — Items 58-62: modern JS, @ts-check, allowJs, module-by-module, noImplicitAny
+- `ref-01-getting-to-know-ts.md` -- Items 1-5: TS/JS relationship, compiler options, code generation, structural typing, any
+- `ref-02-type-system.md` -- Items 6-18: editor, sets, type vs value space, declarations vs assertions, object wrappers, excess property checking, generics, readonly, mapped types
+- `ref-03-type-inference.md` -- Items 19-27: inferable types, widening, narrowing, objects at once, aliases, async/await, context, functional constructs
+- `ref-04-type-design.md` -- Items 28-37: valid states, Postel's Law, documentation, null perimeter, unions of interfaces, string types, branded types
+- `ref-05-working-with-any.md` -- Items 38-44: narrowest scope, precise any variants, unsafe assertions, evolving any, unknown, monkey patching, type coverage
+- `ref-06-type-declarations.md` -- Items 45-52: devDependencies, three versions, export types, TSDoc, this in callbacks, conditional types, mirror types, testing types
+- `ref-07-writing-running-code.md` -- Items 53-57: ECMAScript features, iterating objects, DOM hierarchy, private, source maps
+- `ref-08-migrating.md` -- Items 58-62: modern JS, @ts-check, allowJs, module-by-module, noImplicitAny
 
 ## How to Use This Skill
 
@@ -48,7 +48,7 @@ Before listing issues, first ask: **Is this code already applying Effective Type
 - `async`/`await` with typed return types (Item 25)
 - TSDoc comments on public functions (Item 48)
 
-**Key rule — Item 40 interaction with Item 9:** A type assertion (`as T`) inside a function that has a fully-typed signature is NOT a violation of Item 9. Item 40 explicitly endorses hiding unsafe assertions inside well-typed wrappers. Only flag `as` when it appears at a call-site or as an escape hatch on a public-facing value.
+**Key rule -- Item 40 interaction with Item 9:** A type assertion (`as T`) inside a function that has a fully-typed signature is NOT a violation of Item 9. Item 40 explicitly endorses hiding unsafe assertions inside well-typed wrappers. Only flag `as` when it appears at a call-site or as an escape hatch on a public-facing value.
 
 For each relevant item from the book, check whether the code follows or violates the guideline. Focus on:
 
@@ -92,17 +92,17 @@ When the user asks you to **write** new TypeScript code, apply these core practi
 
 2. **Prefer type declarations over assertions** (Item 9). Use `const x: MyType = value` not `const x = value as MyType`.
 
-3. **Avoid object wrapper types** (Item 10). Use `string`, `number`, `boolean` — never `String`, `Number`, `Boolean`.
+3. **Avoid object wrapper types** (Item 10). Use `string`, `number`, `boolean` -- never `String`, `Number`, `Boolean`.
 
 4. **Use types that represent only valid states** (Item 28). Eliminate impossible states at the type level with tagged unions.
 
-5. **Push null to the perimeter** (Item 31). Don't scatter `T | null` throughout — handle nullability at boundaries.
+5. **Push null to the perimeter** (Item 31). Don't scatter `T | null` throughout -- handle nullability at boundaries.
 
 6. **Prefer unions of interfaces to interfaces of unions** (Item 32). Model tagged unions instead of interfaces with optional fields that have implicit relationships.
 
 7. **Replace plain string types with string literal unions** (Item 33). `type Direction = 'north' | 'south' | 'east' | 'west'` not `string`.
 
-8. **Generate types from APIs and specs, not data** (Item 35). Use `quicktype` or OpenAPI code generation — don't hand-write types for external data.
+8. **Generate types from APIs and specs, not data** (Item 35). Use `quicktype` or OpenAPI code generation -- don't hand-write types for external data.
 
 9. **Use `unknown` instead of `any` for values with unknown type** (Item 42). `unknown` forces callers to narrow before use.
 
@@ -112,7 +112,7 @@ When the user asks you to **write** new TypeScript code, apply these core practi
 
 12. **Use `async`/`await` over raw Promises and callbacks** (Item 25). It produces cleaner inferred types and clearer code.
 
-13. **Use type aliases to avoid repeating yourself** (Item 14). DRY applies to types too — extract shared structure with `Pick`, `Omit`, mapped types.
+13. **Use type aliases to avoid repeating yourself** (Item 14). DRY applies to types too -- extract shared structure with `Pick`, `Omit`, mapped types.
 
 14. **Export all types that appear in public APIs** (Item 47). Don't force users to reconstruct types with `ReturnType<>` or `Parameters<>`.
 
@@ -131,7 +131,7 @@ interface User {
 // Branded type for nominal typing (Item 37)
 type UserId = string & { readonly __brand: 'UserId' };
 
-// Tagged union — only valid states representable (Item 28, 32)
+// Tagged union -- only valid states representable (Item 28, 32)
 type RequestState<T> =
   | { status: 'loading' }
   | { status: 'success'; data: T }
@@ -161,11 +161,11 @@ async function fetchUser(id: UserId): Promise<User> {
 ## Priority of Items by Impact
 
 ### Critical (Correctness & Bugs)
-- Item 2: Enable `strict` mode — `noImplicitAny` and `strictNullChecks` prevent whole classes of bugs
-- Item 9: Prefer declarations to assertions — **but see Item 40**: assertions inside well-typed wrappers are fine
-- Item 28: Types that always represent valid states — impossible states cause runtime errors
-- Item 31: Push null to the perimeter — scattered nullability causes null dereferences
-- Item 42: Use `unknown` instead of `any` — `any` silently disables type checking
+- Item 2: Enable `strict` mode -- `noImplicitAny` and `strictNullChecks` prevent whole classes of bugs
+- Item 9: Prefer declarations to assertions -- **but see Item 40**: assertions inside well-typed wrappers are fine
+- Item 28: Types that always represent valid states -- impossible states cause runtime errors
+- Item 31: Push null to the perimeter -- scattered nullability causes null dereferences
+- Item 42: Use `unknown` instead of `any` -- `any` silently disables type checking
 
 > **Item 40 exception:** `raw as SomeType` inside a function with a fully-typed signature is explicitly endorsed by Item 40. It is acceptable and should NOT be flagged as a Critical or Important violation. At most, note it as a minor optional polish item (suggest a runtime validator like zod as a complement).
 

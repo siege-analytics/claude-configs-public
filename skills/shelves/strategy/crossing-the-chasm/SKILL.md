@@ -15,7 +15,7 @@ Strategic framework for marketing and selling disruptive technology products, pa
 
 **There is a chasm between early adopters and the mainstream market.** Most tech companies fail not because they can't build great products, but because they can't cross from visionaries who love new technology to pragmatists who just want solutions that work.
 
-**The foundation:** Early adopters and mainstream customers want fundamentally different things. What wins over innovators actively repels the early majority. You must change your strategy—and your whole product—to cross the chasm.
+**The foundation:** Early adopters and mainstream customers want fundamentally different things. What wins over innovators actively repels the early majority. You must change your strategy--and your whole product--to cross the chasm.
 
 ## Scoring
 
@@ -36,7 +36,7 @@ Innovators → Early Adopters → [CHASM] → Early Majority → Late Majority �
 |---------|----------|------------|---------------|----------------|
 | **Innovators** | 2.5% | Technology enthusiasts | The newest, coolest tech | Product exists, technical specs |
 | **Early Adopters** | 13.5% | Visionaries seeking advantage | Change, revolution, competitive edge | Vision, big potential, strategic value |
-| **[THE CHASM]** | — | — | — | — |
+| **[THE CHASM]** | -- | -- | -- | -- |
 | **Early Majority** | 34% | Pragmatists | Productivity improvements | Whole product, references, de-risked |
 | **Late Majority** | 34% | Conservatives | Avoid being left behind | Commodity, support, low risk |
 | **Laggards** | 16% | Skeptics | Only when forced | Cheap, simple, necessary |
@@ -187,7 +187,7 @@ See: [references/whole-product.md](references/whole-product.md) for whole produc
 
 **Identify the market alternative:**
 - What do customers use today?
-- Often it's NOT a direct competitor—it's manual processes, spreadsheets, or old systems
+- Often it's NOT a direct competitor--it's manual processes, spreadsheets, or old systems
 
 **Frame the competition:**
 - Don't pick fights you can't win

@@ -1,4 +1,4 @@
-# System Design Interview — Chapter-by-Chapter Reference
+# System Design Interview -- Chapter-by-Chapter Reference
 
 Complete catalog of system design concepts, patterns, and techniques from all 16 chapters.
 
@@ -11,7 +11,7 @@ Complete catalog of system design concepts, patterns, and techniques from all 16
 - DNS resolves domain to IP; HTTP request/response cycle
 
 ### Database
-- **Relational (SQL)**: MySQL, PostgreSQL — structured data, joins, ACID
+- **Relational (SQL)**: MySQL, PostgreSQL -- structured data, joins, ACID
 - **NoSQL**: Key-value (Redis, DynamoDB), Document (MongoDB), Column (Cassandra), Graph (Neo4j)
 - Choose NoSQL when: super-low latency, unstructured data, massive scale, no relational needs
 
@@ -114,24 +114,24 @@ Complete catalog of system design concepts, patterns, and techniques from all 16
 
 ### The 4-Step Process
 
-**Step 1 — Understand the problem and establish design scope (3–10 min)**
+**Step 1 -- Understand the problem and establish design scope (3–10 min)**
 - Ask clarifying questions: What features? How many users? Scale trajectory?
 - Define functional requirements (what the system does)
 - Define non-functional requirements (scale, latency, availability, consistency)
 - Make back-of-envelope estimates
 
-**Step 2 — Propose high-level design and get buy-in (10–15 min)**
+**Step 2 -- Propose high-level design and get buy-in (10–15 min)**
 - Draw component diagram: clients, servers, databases, caches, CDN, load balancers
 - Define API endpoints (REST or similar)
 - Sketch data flow through the system
 - Get agreement before diving deeper
 
-**Step 3 — Design deep dive (10–25 min)**
+**Step 3 -- Design deep dive (10–25 min)**
 - Focus on 2–3 most critical/interesting components
 - Discuss trade-offs for each design decision
 - Address non-functional requirements (scalability, consistency, availability)
 
-**Step 4 — Wrap up (3–5 min)**
+**Step 4 -- Wrap up (3–5 min)**
 - Summarize the design
 - Discuss error handling and edge cases
 - Operational considerations: metrics, monitoring, alerts
@@ -243,7 +243,7 @@ Complete catalog of system design concepts, patterns, and techniques from all 16
 - Downside: complexity grows with many servers; prune based on threshold
 
 **Handling Failures**
-- **Failure detection**: Gossip protocol — each node periodically sends heartbeat list to random nodes; if no heartbeat for threshold period, node marked down
+- **Failure detection**: Gossip protocol -- each node periodically sends heartbeat list to random nodes; if no heartbeat for threshold period, node marked down
 - **Sloppy quorum**: When not enough healthy nodes, use temporary nodes (hinted handoff)
 - **Anti-entropy**: Merkle trees for efficient inconsistency detection and repair
 - **Merkle tree**: Hash tree where leaves are hashes of data blocks; only differing branches need sync
@@ -422,7 +422,7 @@ Complete catalog of system design concepts, patterns, and techniques from all 16
 
 ### Storage
 - Generic data (user profiles, settings): relational DB with replication/sharding
-- Chat history: key-value store (HBase recommended) — write-heavy, sequential access, no random access needed
+- Chat history: key-value store (HBase recommended) -- write-heavy, sequential access, no random access needed
 - **Message table (1-on-1)**: message_id (bigint), message_from (bigint), message_to (bigint), content (text), created_at (timestamp)
 - **Message table (group)**: channel_id + message_id as composite key; channel_id is partition key
 
@@ -458,7 +458,7 @@ Complete catalog of system design concepts, patterns, and techniques from all 16
 - **Aggregators**: Aggregate query frequency (weekly or real-time depending on use case)
 - **Workers**: Build/update trie from aggregated data
 - **Trie cache**: In-memory trie for fast lookups; weekly snapshot
-- **Trie DB**: Persistent storage — document store (serialize trie) or key-value (each prefix = key)
+- **Trie DB**: Persistent storage -- document store (serialize trie) or key-value (each prefix = key)
 
 ### Query Service
 - User types → request sent to query service → trie cache lookup → return top suggestions
@@ -470,7 +470,7 @@ Complete catalog of system design concepts, patterns, and techniques from all 16
 - **Delete**: Filter layer removes hateful, violent, explicit, or dangerous suggestions before returning results (don't modify trie directly)
 
 ### Scaling
-- **Sharding**: By first character (uneven — 's' much larger than 'z'); smarter: shard by frequency-based analysis for even distribution
+- **Sharding**: By first character (uneven -- 's' much larger than 'z'); smarter: shard by frequency-based analysis for even distribution
 - **Multi-language**: Unicode support in trie nodes; separate tries per language or unified with locale metadata
 
 ---
@@ -526,7 +526,7 @@ Complete catalog of system design concepts, patterns, and techniques from all 16
 - File upload/download, file sync across devices, notifications, reliability, fast sync, low bandwidth, high scalability/availability
 
 ### APIs
-- **Upload**: Simple upload (small files), Resumable upload (large files — init → get resumable URI → upload chunks → resume on failure)
+- **Upload**: Simple upload (small files), Resumable upload (large files -- init → get resumable URI → upload chunks → resume on failure)
 - **Download**: GET by file path
 - **Get revisions**: GET revision history by file path and limit
 
@@ -538,7 +538,7 @@ Complete catalog of system design concepts, patterns, and techniques from all 16
 - **API servers**: User/auth management, file metadata CRUD
 - **Metadata DB**: File metadata, user info, block info, versioning
 - **Metadata cache**: Cache frequently accessed metadata
-- **Notification service**: Long polling — client holds connection, notified of changes; eventbus for internal change distribution
+- **Notification service**: Long polling -- client holds connection, notified of changes; eventbus for internal change distribution
 - **Offline backup queue**: Queue sync changes for when clients come back online
 
 ### Block Server Design

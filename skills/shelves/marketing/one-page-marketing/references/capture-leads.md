@@ -11,10 +11,10 @@ Most businesses send their advertising traffic to a homepage and hope visitors w
 | 1,000 people see your ad | 30 might be ready to buy (3%) | 30 might be ready to buy (3%) |
 | 970 who are not ready | They leave and you never see them again | 200-400 give you their email (20-40% opt-in) |
 | Over next 12 months | You must pay to reach them again from scratch | You nurture them for free via email and they buy when ready |
-| Customer acquisition cost | High — paying full price for every customer | Low — one-time cost to capture, low cost to nurture |
-| Compounding effect | None — every month starts from zero | Your database grows, making each month easier |
+| Customer acquisition cost | High -- paying full price for every customer | Low -- one-time cost to capture, low cost to nurture |
+| Compounding effect | None -- every month starts from zero | Your database grows, making each month easier |
 
-Your database of leads is the most valuable asset in your business. It is the only marketing asset you truly own — you rent attention on social media, search engines, and ad platforms, but you own your email list.
+Your database of leads is the most valuable asset in your business. It is the only marketing asset you truly own -- you rent attention on social media, search engines, and ad platforms, but you own your email list.
 
 ## Lead Magnet Types
 
@@ -89,7 +89,7 @@ At minimum, your CRM should capture and track:
 | Name | Personalization in all communications |
 | Email | Primary nurture channel |
 | Phone | For high-value follow-ups |
-| Lead source | Attribution — know which channel they came from |
+| Lead source | Attribution -- know which channel they came from |
 | Lead magnet | Know which resource they requested |
 | Date captured | Track recency and sequence timing |
 | Lead score | Prioritize outreach to hottest leads |
@@ -102,7 +102,7 @@ At minimum, your CRM should capture and track:
 - Enter every lead within 24 hours (ideally instantly via automation)
 - Never let leads exist only in your email inbox, on business cards, or in your head
 - Set up automated tagging based on lead source and behavior
-- Review and clean your CRM monthly — remove duplicates, update statuses, re-engage cold leads
+- Review and clean your CRM monthly -- remove duplicates, update statuses, re-engage cold leads
 - Your CRM is the single source of truth for all customer data
 
 ## Opt-In Page Design
@@ -141,11 +141,11 @@ An opt-in page is not your website. Remove everything that does not directly sup
 | 10-20% | Average | Test new headlines and CTAs for improvement |
 | 20-35% | Good | Optimize and scale traffic |
 | 35-50% | Excellent | Scale aggressively, this is working |
-| Above 50% | Exceptional | Likely warm/targeted traffic — check if cold traffic converts similarly |
+| Above 50% | Exceptional | Likely warm/targeted traffic -- check if cold traffic converts similarly |
 
 ## Speed-to-Lead
 
-Speed-to-lead is the time between when a lead fills out a form and when they receive their first human or automated response. It is one of the most important — and most neglected — conversion factors.
+Speed-to-lead is the time between when a lead fills out a form and when they receive their first human or automated response. It is one of the most important -- and most neglected -- conversion factors.
 
 ### The Research
 
@@ -154,7 +154,7 @@ Speed-to-lead is the time between when a lead fills out a form and when they rec
 | Within 5 minutes | 21x more likely to qualify the lead compared to 30 minutes |
 | Within 1 hour | 7x more likely to qualify compared to 2 hours |
 | Within 24 hours | Baseline |
-| After 24 hours | Lead is likely cold — they have moved on or contacted a competitor |
+| After 24 hours | Lead is likely cold -- they have moved on or contacted a competitor |
 
 ### Speed-to-Lead Implementation
 

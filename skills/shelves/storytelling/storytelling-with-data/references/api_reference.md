@@ -1,4 +1,4 @@
-# Storytelling with Data — Frameworks & Visual Reference
+# Storytelling with Data -- Frameworks & Visual Reference
 
 Complete catalog of chart types, principles, frameworks, and techniques
 from all 10 chapters of *Storytelling with Data* by Cole Nussbaumer Knaflic.
@@ -13,9 +13,9 @@ Before creating any visualization:
 
 | Question | Details |
 |----------|---------|
-| **Who** | Your audience — their knowledge level, relationship to you, motivations, potential resistance |
-| **What** | The action you want them to take — be specific (approve budget, change process, investigate further) |
-| **How** | The delivery mechanism — live presentation, printed report, email, interactive dashboard |
+| **Who** | Your audience -- their knowledge level, relationship to you, motivations, potential resistance |
+| **What** | The action you want them to take -- be specific (approve budget, change process, investigate further) |
+| **How** | The delivery mechanism -- live presentation, printed report, email, interactive dashboard |
 
 ### Exploratory vs. Explanatory Analysis
 
@@ -24,7 +24,7 @@ Before creating any visualization:
 | **Exploratory** | Find insights in data | Yourself/team | Hunting for pearls in oysters |
 | **Explanatory** | Communicate a specific insight | Decision-makers | Presenting the pearl on a necklace |
 
-Most data visualization effort should go to explanatory — you've already done the exploring.
+Most data visualization effort should go to explanatory -- you've already done the exploring.
 
 ### The 3-Minute Story
 Distill your entire analysis into what someone would tell a colleague in 3 minutes at the coffee machine. If you can't do this, your message isn't focused enough.
@@ -35,9 +35,9 @@ A single sentence that:
 2. Conveys what's at stake (why should they care?)
 3. Is a complete sentence (not a topic or category)
 
-**Template**: "[Observation about the data] — [what the audience should do about it]"
+**Template**: "[Observation about the data] -- [what the audience should do about it]"
 
-**Example**: "Customer churn increased 15% in Q3 driven by pricing complaints — we should pilot a loyalty discount for at-risk segments before Q4."
+**Example**: "Customer churn increased 15% in Q3 driven by pricing complaints -- we should pilot a loyalty discount for at-risk segments before Q4."
 
 ### Storyboarding
 - Use sticky notes or paper before opening any tool
@@ -85,7 +85,7 @@ A single sentence that:
 - **Use when**: Long category labels; many categories; ranking
 - **How**: Categories on y-axis; values on x-axis; order by value (descending, top to bottom)
 - **Rules**: MUST start at zero; single color or strategic color highlighting
-- **Best practice**: Default to horizontal bars — they're almost always more readable than vertical
+- **Best practice**: Default to horizontal bars -- they're almost always more readable than vertical
 
 #### Stacked Bar Charts
 - **Use when**: Showing composition (parts of a whole) across categories
@@ -151,7 +151,7 @@ Every element on a chart consumes processing power. The goal is to minimize extr
 Coined by Edward Tufte: the proportion of a graphic's ink devoted to displaying data vs. non-data elements. Maximize this ratio by removing non-data ink.
 
 ### White Space
-- Not "empty" — it's strategic
+- Not "empty" -- it's strategic
 - Creates visual breathing room
 - Signals grouping through proximity
 - Resist the urge to fill every pixel
@@ -201,7 +201,7 @@ Attributes processed by the visual system in <500 milliseconds, before conscious
 4. Use a single accent color (or at most 2)
 
 **Color rules**:
-- Grey is your default — not a boring choice, a strategic one
+- Grey is your default -- not a boring choice, a strategic one
 - Brand colors: use sparingly as accents, not for every data series
 - Warm colors (red, orange) advance; cool colors (blue, green) recede
 - Never use color as the only means of conveying information
@@ -236,14 +236,14 @@ After creating any visual:
 - Margin around charts: don't let elements touch edges
 - Breathing room between chart title and chart body
 - Space between legend/annotations and data area
-- White space is NOT wasted — it improves comprehension
+- White space is NOT wasted -- it improves comprehension
 
 ### Visual Hierarchy in Data Viz
-1. **Title/takeaway** — Most prominent (bold, larger, top of chart)
-2. **Data** — The actual bars/lines/points (the substance)
-3. **Annotations** — Call-outs explaining what to see
-4. **Axis labels** — Necessary but quiet
-5. **Source/footnotes** — Smallest, least prominent
+1. **Title/takeaway** -- Most prominent (bold, larger, top of chart)
+2. **Data** -- The actual bars/lines/points (the substance)
+3. **Annotations** -- Call-outs explaining what to see
+4. **Axis labels** -- Necessary but quiet
+5. **Source/footnotes** -- Smallest, least prominent
 
 ### Consistency Across a Presentation
 - Same color = same meaning on every slide
@@ -254,7 +254,7 @@ After creating any visual:
 
 ---
 
-## Ch 6: Model Visuals — Integration Examples
+## Ch 6: Model Visuals -- Integration Examples
 
 ### Before/After Transformation Process
 The book provides detailed worked examples showing the full transformation:
@@ -325,7 +325,7 @@ After presenting any data point or chart, ask: "So what?" The answer should be:
 - State the Big Idea early
 - Support it with data in the middle
 - Restate it at the end
-- Don't be afraid to repeat — audiences need it more than you think
+- Don't be afraid to repeat -- audiences need it more than you think
 
 ---
 
@@ -333,20 +333,20 @@ After presenting any data point or chart, ask: "So what?" The answer should be:
 
 ### Complete Workflow Checklist
 
-1. **Context** — Who is my audience? What action do I want? How will I deliver?
-2. **Big Idea** — Can I state my message in one sentence?
-3. **Storyboard** — Have I planned the narrative flow before building?
-4. **Chart type** — Is this the right visual for this data?
-5. **Declutter** — Have I removed everything non-essential?
-6. **Focus** — Is color used sparingly and strategically?
-7. **Design** — Is it aligned, consistent, accessible?
-8. **Annotate** — Have I told the audience what to see?
-9. **Title** — Does each title state a takeaway, not a label?
-10. **Story** — Does the horizontal logic tell a complete narrative?
+1. **Context** -- Who is my audience? What action do I want? How will I deliver?
+2. **Big Idea** -- Can I state my message in one sentence?
+3. **Storyboard** -- Have I planned the narrative flow before building?
+4. **Chart type** -- Is this the right visual for this data?
+5. **Declutter** -- Have I removed everything non-essential?
+6. **Focus** -- Is color used sparingly and strategically?
+7. **Design** -- Is it aligned, consistent, accessible?
+8. **Annotate** -- Have I told the audience what to see?
+9. **Title** -- Does each title state a takeaway, not a label?
+10. **Story** -- Does the horizontal logic tell a complete narrative?
 
 ---
 
-## Ch 9: Case Studies — Key Patterns
+## Ch 9: Case Studies -- Key Patterns
 
 ### Transformation Patterns Observed
 
@@ -372,8 +372,8 @@ After presenting any data point or chart, ask: "So what?" The answer should be:
 ## Ch 10: Final Thoughts
 
 ### Practice Framework
-- **Practice constantly** — Apply these lessons to every chart you make, even internal ones
-- **Seek feedback** — Ask others "where are your eyes drawn?" and "what's the message?"
-- **Study great examples** — Collect data visualizations that work and analyze why
-- **Iterate** — First drafts are never final; refine through multiple passes
-- **Be brave** — Simplifying feels risky ("What if they want more data?") but almost always improves communication
+- **Practice constantly** -- Apply these lessons to every chart you make, even internal ones
+- **Seek feedback** -- Ask others "where are your eyes drawn?" and "what's the message?"
+- **Study great examples** -- Collect data visualizations that work and analyze why
+- **Iterate** -- First drafts are never final; refine through multiple passes
+- **Be brave** -- Simplifying feels risky ("What if they want more data?") but almost always improves communication

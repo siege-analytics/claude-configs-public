@@ -75,7 +75,7 @@ INNER JOIN boundaries_subdivided AS b
 
 ### Distance and Proximity
 
-**For distance between two points — no library needed:**
+**For distance between two points -- no library needed:**
 
 ```python
 from math import radians, cos, sin, asin, sqrt
@@ -120,13 +120,13 @@ WHERE lat BETWEEN :center_lat - 0.45 AND :center_lat + 0.45
 
 **If you already have the region assignment** (e.g., state, district, county as a column):
 ```sql
--- Just GROUP BY — no geometry needed
+-- Just GROUP BY -- no geometry needed
 SELECT state, COUNT(*) AS donations, SUM(amount) AS total
 FROM donations
 GROUP BY state;
 ```
 
-**Apportionment** — when a region spans multiple units:
+**Apportionment** -- when a region spans multiple units:
 ```python
 # ZIP 07901 is 60% in NJ-07 and 40% in NJ-10
 # A $100 donation from 07901 contributes $60 to NJ-07 and $40 to NJ-10
@@ -163,7 +163,7 @@ LEFT JOIN zip_centroids AS z ON d.zip_code = z.zip_code;
 - Store in EPSG:4326 (degrees)
 - Transform to a projected CRS for distance or area calculations
 - Transform back to 4326 for display or export
-- Never calculate distance in degrees — 1 degree of longitude varies from 111 km at the equator to 0 km at the poles
+- Never calculate distance in degrees -- 1 degree of longitude varies from 111 km at the equator to 0 km at the poles
 
 ## Technology Quick Reference
 
@@ -198,7 +198,7 @@ Proposed new section to append after the "Common Mistakes" table. Positions the 
 
 ---
 
-## Dirty Tabular Data — Why Geometry Exists
+## Dirty Tabular Data -- Why Geometry Exists
 
 In real-world civic / census / redistricting work, the tabular representation is usually the *reason* you need geometry. The crosswalks, FIPS codes, and state columns users rely on are wrong more often than anyone admits.
 
@@ -207,7 +207,7 @@ In real-world civic / census / redistricting work, the tabular representation is
 | Lie | What actually happens |
 |---|---|
 | "ZIP → Congressional District is a 1-to-1 table" | ~10% of ZIPs span multiple CDs. Court-ordered redistricts invalidate tables mid-cycle. |
-| "FIPS codes are stable" | Mostly true — except Alaska borough reorgs (Wrangell 2008, Hoonah-Angoon 2015), Bedford VA county merger (2013), new Puerto Rico municipios. |
+| "FIPS codes are stable" | Mostly true -- except Alaska borough reorgs (Wrangell 2008, Hoonah-Angoon 2015), Bedford VA county merger (2013), new Puerto Rico municipios. |
 | "Census GEOIDs for tracts stay the same" | They change every decennial. `GEOID20 ≠ GEOID10` for most features. |
 | "State abbreviation 'PR' means Puerto Rico everywhere" | USPS: `PR`. Census sometimes: `RQ`. ISO-3166: `PR`. Some voter files: `P.R.` with dots. |
 | "The precinct name is consistent year-to-year" | Spelling drift. `"WARD 1 PCT 3"` becomes `"Ward 1-3"` becomes `"W1P3"` without warning. |
@@ -241,7 +241,7 @@ class StateIdentifiers:
     fips: str         # "48"
     usps: str         # "TX"
     iso3166: str      # "US-TX"
-    census_name: str  # "Texas" — but watch "District of Columbia" vs "DC"
+    census_name: str  # "Texas" -- but watch "District of Columbia" vs "DC"
     common: str       # "Texas"
 ```
 
@@ -292,13 +292,13 @@ Point-in-polygon can also lie:
 Mitigations:
 - After point-in-polygon, check for unmatched points and log rate
 - For edge cases, use a snap-to-nearest-polygon fallback with a distance threshold (e.g., snap if within 100m, otherwise flag)
-- If accuracy matters, use the same provider's boundaries AND the same provider's point geocoder — don't mix TIGER with Google geocoder
+- If accuracy matters, use the same provider's boundaries AND the same provider's point geocoder -- don't mix TIGER with Google geocoder
 
 ### When to raise vs. silently accept
 
-At the **ingestion boundary** — when data enters your system — raise on unknown identifiers. It's better to halt an ingest than to silently miscategorize donors for a month.
+At the **ingestion boundary** -- when data enters your system -- raise on unknown identifiers. It's better to halt an ingest than to silently miscategorize donors for a month.
 
-At the **analysis boundary** — when data is used for reporting — raise if data loss exceeds a threshold (e.g., > 1% unmatched after join). Below that, log and proceed, but include the rate in the output.
+At the **analysis boundary** -- when data is used for reporting -- raise if data loss exceeds a threshold (e.g., > 1% unmatched after join). Below that, log and proceed, but include the rate in the output.
 
 ### Checklist before shipping spatial / identifier code
 
@@ -310,11 +310,11 @@ At the **analysis boundary** — when data is used for reporting — raise if da
 - [ ] Tests include a "known-dirty" fixture (empty strings, ISO-3166 variants, Excel-stripped FIPS, renamed precincts)
 
 
-# Addendum to analysis/spatial/reference.md — ESDA / Geographic Data Science
+# Addendum to analysis/spatial/reference.md -- ESDA / Geographic Data Science
 
 Append this section after the "Dirty Tabular Data" section.
 
-Draws from **Rey, Arribas-Bel, Wolf — *Geographic Data Science with Python*** (geographicdata.science/book/intro.html) — the canonical open-access reference.
+Draws from **Rey, Arribas-Bel, Wolf -- *Geographic Data Science with Python*** (geographicdata.science/book/intro.html) -- the canonical open-access reference.
 
 ---
 
@@ -326,16 +326,16 @@ Most spatial work is descriptive: "what's going on spatially with this variable?
 
 | Library | Use |
 |---|---|
-| `libpysal` | Spatial weights (W) construction — Queen/Rook contiguity, KNN, distance-band |
-| `esda` | Global and local spatial statistics — Moran's I, LISA, Geary's C |
-| `spreg` | Spatial regression — lag, error, SARAR, GWR hooks |
+| `libpysal` | Spatial weights (W) construction -- Queen/Rook contiguity, KNN, distance-band |
+| `esda` | Global and local spatial statistics -- Moran's I, LISA, Geary's C |
+| `spreg` | Spatial regression -- lag, error, SARAR, GWR hooks |
 | `segregation` | Residential / spatial segregation indices |
 | `mgwr` | Geographically Weighted Regression |
 | `splot` | ESDA-specific visualizations (choropleth, LISA cluster maps) |
 
-### Spatial weights — the foundation
+### Spatial weights -- the foundation
 
-Every spatial statistic requires a weights matrix `W` — who is a neighbor of whom.
+Every spatial statistic requires a weights matrix `W` -- who is a neighbor of whom.
 
 ```python
 from libpysal import weights
@@ -356,10 +356,10 @@ w = weights.DistanceBand.from_dataframe(gdf, threshold=5000, binary=False)
 
 Rules:
 - Check for islands: `w.islands` returns GEOIDs with zero neighbors. These break Moran's I.
-- Row-standardize (`w.transform = "r"`) for most analyses — makes weights a weighted average.
-- Cache `W` objects — they're expensive to build for large geographies.
+- Row-standardize (`w.transform = "r"`) for most analyses -- makes weights a weighted average.
+- Cache `W` objects -- they're expensive to build for large geographies.
 
-### Moran's I — global spatial autocorrelation
+### Moran's I -- global spatial autocorrelation
 
 ```python
 from esda.moran import Moran
@@ -371,11 +371,11 @@ print(f"Moran's I: {moran.I:.3f} (p={moran.p_sim:.3f})")
 Interpretation:
 - `I` ≈ 1: strong positive spatial autocorrelation (similar values cluster)
 - `I` ≈ 0: random spatial pattern
-- `I` ≈ -1: strong negative autocorrelation (dissimilar values adjacent — rare in real data)
+- `I` ≈ -1: strong negative autocorrelation (dissimilar values adjacent -- rare in real data)
 
 Always report `p_sim` (permutation-based p-value) not the analytic p-value. Spatial data violates the IID assumption.
 
-### LISA — local indicators
+### LISA -- local indicators
 
 ```python
 from esda.moran import Moran_Local
@@ -394,7 +394,7 @@ gdf["lisa_cat"] = gdf.apply(lisa_category, axis=1)
 
 LISA clusters are where real stories live: "this block group is a Low-Low island in a High-High region" is much more informative than a global Moran's I.
 
-### splot — consistent LISA maps
+### splot -- consistent LISA maps
 
 ```python
 from splot.esda import lisa_cluster
@@ -402,7 +402,7 @@ from splot.esda import lisa_cluster
 fig, ax = lisa_cluster(lisa, gdf, p=0.05)
 ```
 
-Use `splot` rather than rolling your own choropleth — the color scheme is the GDS book's standard and readers can interpret across analyses.
+Use `splot` rather than rolling your own choropleth -- the color scheme is the GDS book's standard and readers can interpret across analyses.
 
 ## Spatial regression (from chapter 11 of the book)
 
@@ -411,7 +411,7 @@ Use `splot` rather than rolling your own choropleth — the color scheme is the 
 | **OLS** | Baseline; check Moran's I of residuals. If significant, OLS is underspecified. |
 | **Spatial lag** | The dependent variable spills over space (crime contagion, house prices) |
 | **Spatial error** | Unobserved factors are spatially correlated (missing neighborhood fixed effects) |
-| **SARAR** | Both lag and error — use when diagnostics say both |
+| **SARAR** | Both lag and error -- use when diagnostics say both |
 | **GWR (mgwr)** | Coefficients themselves vary over space |
 
 ### Diagnostic workflow
@@ -431,9 +431,9 @@ err = ML_Error(y, X, w=w)
 
 ### Never skip
 
-- Plot residuals spatially — clustering is a diagnostic failure
+- Plot residuals spatially -- clustering is a diagnostic failure
 - Report Moran's I of residuals alongside any coefficient
-- If the dependent variable is count-data, don't use OLS — use a Poisson variant
+- If the dependent variable is count-data, don't use OLS -- use a Poisson variant
 
 ## Geocoding (GDS chapter 4)
 
@@ -454,19 +454,19 @@ from census_geocoder import geocoder  # hypothetical; check current lib
 result = geocoder(addresses, returntype="locations", benchmark="Public_AR_Current")
 ```
 
-## Reproducibility — the book's discipline
+## Reproducibility -- the book's discipline
 
 1. **Notebooks for exploration, modules for production.** Copy-paste from a notebook into `.py` once the analysis is stable.
 2. **Pin data versions.** Store the dataset URL + a checksum alongside the notebook. Census URLs change.
 3. **Every figure exports as both PNG (for docs) and PDF (for print).**
-4. **Use `contextily` for basemaps** — it handles Web Mercator reprojection automatically and attributes the tile provider. Don't hand-roll basemap loading.
-5. **`pyproj` has a `Transformer.from_crs` caching pattern** — use it for repeated reprojections in loops.
+4. **Use `contextily` for basemaps** -- it handles Web Mercator reprojection automatically and attributes the tile provider. Don't hand-roll basemap loading.
+5. **`pyproj` has a `Transformer.from_crs` caching pattern** -- use it for repeated reprojections in loops.
 
 ## Canonical references
 
-- **Rey, Arribas-Bel, Wolf — *Geographic Data Science with Python*** (geographicdata.science/book)
-- **PySAL documentation** — pysal.org
-- **Luc Anselin's work (GeoDa author)** — foundational spatial econometrics literature
-- **Fotheringham, Brunsdon, Charlton — *Geographically Weighted Regression*** — GWR canon
+- **Rey, Arribas-Bel, Wolf -- *Geographic Data Science with Python*** (geographicdata.science/book)
+- **PySAL documentation** -- pysal.org
+- **Luc Anselin's work (GeoDa author)** -- foundational spatial econometrics literature
+- **Fotheringham, Brunsdon, Charlton -- *Geographically Weighted Regression*** -- GWR canon
 
 Every ESDA operation above has a worked example in one of the book chapters. Link to the relevant chapter in any analysis that uses the method.

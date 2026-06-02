@@ -1,6 +1,6 @@
 # Word-of-Mouth: The Dominant Channel Nobody Optimizes
 
-Word-of-mouth is the most powerful form of marketing. It drives 20-50% of all purchasing decisions and is up to 10 times more effective than traditional advertising. Yet most companies invest 90%+ of their marketing budget in channels other than WOM. Understanding how word-of-mouth actually works — especially the dominance of offline WOM — is essential to engineering contagious products and ideas.
+Word-of-mouth is the most powerful form of marketing. It drives 20-50% of all purchasing decisions and is up to 10 times more effective than traditional advertising. Yet most companies invest 90%+ of their marketing budget in channels other than WOM. Understanding how word-of-mouth actually works -- especially the dominance of offline WOM -- is essential to engineering contagious products and ideas.
 
 ## The Offline Dominance: 93% vs. 7%
 
@@ -18,7 +18,7 @@ This finding runs counter to the prevailing obsession with social media, viral v
 | **Trust** | Face-to-face recommendations carry highest trust | Online reviews and posts carry moderate trust |
 | **Reach per instance** | Smaller (1-5 people per conversation) | Potentially larger (hundreds of followers) |
 | **Depth** | Rich, contextual, back-and-forth dialogue | Often shallow (likes, retweets, brief comments) |
-| **Retention** | Higher — personal recommendations are remembered | Lower — feeds move fast, posts are forgotten |
+| **Retention** | Higher -- personal recommendations are remembered | Lower -- feeds move fast, posts are forgotten |
 | **Measurability** | Very difficult to track | Relatively easy to track |
 
 ### The Measurement Trap
@@ -50,11 +50,11 @@ Beyond the 93% volume advantage, offline WOM has qualitative advantages that mak
 
 When a friend tells you face-to-face that they love a product, several trust mechanisms activate:
 
-1. **Social accountability** — they're putting their reputation on the line in person
-2. **Non-verbal cues** — you can see their genuine enthusiasm (or lack thereof)
-3. **Contextual relevance** — they're telling you because they know your specific situation
-4. **Dialogue** — you can ask questions, get clarification, understand nuance
-5. **Relationship depth** — recommendations from close ties carry more weight
+1. **Social accountability** -- they're putting their reputation on the line in person
+2. **Non-verbal cues** -- you can see their genuine enthusiasm (or lack thereof)
+3. **Contextual relevance** -- they're telling you because they know your specific situation
+4. **Dialogue** -- you can ask questions, get clarification, understand nuance
+5. **Relationship depth** -- recommendations from close ties carry more weight
 
 Online recommendations lack most of these. A tweet saying "Love this product!" carries a fraction of the persuasive weight of a friend looking you in the eye and saying the same thing.
 
@@ -80,18 +80,18 @@ Action (listener investigates, tries, or purchases)
 
 ## Conversation Triggers: Designing for Talk
 
-A conversation trigger is something about your product, brand, or experience that naturally comes up in everyday conversation. It's different from an environmental trigger (which reminds someone of the product) — it's the thing that gives someone a reason to bring it up.
+A conversation trigger is something about your product, brand, or experience that naturally comes up in everyday conversation. It's different from an environmental trigger (which reminds someone of the product) -- it's the thing that gives someone a reason to bring it up.
 
 ### Types of Conversation Triggers
 
 | Trigger Type | Mechanism | Example | Conversation Starter |
 |-------------|-----------|---------|---------------------|
 | **Remarkable experience** | Something unusual happened during product use | $100 cheesesteak at Barclay Prime | "You won't believe what I had for lunch" |
-| **Useful discovery** | Found something genuinely helpful | A coupon app that saved $50 on groceries | "You should try this app — I saved $50" |
-| **Identity expression** | Product says something about who they are | Driving a Tesla | "I got the new Tesla — let me tell you about it" |
+| **Useful discovery** | Found something genuinely helpful | A coupon app that saved $50 on groceries | "You should try this app -- I saved $50" |
+| **Identity expression** | Product says something about who they are | Driving a Tesla | "I got the new Tesla -- let me tell you about it" |
 | **Problem-solution** | Product solved a specific pain point | Password manager after a security scare | "After I got hacked, I found this tool..." |
 | **Social experience** | Shared experience with others | Trying a new restaurant together | "We went to this amazing place..." |
-| **Status change** | Achieved something through the product | Completed a challenging course | "I just finished [program] — it was intense" |
+| **Status change** | Achieved something through the product | Completed a challenging course | "I just finished [program] -- it was intense" |
 
 ### Designing Conversation Triggers
 
@@ -112,7 +112,7 @@ A conversation trigger is something about your product, brand, or experience tha
 - "Did you know [surprising fact about the product]?"
 - "I tried [product] and [specific impressive result]"
 
-**Step 4: Provide proof.** Give users something to show during the conversation — a before/after photo, a result screenshot, a physical artifact — that makes the recommendation tangible.
+**Step 4: Provide proof.** Give users something to show during the conversation -- a before/after photo, a result screenshot, a physical artifact -- that makes the recommendation tangible.
 
 ## Word-of-Mouth Measurement
 
@@ -133,7 +133,7 @@ Measuring WOM is challenging, especially offline. Here are approaches for both c
 
 | Method | How It Works | Limitation |
 |--------|-------------|-----------|
-| **"How did you hear about us?"** | Ask new customers directly | Recall bias — people forget or misattribute |
+| **"How did you hear about us?"** | Ask new customers directly | Recall bias -- people forget or misattribute |
 | **Conversation diaries** | Participants log brand conversations for a week | Effort-intensive, sample bias |
 | **Referral codes** | Track who referred whom | Only captures deliberate referrals, misses casual mentions |
 | **Qualitative interviews** | In-depth conversations with customers about sharing behavior | Small sample, not scalable |

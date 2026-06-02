@@ -11,16 +11,16 @@ Apply the 90 items from Brett Slatkin's "Effective Python" (2nd Edition) to revi
 
 This skill includes categorized reference files with all 90 items:
 
-- `ref-01-pythonic-thinking.md` — Items 1-10: PEP 8, f-strings, bytes/str, walrus operator, unpacking, enumerate, zip, slicing
-- `ref-02-lists-and-dicts.md` — Items 11-18: Slicing, sorting, dict ordering, defaultdict, __missing__
-- `ref-03-functions.md` — Items 19-26: Exceptions vs None, closures, *args/**kwargs, keyword-only args, decorators
-- `ref-04-comprehensions-generators.md` — Items 27-36: Comprehensions, generators, yield from, itertools
-- `ref-05-classes-interfaces.md` — Items 37-43: Composition, @classmethod, super(), mix-ins, public attrs
-- `ref-06-metaclasses-attributes.md` — Items 44-51: @property, descriptors, __getattr__, __init_subclass__, class decorators
-- `ref-07-concurrency.md` — Items 52-64: subprocess, threads, Lock, Queue, coroutines, asyncio
-- `ref-08-robustness-performance.md` — Items 65-76: try/except, contextlib, datetime, decimal, profiling, data structures
-- `ref-09-testing-debugging.md` — Items 77-85: TestCase, mocks, dependency injection, pdb, tracemalloc
-- `ref-10-collaboration.md` — Items 86-90: Docstrings, packages, root exceptions, virtual environments
+- `ref-01-pythonic-thinking.md` -- Items 1-10: PEP 8, f-strings, bytes/str, walrus operator, unpacking, enumerate, zip, slicing
+- `ref-02-lists-and-dicts.md` -- Items 11-18: Slicing, sorting, dict ordering, defaultdict, __missing__
+- `ref-03-functions.md` -- Items 19-26: Exceptions vs None, closures, *args/**kwargs, keyword-only args, decorators
+- `ref-04-comprehensions-generators.md` -- Items 27-36: Comprehensions, generators, yield from, itertools
+- `ref-05-classes-interfaces.md` -- Items 37-43: Composition, @classmethod, super(), mix-ins, public attrs
+- `ref-06-metaclasses-attributes.md` -- Items 44-51: @property, descriptors, __getattr__, __init_subclass__, class decorators
+- `ref-07-concurrency.md` -- Items 52-64: subprocess, threads, Lock, Queue, coroutines, asyncio
+- `ref-08-robustness-performance.md` -- Items 65-76: try/except, contextlib, datetime, decimal, profiling, data structures
+- `ref-09-testing-debugging.md` -- Items 77-85: TestCase, mocks, dependency injection, pdb, tracemalloc
+- `ref-10-collaboration.md` -- Items 86-90: Docstrings, packages, root exceptions, virtual environments
 
 ## How to Use This Skill
 
@@ -48,12 +48,12 @@ Determine which chapters apply to the code under review and read those reference
 ### Step 3: Praise Good Patterns (when present)
 When the code uses these patterns correctly, explicitly praise them:
 
-- **`@contextmanager`** for resource management: "Good use of `@contextmanager` (Item 66) — avoids boilerplate try/finally and makes the cleanup intent clear."
-- **Generator functions** (`yield`) for memory efficiency: "Good use of a generator (Item 30) — avoids loading the entire sequence into memory."
-- **Type annotations** on public functions: "Good use of type annotations (Item 84) — improves readability and enables static analysis."
-- **Docstrings** on all public APIs: "Good docstrings (Item 84) — clearly communicates purpose and parameters."
-- **`@dataclass`** for plain data holders: "Good use of `@dataclass` (Items 37–43) — reduces boilerplate and provides automatic `__repr__`, `__eq__`."
-- **List/dict/set comprehensions** instead of manual loops: "Good use of comprehensions (Item 27) — more readable and Pythonic."
+- **`@contextmanager`** for resource management: "Good use of `@contextmanager` (Item 66) -- avoids boilerplate try/finally and makes the cleanup intent clear."
+- **Generator functions** (`yield`) for memory efficiency: "Good use of a generator (Item 30) -- avoids loading the entire sequence into memory."
+- **Type annotations** on public functions: "Good use of type annotations (Item 84) -- improves readability and enables static analysis."
+- **Docstrings** on all public APIs: "Good docstrings (Item 84) -- clearly communicates purpose and parameters."
+- **`@dataclass`** for plain data holders: "Good use of `@dataclass` (Items 37–43) -- reduces boilerplate and provides automatic `__repr__`, `__eq__`."
+- **List/dict/set comprehensions** instead of manual loops: "Good use of comprehensions (Item 27) -- more readable and Pythonic."
 - **`enumerate`** instead of `range(len(...))`: "Good use of `enumerate` (Item 7)."
 
 ### Step 4: Analyze the Code for Issues
@@ -89,7 +89,7 @@ When the user asks you to **write** new Python code, follow these principles:
 
 ### Always Apply These Core Practices
 
-1. **Follow PEP 8** — Use consistent naming (snake_case for functions/variables, PascalCase for classes). Use `pylint` and `black`-compatible style.
+1. **Follow PEP 8** -- Use consistent naming (snake_case for functions/variables, PascalCase for classes). Use `pylint` and `black`-compatible style.
 
 2. **Use f-strings** for string formatting (Item 4). Never use % or .format() for simple cases.
 
@@ -109,7 +109,7 @@ When the user asks you to **write** new Python code, follow these principles:
 
 10. **Use functools.wraps** on all decorators (Item 26).
 
-11. **Prefer comprehensions** over map/filter (Item 27). Keep them simple — no more than two expressions (Item 28).
+11. **Prefer comprehensions** over map/filter (Item 27). Keep them simple -- no more than two expressions (Item 28).
 
 12. **Use generators** for large sequences instead of returning lists (Item 30).
 
@@ -228,7 +228,7 @@ When time is limited, focus on these highest-impact items first:
 
 When the submitted code is already idiomatic and well-structured, the review must:
 
-1. **Lead with affirmative praise** — say explicitly that the code is idiomatic / well-written.
+1. **Lead with affirmative praise** -- say explicitly that the code is idiomatic / well-written.
 2. **Call out each strong pattern by name and item**, e.g.:
    - `@contextmanager` usage → praise as Item 66
    - Generator functions (`yield`) → praise as Item 30
@@ -237,8 +237,8 @@ When the submitted code is already idiomatic and well-structured, the review mus
    - `@dataclass` for data holders → praise as Items 37–43
    - List/dict/set comprehensions → praise as Item 27
 3. **Do not invent problems.** If something is genuinely fine, do not flag it as an issue.
-4. **Clearly label any suggestion as optional** — use language like "minor suggestion", "stylistic alternative", or "optional improvement", never "issue" or "problem".
-5. **Keep the tone positive** — the goal is to affirm and explain why the patterns are good, not to find fault.
+4. **Clearly label any suggestion as optional** -- use language like "minor suggestion", "stylistic alternative", or "optional improvement", never "issue" or "problem".
+5. **Keep the tone positive** -- the goal is to affirm and explain why the patterns are good, not to find fault.
 
 ---
 

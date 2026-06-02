@@ -159,28 +159,28 @@ See: [references/krug-principles.md](references/krug-principles.md) for the full
 ## Nielsen's 10 Usability Heuristics
 
 ### 1. Visibility of System Status
-Keep users informed about what's happening through timely feedback. Every action needs acknowledgment — progress bars for uploads, confirmations for submissions, skeleton screens for loading. Silent failures destroy trust. Copy pattern: "Saving..." → "Saved" (immediate state transitions).
+Keep users informed about what's happening through timely feedback. Every action needs acknowledgment -- progress bars for uploads, confirmations for submissions, skeleton screens for loading. Silent failures destroy trust. Copy pattern: "Saving..." → "Saved" (immediate state transitions).
 
 ### 2. Match Between System and Real World
 Speak users' language, not system language. Use "Sign in" not "Authenticate", "Search" not "Query." Follow real-world metaphors (trash bin, shopping cart) and natural ordering (street → city → state → zip). One term per concept, everywhere.
 
 ### 3. User Control and Freedom
-Provide clear "emergency exits." Undo beats "Are you sure?" dialogs every time — users click through confirmations without reading. Every flow needs cancel/exit, back buttons must never break, and soft delete with undo beats permanent deletion.
+Provide clear "emergency exits." Undo beats "Are you sure?" dialogs every time -- users click through confirmations without reading. Every flow needs cancel/exit, back buttons must never break, and soft delete with undo beats permanent deletion.
 
 ### 4. Consistency and Standards
-Same words, styles, and behaviors should mean the same thing throughout. Internal consistency (your app) and external consistency (platform conventions: logo top-left, search top-right). Pick one term per concept — "Projects" everywhere, never mixing with "Workspaces."
+Same words, styles, and behaviors should mean the same thing throughout. Internal consistency (your app) and external consistency (platform conventions: logo top-left, search top-right). Pick one term per concept -- "Projects" everywhere, never mixing with "Workspaces."
 
 ### 5. Error Prevention
 Prevent problems before they occur. Constrained inputs (date pickers over text fields), autocomplete, sensible defaults, and "unsaved changes" warnings. Two error types need different prevention: slips (accidental wrong action) and mistakes (wrong intention).
 
 ### 6. Recognition Rather Than Recall
-Minimize memory load — show options, don't require memorization. Breadcrumbs, recent searches, pre-filled fields, dropdowns with decoded values (country names, not codes). Human working memory holds ~7 items; recognition is far easier than recall.
+Minimize memory load -- show options, don't require memorization. Breadcrumbs, recent searches, pre-filled fields, dropdowns with decoded values (country names, not codes). Human working memory holds ~7 items; recognition is far easier than recall.
 
 ### 7. Flexibility and Efficiency of Use
 Serve both novices and experts. Keyboard shortcuts, touch gestures, bulk actions, saved searches, and command palettes (Cmd+K) speed up power users. Progressive disclosure keeps it simple for beginners while experts access full power.
 
 ### 8. Aesthetic and Minimalist Design
-Every element must earn its place. Signal-to-noise ratio determines usability — when everything screams for attention, nothing stands out. Show what matters now, hide what doesn't. One primary CTA per page, not five competing ones.
+Every element must earn its place. Signal-to-noise ratio determines usability -- when everything screams for attention, nothing stands out. Show what matters now, hide what doesn't. One primary CTA per page, not five competing ones.
 
 ### 9. Help Users Recognize, Diagnose, and Recover from Errors
 Error messages need three parts: what happened, why, and how to fix it. Plain language always ("Connection failed" not "ECONNREFUSED"), specific ("Password must be 8+ characters" not "Invalid"), never blame the user, and preserve their input.

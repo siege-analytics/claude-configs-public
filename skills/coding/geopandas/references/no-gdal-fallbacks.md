@@ -11,27 +11,27 @@ caps = geo_capabilities()
 print(caps["tier"])  # "geo" | "geo-lite" | "geodjango" | "none"
 ```
 
-- **`"geo"`** — full stack (Shapely, pyproj, GeoPandas, Fiona, Rtree). Use everything.
-- **`"geo-lite"`** — Shapely + pyproj only. Most operations work; file I/O is constrained.
-- **`"geodjango"`** — `"geo"` + Django GIS (still needs GDAL).
-- **`"none"`** — none of the above. Fall back to pandas + math.
+- **`"geo"`** -- full stack (Shapely, pyproj, GeoPandas, Fiona, Rtree). Use everything.
+- **`"geo-lite"`** -- Shapely + pyproj only. Most operations work; file I/O is constrained.
+- **`"geodjango"`** -- `"geo"` + Django GIS (still needs GDAL).
+- **`"none"`** -- none of the above. Fall back to pandas + math.
 
-Branch your code on `caps["tier"]`. Don't import GeoPandas at module level if you support `geo-lite` callers — wrap with try/except or detect first.
+Branch your code on `caps["tier"]`. Don't import GeoPandas at module level if you support `geo-lite` callers -- wrap with try/except or detect first.
 
 ## Operations matrix
 
 | Operation | With GDAL | Without GDAL (geo-lite) |
 |---|---|---|
-| Read Shapefile | `gpd.read_file("x.shp")` | **Not possible** — convert before deploy |
+| Read Shapefile | `gpd.read_file("x.shp")` | **Not possible** -- convert before deploy |
 | Read GeoJSON | `gpd.read_file()` | Hand-parse JSON + `shapely.geometry.shape()` |
-| Read GeoPackage | `gpd.read_file()` | **Not possible** — convert before deploy |
+| Read GeoPackage | `gpd.read_file()` | **Not possible** -- convert before deploy |
 | Read GeoParquet | `gpd.read_parquet()` (uses pyarrow, not GDAL) | `gpd.read_parquet()` works without GDAL |
-| Read CSV+WKT | manual | manual — `pd.read_csv` + `shapely.wkt.loads` |
+| Read CSV+WKT | manual | manual -- `pd.read_csv` + `shapely.wkt.loads` |
 | Write GeoJSON | `gpd.to_file()` or manual | manual JSON dump + `geom.__geo_interface__` |
 | Write GeoParquet | `gpd.to_parquet()` | `gpd.to_parquet()` works without GDAL |
 | Reproject | `gdf.to_crs()` (uses pyproj) | `pyproj.Transformer` directly |
-| Spatial predicates | `geom.within(other)` etc. | Same — pure Shapely |
-| Buffer / simplify | `geom.buffer(d)` | Same — pure Shapely |
+| Spatial predicates | `geom.within(other)` etc. | Same -- pure Shapely |
+| Buffer / simplify | `geom.buffer(d)` | Same -- pure Shapely |
 | Spatial join | `gpd.sjoin` (uses Rtree) | `shapely.STRtree` + manual loop |
 | Areal interpolation | `tobler.area_interpolate` | Approximate via H3 (`siege_utilities.geo.h3_utils`) |
 
@@ -71,7 +71,7 @@ This is one of the most useful no-GDAL paths. The format itself is well-supporte
 
 ### Reproject without GDAL
 
-`pyproj` is pure Python and ships with PROJ binaries — no GDAL dependency:
+`pyproj` is pure Python and ships with PROJ binaries -- no GDAL dependency:
 
 ```python
 from pyproj import Transformer
@@ -125,7 +125,7 @@ merged = h3_spatial_join(source_cells, target_cells)
 
 H3 is approximate (boundaries have ~50m precision at resolution 8) but doesn't need GDAL or overlays.
 
-## What you can't do without GDAL — at all
+## What you can't do without GDAL -- at all
 
 - Read or write Shapefile, GeoPackage, FlatGeobuf, KML, GML, KML, FileGDB, MapInfo TAB.
 - True polygon overlay (`gpd.overlay`) requires GEOS via GeoPandas; the `geo-lite` tier has Shapely+pyproj only and is missing some overlay paths.
@@ -134,8 +134,8 @@ H3 is approximate (boundaries have ~50m precision at resolution 8) but doesn't n
 If you find yourself blocked on these, the choices are:
 
 1. **Pre-convert** files to GeoParquet on a machine that has GDAL; ship Parquet to the GDAL-less environment.
-2. **DuckDB-spatial** ([skill:duckdb-spatial]) — bundles its own GEOS; reads/writes Parquet without GDAL; provides ST_* operations at SQL level. The strongest single tool for GDAL-less spatial work.
-3. **PostGIS** — if you can stand up a tiny Postgres, push the spatial work there.
+2. **DuckDB-spatial** ([skill:duckdb-spatial]) -- bundles its own GEOS; reads/writes Parquet without GDAL; provides ST_* operations at SQL level. The strongest single tool for GDAL-less spatial work.
+3. **PostGIS** -- if you can stand up a tiny Postgres, push the spatial work there.
 
 ## SU-blessed no-GDAL paths
 
@@ -150,8 +150,8 @@ If you find yourself blocked on these, the choices are:
 ## Pending SU upstream PRs that close gaps here
 
 - **SU-1:** `read_geoparquet()` / `write_geoparquet()` using DuckDB-WKB without any GeoPandas dep. Closes the "I have only pandas + duckdb" path.
-- **SU-6:** `pyogrio` fallback when `fiona` is missing — useful when you have *some* GDAL-adjacent stuff but not the full Fiona stack.
-- **SU-9:** DuckDB spatial-query helpers — wraps `INSTALL spatial; LOAD spatial; ST_Read(...)` for parquet/csv → DataFrame.
+- **SU-6:** `pyogrio` fallback when `fiona` is missing -- useful when you have *some* GDAL-adjacent stuff but not the full Fiona stack.
+- **SU-9:** DuckDB spatial-query helpers -- wraps `INSTALL spatial; LOAD spatial; ST_Read(...)` for parquet/csv → DataFrame.
 
 Until these land, do the equivalent inline.
 
@@ -166,7 +166,7 @@ Until these land, do the equivalent inline.
      - Replace gpd.overlay with PostGIS or DuckDB if needed
 4. If caps["tier"] == "none":
      - You need pandas + math + (optionally) DuckDB-spatial
-     - GeoPandas isn't even available — use the pyarrow + shapely.wkb path
+     - GeoPandas isn't even available -- use the pyarrow + shapely.wkb path
 5. If you find an operation that's blocked:
      - Stand up DuckDB-spatial in-process
      - Or push to PostGIS / Sedona

@@ -1,9 +1,9 @@
 ---
 name: think-stats
-description: 'Computational, Python-first applied statistics for working analysts — descriptive stats, distributions, hypothesis testing, regression, time series, survival analysis. Use when the user mentions "exploratory data analysis", "EDA", "distributions", "PMF / CDF / PDF", "hypothesis test", "permutation test", "Bayes simple", "regression diagnostics", "time series", "survival analysis", "Allen Downey", or "Think Stats". Also trigger when looking for the right statistical test for a question, doing exploratory analysis on a new dataset, validating assumptions of a regression, or running simulation-based inference. Applied / hands-on / Python-Jupyter; pairs with causal-inference-what-if (when the question becomes causal) and statistical-rethinking-course (Bayesian formalism). Lowest barrier-to-entry entry on the statistical-inference shelf.'
+description: 'Computational, Python-first applied statistics for working analysts -- descriptive stats, distributions, hypothesis testing, regression, time series, survival analysis. Use when the user mentions "exploratory data analysis", "EDA", "distributions", "PMF / CDF / PDF", "hypothesis test", "permutation test", "Bayes simple", "regression diagnostics", "time series", "survival analysis", "Allen Downey", or "Think Stats". Also trigger when looking for the right statistical test for a question, doing exploratory analysis on a new dataset, validating assumptions of a regression, or running simulation-based inference. Applied / hands-on / Python-Jupyter; pairs with causal-inference-what-if (when the question becomes causal) and statistical-rethinking-course (Bayesian formalism). Lowest barrier-to-entry entry on the statistical-inference shelf.'
 license: 'Creative Commons (non-commercial); ORM print edition paid'
 metadata:
-  source: 'allendowney.github.io/ThinkStats — Jupyter notebooks for Think Stats 3e (Allen B. Downey, Olin College). OReilly publishes paid print edition.'
+  source: 'allendowney.github.io/ThinkStats -- Jupyter notebooks for Think Stats 3e (Allen B. Downey, Olin College). OReilly publishes paid print edition.'
   coverage: 'Full book (14 chapters) freely accessible as runnable Jupyter notebooks. Verified 2026-05-17 via WebFetch.'
 ---
 
@@ -86,26 +86,26 @@ These two tools subsume most of an introductory statistics course. When parametr
 
 ## When this skill does NOT apply
 
-- **Causal inference** — Think Stats is descriptive / predictive. For causal questions see causal-inference-what-if (theory) or causal-inference-mixtape (applied designs).
-- **Bayesian formalism** — Think Stats touches Bayes lightly (chapter 8); for full Bayesian framing see statistical-rethinking-course or Downey's own *Think Bayes* (different book, same author).
-- **Machine learning** — the book is intentionally statistics-focused, not ML-focused. Regression coverage is the bridge but the book doesn't go into trees / boosting / neural nets.
-- **Spatial statistics** — see spatial-data-science (geospatial shelf).
+- **Causal inference** -- Think Stats is descriptive / predictive. For causal questions see causal-inference-what-if (theory) or causal-inference-mixtape (applied designs).
+- **Bayesian formalism** -- Think Stats touches Bayes lightly (chapter 8); for full Bayesian framing see statistical-rethinking-course or Downey's own *Think Bayes* (different book, same author).
+- **Machine learning** -- the book is intentionally statistics-focused, not ML-focused. Regression coverage is the bridge but the book doesn't go into trees / boosting / neural nets.
+- **Spatial statistics** -- see spatial-data-science (geospatial shelf).
 
 ## Companions
 
-- `causal-inference-what-if` — when the question becomes causal.
-- `causal-inference-mixtape` — for quasi-experimental designs.
-- `statistical-rethinking-course` — for full Bayesian framing.
-- `engineering-principles/` — the analysis pipeline is code; standard craft applies.
+- `causal-inference-what-if` -- when the question becomes causal.
+- `causal-inference-mixtape` -- for quasi-experimental designs.
+- `statistical-rethinking-course` -- for full Bayesian framing.
+- `engineering-principles/` -- the analysis pipeline is code; standard craft applies.
 
 ## Source + license
 
-- **Source:** allendowney.github.io/ThinkStats — *Think Stats: Exploratory Data Analysis in Python* (Allen B. Downey, Olin College of Engineering).
+- **Source:** allendowney.github.io/ThinkStats -- *Think Stats: Exploratory Data Analysis in Python* (Allen B. Downey, Olin College of Engineering).
 - **License:** Creative Commons (non-commercial). O'Reilly publishes the paid print edition of the 3rd edition.
 - **Format:** Jupyter notebooks. Each chapter is an executable notebook with text + code + exercises. Runnable on Google Colab without setup.
 - **Verified:** WebFetch 2026-05-17 confirmed the free Jupyter-notebook edition at allendowney.github.io/ThinkStats with 14 chapters spanning EDA through survival analysis.
 
 ## See also
 
-- *Think Bayes* (same author, free at greenteapress.com) — Bayesian counterpart to Think Stats; not absorbed in this shelf because statistical-rethinking-course covers Bayesian more completely.
-- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` — context on Think Stats as the applied-statistical-rigor entry. Operator wanted "all three" statistical flavors; this is the practical / EDA / simulation-based flavor.
+- *Think Bayes* (same author, free at greenteapress.com) -- Bayesian counterpart to Think Stats; not absorbed in this shelf because statistical-rethinking-course covers Bayesian more completely.
+- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` -- context on Think Stats as the applied-statistical-rigor entry. Operator wanted "all three" statistical flavors; this is the practical / EDA / simulation-based flavor.

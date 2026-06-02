@@ -36,7 +36,7 @@ def with_retry(max_attempts: int = 3, backoff_seconds: float = 2.0):
                     if attempt == max_attempts:
                         raise
                     wait = backoff_seconds ** attempt
-                    logger.warning("Attempt %d/%d failed: %s — retrying in %.1fs",
+                    logger.warning("Attempt %d/%d failed: %s -- retrying in %.1fs",
                                    attempt, max_attempts, exc, wait)
                     time.sleep(wait)
         return wrapper
@@ -89,9 +89,9 @@ def run_pipeline(api_url: str, warehouse_dsn: str) -> None:
 ```
 
 Key improvements:
-- Extract, transform, and load are separate functions with single responsibilities — each is independently testable and replaceable (Ch 13: Best Practices — separation of concerns)
-- `ON CONFLICT (sale_id) DO UPDATE` makes the load idempotent — re-running the pipeline never creates duplicate rows (Ch 13: Idempotency)
-- `@with_retry` decorator handles transient API and database failures with exponential backoff (Ch 6: API Ingestion — retry logic)
+- Extract, transform, and load are separate functions with single responsibilities -- each is independently testable and replaceable (Ch 13: Best Practices -- separation of concerns)
+- `ON CONFLICT (sale_id) DO UPDATE` makes the load idempotent -- re-running the pipeline never creates duplicate rows (Ch 13: Idempotency)
+- `@with_retry` decorator handles transient API and database failures with exponential backoff (Ch 6: API Ingestion -- retry logic)
 - `SaleRecord` dataclass replaces a raw dict, providing type safety and named field access in the transform step
 - `psycopg2.connect` used as a context manager ensures the connection and transaction are always closed and committed correctly (Ch 4: Database Ingestion)
-- Structured logging with `logger.info/warning` replaces bare `print` — output is filterable and includes context (Ch 12: Monitoring)
+- Structured logging with `logger.info/warning` replaces bare `print` -- output is filterable and includes context (Ch 12: Monitoring)

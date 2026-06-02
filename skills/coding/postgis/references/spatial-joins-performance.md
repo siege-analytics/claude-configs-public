@@ -1,4 +1,4 @@
-# Spatial Joins — Performance
+# Spatial Joins -- Performance
 
 The expensive operations and how to make them tractable.
 
@@ -54,7 +54,7 @@ INNER JOIN districts_subdivided AS b
 
 Paul Ramsey has documented 10-100× speedups on real Census-tract / congressional-district data. This is the highest-ROI optimization in PostGIS.
 
-## KNN — nearest neighbor
+## KNN -- nearest neighbor
 
 For "nearest 5 features to this point," use the `<->` operator:
 
@@ -65,7 +65,7 @@ ORDER BY geom <-> ST_SetSRID(ST_Point(-98, 30), 4326)
 LIMIT 5;
 ```
 
-The repetition of the operator in `SELECT` and `ORDER BY` is necessary — the planner uses the `ORDER BY` form to drive the index. Aliasing breaks it; keep the literal expressions identical.
+The repetition of the operator in `SELECT` and `ORDER BY` is necessary -- the planner uses the `ORDER BY` form to drive the index. Aliasing breaks it; keep the literal expressions identical.
 
 For nearest neighbors **per row** (find the nearest place for each donor), use a `LATERAL` join:
 
@@ -87,7 +87,7 @@ LATERAL re-executes the inner query per outer row but with the spatial index ava
 `ST_DWithin` uses the index by expanding the query geometry's bounding box by the distance:
 
 ```sql
--- All places within 5km of a point — index-aware
+-- All places within 5km of a point -- index-aware
 SELECT name FROM places
 WHERE ST_DWithin(
     geom::geography,
@@ -158,6 +158,6 @@ Refresh on a schedule. Subsequent queries are pure relational joins, no PostGIS 
 
 ## When PostGIS is the wrong tool
 
-If your spatial join is a single query against parquet files, no Postgres in the picture, consider DuckDB-spatial — see [skill:duckdb-spatial].
+If your spatial join is a single query against parquet files, no Postgres in the picture, consider DuckDB-spatial -- see [skill:duckdb-spatial].
 
-If your data is bigger than one Postgres node can hold or the join exceeds memory, move to Sedona on Spark — see [skill:sedona].
+If your data is bigger than one Postgres node can hold or the join exceeds memory, move to Sedona on Spark -- see [skill:sedona].

@@ -16,11 +16,11 @@ description: >
 
 Apply the practices from Craig Walls' "Spring Boot in Action" to review existing code and write new Spring Boot applications. This skill operates in two modes: **Review Mode** (analyze code for violations of Spring Boot idioms) and **Write Mode** (produce clean, idiomatic Spring Boot from scratch).
 
-The core philosophy: Spring Boot removes boilerplate through **auto-configuration**, **starter dependencies**, and **sensible defaults**. Fight the framework only when necessary — and when you do, prefer `application.properties` over code.
+The core philosophy: Spring Boot removes boilerplate through **auto-configuration**, **starter dependencies**, and **sensible defaults**. Fight the framework only when necessary -- and when you do, prefer `application.properties` over code.
 
 ## Reference Files
 
-- `practices-catalog.md` — Before/after examples for auto-configuration, starters, properties, profiles, security, testing, Actuator, and deployment
+- `practices-catalog.md` -- Before/after examples for auto-configuration, starters, properties, profiles, security, testing, Actuator, and deployment
 
 ## How to Use This Skill
 
@@ -64,7 +64,7 @@ Check these areas in order of severity:
 
 9. **General Idioms**:
    - Constructor injection over field injection (`@Autowired` on fields)
-   - `@RestController` = `@Controller` + `@ResponseBody` — use it for REST APIs
+   - `@RestController` = `@Controller` + `@ResponseBody` -- use it for REST APIs
    - Return `ResponseEntity<T>` from controllers when status codes matter
    - `Optional<T>` from repository methods, never `null`
 
@@ -75,17 +75,17 @@ Check these areas in order of severity:
 **Rule: Only flag what is actually wrong in the code shown. Do not raise issues about code or configuration files that are NOT present in the review.**
 - Missing test files are not an issue in a review of production code unless the prompt asks about test coverage.
 - Missing Flyway/Liquibase is not an issue unless `spring.jpa.hibernate.ddl-auto=create` is used in a production context.
-- `spring.jpa.hibernate.ddl-auto=validate` combined with H2 or any datasource is NOT a conflict — validate is a safe, correct choice.
+- `spring.jpa.hibernate.ddl-auto=validate` combined with H2 or any datasource is NOT a conflict -- validate is a safe, correct choice.
 - Missing `spring.application.name` is NOT an issue unless service discovery is involved.
 
 These patterns are **correct** and must NOT be flagged as issues:
-- `@SpringBootApplication` on the main class — correct (Ch 1)
-- Constructor injection without `@Autowired` — correct; Spring auto-wires single-constructor beans (Ch 2)
-- `ResponseEntity.created(URI.create("/api/resource/" + id)).body(saved)` — correct; relative URIs are standard practice here (Ch 2)
-- `repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))` — correct pattern (Ch 2); at most suggest adding a descriptive message string, do NOT recommend replacing it with a domain exception + `@RestControllerAdvice`
-- `SLF4J` logger via `LoggerFactory.getLogger(...)` — correct (Ch 3)
-- `${ENV_VAR:default}` syntax in `application.properties` — correct externalization (Ch 3)
-- `management.endpoints.web.exposure.include=health,info` — correct Actuator lockdown (Ch 7)
+- `@SpringBootApplication` on the main class -- correct (Ch 1)
+- Constructor injection without `@Autowired` -- correct; Spring auto-wires single-constructor beans (Ch 2)
+- `ResponseEntity.created(URI.create("/api/resource/" + id)).body(saved)` -- correct; relative URIs are standard practice here (Ch 2)
+- `repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))` -- correct pattern (Ch 2); at most suggest adding a descriptive message string, do NOT recommend replacing it with a domain exception + `@RestControllerAdvice`
+- `SLF4J` logger via `LoggerFactory.getLogger(...)` -- correct (Ch 3)
+- `${ENV_VAR:default}` syntax in `application.properties` -- correct externalization (Ch 3)
+- `management.endpoints.web.exposure.include=health,info` -- correct Actuator lockdown (Ch 7)
 
 **When the code is idiomatic, the only acceptable suggestions are:**
 1. Add a descriptive message to `ResponseStatusException` if one is missing (minor suggestion only)
@@ -111,7 +111,7 @@ When the user asks you to **write** new Spring Boot code, apply these core princ
 
 ### Project Bootstrap (Ch 1, 2)
 
-1. **Start with Spring Initializr** (Ch 1). Use `start.spring.io` or `spring init` CLI. Select starters upfront — don't add raw dependencies manually.
+1. **Start with Spring Initializr** (Ch 1). Use `start.spring.io` or `spring init` CLI. Select starters upfront -- don't add raw dependencies manually.
 
 2. **Use starters, not individual dependencies** (Ch 2). `spring-boot-starter-web` includes Tomcat, Spring MVC, Jackson, and logging at compatible versions. Never declare `spring-webmvc` + `jackson-databind` + `tomcat-embed-core` separately.
 
@@ -130,7 +130,7 @@ When the user asks you to **write** new Spring Boot code, apply these core princ
 
 4. **Externalize all environment-specific values** (Ch 3). Nothing deployment-specific belongs in code. Use `application.properties` / `application.yml` for defaults.
 
-5. **Use `@ConfigurationProperties` for grouped config** (Ch 3). Bind a prefix to a POJO — type-safe, IDE-friendly, testable:
+5. **Use `@ConfigurationProperties` for grouped config** (Ch 3). Bind a prefix to a POJO -- type-safe, IDE-friendly, testable:
    ```java
    @ConfigurationProperties(prefix = "app.mail")
    @Component
@@ -186,7 +186,7 @@ When the user asks you to **write** new Spring Boot code, apply these core princ
            .andExpect(jsonPath("$.title").value("Spring Boot in Action"));
     ```
 
-17. **Use `@MockBean` to isolate the unit under test** (Ch 4). Replaces the real bean in the Spring context with a Mockito mock — cleaner than manual wiring.
+17. **Use `@MockBean` to isolate the unit under test** (Ch 4). Replaces the real bean in the Spring context with a Mockito mock -- cleaner than manual wiring.
 
 18. **Test security explicitly** (Ch 4). Use `.with(user("admin").roles("ADMIN"))` or `@WithMockUser` to assert secured endpoints reject unauthenticated requests.
 
@@ -206,7 +206,7 @@ When the user asks you to **write** new Spring Boot code, apply these core princ
     }
     ```
 
-21. **Add custom metrics via `MeterRegistry`** (Ch 7). Counter, gauge, timer — gives Prometheus/Grafana visibility into business events.
+21. **Add custom metrics via `MeterRegistry`** (Ch 7). Counter, gauge, timer -- gives Prometheus/Grafana visibility into business events.
 
 22. **Restrict Actuator exposure in production** (Ch 7):
     ```properties
@@ -266,7 +266,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findByTitleContainingIgnoreCase(String title);
 }
 
-// Service (Ch 2) — constructor injection
+// Service (Ch 2) -- constructor injection
 @Service
 public class BookService {
     private final BookRepository repo;
@@ -316,22 +316,22 @@ public class BookController {
 ## Priority of Practices by Impact
 
 ### Critical (Security & Correctness)
-- Ch 3: Never hardcode credentials — use `${ENV_VAR}` in properties
-- Ch 3: Secure Actuator endpoints — `env`, `beans`, `shutdown` must require auth
-- Ch 4: Test secured endpoints explicitly — assert 401/403 on unauthenticated requests
-- Ch 8: Never use `ddl-auto=create` in production — use Flyway/Liquibase
+- Ch 3: Never hardcode credentials -- use `${ENV_VAR}` in properties
+- Ch 3: Secure Actuator endpoints -- `env`, `beans`, `shutdown` must require auth
+- Ch 4: Test secured endpoints explicitly -- assert 401/403 on unauthenticated requests
+- Ch 8: Never use `ddl-auto=create` in production -- use Flyway/Liquibase
 
 ### Important (Idiom & Maintainability)
 - Ch 2: Constructor injection over `@Autowired` field injection
 - Ch 2: `@RestController` over `@Controller` + `@ResponseBody` for APIs
 - Ch 2: `Optional` from repository, never `null`
 - Ch 3: `@ConfigurationProperties` over scattered `@Value` for grouped config
-- Ch 3: Profiles for environment differences — not `if` statements
-- Ch 4: `@WebMvcTest` for controller tests — not full `@SpringBootTest`
+- Ch 3: Profiles for environment differences -- not `if` statements
+- Ch 4: `@WebMvcTest` for controller tests -- not full `@SpringBootTest`
 - Ch 7: Custom `HealthIndicator` for each critical dependency
 
 ### Suggestions (Polish)
-- Ch 3: Custom error pages in `templates/error/` — no code needed
+- Ch 3: Custom error pages in `templates/error/` -- no code needed
 - Ch 7: Custom metrics via `MeterRegistry` for business events
 - Ch 8: Production profile disables dev tools, sets WARN log level
 - Ch 2: Use `spring-boot-devtools` in dev for live reload

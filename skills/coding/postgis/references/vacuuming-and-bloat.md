@@ -1,4 +1,4 @@
-# Vacuuming and Bloat — The Silent Ops Killer
+# Vacuuming and Bloat -- The Silent Ops Killer
 
 PostGIS GIST indexes bloat fast under update/delete workloads. Spatial query performance degrades quietly until queries that took milliseconds take seconds. This is the most common "PostGIS got slow and we don't know why" cause.
 
@@ -8,7 +8,7 @@ Postgres MVCC marks updated/deleted rows as dead but doesn't remove them until V
 
 1. They have higher per-tuple overhead (bounding-box metadata).
 2. Page splits during insert grow the tree unevenly.
-3. Dead tuples in GIST can't always be reclaimed in-place — `VACUUM` may need a `REINDEX` to actually recover space.
+3. Dead tuples in GIST can't always be reclaimed in-place -- `VACUUM` may need a `REINDEX` to actually recover space.
 
 Symptom: `pg_stat_user_indexes.idx_scan` is high, but query times keep growing. EXPLAIN shows correct index usage; just slow.
 
@@ -49,7 +49,7 @@ LIMIT 20;
 
 ## Routine maintenance
 
-### Autovacuum — usually undersized for spatial workloads
+### Autovacuum -- usually undersized for spatial workloads
 
 Default Postgres autovacuum settings target OLTP tables of ~100K rows. PostGIS workloads with multi-million-row spatial tables need:
 
@@ -61,7 +61,7 @@ ALTER TABLE features SET (
 );
 ```
 
-This makes autovacuum touch big tables more often with smaller batches — better than long, page-locking vacuums hitting once a week.
+This makes autovacuum touch big tables more often with smaller batches -- better than long, page-locking vacuums hitting once a week.
 
 ### Manual VACUUM
 
@@ -71,7 +71,7 @@ After bulk loads or large updates:
 VACUUM (ANALYZE, VERBOSE) features;
 ```
 
-`VERBOSE` shows what was reclaimed. `ANALYZE` updates planner stats — critical after bulk changes or the planner uses stale row counts.
+`VERBOSE` shows what was reclaimed. `ANALYZE` updates planner stats -- critical after bulk changes or the planner uses stale row counts.
 
 ### REINDEX for severe bloat
 
@@ -81,19 +81,19 @@ When VACUUM can't recover GIST space:
 REINDEX INDEX CONCURRENTLY features_geom_idx;
 ```
 
-`CONCURRENTLY` is essential in production — without it, the index is locked for writes for the duration of the rebuild (which on a 100M-row spatial table can be hours).
+`CONCURRENTLY` is essential in production -- without it, the index is locked for writes for the duration of the rebuild (which on a 100M-row spatial table can be hours).
 
 For very bloated indexes, `REINDEX` halves or quarters the index size, which translates directly to query speedups (less of the index in memory means more cache hits).
 
 ## When the table itself is bloated
 
-If `pct_dead` stays high even after VACUUM, the table has internal bloat — pages with mostly-dead tuples that VACUUM can't fully reclaim because of long-running transactions or `VACUUM FULL` aversion.
+If `pct_dead` stays high even after VACUUM, the table has internal bloat -- pages with mostly-dead tuples that VACUUM can't fully reclaim because of long-running transactions or `VACUUM FULL` aversion.
 
 Options, in order of disruption:
 
-1. **`pg_repack`** (extension) — rebuilds the table online with no exclusive lock. Best for production. Install once: `CREATE EXTENSION pg_repack;`
-2. **`CLUSTER`** — rewrites the table sorted by an index. Holds an exclusive lock. Acceptable in maintenance windows.
-3. **`VACUUM FULL`** — same outcome as CLUSTER without the sort. Exclusive lock. Last resort.
+1. **`pg_repack`** (extension) -- rebuilds the table online with no exclusive lock. Best for production. Install once: `CREATE EXTENSION pg_repack;`
+2. **`CLUSTER`** -- rewrites the table sorted by an index. Holds an exclusive lock. Acceptable in maintenance windows.
+3. **`VACUUM FULL`** -- same outcome as CLUSTER without the sort. Exclusive lock. Last resort.
 
 For partitioned tables, prefer dropping/recreating individual partitions over VACUUM FULL of the whole table.
 
@@ -124,4 +124,4 @@ When PostGIS queries are mysteriously slow:
 - [ ] After REINDEX, query time improved meaningfully
 - [ ] `work_mem` and `maintenance_work_mem` aren't the bottleneck
 
-If all five pass and queries are still slow, the problem isn't bloat — see [`query-optimization.md`](query-optimization.md).
+If all five pass and queries are still slow, the problem isn't bloat -- see [`query-optimization.md`](query-optimization.md).

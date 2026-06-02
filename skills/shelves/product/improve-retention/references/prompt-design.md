@@ -1,6 +1,6 @@
 # Prompt Design
 
-Prompts are the most overlooked element in behavior design. Without a prompt, behavior doesn't happen — no matter how motivated or able the user is.
+Prompts are the most overlooked element in behavior design. Without a prompt, behavior doesn't happen -- no matter how motivated or able the user is.
 
 ## Three Prompt Types
 
@@ -13,7 +13,7 @@ Prompts are the most overlooked element in behavior design. Without a prompt, be
 **Product implications:**
 - You cannot directly create Person Prompts
 - You create them indirectly by pairing external prompts with consistent contexts
-- Person Prompts are the goal — they mean the habit is formed
+- Person Prompts are the goal -- they mean the habit is formed
 - When users act without any external prompt, Person Prompts are driving behavior
 
 **Measurement:** Track organic sessions (sessions without a preceding notification or email). Rising organic sessions = Person Prompts forming.
@@ -24,7 +24,7 @@ Prompts are the most overlooked element in behavior design. Without a prompt, be
 
 **What they are:** Cues in the user's environment that trigger behavior. A badge on an app icon. A browser tab that's always open. A physical location associated with a task.
 
-**How they work:** The environment reminds the user to act. The cue doesn't come from the product's notification system — it comes from the user's existing context.
+**How they work:** The environment reminds the user to act. The cue doesn't come from the product's notification system -- it comes from the user's existing context.
 
 **Product implications:**
 - Design for environmental persistence (widgets, browser tabs, badges, status bar items)
@@ -48,7 +48,7 @@ Prompts are the most overlooked element in behavior design. Without a prompt, be
 
 **Product implications:**
 - You have full control over timing, content, and frequency
-- But Action Prompts are expensive — each one uses up attention capital
+- But Action Prompts are expensive -- each one uses up attention capital
 - Prompt fatigue is real: too many Action Prompts degrades all future prompts
 - Action Prompts should feel like helpful reminders, not interruptions
 
@@ -56,7 +56,7 @@ Prompts are the most overlooked element in behavior design. Without a prompt, be
 
 ## Prompt Timing
 
-The most important principle: **Prompts only work above the Action Line.** Sending a prompt to someone who lacks motivation or ability is not engagement — it's spam.
+The most important principle: **Prompts only work above the Action Line.** Sending a prompt to someone who lacks motivation or ability is not engagement -- it's spam.
 
 ### When to Prompt
 
@@ -65,7 +65,7 @@ The most important principle: **Prompts only work above the Action Line.** Sendi
 | **Event-based** | Prompt triggered by a real event | "Your report is ready" (report was generated) |
 | **Anchor-based** | Prompt tied to user's existing routine | "After your morning standup, check your dashboard" |
 | **State-based** | Prompt triggered by user's product state | "You have 3 unread comments" (content waiting) |
-| **Completion-based** | Prompt after user finishes a related action | "You just finished a meeting — want to log action items?" |
+| **Completion-based** | Prompt after user finishes a related action | "You just finished a meeting -- want to log action items?" |
 | **Threshold-based** | Prompt when a metric crosses a threshold | "Your project hit 80% completion" |
 
 ### When NOT to Prompt
@@ -86,19 +86,19 @@ The most important principle: **Prompts only work above the Action Line.** Sendi
 
 Every notification should pass four tests:
 
-**P — Personal:** Is this relevant to this specific user?
+**P -- Personal:** Is this relevant to this specific user?
 - Bad: "Check out our new features"
 - Good: "Your project 'Q2 Launch' has 3 new comments"
 
-**A — Actionable:** Can the user act on this right now?
+**A -- Actionable:** Can the user act on this right now?
 - Bad: "Your subscription renews in 30 days"
-- Good: "Sarah shared a file with you — tap to view"
+- Good: "Sarah shared a file with you -- tap to view"
 
-**S — Specific:** Does it tell the user exactly what happened?
+**S -- Specific:** Does it tell the user exactly what happened?
 - Bad: "You have new activity"
 - Good: "2 tasks were completed in your Sprint 4 board"
 
-**S — Short:** Can the user get the point in under 3 seconds?
+**S -- Short:** Can the user get the point in under 3 seconds?
 - Bad: "We wanted to let you know that there have been some updates to the project that you've been following, and several team members have added their contributions"
 - Good: "3 updates in Project Alpha"
 
@@ -141,7 +141,7 @@ A good anchor moment is:
 - **Reliable:** It happens consistently (daily, weekly)
 - **Recognizable:** The user clearly knows when it happens
 - **Relevant:** It's contextually related to the new behavior
-- **Already habitual:** It doesn't require motivation — it's automatic
+- **Already habitual:** It doesn't require motivation -- it's automatic
 
 ### Common Anchor Moments for Products
 

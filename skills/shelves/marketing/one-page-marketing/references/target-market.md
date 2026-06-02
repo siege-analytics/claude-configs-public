@@ -1,6 +1,6 @@
 # Target Market Selection
 
-Choosing the right target market is the single most important decision in your marketing plan. Get this right and everything downstream — your message, media, offers, and sales process — becomes dramatically easier. Get it wrong and no amount of clever copywriting or ad spend will save you.
+Choosing the right target market is the single most important decision in your marketing plan. Get this right and everything downstream -- your message, media, offers, and sales process -- becomes dramatically easier. Get it wrong and no amount of clever copywriting or ad spend will save you.
 
 ## The PVP Index
 
@@ -43,11 +43,11 @@ Can this market afford to pay you? Is there enough margin in the solution to bui
 | Segment D      |      |      |      |       |      |
 | Segment E      |      |      |      |       |      |
 
-**Decision rule:** Pursue the segment with the highest total score. If two segments score within 2 points of each other, favor the one with the higher Personal Fulfillment score — you will need sustained energy to dominate a niche.
+**Decision rule:** Pursue the segment with the highest total score. If two segments score within 2 points of each other, favor the one with the higher Personal Fulfillment score -- you will need sustained energy to dominate a niche.
 
 ## Ideal Customer Avatar Worksheet
 
-Once you have selected your target market, go deeper. Create a detailed avatar of your single most ideal customer within that market. This is not a demographic profile — it is a complete picture of a real human being.
+Once you have selected your target market, go deeper. Create a detailed avatar of your single most ideal customer within that market. This is not a demographic profile -- it is a complete picture of a real human being.
 
 ### Demographics
 
@@ -108,11 +108,11 @@ Where does your ideal customer spend time, both online and offline? These become
 
 Most businesses resist niching because they fear missing opportunities. The opposite is true. Here is the narrowing sequence:
 
-1. **Industry** — Start with a broad industry (e.g., "healthcare")
-2. **Sub-industry** — Narrow to a segment (e.g., "dental practices")
-3. **Sub-segment** — Go deeper (e.g., "cosmetic dental practices")
-4. **Geographic or size qualifier** — Add a boundary (e.g., "cosmetic dental practices with 3-10 dentists in metro areas")
-5. **Psychographic qualifier** — Add a mindset filter (e.g., "...who want to be seen as premium, not discount")
+1. **Industry** -- Start with a broad industry (e.g., "healthcare")
+2. **Sub-industry** -- Narrow to a segment (e.g., "dental practices")
+3. **Sub-segment** -- Go deeper (e.g., "cosmetic dental practices")
+4. **Geographic or size qualifier** -- Add a boundary (e.g., "cosmetic dental practices with 3-10 dentists in metro areas")
+5. **Psychographic qualifier** -- Add a mindset filter (e.g., "...who want to be seen as premium, not discount")
 
 ### The "Too Narrow?" Test
 
@@ -130,11 +130,11 @@ Ask yourself these four questions. If you answer "yes" to all four, your niche i
 | Message specificity | Generic, speaks to no one deeply | Specific, feels personally written |
 | Competition | Competing with everyone | Few or no direct competitors |
 | Pricing power | Commodity pricing, race to bottom | Premium pricing, perceived specialist |
-| Customer acquisition cost | High — large audiences, low conversion | Low — small audiences, high conversion |
-| Referrals | Rare — you are forgettable | Common — you are the obvious specialist |
-| Content creation | Difficult — topics are generic | Easy — you know exact problems and language |
+| Customer acquisition cost | High -- large audiences, low conversion | Low -- small audiences, high conversion |
+| Referrals | Rare -- you are forgettable | Common -- you are the obvious specialist |
+| Content creation | Difficult -- topics are generic | Easy -- you know exact problems and language |
 | Ad targeting | Expensive, broad, wasteful | Precise, efficient, high-relevance |
-| Sales cycle | Long — must educate and differentiate | Short — they already see you as the expert |
+| Sales cycle | Long -- must educate and differentiate | Short -- they already see you as the expert |
 
 ## Common Targeting Mistakes
 
@@ -164,7 +164,7 @@ Choosing a profitable niche you hate leads to burnout, low-quality work, and eve
 
 ### Mistake 5: Niching on Product Instead of Market
 
-"We sell accounting software" is a product description, not a target market. The same software might serve solopreneurs, mid-market manufacturers, and enterprise retailers — but the marketing for each is completely different.
+"We sell accounting software" is a product description, not a target market. The same software might serve solopreneurs, mid-market manufacturers, and enterprise retailers -- but the marketing for each is completely different.
 
 **Fix:** Define your niche by who you serve and what problem you solve for them, not by what you sell.
 
@@ -176,7 +176,7 @@ List five potential market segments you could serve. Score each on Personal Fulf
 
 ### Exercise 2: Avatar Deep Dive
 
-Pick your highest-scoring segment. Complete the full Ideal Customer Avatar Worksheet above. Do not stop at demographics — go deep into psychographics, pain points, and watering holes. If you do not know the answers, that is a sign you need to talk to more customers.
+Pick your highest-scoring segment. Complete the full Ideal Customer Avatar Worksheet above. Do not stop at demographics -- go deep into psychographics, pain points, and watering holes. If you do not know the answers, that is a sign you need to talk to more customers.
 
 ### Exercise 3: The Narrowing Sequence
 
@@ -184,7 +184,7 @@ Take your chosen segment and apply the 5-step narrowing sequence. At each level,
 
 ### Exercise 4: Competitor Audit
 
-Search for businesses that currently serve your chosen niche. How many are there? How specific is their marketing? If the market is saturated with specialists, consider narrowing further or finding an adjacent niche. If there are no specialists, you have found a potential goldmine — or a market that does not exist (verify with the PVP Index).
+Search for businesses that currently serve your chosen niche. How many are there? How specific is their marketing? If the market is saturated with specialists, consider narrowing further or finding an adjacent niche. If there are no specialists, you have found a potential goldmine -- or a market that does not exist (verify with the PVP Index).
 
 ### Exercise 5: Customer Interview Script
 

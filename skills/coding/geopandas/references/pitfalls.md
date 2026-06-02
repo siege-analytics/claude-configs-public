@@ -6,8 +6,8 @@ Bugs that don't error and silently produce wrong results.
 
 ```python
 gdf = gpd.read_file("source.shp")
-print(gdf.crs)  # None — .prj was missing
-gdf["area"] = gdf.geometry.area  # nonsense — no projection info
+print(gdf.crs)  # None -- .prj was missing
+gdf["area"] = gdf.geometry.area  # nonsense -- no projection info
 ```
 
 Always check `.crs` after read; refuse to compute area/distance if it's None. See [`crs-management.md`](crs-management.md).
@@ -44,7 +44,7 @@ If you find yourself needing `set_crs(allow_override=True)`, you almost certainl
 
 ```python
 joined = gpd.sjoin(points, counties, predicate="contains")  # WRONG
-# This means "left contains right" — points contain counties (no row matches)
+# This means "left contains right" -- points contain counties (no row matches)
 
 joined = gpd.sjoin(points, counties, predicate="within")    # CORRECT
 # Points within counties
@@ -73,7 +73,7 @@ Some sources include Z (elevation) or M (measure) coordinates:
 
 ```python
 gdf = gpd.read_file("source.shp")
-gdf.geometry.iloc[0]  # POINT Z (-98 30 0) — has Z
+gdf.geometry.iloc[0]  # POINT Z (-98 30 0) -- has Z
 
 # Most operations work but:
 gdf.to_parquet("out.parquet")  # writes WKB with Z; some readers don't expect it
@@ -89,7 +89,7 @@ gdf["geometry"] = gdf.geometry.apply(force_2d)
 ## Invalid geometries
 
 ```python
-gdf.geometry.is_valid.all()  # False — some are invalid
+gdf.geometry.is_valid.all()  # False -- some are invalid
 gdf["area"] = gdf.geometry.area  # may give wrong numbers for invalid polygons
 ```
 
@@ -106,13 +106,13 @@ Or filter:
 gdf = gdf[gdf.geometry.is_valid]
 ```
 
-The choice depends on whether you can drop invalid features (election precinct: no — the precinct exists; donor address: maybe).
+The choice depends on whether you can drop invalid features (election precinct: no -- the precinct exists; donor address: maybe).
 
 ## sjoin with empty right side
 
 ```python
 joined = gpd.sjoin(points, counties[counties["state"] == "ZZ"], how="left")
-# All points get NaN for right columns — that's fine
+# All points get NaN for right columns -- that's fine
 # But: joined is points-shaped; you might expect zero rows
 ```
 
@@ -121,10 +121,10 @@ Always specify `how`. `how="inner"` returns zero rows when there are no matches;
 ## Vectorized vs apply confusion
 
 ```python
-# Slow — Python loop
+# Slow -- Python loop
 gdf["centroid"] = gdf.apply(lambda r: r.geometry.centroid, axis=1)
 
-# Fast — vectorized
+# Fast -- vectorized
 gdf["centroid"] = gdf.geometry.centroid
 ```
 
@@ -133,14 +133,14 @@ Almost any time you write `gdf.apply` involving `.geometry`, there's a vectorize
 ## .to_file with default driver
 
 ```python
-gdf.to_file("out.shp")  # writes Shapefile by default — column names truncated to 10 chars
+gdf.to_file("out.shp")  # writes Shapefile by default -- column names truncated to 10 chars
 ```
 
 Always specify driver:
 
 ```python
 gdf.to_file("out.gpkg", driver="GPKG")
-gdf.to_parquet("out.parquet")  # GeoParquet — no driver arg, no GDAL needed
+gdf.to_parquet("out.parquet")  # GeoParquet -- no driver arg, no GDAL needed
 ```
 
 ## .crs comparison
@@ -225,4 +225,4 @@ Deduplicate explicitly:
 joined = joined[~joined.index.duplicated(keep="first")]
 ```
 
-Or aggregate (e.g., `groupby(joined.index).first()`) — but choose deliberately, because keeping all matches may be what you want.
+Or aggregate (e.g., `groupby(joined.index).first()`) -- but choose deliberately, because keeping all matches may be what you want.

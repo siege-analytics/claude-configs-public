@@ -41,7 +41,7 @@ START: I'm about to compute something on geometry.
   │     │
   │     ├─ The geometric output is fine in any CRS, but the size of the
   │     │  buffer is in CRS units. ST_Buffer(geom_4326, 100) buffers by
-  │     │  100 degrees — wrong if you want 100 meters.
+  │     │  100 degrees -- wrong if you want 100 meters.
   │     │
   │     └─ Reproject first; transform back if you need to store in 4326.
   │
@@ -115,18 +115,18 @@ The naming convention `geom_<srid>` (e.g., `geom_4326`, `geom_5070`) makes the C
 - `geography` type pays per-row spheroidal math cost. Fine for one-off queries; expensive in hot loops.
 - For high-volume work, materialize a projected `geometry` column and index it.
 
-DuckDB has `ST_Distance_Sphere` (spheroidal meters) without a separate type. Sedona has `ST_DistanceSphere` and `ST_DistanceSpheroid`. GeoPandas does not — project explicitly.
+DuckDB has `ST_Distance_Sphere` (spheroidal meters) without a separate type. Sedona has `ST_DistanceSphere` and `ST_DistanceSpheroid`. GeoPandas does not -- project explicitly.
 
-## CRS in the wild — what to expect
+## CRS in the wild -- what to expect
 
 | Source | CRS you'll find |
 |---|---|
-| Census TIGER (current) | EPSG:4269 (NAD83) — convert to 4326 |
+| Census TIGER (current) | EPSG:4269 (NAD83) -- convert to 4326 |
 | OpenStreetMap | EPSG:4326 (WGS 84) |
 | GADM | EPSG:4326 |
 | Mapbox tiles | EPSG:3857 (Web Mercator) |
-| State / local GIS files | varies — check the `.prj` |
-| Random shapefile from the internet | might have no `.prj` — refuse to compute area/distance until you set it |
+| State / local GIS files | varies -- check the `.prj` |
+| Random shapefile from the internet | might have no `.prj` -- refuse to compute area/distance until you set it |
 
 ## Validating CRS at boundaries
 
@@ -135,21 +135,21 @@ Before any spatial operation in code you don't control:
 ```python
 def assert_crs_for_distance(gdf, name="dataframe"):
     if gdf.crs is None:
-        raise ValueError(f"{name} has no CRS — set it before distance/area work")
+        raise ValueError(f"{name} has no CRS -- set it before distance/area work")
     if str(gdf.crs).lower() in ("epsg:4326", "epsg:4269"):
-        raise ValueError(f"{name} is in lat/lng — reproject before distance/area work")
+        raise ValueError(f"{name} is in lat/lng -- reproject before distance/area work")
 ```
 
 The general SU upstream PR candidate **SU-2** (`crs_distance_operations_safe`, `crs_to_projection_family`, `crs_is_cartesian`) would centralize this.
 
-## Pitfalls — same across engines
+## Pitfalls -- same across engines
 
-- **Computing area in degrees** — returns a tiny number that looks reasonable. Always project first.
-- **Mixing CRSs in a join predicate** — most engines either error or implicitly reproject one side (silently slow).
-- **`set_crs` vs `to_crs`** in GeoPandas — `set_crs` labels without reprojecting. Used incorrectly = silent corruption.
-- **`ST_Transform` on the indexed column in PostGIS** — blocks the index. Materialize the projected geometry as a separate column.
-- **Coordinate axis order** — Shapely / GeoPandas / DuckDB / Sedona all use `(x, y) = (lng, lat)`. Source data may store `(lat, lng)`. Misorder = points in wrong hemisphere. Always verify.
-- **CRS not stored in DuckDB GEOMETRY type** — track externally via column naming or sidecar.
+- **Computing area in degrees** -- returns a tiny number that looks reasonable. Always project first.
+- **Mixing CRSs in a join predicate** -- most engines either error or implicitly reproject one side (silently slow).
+- **`set_crs` vs `to_crs`** in GeoPandas -- `set_crs` labels without reprojecting. Used incorrectly = silent corruption.
+- **`ST_Transform` on the indexed column in PostGIS** -- blocks the index. Materialize the projected geometry as a separate column.
+- **Coordinate axis order** -- Shapely / GeoPandas / DuckDB / Sedona all use `(x, y) = (lng, lat)`. Source data may store `(lat, lng)`. Misorder = points in wrong hemisphere. Always verify.
+- **CRS not stored in DuckDB GEOMETRY type** -- track externally via column naming or sidecar.
 
 ## The general principle
 

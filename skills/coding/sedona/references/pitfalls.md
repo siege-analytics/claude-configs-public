@@ -5,7 +5,7 @@ Bugs that don't error and silently produce wrong results, plus the operational f
 ## 1. Forgot KryoSerializer + SedonaKryoRegistrator
 
 ```python
-# Missing both — geometry serialization falls back to Java default
+# Missing both -- geometry serialization falls back to Java default
 config = SedonaContext.builder().appName("oops").getOrCreate()
 sedona = SedonaContext.create(config)
 ```
@@ -44,7 +44,7 @@ WHERE ST_Distance(
 
 For repeated work, materialize the projected column rather than transforming per query.
 
-## 3. Python UDF in the spatial predicate — optimizer skips
+## 3. Python UDF in the spatial predicate -- optimizer skips
 
 ```python
 @udf(returnType=BooleanType())
@@ -54,11 +54,11 @@ def my_predicate(a, b):
 result = points.join(counties, my_predicate("points.geom", "counties.geom"))
 ```
 
-Sedona's optimizer doesn't see inside UDFs — falls back to nested-loop join. Use `ST_Intersects` SQL.
+Sedona's optimizer doesn't see inside UDFs -- falls back to nested-loop join. Use `ST_Intersects` SQL.
 
 ## 4. `ST_Distance(geom, geom) < d` instead of `ST_DWithin`
 
-`ST_Distance < d` requires computing distance for every pair (no index). `ST_DWithin(geom1, geom2, d)` uses spatial partitioning with bbox expansion — index-aware.
+`ST_Distance < d` requires computing distance for every pair (no index). `ST_DWithin(geom1, geom2, d)` uses spatial partitioning with bbox expansion -- index-aware.
 
 ## 5. CRS lost across stages
 
@@ -66,7 +66,7 @@ Sedona DataFrame schemas don't carry CRS metadata. If stage 1 reprojects to EPSG
 
 Convention: name geometry columns by SRID. `geom_4326`, `geom_5070`. Catches the bug at column-name level.
 
-## 6. Skew — one task takes 10× longer than others
+## 6. Skew -- one task takes 10× longer than others
 
 Spatial data is almost always skewed (NY > Wyoming). Symptom in Spark UI: "straggler task" 10× the runtime of peers.
 
@@ -97,7 +97,7 @@ Or use explicit `broadcast()`.
 
 ## 9. AQE interfering with spatial joins
 
-Spark 3.x AQE can dynamically coalesce partitions and handle skew at runtime. But its skew-handler doesn't fully understand Sedona's spatial partitioning — sometimes makes things worse.
+Spark 3.x AQE can dynamically coalesce partitions and handle skew at runtime. But its skew-handler doesn't fully understand Sedona's spatial partitioning -- sometimes makes things worse.
 
 Test with both:
 
@@ -114,7 +114,7 @@ Pick whichever gives faster runtime on your representative workload.
 ```python
 df = sedona.read.format("binaryFile").load("s3://bucket/*.shp")
 # df has columns: path, modificationTime, length, content (binary)
-# But no geometry — you forgot to parse the .shp content
+# But no geometry -- you forgot to parse the .shp content
 ```
 
 Sedona doesn't have a built-in shapefile reader from `binaryFile`. Either:
@@ -123,7 +123,7 @@ Sedona doesn't have a built-in shapefile reader from `binaryFile`. Either:
 
 ## 11. NULL geometries silently filter rows
 
-`ST_Within(NULL, polygon)` returns NULL, not FALSE. Spark's join filter is "true" — NULL fails. Rows with NULL geom silently drop.
+`ST_Within(NULL, polygon)` returns NULL, not FALSE. Spark's join filter is "true" -- NULL fails. Rows with NULL geom silently drop.
 
 Filter explicitly if you want to keep them:
 
@@ -169,7 +169,7 @@ WKB bytes are smaller than parsed Shapely objects.
 SELECT * FROM districts WHERE ST_Contains(ST_Subdivide(geom, 256), point)
 ```
 
-Per-query subdivision — slow. Pre-process once:
+Per-query subdivision -- slow. Pre-process once:
 
 ```python
 districts_sub = sedona.sql("SELECT id, name, ST_Subdivide(geom, 256) AS geom FROM districts").cache()
@@ -183,7 +183,7 @@ Always check: Spark major version × Scala major version × Sedona version compa
 
 ## 16. Forgetting to register UDFs in Scala
 
-PySpark `SedonaContext.create(config)` registers ST_* automatically. Scala — you must call `SedonaContext.create()` to register the SQL functions. Without it, `ST_Within` is undefined.
+PySpark `SedonaContext.create(config)` registers ST_* automatically. Scala -- you must call `SedonaContext.create()` to register the SQL functions. Without it, `ST_Within` is undefined.
 
 ## 17. EXPLAIN shows `CartesianProduct` on a spatial join
 
@@ -191,7 +191,7 @@ The optimizer didn't recognize the predicate. Causes:
 - Predicate wrapped in a UDF.
 - Predicate in `WHERE` instead of `ON`.
 - Mixed CRSs (one side casts).
-- Sedona JARs not loaded (silent — no spatial functions, falls back to scalar predicate evaluation).
+- Sedona JARs not loaded (silent -- no spatial functions, falls back to scalar predicate evaluation).
 
 If `CartesianProduct` appears, halt the job (it'll OOM) and investigate.
 

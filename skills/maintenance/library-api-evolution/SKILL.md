@@ -22,7 +22,7 @@ Apply whenever changing anything a consumer could import, call, or depend on. Se
 | Internal helpers prefixed `_` | **NO** |
 | Test fixtures and utilities | **NO** |
 
-If yes to any — the change is a candidate for BC compliance.
+If yes to any -- the change is a candidate for BC compliance.
 
 ## Step 2: Classify the change
 
@@ -30,24 +30,24 @@ If yes to any — the change is a candidate for BC compliance.
 CHANGE TYPE
   │
   ├─ Adding a new optional argument, a new function, a new module
-  │   └─ ADDITIVE — no break, ship in a minor version
+  │   └─ ADDITIVE -- no break, ship in a minor version
   │
   ├─ Renaming X to Y, removing X, reordering positional args
-  │   └─ BREAKING — need a deprecation path OR a major version bump
+  │   └─ BREAKING -- need a deprecation path OR a major version bump
   │
   ├─ Changing a default value (e.g., metric='sessions' → metric='value')
-  │   └─ SOFT-BREAKING — silent behavior change for existing callers
+  │   └─ SOFT-BREAKING -- silent behavior change for existing callers
   │      Safe only if: (a) audit shows no callers rely on the old default,
   │      OR (b) you emit a DeprecationWarning for one release cycle
   │
   ├─ Changing a return type/shape
-  │   └─ BREAKING — callers will type-error or silently consume wrong shape
+  │   └─ BREAKING -- callers will type-error or silently consume wrong shape
   │
   ├─ Changing a raised exception type
-  │   └─ BREAKING — callers' `except` clauses may stop catching
+  │   └─ BREAKING -- callers' `except` clauses may stop catching
   │
   └─ Tightening a validation (previously-accepted input now raises)
-      └─ SOFT-BREAKING — callers may be relying on quiet acceptance
+      └─ SOFT-BREAKING -- callers may be relying on quiet acceptance
 ```
 
 ## Step 3: Audit the blast radius
@@ -66,7 +66,7 @@ rg "old_function_name\([^)]*\)" --glob '*.py' | grep -v 'metric='
 ```
 
 Follow with:
-- Search notebooks (`*.ipynb`) — they use the API but tooling ignores them.
+- Search notebooks (`*.ipynb`) -- they use the API but tooling ignores them.
 - Search other repos you own.
 - Check the library's Sphinx docs and README code samples.
 - If the library has external users, check GitHub code search for `<library_name> <func_name>`.
@@ -105,7 +105,7 @@ def old_name(x):
     return new_name(x)
 ```
 
-- `stacklevel=2` — warning points at the caller, not the wrapper
+- `stacklevel=2` -- warning points at the caller, not the wrapper
 - Keep alias for at least one minor version; remove on next major
 - Document the migration in CHANGELOG
 
@@ -153,7 +153,7 @@ Process:
 | Added a new function/kwarg/module | Minor |
 | Deprecation added (old still works) | Minor |
 | Breaking change shipped | Major |
-| Behavior change users would notice | At least minor — consider major |
+| Behavior change users would notice | At least minor -- consider major |
 
 Use what the project uses. If pyproject.toml says SemVer, follow SemVer. If CalVer, follow CalVer. Don't mix.
 
@@ -167,7 +167,7 @@ Every public-API change lands with:
 - [ ] CHANGELOG entry under the right section (Added / Changed / Deprecated / Removed / Fixed)
 - [ ] Migration guide if the change is breaking (before/after code)
 - [ ] Updated docstring reflecting the new behavior
-- [ ] Updated tests — including a negative test that exercises the old path and documents why it no longer works
+- [ ] Updated tests -- including a negative test that exercises the old path and documents why it no longer works
 
 ## Schema-level changes (DataFrames, dicts, models)
 

@@ -4,7 +4,7 @@ description: Router for team / ways-of-working / staff-engineering book skills. 
 disable-model-invocation: false
 ---
 
-# Team — Shelf
+# Team -- Shelf
 
 ## Trigger table
 
@@ -16,9 +16,9 @@ disable-model-invocation: false
 
 ## Books in this shelf
 
-- [skill:drive-motivation] — Daniel Pink, *Drive*. Autonomy / Mastery / Purpose; why extrinsic rewards fail for cognitive work.
-- [skill:37signals-way] — Jason Fried & DHH, calm-company operating practices.
-- [skill:staff-engineer] — Will Larson, *Staff Engineer* (companion-site material; full book paid). Four archetypes + operating disciplines + getting-the-title.
+- [skill:drive-motivation] -- Daniel Pink, *Drive*. Autonomy / Mastery / Purpose; why extrinsic rewards fail for cognitive work.
+- [skill:37signals-way] -- Jason Fried & DHH, calm-company operating practices.
+- [skill:staff-engineer] -- Will Larson, *Staff Engineer* (companion-site material; full book paid). Four archetypes + operating disciplines + getting-the-title.
 
 ## Disambiguation
 
@@ -27,7 +27,7 @@ disable-model-invocation: false
 
 ## Always-on companions
 
-- `engineering-principles/` shelf — technical-craft floor for any Staff IC.
-- `systems-architecture/` shelf — Architect-archetype Staff engineers lean here.
+- `engineering-principles/` shelf -- technical-craft floor for any Staff IC.
+- `systems-architecture/` shelf -- Architect-archetype Staff engineers lean here.
 
-drive-motivation and 37signals-way are wondelai/skills imports — see footers and `THIRD_PARTY_NOTICES.md`. staff-engineer is original distillation from staffeng.com (CC BY-NC, attribution preserved in the SKILL.md source section).
+drive-motivation and 37signals-way are wondelai/skills imports -- see footers and `THIRD_PARTY_NOTICES.md`. staff-engineer is original distillation from staffeng.com (CC BY-NC, attribution preserved in the SKILL.md source section).

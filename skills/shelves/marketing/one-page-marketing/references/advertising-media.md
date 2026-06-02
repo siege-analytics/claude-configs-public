@@ -1,6 +1,6 @@
 # Advertising Media
 
-Advertising media is the vehicle that carries your message to your target market. Choosing the right media is not about what is trendy — it is about where your ideal customer pays attention and whether you can track the results. Every dollar spent on advertising must be accountable.
+Advertising media is the vehicle that carries your message to your target market. Choosing the right media is not about what is trendy -- it is about where your ideal customer pays attention and whether you can track the results. Every dollar spent on advertising must be accountable.
 
 ## Direct Response Principles Applied to Channels
 
@@ -16,7 +16,7 @@ Allan Dib draws a sharp line between "brand awareness" advertising and direct re
 | Timeline | Long-term, unclear ROI | Immediate, measurable ROI |
 | Accountability | "It is hard to measure" | Every dollar tracked to a result |
 | Best for | Coca-Cola, Nike (billion-dollar budgets) | Small and medium businesses with real budgets |
-| Typical waste | High — you pay for attention you cannot measure | Low — you pay for results you can count |
+| Typical waste | High -- you pay for attention you cannot measure | Low -- you pay for results you can count |
 
 ### The 7 Rules of Direct Response Advertising
 
@@ -27,7 +27,7 @@ Every ad, regardless of channel, must follow these rules:
 3. **It must use a compelling headline.** The headline is responsible for 80% of the ad's effectiveness. Lead with the outcome the prospect desires.
 4. **It must target a specific audience.** Speak to one person with one problem, not the general public.
 5. **It must make a specific offer.** "Learn more" is not an offer. "Download the free 7-step checklist" is an offer.
-6. **It must demand a response.** Give people a reason to act now — a deadline, limited availability, or a fast-action incentive.
+6. **It must demand a response.** Give people a reason to act now -- a deadline, limited availability, or a fast-action incentive.
 7. **It must include follow-up.** A single ad touch is rarely enough. Build multi-step follow-up into every campaign (retargeting, email sequences, phone calls).
 
 ## Channel Selection Framework
@@ -168,14 +168,14 @@ Your CAC only makes sense in context. The key metric is the CAC:LTV ratio.
 
 ## Organic vs. Paid: A Partnership
 
-Organic and paid are not competitors — they are partners. Each serves a different function.
+Organic and paid are not competitors -- they are partners. Each serves a different function.
 
 | Dimension | Organic | Paid |
 |-----------|---------|------|
-| Speed | Slow — months to build | Fast — results within days |
+| Speed | Slow -- months to build | Fast -- results within days |
 | Cost | Low cash, high time | High cash, low time |
 | Sustainability | Compounds over time | Stops when you stop paying |
-| Trust | High — earned attention | Lower — bought attention |
+| Trust | High -- earned attention | Lower -- bought attention |
 | Scalability | Limited by content production | Limited by budget |
 | Best for | Authority, SEO, long-term pipeline | Testing, speed, immediate leads |
 

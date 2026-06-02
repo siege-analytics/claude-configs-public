@@ -23,9 +23,9 @@ Load this skill when:
 
 AST-walk the module (or manually scan it) to count every error site. An error site is one of:
 
-1. **`except` blocks** — each `except` clause is one site, even if the `try` has multiple handlers
-2. **`raise` statements** — each explicit `raise` is one site
-3. **Error-return paths** — `return None`, `return []`, `return pd.DataFrame()`, `return {}`, `return ""`, `return 0.0` inside a conditional or `except` block where the intent is to signal failure
+1. **`except` blocks** -- each `except` clause is one site, even if the `try` has multiple handlers
+2. **`raise` statements** -- each explicit `raise` is one site
+3. **Error-return paths** -- `return None`, `return []`, `return pd.DataFrame()`, `return {}`, `return ""`, `return 0.0` inside a conditional or `except` block where the intent is to signal failure
 
 Record each site as a row:
 
@@ -141,22 +141,22 @@ def test_validate_fips_rejects_invalid_length():
 
 ### What does NOT count
 
-- A test that mocks the dependency to always succeed — this only exercises the happy path
-- A test that catches the exception in the test body instead of using `pytest.raises` — this swallows the signal
-- A test that calls the function with valid input and asserts it does not raise — this is a happy-path test, not an error-path test
+- A test that mocks the dependency to always succeed -- this only exercises the happy path
+- A test that catches the exception in the test body instead of using `pytest.raises` -- this swallows the signal
+- A test that calls the function with valid input and asserts it does not raise -- this is a happy-path test, not an error-path test
 
 ## Carve-outs from writing-tests:5
 
 Two categories of `except` blocks are exempt from the coverage requirement:
 
-1. **`finally`-cleanup code** — `except` in best-effort cleanup (closing a file handle, removing a temp directory) where the failure is documented as ignorable. The handler must have a comment explaining why no test exists.
+1. **`finally`-cleanup code** -- `except` in best-effort cleanup (closing a file handle, removing a temp directory) where the failure is documented as ignorable. The handler must have a comment explaining why no test exists.
 
-2. **`__del__` or signal handlers** — `except` in `__del__` methods or signal handlers where inducing the exception in a test is unsafe or non-deterministic. The handler must have a comment explaining why no test exists.
+2. **`__del__` or signal handlers** -- `except` in `__del__` methods or signal handlers where inducing the exception in a test is unsafe or non-deterministic. The handler must have a comment explaining why no test exists.
 
 Both carve-outs require a one-line comment in the source code naming why no test exists. Without the comment, the handler counts as untested and must be reported as uncovered.
 
 ## Cross-references
 
-- `[rule:writing-tests]` writing-tests:5 — the rule this skill enforces
-- `[skill:hostile-review]` — uses this audit as input for Priority 4 (SU-4b) findings
-- `[skill:code-review]` — review checklist item for `except` block coverage
+- `[rule:writing-tests]` writing-tests:5 -- the rule this skill enforces
+- `[skill:hostile-review]` -- uses this audit as input for Priority 4 (SU-4b) findings
+- `[skill:code-review]` -- review checklist item for `except` block coverage

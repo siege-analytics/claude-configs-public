@@ -9,7 +9,7 @@ Every engine has a spatial index family. The names differ; the function is the s
 | Engine | Spatial index family |
 |---|---|
 | **PostGIS** | GIST (default), SP-GIST (point-heavy uniform), BRIN (spatially-clustered ingest order) |
-| **GeoPandas / Shapely** | STRtree (R-tree) — built lazily on `gdf.sindex` access |
+| **GeoPandas / Shapely** | STRtree (R-tree) -- built lazily on `gdf.sindex` access |
 | **Sedona** | KDB-tree (default for spatial joins), quad-tree (alternative) |
 | **DuckDB-spatial** | R-tree (built implicitly on join, or explicitly via `CREATE INDEX ... USING RTREE`) |
 
@@ -38,7 +38,7 @@ GIST is the default and works for all geometry types. SP-GIST and BRIN are situa
 
 ### GeoPandas
 
-The STRtree is built lazily — first access to `.sindex` builds; subsequent accesses reuse:
+The STRtree is built lazily -- first access to `.sindex` builds; subsequent accesses reuse:
 
 ```python
 counties.sindex  # eager build (optional but explicit)
@@ -147,11 +147,11 @@ PostGIS-specific deep dive: [`coding/postgis/references/vacuuming-and-bloat.md`]
 
 Cases where adding a spatial index doesn't speed things up:
 
-- **Tiny right side (< 1000 rows)** — sequential scan is faster than building/using the index
-- **Predicate that can't use the index** (`ST_Distance < d`, `ST_Equals`, custom UDFs) — index can't help; rewrite the predicate
-- **Function on the indexed column** (`ST_Transform(geom, ...)`) — blocks the index; materialize a transformed column
-- **Cross-CRS comparisons** — forces implicit reprojection per row, blocks index
-- **Highly selective non-spatial predicate** that already narrows to few rows — spatial index overhead exceeds benefit
+- **Tiny right side (< 1000 rows)** -- sequential scan is faster than building/using the index
+- **Predicate that can't use the index** (`ST_Distance < d`, `ST_Equals`, custom UDFs) -- index can't help; rewrite the predicate
+- **Function on the indexed column** (`ST_Transform(geom, ...)`) -- blocks the index; materialize a transformed column
+- **Cross-CRS comparisons** -- forces implicit reprojection per row, blocks index
+- **Highly selective non-spatial predicate** that already narrows to few rows -- spatial index overhead exceeds benefit
 
 For each of these, the fix is upstream of the index (rewrite predicate, materialize column, etc.).
 
@@ -176,7 +176,7 @@ CREATE INDEX features_geom_5070_idx ON features USING GIST (geom_5070);
 
 Trade storage for query speed. Almost always worth it for hot queries.
 
-## Compound indexes — spatial + attribute
+## Compound indexes -- spatial + attribute
 
 Real workloads filter on more than geometry:
 
@@ -202,19 +202,19 @@ PostGIS-specific. For Sedona / GeoPandas / DuckDB, partial indexes don't exist; 
 
 ## Pitfalls
 
-- **No index on the spatial column** — every query is a sequential scan.
-- **Index on a column that's never used in WHERE/JOIN** — wasted storage and write overhead.
-- **Functional index without exact-expression query match** — index never used.
-- **Forgot `ANALYZE` after bulk load** — planner uses default 1000-row estimates; bad plans.
-- **Index bloat** unmonitored — queries get slower over months without an obvious cause. Check periodically.
-- **`ST_Transform` in the indexed query** — blocks the index. Materialize the projected geometry.
-- **Compound condition where attribute filter is more selective** — spatial index is correct but not the best plan; check both work.
-- **Tiny tables** — index overhead exceeds benefit; planner correctly chooses Seq Scan; not a bug.
+- **No index on the spatial column** -- every query is a sequential scan.
+- **Index on a column that's never used in WHERE/JOIN** -- wasted storage and write overhead.
+- **Functional index without exact-expression query match** -- index never used.
+- **Forgot `ANALYZE` after bulk load** -- planner uses default 1000-row estimates; bad plans.
+- **Index bloat** unmonitored -- queries get slower over months without an obvious cause. Check periodically.
+- **`ST_Transform` in the indexed query** -- blocks the index. Materialize the projected geometry.
+- **Compound condition where attribute filter is more selective** -- spatial index is correct but not the best plan; check both work.
+- **Tiny tables** -- index overhead exceeds benefit; planner correctly chooses Seq Scan; not a bug.
 
 ## Cross-links
 
-- [`bbox-pre-filter.md`](bbox-pre-filter.md) — what the index enables
-- [`subdivide-complex-polygons.md`](subdivide-complex-polygons.md) — subdivided polygons need their own index
-- [`../../coding/postgis/references/indexing-strategies.md`](../../../coding/postgis/references/indexing-strategies.md) — PostGIS-specific GIST / SP-GIST / BRIN deep dive
-- [`../../coding/postgis/references/vacuuming-and-bloat.md`](../../../coding/postgis/references/vacuuming-and-bloat.md) — PostGIS-specific bloat management
-- [`../../coding/sedona/references/partitioning-strategies.md`](../../../coding/sedona/references/partitioning-strategies.md) — Sedona equivalent
+- [`bbox-pre-filter.md`](bbox-pre-filter.md) -- what the index enables
+- [`subdivide-complex-polygons.md`](subdivide-complex-polygons.md) -- subdivided polygons need their own index
+- [`../../coding/postgis/references/indexing-strategies.md`](../../../coding/postgis/references/indexing-strategies.md) -- PostGIS-specific GIST / SP-GIST / BRIN deep dive
+- [`../../coding/postgis/references/vacuuming-and-bloat.md`](../../../coding/postgis/references/vacuuming-and-bloat.md) -- PostGIS-specific bloat management
+- [`../../coding/sedona/references/partitioning-strategies.md`](../../../coding/sedona/references/partitioning-strategies.md) -- Sedona equivalent

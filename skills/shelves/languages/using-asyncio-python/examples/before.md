@@ -4,7 +4,7 @@ An `async def` function that calls the blocking `requests.get()` synchronously, 
 
 ```python
 import asyncio
-import requests  # blocking library — not async-safe
+import requests  # blocking library -- not async-safe
 
 PRODUCT_API = "https://api.internal.com/products"
 INVENTORY_API = "https://api.internal.com/inventory"
@@ -14,11 +14,11 @@ async def build_product_catalog(product_ids: list[str]) -> list[dict]:
     catalog = []
 
     for product_id in product_ids:
-        # Blocks the event loop for every request — defeats asyncio entirely
+        # Blocks the event loop for every request -- defeats asyncio entirely
         product_resp = requests.get(f"{PRODUCT_API}/{product_id}")
         product = product_resp.json()
 
-        # Called sequentially AND blocking — no concurrency at all
+        # Called sequentially AND blocking -- no concurrency at all
         inv_resp = requests.get(f"{INVENTORY_API}/{product_id}")
         inventory = inv_resp.json()
 

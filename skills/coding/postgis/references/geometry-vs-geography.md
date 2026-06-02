@@ -9,15 +9,15 @@
 
 `geography` is *not* a "more accurate version of geometry." It's a different coordinate space (spheroidal vs planar) with different operators and a different cost model. Pick at the column level and stick with it.
 
-## SRID hygiene — what to enforce
+## SRID hygiene -- what to enforce
 
 ### 1. Always declare SRID at column creation
 
 ```sql
--- BAD — implicit SRID 0
+-- BAD -- implicit SRID 0
 CREATE TABLE features (id SERIAL, geom geometry);
 
--- GOOD — explicit type and SRID
+-- GOOD -- explicit type and SRID
 CREATE TABLE features (
     id SERIAL,
     geom geometry(Point, 4326)
@@ -60,10 +60,10 @@ Standard pattern:
 - **Computation:** project on demand to an equal-area or equal-distance CRS appropriate to the operation.
 
 ```sql
--- Area in square meters (continental US — Albers Equal Area)
+-- Area in square meters (continental US -- Albers Equal Area)
 SELECT id, ST_Area(ST_Transform(geom, 5070)) AS area_m2 FROM districts;
 
--- Distance in meters (local — UTM zone)
+-- Distance in meters (local -- UTM zone)
 SELECT a.id, b.id, ST_Distance(ST_Transform(a.geom, 32614), ST_Transform(b.geom, 32614)) AS dist_m
 FROM places a JOIN places b ON a.id < b.id;
 ```
@@ -75,9 +75,9 @@ For **performance-critical** distance work, materialize the projected geometry a
 | EPSG | What | When |
 |---|---|---|
 | 4326 | WGS 84 (lat/lng) | Storage, web mapping, GeoJSON, Mapbox |
-| 3857 | Web Mercator | Tile rendering, only for visualization — distorted distances |
+| 3857 | Web Mercator | Tile rendering, only for visualization -- distorted distances |
 | 5070 | NAD83 / Conus Albers Equal Area | Continental US area calculations |
-| 26915 | NAD83 / UTM zone 15N | Local distance calculations (Texas, etc.) — pick zone for your area |
+| 26915 | NAD83 / UTM zone 15N | Local distance calculations (Texas, etc.) -- pick zone for your area |
 | 4269 | NAD83 (lat/lng) | US federal data files; convert to 4326 for interop |
 
 ## Why `geography` exists at all
@@ -93,18 +93,18 @@ FROM places a JOIN places b ON a.id < b.id;
 
 Cost: every operation pays the spheroidal math overhead. For a once-a-day query, fine. For a high-volume API, materialize a projected `geometry` column and use `ST_Distance` on it.
 
-## When to mix — almost never
+## When to mix -- almost never
 
 Casting `geometry::geography` per row blocks the spatial index and pays the conversion cost on every comparison. If you find yourself doing this:
 
 ```sql
--- BAD — per-row cast
+-- BAD -- per-row cast
 SELECT * FROM features WHERE ST_DWithin(geom::geography, $1::geography, 1000);
 ```
 
 Either:
 - Add a `geog` column populated once (`ALTER TABLE ... ADD COLUMN geog geography(Point, 4326)`) and index it, or
-- Use the planar geometry with a projected CRS for the distance: `ST_DWithin(ST_Transform(geom, 32614), ST_Transform($1, 32614), 1000)` — and store the projected geometry too if this is hot.
+- Use the planar geometry with a projected CRS for the distance: `ST_DWithin(ST_Transform(geom, 32614), ST_Transform($1, 32614), 1000)` -- and store the projected geometry too if this is hot.
 
 ## Pitfall: signed vs unsigned distances
 

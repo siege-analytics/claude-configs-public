@@ -16,21 +16,21 @@ Pandas-style spatial operations in-process, single-node. The default Python tool
 |---|---|
 | Data fits in RAM, exploration, notebook work | **GeoPandas** |
 | Inputs are WKT strings or coordinate dicts, no files | **Raw Shapely** (see [`shapely-direct.md`](references/shapely-direct.md)) |
-| GDAL not available in the environment | **GeoPandas with `pyogrio` + WKB** or fall through to DuckDB-spatial — see [`no-gdal-fallbacks.md`](references/no-gdal-fallbacks.md) |
+| GDAL not available in the environment | **GeoPandas with `pyogrio` + WKB** or fall through to DuckDB-spatial -- see [`no-gdal-fallbacks.md`](references/no-gdal-fallbacks.md) |
 | Data > 5 GB or persistent multi-user reads | **PostGIS** ([skill:postgis]) |
 | Data > RAM, distributed compute available | **Sedona** ([skill:sedona]) |
 | You have parquet, want SQL, no server | **DuckDB-spatial** ([skill:duckdb-spatial]) |
 
 ## References
 
-- [`crs-management.md`](references/crs-management.md) — CRS via `siege_utilities.geo.crs` first; pyproj for edge cases
-- [`spatial-joins.md`](references/spatial-joins.md) — `sjoin`, `sjoin_nearest`, predicates, performance
-- [`io-formats.md`](references/io-formats.md) — Parquet/GeoParquet, GPKG, Shapefile pitfalls; format selection
-- [`performance.md`](references/performance.md) — pyogrio vs fiona vs no-GDAL; vectorized ops; STRtree
-- [`no-gdal-fallbacks.md`](references/no-gdal-fallbacks.md) — Shapely + pyproj + DuckDB paths when GDAL is missing
-- [`shapely-direct.md`](references/shapely-direct.md) — when inputs are WKT/dicts, skip GeoPandas
-- [`pitfalls.md`](references/pitfalls.md) — CRS silent assumption, geometry validity, Z/M coords
-- [`siege-utilities-geopandas.md`](references/siege-utilities-geopandas.md) — SU obviates Census/GADM sourcing, choropleth, areal interp, isochrones, geocoding
+- [`crs-management.md`](references/crs-management.md) -- CRS via `siege_utilities.geo.crs` first; pyproj for edge cases
+- [`spatial-joins.md`](references/spatial-joins.md) -- `sjoin`, `sjoin_nearest`, predicates, performance
+- [`io-formats.md`](references/io-formats.md) -- Parquet/GeoParquet, GPKG, Shapefile pitfalls; format selection
+- [`performance.md`](references/performance.md) -- pyogrio vs fiona vs no-GDAL; vectorized ops; STRtree
+- [`no-gdal-fallbacks.md`](references/no-gdal-fallbacks.md) -- Shapely + pyproj + DuckDB paths when GDAL is missing
+- [`shapely-direct.md`](references/shapely-direct.md) -- when inputs are WKT/dicts, skip GeoPandas
+- [`pitfalls.md`](references/pitfalls.md) -- CRS silent assumption, geometry validity, Z/M coords
+- [`siege-utilities-geopandas.md`](references/siege-utilities-geopandas.md) -- SU obviates Census/GADM sourcing, choropleth, areal interp, isochrones, geocoding
 
 ## Always-on companions
 
@@ -68,7 +68,7 @@ points = points.to_crs("EPSG:4326") if points.crs != "EPSG:4326" else points
 # Spatial join
 joined = gpd.sjoin(points, counties[["geoid", "geometry"]], how="left", predicate="within")
 
-# Write — choose format with intent
+# Write -- choose format with intent
 joined.to_parquet("donations_with_county.parquet")  # GeoParquet, no GDAL
 # joined.to_file("donations_with_county.gpkg", driver="GPKG")  # needs GDAL
 ```
@@ -98,7 +98,7 @@ GeoPandas uses `rtree` (or `pygeos`/`shapely 2.x` STRtree) automatically. The fi
 
 ## Decision: pyogrio vs fiona
 
-GeoPandas 0.13+ supports `pyogrio` as the I/O backend — faster reads/writes than `fiona`, smaller install (no separate GDAL Python bindings):
+GeoPandas 0.13+ supports `pyogrio` as the I/O backend -- faster reads/writes than `fiona`, smaller install (no separate GDAL Python bindings):
 
 ```python
 import geopandas as gpd
@@ -122,17 +122,17 @@ print(p.within(poly))  # True
 
 See [`shapely-direct.md`](references/shapely-direct.md) for the full pattern.
 
-## What `siege_utilities` already does — use it
+## What `siege_utilities` already does -- use it
 
 Per [rule:siege-utilities], check SU first. For spatial Python work specifically, SU obviates:
 
-- **Boundary sourcing** (Census TIGER, GADM, OSM) — `geo.spatial_data.get_geographic_boundaries()`
-- **Areal interpolation** between mismatched boundaries — `geo.interpolation.areal.interpolate_areal()`
-- **Choropleth mapping** — `geo.choropleth.create_choropleth()`
-- **Isochrone retrieval** — `geo.isochrones.get_isochrone()`
-- **Census API** — `geo.census_api_client.CensusAPIClient`
-- **Crosswalk algebra** — `geo.crosswalk.crosswalk_processor.apply_crosswalk()`
-- **GEOID manipulation** — `geo.geoid_utils.normalize_geoid()`
+- **Boundary sourcing** (Census TIGER, GADM, OSM) -- `geo.spatial_data.get_geographic_boundaries()`
+- **Areal interpolation** between mismatched boundaries -- `geo.interpolation.areal.interpolate_areal()`
+- **Choropleth mapping** -- `geo.choropleth.create_choropleth()`
+- **Isochrone retrieval** -- `geo.isochrones.get_isochrone()`
+- **Census API** -- `geo.census_api_client.CensusAPIClient`
+- **Crosswalk algebra** -- `geo.crosswalk.crosswalk_processor.apply_crosswalk()`
+- **GEOID manipulation** -- `geo.geoid_utils.normalize_geoid()`
 
 See [`siege-utilities-geopandas.md`](references/siege-utilities-geopandas.md) for the full per-task map.
 
@@ -141,5 +141,5 @@ See [`siege-utilities-geopandas.md`](references/siege-utilities-geopandas.md) fo
 See [`pitfalls.md`](references/pitfalls.md). Top three:
 
 1. **Silent CRS assumption.** `gdf.crs is None` → `gdf.area` returns nonsense. Set CRS at ingest.
-2. **`sjoin` predicate confusion.** `predicate="within"` vs `"intersects"` vs `"contains"` matter at boundaries — same gotcha as PostGIS `ST_Contains` vs `ST_Covers`.
+2. **`sjoin` predicate confusion.** `predicate="within"` vs `"intersects"` vs `"contains"` matter at boundaries -- same gotcha as PostGIS `ST_Contains` vs `ST_Covers`.
 3. **`to_file` requires GDAL.** `to_parquet` / `to_feather` don't. Default to GeoParquet for Siege pipelines.

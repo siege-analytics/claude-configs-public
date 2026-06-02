@@ -11,16 +11,16 @@ paths: "**/*.py"
 ## Companion shelves
 
 Tier A delegation. The deep rationale lives in:
-- [skill:effective-python] — Pythonic structure.
-- [skill:using-asyncio-python] — async patterns.
-- [skill:clean-code] — DRY, function discipline.
-- [skill:design-patterns] — GoF in Python.
+- [skill:effective-python] -- Pythonic structure.
+- [skill:using-asyncio-python] -- async patterns.
+- [skill:clean-code] -- DRY, function discipline.
+- [skill:design-patterns] -- GoF in Python.
 
 Use the rules below for Siege-specific conventions; load the shelf books for principle-level reasoning.
 
-Apply these to library code — things imported and called by other modules. See [reference.md](reference.md) for specific before/after refactors and the Geographic Data Science with Python ESDA patterns.
+Apply these to library code -- things imported and called by other modules. See [reference.md](reference.md) for specific before/after refactors and the Geographic Data Science with Python ESDA patterns.
 
-## DRY — extract when duplication is real
+## DRY -- extract when duplication is real
 
 **Three similar lines is better than a premature abstraction.** Don't factor out a helper until you have three concrete call sites whose behavior actually converges.
 
@@ -39,7 +39,7 @@ Signs you should NOT extract yet:
 When N functions share 90% of their logic with per-case dispatchers:
 
 ```python
-# BEFORE — three near-duplicates
+# BEFORE -- three near-duplicates
 def _build_single_response(df, row_var, break_vars, metric, weight_var, top_n, geo_column):
     views = {}
     for bv in break_vars:
@@ -55,7 +55,7 @@ def _build_single_response(df, row_var, break_vars, metric, weight_var, top_n, g
 def _build_cross_tab(...):  # same body, different TableType
 def _build_banner(...):      # same body, different TableType
 
-# AFTER — one core + a per-type tail
+# AFTER -- one core + a per-type tail
 def _build_grouped_counts(df, row_var, break_vars, metric, weight_var, top_n):
     """Shared implementation for SINGLE_RESPONSE, CROSS_TAB, BANNER."""
     views = {}
@@ -76,7 +76,7 @@ def _build_single_response(df, row_var, break_vars, metric, weight_var, top_n, g
 
 Three call sites collapse to one, each 2 lines, total line count drops ~40%.
 
-## Dataclass discipline — declared fields only
+## Dataclass discipline -- declared fields only
 
 If you use `@dataclass`, **every attribute the class holds is a field**. Don't attach runtime attributes from sibling modules:
 
@@ -94,7 +94,7 @@ def compute_significance(chain):
 
 Why bad:
 - Attribute doesn't appear in `__annotations__`, so `asdict()`, `pickle`, `dataclasses.fields()`, and IDE autocomplete miss it
-- With `slots=True` it raises `AttributeError` — protecting you
+- With `slots=True` it raises `AttributeError` -- protecting you
 - Future readers can't tell what a `Chain` *actually* contains
 
 Fix, in order of preference:
@@ -117,7 +117,7 @@ Fix, in order of preference:
        p_value: float
    ```
 
-3. **Return instead of mutate** — the compute function returns the new value; caller decides where to put it.
+3. **Return instead of mutate** -- the compute function returns the new value; caller decides where to put it.
 
 ### When dynamic attributes ARE OK
 
@@ -127,17 +127,17 @@ Fix, in order of preference:
 
 None of those apply to ordinary library code.
 
-## Interface integrity — honor every kwarg
+## Interface integrity -- honor every kwarg
 
 If a function accepts a parameter, use it. If you can't use it, raise.
 
 ```python
-# BAD — caller pays for something they don't get
+# BAD -- caller pays for something they don't get
 def create_report(title, *, chart_generator=None, map_generator=None):
     """Build a report. Accepts chart_generator and map_generator kwargs."""
     # ...neither kwarg is ever referenced in the body...
 
-# BETTER — fail loudly on unsupported options
+# BETTER -- fail loudly on unsupported options
 def create_report(title, *, chart_generator=None, map_generator=None):
     if chart_generator is not None:
         raise NotImplementedError("chart_generator injection not yet supported; see issue #123")
@@ -145,7 +145,7 @@ def create_report(title, *, chart_generator=None, map_generator=None):
         raise NotImplementedError("map_generator injection not yet supported; see issue #123")
     ...
 
-# BEST — only accept what you handle
+# BEST -- only accept what you handle
 def create_report(title):
     ...
 ```
@@ -159,18 +159,18 @@ Type hints are documentation. They don't check at runtime unless you do.
 At module boundaries where wrong types cause confusing downstream failures, **add explicit `isinstance` checks** or use a validation library:
 
 ```python
-# BAD — type hint is a lie
+# BAD -- type hint is a lie
 def stack_to_arguments(stack: Stack) -> list[Argument]:
     args = []
     for cluster in stack.clusters:
         for chain in cluster.chains:  # declared: list[Chain]
             args.append(chain.to_argument())
-    cluster.chains = args  # now it's list[Argument] — caller gets wrong type
+    cluster.chains = args  # now it's list[Argument] -- caller gets wrong type
     return args
 ```
 
 ```python
-# GOOD — separate input type from output type; don't mutate inputs
+# GOOD -- separate input type from output type; don't mutate inputs
 def stack_to_arguments(stack: Stack) -> list[Argument]:
     return [
         chain.to_argument()
@@ -200,13 +200,13 @@ For dataclasses specifically, consider `pydantic.BaseModel` or `attrs` with vali
 Returning an empty result when a computation failed is worse than raising. Callers can't tell "no data" from "error hidden".
 
 ```python
-# BAD — empty chain could mean "no matching rows" OR "metric column missing"
+# BAD -- empty chain could mean "no matching rows" OR "metric column missing"
 def _build_mean_scale(df, row_var, ...):
     if metric not in df.columns:
         return Chain(row_var, [], {}, TableType.MEAN_SCALE)
     ...
 
-# GOOD — distinguish the cases
+# GOOD -- distinguish the cases
 def _build_mean_scale(df, row_var, ...):
     if metric not in df.columns:
         raise MeanScaleError(f"column {metric!r} not found in input; got columns={list(df.columns)}")
@@ -216,7 +216,7 @@ def _build_mean_scale(df, row_var, ...):
 Or, if "no data" is legitimate:
 
 ```python
-# GOOD — return empty explicitly, document, log
+# GOOD -- return empty explicitly, document, log
 def _build_mean_scale(df, row_var, ...):
     if metric not in df.columns:
         log_warning(f"metric {metric!r} missing; returning empty chain")
@@ -251,7 +251,7 @@ The `base_note="NO DATA"` is a breadcrumb a downstream reader can see. A naked e
 ## Mutable defaults
 
 ```python
-# BAD — shared across all calls
+# BAD -- shared across all calls
 def append(item, *, to=[]):
     to.append(item)
     return to
@@ -267,11 +267,11 @@ Any linter catches this. Still worth naming because it comes up in review.
 
 ## References
 
-- **Brett Slatkin — *Effective Python* 3rd ed (2025)** — 125 specific items, many load-bearing here
-- **Raymond Hettinger — PyCon talks on dataclasses, generators, `__init_subclass__`** — YouTube, annual
-- **Martin Fowler — *Refactoring* 2nd ed** — the canonical refactoring catalog, language-agnostic but applicable
-- **Will McGugan's textual blog** — pragmatic library-maintenance posts
-- **Adam Johnson (adamj.eu)** — Python / Django patterns, current as of 2025
+- **Brett Slatkin -- *Effective Python* 3rd ed (2025)** -- 125 specific items, many load-bearing here
+- **Raymond Hettinger -- PyCon talks on dataclasses, generators, `__init_subclass__`** -- YouTube, annual
+- **Martin Fowler -- *Refactoring* 2nd ed** -- the canonical refactoring catalog, language-agnostic but applicable
+- **Will McGugan's textual blog** -- pragmatic library-maintenance posts
+- **Adam Johnson (adamj.eu)** -- Python / Django patterns, current as of 2025
 
 ## Attribution Policy
 

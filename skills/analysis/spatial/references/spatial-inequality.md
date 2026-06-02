@@ -1,6 +1,6 @@
 # Spatial Inequality
 
-How unequally a value is distributed *across space*. Goes beyond the segregation indices in [`spatial-statistics.md`](spatial-statistics.md) §8 by adding inequality measures (Gini, Theil) with explicit spatial decomposition — between-region vs within-region inequality.
+How unequally a value is distributed *across space*. Goes beyond the segregation indices in [`spatial-statistics.md`](spatial-statistics.md) §8 by adding inequality measures (Gini, Theil) with explicit spatial decomposition -- between-region vs within-region inequality.
 
 GDSPy Chapter 9 frames this as the bridge between economic-inequality measures (originally non-spatial) and the spatial structure that produces them.
 
@@ -8,8 +8,8 @@ GDSPy Chapter 9 frames this as the bridge between economic-inequality measures (
 
 | Question | Method family |
 |---|---|
-| "How separated are two groups across space?" | **Segregation indices** (Dissimilarity, Isolation, Exposure) — see [`spatial-statistics.md`](spatial-statistics.md) §8 |
-| "How unequally is a continuous variable distributed across spatial units?" | **Inequality measures** (Gini, Theil) — this file |
+| "How separated are two groups across space?" | **Segregation indices** (Dissimilarity, Isolation, Exposure) -- see [`spatial-statistics.md`](spatial-statistics.md) §8 |
+| "How unequally is a continuous variable distributed across spatial units?" | **Inequality measures** (Gini, Theil) -- this file |
 | "Of the inequality I see, how much is between regions vs within them?" | **Theil decomposition** (this file) |
 | "Are inequality patterns spatially clustered?" | Inequality + Moran's I on local inequality measures |
 
@@ -46,7 +46,7 @@ print(g.g)
 
 ### Theil's T
 
-Information-theoretic measure of inequality. Decomposable — its key advantage over Gini.
+Information-theoretic measure of inequality. Decomposable -- its key advantage over Gini.
 
 ```python
 from inequality.theil import Theil
@@ -68,12 +68,12 @@ a = Atkinson(gdf["median_income"].values, e=0.5)  # ε = 0.5
 print(a.A)
 ```
 
-## Spatial decomposition — Theil's T_BG
+## Spatial decomposition -- Theil's T_BG
 
 The major technique. Decomposes total Theil's T into:
 
-- **T_BG (between-group)** — inequality between regional means
-- **T_WG (within-group)** — inequality within each region, averaged
+- **T_BG (between-group)** -- inequality between regional means
+- **T_WG (within-group)** -- inequality within each region, averaged
 
 ```python
 from inequality.theil import TheilD
@@ -129,7 +129,7 @@ mi = Moran(gdf_county["local_gini"], w)
 print(f"Moran's I of inequality: {mi.I:.3f}")
 ```
 
-If positive Moran's I, "high-inequality places cluster near high-inequality places" — useful for targeting interventions.
+If positive Moran's I, "high-inequality places cluster near high-inequality places" -- useful for targeting interventions.
 
 ## Lorenz curves
 
@@ -166,35 +166,35 @@ Side-by-side Lorenz curves for different regions / time periods make inequality 
 | "How does the rural/urban split contribute to inequality?" | Theil with `partition=urbanicity_class` |
 | "Is school-district inequality bigger than county inequality?" | Compute decomposition at both partitions; compare BG shares |
 
-The Theil decomposition is the load-bearing tool — it's what economic geographers and policy analysts actually use to make the rural-urban / center-periphery / between-state arguments.
+The Theil decomposition is the load-bearing tool -- it's what economic geographers and policy analysts actually use to make the rural-urban / center-periphery / between-state arguments.
 
 ## Per-engine implementation
 
 | Engine | Inequality measures |
 |---|---|
-| **GeoPandas + inequality (PySAL)** | Native — Gini, Theil, Atkinson, decomposition. **Default.** |
+| **GeoPandas + inequality (PySAL)** | Native -- Gini, Theil, Atkinson, decomposition. **Default.** |
 | **PostGIS** | Manual SQL for Gini (sort + cumsum). Theil + Atkinson are manageable in SQL but verbose. For decomposition, pull to Python. |
-| **DuckDB-spatial** | Same as PostGIS — manual SQL works for Gini; pull to Python for the rest. |
+| **DuckDB-spatial** | Same as PostGIS -- manual SQL works for Gini; pull to Python for the rest. |
 | **Sedona** | Aggregate per region, collect to driver, run inequality computation in Python. |
 
 Like other spatial-stats methods, the engine choice is about where the data prep happens. The inequality computation itself is single-node Python.
 
 ## Pitfalls
 
-- **Gini on small samples** — high variance. Bootstrap for confidence intervals (`inequality.gini.Gini` doesn't ship them).
-- **Theil with zero values** — `T = Σ (x_i / total) × log(x_i / mean)` blows up at x_i = 0. Either drop zeros (with rationale) or add a tiny offset (e.g., 0.01) and document it.
-- **Comparing inequality across populations of different sizes** — Gini is size-invariant but Theil's level depends on n. For comparison, use Gini or normalize Theil.
-- **Treating between-share as a causal claim** — high between-state inequality doesn't mean states *cause* the inequality. It means inequality varies geographically; unobserved variables may drive both.
-- **Forgetting to weight by population** — tract-level Gini treats every tract equally regardless of size. For person-level interpretation, use weights:
+- **Gini on small samples** -- high variance. Bootstrap for confidence intervals (`inequality.gini.Gini` doesn't ship them).
+- **Theil with zero values** -- `T = Σ (x_i / total) × log(x_i / mean)` blows up at x_i = 0. Either drop zeros (with rationale) or add a tiny offset (e.g., 0.01) and document it.
+- **Comparing inequality across populations of different sizes** -- Gini is size-invariant but Theil's level depends on n. For comparison, use Gini or normalize Theil.
+- **Treating between-share as a causal claim** -- high between-state inequality doesn't mean states *cause* the inequality. It means inequality varies geographically; unobserved variables may drive both.
+- **Forgetting to weight by population** -- tract-level Gini treats every tract equally regardless of size. For person-level interpretation, use weights:
   ```python
   Gini(gdf["income"].values, weights=gdf["population"].values)
   ```
 
 ## Cross-links
 
-- [`spatial-statistics.md`](spatial-statistics.md) §8 — segregation indices (the related-but-distinct family)
-- [`spatial-weights.md`](spatial-weights.md) — W matrix for spatial-autocorrelation tests on inequality
-- [`spatial-feature-engineering.md`](spatial-feature-engineering.md) — when inequality measures become features for ML
+- [`spatial-statistics.md`](spatial-statistics.md) §8 -- segregation indices (the related-but-distinct family)
+- [`spatial-weights.md`](spatial-weights.md) -- W matrix for spatial-autocorrelation tests on inequality
+- [`spatial-feature-engineering.md`](spatial-feature-engineering.md) -- when inequality measures become features for ML
 
 ## Citation
 

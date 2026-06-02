@@ -218,8 +218,8 @@ REDUCE                         CREATE
 
 | Action | Effect on Cost | Effect on Value |
 |--------|---------------|-----------------|
-| Eliminate | ⬇ Reduces | — (no loss if done right) |
-| Reduce | ⬇ Reduces | — (over-served area) |
+| Eliminate | ⬇ Reduces | -- (no loss if done right) |
+| Reduce | ⬇ Reduces | -- (over-served area) |
 | Raise | ⬆ May increase | ⬆ Increases significantly |
 | Create | ⬆ May increase | ⬆ Increases significantly |
 
@@ -326,7 +326,7 @@ See: [references/six-paths.md](references/six-paths.md) for detailed path exerci
 
 **Opportunity:** Understand why they refuse, eliminate barriers
 
-**Example:** JCDecaux bus-shelter advertising—cities refused outdoor ads until JCDecaux offered free bus shelters in exchange
+**Example:** JCDecaux bus-shelter advertising--cities refused outdoor ads until JCDecaux offered free bus shelters in exchange
 
 ### Tier 3: "Unexplored" Non-Customers
 - In markets distant from yours
@@ -334,7 +334,7 @@ See: [references/six-paths.md](references/six-paths.md) for detailed path exerci
 
 **Opportunity:** Reframe offering to serve distant needs
 
-**Example:** Callaway Big Bertha golf clubs—expanded market to beginners and occasional golfers (unexplored)
+**Example:** Callaway Big Bertha golf clubs--expanded market to beginners and occasional golfers (unexplored)
 
 **Process:**
 1. Map all three tiers

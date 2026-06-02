@@ -219,7 +219,7 @@ Different metrics require different review rhythms. Over-reviewing lagging indic
 
 ```
 +-------------------------------------------------------+
-|  SALES DEVELOPMENT DASHBOARD — [Month, Year]           |
+|  SALES DEVELOPMENT DASHBOARD -- [Month, Year]           |
 +-------------------------------------------------------+
 |                                                         |
 |  TEAM SUMMARY                                           |

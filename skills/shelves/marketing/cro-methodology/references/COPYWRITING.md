@@ -1,6 +1,6 @@
 # Persuasive Copywriting for CRO
 
-Evidence-based copywriting principles. Write as much as it takes to communicate your entire sales message—but not one word more.
+Evidence-based copywriting principles. Write as much as it takes to communicate your entire sales message--but not one word more.
 
 ## Headlines
 

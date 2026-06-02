@@ -87,7 +87,7 @@ The trailing reminder is not decoration. It exists so a clean scan does not get 
 - **`[rule:writing-claims]` writing-claims:2** (countable claims) in commit/PR message bodies. Trigger phrases: "all N", "all X engines/connectors/call sites", "every (call site/engine/caller/connector)", "no remaining", "fully covers", "completes the X surface". When a trigger fires, the body must contain a `Verified-by: <command output excerpt>` trailer.
 - **`[rule:writing-claims]` writing-claims:3** (completeness claims): extends the writing-claims:2 trigger set to unquantified phrases ("I have completed", "addressed all", "ready to ship", "loop closed"). Same `Verified-by:` trailer requirement.
 - **`[rule:writing-releases]` writing-releases:2** (skip-count trending) in `--pr <n>` mode: counts new `pytest.skip(...)` / `@pytest.mark.skipif(...)` / `@pytest.mark.skip(...)` sites in the PR diff and requires a `New-skip: <count>; <reason>` trailer when the count increased.
-- **`[rule:writing-code]` writing-code:4 — Django ORM kwarg validation** (v1, same-file models). For each `<Model>.objects.<method>(...)` call where `<Model>` is a class defined IN THE SAME FILE with at least one `<X>Field(...)` attribute, the scanner verifies each direct kwarg key (and each key inside a `defaults={...}` dict literal for `get_or_create` / `update_or_create`) maps to a declared field. Lookups like `field__gte` decompose to `field` before matching. Reports `writing-code-4-django-orm-kwarg(unknown-field)`. **Scope limitation:** cross-file model resolution is not in v1 — calls referencing models imported from other modules are silently skipped (no false positives, also no coverage). Use the survey-context skill at author time to close the cross-file gap.
+- **`[rule:writing-code]` writing-code:4 -- Django ORM kwarg validation** (v1, same-file models). For each `<Model>.objects.<method>(...)` call where `<Model>` is a class defined IN THE SAME FILE with at least one `<X>Field(...)` attribute, the scanner verifies each direct kwarg key (and each key inside a `defaults={...}` dict literal for `get_or_create` / `update_or_create`) maps to a declared field. Lookups like `field__gte` decompose to `field` before matching. Reports `writing-code-4-django-orm-kwarg(unknown-field)`. **Scope limitation:** cross-file model resolution is not in v1 -- calls referencing models imported from other modules are silently skipped (no false positives, also no coverage). Use the survey-context skill at author time to close the cross-file gap.
 
 ## What the scanner does NOT cover
 
@@ -137,7 +137,7 @@ The `[skill:commit]` pre-review gate checks the exit code; non-zero stops the co
 
 ```
 $ bash skills/meta/detect-ai-fingerprints/scan.sh --pr 43
-src/transforms/silver.py:118:writing-prose-1-em-dash: # Cast to StringType — the FEC IDs need leading zeros
+src/transforms/silver.py:118:writing-prose-1-em-dash: # Cast to StringType -- the FEC IDs need leading zeros
 src/transforms/silver.py:118:writing-prose-3-adverb(explicitly):   ...
 violations: 2
 ```

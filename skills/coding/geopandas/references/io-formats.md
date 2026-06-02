@@ -9,13 +9,13 @@ Format selection for spatial Python work. Defaults: GeoParquet for storage, GeoJ
 | **GeoParquet** | `.parquet` | pyarrow (no GDAL) | pyarrow | **Default for Siege storage and pipelines.** Columnar, compressed, schema-stable, no GDAL. |
 | **GeoJSON** | `.geojson`, `.json` | none (built-in) | none | Interchange, web APIs, small datasets. Verbose; large files OOM Pandas readers. |
 | **GeoPackage** | `.gpkg` | GDAL (fiona/pyogrio) | GDAL | Multi-layer SQLite-based; good for desktop GIS handoff. |
-| **Shapefile** | `.shp` (+ `.shx`, `.dbf`, `.prj`) | GDAL | GDAL | Legacy. Avoid for new work — column-name length limit (10 chars), no UTF-8 in attributes, multi-file. |
+| **Shapefile** | `.shp` (+ `.shx`, `.dbf`, `.prj`) | GDAL | GDAL | Legacy. Avoid for new work -- column-name length limit (10 chars), no UTF-8 in attributes, multi-file. |
 | **FlatGeobuf** | `.fgb` | GDAL | GDAL | Streaming, indexed format; useful for large mapping pipelines. |
 | **CSV with WKT/WKB column** | `.csv` | none + Shapely WKT/WKB parser | manual | Easy debugging; no index; not for production storage. |
 | **PostGIS** | (database) | psycopg2 + GeoAlchemy2 or pandas+sqlalchemy | same | Persistent, indexed, multi-user. See [skill:postgis]. |
 | **Iceberg/Delta with geometry column** | (table format) | spark or polars | same | Lakehouse spatial. WKB-encoded columns. |
 
-## GeoParquet — the default
+## GeoParquet -- the default
 
 ```python
 import geopandas as gpd
@@ -36,7 +36,7 @@ gdf = gpd.read_parquet("s3://bucket/features.parquet", storage_options={"key": "
 GeoParquet (`.parquet` with WKB-encoded geometry column + GeoParquet metadata in column properties):
 
 - No GDAL needed
-- Columnar — selective reads of attribute columns are fast
+- Columnar -- selective reads of attribute columns are fast
 - Compressed (Snappy by default; ZSTD for better ratio)
 - Schema-stable across versions
 - Round-trips through Polars, DuckDB, Spark/Sedona, BigQuery
@@ -74,7 +74,7 @@ gdf = gpd.GeoDataFrame(records, crs="EPSG:4326")  # GeoJSON is always 4326
 
 This path requires only `shapely`, no GDAL/Fiona/pyogrio.
 
-## Shapefile — when you have to
+## Shapefile -- when you have to
 
 Inevitable for some sources (Census TIGER, state SOS files). Read, then immediately convert:
 
@@ -87,7 +87,7 @@ Don't keep shapefiles in pipelines. Convert at the boundary.
 
 Pitfalls:
 - Column names truncated to 10 chars on write.
-- No UTF-8 by default — `encoding='utf-8'` reader option, but the original may be Latin-1.
+- No UTF-8 by default -- `encoding='utf-8'` reader option, but the original may be Latin-1.
 - Multi-file: forgetting one of `.shx`/`.dbf`/`.prj` makes the file unusable. Carry as `.zip` or directory.
 - `.prj` files with custom WKT can confuse pyproj. Set CRS explicitly after reading if needed.
 
@@ -102,7 +102,7 @@ gdf2 = gpd.read_file("data.gpkg", layer="features")
 
 Single file, supports multiple layers, no column-name limit, UTF-8 native. Still needs GDAL.
 
-## CSV with WKT — debug only
+## CSV with WKT -- debug only
 
 For inspection or quick handoff:
 
@@ -148,15 +148,15 @@ For partitioned datasets in cloud (Hive-style):
 gdf = gpd.read_parquet("s3://bucket/features/", filters=[("state", "=", "TX")])
 ```
 
-`pyarrow` does predicate pushdown — only the matching partitions/files are read.
+`pyarrow` does predicate pushdown -- only the matching partitions/files are read.
 
 ## What SU provides
 
-- **Source readers** for Census/GADM/OSM boundaries return GeoDataFrames in EPSG:4326 — no I/O concern, just call `get_geographic_boundaries()`.
-- **Format conversion** via `geo.spatial_transformations.SpatialDataTransformer.convert_format()` — supports shapefile, geojson, gpkg, kml, gml, wkt, wkb, postgis, duckdb.
+- **Source readers** for Census/GADM/OSM boundaries return GeoDataFrames in EPSG:4326 -- no I/O concern, just call `get_geographic_boundaries()`.
+- **Format conversion** via `geo.spatial_transformations.SpatialDataTransformer.convert_format()` -- supports shapefile, geojson, gpkg, kml, gml, wkt, wkb, postgis, duckdb.
 
 What SU doesn't yet do (upstream PR candidates):
-- **SU-1:** `read_geoparquet()` / `write_geoparquet()` using DuckDB-WKB without GDAL — major gap for GDAL-free environments.
+- **SU-1:** `read_geoparquet()` / `write_geoparquet()` using DuckDB-WKB without GDAL -- major gap for GDAL-free environments.
 - **SU-7:** `csv_to_geoparquet(csv_path, lat_col, lon_col)` convenience.
 
 See [`siege-utilities-geopandas.md`](siege-utilities-geopandas.md) for the full SU map.

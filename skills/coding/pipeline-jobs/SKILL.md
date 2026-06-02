@@ -9,8 +9,8 @@ routed-by: coding-standards
 ## Companion shelves
 
 For pipeline-design rationale and structural cleanliness:
-- [skill:data-pipelines] — ingestion, scheduling, observability patterns.
-- [skill:clean-architecture] — separate orchestration from transformation.
+- [skill:data-pipelines] -- ingestion, scheduling, observability patterns.
+- [skill:clean-architecture] -- separate orchestration from transformation.
 
 The logic lives in Python. The scheduler (Rundeck, Airflow, cron) is just the wrapper that calls it. If you move schedulers, the Python doesn't change.
 
@@ -18,10 +18,10 @@ The logic lives in Python. The scheduler (Rundeck, Airflow, cron) is just the wr
 
 Every pipeline job has two parts:
 
-1. **Python script** — standalone, testable, accepts CLI arguments, returns exit codes
-2. **Scheduler config** — YAML/DAG that calls the Python script on a schedule
+1. **Python script** -- standalone, testable, accepts CLI arguments, returns exit codes
+2. **Scheduler config** -- YAML/DAG that calls the Python script on a schedule
 
-The Python script must work when called directly from a terminal. The scheduler config must never contain business logic — only environment setup, nohup wrapping, and the call to Python.
+The Python script must work when called directly from a terminal. The scheduler config must never contain business logic -- only environment setup, nohup wrapping, and the call to Python.
 
 ## Python Script Design
 

@@ -109,10 +109,10 @@ The subdivide payoff scales with two factors:
 
 ## When subdivision doesn't help
 
-- Right-side polygons are simple (< ~500 vertices) — `ST_Subdivide` overhead exceeds the benefit
-- Workload is many-to-many overlay (`ST_Intersection`, not predicate) — exact intersection is the cost; subdivision doesn't reduce it
-- Right-side is small (< 100 polygons) — sequential scan is faster anyway
-- Right-side changes per query — pre-processing has no payoff
+- Right-side polygons are simple (< ~500 vertices) -- `ST_Subdivide` overhead exceeds the benefit
+- Workload is many-to-many overlay (`ST_Intersection`, not predicate) -- exact intersection is the cost; subdivision doesn't reduce it
+- Right-side is small (< 100 polygons) -- sequential scan is faster anyway
+- Right-side changes per query -- pre-processing has no payoff
 
 ## Choosing `max_vertices`
 
@@ -163,23 +163,23 @@ The pattern is universal but the function name varies:
 | PostGIS | `ST_Subdivide(geom, max_vertices)` | Returns set; use as `(ST_Subdivide(...)).geom` |
 | Sedona | `ST_Subdivide(geom, max_vertices)` | Same syntax |
 | DuckDB-spatial | `ST_Subdivide(geom, max_vertices)` | Same syntax |
-| Shapely | none — manual recursive split | See recipe above |
+| Shapely | none -- manual recursive split | See recipe above |
 
 When porting code that uses subdivision across engines, the pattern transfers; only the Python (Shapely) case requires custom code.
 
 ## Pitfalls
 
-- **Forgot `DISTINCT`** — duplicate rows from points falling on subdivision boundaries.
-- **Subdivision in the WHERE clause** — recomputes per query.
-- **`max_vertices` too small** — billions of tiny pieces; index update cost dominates.
-- **Subdividing simple polygons** — overhead with no benefit.
-- **Subdividing without an index on the result** — defeats the purpose.
-- **Subdividing then forgetting `ANALYZE`** — planner uses default row-count estimates; bad plans.
-- **Subdivision in GeoPandas via Shapely** — slow; round-trip through PostGIS/DuckDB if you can.
+- **Forgot `DISTINCT`** -- duplicate rows from points falling on subdivision boundaries.
+- **Subdivision in the WHERE clause** -- recomputes per query.
+- **`max_vertices` too small** -- billions of tiny pieces; index update cost dominates.
+- **Subdividing simple polygons** -- overhead with no benefit.
+- **Subdividing without an index on the result** -- defeats the purpose.
+- **Subdividing then forgetting `ANALYZE`** -- planner uses default row-count estimates; bad plans.
+- **Subdivision in GeoPandas via Shapely** -- slow; round-trip through PostGIS/DuckDB if you can.
 
 ## Cross-links
 
-- [`bbox-pre-filter.md`](bbox-pre-filter.md) — subdivision makes the bbox pre-filter much more selective
-- [`spatial-indexing-discipline.md`](spatial-indexing-discipline.md) — the subdivided table needs its own spatial index
-- [`../../coding/postgis/references/spatial-joins-performance.md`](../../../coding/postgis/references/spatial-joins-performance.md) — Paul Ramsey's worked PostGIS examples
-- [`../../coding/sedona/references/partitioning-strategies.md`](../../../coding/sedona/references/partitioning-strategies.md) — for Sedona, subdivision pairs with partitioning
+- [`bbox-pre-filter.md`](bbox-pre-filter.md) -- subdivision makes the bbox pre-filter much more selective
+- [`spatial-indexing-discipline.md`](spatial-indexing-discipline.md) -- the subdivided table needs its own spatial index
+- [`../../coding/postgis/references/spatial-joins-performance.md`](../../../coding/postgis/references/spatial-joins-performance.md) -- Paul Ramsey's worked PostGIS examples
+- [`../../coding/sedona/references/partitioning-strategies.md`](../../../coding/sedona/references/partitioning-strategies.md) -- for Sedona, subdivision pairs with partitioning

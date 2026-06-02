@@ -4,7 +4,7 @@ description: Router for systems-architecture book skills. Dispatches to data-int
 disable-model-invocation: false
 ---
 
-# Systems Architecture — Shelf
+# Systems Architecture -- Shelf
 
 Books on designing distributed systems, choosing storage and compute primitives, and surviving in production.
 
@@ -13,20 +13,20 @@ Books on designing distributed systems, choosing storage and compute primitives,
 | Task signal | Book to read |
 |---|---|
 | Storage engine choice (LSM vs B-tree, SQL vs NoSQL), replication, partitioning, transactions, consistency models, batch vs stream | [skill:data-intensive] |
-| End-to-end system design — load balancers, caches, queues, capacity estimation, back-of-envelope math | [skill:system-design] |
+| End-to-end system design -- load balancers, caches, queues, capacity estimation, back-of-envelope math | [skill:system-design] |
 | Service decomposition, sagas, API gateway, service discovery, distributed data patterns | [skill:microservices-patterns] |
-| Production failure modes — circuit breakers, bulkheads, timeouts, capacity, "what breaks at 3am" | [skill:release-it] |
+| Production failure modes -- circuit breakers, bulkheads, timeouts, capacity, "what breaks at 3am" | [skill:release-it] |
 | Browser performance, latency budgets, HTTP/2/3, CDN, image optimization, critical-path render | [skill:high-perf-browser] |
-| Tech-interview prep — design YouTube, Twitter, Uber, Dropbox; capacity drills | [skill:system-design-interview] |
+| Tech-interview prep -- design YouTube, Twitter, Uber, Dropbox; capacity drills | [skill:system-design-interview] |
 
 ## Books in this shelf
 
-- [skill:data-intensive] — *Designing Data-Intensive Applications* (Kleppmann). Storage engines, replication, partitioning, transactions, batch + stream.
-- [skill:system-design] — System design fundamentals: load balancing, caching, queues, capacity planning.
-- [skill:microservices-patterns] — Chris Richardson. Service decomposition, sagas, distributed data, API gateway.
-- [skill:release-it] — Michael Nygard. Stability and capacity patterns; production failure modes.
-- [skill:high-perf-browser] — *High Performance Browser Networking* (Grigorik). Network primitives and frontend latency.
-- [skill:system-design-interview] — Alex Xu. Common interview design problems, walkthroughs.
+- [skill:data-intensive] -- *Designing Data-Intensive Applications* (Kleppmann). Storage engines, replication, partitioning, transactions, batch + stream.
+- [skill:system-design] -- System design fundamentals: load balancing, caching, queues, capacity planning.
+- [skill:microservices-patterns] -- Chris Richardson. Service decomposition, sagas, distributed data, API gateway.
+- [skill:release-it] -- Michael Nygard. Stability and capacity patterns; production failure modes.
+- [skill:high-perf-browser] -- *High Performance Browser Networking* (Grigorik). Network primitives and frontend latency.
+- [skill:system-design-interview] -- Alex Xu. Common interview design problems, walkthroughs.
 
 ## Disambiguation
 

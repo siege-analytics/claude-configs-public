@@ -108,7 +108,7 @@ Statistical significance tells you: "How likely is this result due to chance vs.
 
 Checking results daily and stopping when you see a winner leads to false positives.
 
-- **Wrong:** "We're at 95% confidence after 3 days—ship it!"
+- **Wrong:** "We're at 95% confidence after 3 days--ship it!"
 - **Right:** Pre-determine sample size and test duration; don't stop early
 
 **2. Calling tests with insufficient data**
@@ -146,7 +146,7 @@ For 5% baseline, 50% relative lift detection:
 ~4,000 visitors per variant needed
 ```
 
-**Key insight:** The smaller the effect you want to detect, the more traffic you need. This is why bold changes are better—they're detectable with less traffic.
+**Key insight:** The smaller the effect you want to detect, the more traffic you need. This is why bold changes are better--they're detectable with less traffic.
 
 ### Test Duration
 

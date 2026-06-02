@@ -10,7 +10,7 @@ The market category you choose is the single most powerful lever in positioning.
 
 **When to use:**
 - Your product can credibly claim to be the best (or among the best) in an established category
-- The category is well-understood by buyers — they know what it is, how to evaluate options, and what to expect
+- The category is well-understood by buyers -- they know what it is, how to evaluate options, and what to expect
 - You have attributes that make you the best choice for a meaningful segment of the category's buyers
 - The category is large enough to support your growth ambitions
 
@@ -18,7 +18,7 @@ The market category you choose is the single most powerful lever in positioning.
 
 | Advantage | Explanation |
 |-----------|-------------|
-| Zero education cost | Customers already know the category — no need to explain what it is |
+| Zero education cost | Customers already know the category -- no need to explain what it is |
 | Established buying process | Customers know how to evaluate, compare, and purchase |
 | Existing budget | Companies already allocate budget for this category |
 | Clear competitive positioning | "We're the best CRM for X" is immediately understandable |
@@ -36,12 +36,12 @@ The market category you choose is the single most powerful lever in positioning.
 
 **How to win head-to-head:**
 1. Target the segment of the category where your unique attributes matter most
-2. Lead with differentiation — "We're [category] but unlike others, we [unique value]"
-3. Redefine evaluation criteria to favor your strengths — create comparison frameworks that highlight your unique attributes
+2. Lead with differentiation -- "We're [category] but unlike others, we [unique value]"
+3. Redefine evaluation criteria to favor your strengths -- create comparison frameworks that highlight your unique attributes
 4. Use proof points aggressively to demonstrate superiority for your segment
-5. Accept you won't win every deal — focus on the deals where your positioning is strongest
+5. Accept you won't win every deal -- focus on the deals where your positioning is strongest
 
-**Example:** A new CRM that competes head-to-head with Salesforce by targeting mid-market companies. "We're the CRM built for mid-market teams — all the power of enterprise CRM without the 6-month implementation."
+**Example:** A new CRM that competes head-to-head with Salesforce by targeting mid-market companies. "We're the CRM built for mid-market teams -- all the power of enterprise CRM without the 6-month implementation."
 
 ### Strategy 2: Subcategory of an Existing Category
 
@@ -57,7 +57,7 @@ The market category you choose is the single most powerful lever in positioning.
 
 | Advantage | Explanation |
 |-----------|-------------|
-| Leverage existing awareness | Customers understand the base category — the modifier adds specificity |
+| Leverage existing awareness | Customers understand the base category -- the modifier adds specificity |
 | Shift evaluation criteria | The modifier introduces new criteria that favor your strengths |
 | Reduced competition | Fewer direct competitors in the subcategory |
 | "Built for us" effect | Target customers feel the product was made specifically for them |
@@ -74,7 +74,7 @@ The market category you choose is the single most powerful lever in positioning.
 
 **How to create a strong subcategory:**
 1. Start with a well-known base category that your target customers understand
-2. Add a modifier that is immediately clear and meaningful — usually industry, company size, role, or use case
+2. Add a modifier that is immediately clear and meaningful -- usually industry, company size, role, or use case
 3. Define 2-3 evaluation criteria specific to the subcategory that your unique attributes address
 4. Create content and thought leadership around the subcategory to establish it
 5. Build proof points (case studies, benchmarks) specific to the subcategory
@@ -89,14 +89,14 @@ The market category you choose is the single most powerful lever in positioning.
 | [Technology] [Category] | AI-powered customer support | Customer support |
 | [Role]-first [Category] | Developer-first analytics | Analytics |
 
-**Example:** "Revenue intelligence platform" as a subcategory of CRM. Gong didn't try to be a better CRM — it created a subcategory that shifted evaluation criteria from "contact management and pipeline tracking" to "conversation analytics and revenue insights."
+**Example:** "Revenue intelligence platform" as a subcategory of CRM. Gong didn't try to be a better CRM -- it created a subcategory that shifted evaluation criteria from "contact management and pipeline tracking" to "conversation analytics and revenue insights."
 
 ### Strategy 3: Create a New Category
 
 **Definition:** You define an entirely new market category that doesn't exist yet and position your product as the defining example.
 
 **When to use:**
-- Your product is genuinely different from anything that exists — it doesn't fit neatly into any existing category
+- Your product is genuinely different from anything that exists -- it doesn't fit neatly into any existing category
 - Forcing your product into an existing category creates more confusion than clarity
 - You have the resources (time, money, talent) to educate the market on what the new category is
 - The potential upside of owning a category justifies the significant investment required
@@ -118,18 +118,18 @@ The market category you choose is the single most powerful lever in positioning.
 | The "education tax" | You must teach the market what the category is before selling into it |
 | Long sales cycles | Buyers need time to understand, budget for, and approve a new category |
 | No existing budget | Companies don't have a line item for a category that didn't exist yesterday |
-| Market may not adopt | The category may never gain traction — you're betting on market creation |
+| Market may not adopt | The category may never gain traction -- you're betting on market creation |
 | Competitors may define it differently | If you don't control the narrative, others may define the category in ways that don't favor you |
 
 ## The Education Tax
 
 The "education tax" is the most important concept in category strategy. When you create a new category, every customer must learn:
 
-1. **What the category is** — "What is 'revenue intelligence'?"
-2. **Why it matters** — "Why should I care about revenue intelligence?"
-3. **How to evaluate options** — "What makes one revenue intelligence platform better than another?"
-4. **How to budget for it** — "Where does this come from in my budget?"
-5. **How to get internal buy-in** — "How do I explain this to my CFO?"
+1. **What the category is** -- "What is 'revenue intelligence'?"
+2. **Why it matters** -- "Why should I care about revenue intelligence?"
+3. **How to evaluate options** -- "What makes one revenue intelligence platform better than another?"
+4. **How to budget for it** -- "Where does this come from in my budget?"
+5. **How to get internal buy-in** -- "How do I explain this to my CFO?"
 
 **The education tax is cumulative.** Every prospect you talk to pays this tax. Every blog post, webinar, and sales call must include education. This is expensive and time-consuming.
 
@@ -156,7 +156,7 @@ Use this flowchart-style decision framework:
 ### Question 2: If you placed your product in the existing category, would customers understand your value?
 
 - **Yes, and we can credibly claim to be among the best** → Head-to-head
-- **Yes, but the category is too broad — our unique value gets lost** → Subcategory
+- **Yes, but the category is too broad -- our unique value gets lost** → Subcategory
 - **No, the category creates wrong expectations** → New category or different existing category
 
 ### Question 3: Do you have the resources to pay the education tax?
@@ -206,7 +206,7 @@ Category changes are major strategic decisions. They should not be taken lightly
 
 | Risk | Mitigation |
 |------|-----------|
-| Confusing existing customers | Communicate proactively — "We're not changing the product, we're changing how we describe it" |
+| Confusing existing customers | Communicate proactively -- "We're not changing the product, we're changing how we describe it" |
 | Losing SEO for old category terms | Maintain old content while building new, redirect rather than delete |
 | Analyst/media confusion | Brief analysts before the change, explain the rationale |
 | Sales team inconsistency | Train the sales team first, provide new talk tracks, role-play the new positioning |

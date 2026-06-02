@@ -22,7 +22,7 @@ def run_pipeline():
         revenue = float(record["amount_usd"])
         region = record["region"].strip().upper()
 
-        # No upsert — re-running inserts duplicates
+        # No upsert -- re-running inserts duplicates
         cur.execute("""
             INSERT INTO fact_sales (sale_id, sale_date, revenue, region, loaded_at)
             VALUES (%s, %s, %s, %s, NOW())

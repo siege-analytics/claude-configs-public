@@ -121,7 +121,7 @@ Push `WHERE` conditions as close to the source tables as possible. Don't filter 
 |------|----------|
 | `INNER JOIN` | Only rows that match in both tables |
 | `LEFT JOIN` | All rows from left, NULLs for non-matches |
-| `CROSS JOIN` | Every combination (rare — usually a mistake) |
+| `CROSS JOIN` | Every combination (rare -- usually a mistake) |
 | Anti join (`LEFT JOIN ... WHERE right.id IS NULL`) | Rows that do NOT match |
 
 Never use implicit joins (comma-separated `FROM` with `WHERE` conditions).
@@ -133,7 +133,7 @@ Every non-aggregated column must be in GROUP BY. `HAVING` filters groups after a
 ### 5. NULL Awareness
 
 ```sql
--- NULL is not a value — it is the absence of a value
+-- NULL is not a value -- it is the absence of a value
 WHERE employer IS NULL          -- not: WHERE employer = NULL
 SELECT COALESCE(employer, 'Not reported') AS employer
 

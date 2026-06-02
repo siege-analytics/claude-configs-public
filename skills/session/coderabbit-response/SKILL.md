@@ -10,7 +10,7 @@ argument-hint: [pr-number]
 
 Use this skill to triage a CodeRabbit (or similar bot) review on a pull request. See [reference.md](reference.md) for GraphQL command templates and GitHub review-decision rules.
 
-**Platform scope**: CodeRabbit is GitHub-specific (operates on GitHub PR + reviewDecision semantics). GitLab repos use different review-bot ecosystems (CodeClimate, GitGuardian, custom MR-bot integrations); the triage *posture* in this skill — fix / reply / dismiss; manage stale-review-blocks-merge — generalizes, but the GraphQL + `gh api` commands below are GitHub-only. For GitLab MR review triage, treat this skill as conceptual guidance and adapt the API surface to GitLab's MR / discussion / approval endpoints.
+**Platform scope**: CodeRabbit is GitHub-specific (operates on GitHub PR + reviewDecision semantics). GitLab repos use different review-bot ecosystems (CodeClimate, GitGuardian, custom MR-bot integrations); the triage *posture* in this skill -- fix / reply / dismiss; manage stale-review-blocks-merge -- generalizes, but the GraphQL + `gh api` commands below are GitHub-only. For GitLab MR review triage, treat this skill as conceptual guidance and adapt the API surface to GitLab's MR / discussion / approval endpoints.
 
 ## When to Use
 
@@ -24,10 +24,10 @@ Runs from the repo root with the PR checked out (or the PR number as `$1`).
 START: CodeRabbit posted N threads
   │
   ├─ For each thread, classify severity (CR marks 🔴/🟠/🟡/🔵):
-  │   🔴 Critical — likely a real bug or security issue
-  │   🟠 Major    — code quality / correctness concern worth fixing
-  │   🟡 Minor    — nit that might matter
-  │   🔵 Trivial  — preference, not correctness
+  │   🔴 Critical -- likely a real bug or security issue
+  │   🟠 Major    -- code quality / correctness concern worth fixing
+  │   🟡 Minor    -- nit that might matter
+  │   🔵 Trivial  -- preference, not correctness
   │
   ├─ For each thread, decide:
   │
@@ -50,7 +50,7 @@ START: CodeRabbit posted N threads
   └─ Never:
       - Blindly apply autofix without reading the diff
       - Dismiss a review just because it's inconvenient
-      - Mix "resolve" with "dismiss" — resolve = thread, dismiss = review
+      - Mix "resolve" with "dismiss" -- resolve = thread, dismiss = review
 ```
 
 ## The stale-review trap
@@ -73,15 +73,15 @@ Look for any `coderabbitai[bot]` entry with `state: CHANGES_REQUESTED` that hasn
 
 | CR says | Severity | Default action | Exception |
 |---|---|---|---|
-| "bare except catches too much" | 🟠 | Fix (see python-exceptions skill) | — |
+| "bare except catches too much" | 🟠 | Fix (see python-exceptions skill) | -- |
 | "hardcoded password in test" | 🟠 | Replace with fixture const + `# noqa: S105` | Real secret → rotate NOW |
 | "F401 unused import" | 🔵 | Fix | Re-export intentional → `__all__` or `# noqa: F401` |
 | "missing regression test" | 🟡 | Add one if it's in diff | Skip if test infra for that path is broken |
-| "consider renaming X to Y" | 🔵 | Reply "style preference; deferring" | — |
+| "consider renaming X to Y" | 🔵 | Reply "style preference; deferring" | -- |
 | "this function is too long" | 🟡 | Fix if < 30 min refactor | Reply + linear ticket if it's >30 min |
 | "potential SQL injection" | 🔴 | **Fix immediately**; verify the fix | Rare case where it's a mock / test stub |
 | "this will break existing callers" | 🔴 | Audit callers (see library-api-evolution) | Confirmed no callers → reply + fix forward |
-| "consider async here" | 🔵 | Reply "not async-first" | — |
+| "consider async here" | 🔵 | Reply "not async-first" | -- |
 
 ## Phases
 
@@ -110,9 +110,9 @@ gh api graphql -f query='query {
 Load the full file the thread is on. Read the CR comment body. Apply the decision tree. Mark each thread in a scratchpad:
 
 ```
-[FIX] thread#PRRT_xxx — boundary_providers.py:368 — format kwarg dropped
-[FIX] thread#PRRT_xxx — polling_analyzer.py:265 — silent except
-[REPLY] thread#PRRT_xxx — style: _LEVELS as tuple (fine either way)
+[FIX] thread#PRRT_xxx -- boundary_providers.py:368 -- format kwarg dropped
+[FIX] thread#PRRT_xxx -- polling_analyzer.py:265 -- silent except
+[REPLY] thread#PRRT_xxx -- style: _LEVELS as tuple (fine either way)
 [DISMISS-REVIEW] CR CHANGES_REQUESTED review id=41xxxx on old commit
 ```
 
@@ -173,17 +173,17 @@ If still BLOCKED, check:
 
 For each FIXed thread, ask: "is this a recurring pattern, or a one-off?" If recurring (you've seen it before in this repo, or it points at a project-wide invariant), invoke [skill:lessons-learned] to log or bump the corresponding entry in `LESSONS.md`.
 
-Heuristic — log when **any** of these are true:
+Heuristic -- log when **any** of these are true:
 
 - The same CR rule has fired on 2+ prior PRs in this repo
 - The fix touches a hot file (one with frequent CR findings)
-- The finding is 🔴 Critical (security, data loss) — log even at recurrence 1
+- The finding is 🔴 Critical (security, data loss) -- log even at recurrence 1
 - Your own intuition says "we keep getting this"
 
 Do NOT log:
 - 🔵 Trivial style nits
 - One-off bugs with no underlying pattern
-- Findings already covered by an existing ledger entry — bump that entry's recurrence instead
+- Findings already covered by an existing ledger entry -- bump that entry's recurrence instead
 
 ## When you disagree with CR
 

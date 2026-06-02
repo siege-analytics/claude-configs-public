@@ -1,18 +1,18 @@
 # Practical Value: Making Information Worth Sharing
 
-People share useful information to help others. If your product, content, or message saves people time, money, health, or effort, they will pass it along as a favor to the people they care about. Practical value is the altruistic engine of word-of-mouth — people share not to make themselves look good, but to help their friends and family.
+People share useful information to help others. If your product, content, or message saves people time, money, health, or effort, they will pass it along as a favor to the people they care about. Practical value is the altruistic engine of word-of-mouth -- people share not to make themselves look good, but to help their friends and family.
 
 ## Why Practical Value Drives Sharing
 
 Unlike Social Currency (which is about self-enhancement), Practical Value is driven by genuine altruism. People forward useful articles, share money-saving tips, and recommend helpful tools because they want to help the people in their network.
 
-**The key insight:** Practical value content doesn't need to be exciting or remarkable. It just needs to be genuinely useful. A 65-year-old forwarding an article about "10 Ways to Reduce Your Electricity Bill" to their adult children isn't trying to look cool — they're trying to be helpful. This makes Practical Value the most democratic STEPPS principle. Anyone can share something useful.
+**The key insight:** Practical value content doesn't need to be exciting or remarkable. It just needs to be genuinely useful. A 65-year-old forwarding an article about "10 Ways to Reduce Your Electricity Bill" to their adult children isn't trying to look cool -- they're trying to be helpful. This makes Practical Value the most democratic STEPPS principle. Anyone can share something useful.
 
-**The paradox of narrowness:** Counterintuitively, content targeting a narrow audience often spreads more than broadly targeted content. Why? Because when something is specifically useful to a certain type of person, people actively forward it to "the person who needs this." "You're into gardening — you need to see this" is a more powerful sharing mechanism than "Everyone might find this interesting."
+**The paradox of narrowness:** Counterintuitively, content targeting a narrow audience often spreads more than broadly targeted content. Why? Because when something is specifically useful to a certain type of person, people actively forward it to "the person who needs this." "You're into gardening -- you need to see this" is a more powerful sharing mechanism than "Everyone might find this interesting."
 
 ## Prospect Theory: The Psychology of Value Perception
 
-Daniel Kahneman and Amos Tversky's Prospect Theory explains how people perceive gains and losses — and it has direct implications for how you frame deals, discounts, and practical value.
+Daniel Kahneman and Amos Tversky's Prospect Theory explains how people perceive gains and losses -- and it has direct implications for how you frame deals, discounts, and practical value.
 
 ### Core Principles of Prospect Theory
 
@@ -161,7 +161,7 @@ Even genuinely good deals need to feel like deals. Perception of value often mat
 | **Anchor price** | Show the original price prominently | ~~$99~~ Now $49 |
 | **Limited time** | Create urgency with a deadline | "Offer expires Friday" |
 | **Limited quantity** | Create scarcity | "Only 12 left at this price" |
-| **Unexpected discount** | Surprise with savings they didn't expect | "We noticed you were looking at this — here's 20% off" |
+| **Unexpected discount** | Surprise with savings they didn't expect | "We noticed you were looking at this -- here's 20% off" |
 | **Stacking** | Show multiple savings combined | "30% off + free shipping + bonus gift" |
 | **Per-unit breakdown** | Make cost feel trivial | "Less than $1 per day" |
 | **Comparison frame** | Compare to more expensive alternative | "Half the cost of [competitor]" |
@@ -170,10 +170,10 @@ Even genuinely good deals need to feel like deals. Perception of value often mat
 
 A deal that's good enough to share follows this pattern:
 
-1. **It feels exceptional** — not just good, but surprisingly good
-2. **It's easy to communicate** — "50% off everything" is shareable; "Up to 50% off select items from participating categories" is not
-3. **It's time-bound** — urgency makes people share faster ("Tell your friends before Friday!")
-4. **It helps a specific person** — "Your sister who loves cooking would love this"
+1. **It feels exceptional** -- not just good, but surprisingly good
+2. **It's easy to communicate** -- "50% off everything" is shareable; "Up to 50% off select items from participating categories" is not
+3. **It's time-bound** -- urgency makes people share faster ("Tell your friends before Friday!")
+4. **It helps a specific person** -- "Your sister who loves cooking would love this"
 
 ### Deal Framing Checklist
 

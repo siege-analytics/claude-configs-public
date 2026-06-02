@@ -6,21 +6,21 @@ routed-by: analysis-methods
 
 # Spatial Analysis
 
-Apply this decision framework when facing a problem involving geographic data. The framework below routes by data trustworthiness, accuracy needs, and scale. The **engine** axis (PostGIS / GeoPandas / Sedona / DuckDB-spatial) and the **GDAL availability** axis are documented in the per-axis references — load on demand:
+Apply this decision framework when facing a problem involving geographic data. The framework below routes by data trustworthiness, accuracy needs, and scale. The **engine** axis (PostGIS / GeoPandas / Sedona / DuckDB-spatial) and the **GDAL availability** axis are documented in the per-axis references -- load on demand:
 
-- [`references/engine-selection.md`](references/engine-selection.md) — given the task, pick PostGIS / GeoPandas / Sedona / DuckDB-spatial
-- [`references/gdal-availability-matrix.md`](references/gdal-availability-matrix.md) — which paths work without GDAL, per engine, with SU tier mapping
-- [`references/crs-decision-tree.md`](references/crs-decision-tree.md) — cross-engine projection rules; lat/lng vs projected for distance
-- [`references/siege-utilities-spatial.md`](references/siege-utilities-spatial.md) — what SU obviates per task category; check this before reaching for native engine APIs
-- [`references/capability-tiers.md`](references/capability-tiers.md) — `geo` / `geo-lite` / `geodjango` / `none` — adopt SU's vocabulary for environment classification
-- [`references/principles/`](references/principles/index.md) — **universal cross-engine spatial principles** (CRS-as-meaning, validate-on-ingest, bbox-pre-filter, subdivide-complex-polygons, indexing-discipline, name-by-srid). Engine-agnostic; load when you need the *why* behind the patterns
-- [`references/spatial-statistics.md`](references/spatial-statistics.md) — Moran's I, LISA, Gi*, regression, GWR, segregation, DBSCAN; per-engine matrix
-- [`references/spatial-weights.md`](references/spatial-weights.md) — the W matrix in depth; standardization; sensitivity
-- [`references/regionalization.md`](references/regionalization.md) — constrained spatial clustering (max-p / SKATER / AZP); redistricting algorithms
-- [`references/spatial-inequality.md`](references/spatial-inequality.md) — Gini, Theil, between-region vs within-region decomposition
-- [`references/spatial-feature-engineering.md`](references/spatial-feature-engineering.md) — features for spatial ML; spatial cross-validation (non-negotiable)
-- [`references/point-pattern-analysis.md`](references/point-pattern-analysis.md) — Ripley's K, KDE, CSR tests for point data
-- [`references/geographic-data-science-distilled.md`](references/geographic-data-science-distilled.md) — distillation of *Geographic Data Science with Python* (Rey, Arribas-Bel, Wolf)
+- [`references/engine-selection.md`](references/engine-selection.md) -- given the task, pick PostGIS / GeoPandas / Sedona / DuckDB-spatial
+- [`references/gdal-availability-matrix.md`](references/gdal-availability-matrix.md) -- which paths work without GDAL, per engine, with SU tier mapping
+- [`references/crs-decision-tree.md`](references/crs-decision-tree.md) -- cross-engine projection rules; lat/lng vs projected for distance
+- [`references/siege-utilities-spatial.md`](references/siege-utilities-spatial.md) -- what SU obviates per task category; check this before reaching for native engine APIs
+- [`references/capability-tiers.md`](references/capability-tiers.md) -- `geo` / `geo-lite` / `geodjango` / `none` -- adopt SU's vocabulary for environment classification
+- [`references/principles/`](references/principles/index.md) -- **universal cross-engine spatial principles** (CRS-as-meaning, validate-on-ingest, bbox-pre-filter, subdivide-complex-polygons, indexing-discipline, name-by-srid). Engine-agnostic; load when you need the *why* behind the patterns
+- [`references/spatial-statistics.md`](references/spatial-statistics.md) -- Moran's I, LISA, Gi*, regression, GWR, segregation, DBSCAN; per-engine matrix
+- [`references/spatial-weights.md`](references/spatial-weights.md) -- the W matrix in depth; standardization; sensitivity
+- [`references/regionalization.md`](references/regionalization.md) -- constrained spatial clustering (max-p / SKATER / AZP); redistricting algorithms
+- [`references/spatial-inequality.md`](references/spatial-inequality.md) -- Gini, Theil, between-region vs within-region decomposition
+- [`references/spatial-feature-engineering.md`](references/spatial-feature-engineering.md) -- features for spatial ML; spatial cross-validation (non-negotiable)
+- [`references/point-pattern-analysis.md`](references/point-pattern-analysis.md) -- Ripley's K, KDE, CSR tests for point data
+- [`references/geographic-data-science-distilled.md`](references/geographic-data-science-distilled.md) -- distillation of *Geographic Data Science with Python* (Rey, Arribas-Bel, Wolf)
 
 For operation code examples, CRS tables, dirty-data recipes, and the original technology-comparison matrix, see [`reference.md`](reference.md) (the cookbook).
 
@@ -36,7 +36,7 @@ caps = geo_capabilities()  # detect installed packages
 set_default_crs("EPSG:4326")  # session-wide default
 ```
 
-`caps["tier"]` is `"geo"` (full GDAL stack), `"geo-lite"` (Shapely + pyproj only), `"geodjango"` (full + Django GIS), or `"none"`. The tier constrains the engine choice — see [`gdal-availability-matrix.md`](references/gdal-availability-matrix.md). On Spark/Databricks, also call `siege_utilities.geo.spatial_runtime.resolve_spatial_runtime_plan()` to detect Sedona / native-spatial availability.
+`caps["tier"]` is `"geo"` (full GDAL stack), `"geo-lite"` (Shapely + pyproj only), `"geodjango"` (full + Django GIS), or `"none"`. The tier constrains the engine choice -- see [`gdal-availability-matrix.md`](references/gdal-availability-matrix.md). On Spark/Databricks, also call `siege_utilities.geo.spatial_runtime.resolve_spatial_runtime_plan()` to detect Sedona / native-spatial availability.
 
 ## Step 1: Do You Trust Your Tabular Representation?
 
@@ -53,7 +53,7 @@ Ask of every column you're about to JOIN on:
 | Is there a `NULL`-or-empty rate ≥ 5% on the join key? | Likely means upstream ingestion is dropping rows |
 | Does the crosswalk document its coverage gaps? | No docs → assume gaps |
 
-If **any answer is concerning, skip to Step 3 — you need geometry precisely because the tabular identifiers can't be trusted.**
+If **any answer is concerning, skip to Step 3 -- you need geometry precisely because the tabular identifiers can't be trusted.**
 
 Common cases where crosswalks lie:
 - **ZIP → Congressional District.** ~10% of ZIPs span two or more CDs. Court-ordered re-maps invalidate old crosswalks without warning.
@@ -70,7 +70,7 @@ Only if Step 1 came back clean. When your tabular data is trustworthy:
 |---------|-----------|-----------|
 | "Which state is this address in?" | Point-in-polygon | **String lookup** (if you already have the `state` column) |
 | "Find all donors in this ZIP code" | Spatial query | **String filter** on `zip_code` |
-| "How far apart are these two addresses?" | Geodesic distance | **Haversine formula** — two lines of math |
+| "How far apart are these two addresses?" | Geodesic distance | **Haversine formula** -- two lines of math |
 | "Show me all donations within 50 miles of X" | Radius query | **Bounding-box pre-filter** + Haversine |
 
 **Rule:** if a trusted string comparison or simple formula gives the right answer, use it. Spatial libraries add complexity, dependencies, and cost.
@@ -82,7 +82,7 @@ Only if Step 1 came back clean. When your tabular data is trustworthy:
 | State | "Which state?" | State column / ZIP prefix (99.9%) |
 | County | "Which county?" | ZIP-to-county crosswalk if current; else geo join |
 | Congressional District | "Which CD?" | Current-vintage crosswalk (~90%) or geo join (~99%) |
-| Precinct / block | "Which precinct?" | Geo join only — no shortcut exists |
+| Precinct / block | "Which precinct?" | Geo join only -- no shortcut exists |
 | Street side | "Which side of the street?" | Full geocoding + precise boundary geometry |
 
 If the problem requires post-redistricting CD assignments and your crosswalk predates the last court order, the "90% crosswalk" number drops fast. Use geometry.
@@ -93,11 +93,11 @@ Some problems use geographic language but are really about relationships:
 
 | Question | Sounds Spatial | Actually |
 |---|---|---|
-| "Which donors are connected to this PAC?" | Network map | **Graph traversal** — find nodes within N hops |
-| "Which campaigns share donors?" | Geographic overlap | **Bipartite graph** — donor nodes connect campaign nodes |
-| "Shortest path between two political networks?" | Route finding | **Graph shortest path** — Dijkstra or BFS |
+| "Which donors are connected to this PAC?" | Network map | **Graph traversal** -- find nodes within N hops |
+| "Which campaigns share donors?" | Geographic overlap | **Bipartite graph** -- donor nodes connect campaign nodes |
+| "Shortest path between two political networks?" | Route finding | **Graph shortest path** -- Dijkstra or BFS |
 | "Which vendors work for competing campaigns?" | Spatial clustering | **Graph community detection** |
-| "How does money flow through the system?" | Flow map | **Graph flow analysis** — follow directed edges |
+| "How does money flow through the system?" | Flow map | **Graph flow analysis** -- follow directed edges |
 
 If the core question is about **connections between entities** rather than **positions in space**, use a graph database or graph algorithms.
 
@@ -121,7 +121,7 @@ If the core question is about **connections between entities** rather than **pos
 | Single-node, want SQL idiom on Parquet | [skill:duckdb-spatial] | Faster than GeoPandas for batch SQL |
 | SQLite / embedded | SpatiaLite | Zero-config, local lookups |
 | Browser / web app | Turf.js or H3 | Client-side operations |
-| Nothing — minimal deps | Haversine + bounding box | Surprisingly effective |
+| Nothing -- minimal deps | Haversine + bounding box | Surprisingly effective |
 
 **Routing detail:** see [`references/engine-selection.md`](references/engine-selection.md) for the full engine comparison and the decision tree by data scale × GDAL availability × workload pattern.
 
