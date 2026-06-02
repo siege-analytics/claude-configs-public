@@ -1,6 +1,6 @@
 ---
 name: shelves
-description: Meta-router for the DBrain book-skill library. Dispatches to one of 13 topic shelves (engineering-principles, systems-architecture, languages, data-and-pipelines, product, marketing, sales, strategy, design, team, storytelling, geospatial, statistical-inference). Read this before consulting any individual book skill.
+description: Meta-router for the DBrain book-skill library. Dispatches to one of 14 topic shelves (engineering-principles, systems-architecture, django, languages, data-and-pipelines, product, marketing, sales, strategy, design, team, storytelling, geospatial, statistical-inference). Read this before consulting any individual book skill.
 ---
 
 # DBrain -- Book-Skill Library
@@ -15,6 +15,7 @@ This pattern keeps the description budget small: one slot per shelf, not one per
 |---|---|
 | [`engineering-principles`](../shelves/engineering-principles/SKILL.md) | Code quality, design, refactoring rationale, principles arguments |
 | [`systems-architecture`](../shelves/systems-architecture/SKILL.md) | Distributed-system design, storage choice, replication, scaling, system-design interview |
+| [`django`](../shelves/django/SKILL.md) | Django best practices, scaling for production, legacy codebase rescue |
 | [`languages`](../shelves/languages/SKILL.md) | Idioms and best practices for Python, JVM (Java/Kotlin/Scala-on-Spark), TypeScript, Rust |
 | [`data-and-pipelines`](../shelves/data-and-pipelines/SKILL.md) | Pipeline design, batch/stream, scheduled jobs |
 | [`product`](../shelves/product/SKILL.md) | Discovery, JTBD, lean experimentation, retention |
