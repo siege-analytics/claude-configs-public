@@ -213,7 +213,7 @@ except:
 " 2>/dev/null || echo "")
 
     # Extract ticket number(s) from branch name
-    BRANCH_TICKETS=$(echo "$BRANCH_NAME" | grep -oE '([0-9]+|[A-Z]+-[0-9]+)' | head -5)
+    BRANCH_TICKETS=$(echo "$BRANCH_NAME" | grep -oE '([0-9]+|[A-Z]+-[0-9]+)' || true)
 
     if [ -n "$SIGNAL_TICKET" ] && [ -n "$BRANCH_TICKETS" ]; then
         if ! echo "$BRANCH_TICKETS" | grep -qF "$SIGNAL_TICKET"; then
