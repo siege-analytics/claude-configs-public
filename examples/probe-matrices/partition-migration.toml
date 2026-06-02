@@ -1,0 +1,47 @@
+# Starter probe matrix: partition-migration shape.
+#
+# Use this when adding PARTITIONED BY to an existing table or migrating
+# from one partition scheme to another. The load-bearing data-shape
+# assumptions for this operation class are pre-filled. Edit `probe`
+# commands to point at your actual source/target. Tighten or relax
+# `threshold.value` per the operation's resource budget.
+#
+# The cardinality probe (`partition_key_cardinality_bounded`) is the one
+# that catches the failure shape from electinfo/airflow#147+#148 (24
+# assumed, 179 actual). Do not delete it without articulating why your
+# partition key has guaranteed-bounded cardinality.
+
+version = 1
+operation = "INSERT OVERWRITE <target> PARTITION (<cols>)"
+target_repo = "electinfo/airflow"
+target_pr = 0
+
+[[assumption]]
+id = "source_partition_has_data"
+description = "Source partition has rows to migrate. Cheap row-count probe."
+probe = "echo 'EDIT: spark-sql -e \"SELECT COUNT(*) FROM <source> WHERE <partition_filter>\"'"
+threshold = { type = "int_gt", value = 0 }
+
+[[assumption]]
+id = "partition_key_cardinality_bounded"
+description = "Distinct partition-key values are below the file-commit-storm threshold. The threshold is OPERATIONAL not theoretical: Spark + Unity Catalog dynamic partition writes stall when N(partitions) * N(executors) exceeds the metadata-commit throughput. Empirical floor for the EE pipeline is ~50; if your cardinality exceeds this, you need DISTRIBUTE BY + smaller fan-in or a different partition scheme. Do NOT raise this number without measuring the file-commit phase on the actual workload."
+probe = "echo 'EDIT: spark-sql -e \"SELECT COUNT(DISTINCT <partition_col>) FROM <source> WHERE <filter>\"'"
+threshold = { type = "int_lt", value = 50 }
+
+[[assumption]]
+id = "partition_columns_present"
+description = "Source columns named by [[partition]] exist in the rendered SELECT output. Schema-presence check; does not validate types."
+probe = "echo 'EDIT: spark-sql -e \"DESCRIBE <source>\" | grep -c -E \"^<partition_col_1>|^<partition_col_2>\"'"
+threshold = { type = "int_ge", value = 1 }
+
+[[assumption]]
+id = "no_null_partition_keys"
+description = "Partition columns have no NULLs. NULL handling under dynamic-partition mode varies by engine; safer to refuse rather than guess."
+probe = "echo 'EDIT: spark-sql -e \"SELECT COUNT(*) FROM <source> WHERE <partition_col> IS NULL\"'"
+threshold = { type = "int_eq", value = 0 }
+
+[[assumption]]
+id = "explain_plan_includes_partition_pruning"
+description = "EXPLAIN COST of a representative consumer query shows partition pruning. If pruning is absent, partitioning provides no read-path benefit and the migration is pure overhead."
+probe = "echo 'EDIT: spark-sql -e \"EXPLAIN COST SELECT * FROM <target> WHERE <partition_filter>\" | grep -c \"PartitionFilters:\"'"
+threshold = { type = "int_ge", value = 1 }
