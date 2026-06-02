@@ -20,6 +20,11 @@
 #     section (structural check only; content quality is operator-auditable).
 #     NONE is accepted only when a Trivial-against-state: declaration
 #     is also present in the artifact.
+# v1.8 (this version):
+#   - Investigate-artifact prose quality: if the artifact file exists,
+#     checks the ### Verified Shapes section for at least one PROBED or
+#     ATTESTED line. All-SKIPPED = blocked. Cross-checks entity count
+#     between prose and investigate-gate.json for drift detection.
 # v2 scope (deferred follow-ups, tracked in SKILL.md):
 #   - Goal source does not point at the commit being pushed
 #   - Lead section's role-tagged affirmative standard format
@@ -361,6 +366,67 @@ HOOKEOF
         fi
         # Ticket-comment-links (URLs, #NNN references) are accepted but
         # not yet validated against the ticket API — v2 follow-up.
+
+        # v1.8: If the Investigate-artifact file exists and is a .md file,
+        # check that its Verified Shapes section has at least one PROBED or
+        # ATTESTED line. An all-SKIPPED artifact = not actually investigated.
+        if [[ "$FIELD_NAME" == "Investigate-artifact" ]] && \
+           [[ -n "${FIELD_PATH:-}" ]] && [[ -f "${FIELD_PATH:-}" ]]; then
+            SHAPES_BLOCK=$(awk '/^### Verified Shapes/{flag=1; next} /^### /{flag=0} flag' "$FIELD_PATH")
+            if [[ -n "$SHAPES_BLOCK" ]]; then
+                PROBED_ATTESTED=$(echo "$SHAPES_BLOCK" | grep -cE 'PROBED|ATTESTED' || true)
+                SKIPPED_COUNT=$(echo "$SHAPES_BLOCK" | grep -cE 'SKIPPED' || true)
+                TOTAL_DISP=$((PROBED_ATTESTED + SKIPPED_COUNT))
+
+                if [[ "$TOTAL_DISP" -gt 0 ]] && [[ "$PROBED_ATTESTED" -eq 0 ]]; then
+                    cat >&2 <<HOOKEOF
+BLOCKED: Investigate-artifact at $FIELD_PATH has $SKIPPED_COUNT SKIPPED
+dispositions but zero PROBED or ATTESTED. An all-SKIPPED investigation
+is not an investigation — at least one assumption must be verified.
+
+Fix the investigation artifact to include PROBED (shell command executed,
+threshold met) or ATTESTED (semantic claim verified against source) entries.
+HOOKEOF
+                    exit 2
+                fi
+            fi
+
+            # Cross-check: if investigate-gate.json exists, compare entity
+            # counts between prose and signal file (drift detection).
+            GATE_FILE="${CLAUDE_INVESTIGATE_GATE:-}"
+            if [[ -z "$GATE_FILE" ]]; then
+                # Infer workspace root from the skill convention.
+                for CANDIDATE in "$EFFECTIVE_CWD/investigate-gate.json" \
+                    "$HOME/.craft-agent/workspaces/my-workspace/investigate-gate.json"; do
+                    if [[ -f "$CANDIDATE" ]]; then
+                        GATE_FILE="$CANDIDATE"
+                        break
+                    fi
+                done
+            fi
+            if [[ -n "$GATE_FILE" ]] && [[ -f "$GATE_FILE" ]]; then
+                SIGNAL_ENTITY_COUNT=$(python3 -c "
+import json, sys
+try:
+    d = json.load(open('$GATE_FILE'))
+    print(len(d.get('verifiedShapes', [])))
+except:
+    print('0')
+" 2>/dev/null || echo "0")
+                PROSE_ENTITY_COUNT=$(echo "$SHAPES_BLOCK" | grep -cE '^\*\*' || true)
+                if [[ "$SIGNAL_ENTITY_COUNT" != "$PROSE_ENTITY_COUNT" ]] && \
+                   [[ "$SIGNAL_ENTITY_COUNT" -gt 0 ]] && [[ "$PROSE_ENTITY_COUNT" -gt 0 ]]; then
+                    cat >&2 <<HOOKEOF
+WARNING: Entity count mismatch between investigate-artifact prose
+($PROSE_ENTITY_COUNT entities) and investigate-gate.json ($SIGNAL_ENTITY_COUNT
+entries). This may indicate drift between the investigation and the signal file.
+
+Verify both artifacts are in sync before proceeding.
+HOOKEOF
+                    # WARNING only — do not exit 2
+                fi
+            fi
+        fi
     done
 
     # Peer review section must cite at least one shelf.
