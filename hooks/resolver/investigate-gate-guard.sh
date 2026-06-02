@@ -129,7 +129,8 @@ STALE INVESTIGATION: investigate-gate.json is older than think-gate.json.
 The design changed after investigation was completed. Re-investigate:
 the Fact Sheet may no longer match the current design approach.
 
-Update investigate-gate.json after re-investigation.
+Re-run investigation and update investigate-gate.json, or archive it
+(post disposition to ticket, then rm the file).
 Ref: #255
 </investigate-gate>
 EOF
@@ -273,7 +274,8 @@ except:
             DISPLAY_TICKET="${SIGNAL_TICKET}"
             if echo "$SIGNAL_TICKET" | grep -qE '^[0-9]+$'; then DISPLAY_TICKET="#${SIGNAL_TICKET}"; fi
             SCOPE_WARN="SCOPE MISMATCH: investigate-gate.json is for ${DISPLAY_TICKET} but current branch is '${BRANCH_NAME}'.
-Update the signal file for the current task or archive the stale one."
+To continue: update the signal file for the current task.
+To archive: post disposition to the ticket, then rm investigate-gate.json."
         fi
     fi
 fi
@@ -282,6 +284,54 @@ if [ -n "$SCOPE_WARN" ]; then
     cat <<EOF
 <investigate-gate>
 $SCOPE_WARN
+</investigate-gate>
+EOF
+fi
+
+# Level 2.75: Temporal decay check.
+# Detects stale signal files based on lastUpdated/timestamp or file mtime.
+# Tiered warnings: 4h stale (active), 24h expired (active).
+# Ref: #328
+DECAY_WARN=$(python3 -c "
+import json, sys, os, time
+from datetime import datetime, timezone
+
+try:
+    data = json.load(open('$INVESTIGATE_GATE'))
+except:
+    sys.exit(0)
+
+last_updated = data.get('lastUpdated', '') or data.get('timestamp', '')
+ticket = data.get('ticket', 'unknown')
+
+if last_updated:
+    try:
+        ts = datetime.fromisoformat(last_updated.replace('Z', '+00:00'))
+        age_seconds = (datetime.now(timezone.utc) - ts).total_seconds()
+        age_source = 'lastUpdated' if data.get('lastUpdated') else 'timestamp'
+    except:
+        age_seconds = time.time() - os.path.getmtime('$INVESTIGATE_GATE')
+        age_source = 'file mtime (timestamp unparseable)'
+else:
+    age_seconds = time.time() - os.path.getmtime('$INVESTIGATE_GATE')
+    age_source = 'file mtime (no timestamp field)'
+
+age_hours = age_seconds / 3600
+
+if age_hours >= 24:
+    print(f'EXPIRED SIGNAL: investigate-gate.json for {ticket} has not been updated in {age_hours:.0f}h (source: {age_source}).')
+    print(f'A signal older than 24h likely reflects an abandoned or interrupted task.')
+    print(f'Re-investigate before continuing. Update lastUpdated or timestamp after review.')
+elif age_hours >= 4:
+    print(f'STALE SIGNAL: investigate-gate.json for {ticket} has not been updated in {age_hours:.1f}h (source: {age_source}).')
+    print(f'If the task is still active, update lastUpdated in the signal file.')
+    print(f'If investigation is complete and task is done, archive: post to ticket, then rm the file.')
+" 2>/dev/null || true)
+
+if [ -n "$DECAY_WARN" ]; then
+    cat <<EOF
+<investigate-gate>
+$DECAY_WARN
 </investigate-gate>
 EOF
 fi

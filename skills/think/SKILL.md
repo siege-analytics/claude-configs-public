@@ -248,6 +248,63 @@ If there is no ticket (exploratory work only), mark the local file `propagation-
 
 The same rule applies to every artifact this skill produces: if a ticket exists, the artifact goes there. A design note that only exists in a session plans folder is a design note that doesn't exist -- it disappears when the session ends, and the next agent re-derives it from scratch.
 
+## Signal file lifecycle
+
+The `think-gate.json` signal file enables the `think-gate-guard.sh` hook
+to verify the design's premises on every turn. It is the bridge between
+the design (prose) and the enforcement (hook).
+
+### Creating a signal file
+
+After the design note is posted to the ticket (Step 7), write
+`think-gate.json` to the workspace root with these fields:
+
+```json
+{
+  "ticket": "owner/repo#NNN",
+  "task": "brief description",
+  "design_note_location": "URL to ticket comment",
+  "status": "implementing",
+  "lastUpdated": "2026-01-15T14:30:00Z"
+}
+```
+
+The `lastUpdated` field (ISO 8601) is consumed by the temporal decay
+check. Omitting it forces the hook to fall back to file modification
+time, which is less reliable across machines and sessions.
+
+### Cleanup before creating
+
+Before writing a new signal file, check for an existing one. If a
+signal file exists from a prior task:
+
+1. Verify the prior task's disposition was posted to its ticket
+2. Delete the old signal file: `rm think-gate.json`
+3. Then create the new one
+
+A stale signal file from task X gives misleading status on task Y.
+The scope mismatch check catches this, but cleanup is better than warning.
+
+### Updating during work
+
+Update `lastUpdated` when the task's status changes or when resuming
+work after a significant pause. The hook warns at 4h (stale) and 24h
+(expired) without an update.
+
+Status transitions: `designing` → `implementing` → `done-awaiting-pr`
+
+### Archiving after completion
+
+When the PR is merged and work is complete:
+
+1. Set `status` to `done-awaiting-pr` with a `disposition` summarizing outcome
+2. Post the disposition to the ticket if not already there
+3. Delete the signal file: `rm think-gate.json`
+
+The signal file is a workspace singleton. Leaving done signals around
+causes scope mismatch warnings on the next task and archive prompts
+after 4h.
+
 ## Attribution Policy
 
 NEVER include AI or agent attribution in designs, documentation, or any output.
