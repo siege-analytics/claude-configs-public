@@ -230,13 +230,45 @@ For each post-error revision found in Phase 0:
 ### Impact Chain
 <Phase 1 output -- full upstream/task/downstream chain>
 
-### Verified Shapes
-For each entity:
+### Verified Shapes (Assumption Universe)
+
+For each entity, enumerate ALL assumptions your task makes. Start from
+the full universe -- do not pre-filter. Each assumption gets one of three
+dispositions (no deletions -- the universe must be complete):
+
+- **PROBED**: shell command executed, threshold met.
+  Format: `assumption | probe: <command> | result: <output> | threshold: <pass/fail>`
+- **ATTESTED**: semantic claim verified against source.
+  Format: `assumption | source: <file:line or URL> | value: <verbatim from source>`
+- **SKIPPED**: assumption doesn't apply to this task.
+  Format: `assumption | skip: <justification, >=20 chars>`
+
+Organize by entity, then by layer (physical, schematic, semantic,
+operational, correctness -- use whichever layers apply):
+
 - **<Entity name>** (<type>, <file:line>)
-  - Fields/signature: <verbatim from source>
-  - Verified at: <file:line>
-  - Assumptions my task makes: <named explicitly>
-  - Verification status: VERIFIED | UNVERIFIED (with reason)
+  - PHYSICAL: <infrastructure reachability, permissions, connectivity>
+  - SCHEMATIC: <table/column/field existence, types, constraints>
+  - SEMANTIC: <what values mean, business rules, edge cases>
+  - OPERATIONAL: <scale, cardinality, runtime bounds>
+  - CORRECTNESS: <invariants that must hold before and after>
+
+Not every entity needs all five layers. A function signature needs
+schematic (params, types) and semantic (what the params mean), not
+physical. A database table needs all five. Use judgment, but err
+toward inclusion -- a skipped layer with justification is better than
+a missing layer that hid an assumption.
+
+The assumption universe is the investigation's load-bearing output.
+A Fact Sheet with free-form "Fields/signature: ..." is a Fact Sheet
+that hasn't investigated -- it has transcribed. Transcription is
+necessary but not sufficient. The question is not "what does this
+entity look like?" but "what does my task assume about this entity,
+and is each assumption verified?"
+
+See `examples/probe-matrices/` for the TOML format used by
+`hooks/lib/probe-runner.py` when transformation code requires
+machine-executable probes.
 
 ### Logic Trace
 <Phase 3 output -- concrete execution paths with values>
@@ -295,10 +327,10 @@ Scope justification: <why Focused tier -- must name: files touched (1-2),
 - **<Entity>**: knowledge locus is <location>
   - Will this task invalidate it: YES / NO
 
-### Verified Shapes
+### Verified Shapes (Assumption Universe)
 - **<Entity name>** (<type>, <file:line>)
-  - Fields/signature: <verbatim from source>
-  - Verification status: VERIFIED | UNVERIFIED
+  - Assumptions (PROBED / ATTESTED / SKIPPED per Full tier format):
+    - <assumption> | <disposition>
 
 ### Coherence
 <Do the prior knowledge, loci, and verified shapes agree with each other?>
