@@ -188,4 +188,44 @@ $RESULT
 EOF
 fi
 
+# Level 2: Design note structure check.
+# If the design note is a local file, verify it contains key section headings.
+# Warnings only — format varies by task complexity.
+DESIGN_NOTE_PATH=$(python3 -c "
+import json, sys
+try:
+    data = json.load(open('$SIGNAL_FILE'))
+    note = data.get('design_note') or data.get('design_note_location') or data.get('design_note_path', '')
+    print(note)
+except:
+    print('')
+" 2>/dev/null || echo "")
+
+if [ -n "$DESIGN_NOTE_PATH" ] && [ -f "$DESIGN_NOTE_PATH" ]; then
+    STRUCTURE_WARNINGS=""
+    HEADING_COUNT=$(grep -cE '^#{1,3} ' "$DESIGN_NOTE_PATH" || true)
+
+    if [ "$HEADING_COUNT" -lt 2 ]; then
+        STRUCTURE_WARNINGS="${STRUCTURE_WARNINGS}  - Design note has $HEADING_COUNT section heading(s); expected at least 2 (e.g., What + Risk)\n"
+    fi
+
+    HAS_WHAT=$(grep -ciE '^#{1,3} (what|context|problem|summary|approach)' "$DESIGN_NOTE_PATH" || true)
+    HAS_RISK=$(grep -ciE '^#{1,3} (risk|what could go wrong|tradeoff|rollback|falsif)' "$DESIGN_NOTE_PATH" || true)
+    HAS_PROPOSAL=$(grep -ciE '^#{1,3} (proposal|option|approach|design|layer|how)' "$DESIGN_NOTE_PATH" || true)
+
+    if [ "$HAS_WHAT" -eq 0 ]; then
+        STRUCTURE_WARNINGS="${STRUCTURE_WARNINGS}  - Missing context/problem section (expected heading like ## What, ## Context, ## Problem)\n"
+    fi
+    if [ "$HAS_RISK" -eq 0 ]; then
+        STRUCTURE_WARNINGS="${STRUCTURE_WARNINGS}  - Missing risk section (expected heading like ## Risk, ## What could go wrong, ## Rollback)\n"
+    fi
+    if [ "$HAS_PROPOSAL" -eq 0 ]; then
+        STRUCTURE_WARNINGS="${STRUCTURE_WARNINGS}  - Missing proposal/design section (expected heading like ## Proposals, ## Design, ## Approach)\n"
+    fi
+
+    if [ -n "$STRUCTURE_WARNINGS" ]; then
+        printf '<think-gate>\nDesign note structure warnings for %s:\n%b\nThese are advisory — update the design note if sections are genuinely missing.\n</think-gate>\n' "$DESIGN_NOTE_PATH" "$STRUCTURE_WARNINGS"
+    fi
+fi
+
 exit 0

@@ -346,6 +346,22 @@ if v1_count == len(shapes):
 if v1_count > 0:
     warnings.append(f'{v1_count} of {len(shapes)} entries have no dispositions (v1 schema)')
 
+# Tier escalation check: if tier is "focused" but entities span 3+ directories,
+# the investigation scope exceeds what Focused tier covers.
+tier = data.get('tier', 'unknown')
+if tier == 'focused':
+    dirs = set()
+    for shape in shapes:
+        fp = shape.get('file', '')
+        if fp:
+            parts = fp.rsplit('/', 1)
+            dirs.add(parts[0] if len(parts) > 1 else '.')
+    if len(dirs) >= 3:
+        warnings.append(
+            f'Focused tier declared but entities span {len(dirs)} directories: '
+            f'{sorted(dirs)}. Consider escalating to Full tier.'
+        )
+
 if errors:
     print(f'DISPOSITION ERRORS ({len(errors)}):')
     for e in errors:
