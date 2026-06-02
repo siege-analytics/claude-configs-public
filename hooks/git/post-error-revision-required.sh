@@ -133,5 +133,31 @@ HOOKEOF
     fi
 fi
 
-# URL values are not fetched; pre-merge review is the second gate.
+# If the value is a GitHub issue URL, verify the ticket has a post-error
+# revision comment. Best-effort: warns if gh is unavailable or API fails.
+if echo "$PER_VALUE" | grep -qE 'github\.com/.+/issues/[0-9]+'; then
+    REPO_SLUG=$(echo "$PER_VALUE" | grep -oE 'github\.com/[^/]+/[^/]+' | sed 's|github.com/||')
+    ISSUE_NUM=$(echo "$PER_VALUE" | grep -oE 'issues/[0-9]+' | grep -oE '[0-9]+')
+    if [ -n "$REPO_SLUG" ] && [ -n "$ISSUE_NUM" ] && command -v gh >/dev/null 2>&1; then
+        HAS_PER_COMMENT=$(gh api "repos/$REPO_SLUG/issues/$ISSUE_NUM/comments" \
+            --jq '[.[] | select(.body | test("## Post-error revision"; "i"))] | length' \
+            2>/dev/null || echo "error")
+        if [ "$HAS_PER_COMMENT" = "0" ]; then
+            cat >&2 <<HOOKEOF
+WARNING: Post-error-revision: points at $REPO_SLUG#$ISSUE_NUM but no
+comment with "## Post-error revision" was found on the ticket.
+
+The five-field block should be posted to the originating ticket BEFORE
+this commit. Either post it now, or verify the heading is different.
+HOOKEOF
+        elif [ "$HAS_PER_COMMENT" = "error" ]; then
+            cat >&2 <<HOOKEOF
+WARNING: Could not verify Post-error-revision ticket via GitHub API.
+Manual verification recommended: check $PER_VALUE for a
+"## Post-error revision" section.
+HOOKEOF
+        fi
+    fi
+fi
+
 exit 0
