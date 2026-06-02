@@ -97,7 +97,7 @@ if status in ('disposed', 'done-awaiting-pr'):
     msg = f'Design for {ticket}: status={status}.'
     if disposition:
         msg += f' Disposition: {disposition}'
-    msg += ' No verification needed — update or archive the signal file.'
+    msg += ' No verification needed.'
     print(msg)
     sys.exit(0)
 
@@ -173,7 +173,7 @@ if failed:
     print(f'STALE DESIGN for {ticket}: {len(failed)} claim(s) no longer hold.')
     print(f'The premises of your design have changed. Re-examine the')
     print(f'design note at {design_note} before proceeding.')
-    print(f'Update or archive {os.path.basename(\"$SIGNAL_FILE\")} after reconciliation.')
+    print(f'Reconcile the design, then update the signal or archive it (post disposition to ticket, then rm the file).')
 else:
     total = len(passed) + len(prose_claims)
     print()
@@ -221,7 +221,8 @@ except:
             DISPLAY_TICKET="${SIGNAL_TICKET}"
             if echo "$SIGNAL_TICKET" | grep -qE '^[0-9]+$'; then DISPLAY_TICKET="#${SIGNAL_TICKET}"; fi
             SCOPE_WARN="SCOPE MISMATCH: think-gate.json is for ${DISPLAY_TICKET} but current branch is '${BRANCH_NAME}'.
-Update the signal file for the current task or archive the stale one.
+To continue: update the signal file for the current task.
+To archive: post disposition to the ticket, then rm think-gate.json.
 A mismatched signal file cannot validate your current design."
         fi
     fi
@@ -231,6 +232,62 @@ if [ -n "$SCOPE_WARN" ]; then
     cat <<EOF
 <think-gate>
 $SCOPE_WARN
+</think-gate>
+EOF
+fi
+
+# Level 1.75: Temporal decay check.
+# Detects stale signal files based on lastUpdated timestamp or file mtime.
+# Tiered warnings: 4h stale (active), 24h expired (active), 4h archive prompt (done).
+# Ref: #328
+DECAY_WARN=$(python3 -c "
+import json, sys, os, time
+from datetime import datetime, timezone
+
+try:
+    data = json.load(open('$SIGNAL_FILE'))
+except:
+    sys.exit(0)
+
+status = data.get('status', '')
+last_updated = data.get('lastUpdated', '')
+ticket = data.get('ticket', 'unknown')
+
+if last_updated:
+    try:
+        ts = datetime.fromisoformat(last_updated.replace('Z', '+00:00'))
+        age_seconds = (datetime.now(timezone.utc) - ts).total_seconds()
+        age_source = 'lastUpdated'
+    except:
+        age_seconds = time.time() - os.path.getmtime('$SIGNAL_FILE')
+        age_source = 'file mtime (lastUpdated unparseable)'
+else:
+    age_seconds = time.time() - os.path.getmtime('$SIGNAL_FILE')
+    age_source = 'file mtime (no lastUpdated field)'
+
+age_hours = age_seconds / 3600
+
+if status in ('disposed', 'done-awaiting-pr'):
+    if age_hours >= 4:
+        print(f'ARCHIVE PROMPT: think-gate.json for {ticket} has been {status} for {age_hours:.0f}h (source: {age_source}).')
+        print(f'This signal is from a completed task. To archive:')
+        print(f'  1. Verify disposition is posted to the ticket')
+        print(f'  2. Delete the signal file: rm think-gate.json')
+        print(f'Starting new work with a stale done signal causes scope mismatch warnings.')
+elif age_hours >= 24:
+    print(f'EXPIRED SIGNAL: think-gate.json for {ticket} has not been updated in {age_hours:.0f}h (source: {age_source}).')
+    print(f'A signal older than 24h likely reflects an abandoned or interrupted task.')
+    print(f'Re-examine the design note before continuing. Update lastUpdated after review.')
+elif age_hours >= 4:
+    print(f'STALE SIGNAL: think-gate.json for {ticket} has not been updated in {age_hours:.1f}h (source: {age_source}).')
+    print(f'If the task is still active, update lastUpdated in the signal file.')
+    print(f'If the task is complete, set status to done-awaiting-pr with a disposition.')
+" 2>/dev/null || true)
+
+if [ -n "$DECAY_WARN" ]; then
+    cat <<EOF
+<think-gate>
+$DECAY_WARN
 </think-gate>
 EOF
 fi
