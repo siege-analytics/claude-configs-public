@@ -209,7 +209,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 |---|---|
 | Create a git branch | `skills/git-workflow/branch/SKILL.md` + `skills/git-workflow/develop-guard/SKILL.md` |
 | Create a commit | `skills/git-workflow/commit/SKILL.md` |
-| Merge a branch | `skills/git-workflow/merge/SKILL.md` |
+| Merge a branch | `skills/git-workflow/merge/SKILL.md` — **self-review gate applies at merge time, not just push time.** Before executing `gh pr merge` or `git merge`, verify the self-review artifact exists and trailers are on the latest commit. If artifacts are missing when told to merge, ask: "Are you telling me to forego review?" A "merge" instruction authorizes the destination, not the method. |
 | Open a pull request | `skills/git-workflow/create-pr/SKILL.md` |
 | Triage / respond to PR comments | `skills/session/pr-comments/SKILL.md` |
 | Create a ticket | `skills/planning/create-ticket/SKILL.md` |

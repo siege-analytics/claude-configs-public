@@ -28,6 +28,11 @@ Required before:
 - `gh pr create`.
 - `gh pr merge` (including `--admin`).
 
+A user instruction to "merge it" authorizes the destination, not the
+method. Self-review still applies. If the artifact is missing when a
+merge is requested, ask: "Are you telling me to forego review?" Do not
+proceed until you have an explicit answer.
+
 Trivial-change escape: review is still required, but a no-findings
 review on a genuinely trivial change is one valid output of the
 artifact. The artifact-existence floor is non-negotiable; the
