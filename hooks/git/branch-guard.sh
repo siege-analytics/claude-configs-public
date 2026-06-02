@@ -49,7 +49,7 @@ fi
 # the effective cwd at the point `git commit` runs may differ from what
 # the leading-cd parser captures. Yield rather than risk a false-positive
 # block or false-negative pass. See issue #101 for the characterization.
-CD_COUNT=$(echo "$COMMAND" | grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null | wc -l | tr -d ' ')
+CD_COUNT=$(echo "$COMMAND" | { grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null || true; } | wc -l | tr -d ' ')
 if [[ "$CD_COUNT" -gt 0 ]]; then
     # Use case instead of grep for newline/semicolon/|| detection.
     # BSD grep on macOS chokes on $'\n' in alternation patterns.

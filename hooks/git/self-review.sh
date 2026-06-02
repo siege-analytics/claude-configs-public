@@ -72,7 +72,7 @@ fi
 # which then parses as adjacent empty alternations. The case approach also
 # avoids the `echo "$cmd" | grep -qF $'\n'` false-positive from echo's trailing
 # newline.
-CD_COUNT=$(echo "$COMMAND" | grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null | wc -l | tr -d ' ')
+CD_COUNT=$(echo "$COMMAND" | { grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null || true; } | wc -l | tr -d ' ')
 if [[ "$CD_COUNT" -gt 0 ]]; then
     case "$COMMAND" in
         *$'\n'*|*';'*|*'||'*) exit 0 ;;
