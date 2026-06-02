@@ -10,9 +10,9 @@ Code is not finished until **all five** of the following are true. This is a gat
 
 ### a. Code-reviewed
 
-Every behavior change goes through code review at **two transitions**: pre-commit (against the staged diff, by [skill:code-review]) and pre-merge (against the cumulative PR diff, by CodeRabbit + human reviewer for non-trivial changes). The pre-commit pass catches findings while context is fresh and the diff is small; the pre-merge pass catches findings that only emerge across multiple commits.
+Every behavior change goes through code review at **two transitions**: pre-commit (against the staged diff, by [`code-review`](code-review/SKILL.md)) and pre-merge (against the cumulative PR diff, by CodeRabbit + human reviewer for non-trivial changes). The pre-commit pass catches findings while context is fresh and the diff is small; the pre-merge pass catches findings that only emerge across multiple commits.
 
-**Operationalized by:** [skill:code-review] (slash-invokable as `/code-review`); [skill:commit] step 3 (pre-commit gate); [skill:create-pr] (pre-PR cumulative review).
+**Operationalized by:** [`code-review`](code-review/SKILL.md) (slash-invokable as `/code-review`); [`commit`](commit/SKILL.md) step 3 (pre-commit gate); [`create-pr`](create-pr/SKILL.md) (pre-PR cumulative review).
 
 ### b. Edge cases explored
 
@@ -28,7 +28,7 @@ Every behavior change has been tested mentally -- and where appropriate, in test
 - Null / NaN / NULL in tabular inputs
 - Identifier collisions (two different sources, same key)
 
-**Operationalized by:** [skill:code-review] §1 ("Correctness") -- explicit edge-case checklist.
+**Operationalized by:** [`code-review`](code-review/SKILL.md) §1 ("Correctness") -- explicit edge-case checklist.
 
 ### c. Tests written
 
@@ -40,7 +40,7 @@ Every behavior change has been tested mentally -- and where appropriate, in test
 - If the project has no test infrastructure yet, **the first contribution adds the infrastructure** (test framework, runner, sample test) before any behavior change. "We don't have tests yet" is not an exception; it's the first ticket.
 - PRs without tests must justify the omission in the PR description, and the justification is subject to review. Acceptance is not assumed.
 
-**Operationalized by:** [skill:python] "Tests and Documentation -- non-negotiable" section (Python); [skill:coding] Rule 6 (language-agnostic).
+**Operationalized by:** [`python`](python/SKILL.md) "Tests and Documentation -- non-negotiable" section (Python); [`coding`](coding/SKILL.md) Rule 6 (language-agnostic).
 
 ### d. Non-trivial updates → update the ticket
 
@@ -52,7 +52,7 @@ What counts as a ticket update:
 - Links to commits and PRs (bidirectional -- commit references ticket, ticket links commit)
 - Final summary at close (what shipped, what was deferred, validation status)
 
-**Operationalized by:** [skill:update-ticket] (slash-invokable as `/update-ticket`); [skill:close-ticket].
+**Operationalized by:** [`update-ticket`](update-ticket/SKILL.md) (slash-invokable as `/update-ticket`); [`close-ticket`](close-ticket/SKILL.md).
 
 ### e. Work has a ticket
 
@@ -62,15 +62,15 @@ Every behavior change starts from a ticket. Tickets exist to:
 - Surface dependency relations (what blocks this; what this unblocks)
 - Provide an audit trail tying code changes to motivating problems
 
-**Operationalized by:** [skill:pre-work-check] (slash-invokable as `/pre-work-check`) -- runs before the first commit; verifies ticket exists, belongs to a project, has no open blockers.
+**Operationalized by:** [`pre-work-check`](pre-work-check/SKILL.md) (slash-invokable as `/pre-work-check`) -- runs before the first commit; verifies ticket exists, belongs to a project, has no open blockers.
 
-If you find yourself coding without a ticket, stop and write one (or invoke [skill:create-ticket]). The ticket can be a one-liner; what matters is that it exists and is reachable from the commit.
+If you find yourself coding without a ticket, stop and write one (or invoke [`create-ticket`](create-ticket/SKILL.md)). The ticket can be a one-liner; what matters is that it exists and is reachable from the commit.
 
 ## What "done" means at each transition
 
 | Transition | Done check |
 |---|---|
-| Pre-commit | [skill:code-review] runs on the staged diff (Blockers resolved, Majors fixed-or-deferred); tests added/updated; docstrings on new public APIs; commit message references the ticket |
+| Pre-commit | [`code-review`](code-review/SKILL.md) runs on the staged diff (Blockers resolved, Majors fixed-or-deferred); tests added/updated; docstrings on new public APIs; commit message references the ticket |
 | Pre-PR | All five criteria; PR description summarizes scope, links the ticket, lists what was tested |
 | Pre-merge | CodeRabbit + GitGuardian + (when relevant) human review pass; ticket is In Review status |
 | Session-end | All five criteria across all changes in the session; ticket status reflects current state; no orphan commits without ticket links |
@@ -79,15 +79,15 @@ If you find yourself coding without a ticket, stop and write one (or invoke [ski
 
 | Criterion | Skill / file that runs it |
 |---|---|
-| (a) Code-reviewed | [skill:code-review] |
-| (b) Edge cases | [skill:code-review] §1 |
-| (c) Tests | [skill:python] "Tests and Documentation" section; [skill:coding] Rule 6 |
-| (d) Ticket update | [skill:update-ticket], [skill:close-ticket] |
-| (e) Ticket exists | [skill:pre-work-check], [skill:create-ticket] |
+| (a) Code-reviewed | [`code-review`](code-review/SKILL.md) |
+| (b) Edge cases | [`code-review`](code-review/SKILL.md) §1 |
+| (c) Tests | [`python`](python/SKILL.md) "Tests and Documentation" section; [`coding`](coding/SKILL.md) Rule 6 |
+| (d) Ticket update | [`update-ticket`](update-ticket/SKILL.md), [`close-ticket`](close-ticket/SKILL.md) |
+| (e) Ticket exists | [`pre-work-check`](pre-work-check/SKILL.md), [`create-ticket`](create-ticket/SKILL.md) |
 
-The PR-creation gate ([skill:create-pr]) checks all five before opening.
+The PR-creation gate ([`create-pr`](create-pr/SKILL.md)) checks all five before opening.
 
-The session-end check ([skill:wrap-up]) verifies all five before declaring the session complete.
+The session-end check ([`wrap-up`](wrap-up/SKILL.md)) verifies all five before declaring the session complete.
 
 ## Exceptions
 
@@ -130,4 +130,4 @@ The Definition of Done is the documented response to those incidents. Treat it a
 
 ## Attribution
 
-Defers to [rule:output]. No AI / agent attribution in commits, PRs, or comments.
+Defers to [`output`](_output-rules.md). No AI / agent attribution in commits, PRs, or comments.

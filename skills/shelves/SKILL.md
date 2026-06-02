@@ -1,7 +1,6 @@
 ---
 name: shelves
 description: Meta-router for the DBrain book-skill library. Dispatches to one of 13 topic shelves (engineering-principles, systems-architecture, languages, data-and-pipelines, product, marketing, sales, strategy, design, team, storytelling, geospatial, statistical-inference). Read this before consulting any individual book skill.
-disable-model-invocation: false
 ---
 
 # DBrain -- Book-Skill Library
@@ -14,19 +13,19 @@ This pattern keeps the description budget small: one slot per shelf, not one per
 
 | Shelf | When to load |
 |---|---|
-| [skill:engineering-principles] | Code quality, design, refactoring rationale, principles arguments |
-| [skill:systems-architecture] | Distributed-system design, storage choice, replication, scaling, system-design interview |
-| [skill:languages] | Idioms and best practices for Python, JVM (Java/Kotlin/Scala-on-Spark), TypeScript, Rust |
-| [skill:data-and-pipelines] | Pipeline design, batch/stream, scheduled jobs |
-| [skill:product] | Discovery, JTBD, lean experimentation, retention |
-| [skill:marketing] | Messaging, copy, conversion, positioning |
-| [skill:sales] | Pipeline, pricing, negotiation, influence |
-| [skill:strategy] | Market entry, positioning, EOS, blue ocean |
-| [skill:design] | UI, UX heuristics, typography, microinteractions |
-| [skill:team] | Motivation, ways of working |
-| [skill:storytelling] | Communicating data, slide animation |
-| [skill:shelf-geospatial] | CRS / spatial joins / MAUP / areal interpolation / spatial statistics -- geographic analysis grounded in methodology |
-| [skill:shelf-statistical-inference] | Causal inference (theory + applied), Bayesian / multilevel, applied EDA / hypothesis testing -- analytical rigor for any statistical claim |
+| [`engineering-principles`](../shelves/engineering-principles/SKILL.md) | Code quality, design, refactoring rationale, principles arguments |
+| [`systems-architecture`](../shelves/systems-architecture/SKILL.md) | Distributed-system design, storage choice, replication, scaling, system-design interview |
+| [`languages`](../shelves/languages/SKILL.md) | Idioms and best practices for Python, JVM (Java/Kotlin/Scala-on-Spark), TypeScript, Rust |
+| [`data-and-pipelines`](../shelves/data-and-pipelines/SKILL.md) | Pipeline design, batch/stream, scheduled jobs |
+| [`product`](../shelves/product/SKILL.md) | Discovery, JTBD, lean experimentation, retention |
+| [`marketing`](../shelves/marketing/SKILL.md) | Messaging, copy, conversion, positioning |
+| [`sales`](../shelves/sales/SKILL.md) | Pipeline, pricing, negotiation, influence |
+| [`strategy`](../shelves/strategy/SKILL.md) | Market entry, positioning, EOS, blue ocean |
+| [`design`](../shelves/design/SKILL.md) | UI, UX heuristics, typography, microinteractions |
+| [`team`](../shelves/team/SKILL.md) | Motivation, ways of working |
+| [`storytelling`](../shelves/storytelling/SKILL.md) | Communicating data, slide animation |
+| `shelf-geospatial` (planned) | CRS / spatial joins / MAUP / areal interpolation / spatial statistics -- geographic analysis grounded in methodology |
+| `shelf-statistical-inference` (planned) | Causal inference (theory + applied), Bayesian / multilevel, applied EDA / hypothesis testing -- analytical rigor for any statistical claim |
 
 ## How shelves work
 

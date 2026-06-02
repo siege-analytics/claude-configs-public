@@ -10,21 +10,21 @@ The sibling boundary in `_writing-claims-rules.md` is "verify before claiming": 
 
 ## The seventeen code-writing rules
 
-**writing-code:1. Default to no docstring or a one-liner.** Multi-paragraph Sphinx-style docstrings are reserved for public API surface that is exported and consumed externally. Internal helpers and one-off functions get type hints and at most one sentence. Docstrings are code, not prose; the discipline lives here rather than in `[rule:writing-prose]`.
+**writing-code:1. Default to no docstring or a one-liner.** Multi-paragraph Sphinx-style docstrings are reserved for public API surface that is exported and consumed externally. Internal helpers and one-off functions get type hints and at most one sentence. Docstrings are code, not prose; the discipline lives here rather than in `[`writing-prose`](_writing-prose-rules.md)`.
 
-**writing-code:2. No PR / sprint / issue references inside code comments.** "Sprint A item 2," "the v3.15.0 hardening," "PR #443 follow-up" all rot the moment the codebase moves. Reference behaviour, not history. The git log is the history layer; the ticket tracker is the planning layer; code comments are the behaviour layer. This rule applies specifically to code comments; commit-message footers and PR descriptions can and should reference tickets via `Refs:` / `Closes:` trailers per `[skill:commit]`.
+**writing-code:2. No PR / sprint / issue references inside code comments.** "Sprint A item 2," "the v3.15.0 hardening," "PR #443 follow-up" all rot the moment the codebase moves. Reference behaviour, not history. The git log is the history layer; the ticket tracker is the planning layer; code comments are the behaviour layer. This rule applies specifically to code comments; commit-message footers and PR descriptions can and should reference tickets via `Refs:` / `Closes:` trailers per `[`commit`](commit/SKILL.md)`.
 
 **writing-code:3. No speculative abstractions.** Helpers, base classes, and configuration scaffolding are introduced only when a second caller already exists. "Future-proofing" without a second caller is dead weight. Revisit when the second caller arrives, not before.
 
-This rule applies primarily to production code (helpers, base classes). When the failure mode is "test fixtures introduced for one test that will hypothetically have a second caller someday," see `[rule:writing-tests]` writing-tests:2 for the test-side application.
+This rule applies primarily to production code (helpers, base classes). When the failure mode is "test fixtures introduced for one test that will hypothetically have a second caller someday," see `[`writing-tests`](_writing-tests-rules.md)` writing-tests:2 for the test-side application.
 
 **writing-code:4. Verify before asserting a symbol exists.** Before writing code, a test, or documentation that names a method, class, attribute, flag, or behaviour: open the file, grep for the symbol, read the actual signature. Production code that calls a non-existent method (the `create_presentation_from_data` failure mode, where the method is `create_analytics_presentation`) and documentation that asserts current behaviour reflecting aspiration (the INVARIANTS identifier-validation claim) are the canonical failures here. If a behaviour is aspirational, label it: `_aspiration, not current behaviour_` or equivalent.
 
-This rule pairs with writing-code:5 below: both have the same shape ("verify Y before writing code that uses Y") and fire at the same trigger time. See `[rule:verify-before-execute]` for the parent claim-grounding discipline that covers prose claims about the same symbols in PR bodies, commit messages, and agent-to-agent messages.
+This rule pairs with writing-code:5 below: both have the same shape ("verify Y before writing code that uses Y") and fire at the same trigger time. See `[`verify-before-execute`](_verify-before-execute-rules.md)` for the parent claim-grounding discipline that covers prose claims about the same symbols in PR bodies, commit messages, and agent-to-agent messages.
 
 **writing-code:5. No hypothetical code.** When you write code or a test that depends on a library, service, configuration, or external API, you must have already verified the dependency is reachable in the target environment, and you must exercise the real dependency before claiming the code works. Reachable means reachable in the workspace where the code is being written, in the same session, before the code is written. CI does not count. The PR-body label `untested locally; first run is CI` is a one-time escape hatch when the dependency genuinely cannot be reached locally; per `_writing-rules-rules.md` writing-rules:4, the label is itself a "this doesn't apply" claim and requires the three-field evidence chain in the PR body alongside the label: `Reason: <why the dependency genuinely cannot be reached locally> | Evidence: <command output showing the failed-to-reach attempt -- e.g. `nc -zv host 5432` returning Connection refused, or `gh secret list` showing the required token is absent> | Falsification: <observable that would prove the dependency IS reachable, e.g. "running `python -c 'import X; X.connect()'` locally without ConnectionError">`. Using the label means the agent has tried and failed AND has paste-able evidence of the failure, not that the agent did not try. Repeated use of the label is a smell. A mock test that asserts the mock was called is not exercise.
 
-The companion `[rule:environment-preflight]` describes the one-time-per-repo inventory that establishes what is reachable; this rule is the per-action application. The mechanical enforcement is `[skill:commit]` step 4 (the affected-tests gate); the rule itself is in force at write-time, not just at commit-time. Symmetric with writing-code:4: both verify a precondition before code that depends on it.
+The companion `[`environment-preflight`](_environment-preflight-rules.md)` describes the one-time-per-repo inventory that establishes what is reachable; this rule is the per-action application. The mechanical enforcement is `[`commit`](commit/SKILL.md)` step 4 (the affected-tests gate); the rule itself is in force at write-time, not just at commit-time. Symmetric with writing-code:4: both verify a precondition before code that depends on it.
 
 **Per-session corollary (writing-rules:7).** "No hypothetical code" applies to pattern repetition across actions, not just to individual function bodies. If you have shipped N fixes of the same shape in one session (same import, same decorator, same call site shape, same failure signature) and the (N+1)th instance lands, the (N+1)th fix without a class audit IS hypothetical pattern-completion -- you are extrapolating that "this is the last one" without grep evidence. Per writing-claims:1's widened scope, run the class-grep BEFORE writing the (N+1)th fix. Threshold: N≥2 is the warn point; N≥3 is the hard gate. The pattern that motivated this corollary: five same-shape Spark Connect guard PRs shipped in one session before the class audit ran, when one would have sufficed.
 
@@ -32,7 +32,7 @@ The companion `[rule:environment-preflight]` describes the one-time-per-repo inv
 
 The doc tree default: `**/*.md` minus auto-generated paths (`htmlcov/`, `_build/`, `node_modules/`), plus the canonical names regardless of location (`README.md`, `CHANGELOG.md`, `INVARIANTS.md`, `CONTRIBUTING.md`). Per-repo override at `.claude/doc-paths.toml` that takes a glob list. The trailer names which files were grepped so an auditor can verify post-hoc.
 
-The session's worst case: `INVARIANTS.md` kept asserting current behaviour that did not exist because the agent edited the code without going back to the doc. The rule lives in writing-code (not in writing-claims) because it fires at code-edit time; the operator editing code should find it where they look up "what applies when I edit code." See `[rule:writing-claims]` for the broader claim-grounding family this rule belongs to by failure-mode shape.
+The session's worst case: `INVARIANTS.md` kept asserting current behaviour that did not exist because the agent edited the code without going back to the doc. The rule lives in writing-code (not in writing-claims) because it fires at code-edit time; the operator editing code should find it where they look up "what applies when I edit code." See `[`writing-claims`](_writing-claims-rules.md)` for the broader claim-grounding family this rule belongs to by failure-mode shape.
 
 **writing-code:7. Silent error swallowing.** When catching an exception, the handler must do exactly one of:
 
@@ -57,7 +57,7 @@ Two-line acceptance check at review time: grep for `X_AVAILABLE = False` (or the
 
 Forward-only. New optional imports must comply; existing modules audited as discovery surfaces them.
 
-The session's concrete instance: both `census_gazetteer.py` and `wikidata_gazetteer.py` had `SHAPELY_AVAILABLE` flags but the geometry-construction callsites used `shapely.geometry.Polygon(...)` without guarding. The first call in an environment without shapely raised `NameError: name 'shapely' is not defined` instead of the intended clear `RuntimeError`. Cross-module re-export case (X re-exported from `__init__.py`, used in sibling module via `from .somemod import X`) is a known scanner gap; the failure mode is loud (immediate NameError) and the pattern is rare. Mechanical detection is high (multi-pass within a file; tracked at upstream issue #57 for v1.6.2); judgment-enforced via `[skill:code-review]` until the scanner enhancement lands.
+The session's concrete instance: both `census_gazetteer.py` and `wikidata_gazetteer.py` had `SHAPELY_AVAILABLE` flags but the geometry-construction callsites used `shapely.geometry.Polygon(...)` without guarding. The first call in an environment without shapely raised `NameError: name 'shapely' is not defined` instead of the intended clear `RuntimeError`. Cross-module re-export case (X re-exported from `__init__.py`, used in sibling module via `from .somemod import X`) is a known scanner gap; the failure mode is loud (immediate NameError) and the pattern is rare. Mechanical detection is high (multi-pass within a file; tracked at upstream issue #57 for v1.6.2); judgment-enforced via `[`code-review`](code-review/SKILL.md)` until the scanner enhancement lands.
 
 **writing-code:9. No silently-dropped parameters.**
 
@@ -72,7 +72,7 @@ The session's concrete instance: `load_polygons` and `load_lines` accepted `form
 
 Parameters consumed by a decorator (e.g. introspected by `@validate_args` or similar) are a judgment-enforced carve-out the AST scanner cannot see. Reviewer attests in the PR body that decorator-side consumption accounts for the apparent unused parameter. The scanner consults `.claude/scanner-config.toml` if present for a project-specific decorator allow-list; default allow-list is `{functools.wraps, contextlib.contextmanager, classmethod, staticmethod, property}`.
 
-Mechanical via AST walk in `[skill:detect-ai-fingerprints]`: collect signature args (name, default), collect `Name` and `keyword` references in body, flag args with non-`None` defaults that are neither referenced by name nor forwarded via `**kwargs`. Carve-out for decorator-consumed parameters via the allow-list above.
+Mechanical via AST walk in `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)`: collect signature args (name, default), collect `Name` and `keyword` references in body, flag args with non-`None` defaults that are neither referenced by name nor forwarded via `**kwargs`. Carve-out for decorator-consumed parameters via the allow-list above.
 
 **writing-code:10. Capability declarations match implementations.**
 
@@ -80,7 +80,7 @@ When a module exposes a central "supported X" registry (a frozenset, dict, class
 
 The session's concrete instance: `_SUPPORTED_AGG_NAMES` at line 68 of `dataframe_engine.py` is a frozenset of agg names the validator accepts. The pandas implementation does not implement `approx_count_distinct` (a member of the registry). A pandas caller passing `agg={"col": "approx_count_distinct"}` passes validation, then dies inside the pandas impl with `AttributeError`. The error is misleading because the validator already attested support.
 
-This is the sibling rule of writing-code:9. writing-code:9 fires per-method-signature at function-definition review time; writing-code:10 fires at architecture review when a central registry's shape is examined against each consumer. Different scanners would catch each: writing-code:9 is one-pass AST per function; writing-code:10 needs cross-implementation tracing (validator to registry to consumers) that requires symbolic execution or extensive AST graph-building, infeasible at scanner tier. Judgment-enforced via `[skill:code-review]`; coverage matrix marks `prevention_path` accordingly.
+This is the sibling rule of writing-code:9. writing-code:9 fires per-method-signature at function-definition review time; writing-code:10 fires at architecture review when a central registry's shape is examined against each consumer. Different scanners would catch each: writing-code:9 is one-pass AST per function; writing-code:10 needs cross-implementation tracing (validator to registry to consumers) that requires symbolic execution or extensive AST graph-building, infeasible at scanner tier. Judgment-enforced via `[`code-review`](code-review/SKILL.md)`; coverage matrix marks `prevention_path` accordingly.
 
 When discovered, the fix has two shapes: (i) implement the missing capability in the lagging engine; (ii) narrow the registry to the intersection of what every gated impl actually supports, and add the broader names per-engine via `Engine.EXTRA_SUPPORTED` or equivalent. The choice is project-judgment; the rule's job is to surface the mismatch.
 
@@ -141,7 +141,7 @@ The session's concrete instances:
 
 Forward-only. Existing silent processes in the codebase are flagged when discovered but the rule's expectation is that codebases address them as discovery surfaces them, not big-bang. The fix-exercise pattern from v2.2.0-rc1 (each rule application becomes a per-rule commit citing the rule that drove the change) applies here.
 
-Judgment-enforced via `[skill:code-review]` at v2.3.0. Mechanical detection is tractable but non-trivial: AST-walk for side-effect detection (Call to known-side-effecting builtins like `open`, `os.write`, `subprocess.run`, plus method calls on known-mutable types), cross-reference with return type and log calls in body. Tracked for v2.3.x scanner enhancement.
+Judgment-enforced via `[`code-review`](code-review/SKILL.md)` at v2.3.0. Mechanical detection is tractable but non-trivial: AST-walk for side-effect detection (Call to known-side-effecting builtins like `open`, `os.write`, `subprocess.run`, plus method calls on known-mutable types), cross-reference with return type and log calls in body. Tracked for v2.3.x scanner enhancement.
 
 **writing-code:12. No duplicate imports at module scope.**
 
@@ -190,7 +190,7 @@ The session's concrete instances:
 
 Cross-rule composition: writing-code:13 closes the failure-contract gap that writing-code:7 (silent error swallowing) left open. writing-code:7 ensures every except produces a typed-failure result OR re-raise OR audit-log; writing-code:13 ensures the choice is consistent within a function and across sibling methods. Paired together, they prevent both silent swallow and inconsistent contract.
 
-Judgment-enforced via `[skill:code-review]`. Mechanical detection requires control-flow analysis (Optional return + raise on different paths in same function); tractable but non-trivial. Tracked for v2.3.x scanner enhancement.
+Judgment-enforced via `[`code-review`](code-review/SKILL.md)`. Mechanical detection requires control-flow analysis (Optional return + raise on different paths in same function); tractable but non-trivial. Tracked for v2.3.x scanner enhancement.
 
 Empirical note (v2.4.0): the rename-over-converge option of writing-code:13 has zero-of-five firing rate across v2.3.0 and v2.3.1 fix exercises; real-world inconsistent contracts converged cleanly in every case. Option retained for completeness; recurrence threshold set at 5+ exercises before reconsidering removal. Coverage matrix entry annotated.
 
@@ -240,7 +240,7 @@ The session's three concrete instances (triangulated across module shapes):
 
 Cross-rule composition with writing-code:7: writing-code:14 is a specific case of writing-code:7 where the silent swallow happens via dispatch rather than via empty handler. writing-code:7's scanner detects the four base banned shapes (Pass / Return None|False / Continue / log+terminator); writing-code:14 detects the dispatch shape (catch-all returning a different valid result via alternative path). Both rules can apply; writing-code:14 is more specific and produces a sharper diagnostic.
 
-Judgment-enforced via `[skill:code-review]` at v2.4.0. Mechanical detection candidate: TC5 alternative-return-shape from sibling's writing-code:7 scanner test-case set (catch-all `except` whose body returns a different result without re-raise). Scanner enhancement queued for v2.4.x.
+Judgment-enforced via `[`code-review`](code-review/SKILL.md)` at v2.4.0. Mechanical detection candidate: TC5 alternative-return-shape from sibling's writing-code:7 scanner test-case set (catch-all `except` whose body returns a different result without re-raise). Scanner enhancement queued for v2.4.x.
 
 **writing-code:15. Every blocking I/O call declares a timeout at the call site.**
 
@@ -334,19 +334,19 @@ The default bias toward forward motion -- documented unblockers and routine next
 
 The standing instruction "default is fix and keep moving" is not permission to skip investigate or pre-mortem. It is permission to skip deliberation about WHETHER to fix, not HOW to fix. The how still requires evidence.
 
-**Carve-out:** genuinely trivial fixes (typo, single-character, config-only) that qualify for the Trivial-investigation declaration in `[skill:self-review]` are exempt. The declaration itself requires falsifiable evidence; "this is trivial" without a basis is not an acceptable declaration.
+**Carve-out:** genuinely trivial fixes (typo, single-character, config-only) that qualify for the Trivial-investigation declaration in `[`self-review`](self-review/SKILL.md)` are exempt. The declaration itself requires falsifiable evidence; "this is trivial" without a basis is not an acceptable declaration.
 
 ## Override
 
-These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[skill:commit]` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[skill:detect-ai-fingerprints]`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:12 (no duplicate imports) lands mechanical at v2.3.1 via AST scanner; writing-code:7 (silent error swallowing) lands mechanical at v2.3.1.1 via AST scanner with carve-outs for Optional[T]+docstring, `# noqa: writing-code-7` opt-out, and the `except ImportError`+flag-pattern idiom (writing-code:8 territory); writing-code:15 (unbounded blocking I/O) lands mechanical at v2.6.0 via AST scanner with empirical-evidence-only call-surface list and audit-signal comment carve-out for `timeout=None`; writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; writing-code:16 (migration completeness) and writing-code:17 (deprecation shim follow-up ticket) are judgment-enforced via `[skill:code-review]` and `[skill:self-review]`; writing-code:18 (fix-and-keep-moving requires artifacts) is judgment-enforced via `[skill:self-review]` v1.3 artifact fields; the remaining eight (writing-code:1, :3, :4, :6, :10, :11, :13, :14) are judgment-enforced via `[skill:code-review]`. writing-code:11, :13, :14 scanner enhancements tracked for v2.3.x and beyond. writing-code:7 scanner has two enhancement candidates queued for v2.3.2/v2.4.0: TC5 catch-all-with-alternative-return-shape (also the writing-code:14 mechanical detection candidate) and TC8 catch-all-wrapping-pure-logic-body.
+These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothetical code) is mechanically enforced by `[`commit`](commit/SKILL.md)` step 4 (the affected-tests gate); writing-code:2 (history references in code comments) is mechanically enforced by `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)`; writing-code:9 (no silently-dropped parameters) lands mechanical at v2.2.0 via the AST scanner described above; writing-code:12 (no duplicate imports) lands mechanical at v2.3.1 via AST scanner; writing-code:7 (silent error swallowing) lands mechanical at v2.3.1.1 via AST scanner with carve-outs for Optional[T]+docstring, `# noqa: writing-code-7` opt-out, and the `except ImportError`+flag-pattern idiom (writing-code:8 territory); writing-code:15 (unbounded blocking I/O) lands mechanical at v2.6.0 via AST scanner with empirical-evidence-only call-surface list and audit-signal comment carve-out for `timeout=None`; writing-code:8 (multi-pass within file) ships under upstream issue #57 v1.6.2 milestone; writing-code:16 (migration completeness) and writing-code:17 (deprecation shim follow-up ticket) are judgment-enforced via `[`code-review`](code-review/SKILL.md)` and `[`self-review`](self-review/SKILL.md)`; writing-code:18 (fix-and-keep-moving requires artifacts) is judgment-enforced via `[`self-review`](self-review/SKILL.md)` v1.3 artifact fields; the remaining eight (writing-code:1, :3, :4, :6, :10, :11, :13, :14) are judgment-enforced via `[`code-review`](code-review/SKILL.md)`. writing-code:11, :13, :14 scanner enhancements tracked for v2.3.x and beyond. writing-code:7 scanner has two enhancement candidates queued for v2.3.2/v2.4.0: TC5 catch-all-with-alternative-return-shape (also the writing-code:14 mechanical detection candidate) and TC8 catch-all-wrapping-pure-logic-body.
 
 ## Cross-references
 
-- `[rule:writing-tests]` writing-tests:2 (no cargo-cult patterns) is the test-side discipline for the same family of failures as writing-code:3.
-- `[rule:writing-claims]` writing-claims:1 (grep before declaring fix complete), writing-claims:2 (countable claims auditable), writing-claims:3 (confidence calibration) are the claim-side counterparts. The boundary: writing-code rules fire when editing code; writing-claims rules fire when stating facts in commit/PR bodies or chat.
-- `[rule:verify-before-execute]` Evidence clause is the parent discipline for writing-code:4 and writing-code:5; it also covers prose claims that name the same symbols.
-- `[rule:environment-preflight]` is the one-time-per-repo inventory underlying writing-code:5.
-- `[skill:commit]` step 4 is the mechanical enforcement of writing-code:5.
+- `[`writing-tests`](_writing-tests-rules.md)` writing-tests:2 (no cargo-cult patterns) is the test-side discipline for the same family of failures as writing-code:3.
+- `[`writing-claims`](_writing-claims-rules.md)` writing-claims:1 (grep before declaring fix complete), writing-claims:2 (countable claims auditable), writing-claims:3 (confidence calibration) are the claim-side counterparts. The boundary: writing-code rules fire when editing code; writing-claims rules fire when stating facts in commit/PR bodies or chat.
+- `[`verify-before-execute`](_verify-before-execute-rules.md)` Evidence clause is the parent discipline for writing-code:4 and writing-code:5; it also covers prose claims that name the same symbols.
+- `[`environment-preflight`](_environment-preflight-rules.md)` is the one-time-per-repo inventory underlying writing-code:5.
+- `[`commit`](commit/SKILL.md)` step 4 is the mechanical enforcement of writing-code:5.
 
 ## Migration note (v2.0.x only)
 
@@ -354,4 +354,4 @@ This file is derived from rules 3, 6, 9, 10, 12, 17, 18, and 20 of the deprecate
 
 ## Attribution
 
-Defers to `[rule:output]`. No AI / agent attribution in code, commits, or comments.
+Defers to `[`output`](_output-rules.md)`. No AI / agent attribution in code, commits, or comments.
