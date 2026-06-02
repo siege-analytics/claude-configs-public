@@ -31,7 +31,7 @@ Investigation is required before any artifact is created, modified, or deleted. 
 
 Think of investigation as flashing an ID to get into a bar. You do not get to create, modify, or delete anything -- code, config, skills, hooks, docs, anything -- until you have shown evidence of knowledge gathering.
 
-**Trivial-change escape (the ONLY exemptions):** Pure typo fixes, doc-only edits with no behavioral change, and single-line literal changes. Each requires a Trivial-investigation declaration in the self-review artifact with falsifiable evidence for why investigation was unnecessary. "This is simple" is not falsifiable evidence.
+**Trivial-change escape (the ONLY exemptions):** Changes to non-executable content only (markdown prose, comments with no functional effect, whitespace). Any change to executable code (`.sh`, `.py`, `.sql`, `.js`, `.ts`, etc.) requires investigation — the Junior cannot classify code changes out of the pipeline. Each exemption requires a Trivial-investigation declaration in the self-review artifact with falsifiable evidence for why investigation was unnecessary. "This is simple" is not falsifiable evidence. See #338.
 
 **The recursive case -- pipeline editing itself:** Edits to skills (`skills/**/SKILL.md`), hooks (`hooks/**/*.sh`), and rule files (`_*-rules.md`) are never trivial. They change the behavior of the pipeline that governs all future work. A broken skill silently degrades every task that invokes it. Investigation for pipeline edits must trace: (1) which other skills consume this skill's output, (2) which hooks enforce this skill's requirements, (3) what changes for downstream tasks if this edit ships. The "doc-only edit" exemption does not apply to skills, hooks, or rules -- these are behavioral artifacts, not documentation.
 
@@ -283,6 +283,31 @@ machine-executable probes.
 
 ### Open Questions
 <Anything that could not be verified, with why and what the risk is>
+
+### Negative Verification (class-of-bug fixes only)
+
+When a fix addresses a class of bug (same pattern in N >= 2 files),
+the Fact Sheet MUST include a negative verification section. Positive
+verification ("these N instances are fixed") confirms what you did.
+Negative verification ("zero remaining instances exist") confirms
+what's left. Both are required.
+
+```
+### Negative Verification
+Pattern: <human-readable description of the bug class>
+Grep: <exact command used to find remaining instances>
+Scope: <directory or file set searched>
+Result: <paste the grep output — empty output = zero remaining>
+Count: <number of remaining unguarded instances — must be 0>
+```
+
+Run the grep. Paste the output. If the output is non-empty, the fix
+is incomplete — go fix the remaining instances before proceeding.
+
+The corresponding think-gate signal file must include a Schema A claim
+encoding this same grep as a machine-verifiable assertion. The hook
+checks it every turn; if a new file introduces the pattern, the claim
+fails mechanically. See #338.
 
 ### Findings
 For each issue discovered during investigation:

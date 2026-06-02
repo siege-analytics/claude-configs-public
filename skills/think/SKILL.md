@@ -216,10 +216,9 @@ This skill is **MANDATORY**. It auto-triggers whenever you are about to:
 You MUST complete the full design workflow and receive user approval before writing any code. Skipping this skill is not an option.
 
 **Exemptions** (the ONLY cases where you may skip this skill):
-- Single-line fixes (typos, obvious bugs with a clear one-line fix)
+- Changes to non-executable content only (markdown prose, comments with no functional effect, whitespace). Any change to `.sh`, `.py`, `.sql`, `.js`, `.ts`, or other executable code is non-trivial and requires the full pipeline — the Junior cannot classify code changes out of the pipeline. See #338.
 - Tasks where the user has given detailed, specific, step-by-step instructions
 - Pure research or exploration (use the Explore agent instead)
-- Git operations and other non-code tasks that do not change behavior
 
 **Not exempt -- highest-stakes edits that require the full pipeline:**
 - Skill files (`skills/**/SKILL.md`) -- these change the behavior of every future task
@@ -272,6 +271,37 @@ After the design note is posted to the ticket (Step 7), write
 The `lastUpdated` field (ISO 8601) is consumed by the temporal decay
 check. Omitting it forces the hook to fall back to file modification
 time, which is less reliable across machines and sessions.
+
+### Schema A claims for class-of-bug fixes
+
+When a fix addresses a class of bug (the same pattern in multiple
+files), the signal file MUST include at least one Schema A claim
+(machine-verifiable: file + grep + expected) that asserts zero
+remaining unguarded instances. The hook checks this every turn.
+
+Example: fixing unguarded `grep` in pipelines across hook scripts:
+```json
+{
+  "claims": [
+    {
+      "assertion": "No unguarded CD_COUNT grep patterns remain in hooks/",
+      "file": "hooks/",
+      "grep": "CD_COUNT=.*grep.*[^}].*|.*wc",
+      "expected": false
+    }
+  ]
+}
+```
+
+A class-of-bug fix is identified structurally: if the same pattern
+appears in more than one file, it is a class. This is not a judgment
+call. The definition is: N >= 2 files with the same pattern = class.
+See #338.
+
+Positive verification ("these N instances are fixed") is necessary
+but not sufficient. Negative verification ("zero remaining instances,
+verified by grep") is required. The distinction: positive verification
+confirms what you did; negative verification confirms what's left.
 
 ### Cleanup before creating
 
