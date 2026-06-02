@@ -100,9 +100,14 @@ reverts a change or fixes a regression must reference the originating
 ticket AND the Post-error revision block on it.
 
 Required trailers in the commit / PR body:
-  Refs: <repo>#<originating-ticket> Post-error revision dated YYYY-MM-DD
+  Refs: <ticket-reference> Post-error revision dated YYYY-MM-DD
   Post-error-revision: <link to the ticket's '## Post-error revision'
                         block, OR a local artifact path>
+
+Accepted ticket reference formats:
+  GitHub/GitLab:  repo#42, owner/repo#42, #42
+  Jira/Linear:    PROJ-123, ELE-42
+  URL:            https://jira.example.com/browse/PROJ-123
 
 If the originating ticket has no Post-error revision block yet, STOP
 and follow skills/post-error-revision/SKILL.md:
