@@ -1,6 +1,6 @@
 # Lifetime Value
 
-Customer Lifetime Value (LTV) is the total revenue a customer generates over their entire relationship with your business. Increasing LTV is the highest-leverage activity in marketing because it costs nothing in acquisition — these people are already your customers. The most profitable businesses are not the ones that acquire the most customers; they are the ones that extract the most value from each customer relationship.
+Customer Lifetime Value (LTV) is the total revenue a customer generates over their entire relationship with your business. Increasing LTV is the highest-leverage activity in marketing because it costs nothing in acquisition -- these people are already your customers. The most profitable businesses are not the ones that acquire the most customers; they are the ones that extract the most value from each customer relationship.
 
 ## LTV Formulas and Calculation
 
@@ -99,7 +99,7 @@ The key to the ascension model is knowing when and how to move customers up. The
 
 ### When to Upsell and Cross-Sell
 
-The most effective timing is at the "point of maximum satisfaction" — right after the customer has experienced a win or positive outcome.
+The most effective timing is at the "point of maximum satisfaction" -- right after the customer has experienced a win or positive outcome.
 
 | Timing | Why It Works | Example |
 |--------|-------------|---------|
@@ -142,15 +142,15 @@ Raising prices is the simplest and fastest way to increase LTV. It requires no n
 | Grandfather existing, raise for new | When loyalty is critical | Existing customers keep current price; new customers pay more |
 | Gradual increase | When the increase is significant | Raise 10% now, another 10% in 6 months |
 | Value add + price increase | When you want to justify the increase | Add a new feature or service, then raise the price |
-| Rebrand / repackage | When you want a fresh perception | New name, new packaging, new pricing — the "new" justifies the price |
+| Rebrand / repackage | When you want a fresh perception | New name, new packaging, new pricing -- the "new" justifies the price |
 | Direct increase with notice | When you have strong relationships | "Starting [date], pricing will increase to [new price]. Here is why and what additional value you are getting." |
 
 ### The Price Increase Communication Framework
 
-1. **Give notice** — at least 30 days for existing customers
-2. **Explain the value** — connect the increase to improvements, results, or market factors
-3. **Offer a loyalty option** — lock in old pricing for a period, or offer an annual plan at a discount
-4. **Be confident** — do not apologize excessively; price increases are normal and expected
+1. **Give notice** -- at least 30 days for existing customers
+2. **Explain the value** -- connect the increase to improvements, results, or market factors
+3. **Offer a loyalty option** -- lock in old pricing for a period, or offer an annual plan at a discount
+4. **Be confident** -- do not apologize excessively; price increases are normal and expected
 
 ## Reactivation Campaigns
 
@@ -164,7 +164,7 @@ Lapsed customers are among your highest-ROI marketing targets. They already know
 | Email 2 | 37 days | "Here is what you are missing" | Highlight new features, improvements, or content since they left |
 | Email 3 | 44 days | "[Name], a special offer just for you" | Exclusive discount, free month, or bonus for returning |
 | Email 4 | 51 days | "Last chance: [offer] expires [date]" | Genuine deadline on the reactivation offer |
-| Email 5 | 60 days | "Should we close your account?" | Breakup email — often triggers a response |
+| Email 5 | 60 days | "Should we close your account?" | Breakup email -- often triggers a response |
 
 ### Reactivation Offer Ideas
 

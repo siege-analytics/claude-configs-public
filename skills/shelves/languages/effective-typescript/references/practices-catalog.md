@@ -1,4 +1,4 @@
-# Effective TypeScript — Practices Catalog
+# Effective TypeScript -- Practices Catalog
 
 Deep before/after examples for the 20 most impactful items.
 
@@ -23,7 +23,7 @@ Always use `strict: true`. It enables `noImplicitAny` and `strictNullChecks` whi
 
 **Before:**
 ```typescript
-const user = {} as User;  // bypasses type checking — user is actually empty
+const user = {} as User;  // bypasses type checking -- user is actually empty
 const input = document.getElementById('name') as HTMLInputElement;
 ```
 **After:**
@@ -103,7 +103,7 @@ function sort(arr: number[]): number[] {
 **After:**
 ```typescript
 function sort(arr: readonly number[]): number[] {
-  return [...arr].sort(); // forced to copy — cannot mutate readonly input
+  return [...arr].sort(); // forced to copy -- cannot mutate readonly input
 }
 ```
 
@@ -173,7 +173,7 @@ type Page =
   | { state: 'loading' }
   | { state: 'success'; pageText: string }
   | { state: 'error'; error: string };
-// Every combination is meaningful — no impossible states
+// Every combination is meaningful -- no impossible states
 ```
 
 ---
@@ -253,7 +253,7 @@ console.log(config.timeout);               // no type checking from here on
 **After:**
 ```typescript
 const config = JSON.parse(rawConfig) as { timeout: number; retries: number };
-// or better — parse with unknown and narrow:
+// or better -- parse with unknown and narrow:
 const raw: unknown = JSON.parse(rawConfig);
 const timeout = (raw as { timeout: number }).timeout; // any scoped to one property access
 ```
@@ -269,7 +269,7 @@ const user = fetchUser() as User;
 ```
 **After:**
 ```typescript
-// Assertion encapsulated once — all callers get proper types
+// Assertion encapsulated once -- all callers get proper types
 async function fetchUser(id: string): Promise<User> {
   const raw: unknown = await fetch(`/api/users/${id}`).then(r => r.json());
   return raw as User; // single controlled assertion inside typed boundary
@@ -286,7 +286,7 @@ function parseYaml(yaml: string): any { // callers never have to narrow
   return parse(yaml);
 }
 const config = parseYaml(raw);
-config.port.toFixed(); // no error — but crashes if port is missing
+config.port.toFixed(); // no error -- but crashes if port is missing
 ```
 **After:**
 ```typescript
@@ -305,7 +305,7 @@ if (typeof config === 'object' && config !== null && 'port' in config) {
 
 **Before:**
 ```typescript
-// Unexported — users have to use ReturnType<typeof getUser> hacks
+// Unexported -- users have to use ReturnType<typeof getUser> hacks
 interface User { id: string; name: string; }
 export function getUser(id: string): User { ... }
 ```
@@ -344,12 +344,12 @@ Avoid TypeScript-specific features that don't map cleanly to JavaScript. Prefer 
 
 **Before:**
 ```typescript
-// TypeScript enums — compiled to objects with side effects, can't be tree-shaken
+// TypeScript enums -- compiled to objects with side effects, can't be tree-shaken
 enum Direction { North, South, East, West }
 ```
 **After:**
 ```typescript
-// Const object + type — tree-shakeable, maps cleanly to JS
+// Const object + type -- tree-shakeable, maps cleanly to JS
 const Direction = { North: 'North', South: 'South', East: 'East', West: 'West' } as const;
 type Direction = typeof Direction[keyof typeof Direction];
 ```
@@ -361,11 +361,11 @@ type Direction = typeof Direction[keyof typeof Direction];
 The final step of any JS→TS migration. Without it, TypeScript silently accepts untyped code.
 
 ```json
-// tsconfig.json — final migration milestone
+// tsconfig.json -- final migration milestone
 {
   "compilerOptions": {
     "strict": true,          // includes noImplicitAny and strictNullChecks
-    "noImplicitAny": true    // explicit — every value must have a type
+    "noImplicitAny": true    // explicit -- every value must have a type
   }
 }
 ```

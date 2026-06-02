@@ -1,4 +1,4 @@
-# siege_utilities + Sedona — Interop Map
+# siege_utilities + Sedona -- Interop Map
 
 When working with Sedona in Siege projects, [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) provides **runtime detection** and **geometry encoding** but does *not* wrap Sedona's spatial operations. The pattern: ask SU what runtime is available, use SU's encoder/decoder for cross-stage geometry safety, write the spatial logic directly in Sedona SQL.
 
@@ -17,7 +17,7 @@ plan = resolve_spatial_runtime_plan()
 
 Three reasons this matters:
 
-1. **Databricks runtimes 13+ ship native spatial.** ST_* SQL works without Sedona at all — same syntax. SU detects the runtime version and recommends the right path.
+1. **Databricks runtimes 13+ ship native spatial.** ST_* SQL works without Sedona at all -- same syntax. SU detects the runtime version and recommends the right path.
 2. **Sedona JAR presence is uncertain.** Importing `sedona.spark` crashes if the JAR isn't on the classpath. SU checks safely without import-time crashes.
 3. **The fallback is explicit.** If neither native nor Sedona is available, SU surfaces the "fall back to single-node Python" recommendation rather than letting the job fail mid-DAG.
 
@@ -54,7 +54,7 @@ from siege_utilities.geo.spatial_runtime import (
 
 # In an executor, encode for downstream stage:
 payload: GeometryPayload = encode_geometry(shapely_geom)
-# payload is WKB-bytes + SRID + dim flags — Spark-safe
+# payload is WKB-bytes + SRID + dim flags -- Spark-safe
 
 # In the next stage, decode:
 geom = decode_geometry(payload)
@@ -66,15 +66,15 @@ For Spark-side use:
 from pyspark.sql.functions import udf
 from pyspark.sql.types import BinaryType
 
-# UDF that returns the WKB payload — better than `geom.wkt` (loses precision) or pickling
+# UDF that returns the WKB payload -- better than `geom.wkt` (loses precision) or pickling
 @udf(BinaryType())
 def to_payload(geom):
     return encode_geometry(geom).wkb_bytes
 ```
 
-When you do need a custom UDF (rare — prefer ST_*), use SU's payload format for cross-stage safety.
+When you do need a custom UDF (rare -- prefer ST_*), use SU's payload format for cross-stage safety.
 
-## What SU does NOT do — write directly
+## What SU does NOT do -- write directly
 
 ### Spatial joins
 
@@ -105,7 +105,7 @@ sedona.conf.set("spark.sedona.join.gridtype", "kdbtree")  # or "quadtree"
 
 ### Raster operations
 
-SU has no Sedona raster wrappers. Use `RS_*` SQL directly — see [`raster.md`](raster.md).
+SU has no Sedona raster wrappers. Use `RS_*` SQL directly -- see [`raster.md`](raster.md).
 
 ## Checklist when starting Sedona work
 

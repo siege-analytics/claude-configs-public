@@ -1,22 +1,22 @@
 # Triggers: Designing Environmental Cues for Top-of-Mind Awareness
 
-Triggers are stimuli in the environment that prompt people to think about related things. If your product is linked to a frequent trigger, people will think about it more often — and what's top-of-mind becomes tip-of-tongue. Triggers are the most underestimated of the STEPPS principles, yet they may be the most powerful driver of sustained word-of-mouth.
+Triggers are stimuli in the environment that prompt people to think about related things. If your product is linked to a frequent trigger, people will think about it more often -- and what's top-of-mind becomes tip-of-tongue. Triggers are the most underestimated of the STEPPS principles, yet they may be the most powerful driver of sustained word-of-mouth.
 
 ## Why Triggers Matter More Than You Think
 
 Most marketers obsess over making their product exciting. But excitement fades. Triggers persist.
 
-Consider this: Rebecca Black's "Friday" — widely considered one of the worst songs ever made — sees a reliable spike in YouTube views every single Friday. Not because people suddenly like the song more on Fridays, but because the day of the week triggers thoughts of it. The environmental cue (Friday) keeps it top-of-mind on a weekly cycle.
+Consider this: Rebecca Black's "Friday" -- widely considered one of the worst songs ever made -- sees a reliable spike in YouTube views every single Friday. Not because people suddenly like the song more on Fridays, but because the day of the week triggers thoughts of it. The environmental cue (Friday) keeps it top-of-mind on a weekly cycle.
 
 **The core insight:** Products that are linked to frequent environmental triggers get more word-of-mouth than products that are more exciting but lack triggers. Frequency of trigger beats strength of association.
 
-This is why Kit Kat linking itself to coffee breaks was genius — not because coffee and Kit Kat are a natural pairing, but because coffee breaks happen multiple times per day, every day. Each break is a trigger.
+This is why Kit Kat linking itself to coffee breaks was genius -- not because coffee and Kit Kat are a natural pairing, but because coffee breaks happen multiple times per day, every day. Each break is a trigger.
 
 ## The Kit Kat + Coffee Case Study
 
 In 2007, Kit Kat was struggling. Sales had been declining. The brand needed a new approach.
 
-**What they did:** Kit Kat repositioned itself as the companion to coffee. "Have a break, have a Kit Kat" was paired with coffee in every ad, display, and message. The idea was simple: link Kit Kat to something people already do frequently — drink coffee.
+**What they did:** Kit Kat repositioned itself as the companion to coffee. "Have a break, have a Kit Kat" was paired with coffee in every ad, display, and message. The idea was simple: link Kit Kat to something people already do frequently -- drink coffee.
 
 **Why it worked:**
 - Coffee is consumed 2-3 times per day by most adults
@@ -82,15 +82,15 @@ Not all triggers are created equal. The frequency and strength of a trigger dete
 
 | | **High Frequency** | **Low Frequency** |
 |---|---|---|
-| **Strong Association** | **Gold Mine** — Daily trigger strongly linked to your product. Maximum WOM. | **Wasted Potential** — Strong link but rare encounters. Spiky WOM. |
-| **Weak Association** | **Opportunity** — Frequent trigger, weak link. Invest in building the association. | **Avoid** — Rare trigger, weak link. Not worth the investment. |
+| **Strong Association** | **Gold Mine** -- Daily trigger strongly linked to your product. Maximum WOM. | **Wasted Potential** -- Strong link but rare encounters. Spiky WOM. |
+| **Weak Association** | **Opportunity** -- Frequent trigger, weak link. Invest in building the association. | **Avoid** -- Rare trigger, weak link. Not worth the investment. |
 
 ### Examples by Quadrant
 
 **Gold Mine (High Frequency + Strong Association):**
 - Kit Kat + coffee breaks (2-3x/day, strong link)
 - Budweiser + watching sports (weekly+ for fans, strong link)
-- "That's hot" + Paris Hilton (early 2000s — phrase used constantly, strong link)
+- "That's hot" + Paris Hilton (early 2000s -- phrase used constantly, strong link)
 
 **Wasted Potential (Low Frequency + Strong Association):**
 - Turkeys + Thanksgiving (strong link, but once a year)
@@ -127,7 +127,7 @@ Build the association between your product and the trigger through repetition an
 | **Advertising co-occurrence** | Show product alongside trigger in every ad | Kit Kat always shown with coffee |
 | **Physical proximity** | Place product near the trigger in the real world | Candy at checkout counters (impulse trigger) |
 | **Verbal anchoring** | Use taglines that embed the trigger | "Have a break, have a Kit Kat" |
-| **Digital pairing** | Trigger-timed push notifications or content | "It's Friday — time for your weekly review" |
+| **Digital pairing** | Trigger-timed push notifications or content | "It's Friday -- time for your weekly review" |
 | **Experiential linking** | Create events or experiences that pair the two | Sampling coffee + Kit Kat at offices |
 
 ### Step 3: Reinforce Consistently
@@ -148,16 +148,16 @@ Once you own a trigger, competitors may try to hijack it.
 
 ## Competitive Triggers: Hijacking Competitor Moments
 
-One advanced trigger strategy is linking your product to a competitor's context — so that when people think of the competitor, they think of you.
+One advanced trigger strategy is linking your product to a competitor's context -- so that when people think of the competitor, they think of you.
 
 ### How Competitive Triggers Work
 
 **The principle:** If your competitor's product or brand is a frequent environmental cue, you can link your product to it. This turns competitor visibility into your word-of-mouth.
 
 **Examples:**
-- A challenger bank could tie its messaging to ATM fee receipts — every time a customer sees a fee, they think of the fee-free alternative
-- A meditation app could tie to the stress of checking email — "Before you open your inbox, open [app]"
-- A healthy snack brand could trigger when people see a vending machine — "Next time you see a vending machine, remember there's a better option"
+- A challenger bank could tie its messaging to ATM fee receipts -- every time a customer sees a fee, they think of the fee-free alternative
+- A meditation app could tie to the stress of checking email -- "Before you open your inbox, open [app]"
+- A healthy snack brand could trigger when people see a vending machine -- "Next time you see a vending machine, remember there's a better option"
 
 ### Competitive Trigger Design
 
@@ -233,7 +233,7 @@ For your current product or campaign, answer: What is the environmental trigger?
 
 ### Exercise 3: The Friday Test
 
-Rebecca Black's "Friday" spikes every Friday. Does your product have a "Friday" — a regular environmental event that triggers thoughts of it? If not, design one. Pick a daily or weekly event and create a campaign that systematically links your product to it.
+Rebecca Black's "Friday" spikes every Friday. Does your product have a "Friday" -- a regular environmental event that triggers thoughts of it? If not, design one. Pick a daily or weekly event and create a campaign that systematically links your product to it.
 
 ### Exercise 4: Competitive Trigger Brainstorm
 

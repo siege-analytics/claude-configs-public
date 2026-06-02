@@ -8,13 +8,13 @@ These detailed case study breakdowns illustrate how the STEPPS framework operate
 
 Blendtec is a manufacturer of commercial and consumer blenders based in Orem, Utah. In 2006, the company had strong commercial sales (restaurant and food service blenders) but struggled in the consumer market. Their blenders were powerful but expensive, and the brand had virtually zero consumer awareness.
 
-Marketing director George Wright discovered that founder Tom Dickson had been testing blenders by blending unusual items — wood boards, marbles — to check durability. Wright realized this was not just a quality assurance process. It was a content goldmine.
+Marketing director George Wright discovered that founder Tom Dickson had been testing blenders by blending unusual items -- wood boards, marbles -- to check durability. Wright realized this was not just a quality assurance process. It was a content goldmine.
 
 ### What They Did
 
 They launched a YouTube series called "Will It Blend?" in which Tom Dickson, wearing a lab coat and safety goggles, would blend increasingly extreme objects: golf balls, a rake handle, glow sticks, and most famously, an iPhone. Each video followed an identical format: Tom introduces the object, asks "Will it blend?", blends it, reveals the result, and delivers his catchphrase: "Don't breathe this."
 
-The production budget per video was approximately $50-100 — the cost of the blended item.
+The production budget per video was approximately $50-100 -- the cost of the blended item.
 
 ### STEPPS Analysis
 
@@ -25,7 +25,7 @@ The production budget per video was approximately $50-100 — the cost of the bl
 | **Emotion** | Amusement (high-arousal positive) from the absurdity of blending an iPad | Very Strong |
 | **Public** | YouTube views, embeds, and social shares made it highly visible | Strong |
 | **Practical Value** | Implicitly demonstrates extreme blending power ("Imagine what it does to food") | Moderate |
-| **Stories** | Perfect Trojan Horse — you cannot retell the story without mentioning Blendtec | Very Strong |
+| **Stories** | Perfect Trojan Horse -- you cannot retell the story without mentioning Blendtec | Very Strong |
 
 ### Why It Worked
 
@@ -49,18 +49,18 @@ The production budget per video was approximately $50-100 — the cost of the bl
 
 1. **Demonstrate your core product claim in the most extreme way possible.** What is the most outrageous thing your product can do that proves its core value proposition?
 2. **Create a repeatable format.** A series builds audience, anticipation, and a content library. One viral video is a spike; a series is a growth engine.
-3. **Make the product the protagonist.** The product should not be the sponsor of the entertainment — it should be the source of the entertainment.
+3. **Make the product the protagonist.** The product should not be the sponsor of the entertainment -- it should be the source of the entertainment.
 4. **Keep production simple.** The authenticity of a simple setup (one man, one blender, one camera) was part of the charm. Overproduction would have undermined the effect.
 
 ## Case Study 2: Barclay Prime's $100 Cheesesteak
 
 ### Background
 
-Barclay Prime was a new upscale steakhouse opening in Philadelphia in 2004. Philadelphia is one of the most competitive restaurant markets in the US, and the city is especially proud of its cheesesteak — a working-class sandwich typically costing $5-10. Restaurant owner Howard Wein needed to generate buzz for a new, expensive restaurant with no existing reputation.
+Barclay Prime was a new upscale steakhouse opening in Philadelphia in 2004. Philadelphia is one of the most competitive restaurant markets in the US, and the city is especially proud of its cheesesteak -- a working-class sandwich typically costing $5-10. Restaurant owner Howard Wein needed to generate buzz for a new, expensive restaurant with no existing reputation.
 
 ### What They Did
 
-Wein created a $100 cheesesteak. Not a $100 steak — a $100 cheesesteak. It was made with Kobe beef, lobster tail, shaved truffles, and marbled cheese, served with a split of Veuve Clicquot champagne. The sandwich was placed on the menu alongside regular (expensive but not outrageous) offerings.
+Wein created a $100 cheesesteak. Not a $100 steak -- a $100 cheesesteak. It was made with Kobe beef, lobster tail, shaved truffles, and marbled cheese, served with a split of Veuve Clicquot champagne. The sandwich was placed on the menu alongside regular (expensive but not outrageous) offerings.
 
 ### STEPPS Analysis
 
@@ -68,7 +68,7 @@ Wein created a $100 cheesesteak. Not a $100 steak — a $100 cheesesteak. It was
 |-----------|---------------------|----------|
 | **Social Currency** | Ordering or knowing about the $100 cheesesteak signals insider status and adventurousness | Very Strong |
 | **Triggers** | Every cheesesteak shop in Philadelphia became a trigger for Barclay Prime | Moderate |
-| **Emotion** | Surprise and amusement — the audacity of a $100 cheesesteak in Philly | Strong |
+| **Emotion** | Surprise and amusement -- the audacity of a $100 cheesesteak in Philly | Strong |
 | **Public** | People photographed and displayed the cheesesteak; media covered it extensively | Strong |
 | **Practical Value** | Low (it's not a "deal") | Weak |
 | **Stories** | "I went to this restaurant that has a $100 cheesesteak" is an irresistible story | Very Strong |
@@ -79,7 +79,7 @@ Wein created a $100 cheesesteak. Not a $100 steak — a $100 cheesesteak. It was
 
 **The Trojan Horse was airtight.** You cannot tell someone about the $100 cheesesteak without mentioning Barclay Prime (or at minimum, the restaurant that serves it, which leads to Barclay Prime). The restaurant IS the story.
 
-**Social Currency multiplied.** People who ordered it earned extreme social currency — "I had the $100 cheesesteak at Barclay Prime" is a dinner party story that signals adventurousness, affluence, and insider knowledge. But even people who didn't order it gained social currency from knowing about it.
+**Social Currency multiplied.** People who ordered it earned extreme social currency -- "I had the $100 cheesesteak at Barclay Prime" is a dinner party story that signals adventurousness, affluence, and insider knowledge. But even people who didn't order it gained social currency from knowing about it.
 
 **Media amplification.** The $100 cheesesteak was covered by every food blogger, local news outlet, and eventually national media. The media earned social currency by covering it (their audiences would find it remarkable), creating a virtuous cycle.
 
@@ -92,10 +92,10 @@ Wein created a $100 cheesesteak. Not a $100 steak — a $100 cheesesteak. It was
 
 ### Transferable Lessons
 
-1. **You don't need to make your entire product remarkable — just one element.** The rest of Barclay Prime's menu was normally priced. The $100 cheesesteak was a single menu item that generated awareness for the whole restaurant.
+1. **You don't need to make your entire product remarkable -- just one element.** The rest of Barclay Prime's menu was normally priced. The $100 cheesesteak was a single menu item that generated awareness for the whole restaurant.
 2. **Violate category expectations.** Take something people think they know (cheesesteaks are cheap) and subvert it dramatically.
 3. **The remarkable item doesn't need to be profitable.** The cheesesteak was likely a break-even or loss-leader item. Its value was in word-of-mouth, not direct margin.
-4. **Leverage cultural context.** A $100 cheesesteak in Philadelphia — the cheesesteak capital of the world — was far more remarkable than a $100 cheesesteak in any other city.
+4. **Leverage cultural context.** A $100 cheesesteak in Philadelphia -- the cheesesteak capital of the world -- was far more remarkable than a $100 cheesesteak in any other city.
 
 ## Case Study 3: Kit Kat + Coffee Breaks
 
@@ -111,10 +111,10 @@ Kit Kat repositioned around coffee breaks. The existing tagline "Have a break, h
 
 | Principle | How It Was Activated | Strength |
 |-----------|---------------------|----------|
-| **Social Currency** | Low — this wasn't about making people look good | Weak |
+| **Social Currency** | Low -- this wasn't about making people look good | Weak |
 | **Triggers** | Every coffee break (2-3 times/day for most adults) triggered thoughts of Kit Kat | Very Strong |
-| **Emotion** | Moderate — comfort and routine satisfaction | Moderate |
-| **Public** | Moderate — seeing someone eating Kit Kat with coffee reinforced the link | Moderate |
+| **Emotion** | Moderate -- comfort and routine satisfaction | Moderate |
+| **Public** | Moderate -- seeing someone eating Kit Kat with coffee reinforced the link | Moderate |
 | **Practical Value** | Low | Weak |
 | **Stories** | Low | Weak |
 
@@ -122,7 +122,7 @@ Kit Kat repositioned around coffee breaks. The existing tagline "Have a break, h
 
 **Frequency is everything.** Coffee breaks happen 2-3 times per day for most working adults. By linking Kit Kat to this daily ritual, the brand went from occasional indulgence to top-of-mind multiple times per day. Each coffee break was a trigger.
 
-**The trigger was already social.** Coffee breaks often involve going to a break room, a coffee shop, or a meeting with colleagues — all social situations where conversation (and therefore word-of-mouth) naturally occurs. The trigger coincided with conversation opportunities.
+**The trigger was already social.** Coffee breaks often involve going to a break room, a coffee shop, or a meeting with colleagues -- all social situations where conversation (and therefore word-of-mouth) naturally occurs. The trigger coincided with conversation opportunities.
 
 **The link was plausible.** "Coffee and chocolate" is a natural pairing. The association didn't feel forced. If Kit Kat had tried to link itself to, say, brushing your teeth, the association would have failed because the pairing feels wrong.
 
@@ -137,7 +137,7 @@ Kit Kat repositioned around coffee breaks. The existing tagline "Have a break, h
 1. **Frequency of trigger beats strength of excitement.** A daily, mundane trigger generates more word-of-mouth than an exciting but rare association.
 2. **Link to existing behaviors, don't create new ones.** Kit Kat didn't try to create a new ritual. They attached to an existing one (coffee breaks).
 3. **Consistency is critical.** The coffee association was maintained for years across all channels. A trigger link takes time to build and must be reinforced continuously.
-4. **Choose triggers that coincide with social moments.** A trigger that occurs during conversation is twice as valuable — it reminds people of the product at the exact moment they can mention it.
+4. **Choose triggers that coincide with social moments.** A trigger that occurs during conversation is twice as valuable -- it reminds people of the product at the exact moment they can mention it.
 
 ## Case Study 4: Livestrong Wristband
 
@@ -153,16 +153,16 @@ They created a simple yellow silicone wristband, sold for $1. The bright yellow 
 
 | Principle | How It Was Activated | Strength |
 |-----------|---------------------|----------|
-| **Social Currency** | Wearing the band signaled "I care about cancer research" — positive identity signal | Strong |
+| **Social Currency** | Wearing the band signaled "I care about cancer research" -- positive identity signal | Strong |
 | **Triggers** | Seeing the yellow band on anyone's wrist triggered awareness | Strong |
 | **Emotion** | Inspiration and hope (high-arousal positive) | Strong |
-| **Public** | The wristband was visible on the wrist during all daily activities — maximum observability | Very Strong |
+| **Public** | The wristband was visible on the wrist during all daily activities -- maximum observability | Very Strong |
 | **Practical Value** | Low (no utility beyond signaling) | Weak |
 | **Stories** | Lance Armstrong's cancer survival story was integral | Strong |
 
 ### Why It Worked
 
-**Maximum public visibility.** The wristband was visible all day, every day — at work, at the gym, at meals, in conversation. Unlike a donation receipt (private), the wristband turned a private act (donating) into a public signal (wearing).
+**Maximum public visibility.** The wristband was visible all day, every day -- at work, at the gym, at meals, in conversation. Unlike a donation receipt (private), the wristband turned a private act (donating) into a public signal (wearing).
 
 **Behavioral residue that outlasts the act.** The donation took 10 seconds. The wristband was worn for months or years. Each day of wearing was a day of passive advertising.
 
@@ -202,7 +202,7 @@ Dove launched the "Campaign for Real Beauty," which featured real women (not mod
 | **Triggers** | Every beauty ad (from competitors) became a trigger for Dove's counter-message | Moderate |
 | **Emotion** | Complex high-arousal blend: anger (at beauty standards), inspiration (real beauty), awe (the sketch reveal) | Very Strong |
 | **Public** | Massive media coverage, social sharing, billboards, in-store displays | Strong |
-| **Practical Value** | Moderate — provided an empowering perspective on self-image | Moderate |
+| **Practical Value** | Moderate -- provided an empowering perspective on self-image | Moderate |
 | **Stories** | The individual women's stories were deeply human and retellable | Very Strong |
 
 ### Why It Worked
@@ -213,7 +213,7 @@ Dove launched the "Campaign for Real Beauty," which featured real women (not mod
 
 **Competitor advertising became a trigger.** Every time someone saw a traditional beauty ad with airbrushed models, it triggered thoughts of Dove's counter-message. Competitors' own advertising inadvertently promoted Dove's positioning.
 
-**Identity signaling through sharing.** Sharing the Dove campaign signaled "I believe in real beauty" and "I reject unrealistic standards" — both positive identity signals. This social currency drove massive sharing across demographics.
+**Identity signaling through sharing.** Sharing the Dove campaign signaled "I believe in real beauty" and "I reject unrealistic standards" -- both positive identity signals. This social currency drove massive sharing across demographics.
 
 ### Results
 
@@ -226,7 +226,7 @@ Dove launched the "Campaign for Real Beauty," which featured real women (not mod
 
 1. **Challenge industry norms that people already resent.** The backlash against unrealistic beauty standards was simmering. Dove gave it voice and a brand to rally around.
 2. **Turn competitor behavior into your trigger.** When competitors do the thing you challenge, they inadvertently promote your message.
-3. **Multi-emotion activation amplifies sharing.** The campaign didn't just make people feel one thing — it made them feel many things intensely.
+3. **Multi-emotion activation amplifies sharing.** The campaign didn't just make people feel one thing -- it made them feel many things intensely.
 4. **Take a stand.** Commodity products differentiate through values, not features. Dove sold soap by standing for something bigger than soap.
 
 ## Case Study 6: Hotmail "Get Your Free Email"
@@ -245,8 +245,8 @@ They added a simple line at the bottom of every email sent by a Hotmail user: "G
 |-----------|---------------------|----------|
 | **Social Currency** | Early on, having free web-based email was novel and tech-savvy | Moderate |
 | **Triggers** | Every email from a Hotmail user was a trigger | Very Strong |
-| **Emotion** | Low — functional, not emotional | Weak |
-| **Public** | Every email was a public display of Hotmail usage — self-advertising product | Very Strong |
+| **Emotion** | Low -- functional, not emotional | Weak |
+| **Public** | Every email was a public display of Hotmail usage -- self-advertising product | Very Strong |
 | **Practical Value** | Free email (previously paid) was genuinely valuable | Strong |
 | **Stories** | Low | Weak |
 
@@ -256,7 +256,7 @@ They added a simple line at the bottom of every email sent by a Hotmail user: "G
 
 **Implicit endorsement.** When you receive an email from a friend who uses Hotmail, the friend is implicitly endorsing the product. They chose it and use it. This carried more weight than any advertisement.
 
-**Practical value was clear.** "Free email" in 1996 — when most email required a paid ISP — was immediately, obviously valuable. The value proposition was self-evident.
+**Practical value was clear.** "Free email" in 1996 -- when most email required a paid ISP -- was immediately, obviously valuable. The value proposition was self-evident.
 
 **Network effects.** As more people joined Hotmail, more emails carried the tagline, exposing more non-users, who then joined and sent more emails. This was a textbook viral loop.
 

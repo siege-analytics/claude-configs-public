@@ -13,9 +13,9 @@ Framework for designing motivation systems in products, teams, and organizations
 
 ## Core Principle
 
-**The secret to high performance isn't rewards and punishment — it's the deeply human need to direct our own lives, learn and create new things, and do better for ourselves and our world.**
+**The secret to high performance isn't rewards and punishment -- it's the deeply human need to direct our own lives, learn and create new things, and do better for ourselves and our world.**
 
-**The foundation:** For any task requiring even rudimentary cognitive effort, external rewards (bonuses, prizes, punishments) either don't work or actively make performance worse. Intrinsic motivation — Autonomy, Mastery, Purpose — drives lasting engagement.
+**The foundation:** For any task requiring even rudimentary cognitive effort, external rewards (bonuses, prizes, punishments) either don't work or actively make performance worse. Intrinsic motivation -- Autonomy, Mastery, Purpose -- drives lasting engagement.
 
 ## Scoring
 
@@ -64,7 +64,7 @@ See: [references/extrinsic-rewards.md](references/extrinsic-rewards.md) for the 
 
 ### 1. Autonomy
 
-**Definition:** The desire to direct our own lives — to have choice over what we do, when we do it, how we do it, and who we do it with.
+**Definition:** The desire to direct our own lives -- to have choice over what we do, when we do it, how we do it, and who we do it with.
 
 **Autonomy ≠ independence.** Autonomy means acting with choice. You can be autonomous while being interdependent with a team.
 
@@ -105,9 +105,9 @@ See: [references/autonomy.md](references/autonomy.md) for autonomy design patter
 
 ### 2. Mastery
 
-**Definition:** The desire to get better at something that matters — to continually improve and grow.
+**Definition:** The desire to get better at something that matters -- to continually improve and grow.
 
-**Mastery is a mindset, not a destination.** It's asymptotic — you can approach it but never fully reach it. The joy is in the pursuit.
+**Mastery is a mindset, not a destination.** It's asymptotic -- you can approach it but never fully reach it. The joy is in the pursuit.
 
 **Three laws of mastery:**
 
@@ -120,7 +120,7 @@ See: [references/autonomy.md](references/autonomy.md) for autonomy design patter
 **Law 2: Mastery is a Pain**
 - Requires effort, deliberate practice, and grit
 - Flow (Csikszentmihalyi): Optimal state between boredom and anxiety
-- Challenge must match skill level — too easy = boring, too hard = anxious
+- Challenge must match skill level -- too easy = boring, too hard = anxious
 - **Design implication:** Calibrate difficulty to user's level
 
 **Law 3: Mastery is Asymptotic**

@@ -1,6 +1,6 @@
 ---
 name: duckdb-spatial
-description: "DuckDB spatial extension — single-node SQL spatial queries on Parquet/CSV without Postgres or GDAL. TRIGGER: import duckdb with INSTALL spatial / LOAD spatial, ST_Read in DuckDB SQL, GeoParquet without GDAL, parquet → spatial-query workflows. Stacks with `coding/sql/`, `analysis/spatial/`, and `_siege-utilities-rules.md`."
+description: "DuckDB spatial extension -- single-node SQL spatial queries on Parquet/CSV without Postgres or GDAL. TRIGGER: import duckdb with INSTALL spatial / LOAD spatial, ST_Read in DuckDB SQL, GeoParquet without GDAL, parquet → spatial-query workflows. Stacks with `coding/sql/`, `analysis/spatial/`, and `_siege-utilities-rules.md`."
 routed-by: coding-standards
 user-invocable: false
 paths: "**/*.py,**/*.sql"
@@ -8,14 +8,14 @@ paths: "**/*.py,**/*.sql"
 
 # DuckDB Spatial
 
-DuckDB's `spatial` extension ships GEOS, GDAL, and PROJ inside a single in-process binary. It gives you SQL spatial queries on Parquet/CSV files without standing up a server, and — critically — it's the **strongest single tool for GDAL-less environments**. The DuckDB binary bundles its own spatial libraries; the host system doesn't need GDAL installed.
+DuckDB's `spatial` extension ships GEOS, GDAL, and PROJ inside a single in-process binary. It gives you SQL spatial queries on Parquet/CSV files without standing up a server, and -- critically -- it's the **strongest single tool for GDAL-less environments**. The DuckDB binary bundles its own spatial libraries; the host system doesn't need GDAL installed.
 
 ## When DuckDB-spatial is the right tool
 
 | Situation | Use DuckDB-spatial |
 |---|---|
 | You have a Parquet/CSV with geometry, want SQL spatial queries, no Postgres available | ✓ |
-| GDAL not available in the environment | ✓ — bundles its own |
+| GDAL not available in the environment | ✓ -- bundles its own |
 | Single-node analysis on data 1 GB to ~100 GB | ✓ |
 | You want a SQL idiom but data fits in one machine | ✓ |
 | Cloud function / Lambda / Databricks notebook spatial work that doesn't justify Postgres | ✓ |
@@ -31,16 +31,16 @@ DuckDB's `spatial` extension ships GEOS, GDAL, and PROJ inside a single in-proce
 
 ## References
 
-- [`when-to-use.md`](references/when-to-use.md) — vs PostGIS / vs GeoPandas / vs Sedona, decision criteria
-- [`geoparquet-without-gdal.md`](references/geoparquet-without-gdal.md) — WKB-encoded geometry columns; the SU gap; how to read/write GeoParquet entirely without GDAL
-- [`spatial-extension-cookbook.md`](references/spatial-extension-cookbook.md) — `INSTALL spatial`, `ST_Read`, `ST_AsWKB`, `ST_Distance_Sphere`, partition pruning
-- [`pitfalls.md`](references/pitfalls.md) — extension version drift, WKB endianness, single-process ceiling
-- [`siege-utilities-duckdb-spatial.md`](references/siege-utilities-duckdb-spatial.md) — SU's current DuckDB integration is thin (format conversion only); pending SU-1 / SU-7 / SU-9 will close most inline-SQL gaps
+- [`when-to-use.md`](references/when-to-use.md) -- vs PostGIS / vs GeoPandas / vs Sedona, decision criteria
+- [`geoparquet-without-gdal.md`](references/geoparquet-without-gdal.md) -- WKB-encoded geometry columns; the SU gap; how to read/write GeoParquet entirely without GDAL
+- [`spatial-extension-cookbook.md`](references/spatial-extension-cookbook.md) -- `INSTALL spatial`, `ST_Read`, `ST_AsWKB`, `ST_Distance_Sphere`, partition pruning
+- [`pitfalls.md`](references/pitfalls.md) -- extension version drift, WKB endianness, single-process ceiling
+- [`siege-utilities-duckdb-spatial.md`](references/siege-utilities-duckdb-spatial.md) -- SU's current DuckDB integration is thin (format conversion only); pending SU-1 / SU-7 / SU-9 will close most inline-SQL gaps
 
 ## Always-on companions
 
-- [skill:sql] — DuckDB is SQL-first
-- [skill:python] — when scaffolding via `import duckdb`
+- [skill:sql] -- DuckDB is SQL-first
+- [skill:python] -- when scaffolding via `import duckdb`
 - [rule:principles], [rule:python], [rule:data-trust], [rule:siege-utilities]
 
 ## Setup
@@ -91,7 +91,7 @@ con.execute("""
 """)
 ```
 
-Common pipeline shape — the `ST_Point` call is fast even for millions of rows.
+Common pipeline shape -- the `ST_Point` call is fast even for millions of rows.
 
 ### Spatial join with index
 
@@ -110,7 +110,7 @@ For very large joins, materialize an R-tree explicitly:
 con.execute("CREATE INDEX counties_geom_idx ON counties USING RTREE (geom)")
 ```
 
-## Read shapefiles / GeoPackage / KML — DuckDB does it without GDAL host install
+## Read shapefiles / GeoPackage / KML -- DuckDB does it without GDAL host install
 
 ```python
 con.execute("""
@@ -147,15 +147,15 @@ DuckDB sees Pandas/GeoPandas DataFrames as queryable views without copying data.
 
 ## What `siege_utilities` does and doesn't do
 
-SU pulls `duckdb>=0.7.0` as a `performance` extra but currently uses it only for format conversion (`spatial_transformations.SpatialDataTransformer`) — *not* for the in-process query patterns above.
+SU pulls `duckdb>=0.7.0` as a `performance` extra but currently uses it only for format conversion (`spatial_transformations.SpatialDataTransformer`) -- *not* for the in-process query patterns above.
 
 **SU obviates:** nothing yet on the spatial query side.
 
 **SU upstream PR candidates** (pending the other agent's tickets):
 
-- **SU-1:** `read_geoparquet()` / `write_geoparquet()` using DuckDB-WKB without GDAL — would wrap the GeoParquet patterns above behind a SU function.
-- **SU-9:** DuckDB spatial-query helpers — `INSTALL spatial; LOAD spatial; ST_Read(...)` wrapper that returns a GeoDataFrame.
-- **SU-7:** `csv_to_geoparquet(csv_path, lat_col, lon_col, output_path)` — the pipeline shape above as a one-liner.
+- **SU-1:** `read_geoparquet()` / `write_geoparquet()` using DuckDB-WKB without GDAL -- would wrap the GeoParquet patterns above behind a SU function.
+- **SU-9:** DuckDB spatial-query helpers -- `INSTALL spatial; LOAD spatial; ST_Read(...)` wrapper that returns a GeoDataFrame.
+- **SU-7:** `csv_to_geoparquet(csv_path, lat_col, lon_col, output_path)` -- the pipeline shape above as a one-liner.
 
 Until they land, write the inline DuckDB SQL. See [`references/siege-utilities-duckdb-spatial.md`](references/siege-utilities-duckdb-spatial.md) for the full per-task interop map.
 
@@ -163,6 +163,6 @@ Until they land, write the inline DuckDB SQL. See [`references/siege-utilities-d
 
 See [`pitfalls.md`](references/pitfalls.md). Top three:
 
-1. **Forgot `LOAD spatial`** — `ST_*` functions undefined; "Catalog Error: Scalar Function ST_Within does not exist."
-2. **Computing distance in degrees** — same gotcha as PostGIS; use `ST_Distance_Sphere` or project first.
-3. **Single-process ceiling** — DuckDB is great up to ~100 GB on a beefy machine; beyond that, push to Sedona.
+1. **Forgot `LOAD spatial`** -- `ST_*` functions undefined; "Catalog Error: Scalar Function ST_Within does not exist."
+2. **Computing distance in degrees** -- same gotcha as PostGIS; use `ST_Distance_Sphere` or project first.
+3. **Single-process ceiling** -- DuckDB is great up to ~100 GB on a beefy machine; beyond that, push to Sedona.

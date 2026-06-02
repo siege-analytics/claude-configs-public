@@ -13,7 +13,7 @@ A CSS animation on a navigation drawer that animates `width` and `height` (layou
 .nav-drawer.open {
   width: 280px;
   height: 100vh;
-  /* Animates layout properties — forces browser to recalculate layout
+  /* Animates layout properties -- forces browser to recalculate layout
      on every frame, causing jank on low-powered devices */
   transition: width 1.5s linear, height 1.5s linear;
 }
@@ -30,6 +30,6 @@ A CSS animation on a navigation drawer that animates `width` and `height` (layou
   margin-left: 0;
 }
 
-/* No prefers-reduced-motion support — users with vestibular
+/* No prefers-reduced-motion support -- users with vestibular
    disorders experience the full 1.5s sweep animation */
 ```

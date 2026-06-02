@@ -1,4 +1,4 @@
-# Effective TypeScript — All 62 Items
+# Effective TypeScript -- All 62 Items
 
 All items from Dan Vanderkam's "Effective TypeScript" organized by chapter with priority levels.
 
@@ -108,10 +108,10 @@ All items from Dan Vanderkam's "Effective TypeScript" organized by chapter with 
 
 ## Priority Summary
 
-**Critical (fix immediately — correctness or safety)**
+**Critical (fix immediately -- correctness or safety)**
 Items: 2, 5, 9, 10, 22, 28, 31, 32, 38, 42, 62
 
-**Important (fix soon — maintainability and idiom)**
+**Important (fix soon -- maintainability and idiom)**
 Items: 3, 4, 7, 8, 11, 12, 13, 14, 15, 17, 18, 20, 21, 23, 24, 25, 26, 29, 30, 33, 34, 36, 39, 40, 41, 43, 45, 46, 47, 48, 49, 52, 53, 54, 55, 56, 58, 60, 61
 
 **Suggestion (polish when time allows)**

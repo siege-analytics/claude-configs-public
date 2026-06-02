@@ -15,7 +15,7 @@ A framework for crafting ideas and messages that are understood, remembered, and
 
 **The Curse of Knowledge is the single greatest barrier to effective communication.** Once we know something, we can't imagine not knowing it. This makes us bad at explaining our ideas to others.
 
-**The foundation:** Sticky ideas aren't born — they're made. The SUCCESs framework provides six principles that make any idea more memorable and impactful.
+**The foundation:** Sticky ideas aren't born -- they're made. The SUCCESs framework provides six principles that make any idea more memorable and impactful.
 
 ## Scoring
 
@@ -34,7 +34,7 @@ E - Emotional
 S - Stories
 ```
 
-**Not a checklist — a toolkit.** Not every sticky idea uses all six. But the stickiest ideas tend to use most of them.
+**Not a checklist -- a toolkit.** Not every sticky idea uses all six. But the stickiest ideas tend to use most of them.
 
 ### 1. Simple
 
@@ -92,7 +92,7 @@ See: [references/simple.md](references/simple.md) for simplification exercises a
 | Category | Expected | Unexpected (Sticky) |
 |----------|----------|---------------------|
 | **Product launch** | "Introducing our new feature" | "We removed your favorite feature. Here's why." |
-| **Statistics** | "Obesity is growing" | "A bag of movie popcorn has more fat than a bacon-and-eggs breakfast, Big Mac and fries, and steak dinner — combined" |
+| **Statistics** | "Obesity is growing" | "A bag of movie popcorn has more fat than a bacon-and-eggs breakfast, Big Mac and fries, and steak dinner -- combined" |
 | **Value prop** | "Save money on insurance" | "15 minutes could save you 15%" (specific, unexpected) |
 
 **Curiosity gaps:**

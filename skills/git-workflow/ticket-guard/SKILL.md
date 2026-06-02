@@ -15,9 +15,9 @@ Enforce that every workspace has a configured, reachable ticket destination befo
 
 The destination does not have to be GitHub Issues. It must be:
 
-1. **Durable** — survives session end, agent restart, workspace deletion
-2. **Human-visible** — a human can find it without running the agent
-3. **Addressable** — each item has a stable reference (URL, file path + row, ticket ID)
+1. **Durable** -- survives session end, agent restart, workspace deletion
+2. **Human-visible** -- a human can find it without running the agent
+3. **Addressable** -- each item has a stable reference (URL, file path + row, ticket ID)
 
 ## Acceptable destinations
 
@@ -32,10 +32,10 @@ The destination does not have to be GitHub Issues. It must be:
 
 ## NOT acceptable destinations
 
-- `plans/*.md` — agent-local, not human-visible without the agent
-- `memory/*.md` — agent-local, same problem
-- "I'll file a ticket later" — not a destination; it's a deferral
-- Conversation context — ephemeral, lost on session end
+- `plans/*.md` -- agent-local, not human-visible without the agent
+- `memory/*.md` -- agent-local, same problem
+- "I'll file a ticket later" -- not a destination; it's a deferral
+- Conversation context -- ephemeral, lost on session end
 
 ## Instructions
 
@@ -45,13 +45,13 @@ This skill fires as a pre-work check. It runs once per session (memoized after f
 
 Check, in order:
 
-1. **Workspace config** — does `~/.craft-agent/workspaces/<workspace>/config.json` (or equivalent) have a `ticketDestination` field?
-2. **Git remote** — does the working directory have a GitHub or GitLab remote? If so, the remote's issue tracker is the default destination.
-3. **Source integrations** — does the workspace have an active Linear, Jira, or similar source?
+1. **Workspace config** -- does `~/.craft-agent/workspaces/<workspace>/config.json` (or equivalent) have a `ticketDestination` field?
+2. **Git remote** -- does the working directory have a GitHub or GitLab remote? If so, the remote's issue tracker is the default destination.
+3. **Source integrations** -- does the workspace have an active Linear, Jira, or similar source?
 
 If any of the above resolves, store the result and proceed.
 
-### Step 2: If no destination found — STOP
+### Step 2: If no destination found -- STOP
 
 Present the user with options:
 
@@ -59,8 +59,8 @@ Present the user with options:
 >
 > 1. **GitHub Issues** on `<detected-remote>` (if a remote exists)
 > 2. **Linear** (if source is configured but inactive)
-> 3. **Local tracking file** — I'll create a `TICKETS.md` or `tickets.csv` in the project root
-> 4. **Other** — tell me the system and I'll configure it
+> 3. **Local tracking file** -- I'll create a `TICKETS.md` or `tickets.csv` in the project root
+> 4. **Other** -- tell me the system and I'll configure it
 >
 > This is a one-time setup per workspace. I won't ask again once configured.
 
@@ -87,7 +87,7 @@ For cross-session persistence:
 
 ## When this skill fires
 
-This skill is a **universal pre-action check** — it fires before any non-trivial work, in the same category as develop-guard (check #6) and ticket-required (check #5).
+This skill is a **universal pre-action check** -- it fires before any non-trivial work, in the same category as develop-guard (check #6) and ticket-required (check #5).
 
 **Specifically, it fires when:**
 - The agent is about to start implementation work
@@ -119,4 +119,4 @@ If the ticket destination is unreachable (no network, API down), the guard shoul
 3. Queue the ticket creation for when connectivity returns
 
 ### User explicitly opts out
-If the user says "I don't want ticket tracking for this project," that IS a valid answer. Record it as the destination: `none (user opted out on <date>)`. The guard won't ask again, but `decision-to-ticket` will still flag strategic decisions — it just won't auto-file them.
+If the user says "I don't want ticket tracking for this project," that IS a valid answer. Record it as the destination: `none (user opted out on <date>)`. The guard won't ask again, but `decision-to-ticket` will still flag strategic decisions -- it just won't auto-file them.

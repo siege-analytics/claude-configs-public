@@ -4,7 +4,7 @@ description: Router for geospatial book skills. Dispatches to geocomputation-wit
 disable-model-invocation: false
 ---
 
-# Geospatial — Shelf
+# Geospatial -- Shelf
 
 Books grounding geographic analysis: the principles that make spatial computing non-fraudulent. Load the book that matches your task signal and read its full SKILL.md.
 
@@ -17,13 +17,13 @@ Books grounding geographic analysis: the principles that make spatial computing 
 
 ## Books in this shelf
 
-- [skill:geocomputation-with-r] — Lovelace, Nowosad, Muenchow. *Geocomputation with R*. Applied / code-first; 16 chapters covering classes, operations, CRS, raster-vector, I/O, mapping. Full free online at r.geocompx.org.
-- [skill:spatial-data-science] — Pebesma & Bivand. *Spatial Data Science: With Applications in R*. Theory / methodology-first; 17+ chapters across spatial-data, R-tooling, models-for-spatial-data. Full free online at r-spatial.org/book.
+- [skill:geocomputation-with-r] -- Lovelace, Nowosad, Muenchow. *Geocomputation with R*. Applied / code-first; 16 chapters covering classes, operations, CRS, raster-vector, I/O, mapping. Full free online at r.geocompx.org.
+- [skill:spatial-data-science] -- Pebesma & Bivand. *Spatial Data Science: With Applications in R*. Theory / methodology-first; 17+ chapters across spatial-data, R-tooling, models-for-spatial-data. Full free online at r-spatial.org/book.
 
 ## Disambiguation
 
 - **geocomputation-with-r vs spatial-data-science:** geocomputation teaches WHAT to do; spatial-data-science teaches WHY. Load geocomputation when writing code; load spatial-data-science when reasoning about whether the analysis is methodologically defensible. They compose: load both for new spatial work.
-- **geospatial shelf vs coding/postgis (and friends):** shelf books are book-shaped — frameworks + first-principles. `coding/<engine>` skills are operation-level — syntax for a specific engine. Use shelf books to ground the principles; use coding skills for the actual API calls.
+- **geospatial shelf vs coding/postgis (and friends):** shelf books are book-shaped -- frameworks + first-principles. `coding/<engine>` skills are operation-level -- syntax for a specific engine. Use shelf books to ground the principles; use coding skills for the actual API calls.
 
 ## When to use this shelf
 
@@ -41,8 +41,8 @@ Books grounding geographic analysis: the principles that make spatial computing 
 
 ## Always-on companions
 
-- `_data-trust-rules.md` — applies to any data, doubly to spatial data (CRS is one more dimension where trust can be wrong).
-- `engineering-principles/` shelf — for the code-craft floor that any spatial analysis script should meet.
+- `_data-trust-rules.md` -- applies to any data, doubly to spatial data (CRS is one more dimension where trust can be wrong).
+- `engineering-principles/` shelf -- for the code-craft floor that any spatial analysis script should meet.
 
 ## Origin
 

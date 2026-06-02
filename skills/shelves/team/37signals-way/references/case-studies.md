@@ -17,7 +17,7 @@ A 25-person B2B SaaS company builds project management software for construction
 
 **Sprint planning consumed 20% of productive time.** Every two weeks, the team spent a full day on sprint planning: grooming the backlog, estimating story points, debating priorities, assigning tasks. With two-week sprints, this meant one day out of every ten was spent on ceremony rather than building.
 
-**The backlog had 847 items.** Over three years, the backlog had grown from a focused list to an unmanageable graveyard. The team spent hours each month grooming items they would never build. The backlog created a constant sense of being behind — there was always more to do than could ever be done.
+**The backlog had 847 items.** Over three years, the backlog had grown from a focused list to an unmanageable graveyard. The team spent hours each month grooming items they would never build. The backlog created a constant sense of being behind -- there was always more to do than could ever be done.
 
 **Teams did not feel ownership.** Engineers received assigned tasks with detailed acceptance criteria. They executed the tasks but did not feel connected to the problems they were solving. Designer mockups were handed off to engineers who implemented them without understanding the design decisions. The result: technically correct but uninspired work.
 
@@ -32,7 +32,7 @@ The product team exported the backlog to a spreadsheet (for reference, not oblig
 **Phase 2: Learn to shape (Weeks 2-6)**
 
 The two most senior product people (a PM and a designer) spent four weeks learning to shape. They read Shape Up, practiced breadboarding, and shaped three pitches as exercises. Key learnings:
-- Shaping is harder than it looks — it requires holding business context, user needs, and technical reality simultaneously
+- Shaping is harder than it looks -- it requires holding business context, user needs, and technical reality simultaneously
 - The appetite concept was the biggest mental shift: "How much is this worth?" instead of "How long will this take?"
 - Breadboarding felt awkward at first but proved effective at clarifying flows without getting stuck on visual details
 
@@ -42,16 +42,16 @@ Three teams of three (one designer + two engineers) were formed. Each team recei
 
 Results of the first cycle:
 - Two of three teams shipped successfully within six weeks
-- One team hit the circuit breaker — their project was not done and was paused
+- One team hit the circuit breaker -- their project was not done and was paused
 - The team that hit the circuit breaker initially resisted, but after reflecting, agreed the pitch needed reshaping (the rabbit holes were larger than anticipated)
 - Total ceremony time dropped from 20% to approximately 3% (one betting table meeting every 8 weeks)
 
 **Phase 4: Iterate and stabilize (Cycles 2-4)**
 
 Over the next three cycles (18 weeks), the company refined their approach:
-- Shaping improved — rabbit holes were caught earlier, appetites were more realistic
+- Shaping improved -- rabbit holes were caught earlier, appetites were more realistic
 - Teams learned to cut scope proactively rather than requesting extensions
-- Hill charts replaced standup meetings — the team posted updates twice per week
+- Hill charts replaced standup meetings -- the team posted updates twice per week
 - The circuit breaker fired once more, and the team handled it without drama
 
 ### Results After 6 Months
@@ -86,7 +86,7 @@ A 10-person startup builds an email marketing tool for small businesses. After t
 
 **New users were overwhelmed.** The onboarding flow required 12 steps. New users had to configure their CRM fields, set up automation rules, and connect their landing pages before they could send a single email. Activation rate had dropped from 60% to 28%.
 
-**The core product was neglected.** The email editor — the thing every user needed — had not been improved in 8 months. All engineering time went to maintaining peripheral features or building new ones.
+**The core product was neglected.** The email editor -- the thing every user needed -- had not been improved in 8 months. All engineering time went to maintaining peripheral features or building new ones.
 
 ### The Intervention
 
@@ -94,7 +94,7 @@ The founders read Getting Real and Rework and decided to apply the "build less" 
 
 **Step 1: Identify the core job**
 
-They surveyed users with one question: "What is the one thing you use our product for?" 73% of responses mentioned some variation of "send emails to my list." Not automation, not CRM, not landing pages — sending emails.
+They surveyed users with one question: "What is the one thing you use our product for?" 73% of responses mentioned some variation of "send emails to my list." Not automation, not CRM, not landing pages -- sending emails.
 
 **Step 2: Audit every feature**
 
@@ -114,7 +114,7 @@ They categorized every feature using the feature audit framework:
 
 **Step 3: Cut**
 
-They removed the automation workflow builder, the A/B testing feature, the landing page builder, the CRM module, and advanced analytics. This was painful — these features had taken months to build. But each one was used by fewer than 10% of customers and cost disproportionate engineering time to maintain.
+They removed the automation workflow builder, the A/B testing feature, the landing page builder, the CRM module, and advanced analytics. This was painful -- these features had taken months to build. But each one was used by fewer than 10% of customers and cost disproportionate engineering time to maintain.
 
 They communicated the changes to affected users with honesty: "We're focusing on making the core email experience excellent. These features are being retired. Here are alternatives that specialize in [automation/CRM/landing pages]. We'll help you export your data."
 
@@ -150,11 +150,11 @@ A 15-person design and engineering team at a mid-size company builds internal to
 
 ### The Problems
 
-**Status meetings were theater.** Project leads spent 30 minutes preparing slides for the weekly meeting. During the meeting, most attendees listened passively while one person presented. The information was stale by the time it was shared — things had changed since the slides were prepared.
+**Status meetings were theater.** Project leads spent 30 minutes preparing slides for the weekly meeting. During the meeting, most attendees listened passively while one person presented. The information was stale by the time it was shared -- things had changed since the slides were prepared.
 
 **"Percentage complete" was meaningless.** Project leads reported progress as percentages: "We're 70% done." But 70% done could mean "the easy 70% is done and the hard 30% remains" or "we're 70% through the timeline but only 40% through the complexity." Percentages created a false sense of precision.
 
-**Daily standups were ritualistic.** Team members recited "what I did yesterday, what I'll do today, any blockers" without genuine engagement. The standup ran on autopilot — it was a habit, not a tool. Real problems were discussed after the standup, in smaller groups.
+**Daily standups were ritualistic.** Team members recited "what I did yesterday, what I'll do today, any blockers" without genuine engagement. The standup ran on autopilot -- it was a habit, not a tool. Real problems were discussed after the standup, in smaller groups.
 
 **Problems were hidden until late.** Because percentage-complete tracked tasks (not understanding), a scope that was "on track" could suddenly be "in trouble" when the team hit an unexpected complexity. The status meeting format did not surface this risk early enough.
 
@@ -164,7 +164,7 @@ A 15-person design and engineering team at a mid-size company builds internal to
 
 The team adopted hill charts for all active projects. Each project identified 4-8 scopes and placed them on the hill. Initial positions:
 
-- Most scopes started on the left side of the hill (uphill — still figuring things out)
+- Most scopes started on the left side of the hill (uphill -- still figuring things out)
 - A few scopes started near the summit or on the downhill side (approach was clear)
 
 **Week 2: Replace standup with async updates**
@@ -189,9 +189,9 @@ The one-hour weekly status meeting was replaced with a 20-minute hill chart revi
 
 **After (hill charts):**
 
-> "The 'Report Templates' scope is moving downhill — we know what to build and we're executing. But 'Data Aggregation' has been uphill for a week. We're still figuring out how to handle cross-timezone calculations."
+> "The 'Report Templates' scope is moving downhill -- we know what to build and we're executing. But 'Data Aggregation' has been uphill for a week. We're still figuring out how to handle cross-timezone calculations."
 > "That's a risk. Is the appetite still right for this, or does 'Data Aggregation' need to be re-scoped?"
-> "Let's simplify — what if we only support one timezone per report for v1?"
+> "Let's simplify -- what if we only support one timezone per report for v1?"
 > "That works. Move it to the summit."
 
 The hill chart made the risk visible two weeks earlier and prompted a scope-cutting conversation that kept the project on track.
@@ -210,7 +210,7 @@ The hill chart made the risk visible two weeks earlier and prompted a scope-cutt
 
 1. **Hill charts separate uncertainty from execution.** The uphill/downhill distinction gives an honest view of where the real risk is, which percentage-complete cannot.
 2. **Async updates respect focus time.** Writing a one-paragraph update takes 2 minutes and does not interrupt anyone's flow. A standup interrupts everyone's morning.
-3. **Short meetings focus on risk, not reports.** The 20-minute review only discusses scopes that are stuck or moving backward. Good news is visible on the chart — it does not need to be presented.
+3. **Short meetings focus on risk, not reports.** The 20-minute review only discusses scopes that are stuck or moving backward. Good news is visible on the chart -- it does not need to be presented.
 4. **Visual progress is motivating.** Seeing scopes move across the hill provides a tangible sense of progress that task lists and percentages do not.
 
 ## Key Takeaways
@@ -225,4 +225,4 @@ Across all three case studies, several themes emerge:
 
 **4. Transitions are uncomfortable.** Every team experienced discomfort when changing their process. The backlog deletion felt risky. The first circuit breaker felt harsh. Removing status meetings felt like losing control. In every case, the discomfort faded within one or two cycles as the new approach proved itself.
 
-**5. The framework adapts to context.** No team implemented Shape Up exactly as described in the book. Each adapted the principles to their size, domain, and culture. The six-week cycle is not sacred — the principles behind it (fixed time, variable scope, shaped work, small teams) are what matter.
+**5. The framework adapts to context.** No team implemented Shape Up exactly as described in the book. Each adapted the principles to their size, domain, and culture. The six-week cycle is not sacred -- the principles behind it (fixed time, variable scope, shaped work, small teams) are what matter.

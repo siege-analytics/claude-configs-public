@@ -1,6 +1,6 @@
 # StoryBrand One-Liners
 
-A one-liner is a single, memorable sentence that explains what you do. It should pass the "cocktail party test"—can someone repeat it after hearing it once?
+A one-liner is a single, memorable sentence that explains what you do. It should pass the "cocktail party test"--can someone repeat it after hearing it once?
 
 ## The Formula
 

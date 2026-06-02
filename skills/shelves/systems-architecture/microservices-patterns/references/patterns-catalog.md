@@ -10,7 +10,7 @@ Organized by problem category. Read the section relevant to the code you're gene
 1. [Decomposition Patterns](#decomposition-patterns)
 2. [Communication Patterns](#communication-patterns)
 3. [API Gateway Patterns](#api-gateway-patterns)
-4. [Transaction Management — Sagas](#transaction-management--sagas)
+4. [Transaction Management -- Sagas](#transaction-management--sagas)
 5. [Business Logic Patterns](#business-logic-patterns)
 6. [Event Sourcing](#event-sourcing)
 7. [Query Patterns](#query-patterns)
@@ -60,21 +60,21 @@ as services and gradually routing traffic away from the monolith.
 
 ## Communication Patterns
 
-### Synchronous — REST
+### Synchronous -- REST
 
 - Use for simple request/response interactions
 - Design APIs using the Richardson Maturity Model (ideally Level 2+)
 - Define IDL: OpenAPI/Swagger for REST
 - Handle partial failure: timeouts, retries, circuit breakers
 
-### Synchronous — gRPC
+### Synchronous -- gRPC
 
 - Binary protocol, strongly typed via Protocol Buffers
 - More efficient than REST for inter-service calls
 - Supports streaming (server, client, bidirectional)
 - Good for polyglot environments (code generation for many languages)
 
-### Asynchronous — Messaging
+### Asynchronous -- Messaging
 
 - Services communicate via message broker (Kafka, RabbitMQ, etc.)
 - Message types: **Document** (carries data), **Command** (request action), **Event** (notification of change)
@@ -84,7 +84,7 @@ Key implementation concerns:
 
 - **Message ordering**: Use partitioned channels (e.g., Kafka partitions keyed by aggregate ID)
 - **Duplicate handling**: Make consumers idempotent (track processed message IDs, or make operations naturally idempotent)
-- **Transactional outbox**: Write events to an OUTBOX table in the same transaction as business data, then relay to broker — ensures atomicity without distributed transactions
+- **Transactional outbox**: Write events to an OUTBOX table in the same transaction as business data, then relay to broker -- ensures atomicity without distributed transactions
 - **Polling publisher or Transaction log tailing**: Two strategies for relaying outbox messages to the broker
 
 ### Circuit Breaker
@@ -131,7 +131,7 @@ Separate API gateway per client type (web, mobile, third-party). Each BFF:
 
 ---
 
-## Transaction Management — Sagas
+## Transaction Management -- Sagas
 
 ### The Problem
 
@@ -173,7 +173,7 @@ CreateOrderSaga:
 - Each saga step modifies one aggregate in one service
 - Every forward step needs a compensating transaction (undo/rollback action)
 - Compensating transactions must be idempotent (safe to retry)
-- Use semantic locks — mark records as "pending" during saga execution
+- Use semantic locks -- mark records as "pending" during saga execution
 - Countermeasures for lack of isolation: semantic locks, commutative updates, pessimistic/optimistic views, re-reading values
 
 ---
@@ -190,7 +190,7 @@ An aggregate is a cluster of domain objects treated as a unit for data changes.
 - **References between aggregates**: Use IDs, not object references
 
 Design rules:
-- Keep aggregates small — reference other aggregates by identity
+- Keep aggregates small -- reference other aggregates by identity
 - Business logic lives in the aggregate, not in service classes
 - Aggregates publish domain events when their state changes
 
@@ -226,7 +226,7 @@ Reconstruct current state by replaying events.
 
 ### Benefits
 
-- Reliable event publishing (events ARE the data — no outbox needed)
+- Reliable event publishing (events ARE the data -- no outbox needed)
 - Complete audit trail
 - Temporal queries (reconstruct state at any point in time)
 - Enables CQRS naturally
@@ -235,7 +235,7 @@ Reconstruct current state by replaying events.
 
 - Learning curve; different way of thinking
 - Querying the event store is hard (need CQRS for queries)
-- Event schema evolution — events are immutable, so versioning matters
+- Event schema evolution -- events are immutable, so versioning matters
 - Deleting data (e.g., GDPR) requires special handling like encryption with deletable keys
 
 ### Snapshots
@@ -318,11 +318,11 @@ Test interaction between a service and its infrastructure:
 
 From bottom (fast, many) to top (slow, few):
 
-1. Unit tests — domain logic, aggregates, sagas
-2. Integration tests — persistence, messaging, REST clients
-3. Component tests — single service end-to-end with stubs
-4. Contract tests — API compatibility between consumer and provider
-5. End-to-end tests — full system (keep these minimal)
+1. Unit tests -- domain logic, aggregates, sagas
+2. Integration tests -- persistence, messaging, REST clients
+3. Component tests -- single service end-to-end with stubs
+4. Contract tests -- API compatibility between consumer and provider
+5. End-to-end tests -- full system (keep these minimal)
 
 ---
 

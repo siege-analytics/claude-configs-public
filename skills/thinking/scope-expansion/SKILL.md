@@ -1,6 +1,6 @@
 ---
 name: scope-expansion
-description: "Post-epic/post-batch boundary audit. Fires after closing >=3 tickets in the same module to find sibling bugs the per-ticket pipeline missed. Analytical — read-only investigation producing a findings report."
+description: "Post-epic/post-batch boundary audit. Fires after closing >=3 tickets in the same module to find sibling bugs the per-ticket pipeline missed. Analytical -- read-only investigation producing a findings report."
 disable-model-invocation: true
 allowed-tools: Read Grep Glob
 argument-hint: "[module-path-or-epic-ref]"
@@ -18,7 +18,7 @@ The per-ticket pipeline (think → investigate → implement → review) is thor
 2. **Contract drift:** The tickets changed internal behavior but a public API, docstring, or test still encodes the old contract.
 3. **Cross-cut violations:** The tickets each passed individually, but together they introduced an inconsistency (duplicate logic, incompatible assumptions, conflicting defaults).
 
-Round 1 of the siege_utilities audit found 8 bugs in 6 files. Round 2 — triggered by this gap — found 13 more across 350 files. Every one of them was a sibling, contract drift, or cross-cut that no individual ticket would have surfaced.
+Round 1 of the siege_utilities audit found 8 bugs in 6 files. Round 2 -- triggered by this gap -- found 13 more across 350 files. Every one of them was a sibling, contract drift, or cross-cut that no individual ticket would have surfaced.
 
 ## When This Skill Fires
 
@@ -36,7 +36,7 @@ List every file touched by the batch of tickets. For each file:
 2. What imports changed?
 3. What tests were added or modified?
 
-Then list every file that **imports from** a touched file (one hop out). These are the boundary files — they depend on contracts that may have changed.
+Then list every file that **imports from** a touched file (one hop out). These are the boundary files -- they depend on contracts that may have changed.
 
 ```
 ### Blast-Radius Map
@@ -84,7 +84,7 @@ For every public API (function, class, or module `__all__`) in a touched file:
 Produce a structured report:
 
 ```
-### Scope Expansion Findings — [epic/batch ref]
+### Scope Expansion Findings -- [epic/batch ref]
 
 **Scope:** N tickets, P files audited (N touched + M boundary)
 
@@ -114,5 +114,5 @@ Produce a structured report:
 3. **Don't fix during audit.** This skill produces findings. Fixes are separate tickets with their own think gates per resolver rule #10.
 4. **Sibling-grep is not optional.** Phase 2 is the reason this skill exists. If you skip it, you're doing a regular code review, not a scope expansion.
 5. **Include the false-positive count.** The ratio of findings to false positives is a quality signal for the audit itself.
-6. **"Design choice" is not a finding disposition.** If you encounter a pattern that looks wrong but you want to call it a design choice, you must state the invariant that makes it safe. If you cannot state the invariant, classify it as debt (file a ticket) or bug (promote to finding). "Debatable" is not a disposition — it is the Junior avoiding a verdict.
-7. **Scope expansion is the Lead's pass.** The Junior optimizes for speed of one task — it closes the ticket and moves on. The Lead optimizes for speed of the project — it asks "did we introduce sibling bugs across the module boundary that no individual ticket would catch?" The 10-minute scope expansion prevents the next developer from filing 5 more tickets for the same class of bug. The agent's minutes are cheap; the human's hours are not.
+6. **"Design choice" is not a finding disposition.** If you encounter a pattern that looks wrong but you want to call it a design choice, you must state the invariant that makes it safe. If you cannot state the invariant, classify it as debt (file a ticket) or bug (promote to finding). "Debatable" is not a disposition -- it is the Junior avoiding a verdict.
+7. **Scope expansion is the Lead's pass.** The Junior optimizes for speed of one task -- it closes the ticket and moves on. The Lead optimizes for speed of the project -- it asks "did we introduce sibling bugs across the module boundary that no individual ticket would catch?" The 10-minute scope expansion prevents the next developer from filing 5 more tickets for the same class of bug. The agent's minutes are cheap; the human's hours are not.

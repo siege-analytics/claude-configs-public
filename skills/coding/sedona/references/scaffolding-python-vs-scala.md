@@ -1,6 +1,6 @@
-# Sedona Scaffolding — Scala Variant
+# Sedona Scaffolding -- Scala Variant
 
-**PySpark is the Siege default** for Sedona work. This file documents the Scala variant — load it only when you're actually writing `.scala` files or `%scala` notebook cells. The spatial logic and SQL strings are identical between languages; only the scaffolding around them diverges.
+**PySpark is the Siege default** for Sedona work. This file documents the Scala variant -- load it only when you're actually writing `.scala` files or `%scala` notebook cells. The spatial logic and SQL strings are identical between languages; only the scaffolding around them diverges.
 
 ## When you'd use Scala
 
@@ -11,7 +11,7 @@
 | You need compile-time `Dataset[T]` typing | Python is dynamic; Scala catches schema errors at compile time |
 | Team / project preference | Already decided |
 
-For everything else — notebook exploration, batch jobs, ML around the spatial work — **stay in PySpark**.
+For everything else -- notebook exploration, batch jobs, ML around the spatial work -- **stay in PySpark**.
 
 ## The diff
 
@@ -67,9 +67,9 @@ df.createOrReplaceTempView("points")
 
 ### UDF registration (avoid both, but if you must)
 
-Always prefer ST_* SQL — see [`udf-vs-builtin.md`](udf-vs-builtin.md). Both per-row paths pay the same serialization cost and bypass the optimizer.
+Always prefer ST_* SQL -- see [`udf-vs-builtin.md`](udf-vs-builtin.md). Both per-row paths pay the same serialization cost and bypass the optimizer.
 
-**Default (PySpark — vectorized Pandas UDF):**
+**Default (PySpark -- vectorized Pandas UDF):**
 ```python
 from pyspark.sql.functions import pandas_udf
 from pyspark.sql.types import StringType
@@ -90,7 +90,7 @@ sedona.udf.register("my_udf", myUdf)
 
 ### DataFrame typing
 
-PySpark is dynamically typed; schema errors surface at runtime. Scala has typed `Dataset[T]` available — use it when you want compile-time safety on column names and types:
+PySpark is dynamically typed; schema errors surface at runtime. Scala has typed `Dataset[T]` available -- use it when you want compile-time safety on column names and types:
 
 ```scala
 case class Point(id: Long, geom: Geometry)
@@ -102,7 +102,7 @@ If you don't need that safety, stay with `DataFrame` and the typing difference v
 
 ### Error handling
 
-**Default (PySpark — Python exceptions):**
+**Default (PySpark -- Python exceptions):**
 ```python
 try:
     sedona.sql("...").write.format("parquet").save("...")
@@ -123,7 +123,7 @@ Try(sedona.sql("...").write.format("parquet").save("...")) match {
 
 ### Testing
 
-**Default (PySpark — pytest + fixtures):**
+**Default (PySpark -- pytest + fixtures):**
 ```python
 @pytest.fixture
 def sedona():
@@ -149,11 +149,11 @@ class SpatialJoinSpec extends AnyFlatSpec with BeforeAndAfterAll {
 }
 ```
 
-## Same in both — partition tuning, broadcast, AQE
+## Same in both -- partition tuning, broadcast, AQE
 
 All Spark-level tuning is identical. `spark.sedona.global.partitionnum`, `broadcast()`, AQE settings all apply equally.
 
-## Same in both — debugging
+## Same in both -- debugging
 
 `EXPLAIN`, the Spark UI, `result.explain()` work identically. Plan output is the same JVM plan in both languages.
 

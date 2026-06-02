@@ -24,7 +24,7 @@ finally:
 
 - `else` block: reduces code in `try`, makes it clear what you're protecting
 - `finally` block: guaranteed cleanup
-- Don't put too much in `try` — only the code that can raise the expected exception
+- Don't put too much in `try` -- only the code that can raise the expected exception
 
 ## Item 66: Consider contextlib and with Statements for Reusable try/finally Behavior
 ```python
@@ -54,18 +54,18 @@ with log_level(logging.DEBUG, 'my-log') as logger:
 from datetime import datetime, timezone
 import pytz  # or zoneinfo (Python 3.9+)
 
-# BAD — time module is unreliable for timezones
+# BAD -- time module is unreliable for timezones
 import time
 time.localtime()  # platform-dependent behavior
 
-# GOOD — datetime with explicit timezone
+# GOOD -- datetime with explicit timezone
 now = datetime.now(tz=timezone.utc)
 
 # Convert between timezones
 eastern = pytz.timezone('US/Eastern')
 local_time = now.astimezone(eastern)
 
-# Python 3.9+ — use zoneinfo
+# Python 3.9+ -- use zoneinfo
 from zoneinfo import ZoneInfo
 eastern = ZoneInfo('America/New_York')
 local_time = now.astimezone(eastern)
@@ -105,12 +105,12 @@ copyreg.pickle(GameState, pickle_game_state)
 ```python
 from decimal import Decimal, ROUND_UP
 
-# BAD — float precision issues
+# BAD -- float precision issues
 rate = 1.45
 seconds = 222
 cost = rate * seconds / 60  # 5.364999999999999
 
-# GOOD — Decimal for exact arithmetic
+# GOOD -- Decimal for exact arithmetic
 rate = Decimal('1.45')
 seconds = Decimal('222')
 cost = rate * seconds / Decimal('60')
@@ -135,7 +135,7 @@ stats.sort_stats('cumulative')
 stats.print_stats()
 ```
 
-- Never guess where bottlenecks are — profile first
+- Never guess where bottlenecks are -- profile first
 - Use `cProfile` for C-extension speed profiling
 - `cumulative` time shows total time including sub-calls
 - `tottime` shows time in the function itself (excluding sub-calls)
@@ -150,7 +150,7 @@ queue = deque()
 queue.append('item')      # O(1) add to right
 item = queue.popleft()    # O(1) remove from left
 
-# BAD — list as queue
+# BAD -- list as queue
 queue = []
 queue.append('item')      # O(1)
 item = queue.pop(0)       # O(n)! shifts all elements
@@ -207,11 +207,11 @@ heapq.heappush(heap, (priority, item))
 
 ## Item 74: Consider memoryview and bytearray for Zero-Copy Interactions with bytes
 ```python
-# BAD — copying bytes on every slice
+# BAD -- copying bytes on every slice
 data = b'large data...'
 chunk = data[10:20]  # creates a new bytes object
 
-# GOOD — zero-copy with memoryview
+# GOOD -- zero-copy with memoryview
 data = bytearray(b'large data...')
 view = memoryview(data)
 chunk = view[10:20]  # no copy, just a view

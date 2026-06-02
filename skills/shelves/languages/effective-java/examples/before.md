@@ -1,6 +1,6 @@
 # Before
 
-A Java class representing a shipping address with public mutable fields, no validation, and no safe construction — making it trivial to create corrupt objects.
+A Java class representing a shipping address with public mutable fields, no validation, and no safe construction -- making it trivial to create corrupt objects.
 
 ```java
 public class ShippingAddress {
@@ -30,8 +30,8 @@ public class ShippingAddress {
     }
 }
 
-// Usage — nothing prevents corrupt construction
+// Usage -- nothing prevents corrupt construction
 ShippingAddress addr = new ShippingAddress();
 addr.city = "Austin";
-// postalCode, countryCode, recipientName all null — silently broken
+// postalCode, countryCode, recipientName all null -- silently broken
 ```

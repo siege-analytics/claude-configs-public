@@ -15,11 +15,11 @@ description: >
 
 Apply the systems programming practices from Tim McNamara's "Rust in Action" to review existing code and write new Rust. This skill operates in two modes: **Review Mode** (analyze code for violations of Rust idioms and systems programming correctness) and **Write Mode** (produce safe, idiomatic, systems-capable Rust from scratch).
 
-The key differentiator of this book: Rust is taught through real systems — a CPU simulator, key-value store, NTP client, raw TCP stack, and OS kernel. Practices focus on correctness at the hardware boundary, not just language syntax.
+The key differentiator of this book: Rust is taught through real systems -- a CPU simulator, key-value store, NTP client, raw TCP stack, and OS kernel. Practices focus on correctness at the hardware boundary, not just language syntax.
 
 ## Reference Files
 
-- `practices-catalog.md` — Before/after examples for ownership, smart pointers, bit ops, I/O, networking, concurrency, error wrapping, and state machines
+- `practices-catalog.md` -- Before/after examples for ownership, smart pointers, bit ops, I/O, networking, concurrency, error wrapping, and state machines
 
 ## How to Use This Skill
 
@@ -36,7 +36,7 @@ Determine whether the code is application-level, systems-level (binary data, I/O
 
 ### Step 2: Analyze the Code
 
-**Critical rule**: Only flag genuine issues. If a pattern is idiomatic Rust, acknowledge it as correct. Do not manufacture problems where none exist. When code is well-written, say so and offer only minor suggestions. See the "Idiomatic Patterns — Do NOT Flag as Issues" section for patterns that must never be flagged.
+**Critical rule**: Only flag genuine issues. If a pattern is idiomatic Rust, acknowledge it as correct. Do not manufacture problems where none exist. When code is well-written, say so and offer only minor suggestions. See the "Idiomatic Patterns -- Do NOT Flag as Issues" section for patterns that must never be flagged.
 
 Check these areas in order of severity:
 
@@ -45,11 +45,11 @@ Check these areas in order of severity:
 3. **Error Handling** (Ch 3, 8): `.unwrap()` or `.expect()` where `?` belongs? For library code, define a custom error type that wraps downstream errors via `From` impl. Never leak internal error types across the public API boundary.
 4. **Binary Data & Endianness** (Ch 5, 7): Are integer byte representations explicit? Use `to_le_bytes()` / `from_le_bytes()` / `to_be_bytes()`. Validate with checksums when writing binary formats. Use `serde` + `bincode` for structured serialization.
 5. **Memory** (Ch 6): Is `unsafe` minimized? Raw pointer use must be bounded by a safe abstraction. Stack vs heap allocation: prefer stack; use `Box` only when size is unknown at compile time or you need heap lifetime.
-6. **File & I/O** (Ch 7): Use `BufReader`/`BufWriter` for large files. Handle `ENOENT`, `EPERM`, `ENOSPC` distinctly — don't collapse I/O errors to strings. Use `std::fs::Path` for type-safe path handling.
-7. **Networking** (Ch 8): TCP state is implicit in OS — model explicit state machines with enums. Use trait objects (`Box<dyn Trait>`) only when heterogeneous runtime dispatch is needed. Prefer `impl Trait` for static dispatch.
+6. **File & I/O** (Ch 7): Use `BufReader`/`BufWriter` for large files. Handle `ENOENT`, `EPERM`, `ENOSPC` distinctly -- don't collapse I/O errors to strings. Use `std::fs::Path` for type-safe path handling.
+7. **Networking** (Ch 8): TCP state is implicit in OS -- model explicit state machines with enums. Use trait objects (`Box<dyn Trait>`) only when heterogeneous runtime dispatch is needed. Prefer `impl Trait` for static dispatch.
 8. **Concurrency** (Ch 10): Closures passed to threads must be `'static` or use `move`. Shared mutable state needs `Arc<Mutex<T>>`. Use channels for message passing over shared state. Thread pool patterns over spawning one thread per task.
-9. **Time** (Ch 9): Don't use `std::time::SystemTime` for elapsed measurement — it can go backwards. Use `std::time::Instant` for durations. For network time, NTP requires epoch conversion (NTP epoch: 1900 vs Unix: 1970 — offset 70 years = 2_208_988_800 seconds).
-10. **Idioms**: Iterator adapters over manual loops. `for item in &collection` not `for i in 0..collection.len()`. `if let`/`while let` for single-variant matching. Exhaustive `match` — no silent wildcard arms.
+9. **Time** (Ch 9): Don't use `std::time::SystemTime` for elapsed measurement -- it can go backwards. Use `std::time::Instant` for durations. For network time, NTP requires epoch conversion (NTP epoch: 1900 vs Unix: 1970 -- offset 70 years = 2_208_988_800 seconds).
+10. **Idioms**: Iterator adapters over manual loops. `for item in &collection` not `for i in 0..collection.len()`. `if let`/`while let` for single-variant matching. Exhaustive `match` -- no silent wildcard arms.
 
 ### Step 3: Report Findings
 For each issue, report:
@@ -70,7 +70,7 @@ When the user asks you to **write** new Rust code, apply these core principles:
 
 ### Language Foundations (Ch 2)
 
-1. **Use cargo, not rustc directly** (Ch 2). `cargo new`, `cargo build`, `cargo test`, `cargo doc`. Add third-party crates via `Cargo.toml` — never manually link.
+1. **Use cargo, not rustc directly** (Ch 2). `cargo new`, `cargo build`, `cargo test`, `cargo doc`. Add third-party crates via `Cargo.toml` -- never manually link.
 
 2. **Prefer integer types that match the domain** (Ch 2). Use `u8` for bytes, `u16`/`u32`/`u64` for protocol fields sized to spec, `i64` for timestamps. Avoid default `usize` for domain values.
 
@@ -86,22 +86,22 @@ When the user asks you to **write** new Rust code, apply these core principles:
 
 7. **Use `pub(crate)` to limit visibility to the crate; keep internals private** (Ch 3). Public API surface should be minimal and intentional.
 
-8. **Document public items with `///` rustdoc comments** (Ch 3). Include examples in doc comments — `cargo test` runs them.
+8. **Document public items with `///` rustdoc comments** (Ch 3). Include examples in doc comments -- `cargo test` runs them.
 
 ### Ownership, Borrowing & Smart Pointers (Ch 4, 6)
 
 9. **Use references where full ownership is not required** (Ch 4). Pass `&T` for read, `&mut T` for write. Only transfer ownership when the callee must own (e.g., storing in a struct).
 
 10. **Choose smart pointers by use case** (Ch 6):
-    - `Box<T>` — heap allocation, single owner, unknown size at compile time
-    - `Rc<T>` — shared ownership, single-threaded
-    - `Arc<T>` — shared ownership, multi-threaded
-    - `Cell<T>` — interior mutability for `Copy` types, single-threaded
-    - `RefCell<T>` — interior mutability for non-`Copy`, single-threaded, runtime borrow checks
-    - `Cow<'a, T>` — clone-on-write, avoids allocation when data is only read
-    - `Arc<Mutex<T>>` — shared mutable state across threads
+    - `Box<T>` -- heap allocation, single owner, unknown size at compile time
+    - `Rc<T>` -- shared ownership, single-threaded
+    - `Arc<T>` -- shared ownership, multi-threaded
+    - `Cell<T>` -- interior mutability for `Copy` types, single-threaded
+    - `RefCell<T>` -- interior mutability for non-`Copy`, single-threaded, runtime borrow checks
+    - `Cow<'a, T>` -- clone-on-write, avoids allocation when data is only read
+    - `Arc<Mutex<T>>` -- shared mutable state across threads
 
-11. **Never use `Rc` across thread boundaries** (Ch 6). The compiler enforces this — `Rc` is not `Send`. Use `Arc` instead.
+11. **Never use `Rc` across thread boundaries** (Ch 6). The compiler enforces this -- `Rc` is not `Send`. Use `Arc` instead.
 
 12. **Minimize `unsafe` blocks; wrap them in safe abstractions** (Ch 6). Raw pointers (`*const T`, `*mut T`) must be bounded within a module or function that upholds safety invariants. Document the safety contract with `// SAFETY:` comments.
 
@@ -123,7 +123,7 @@ When the user asks you to **write** new Rust code, apply these core principles:
 
 ### Networking (Ch 8)
 
-19. **Model protocol state explicitly with enums** (Ch 8). A TCP connection has states (SYN_SENT, ESTABLISHED, CLOSE_WAIT, etc.). Encode them as enum variants — the compiler enforces valid transitions.
+19. **Model protocol state explicitly with enums** (Ch 8). A TCP connection has states (SYN_SENT, ESTABLISHED, CLOSE_WAIT, etc.). Encode them as enum variants -- the compiler enforces valid transitions.
 
 20. **Wrap library errors in a domain error type** (Ch 8). When a function calls multiple libraries (network + I/O + parse), define an enum that wraps each. Implement `From<LibError> for DomainError` so `?` converts automatically.
 
@@ -133,7 +133,7 @@ When the user asks you to **write** new Rust code, apply these core principles:
 
 22. **Use `move` closures when passing to threads** (Ch 10). `thread::spawn(move || { ... })` transfers ownership of captured variables into the thread. This is required when the closure outlives the current stack frame.
 
-23. **Use `Arc::clone()` explicitly, not `.clone()` on a value** (Ch 10). `Arc::clone(&ptr)` is idiomatic — it's cheap (increments a reference count). Avoid `.clone()` on the inner value.
+23. **Use `Arc::clone()` explicitly, not `.clone()` on a value** (Ch 10). `Arc::clone(&ptr)` is idiomatic -- it's cheap (increments a reference count). Avoid `.clone()` on the inner value.
 
 24. **Use channels for work distribution; `Arc<Mutex<T>>` for shared state** (Ch 10). Channels (`std::sync::mpsc`) are simpler and safer. Use shared state only when channels don't fit (e.g., result collection).
 
@@ -268,18 +268,18 @@ impl ThreadPool {
 
 ---
 
-## Idiomatic Patterns — Do NOT Flag as Issues
+## Idiomatic Patterns -- Do NOT Flag as Issues
 
 When reviewing code, recognize these patterns as **correct and idiomatic**. Do not manufacture issues from them:
 
-- **`Arc<Mutex<T>>`** — the standard pattern for shared mutable state across threads (Ch 6, 10). This is correct and idiomatic. Never call it redundant, a design error, or suggest removing/replacing it when it is the appropriate choice. When a `Store` or similar struct wraps shared mutable data accessed by multiple threads, `Arc<Mutex<Vec<u8>>>` is exactly right — acknowledge it as such.
-- **`BufReader<File>`** — explicitly recommended for batched I/O (Ch 7). Never call it overhead-adding or harmful.
-- **`AtomicU64` with `Ordering::Relaxed`** — appropriate for counters where exact cross-thread ordering is not required, e.g. telemetry, stats (Ch 10). Not a bug.
-- **`&Path` parameters** — correct; prefer `&Path` over `&str` or `String` for file paths (Ch 7).
-- **Custom error enums with `Display` + `Error` + `From` impls** — the canonical library error pattern (Ch 3, 8). Praise it, don't critique it.
-- **`.expect("mutex poisoned")`** with a descriptive reason — correct idiom for panicking on a poisoned mutex (Ch 10).
-- **`Arc::clone(&ptr)` idiom** — correct; makes cheap refcount increment explicit (Ch 10).
-- **`move` closures for threads** — required and correct (Ch 10).
+- **`Arc<Mutex<T>>`** -- the standard pattern for shared mutable state across threads (Ch 6, 10). This is correct and idiomatic. Never call it redundant, a design error, or suggest removing/replacing it when it is the appropriate choice. When a `Store` or similar struct wraps shared mutable data accessed by multiple threads, `Arc<Mutex<Vec<u8>>>` is exactly right -- acknowledge it as such.
+- **`BufReader<File>`** -- explicitly recommended for batched I/O (Ch 7). Never call it overhead-adding or harmful.
+- **`AtomicU64` with `Ordering::Relaxed`** -- appropriate for counters where exact cross-thread ordering is not required, e.g. telemetry, stats (Ch 10). Not a bug.
+- **`&Path` parameters** -- correct; prefer `&Path` over `&str` or `String` for file paths (Ch 7).
+- **Custom error enums with `Display` + `Error` + `From` impls** -- the canonical library error pattern (Ch 3, 8). Praise it, don't critique it.
+- **`.expect("mutex poisoned")`** with a descriptive reason -- correct idiom for panicking on a poisoned mutex (Ch 10).
+- **`Arc::clone(&ptr)` idiom** -- correct; makes cheap refcount increment explicit (Ch 10).
+- **`move` closures for threads** -- required and correct (Ch 10).
 
 If code is already correct, say so. Only flag real issues. If the only things left to say are minor suggestions, label them as suggestions, not bugs or important issues.
 
@@ -288,25 +288,25 @@ If code is already correct, say so. Only flag real issues. If the only things le
 ## Priority of Practices by Impact
 
 ### Critical (Safety, Correctness, UB)
-- Ch 4: Borrow, don't clone — never move when a reference suffices
-- Ch 6: Choose the right smart pointer — `Rc` is not thread-safe; don't share across threads
-- Ch 6: Wrap `unsafe` in safe abstractions — document safety contracts with `// SAFETY:`
-- Ch 5/7: Explicit endianness — wrong byte order silently corrupts binary data
-- Ch 9: Use `Instant` for elapsed time — `SystemTime` can go backwards
+- Ch 4: Borrow, don't clone -- never move when a reference suffices
+- Ch 6: Choose the right smart pointer -- `Rc` is not thread-safe; don't share across threads
+- Ch 6: Wrap `unsafe` in safe abstractions -- document safety contracts with `// SAFETY:`
+- Ch 5/7: Explicit endianness -- wrong byte order silently corrupts binary data
+- Ch 9: Use `Instant` for elapsed time -- `SystemTime` can go backwards
 
 ### Important (Idiom & Maintainability)
-- Ch 3: Domain enums over stringly-typed state — invalid states should not compile
+- Ch 3: Domain enums over stringly-typed state -- invalid states should not compile
 - Ch 8: Wrap downstream errors in a domain error type with `From` impls
 - Ch 8: `impl Trait` over `dyn Trait` when types are homogeneous
-- Ch 10: `move` closures for threads — required when closure outlives the stack frame
-- Ch 10: `Arc::clone()` idiom — makes cheap pointer clone explicit
+- Ch 10: `move` closures for threads -- required when closure outlives the stack frame
+- Ch 10: `Arc::clone()` idiom -- makes cheap pointer clone explicit
 
 ### Suggestions (Systems Polish)
-- Ch 2: Size integer types to the protocol spec — `u8` for bytes, `u16` for ports
-- Ch 5: Named bit-mask constants — `const SIGN_BIT: u32 = 0x8000_0000`
-- Ch 7: `BufReader`/`BufWriter` for all file I/O — syscall batching
-- Ch 7: Checksums on binary writes — detect corruption on read
-- Ch 9: NTP epoch offset constant — `const NTP_UNIX_OFFSET: u64 = 2_208_988_800`
+- Ch 2: Size integer types to the protocol spec -- `u8` for bytes, `u16` for ports
+- Ch 5: Named bit-mask constants -- `const SIGN_BIT: u32 = 0x8000_0000`
+- Ch 7: `BufReader`/`BufWriter` for all file I/O -- syscall batching
+- Ch 7: Checksums on binary writes -- detect corruption on read
+- Ch 9: NTP epoch offset constant -- `const NTP_UNIX_OFFSET: u64 = 2_208_988_800`
 
 ---
 

@@ -8,7 +8,7 @@ GDSPy Chapter 12 makes the case that spatial cross-validation is **non-negotiabl
 
 Two reasons:
 
-1. **Spatial autocorrelation gives you free predictive power.** A feature's neighbor-mean is often a strong predictor — but only useful if you handle the leakage problem (below).
+1. **Spatial autocorrelation gives you free predictive power.** A feature's neighbor-mean is often a strong predictor -- but only useful if you handle the leakage problem (below).
 2. **Geographic coordinates aren't features.** Raw lat/lng as an X column gives the model no useful signal; the model learns "Texas-ness" if you're lucky and overfits to specific regions if you're not. Engineered spatial features (neighborhood characteristics, distance to landmarks, density measures) are the actually-useful inputs.
 
 ## Feature families
@@ -27,13 +27,13 @@ gdf["income_neighbor_mean"] = lag_spatial(w, gdf["median_income"].values)
 ```
 
 Useful neighbor aggregates:
-- **Mean** — most common; "what's typical around here"
-- **Median** — robust to outlier neighbors
-- **Min / Max / Range** — highest income neighbor; range as a "diversity" signal
-- **Std deviation** — local heterogeneity
-- **Count above threshold** — how many neighboring features are >$100K income, etc.
+- **Mean** -- most common; "what's typical around here"
+- **Median** -- robust to outlier neighbors
+- **Min / Max / Range** -- highest income neighbor; range as a "diversity" signal
+- **Std deviation** -- local heterogeneity
+- **Count above threshold** -- how many neighboring features are >$100K income, etc.
 
-Usually, the neighbor-mean of Y itself (the target) is the strongest predictor. **Don't include it** if you want generalizable models — it's a proxy for "places similar to this one are similar to this one." Tautological. Use neighbor-means of *other* features instead.
+Usually, the neighbor-mean of Y itself (the target) is the strongest predictor. **Don't include it** if you want generalizable models -- it's a proxy for "places similar to this one are similar to this one." Tautological. Use neighbor-means of *other* features instead.
 
 ### 2. Distance-to features
 
@@ -95,7 +95,7 @@ Features that capture "what kind of place is this":
 - Region-level totals scaled by feature share
 - Group-share features (% of population in some demographic, fraction of POIs that are restaurants)
 
-These are **multi-level** features — the feature's value is shaped by both its own attributes and the region it sits in.
+These are **multi-level** features -- the feature's value is shaped by both its own attributes and the region it sits in.
 
 ### 5. Spatial weights as features
 
@@ -111,25 +111,25 @@ w_sparse = w.sparse  # scipy sparse matrix
 
 Less common in classical ML; central in GNN approaches.
 
-## The validation problem — spatial cross-validation
+## The validation problem -- spatial cross-validation
 
 ### Why random K-fold leaks signal
 
-Random K-fold assumes train and test rows are independent. In spatial data they're not — adjacent rows share spatial drivers, so a random split puts highly-correlated rows on both sides:
+Random K-fold assumes train and test rows are independent. In spatial data they're not -- adjacent rows share spatial drivers, so a random split puts highly-correlated rows on both sides:
 
 ```
 Random K-fold on spatial data:
   Train: tract_001, tract_005, tract_007, tract_010, tract_011
   Test:  tract_002, tract_006, tract_008
                   ↑
-  tract_002 is adjacent to tract_001 (in train) — they share neighborhood
+  tract_002 is adjacent to tract_001 (in train) -- they share neighborhood
   effects, so the model "predicts" tract_002 well because it memorized
   tract_001's pattern, not because it learned anything generalizable.
 ```
 
 Result: training accuracy and test accuracy both look great. Production accuracy on a different region (truly out-of-sample) collapses.
 
-This is the spatial-stats version of the "did you accidentally test on training data" mistake. Unlike that classic, it can happen even with clean train/test splits — the leak is through spatial autocorrelation, not row overlap.
+This is the spatial-stats version of the "did you accidentally test on training data" mistake. Unlike that classic, it can happen even with clean train/test splits -- the leak is through spatial autocorrelation, not row overlap.
 
 ### Spatial K-fold
 
@@ -207,7 +207,7 @@ Default assumption: **if it's spatial data, you need spatial K-fold.** Justify t
 
 If you use raw lat/lng as features, your model learns spurious "Texas vs Maine" patterns based on coordinate magnitude. Either:
 - **Project first** so coordinate units are meaningful (meters from a reference point).
-- **Don't use raw coordinates** — use derived spatial features (neighbor aggregates, distances) instead.
+- **Don't use raw coordinates** -- use derived spatial features (neighbor aggregates, distances) instead.
 
 ### Data leakage via coordinates
 
@@ -215,7 +215,7 @@ If your model has access to lat/lng, it can implicitly memorize the train set's 
 
 ### Imbalanced spatial data
 
-Some spatial classes are rare (e.g., predicting which counties had unusual events). Standard imbalance corrections (oversampling, class weights) apply, but **resample within spatial blocks** — don't oversample across the entire dataset, which would put oversampled rows in both train and test (leak again).
+Some spatial classes are rare (e.g., predicting which counties had unusual events). Standard imbalance corrections (oversampling, class weights) apply, but **resample within spatial blocks** -- don't oversample across the entire dataset, which would put oversampled rows in both train and test (leak again).
 
 ### Time-and-space data
 
@@ -272,35 +272,35 @@ mi = Moran(residuals, w)
 print(f"Moran's I of residuals: {mi.I:.3f}, p_sim: {mi.p_sim:.3f}")
 ```
 
-If significant positive Moran's I, your model isn't capturing the spatial structure — and your random-K-fold accuracy is overstating performance.
+If significant positive Moran's I, your model isn't capturing the spatial structure -- and your random-K-fold accuracy is overstating performance.
 
 ## Per-engine implementation
 
 | Engine | Spatial features |
 |---|---|
-| **GeoPandas + libpysal** | Native — `lag_spatial`, distance-band W, all neighbor aggregates. **Default.** |
+| **GeoPandas + libpysal** | Native -- `lag_spatial`, distance-band W, all neighbor aggregates. **Default.** |
 | **PostGIS** | SQL-friendly: `AVG(b.income) OVER (PARTITION BY ...)` for neighbor means; `ST_DWithin` for distance/density. Fast for very large datasets where pulling to Python is expensive. |
-| **DuckDB-spatial** | Same as PostGIS — SQL works well for feature engineering. |
+| **DuckDB-spatial** | Same as PostGIS -- SQL works well for feature engineering. |
 | **Sedona** | Spatial joins for neighbor aggregates; collect to driver for libpysal-style W operations. |
 
 For ML training, **pull engineered features into a single-node Python frame**. Distributed ML on spatial data exists (Spark MLlib, etc.) but adds complexity for usually-marginal gain at scales where DuckDB/single-node Python work.
 
 ## Pitfalls (recap)
 
-- **Random K-fold on spatial data** — leaks signal. Use spatial K-fold or GroupKFold.
-- **Raw lat/lng as features** — model memorizes coordinate patterns. Use derived spatial features.
-- **Including the target's spatial lag as a feature** — tautological. Use other variables' lags.
-- **Spatial-block CV without buffer** — adjacent blocks may still share signal. Buffer if conservative.
-- **Forgetting to check Moran's I on residuals** — the diagnostic that catches missed spatial structure.
-- **Resampling for imbalance globally instead of within spatial blocks** — re-introduces leakage.
-- **Standard MLOps tools assuming i.i.d. data** — model registries / drift monitors etc. may not flag spatial drift. Add spatial diagnostics manually.
+- **Random K-fold on spatial data** -- leaks signal. Use spatial K-fold or GroupKFold.
+- **Raw lat/lng as features** -- model memorizes coordinate patterns. Use derived spatial features.
+- **Including the target's spatial lag as a feature** -- tautological. Use other variables' lags.
+- **Spatial-block CV without buffer** -- adjacent blocks may still share signal. Buffer if conservative.
+- **Forgetting to check Moran's I on residuals** -- the diagnostic that catches missed spatial structure.
+- **Resampling for imbalance globally instead of within spatial blocks** -- re-introduces leakage.
+- **Standard MLOps tools assuming i.i.d. data** -- model registries / drift monitors etc. may not flag spatial drift. Add spatial diagnostics manually.
 
 ## Cross-links
 
-- [`spatial-weights.md`](spatial-weights.md) — W matrix construction (foundation for neighbor aggregates)
-- [`spatial-statistics.md`](spatial-statistics.md) — diagnostic tests (Moran's I on residuals)
-- [`siege-utilities-spatial.md`](siege-utilities-spatial.md) — SU helpers for boundary / density data sourcing
-- [`coding/postgis/references/spatial-joins-performance.md`](../../../coding/postgis/references/spatial-joins-performance.md) — PostGIS-side feature engineering with `ST_DWithin`
+- [`spatial-weights.md`](spatial-weights.md) -- W matrix construction (foundation for neighbor aggregates)
+- [`spatial-statistics.md`](spatial-statistics.md) -- diagnostic tests (Moran's I on residuals)
+- [`siege-utilities-spatial.md`](siege-utilities-spatial.md) -- SU helpers for boundary / density data sourcing
+- [`coding/postgis/references/spatial-joins-performance.md`](../../../coding/postgis/references/spatial-joins-performance.md) -- PostGIS-side feature engineering with `ST_DWithin`
 
 ## Citation
 

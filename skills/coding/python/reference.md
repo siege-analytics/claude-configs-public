@@ -110,8 +110,8 @@ def test_validate_filing_accepts_valid(sample_filing):
 
 **Rules:**
 - One assertion concept per test (multiple `assert` lines testing the same thing is fine)
-- Tests should be independent — no ordering dependencies
-- Test behavior, not implementation — if you refactor internals, tests should still pass
+- Tests should be independent -- no ordering dependencies
+- Test behavior, not implementation -- if you refactor internals, tests should still pass
 - Name tests so a failure message tells you what broke
 
 ## Project Structure

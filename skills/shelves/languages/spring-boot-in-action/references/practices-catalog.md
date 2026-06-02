@@ -1,4 +1,4 @@
-# Spring Boot in Action — Practices Catalog
+# Spring Boot in Action -- Practices Catalog
 
 Before/after examples from each chapter group.
 
@@ -6,7 +6,7 @@ Before/after examples from each chapter group.
 
 ## Auto-Configuration: Let Boot Do Its Job (Ch 2, 3)
 
-**Before — manual DataSource fighting auto-config:**
+**Before -- manual DataSource fighting auto-config:**
 ```java
 @Configuration
 public class DatabaseConfig {
@@ -20,7 +20,7 @@ public class DatabaseConfig {
     }
 }
 ```
-**After — delete the class; use properties:**
+**After -- delete the class; use properties:**
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost/mydb
 spring.datasource.username=${DB_USER}
@@ -32,7 +32,7 @@ Spring Boot auto-configures a connection pool (HikariCP) from these properties a
 
 ## Overriding Auto-Configuration Surgically (Ch 3)
 
-**When auto-config is not enough — extend, don't replace:**
+**When auto-config is not enough -- extend, don't replace:**
 ```java
 // Wrong: replaces all security auto-config
 @Configuration
@@ -62,7 +62,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 ## Externalized Configuration (Ch 3)
 
-**Before — hardcoded values:**
+**Before -- hardcoded values:**
 ```java
 @Service
 public class MailService {
@@ -71,7 +71,7 @@ public class MailService {
     private int timeout = 5000;               // hardcoded
 }
 ```
-**After — `@ConfigurationProperties` (type-safe, testable):**
+**After -- `@ConfigurationProperties` (type-safe, testable):**
 ```java
 @ConfigurationProperties(prefix = "app.mail")
 @Component
@@ -93,7 +93,7 @@ app.mail.timeout-ms=5000
 
 ## Profiles for Environment Differences (Ch 3)
 
-**Before — environment check in code:**
+**Before -- environment check in code:**
 ```java
 @Bean
 public DataSource dataSource() {
@@ -103,7 +103,7 @@ public DataSource dataSource() {
     return productionDataSource();  // messy
 }
 ```
-**After — profile-specific properties files:**
+**After -- profile-specific properties files:**
 ```properties
 # application.properties (defaults)
 spring.datasource.url=jdbc:postgresql://${DB_HOST:localhost}/myapp
@@ -132,7 +132,7 @@ public DataSource prodDataSource() { ... }
 
 ## Constructor Injection (Ch 2)
 
-**Before — field injection, untestable:**
+**Before -- field injection, untestable:**
 ```java
 @Service
 public class OrderService {
@@ -143,7 +143,7 @@ public class OrderService {
     private PaymentGateway gateway;
 }
 ```
-**After — constructor injection:**
+**After -- constructor injection:**
 ```java
 @Service
 public class OrderService {
@@ -162,7 +162,7 @@ public class OrderService {
 
 ## REST Controllers: Status Codes & ResponseEntity (Ch 2)
 
-**Before — always 200, null on missing:**
+**Before -- always 200, null on missing:**
 ```java
 @GetMapping("/users/{id}")
 public User getUser(@PathVariable Long id) {
@@ -174,7 +174,7 @@ public User createUser(@RequestBody User user) {
     return repo.save(user);  // 200, should be 201
 }
 ```
-**After — correct HTTP semantics:**
+**After -- correct HTTP semantics:**
 ```java
 @GetMapping("/users/{id}")
 public ResponseEntity<User> getUser(@PathVariable Long id) {
@@ -195,9 +195,9 @@ public ResponseEntity<User> createUser(@RequestBody User user) {
 
 ## Testing: Match Slice to Layer (Ch 4)
 
-**Before — full context for every test (slow):**
+**Before -- full context for every test (slow):**
 ```java
-@SpringBootTest  // loads ALL beans — overkill for a controller test
+@SpringBootTest  // loads ALL beans -- overkill for a controller test
 public class ProductControllerTest {
     @Autowired
     private ProductController controller;
@@ -209,9 +209,9 @@ public class ProductControllerTest {
     }
 }
 ```
-**After — slice tests by layer:**
+**After -- slice tests by layer:**
 ```java
-// Controller slice — only web layer, MockMvc, no DB (Ch 4)
+// Controller slice -- only web layer, MockMvc, no DB (Ch 4)
 @WebMvcTest(ProductController.class)
 public class ProductControllerTest {
     @Autowired
@@ -240,7 +240,7 @@ public class ProductControllerTest {
     }
 }
 
-// Repository slice — real DB (H2 in-memory), no web layer (Ch 4)
+// Repository slice -- real DB (H2 in-memory), no web layer (Ch 4)
 @DataJpaTest
 public class ProductRepositoryTest {
     @Autowired
@@ -254,7 +254,7 @@ public class ProductRepositoryTest {
     }
 }
 
-// Full stack test — only when testing HTTP ↔ DB integration (Ch 4)
+// Full stack test -- only when testing HTTP ↔ DB integration (Ch 4)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ProductIntegrationTest {
     @Autowired
@@ -351,7 +351,7 @@ public class OrderService {
 ```
 
 ```properties
-# Secure Actuator — expose only what's needed (Ch 7)
+# Secure Actuator -- expose only what's needed (Ch 7)
 management.endpoints.web.exposure.include=health,info,metrics
 management.endpoint.health.show-details=when-authorized
 management.endpoint.shutdown.enabled=false

@@ -19,7 +19,7 @@ Code written without a design is a draft disguised as a solution. It commits you
 
 The purpose of accumulating knowledge of facts and failures on a ticket is to provide a framework for what we know, what we've tried, what has failed and why it's failed, to produce better outcomes.
 
-Every ticket accumulates knowledge over its lifetime: design notes, investigation findings, what was tried, what failed and why. This accumulated knowledge exists to be consumed. Your first act on any ticket is reading that history — not re-deriving understanding from source code. The ticket is the briefing document. Code reading verifies the ticket's claims; it does not replace them.
+Every ticket accumulates knowledge over its lifetime: design notes, investigation findings, what was tried, what failed and why. This accumulated knowledge exists to be consumed. Your first act on any ticket is reading that history -- not re-deriving understanding from source code. The ticket is the briefing document. Code reading verifies the ticket's claims; it does not replace them.
 
 This principle governs the entire workflow below. Steps that gather context (Step 1) start from accumulated knowledge. Steps that produce knowledge (Steps 7, 8) write for the next consumer. An agent that satisfies every structural gate while ignoring accumulated knowledge has defeated the purpose of the pipeline.
 
@@ -52,7 +52,7 @@ bash <scripts>/discipline/evaluate-ticket.sh <ticket-ref>
 
 Understand what exists and what's changing. Start from the ticket's accumulated knowledge, not from code.
 
-- **Read the ticket first** — the body is the specification (context, goal, acceptance criteria). The comments are the accumulated knowledge (design notes, investigation findings, what was tried, what failed and why). Read both before reading any code. The ticket is the briefing document; code reading verifies the ticket's claims, it does not replace them.
+- **Read the ticket first** -- the body is the specification (context, goal, acceptance criteria). The comments are the accumulated knowledge (design notes, investigation findings, what was tried, what failed and why). Read both before reading any code. The ticket is the briefing document; code reading verifies the ticket's claims, it does not replace them.
 - What code, systems, or data are involved?
 - What works today that must keep working?
 - What prompted this change? (Bug, feature request, tech debt, new requirement)
@@ -65,25 +65,25 @@ Read the relevant files. Don't guess about the current state.
 
 Before designing a solution, verify that the ticket's description of the current state matches what's actually on **the PR target branch** (usually `develop`), not your current feature branch. Run `git fetch origin develop` (or whatever the target is) and check against `origin/develop`, not local HEAD.
 
-Why the target branch, not your current branch: your feature branch may be days or weeks behind. PRs that landed since you branched change the code the ticket describes. A Fact Sheet built against a stale feature branch produces confidently wrong findings — and if you post that to the ticket (per the post-to-ticket gate), you've published misinformation. This happened in dogfood session 260528-proud-birch: the agent verified claims against its stale branch, concluded the ticket was wrong, posted that conclusion, and only discovered the ticket was right when it fetched develop to create a new branch.
+Why the target branch, not your current branch: your feature branch may be days or weeks behind. PRs that landed since you branched change the code the ticket describes. A Fact Sheet built against a stale feature branch produces confidently wrong findings -- and if you post that to the ticket (per the post-to-ticket gate), you've published misinformation. This happened in dogfood session 260528-proud-birch: the agent verified claims against its stale branch, concluded the ticket was wrong, posted that conclusion, and only discovered the ticket was right when it fetched develop to create a new branch.
 
 For each factual claim the ticket makes about the current code (e.g., "function X returns None," "class Y doesn't exist," "PR #NNN added a try/except wrapper"):
 - Grep or read the actual code on `origin/<target-branch>` (e.g., `git show origin/develop:path/to/file.py`)
 - If the claim matches: note "verified against origin/develop at <commit>" and move on
 - If the claim doesn't match: STOP. Note the discrepancy in Step 2 (Questions). The design must be based on what the target branch actually looks like, not what the ticket says OR what your stale local branch says.
 
-A design based on a stale branch is a design based on fiction. This check takes 30 seconds and prevents hours of rework — or worse, a wrong Fact Sheet posted to the ticket.
+A design based on a stale branch is a design based on fiction. This check takes 30 seconds and prevents hours of rework -- or worse, a wrong Fact Sheet posted to the ticket.
 
 #### Sibling-grep gate (mandatory when designing a fix)
 
-When the task is designing a fix — not designing a new feature — Step 1 MUST include a sibling-grep before any proposal in Step 3. Grep the codebase for siblings of the symptom we're fixing, using at least the following queries:
+When the task is designing a fix -- not designing a new feature -- Step 1 MUST include a sibling-grep before any proposal in Step 3. Grep the codebase for siblings of the symptom we're fixing, using at least the following queries:
 
 - **Same import path:** grep for other call sites of the failing function / class / module.
 - **Same decorator or fixture:** grep for the decorator (`@dp.materialized_view`, `@retry`, `@cached_property`) across the repo; list every site.
 - **Same filter / call shape:** grep for the syntactic pattern that bracketed the failure (`filter(...).partition_cols=(...)`, `except SpecificClass:`, `if config.get('x')`).
 - **Same failure signature:** if the failure has a known exception class or error string, grep for other handlers that catch the same shape.
 
-Paste the sibling-set in Step 1's Context block. If the sibling-set is N≥2, the bug is a class — design the fix at the class level, not per-instance. Per writing-rules:7, N≥3 in one session is a hard gate: produce the audit matrix or revert to investigation.
+Paste the sibling-set in Step 1's Context block. If the sibling-set is N≥2, the bug is a class -- design the fix at the class level, not per-instance. Per writing-rules:7, N≥3 in one session is a hard gate: produce the audit matrix or revert to investigation.
 
 Bug class is the unit; per-instance design is fragile. The Spark Connect guard sequence that motivated this gate had five same-shape PRs over hours because nobody grep'd for siblings before designing the second fix. One PR with an audit matrix would have replaced all five.
 
@@ -102,11 +102,11 @@ If you have questions for the user, ask them now. Do not proceed with unresolved
 
 Present 2-3 approaches with tradeoffs. Not 1 (no comparison). Not 5 (decision paralysis).
 
-**Precedent exception:** If a prior ticket in the same repo established a pattern for this exact class of fix (e.g., "ticket #801 already introduced `GeocodingError` for this shape of SU-1 violation"), you may present 1 proposal that follows the precedent plus a brief note explaining why alternatives would diverge from the established pattern. The point of multiple proposals is to ensure you've considered the space — when the space has already been explored and a convention chosen, re-exploring it is ceremony.
+**Precedent exception:** If a prior ticket in the same repo established a pattern for this exact class of fix (e.g., "ticket #801 already introduced `GeocodingError` for this shape of SU-1 violation"), you may present 1 proposal that follows the precedent plus a brief note explaining why alternatives would diverge from the established pattern. The point of multiple proposals is to ensure you've considered the space -- when the space has already been explored and a convention chosen, re-exploring it is ceremony.
 
 For each approach:
 - **What:** One-sentence summary
-- **How:** Key implementation steps (not code — describe the approach)
+- **How:** Key implementation steps (not code -- describe the approach)
 - **Tradeoffs:** What you gain and what you give up
 - **Risk:** What could go wrong
 
@@ -126,7 +126,7 @@ The design should be detailed enough that someone else could implement it withou
 
 ### Step 5: Documentation Plan
 
-If the design changes documented behavior, the documentation update is part of the deliverable — not a follow-up. "We'll document it later" means never.
+If the design changes documented behavior, the documentation update is part of the deliverable -- not a follow-up. "We'll document it later" means never.
 
 For each of these, state what changes and where the update goes:
 
@@ -134,9 +134,9 @@ For each of these, state what changes and where the update goes:
 - **README or CLAUDE.md:** does the project's top-level documentation describe the feature or convention you're modifying?
 - **Notebooks:** does any notebook demonstrate the function or workflow you're changing? (See the notebook coverage invariant in CLAUDE.md for siege_utilities.)
 - **Tickets:** which tickets need updating with the new design, findings, or status?
-- **External docs:** API docs, wiki pages, knowledge base articles, guide.md files — anything outside the repo that describes the behavior.
+- **External docs:** API docs, wiki pages, knowledge base articles, guide.md files -- anything outside the repo that describes the behavior.
 
-These are the **designated knowledge loci** for the entities this task touches. Investigation Phase 0 identifies them in the Fact Sheet's "Knowledge Loci" section. If investigation found loci that describe behavior this task will change, updating those loci is a required deliverable — not a follow-up. A PR that changes behavior without updating the knowledge loci that describe it ships a lie.
+These are the **designated knowledge loci** for the entities this task touches. Investigation Phase 0 identifies them in the Fact Sheet's "Knowledge Loci" section. If investigation found loci that describe behavior this task will change, updating those loci is a required deliverable -- not a follow-up. A PR that changes behavior without updating the knowledge loci that describe it ships a lie.
 
 ### Step 6: Implementation Gate
 
@@ -163,7 +163,7 @@ Knowledge you produce here will be consumed by the next agent working this ticke
 
 If no ticket exists (exempt per pre-action check 5), skip the post.
 
-**Then continue autonomously to Step 8.** Do not wait for parent approval, operator acknowledgement, or external signal to proceed. The pipeline is self-driving: each gate produces an artifact, posts it, and advances to the next gate. Stopping between gates to ask "should I continue?" defeats the purpose of having a pipeline — it turns autonomous execution into supervised step-by-step work.
+**Then continue autonomously to Step 8.** Do not wait for parent approval, operator acknowledgement, or external signal to proceed. The pipeline is self-driving: each gate produces an artifact, posts it, and advances to the next gate. Stopping between gates to ask "should I continue?" defeats the purpose of having a pipeline -- it turns autonomous execution into supervised step-by-step work.
 
 ### Step 8: Downstream Routing (hard gate)
 
@@ -222,13 +222,13 @@ You MUST complete the full design workflow and receive user approval before writ
 - Pure research or exploration (use the Explore agent instead)
 - Git operations and other non-code tasks that do not change behavior
 
-**Not exempt — highest-stakes edits that require the full pipeline:**
-- Skill files (`skills/**/SKILL.md`) — these change the behavior of every future task
-- Hook scripts (`hooks/**/*.sh`) — these change what the pipeline enforces
-- Rule files (`_*-rules.md`) — these change the standards the pipeline evaluates against
-- CLAUDE.md and project conventions — these change how agents interpret the codebase
+**Not exempt -- highest-stakes edits that require the full pipeline:**
+- Skill files (`skills/**/SKILL.md`) -- these change the behavior of every future task
+- Hook scripts (`hooks/**/*.sh`) -- these change what the pipeline enforces
+- Rule files (`_*-rules.md`) -- these change the standards the pipeline evaluates against
+- CLAUDE.md and project conventions -- these change how agents interpret the codebase
 
-"Documentation-only edit" does NOT include skill/hook/rule edits. Changing a skill is changing the pipeline's behavior — it requires think, investigate, and pre-mortem like any behavioral change. The recursive case (the pipeline editing itself) is the highest-stakes change because a broken skill silently degrades all future work.
+"Documentation-only edit" does NOT include skill/hook/rule edits. Changing a skill is changing the pipeline's behavior -- it requires think, investigate, and pre-mortem like any behavioral change. The recursive case (the pipeline editing itself) is the highest-stakes change because a broken skill silently degrades all future work.
 
 ## Iron Laws
 
@@ -247,7 +247,7 @@ Post the design note as a comment on the ticket before proceeding to investigati
 
 If there is no ticket (exploratory work only), mark the local file `propagation-deferred: no ticket, exploratory` in frontmatter.
 
-The same rule applies to every artifact this skill produces: if a ticket exists, the artifact goes there. A design note that only exists in a session plans folder is a design note that doesn't exist — it disappears when the session ends, and the next agent re-derives it from scratch.
+The same rule applies to every artifact this skill produces: if a ticket exists, the artifact goes there. A design note that only exists in a session plans folder is a design note that doesn't exist -- it disappears when the session ends, and the next agent re-derives it from scratch.
 
 ## Attribution Policy
 

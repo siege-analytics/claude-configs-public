@@ -6,13 +6,13 @@ allowed-tools: Read Grep Glob Bash
 
 # Verify the failure premise
 
-A "failure" report is a claim. Before debugging the stated cause, verify the failure premise. Look at substantive evidence — output files, DB rows, audit tables, partial state — and confirm the work actually didn't happen. If the substantive work appears complete, **the failure signal is the bug; investigate the reporter, not the reported.**
+A "failure" report is a claim. Before debugging the stated cause, verify the failure premise. Look at substantive evidence -- output files, DB rows, audit tables, partial state -- and confirm the work actually didn't happen. If the substantive work appears complete, **the failure signal is the bug; investigate the reporter, not the reported.**
 
 This is not a suggestion. It is a hard gate.
 
 ## Why
 
-Failure reports — non-zero exit codes, "FAILED" badges, shared stack traces, "X is broken" Slack messages — are intermediated reports about a system. They are not the system state. The wrapper script, the kubectl probe, the post-success cleanup hook, the JVM shutdown sequence, the API gateway timeout firing independently of the Lambda completing — any of these can produce a false-FAIL signal after the substantive work has completed.
+Failure reports -- non-zero exit codes, "FAILED" badges, shared stack traces, "X is broken" Slack messages -- are intermediated reports about a system. They are not the system state. The wrapper script, the kubectl probe, the post-success cleanup hook, the JVM shutdown sequence, the API gateway timeout firing independently of the Lambda completing -- any of these can produce a false-FAIL signal after the substantive work has completed.
 
 Hours spent on "why did X fail?" when X actually succeeded are hours not spent on "why is the reporter lying?". The wrong-layer chase is seductive because the stack trace points at one layer while the bug lives one layer up.
 
@@ -28,7 +28,7 @@ Concrete example (the rule's originating case):
 
 ### Step 1: Find the durable-commit evidence
 
-The evidence has to confirm the work **durably committed**, not that "the function returned without raising." In-memory success before a final flush is not success — it looks like success in stack traces and looks like failure in the durable surface.
+The evidence has to confirm the work **durably committed**, not that "the function returned without raising." In-memory success before a final flush is not success -- it looks like success in stack traces and looks like failure in the durable surface.
 
 Where would the work's *durable* output be if it succeeded?
 
@@ -56,11 +56,11 @@ State, out loud, one of three things:
 
 | Evidence verdict | Investigation layer |
 |---|---|
-| Didn't-happen | The work itself. Normal debug path — stack trace, logs, recent changes. |
+| Didn't-happen | The work itself. Normal debug path -- stack trace, logs, recent changes. |
 | Did-happen | The failure signal. Instrumentation bug, wrapper bug, post-success cleanup throw, exit-code lying, monitor misreporting. **The work is not broken; the reporter is.** |
 | Ambiguous | Say so explicitly. Do not pick a layer. Collect more evidence first (re-run with verbose logging, query intermediate state, check downstream consumers). |
 
-Going to the wrong layer when the evidence is clear is the failure mode this gate prevents. Going to a layer when the evidence is ambiguous is a worse failure mode — at least the wrong-layer chase produces information; the ambiguous-evidence guess produces incorrect explanations that future debuggers inherit.
+Going to the wrong layer when the evidence is clear is the failure mode this gate prevents. Going to a layer when the evidence is ambiguous is a worse failure mode -- at least the wrong-layer chase produces information; the ambiguous-evidence guess produces incorrect explanations that future debuggers inherit.
 
 ### Step 4: Trace the causal path (when evidence says did-happen)
 
@@ -75,7 +75,7 @@ When the evidence verdict is **did-happen**, the bug lives somewhere on the caus
 | Spark / dataframe action | The action's durable-write to storage, not the lazy plan or the local result |
 | RPC / message send | The ACK from the callee, not the local send |
 | Shell pipeline | The successful exit of the producing process, not the pipe write |
-| In-memory state only | (no commit-point — there is no durable substantive surface; the rule does not apply) |
+| In-memory state only | (no commit-point -- there is no durable substantive surface; the rule does not apply) |
 
 **Signal-point** = the moment the failure status was set. Exit code emitted, FAILED badge written, error frame raised, alert fired, monitor incremented. Walk back observers: who set the badge → reading what value → from which subprocess → whose return code.
 
@@ -93,9 +93,9 @@ When the evidence verdict is **did-happen**, the bug lives somewhere on the caus
 
 **Trace procedure**:
 
-1. **Locate the commit-point precisely.** File + line, or query + clause, or command + redirection — whatever pins durability in this substrate. If you can't pin it, you can't use this method; say so and stop until you can.
+1. **Locate the commit-point precisely.** File + line, or query + clause, or command + redirection -- whatever pins durability in this substrate. If you can't pin it, you can't use this method; say so and stop until you can.
 2. **Locate the signal-point precisely.** The actual source of the FAILED status, not where it was observed. Walk back observers: who set this badge → reading what value → from which subprocess → whose return code.
-3. **Enumerate the path.** Every step between commit-point and signal-point in this substrate. Hooks, triggers, traps, cleanup handlers, and wrapper observers all count. Write the list down — guessing about completeness defeats the method.
+3. **Enumerate the path.** Every step between commit-point and signal-point in this substrate. Hooks, triggers, traps, cleanup handlers, and wrapper observers all count. Write the list down -- guessing about completeness defeats the method.
 4. **Rank suspects.** Likelihood-of-throw factors: recent changes (`git blame` the path), known-flaky steps (Spark Connect lifecycle, kubectl probes, network-touching steps generally), external-dependency steps, steps that touch the durable store after commit (re-reads, fresh queries, downstream FKs).
 5. **Bisect.** Pick the highest-likelihood suspect; instrument it (log line, breakpoint, intermediate state query). Each negative narrows the path; do not skip the instrumentation in favor of guessing further.
 
@@ -103,7 +103,7 @@ When the evidence verdict is **did-happen**, the bug lives somewhere on the caus
 
 ### Step 5: When the diagnosis falsifies a documented Assumption
 
-Once Step 4 names the actual cause, check whether that cause contradicts a belief that was *durably documented* before the failure surfaced — on the originating ticket's Assumptions block, a self-review artifact, or a Trivial-change declaration's Cannot-produce-error claim. If yes, the writing-rules:6 trigger has fired and the response is **not** to just write the fix:
+Once Step 4 names the actual cause, check whether that cause contradicts a belief that was *durably documented* before the failure surfaced -- on the originating ticket's Assumptions block, a self-review artifact, or a Trivial-change declaration's Cannot-produce-error claim. If yes, the writing-rules:6 trigger has fired and the response is **not** to just write the fix:
 
 1. Walk the chain (failure → commit → PR → ticket). If the chain breaks, file the missing ticket retroactively.
 2. Append a `## Post-error revision` block (five fields: Triggered by / Observed / Falsified assumption / Revised model / Implication) to that ticket. Use the diagnosis from Steps 1–4 as the `Observed:` and `Revised model:` content.
@@ -137,8 +137,8 @@ This skill is **MANDATORY** when:
 
 **Exemptions** (the only cases where you may skip):
 
-- The substantive evidence is the same thing as the failure signal (e.g., compiler reports a syntax error AND there is no compiled output to check — the report IS the substantive truth).
-- Trivial failures where the evidence and the claim are obviously the same (e.g., `command not found` — there's no work to have happened).
+- The substantive evidence is the same thing as the failure signal (e.g., compiler reports a syntax error AND there is no compiled output to check -- the report IS the substantive truth).
+- Trivial failures where the evidence and the claim are obviously the same (e.g., `command not found` -- there's no work to have happened).
 - The user has already done Steps 1–3 and tells you which layer to investigate (or, given that layer is the signal layer, has already named the suspect step on the causal path).
 
 ## Iron Laws
@@ -153,17 +153,17 @@ This skill is **MANDATORY** when:
 
 ## Pairs with
 
-- `writing-claims` — failure reports are claims; same verification discipline.
-- `think` — once diagnosis identifies the right layer (and the causal-path trace identifies the suspect step), design the fix at that step per the think gate.
-- `brain-first` (universal check — NOT a separate skill) — checking durable-commit evidence first is the diagnosis-shaped version of the resolver's "check existing state before recreating" universal check. The label appears in the resolver's always-applied checks block, not in `skills/`.
-- `post-error-revision` — writing-rules:6 back-edge; activated by Step 5 when the diagnosis falsifies a documented Assumption.
+- `writing-claims` -- failure reports are claims; same verification discipline.
+- `think` -- once diagnosis identifies the right layer (and the causal-path trace identifies the suspect step), design the fix at that step per the think gate.
+- `brain-first` (universal check -- NOT a separate skill) -- checking durable-commit evidence first is the diagnosis-shaped version of the resolver's "check existing state before recreating" universal check. The label appears in the resolver's always-applied checks block, not in `skills/`.
+- `post-error-revision` -- writing-rules:6 back-edge; activated by Step 5 when the diagnosis falsifies a documented Assumption.
 
 ## Vocabulary
 
-- **Commit-point** — the moment the substantive work became *durable* (fsync, COMMIT, ACK, downstream-observable). Substrate-specific; substrate-listed above.
-- **Signal-point** — the moment the failure status was *set* (exit code emitted, FAILED badge written, error frame raised). Substrate-specific; not necessarily where it was observed.
-- **Causal path** — the enumerable sequence of steps the system actually ran between commit-point and signal-point. Unit-of-step varies by substrate (statement, function, hook, trigger, trap, wrapper observer); the discipline of enumerate-then-bisect does not.
-- **Durable-commit evidence** — observable proof that the commit-point was reached. Always observable by a process other than the writer (fresh transaction, fresh process, downstream consumer).
+- **Commit-point** -- the moment the substantive work became *durable* (fsync, COMMIT, ACK, downstream-observable). Substrate-specific; substrate-listed above.
+- **Signal-point** -- the moment the failure status was *set* (exit code emitted, FAILED badge written, error frame raised). Substrate-specific; not necessarily where it was observed.
+- **Causal path** -- the enumerable sequence of steps the system actually ran between commit-point and signal-point. Unit-of-step varies by substrate (statement, function, hook, trigger, trap, wrapper observer); the discipline of enumerate-then-bisect does not.
+- **Durable-commit evidence** -- observable proof that the commit-point was reached. Always observable by a process other than the writer (fresh transaction, fresh process, downstream consumer).
 
 ## Attribution Policy
 

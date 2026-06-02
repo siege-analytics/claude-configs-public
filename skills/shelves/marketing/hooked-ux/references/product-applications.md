@@ -79,7 +79,7 @@ Investment: Data completeness, reporting value
 
 ### Unique Characteristics
 
-E-commerce hook isn't about daily use—it's about:
+E-commerce hook isn't about daily use--it's about:
 - Being first choice when purchase intent arises
 - Building browsing habits that lead to discovery
 - Creating loyalty that overcomes friction

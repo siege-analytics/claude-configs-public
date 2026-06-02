@@ -17,17 +17,17 @@ A backlog is a growing list of ideas, requests, and tasks that theoretically rep
 
 **The problems with backlogs:**
 
-1. **Backlogs grow forever.** Items are added faster than they are completed. A 200-item backlog is not a plan — it is an anxiety list.
+1. **Backlogs grow forever.** Items are added faster than they are completed. A 200-item backlog is not a plan -- it is an anxiety list.
 
 2. **Backlogs create false obligations.** Once an idea is in the backlog, it feels like a commitment. Teams spend time grooming, prioritizing, and re-prioritizing items that may never be built.
 
 3. **Backlogs dilute focus.** When everything is in the backlog, nothing stands out. The important is buried alongside the trivial.
 
-4. **Backlogs discourage fresh thinking.** Instead of evaluating each cycle on its own merits, teams default to pulling from the backlog — recycling old ideas instead of responding to current reality.
+4. **Backlogs discourage fresh thinking.** Instead of evaluating each cycle on its own merits, teams default to pulling from the backlog -- recycling old ideas instead of responding to current reality.
 
 5. **Backlogs are emotionally draining.** Team members see hundreds of items and feel perpetually behind. The list never gets shorter. Morale suffers.
 
-**The 37signals alternative:** No backlogs. Ideas are either shaped into pitches and bet on for the next cycle, or they are let go. If an idea is truly important, it will come back — someone will bring it up again, or the problem will resurface. If it does not come back, it was not important enough to build.
+**The 37signals alternative:** No backlogs. Ideas are either shaped into pitches and bet on for the next cycle, or they are let go. If an idea is truly important, it will come back -- someone will bring it up again, or the problem will resurface. If it does not come back, it was not important enough to build.
 
 **But what about good ideas we might forget?** Some ideas do deserve to be saved. The key is who saves them and how. Individual team members can keep their own informal lists. A senior person can maintain a short list of potential pitches to shape. But there is no shared, groomed backlog that creates obligations for the team.
 
@@ -42,7 +42,7 @@ The betting table is a meeting that happens at the end of each cool-down period,
 - A senior designer or product strategist (can assess solution quality)
 - Optionally, one or two other senior people with relevant context
 
-This is not a democratic process. The betting table is small by design — 2-4 people, never more. Too many voices leads to compromise, and compromise produces mediocre bets.
+This is not a democratic process. The betting table is small by design -- 2-4 people, never more. Too many voices leads to compromise, and compromise produces mediocre bets.
 
 **How the betting table works:**
 
@@ -50,9 +50,9 @@ This is not a democratic process. The betting table is small by design — 2-4 p
 
 2. **Discuss trade-offs.** For each pitch, discuss: Is this the right problem? Is the appetite appropriate? Does the solution address the problem well enough? Are the rabbit holes handled?
 
-3. **Place bets.** Decide which pitches get a team for the next cycle. A bet means committing a team for 6 weeks. This is real commitment — once a bet is placed, the team is protected from interruption.
+3. **Place bets.** Decide which pitches get a team for the next cycle. A bet means committing a team for 6 weeks. This is real commitment -- once a bet is placed, the team is protected from interruption.
 
-4. **Say no to the rest.** Most pitches do not get bet on. This is healthy and expected. The rejected pitches are not added to a backlog — they are simply not bet on this cycle.
+4. **Say no to the rest.** Most pitches do not get bet on. This is healthy and expected. The rejected pitches are not added to a backlog -- they are simply not bet on this cycle.
 
 **What makes a good bet:**
 
@@ -88,7 +88,7 @@ Six weeks is the standard cycle length at 37signals. It is long enough for a sma
 | 2 | Exploration → Building | Scopes take shape, first code and design emerge |
 | 3 | Building | Core functionality coming together, biggest uncertainties resolved |
 | 4 | Building | Integration, edge cases, testing begins |
-| 5 | Convergence | Scope cutting begins — what is not essential gets cut |
+| 5 | Convergence | Scope cutting begins -- what is not essential gets cut |
 | 6 | Convergence → Ship | Polish, final testing, deployment |
 
 ## The Circuit Breaker
@@ -119,8 +119,8 @@ The circuit breaker is the most important and most controversial element of the 
 
 **When not to invoke it:**
 
-- The work is 90%+ complete and needs only a few days of polish — some flexibility is reasonable
-- External dependencies (not the team's fault) caused delays — address the dependency issue separately
+- The work is 90%+ complete and needs only a few days of polish -- some flexibility is reasonable
+- External dependencies (not the team's fault) caused delays -- address the dependency issue separately
 
 **Common objections and responses:**
 
@@ -133,12 +133,12 @@ The circuit breaker is the most important and most controversial element of the 
 
 ## Cool-Down Periods
 
-Between every six-week cycle, there is a two-week cool-down period. This is not vacation time, but it is unstructured time — no assigned projects, no obligations, no pressure.
+Between every six-week cycle, there is a two-week cool-down period. This is not vacation time, but it is unstructured time -- no assigned projects, no obligations, no pressure.
 
 **What happens during cool-down:**
 
 - **Bug fixes.** Small bugs that accumulated during the cycle get addressed.
-- **Exploration.** Team members pursue ideas that interest them — potential future pitches, new technology experiments, side projects.
+- **Exploration.** Team members pursue ideas that interest them -- potential future pitches, new technology experiments, side projects.
 - **Technical maintenance.** Dependency updates, infrastructure improvements, small refactors.
 - **Recovery.** After six weeks of focused building, people need time to decompress and reset.
 
@@ -191,7 +191,7 @@ This is the fundamental inversion that makes the 37signals methodology work. Tra
 **After the cycle:**
 
 1. Work ships (or the circuit breaker fires)
-2. Cool-down begins — two weeks of unstructured time
+2. Cool-down begins -- two weeks of unstructured time
 3. The cycle repeats
 
 ## When to Use Small Batches
@@ -207,7 +207,7 @@ Not everything needs a six-week cycle. Small batches (1-2 week projects) are app
 
 - Small batches are also bet on at the betting table
 - Multiple small batches can run in a single cycle (one team does 3-4 small projects in six weeks)
-- Small batches still have a fixed time constraint — 1-2 weeks per project
-- The circuit breaker still applies — if a "1-week project" is not done in 1 week, stop and re-evaluate
+- Small batches still have a fixed time constraint -- 1-2 weeks per project
+- The circuit breaker still applies -- if a "1-week project" is not done in 1 week, stop and re-evaluate
 
 **The key distinction:** Small batches are for work that is already well-understood and does not need extensive shaping. If a small project keeps growing, it probably needs to be shaped as a full six-week bet instead.

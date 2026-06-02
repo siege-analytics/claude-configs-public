@@ -1,4 +1,4 @@
-# siege_utilities + Spatial Router — What SU Obviates
+# siege_utilities + Spatial Router -- What SU Obviates
 
 Cross-engine map. Before reaching for any engine's native API, check whether SU already does the work. SU is the spine for Siege spatial pipelines; engine APIs fill the gaps.
 
@@ -44,7 +44,7 @@ from siege_utilities.geo.crs import set_default_crs, get_default_crs, reproject_
 
 set_default_crs("EPSG:4326")  # session-wide default
 
-# Idempotent reproject — no-op if already correct
+# Idempotent reproject -- no-op if already correct
 gdf = reproject_if_needed(gdf, "EPSG:4326")
 ```
 
@@ -236,7 +236,7 @@ geom = decode_geometry(payload)
 
 ### GeoPandas
 
-- ✓ Most things — SU is GeoPandas-first internally
+- ✓ Most things -- SU is GeoPandas-first internally
 - ✗ pyogrio fallback for fiona (SU-6 candidate)
 - ✗ `read_geoparquet`/`write_geoparquet` without GDAL (SU-1 candidate)
 
@@ -259,8 +259,8 @@ For any of these, write directly in the appropriate engine:
 
 - Raw spatial queries (ST_Within, ST_DWithin, etc.)
 - Spatial index management
-- Geometry validation tier — `validate_geometry`, `simplify_geometry`, `fix_invalid_geometries` (SU-3 candidate)
-- CRS validation helpers — `crs_distance_operations_safe`, `crs_to_projection_family` (SU-2 candidate)
+- Geometry validation tier -- `validate_geometry`, `simplify_geometry`, `fix_invalid_geometries` (SU-3 candidate)
+- CRS validation helpers -- `crs_distance_operations_safe`, `crs_to_projection_family` (SU-2 candidate)
 
 ## Per-engine deeper dive
 

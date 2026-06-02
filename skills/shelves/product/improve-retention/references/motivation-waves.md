@@ -1,6 +1,6 @@
 # Motivation Waves
 
-Motivation is the most misunderstood element in behavior design. It is powerful but unreliable — it comes in waves, and products that depend on motivation peaks fail when the wave inevitably recedes.
+Motivation is the most misunderstood element in behavior design. It is powerful but unreliable -- it comes in waves, and products that depend on motivation peaks fail when the wave inevitably recedes.
 
 ## The Three Core Motivators
 
@@ -17,7 +17,7 @@ BJ Fogg identifies three core motivators, each with two sides:
 **Design implications:**
 - Make the product pleasant to use (sensory reward)
 - Remove painful friction points
-- But don't rely on pleasure alone — novelty wears off
+- But don't rely on pleasure alone -- novelty wears off
 - Sensation is the fastest motivator but the shortest-lasting
 
 ### 2. Anticipation (Hope / Fear)
@@ -32,7 +32,7 @@ BJ Fogg identifies three core motivators, each with two sides:
 - Hope is more sustainable than fear for building habits
 - Fear is powerful for one-time behaviors (upgrades, completions) but corrosive for habits
 - Show users their potential future state (before/after, progress projections)
-- Be careful with fear — overuse damages trust and creates anxiety
+- Be careful with fear -- overuse damages trust and creates anxiety
 
 ### 3. Belonging (Acceptance / Rejection)
 
@@ -46,7 +46,7 @@ BJ Fogg identifies three core motivators, each with two sides:
 - Social proof is one of the most reliable motivation boosters
 - Showing teammates already using the product reduces social deviance (Ability Chain)
 - Community features create belonging
-- Be careful with rejection/comparison — it can demotivate rather than motivate
+- Be careful with rejection/comparison -- it can demotivate rather than motivate
 
 ---
 
@@ -191,9 +191,9 @@ Motivation and ability interact on the Fogg Behavior Model:
 
 | Scenario | Motivation | Ability | What Happens |
 |----------|-----------|---------|--------------|
-| New user, day 1 | High (honeymoon) | Low (unfamiliar) | Works temporarily — but trough will come |
-| New user, day 14 | Low (trough) | Low (still unfamiliar) | **Churn** — below the Action Line |
-| Trained user, day 30 | Low (stable) | High (practiced) | **Habit** — ability compensates for low motivation |
-| Power user | Variable | Very high | Automatic behavior — above the line regardless |
+| New user, day 1 | High (honeymoon) | Low (unfamiliar) | Works temporarily -- but trough will come |
+| New user, day 14 | Low (trough) | Low (still unfamiliar) | **Churn** -- below the Action Line |
+| Trained user, day 30 | Low (stable) | High (practiced) | **Habit** -- ability compensates for low motivation |
+| Power user | Variable | Very high | Automatic behavior -- above the line regardless |
 
 The path to retention: **Move users from top-left (high motivation, low ability) to bottom-right (low motivation, high ability) before the motivation wave crashes.**

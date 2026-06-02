@@ -17,10 +17,10 @@ manner suitable to the situation.
 **Problem it solves:** Client code needs to create objects but shouldn't be coupled to specific concrete classes. New types may be added without modifying existing code.
 
 **Participants:**
-- **Creator** — Abstract class with the factory method (e.g., `PizzaStore`)
-- **ConcreteCreator** — Subclass that implements the factory method (e.g., `NYPizzaStore`, `ChicagoPizzaStore`)
-- **Product** — Interface for the objects created (e.g., `Pizza`)
-- **ConcreteProduct** — Specific product classes (e.g., `NYStyleCheesePizza`)
+- **Creator** -- Abstract class with the factory method (e.g., `PizzaStore`)
+- **ConcreteCreator** -- Subclass that implements the factory method (e.g., `NYPizzaStore`, `ChicagoPizzaStore`)
+- **Product** -- Interface for the objects created (e.g., `Pizza`)
+- **ConcreteProduct** -- Specific product classes (e.g., `NYStyleCheesePizza`)
 
 **Key characteristics:**
 - Creator declares abstract `factoryMethod()` returning Product type
@@ -45,10 +45,10 @@ manner suitable to the situation.
 **Problem it solves:** A system needs to create families of related objects (e.g., all NY-style ingredients or all Chicago-style ingredients) that must be used together.
 
 **Participants:**
-- **AbstractFactory** — Interface declaring creation methods for each product type (e.g., `PizzaIngredientFactory`)
-- **ConcreteFactory** — Implements creation for a specific family (e.g., `NYPizzaIngredientFactory`)
-- **AbstractProduct** — Interface for each product type (e.g., `Dough`, `Sauce`, `Cheese`)
-- **ConcreteProduct** — Family-specific products (e.g., `ThinCrustDough`, `MarinaraSauce`)
+- **AbstractFactory** -- Interface declaring creation methods for each product type (e.g., `PizzaIngredientFactory`)
+- **ConcreteFactory** -- Implements creation for a specific family (e.g., `NYPizzaIngredientFactory`)
+- **AbstractProduct** -- Interface for each product type (e.g., `Dough`, `Sauce`, `Cheese`)
+- **ConcreteProduct** -- Family-specific products (e.g., `ThinCrustDough`, `MarinaraSauce`)
 
 **Key characteristics:**
 - Groups related factory methods into a single interface
@@ -73,17 +73,17 @@ manner suitable to the situation.
 **Problem it solves:** Some objects should only have one instance (thread pools, caches, dialog boxes, registry settings, logging objects, device drivers).
 
 **Participants:**
-- **Singleton** — Class with a private constructor and a static method that returns the sole instance
+- **Singleton** -- Class with a private constructor and a static method that returns the sole instance
 
 **Key characteristics:**
 - Private constructor prevents external instantiation
 - Static method (e.g., `getInstance()`) returns the unique instance
 - Lazy initialization: instance created on first request
 - Thread safety considerations are critical:
-  - **Eager initialization** — Create at class load time (simplest, always thread-safe)
-  - **synchronized method** — Thread-safe but may impact performance
-  - **Double-checked locking** — Only synchronize on first creation (use `volatile`)
-  - **Enum-based** — Most robust in Java (handles serialization and reflection)
+  - **Eager initialization** -- Create at class load time (simplest, always thread-safe)
+  - **synchronized method** -- Thread-safe but may impact performance
+  - **Double-checked locking** -- Only synchronize on first creation (use `volatile`)
+  - **Enum-based** -- Most robust in Java (handles serialization and reflection)
 
 **When to use:**
 - Exactly one instance of a class is required
@@ -108,10 +108,10 @@ manner suitable to the situation.
 **Problem it solves:** Object creation involves many steps or configurations. Constructors with many parameters become unwieldy. Different representations need the same build process.
 
 **Participants:**
-- **Builder** — Interface specifying steps to build each part
-- **ConcreteBuilder** — Implements the steps for a specific representation
-- **Director** — Constructs the object using the Builder interface
-- **Product** — The complex object being built
+- **Builder** -- Interface specifying steps to build each part
+- **ConcreteBuilder** -- Implements the steps for a specific representation
+- **Director** -- Constructs the object using the Builder interface
+- **Product** -- The complex object being built
 
 **Key characteristics:**
 - Step-by-step construction process
@@ -136,10 +136,10 @@ manner suitable to the situation.
 **Problem it solves:** Creating new objects is expensive or complex, but similar objects already exist. You need many instances that differ slightly from existing ones.
 
 **Participants:**
-- **Prototype** — Interface declaring a `clone()` method
-- **ConcretePrototype** — Implements clone to copy itself
-- **Client** — Creates new objects by asking a prototype to clone itself
-- **Registry/Manager** — Optional catalog of available prototypes
+- **Prototype** -- Interface declaring a `clone()` method
+- **ConcretePrototype** -- Implements clone to copy itself
+- **Client** -- Creates new objects by asking a prototype to clone itself
+- **Registry/Manager** -- Optional catalog of available prototypes
 
 **Key characteristics:**
 - Objects create copies of themselves
@@ -170,13 +170,13 @@ to form larger structures.
 **Problem it solves:** You have an existing class whose interface doesn't match what client code needs. You want to use a third-party class but its interface doesn't fit your system.
 
 **Participants:**
-- **Target** — The interface the client expects (e.g., `Duck`)
-- **Adapter** — Translates calls from Target interface to Adaptee (e.g., `TurkeyAdapter`)
-- **Adaptee** — The existing class with an incompatible interface (e.g., `Turkey`)
-- **Client** — Works with the Target interface
+- **Target** -- The interface the client expects (e.g., `Duck`)
+- **Adapter** -- Translates calls from Target interface to Adaptee (e.g., `TurkeyAdapter`)
+- **Adaptee** -- The existing class with an incompatible interface (e.g., `Turkey`)
+- **Client** -- Works with the Target interface
 
 **Key characteristics:**
-- Object Adapter uses composition (wraps adaptee) — preferred
+- Object Adapter uses composition (wraps adaptee) -- preferred
 - Class Adapter uses multiple inheritance (where available)
 - Adapter translates method calls, may need to handle mismatches in methods
 - Can adapt a single class or multiple classes (facade-like adapter)
@@ -198,10 +198,10 @@ to form larger structures.
 **Problem it solves:** You have a class hierarchy that is growing in two dimensions (e.g., different types AND different platforms). Without Bridge, you get a combinatorial explosion of subclasses.
 
 **Participants:**
-- **Abstraction** — High-level control interface (e.g., `RemoteControl`)
-- **RefinedAbstraction** — Extension of the abstraction (e.g., `AdvancedRemoteControl`)
-- **Implementor** — Interface for implementation classes (e.g., `TV`)
-- **ConcreteImplementor** — Specific implementation (e.g., `SonyTV`, `LGTV`)
+- **Abstraction** -- High-level control interface (e.g., `RemoteControl`)
+- **RefinedAbstraction** -- Extension of the abstraction (e.g., `AdvancedRemoteControl`)
+- **Implementor** -- Interface for implementation classes (e.g., `TV`)
+- **ConcreteImplementor** -- Specific implementation (e.g., `SonyTV`, `LGTV`)
 
 **Key characteristics:**
 - Abstraction holds a reference to an Implementor
@@ -227,10 +227,10 @@ to form larger structures.
 **Problem it solves:** You need to represent hierarchical structures where both individual items and groups of items should be treated the same way (menus with sub-menus, file systems, organizational charts).
 
 **Participants:**
-- **Component** — Interface for all objects in the composition (e.g., `MenuComponent`)
-- **Leaf** — Represents end objects with no children (e.g., `MenuItem`)
-- **Composite** — Has children, implements child-related operations (e.g., `Menu`)
-- **Client** — Manipulates objects through the Component interface
+- **Component** -- Interface for all objects in the composition (e.g., `MenuComponent`)
+- **Leaf** -- Represents end objects with no children (e.g., `MenuItem`)
+- **Composite** -- Has children, implements child-related operations (e.g., `Menu`)
+- **Client** -- Manipulates objects through the Component interface
 
 **Key characteristics:**
 - Tree structure with uniform interface
@@ -256,10 +256,10 @@ to form larger structures.
 **Problem it solves:** You need to add behavior to individual objects without affecting others of the same class. Subclassing for every combination leads to class explosion.
 
 **Participants:**
-- **Component** — Interface for objects that can have responsibilities added (e.g., `Beverage`)
-- **ConcreteComponent** — Object to which additional responsibilities can be attached (e.g., `DarkRoast`)
-- **Decorator** — Abstract class that wraps a Component and conforms to its interface (e.g., `CondimentDecorator`)
-- **ConcreteDecorator** — Adds responsibilities (e.g., `Mocha`, `Whip`, `Soy`)
+- **Component** -- Interface for objects that can have responsibilities added (e.g., `Beverage`)
+- **ConcreteComponent** -- Object to which additional responsibilities can be attached (e.g., `DarkRoast`)
+- **Decorator** -- Abstract class that wraps a Component and conforms to its interface (e.g., `CondimentDecorator`)
+- **ConcreteDecorator** -- Adds responsibilities (e.g., `Mocha`, `Whip`, `Soy`)
 
 **Key characteristics:**
 - Decorators have the same supertype as the objects they decorate
@@ -267,7 +267,7 @@ to form larger structures.
 - Decorator adds its own behavior before/after delegating to the wrapped object
 - Objects can be decorated at runtime with any combination
 - Follows Open-Closed Principle: extend behavior without modifying existing code
-- Can result in many small objects — harder to debug
+- Can result in many small objects -- harder to debug
 
 **When to use:**
 - You need to add responsibilities to individual objects dynamically and transparently
@@ -285,11 +285,11 @@ to form larger structures.
 **Problem it solves:** A subsystem has many classes with complex interactions. Clients need a simpler way to perform common tasks without understanding the subsystem's internals.
 
 **Participants:**
-- **Facade** — Provides simplified methods that delegate to subsystem classes (e.g., `HomeTheaterFacade`)
-- **Subsystem classes** — The complex classes being simplified (e.g., `Amplifier`, `DVDPlayer`, `Projector`, `Screen`, `PopcornPopper`)
+- **Facade** -- Provides simplified methods that delegate to subsystem classes (e.g., `HomeTheaterFacade`)
+- **Subsystem classes** -- The complex classes being simplified (e.g., `Amplifier`, `DVDPlayer`, `Projector`, `Screen`, `PopcornPopper`)
 
 **Key characteristics:**
-- Doesn't encapsulate subsystem — clients can still use subsystem directly if needed
+- Doesn't encapsulate subsystem -- clients can still use subsystem directly if needed
 - Simplifies the interface without adding new functionality
 - Decouples client from subsystem classes
 - Follows Principle of Least Knowledge (Law of Demeter)
@@ -312,14 +312,14 @@ to form larger structures.
 **Problem it solves:** An application needs a huge number of objects that share common state. Storing all state in each object would consume too much memory.
 
 **Participants:**
-- **Flyweight** — Interface through which flyweights receive and act on extrinsic state
-- **ConcreteFlyweight** — Stores intrinsic (shared) state
-- **FlyweightFactory** — Creates and manages flyweight objects, ensures proper sharing
-- **Client** — Maintains extrinsic state, passes it to flyweights
+- **Flyweight** -- Interface through which flyweights receive and act on extrinsic state
+- **ConcreteFlyweight** -- Stores intrinsic (shared) state
+- **FlyweightFactory** -- Creates and manages flyweight objects, ensures proper sharing
+- **Client** -- Maintains extrinsic state, passes it to flyweights
 
 **Key characteristics:**
-- **Intrinsic state** — Stored in the flyweight, shared, context-independent (e.g., tree type, texture)
-- **Extrinsic state** — Stored externally, context-dependent, passed to flyweight (e.g., position, age)
+- **Intrinsic state** -- Stored in the flyweight, shared, context-independent (e.g., tree type, texture)
+- **Extrinsic state** -- Stored externally, context-dependent, passed to flyweight (e.g., position, age)
 - Factory ensures flyweights are shared (returns existing instance or creates new)
 - Dramatic reduction in number of objects
 - Trade-off: computation time for looking up/computing extrinsic state
@@ -339,18 +339,18 @@ to form larger structures.
 
 **Intent:** Provide a surrogate or placeholder for another object to control access to it.
 
-**Problem it solves:** You need to control access to an object — for remote access, lazy loading, access control, logging, caching, or other cross-cutting concerns.
+**Problem it solves:** You need to control access to an object -- for remote access, lazy loading, access control, logging, caching, or other cross-cutting concerns.
 
 **Participants:**
-- **Subject** — Interface shared by RealSubject and Proxy
-- **RealSubject** — The actual object being proxied
-- **Proxy** — Controls access to RealSubject, may create/manage it
+- **Subject** -- Interface shared by RealSubject and Proxy
+- **RealSubject** -- The actual object being proxied
+- **Proxy** -- Controls access to RealSubject, may create/manage it
 
 **Proxy variants:**
-- **Remote Proxy** — Represents an object in a different JVM/address space (e.g., Java RMI). The proxy handles network communication transparently
-- **Virtual Proxy** — Creates expensive objects on demand. Displays a placeholder until the real object is loaded (e.g., image loading with placeholder)
-- **Protection Proxy** — Controls access based on permissions (e.g., Java's dynamic Proxy with InvocationHandler checks caller rights)
-- **Other variants** — Firewall proxy, caching proxy, synchronization proxy, smart reference proxy, copy-on-write proxy
+- **Remote Proxy** -- Represents an object in a different JVM/address space (e.g., Java RMI). The proxy handles network communication transparently
+- **Virtual Proxy** -- Creates expensive objects on demand. Displays a placeholder until the real object is loaded (e.g., image loading with placeholder)
+- **Protection Proxy** -- Controls access based on permissions (e.g., Java's dynamic Proxy with InvocationHandler checks caller rights)
+- **Other variants** -- Firewall proxy, caching proxy, synchronization proxy, smart reference proxy, copy-on-write proxy
 
 **Key characteristics:**
 - Proxy and RealSubject share the same interface
@@ -381,9 +381,9 @@ distribute responsibility.
 **Problem it solves:** Multiple related classes differ only in their behavior. You need different variants of an algorithm. Conditional statements for selecting desired behavior become complex.
 
 **Participants:**
-- **Strategy** — Interface common to all supported algorithms (e.g., `FlyBehavior`)
-- **ConcreteStrategy** — Implements the algorithm (e.g., `FlyWithWings`, `FlyNoWay`)
-- **Context** — Configured with a Strategy, delegates to it (e.g., `Duck`)
+- **Strategy** -- Interface common to all supported algorithms (e.g., `FlyBehavior`)
+- **ConcreteStrategy** -- Implements the algorithm (e.g., `FlyWithWings`, `FlyNoWay`)
+- **Context** -- Configured with a Strategy, delegates to it (e.g., `Duck`)
 
 **Key characteristics:**
 - Context composes a Strategy via an interface field
@@ -410,16 +410,16 @@ distribute responsibility.
 **Problem it solves:** Multiple objects need to stay synchronized with another object's state. Tight coupling between the source of data and its consumers makes the system rigid.
 
 **Participants:**
-- **Subject** — Maintains list of observers, sends notifications (e.g., `WeatherData`)
-- **Observer** — Interface for objects that should be notified (e.g., `Observer` with `update()`)
-- **ConcreteSubject** — Stores state of interest, notifies observers when state changes
-- **ConcreteObserver** — Maintains reference to ConcreteSubject, implements update (e.g., `CurrentConditionsDisplay`)
+- **Subject** -- Maintains list of observers, sends notifications (e.g., `WeatherData`)
+- **Observer** -- Interface for objects that should be notified (e.g., `Observer` with `update()`)
+- **ConcreteSubject** -- Stores state of interest, notifies observers when state changes
+- **ConcreteObserver** -- Maintains reference to ConcreteSubject, implements update (e.g., `CurrentConditionsDisplay`)
 
 **Key characteristics:**
 - Loose coupling: Subject knows only the Observer interface
 - Observers can be added/removed at runtime
-- **Push model** — Subject sends data with notification
-- **Pull model** — Observer queries Subject for data after notification
+- **Push model** -- Subject sends data with notification
+- **Pull model** -- Observer queries Subject for data after notification
 - Subject doesn't need to know concrete observer classes
 - Be careful with notification order dependencies
 - Remember to unregister observers to prevent memory leaks
@@ -440,18 +440,18 @@ distribute responsibility.
 **Problem it solves:** You need to issue requests to objects without knowing anything about the operation being requested or the receiver. You need to support undo/redo, queuing, logging.
 
 **Participants:**
-- **Command** — Interface declaring `execute()` (and optionally `undo()`)
-- **ConcreteCommand** — Binds a receiver to an action (e.g., `LightOnCommand`)
-- **Invoker** — Asks the command to carry out the request (e.g., `RemoteControl`)
-- **Receiver** — Knows how to perform the actual work (e.g., `Light`, `Stereo`)
-- **Client** — Creates commands and sets their receivers
+- **Command** -- Interface declaring `execute()` (and optionally `undo()`)
+- **ConcreteCommand** -- Binds a receiver to an action (e.g., `LightOnCommand`)
+- **Invoker** -- Asks the command to carry out the request (e.g., `RemoteControl`)
+- **Receiver** -- Knows how to perform the actual work (e.g., `Light`, `Stereo`)
+- **Client** -- Creates commands and sets their receivers
 
 **Key characteristics:**
 - Decouples invoker from receiver
 - Commands can be stored, queued, and logged
-- **Undo** — Command stores previous state; `undo()` reverses `execute()`
-- **Macro Command** — Command that executes a sequence of commands
-- **NoCommand** (Null Object) — Placeholder command that does nothing; eliminates null checks
+- **Undo** -- Command stores previous state; `undo()` reverses `execute()`
+- **Macro Command** -- Command that executes a sequence of commands
+- **NoCommand** (Null Object) -- Placeholder command that does nothing; eliminates null checks
 - Commands can be serialized for replay or remote execution
 
 **When to use:**
@@ -472,14 +472,14 @@ distribute responsibility.
 **Problem it solves:** Two or more classes have algorithms with the same structure but different steps. Duplicating the algorithm in each class violates DRY.
 
 **Participants:**
-- **AbstractClass** — Defines the template method and abstract primitive operations (e.g., `CaffeineBeverage`)
-- **ConcreteClass** — Implements the primitive operations (e.g., `Tea`, `Coffee`)
+- **AbstractClass** -- Defines the template method and abstract primitive operations (e.g., `CaffeineBeverage`)
+- **ConcreteClass** -- Implements the primitive operations (e.g., `Tea`, `Coffee`)
 
 **Key characteristics:**
 - Template method defines the algorithm structure, calls abstract/hook methods
-- **Abstract methods** — Subclasses MUST implement these steps
-- **Hook methods** — Subclasses CAN override these; default (often empty) implementation provided
-- **Hollywood Principle** — "Don't call us, we'll call you." Superclass controls when subclasses are called
+- **Abstract methods** -- Subclasses MUST implement these steps
+- **Hook methods** -- Subclasses CAN override these; default (often empty) implementation provided
+- **Hollywood Principle** -- "Don't call us, we'll call you." Superclass controls when subclasses are called
 - Template method itself should be `final` to prevent subclass overriding
 - Strategy vs Template Method: Strategy uses composition, Template Method uses inheritance
 
@@ -499,10 +499,10 @@ distribute responsibility.
 **Problem it solves:** Collections have different internal structures (arrays, lists, hashtables) but clients need a uniform way to traverse them without knowing the internals.
 
 **Participants:**
-- **Iterator** — Interface for accessing and traversing elements (`hasNext()`, `next()`)
-- **ConcreteIterator** — Implements Iterator for a specific aggregate
-- **Aggregate** — Interface for creating an Iterator (`createIterator()`)
-- **ConcreteAggregate** — Implements the Aggregate; returns appropriate ConcreteIterator
+- **Iterator** -- Interface for accessing and traversing elements (`hasNext()`, `next()`)
+- **ConcreteIterator** -- Implements Iterator for a specific aggregate
+- **Aggregate** -- Interface for creating an Iterator (`createIterator()`)
+- **ConcreteAggregate** -- Implements the Aggregate; returns appropriate ConcreteIterator
 
 **Key characteristics:**
 - Uniform traversal interface regardless of collection type
@@ -528,13 +528,13 @@ distribute responsibility.
 **Problem it solves:** An object's behavior depends on its state, and it must change behavior at runtime depending on that state. Large conditional statements test the current state and select behavior.
 
 **Participants:**
-- **State** — Interface defining behavior for each state (e.g., `State` with insertQuarter(), turnCrank(), etc.)
-- **ConcreteState** — Each state implements behavior appropriate for that state (e.g., `HasQuarterState`, `SoldState`)
-- **Context** — Maintains a current State instance, delegates behavior to it (e.g., `GumballMachine`)
+- **State** -- Interface defining behavior for each state (e.g., `State` with insertQuarter(), turnCrank(), etc.)
+- **ConcreteState** -- Each state implements behavior appropriate for that state (e.g., `HasQuarterState`, `SoldState`)
+- **Context** -- Maintains a current State instance, delegates behavior to it (e.g., `GumballMachine`)
 
 **Key characteristics:**
 - Eliminates large conditional blocks (switch/if-else on state)
-- State transitions handled by state objects (or by context — design choice)
+- State transitions handled by state objects (or by context -- design choice)
 - Each state encapsulates its own behavior
 - Similar class diagram to Strategy, but different intent:
   - Strategy: client chooses algorithm, typically configured once
@@ -558,9 +558,9 @@ distribute responsibility.
 **Problem it solves:** Multiple objects may handle a request, and the handler isn't known a priori. The set of handlers and their order should be configurable.
 
 **Participants:**
-- **Handler** — Interface defining handleRequest(); may include successor reference
-- **ConcreteHandler** — Handles requests it's responsible for; forwards others to successor
-- **Client** — Initiates the request to a handler in the chain
+- **Handler** -- Interface defining handleRequest(); may include successor reference
+- **ConcreteHandler** -- Handles requests it's responsible for; forwards others to successor
+- **Client** -- Initiates the request to a handler in the chain
 
 **Key characteristics:**
 - Request travels along the chain until handled (or falls off the end)
@@ -586,11 +586,11 @@ distribute responsibility.
 **Problem it solves:** You have a simple language or grammar that needs to be interpreted. Each rule in the grammar can be represented as a class.
 
 **Participants:**
-- **AbstractExpression** — Interface for interpret() operation
-- **TerminalExpression** — Implements interpret for terminal symbols in the grammar
-- **NonterminalExpression** — Implements interpret for grammar rules (contains other expressions)
-- **Context** — Contains global information for the interpreter
-- **Client** — Builds the abstract syntax tree and invokes interpret
+- **AbstractExpression** -- Interface for interpret() operation
+- **TerminalExpression** -- Implements interpret for terminal symbols in the grammar
+- **NonterminalExpression** -- Implements interpret for grammar rules (contains other expressions)
+- **Context** -- Contains global information for the interpreter
+- **Client** -- Builds the abstract syntax tree and invokes interpret
 
 **Key characteristics:**
 - Each grammar rule becomes a class
@@ -615,9 +615,9 @@ distribute responsibility.
 **Problem it solves:** Many objects communicate with many others in complex ways. Direct references create a tangled web of dependencies that's hard to understand and modify.
 
 **Participants:**
-- **Mediator** — Interface defining communication between colleague objects
-- **ConcreteMediator** — Coordinates communication between colleagues; knows all colleagues
-- **Colleague** — Each object communicates through the mediator rather than directly with others
+- **Mediator** -- Interface defining communication between colleague objects
+- **ConcreteMediator** -- Coordinates communication between colleagues; knows all colleagues
+- **Colleague** -- Each object communicates through the mediator rather than directly with others
 
 **Key characteristics:**
 - Centralizes complex communication and control logic
@@ -643,9 +643,9 @@ distribute responsibility.
 **Problem it solves:** You need to implement undo, checkpoint, or rollback functionality. Saving/restoring state directly would expose internal details and violate encapsulation.
 
 **Participants:**
-- **Originator** — Object whose state needs to be saved; creates and restores from Memento
-- **Memento** — Stores the internal state of the Originator; opaque to other objects
-- **Caretaker** — Responsible for keeping the Memento; never examines or modifies its contents
+- **Originator** -- Object whose state needs to be saved; creates and restores from Memento
+- **Memento** -- Stores the internal state of the Originator; opaque to other objects
+- **Caretaker** -- Responsible for keeping the Memento; never examines or modifies its contents
 
 **Key characteristics:**
 - Preserves encapsulation: only Originator can access Memento's internals
@@ -671,14 +671,14 @@ distribute responsibility.
 **Problem it solves:** You have a stable class hierarchy but need to add new operations frequently. Adding methods to each class for every new operation pollutes the interface and requires changing all classes.
 
 **Participants:**
-- **Visitor** — Interface declaring visit method for each element type
-- **ConcreteVisitor** — Implements operations for each element type (e.g., `NutritionVisitor`, `PricingVisitor`)
-- **Element** — Interface declaring accept(Visitor) method
-- **ConcreteElement** — Implements accept by calling visitor.visit(this) (double dispatch)
-- **ObjectStructure** — Collection of elements that can be iterated
+- **Visitor** -- Interface declaring visit method for each element type
+- **ConcreteVisitor** -- Implements operations for each element type (e.g., `NutritionVisitor`, `PricingVisitor`)
+- **Element** -- Interface declaring accept(Visitor) method
+- **ConcreteElement** -- Implements accept by calling visitor.visit(this) (double dispatch)
+- **ObjectStructure** -- Collection of elements that can be iterated
 
 **Key characteristics:**
-- **Double dispatch** — Operation depends on both Visitor type AND Element type
+- **Double dispatch** -- Operation depends on both Visitor type AND Element type
 - Element.accept(visitor) → visitor.visit(element): two method calls determine behavior
 - Easy to add new operations (new Visitor class) without changing elements
 - Hard to add new element types (must update all Visitors)
@@ -701,21 +701,21 @@ distribute responsibility.
 **Intent:** Separate an application into three interconnected components to separate internal representations from the ways information is presented and accepted by the user.
 
 **Patterns used:**
-- **Observer** — Model notifies Views when state changes
-- **Strategy** — View uses Controller as its strategy for handling user input
-- **Composite** — View hierarchy is a composite structure (panels contain buttons, labels, etc.)
+- **Observer** -- Model notifies Views when state changes
+- **Strategy** -- View uses Controller as its strategy for handling user input
+- **Composite** -- View hierarchy is a composite structure (panels contain buttons, labels, etc.)
 
 **Participants:**
-- **Model** — Application data and business logic; notifies observers (views) of changes
-- **View** — Renders the model's data; observes model for updates; delegates user actions to controller
-- **Controller** — Takes user input from view, interprets it, and manipulates the model; acts as the strategy for the view
+- **Model** -- Application data and business logic; notifies observers (views) of changes
+- **View** -- Renders the model's data; observes model for updates; delegates user actions to controller
+- **Controller** -- Takes user input from view, interprets it, and manipulates the model; acts as the strategy for the view
 
 **Key characteristics:**
 - Model is completely independent of View and Controller
 - Views can be swapped without changing the Model
 - Controllers can be swapped to change input handling behavior
 - Multiple Views can observe the same Model simultaneously
-- **Model 2 (Web MVC)** — Adapted for web: Controller is a servlet, View is a JSP/template, Model is a POJO/bean
+- **Model 2 (Web MVC)** -- Adapted for web: Controller is a servlet, View is a JSP/template, Model is a POJO/bean
 - Clean separation of concerns enables independent testing and development
 
 **When to use:**

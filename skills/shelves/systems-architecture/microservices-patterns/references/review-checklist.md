@@ -1,7 +1,7 @@
 # Microservices Code Review Checklist
 
 Use this checklist when reviewing microservices code. Work through each section
-and flag any violations. Not every section applies to every review — skip sections
+and flag any violations. Not every section applies to every review -- skip sections
 that aren't relevant to the code under review.
 
 ---
@@ -9,10 +9,10 @@ that aren't relevant to the code under review.
 ## 1. Service Decomposition
 
 - [ ] Service boundaries align with business capabilities or DDD bounded contexts
-- [ ] No "god service" doing too much — each service has a focused responsibility
+- [ ] No "god service" doing too much -- each service has a focused responsibility
 - [ ] Services can be deployed independently
 - [ ] No shared domain logic libraries that couple services at the code level
-- [ ] Team ownership is clear — ideally one team owns one or a few related services
+- [ ] Team ownership is clear -- ideally one team owns one or a few related services
 
 **Red flags**: A service that imports domain models from another service. A change
 in one service requiring simultaneous deployment of another service.
@@ -66,7 +66,7 @@ Internal implementation details leaking through the API.
 - [ ] Compensating transactions are idempotent
 - [ ] Saga state is persisted (not just in-memory)
 - [ ] Semantic locks or other countermeasures handle isolation concerns
-- [ ] Saga orchestrator (if used) doesn't contain business logic — only coordinates
+- [ ] Saga orchestrator (if used) doesn't contain business logic -- only coordinates
 
 **Red flags**: Try/catch blocks attempting to rollback across service boundaries without
 a saga. Services directly calling another service's "undo" endpoint without saga coordination.
@@ -104,7 +104,7 @@ publishing service for more data. No strategy for event schema evolution.
 
 ## 8. Query Implementation
 
-- [ ] Cross-service queries use API Composition or CQRS — not direct DB access
+- [ ] Cross-service queries use API Composition or CQRS -- not direct DB access
 - [ ] API Composition: composer handles partial failures gracefully
 - [ ] CQRS views: event handlers maintain denormalized read models
 - [ ] CQRS views: eventual consistency is acceptable for the use case

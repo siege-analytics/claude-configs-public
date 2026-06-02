@@ -15,7 +15,7 @@ Copy the structure below to `<repo>/.agents/skills/survey-context/` to adopt the
 ## `config.md` skeleton
 
 ```markdown
-# survey-context project skill — <project name>
+# survey-context project skill -- <project name>
 
 ## Doc root
 <absolute repo path where entity pages live, e.g. `docs/entities/`>
@@ -50,7 +50,7 @@ List project-specific surveyor recipes in `recipes/`. Examples:
 ## Shape
 
 ### Fields / signature / columns
-<list — declared fields with type + constraints>
+<list -- declared fields with type + constraints>
 
 ### Constraints
 <unique_together, indexes, FK targets, NOT NULL, defaults>
@@ -73,7 +73,7 @@ List project-specific surveyor recipes in `recipes/`. Examples:
 
 ## `entities/<name>.md` example
 
-Use the template above. The first entity added in a project doesn't need full coverage — seed with what you know, expand on next touch. The doc-page-exists check is what the skill needs; completeness grows organically.
+Use the template above. The first entity added in a project doesn't need full coverage -- seed with what you know, expand on next touch. The doc-page-exists check is what the skill needs; completeness grows organically.
 
 ## `recipes/<class>.md` skeleton
 
@@ -97,5 +97,5 @@ Project skills are resolved at `<projectRoot>/.agents/skills/<slug>/SKILL.md` pe
 
 1. Drop `config.md` + `templates/entity.md` into the project skill dir.
 2. Seed `entities/` with 3-6 of the highest-traffic entities (the ones that appear in incident postmortems or hostile-review findings).
-3. Let the skill grow the catalog organically — every survey that hits `NO-DOC` offers to seed the doc page from live introspection.
+3. Let the skill grow the catalog organically -- every survey that hits `NO-DOC` offers to seed the doc page from live introspection.
 4. Once coverage is meaningful (~20 entities), enable the hook (`survey-context.sh`, v2.1) to make the shape-change → doc-touch DoD enforced.

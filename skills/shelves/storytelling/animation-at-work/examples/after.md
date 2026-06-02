@@ -3,16 +3,16 @@
 The navigation drawer animation switches to composite-only properties (`transform` + `opacity`), uses `ease-out` easing, a 250ms duration, and respects `prefers-reduced-motion`.
 
 ```css
-/* Nav drawer — animate only composite properties (transform, opacity) */
+/* Nav drawer -- animate only composite properties (transform, opacity) */
 .nav-drawer {
-  /* Position off-screen using transform — not width/height */
+  /* Position off-screen using transform -- not width/height */
   transform: translateX(-280px);
   opacity: 0;
   width: 280px;         /* fixed dimensions, never animated */
   height: 100vh;
   overflow: hidden;
   background-color: #1a1a2e;
-  /* ease-out: fast start → gentle stop — natural for entering elements (Ch 1) */
+  /* ease-out: fast start → gentle stop -- natural for entering elements (Ch 1) */
   transition:
     transform 250ms ease-out,
     opacity   200ms ease-out;
@@ -56,9 +56,9 @@ The navigation drawer animation switches to composite-only properties (`transfor
 ```
 
 Key improvements:
-- `transform: translateX()` replaces `width`/`height` animation — `transform` and `opacity` are the only composite-only properties that animate on the GPU without triggering layout recalculation (Ch 3: Performance — composite-only properties)
-- Duration reduced from 1.5s to 250ms — functional UI animations should be 200–500ms; 1.5s feels sluggish and blocks the user (Ch 1: Timing and duration)
-- `ease-out` replaces `linear` — entering elements should start fast and slow to a stop; linear easing feels robotic for UI elements (Ch 1: 12 Principles — ease in / ease out)
+- `transform: translateX()` replaces `width`/`height` animation -- `transform` and `opacity` are the only composite-only properties that animate on the GPU without triggering layout recalculation (Ch 3: Performance -- composite-only properties)
+- Duration reduced from 1.5s to 250ms -- functional UI animations should be 200–500ms; 1.5s feels sluggish and blocks the user (Ch 1: Timing and duration)
+- `ease-out` replaces `linear` -- entering elements should start fast and slow to a stop; linear easing feels robotic for UI elements (Ch 1: 12 Principles -- ease in / ease out)
 - `will-change: transform` promotes the drawer to its own compositor layer, enabling smooth 60fps animation on mobile devices (Ch 3: will-change)
-- Staggered `transition-delay` on menu items creates overlapping action — the drawer and its children don't all stop simultaneously, producing a more natural feel (Ch 1: 12 Principles — follow-through and overlapping action)
-- `@media (prefers-reduced-motion: reduce)` is implemented — users with vestibular disorders receive a simple fade instead of a lateral sweep (Ch 5: Accessibility — prefers-reduced-motion)
+- Staggered `transition-delay` on menu items creates overlapping action -- the drawer and its children don't all stop simultaneously, producing a more natural feel (Ch 1: 12 Principles -- follow-through and overlapping action)
+- `@media (prefers-reduced-motion: reduce)` is implemented -- users with vestibular disorders receive a simple fade instead of a lateral sweep (Ch 5: Accessibility -- prefers-reduced-motion)

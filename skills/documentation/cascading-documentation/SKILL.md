@@ -11,7 +11,7 @@ user-invocable: false
    2. Categorize changes: new module, changed API, new feature, config change, bug fix, infrastructure
    3. Determine which documentation levels need updating (see Documentation levels below)
 2. Inventory existing documentation at each level
-   1. **Inline**: Read the changed files — do docstrings, comments, and section anchors exist?
+   1. **Inline**: Read the changed files -- do docstrings, comments, and section anchors exist?
    2. **Files**: Check for README, docs/, CLAUDE.md, ROADMAP.md, SESSION_STATUS.md
       ```bash
       find . -maxdepth 2 -name "*.md" -o -name "*.rst" | head -30
@@ -29,12 +29,12 @@ user-invocable: false
       ```
 3. Determine which levels need updates (see Decision tree below)
 4. Execute updates at each affected level, bottom-up (inline first, KMS last)
-5. Verify consistency across levels — no contradictions between inline docs and README, etc.
+5. Verify consistency across levels -- no contradictions between inline docs and README, etc.
 6. Use the commit skill when committing documentation changes (ticket references still required)
 
 # Documentation philosophy
 
-Any work worth doing is worth documenting. That is why we have skills for commits, tickets, and PRs — each is documentation at a different level. This skill governs the documentation *of the code and systems themselves*, organized as a federation.
+Any work worth doing is worth documenting. That is why we have skills for commits, tickets, and PRs -- each is documentation at a different level. This skill governs the documentation *of the code and systems themselves*, organized as a federation.
 
 Like government, every level serves a different audience and purpose. Missing a level creates a gap that forces readers to reverse-engineer intent from the wrong source. A README reader should not have to read source code to understand what a project does. A code reader should not have to find a wiki page to understand what a function does.
 
@@ -61,9 +61,9 @@ Lives inside source files, closest to the code.
   # === Bronze-to-Silver Transform ===
   # Converts raw FEC filings to typed Delta Lake records
   ```
-- **Decision comments**: Explain *why*, not *what* — only where the code is non-obvious
+- **Decision comments**: Explain *why*, not *what* -- only where the code is non-obvious
   ```python
-  # Use StringType, not IntegerType — FEC IDs have meaningful leading zeros
+  # Use StringType, not IntegerType -- FEC IDs have meaningful leading zeros
   ```
 - **Constants and magic values**: Explain the source or reasoning
   ```python
@@ -84,7 +84,7 @@ Lives inside source files, closest to the code.
 
 ## Level 2: Documentation files
 
-README.md, docs/, CLAUDE.md, ROADMAP.md — files that describe the project.
+README.md, docs/, CLAUDE.md, ROADMAP.md -- files that describe the project.
 
 ### What belongs here
 
@@ -100,10 +100,10 @@ README.md, docs/, CLAUDE.md, ROADMAP.md — files that describe the project.
 | Change type | README | CLAUDE.md | docs/ | ROADMAP |
 |-------------|--------|-----------|-------|---------|
 | New module or feature | Yes | If it changes conventions | Yes (design doc) | Mark complete |
-| API change | Yes (if public) | If it changes usage patterns | Yes | — |
-| Bug fix | — | — | If it reveals a known issue | — |
-| Config/infra change | — | Yes (if it affects dev workflow) | Yes (if architectural) | — |
-| Dependency change | Yes (if install changes) | — | — | — |
+| API change | Yes (if public) | If it changes usage patterns | Yes | -- |
+| Bug fix | -- | -- | If it reveals a known issue | -- |
+| Config/infra change | -- | Yes (if it affects dev workflow) | Yes (if architectural) | -- |
+| Dependency change | Yes (if install changes) | -- | -- | -- |
 
 ### Style guide
 
@@ -158,8 +158,8 @@ Company-wide: Linear, Confluence, Notion, or equivalent.
 
 ### What belongs here
 
-- Ticket and epic context — is the work tracked on the right ticket?
-- Project/milestone alignment — does the milestone reflect current state?
+- Ticket and epic context -- is the work tracked on the right ticket?
+- Project/milestone alignment -- does the milestone reflect current state?
 - Cross-project knowledge at every abstraction level:
   - **High**: Business goals, initiative rationale, stakeholder context
   - **Mid**: Technical architecture spanning multiple repos, integration patterns
@@ -219,7 +219,7 @@ When starting documentation work in a new repo:
    find . -iname "*style*" -o -iname "*contributing*" -o -iname ".editorconfig" | head -10
    grep -ri "style guide\|documentation standard" CLAUDE.md README.md CONTRIBUTING.md 2>/dev/null
    ```
-2. **If guides exist**: Follow them. If they conflict with best practices, note the conflict to the user and suggest improvements — but accept the user's decision.
+2. **If guides exist**: Follow them. If they conflict with best practices, note the conflict to the user and suggest improvements -- but accept the user's decision.
 3. **If no guides exist**: Announce which conventions you will use:
    - Python docstrings: Google style
    - Markdown: CommonMark with ATX headers
@@ -238,7 +238,7 @@ Documentation levels may feed each other through automated or semi-automated tra
 | Docstrings (L1) | API reference (L3) | Sphinx autodoc, MkDocs mkdocstrings |
 | CHANGELOG.md (L2) | Release notes (L3/L4) | GitHub Releases, `gh release create --notes-file` |
 | Design docs (L2) | Wiki pages (L3) | Manual sync or git submodule |
-| Tickets (L4) | ROADMAP.md (L2) | Manual sync — update ROADMAP when epics close |
+| Tickets (L4) | ROADMAP.md (L2) | Manual sync -- update ROADMAP when epics close |
 
 ### When updating syncs
 
@@ -249,7 +249,7 @@ Documentation levels may feed each other through automated or semi-automated tra
    # Check for generated files
    grep -ri "auto-generated\|do not edit" docs/ 2>/dev/null
    ```
-2. Track what is automatically generated vs. manually maintained — never hand-edit generated files
+2. Track what is automatically generated vs. manually maintained -- never hand-edit generated files
 3. If a change affects a sync source, trigger the rebuild:
    ```bash
    # Sphinx

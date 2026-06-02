@@ -1,26 +1,26 @@
 # Skill Resolver
 
-This is the top-level dispatcher. Skills live under category directories. **Read the skill file before acting.** If two skills could match, read both — they chain.
+This is the top-level dispatcher. Skills live under category directories. **Read the skill file before acting.** If two skills could match, read both -- they chain.
 
 ## Conventions (apply to everything)
 
 | File | Purpose |
 |---|---|
-| [rule:output] | Commit trailers, attribution policy, docstring minimums, markdown style — shared across all skills that write anything |
-| [rule:data-trust] | Default assumption: tabular data lies. Validate at boundaries. — applied before any spatial / identifier work |
-| [rule:principles] | Clean Code maxims (naming, function size, error handling) — always-on for any code task |
-| [rule:python] | Effective Python idioms — applied when touching `*.py` |
-| [rule:jvm] | Effective Java + Effective Kotlin merged — applied when touching JVM languages, including Scala on Spark |
-| [rule:typescript] | Effective TypeScript idioms — applied when touching `*.ts` / `*.tsx` |
-| [rule:rust] | Rust idioms — applied when touching `*.rs` |
+| [rule:output] | Commit trailers, attribution policy, docstring minimums, markdown style -- shared across all skills that write anything |
+| [rule:data-trust] | Default assumption: tabular data lies. Validate at boundaries. -- applied before any spatial / identifier work |
+| [rule:principles] | Clean Code maxims (naming, function size, error handling) -- always-on for any code task |
+| [rule:python] | Effective Python idioms -- applied when touching `*.py` |
+| [rule:jvm] | Effective Java + Effective Kotlin merged -- applied when touching JVM languages, including Scala on Spark |
+| [rule:typescript] | Effective TypeScript idioms -- applied when touching `*.ts` / `*.tsx` |
+| [rule:rust] | Rust idioms -- applied when touching `*.rs` |
 | [rule:siege-utilities] | Prefer `siege_utilities` for utility-shaped problems before writing a new helper. If `siege_utilities` almost solves it but doesn't, consider a PR upstream. |
 | [rule:definition-of-done] | Five hard criteria for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists. Behavior changes are not finished until all five pass. |
-| [rule:robustness] | Robust Python (Viafore) — type safety, invariant enforcement, fail fast, constrain mutability. Applied when writing or reviewing Python code. |
-| [rule:architecture-patterns] | Architecture Patterns with Python (Percival & Gregory) — repository pattern, service layer, dependency inversion. Applied when designing service layers or data-access boundaries. |
-| [rule:property-testing] | Hypothesis property-testing patterns — strategies, round-trip/invariant/oracle properties. Applied when writing tests for functions with numeric, string, or collection inputs. |
-| [rule:scipy-spec] | Scientific Python SPECs 0, 4, 6 — version support, deprecation timelines, lazy loading. Applied when managing dependency versions or API lifecycle in library packages. |
-| [rule:packaging] | PyPA Packaging Guide — pyproject.toml, dependency spec, version management. Applied when modifying pyproject.toml, managing dependencies, or publishing packages. |
-| [rule:security-scanning] | Bandit/OWASP security standards — injection prevention, credential handling, TLS, serialization safety. Applied when writing code that handles user input, credentials, shell commands, or network requests. |
+| [rule:robustness] | Robust Python (Viafore) -- type safety, invariant enforcement, fail fast, constrain mutability. Applied when writing or reviewing Python code. |
+| [rule:architecture-patterns] | Architecture Patterns with Python (Percival & Gregory) -- repository pattern, service layer, dependency inversion. Applied when designing service layers or data-access boundaries. |
+| [rule:property-testing] | Hypothesis property-testing patterns -- strategies, round-trip/invariant/oracle properties. Applied when writing tests for functions with numeric, string, or collection inputs. |
+| [rule:scipy-spec] | Scientific Python SPECs 0, 4, 6 -- version support, deprecation timelines, lazy loading. Applied when managing dependency versions or API lifecycle in library packages. |
+| [rule:packaging] | PyPA Packaging Guide -- pyproject.toml, dependency spec, version management. Applied when modifying pyproject.toml, managing dependencies, or publishing packages. |
+| [rule:security-scanning] | Bandit/OWASP security standards -- injection prevention, credential handling, TLS, serialization safety. Applied when writing code that handles user input, credentials, shell commands, or network requests. |
 
 ## Routing table
 
@@ -30,18 +30,18 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 |---|---|
 | Writing or reviewing any `.py`, `.sql`, `.ts`, `.go`, `.tsx`, `.jsx` | [skill:coding] router |
 | "Review this PR", "review this diff" | [skill:code-review] |
-| Library code architecture — DRY, dataclass discipline, interface integrity, runtime types | [skill:python-patterns] |
+| Library code architecture -- DRY, dataclass discipline, interface integrity, runtime types | [skill:python-patterns] |
 | "Why is this try/except too broad?", silent-failure patterns, `except Exception: pass` | [skill:python-exceptions] |
 | Django models, views, forms, migrations, settings | [skill:django] |
 | Data pipeline, scheduled job, Rundeck YAML, Airflow DAG | [skill:pipeline-jobs] |
 | PySpark DataFrame work, tuning, shuffle / skew | [skill:spark] |
 | Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | [skill:scala-on-spark] |
 | SQL query structure, joins, window functions, Postgres performance | [skill:sql] |
-| PostGIS — ST_* functions, spatial indexes, spatial joins | [skill:postgis] |
-| GeoPandas + Shapely — `import geopandas`, `gpd.`, `.sjoin`, raw `from shapely.geometry import` | [skill:geopandas] |
-| Apache Sedona — `from sedona`, `SedonaContext`, ST_* in Spark SQL, `%scala` Sedona | [skill:sedona] |
-| DuckDB-spatial — `import duckdb` + `INSTALL spatial` / `LOAD spatial` / `ST_Read` (single-node SQL on Parquet, GDAL-less) | [skill:duckdb-spatial] |
-| QML component review — properties-in / signals-out, MuseScore plugins, Qt Quick decomposition | [skill:qml-component-review] |
+| PostGIS -- ST_* functions, spatial indexes, spatial joins | [skill:postgis] |
+| GeoPandas + Shapely -- `import geopandas`, `gpd.`, `.sjoin`, raw `from shapely.geometry import` | [skill:geopandas] |
+| Apache Sedona -- `from sedona`, `SedonaContext`, ST_* in Spark SQL, `%scala` Sedona | [skill:sedona] |
+| DuckDB-spatial -- `import duckdb` + `INSTALL spatial` / `LOAD spatial` / `ST_Read` (single-node SQL on Parquet, GDAL-less) | [skill:duckdb-spatial] |
+| QML component review -- properties-in / signals-out, MuseScore plugins, Qt Quick decomposition | [skill:qml-component-review] |
 | Auditing error-path test coverage, writing-tests:5 compliance | [skill:test-coverage-audit] |
 | Fix a bug or issue identified by code review / audit / static analysis | [skill:think] Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per [skill:evaluate-ticket] criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
 
@@ -49,7 +49,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 
 | Trigger | Skill |
 |---|---|
-| Geospatial data — pick engine + GDAL-availability path, cross-engine principles | [skill:spatial] (router; dispatches to `coding/{postgis,geopandas,sedona,duckdb-spatial}/`) |
+| Geospatial data -- pick engine + GDAL-availability path, cross-engine principles | [skill:spatial] (router; dispatches to `coding/{postgis,geopandas,sedona,duckdb-spatial}/`) |
 | Statistical modeling, regression, hypothesis tests | `analysis/statistical/SKILL.md` (if present) |
 | Graph / network analysis, entity relationships | `analysis/graph/SKILL.md` (if present) |
 | Record linkage, dedup, fuzzy matching | `analysis/entity-resolution/SKILL.md` (if present) |
@@ -80,7 +80,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | CodeRabbit or other bot review on a PR | [skill:coderabbit-response] |
 | Inline PR discussion threads | [skill:pr-comments] |
 | End-of-session summary, close the loop | [skill:wrap-up] |
-| "Drive while I'm gone," "monitor X overnight," any continuous-cadence handoff longer than a typical turn | [skill:drive-while-away] — sibling of `[rule:writing-prose]` writing-prose:5; the rule says "use a mechanism," this skill says "which mechanism for which cadence" and mandates the same-turn `ScheduleWakeup` call. |
+| "Drive while I'm gone," "monitor X overnight," any continuous-cadence handoff longer than a typical turn | [skill:drive-while-away] -- sibling of `[rule:writing-prose]` writing-prose:5; the rule says "use a mechanism," this skill says "which mechanism for which cadence" and mandates the same-turn `ScheduleWakeup` call. |
 
 ### Planning
 
@@ -90,9 +90,9 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Update ticket status | [skill:update-ticket] |
 | Close a ticket | [skill:close-ticket] |
 | "What should I work on next?", opportunity surfacing | [skill:im-feeling-lucky] |
-| Starting work on a ticket — claim it, mark in-progress, branch, then code | [skill:pre-work-check] |
+| Starting work on a ticket -- claim it, mark in-progress, branch, then code | [skill:pre-work-check] |
 | Create ≥2 tickets in one session (epic breakdown, audit findings, batch triage) | [skill:create-ticket] + [skill:evaluate-ticket] per ticket. **Test-before-bulk applies:** create the first ticket, run `evaluate-ticket`, fix gaps until it PASSes, THEN continue to the next. Each ticket is an independent act of investigation, not a line item in a list. |
-| Making or recognizing a strategic decision (scope, architecture, deferral, standing approval, completion claim) | [skill:decision-to-ticket] — fires in real time during work, not at PR time. Consumes the destination configured by [skill:ticket-guard]. |
+| Making or recognizing a strategic decision (scope, architecture, deferral, standing approval, completion claim) | [skill:decision-to-ticket] -- fires in real time during work, not at PR time. Consumes the destination configured by [skill:ticket-guard]. |
 
 ### Documentation
 
@@ -117,7 +117,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 
 ### Shelves (book-derived libraries)
 
-DBrain book-skill library. Each shelf is itself a router — load the shelf, it tells you which book to read in full. See [skill:shelves] for the meta-router.
+DBrain book-skill library. Each shelf is itself a router -- load the shelf, it tells you which book to read in full. See [skill:shelves] for the meta-router.
 
 | Trigger | Shelf |
 |---|---|
@@ -141,7 +141,7 @@ DBrain book-skill library. Each shelf is itself a router — load the shelf, it 
 |---|---|
 | Databricks workspace, jobs, DLT, Delta, Unity Catalog, Photon, liquid clustering | [skill:databricks] |
 | Unity Catalog permissioning specifics (standalone) | [skill:unity-catalog] |
-| Operating shared infra — cyberpower, K8s, Rundeck — process and concurrency limits | [skill:ops] |
+| Operating shared infra -- cyberpower, K8s, Rundeck -- process and concurrency limits | [skill:ops] |
 
 ## Project-specific rules and skills
 
@@ -161,11 +161,11 @@ Tokens use the prefixed slug directly: `[skill:siege-utilities--hostile-review]`
 
 Items marked **[build-enforced]** are validated by `bin/build.py`. Items marked **[convention]** are author-discipline; the build cannot check them.
 
-1. **Routing entries are conditional.** [convention] The agent only invokes a `<project>--<skill>` skill when the routing entry that references it is in scope — typically when the working directory matches the project's `repo:` field. The build validates that token references resolve to existing slugs, but cannot validate trigger semantics.
+1. **Routing entries are conditional.** [convention] The agent only invokes a `<project>--<skill>` skill when the routing entry that references it is in scope -- typically when the working directory matches the project's `repo:` field. The build validates that token references resolve to existing slugs, but cannot validate trigger semantics.
 2. **No implicit shadowing.** [build-enforced] A project skill with the same base name as a general skill (e.g., `projects/siege-utilities/skills/self-review/` and `skills/<category>/self-review/`) produces two distinct flat slugs (`siege-utilities--self-review` and `self-review`). The build rejects collisions between project and general slugs. Which one fires is set by the routing entry, not by precedence rules at load time.
-3. **Weakening overrides must be declared.** [convention] If a project rule weakens a general rule (permits something the general rule prohibits), it must appear in the project's Overrides table in `_rules.md`. An undeclared weakening is void — the general rule wins. The build cannot detect semantic weakening; this is enforced at PR review.
+3. **Weakening overrides must be declared.** [convention] If a project rule weakens a general rule (permits something the general rule prohibits), it must appear in the project's Overrides table in `_rules.md`. An undeclared weakening is void -- the general rule wins. The build cannot detect semantic weakening; this is enforced at PR review.
 4. **No cross-project inheritance.** [convention] Project B cannot reference or import Project A's rules. Each project is a self-contained overlay on the general set.
-5. **Scope is repo-bound.** [convention] Project rules and the conditional routing entries below activate when the working directory matches the `repo` field in `PROJECT.md`. The build validates that `repo:` is present and unique across projects, but does not verify that the repo exists or that the working directory matches at runtime. The prefixed slugs remain visible in the catalog regardless — they're addressable but not invoked out of scope.
+5. **Scope is repo-bound.** [convention] Project rules and the conditional routing entries below activate when the working directory matches the `repo` field in `PROJECT.md`. The build validates that `repo:` is present and unique across projects, but does not verify that the repo exists or that the working directory matches at runtime. The prefixed slugs remain visible in the catalog regardless -- they're addressable but not invoked out of scope.
 
 ### Active projects
 
@@ -183,9 +183,9 @@ These triggers apply only when the working directory matches `siege-analytics/si
 | Any change to a function signature, return type, or exception contract | [skill:siege-utilities--notebook-impact] |
 | Adding or backfilling error-path tests, SU-4b compliance | [skill:siege-utilities--error-path-tests] |
 | Auditing error-path test coverage for any module | [skill:test-coverage-audit] |
-| `except Exception: pass` or `except: pass` anywhere | Bug — see [rule:siege-utilities--rules] (SU-1) |
-| Function returns empty DataFrame/list/dict/string on error path | Bug — see [rule:siege-utilities--rules] (SU-1) |
-| Code under `examples/` or `notebooks/` | Held to library standard — see [rule:siege-utilities--rules] (SU-3) |
+| `except Exception: pass` or `except: pass` anywhere | Bug -- see [rule:siege-utilities--rules] (SU-1) |
+| Function returns empty DataFrame/list/dict/string on error path | Bug -- see [rule:siege-utilities--rules] (SU-1) |
+| Code under `examples/` or `notebooks/` | Held to library standard -- see [rule:siege-utilities--rules] (SU-3) |
 
 ## Universal pre-action checks
 
@@ -212,7 +212,7 @@ These skills fire automatically before non-trivial work, regardless of which rou
 | Classification | Frontmatter key | Invocation |
 |---|---|---|
 | Reference | `user-invocable: false` | Auto-loaded by Claude when context matches |
-| Router | `user-invocable: false` + `paths:` | Structural — dispatches to sub-skills |
+| Router | `user-invocable: false` + `paths:` | Structural -- dispatches to sub-skills |
 | Action | `disable-model-invocation: true` + `allowed-tools:` | User runs `/skill-name` |
 | Analytical | `disable-model-invocation: true` + `allowed-tools: Read Grep Glob` | User runs `/skill-name` for a read-only audit |
 

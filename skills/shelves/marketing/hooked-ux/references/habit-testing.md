@@ -32,7 +32,7 @@ Systematic approach to measuring whether your product is forming habits. Based o
 
 ### 2. What Are They Doing?
 
-**Goal:** Identify the "Habit Path"—the specific sequence of actions habitual users take.
+**Goal:** Identify the "Habit Path"--the specific sequence of actions habitual users take.
 
 **Method:**
 1. Map the journey of your top 5% engaged users
@@ -58,7 +58,7 @@ Find the action that correlates with retention:
 
 ### 3. Why Are They Doing It?
 
-**Goal:** Understand the internal trigger—what emotion or situation drives habitual use.
+**Goal:** Understand the internal trigger--what emotion or situation drives habitual use.
 
 **Research methods:**
 

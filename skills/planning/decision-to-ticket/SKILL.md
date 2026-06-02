@@ -11,7 +11,7 @@ Surface strategic decisions on the ticket destination in real time. Decisions th
 
 ## Core invariant
 
-> **Every strategic decision must be visible on the ticket destination within the same conversation turn it was made.** The ticket doesn't need to be the primary artifact — a summary + pointer to the plan is enough. But the ticket must exist.
+> **Every strategic decision must be visible on the ticket destination within the same conversation turn it was made.** The ticket doesn't need to be the primary artifact -- a summary + pointer to the plan is enough. But the ticket must exist.
 
 ## What is a strategic decision?
 
@@ -56,7 +56,7 @@ When you make or recognize a strategic decision during work:
 
 ### The Completion Guard
 
-The completion guard is the most important part of this skill. It catches **scope-reduction rationalization** — the pattern where an agent stops work partway through and frames the partial result as the complete deliverable.
+The completion guard is the most important part of this skill. It catches **scope-reduction rationalization** -- the pattern where an agent stops work partway through and frames the partial result as the complete deliverable.
 
 **The completion guard fires when:**
 - You're about to say "that's everything" or equivalent
@@ -66,7 +66,7 @@ The completion guard is the most important part of this skill. It catches **scop
 
 **Before any completion claim, you MUST:**
 
-1. **Re-read the original request.** What did the user actually ask for? Not your interpretation — the literal words.
+1. **Re-read the original request.** What did the user actually ask for? Not your interpretation -- the literal words.
 
 2. **List delivered vs. requested.**
    ```
@@ -133,7 +133,7 @@ The completion guard would additionally have caught the scope-reduction pattern 
 ## Edge cases
 
 ### Rapid-fire decisions during design
-During a `think` design session, you might make 5+ strategic decisions in quick succession (scope, architecture, sequencing). Don't file 5 separate tickets — batch them into a single ticket/comment: "Design decisions from [design note name]: 1. ... 2. ... 3. ..."
+During a `think` design session, you might make 5+ strategic decisions in quick succession (scope, architecture, sequencing). Don't file 5 separate tickets -- batch them into a single ticket/comment: "Design decisions from [design note name]: 1. ... 2. ... 3. ..."
 
 ### User explicitly says "don't file a ticket for this"
 Respect the user's instruction. But note in the conversation that the decision was made and not ticketed at the user's request. This creates a traceable record in the conversation even if not on a ticket.

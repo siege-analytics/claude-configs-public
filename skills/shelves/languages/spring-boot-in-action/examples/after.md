@@ -1,6 +1,6 @@
 # After: Spring Boot in Action
 
-The same library API rewritten with idiomatic Spring Boot — auto-configuration, constructor injection, externalized config, profiles, proper testing, and Actuator.
+The same library API rewritten with idiomatic Spring Boot -- auto-configuration, constructor injection, externalized config, profiles, proper testing, and Actuator.
 
 ```java
 // @SpringBootApplication enables auto-config, component scan, config (Ch 1, 2)
@@ -11,10 +11,10 @@ public class LibraryApp {
     }
 }
 
-// No DatabaseConfig class needed — auto-configuration handles DataSource (Ch 2, 3)
+// No DatabaseConfig class needed -- auto-configuration handles DataSource (Ch 2, 3)
 // Credentials externalized to application.properties via environment variables
 
-// Constructor injection — testable without Spring context (Ch 2)
+// Constructor injection -- testable without Spring context (Ch 2)
 @RestController
 @RequestMapping("/api/books")
 public class BookController {
@@ -55,7 +55,7 @@ public class BookService {
     }
 
     public Book findById(Long id) {
-        // Optional — 404 automatically surfaced (Ch 2)
+        // Optional -- 404 automatically surfaced (Ch 2)
         return repo.findById(id)
                    .orElseThrow(() -> new ResponseStatusException(
                        HttpStatus.NOT_FOUND, "Book " + id + " not found"));
@@ -73,7 +73,7 @@ public class BookService {
     }
 }
 
-// Repository — Spring Data does the rest (Ch 2)
+// Repository -- Spring Data does the rest (Ch 2)
 public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findByTitleContainingIgnoreCase(String title);
 }
@@ -104,7 +104,7 @@ public class StorageHealthIndicator implements HealthIndicator {
     }
 }
 
-// Controller slice test — no full context, fast (Ch 4)
+// Controller slice test -- no full context, fast (Ch 4)
 @WebMvcTest(BookController.class)
 public class BookControllerTest {
     @Autowired
@@ -149,37 +149,37 @@ public class BookControllerTest {
 ```
 
 ```properties
-# application.properties — base config, all env-specific values externalized (Ch 3)
+# application.properties -- base config, all env-specific values externalized (Ch 3)
 spring.datasource.url=${DB_URL:jdbc:h2:mem:library}
 spring.datasource.username=${DB_USER:sa}
 spring.datasource.password=${DB_PASS:}
 spring.jpa.hibernate.ddl-auto=validate
 
-# Actuator — health and info only exposed publicly (Ch 7)
+# Actuator -- health and info only exposed publicly (Ch 7)
 management.endpoints.web.exposure.include=health,info
 management.endpoint.health.show-details=when-authorized
 
-# application-dev.properties — dev overrides (Ch 3)
+# application-dev.properties -- dev overrides (Ch 3)
 # spring.datasource.url=jdbc:h2:mem:library
 # spring.jpa.hibernate.ddl-auto=create-drop
 # logging.level.com.example=DEBUG
 # management.endpoints.web.exposure.include=*
 
-# application-production.properties — production hardening (Ch 8)
+# application-production.properties -- production hardening (Ch 8)
 # spring.jpa.hibernate.ddl-auto=validate
 # logging.level.root=WARN
 # management.endpoints.web.exposure.include=health,info
 ```
 
 **Key improvements:**
-- `@SpringBootApplication` enables auto-configuration — no manual `DataSource` bean (Ch 2)
-- Credentials externalized to env vars via `${DB_URL}` — never hardcoded (Ch 3)
-- Constructor injection throughout — testable without Spring context (Ch 2)
+- `@SpringBootApplication` enables auto-configuration -- no manual `DataSource` bean (Ch 2)
+- Credentials externalized to env vars via `${DB_URL}` -- never hardcoded (Ch 3)
+- Constructor injection throughout -- testable without Spring context (Ch 2)
 - `ResponseEntity` with correct status codes: 200, 201, 404 (Ch 2)
-- `Optional` → `orElseThrow` → `ResponseStatusException` — clean 404 (Ch 2)
+- `Optional` → `orElseThrow` → `ResponseStatusException` -- clean 404 (Ch 2)
 - `@ConfigurationProperties` for grouped app config (Ch 3)
-- `@WebMvcTest` + `@MockBean` — fast, isolated controller tests (Ch 4)
-- `@WithMockUser` — security tested explicitly (Ch 4)
-- Custom `HealthIndicator` — DB health visible in Actuator (Ch 7)
-- Actuator locked down — only `health` and `info` public (Ch 7)
-- Profile-based properties — no env checks in code (Ch 3, 8)
+- `@WebMvcTest` + `@MockBean` -- fast, isolated controller tests (Ch 4)
+- `@WithMockUser` -- security tested explicitly (Ch 4)
+- Custom `HealthIndicator` -- DB health visible in Actuator (Ch 7)
+- Actuator locked down -- only `health` and `info` public (Ch 7)
+- Profile-based properties -- no env checks in code (Ch 3, 8)

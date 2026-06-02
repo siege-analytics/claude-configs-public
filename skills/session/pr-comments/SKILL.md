@@ -27,7 +27,7 @@ PR comments are a conversation, not a monologue. Every comment should either **m
 
 **Match the register of the commenter.** A terse reviewer gets terse replies. A detailed reviewer gets detailed replies. A bot gets no reply unless action is needed.
 
-**Never argue in comments.** If you disagree with a review, state your reasoning once with evidence (a link, a test result, a design doc reference). If the reviewer pushes back again, escalate to the user — don't engage in a back-and-forth in the comment thread.
+**Never argue in comments.** If you disagree with a review, state your reasoning once with evidence (a link, a test result, a design doc reference). If the reviewer pushes back again, escalate to the user -- don't engage in a back-and-forth in the comment thread.
 
 **Comments are permanent.** They appear in notification emails, search results, and audit trails. Write as if a stranger will read this comment six months from now trying to understand why a decision was made.
 
@@ -70,10 +70,10 @@ Automated reviewers (CodeRabbit, Copilot, SonarQube, Danger, custom bots) leave 
 
 | Category | Action |
 |----------|--------|
-| **Blocking** — security vulnerability, failing test, lint error marked as error | Must fix before merge. Create a commit or respond with justification. |
-| **Suggestion** — code improvement, style nit, refactor idea | Evaluate. Apply if it genuinely improves the code. Dismiss with reason if not. |
-| **Informational** — coverage report, bundle size delta, dependency audit | Read and note. No response needed unless a threshold is breached. |
-| **False positive** — tool misunderstands the code | Dismiss with a brief explanation so future readers know it was evaluated. |
+| **Blocking** -- security vulnerability, failing test, lint error marked as error | Must fix before merge. Create a commit or respond with justification. |
+| **Suggestion** -- code improvement, style nit, refactor idea | Evaluate. Apply if it genuinely improves the code. Dismiss with reason if not. |
+| **Informational** -- coverage report, bundle size delta, dependency audit | Read and note. No response needed unless a threshold is breached. |
+| **False positive** -- tool misunderstands the code | Dismiss with a brief explanation so future readers know it was evaluated. |
 
 ### Identifying automated comments
 
@@ -99,7 +99,7 @@ Watch for comments that signal a human is handing off to an agent or vice versa:
 | "LGTM", "approved", ":shipit:" | Reviewer approves the change |
 | "needs work", "request changes" | Reviewer wants modifications before merge |
 | "blocked on X", "waiting for Y" | PR is stalled on a dependency |
-| "WIP", "draft", "do not merge" | PR is not ready — do not act on it |
+| "WIP", "draft", "do not merge" | PR is not ready -- do not act on it |
 
 When an agent-ready signal is detected:
 1. Read the full PR diff and description
@@ -132,7 +132,7 @@ I'd prefer to keep the current approach because {reason}.
 
 {Evidence: link, benchmark, test result, or design doc reference.}
 
-Happy to discuss further — let me know if you'd like to hop on a call or if there's a specific concern I'm not addressing.
+Happy to discuss further -- let me know if you'd like to hop on a call or if there's a specific concern I'm not addressing.
 ```
 
 ## Leaving a review comment
@@ -185,7 +185,7 @@ When asked "what's happening on this PR" or when triaging a PR's comments, produ
 - {Reviewer}: {summary of their comments and whether addressed}
 
 ### Automated feedback
-- {Tool}: {N comments — M blocking, K suggestions, J informational}
+- {Tool}: {N comments -- M blocking, K suggestions, J informational}
 - {Action needed}: {what still needs to be fixed}
 
 ### Signals
@@ -208,14 +208,14 @@ gh api repos/{owner}/{repo}/pulls/{number}/reviews/{review_id}/comments \
   -f body="reply text"
 
 # Resolve a conversation (dismiss a review thread)
-# Note: GitHub doesn't have a CLI for this — use the web UI or GraphQL
+# Note: GitHub doesn't have a CLI for this -- use the web UI or GraphQL
 ```
 
 ## GitHub: submitting a review
 
 ```bash
 # Approve
-gh pr review {number} --repo {owner}/{repo} --approve --body "LGTM — clean implementation."
+gh pr review {number} --repo {owner}/{repo} --approve --body "LGTM -- clean implementation."
 
 # Request changes
 gh pr review {number} --repo {owner}/{repo} --request-changes --body "See inline comments."
@@ -245,7 +245,7 @@ When invoked, run this workflow:
 4. **Detect** handoff signals (agent-ready, PTAL, LGTM, etc.)
 5. **Report** the structured summary to the user
 6. **Recommend** next action: fix blocking items, respond to questions, merge, or wait
-7. **Feed the lessons-learned ledger** — for any human-reviewer comment that flags a recurring pattern (the reviewer says "again," "always," "we keep doing this," or you recognize the pattern from prior PRs), invoke [skill:lessons-learned] to log or bump the entry in `LESSONS.md`. Skip one-off bugs and pure style preferences.
+7. **Feed the lessons-learned ledger** -- for any human-reviewer comment that flags a recurring pattern (the reviewer says "again," "always," "we keep doing this," or you recognize the pattern from prior PRs), invoke [skill:lessons-learned] to log or bump the entry in `LESSONS.md`. Skip one-off bugs and pure style preferences.
 
 # Attribution policy
 

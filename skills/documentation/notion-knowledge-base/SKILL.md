@@ -16,7 +16,7 @@ user-invocable: false
    - **Sync-managed pages** (auto-rebuilt hourly): edit the sync job in `electinfo/sync/sync/jobs/`
    - **Manual pages** (human-curated): edit directly via Notion API
    - **New pages**: create via Notion API, then decide if a sync job should maintain it
-5. Verify cross-references between pages — every page should link to related pages
+5. Verify cross-references between pages -- every page should link to related pages
 6. Ensure the reading map ("How to Read This") is updated if page structure changed
 
 # Philosophy
@@ -28,9 +28,9 @@ The Notion knowledge base exists for people who are **not** reading the code. It
 - **Clients** (LegiNation, future): need to understand what data is available and how to use it
 - **Future team members**: need onboarding material that doesn't assume existing context
 
-Every page should be understandable by someone who has never seen a terminal. Technical terms must be defined the first time they appear. Diagrams should be labeled. Numbers should have context ("6 million records — roughly one for every campaign donation filed with the federal government since 2001").
+Every page should be understandable by someone who has never seen a terminal. Technical terms must be defined the first time they appear. Diagrams should be labeled. Numbers should have context ("6 million records -- roughly one for every campaign donation filed with the federal government since 2001").
 
-This is **not** developer documentation — that lives in the code (see `update-docs` skill). This is knowledge management for the organisation.
+This is **not** developer documentation -- that lives in the code (see `update-docs` skill). This is knowledge management for the organisation.
 
 # Infrastructure
 
@@ -83,13 +83,13 @@ Elect Info Telemetry                     (TELEMETRY_PAGE)
 ├── Project Dashboard [DB]               (PROJECT_DASHBOARD_DB)  ← sync: dashboard.py
 ├── Heads Up Display                     (HUD_PAGE)              ← sync: hud.py
 ├── What We're Building                  (WHAT_BUILDING_PAGE)    ← sync: what_building.py
-├── How to Read This                     (manual — reading map)
+├── How to Read This                     (manual -- reading map)
 ├── Data                                 (DATA_PAGE)             ← sync: data_charts.py
 │   └── [sub-pages per data source]      (manual)
 ├── State Data Collection Status [DB]    (STATE_DATA_DB)         ← sync: states.py
 ├── System Dependencies                  (SYSTEM_DEPS_PAGE)      ← sync: deps_diagrams.py
 ├── User Feedback [DB]                   (USER_FEEDBACK_DB)      (manual)
-└── [team space pages — see below]
+└── [team space pages -- see below]
 ```
 
 Page IDs are in `sync/config/__init__.py`. When creating new pages, add the ID there.
@@ -244,7 +244,7 @@ Every page must be understandable by a smart 12-year-old. This means:
 2. **Common words.** "Use" not "utilise". "Send" not "transmit". "Fix" not "remediate".
 3. **Define terms.** First use of any technical term gets a plain-language definition.
    - Bad: "We use DLT for CDC on Delta tables."
-   - Good: "We use a system called Delta Live Tables to track changes in our data. When a new campaign donation is filed, only that new record gets processed — we don't have to redo everything from scratch."
+   - Good: "We use a system called Delta Live Tables to track changes in our data. When a new campaign donation is filed, only that new record gets processed -- we don't have to redo everything from scratch."
 4. **Concrete numbers.** "6 million records" not "a large dataset". "50 states" not "nationwide".
 5. **Analogies.** Compare technical concepts to everyday things.
    - "A knowledge graph is like a map of relationships. Instead of showing roads between cities, it shows connections between people, organisations, and money."
@@ -342,7 +342,7 @@ This skill (update-notion) and the cascading-documentation skill (update-docs) a
 
 **Flow**: Technical changes → update-docs updates code-level documentation → update-notion translates the *impact* of those changes into accessible Notion pages.
 
-A change to a Spark transform doesn't need a Notion page. But if that change means "we can now process state-level data, not just federal" — that's a Notion page for Leadership, Sales, and Operations.
+A change to a Spark transform doesn't need a Notion page. But if that change means "we can now process state-level data, not just federal" -- that's a Notion page for Leadership, Sales, and Operations.
 
 # Attribution policy
 
@@ -355,13 +355,13 @@ A change to a Spark transform doesn't need a Notion page. But if that change mea
 
 - [ ] Content type identified (data source, technology, stakeholder, reading map, status)
 - [ ] Correct team space selected (Leadership, Sales, Operations, Engineering)
-- [ ] Content written at 5th-grade reading level — no unexplained jargon
+- [ ] Content written at 5th-grade reading level -- no unexplained jargon
 - [ ] Technical terms defined on first use
 - [ ] Concrete numbers and examples throughout
 - [ ] Implementation path chosen (sync job vs. manual page)
 - [ ] If sync job: tested locally, committed to electinfo/sync
 - [ ] If manual page: page ID recorded in sync/config if needed
 - [ ] Reading map ("How to Read This") updated if page structure changed
-- [ ] Cross-references verified — related pages link to each other
-- [ ] Cross-level sync considered — does update-docs also need to run?
+- [ ] Cross-references verified -- related pages link to each other
+- [ ] Cross-level sync considered -- does update-docs also need to run?
 - [ ] No AI/agent attribution anywhere in content

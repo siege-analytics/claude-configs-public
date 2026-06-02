@@ -114,11 +114,11 @@ Rundeck YAML template and nohup wrapper pattern.
 
 The Rundeck K8s executor websocket drops after ~7 minutes. Without nohup, a long-running job dies when the connection drops. The pattern:
 
-1. **`nohup bash -c "$CMD" > "$LOGFILE" 2>&1 &`** — starts the job in the background, immune to hangup signals, logging to a file
-2. **`echo $PID > "$PIDFILE"`** — saves the PID for monitoring
-3. **`while kill -0 $PID`** — polls until the process finishes, tailing the log for Rundeck output
-4. **`wait $PID; EXIT_CODE=$?`** — captures the exit code after the process finishes
-5. **`exit $EXIT_CODE`** — propagates the exit code to Rundeck
+1. **`nohup bash -c "$CMD" > "$LOGFILE" 2>&1 &`** -- starts the job in the background, immune to hangup signals, logging to a file
+2. **`echo $PID > "$PIDFILE"`** -- saves the PID for monitoring
+3. **`while kill -0 $PID`** -- polls until the process finishes, tailing the log for Rundeck output
+4. **`wait $PID; EXIT_CODE=$?`** -- captures the exit code after the process finishes
+5. **`exit $EXIT_CODE`** -- propagates the exit code to Rundeck
 
 If Rundeck disconnects during step 3, the process continues via nohup. The log file persists on the pod.
 
@@ -221,7 +221,7 @@ def main():
         sys.exit(0 if has_updates else 1)
 
     if not has_updates:
-        logger.info("No updates — nothing to do")
+        logger.info("No updates -- nothing to do")
         sys.exit(0)
 
     if args.dry_run:

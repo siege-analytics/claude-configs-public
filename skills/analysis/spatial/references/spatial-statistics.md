@@ -1,10 +1,10 @@
 # Spatial Statistics
 
-When the analysis goes beyond joins and measurements into inference, clustering, smoothing, or diagnostic work. Civic / Census / FEC / redistricting data is exactly where these methods earn their keep — the patterns you're looking for usually aren't obvious from a map alone.
+When the analysis goes beyond joins and measurements into inference, clustering, smoothing, or diagnostic work. Civic / Census / FEC / redistricting data is exactly where these methods earn their keep -- the patterns you're looking for usually aren't obvious from a map alone.
 
 This file is method-first; per-engine implementation matrix at the bottom.
 
-## Decision matrix — pick the method
+## Decision matrix -- pick the method
 
 | You want to know… | Method | Strongest engine |
 |---|---|---|
@@ -22,9 +22,9 @@ This file is method-first; per-engine implementation matrix at the bottom.
 | "Where should I prioritize intervention?" | **Suitability analysis / weighted overlay** | GeoPandas + raster math; PostGIS |
 | "Did the spatial pattern change between two periods?" | **Diff-in-diff with spatial weights** | GeoPandas + `pysal.spreg` |
 
-## Use cases — depth
+## Use cases -- depth
 
-### 1. Global spatial autocorrelation — Moran's I
+### 1. Global spatial autocorrelation -- Moran's I
 
 **When:** You want a single answer to "is this variable spatially clustered?" Useful as a first-pass diagnostic before deciding whether to use a spatial regression.
 
@@ -49,14 +49,14 @@ print(f"Moran's I: {mi.I:.3f}, p_sim: {mi.p_sim:.3f}")
 **Methodological choices:**
 
 - **Weights matrix:** Queen (shared edge or vertex), Rook (shared edge only), distance-band, k-nearest. Queen is the default for irregular polygons; k-nearest is typical for points.
-- **Standardization:** Always row-standardize (`w.transform = "r"`) for interpretability — neighbors sum to 1 per row.
+- **Standardization:** Always row-standardize (`w.transform = "r"`) for interpretability -- neighbors sum to 1 per row.
 - **Inference:** Use Monte Carlo `p_sim` (default `permutations=999`), not analytical p-values. The latter assume normality.
 
 **Pitfalls:**
 - Sensitive to the weights matrix. Run with two W's (Queen + 4-NN, e.g.) and report both.
 - Global → can mask interesting local patterns. Always run LISA after.
 
-### 2. Hotspot analysis — Getis-Ord Gi*
+### 2. Hotspot analysis -- Getis-Ord Gi*
 
 **When:** You need to identify *where* the high (or low) values cluster, not just whether clustering exists. The output is per-feature, mappable.
 
@@ -85,17 +85,17 @@ gdf.plot(column="status", categorical=True, legend=True, figsize=(10, 6))
 
 **Methodological choices:**
 
-- **Distance band vs adjacency:** For point data or coarse polygons, distance-band weights (`libpysal.weights.DistanceBand`) often produce more interpretable hotspots than adjacency. The band width *is* the spatial scale of the analysis — pick deliberately.
+- **Distance band vs adjacency:** For point data or coarse polygons, distance-band weights (`libpysal.weights.DistanceBand`) often produce more interpretable hotspots than adjacency. The band width *is* the spatial scale of the analysis -- pick deliberately.
 - **Fixed vs adaptive bandwidth:** Fixed band = same distance for everyone; adaptive = same number of neighbors. Use adaptive when density varies dramatically (urban vs rural counties).
 - **Significance threshold:** 95% (z > 1.96) is conventional; 99% (z > 2.58) for stricter hotspot maps. Always report both `z` and `p_sim`.
 - **Multiple-testing correction:** Pseudo-p values from Monte Carlo aren't FDR-corrected. For maps with thousands of features, apply Bonferroni or FDR (`statsmodels.stats.multitest.multipletests`) to avoid spurious hotspots.
 
 **Pitfalls:**
-- "Hotspot" is sensitive to the spatial scale. The same data at block-group vs county levels can show different hotspots — see MAUP below.
+- "Hotspot" is sensitive to the spatial scale. The same data at block-group vs county levels can show different hotspots -- see MAUP below.
 - Rate denominators matter: a "hot spot of donations" might just be a hot spot of population. Normalize before testing.
 - Edge effects: features at dataset boundaries have fewer neighbors; their Gi* is less reliable. Buffer with neighboring jurisdictions when possible.
 
-**Recipe (PostGIS — manual Gi* via SQL):**
+**Recipe (PostGIS -- manual Gi* via SQL):**
 
 ```sql
 WITH neighbors AS (
@@ -121,11 +121,11 @@ SELECT
 FROM neighbors n CROSS JOIN global_stats g;
 ```
 
-(Approximate — for production use the GeoSiLK or `pgxn`-installed `pysal-pg` extensions if available, or pull data into pysal for the actual Gi* computation.)
+(Approximate -- for production use the GeoSiLK or `pgxn`-installed `pysal-pg` extensions if available, or pull data into pysal for the actual Gi* computation.)
 
-### 3. LISA — local clusters and outliers
+### 3. LISA -- local clusters and outliers
 
-**When:** You want to distinguish *types* of local patterns: high values surrounded by high (HH), low surrounded by low (LL), high surrounded by low (HL — outlier), low surrounded by high (LH — outlier).
+**When:** You want to distinguish *types* of local patterns: high values surrounded by high (HH), low surrounded by low (LL), high surrounded by low (HL -- outlier), low surrounded by high (LH -- outlier).
 
 **Method:** Local Moran's I. Each feature gets a quadrant assignment (HH/LL/HL/LH) and a significance test.
 
@@ -149,17 +149,17 @@ gdf.loc[(gdf["lisa_q"] == 4) & gdf["lisa_sig"], "lisa_label"] = "HL (outlier)"
 
 **When LISA beats Gi*:**
 - You care about outliers (HL, LH), not just hot/cold spots.
-- The narrative is "this place behaves like an island in a sea of opposites" — the literal frame for HL/LH.
+- The narrative is "this place behaves like an island in a sea of opposites" -- the literal frame for HL/LH.
 
 **When Gi* beats LISA:**
 - You only need hot vs cold (continuous Z-score interpretation).
 - Audience expects a hot-spot map, not a four-color cluster map.
 
-### 4. Rate smoothing / empirical Bayes — fixing small-area instability
+### 4. Rate smoothing / empirical Bayes -- fixing small-area instability
 
 **When:** You're mapping rates (per-capita turnout, per-capita donations) and small areas have wild swings because the *denominator* is small. A precinct with 50 voters and 5 anomalous donations has a per-capita rate that's not real signal.
 
-**Method:** Empirical Bayes shrinks raw rates toward a mean (global mean, or local-neighborhood mean). The amount of shrinkage depends on the variance — small areas get shrunk more.
+**Method:** Empirical Bayes shrinks raw rates toward a mean (global mean, or local-neighborhood mean). The amount of shrinkage depends on the variance -- small areas get shrunk more.
 
 **Recipe:**
 
@@ -192,10 +192,10 @@ gdf["smoothed_rate_spatial"] = ses.r
 - Detecting "true" hot spots that aren't artifacts of small denominators.
 
 **When NOT to use:**
-- Very small numerators (<5 events per area) — smoothing isn't enough; use a spatial model with covariates.
+- Very small numerators (<5 events per area) -- smoothing isn't enough; use a spatial model with covariates.
 - Extreme heterogeneity where neighborhood mean is meaningless.
 
-### 5. Spatial regression — when neighbors predict the outcome
+### 5. Spatial regression -- when neighbors predict the outcome
 
 **When:** Your independent variables don't fully explain Y, and Moran's I on the residuals is significant. That's the diagnostic that you need a spatial model.
 
@@ -225,7 +225,7 @@ If `rho` is significant, OLS would have given biased / inefficient estimates. SA
 - Test SAR vs SEM via Lagrange Multiplier tests (`spreg.utils.MoranR`).
 - For panel data, use `spreg.Panel_FE_Lag`.
 
-### 6. GWR — when relationships vary across space
+### 6. GWR -- when relationships vary across space
 
 **When:** You suspect the coefficient on a variable changes by location (e.g., income predicts turnout differently in urban vs rural counties).
 
@@ -254,14 +254,14 @@ Then map the local coefficients to see where each variable matters more.
 
 **Methodological choices:**
 - Adaptive bandwidth (k-nearest) for irregular density; fixed for uniform.
-- Bisquare or Gaussian kernel — both common.
-- Multi-Scale GWR (MGWR) lets each variable have its own bandwidth — more accurate but slower.
+- Bisquare or Gaussian kernel -- both common.
+- Multi-Scale GWR (MGWR) lets each variable have its own bandwidth -- more accurate but slower.
 
 **Pitfalls:**
 - Computationally expensive (O(n²) per fit).
-- Local coefficients can flip sign in low-data regions — interpret with confidence intervals, not point estimates.
+- Local coefficients can flip sign in low-data regions -- interpret with confidence intervals, not point estimates.
 
-### 7. Cluster detection on points — DBSCAN / OPTICS
+### 7. Cluster detection on points -- DBSCAN / OPTICS
 
 **When:** You have point data (donor addresses, event locations) and want to find spatial clusters without polygon boundaries.
 
@@ -280,14 +280,14 @@ gdf["cluster"] = clusterer.fit_predict(coords_rad)
 
 For projected meter coordinates, use Euclidean and `eps` in meters.
 
-**OPTICS** is similar but doesn't require a fixed eps — it builds a reachability ordering you can threshold afterward. Useful when cluster scales vary.
+**OPTICS** is similar but doesn't require a fixed eps -- it builds a reachability ordering you can threshold afterward. Useful when cluster scales vary.
 
 **Tradeoffs:**
 - DBSCAN scales linearly with n; great for millions of points.
 - HDBSCAN handles varying densities better but is slower.
 - For *contiguous polygon* clustering (regionalization, redistricting), use `pysal.region.spenc` or graph-based methods, not DBSCAN.
 
-### 8. Segregation indices — measuring spatial separation of groups
+### 8. Segregation indices -- measuring spatial separation of groups
 
 **When:** Civic / demographic work where the question is "how separated are populations?" Standard for redistricting analysis, education access, housing studies.
 
@@ -314,11 +314,11 @@ h = MultiInfoTheil(gdf, ["group_a", "group_b", "group_c"])
 print(f"Theil's H: {h.statistic:.3f}")
 ```
 
-The `segregation` package (formerly `pysal.segregation`) is comprehensive — 30+ indices.
+The `segregation` package (formerly `pysal.segregation`) is comprehensive -- 30+ indices.
 
-### 9. Accessibility — 2-step floating catchment area (2SFCA)
+### 9. Accessibility -- 2-step floating catchment area (2SFCA)
 
-**When:** "How accessible is a service to a population?" — clinics, polling places, schools. The classic question for civic / health geography.
+**When:** "How accessible is a service to a population?" -- clinics, polling places, schools. The classic question for civic / health geography.
 
 **Method:**
 1. For each service location, compute the population within travel time T. The service "load."
@@ -367,7 +367,7 @@ print(pd.DataFrame(results).T)
 
 If Moran's I is positive at all levels, the claim holds. If it flips, you have a MAUP problem and should report results at multiple scales rather than picking one.
 
-### 11. Spatial sampling — stratified / balanced
+### 11. Spatial sampling -- stratified / balanced
 
 **When:** Drawing a sample for survey or audit purposes. Naive random sampling under-represents low-density areas; stratified or spatially-balanced sampling fixes this.
 
@@ -382,9 +382,9 @@ def stratified_sample(gdf, n_per_stratum, strata_col):
 sample = stratified_sample(gdf, n_per_stratum=10, strata_col="state")
 ```
 
-**Spatially balanced (GRTS — generalized random tessellation stratified):**
+**Spatially balanced (GRTS -- generalized random tessellation stratified):**
 
-Use the `spsurvey` R package (via `rpy2`) — Python-native equivalents are limited. The output is a sample where points are spread across the spatial extent rather than clustered.
+Use the `spsurvey` R package (via `rpy2`) -- Python-native equivalents are limited. The output is a sample where points are spread across the spatial extent rather than clustered.
 
 ## Per-engine implementation matrix
 
@@ -450,18 +450,18 @@ Mapping ~3000 counties' Gi* Z-scores at α=0.05 expects ~150 false positives by 
 
 ### Spatial autocorrelation ≠ causation
 
-Moran's I tells you values cluster — not why. Hot spots may be artifacts of underlying spatial structure (cities cluster), not the phenomenon you're studying.
+Moran's I tells you values cluster -- not why. Hot spots may be artifacts of underlying spatial structure (cities cluster), not the phenomenon you're studying.
 
 **Mitigation:** Always normalize the variable (per-capita, per-area) before testing. Use spatial regression with covariates, not just unconditional clustering.
 
 ## Companion references (deeper coverage)
 
-- [`spatial-weights.md`](spatial-weights.md) — the W matrix in depth (kernel / KNN / distance-band / hybrid; standardization; sensitivity)
-- [`regionalization.md`](regionalization.md) — constrained spatial clustering (max-p, SKATER, AZP); redistricting
-- [`spatial-inequality.md`](spatial-inequality.md) — Gini, Theil, decomposition into between- and within-region inequality
-- [`spatial-feature-engineering.md`](spatial-feature-engineering.md) — features for spatial ML, plus spatial cross-validation (the non-negotiable)
-- [`point-pattern-analysis.md`](point-pattern-analysis.md) — Ripley's K, KDE, CSR tests for point data
-- [`geographic-data-science-distilled.md`](geographic-data-science-distilled.md) — the GDSPy book's chapter map and how it threads through these refs
+- [`spatial-weights.md`](spatial-weights.md) -- the W matrix in depth (kernel / KNN / distance-band / hybrid; standardization; sensitivity)
+- [`regionalization.md`](regionalization.md) -- constrained spatial clustering (max-p, SKATER, AZP); redistricting
+- [`spatial-inequality.md`](spatial-inequality.md) -- Gini, Theil, decomposition into between- and within-region inequality
+- [`spatial-feature-engineering.md`](spatial-feature-engineering.md) -- features for spatial ML, plus spatial cross-validation (the non-negotiable)
+- [`point-pattern-analysis.md`](point-pattern-analysis.md) -- Ripley's K, KDE, CSR tests for point data
+- [`geographic-data-science-distilled.md`](geographic-data-science-distilled.md) -- the GDSPy book's chapter map and how it threads through these refs
 
 ## Reference
 
@@ -471,9 +471,9 @@ Moran's I tells you values cluster — not why. Hot spots may be artifacts of un
 - `pointpats`: https://pysal.org/pointpats/
 - `spopt`: https://pysal.org/spopt/
 - `inequality`: https://pysal.org/inequality/
-- *Geographic Data Science with Python* (Rey, Arribas-Bel, Wolf, 2023) — https://geographicdata.science/book/intro.html (free online; the canonical modern textbook)
-- *Geographic Information Analysis* (O'Sullivan & Unwin, 3rd ed.) — textbook for the principles
-- *Spatial Regression Models* (Ward & Gleditsch) — deep regression treatment
+- *Geographic Data Science with Python* (Rey, Arribas-Bel, Wolf, 2023) -- https://geographicdata.science/book/intro.html (free online; the canonical modern textbook)
+- *Geographic Information Analysis* (O'Sullivan & Unwin, 3rd ed.) -- textbook for the principles
+- *Spatial Regression Models* (Ward & Gleditsch) -- deep regression treatment
 - ESRI's online documentation has good methodological intros (concepts are universal even though their implementations are proprietary)
 
 ## Out of scope for this skill

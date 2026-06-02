@@ -20,7 +20,7 @@ Analysis of five successful products using the Fogg Behavior Model (B=MAP). Unli
 - Social deviance: Very low (everyone posts photos)
 - Non-routine: Low (camera phones already trained the behavior)
 
-**Key insight:** Instagram succeeded because it made photography effortless. Before Instagram, sharing a quality photo required a camera, editing software, and a hosting platform. Instagram collapsed all six Ability Chain factors simultaneously. Filters were the breakthrough: they reduced mental effort (no editing skill needed) and physical effort (no desktop software) while increasing quality — making the behavior both easier AND more rewarding.
+**Key insight:** Instagram succeeded because it made photography effortless. Before Instagram, sharing a quality photo required a camera, editing software, and a hosting platform. Instagram collapsed all six Ability Chain factors simultaneously. Filters were the breakthrough: they reduced mental effort (no editing skill needed) and physical effort (no desktop software) while increasing quality -- making the behavior both easier AND more rewarding.
 
 **Prompt analysis:**
 - Action Prompts: Notifications ("X liked your photo", "X started following you")
@@ -39,7 +39,7 @@ Analysis of five successful products using the Fogg Behavior Model (B=MAP). Unli
 - Anticipation (hope): Learn a new language, travel, career opportunities
 - Anticipation (fear): Lose streak, fall behind in league
 - Belonging: Compete in leagues, compare with friends
-- Motivation level: Spikes and crashes — learning a language is a months-long commitment
+- Motivation level: Spikes and crashes -- learning a language is a months-long commitment
 
 **Ability analysis (Ability Chain):**
 - Time: 5 minutes per lesson (critical design decision)
@@ -49,7 +49,7 @@ Analysis of five successful products using the Fogg Behavior Model (B=MAP). Unli
 - Social deviance: Low (learning is socially praised)
 - Non-routine: Moderate (new daily behavior to establish)
 
-**Key insight:** Duolingo is the purest implementation of Tiny Habits in a product. The 5-minute lesson is a Starter Step — small enough to survive any motivation trough. Users who "just do one lesson" often do three or four (natural scaling). The genius is that the product delivers value at the tiny level, not just at the ambitious level.
+**Key insight:** Duolingo is the purest implementation of Tiny Habits in a product. The 5-minute lesson is a Starter Step -- small enough to survive any motivation trough. Users who "just do one lesson" often do three or four (natural scaling). The genius is that the product delivers value at the tiny level, not just at the ambitious level.
 
 **Prompt analysis:**
 - Action Prompts: "Don't lose your streak!" notification (precisely timed)
@@ -59,7 +59,7 @@ Analysis of five successful products using the Fogg Behavior Model (B=MAP). Unli
 **The streak as a prompt, not a motivation tool:**
 Most analyses frame the streak as motivation (gamification). Through Fogg's lens, the streak is primarily a Person Prompt. After 30+ days, "don't break the streak" becomes an internal trigger that fires at the same time every day. The motivation effect (loss aversion) is secondary to the prompt effect (automatic reminder).
 
-**Fogg diagnosis:** Duolingo succeeds because it designed the behavior to be tiny enough to survive any motivation level. The streak creates a Person Prompt. The 5-minute lesson is the Starter Step that naturally scales. When Duolingo tried longer lessons, retention dropped — confirming that Ability, not Motivation, drives sustained behavior.
+**Fogg diagnosis:** Duolingo succeeds because it designed the behavior to be tiny enough to survive any motivation level. The streak creates a Person Prompt. The 5-minute lesson is the Starter Step that naturally scales. When Duolingo tried longer lessons, retention dropped -- confirming that Ability, not Motivation, drives sustained behavior.
 
 ---
 
@@ -71,7 +71,7 @@ Most analyses frame the streak as motivation (gamification). Through Fogg's lens
 - Sensation: Faster responses, real-time interaction (pleasure)
 - Anticipation: Fear of missing important messages (FOMO)
 - Belonging: Team is here, be part of the conversation
-- Motivation level: Varies — champions have high motivation, late adopters have low
+- Motivation level: Varies -- champions have high motivation, late adopters have low
 
 **Ability analysis (Ability Chain):**
 - Time: Typing a message takes seconds
@@ -81,14 +81,14 @@ Most analyses frame the streak as motivation (gamification). Through Fogg's lens
 - Social deviance: High initially (convincing team to switch tools), low once team commits
 - Non-routine: High initially (new tool replacing email), decreasing over time
 
-**Key insight:** Slack's biggest Ability Chain challenge is Social Deviance and Non-Routine — not for the individual user, but for the team. One person can't use Slack alone; the behavior depends on the team adopting it. Slack solved this with the "invite your team" flow and by making the first team messages happen in the onboarding itself.
+**Key insight:** Slack's biggest Ability Chain challenge is Social Deviance and Non-Routine -- not for the individual user, but for the team. One person can't use Slack alone; the behavior depends on the team adopting it. Slack solved this with the "invite your team" flow and by making the first team messages happen in the onboarding itself.
 
 **Prompt analysis:**
 - Action Prompts: Desktop notifications for @mentions and DMs
 - Context Prompts: App always open in taskbar, persistent badge counts
 - Person Prompts: Hearing the notification sound triggers checking Slack
 
-**Fogg diagnosis:** Slack's retention challenge is a team Ability problem (social deviance), not an individual one. Once the team commits, Slack's always-on desktop presence creates powerful Context Prompts. The sound notification becomes a Person Prompt within days — users report reflexively checking Slack when they hear the sound. Slack's Ability breakthrough was making messages shorter and more casual than email, reducing both time and mental effort per message.
+**Fogg diagnosis:** Slack's retention challenge is a team Ability problem (social deviance), not an individual one. Once the team commits, Slack's always-on desktop presence creates powerful Context Prompts. The sound notification becomes a Person Prompt within days -- users report reflexively checking Slack when they hear the sound. Slack's Ability breakthrough was making messages shorter and more casual than email, reducing both time and mental effort per message.
 
 ---
 
@@ -99,8 +99,8 @@ Most analyses frame the streak as motivation (gamification). Through Fogg's lens
 **Motivation analysis:**
 - Sensation: Relaxation, stress relief (pleasure)
 - Anticipation: Better mental health, sleep improvement (hope)
-- Belonging: Low — meditation is often solitary
-- Motivation level: Highly variable — spikes during stress, drops when life is calm
+- Belonging: Low -- meditation is often solitary
+- Motivation level: Highly variable -- spikes during stress, drops when life is calm
 
 **Ability analysis (Ability Chain):**
 - Time: Calm offers sessions from 3 to 25 minutes (range matters)
@@ -110,7 +110,7 @@ Most analyses frame the streak as motivation (gamification). Through Fogg's lens
 - Social deviance: Moderate (meditation is increasingly mainstream but still feels "woo" to some)
 - Non-routine: High (adding a new daily practice from scratch)
 
-**Key insight:** Calm's Ability Chain bottleneck is mental effort for beginners. Meditation is paradoxically "easy" physically (just sit) but "hard" mentally (quiet your mind). Calm solved this with guided meditations — the instructor removes mental effort by telling you exactly what to do moment by moment. The "Daily Calm" (one specific session each day) eliminates decision fatigue (which session should I pick?).
+**Key insight:** Calm's Ability Chain bottleneck is mental effort for beginners. Meditation is paradoxically "easy" physically (just sit) but "hard" mentally (quiet your mind). Calm solved this with guided meditations -- the instructor removes mental effort by telling you exactly what to do moment by moment. The "Daily Calm" (one specific session each day) eliminates decision fatigue (which session should I pick?).
 
 **Prompt analysis:**
 - Action Prompts: Daily reminder notification (user-set time)
@@ -142,7 +142,7 @@ Calm's most powerful retention mechanism is the bedtime anchor. Sleep Stories ti
 - Social deviance: Low-moderate (home fitness is mainstream)
 - Non-routine: Moderate (new equipment, new routine)
 
-**Key insight:** Peloton breaks a core Fogg principle — it's a high-motivation, low-ability product. Exercise is hard (physically and time-wise) and expensive. Peloton survives because it maximizes every motivation lever simultaneously: live social pressure (belonging), instructor charisma (sensation), personal records (anticipation), and real-time leaderboard (all three motivators at once).
+**Key insight:** Peloton breaks a core Fogg principle -- it's a high-motivation, low-ability product. Exercise is hard (physically and time-wise) and expensive. Peloton survives because it maximizes every motivation lever simultaneously: live social pressure (belonging), instructor charisma (sensation), personal records (anticipation), and real-time leaderboard (all three motivators at once).
 
 **Prompt analysis:**
 - Action Prompts: Push notifications for favorite instructor's live classes
@@ -150,9 +150,9 @@ Calm's most powerful retention mechanism is the bedtime anchor. Sleep Stories ti
 - Person Prompts: Scheduled class time becomes a routine
 
 **The physical product as a prompt:**
-Peloton's most underrated design decision: the bike is always visible in your home. It is a permanent Context Prompt. Unlike an app you can delete or a gym membership you can forget, the bike occupies physical space and creates a visual cue every time you walk past it. This is why Peloton's retention exceeds most fitness apps — the prompt is inescapable.
+Peloton's most underrated design decision: the bike is always visible in your home. It is a permanent Context Prompt. Unlike an app you can delete or a gym membership you can forget, the bike occupies physical space and creates a visual cue every time you walk past it. This is why Peloton's retention exceeds most fitness apps -- the prompt is inescapable.
 
-**Fogg diagnosis:** Peloton is the exception that proves the rule. When you can't make the behavior easy (exercise is inherently hard), you must maximize motivation and create inescapable prompts. Peloton does both — live social motivation, instructor energy, and a physical product that serves as a permanent context prompt. However, this high-motivation dependency shows in the data: when motivation drops (post-pandemic, lifestyle change), retention suffers more than ability-first products like Duolingo.
+**Fogg diagnosis:** Peloton is the exception that proves the rule. When you can't make the behavior easy (exercise is inherently hard), you must maximize motivation and create inescapable prompts. Peloton does both -- live social motivation, instructor energy, and a physical product that serves as a permanent context prompt. However, this high-motivation dependency shows in the data: when motivation drops (post-pandemic, lifestyle change), retention suffers more than ability-first products like Duolingo.
 
 ---
 

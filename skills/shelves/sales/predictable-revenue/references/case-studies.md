@@ -2,7 +2,7 @@
 
 These case studies illustrate how companies at different stages and in different industries have implemented the Predictable Revenue methodology. Each follows the same structure: starting state, system implemented, results, timeline, and key lessons. The final sections cover common patterns in successful implementations and failure modes.
 
-## Case Study 1: Salesforce — The Original Playbook
+## Case Study 1: Salesforce -- The Original Playbook
 
 ### Company Profile
 
@@ -55,7 +55,7 @@ Aaron Ross was hired to build an outbound prospecting team from scratch. He impl
 4. SDRs did not need sales experience; coachability and writing skills mattered more.
 5. The system scaled linearly: more SDRs meant proportionally more pipeline.
 
-## Case Study 2: HubSpot — Inbound Meets Outbound
+## Case Study 2: HubSpot -- Inbound Meets Outbound
 
 ### Company Profile
 

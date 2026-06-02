@@ -16,7 +16,7 @@ Apply these principles from *Architecture Patterns with Python* (Harry Percival 
 
 - Services orchestrate. They call repositories, apply domain logic, and return results. They do not contain HTML rendering, file I/O, or network calls.
 - A service method should be callable from a management command, a REST endpoint, or a notebook with the same arguments and the same result type.
-- Services own the transaction boundary. The caller should not wrap service calls in `transaction.atomic()` — the service decides when to commit.
+- Services own the transaction boundary. The caller should not wrap service calls in `transaction.atomic()` -- the service decides when to commit.
 
 ## Unit of work
 

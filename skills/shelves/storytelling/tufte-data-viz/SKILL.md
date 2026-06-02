@@ -9,13 +9,13 @@ description: >-
   Trigger on "chart", "graph", "dashboard", "data visualization", "data
   viz", "sparkline", "Tufte", "data-ink ratio", "chartjunk", "matplotlib",
   "plotly", "recharts", "echarts", "chart.js", "d3". Composes with
-  storytelling-with-data (Knaflic) — Tufte governs chart-implementation
+  storytelling-with-data (Knaflic) -- Tufte governs chart-implementation
   rules; Knaflic governs audience + narrative process. Read both for
   full coverage of a data-presentation task.
 license: MIT
 metadata:
-  source: 'https://github.com/caylent/tufte-data-viz — Caylent agent skill, Edward Tufte data visualization principles distilled for Recharts / ECharts / Chart.js / matplotlib / Plotly / D3 / SVG. Upstream copyright © 2026 Caylent. Verified 2026-05-23 via gh api.'
-  coverage: 'PARTIAL: SKILL.md (universal rules 1-22, library quick reference, chart-type guidance, color reference, anti-pattern detection, validation checklist) vendored from upstream commit ae7ca0de7819db83241b24a2618810d5f1171145. Per-library rules/*.md (chartjs, echarts, matplotlib, plotly, recharts, svg-html, typography-and-color, interactive-and-accessible, anti-patterns, small-multiples-sparklines) NOT vendored — link to upstream for implementation depth (see Source + license footer).'
+  source: 'https://github.com/caylent/tufte-data-viz -- Caylent agent skill, Edward Tufte data visualization principles distilled for Recharts / ECharts / Chart.js / matplotlib / Plotly / D3 / SVG. Upstream copyright © 2026 Caylent. Verified 2026-05-23 via gh api.'
+  coverage: 'PARTIAL: SKILL.md (universal rules 1-22, library quick reference, chart-type guidance, color reference, anti-pattern detection, validation checklist) vendored from upstream commit ae7ca0de7819db83241b24a2618810d5f1171145. Per-library rules/*.md (chartjs, echarts, matplotlib, plotly, recharts, svg-html, typography-and-color, interactive-and-accessible, anti-patterns, small-multiples-sparklines) NOT vendored -- link to upstream for implementation depth (see Source + license footer).'
 ---
 
 # Tufte Data Visualization
@@ -30,12 +30,12 @@ Follow these steps in order when creating any chart:
 
 Before writing code, determine:
 1. The key finding or trend the chart must make visible.
-2. The comparison context — a baseline, prior period, target, or peer group. A number without context is meaningless.
+2. The comparison context -- a baseline, prior period, target, or peer group. A number without context is meaningless.
 3. The chart type that best fits the data structure (see Chart type guidance below).
 
 ### Step 2: Apply universal rules
 
-Review the rules below. Every rule is a default — deviate only when the user explicitly requests otherwise.
+Review the rules below. Every rule is a default -- deviate only when the user explicitly requests otherwise.
 
 ### Step 3: Apply library-specific config
 
@@ -57,7 +57,7 @@ No chart should have top or right axis lines, borders, or spines. The bottom and
 
 ### 2. Direct labels, not legends
 
-Label each data series directly — at the endpoint of a line, on or beside a bar, next to a cluster. Remove the `<Legend>` component entirely. If there is only one series, the chart title provides that context; no label is needed.
+Label each data series directly -- at the endpoint of a line, on or beside a bar, next to a cluster. Remove the `<Legend>` component entirely. If there is only one series, the chart title provides that context; no label is needed.
 
 ### 3. No gridlines by default
 
@@ -93,11 +93,11 @@ Use serif fonts for data labels, annotations, and chart titles: `"ET Book", "Pal
 
 ### 11. No dual y-axes
 
-Two y-axes on one chart create false implied correlations. Use small multiples instead — two charts stacked vertically with shared x-axis.
+Two y-axes on one chart create false implied correlations. Use small multiples instead -- two charts stacked vertically with shared x-axis.
 
 ### 12. Annotate the notable
 
-If the data contains a peak, trough, inflection point, or event boundary, add a text annotation pointing to it directly on the chart. Place annotations in the nearest clear space — offset from the data point with a short leader line if needed. When multiple annotations compete for space, keep only the most important; move others to a footnote or tooltip.
+If the data contains a peak, trough, inflection point, or event boundary, add a text annotation pointing to it directly on the chart. Place annotations in the nearest clear space -- offset from the data point with a short leader line if needed. When multiple annotations compete for space, keep only the most important; move others to a footnote or tooltip.
 
 ### 13. Show comparison context
 
@@ -109,19 +109,19 @@ Tooltips should be plain text with the data value and label. No colored backgrou
 
 ### 15. Progressive disclosure over static density
 
-Default to the Tufte-clean overview — high data-ink, minimal chrome. Layer details through hover, tap, and click (values, annotations, comparisons). Don't frontload everything onto a single static view. A contextual crosshair on hover replaces permanent gridlines.
+Default to the Tufte-clean overview -- high data-ink, minimal chrome. Layer details through hover, tap, and click (values, annotations, comparisons). Don't frontload everything onto a single static view. A contextual crosshair on hover replaces permanent gridlines.
 
 ### 16. Accessible by default
 
-3:1 contrast ratio minimum for chart elements against their background; 4.5:1 for text in charts. Never use color as the sole differentiator — pair with shape, pattern, or direct label. Provide a text alternative for every chart (`aria-label` with key finding, or companion data table). Interactive charts must be keyboard-navigable.
+3:1 contrast ratio minimum for chart elements against their background; 4.5:1 for text in charts. Never use color as the sole differentiator -- pair with shape, pattern, or direct label. Provide a text alternative for every chart (`aria-label` with key finding, or companion data table). Interactive charts must be keyboard-navigable.
 
 ### 17. Responsive, not just resized
 
-Charts must have a responsive strategy — fluid (percentage width + viewBox), adaptive (breakpoint-based layout changes), or hybrid. At narrow viewports, change chart type or layout (horizontal bars for categories, reduced tick density, abbreviated labels), don't just shrink.
+Charts must have a responsive strategy -- fluid (percentage width + viewBox), adaptive (breakpoint-based layout changes), or hybrid. At narrow viewports, change chart type or layout (horizontal bars for categories, reduced tick density, abbreviated labels), don't just shrink.
 
 ### 18. Animate to explain, not to decorate
 
-Transitions for data changes (sorting, filtering, time progression) are good — they help the viewer track transformations. Gratuitous entrance animations, bouncing, and decorative motion are chartjunk. Duration: 200–500ms, ease-out. Always respect `prefers-reduced-motion`.
+Transitions for data changes (sorting, filtering, time progression) are good -- they help the viewer track transformations. Gratuitous entrance animations, bouncing, and decorative motion are chartjunk. Duration: 200–500ms, ease-out. Always respect `prefers-reduced-motion`.
 
 ### 19. Dark mode as first-class citizen
 
@@ -169,7 +169,7 @@ The universal rules above are sufficient for most charts. For complete code exam
 | **Data tables** | No zebra striping, whitespace + thin rules every 3–5 rows, right-align numbers, `font-feature-settings: 'onum' 1` |
 | **Slopegraph** | Before/after categories, label both endpoints (value + name), gray default + highlight key slopes |
 | **Area** | Prefer lines. If area: fillOpacity 0.03–0.08, no gradient, direct labels at endpoints |
-| **Stacked bar** | Avoid — use small multiples instead. If forced: sort by total, direct labels per segment, max 4 segments |
+| **Stacked bar** | Avoid -- use small multiples instead. If forced: sort by total, direct labels per segment, max 4 segments |
 | **Heatmap** | Sequential or diverging palette only, value labels in cells, companion data table for accessibility |
 
 For small multiples, sparklines, and slopegraph implementation patterns, see `rules/small-multiples-sparklines.md`.
@@ -207,7 +207,7 @@ For the full table with per-library detection patterns and one-liner fixes, see 
 Before presenting any chart, verify:
 
 - [ ] No top or right borders/spines
-- [ ] No Legend component — series labeled directly on the chart
+- [ ] No Legend component -- series labeled directly on the chart
 - [ ] Gridlines removed or horizontal-only at opacity <= 0.12
 - [ ] Aspect ratio approximately 1.5:1
 - [ ] Background is `#fffff8` (light) or `#151515` (dark), not pure white/black
@@ -225,19 +225,19 @@ Before presenting any chart, verify:
 - [ ] Charts render usably at 320px and 1440px+ widths
 - [ ] Title states the finding, not the axis description
 - [ ] Numbers are formatted for readability (abbreviations, separators, consistent precision)
-- [ ] A chart is warranted — the data couldn't be communicated as a sentence or table
+- [ ] A chart is warranted -- the data couldn't be communicated as a sentence or table
 
 ---
 
 ## Additional resources
 
-**Library rules** (read ONE per task): `rules/recharts.md`, `rules/echarts.md`, `rules/chartjs.md`, `rules/matplotlib.md`, `rules/plotly.md`, `rules/svg-html.md` — complete code examples, helpers, and theme registrations.
+**Library rules** (read ONE per task): `rules/recharts.md`, `rules/echarts.md`, `rules/chartjs.md`, `rules/matplotlib.md`, `rules/plotly.md`, `rules/svg-html.md` -- complete code examples, helpers, and theme registrations.
 
 **Cross-cutting** (read when specifically needed):
-- `rules/interactive-and-accessible.md` — progressive disclosure, WCAG, responsive, animation, dark mode
-- `rules/typography-and-color.md` — font loading, full palette tables, old-style figures
-- `rules/anti-patterns.md` — per-library detection heuristics and fixes
-- `rules/small-multiples-sparklines.md` — layout patterns for small multiples, sparklines, slopegraphs
+- `rules/interactive-and-accessible.md` -- progressive disclosure, WCAG, responsive, animation, dark mode
+- `rules/typography-and-color.md` -- font loading, full palette tables, old-style figures
+- `rules/anti-patterns.md` -- per-library detection heuristics and fixes
+- `rules/small-multiples-sparklines.md` -- layout patterns for small multiples, sparklines, slopegraphs
 
 ---
 
@@ -246,20 +246,20 @@ Before presenting any chart, verify:
 - **Slide / presentation design (non-chart elements).** This skill covers chart generation. For slide composition, narrative arc, audience-facing storytelling decisions, see [skill:storytelling-with-data] (Knaflic).
 - **Map cartography.** Tufte's chart principles are not a substitute for cartographic conventions. For map design, see the `geospatial` shelf.
 - **UI / dashboard layout (the wrapping interface, not the charts inside).** For dashboard frame, navigation, and IA decisions, see the `design` shelf (`refactoring-ui`, `ux-heuristics`).
-- **Exploratory analysis.** Tufte's rules are calibrated for the explanatory artifact (the chart you ship). During exploration, default chartjunk that helps the analyst see patterns fast is fine — apply Tufte at the explanatory boundary, not before.
+- **Exploratory analysis.** Tufte's rules are calibrated for the explanatory artifact (the chart you ship). During exploration, default chartjunk that helps the analyst see patterns fast is fine -- apply Tufte at the explanatory boundary, not before.
 
 ## Composes with
 
-- [skill:storytelling-with-data] (Knaflic). Read both for a data-presentation task: Knaflic asks "who is the audience, what's the action, what's the Big Idea, what story does the data tell?" Tufte asks "given the chart is needed, what is the highest-data-ink, lowest-chartjunk implementation?" The pair compose without overlap — Knaflic handles the upstream framing decisions; Tufte handles the chart-pixel decisions.
+- [skill:storytelling-with-data] (Knaflic). Read both for a data-presentation task: Knaflic asks "who is the audience, what's the action, what's the Big Idea, what story does the data tell?" Tufte asks "given the chart is needed, what is the highest-data-ink, lowest-chartjunk implementation?" The pair compose without overlap -- Knaflic handles the upstream framing decisions; Tufte handles the chart-pixel decisions.
 - `[rule:writing-claims]` writing-claims:5. Validation checklist item "Numbers are formatted for readability" + "Title states the finding, not the axis description" both cross-reference the workspace's claim-discipline (countable claims need same-turn evidence; a chart title that asserts a finding is a countable claim).
-- `[rule:authoring-against-state]` rule 1 (data-shape contact). Before writing chart code that consumes data, measure the data's shape. Tufte's "Don't chart what a sentence can say" (rule 22) presupposes the author has measured the data — without rule 1's measurement, the rule-22 judgment ("is this data chart-worthy?") is uncalibrated.
+- `[rule:authoring-against-state]` rule 1 (data-shape contact). Before writing chart code that consumes data, measure the data's shape. Tufte's "Don't chart what a sentence can say" (rule 22) presupposes the author has measured the data -- without rule 1's measurement, the rule-22 judgment ("is this data chart-worthy?") is uncalibrated.
 
 ## Source + license
 
 - **Upstream:** https://github.com/caylent/tufte-data-viz
-- **License:** MIT — copyright © 2026 Caylent. Full license text retained in upstream `LICENSE` file; honored under MIT terms (attribution preserved, copyright notice intact).
+- **License:** MIT -- copyright © 2026 Caylent. Full license text retained in upstream `LICENSE` file; honored under MIT terms (attribution preserved, copyright notice intact).
 - **Imported at commit:** `ae7ca0de7819db83241b24a2618810d5f1171145` (2026-02-19)
 - **Verified:** 2026-05-23 via `gh api repos/caylent/tufte-data-viz/commits/main`
 - **What was vendored:** the upstream `SKILL.md` body (rules 1-22, library quick reference, chart-type guidance, color quick reference, anti-pattern detection, validation checklist) is reproduced largely verbatim above. The workspace's frontmatter conventions (description with trigger phrases, license / metadata.source / metadata.coverage) replace the upstream's lighter frontmatter; the "When this skill does NOT apply" + "Composes with" sections are workspace-specific additions to integrate the skill into the existing shelf ecosystem.
-- **What was NOT vendored:** the per-library implementation files in upstream's `rules/` directory (`chartjs.md`, `echarts.md`, `matplotlib.md`, `plotly.md`, `recharts.md`, `svg-html.md`, `typography-and-color.md`, `interactive-and-accessible.md`, `anti-patterns.md`, `small-multiples-sparklines.md`) — these are referenced inline by the "Library quick reference" and "Additional resources" sections but live upstream. When working in a specific library, fetch the corresponding `rules/<library>.md` from `https://github.com/caylent/tufte-data-viz/blob/main/rules/<library>.md`.
+- **What was NOT vendored:** the per-library implementation files in upstream's `rules/` directory (`chartjs.md`, `echarts.md`, `matplotlib.md`, `plotly.md`, `recharts.md`, `svg-html.md`, `typography-and-color.md`, `interactive-and-accessible.md`, `anti-patterns.md`, `small-multiples-sparklines.md`) -- these are referenced inline by the "Library quick reference" and "Additional resources" sections but live upstream. When working in a specific library, fetch the corresponding `rules/<library>.md` from `https://github.com/caylent/tufte-data-viz/blob/main/rules/<library>.md`.
 - **Why partial vendor:** the universal rules are the load-bearing principles and rarely change; per-library implementation files track library API drift and are better consulted at the upstream where the maintainer keeps them current.

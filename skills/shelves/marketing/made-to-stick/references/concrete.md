@@ -1,19 +1,19 @@
 # Concrete: Making Ideas Tangible and Memorable
 
-Abstraction is the enemy of memory. The more abstract your language, the fewer hooks your audience has to hold onto. Concrete ideas stick because they engage the senses, create mental images, and connect to real experience. This reference is a deep dive into making any idea — no matter how complex or intangible — concrete enough to remember and act on.
+Abstraction is the enemy of memory. The more abstract your language, the fewer hooks your audience has to hold onto. Concrete ideas stick because they engage the senses, create mental images, and connect to real experience. This reference is a deep dive into making any idea -- no matter how complex or intangible -- concrete enough to remember and act on.
 
 ## The Velcro Theory of Memory
 
 Think of memory as Velcro. One side has thousands of tiny hooks. The other side has thousands of tiny loops. The more hooks and loops that connect, the stronger the bond.
 
-Abstract ideas are smooth — they have very few hooks. Concrete ideas are covered in hooks: sensory details, specific images, tangible objects, real people, particular moments.
+Abstract ideas are smooth -- they have very few hooks. Concrete ideas are covered in hooks: sensory details, specific images, tangible objects, real people, particular moments.
 
 | Abstract (Smooth) | Concrete (Velcro) | Why It Sticks |
 |-------------------|-------------------|---------------|
 | "Vehicle" | "A red 1967 Mustang convertible" | You can see it, hear the engine, feel the wind |
 | "Improve customer satisfaction" | "Every customer gets a handwritten thank-you note within 24 hours" | You can picture someone writing the note |
 | "Increase efficiency" | "Cut the report from 47 clicks to 3" | You can count the clicks |
-| "Better communication" | "Every team member posts a 2-sentence daily update by 9am" | You can do it or not do it — it is binary |
+| "Better communication" | "Every team member posts a 2-sentence daily update by 9am" | You can do it or not do it -- it is binary |
 | "Drive growth" | "Add 200 paying customers every month" | You can track it on a chart |
 
 ### Why This Matters for Communication
@@ -52,11 +52,11 @@ Percentages feel abstract. Real numbers tied to real things feel concrete.
 
 | Percentage (Abstract) | Real Number (Concrete) |
 |----------------------|----------------------|
-| "Save 30% of your time" | "Get back 12 hours every week — that is a whole day and a half" |
+| "Save 30% of your time" | "Get back 12 hours every week -- that is a whole day and a half" |
 | "Reduce errors by 85%" | "Go from 17 bugs per release to 2 or 3" |
-| "40% faster deployment" | "Deploy in 6 minutes instead of 10 — before your coffee gets cold" |
-| "95% uptime" | "Down for 18 days a year — that is almost 3 full work weeks" |
-| "99.9% uptime" | "Down for 8 hours a year — roughly one workday" |
+| "40% faster deployment" | "Deploy in 6 minutes instead of 10 -- before your coffee gets cold" |
+| "95% uptime" | "Down for 18 days a year -- that is almost 3 full work weeks" |
+| "99.9% uptime" | "Down for 8 hours a year -- roughly one workday" |
 
 ### Technique 4: Add Time, Place, and Person
 
@@ -76,11 +76,11 @@ The brain processes sensory information differently from abstract information. S
 
 | Sense | Abstract Version | Sensory Version |
 |-------|-----------------|-----------------|
-| **Sight** | "Beautiful dashboard" | "A clean white screen with three colored bars — green means you are on track" |
+| **Sight** | "Beautiful dashboard" | "A clean white screen with three colored bars -- green means you are on track" |
 | **Sound** | "Get notified instantly" | "Your phone buzzes the moment a deal closes" |
-| **Touch** | "Easy to use" | "Drag a card from one column to the next — that is it" |
+| **Touch** | "Easy to use" | "Drag a card from one column to the next -- that is it" |
 | **Taste/Smell** | "Fresh ingredients" | "Tomatoes picked this morning, basil that still smells like the garden" |
-| **Motion** | "Fast loading" | "Pages snap into place — no spinning wheels, no waiting" |
+| **Motion** | "Fast loading" | "Pages snap into place -- no spinning wheels, no waiting" |
 
 ### The Sensory Language Audit
 
@@ -102,7 +102,7 @@ Vague claims feel like marketing. Specific numbers feel like truth.
 
 ### The Specificity Principle
 
-The more specific a number, the more believable it is — even if the audience does not verify it. "We have helped 2,347 companies" is more believable than "We have helped thousands of companies," even though both could be equally true or false.
+The more specific a number, the more believable it is -- even if the audience does not verify it. "We have helped 2,347 companies" is more believable than "We have helped thousands of companies," even though both could be equally true or false.
 
 | Vague Claim | Specific Claim | Why It Works |
 |------------|---------------|-------------|
@@ -126,11 +126,11 @@ A demonstration is worth a thousand bullet points. When someone can see the prod
 
 **Rules for effective demonstrations:**
 
-1. **Use real data** — never "Lorem ipsum" or fake company names
-2. **Solve a real problem** — not a contrived example
-3. **Show the pain first** — demonstrate the old way before the new way
-4. **Time it** — "Watch: this takes 8 seconds" is more concrete than "It's fast"
-5. **Let the audience drive** — interactive demos beat scripted walkthroughs
+1. **Use real data** -- never "Lorem ipsum" or fake company names
+2. **Solve a real problem** -- not a contrived example
+3. **Show the pain first** -- demonstrate the old way before the new way
+4. **Time it** -- "Watch: this takes 8 seconds" is more concrete than "It's fast"
+5. **Let the audience drive** -- interactive demos beat scripted walkthroughs
 
 ### Before/After Comparison Template
 
@@ -186,8 +186,8 @@ A demonstration is worth a thousand bullet points. When someone can see the prod
 
 Read your message and ask: "Could a camera record this?" If a filmmaker cannot point a camera at it and capture it, the language is too abstract.
 
-- "Improve team alignment" — A camera cannot film "alignment." Rewrite.
-- "Every Monday at 9am, the team spends 15 minutes reviewing the same dashboard together" — A camera can film this.
+- "Improve team alignment" -- A camera cannot film "alignment." Rewrite.
+- "Every Monday at 9am, the team spends 15 minutes reviewing the same dashboard together" -- A camera can film this.
 
 ### Exercise 2: The Specificity Ladder
 
@@ -238,7 +238,7 @@ Before publishing any message:
 - [ ] The audience can form a mental image of the claim
 - [ ] At least one concrete before/after comparison is included
 - [ ] Sensory language engages at least one sense (sight, sound, touch)
-- [ ] Examples use real names, real places, or real scenarios — not placeholders
+- [ ] Examples use real names, real places, or real scenarios -- not placeholders
 - [ ] The Camera Test passes: a filmmaker could capture the scene
 - [ ] Category words have been replaced with specific instances
 - [ ] Statistics are human-scale and relatable

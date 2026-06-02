@@ -17,7 +17,7 @@ The fundamental unit of work at 37signals is a team of three: one designer and t
 
 **Why three:**
 
-- **Communication overhead scales quadratically.** With 3 people, there are 3 communication paths. With 6 people, there are 15. With 10, there are 45. Small teams communicate naturally — in conversations, not meetings.
+- **Communication overhead scales quadratically.** With 3 people, there are 3 communication paths. With 6 people, there are 15. With 10, there are 45. Small teams communicate naturally -- in conversations, not meetings.
 - **Shared context comes automatically.** Three people working on the same shaped pitch can hold the entire project in their heads. They do not need status documents to stay aligned.
 - **Accountability is clear.** When three people own a bet, there is nowhere to hide. Everyone contributes, everyone is responsible.
 - **Decision-making is fast.** Three people can make a decision in a five-minute conversation. Ten people need a meeting with an agenda and follow-up action items.
@@ -29,7 +29,7 @@ The fundamental unit of work at 37signals is a team of three: one designer and t
 | Project manager | Shaped pitches eliminate ambiguity; small teams self-organize | The team manages itself using hill charts |
 | Product manager (during the cycle) | Shaping happens before the cycle; the PM shapes, not manages | The shaper hands off the pitch; the team builds |
 | QA engineer | Three people test as they build; scope is small enough to verify | Integrated testing by the building team |
-| Scrum master | No sprints, no ceremonies, no process to facilitate | No process overhead — the team just builds |
+| Scrum master | No sprints, no ceremonies, no process to facilitate | No process overhead -- the team just builds |
 | Tech lead (separate from the team) | The senior programmer on the team makes technical decisions | Technical leadership comes from within the team |
 
 **What happens when a bet needs more than three people:** It does not get more people. It gets re-shaped. If a shaped pitch requires more than three people, the pitch is too big or too vague. Break it into smaller, independent bets that each fit a three-person team.
@@ -48,16 +48,16 @@ Once a team receives a shaped pitch and the cycle begins, they are autonomous. N
 
 **What autonomy does not mean:**
 
-- Ignoring the shaped pitch — the pitch defines the boundaries; the team fills in the details
-- Skipping communication — the team posts hill chart updates and writes up decisions for transparency
-- Expanding scope — autonomy is freedom within constraints, not freedom to redefine the bet
-- Working in isolation — team members collaborate closely with each other; they just do not need external direction
+- Ignoring the shaped pitch -- the pitch defines the boundaries; the team fills in the details
+- Skipping communication -- the team posts hill chart updates and writes up decisions for transparency
+- Expanding scope -- autonomy is freedom within constraints, not freedom to redefine the bet
+- Working in isolation -- team members collaborate closely with each other; they just do not need external direction
 
 **Why autonomy works:** When people own their work, they bring better judgment, more energy, and more creativity than when they are executing someone else's task list. Autonomy also attracts and retains talented people who want to do meaningful work, not follow instructions.
 
 ## Discovering Scopes
 
-When a team receives a shaped pitch, their first job is to discover scopes — named chunks of work that can be built and tracked somewhat independently. Scopes are not pre-defined; the team discovers them by exploring the pitch.
+When a team receives a shaped pitch, their first job is to discover scopes -- named chunks of work that can be built and tracked somewhat independently. Scopes are not pre-defined; the team discovers them by exploring the pitch.
 
 **What a scope is:**
 
@@ -69,8 +69,8 @@ When a team receives a shaped pitch, their first job is to discover scopes — n
 **How to discover scopes:**
 
 1. **Read the pitch thoroughly.** Understand the problem, the solution, the rabbit holes, and the no-gos.
-2. **Start building.** Do not spend days planning — start with the most uncertain part of the project.
-3. **Notice natural boundaries.** As you work, pieces of the project naturally group together. A set of related database changes, a UI component, an integration point — these become scopes.
+2. **Start building.** Do not spend days planning -- start with the most uncertain part of the project.
+3. **Notice natural boundaries.** As you work, pieces of the project naturally group together. A set of related database changes, a UI component, an integration point -- these become scopes.
 4. **Name them.** Give each scope a clear, descriptive name. The name should communicate what the scope is about to someone who has not read the code.
 5. **Revise as you learn.** Scopes evolve during the cycle. Some merge, some split, some turn out to be unnecessary. This is normal and expected.
 
@@ -107,7 +107,7 @@ figuring out    executing
 - **Dot on the far left:** The team has not started this scope yet.
 - **Dot climbing uphill:** The team is exploring, figuring out the approach, encountering unknowns.
 - **Dot near the summit:** The core approach is figured out but implementation has not started.
-- **Dot going downhill:** The approach is clear and the team is executing — this is the "boring" productive work.
+- **Dot going downhill:** The approach is clear and the team is executing -- this is the "boring" productive work.
 - **Dot at the far right:** The scope is done.
 
 **Why hill charts work better than other progress tracking:**
@@ -121,19 +121,19 @@ figuring out    executing
 
 **Using hill charts to manage risk:**
 
-The most important thing a hill chart reveals is which scopes are stuck uphill. A scope that has been uphill for more than two weeks is a warning sign — the team is struggling with uncertainty. This triggers a conversation: Is the scope too big? Is there a rabbit hole that was not identified during shaping? Does the scope need to be re-shaped or cut?
+The most important thing a hill chart reveals is which scopes are stuck uphill. A scope that has been uphill for more than two weeks is a warning sign -- the team is struggling with uncertainty. This triggers a conversation: Is the scope too big? Is there a rabbit hole that was not identified during shaping? Does the scope need to be re-shaped or cut?
 
-**How often to update hill charts:** At least twice per week. Updates should take less than two minutes — just drag the dots to their current position. No written status reports needed.
+**How often to update hill charts:** At least twice per week. Updates should take less than two minutes -- just drag the dots to their current position. No written status reports needed.
 
 ## Getting Real
 
-"Getting real" is the 37signals principle of working with real materials as early as possible. In software, real materials are HTML, CSS, JavaScript, and real data — not wireframes, not prototypes, not mockups with lorem ipsum.
+"Getting real" is the 37signals principle of working with real materials as early as possible. In software, real materials are HTML, CSS, JavaScript, and real data -- not wireframes, not prototypes, not mockups with lorem ipsum.
 
 **What "getting real" looks like:**
 
 - Build the actual interface in the browser on day one or two, not in a design tool
 - Use real data (or realistic fake data), not "lorem ipsum" and placeholder content
-- Make it functional as fast as possible, even if it is ugly — then improve the design
+- Make it functional as fast as possible, even if it is ugly -- then improve the design
 - Test with real interactions (clicking, typing, navigating), not static screenshots
 
 **Why getting real works:**
@@ -147,7 +147,7 @@ The most important thing a hill chart reveals is which scopes are stuck uphill. 
 
 ## Async Communication
 
-Meetings are toxic at 37signals. Not because meetings are always bad, but because they are almost always overused. A one-hour meeting with six people is not a one-hour meeting — it is six hours of collective time. And most of that time is wasted by the majority who are listening rather than contributing.
+Meetings are toxic at 37signals. Not because meetings are always bad, but because they are almost always overused. A one-hour meeting with six people is not a one-hour meeting -- it is six hours of collective time. And most of that time is wasted by the majority who are listening rather than contributing.
 
 **The async-first approach:**
 
@@ -174,15 +174,15 @@ The 37signals philosophy strongly favors shipping over perfecting. Working softw
 
 - Ship at the end of the six-week cycle, even if some nice-to-have scopes were cut
 - Ship to real users, not to a staging environment for internal review
-- Accept that the first version will not be perfect — it should be good, but not perfect
+- Accept that the first version will not be perfect -- it should be good, but not perfect
 - Plan to iterate in future cycles based on real usage data, not hypothetical feedback
 
 **What "launch now" does not mean:**
 
-- Ship broken software — everything that ships should work correctly
-- Skip testing — the building team tests as they build
-- Ignore quality — the shipped version should be polished within its reduced scope
-- Never improve — iteration is expected; "launch now" is the beginning, not the end
+- Ship broken software -- everything that ships should work correctly
+- Skip testing -- the building team tests as they build
+- Ignore quality -- the shipped version should be polished within its reduced scope
+- Never improve -- iteration is expected; "launch now" is the beginning, not the end
 
 **The iteration cycle:**
 
@@ -204,10 +204,10 @@ Traditional product development separates design and engineering into sequential
 
 **Why integration matters:**
 
-- No handoff problems — the designer sees the real implementation, not a screenshot
-- Faster decision-making — questions are resolved in minutes, not in a review meeting next week
-- Better solutions — the designer understands technical constraints; the programmer understands design intent
-- Single source of truth — the codebase is the design, not a Figma file that may be out of date
+- No handoff problems -- the designer sees the real implementation, not a screenshot
+- Faster decision-making -- questions are resolved in minutes, not in a review meeting next week
+- Better solutions -- the designer understands technical constraints; the programmer understands design intent
+- Single source of truth -- the codebase is the design, not a Figma file that may be out of date
 
 **What this requires from the team:**
 

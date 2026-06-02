@@ -6,7 +6,7 @@ user-invocable: false
 paths: "**/*.py,**/*.scala,**/*.sql"
 ---
 
-# Apache Sedona — Distributed Spatial on Spark
+# Apache Sedona -- Distributed Spatial on Spark
 
 Use Sedona when:
 - Data is bigger than one machine's RAM and a Spark cluster is available.
@@ -14,26 +14,26 @@ Use Sedona when:
 - You need distributed spatial joins on hundreds of millions to billions of points/polygons.
 
 Don't use Sedona for:
-- Single-node datasets (< 10 GB) — use **GeoPandas** ([skill:geopandas]) or **DuckDB-spatial** ([skill:duckdb-spatial]).
-- Persistent multi-user query workloads — use **PostGIS** ([skill:postgis]).
+- Single-node datasets (< 10 GB) -- use **GeoPandas** ([skill:geopandas]) or **DuckDB-spatial** ([skill:duckdb-spatial]).
+- Persistent multi-user query workloads -- use **PostGIS** ([skill:postgis]).
 
 ## Always-on companions
 
-- [skill:spark] — Siege-specific Spark patterns (medallion, catalog rules, transform shape).
-- [skill:scala-on-spark] — when scaffolding is `.scala` or `%scala`.
-- [skill:python] — when scaffolding is PySpark.
-- [skill:data-intensive] — partitioning, replication, batch/stream theory.
+- [skill:spark] -- Siege-specific Spark patterns (medallion, catalog rules, transform shape).
+- [skill:scala-on-spark] -- when scaffolding is `.scala` or `%scala`.
+- [skill:python] -- when scaffolding is PySpark.
+- [skill:data-intensive] -- partitioning, replication, batch/stream theory.
 - [rule:jvm], [rule:python], [rule:data-trust], [rule:siege-utilities].
 
 ## References
 
-- [`partitioning-strategies.md`](references/partitioning-strategies.md) — KDB-tree / quad-tree, broadcast spatial joins
-- [`spatial-joins-at-scale.md`](references/spatial-joins-at-scale.md) — range joins, distance joins, cost model, when to broadcast
-- [`udf-vs-builtin.md`](references/udf-vs-builtin.md) — ST_* SQL vs Python UDF performance gap
-- [`raster.md`](references/raster.md) — Sedona raster ops; when in scope vs out
-- [`scaffolding-python-vs-scala.md`](references/scaffolding-python-vs-scala.md) — Scala variant of the PySpark defaults; same spatial logic, scaffolding diverges in 5–10 known ways
-- [`pitfalls.md`](references/pitfalls.md) — skew, OOM on join, CRS lost across stages, Kryo registration
-- [`siege-utilities-sedona.md`](references/siege-utilities-sedona.md) — ALWAYS call `resolve_spatial_runtime_plan()` first; encode/decode geometry for Spark safety
+- [`partitioning-strategies.md`](references/partitioning-strategies.md) -- KDB-tree / quad-tree, broadcast spatial joins
+- [`spatial-joins-at-scale.md`](references/spatial-joins-at-scale.md) -- range joins, distance joins, cost model, when to broadcast
+- [`udf-vs-builtin.md`](references/udf-vs-builtin.md) -- ST_* SQL vs Python UDF performance gap
+- [`raster.md`](references/raster.md) -- Sedona raster ops; when in scope vs out
+- [`scaffolding-python-vs-scala.md`](references/scaffolding-python-vs-scala.md) -- Scala variant of the PySpark defaults; same spatial logic, scaffolding diverges in 5–10 known ways
+- [`pitfalls.md`](references/pitfalls.md) -- skew, OOM on join, CRS lost across stages, Kryo registration
+- [`siege-utilities-sedona.md`](references/siege-utilities-sedona.md) -- ALWAYS call `resolve_spatial_runtime_plan()` first; encode/decode geometry for Spark safety
 
 ## Always start with: runtime detection (siege_utilities)
 
@@ -67,7 +67,7 @@ print(loader.engine, loader.method)
 
 ## Sedona session
 
-PySpark is the default scaffolding for Sedona work in Siege projects. (For Scala scaffolding, see [`scaffolding-python-vs-scala.md`](references/scaffolding-python-vs-scala.md) — the spatial logic is identical, only the session-creation and DataFrame-construction syntax changes.)
+PySpark is the default scaffolding for Sedona work in Siege projects. (For Scala scaffolding, see [`scaffolding-python-vs-scala.md`](references/scaffolding-python-vs-scala.md) -- the spatial logic is identical, only the session-creation and DataFrame-construction syntax changes.)
 
 ```python
 from sedona.spark import SedonaContext
@@ -103,7 +103,7 @@ df = df.withColumn("geom", expr("ST_GeomFromWKB(geometry_wkb)"))
 df = sedona.read.format("geoparquet").load("s3://bucket/features.parquet")
 ```
 
-## Spatial join — range join
+## Spatial join -- range join
 
 ```python
 points = sedona.read.format("geoparquet").load("s3://bucket/donations.parquet")
@@ -134,7 +134,7 @@ result = sedona.sql("""
 """)
 ```
 
-For meter distances, both sides must be in a meter-based CRS. Project before the join (see [`pitfalls.md`](references/pitfalls.md) — CRS lost across stages).
+For meter distances, both sides must be in a meter-based CRS. Project before the join (see [`pitfalls.md`](references/pitfalls.md) -- CRS lost across stages).
 
 ## Broadcast a small spatial table
 
@@ -157,7 +157,7 @@ Eliminates the spatial shuffle. The biggest single optimization for "billions of
 Always prefer ST_* SQL functions. They run in the JVM, are vectorized, and integrate with Sedona's spatial optimizer. Python UDFs serialize to Python per row and bypass the optimizer:
 
 ```python
-# BAD — Python UDF
+# BAD -- Python UDF
 from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 from shapely import wkb
@@ -168,7 +168,7 @@ def get_geohash(wkb_bytes):
 
 df = df.withColumn("geohash", get_geohash("geom"))  # row-by-row Python
 
-# GOOD — Sedona builtin
+# GOOD -- Sedona builtin
 df = sedona.sql("SELECT *, ST_GeoHash(geom, 9) AS geohash FROM df")
 ```
 
@@ -183,9 +183,9 @@ Sedona geometry columns don't carry CRS metadata in the schema. If you reproject
 projected = points.withColumn("geom_5070", expr("ST_Transform(geom, 'EPSG:4326', 'EPSG:5070')"))
 projected.write.format("geoparquet").save("s3://stage/projected/")
 
-# Stage 2 input — explicitly rename the column to indicate projection
+# Stage 2 input -- explicitly rename the column to indicate projection
 df = sedona.read.format("geoparquet").load("s3://stage/projected/")
-df = df.withColumnRenamed("geom_5070", "geom_5070")  # already named — keep convention
+df = df.withColumnRenamed("geom_5070", "geom_5070")  # already named -- keep convention
 ```
 
 Naming convention: `geom_<srid>` for any non-4326 geometry column. Catches the bug at column-name level.
@@ -194,8 +194,8 @@ Naming convention: `geom_<srid>` for any non-4326 geometry column. Catches the b
 
 See [`pitfalls.md`](references/pitfalls.md). Top three:
 
-1. **Forgot Kryo registrator.** Geometry serialization falls back to Java default — silent perf loss.
-2. **Distance comparison without projection.** `ST_Distance(geom1, geom2) < 1000` on EPSG:4326 = "less than 1000 degrees" — meaningless.
+1. **Forgot Kryo registrator.** Geometry serialization falls back to Java default -- silent perf loss.
+2. **Distance comparison without projection.** `ST_Distance(geom1, geom2) < 1000` on EPSG:4326 = "less than 1000 degrees" -- meaningless.
 3. **Python UDF for ST_* operation.** 10-100× slower than the Sedona builtin equivalent.
 
 ## When Sedona is the wrong tool

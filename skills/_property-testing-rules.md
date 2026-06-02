@@ -27,7 +27,7 @@ Apply these principles from the [Hypothesis](https://hypothesis.readthedocs.io/)
 
 ## Shrinking and debugging
 
-- When a property test fails, Hypothesis automatically shrinks the input to the minimal failing case. Read the minimal example before debugging — it usually reveals the boundary condition.
+- When a property test fails, Hypothesis automatically shrinks the input to the minimal failing case. Read the minimal example before debugging -- it usually reveals the boundary condition.
 - Use `@example(...)` to pin known regressions so they run on every invocation, not just when Hypothesis happens to generate them.
 
 ## Integration with pytest

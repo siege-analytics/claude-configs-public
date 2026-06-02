@@ -9,25 +9,25 @@ metadata:
 
 # The 1-Page Marketing Plan Framework
 
-A complete marketing system captured on a single page. Instead of a 50-page marketing plan that never gets executed, the 1-Page Marketing Plan distills everything into a 3x3 grid of nine squares — each representing a critical stage in turning a stranger into a raving fan. Fill in all nine squares and you have a living, breathing marketing engine that drives predictable growth.
+A complete marketing system captured on a single page. Instead of a 50-page marketing plan that never gets executed, the 1-Page Marketing Plan distills everything into a 3x3 grid of nine squares -- each representing a critical stage in turning a stranger into a raving fan. Fill in all nine squares and you have a living, breathing marketing engine that drives predictable growth.
 
 ## Core Principle
 
-**"Marketing is not an event — it is a process."**
+**"Marketing is not an event -- it is a process."**
 
 Most businesses treat marketing as a series of disconnected tactics: run an ad here, post on social media there, attend a trade show when the budget allows. The 1-Page Marketing Plan replaces this randomness with a structured, sequential process built around three phases of the customer journey:
 
-1. **BEFORE** — The prospect does not yet know you exist. Your job is to identify exactly who they are, craft a message that resonates, and place that message in the media they consume.
-2. **DURING** — The prospect is now aware of you and becomes a lead. Your job is to capture their information, nurture the relationship, and convert them into a paying customer.
-3. **AFTER** — The person is now a customer. Your job is to deliver a world-class experience, maximize their lifetime value, and turn them into a referral source.
+1. **BEFORE** -- The prospect does not yet know you exist. Your job is to identify exactly who they are, craft a message that resonates, and place that message in the media they consume.
+2. **DURING** -- The prospect is now aware of you and becomes a lead. Your job is to capture their information, nurture the relationship, and convert them into a paying customer.
+3. **AFTER** -- The person is now a customer. Your job is to deliver a world-class experience, maximize their lifetime value, and turn them into a referral source.
 
-Each phase contains three squares, giving you nine total building blocks. When all nine work together, you have a marketing machine — not a collection of tactics.
+Each phase contains three squares, giving you nine total building blocks. When all nine work together, you have a marketing machine -- not a collection of tactics.
 
 ## Scoring
 
 **Goal: 10/10**
 
-Rate your marketing plan from 0 to 10 based on how completely and specifically you have filled in all nine squares of the grid. A score of 10 means every square contains specific, actionable content — named target segments, a written USP, identified media channels with budgets, a designed lead magnet, a mapped nurture sequence, a defined sales process, a documented customer experience, an ascension model with pricing tiers, and a referral system with scripts and tracking.
+Rate your marketing plan from 0 to 10 based on how completely and specifically you have filled in all nine squares of the grid. A score of 10 means every square contains specific, actionable content -- named target segments, a written USP, identified media channels with budgets, a designed lead magnet, a mapped nurture sequence, a defined sales process, a documented customer experience, an ascension model with pricing tiers, and a referral system with scripts and tracking.
 
 | Score | Meaning |
 |-------|---------|
@@ -66,7 +66,7 @@ Rate your marketing plan from 0 to 10 based on how completely and specifically y
 
 **Key insights:**
 - Score potential niches on three dimensions: Personal fulfillment (do you enjoy serving them?), Value to marketplace (do they urgently need what you offer?), Profitability (can they pay and will they pay enough?)
-- Create a detailed ideal customer avatar — demographics, psychographics, pain points, desires, watering holes
+- Create a detailed ideal customer avatar -- demographics, psychographics, pain points, desires, watering holes
 - Go narrow enough that your target market feels like you are speaking directly to them
 - "If you speak to everyone, you speak to no one"
 - One niche does not mean one product; it means one marketing message to one audience
@@ -96,10 +96,10 @@ See: `references/target-market.md`
 **Why it works:** A clear USP gives prospects a reason to choose you, gives your marketing a consistent theme, and eliminates the need to compete on price. It transforms your business from "one of many" to "the only one."
 
 **Key insights:**
-- Your USP is not a slogan — it is a position in the market that you can defend and prove
+- Your USP is not a slogan -- it is a position in the market that you can defend and prove
 - Build your USP around one of: specialization, a unique mechanism, a bold guarantee, a proprietary process, or an underserved niche
 - Your elevator pitch should be completable in under 30 seconds: "You know how [target market] struggles with [problem]? What we do is [solution], so that [outcome]."
-- Test your message — if you replace your company name with a competitor's and it still works, your message is too generic
+- Test your message -- if you replace your company name with a competitor's and it still works, your message is too generic
 - The commodity trap: if prospects cannot tell the difference between you and competitors, the only differentiator left is price
 
 **Product applications:**
@@ -107,7 +107,7 @@ See: `references/target-market.md`
 | Context | Application | Example |
 |---------|-------------|---------|
 | SaaS product | Define the unique mechanism | "The only CRM that auto-generates follow-up emails using your voice tone" |
-| Agency | Create a proprietary process | "Our 5-Phase Growth Sprint" — named, trademarked, diagrammed |
+| Agency | Create a proprietary process | "Our 5-Phase Growth Sprint" -- named, trademarked, diagrammed |
 | Retail brand | Craft a bold guarantee | "If your shoes wear out in under 2 years, we replace them free" |
 | Professional service | Build authority positioning | "The tax firm that has saved mid-market retailers $47M since 2018" |
 
@@ -123,17 +123,17 @@ See: `references/craft-message.md`
 
 ### 3. Advertising Media
 
-**Core concept:** Use direct response marketing principles for every advertising dollar you spend. Every ad must be trackable, measurable, and designed to generate a specific response — not "brand awareness." Choose media channels where your target market actually spends time.
+**Core concept:** Use direct response marketing principles for every advertising dollar you spend. Every ad must be trackable, measurable, and designed to generate a specific response -- not "brand awareness." Choose media channels where your target market actually spends time.
 
 **Why it works:** Direct response marketing eliminates waste. Instead of hoping people remember your brand, you ask them to take a specific action right now, and you measure whether they did. This turns marketing from a cost center into a profit center.
 
 **Key insights:**
 - Apply the direct response trinity: trackable, measurable, calls to specific action
 - Select channels based on where your target market actually is, not what is trendy
-- Start with one channel, master it, then expand — do not spread thin across five platforms simultaneously
+- Start with one channel, master it, then expand -- do not spread thin across five platforms simultaneously
 - Track Customer Acquisition Cost (CAC) per channel and compare to Customer Lifetime Value (LTV)
 - The best media channel is the one where you can reach your target market at an acceptable CAC
-- Organic and paid work together — organic builds authority, paid buys speed
+- Organic and paid work together -- organic builds authority, paid buys speed
 - Attribution matters: know which dollar produced which result
 
 **Product applications:**
@@ -160,7 +160,7 @@ See: `references/advertising-media.md`
 
 ### 4. Capture Leads
 
-**Core concept:** The goal of your marketing is not to make an immediate sale — it is to build a database of interested prospects. Use lead magnets to exchange value for contact information. Your database is the most valuable asset in your business.
+**Core concept:** The goal of your marketing is not to make an immediate sale -- it is to build a database of interested prospects. Use lead magnets to exchange value for contact information. Your database is the most valuable asset in your business.
 
 **Why it works:** Only about 3% of any market is ready to buy right now. If your marketing only targets that 3%, you miss the other 97% who will buy later. Lead capture lets you stay in contact with the full market and sell to them when they are ready.
 
@@ -168,7 +168,7 @@ See: `references/advertising-media.md`
 - A lead magnet offers something of genuine value in exchange for contact information
 - The best lead magnets solve a specific, immediate problem for your target market
 - Speed-to-lead is critical: respond within 5 minutes and your conversion rate skyrockets
-- Use a CRM from day one — even a simple one. Do not rely on memory, spreadsheets, or sticky notes
+- Use a CRM from day one -- even a simple one. Do not rely on memory, spreadsheets, or sticky notes
 - Your opt-in page has one job: get the visitor to exchange their contact info for your lead magnet
 - Lead scoring helps you prioritize which leads to focus on first
 
@@ -176,15 +176,15 @@ See: `references/advertising-media.md`
 
 | Context | Application | Example |
 |---------|-------------|---------|
-| SaaS | Free trial or interactive tool | "Free website audit — get your score in 60 seconds" |
+| SaaS | Free trial or interactive tool | "Free website audit -- get your score in 60 seconds" |
 | Consultant | Downloadable framework or checklist | "The 7-Point Financial Health Checklist for Clinic Owners" |
-| E-commerce | Quiz or discount | "Find your perfect mattress — take our 2-minute sleep quiz" |
-| Local service | Free estimate or inspection | "Free 15-point roof inspection — book online in 30 seconds" |
+| E-commerce | Quiz or discount | "Find your perfect mattress -- take our 2-minute sleep quiz" |
+| Local service | Free estimate or inspection | "Free 15-point roof inspection -- book online in 30 seconds" |
 
 **Copy patterns:**
 - "Download the free [resource] that shows you how to [desired result]"
 - "Take the free [quiz/assessment] and discover your [score/type/result]"
-- "Get instant access to [resource] — no credit card required"
+- "Get instant access to [resource] -- no credit card required"
 
 **Ethical boundary:** Always deliver on the promise of the lead magnet. Never use deceptive opt-in tactics or sell contact information to third parties without explicit consent.
 
@@ -199,10 +199,10 @@ See: `references/capture-leads.md`
 **Key insights:**
 - The welcome sequence is the most important: it sets expectations and builds the initial relationship
 - Follow a content cadence: educate, entertain, inspire, then offer (roughly 3:1 value-to-ask ratio)
-- Use multiple channels — email is the backbone, but reinforce with retargeting ads, social media, direct mail, SMS
+- Use multiple channels -- email is the backbone, but reinforce with retargeting ads, social media, direct mail, SMS
 - Segment your list based on behavior (what they clicked, downloaded, viewed) not just demographics
 - Automation makes nurture scalable, but personalization makes it effective
-- The fortune is in the follow-up — most sales happen after the 5th-12th contact
+- The fortune is in the follow-up -- most sales happen after the 5th-12th contact
 
 **Product applications:**
 
@@ -211,10 +211,10 @@ See: `references/capture-leads.md`
 | SaaS | Onboarding email sequence + in-app messages | 7-day welcome series showing one feature per day |
 | Consultant | Weekly newsletter + case studies | "Friday Insights" email with one actionable tip per week |
 | E-commerce | Browse abandonment + cart abandonment sequences | "Still thinking about it?" email with social proof |
-| Local service | Seasonal reminder emails + SMS | "Spring is here — time for your annual AC check-up" |
+| Local service | Seasonal reminder emails + SMS | "Spring is here -- time for your annual AC check-up" |
 
 **Copy patterns:**
-- "Here is the #1 mistake [target market] makes with [topic] — and how to fix it"
+- "Here is the #1 mistake [target market] makes with [topic] -- and how to fix it"
 - "How [client name] went from [before state] to [after state] in [time period]"
 - "I noticed you downloaded [lead magnet]. Here is the next step..."
 
@@ -229,11 +229,11 @@ See: `references/nurture-leads.md`
 **Why it works:** Even the best leads need a clear path to purchase. Pricing psychology, risk reversal, and structured sales processes dramatically increase conversion rates by addressing the real reasons people hesitate: fear of making a mistake, lack of trust, and confusion about the next step.
 
 **Key insights:**
-- Price communicates value — do not undercharge. Premium pricing attracts premium clients
+- Price communicates value -- do not undercharge. Premium pricing attracts premium clients
 - Use risk reversal (guarantees, free trials, money-back promises) to shift risk from buyer to seller
 - The most common objections are predictable: address them proactively in your sales materials
 - Structure your sales conversations: rapport, discovery, presentation, objection handling, close
-- Make the buying process simple — every extra step loses customers
+- Make the buying process simple -- every extra step loses customers
 - Social proof (testimonials, case studies, reviews) is more persuasive than anything you say about yourself
 - Proposals should be designed to sell, not just inform
 
@@ -262,14 +262,14 @@ See: `references/sales-conversion.md`
 
 ### 7. World-Class Experience
 
-**Core concept:** The sale is not the finish line — it is the starting line. Delivering a world-class experience turns customers into a tribe of loyal advocates. Use systems and technology to ensure consistency, and design intentional "moments of truth" that surprise and delight.
+**Core concept:** The sale is not the finish line -- it is the starting line. Delivering a world-class experience turns customers into a tribe of loyal advocates. Use systems and technology to ensure consistency, and design intentional "moments of truth" that surprise and delight.
 
 **Why it works:** Customer experience is the ultimate competitive moat. Products can be copied, prices can be undercut, but a remarkable experience creates emotional loyalty that competitors cannot replicate. It also dramatically reduces churn and increases lifetime value.
 
 **Key insights:**
-- Map every touchpoint in the customer journey and identify "moments of truth" — the interactions that disproportionately shape perception
+- Map every touchpoint in the customer journey and identify "moments of truth" -- the interactions that disproportionately shape perception
 - Build systems (checklists, SOPs, automation) so the experience is consistent regardless of who delivers it
-- Create a tribe — customers who feel part of a community have dramatically higher retention
+- Create a tribe -- customers who feel part of a community have dramatically higher retention
 - The "wow factor" does not have to be expensive; it has to be unexpected and personal
 - Use technology to automate the routine so your team can focus on the human touches that matter
 - Measure experience with Net Promoter Score (NPS) and act on the feedback
@@ -288,7 +288,7 @@ See: `references/sales-conversion.md`
 - "We just completed [milestone]. Here is what we found and what is next."
 - "You have been a customer for [X months]. We wanted to say thank you with [surprise]."
 
-**Ethical boundary:** Customer experience systems must genuinely serve the customer, not create lock-in or switching costs that trap them. Always make it easy to leave — that confidence is what makes them stay.
+**Ethical boundary:** Customer experience systems must genuinely serve the customer, not create lock-in or switching costs that trap them. Always make it easy to leave -- that confidence is what makes them stay.
 
 See: `references/customer-experience.md`
 
@@ -296,13 +296,13 @@ See: `references/customer-experience.md`
 
 **Core concept:** The most expensive sale is the first one. Once someone is a customer, increasing their lifetime value through upsells, cross-sells, an ascension model, and retention strategies is the highest-leverage activity in your business.
 
-**Why it works:** Acquiring a new customer costs 5-25x more than retaining an existing one. Increasing customer retention by just 5% can increase profits by 25-95%. Your existing customers already know, like, and trust you — selling more to them is dramatically easier than finding new buyers.
+**Why it works:** Acquiring a new customer costs 5-25x more than retaining an existing one. Increasing customer retention by just 5% can increase profits by 25-95%. Your existing customers already know, like, and trust you -- selling more to them is dramatically easier than finding new buyers.
 
 **Key insights:**
 - Design an ascension model: low-ticket entry offer, mid-ticket core offer, high-ticket premium offer, ultra-premium tier
-- Raising prices is the simplest path to higher LTV — most businesses are undercharging
+- Raising prices is the simplest path to higher LTV -- most businesses are undercharging
 - Reactivation campaigns to lapsed customers are among the highest-ROI marketing activities
-- Track LTV by segment, channel, and cohort — not just as a single average number
+- Track LTV by segment, channel, and cohort -- not just as a single average number
 - Subscription and recurring revenue models dramatically increase predictable LTV
 - Cross-sell and upsell at the point of maximum satisfaction (right after a win or positive experience)
 
@@ -332,9 +332,9 @@ See: `references/lifetime-value.md`
 **Why it works:** Referred customers have higher conversion rates, higher lifetime value, lower acquisition costs, and shorter sales cycles than any other source. A recommendation from a trusted friend or colleague is more persuasive than any ad you could ever run. Yet most businesses never proactively ask for referrals.
 
 **Key insights:**
-- The #1 reason customers do not refer is that they are never asked — not that they would not want to
+- The #1 reason customers do not refer is that they are never asked -- not that they would not want to
 - Ask at the moment of peak satisfaction (right after a win, positive review, or compliment)
-- Make referring easy — provide exact language, shareable links, and simple mechanics
+- Make referring easy -- provide exact language, shareable links, and simple mechanics
 - Reward both the referrer and the referred (two-sided incentives)
 - Track referral sources religiously so you know which customers and partners generate the most referrals
 - Joint ventures and partnerships let you borrow the trust of a complementary business
@@ -382,9 +382,9 @@ These cross-cutting principles apply across all nine squares:
 | Mistake | Why It Fails | Fix |
 |---------|-------------|-----|
 | Targeting everyone | Dilutes message, inflates acquisition cost, creates generic marketing | Use PVP Index to select one niche and dominate it before expanding |
-| No USP — competing on price | Attracts price-sensitive buyers, destroys margins, creates a race to the bottom | Develop a genuine USP based on specialization, unique mechanism, or bold guarantee |
+| No USP -- competing on price | Attracts price-sensitive buyers, destroys margins, creates a race to the bottom | Develop a genuine USP based on specialization, unique mechanism, or bold guarantee |
 | Running brand awareness ads with no tracking | No way to measure ROI, no accountability, money disappears | Apply direct response principles to every ad: track, measure, call to action |
-| No lead capture — sending traffic to home page | 97% of visitors are not ready to buy now and leave forever | Create lead magnets and dedicated landing pages to capture contact info |
+| No lead capture -- sending traffic to home page | 97% of visitors are not ready to buy now and leave forever | Create lead magnets and dedicated landing pages to capture contact info |
 | Ignoring existing customers | Missing the highest-ROI marketing (retention and upsells) | Build the AFTER phase: experience, LTV, and referral systems |
 | No follow-up system | Leads go cold, opportunities die, money is left on the table | Implement automated nurture sequences and a CRM from day one |
 
@@ -401,16 +401,16 @@ These cross-cutting principles apply across all nine squares:
 
 ## Reference Files
 
-- `references/target-market.md` — PVP Index scoring, ideal customer avatar worksheet, niche selection framework, common targeting mistakes
-- `references/craft-message.md` — USP creation process, elevator pitch formula, differentiation strategies, commodity trap avoidance
-- `references/advertising-media.md` — Direct response principles for channel selection, CAC tracking, media buying, organic vs paid, attribution
-- `references/capture-leads.md` — Lead magnet types, CRM setup, opt-in page design, speed-to-lead, lead scoring
-- `references/nurture-leads.md` — Email sequence templates, content cadence, multi-channel nurture, segmentation, automation
-- `references/sales-conversion.md` — Pricing psychology, risk reversal, objection handling, sales call structure, proposal templates
-- `references/customer-experience.md` — Moments of truth, NPS, surprise and delight, tribes and community, technology systems
-- `references/lifetime-value.md` — LTV formulas, ascension model design, reactivation campaigns, retention, raising prices
-- `references/referral-systems.md` — Referral program design, partnerships, affiliate programs, referral scripts, tracking
-- `references/one-page-plan-template.md` — Blank 9-square template with prompts, two worked examples, planning exercise guide
+- `references/target-market.md` -- PVP Index scoring, ideal customer avatar worksheet, niche selection framework, common targeting mistakes
+- `references/craft-message.md` -- USP creation process, elevator pitch formula, differentiation strategies, commodity trap avoidance
+- `references/advertising-media.md` -- Direct response principles for channel selection, CAC tracking, media buying, organic vs paid, attribution
+- `references/capture-leads.md` -- Lead magnet types, CRM setup, opt-in page design, speed-to-lead, lead scoring
+- `references/nurture-leads.md` -- Email sequence templates, content cadence, multi-channel nurture, segmentation, automation
+- `references/sales-conversion.md` -- Pricing psychology, risk reversal, objection handling, sales call structure, proposal templates
+- `references/customer-experience.md` -- Moments of truth, NPS, surprise and delight, tribes and community, technology systems
+- `references/lifetime-value.md` -- LTV formulas, ascension model design, reactivation campaigns, retention, raising prices
+- `references/referral-systems.md` -- Referral program design, partnerships, affiliate programs, referral scripts, tracking
+- `references/one-page-plan-template.md` -- Blank 9-square template with prompts, two worked examples, planning exercise guide
 
 ## Further Reading
 

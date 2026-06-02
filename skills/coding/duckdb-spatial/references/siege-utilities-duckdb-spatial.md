@@ -1,4 +1,4 @@
-# siege_utilities + DuckDB-Spatial — Interop Map
+# siege_utilities + DuckDB-Spatial -- Interop Map
 
 `siege_utilities` pulls `duckdb>=0.7.0` as a `performance` extra, but currently uses it only for format conversion. The full DuckDB-spatial query layer is **bring-your-own** today. This file documents what SU does, doesn't, and the upstream-PR opportunities (which, when they land, will collapse most inline DuckDB SQL into one-liners).
 
@@ -36,7 +36,7 @@ caps["duckdb"]  # True / False
 
 Useful for deciding whether to fall through from a missing GDAL stack to DuckDB-spatial. Doesn't drive any SU logic itself.
 
-## What SU doesn't do — write directly
+## What SU doesn't do -- write directly
 
 The honest list. Each item below is also a candidate upstream PR (referenced by ID).
 
@@ -88,7 +88,7 @@ con.execute("""
 """).df()
 ```
 
-**SU-9** (DuckDB spatial-query helpers — wrap `INSTALL spatial; LOAD spatial; ST_Read(...)`) would provide a `query_spatial()` helper returning a GeoDataFrame. Today: write the SQL inline.
+**SU-9** (DuckDB spatial-query helpers -- wrap `INSTALL spatial; LOAD spatial; ST_Read(...)`) would provide a `query_spatial()` helper returning a GeoDataFrame. Today: write the SQL inline.
 
 ### 4. Reading shapefile / GPKG / KML without GDAL on host
 
@@ -142,7 +142,7 @@ Other items in §10 (SU-2 CRS validation, SU-3 geometry validation, SU-4 Sedona 
 - [ ] `caps = geo_capabilities()`; verify `caps["duckdb"]` is True (or `pip install duckdb`)
 - [ ] `con.install_extension("spatial")` + `con.load_extension("spatial")` at session start
 - [ ] For S3 reads, also install `httpfs` and use `CREDENTIAL_CHAIN` (no hardcoded creds)
-- [ ] Track CRS externally — column naming convention `geom_<srid>`
+- [ ] Track CRS externally -- column naming convention `geom_<srid>`
 - [ ] Watch for SU-1 to land; refactor inline `read_parquet` / `COPY` patterns to `read_geoparquet()` / `write_geoparquet()` once available
 - [ ] If you write the same DuckDB-spatial wrapper twice across projects, file the SU PR
 
@@ -155,10 +155,10 @@ The thin SU integration isn't a reason to avoid DuckDB-spatial. The engine is th
 - Single-node, < 100 GB working set
 - You're prototyping and don't want Spark startup cost
 
-The inline SQL is concise enough that the missing SU layer doesn't add real friction — it just adds 5-10 lines per pipeline. Once SU-1 lands, that drops to 1 line.
+The inline SQL is concise enough that the missing SU layer doesn't add real friction -- it just adds 5-10 lines per pipeline. Once SU-1 lands, that drops to 1 line.
 
 ## Mental model
 
-DuckDB-spatial is the **GDAL-less single-node SQL spatial engine.** SU is currently the **runtime planner + Census/CRS/geometry plumbing** — the two complement at a coarse level (SU detects `caps["duckdb"]`; DuckDB does the work). The fine-grained interop (SU-blessed read/write/query helpers) is the upcoming SU-1 / SU-9 / SU-7 territory.
+DuckDB-spatial is the **GDAL-less single-node SQL spatial engine.** SU is currently the **runtime planner + Census/CRS/geometry plumbing** -- the two complement at a coarse level (SU detects `caps["duckdb"]`; DuckDB does the work). The fine-grained interop (SU-blessed read/write/query helpers) is the upcoming SU-1 / SU-9 / SU-7 territory.
 
 Treat the inline DuckDB SQL as the temporary state. As the SU PRs land, replace.

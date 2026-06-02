@@ -1,6 +1,6 @@
 ---
 name: scala-on-spark
-description: Scala for Spark / Databricks. Thin delegating skill — pulls JVM idiom rationale from the languages shelf and Spark cost-model rationale from the data-intensive shelf and the existing Spark skill. Read this when you're about to write or review Scala in a Databricks notebook, a `.scala` file, or `Dataset[T]` Spark code.
+description: Scala for Spark / Databricks. Thin delegating skill -- pulls JVM idiom rationale from the languages shelf and Spark cost-model rationale from the data-intensive shelf and the existing Spark skill. Read this when you're about to write or review Scala in a Databricks notebook, a `.scala` file, or `Dataset[T]` Spark code.
 routed-by: coding-standards
 ---
 
@@ -10,10 +10,10 @@ Most Scala you'll write in a Siege project is **glue around Spark**: notebook ce
 
 ## Companion shelves (load these)
 
-- [skill:effective-java] — `equals`/`hashCode`, immutability, exception handling, generics. Items map almost 1:1 to Scala case classes and `Either`-shaped APIs.
-- [skill:effective-kotlin] — null-safety idioms (Scala `Option`/`Either` ≈ Kotlin nullable + `let`), DSLs, scope functions.
-- [skill:data-intensive] — partitioning, replication, batch/stream, the *why* behind Spark's cost model.
-- [skill:spark] — Siege-specific Spark patterns (catalog, medallion, transform shape).
+- [skill:effective-java] -- `equals`/`hashCode`, immutability, exception handling, generics. Items map almost 1:1 to Scala case classes and `Either`-shaped APIs.
+- [skill:effective-kotlin] -- null-safety idioms (Scala `Option`/`Either` ≈ Kotlin nullable + `let`), DSLs, scope functions.
+- [skill:data-intensive] -- partitioning, replication, batch/stream, the *why* behind Spark's cost model.
+- [skill:spark] -- Siege-specific Spark patterns (catalog, medallion, transform shape).
 
 Always-on: [rule:jvm] is loaded when JVM code is touched and applies to Scala notebook cells equally.
 
@@ -24,7 +24,7 @@ Always-on: [rule:jvm] is loaded when JVM code is touched and applies to Scala no
 - **`Option` over `null`.** Wrap any Spark API call that *could* return null. UDFs that take primitives must accept `java.lang.Long`/`java.lang.Double` to handle nullable columns.
 - **`for`-comprehensions over nested `flatMap`.** Cleaner, but watch for unintended early termination on `None`.
 - **Avoid implicit conversions in production code.** Implicit *parameters* (e.g., `SparkSession`) are fine; implicit *value conversions* obscure intent and slow review.
-- **Serialization.** Anything captured in a closure crosses the wire — keep it `Serializable`, avoid capturing the `SparkSession` or large `Map`s. Kryo is usually the right registrar; register custom classes.
+- **Serialization.** Anything captured in a closure crosses the wire -- keep it `Serializable`, avoid capturing the `SparkSession` or large `Map`s. Kryo is usually the right registrar; register custom classes.
 - **Don't write your own `equals`/`hashCode` on case classes.** The compiler generates correct ones; manual versions break `groupBy`/`distinct`.
 
 ## Disambiguation vs other skills

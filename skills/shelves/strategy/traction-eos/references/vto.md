@@ -261,16 +261,16 @@ The Issues List captures everything standing in the way of achieving your vision
 ```
 PAGE 1: VISION
   Core Values: 1.______ 2.______ 3.______ 4.______ 5.______
-  Core Focus — Purpose: ________________ Niche: ________________
+  Core Focus -- Purpose: ________________ Niche: ________________
   10-Year Target: ________________
-  Marketing Strategy — Target: ________________
+  Marketing Strategy -- Target: ________________
     Three Uniques: 1.______ 2.______ 3.______
     Proven Process: ________________  Guarantee: ________________
 
 PAGE 2: TRACTION
-  3-Year Picture — Date:____ Revenue:$____ Profit:$____ Headcount:____
+  3-Year Picture -- Date:____ Revenue:$____ Profit:$____ Headcount:____
     What it looks like: ________________
-  1-Year Plan — Date:____ Revenue:$____ Profit:$____
+  1-Year Plan -- Date:____ Revenue:$____ Profit:$____
     Goals: 1.______ 2.______ 3.______ 4.______ 5.______
   Quarterly Rocks: 1.______(Owner) 2.______(Owner) 3.______(Owner)
     4.______(Owner) 5.______(Owner) 6.______(Owner) 7.______(Owner)
@@ -282,17 +282,17 @@ PAGE 2: TRACTION
 ```
 PAGE 1: VISION
   Core Values: 1. Own It  2. Radically Transparent  3. Ship Fast  4. Customers First  5. Stay Curious
-  Core Focus — Purpose: To eliminate data silos for growing companies  Niche: Real-time data sync for mid-market SaaS
+  Core Focus -- Purpose: To eliminate data silos for growing companies  Niche: Real-time data sync for mid-market SaaS
   10-Year Target: $100M ARR with 3,000 customers
-  Marketing Strategy — Target: B2B SaaS companies, 50-500 employees, $5M-$50M revenue, VP Eng / CTO buyer
+  Marketing Strategy -- Target: B2B SaaS companies, 50-500 employees, $5M-$50M revenue, VP Eng / CTO buyer
     Three Uniques: 1. Zero-downtime migrations  2. Sub-second sync latency  3. White-glove onboarding
     Proven Process: "The Sync Path" (Discovery → Audit → Migration → Go-Live → QBR)
     Guarantee: Full refund if data sync is not live within 30 days
 
 PAGE 2: TRACTION
-  3-Year Picture — Date: Dec 31, 2028  Revenue: $15M  Profit: $2.25M (15%)  Headcount: 85
+  3-Year Picture -- Date: Dec 31, 2028  Revenue: $15M  Profit: $2.25M (15%)  Headcount: 85
     What it looks like: Regional leader in 3 metros, NPS 65+, 600 active accounts, two product lines above $5M, Best Places to Work
-  1-Year Plan — Date: Dec 31, 2026  Revenue: $6.5M  Profit: $650K (10%)
+  1-Year Plan -- Date: Dec 31, 2026  Revenue: $6.5M  Profit: $650K (10%)
     Goals: 1. 200 active accounts  2. Launch enterprise tier  3. Hire VP Sales  4. Achieve SOC 2 Type II  5. 95% gross retention
   Quarterly Rocks: 1. Close 15 new accounts (CRO)  2. Ship enterprise SSO (VP Eng)  3. Hire 3 SDRs (VP Sales)
     4. Launch partner program (CEO)  5. Reduce onboarding time to 14 days (CS Lead)  6. Publish SOC 2 report (CTO)

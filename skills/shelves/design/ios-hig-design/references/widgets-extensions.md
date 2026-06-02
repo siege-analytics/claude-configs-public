@@ -18,7 +18,7 @@ Design guidelines for widgets, App Clips, and system extensions.
 
 ### Widget Philosophy
 
-Widgets provide **glanceable information** on the Home Screen, Lock Screen, and StandBy mode. They are not mini-apps—they're windows into your app's most useful content.
+Widgets provide **glanceable information** on the Home Screen, Lock Screen, and StandBy mode. They are not mini-apps--they're windows into your app's most useful content.
 
 **Key principles:**
 - Show immediately useful information

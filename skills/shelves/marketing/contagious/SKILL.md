@@ -9,13 +9,13 @@ metadata:
 
 # Word-of-Mouth & Virality Framework
 
-A framework for engineering word-of-mouth and making products, ideas, and content contagious. Based on Jonah Berger's research into why certain things catch on while others languish in obscurity — and how to systematically tip the odds in your favor.
+A framework for engineering word-of-mouth and making products, ideas, and content contagious. Based on Jonah Berger's research into why certain things catch on while others languish in obscurity -- and how to systematically tip the odds in your favor.
 
 ## Core Principle
 
-**Virality is not born — it is engineered.** Products don't go viral by luck or by simply being great. They spread because they were designed — consciously or unconsciously — to be shared.
+**Virality is not born -- it is engineered.** Products don't go viral by luck or by simply being great. They spread because they were designed -- consciously or unconsciously -- to be shared.
 
-**The foundation:** Contrary to popular belief, only 7% of word-of-mouth happens online. The remaining 93% happens offline, in everyday conversations. This means virality isn't just about social media — it's about understanding the psychology of why people talk about and share certain things. Sharing follows predictable psychological patterns, and these patterns can be engineered into any product, idea, or piece of content using the STEPPS framework.
+**The foundation:** Contrary to popular belief, only 7% of word-of-mouth happens online. The remaining 93% happens offline, in everyday conversations. This means virality isn't just about social media -- it's about understanding the psychology of why people talk about and share certain things. Sharing follows predictable psychological patterns, and these patterns can be engineered into any product, idea, or piece of content using the STEPPS framework.
 
 ## Scoring
 
@@ -34,7 +34,7 @@ P - Practical Value     → Is it genuinely useful information people want to pa
 S - Stories             → Is it wrapped in a narrative people want to tell?
 ```
 
-**Not a checklist — a multiplier.** Each principle independently increases the likelihood of sharing. The most contagious ideas activate multiple STEPPS simultaneously. But even activating one or two well can dramatically increase word-of-mouth.
+**Not a checklist -- a multiplier.** Each principle independently increases the likelihood of sharing. The most contagious ideas activate multiple STEPPS simultaneously. But even activating one or two well can dramatically increase word-of-mouth.
 
 | Principle | Core Question | Sharing Driver |
 |-----------|--------------|----------------|
@@ -49,15 +49,15 @@ S - Stories             → Is it wrapped in a narrative people want to tell?
 
 ### 1. Social Currency
 
-**Core concept:** People share things that make them look good — smart, cool, in-the-know. If your product or idea makes people feel like insiders, they'll spread it to boost their own image.
+**Core concept:** People share things that make them look good -- smart, cool, in-the-know. If your product or idea makes people feel like insiders, they'll spread it to boost their own image.
 
-**Why it works:** We use brands and information as social signals. Sharing remarkable facts, exclusive access, or high-status products is a form of self-enhancement. People don't just share what they think — they share what makes them look good for thinking it.
+**Why it works:** We use brands and information as social signals. Sharing remarkable facts, exclusive access, or high-status products is a form of self-enhancement. People don't just share what they think -- they share what makes them look good for thinking it.
 
 **Key insights:**
-- **Remarkability** — things that are surprising, novel, or extreme get shared because they make the sharer seem interesting. "Did you know...?" is one of the most powerful sharing triggers
-- **Game mechanics** — leaderboards, badges, status tiers, and achievement systems create visible markers of accomplishment that people want to display and talk about
-- **Exclusivity and scarcity** — secret menus, invite-only access, members-only content — making people feel like insiders gives them social currency when they share "insider knowledge" with their circle
-- **Inner remarkability** — even mundane products can find their remarkable angle. The key is framing, not the product itself
+- **Remarkability** -- things that are surprising, novel, or extreme get shared because they make the sharer seem interesting. "Did you know...?" is one of the most powerful sharing triggers
+- **Game mechanics** -- leaderboards, badges, status tiers, and achievement systems create visible markers of accomplishment that people want to display and talk about
+- **Exclusivity and scarcity** -- secret menus, invite-only access, members-only content -- making people feel like insiders gives them social currency when they share "insider knowledge" with their circle
+- **Inner remarkability** -- even mundane products can find their remarkable angle. The key is framing, not the product itself
 
 **Product applications:**
 
@@ -84,16 +84,16 @@ See: [references/social-currency.md](references/social-currency.md) for remarkab
 
 ### 2. Triggers
 
-**Core concept:** Top-of-mind means tip-of-tongue. Environmental cues — sights, sounds, smells, times of day, routines — can trigger people to think about and talk about your product. The more frequently people encounter your trigger, the more they'll talk about you.
+**Core concept:** Top-of-mind means tip-of-tongue. Environmental cues -- sights, sounds, smells, times of day, routines -- can trigger people to think about and talk about your product. The more frequently people encounter your trigger, the more they'll talk about you.
 
-**Why it works:** Most word-of-mouth is not driven by excitement about the product itself but by whatever happens to be top-of-mind at the moment of conversation. If your product is linked to a frequent environmental cue, it gets mentioned more often — not because it's more exciting, but because it's more accessible in memory.
+**Why it works:** Most word-of-mouth is not driven by excitement about the product itself but by whatever happens to be top-of-mind at the moment of conversation. If your product is linked to a frequent environmental cue, it gets mentioned more often -- not because it's more exciting, but because it's more accessible in memory.
 
 **Key insights:**
-- **Frequency beats strength** — a trigger encountered daily (like coffee) is more valuable than a powerful but rare trigger (like a holiday). Kit Kat linked itself to coffee breaks, which happen multiple times per day
-- **Habitat matters** — where and when do people encounter environments related to your product? Those are your trigger opportunities
-- **Competitive triggers** — you can link competitor moments to your own brand. When people think of [competitor's context], they think of you instead
-- **Ongoing vs. temporary** — triggers that persist in the environment (a desk item, a daily routine) generate sustained word-of-mouth, while event-based triggers create spikes
-- **Context linking** — pair your product with an existing, frequent behavior or environment
+- **Frequency beats strength** -- a trigger encountered daily (like coffee) is more valuable than a powerful but rare trigger (like a holiday). Kit Kat linked itself to coffee breaks, which happen multiple times per day
+- **Habitat matters** -- where and when do people encounter environments related to your product? Those are your trigger opportunities
+- **Competitive triggers** -- you can link competitor moments to your own brand. When people think of [competitor's context], they think of you instead
+- **Ongoing vs. temporary** -- triggers that persist in the environment (a desk item, a daily routine) generate sustained word-of-mouth, while event-based triggers create spikes
+- **Context linking** -- pair your product with an existing, frequent behavior or environment
 
 **Product applications:**
 
@@ -110,7 +110,7 @@ See: [references/social-currency.md](references/social-currency.md) for remarkab
 - "Every time you [frequent activity], think of..."
 - "Next time you [daily habit]..."
 - "When you see [environmental cue]..."
-- "It's [day/time] — time for..."
+- "It's [day/time] -- time for..."
 - "Whenever you [routine behavior]..."
 
 **Ethical boundary:** Triggers should create genuine, helpful associations. Hijacking sensitive contexts (grief, health scares) as triggers is manipulative and will backfire.
@@ -119,17 +119,17 @@ See: [references/triggers.md](references/triggers.md) for habitat analysis and t
 
 ### 3. Emotion
 
-**Core concept:** When we care, we share. High-arousal emotions — both positive (awe, excitement, amusement) and negative (anger, anxiety) — drive sharing. Low-arousal emotions (sadness, contentment) suppress it.
+**Core concept:** When we care, we share. High-arousal emotions -- both positive (awe, excitement, amusement) and negative (anger, anxiety) -- drive sharing. Low-arousal emotions (sadness, contentment) suppress it.
 
-**Why it works:** Physiological arousal — the racing heart, the tightened muscles, the activated state — creates a need to share. It's not about positivity vs. negativity; it's about activation vs. deactivation. Content that fires people up gets shared; content that brings people down gets ignored.
+**Why it works:** Physiological arousal -- the racing heart, the tightened muscles, the activated state -- creates a need to share. It's not about positivity vs. negativity; it's about activation vs. deactivation. Content that fires people up gets shared; content that brings people down gets ignored.
 
 **Key insights:**
-- **High-arousal positive:** awe, excitement, amusement, humor, inspiration — all drive sharing
-- **High-arousal negative:** anger, anxiety, outrage, fear — also drive sharing (controversies spread fast)
-- **Low-arousal positive:** contentment, relaxation, satisfaction — suppress sharing (people feel no urgency to act)
-- **Low-arousal negative:** sadness, melancholy, disappointment — suppress sharing (people withdraw)
-- **Awe is the most powerful sharing emotion** — content that makes people feel small in the face of something vast, beautiful, or surprising spreads the furthest
-- **Emotional framing** — the same information can be framed to evoke different arousal levels. Facts inform; emotional framing motivates sharing
+- **High-arousal positive:** awe, excitement, amusement, humor, inspiration -- all drive sharing
+- **High-arousal negative:** anger, anxiety, outrage, fear -- also drive sharing (controversies spread fast)
+- **Low-arousal positive:** contentment, relaxation, satisfaction -- suppress sharing (people feel no urgency to act)
+- **Low-arousal negative:** sadness, melancholy, disappointment -- suppress sharing (people withdraw)
+- **Awe is the most powerful sharing emotion** -- content that makes people feel small in the face of something vast, beautiful, or surprising spreads the furthest
+- **Emotional framing** -- the same information can be framed to evoke different arousal levels. Facts inform; emotional framing motivates sharing
 
 **Product applications:**
 
@@ -148,7 +148,7 @@ See: [references/triggers.md](references/triggers.md) for habitat analysis and t
 - "Watch what happens when..."
 - "This is why we fight for..."
 - "You won't believe what [person] did..."
-- "[Powerful statistic] — here's what we're doing about it"
+- "[Powerful statistic] -- here's what we're doing about it"
 
 **Ethical boundary:** Anger and outrage are high-arousal and highly shareable, but engineering outrage for clicks corrodes trust. Use high-arousal negative emotion sparingly and only when the underlying cause genuinely warrants it.
 
@@ -156,16 +156,16 @@ See: [references/emotion.md](references/emotion.md) for emotional arousal mappin
 
 ### 4. Public
 
-**Core concept:** Built to show, built to grow. If people can see others using your product, they're more likely to adopt it themselves. Make the private public — design for observability.
+**Core concept:** Built to show, built to grow. If people can see others using your product, they're more likely to adopt it themselves. Make the private public -- design for observability.
 
 **Why it works:** People imitate what they can see. If your product usage is invisible, you lose the most powerful adoption channel: social proof through observation. The phrase "monkey see, monkey do" exists because observational learning is one of the deepest human instincts.
 
 **Key insights:**
-- **Behavioral residue** — design products that leave visible traces after use. A bumper sticker outlasts the rally. A Livestrong wristband is worn long after the donation
-- **Self-advertising products** — every Hotmail email included "Get your free email at Hotmail" in the signature. The product advertised itself through use
-- **Observable consumption** — Apple deliberately designed the MacBook logo to face outward (toward observers) rather than toward the user. Every open laptop became a billboard
-- **Private behaviors stay private** — if no one can see you using the product, you can't benefit from social proof. Find ways to make invisible usage visible
-- **Public = imitable** — people can only copy what they can observe. Making your product publicly visible makes it easier for others to adopt
+- **Behavioral residue** -- design products that leave visible traces after use. A bumper sticker outlasts the rally. A Livestrong wristband is worn long after the donation
+- **Self-advertising products** -- every Hotmail email included "Get your free email at Hotmail" in the signature. The product advertised itself through use
+- **Observable consumption** -- Apple deliberately designed the MacBook logo to face outward (toward observers) rather than toward the user. Every open laptop became a billboard
+- **Private behaviors stay private** -- if no one can see you using the product, you can't benefit from social proof. Find ways to make invisible usage visible
+- **Public = imitable** -- people can only copy what they can observe. Making your product publicly visible makes it easier for others to adopt
 
 **Product applications:**
 
@@ -182,7 +182,7 @@ See: [references/emotion.md](references/emotion.md) for emotional arousal mappin
 - "Show the world you [achievement/identity]..."
 - "Let others know you..."
 - "Wear your [accomplishment]..."
-- "Share your [output] — powered by [brand]..."
+- "Share your [output] -- powered by [brand]..."
 - "Join [number] others who..."
 
 **Ethical boundary:** Public visibility should empower users, not shame them. Never make private information (failures, health data, financial struggles) involuntarily public. The user should always control what is visible.
@@ -191,16 +191,16 @@ See: [references/public-visibility.md](references/public-visibility.md) for obse
 
 ### 5. Practical Value
 
-**Core concept:** People share useful information to help others. News you can use spreads — especially when it's packaged in a way that's easy to pass along and clearly valuable.
+**Core concept:** People share useful information to help others. News you can use spreads -- especially when it's packaged in a way that's easy to pass along and clearly valuable.
 
-**Why it works:** Sharing practical value is driven by altruism — people genuinely want to help their friends and family. If your content or product saves people time, money, or effort, they'll share it as a favor to their network.
+**Why it works:** Sharing practical value is driven by altruism -- people genuinely want to help their friends and family. If your content or product saves people time, money, or effort, they'll share it as a favor to their network.
 
 **Key insights:**
-- **Prospect Theory** — people evaluate deals relative to a reference point, not in absolute terms. A $10 discount on a $20 item feels better than a $10 discount on a $1,000 item, even though the savings are identical
-- **Rule of 100** — for products under $100, use percentage discounts (50% off a $30 item sounds better than $15 off). For products over $100, use dollar amounts ($200 off sounds better than 10% off a $2,000 item)
-- **Diminishing sensitivity** — the difference between $5 and $10 feels bigger than the difference between $495 and $500. Frame savings relative to small reference points
-- **Knowledge packaging** — useful information needs to be packaged for easy sharing. Lists, how-tos, infographics, and tip collections are inherently more shareable than long-form essays
-- **Narrow audience = wider sharing** — counterintuitively, content targeting a specific niche gets shared more because people forward it to "the person who needs this"
+- **Prospect Theory** -- people evaluate deals relative to a reference point, not in absolute terms. A $10 discount on a $20 item feels better than a $10 discount on a $1,000 item, even though the savings are identical
+- **Rule of 100** -- for products under $100, use percentage discounts (50% off a $30 item sounds better than $15 off). For products over $100, use dollar amounts ($200 off sounds better than 10% off a $2,000 item)
+- **Diminishing sensitivity** -- the difference between $5 and $10 feels bigger than the difference between $495 and $500. Frame savings relative to small reference points
+- **Knowledge packaging** -- useful information needs to be packaged for easy sharing. Lists, how-tos, infographics, and tip collections are inherently more shareable than long-form essays
+- **Narrow audience = wider sharing** -- counterintuitively, content targeting a specific niche gets shared more because people forward it to "the person who needs this"
 
 **Product applications:**
 
@@ -227,16 +227,16 @@ See: [references/practical-value.md](references/practical-value.md) for Prospect
 
 ### 6. Stories
 
-**Core concept:** People don't just share information — they tell stories. The best way to spread your idea is to embed it inside a narrative so engaging that people retell it, and your brand comes along for the ride. This is the Trojan Horse approach.
+**Core concept:** People don't just share information -- they tell stories. The best way to spread your idea is to embed it inside a narrative so engaging that people retell it, and your brand comes along for the ride. This is the Trojan Horse approach.
 
-**Why it works:** Stories are how humans naturally process and transmit information. We think in narratives, not bullet points. A well-crafted story carries your brand message inside it like a Trojan Horse — the listener absorbs the message while being entertained by the story.
+**Why it works:** Stories are how humans naturally process and transmit information. We think in narratives, not bullet points. A well-crafted story carries your brand message inside it like a Trojan Horse -- the listener absorbs the message while being entertained by the story.
 
 **Key insights:**
-- **The Trojan Horse test** — can someone retell the story without mentioning your brand? If yes, the story fails. Your brand must be so integral to the narrative that removing it makes the story collapse
-- **Stories carry morals** — people extract lessons from narratives. The lesson should naturally lead to your value proposition
-- **Narrative transportation** — when people are absorbed in a story, their critical defenses drop. They accept the embedded message more readily than a direct pitch
-- **Retellability** — the story must be simple enough to retell in a conversation. If it requires a 10-minute setup, it won't spread
-- **Valuable virality** — the story must not just be shareable but must carry the brand message. A hilarious ad that people can't remember the brand of is a failure
+- **The Trojan Horse test** -- can someone retell the story without mentioning your brand? If yes, the story fails. Your brand must be so integral to the narrative that removing it makes the story collapse
+- **Stories carry morals** -- people extract lessons from narratives. The lesson should naturally lead to your value proposition
+- **Narrative transportation** -- when people are absorbed in a story, their critical defenses drop. They accept the embedded message more readily than a direct pitch
+- **Retellability** -- the story must be simple enough to retell in a conversation. If it requires a 10-minute setup, it won't spread
+- **Valuable virality** -- the story must not just be shareable but must carry the brand message. A hilarious ad that people can't remember the brand of is a failure
 
 **Product applications:**
 
@@ -252,7 +252,7 @@ See: [references/practical-value.md](references/practical-value.md) for Prospect
 **Copy patterns:**
 - "Here's the story of how..."
 - "It all started when [founder/customer] realized..."
-- "Nobody believed [audacious claim] — until..."
+- "Nobody believed [audacious claim] -- until..."
 - "What would you do if [relatable dilemma]?"
 - "The [person/company] who [did something remarkable]..."
 
@@ -296,8 +296,8 @@ The STEPPS principles are most powerful when combined. Here are applied combinat
 
 | Mistake | Why It Fails | Fix |
 |---------|-------------|-----|
-| Focusing only on online sharing | 93% of WOM is offline — you're ignoring the dominant channel | Design for conversation triggers, not just social media shares |
-| Making content shareable but not brand-linked | People share the joke but forget who made it | Apply the Trojan Horse test — brand must be integral to the story |
+| Focusing only on online sharing | 93% of WOM is offline -- you're ignoring the dominant channel | Design for conversation triggers, not just social media shares |
+| Making content shareable but not brand-linked | People share the joke but forget who made it | Apply the Trojan Horse test -- brand must be integral to the story |
 | Using low-arousal emotions | Sadness and contentment don't activate sharing behavior | Reframe content for high-arousal emotions: awe, excitement, amusement, anger |
 | Making product usage invisible | No one can imitate what they can't see | Add behavioral residue and observable usage signals |
 | Relying on product quality alone | Great products with no STEPPS integration spread slowly | Deliberately engineer at least 2-3 STEPPS into the product experience |
@@ -318,15 +318,15 @@ Run this diagnostic on any product, campaign, or content piece:
 
 ## Reference Files
 
-- [references/social-currency.md](references/social-currency.md) — Remarkability techniques, game mechanics, exclusivity design, and identity signaling strategies
-- [references/triggers.md](references/triggers.md) — Habitat analysis, trigger frequency matrix, competitive triggers, and the Kit Kat case study
-- [references/emotion.md](references/emotion.md) — High-arousal vs. low-arousal emotion mapping, awe engineering, humor design, and emotional audit tools
-- [references/public-visibility.md](references/public-visibility.md) — Behavioral residue, observable consumption design, self-advertising products, and the Apple logo story
-- [references/practical-value.md](references/practical-value.md) — Prospect Theory for marketers, Rule of 100, knowledge packaging formats, and deal framing
-- [references/stories-trojan-horse.md](references/stories-trojan-horse.md) — Trojan Horse narrative design, brand integration testing, and story templates
-- [references/word-of-mouth.md](references/word-of-mouth.md) — Offline vs. online WOM, conversation triggers, measurement approaches, and WOM audit
-- [references/viral-content-patterns.md](references/viral-content-patterns.md) — Content formats that spread, platform-specific patterns, viral coefficient, and shareability audit
-- [references/case-studies.md](references/case-studies.md) — Detailed breakdowns of Blendtec, Barclay Prime, Kit Kat, Livestrong, Dove, and Hotmail
+- [references/social-currency.md](references/social-currency.md) -- Remarkability techniques, game mechanics, exclusivity design, and identity signaling strategies
+- [references/triggers.md](references/triggers.md) -- Habitat analysis, trigger frequency matrix, competitive triggers, and the Kit Kat case study
+- [references/emotion.md](references/emotion.md) -- High-arousal vs. low-arousal emotion mapping, awe engineering, humor design, and emotional audit tools
+- [references/public-visibility.md](references/public-visibility.md) -- Behavioral residue, observable consumption design, self-advertising products, and the Apple logo story
+- [references/practical-value.md](references/practical-value.md) -- Prospect Theory for marketers, Rule of 100, knowledge packaging formats, and deal framing
+- [references/stories-trojan-horse.md](references/stories-trojan-horse.md) -- Trojan Horse narrative design, brand integration testing, and story templates
+- [references/word-of-mouth.md](references/word-of-mouth.md) -- Offline vs. online WOM, conversation triggers, measurement approaches, and WOM audit
+- [references/viral-content-patterns.md](references/viral-content-patterns.md) -- Content formats that spread, platform-specific patterns, viral coefficient, and shareability audit
+- [references/case-studies.md](references/case-studies.md) -- Detailed breakdowns of Blendtec, Barclay Prime, Kit Kat, Livestrong, Dove, and Hotmail
 
 ## Further Reading
 

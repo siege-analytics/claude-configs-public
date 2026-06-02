@@ -17,18 +17,18 @@ unique_lengths = {len(name) for name in names}
 
 ## Item 28: Avoid More Than Two Control Subexpressions in Comprehensions
 ```python
-# OK — two levels
+# OK -- two levels
 flat = [x for row in matrix for x in row]
 
-# OK — two conditions
+# OK -- two conditions
 filtered = [x for x in numbers if x > 0 if x % 2 == 0]
 
-# BAD — too complex, hard to read
+# BAD -- too complex, hard to read
 result = [x for sublist1 in my_lists
           for sublist2 in sublist1
           for x in sublist2]
 
-# GOOD — use a loop or helper
+# GOOD -- use a loop or helper
 result = []
 for sublist1 in my_lists:
     for sublist2 in sublist1:
@@ -40,11 +40,11 @@ for sublist1 in my_lists:
 
 ## Item 29: Avoid Repeated Work in Comprehensions by Using Assignment Expressions
 ```python
-# BAD — calls get_batches twice
+# BAD -- calls get_batches twice
 found = {name: batches for name in order
          if (batches := get_batches(stock.get(name, 0), 8))}
 
-# GOOD — walrus operator avoids repeated computation
+# GOOD -- walrus operator avoids repeated computation
 found = {name: batches for name in order
          if (batches := get_batches(stock.get(name, 0), 8))}
 
@@ -56,7 +56,7 @@ found = {name: batches for name in order
 
 ## Item 30: Consider Generators Instead of Returning Lists
 ```python
-# BAD — builds entire list in memory
+# BAD -- builds entire list in memory
 def index_words(text):
     result = []
     if text:
@@ -66,7 +66,7 @@ def index_words(text):
             result.append(index + 1)
     return result
 
-# GOOD — generator yields one at a time
+# GOOD -- generator yields one at a time
 def index_words(text):
     if text:
         yield 0
@@ -81,7 +81,7 @@ def index_words(text):
 
 ## Item 31: Be Defensive When Iterating Over Arguments
 ```python
-# BAD — generator exhausted after first iteration
+# BAD -- generator exhausted after first iteration
 def normalize(numbers):
     total = sum(numbers)    # exhausts the generator
     result = []
@@ -89,15 +89,15 @@ def normalize(numbers):
         result.append(value / total)
     return result
 
-# GOOD — accept an iterable container, not iterator
+# GOOD -- accept an iterable container, not iterator
 def normalize(numbers):
     total = sum(numbers)    # iterates once
     result = []
-    for value in numbers:   # iterates again — works with lists, not generators
+    for value in numbers:   # iterates again -- works with lists, not generators
         result.append(value / total)
     return result
 
-# BETTER — use __iter__ protocol to detect single-use iterators
+# BETTER -- use __iter__ protocol to detect single-use iterators
 def normalize(numbers):
     if iter(numbers) is numbers:  # iterator, not container
         raise TypeError('Must supply a container')
@@ -111,10 +111,10 @@ def normalize(numbers):
 
 ## Item 32: Consider Generator Expressions for Large List Comprehensions
 ```python
-# BAD — creates entire list in memory
+# BAD -- creates entire list in memory
 values = [len(x) for x in open('my_file.txt')]
 
-# GOOD — generator expression, lazy evaluation
+# GOOD -- generator expression, lazy evaluation
 values = (len(x) for x in open('my_file.txt'))
 
 # Chain generator expressions
@@ -122,19 +122,19 @@ roots = ((x, x**0.5) for x in values)
 ```
 
 - Generator expressions use `()` instead of `[]`
-- Lazy — only compute values as needed
+- Lazy -- only compute values as needed
 - Can be chained together without memory overhead
 
 ## Item 33: Compose Multiple Generators with yield from
 ```python
-# BAD — manual iteration
+# BAD -- manual iteration
 def chain_generators(gen1, gen2):
     for item in gen1:
         yield item
     for item in gen2:
         yield item
 
-# GOOD — yield from
+# GOOD -- yield from
 def chain_generators(gen1, gen2):
     yield from gen1
     yield from gen2
@@ -180,22 +180,22 @@ it1, it2 = itertools.tee(iterator, 2)
 
 **Filtering:**
 ```python
-# takewhile — yield while predicate is True
+# takewhile -- yield while predicate is True
 itertools.takewhile(lambda x: x < 5, values)
 
-# dropwhile — skip while predicate is True
+# dropwhile -- skip while predicate is True
 itertools.dropwhile(lambda x: x < 5, values)
 
-# filterfalse — yield items where predicate is False
+# filterfalse -- yield items where predicate is False
 itertools.filterfalse(lambda x: x < 5, values)
 
-# islice — slice an iterator
+# islice -- slice an iterator
 itertools.islice(values, 2, 8, 2)  # start, stop, step
 ```
 
 **Combining:**
 ```python
-# product — cartesian product
+# product -- cartesian product
 itertools.product([1,2], ['a','b'])  # (1,'a'), (1,'b'), (2,'a'), (2,'b')
 
 # permutations and combinations
@@ -203,7 +203,7 @@ itertools.permutations([1,2,3], 2)
 itertools.combinations([1,2,3], 2)
 itertools.combinations_with_replacement([1,2,3], 2)
 
-# accumulate — running totals
+# accumulate -- running totals
 itertools.accumulate([1,2,3,4])  # 1, 3, 6, 10
 
 # zip_longest

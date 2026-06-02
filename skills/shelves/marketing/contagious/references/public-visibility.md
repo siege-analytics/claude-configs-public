@@ -8,16 +8,16 @@ Humans are social learners. We look to others to figure out what to do, what to 
 
 **If people can see others using your product, adoption spreads. If they can't, it doesn't.**
 
-This is why some excellent products grow slowly (invisible usage) while some mediocre products grow fast (highly visible usage). Visibility is not about quality — it's about observability.
+This is why some excellent products grow slowly (invisible usage) while some mediocre products grow fast (highly visible usage). Visibility is not about quality -- it's about observability.
 
 ### Public vs. Private Behaviors
 
 | Behavior Type | Visibility | Word-of-Mouth Impact | Example |
 |--------------|-----------|---------------------|---------|
-| **Public consumption** | Others can see you using it | High — passive advertising | Wearing Nike shoes, driving a Tesla |
-| **Semi-public** | Visible in certain contexts | Medium — context-dependent exposure | Using Slack at work, reading a Kindle |
-| **Private consumption** | Others cannot see you using it | Low — requires active sharing | Using a meditation app, taking supplements |
-| **Stigmatized private** | Actively hidden from others | Very low — people avoid discussion | Mental health apps, debt management tools |
+| **Public consumption** | Others can see you using it | High -- passive advertising | Wearing Nike shoes, driving a Tesla |
+| **Semi-public** | Visible in certain contexts | Medium -- context-dependent exposure | Using Slack at work, reading a Kindle |
+| **Private consumption** | Others cannot see you using it | Low -- requires active sharing | Using a meditation app, taking supplements |
+| **Stigmatized private** | Actively hidden from others | Very low -- people avoid discussion | Mental health apps, debt management tools |
 
 **The design challenge:** For private-consumption products, find ways to create public signals without violating privacy.
 
@@ -27,7 +27,7 @@ Behavioral residue is the physical or digital evidence that remains after someon
 
 ### What Is Behavioral Residue?
 
-The behavior itself is temporary — you attend a rally, you visit a store, you use an app. But behavioral residue persists: the bumper sticker stays on the car, the tote bag gets carried to the grocery store, the "Powered by" badge stays on the website.
+The behavior itself is temporary -- you attend a rally, you visit a store, you use an app. But behavioral residue persists: the bumper sticker stays on the car, the tote bag gets carried to the grocery store, the "Powered by" badge stays on the website.
 
 **Key insight:** The residue often generates more word-of-mouth than the behavior itself, because the residue is visible for much longer.
 
@@ -69,7 +69,7 @@ One of the most instructive examples of Public design is Apple's decision about 
 
 In the early days of laptops, the Apple logo on the MacBook lid was oriented so that it appeared right-side-up to the user when they opened the laptop. This meant that when the laptop was open and in use, the logo appeared upside-down to everyone looking at it.
 
-Apple made a deliberate decision to flip the logo. The current design shows the Apple logo right-side-up to observers — the people in the coffee shop, the meeting room, the library — rather than to the user.
+Apple made a deliberate decision to flip the logo. The current design shows the Apple logo right-side-up to observers -- the people in the coffee shop, the meeting room, the library -- rather than to the user.
 
 ### Why It Matters
 
@@ -83,7 +83,7 @@ Apple chose to optimize for the observer, not the user. Every open MacBook becam
 
 ### The Design Lesson
 
-**Always ask: Who is the audience for the visible element — the user or the observer?**
+**Always ask: Who is the audience for the visible element -- the user or the observer?**
 
 | Design Decision | User-Facing | Observer-Facing | Better for Growth |
 |----------------|-------------|-----------------|-------------------|
@@ -123,9 +123,9 @@ The most powerful form of Public design is a product that advertises itself simp
 
 **Method 2: Distinctive physical design.** Make the product visually distinctive so usage is immediately recognizable.
 
-**Method 3: Audible signatures.** Create recognizable sounds — the Intel chime, the iPhone ringtone, the Skype call sound — that signal product usage to bystanders.
+**Method 3: Audible signatures.** Create recognizable sounds -- the Intel chime, the iPhone ringtone, the Skype call sound -- that signal product usage to bystanders.
 
-**Method 4: Usage signals.** Create visible indicators of product usage — typing indicators in chat, "currently playing" in music apps, live status in collaboration tools.
+**Method 4: Usage signals.** Create visible indicators of product usage -- typing indicators in chat, "currently playing" in music apps, live status in collaboration tools.
 
 ## The Livestrong Wristband Case Study
 
@@ -137,7 +137,7 @@ In 2004, Nike and the Lance Armstrong Foundation launched a simple yellow silico
 
 ### Why It Worked (Public Principle Analysis)
 
-**Observable consumption:** Unlike a donation (private), wearing a wristband is public. Everyone can see it on your wrist — at work, at the gym, at school, in conversation.
+**Observable consumption:** Unlike a donation (private), wearing a wristband is public. Everyone can see it on your wrist -- at work, at the gym, at school, in conversation.
 
 **Behavioral residue:** The wristband outlasts the moment of donation. You donate once, but you wear the wristband for months or years. Every day of wearing is a day of advertising.
 
@@ -145,17 +145,17 @@ In 2004, Nike and the Lance Armstrong Foundation launched a simple yellow silico
 
 **Social proof cascade:** As more people wore them, more people wanted them. Visibility created demand, which created more visibility. The cycle was self-reinforcing.
 
-**Identity signaling:** Wearing the wristband said "I care about cancer research" — a positive identity signal. It was social currency expressed through a public artifact.
+**Identity signaling:** Wearing the wristband said "I care about cancer research" -- a positive identity signal. It was social currency expressed through a public artifact.
 
 ### Key Design Elements
 
 | Element | Design Choice | Why It Mattered |
 |---------|--------------|----------------|
-| **Color** | Bright yellow — distinctive and noticeable | Stood out against any clothing, immediately identifiable |
-| **Material** | Silicone — comfortable for all-day wear | Removed barrier to continuous display |
-| **Price** | $1 — minimal barrier to entry | Anyone could participate |
+| **Color** | Bright yellow -- distinctive and noticeable | Stood out against any clothing, immediately identifiable |
+| **Material** | Silicone -- comfortable for all-day wear | Removed barrier to continuous display |
+| **Price** | $1 -- minimal barrier to entry | Anyone could participate |
 | **Simplicity** | No text visible from distance, just the color | The color itself became the symbol |
-| **Wearability** | Wrist — always visible in daily activities | Maximum exposure surface |
+| **Wearability** | Wrist -- always visible in daily activities | Maximum exposure surface |
 
 ## "Built to Show" Design Principles
 
@@ -198,7 +198,7 @@ For products with inherently private usage, find ethical ways to create public s
 |----------------|----------------------|----------------|
 | Meditation app | Streak badge for social profiles | "Meditator: 365-day streak" badge |
 | Financial tool | Aggregate achievement sharing | "This community saved $10M this year" |
-| Health app | Anonymized collective milestones | "Our users walked to the moon and back — 3 times" |
+| Health app | Anonymized collective milestones | "Our users walked to the moon and back -- 3 times" |
 | Learning platform | Certification badges | Shareable LinkedIn credentials |
 | Therapy/Counseling | Community awareness campaigns | "I believe in mental health" shareable frames |
 

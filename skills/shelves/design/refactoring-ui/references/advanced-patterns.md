@@ -106,7 +106,7 @@ Danger:     Red but not screaming (bg-red-600 for confirm, text-red-600 for trig
 
 ### Hero Images
 
-- Don't stretch—use `object-cover`
+- Don't stretch--use `object-cover`
 - Consider `aspect-ratio` for consistency
 - Compress appropriately (WebP, quality 80%)
 
@@ -137,7 +137,7 @@ Always align icon center with text baseline or center. Add consistent gap (8px t
 - Navigation items
 - Common actions (edit, delete, share)
 - Status indicators
-- Feature lists (with caution—don't overdo)
+- Feature lists (with caution--don't overdo)
 
 ### When NOT to Use Icons
 

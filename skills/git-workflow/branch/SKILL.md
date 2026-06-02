@@ -14,7 +14,7 @@ argument-hint: "[type/descriptive_string]"
    3. If no ticket exists, create one first -- if the work is branchable, it is ticketable
 2. Choose the base branch
    1. Branch from `develop` (or its synonym -- see Develop detection below)
-   2. If no `develop` branch exists, **ASK the user** before creating one (see develop-guard skill — no silent creation)
+   2. If no `develop` branch exists, **ASK the user** before creating one (see develop-guard skill -- no silent creation)
    3. If `develop` exists but is **behind `main`**, **STOP** and surface a sync decision before branching. Branches built from a stale develop carry the divergence forward.
    4. **Never** branch directly from `main` for feature or task work
    5. **Invariant:** `main` is always a subset of `develop`. If you discover that's not currently true, that's a sync ticket, not a license to branch from main.

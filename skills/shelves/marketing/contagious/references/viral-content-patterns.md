@@ -73,13 +73,13 @@ Controversial content is highly shareable because it triggers high-arousal emoti
 
 | Level | Type | Risk | Sharing Driver | Example |
 |-------|------|------|---------------|---------|
-| 1 - Safe | Challenging conventional wisdom | Low | "I never thought of it that way" | "Cold outreach is dead — here's what replaced it" |
+| 1 - Safe | Challenging conventional wisdom | Low | "I never thought of it that way" | "Cold outreach is dead -- here's what replaced it" |
 | 2 - Moderate | Taking a professional stance | Medium | "I agree/disagree strongly" | "Remote work is more productive than office work" |
 | 3 - Spicy | Naming industry problems | Medium-high | "Finally someone said it" | "Most SaaS marketing is manipulative" |
 | 4 - Risky | Polarizing cultural positions | High | Strong tribalism | Cultural commentary tied to brand |
 | 5 - Dangerous | Attacking groups or individuals | Very high | Outrage cycle | Personal attacks, punching down |
 
-**Recommendation:** Levels 1-3 generate high sharing with manageable risk. Level 4 requires careful judgment. Level 5 should be avoided — the backlash will outweigh the buzz.
+**Recommendation:** Levels 1-3 generate high sharing with manageable risk. Level 4 requires careful judgment. Level 5 should be avoided -- the backlash will outweigh the buzz.
 
 ## Platform-Specific Sharing Patterns
 
@@ -103,26 +103,26 @@ Each platform has distinct sharing mechanics and culture that affect what conten
 **For Twitter/X:**
 - Lead with the most provocative or surprising statement
 - Use threads for depth (the first tweet is the hook)
-- Include an image — tweets with images get 150% more retweets
+- Include an image -- tweets with images get 150% more retweets
 - Time posts for maximum initial engagement (engagement begets more engagement)
 
 **For LinkedIn:**
 - Open with a personal story or counter-intuitive insight
 - Use line breaks generously (the mobile reading experience demands it)
 - End with a question to drive comments (the algorithm rewards comments)
-- Avoid self-promotion in the first 3 lines — lead with value
+- Avoid self-promotion in the first 3 lines -- lead with value
 
 **For Instagram:**
 - Carousels get highest saves and shares (people swipe = algorithm boost)
 - Educational Reels outperform entertainment in most niches
-- Use Stories for raw, behind-the-scenes content — it feels more authentic
+- Use Stories for raw, behind-the-scenes content -- it feels more authentic
 - The first frame of a Reel must hook in under 1 second
 
 **For TikTok:**
-- Hook in the first 0.5 seconds — you're competing with a thumb scroll
-- Use trending sounds and formats — participation in trends amplifies reach
-- Teach something in under 60 seconds — educational content has highest share rate
-- Encourage duets and stitches — they extend your content's life
+- Hook in the first 0.5 seconds -- you're competing with a thumb scroll
+- Use trending sounds and formats -- participation in trends amplifies reach
+- Teach something in under 60 seconds -- educational content has highest share rate
+- Encourage duets and stitches -- they extend your content's life
 
 **For Email Forwards:**
 - The subject line must work as a "forwarded to you because..." prompt
@@ -194,7 +194,7 @@ c = conversion rate of each invitation/share
 
 ### Viral Cycle Time
 
-K-factor alone doesn't determine growth speed. The cycle time — how long it takes from a user signing up to their referrals signing up — is equally important.
+K-factor alone doesn't determine growth speed. The cycle time -- how long it takes from a user signing up to their referrals signing up -- is equally important.
 
 | Cycle Time | Even With K = 2.0 | Example |
 |------------|-------------------|---------|
@@ -226,7 +226,7 @@ Create the most comprehensive resource on a topic.
 
 Share original data or research that reveals something surprising.
 
-**Structure:** "We analyzed X and found Y — here's what it means."
+**Structure:** "We analyzed X and found Y -- here's what it means."
 
 **Why it works:** Remarkable findings create social currency + data is citable (spreading through attribution) + original research is inherently rare and valuable.
 
@@ -242,7 +242,7 @@ Challenge a widely held belief with evidence.
 
 Share a genuine personal or customer transformation story.
 
-**Structure:** "I went from X to Y by doing Z — here's exactly how."
+**Structure:** "I went from X to Y by doing Z -- here's exactly how."
 
 **Why it works:** Emotional arousal (inspiration) + practical value (the "how") + story (narrative vehicle) + social currency for the sharer ("I found this great story").
 

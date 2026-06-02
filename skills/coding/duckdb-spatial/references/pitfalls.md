@@ -18,7 +18,7 @@ con.load_extension("spatial")
 ## 2. Computing distance in degrees
 
 ```sql
--- WRONG — returns degrees (meaningless)
+-- WRONG -- returns degrees (meaningless)
 SELECT ST_Distance(p1.geom, p2.geom) FROM places p1 JOIN places p2 ON p1.id < p2.id;
 ```
 
@@ -36,7 +36,7 @@ SELECT ST_Distance(
 FROM places p1 JOIN places p2 ON p1.id < p2.id;
 ```
 
-Same gotcha as PostGIS — see [`coding/postgis/references/pitfalls.md`](../../postgis/references/pitfalls.md).
+Same gotcha as PostGIS -- see [`coding/postgis/references/pitfalls.md`](../../postgis/references/pitfalls.md).
 
 ## 3. CRS is not stored in GEOMETRY type
 
@@ -60,7 +60,7 @@ DuckDB writes WKB in standard NDR (little-endian) format, which is what every ot
 ```python
 # If you read WKB from another source (e.g., Postgres EWKB) and pass to DuckDB:
 con.execute("SELECT ST_GeomFromWKB(?)", [postgres_ewkb])
-# May fail or misread — Postgres EWKB embeds SRID, plain WKB doesn't
+# May fail or misread -- Postgres EWKB embeds SRID, plain WKB doesn't
 ```
 
 For Postgres WKB, use `ST_AsBinary(geom)` on the Postgres side (returns plain WKB) before passing.
@@ -73,7 +73,7 @@ DuckDB scales up, not out. Single-machine RAM × disk-spill margin is your ceili
 - 128 GB RAM machine: ~200 GB working set.
 - Beyond that: spills become the bottleneck; latency degrades; eventually OOM.
 
-When you hit it, push to Sedona on Spark — the SQL is similar enough to port quickly.
+When you hit it, push to Sedona on Spark -- the SQL is similar enough to port quickly.
 
 ## 6. R-tree index doesn't always get used
 
@@ -102,7 +102,7 @@ result_arrow = con.execute("SELECT * FROM features").arrow()
 result_df = con.execute("SELECT * FROM features").df()
 ```
 
-`.arrow()` is faster (zero-copy in some cases) but geometry columns come back as binary, not Shapely. `.df()` converts to Pandas; geometry columns are still binary unless you cast. There's no built-in "give me a GeoDataFrame" — you have to wrap with GeoPandas yourself.
+`.arrow()` is faster (zero-copy in some cases) but geometry columns come back as binary, not Shapely. `.df()` converts to Pandas; geometry columns are still binary unless you cast. There's no built-in "give me a GeoDataFrame" -- you have to wrap with GeoPandas yourself.
 
 ## 9. `read_csv_auto` and lat/lng schema inference
 
@@ -133,7 +133,7 @@ con.install_extension("spatial", force_install=True)
 con.load_extension("spatial")
 ```
 
-In long-running services, this isn't an issue — just be aware after upgrades.
+In long-running services, this isn't an issue -- just be aware after upgrades.
 
 ## 11. Shutil-clean tempdir between runs
 
@@ -162,7 +162,7 @@ COPY (
 
 ```python
 con.execute("CREATE SECRET (TYPE S3, KEY_ID '...', SECRET '...', REGION 'us-east-1')")
-# Hardcoded creds — never check into git
+# Hardcoded creds -- never check into git
 ```
 
 Prefer credential chain (IAM role, env vars, instance profile):
@@ -171,7 +171,7 @@ Prefer credential chain (IAM role, env vars, instance profile):
 con.execute("CREATE SECRET (TYPE S3, PROVIDER CREDENTIAL_CHAIN)")
 ```
 
-## 14. `ATTACH` to Postgres for spatial — check version compatibility
+## 14. `ATTACH` to Postgres for spatial -- check version compatibility
 
 DuckDB's `postgres` extension does basic spatial passthrough, but `ST_*` functions in the join condition execute on the DuckDB side (data shipped over). For server-side spatial filtering, write the query in Postgres directly instead.
 

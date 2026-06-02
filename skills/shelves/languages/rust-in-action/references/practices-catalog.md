@@ -1,4 +1,4 @@
-# Rust in Action — Practices Catalog
+# Rust in Action -- Practices Catalog
 
 Systems-focused before/after examples from each chapter group.
 
@@ -8,16 +8,16 @@ Systems-focused before/after examples from each chapter group.
 
 **Before:**
 ```rust
-fn print_log(data: Vec<u8>) {  // consumes — caller loses data
+fn print_log(data: Vec<u8>) {  // consumes -- caller loses data
     println!("{} bytes", data.len());
 }
 let log = vec![1u8, 2, 3];
 print_log(log);
-// log is gone — can't use it again
+// log is gone -- can't use it again
 ```
 **After:**
 ```rust
-fn print_log(data: &[u8]) {  // borrows a slice — Vec<u8> derefs to &[u8]
+fn print_log(data: &[u8]) {  // borrows a slice -- Vec<u8> derefs to &[u8]
     println!("{} bytes", data.len());
 }
 let log = vec![1u8, 2, 3];
@@ -32,20 +32,20 @@ println!("{log:?}");  // still valid
 **Before:**
 ```rust
 struct Config {
-    name: String,  // owned — always heap-allocates
+    name: String,  // owned -- always heap-allocates
 }
 ```
 **After (borrow when caller controls data):**
 ```rust
 struct Config<'a> {
-    name: &'a str,  // borrows — zero allocation if caller has the string
+    name: &'a str,  // borrows -- zero allocation if caller has the string
 }
 // Use when Config doesn't outlive the string it references
 ```
 **Or (own when Config must be independent):**
 ```rust
 struct Config {
-    name: String,  // owned — correct when Config outlives the source string
+    name: String,  // owned -- correct when Config outlives the source string
 }
 ```
 
@@ -60,13 +60,13 @@ let boxed: Box<[u8]> = vec![1, 2, 3].into_boxed_slice();
 // Rc<T>: shared ownership, single thread only
 use std::rc::Rc;
 let shared = Rc::new(vec![1, 2, 3]);
-let clone1 = Rc::clone(&shared);  // cheap — increments refcount
+let clone1 = Rc::clone(&shared);  // cheap -- increments refcount
 // let _ = thread::spawn(move || { clone1; });  // COMPILE ERROR: Rc is not Send
 
 // Arc<T>: shared ownership, multi-thread safe
 use std::sync::Arc;
 let arc = Arc::new(vec![1, 2, 3]);
-let arc2 = Arc::clone(&arc);  // idiomatic — explicit about cheapness
+let arc2 = Arc::clone(&arc);  // idiomatic -- explicit about cheapness
 thread::spawn(move || println!("{arc2:?}")).join().unwrap();
 
 // RefCell<T>: interior mutability, single thread, runtime checks
@@ -74,7 +74,7 @@ use std::cell::RefCell;
 let cache: RefCell<Option<String>> = RefCell::new(None);
 *cache.borrow_mut() = Some("computed".into());
 
-// Cow<T>: clone-on-write — avoids allocation when only reading
+// Cow<T>: clone-on-write -- avoids allocation when only reading
 use std::borrow::Cow;
 fn process(input: &str) -> Cow<str> {
     if input.contains("bad") {
@@ -92,7 +92,7 @@ fn process(input: &str) -> Cow<str> {
 **Before:**
 ```rust
 fn parse_id(bytes: &[u8]) -> u32 {
-    u32::from_ne_bytes([bytes[0], bytes[1], bytes[2], bytes[3]])  // native — wrong on BE hosts
+    u32::from_ne_bytes([bytes[0], bytes[1], bytes[2], bytes[3]])  // native -- wrong on BE hosts
 }
 fn write_id(id: u32) -> [u8; 4] {
     id.to_ne_bytes()  // corrupts protocol on big-endian
@@ -108,7 +108,7 @@ fn parse_id(bytes: &[u8], offset: usize) -> Result<u32, &'static str> {
 }
 
 fn write_id(id: u32) -> [u8; 4] {
-    id.to_le_bytes()  // always little-endian — deterministic on all hosts
+    id.to_le_bytes()  // always little-endian -- deterministic on all hosts
 }
 ```
 
@@ -117,7 +117,7 @@ fn write_id(id: u32) -> [u8; 4] {
 ## Data: Bit Manipulation (Ch 5)
 
 ```rust
-// Named constants for masks — self-documenting (Ch 5)
+// Named constants for masks -- self-documenting (Ch 5)
 const SIGN_BIT: u32      = 0x8000_0000;
 const EXPONENT_MASK: u32 = 0x7F80_0000;
 const MANTISSA_MASK: u32 = 0x007F_FFFF;
@@ -253,7 +253,7 @@ impl TcpState {
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 
-// move closure required — captures must be 'static (Ch 10)
+// move closure required -- captures must be 'static (Ch 10)
 fn spawn_worker(id: usize, rx: Arc<Mutex<mpsc::Receiver<String>>>) {
     thread::spawn(move || loop {  // move transfers rx into thread
         let msg = rx.lock().expect("mutex poisoned").recv();
@@ -274,7 +274,7 @@ fn main() {
 
     tx.send("hello".into()).unwrap();
     tx.send("world".into()).unwrap();
-    drop(tx);  // close channel — workers will exit their loops
+    drop(tx);  // close channel -- workers will exit their loops
     thread::sleep(std::time::Duration::from_millis(10));
 }
 ```
@@ -286,12 +286,12 @@ fn main() {
 ```rust
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
-// Instant for elapsed — monotonic, cannot go backwards (Ch 9)
+// Instant for elapsed -- monotonic, cannot go backwards (Ch 9)
 let start = Instant::now();
 do_work();
 println!("elapsed: {:?}", start.elapsed());
 
-// SystemTime for wall clock (can go backwards — don't use for elapsed)
+// SystemTime for wall clock (can go backwards -- don't use for elapsed)
 let unix_ts = SystemTime::now()
     .duration_since(UNIX_EPOCH)
     .expect("system clock before Unix epoch")
@@ -315,7 +315,7 @@ fn unix_to_ntp(unix_seconds: u64) -> u64 {
 ## Unsafe: Safe Abstraction Pattern (Ch 6)
 
 ```rust
-// Wrap unsafe in a safe API — callers need not use unsafe (Ch 6)
+// Wrap unsafe in a safe API -- callers need not use unsafe (Ch 6)
 pub struct AlignedBuffer {
     ptr: *mut u8,
     len: usize,

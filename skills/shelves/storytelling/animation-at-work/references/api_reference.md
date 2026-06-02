@@ -1,4 +1,4 @@
-# Animation at Work — Chapter-by-Chapter Reference
+# Animation at Work -- Chapter-by-Chapter Reference
 
 Complete catalog of web animation concepts, techniques, and best practices
 from all 5 chapters.
@@ -11,23 +11,23 @@ from all 5 chapters.
 - The brain fills in gaps between static images to perceive fluid motion (persistence of vision)
 - Animations create an illusion of life and spatial relationships in 2D interfaces
 - Users perceive animated interfaces as faster and more responsive than static ones
-- Motion draws attention — use this deliberately, not accidentally
+- Motion draws attention -- use this deliberately, not accidentally
 
 ### The 12 Principles of Animation (Disney)
 Originally from *The Illusion of Life* by Frank Thomas and Ollie Johnston, adapted for UI:
 
-1. **Squash and stretch** — Deformation to show weight/flexibility (limited use in UI — icon bounces, rubbery buttons)
-2. **Anticipation** — Preparatory motion before main action (button shrink before expand, drawer slight pull before open)
-3. **Staging** — Present ideas clearly; direct attention to the important element (dim background, spotlight focus)
-4. **Straight ahead vs. pose to pose** — Drawing technique; in UI, "pose to pose" maps to keyframe animation
-5. **Follow-through and overlapping action** — Not everything stops at once; stagger child elements (list items appearing in sequence)
-6. **Slow in and slow out (ease in/out)** — Objects accelerate and decelerate; never use linear for UI motion
-7. **Arcs** — Natural motion follows curved paths (use CSS motion paths or transform combinations)
-8. **Secondary action** — Supporting motion that reinforces primary (badge bounce while drawer opens)
-9. **Timing** — Number of frames/duration controls perceived weight and mood
-10. **Exaggeration** — Amplify for clarity (overshoot on panel open, extra bounce on landing)
-11. **Solid drawing** — 3D awareness; in UI, use shadows and transforms to create depth
-12. **Appeal** — Pleasing, engaging quality; animations should feel appropriate for the brand
+1. **Squash and stretch** -- Deformation to show weight/flexibility (limited use in UI -- icon bounces, rubbery buttons)
+2. **Anticipation** -- Preparatory motion before main action (button shrink before expand, drawer slight pull before open)
+3. **Staging** -- Present ideas clearly; direct attention to the important element (dim background, spotlight focus)
+4. **Straight ahead vs. pose to pose** -- Drawing technique; in UI, "pose to pose" maps to keyframe animation
+5. **Follow-through and overlapping action** -- Not everything stops at once; stagger child elements (list items appearing in sequence)
+6. **Slow in and slow out (ease in/out)** -- Objects accelerate and decelerate; never use linear for UI motion
+7. **Arcs** -- Natural motion follows curved paths (use CSS motion paths or transform combinations)
+8. **Secondary action** -- Supporting motion that reinforces primary (badge bounce while drawer opens)
+9. **Timing** -- Number of frames/duration controls perceived weight and mood
+10. **Exaggeration** -- Amplify for clarity (overshoot on panel open, extra bounce on landing)
+11. **Solid drawing** -- 3D awareness; in UI, use shadows and transforms to create depth
+12. **Appeal** -- Pleasing, engaging quality; animations should feel appropriate for the brand
 
 ### Timing and Spacing
 - **Timing** = total duration of animation
@@ -37,12 +37,12 @@ Originally from *The Illusion of Life* by Frank Thomas and Ollie Johnston, adapt
 - Same duration with different easing = completely different feel
 
 ### Easing Functions
-- **Linear**: Constant speed — robotic, only for continuous motion (progress bars, spinners)
-- **Ease-in (slow in)**: Starts slow, ends fast — best for elements **leaving** the screen
-- **Ease-out (slow out)**: Starts fast, ends slow — best for elements **entering** the screen
-- **Ease-in-out**: Slow start and end — best for elements **repositioning** on screen
+- **Linear**: Constant speed -- robotic, only for continuous motion (progress bars, spinners)
+- **Ease-in (slow in)**: Starts slow, ends fast -- best for elements **leaving** the screen
+- **Ease-out (slow out)**: Starts fast, ends slow -- best for elements **entering** the screen
+- **Ease-in-out**: Slow start and end -- best for elements **repositioning** on screen
 - **Cubic-bezier**: Custom curves for brand-specific personality
-- **Steps()**: Discrete jumps — for sprite animations or typewriter effects
+- **Steps()**: Discrete jumps -- for sprite animations or typewriter effects
 
 ### Duration Guidelines
 - **Micro-interactions**: 100–200ms (button feedback, toggle, hover)
@@ -80,7 +80,7 @@ Originally from *The Illusion of Life* by Frank Thomas and Ollie Johnston, adapt
 **3. Feedback**
 - Acknowledge that the system received a user's action
 - Examples: button press animation, form validation shake, successful submit checkmark, pull-to-refresh
-- Must be immediate (under 200ms) — user needs instant confirmation
+- Must be immediate (under 200ms) -- user needs instant confirmation
 - Can be subtle (color flash) or prominent (success animation) depending on action importance
 - Missing feedback makes interfaces feel broken or unresponsive
 
@@ -88,7 +88,7 @@ Originally from *The Illusion of Life* by Frank Thomas and Ollie Johnston, adapt
 - Show how something works or draw attention to a feature
 - Examples: onboarding walkthroughs, feature discovery pulses, interactive tutorials, gesture hints
 - Can be longer duration (up to several seconds) since they're instructional
-- Should be skippable — not everyone needs the tutorial
+- Should be skippable -- not everyone needs the tutorial
 - Diminishing returns: show once or twice, then stop
 - Often used on first use, then hidden
 
@@ -156,9 +156,9 @@ const animation = element.animate(keyframes, options);
 - **Keyframes**: Array of keyframe objects or object with array properties
 - **Options**: `duration`, `easing`, `iterations`, `direction`, `fill`, `delay`
 - **Playback control**: `animation.play()`, `.pause()`, `.reverse()`, `.cancel()`, `.finish()`
-- **Timeline scrubbing**: `animation.currentTime = value` — scrub to specific point
-- **Promises**: `animation.finished` returns a Promise — chain sequential animations
-- **Playback rate**: `animation.playbackRate` — speed up, slow down, or reverse
+- **Timeline scrubbing**: `animation.currentTime = value` -- scrub to specific point
+- **Promises**: `animation.finished` returns a Promise -- chain sequential animations
+- **Playback rate**: `animation.playbackRate` -- speed up, slow down, or reverse
 
 **WAAPI vs CSS Animations**:
 | Feature | CSS Animations | WAAPI |
@@ -191,11 +191,11 @@ const animation = element.animate(keyframes, options);
 
 ### Performance Architecture
 **The Rendering Pipeline**:
-1. **JavaScript** — Run scripts, modify DOM/styles
-2. **Style** — Calculate computed styles
-3. **Layout** — Calculate positions and sizes (expensive!)
-4. **Paint** — Fill in pixels for each layer
-5. **Composite** — Combine layers on GPU
+1. **JavaScript** -- Run scripts, modify DOM/styles
+2. **Style** -- Calculate computed styles
+3. **Layout** -- Calculate positions and sizes (expensive!)
+4. **Paint** -- Fill in pixels for each layer
+5. **Composite** -- Combine layers on GPU
 
 **Composite-only animations** skip Layout and Paint:
 - `transform: translate()`, `scale()`, `rotate()`, `skew()`
@@ -212,7 +212,7 @@ const animation = element.animate(keyframes, options);
 
 **RAIL Performance Model**:
 - **Response**: Handle input within 100ms
-- **Animation**: Produce frame within 16ms (60fps) — only 10ms budget after browser overhead
+- **Animation**: Produce frame within 16ms (60fps) -- only 10ms budget after browser overhead
 - **Idle**: Use idle time for deferred work in 50ms chunks
 - **Load**: Deliver content within 1000ms
 
@@ -221,7 +221,7 @@ const animation = element.animate(keyframes, options);
 ## Ch 4: Communicating Animation
 
 ### Why Communication Matters
-- Animations are easy to miscommunicate — "make it slide in" means different things to different people
+- Animations are easy to miscommunicate -- "make it slide in" means different things to different people
 - Without shared language, developers implement something different from what designers intended
 - Animation specs are often omitted from design handoff, leading to guesswork
 
@@ -230,7 +230,7 @@ const animation = element.animate(keyframes, options);
 - Borrowed from film/animation industry
 - **Use for**: Complex multi-step animations, page transitions, onboarding flows
 - **Include**: Key frames, notes about timing/easing, interaction triggers
-- Simple pencil sketches are fine — fidelity doesn't matter, communication does
+- Simple pencil sketches are fine -- fidelity doesn't matter, communication does
 - Number each frame, add annotations for timing and easing
 
 ### Motion Comps (Motion Compositions)
@@ -303,14 +303,14 @@ Establish team-wide terminology:
 2. Provide alternative non-motion presentation for key content
 3. Never rely on animation alone to convey information
 4. Auto-playing content must be pausable
-5. Test with motion settings turned off — your UI should still be fully usable
+5. Test with motion settings turned off -- your UI should still be fully usable
 
 ### Performance Best Practices
 
 **Property Tiers**:
-- **Tier 1 (Composite)**: `transform`, `opacity` — GPU-accelerated, skip layout/paint
-- **Tier 2 (Paint)**: `color`, `background-color`, `box-shadow` — skip layout but trigger paint
-- **Tier 3 (Layout)**: `width`, `height`, `margin`, `padding`, `top/left` — trigger full pipeline
+- **Tier 1 (Composite)**: `transform`, `opacity` -- GPU-accelerated, skip layout/paint
+- **Tier 2 (Paint)**: `color`, `background-color`, `box-shadow` -- skip layout but trigger paint
+- **Tier 3 (Layout)**: `width`, `height`, `margin`, `padding`, `top/left` -- trigger full pipeline
 
 **Optimization Strategies**:
 - Animate only Tier 1 properties whenever possible
@@ -319,14 +319,14 @@ Establish team-wide terminology:
 - Use `opacity` instead of `visibility` or `display`
 - Batch DOM reads and writes (avoid layout thrashing)
 - Use `will-change` sparingly and remove after animation completes
-- Avoid animating during page load — defer to idle time
+- Avoid animating during page load -- defer to idle time
 - Use `requestAnimationFrame` for JavaScript-driven animations
 
 **Testing Performance**:
-- Chrome DevTools Performance panel — look for long frames (>16ms)
-- Paint flashing overlay — identify unexpected repaints
-- Layer borders — check compositor layer count (too many = memory waste)
-- Test on real mobile devices — dev machines hide performance problems
+- Chrome DevTools Performance panel -- look for long frames (>16ms)
+- Paint flashing overlay -- identify unexpected repaints
+- Layer borders -- check compositor layer count (too many = memory waste)
+- Test on real mobile devices -- dev machines hide performance problems
 - Throttle CPU in DevTools to simulate slower hardware
 
 ### Team Workflow
@@ -350,7 +350,7 @@ Establish team-wide terminology:
 - Developer implements animation without knowing intended timing/easing
 - No one tests with reduced-motion setting enabled
 - Animation added at the end of sprint as "polish" without proper design
-- No shared motion language — everyone describes motion differently
+- No shared motion language -- everyone describes motion differently
 
 ### When NOT to Animate
 - When the animation adds no information or functional value

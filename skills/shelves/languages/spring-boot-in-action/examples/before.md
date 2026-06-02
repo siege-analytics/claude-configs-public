@@ -1,9 +1,9 @@
 # Before: Spring Boot in Action
 
-A book library REST API with common Spring Boot anti-patterns — manual configuration fighting auto-config, field injection, hardcoded values, missing tests, and no Actuator.
+A book library REST API with common Spring Boot anti-patterns -- manual configuration fighting auto-config, field injection, hardcoded values, missing tests, and no Actuator.
 
 ```java
-// Main class missing @SpringBootApplication — won't auto-configure anything
+// Main class missing @SpringBootApplication -- won't auto-configure anything
 @Configuration
 @ComponentScan
 public class LibraryApp {
@@ -12,7 +12,7 @@ public class LibraryApp {
     }
 }
 
-// Manual DataSource bean — fights auto-configuration (Ch 2, 3)
+// Manual DataSource bean -- fights auto-configuration (Ch 2, 3)
 @Configuration
 public class DatabaseConfig {
     @Bean
@@ -26,7 +26,7 @@ public class DatabaseConfig {
     }
 }
 
-// Field injection — untestable without Spring context (Ch 2)
+// Field injection -- untestable without Spring context (Ch 2)
 @RestController
 public class BookController {
     @Autowired
@@ -41,7 +41,7 @@ public class BookController {
         return bookRepository.findById(id).orElse(null);  // null slips to client
     }
 
-    // No status code — always returns 200 even on create (Ch 2)
+    // No status code -- always returns 200 even on create (Ch 2)
     @PostMapping("/books")
     @ResponseBody
     public Book createBook(@RequestBody Book book) {
@@ -72,13 +72,13 @@ public class BookControllerTest {
 
     @Test
     public void testGetBook() {
-        // Direct controller call — no HTTP semantics, no status code testing
+        // Direct controller call -- no HTTP semantics, no status code testing
         Book result = controller.getBook(1L);
         assertNotNull(result);
     }
 }
 
-// application.properties — missing externalized config
+// application.properties -- missing externalized config
 // (no datasource url, credentials baked into Java code above)
 // spring.jpa.hibernate.ddl-auto=create  // destroys data on restart!
 ```

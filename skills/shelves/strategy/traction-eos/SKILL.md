@@ -64,7 +64,7 @@ See: [references/vto.md](references/vto.md) for V/TO templates and exercises.
 
 **Tool: Accountability Chart**
 
-Not an org chart—an accountability chart. Defines the structure and who owns what.
+Not an org chart--an accountability chart. Defines the structure and who owns what.
 
 **Structure:**
 ```

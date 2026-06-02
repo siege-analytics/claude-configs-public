@@ -1,6 +1,6 @@
 # GeoPandas Spatial Joins
 
-`gpd.sjoin` and `gpd.sjoin_nearest` — patterns, predicates, performance.
+`gpd.sjoin` and `gpd.sjoin_nearest` -- patterns, predicates, performance.
 
 ## sjoin basics
 
@@ -43,7 +43,7 @@ joined = gpd.sjoin_nearest(
     facilities,
     how="left",
     distance_col="dist_m",  # adds a column with the distance
-    max_distance=5000,      # in CRS units; set this — otherwise it scans everything
+    max_distance=5000,      # in CRS units; set this -- otherwise it scans everything
 )
 ```
 
@@ -114,7 +114,7 @@ def subdivide_polygon(geom, max_vertices=256):
 
 Or use `shapely.ops.split`, or PostGIS `ST_Subdivide` if data is round-tripping through Postgres.
 
-In practice for moderate datasets (< 10M points × few thousand polygons), this isn't needed — GeoPandas' STRtree is fast enough. For larger or more-complex data, push to PostGIS or Sedona where `ST_Subdivide` is one call.
+In practice for moderate datasets (< 10M points × few thousand polygons), this isn't needed -- GeoPandas' STRtree is fast enough. For larger or more-complex data, push to PostGIS or Sedona where `ST_Subdivide` is one call.
 
 ## Many-to-many: spatial overlay
 
@@ -128,7 +128,7 @@ overlay = gpd.overlay(
 )
 ```
 
-Useful for areal interpolation (split a population polygon by overlapping target polygon, distribute population by area). For that specific use case, prefer `siege_utilities.geo.interpolation.areal.interpolate_areal()` — it handles weighting correctly.
+Useful for areal interpolation (split a population polygon by overlapping target polygon, distribute population by area). For that specific use case, prefer `siege_utilities.geo.interpolation.areal.interpolate_areal()` -- it handles weighting correctly.
 
 ## sjoin with predicate=dwithin
 
@@ -139,7 +139,7 @@ joined = gpd.sjoin(
     points,
     facilities,
     predicate="dwithin",
-    distance=500,  # in CRS units — project to meters first if needed
+    distance=500,  # in CRS units -- project to meters first if needed
 )
 ```
 
@@ -153,11 +153,11 @@ After `sjoin`:
 - An `index_right` column shows the matched right-side index.
 - For `how="left"`, unmatched rows have NaN in right columns.
 
-For multi-match cases (a point that intersects two boundaries — common at boundary lines), you get multiple rows in the result. Deduplicate with `drop_duplicates` on the left index, or aggregate with `groupby`.
+For multi-match cases (a point that intersects two boundaries -- common at boundary lines), you get multiple rows in the result. Deduplicate with `drop_duplicates` on the left index, or aggregate with `groupby`.
 
 ## Pitfalls
 
-- **CRS mismatch.** sjoin will reproject the right side to match the left, with a warning. Preempt this — reproject both to a common CRS explicitly.
+- **CRS mismatch.** sjoin will reproject the right side to match the left, with a warning. Preempt this -- reproject both to a common CRS explicitly.
 - **`predicate="contains"` confusion.** `contains` means *left contains right* (left is the polygon, right is the point). Most "find the polygon for each point" tasks want `predicate="within"` (left is the point, right is the polygon) or `predicate="intersects"`.
 - **`how="right"`.** Rarely what you want. Use `how="left"` and swap arguments instead.
 - **`sjoin` on tiny right side.** If the right side is < 100 polygons, building the spatial index is overhead. Just iterate or use a single GeoSeries comparison.

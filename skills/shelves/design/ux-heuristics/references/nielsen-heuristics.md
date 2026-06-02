@@ -227,7 +227,7 @@ Users click through "Are you sure?" without reading. Undo lets them act confiden
 
 ## 7. Flexibility and Efficiency of Use
 
-**Principle:** Accelerators—unseen by the novice user—may often speed up the interaction for the expert user. Allow users to tailor frequent actions.
+**Principle:** Accelerators--unseen by the novice user--may often speed up the interaction for the expert user. Allow users to tailor frequent actions.
 
 ### Accelerators for Experts
 

@@ -1,4 +1,4 @@
-# GeoParquet Without GDAL — The DuckDB Path
+# GeoParquet Without GDAL -- The DuckDB Path
 
 This is the load-bearing pattern for spatial work in GDAL-less environments. If you remember nothing else from this skill, remember this file.
 
@@ -98,7 +98,7 @@ df = con.execute("SELECT * FROM ST_Read('input.kml')").df()
 
 ## CRS handling
 
-DuckDB doesn't currently store full CRS metadata in the GEOMETRY type — geometries are coordinate-only. Track CRS externally:
+DuckDB doesn't currently store full CRS metadata in the GEOMETRY type -- geometries are coordinate-only. Track CRS externally:
 
 ```python
 # Convention: filename suffix or sidecar metadata
@@ -183,7 +183,7 @@ For Siege spatial work in 2026, treat GeoParquet + DuckDB-spatial as the **defau
 |---|---|---|
 | GeoParquet | **no** | **Default for storage** |
 | Shapefile | yes (or DuckDB ST_Read) | Convert at ingest, don't keep |
-| GeoPackage | yes (or DuckDB ST_Read) | Same — convert |
+| GeoPackage | yes (or DuckDB ST_Read) | Same -- convert |
 | GeoJSON | no (built-in JSON) | OK for small data; verbose at scale |
 | FlatGeobuf | yes | Niche; convert to GeoParquet |
 | CSV + WKT/lat-lng | no | OK for ingest; convert to GeoParquet for storage |

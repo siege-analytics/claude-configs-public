@@ -1,4 +1,4 @@
-# Programming with Rust — Chapter Reference
+# Programming with Rust -- Chapter Reference
 
 All 23 chapters from Donis Marshall's "Programming with Rust" with key topics and priority levels.
 
@@ -12,11 +12,11 @@ All 23 chapters from Donis Marshall's "Programming with Rust" with key topics an
 
 ## Ch 3: Variables
 **Key topics:** Immutability by default (`let` vs `let mut`), integer types, overflow behavior, floating point, boolean, char, pointers, references, operators
-**Priority:** Important — immutability by default is a key Rust safety idiom
+**Priority:** Important -- immutability by default is a key Rust safety idiom
 
 ## Ch 4: Strings
 **Key topics:** `&str` (string slice, stack) vs `String` (heap-allocated, owned), deref coercion, `format!`, helpful string functions
-**Idiom:** Accept `&str` in function parameters — `String` derefs to `&str` automatically
+**Idiom:** Accept `&str` in function parameters -- `String` derefs to `&str` automatically
 **Priority:** Important
 
 ## Ch 5: Console
@@ -37,7 +37,7 @@ All 23 chapters from Donis Marshall's "Programming with Rust" with key topics an
 **Critical rules:**
 - Each value has exactly one owner
 - When owner goes out of scope, value is dropped
-- Move transfers ownership — old binding is invalid
+- Move transfers ownership -- old binding is invalid
 - `Copy` types (primitives) are copied instead of moved
 **Priority:** Critical
 
@@ -49,7 +49,7 @@ All 23 chapters from Donis Marshall's "Programming with Rust" with key topics an
 ## Ch 10: References
 **Key topics:** Declaration, borrowing, dereferencing, comparing references, reference notation, mutability, limits to multiple borrowers
 **Critical rules:**
-- At any time: one `&mut T` OR any number of `&T` — never both
+- At any time: one `&mut T` OR any number of `&T` -- never both
 - References must not outlive the referent
 **Priority:** Critical
 
@@ -77,7 +77,7 @@ All 23 chapters from Donis Marshall's "Programming with Rust" with key topics an
 
 ## Ch 15: Patterns
 **Key topics:** `let` destructuring, wildcards (`_`), complex patterns, ownership in patterns, irrefutable patterns, ranges, multiple patterns (`|`), control flow patterns, struct destructuring, function parameter patterns, `match` expressions, match guards
-**Idiom:** `match` is exhaustive — let the compiler enforce all cases; use `if let` for single-variant matches
+**Idiom:** `match` is exhaustive -- let the compiler enforce all cases; use `if let` for single-variant matches
 **Priority:** Important
 
 ## Ch 16: Closures

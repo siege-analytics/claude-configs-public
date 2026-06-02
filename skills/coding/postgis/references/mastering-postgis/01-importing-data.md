@@ -1,4 +1,4 @@
-# Ch 1 — Importing Spatial Data
+# Ch 1 -- Importing Spatial Data
 
 The book's first chapter covers `shp2pgsql`, `ogr2ogr`, and COPY-based loads. All still current; the modern additions are FDW for "import without ingesting" and DuckDB's `ST_Read` for GDAL-less environments.
 
@@ -11,11 +11,11 @@ shp2pgsql -s 4326 -I -W LATIN1 source.shp public.features | psql -d mydb
 ```
 
 Flags worth knowing:
-- `-s SRID` — set the SRID. **Always specify**; default is 0 (no projection info).
-- `-I` — create a GIST index on the geometry column after the load.
-- `-W ENCODING` — source file encoding. Old shapefiles often `LATIN1`; modern ones `UTF8`.
-- `-d` — drop and recreate the table. Use `-a` to append.
-- `-D` — dump format (faster for large loads); pipes through `psql` straight to COPY.
+- `-s SRID` -- set the SRID. **Always specify**; default is 0 (no projection info).
+- `-I` -- create a GIST index on the geometry column after the load.
+- `-W ENCODING` -- source file encoding. Old shapefiles often `LATIN1`; modern ones `UTF8`.
+- `-d` -- drop and recreate the table. Use `-a` to append.
+- `-D` -- dump format (faster for large loads); pipes through `psql` straight to COPY.
 
 For 10M+ row shapefiles, the dump format with `-D` is dramatically faster than the default insert format.
 
@@ -54,7 +54,7 @@ SELECT id, ST_SetSRID(ST_MakePoint(lng, lat), 4326)
 FROM features_staging;
 ```
 
-`ST_MakePoint(x, y)` not `(y, x)` — the axis-order trap.
+`ST_MakePoint(x, y)` not `(y, x)` -- the axis-order trap.
 
 ### `psql \copy` for client-side loads
 
@@ -66,7 +66,7 @@ FROM features_staging;
 
 The book uses `COPY` extensively; `\copy` is the same syntax with the client-vs-server distinction.
 
-## What the book is missing — modern import paths
+## What the book is missing -- modern import paths
 
 ### Foreign Data Wrappers (FDW)
 
@@ -117,9 +117,9 @@ See [skill:duckdb-spatial] for the GDAL-less path.
 
 ### siege_utilities for source-fetching
 
-For Census TIGER, GADM, OSM data — don't `wget` shapefiles. `siege_utilities.geo.spatial_data.get_geographic_boundaries()` returns a GeoDataFrame ready to push to PostGIS via `gdf.to_postgis(...)`. See [`../siege-utilities-postgis.md`](../siege-utilities-postgis.md).
+For Census TIGER, GADM, OSM data -- don't `wget` shapefiles. `siege_utilities.geo.spatial_data.get_geographic_boundaries()` returns a GeoDataFrame ready to push to PostGIS via `gdf.to_postgis(...)`. See [`../siege-utilities-postgis.md`](../siege-utilities-postgis.md).
 
-## The book's bulk-load advice — still current
+## The book's bulk-load advice -- still current
 
 - **Drop indexes before bulk inserts; recreate after.** GIST index updates per-insert kill ingest speed.
 - **`UNLOGGED` table for staging.** Skips WAL; much faster. Promote with INSERT into the logged table.
@@ -137,7 +137,7 @@ COMMIT;
 VACUUM (ANALYZE, VERBOSE) features;
 ```
 
-## What's stale — `ogr2ogr` for everything
+## What's stale -- `ogr2ogr` for everything
 
 The book treats `ogr2ogr` as the universal answer. In 2026, modern alternatives exist for specific cases:
 
@@ -150,7 +150,7 @@ The book treats `ogr2ogr` as the universal answer. In 2026, modern alternatives 
 | Cloud-hosted | n/a | FDW (`parquet_s3_fdw`, `postgres_fdw`). |
 | Census TIGER | manual `wget` + `shp2pgsql` | `siege_utilities.geo.spatial_data.get_geographic_boundaries()`. |
 
-Use `ogr2ogr` when nothing else works — it's the universal fallback. Don't reach for it first.
+Use `ogr2ogr` when nothing else works -- it's the universal fallback. Don't reach for it first.
 
 ## Pitfalls (the book's + modern additions)
 
@@ -164,7 +164,7 @@ Use `ogr2ogr` when nothing else works — it's the universal fallback. Don't rea
 
 ## Cross-links
 
-- [skill:duckdb-spatial] — GDAL-less ingestion gateway
-- [`../siege-utilities-postgis.md`](../siege-utilities-postgis.md) — boundary sourcing via SU
-- [`../indexing-strategies.md`](../indexing-strategies.md) — when to create indexes during ingest
-- [`../vacuuming-and-bloat.md`](../vacuuming-and-bloat.md) — why `VACUUM ANALYZE` after bulk loads matters
+- [skill:duckdb-spatial] -- GDAL-less ingestion gateway
+- [`../siege-utilities-postgis.md`](../siege-utilities-postgis.md) -- boundary sourcing via SU
+- [`../indexing-strategies.md`](../indexing-strategies.md) -- when to create indexes during ingest
+- [`../vacuuming-and-bloat.md`](../vacuuming-and-bloat.md) -- why `VACUUM ANALYZE` after bulk loads matters

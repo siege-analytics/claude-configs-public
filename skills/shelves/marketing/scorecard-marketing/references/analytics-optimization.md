@@ -149,7 +149,7 @@ Compare performance across:
 - Score segments
 - Demographic segments
 
-Example insight: "LinkedIn traffic has 40% higher completion rate but 20% lower CTA click rate—they engage but need different offer."
+Example insight: "LinkedIn traffic has 40% higher completion rate but 20% lower CTA click rate--they engage but need different offer."
 
 ---
 
@@ -170,18 +170,18 @@ Beyond total score, segment by category scores:
 ```
 Marketing Score: 85% | Operations: 45% | Finance: 70%
 
-Insight: Strong marketing, weak operations—target operations content/services
+Insight: Strong marketing, weak operations--target operations content/services
 ```
 
 ### Behavioral Segments
 
 | Segment | Behavior | Strategy |
 |---------|----------|----------|
-| **Quick completers** | <2 min | May be rushed—send detailed PDF |
-| **Thorough completers** | >5 min | Engaged—offer consultation |
+| **Quick completers** | <2 min | May be rushed--send detailed PDF |
+| **Thorough completers** | >5 min | Engaged--offer consultation |
 | **PDF downloaders** | Downloaded report | Ready for deeper content |
 | **CTA clickers** | Clicked but didn't convert | Send reminder/objection handling |
-| **Returners** | Multiple quiz completions | Highly interested—priority follow-up |
+| **Returners** | Multiple quiz completions | Highly interested--priority follow-up |
 
 ---
 
@@ -231,7 +231,7 @@ Map scorecard results to CRM lead scores:
 
 1. **Map fields before launch** - Plan CRM fields and tags in advance
 2. **Test data flow** - Submit test entries through entire flow
-3. **Avoid data overload** - Don't capture every answer—focus on actionable data
+3. **Avoid data overload** - Don't capture every answer--focus on actionable data
 4. **Enable scoring flexibility** - Build in ability to adjust lead scoring
 
 ---

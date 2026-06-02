@@ -13,10 +13,10 @@ Three components, always in this order:
 ### 1. Anchor Moment
 
 The existing routine that triggers the new behavior. It must be:
-- **Something you already do** — not aspirational, already automatic
-- **Precise** — a specific action, not a vague time ("after I close my laptop" not "in the evening")
-- **Reliable** — happens consistently without effort
-- **Contextually related** — ideally in the same environment or workflow
+- **Something you already do** -- not aspirational, already automatic
+- **Precise** -- a specific action, not a vague time ("after I close my laptop" not "in the evening")
+- **Reliable** -- happens consistently without effort
+- **Contextually related** -- ideally in the same environment or workflow
 
 **Examples of strong anchors:**
 - After I open Slack
@@ -26,7 +26,7 @@ The existing routine that triggers the new behavior. It must be:
 - After I close a support ticket
 
 **Examples of weak anchors:**
-- After lunch (too vague — when exactly?)
+- After lunch (too vague -- when exactly?)
 - When I feel motivated (not reliable)
 - At 3pm (time-based, not behavior-based)
 
@@ -58,20 +58,20 @@ The immediate positive emotion after completing the behavior. This is the most c
 - Sound effect (completion chime)
 
 **What's NOT celebration:**
-- External rewards (gift cards, points) — these are motivation, not celebration
-- Delayed feedback (weekly reports) — must be immediate
-- Comparison to others (leaderboards) — this is social pressure, not personal celebration
+- External rewards (gift cards, points) -- these are motivation, not celebration
+- Delayed feedback (weekly reports) -- must be immediate
+- Comparison to others (leaderboards) -- this is social pressure, not personal celebration
 
 ---
 
 ## Starter Steps
 
-A Starter Step is the tiniest version of a behavior that still has meaning. It's the gateway — once a user does the Starter Step, natural momentum often carries them further.
+A Starter Step is the tiniest version of a behavior that still has meaning. It's the gateway -- once a user does the Starter Step, natural momentum often carries them further.
 
 ### How to Find the Starter Step
 
-1. **Describe the target behavior** — "User reviews their weekly project dashboard"
-2. **Ask: What's the first physical action?** — "Open the dashboard"
+1. **Describe the target behavior** -- "User reviews their weekly project dashboard"
+2. **Ask: What's the first physical action?** -- "Open the dashboard"
 3. **Shrink it:** "Click the dashboard link in the navigation"
 4. **Test: Can this be done in under 30 seconds with zero motivation?** If yes, that's your Starter Step.
 

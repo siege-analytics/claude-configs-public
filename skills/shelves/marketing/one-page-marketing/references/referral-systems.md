@@ -45,11 +45,11 @@ The most effective referral programs reward both the referrer and the referred. 
 
 | Business Type | Program Design | Mechanics |
 |--------------|----------------|-----------|
-| SaaS | "Invite and Earn" — both get one month free | Unique referral link in dashboard; automatic credit when referee converts |
-| E-commerce | "Share the Love" — referrer gets $20 credit, friend gets 15% off first order | Unique referral code; shareable via email, social, or text |
-| Consultant | "Professional Network Rewards" — referrer gets $500 off next engagement, referred gets free initial strategy session | Personal introduction via email; tracking in CRM |
-| Local service | "Neighbor Referral" — referrer gets $50 off next service, referred gets $50 off first service | Physical referral cards with unique codes; QR code tracking |
-| Gym/Studio | "Bring a Friend" — referrer gets free month, friend gets free week trial + waived joining fee | In-app referral, front desk tracking |
+| SaaS | "Invite and Earn" -- both get one month free | Unique referral link in dashboard; automatic credit when referee converts |
+| E-commerce | "Share the Love" -- referrer gets $20 credit, friend gets 15% off first order | Unique referral code; shareable via email, social, or text |
+| Consultant | "Professional Network Rewards" -- referrer gets $500 off next engagement, referred gets free initial strategy session | Personal introduction via email; tracking in CRM |
+| Local service | "Neighbor Referral" -- referrer gets $50 off next service, referred gets $50 off first service | Physical referral cards with unique codes; QR code tracking |
+| Gym/Studio | "Bring a Friend" -- referrer gets free month, friend gets free week trial + waived joining fee | In-app referral, front desk tracking |
 
 ## Partnership and Joint Venture Frameworks
 
@@ -85,7 +85,7 @@ The ideal partner serves the same target market with a complementary (not compet
 ### Partnership Outreach Template
 
 ```
-Subject: Partnership idea — [specific benefit for their audience]
+Subject: Partnership idea -- [specific benefit for their audience]
 
 Hi [Name],
 
@@ -97,13 +97,13 @@ I run [your business], and we serve [shared target market] with
 our offerings are complementary.
 
 I had an idea for a partnership that could benefit both our
-audiences: [specific idea — joint webinar, reciprocal referral,
+audiences: [specific idea -- joint webinar, reciprocal referral,
 co-created resource, etc.].
 
 Here is what I am thinking:
 - You would get: [specific benefit for them]
 - Your audience would get: [specific benefit for their audience]
-- We would get: [what you get — be transparent]
+- We would get: [what you get -- be transparent]
 
 Would you be open to a 15-minute call to explore this?
 
@@ -125,7 +125,7 @@ When you partner for a joint promotion:
 
 ## Affiliate Programs
 
-An affiliate program formalizes referrals at scale by paying a commission to anyone who sends you customers — not just existing customers, but bloggers, influencers, complementary businesses, and professional networkers.
+An affiliate program formalizes referrals at scale by paying a commission to anyone who sends you customers -- not just existing customers, but bloggers, influencers, complementary businesses, and professional networkers.
 
 ### Affiliate Program Structure
 
@@ -151,7 +151,7 @@ An affiliate program formalizes referrals at scale by paying a commission to any
 
 ## Asking for Referrals: Scripts and Timing
 
-The number one reason customers do not refer is that they are never asked. Not that they would not want to — they simply do not think of it unless prompted.
+The number one reason customers do not refer is that they are never asked. Not that they would not want to -- they simply do not think of it unless prompted.
 
 ### When to Ask
 
@@ -161,22 +161,22 @@ The number one reason customers do not refer is that they are never asked. Not t
 | After a compliment | They just verbalized their satisfaction | "That means a lot, thank you! Would you be open to sharing that experience with anyone in your network who might need similar help?" |
 | After a 5-star review | They just publicly endorsed you | "Thank you for the amazing review! If you know anyone who is struggling with [problem], I would love to help them too. Here is a link you can share that gives them [incentive]." |
 | At a milestone | Celebration creates positive emotion | "Congratulations on [milestone]! We love working with you. If anyone in your network could use similar results, here is how to refer them." |
-| During a QBR/check-in | Structured time, professional context | "We have covered your results and next steps. One last thing — we grow primarily through referrals from happy clients like you. Is there anyone in your network who might benefit from what we do?" |
+| During a QBR/check-in | Structured time, professional context | "We have covered your results and next steps. One last thing -- we grow primarily through referrals from happy clients like you. Is there anyone in your network who might benefit from what we do?" |
 | After resolving a problem | Service recovery creates extra loyalty | "I am glad we could resolve that quickly. We take your experience seriously. If you are ever talking to someone who needs [your service], we would be honored to help them." |
 
 ### How to Ask: The Three-Step Referral Script
 
 1. **Transition:** "I am glad you are happy with [specific result]."
 2. **Ask:** "Do you know one or two people who might benefit from the same thing?"
-3. **Make it easy:** "If you give me their name and email, I will reach out personally and mention you. Or I can send you a link to share directly — whichever is easier."
+3. **Make it easy:** "If you give me their name and email, I will reach out personally and mention you. Or I can send you a link to share directly -- whichever is easier."
 
 ### Handling "I Can't Think of Anyone Right Now"
 
 This is the most common response, and it does not mean no. It means they need a prompt.
 
-**Response:** "Totally understand. Here is what I find helpful — think about your [industry peers / neighbors / business friends] who have mentioned struggling with [specific problem]. If anyone comes to mind in the next week, just send them this link or forward them my email. No pressure at all."
+**Response:** "Totally understand. Here is what I find helpful -- think about your [industry peers / neighbors / business friends] who have mentioned struggling with [specific problem]. If anyone comes to mind in the next week, just send them this link or forward them my email. No pressure at all."
 
-Then follow up in 7 days: "Hey [Name], just circling back — did anyone come to mind who might benefit from [your service]?"
+Then follow up in 7 days: "Hey [Name], just circling back -- did anyone come to mind who might benefit from [your service]?"
 
 ## Tracking Referral Sources
 
@@ -212,10 +212,10 @@ Every month, review your referral dashboard and take these actions:
 | Finding | Action |
 |---------|--------|
 | A customer made 3+ referrals this month | Personal thank-you call/email plus bonus reward |
-| Referral conversion rate dropped | Audit the referral experience — is the landing page, offer, or follow-up broken? |
+| Referral conversion rate dropped | Audit the referral experience -- is the landing page, offer, or follow-up broken? |
 | No referrals in 30 days | Send a referral reminder to your happiest customers |
 | A new partner sent significant referrals | Schedule a call to deepen the relationship and explore expansion |
-| Referred customers have higher LTV | Increase investment in referral incentives — you can afford to pay more |
+| Referred customers have higher LTV | Increase investment in referral incentives -- you can afford to pay more |
 
 ## Exercises
 

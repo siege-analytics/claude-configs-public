@@ -284,8 +284,8 @@ WHAT WORKED:               WHAT FAILED:
 - [Finding 2]              - [Finding 2]
 
 NEXT STEPS:
-- [ ] [Action item 1] — Owner: [Name] — Due: [Date]
-- [ ] [Action item 2] — Owner: [Name] — Due: [Date]
+- [ ] [Action item 1] -- Owner: [Name] -- Due: [Date]
+- [ ] [Action item 2] -- Owner: [Name] -- Due: [Date]
 ```
 
 ## Common Friday Mistakes

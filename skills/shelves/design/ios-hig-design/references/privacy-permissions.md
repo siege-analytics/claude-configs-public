@@ -382,7 +382,7 @@ Your App Store listing must declare:
 
 ### Best Practices
 
-- Be accurate—Apple verifies
+- Be accurate--Apple verifies
 - Minimize collection to reduce label size
 - Simpler labels build trust
 - Update when collection changes

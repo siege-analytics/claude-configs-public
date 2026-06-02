@@ -1,6 +1,6 @@
 # CRS Management in GeoPandas
 
-CRS bugs are silent and corruptive. A `GeoDataFrame` with the wrong CRS won't error — it'll just give wrong areas, wrong distances, wrong joins.
+CRS bugs are silent and corruptive. A `GeoDataFrame` with the wrong CRS won't error -- it'll just give wrong areas, wrong distances, wrong joins.
 
 ## Lead with siege_utilities
 
@@ -13,16 +13,16 @@ set_default_crs("EPSG:4326")  # session-wide default for SU functions
 gdf = reproject_if_needed(gdf, "EPSG:4326")
 ```
 
-`reproject_if_needed` is idempotent — no-op if already in the target CRS, transforms otherwise. Cheaper than calling `to_crs` defensively.
+`reproject_if_needed` is idempotent -- no-op if already in the target CRS, transforms otherwise. Cheaper than calling `to_crs` defensively.
 
 ## Standard CRS choices for Siege work
 
 | EPSG | Name | Use for |
 |---|---|---|
-| 4326 | WGS 84 (lat/lng) | **Storage / interchange** — every tool reads it |
-| 3857 | Web Mercator | Tile rendering only — distorted distances/areas |
+| 4326 | WGS 84 (lat/lng) | **Storage / interchange** -- every tool reads it |
+| 3857 | Web Mercator | Tile rendering only -- distorted distances/areas |
 | 5070 | NAD83 / Conus Albers Equal Area | **Continental US area calculations** |
-| 26915 | NAD83 / UTM zone 15N | Local distance work (Texas) — pick zone for region |
+| 26915 | NAD83 / UTM zone 15N | Local distance work (Texas) -- pick zone for region |
 | 4269 | NAD83 (lat/lng) | US federal source files; convert to 4326 for interop |
 | 6933 | EASE-Grid 2.0 Global | Global equal-area calculations |
 
@@ -42,7 +42,7 @@ gdf_5070 = gdf.to_crs("EPSG:5070")
 
 Use `set_crs` only when the GeoDataFrame has no CRS (`gdf.crs is None`) but you know what it should be. Use `to_crs` when you need to actually transform.
 
-`set_crs(allow_override=True)` overwrites an existing CRS without reprojecting — almost always wrong; if you think you need it, you actually wanted `to_crs`.
+`set_crs(allow_override=True)` overwrites an existing CRS without reprojecting -- almost always wrong; if you think you need it, you actually wanted `to_crs`.
 
 ## Check before computing
 
@@ -52,14 +52,14 @@ Always verify CRS before area/distance/length:
 def safe_area_m2(gdf, target_crs="EPSG:5070"):
     """Compute area in square meters with explicit projection."""
     if gdf.crs is None:
-        raise ValueError("GeoDataFrame has no CRS — refusing to compute area")
+        raise ValueError("GeoDataFrame has no CRS -- refusing to compute area")
     if str(gdf.crs).lower() in ("epsg:4326", "epsg:4269"):
-        # lat/lng — must project for meaningful area
+        # lat/lng -- must project for meaningful area
         gdf = gdf.to_crs(target_crs)
     return gdf.geometry.area
 ```
 
-For the general "is this CRS safe for distance/area work" question, see SU upstream PR candidate **SU-2** (`crs_distance_operations_safe(crs)`) — until then, the manual check above.
+For the general "is this CRS safe for distance/area work" question, see SU upstream PR candidate **SU-2** (`crs_distance_operations_safe(crs)`) -- until then, the manual check above.
 
 ## Reading from sources with unreliable .crs
 
@@ -78,7 +78,7 @@ gdf = gdf.set_crs("EPSG:4326")
 gdf = gdf.set_crs("EPSG:32614", allow_override=True)  # UTM zone 14N
 ```
 
-GeoJSON files are always WGS84 by spec; explicit `.crs` may still be missing — set to `EPSG:4326`.
+GeoJSON files are always WGS84 by spec; explicit `.crs` may still be missing -- set to `EPSG:4326`.
 
 GeoParquet files store CRS in column metadata; `gpd.read_parquet` reads it correctly. If a file has no metadata, the GeoSeries's `.crs` is None.
 
@@ -97,7 +97,7 @@ gdf_5070.to_parquet("cache/features_5070.parquet")
 
 Subsequent runs skip the reprojection.
 
-## Coordinate axis order — silent corruption risk
+## Coordinate axis order -- silent corruption risk
 
 The lat/lng vs lng/lat question. GeoPandas / Shapely use **(x, y)** = **(longitude, latitude)** consistently. Mistakes:
 

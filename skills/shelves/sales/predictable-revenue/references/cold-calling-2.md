@@ -51,7 +51,7 @@ The referral email is the core innovation. You email someone senior at the targe
 | No attachments | Triggers spam filters, adds friction |
 | No links | Looks like marketing, triggers spam |
 | No pitch | You are asking for help, not selling |
-| One clear ask | "Point me to the right person" — nothing else |
+| One clear ask | "Point me to the right person" -- nothing else |
 | Specific value prop | Generic emails feel like spam |
 | No HTML formatting | Plain text feels personal |
 

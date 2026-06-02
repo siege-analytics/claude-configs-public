@@ -1,4 +1,4 @@
-# Ch 7 — PostGIS Programming (PL/pgSQL)
+# Ch 7 -- PostGIS Programming (PL/pgSQL)
 
 The book's programming chapter covers stored functions, triggers, custom aggregates. All current; the modern addition is `PARALLEL SAFE` annotations (PG 9.6+) and improved JIT compilation (PG 11+).
 
@@ -6,17 +6,17 @@ The book's programming chapter covers stored functions, triggers, custom aggrega
 
 Stored functions earn their complexity when:
 
-- The same logic appears in 5+ queries — encapsulate it
+- The same logic appears in 5+ queries -- encapsulate it
 - The logic involves spatial operations that benefit from inlining (the planner can sometimes optimize through `IMMUTABLE` functions)
 - You need a trigger (validation, history table, denormalization)
 - The logic is too complex for a CTE but doesn't warrant a full application layer
 
 Don't write functions when:
-- The logic is one-off — a CTE or subquery is clearer
+- The logic is one-off -- a CTE or subquery is clearer
 - The function obscures behavior that should be explicit in the query
 - The function makes the query non-portable (other databases can't run PL/pgSQL)
 
-## A canonical pattern — distance helper
+## A canonical pattern -- distance helper
 
 ```sql
 CREATE OR REPLACE FUNCTION distance_meters(
@@ -32,9 +32,9 @@ $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 ```
 
 Three annotations matter:
-- **`LANGUAGE SQL`** — for simple expression-based functions, faster than PL/pgSQL because it can be inlined
-- **`IMMUTABLE`** — same input → same output; planner can cache and parallelize
-- **`PARALLEL SAFE`** — eligible for parallel query execution
+- **`LANGUAGE SQL`** -- for simple expression-based functions, faster than PL/pgSQL because it can be inlined
+- **`IMMUTABLE`** -- same input → same output; planner can cache and parallelize
+- **`PARALLEL SAFE`** -- eligible for parallel query execution
 
 Without these, the planner treats the function as a black box and runs it serially per row. With them, it inlines into the query and respects parallelism.
 
@@ -46,7 +46,7 @@ Without these, the planner treats the function as a black box and runs it serial
 | **STABLE** | Same input → same output, within a query | Functions that read tables (snapshots) |
 | **VOLATILE** | May differ between calls | Functions with side effects (`now()`, INSERT) |
 
-Default is `VOLATILE` — slowest. Annotate as strictly as truthful for your function.
+Default is `VOLATILE` -- slowest. Annotate as strictly as truthful for your function.
 
 ## Parallel safety
 
@@ -158,7 +158,7 @@ CREATE AGGREGATE area_weighted_centroid(geometry, double precision) (
 
 Custom aggregates are powerful but rarely needed. Reach for them when standard aggregates can't express the operation cleanly.
 
-## Modern observability — pg_stat_statements + auto_explain
+## Modern observability -- pg_stat_statements + auto_explain
 
 Post-book: install always.
 
@@ -201,23 +201,23 @@ SET jit = on;
 SET jit_above_cost = 100000;
 ```
 
-Defaults are usually right; if you see "JIT" in EXPLAIN output for spatial queries and they're slower than expected, try `SET jit = off` for the session — JIT has overhead that can dominate for short-running queries.
+Defaults are usually right; if you see "JIT" in EXPLAIN output for spatial queries and they're slower than expected, try `SET jit = off` for the session -- JIT has overhead that can dominate for short-running queries.
 
 ## Pitfalls
 
-- **Function defaults to `VOLATILE`** — blocks parallel query and inlining. Always annotate volatility.
-- **PL/pgSQL when SQL would do** — PL/pgSQL functions can't be inlined; SQL functions can. Use SQL for one-expression functions.
-- **Triggers on bulk-load tables** — slow ingestion 10-100x. Disable during bulk load.
-- **`SECURITY DEFINER` functions accessing tables** — RLS bypass risk. Use only when needed; document scope.
-- **No explicit `IMMUTABLE`/`STABLE`** — planner can't optimize. Default `VOLATILE` is the worst case.
-- **Triggers + RAISE EXCEPTION rolling back transactions** — inconsistent error handling at the application layer; document trigger behavior in user-facing docs.
-- **Custom aggregate with `VOLATILE` state function** — non-deterministic results across runs. Almost always wrong; use `IMMUTABLE`.
+- **Function defaults to `VOLATILE`** -- blocks parallel query and inlining. Always annotate volatility.
+- **PL/pgSQL when SQL would do** -- PL/pgSQL functions can't be inlined; SQL functions can. Use SQL for one-expression functions.
+- **Triggers on bulk-load tables** -- slow ingestion 10-100x. Disable during bulk load.
+- **`SECURITY DEFINER` functions accessing tables** -- RLS bypass risk. Use only when needed; document scope.
+- **No explicit `IMMUTABLE`/`STABLE`** -- planner can't optimize. Default `VOLATILE` is the worst case.
+- **Triggers + RAISE EXCEPTION rolling back transactions** -- inconsistent error handling at the application layer; document trigger behavior in user-facing docs.
+- **Custom aggregate with `VOLATILE` state function** -- non-deterministic results across runs. Almost always wrong; use `IMMUTABLE`.
 
 ## Cross-links
 
-- [`../query-optimization.md`](../query-optimization.md) — `EXPLAIN`, `pg_stat_statements`, parallel query setup
-- [`../vacuuming-and-bloat.md`](../vacuuming-and-bloat.md) — autovacuum and `auto_explain` for ops monitoring
-- [`06-etl-patterns.md`](06-etl-patterns.md) — ETL pipelines that disable triggers during bulk load
+- [`../query-optimization.md`](../query-optimization.md) -- `EXPLAIN`, `pg_stat_statements`, parallel query setup
+- [`../vacuuming-and-bloat.md`](../vacuuming-and-bloat.md) -- autovacuum and `auto_explain` for ops monitoring
+- [`06-etl-patterns.md`](06-etl-patterns.md) -- ETL pipelines that disable triggers during bulk load
 
 ## Citation
 

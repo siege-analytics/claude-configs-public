@@ -1,6 +1,6 @@
 # Craft Your Message
 
-Your message is the bridge between your target market and your offer. It answers the most important question a prospect has: "Why should I buy from you rather than your nearest competitor?" If you cannot answer that question clearly and compellingly, you are a commodity — and commodities compete on price alone.
+Your message is the bridge between your target market and your offer. It answers the most important question a prospect has: "Why should I buy from you rather than your nearest competitor?" If you cannot answer that question clearly and compellingly, you are a commodity -- and commodities compete on price alone.
 
 ## The Unique Selling Proposition (USP)
 
@@ -8,7 +8,7 @@ A USP is not a slogan, tagline, or mission statement. It is a clear, specific st
 
 ### The USP Test
 
-Your USP must pass this test: If you replace your company name with a competitor's name, does the statement still work? If yes, it is not a USP — it is a generic claim.
+Your USP must pass this test: If you replace your company name with a competitor's name, does the statement still work? If yes, it is not a USP -- it is a generic claim.
 
 **Fails the test:** "We provide high-quality solutions with excellent customer service." (Every competitor says this.)
 
@@ -26,7 +26,7 @@ Become the go-to provider for a specific niche, problem, or outcome.
 |---------|-------------|
 | "The accounting firm for Amazon FBA sellers" | Instantly disqualifies competitors who serve everyone |
 | "The only gym designed for people over 50" | Clear niche, specific promise, no direct competitors |
-| "Website design for law firms — we have built 400+ attorney sites" | Credibility through volume in one niche |
+| "Website design for law firms -- we have built 400+ attorney sites" | Credibility through volume in one niche |
 
 #### Strategy 2: Unique Mechanism
 
@@ -45,7 +45,7 @@ Offer a guarantee so strong that it reverses all risk and makes the purchase dec
 | Example | Why It Works |
 |---------|-------------|
 | "Your roof will not leak for 25 years or we fix it free" | Specific, time-bound, clear consequence |
-| "You will pass the bar exam or we refund 100% and pay for your next prep course" | Beyond money-back — adds extra value |
+| "You will pass the bar exam or we refund 100% and pay for your next prep course" | Beyond money-back -- adds extra value |
 | "If we do not sell your home in 90 days, we will buy it" | Extreme commitment signals extreme confidence |
 
 #### Strategy 4: Proprietary Process
@@ -65,7 +65,7 @@ Find a segment that is being ignored or poorly served by existing solutions and 
 | Example | Why It Works |
 |---------|-------------|
 | "Banking designed for freelancers and gig workers" | Major segment ignored by traditional banks |
-| "Project management for creative agencies — not IT teams" | Addresses frustration with tools built for wrong audience |
+| "Project management for creative agencies -- not IT teams" | Addresses frustration with tools built for wrong audience |
 | "Insurance for short-term rental hosts" | New market segment with specific, unmet needs |
 
 ## The Elevator Pitch Formula
@@ -142,7 +142,7 @@ When prospects cannot tell the difference between you and competitors, the only 
 | Name your process | Create a trademarked, stepped methodology | "The 5D Design Process" |
 | Add a guarantee | Offer something competitors are afraid to match | "Double your conversions or we work free until you do" |
 | Narrow your niche | Stop serving everyone and specialize | "Email marketing for Shopify stores only" |
-| Create a category | Redefine what you do so there is no comparison | "We don't do consulting — we do Revenue Architecture" |
+| Create a category | Redefine what you do so there is no comparison | "We don't do consulting -- we do Revenue Architecture" |
 | Bundle differently | Combine products/services in a way no one else does | "Strategy + design + copywriting in one weekly sprint" |
 | Tell a better story | Use founder story, origin story, or mission as differentiator | "Founded by a nurse who was frustrated by..." |
 

@@ -45,7 +45,7 @@ set_default_crs("EPSG:4326")  # session-wide default
 # Always check CRS at boundary
 gdf = gpd.read_file("source.shp")
 if gdf.crs is None:
-    raise ValueError("Source has no CRS — refusing to proceed")
+    raise ValueError("Source has no CRS -- refusing to proceed")
 gdf = reproject_if_needed(gdf, "EPSG:4326")
 
 # Project for measurement
@@ -57,7 +57,7 @@ gdf_5070["area_m2"] = gdf_5070.geometry.area  # square meters
 
 ```python
 df = sedona.read.format("geoparquet").load("s3://bucket/data.parquet")
-# Sedona doesn't store SRID in schema — track via column name
+# Sedona doesn't store SRID in schema -- track via column name
 df = df.withColumn("geom_4326", expr("ST_GeomFromWKB(geom_wkb)"))
 df = df.withColumn("geom_5070", expr("ST_Transform(geom_4326, 'EPSG:4326', 'EPSG:5070')"))
 
@@ -85,8 +85,8 @@ DuckDB's GEOMETRY type also doesn't carry SRID. Same compensation: track via col
 
 Unlike a SQL syntax error, CRS violations don't raise:
 
-- `ST_Distance(point_4326, point_4326)` returns degrees — a small positive number that *looks* reasonable for "distance" but isn't meters.
-- `ST_Area(polygon_4326)` returns square degrees — looks like an area; isn't square meters / acres / anything meaningful.
+- `ST_Distance(point_4326, point_4326)` returns degrees -- a small positive number that *looks* reasonable for "distance" but isn't meters.
+- `ST_Area(polygon_4326)` returns square degrees -- looks like an area; isn't square meters / acres / anything meaningful.
 - A spatial join across mismatched SRIDs may return zero rows OR may silently reproject one side and become slow OR may error in some engines and silently pass in others.
 - A 4326-stored geometry compared to a Web Mercator (3857) bounding box returns zero matches because the bounding-box numbers don't overlap.
 
@@ -96,8 +96,8 @@ The pipeline runs. The output looks plausible. The conclusions are wrong.
 
 | EPSG | Name | Use for |
 |---|---|---|
-| 4326 | WGS 84 (lat/lng) | **Storage / interchange** — universal compatibility |
-| 3857 | Web Mercator | **Tile rendering only** — distorted distances/areas; never compute on this |
+| 4326 | WGS 84 (lat/lng) | **Storage / interchange** -- universal compatibility |
+| 3857 | Web Mercator | **Tile rendering only** -- distorted distances/areas; never compute on this |
 | 5070 | NAD83 / Conus Albers Equal Area | **Continental US area calculations** |
 | 26915 | NAD83 / UTM zone 15N | Local distance work (Texas etc.); pick zone for region |
 | 32614 | WGS 84 / UTM zone 14N | Global UTM equivalent |
@@ -120,7 +120,7 @@ For other regions: https://epsg.io/
 | DuckDB-spatial | None | Track via column naming |
 | GeoParquet | CRS stored in column metadata | Round-trips cleanly through pyarrow / DuckDB / Sedona |
 
-The GeoParquet metadata exception is why GeoParquet is the strongest interchange format — it's the only widely-supported file format that carries CRS *with* the binary geometry data.
+The GeoParquet metadata exception is why GeoParquet is the strongest interchange format -- it's the only widely-supported file format that carries CRS *with* the binary geometry data.
 
 ## Defensive coding
 
@@ -130,7 +130,7 @@ Refuse to compute distance/area on lat/lng:
 def safe_area_m2(gdf, target_crs="EPSG:5070"):
     """Compute area in square meters with explicit projection."""
     if gdf.crs is None:
-        raise ValueError("GeoDataFrame has no CRS — refusing to compute area")
+        raise ValueError("GeoDataFrame has no CRS -- refusing to compute area")
     if str(gdf.crs).lower() in ("epsg:4326", "epsg:4269"):
         gdf = gdf.to_crs(target_crs)
     return gdf.geometry.area
@@ -152,8 +152,8 @@ These functions exist precisely because CRS errors are silent without them.
 
 ## Cross-links
 
-- [`name-by-srid.md`](name-by-srid.md) — naming convention to track CRS across stages where engines don't store it
-- [`../crs-decision-tree.md`](../crs-decision-tree.md) — operational decision tree for picking the right CRS per task
-- [`validate-on-ingest.md`](validate-on-ingest.md) — pairs with this principle: validate CRS *and* geometry at the boundary
-- [`../../coding/postgis/references/geometry-vs-geography.md`](../../../coding/postgis/references/geometry-vs-geography.md) — PostGIS-specific deep dive on the `geometry` vs `geography` choice
-- [`../siege-utilities-spatial.md`](../siege-utilities-spatial.md) — `siege_utilities.geo.crs` helpers
+- [`name-by-srid.md`](name-by-srid.md) -- naming convention to track CRS across stages where engines don't store it
+- [`../crs-decision-tree.md`](../crs-decision-tree.md) -- operational decision tree for picking the right CRS per task
+- [`validate-on-ingest.md`](validate-on-ingest.md) -- pairs with this principle: validate CRS *and* geometry at the boundary
+- [`../../coding/postgis/references/geometry-vs-geography.md`](../../../coding/postgis/references/geometry-vs-geography.md) -- PostGIS-specific deep dive on the `geometry` vs `geography` choice
+- [`../siege-utilities-spatial.md`](../siege-utilities-spatial.md) -- `siege_utilities.geo.crs` helpers

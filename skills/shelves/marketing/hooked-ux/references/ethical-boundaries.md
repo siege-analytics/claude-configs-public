@@ -305,7 +305,7 @@ If the answer is no, reconsider the tactic.
 
 ### Building for Humans
 
-The goal of the Hook Model isn't addiction—it's helping people form habits that serve them.
+The goal of the Hook Model isn't addiction--it's helping people form habits that serve them.
 
 **Ethical products:**
 - Help users achieve their goals

@@ -1,6 +1,6 @@
 # Variable Rewards in the Hook Model
 
-The reward phase is what keeps users coming back. Predictable rewards lose power—variability is what maintains engagement.
+The reward phase is what keeps users coming back. Predictable rewards lose power--variability is what maintains engagement.
 
 ## The Science of Variable Rewards
 
@@ -28,7 +28,7 @@ Reward after a set number of actions (e.g., every 5th action).
 
 Reward after random number of actions.
 
-**Behavior pattern:** High, steady response rate—most powerful for sustained behavior
+**Behavior pattern:** High, steady response rate--most powerful for sustained behavior
 **Example:** Slot machines, social media likes
 **Product use:** Feed refresh, message notifications, loot boxes
 
@@ -73,7 +73,7 @@ Most successful products combine multiple schedules:
 
 ### 1. Rewards of the Tribe
 
-Social rewards—validation, acceptance, and status from others.
+Social rewards--validation, acceptance, and status from others.
 
 **Examples:**
 
@@ -97,7 +97,7 @@ Social rewards—validation, acceptance, and status from others.
 
 ### 2. Rewards of the Hunt
 
-The search for resources—information, money, or material possessions.
+The search for resources--information, money, or material possessions.
 
 **Examples:**
 
@@ -122,7 +122,7 @@ The search for resources—information, money, or material possessions.
 
 ### 3. Rewards of the Self
 
-Intrinsic motivation—mastery, completion, competence, and consistency.
+Intrinsic motivation--mastery, completion, competence, and consistency.
 
 **Examples:**
 

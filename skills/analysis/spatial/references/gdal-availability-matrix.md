@@ -22,7 +22,7 @@ caps["tier"]
 | `geodjango` | `geo` tier + Django + django.contrib.gis | Adds GeoDjango ORM for PostGIS-backed Django apps. |
 | `none` | Neither | Fall back to pandas + math + DuckDB-spatial. |
 
-DuckDB and Sedona don't fit this tier vocabulary cleanly — they bundle their own spatial libs (DuckDB extension binary; JVM-side GEOS for Sedona) and aren't reflected in `caps`. Check independently with `caps["duckdb"]` and `caps["sedona"]`.
+DuckDB and Sedona don't fit this tier vocabulary cleanly -- they bundle their own spatial libs (DuckDB extension binary; JVM-side GEOS for Sedona) and aren't reflected in `caps`. Check independently with `caps["duckdb"]` and `caps["sedona"]`.
 
 ## Operations × engines × GDAL
 
@@ -109,6 +109,6 @@ Before deploying spatial code to a constrained environment:
 
 ## Pending SU upstream PRs
 
-- **SU-1** — `read_geoparquet()`/`write_geoparquet()` without GDAL (DuckDB-WKB path). Closes the geo-lite gap most cleanly.
-- **SU-6** — pyogrio fallback for Fiona. Smaller install footprint when Fiona isn't available.
-- **SU-10** — document the capability tier vocabulary in user-facing README. Until this lands, this file is the canonical reference.
+- **SU-1** -- `read_geoparquet()`/`write_geoparquet()` without GDAL (DuckDB-WKB path). Closes the geo-lite gap most cleanly.
+- **SU-6** -- pyogrio fallback for Fiona. Smaller install footprint when Fiona isn't available.
+- **SU-10** -- document the capability tier vocabulary in user-facing README. Until this lands, this file is the canonical reference.

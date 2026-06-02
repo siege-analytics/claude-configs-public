@@ -14,16 +14,16 @@ Apply the practices from Donis Marshall's "Programming with Rust" to review exis
 
 ## Reference Files
 
-- `ref-01-fundamentals.md` — Ch 1-3: Rust model, tooling, variables, primitives, references
-- `ref-02-types-strings.md` — Ch 4-5: String vs &str, formatting, Display/Debug traits
-- `ref-03-control-collections.md` — Ch 6-7: Control flow, iterators, arrays, Vec, HashMap
-- `ref-04-ownership-lifetimes.md` — Ch 8-10: Ownership, move semantics, borrowing, lifetimes
-- `ref-05-functions-errors.md` — Ch 11-12: Functions, Result, Option, panics, custom errors
-- `ref-06-structs-generics.md` — Ch 13-14: Structs, impl blocks, generics, bounds
-- `ref-07-patterns-closures.md` — Ch 15-16: Pattern matching, closures, Fn/FnMut/FnOnce
-- `ref-08-traits.md` — Ch 17: Trait definition, dispatch, supertraits, associated types
-- `ref-09-concurrency.md` — Ch 18-19: Threads, channels, Mutex, RwLock, atomics
-- `ref-10-advanced.md` — Ch 20-23: Memory, interior mutability, macros, FFI, modules
+- `ref-01-fundamentals.md` -- Ch 1-3: Rust model, tooling, variables, primitives, references
+- `ref-02-types-strings.md` -- Ch 4-5: String vs &str, formatting, Display/Debug traits
+- `ref-03-control-collections.md` -- Ch 6-7: Control flow, iterators, arrays, Vec, HashMap
+- `ref-04-ownership-lifetimes.md` -- Ch 8-10: Ownership, move semantics, borrowing, lifetimes
+- `ref-05-functions-errors.md` -- Ch 11-12: Functions, Result, Option, panics, custom errors
+- `ref-06-structs-generics.md` -- Ch 13-14: Structs, impl blocks, generics, bounds
+- `ref-07-patterns-closures.md` -- Ch 15-16: Pattern matching, closures, Fn/FnMut/FnOnce
+- `ref-08-traits.md` -- Ch 17: Trait definition, dispatch, supertraits, associated types
+- `ref-09-concurrency.md` -- Ch 18-19: Threads, channels, Mutex, RwLock, atomics
+- `ref-10-advanced.md` -- Ch 20-23: Memory, interior mutability, macros, FFI, modules
 
 ## How to Use This Skill
 
@@ -40,18 +40,18 @@ Identify which chapters apply. If unsure, read all reference files.
 
 ### Step 2: Analyze the Code
 
-**CRITICAL: First assess whether the code is already idiomatic.** If the code correctly uses patterns like `Arc<Mutex<T>>` for shared state, `.expect("reason")` for mutex locks, `&str` parameters, custom error types with `Display + Error + From`, iterator adapters like `.find().cloned()`, or proper `Result`/`?` propagation — **acknowledge these as correct and do not manufacture problems**. The goal is accurate assessment, not finding something to criticize.
+**CRITICAL: First assess whether the code is already idiomatic.** If the code correctly uses patterns like `Arc<Mutex<T>>` for shared state, `.expect("reason")` for mutex locks, `&str` parameters, custom error types with `Display + Error + From`, iterator adapters like `.find().cloned()`, or proper `Result`/`?` propagation -- **acknowledge these as correct and do not manufacture problems**. The goal is accurate assessment, not finding something to criticize.
 
 Check these areas in order of severity:
 
-1. **Ownership & Borrowing** (Ch 8, 10): Unnecessary `.clone()` calls? Mutable borrow conflicts? Move semantics misunderstood? Cloning a single found item (e.g., `.find().cloned()`) is correct and intentional — do not flag it.
+1. **Ownership & Borrowing** (Ch 8, 10): Unnecessary `.clone()` calls? Mutable borrow conflicts? Move semantics misunderstood? Cloning a single found item (e.g., `.find().cloned()`) is correct and intentional -- do not flag it.
 2. **Lifetimes** (Ch 9): Missing or incorrect annotations? Can elision rules eliminate them? `'static` used where a shorter lifetime would do?
-3. **Error Handling** (Ch 12): Is `.unwrap()` used without a meaningful reason where `?` or proper matching belongs? `.expect("mutex poisoned")` with a descriptive reason string is correct idiomatic Rust — do not flag it. Are custom error types with `Display`, `Error`, and `From` implementations missing where they'd help callers?
-4. **Traits & Generics** (Ch 14, 17): Are trait bounds as narrow as possible? When a function could return a single concrete type, `impl Trait` is preferred over `Box<dyn Trait>` for zero-cost static dispatch. However, when a function **must** return one of multiple different concrete types at runtime (e.g., `if condition { Box::new(TypeA) } else { Box::new(TypeB) }`), `Box<dyn Trait>` is the correct and necessary choice — do not flag it as wrong. When reviewing code that uses `Box<dyn Trait>` for multiple-type returns, you should still **note** that if only one type were ever returned, `impl Trait` would be preferred — frame this as a general educational point, not a bug. Also note: trait methods that return `String` via `.clone()` could instead return `&str` with a lifetime annotation (`fn summary(&self) -> &str`) to avoid heap allocation — mention this as a suggestion.
+3. **Error Handling** (Ch 12): Is `.unwrap()` used without a meaningful reason where `?` or proper matching belongs? `.expect("mutex poisoned")` with a descriptive reason string is correct idiomatic Rust -- do not flag it. Are custom error types with `Display`, `Error`, and `From` implementations missing where they'd help callers?
+4. **Traits & Generics** (Ch 14, 17): Are trait bounds as narrow as possible? When a function could return a single concrete type, `impl Trait` is preferred over `Box<dyn Trait>` for zero-cost static dispatch. However, when a function **must** return one of multiple different concrete types at runtime (e.g., `if condition { Box::new(TypeA) } else { Box::new(TypeB) }`), `Box<dyn Trait>` is the correct and necessary choice -- do not flag it as wrong. When reviewing code that uses `Box<dyn Trait>` for multiple-type returns, you should still **note** that if only one type were ever returned, `impl Trait` would be preferred -- frame this as a general educational point, not a bug. Also note: trait methods that return `String` via `.clone()` could instead return `&str` with a lifetime annotation (`fn summary(&self) -> &str`) to avoid heap allocation -- mention this as a suggestion.
 5. **Pattern Matching** (Ch 15): Are `match` arms exhaustive? Can `if let` / `while let` simplify single-arm matches? Are wildcards masking unhandled cases?
-6. **Concurrency** (Ch 18, 19): `Arc<Mutex<T>>` for shared mutable state across threads is correct idiomatic Rust — acknowledge it positively. Is shared state protected when it should be? Are channels used correctly? Note: `RwLock` is only preferable over `Mutex` when reads vastly outnumber writes — do not flag `Mutex` as wrong when `RwLock` would merely be an option.
+6. **Concurrency** (Ch 18, 19): `Arc<Mutex<T>>` for shared mutable state across threads is correct idiomatic Rust -- acknowledge it positively. Is shared state protected when it should be? Are channels used correctly? Note: `RwLock` is only preferable over `Mutex` when reads vastly outnumber writes -- do not flag `Mutex` as wrong when `RwLock` would merely be an option.
 7. **Memory** (Ch 20): Is `RefCell` used outside of single-threaded interior mutability? Is `Box` used unnecessarily when stack allocation would work?
-8. **Idioms**: Is `for item in collection` preferred over manual indexing? Are iterator adapters (`map`, `filter`, `collect`) used over manual loops? `&str` parameters with `.to_string()` conversion at the boundary is correct — do not flag it.
+8. **Idioms**: Is `for item in collection` preferred over manual indexing? Are iterator adapters (`map`, `filter`, `collect`) used over manual loops? `&str` parameters with `.to_string()` conversion at the boundary is correct -- do not flag it.
 
 ### Step 3: Report Findings
 
@@ -84,7 +84,7 @@ When the user asks you to **write** new Rust code, apply these core principles:
 
 1. **Prefer borrowing over cloning** (Ch 8). Pass `&T` or `&mut T` rather than transferring ownership when the caller still needs the value. Clone only when ownership genuinely needs to be duplicated.
 
-2. **Respect the single-owner rule** (Ch 8). Each value has exactly one owner. When you move a value, the old binding is invalid — design data flow around this.
+2. **Respect the single-owner rule** (Ch 8). Each value has exactly one owner. When you move a value, the old binding is invalid -- design data flow around this.
 
 3. **Use lifetime elision** (Ch 9). Annotate lifetimes only when the compiler cannot infer them. Explicit annotations are for structs holding references and functions with multiple reference parameters where elision is ambiguous.
 
@@ -102,7 +102,7 @@ When the user asks you to **write** new Rust code, apply these core principles:
 
 ### Traits & Generics
 
-9. **Prefer `impl Trait` over `dyn Trait` for return types when a single concrete type is returned** (Ch 17). Static dispatch is zero-cost. Use `dyn Trait` (typically `Box<dyn Trait>`) only when the function must return one of multiple different concrete types at runtime — that is genuinely the correct tool and should not be changed to `impl Trait`.
+9. **Prefer `impl Trait` over `dyn Trait` for return types when a single concrete type is returned** (Ch 17). Static dispatch is zero-cost. Use `dyn Trait` (typically `Box<dyn Trait>`) only when the function must return one of multiple different concrete types at runtime -- that is genuinely the correct tool and should not be changed to `impl Trait`.
 
 10. **Use trait bounds instead of concrete types** (Ch 14). `fn process<T: Display + Debug>(item: T)` is more reusable than accepting a concrete type.
 
@@ -110,7 +110,7 @@ When the user asks you to **write** new Rust code, apply these core principles:
 
 ### Pattern Matching
 
-12. **Use `match` for exhaustive handling** (Ch 15). The compiler enforces exhaustiveness — treat it as a feature, not a burden.
+12. **Use `match` for exhaustive handling** (Ch 15). The compiler enforces exhaustiveness -- treat it as a feature, not a burden.
 
 13. **Use `if let` for single-variant matching** (Ch 15). `if let Some(x) = opt { }` is cleaner than a two-arm `match` when you only care about one case.
 
@@ -120,9 +120,9 @@ When the user asks you to **write** new Rust code, apply these core principles:
 
 15. **Use channels for message passing** (Ch 18). Prefer `std::sync::mpsc` channels over shared mutable state when threads can communicate by value.
 
-16. **Wrap shared state in `Arc<Mutex<T>>`** (Ch 19). `Arc` for shared ownership across threads, `Mutex` for mutual exclusion. `Arc<Mutex<T>>` is the correct default — only suggest `RwLock` if there is evidence that reads vastly outnumber writes and contention is a measured concern.
+16. **Wrap shared state in `Arc<Mutex<T>>`** (Ch 19). `Arc` for shared ownership across threads, `Mutex` for mutual exclusion. `Arc<Mutex<T>>` is the correct default -- only suggest `RwLock` if there is evidence that reads vastly outnumber writes and contention is a measured concern.
 
-17. **Prefer `Mutex::lock().unwrap()` with `.expect()`** (Ch 19). Poisoned mutexes indicate a panic in another thread — `.expect("mutex poisoned")` makes this explicit.
+17. **Prefer `Mutex::lock().unwrap()` with `.expect()`** (Ch 19). Poisoned mutexes indicate a panic in another thread -- `.expect("mutex poisoned")` makes this explicit.
 
 ### Code Structure Template
 
@@ -186,8 +186,8 @@ pub enum Role {
 ## Priority of Practices by Impact
 
 ### Critical (Safety & Correctness)
-- Ch 8: Understand ownership — moving vs borrowing, no use-after-move
-- Ch 10: One mutable borrow OR many immutable borrows — never both
+- Ch 8: Understand ownership -- moving vs borrowing, no use-after-move
+- Ch 10: One mutable borrow OR many immutable borrows -- never both
 - Ch 12: Never `.unwrap()` in production; use `Result` and `?`
 - Ch 19: Always protect shared mutable state with `Mutex` or `RwLock`
 

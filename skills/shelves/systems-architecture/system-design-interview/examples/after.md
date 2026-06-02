@@ -6,7 +6,7 @@ A structured URL shortener design that follows the 4-step framework: scope clari
 DESIGN: URL Shortener Service
 
 ─────────────────────────────────────────────────────────────
-STEP 1 — SCOPE & REQUIREMENTS
+STEP 1 -- SCOPE & REQUIREMENTS
 ─────────────────────────────────────────────────────────────
 Functional requirements:
   - POST /shorten          → create short URL, return 7-char code
@@ -21,7 +21,7 @@ Non-functional requirements:
   - URLs persist indefinitely (unless TTL set)
 
 ─────────────────────────────────────────────────────────────
-STEP 2 — BACK-OF-ENVELOPE ESTIMATION
+STEP 2 -- BACK-OF-ENVELOPE ESTIMATION
 ─────────────────────────────────────────────────────────────
 Write QPS:  100M / 86,400 sec ≈ 1,160 writes/sec
 Read QPS:   100:1 ratio       ≈ 116,000 reads/sec
@@ -37,7 +37,7 @@ Cache:
   In-memory cache size: 1M hot entries × 500B ≈ 500 MB (fits on one Redis node)
 
 ─────────────────────────────────────────────────────────────
-STEP 3 — HIGH-LEVEL DESIGN
+STEP 3 -- HIGH-LEVEL DESIGN
 ─────────────────────────────────────────────────────────────
 
 [Client]
@@ -65,7 +65,7 @@ API contract:
     Response: HTTP 301 (permanent, browser caches) or 302 (temporary, server tracks clicks)
 
 ─────────────────────────────────────────────────────────────
-STEP 4 — DEEP DIVE: ID Generation
+STEP 4 -- DEEP DIVE: ID Generation
 ─────────────────────────────────────────────────────────────
 Problem: UUID first-8-chars has high collision probability at scale.
 
@@ -74,7 +74,7 @@ Solution: Twitter Snowflake-style 64-bit ID:
   → Globally unique, monotonically increasing, no coordination needed
   → Base62 encode (a-z, A-Z, 0-9): 7 chars covers 62^7 ≈ 3.5 trillion URLs
 
-Collision handling: none needed — IDs are guaranteed unique by construction.
+Collision handling: none needed -- IDs are guaranteed unique by construction.
 
 ─────────────────────────────────────────────────────────────
 OPERATIONAL CONCERNS
@@ -87,8 +87,8 @@ OPERATIONAL CONCERNS
 
 Key improvements:
 - Back-of-envelope estimation (116K reads/sec, 182TB, 500MB cache) validates that a single Redis node suffices and that DB sharding is a future concern, not a day-one requirement (Ch 2: Estimation before design)
-- The 4-step framework structures the proposal — scope before design, estimation before components, component overview before deep dive (Ch 3: 4-step framework)
-- API contract is defined explicitly before implementation — POST/GET endpoints with request/response shapes (Ch 3: High-level design)
+- The 4-step framework structures the proposal -- scope before design, estimation before components, component overview before deep dive (Ch 3: 4-step framework)
+- API contract is defined explicitly before implementation -- POST/GET endpoints with request/response shapes (Ch 3: High-level design)
 - Snowflake ID generation replaces UUID truncation with a correct solution: no collisions at 100M/day scale (Ch 7: Unique ID generation)
 - Read replicas serve the 100:1 read-heavy workload; Redis caches the hot 20% to keep redirect latency under 50ms (Ch 1: Caching and replication)
-- 301 vs 302 redirect choice is a conscious trade-off: 301 reduces server load, 302 enables analytics — stated explicitly (Ch 8: URL Shortener)
+- 301 vs 302 redirect choice is a conscious trade-off: 301 reduces server load, 302 enables analytics -- stated explicitly (Ch 8: URL Shortener)

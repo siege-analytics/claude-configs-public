@@ -13,7 +13,7 @@ This is the counterpart to the static scanner: the scanner catches code-vs-model
 
 ## Why
 
-A recurring failure shape: code references entities — imports, model fields, table columns, function names, env vars — that don't exist or have a different shape than the author assumed. The reference looks plausible. CI doesn't exercise the path. The bug ships.
+A recurring failure shape: code references entities -- imports, model fields, table columns, function names, env vars -- that don't exist or have a different shape than the author assumed. The reference looks plausible. CI doesn't exercise the path. The bug ships.
 
 Without a canonical doc layer, every author re-pays the introspection cost on every task, and drift between author-mental-model and reality goes undetected until it ships. With a doc layer, the survey becomes a cheap diff against committed truth, and drift becomes a tracked finding instead of a per-task surprise.
 
@@ -77,10 +77,10 @@ The global skill defines the loop. **Each project provides the local layer** at 
 ```
 
 `config.md` must declare:
-- **Doc root** — where entity pages live (absolute repo path).
-- **Entity catalog** — list of entities tracked (name, type, doc-page path).
-- **Ownership** — who reviews drift findings.
-- **Recipe extensions** — project-specific surveyor recipes beyond the universal set.
+- **Doc root** -- where entity pages live (absolute repo path).
+- **Entity catalog** -- list of entities tracked (name, type, doc-page path).
+- **Ownership** -- who reviews drift findings.
+- **Recipe extensions** -- project-specific surveyor recipes beyond the universal set.
 
 If `.agents/skills/survey-context/` does not exist in the project, the skill falls back to v1 behavior: produce a per-task Survey artifact from live introspection only, no doc-consult / no DoD enforcement. A consult-warning is emitted so the operator knows the project hasn't adopted the doc layer.
 
@@ -129,7 +129,7 @@ Each entity class has a canonical introspection. Project skills extend this set.
 | HTTP API | WebFetch / curl + response shape, status, headers |
 | Environment variable | grep config + dump from target environment |
 | FK / cross-app reference | `_meta.get_fields()` filtered to ForeignKey types |
-| ContentType / generic FK | Check `object_id` field type — int PK vs string-keyed differ in semantics |
+| ContentType / generic FK | Check `object_id` field type -- int PK vs string-keyed differ in semantics |
 
 ## Definition of Done (shape-change → doc-touch)
 
@@ -139,19 +139,19 @@ The companion hook (`survey-context.sh`, see Known Limitations) enforces this wh
 
 ## Composition with existing primitives
 
-- **`brain-first` universal check** — this skill IS its full expansion for entity shape.
-- **`think` Step 1 (Context)** — survey systematizes Step 1 with per-entity recipes + a doc-consult step.
-- **writing-code:4 (verify symbol exists)** — survey batches across all symbols a task references.
-- **writing-code:5 (no hypothetical code)** — runtime version; survey is the static / pre-write counterpart.
-- **self-review `Goal source:` field** — survey populates it.
-- **scan_ast.py Django ORM check** — runtime enforcement of the field-name shape; survey is the author-time complement that also catches doc drift.
+- **`brain-first` universal check** -- this skill IS its full expansion for entity shape.
+- **`think` Step 1 (Context)** -- survey systematizes Step 1 with per-entity recipes + a doc-consult step.
+- **writing-code:4 (verify symbol exists)** -- survey batches across all symbols a task references.
+- **writing-code:5 (no hypothetical code)** -- runtime version; survey is the static / pre-write counterpart.
+- **self-review `Goal source:` field** -- survey populates it.
+- **scan_ast.py Django ORM check** -- runtime enforcement of the field-name shape; survey is the author-time complement that also catches doc drift.
 
 ## Hard parts (acknowledged)
 
 - **Doc-layer bootstrap cost.** N existing entities × hand-written doc page is a real one-time cost. Mitigation: skill's no-doc → seed path lets coverage grow organically; a separate bootstrap tool can mass-seed from introspection.
 - **Doc-rot.** Without the shape-change → doc-touch DoD enforced by hook, docs decay. The skill makes the requirement visible; the hook (v2.1 follow-up) makes it enforced.
 - **Coverage gap.** A survey of entities X, Y, Z doesn't catch that W is also load-bearing. Mitigation: the artifact's "Referenced entities" field forces enumeration.
-- **Survey paralysis.** Exhaustive survey kills throughput. Mitigation: depth heuristics — DEEP for touched entities (full doc + introspection + diff), SHALLOW for referenced (doc citation only), SKIP for transitively-pulled-in dependencies that the diff doesn't engage.
+- **Survey paralysis.** Exhaustive survey kills throughput. Mitigation: depth heuristics -- DEEP for touched entities (full doc + introspection + diff), SHALLOW for referenced (doc citation only), SKIP for transitively-pulled-in dependencies that the diff doesn't engage.
 - **Recipe staleness.** Surveyor recipes for Spark 3 vs 4, Django 4 vs 5 differ. Universal recipes live in this skill; project-specific recipes live in the project skill's `recipes/`.
 
 ## Hard rules
@@ -162,7 +162,7 @@ The companion hook (`survey-context.sh`, see Known Limitations) enforces this wh
 
 **Shape change = doc change.** When work changes entity shape, the doc page is updated in the same PR (or a sibling PR with an explicit link). No PR opened with stale docs on touched entities.
 
-**Project-skill absence is noisy.** When `.agents/skills/survey-context/` is missing, the skill emits a consult-warning and runs v1-fallback. Don't silently degrade — the operator should know the project hasn't adopted the doc layer.
+**Project-skill absence is noisy.** When `.agents/skills/survey-context/` is missing, the skill emits a consult-warning and runs v1-fallback. Don't silently degrade -- the operator should know the project hasn't adopted the doc layer.
 
 ## Trigger conditions
 
@@ -183,7 +183,7 @@ Format:
 
 Globs use bash's `case`-pattern syntax (`*` `?` `[]`; no `**`). Per-pattern backtick-quoted; the parser walks the line and extracts every `pattern` token. Order does not matter. Empty / missing field → no watched paths, v2.1 behavior unchanged.
 
-v2.2 is an **evidence-collection minimal** — operator-curated glob patterns rather than mechanical caller-discovery. The BLOCK message distinguishes `[v2.1 definition-file match]` from `[v2.2 watched-path match]` so the firing log can separate the two trigger families. Use v2.2 firings over the next several sessions to evaluate whether caller-side enforcement is justified at higher coverage, or whether the file-based shape is the right ceiling.
+v2.2 is an **evidence-collection minimal** -- operator-curated glob patterns rather than mechanical caller-discovery. The BLOCK message distinguishes `[v2.1 definition-file match]` from `[v2.2 watched-path match]` so the firing log can separate the two trigger families. Use v2.2 firings over the next several sessions to evaluate whether caller-side enforcement is justified at higher coverage, or whether the file-based shape is the right ceiling.
 
 Carve-outs for v2.2 watched paths:
 - Patterns are operator-declared per-entity. No automatic caller discovery.
