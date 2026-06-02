@@ -1,7 +1,6 @@
 ---
 name: shelf-team
 description: Router for team / ways-of-working / staff-engineering book skills. Dispatches to drive-motivation, 37signals-way, or staff-engineer based on task signals. Read this when working on motivation, autonomy, team operating-model questions, or Staff-plus IC role craft.
-disable-model-invocation: false
 ---
 
 # Team -- Shelf
@@ -10,15 +9,15 @@ disable-model-invocation: false
 
 | Task signal | Book to read |
 |---|---|
-| Autonomy / mastery / purpose; intrinsic vs extrinsic motivation (Daniel Pink) | [skill:drive-motivation] |
-| Calm-company practices, six-week cycles, async by default | [skill:37signals-way] |
-| Staff/Principal engineer IC role; archetypes (Tech Lead / Architect / Solver / Right Hand); engineering strategy; managing technical quality; promotion to Staff | [skill:staff-engineer] |
+| Autonomy / mastery / purpose; intrinsic vs extrinsic motivation (Daniel Pink) | [`drive-motivation`](../../shelves/team/drive-motivation/SKILL.md) |
+| Calm-company practices, six-week cycles, async by default | [`37signals-way`](../../shelves/team/37signals-way/SKILL.md) |
+| Staff/Principal engineer IC role; archetypes (Tech Lead / Architect / Solver / Right Hand); engineering strategy; managing technical quality; promotion to Staff | [`staff-engineer`](../../shelves/team/staff-engineer/SKILL.md) |
 
 ## Books in this shelf
 
-- [skill:drive-motivation] -- Daniel Pink, *Drive*. Autonomy / Mastery / Purpose; why extrinsic rewards fail for cognitive work.
-- [skill:37signals-way] -- Jason Fried & DHH, calm-company operating practices.
-- [skill:staff-engineer] -- Will Larson, *Staff Engineer* (companion-site material; full book paid). Four archetypes + operating disciplines + getting-the-title.
+- [`drive-motivation`](../../shelves/team/drive-motivation/SKILL.md) -- Daniel Pink, *Drive*. Autonomy / Mastery / Purpose; why extrinsic rewards fail for cognitive work.
+- [`37signals-way`](../../shelves/team/37signals-way/SKILL.md) -- Jason Fried & DHH, calm-company operating practices.
+- [`staff-engineer`](../../shelves/team/staff-engineer/SKILL.md) -- Will Larson, *Staff Engineer* (companion-site material; full book paid). Four archetypes + operating disciplines + getting-the-title.
 
 ## Disambiguation
 

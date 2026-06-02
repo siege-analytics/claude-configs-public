@@ -1,7 +1,6 @@
 ---
 name: shelf-storytelling
 description: Router for storytelling / data-presentation book skills. Dispatches to storytelling-with-data, tufte-data-viz, or animation-at-work based on task signals. Read this when communicating findings, building decks, designing or implementing charts, or animating in slides/web.
-disable-model-invocation: false
 ---
 
 # Storytelling -- Shelf
@@ -10,9 +9,9 @@ disable-model-invocation: false
 
 | Task signal | Book to read |
 |---|---|
-| Charts, decks, presenting findings to a non-technical audience (Knaflic) | [skill:storytelling-with-data] |
-| Tufte chart-implementation rules -- data-ink ratio, direct labels, range-frame axes, per-library config (Recharts / ECharts / Chart.js / matplotlib / Plotly / D3) | [skill:tufte-data-viz] |
-| When and how to use animation in interfaces and slides (Nabors) | [skill:animation-at-work] |
+| Charts, decks, presenting findings to a non-technical audience (Knaflic) | [`storytelling-with-data`](../../shelves/storytelling/storytelling-with-data/SKILL.md) |
+| Tufte chart-implementation rules -- data-ink ratio, direct labels, range-frame axes, per-library config (Recharts / ECharts / Chart.js / matplotlib / Plotly / D3) | [`tufte-data-viz`](../../shelves/storytelling/tufte-data-viz/SKILL.md) |
+| When and how to use animation in interfaces and slides (Nabors) | [`animation-at-work`](../../shelves/storytelling/animation-at-work/SKILL.md) |
 
 ## Disambiguation: Tufte vs Knaflic
 

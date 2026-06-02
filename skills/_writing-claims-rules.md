@@ -8,7 +8,7 @@ These rules apply whenever the agent states a fact in a commit body, PR body, ag
 
 The sibling boundary in `_writing-code-rules.md` is "verify before touching code": rules that fire at code-edit time (verify the symbol exists before naming it, verify the dependency is reachable before depending on it, re-read docs that reference the symbol you just edited). The two files split the same underlying claim-grounding family by temporal trigger; consult writing-code when editing code, consult writing-claims when stating facts.
 
-The parent discipline is `[rule:verify-before-execute]` Evidence clause: same-turn tool calls back factual claims. These rules are specific shapes of that discipline applied at claim time.
+The parent discipline is `[`verify-before-execute`](_verify-before-execute-rules.md)` Evidence clause: same-turn tool calls back factual claims. These rules are specific shapes of that discipline applied at claim time.
 
 ## The ten claim-grounding rules
 
@@ -18,11 +18,11 @@ The parent discipline is `[rule:verify-before-execute]` Evidence clause: same-tu
 
 **writing-claims:2. Countable claims are auditable.** Any countable claim ("all four engines," "every call site," "no remaining occurrences," "fully covers the matrix," "completes the operation surface") must be preceded by the falsifying grep in the same response or the same tool sequence. If the grep is in a prior turn, it is stale and does not satisfy the rule. The grep output, not the claim, is the artifact. State the count, then make the claim. The session's worst case: a PR body claiming "all four engines call `_validate_agg_names`" when only two did.
 
-In commit messages and PR bodies, a countable claim must be paired with a `Verified-by: <command output excerpt>` trailer. `[skill:detect-ai-fingerprints]` scans for the trigger phrases and requires the trailer.
+In commit messages and PR bodies, a countable claim must be paired with a `Verified-by: <command output excerpt>` trailer. `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` scans for the trigger phrases and requires the trailer.
 
 **writing-claims:3. Confidence calibration: unquantified completeness claims need the same grounding.** Statements that imply finality without a count -- "I have completed," "addressed all," "ready to ship," "no remaining," "loop closed," "fully covers" -- are claims subject to writing-claims:2 even when no integer is named. Before stating them, run the falsifying check (re-run the test suite that would catch a regression, re-grep for the pattern, re-read the PR comments). State the check in the same response or the same artifact, then make the claim. The check is the artifact; the claim is the conclusion.
 
-`[skill:detect-ai-fingerprints]` extends writing-claims:2's trigger set to cover these unquantified phrases. Same `Verified-by:` trailer requirement.
+`[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` extends writing-claims:2's trigger set to cover these unquantified phrases. Same `Verified-by:` trailer requirement.
 
 **Multi-PR session-pattern extension.** Confidence on "this fixes the tier" / "this completes the family" claims must be calibrated against session history, not just against the current PR. If N prior PRs in this session shipped same-shape fixes and each was claimed-complete-then-superseded by the next, the (N+1)th claim of completeness requires class-audit evidence inline -- a grep over the family, the audit-matrix as a code block, or a paste of the sibling-set with checkmarks. The session that motivated this extension shipped five same-shape Spark Connect guard PRs, each one claiming "fixes gold," each one superseded by the next within the hour. The (N+1)th claim was unwarranted by N=2 and dishonest by N=4. Per writing-rules:7, the session-scale check is the agent's responsibility until the wrap-up classifier (proposed under #186) automates it.
 
@@ -39,7 +39,7 @@ Bad-example catalog from session 260502-vital-channel (2026-05-17):
 - "py.geocompx.org hosts the free Geocomputation with Python edition" -- WebFetch showed it's a landing page in development; full chapters not yet online; the R version at r.geocompx.org is the canonical free reference. Also mis-stated author list (claimed Muenchow as Python-edition author; actual: Dorman, Graser, Nowosad, Lovelace).
 - Both surfaced past my own pre-recommendation checks; both caught only because operator pushed me to "see what's adjacent free," prompting WebFetch verification.
 
-The discipline: when about to write "X is freely available at URL" or "X supports flag Y" or "X is canonical for Z," verify with the tool that would falsify the claim BEFORE writing the sentence. Mechanically expressible as `[skill:detect-ai-fingerprints]` extension: phrases like "freely available at," "free online edition," "canonical reference for," "available as a free PDF" should trigger a `Verified-by:` requirement on the recommendation. Tracked as a v2.x.y follow-up.
+The discipline: when about to write "X is freely available at URL" or "X supports flag Y" or "X is canonical for Z," verify with the tool that would falsify the claim BEFORE writing the sentence. Mechanically expressible as `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` extension: phrases like "freely available at," "free online edition," "canonical reference for," "available as a free PDF" should trigger a `Verified-by:` requirement on the recommendation. Tracked as a v2.x.y follow-up.
 
 **writing-claims:6. Three samples before promoting a pattern to a rule.** When observing that a failure mode (or a beneficial discipline) recurs, do not promote it to a rule on the first or second instance. N=1 is an observation; N=2 is a candidate; N=3+ (or operator-statement-of-importance) is the promotion threshold. Premature promotion (single-instance pattern made into a rule) produces rule sprawl where each rule has thin grounding and the system as a whole loses signal-to-noise. Late promotion (sitting on a real recurring pattern past N=3+ because nobody noticed) produces undocumented disciplines that future agents have to rediscover.
 
@@ -93,7 +93,7 @@ Bad-example catalog from session 260526-true-coral (siege_utilities Epic #572):
 - PR #586 claimed "Verified all 21 subpackages already define `__all__`." Actual count: 25 subpackages, 4 of which (`conf`, `economic`, `education`, `reference`) lack `__all__`. The number 21 was fabricated from memory; no `ls` or `find` command was run. The false count shaped the PR's conclusion that no action was needed -- the conclusion was wrong because the count was wrong.
 - PR #584 claimed "only 16 internal imports use `from siege_utilities import X` vs 1408 using subpackage paths." Actual grep on non-test files: 2 top-level imports, not 16. The ratio was even more extreme than claimed, but the specific number was still wrong.
 
-Mechanical enforcement candidate: `[skill:detect-ai-fingerprints]` trigger-set extension for integer-count phrases ("all N," "N files," "N subpackages," "N import sites") requiring a `Verified-by:` or inline command-output block. Tracked for v2.x.y.
+Mechanical enforcement candidate: `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` trigger-set extension for integer-count phrases ("all N," "N files," "N subpackages," "N import sites") requiring a `Verified-by:` or inline command-output block. Tracked for v2.x.y.
 
 **writing-claims:9. Present/past-tense causal claims about production state require a same-turn falsification probe.** A statement that asserts *why* something happened or *with what effect* -- "Phase 3 took effect," "the DAG produces Z," "bulk-collapse drives the F3 gap," "the MV now reflects the new rule" -- is a causal claim about production state and must be paired in the same response with the probe that would falsify it. State the probe (the grep, the query, the row-level inspection) and the result together. If the probe didn't run, label the claim explicitly: `Hypothesis:` or `Untested:`.
 
@@ -141,16 +141,16 @@ This is the operational core of the writing-claims:9 failure mode for runtime-lo
 
 ## Override
 
-These rules are mandatory. No `[claim-skip]` override and no `[padding-skip]` override. The same-turn-evidence constraint and the artifact-backing requirement are the entire point; an override defeats the rule. The writing-claims:4 carve-out for new-rule-authoring is in the rule, not an override. `[skill:detect-ai-fingerprints]` trigger-set extension for writing-claims:4 pattern-naming detection is tracked as a v2.x.y follow-up.
+These rules are mandatory. No `[claim-skip]` override and no `[padding-skip]` override. The same-turn-evidence constraint and the artifact-backing requirement are the entire point; an override defeats the rule. The writing-claims:4 carve-out for new-rule-authoring is in the rule, not an override. `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` trigger-set extension for writing-claims:4 pattern-naming detection is tracked as a v2.x.y follow-up.
 
 ## Cross-references
 
-- `[rule:verify-before-execute]` Evidence clause is the parent discipline; these rules extend it to specific claim shapes.
-- `[rule:writing-code]` writing-code:4 (verify symbol exists), writing-code:5 (no hypothetical code), and writing-code:6 (doc-edit symmetry) are the action-side counterparts. The boundary: writing-code rules fire when editing code; writing-claims rules fire when stating facts in commit/PR bodies or chat. The same operator workflow may invoke both -- edit code (writing-code rules apply), then write the commit body (writing-claims rules apply).
-- `[rule:writing-prose]` writing-prose:5 is the future-tense sibling of writing-claims:9. writing-claims:9 grounds present/past-tense causal claims about production state ("the DAG produces Z"); writing-prose:5 grounds future-tense commitments to action ("I'll monitor the DAG"). Same speech-time enforcement surface, same Phase 1 (rule) / Phase 2 (Stop-hook scanner) staging.
-- `[skill:detect-ai-fingerprints]` mechanically enforces writing-claims:2 and writing-claims:3 trigger detection in commit/PR message bodies; the `Verified-by:` trailer is the required pairing. writing-claims:4 trigger-set extension (pattern-naming phrases) is queued as a v2.x.y follow-up. writing-claims:9 detection-markers are outside the scanner's current scope because they target live assistant-response text rather than staged diffs; the Phase 2 follow-up is a separate Stop-hook scanner.
-- `[skill:code-review]` checks writing-claims:1 (scope-of-fix across the codebase) and writing-claims:4 (pattern-naming groundedness) at PR time.
-- `[skill:self-review]` Quantified Claims section requires writing-claims:8 evidence inline for every specific count stated in the PR body or commit message.
+- `[`verify-before-execute`](_verify-before-execute-rules.md)` Evidence clause is the parent discipline; these rules extend it to specific claim shapes.
+- `[`writing-code`](_writing-code-rules.md)` writing-code:4 (verify symbol exists), writing-code:5 (no hypothetical code), and writing-code:6 (doc-edit symmetry) are the action-side counterparts. The boundary: writing-code rules fire when editing code; writing-claims rules fire when stating facts in commit/PR bodies or chat. The same operator workflow may invoke both -- edit code (writing-code rules apply), then write the commit body (writing-claims rules apply).
+- `[`writing-prose`](_writing-prose-rules.md)` writing-prose:5 is the future-tense sibling of writing-claims:9. writing-claims:9 grounds present/past-tense causal claims about production state ("the DAG produces Z"); writing-prose:5 grounds future-tense commitments to action ("I'll monitor the DAG"). Same speech-time enforcement surface, same Phase 1 (rule) / Phase 2 (Stop-hook scanner) staging.
+- `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` mechanically enforces writing-claims:2 and writing-claims:3 trigger detection in commit/PR message bodies; the `Verified-by:` trailer is the required pairing. writing-claims:4 trigger-set extension (pattern-naming phrases) is queued as a v2.x.y follow-up. writing-claims:9 detection-markers are outside the scanner's current scope because they target live assistant-response text rather than staged diffs; the Phase 2 follow-up is a separate Stop-hook scanner.
+- `[`code-review`](code-review/SKILL.md)` checks writing-claims:1 (scope-of-fix across the codebase) and writing-claims:4 (pattern-naming groundedness) at PR time.
+- `[`self-review`](self-review/SKILL.md)` Quantified Claims section requires writing-claims:8 evidence inline for every specific count stated in the PR body or commit message.
 
 ## Migration note (v2.0.x only)
 
@@ -158,4 +158,4 @@ This file is derived from rules 11 and 13 of the deprecated `_no-ai-fingerprints
 
 ## Attribution
 
-Defers to `[rule:output]`. No AI / agent attribution in claims, code, commits, PRs, or comments.
+Defers to `[`output`](_output-rules.md)`. No AI / agent attribution in claims, code, commits, PRs, or comments.

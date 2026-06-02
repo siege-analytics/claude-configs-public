@@ -90,10 +90,10 @@ If skipping, say so in one sentence so the audit trail is explicit: "Skipping pr
 
 ## Cross-references
 
-- `[rule:verify-before-execute]` is the parent discipline. This rule extends it from "verify before code claims" to "verify before environment claims."
-- `[rule:writing-code]` writing-code:5 is the per-action application of this inventory: "you must have already verified the dependency is reachable in the target environment, and you must exercise the real dependency before claiming the code works." This rule establishes the baseline; writing-code:5 enforces it on every action.
+- `[`verify-before-execute`](_verify-before-execute-rules.md)` is the parent discipline. This rule extends it from "verify before code claims" to "verify before environment claims."
+- `[`writing-code`](_writing-code-rules.md)` writing-code:5 is the per-action application of this inventory: "you must have already verified the dependency is reachable in the target environment, and you must exercise the real dependency before claiming the code works." This rule establishes the baseline; writing-code:5 enforces it on every action.
 - Per-repo memory entries (e.g. `reference_szsh_environment`) contain the canonical preflight result for projects already inventoried; if one is in scope, lean on it and skip step 3 onward.
 
 ## Attribution
 
-Defers to `[rule:output]`. No AI / agent attribution in preflight summaries, in commits, or anywhere else.
+Defers to `[`output`](_output-rules.md)`. No AI / agent attribution in preflight summaries, in commits, or anywhere else.

@@ -18,7 +18,7 @@ Any change that rejects input previously accepted, returns output previously not
 
 Tooling is a follow-up ticket (tracked at the `claude-configs-public` repo's issue #51); the rule is in force now. The session's worst case: a `groupby_agg` validator was added that rejects `median`, `sem`, and other names pandas previously accepted, shipped in a minor release with no BREAKING section.
 
-**Composition with other rules' fix exercises (v2.3.1).** When a fix exercise for a different rule (commonly `[rule:writing-code]` writing-code:11 no-silent-processes) produces a breaking-change side effect, the BREAKING-changelog entry per writing-releases:1 lands as a separate commit on the same fix-exercise PR rather than being folded into the originating rule's commit. This composes the disciplines without losing per-rule attribution: the writing-code:11 commit cites that rule and stays scoped to the floor-fix; the writing-releases:1 commit cites the BREAKING change separately and stays scoped to the changelog. Anti-pattern: bundling the BREAKING entry into the writing-code:11 commit, which loses the "one commit per rule" eval-loop signal-attribution. The session's concrete instance: pass 6 databricks `runtime_secret_exists` had its return type narrowed from `bool` to `str` to provide a richer floor signal; the writing-code:11 fix and the writing-releases:1 BREAKING entry shipped as two commits on the same PR.
+**Composition with other rules' fix exercises (v2.3.1).** When a fix exercise for a different rule (commonly `[`writing-code`](_writing-code-rules.md)` writing-code:11 no-silent-processes) produces a breaking-change side effect, the BREAKING-changelog entry per writing-releases:1 lands as a separate commit on the same fix-exercise PR rather than being folded into the originating rule's commit. This composes the disciplines without losing per-rule attribution: the writing-code:11 commit cites that rule and stays scoped to the floor-fix; the writing-releases:1 commit cites the BREAKING change separately and stays scoped to the changelog. Anti-pattern: bundling the BREAKING entry into the writing-code:11 commit, which loses the "one commit per rule" eval-loop signal-attribution. The session's concrete instance: pass 6 databricks `runtime_secret_exists` had its return type narrowed from `bool` to `str` to provide a richer floor signal; the writing-code:11 fix and the writing-releases:1 BREAKING entry shipped as two commits on the same PR.
 
 **Inverse case: one-site-one-commit composition (v2.4.0).** When the rule application AND the composing-rule application live in the same file (e.g., writing-releases:4 runtime warning addition AND writing-releases:3 message-format compliance both edit the same `warnings.warn(...)` call expression), one commit suffices; do not split per-rule artificially. The split discipline above applies when the composing impl lives in a different file (writing-code:11 fix in module + writing-releases:1 BREAKING entry in CHANGELOG); when both edits target the same file and same code site, splitting introduces noise without per-rule attribution benefit. Anti-pattern: rigidly splitting every composition into separate commits regardless of file scope; the result is per-rule attribution at the cost of commit-message coherence and review burden. Originating evidence (PR #489 fix exercise): `writing-releases:4` runtime-warning additions composed naturally with `writing-releases:3` message-format compliance in single commits per site, validating the inverse rule.
 
@@ -26,9 +26,9 @@ Tooling is a follow-up ticket (tracked at the `claude-configs-public` repo's iss
 
 When a PR adds a new `pytest.skip(...)`, `@pytest.mark.skipif(...)`, or `@pytest.mark.skip(...)` call site, the PR body must contain a `New-skip: <count>; <reason>` trailer naming the new skip count and why it cannot be unskipped today. The scanner counts skip sites in `main` vs the PR's diff; any net increase requires the trailer. Removing a skip needs no trailer.
 
-The Django ORM tests in the originating arc accumulated skips ("Postgres not available," "GDAL not installed") and CI stayed green while the test surface silently shrank. `[rule:writing-tests]` writing-tests:3 says each skip must name its remediation; this rule says the project's total skip count must not silently trend upward.
+The Django ORM tests in the originating arc accumulated skips ("Postgres not available," "GDAL not installed") and CI stayed green while the test surface silently shrank. `[`writing-tests`](_writing-tests-rules.md)` writing-tests:3 says each skip must name its remediation; this rule says the project's total skip count must not silently trend upward.
 
-Forward-only; existing skips are grandfathered. Mechanically enforced by `[skill:detect-ai-fingerprints]` `--pr <n>` mode (scans the PR diff for new skip sites, compares against the base, requires the trailer when the count increased).
+Forward-only; existing skips are grandfathered. Mechanically enforced by `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` `--pr <n>` mode (scans the PR diff for new skip sites, compares against the base, requires the trailer when the count increased).
 
 **writing-releases:3. Deprecation messages name a removal target.**
 
@@ -55,15 +55,15 @@ Acceptable shapes:
 
 The session's concrete instance: `data/dataframe_engine.py` shipped a deprecation shim with the message "remove in the next minor release" approximately 2026-03-30. Three releases shipped since (v3.15.0, v3.15.1, v3.16.0); the shim is still there. The author's intent at write-time was the next minor release; the prose did not commit to a specific version, so when "next minor" arrived no scanner or reviewer flagged the missed removal. The rule's purpose is to make the commitment grep-able.
 
-This is the deprecation-message analogue of `[rule:writing-tests]` writing-tests:3 (skip messages name remediation): the runtime warning is the natural site to encode the commitment because that is where consumers see it. PR bodies and CHANGELOG entries are out of scope of this rule (writing-releases:1 covers them).
+This is the deprecation-message analogue of `[`writing-tests`](_writing-tests-rules.md)` writing-tests:3 (skip messages name remediation): the runtime warning is the natural site to encode the commitment because that is where consumers see it. PR bodies and CHANGELOG entries are out of scope of this rule (writing-releases:1 covers them).
 
 **Scope: runtime warning calls only.** This rule covers `DeprecationWarning(...)` and `PendingDeprecationWarning(...)` call expressions. Tooling-only deprecation markers (RST `.. deprecated::` directives in docstrings, `@deprecated` decorators, Sphinx-style `.. versionchanged::` notes) are out of scope here. The composing rule that requires a tooling marker also emit a runtime warning is tracked separately as a v2.3.0 candidate; until that lands, an RST-marked deprecation with no accompanying `warnings.warn(...)` call passes this rule (because there is no runtime message to check) but fails the deprecation-completeness intent. Reviewer should catch the tooling-vs-runtime divergence by judgment until the v2.3.0 rule mechanizes it.
 
-Forward-only; existing deprecation warnings are grandfathered with a one-minor-release grace window after writing-releases:3 lands. New deprecations in any PR must comply from day one. Mechanically enforced by `[skill:detect-ai-fingerprints]` AST scanner: walks `Call` nodes whose `func.id` matches `DeprecationWarning|PendingDeprecationWarning`, flattens the message arg through implicit concat and `BinOp(Add)` of `Constant` strings, then applies the both-tokens-present check on the flattened string.
+Forward-only; existing deprecation warnings are grandfathered with a one-minor-release grace window after writing-releases:3 lands. New deprecations in any PR must comply from day one. Mechanically enforced by `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` AST scanner: walks `Call` nodes whose `func.id` matches `DeprecationWarning|PendingDeprecationWarning`, flattens the message arg through implicit concat and `BinOp(Add)` of `Constant` strings, then applies the both-tokens-present check on the flattened string.
 
 **writing-releases:4. Tooling deprecation markers require runtime warning.**
 
-Functions, methods, classes, or modules marked deprecated in tooling (RST `.. deprecated::` directive in docstring, `@deprecated` decorator, Sphinx `.. versionchanged::` note, equivalent project-defined markers) must emit a `DeprecationWarning` at runtime via `warnings.warn(..., DeprecationWarning)` or equivalent. The runtime warning's message must comply with `[rule:writing-releases]` writing-releases:3 (version-or-date anchor + removal-commitment keyword in the same string).
+Functions, methods, classes, or modules marked deprecated in tooling (RST `.. deprecated::` directive in docstring, `@deprecated` decorator, Sphinx `.. versionchanged::` note, equivalent project-defined markers) must emit a `DeprecationWarning` at runtime via `warnings.warn(..., DeprecationWarning)` or equivalent. The runtime warning's message must comply with `[`writing-releases`](_writing-releases-rules.md)` writing-releases:3 (version-or-date anchor + removal-commitment keyword in the same string).
 
 This is the composing rule with writing-releases:3:
 
@@ -107,15 +107,15 @@ Build passes and source-side checks are necessary but not sufficient. A release 
 - Patch releases that demonstrably do not change consumer integration (CHANGELOG-only, internal-tooling-only, test-fixture-only) may defer the verification gate; the deferral MUST be cited in the patch's CHANGELOG entry naming the basis for the no-integration-change claim.
 - Forward-only: existing releases are grandfathered; the rule applies to new release stampings as discovery surfaces them.
 
-**Composes with `[rule:writing-releases]` writing-releases:1.** writing-releases:1 covers "did you communicate the change to consumers" (BREAKING entries naming public-surface changes); writing-releases:5 covers "did you verify the change reaches consumers correctly." Different halves of release discipline. A change can pass writing-releases:1 (correctly classified BREAKING with changelog entry) and fail writing-releases:5 (correct artifact built but never verified to load in consumer environment). Both rules apply together.
+**Composes with `[`writing-releases`](_writing-releases-rules.md)` writing-releases:1.** writing-releases:1 covers "did you communicate the change to consumers" (BREAKING entries naming public-surface changes); writing-releases:5 covers "did you verify the change reaches consumers correctly." Different halves of release discipline. A change can pass writing-releases:1 (correctly classified BREAKING with changelog entry) and fail writing-releases:5 (correct artifact built but never verified to load in consumer environment). Both rules apply together.
 
-**Cross-references `[rule:writing-claims]` writing-claims:1.** A "release done" claim made from source-side evidence alone (tags exist, build passed, scanners clean) is technically true but operationally false until consumer-side verification lands. writing-releases:5 is the verification gate that makes the writing-claims:1 "release done" claim grounded. Without writing-releases:5, the writing-claims:1 grep-before-declare-fix-complete discipline has a release-shaped blind spot; this rule fills it.
+**Cross-references `[`writing-claims`](_writing-claims-rules.md)` writing-claims:1.** A "release done" claim made from source-side evidence alone (tags exist, build passed, scanners clean) is technically true but operationally false until consumer-side verification lands. writing-releases:5 is the verification gate that makes the writing-claims:1 "release done" claim grounded. Without writing-releases:5, the writing-claims:1 grep-before-declare-fix-complete discipline has a release-shaped blind spot; this rule fills it.
 
 **Originating evidence:** LESSON 323a0f5 (recurrence 1, v2.0.0): RULES.md and _coverage.md added at v2.0.0 but build's `find_rules()` glob missed them; never reached dist; surfaced by sibling sync-verification pass; v2.0.1 patched within an hour. Recurrence 2 (v2.2.0 through v2.6.0, this session): every release shipped without verifying consumer-side integration; workspace stale; resolver hook pointed at non-existent path; Craft Agent skill discovery untested. Same root pattern: source-side quality (build passes, scanners clean, tests green) is not consumer-side verification.
 
 Operator-stated principle (2026-05-14): "And verify it, that should be the rule."
 
-Judgment-enforced via `[skill:code-review]` at v2.7.0. Mechanical detection candidates: per-consumer-shape verification scripts (e.g., `scripts/verify_published_artifact.sh` per repo) invoked at tag-push time by CI. Tractable but consumer-shape-specific; project-by-project rather than universal scanner. Tracked for v2.7.x.
+Judgment-enforced via `[`code-review`](code-review/SKILL.md)` at v2.7.0. Mechanical detection candidates: per-consumer-shape verification scripts (e.g., `scripts/verify_published_artifact.sh` per repo) invoked at tag-push time by CI. Tractable but consumer-shape-specific; project-by-project rather than universal scanner. Tracked for v2.7.x.
 
 ## Override
 
@@ -123,9 +123,9 @@ These rules are mandatory. No `[release-skip]` override. writing-releases:1 stay
 
 ## Cross-references
 
-- `[rule:writing-tests]` writing-tests:3 (skip messages must name the remediation) is the per-skip discipline; writing-releases:2 is the across-PRs trending discipline. Both apply together. writing-tests:3 and writing-releases:3 are siblings: each requires the runtime message (skip / deprecation) name a follow-up commitment grep-able to a future date or version.
-- `[skill:create-pr]` is the artifact-skill that produces PR bodies; the `New-skip:` and `BREAKING` trailers are required when the rules fire.
-- `[skill:detect-ai-fingerprints]` mechanically enforces writing-releases:2 when invoked in `--pr <n>` mode and writing-releases:3 via the AST scanner on `.py` files.
+- `[`writing-tests`](_writing-tests-rules.md)` writing-tests:3 (skip messages must name the remediation) is the per-skip discipline; writing-releases:2 is the across-PRs trending discipline. Both apply together. writing-tests:3 and writing-releases:3 are siblings: each requires the runtime message (skip / deprecation) name a follow-up commitment grep-able to a future date or version.
+- `[`create-pr`](create-pr/SKILL.md)` is the artifact-skill that produces PR bodies; the `New-skip:` and `BREAKING` trailers are required when the rules fire.
+- `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` mechanically enforces writing-releases:2 when invoked in `--pr <n>` mode and writing-releases:3 via the AST scanner on `.py` files.
 
 ## Migration note
 
@@ -133,4 +133,4 @@ This file is derived from rule 14 of the deprecated `_no-ai-fingerprints-rules.m
 
 ## Attribution
 
-Defers to `[rule:output]`. No AI / agent attribution in releases, changelogs, commits, or comments.
+Defers to `[`output`](_output-rules.md)`. No AI / agent attribution in releases, changelogs, commits, or comments.

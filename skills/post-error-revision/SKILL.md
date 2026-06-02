@@ -1,7 +1,6 @@
 ---
 name: post-error-revision
 description: "MANDATORY when a failure contradicts a documented Assumption. Walk failure -> commit -> PR -> ticket; append a five-field Post-error revision block (Triggered by / Observed / Falsified assumption / Revised model / Implication) to the originating ticket; preserve-and-annotate the original Assumption; THEN draft the fix or revert PR with a Refs: + Post-error-revision: trailer pair. Implements writing-rules:6. Canonical implementations: scripts/discipline/check-post-error-revision.sh (block-structure validator), hooks/git/post-error-revision-required.sh (trailer requirement on revert / regression-fix)."
-disable-model-invocation: true
 user-invocable: true
 ---
 
@@ -221,8 +220,8 @@ v2 (deferred): CI scanner walks the `## Post-error revision` blocks across the r
 - writing-rules:4 -- every "this doesn't apply" claim requires the same evidence chain as a "this happened" claim. The `Observed:` field inherits this requirement.
 - writing-rules:5 -- Trivial-change declarations with Cannot-produce-error claims; Falsification field is the writing-rules:6 trigger.
 - writing-rules:6 -- the rule this skill implements.
-- [skill:evaluate-ticket] -- used to confirm the originating ticket's Assumptions block exists and is well-formed before quoting from it.
-- [skill:self-review] -- when the Trivial-change Falsification observable surfaces during self-review of a later PR, that self-review must cross-reference this skill before drafting any fix.
+- [`evaluate-ticket`](../evaluate-ticket/SKILL.md) -- used to confirm the originating ticket's Assumptions block exists and is well-formed before quoting from it.
+- [`self-review`](../self-review/SKILL.md) -- when the Trivial-change Falsification observable surfaces during self-review of a later PR, that self-review must cross-reference this skill before drafting any fix.
 - `scripts/discipline/check-post-error-revision.sh` -- block-structure validator (canonical).
 - `hooks/git/post-error-revision-required.sh` -- trailer requirement on revert / regression-fix commits.
 

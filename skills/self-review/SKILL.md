@@ -1,7 +1,6 @@
 ---
 name: self-review
 description: "MANDATORY pre-push / pre-PR-open / pre-PR-merge gate. Produce a structured artifact with Assumptions (including roles + Goal source verification via evaluate-ticket + Pre-author-inventory link + Evidence-predates-work block), Peer review against the shelves, and Lead review naming affirmative standards. The pre-push hook enforces trailer presence, structural completeness, artifact-predates-work, and the writing-rules:4 evidence-chain on any Trivial-change / Exemption blocks. Do NOT skip this skill; the form is checkable but the discipline is what binds."
-disable-model-invocation: true
 user-invocable: true
 ---
 
@@ -28,6 +27,11 @@ Required before:
   their own PR).
 - `gh pr create`.
 - `gh pr merge` (including `--admin`).
+
+A user instruction to "merge it" authorizes the destination, not the
+method. Self-review still applies. If the artifact is missing when a
+merge is requested, ask: "Are you telling me to forego review?" Do not
+proceed until you have an explicit answer.
 
 Trivial-change escape: review is still required, but a no-findings
 review on a genuinely trivial change is one valid output of the
@@ -103,7 +107,7 @@ is also the most commonly skipped.
 
 The `Pre-author-inventory:` field in the Assumptions section is a **required
 composability link** between this skill and
-[rule:authoring-against-state]:6.
+[`authoring-against-state`](../_authoring-against-state-rules.md):6.
 
 Before authoring any runtime artifact whose contact points trigger rules 1-5 of
 that shelf, the agent must complete a pre-author investigation and record its
@@ -227,7 +231,7 @@ trivial" or "minor cleanup" fail.
 
 The Falsification field is the writing-rules:6 trigger. If the observable named there later surfaces -- an `AttributeError` matching the renamed symbol, a behavior claim acted on from prose-only-docs, a non-comment line changed by what was claimed comments-only -- the Trivial-change declaration was wrong, and the response is **not** to just fix the bug.
 
-Per writing-rules:6 (and [skill:post-error-revision]):
+Per writing-rules:6 (and [`post-error-revision`](../post-error-revision/SKILL.md)):
 
 1. File a ticket retroactively, citing the failed Trivial-change block as Goal source.
 2. Append a `## Post-error revision` block to the new ticket with the five required fields (Triggered by / Observed / Falsified assumption / Revised model / Implication).

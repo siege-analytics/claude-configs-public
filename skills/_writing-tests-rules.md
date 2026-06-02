@@ -6,7 +6,7 @@ description: Always-on. Test-writing discipline. Tests must exercise the product
 
 These rules apply whenever the agent writes a test or a test fixture. Tests fail in distinctive ways: theater (the mock asserts itself was called), cargo-cult (the same test shape pasted across modules whose public surfaces differ), shape-correct stubs that hide real exception classes, skips that the project quietly accepts forever. The rules name the failure modes and bar them.
 
-For test-runner enforcement (the affected-tests gate, which actually runs the tests before allowing a commit) see `[skill:commit]` step 4. For mechanical scanning of test files for stylistic fingerprints, see `[skill:detect-ai-fingerprints]`.
+For test-runner enforcement (the affected-tests gate, which actually runs the tests before allowing a commit) see `[`commit`](commit/SKILL.md)` step 4. For mechanical scanning of test files for stylistic fingerprints, see `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)`.
 
 ## The test-writing rules
 
@@ -28,13 +28,13 @@ The corollary's three-step recipe (rename / cite rule / preserve test) has been 
 
 When writing tests for multiple similar targets (five API connectors, three storage backends), do not copy-modify the same shape across them. Look at each target's actual public surface and write tests that exercise its specific behaviour. The Vista Social retry logic deserves retry tests; the Snowflake connector does not need fake retry tests just because Vista Social had them.
 
-This rule applies primarily to writing tests but also applies to writing modules with similar shapes. When the failure mode is "production modules with the same scaffolding regardless of what they actually do," see `[rule:writing-code]` for the code-side application of the same discipline.
+This rule applies primarily to writing tests but also applies to writing modules with similar shapes. When the failure mode is "production modules with the same scaffolding regardless of what they actually do," see `[`writing-code`](_writing-code-rules.md)` for the code-side application of the same discipline.
 
 **writing-tests:3. Skip messages must name the remediation.**
 
 `pytest.skip("X not installed")` is not actionable. `pytest.skip("install X in this interpreter to run, see docs/setup.md")` is. A skip that does not tell the reader what to do to unskip is a skip the project quietly accepts forever. Same for `pytest.xfail`, `unittest.skipIf`, and any conditional `return` that bypasses a test body: name what the reader changes to make the test run.
 
-Mechanical: `[skill:detect-ai-fingerprints]` scans `.py` files for `pytest.skip(...)` family calls whose message lacks an actionable verb plus an identifier-shaped token.
+Mechanical: `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` scans `.py` files for `pytest.skip(...)` family calls whose message lacks an actionable verb plus an identifier-shaped token.
 
 **writing-tests:4. Mock fidelity.**
 
@@ -62,7 +62,7 @@ Two carve-outs:
 
 Both carve-outs require a one-line comment naming why no test exists. Without the comment, the handler counts as untested.
 
-The session's concrete instance: the gazetteer Census backend caught `requests.exceptions.RequestException` and fell back to TIGERWeb, but no test forced the Census request to fail. The fallback shape was assumed correct because the happy path returned the same data shape; in practice the fallback path returned a different schema. Mechanical detection is partial (cross-file evidence; tracked at upstream issue #56 for v1.6.2); judgment-enforced via `[skill:code-review]` until the scanner enhancement lands. Pairs with `[rule:writing-code]` writing-code:7 (silent error swallowing): writing-code:7 requires a defined handler shape; writing-tests:5 requires a test that proves the handler does what the shape claims.
+The session's concrete instance: the gazetteer Census backend caught `requests.exceptions.RequestException` and fell back to TIGERWeb, but no test forced the Census request to fail. The fallback shape was assumed correct because the happy path returned the same data shape; in practice the fallback path returned a different schema. Mechanical detection is partial (cross-file evidence; tracked at upstream issue #56 for v1.6.2); judgment-enforced via `[`code-review`](code-review/SKILL.md)` until the scanner enhancement lands. Pairs with `[`writing-code`](_writing-code-rules.md)` writing-code:7 (silent error swallowing): writing-code:7 requires a defined handler shape; writing-tests:5 requires a test that proves the handler does what the shape claims.
 
 **writing-tests:6. Inspection tests are acceptable for inspection-detectable bugs only; behavioral bugs need behavior tests.**
 
@@ -80,13 +80,13 @@ The session's concrete instances: two PRs in the same session shipped source-gre
 
 ## Override
 
-These rules are mandatory. No `[test-skip]` override. The rule-7 grep ("test files importing their module under test") and the rule-15 skip-message check land in `[skill:detect-ai-fingerprints]` as mechanical enforcement; the mock-fidelity rule lands as `[skill:code-review]` judgment until project-namespace detection for the mechanical check is built.
+These rules are mandatory. No `[test-skip]` override. The rule-7 grep ("test files importing their module under test") and the rule-15 skip-message check land in `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` as mechanical enforcement; the mock-fidelity rule lands as `[`code-review`](code-review/SKILL.md)` judgment until project-namespace detection for the mechanical check is built.
 
 ## Cross-references
 
-- `[skill:commit]` step 4 (affected-tests gate) is the mechanical enforcement of writing-tests:1: tests covering the touched code must run and pass before the commit lands. See `[rule:writing-code]` writing-code:5 (no hypothetical code) for the rule the gate enforces.
-- `[rule:writing-code]` writing-code:3 (no speculative abstractions) is the sibling discipline on the code side; helpers and base classes are introduced only when a second caller already exists. The test-side application here covers fixtures.
-- `[rule:writing-claims]` rules apply to claims a test makes about coverage ("this test covers all four connectors") and to commit/PR messages that describe what the tests do.
+- `[`commit`](commit/SKILL.md)` step 4 (affected-tests gate) is the mechanical enforcement of writing-tests:1: tests covering the touched code must run and pass before the commit lands. See `[`writing-code`](_writing-code-rules.md)` writing-code:5 (no hypothetical code) for the rule the gate enforces.
+- `[`writing-code`](_writing-code-rules.md)` writing-code:3 (no speculative abstractions) is the sibling discipline on the code side; helpers and base classes are introduced only when a second caller already exists. The test-side application here covers fixtures.
+- `[`writing-claims`](_writing-claims-rules.md)` rules apply to claims a test makes about coverage ("this test covers all four connectors") and to commit/PR messages that describe what the tests do.
 
 ## Migration note (v2.0.x only)
 
@@ -94,4 +94,4 @@ This file is derived from rules 7, 8, 15, 16, and 19 of the deprecated `_no-ai-f
 
 ## Attribution
 
-Defers to `[rule:output]`. No AI / agent attribution in tests, fixtures, commits, or comments.
+Defers to `[`output`](_output-rules.md)`. No AI / agent attribution in tests, fixtures, commits, or comments.

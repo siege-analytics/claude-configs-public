@@ -1,7 +1,6 @@
 ---
 name: shelf-data-and-pipelines
 description: Router for data-and-pipelines book skills. Currently dispatches to data-pipelines (Densmore -- Data Pipelines Pocket Reference). Read this when designing batch/stream pipelines, scheduled jobs, ingestion frameworks, or moving data between systems.
-disable-model-invocation: false
 ---
 
 # Data and Pipelines -- Shelf
@@ -12,12 +11,12 @@ Books on building data pipelines, scheduling, and moving data between systems.
 
 | Task signal | Book to read |
 |---|---|
-| Designing an ingestion pipeline, choosing batch vs stream, scheduling, reliability | [skill:data-pipelines] |
-| Storage-engine choice or distributed-data internals (load this *and* DDIA) | also [skill:data-intensive] |
+| Designing an ingestion pipeline, choosing batch vs stream, scheduling, reliability | [`data-pipelines`](../../shelves/data-and-pipelines/data-pipelines/SKILL.md) |
+| Storage-engine choice or distributed-data internals (load this *and* DDIA) | also [`data-intensive`](../../shelves/systems-architecture/data-intensive/SKILL.md) |
 
 ## Books in this shelf
 
-- [skill:data-pipelines] -- *Data Pipelines Pocket Reference* (James Densmore). Practical patterns for ingestion, transformation, scheduling, and observability.
+- [`data-pipelines`](../../shelves/data-and-pipelines/data-pipelines/SKILL.md) -- *Data Pipelines Pocket Reference* (James Densmore). Practical patterns for ingestion, transformation, scheduling, and observability.
 
 ## Disambiguation
 

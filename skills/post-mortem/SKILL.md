@@ -1,7 +1,6 @@
 ---
 name: post-mortem
 description: "Blameless learning from confirmed failures. Triggered when a shipped implementation contradicts its ticket hypothesis or a pre-mortem Tiger materializes. Produces a root cause analysis with contributing factors, timeline, and action items with testable acceptance criteria. Traces backward through the skill pipeline (self-review → pre-mortem → investigation → think) to identify where the failure could have been caught. Action items update skills, not just code."
-disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read Grep Glob Bash
 ---
