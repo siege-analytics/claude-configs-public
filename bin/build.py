@@ -258,6 +258,8 @@ def find_skills(source: Path) -> dict[str, Path]:
     for skill_md in source.rglob("SKILL.md"):
         skill_dir = skill_md.parent
         slug = skill_dir.name
+        if PROJECT_SEP in slug:
+            continue
         if slug in skills:
             raise BuildError(
                 f"Slug collision on '{slug}':\n"
@@ -718,7 +720,11 @@ def deploy_to_workspace() -> None:
     if not CRAFT_WORKSPACE.exists():
         print(f"  Workspace not found at {CRAFT_WORKSPACE}, skipping deploy")
         return
+    preserved_root_files: dict[str, str] = {}
     if ws_skills.exists():
+        for f in ws_skills.iterdir():
+            if f.is_file() and f.suffix.lower() == ".md":
+                preserved_root_files[f.name] = f.read_text()
         shutil.rmtree(ws_skills)
 
     stripped_count = 0
@@ -737,6 +743,11 @@ def deploy_to_workspace() -> None:
                 stripped_count += 1
         else:
             shutil.copy2(src_path, dst_path)
+
+    for name, content in preserved_root_files.items():
+        target = ws_skills / name
+        if not target.exists():
+            target.write_text(content)
 
     resolver_src = REPO_ROOT / "RESOLVER.md"
     if resolver_src.exists():
