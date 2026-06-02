@@ -26,9 +26,9 @@ INPUT=$(cat)
 
 # Extract the command text. For Bash the tool input is like:
 #   {"tool": "Bash", "tool_input": {"command": "...", "description": "..."}}
+HOOKS_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 COMMAND=$(printf '%s' "$INPUT" \
-  | /usr/local/bun-node-fallback-bin/node -e \
-    'const d=JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")); process.stdout.write(d.tool_input?.command||"")' \
+  | python3 "$HOOKS_DIR/lib/extract-json.py" tool_input.command \
   2>/dev/null || echo "")
 
 if [ -z "$COMMAND" ]; then

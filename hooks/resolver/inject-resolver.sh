@@ -22,7 +22,15 @@
 
 set -euo pipefail
 
-RESOLVER="${CLAUDE_RESOLVER_PATH:-$HOME/git/electinfo/claude-configs-public/RESOLVER.md}"
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$HOOK_DIR/../.." && pwd)"
+if [ -n "${CLAUDE_RESOLVER_PATH:-}" ] && [ -f "$CLAUDE_RESOLVER_PATH" ]; then
+  RESOLVER="$CLAUDE_RESOLVER_PATH"
+elif [ -f "$REPO_ROOT/RESOLVER.md" ]; then
+  RESOLVER="$REPO_ROOT/RESOLVER.md"
+else
+  RESOLVER="$HOME/git/electinfo/claude-configs-public/RESOLVER.md"
+fi
 
 if [ ! -f "$RESOLVER" ]; then
   echo "[resolver-hook] RESOLVER.md not found at $RESOLVER — skills enforcement not injected." >&2
@@ -72,7 +80,7 @@ Failure handling (extracted live from $RESOLVER):
 $FAILURE_HANDLING
 
 Full resolver: cat $RESOLVER
-Skills: ls ~/git/electinfo/claude-configs-public/skills/ and ~/git/electinfo/electinfo_claude_skills/skills/
+Skills: ls $REPO_ROOT/skills/ and ~/git/electinfo/electinfo_claude_skills/skills/
 </skill-resolver>
 EOF
 

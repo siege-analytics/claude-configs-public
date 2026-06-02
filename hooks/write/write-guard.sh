@@ -5,10 +5,10 @@
 set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
 
+HOOKS_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 INPUT=$(cat)
 FILE_PATH=$(printf '%s' "$INPUT" \
-  | /usr/local/bun-node-fallback-bin/node -e \
-    'const d=JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")); process.stdout.write((d.tool_input?.file_path||d.tool_input?.path||""))' \
+  | python3 "$HOOKS_DIR/lib/extract-json.py" tool_input.file_path tool_input.path \
   2>/dev/null || echo "")
 
 [[ -z "$FILE_PATH" ]] && exit 0

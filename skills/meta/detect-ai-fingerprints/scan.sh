@@ -126,7 +126,7 @@ emit() {
 # loses the counter.
 scan_diff_stdin() {
     local current_file="" line_no=0
-    while IFS= read -r line; do
+    while IFS= read -r line || [[ -n "$line" ]]; do
         if [[ "$line" =~ ^\+\+\+\ b/(.+)$ ]]; then
             current_file="${BASH_REMATCH[1]}"
             line_no=0
@@ -198,7 +198,7 @@ scan_message_stdin() {
     declare -a claim_lines=()
     declare -a claim_excerpts=()
 
-    while IFS= read -r line; do
+    while IFS= read -r line || [[ -n "$line" ]]; do
         line_no=$((line_no + 1))
 
         # Subject line (line 1) is exempt from writing-prose:4 body checks.
