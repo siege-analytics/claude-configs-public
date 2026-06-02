@@ -27,6 +27,16 @@
             "type": "command",
             "command": "hooks/resolver/investigate-gate-guard.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/resolver/branch-state-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "hooks/resolver/pipeline-state-guard.sh",
+            "timeout": 10
           }
         ]
       }

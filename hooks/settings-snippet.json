@@ -28,6 +28,16 @@
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/resolver/investigate-gate-guard.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/branch-state-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/pipeline-state-guard.sh",
+            "timeout": 10
           }
         ]
       }
