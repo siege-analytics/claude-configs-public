@@ -39,7 +39,7 @@ if ! echo "$COMMAND" | grep -qE "$TRIGGERS"; then
 fi
 
 # Multi-statement-with-cd yield (mirrors self-review.sh + branch-guard.sh).
-CD_COUNT=$(echo "$COMMAND" | grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null | wc -l | tr -d ' ')
+CD_COUNT=$(echo "$COMMAND" | { grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null || true; } | wc -l | tr -d ' ')
 if [[ "$CD_COUNT" -gt 0 ]]; then
     if [[ "$CD_COUNT" -gt 1 ]] || echo "$COMMAND" | grep -qE $'\n|;|\\|\\|'; then
         exit 0

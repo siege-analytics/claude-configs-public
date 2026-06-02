@@ -82,7 +82,7 @@ fi
 # Ticket reference patterns (org-qualified only, no bare #N)
 TICKET_REGEX='(siege-analytics|electinfo)/[^#[:space:]]+#[0-9]+|github\.com/[^/]+/[^/]+/(issues|pull)/[0-9]+'
 
-FOUND_REFS=$(echo "$BODY" | grep -oE "$TICKET_REGEX" | sort -u)
+FOUND_REFS=$(echo "$BODY" | { grep -oE "$TICKET_REGEX" || true; } | sort -u)
 
 # No ticket refs in body → nothing to enforce
 [[ -z "$FOUND_REFS" ]] && exit 0

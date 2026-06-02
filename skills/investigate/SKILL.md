@@ -348,6 +348,16 @@ Do not proceed past investigation until the Fact Sheet is on the ticket. An inve
 
 ### Write investigate-gate.json (mechanical enforcement)
 
+**Cleanup before creating:** Before writing a new signal file, check for an
+existing `investigate-gate.json`. If one exists from a prior task:
+1. Verify the prior task's Fact Sheet was posted to its ticket
+2. Delete the old signal file: `rm investigate-gate.json`
+3. Then create the new one
+
+A stale signal from task X gives misleading status on task Y. The scope
+mismatch check (Level 2.5) catches this reactively, but cleanup is better
+than warning.
+
 After posting the Fact Sheet to the ticket, write `<workspace>/investigate-gate.json`. This signal file is checked by `investigate-gate-guard.sh` on every turn. Without it, the guard injects a blocking directive reminding you that investigation is incomplete.
 
 ```json
