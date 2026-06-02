@@ -5,12 +5,29 @@ Usage:
     probe-runner.py <matrix.toml> [--output <result.json>] [--session-id <id>]
 
 The agent authors a TOML probe-matrix manifest listing load-bearing
-data-shape assumptions. Each [[assumption]] has a `probe` field (a shell
-command) and an optional `threshold` table specifying the pass/fail check.
-This script runs each probe in sequence, captures stdout, evaluates the
-threshold, and writes a JSON result document the agent cannot have authored
-by hand (the `generator`, `generated_at`, and per-result `output` fields
-all come from this runner).
+data-shape assumptions. Each [[assumption]] is one of three shapes:
+
+  (a) Shell probe (default):
+        probe     = "spark-sql -e '...'"
+        threshold = { type = "int_lt", value = 50 }
+
+  (b) Manual attestation (semantic claims that can't be probed mechanically):
+        probe_type      = "manual_attestation"
+        required_fields = ["meaning", "source", "value_examples"]
+        fields = { meaning = "...", source = "<file:line or URL>", value_examples = "..." }
+
+  (c) Explicit skip (agent attests this assumption doesn't apply):
+        skip = "<non-trivial justification, >=20 chars, not 'n/a' / 'trivial'>"
+
+The Sagan-parody design intent (#284): the starter matrix contains the
+FULL universe of assumptions for an operation class. The agent fills in
+each entry by probing, attesting, or skipping with justification. Deletion
+is not allowed; reduction is by justification. Compliance cost is asymmetric
+in favor of leaving the universe alone.
+
+The runner executes each entry and writes a JSON result document the agent
+cannot author by hand (`generator`, `generated_at`, and per-result `output`
+or `fields` come from this script).
 
 The PR's `Probe-Matrix:` trailer points at the result JSON. The companion
 self-review.sh check validates the trailer, the file's signature, that
@@ -109,6 +126,68 @@ def evaluate_threshold(stdout: str, threshold: dict | None) -> tuple[str, str]:
         return "BLOCK", f"threshold evaluation error: {e}"
 
 
+SOURCE_RE = re.compile(r"(^https?://|^[^\s]+:\d+|^/|^\.{1,2}/)")
+
+
+def evaluate_manual_attestation(assumption: dict) -> dict:
+    """Manual-attestation assumption: no shell probe; validate that `fields`
+    are filled with non-trivial values. Used for semantic claims that can't
+    be probed mechanically (column meaning, business intent, etc.)."""
+    aid = assumption.get("id", "<unnamed>")
+    fields = assumption.get("fields", {})
+    required = assumption.get("required_fields", ["meaning", "source"])
+
+    if not isinstance(fields, dict):
+        return {
+            "id": aid, "probe_type": "manual_attestation", "status": "BLOCK",
+            "reason": "fields must be a TOML table", "ran_at": now_utc(),
+        }
+
+    missing = []
+    for k in required:
+        v = fields.get(k)
+        if v is None or not str(v).strip():
+            missing.append(k)
+    if missing:
+        return {
+            "id": aid, "probe_type": "manual_attestation", "status": "BLOCK",
+            "reason": f"missing or empty required fields: {missing}",
+            "ran_at": now_utc(),
+        }
+
+    # `source` (if required) must look like a file:line, URL, or path —
+    # not prose. This is the load-bearing check: the source must be
+    # something the operator can grep / open / click.
+    if "source" in required:
+        source = str(fields["source"]).strip()
+        if not SOURCE_RE.search(source):
+            return {
+                "id": aid, "probe_type": "manual_attestation",
+                "fields": fields, "status": "BLOCK",
+                "reason": f"source field {source!r} does not look like a path / URL / file:line",
+                "ran_at": now_utc(),
+            }
+
+    return {
+        "id": aid, "probe_type": "manual_attestation", "fields": fields,
+        "status": "PASS",
+        "reason": f"attested fields filled: {sorted(fields.keys())}",
+        "ran_at": now_utc(),
+    }
+
+
+def evaluate_skip(assumption: dict) -> dict:
+    """Skipped assumption: agent asserts this doesn't apply to the current
+    operation. The skip reason is recorded but the validator (hook side)
+    enforces non-triviality."""
+    return {
+        "id": assumption.get("id", "<unnamed>"),
+        "status": "SKIPPED",
+        "skip_reason": assumption["skip"],
+        "ran_at": now_utc(),
+    }
+
+
 def run_probe(assumption: dict, timeout_sec: int) -> dict:
     aid = assumption.get("id", "<unnamed>")
     probe = assumption.get("probe", "")
@@ -199,12 +278,24 @@ def main() -> int:
                 "reason": "prior assumption blocked and --stop-on-block set",
             })
             continue
-        entry = run_probe(a, timeout_sec=args.timeout)
+
+        # Dispatch based on which field is present:
+        #   `skip = "..."` -> agent attests this doesn't apply (SKIPPED)
+        #   `probe_type = "manual_attestation"` + `fields` -> semantic attestation
+        #   `probe = "..."` -> shell-runnable probe (original v1.0 path)
+        if "skip" in a:
+            entry = evaluate_skip(a)
+        elif a.get("probe_type") == "manual_attestation":
+            entry = evaluate_manual_attestation(a)
+        else:
+            entry = run_probe(a, timeout_sec=args.timeout)
+
         results.append(entry)
         if entry["status"] == "BLOCK":
             overall = "BLOCK"
         elif entry["status"] == "ERROR" and overall != "BLOCK":
             overall = "ERROR"
+        # PASS, SKIPPED, NOT_RUN are neutral on overall_status.
 
     result_doc = {
         "schema_version": SCHEMA_VERSION,

@@ -545,6 +545,30 @@ if overall != "PASS":
     print("NOT_PASS: " + " ; ".join(parts))
     sys.exit(1)
 
+# v1.7 Sagan-parody enforcement (#284): every SKIPPED entry must have a
+# non-trivial skip_reason. The whole point of the Sagan starter is that the
+# universe of assumptions is given and the agent reduces by JUSTIFYING
+# omissions. A skip whose reason is "n/a" / "trivial" / 3-word hand-wave
+# defeats the design.
+TRIVIAL_SKIP_PHRASES = {
+    "", "n/a", "na", "n.a.", "n.a",
+    "not applicable", "not relevant", "not needed",
+    "trivial", "obvious", "skip", "skipped", "no",
+}
+MIN_SKIP_REASON_LEN = 20
+bad_skips = []
+for r in doc.get("results", []):
+    if r.get("status") != "SKIPPED":
+        continue
+    reason = (r.get("skip_reason") or "").strip()
+    if reason.lower() in TRIVIAL_SKIP_PHRASES:
+        bad_skips.append(f"{r.get('id')}: skip reason {reason!r} is in the trivial-phrases list")
+    elif len(reason) < MIN_SKIP_REASON_LEN:
+        bad_skips.append(f"{r.get('id')}: skip reason ({len(reason)} chars) < {MIN_SKIP_REASON_LEN} char floor")
+if bad_skips:
+    print("TRIVIAL_SKIPS: " + " | ".join(bad_skips))
+    sys.exit(1)
+
 # Session check is warning-only when CRAFT_AGENT_SESSION_ID isn't set —
 # the host repo or CI may run the hook outside a Craft Agent session.
 if expected_session:

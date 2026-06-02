@@ -3,22 +3,37 @@
 Machine-generated assumption matrices for transformation-code dry-runs. Ships
 the primitive proposed in siege-analytics/claude-configs-public#284.
 
-## Why this exists
+## Why this exists (and the Sagan-parody framing)
 
 `self-review.sh` v1.6 (PR #276 Level 3) requires a `Pre-ship-dry-run:` trailer
 on commits touching transformation code. The check is presence-only — any
 non-empty trailer passes. The failure shape that motivated #284 was:
 
 - The trailer body narrated compliance ("by construction", "schema reconciliation guaranteed")
-- The 30-second probe that would have caught the assumption (cardinality of the partition key) was never run
-- Three same-shape PRs shipped on the same unverified assumption
+- The 30-second probe that would have caught the cardinality assumption (179 vs assumed 24) was never run
+- Even deeper: the *semantic* meaning of `cycle` (FEC filing cycle, not transaction year) was never written down anywhere
 
-A probe matrix forces the agent to enumerate data-shape assumptions in a
-TOML manifest, then runs each probe via `hooks/lib/probe-runner.py`. The
-runner writes a JSON result file with machine-generated fields the agent
-cannot author by hand. `self-review.sh` v1.7 validates the trailer points
-at a result file with a runner signature, current session id, all results
-PASS, and a PASS overall_status.
+**Design intent — Carl Sagan parody:** "If you want to make an apple pie
+from scratch, first you must invent the universe." Each starter matrix
+contains the FULL UNIVERSE of assumptions for a transformation pattern,
+across five layers (physical / schematic / semantic / operational /
+correctness). The agent does NOT delete entries to reduce the matrix —
+the agent JUSTIFIES omissions. Compliance is cheaper as "leave the
+universe alone" than as "prove you considered everything."
+
+Each entry is one of three shapes:
+
+| Shape | When | Example |
+|---|---|---|
+| Shell probe with `threshold` | Mechanically checkable | `SELECT COUNT(DISTINCT year_month) ... → int_lt(50)` |
+| `probe_type = "manual_attestation"` with `fields` | Semantic claim not mechanically probeable | "cycle means FEC filing cycle, source: docs/glossary.md:42" |
+| `skip = "<≥20-char justification>"` | Truly N/A to this operation | "Target is new; no prior-state check applies." |
+
+The runner executes / validates each entry and writes a JSON result file
+with machine-generated fields the agent cannot author by hand.
+`self-review.sh` v1.7 validates: runner signature, session id, all-PASS
+overall_status, AND that every `SKIPPED` entry has a non-trivial reason
+(≥20 chars, not "n/a" / "trivial" / etc.).
 
 ## How to use one
 
@@ -50,18 +65,55 @@ PASS, and a PASS overall_status.
 
 ## Matrix schema
 
+Every `[[assumption]]` is one of three shapes. The `id` and `description`
+fields are required on all three; pick exactly one of `probe`,
+`probe_type = "manual_attestation"`, or `skip`.
+
 ```toml
 version = 1
 operation = "<one-line description of the operation>"
 target_repo = "<owner/repo>"           # optional, informational
 target_pr = 0                           # optional, informational
+starter_pattern = "<name>"             # optional; identifies which starter this matrix derives from
 
+# Shape A: shell probe with optional threshold
 [[assumption]]
 id = "<short-identifier>"               # required, unique within matrix
 description = "<why this matters>"      # required, human-readable
-probe = "<shell command>"               # required, runs via subprocess shell=True
+probe = "<shell command>"               # runs via subprocess shell=True
 threshold = { type = "<type>", value = <value> }  # optional; absent = informational
+
+# Shape B: manual attestation (semantic claims that can't be probed mechanically)
+[[assumption]]
+id = "..."
+description = "..."
+probe_type = "manual_attestation"
+required_fields = ["meaning", "source", "value_examples"]   # default: ["meaning", "source"]
+[assumption.fields]
+meaning = "..."                         # plain-language description
+source = "<file:line | URL | path>"     # required; validator checks it looks like a citable reference, not prose
+value_examples = "..."                  # optional / per required_fields
+
+# Shape C: explicit skip with justification
+[[assumption]]
+id = "..."
+description = "..."
+skip = "<>=20 char specific reason; rejected if 'n/a', 'not applicable', 'trivial', etc.>"
 ```
+
+### When to use each shape
+
+- **Shell probe** — anything you can ask the data to answer with a number or
+  a string match. Row counts, distinct counts, schema presence, EXPLAIN-plan
+  features. The cheapest and most-checkable shape.
+- **Manual attestation** — semantic claims (what does this column mean? who
+  consumes this output? what's the rollback path?). The runner doesn't
+  execute the claim — it validates the matrix has the required fields filled
+  with non-trivial values and that `source` looks like a citable reference.
+- **Skip** — the assumption truly doesn't apply to this specific operation.
+  The justification must be specific (≥20 chars, not on the trivial-phrases
+  list). Deleting the entry is NOT an alternative; this is the Sagan-parody
+  design intent.
 
 ### Threshold types
 
