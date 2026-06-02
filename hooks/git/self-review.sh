@@ -25,6 +25,10 @@
 #     checks the ### Verified Shapes section for at least one PROBED or
 #     ATTESTED line. All-SKIPPED = blocked. Cross-checks entity count
 #     between prose and investigate-gate.json for drift detection.
+# v1.9 (this version):
+#   - Pre-mortem-artifact prose quality: if the artifact file exists,
+#     checks for minimum content (>=5 non-header lines) and at least one
+#     Tiger entry with severity classification. Empty/header-only = blocked.
 # v2 scope (deferred follow-ups, tracked in SKILL.md):
 #   - Goal source does not point at the commit being pushed
 #   - Lead section's role-tagged affirmative standard format
@@ -425,6 +429,37 @@ Verify both artifacts are in sync before proceeding.
 HOOKEOF
                     # WARNING only — do not exit 2
                 fi
+            fi
+        fi
+
+        # v1.9: If the Pre-mortem-artifact file exists and is a .md file,
+        # check that it contains at least one Tiger entry with a severity
+        # classification. An empty or header-only pre-mortem is not a pre-mortem.
+        if [[ "$FIELD_NAME" == "Pre-mortem-artifact" ]] && \
+           [[ -n "${FIELD_PATH:-}" ]] && [[ -f "${FIELD_PATH:-}" ]]; then
+            TIGER_COUNT=$(grep -ciE 'severity:\s*(HIGH|MEDIUM|LOW|CRITICAL)' "$FIELD_PATH" || true)
+            TIGER_HEADER_COUNT=$(grep -cE '^\*\*Tiger|^### Tiger|^- \*\*Tiger' "$FIELD_PATH" || true)
+            CONTENT_LINES=$(grep -cvE '^\s*$|^#|^---' "$FIELD_PATH" || true)
+
+            if [[ "$CONTENT_LINES" -lt 5 ]]; then
+                cat >&2 <<HOOKEOF
+BLOCKED: Pre-mortem-artifact at $FIELD_PATH has only $CONTENT_LINES
+non-header lines. A pre-mortem requires at least one Tiger (risk) with
+severity, likelihood, and mitigation.
+
+If this task genuinely has no risks, use Pre-mortem-artifact: TRIVIAL
+with a Trivial-investigation declaration in the self-review artifact.
+HOOKEOF
+                exit 2
+            fi
+
+            if [[ "$TIGER_COUNT" -eq 0 ]] && [[ "$TIGER_HEADER_COUNT" -eq 0 ]]; then
+                cat >&2 <<HOOKEOF
+WARNING: Pre-mortem-artifact at $FIELD_PATH has no Tiger entries with
+severity classification (expected "Severity: HIGH|MEDIUM|LOW|CRITICAL"
+or "**Tiger" headings). The pre-mortem may lack substantive risk analysis.
+HOOKEOF
+                # WARNING only — formatting varies
             fi
         fi
     done
