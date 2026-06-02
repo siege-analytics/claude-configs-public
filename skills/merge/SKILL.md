@@ -15,9 +15,26 @@ allowed-tools: Bash
    2. Tests pass on the branch
    3. Ticket is in a complete state (acceptance criteria met)
    4. PR exists and has been reviewed (if the project uses PRs)
+   5. **Self-review artifact exists** (see Self-review gate below)
 3. Perform the merge (see Merge procedures below)
 4. Update tickets and clean up branches
 5. If merging to `main`, ask the user first unless they already requested it
+
+# Self-review gate
+
+A "merge" instruction authorizes the **destination**, not the **method**. The merge process includes review, not replaces it.
+
+Before executing any merge (`gh pr merge`, `git merge`, `glab mr merge`), verify:
+
+1. A self-review artifact exists -- posted to the ticket as a comment or committed to the repo
+2. The latest commit on the branch carries `Self-Review:` and `Self-Review-Source:` trailers
+3. The artifact has the required sections: `## Assumptions`, `## Peer review`, `## Lead review`
+
+**If any of these are missing when you are told to merge**, do not proceed silently. Ask:
+
+> "This merge would skip the self-review gate. Self-review artifacts are missing. Are you telling me to forego review?"
+
+Do not merge until you have an explicit, affirmative answer to that question. `--admin` bypasses CI, not review. Speed is not a reason to skip review; the prior session merged 10 PRs without review artifacts and every one was a process violation.
 
 # Merge philosophy
 
@@ -209,6 +226,8 @@ The `--merge` flag creates a merge commit (equivalent to `--no-ff`). Avoid `--sq
 
 # Checklist
 
+- [ ] Self-review artifact exists and is posted to ticket (or explicitly waived by user)
+- [ ] Latest commit carries `Self-Review:` and `Self-Review-Source:` trailers
 - [ ] Merge direction is correct (feature → develop, develop → main, hotfix → main + develop)
 - [ ] Source branch is up to date and pushed
 - [ ] Tests pass on the source branch
