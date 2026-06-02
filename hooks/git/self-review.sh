@@ -118,7 +118,7 @@ fi
 # commit," not "the message adheres to RFC-2822 trailer syntax." Grep at
 # line-start enforces presence; ordering / contiguity is left to the
 # agent's discretion.
-REVIEW_LINE=$(echo "$COMMIT_MSG" | grep -E '^Self-Review:[[:space:]]+\S' | head -1)
+REVIEW_LINE=$(echo "$COMMIT_MSG" | { grep -E '^Self-Review:[[:space:]]+\S' || true; } | head -1)
 SOURCE_LINES=$(echo "$COMMIT_MSG" | grep -cE '^Self-Review-Source:[[:space:]]+\S')
 
 if [[ -z "$REVIEW_LINE" ]]; then
@@ -159,7 +159,7 @@ HOOKEOF
     exit 2
 fi
 
-SOURCE_VALUE=$(echo "$COMMIT_MSG" | grep -E '^Self-Review-Source:[[:space:]]+' | head -1 | sed -E 's/^Self-Review-Source:[[:space:]]+'//)
+SOURCE_VALUE=$(echo "$COMMIT_MSG" | { grep -E '^Self-Review-Source:[[:space:]]+' || true; } | head -1 | sed -E 's/^Self-Review-Source:[[:space:]]+'//)
 
 # If source looks like a path, run the structural checks against the file.
 # Ticket references (e.g. "#123") are accepted but not yet validated --
@@ -221,7 +221,7 @@ HOOKEOF
     # plans/ files aren't in any git repo, so mtime is the v1.1 floor.
     # Caveats inside the source file are unblocked: ticket-shaped sources
     # (#NNN) and quoted-user-request goal-sources skip this check.
-    GOAL_SOURCE_VALUE=$(grep -E '^Goal source:[[:space:]]+' "$SOURCE_PATH" | head -1 | sed -E 's/^Goal source:[[:space:]]+'//)
+    GOAL_SOURCE_VALUE=$({ grep -E '^Goal source:[[:space:]]+' "$SOURCE_PATH" || true; } | head -1 | sed -E 's/^Goal source:[[:space:]]+'//)
     if [[ "$GOAL_SOURCE_VALUE" =~ \.(md|txt|json|yaml|yml|sh|py|sql)$ ]] || [[ "$GOAL_SOURCE_VALUE" == /* ]] || [[ "$GOAL_SOURCE_VALUE" == ./* ]]; then
         case "$GOAL_SOURCE_VALUE" in
             /*) GOAL_SOURCE_PATH="$GOAL_SOURCE_VALUE" ;;
@@ -556,8 +556,8 @@ if [ -n "$DIFF_FILES" ]; then
 fi
 
 if [ "$IS_TRANSFORM" = "true" ]; then
-    DRYRUN_LINE=$(echo "$COMMIT_MSG" | grep -E '^Pre-ship-dry-run:[[:space:]]+\S' | head -1)
-    PROBE_LINE=$(echo "$COMMIT_MSG" | grep -E '^Probe-Matrix:[[:space:]]+\S' | head -1)
+    DRYRUN_LINE=$(echo "$COMMIT_MSG" | { grep -E '^Pre-ship-dry-run:[[:space:]]+\S' || true; } | head -1)
+    PROBE_LINE=$(echo "$COMMIT_MSG" | { grep -E '^Probe-Matrix:[[:space:]]+\S' || true; } | head -1)
     if [ -z "$DRYRUN_LINE" ] && [ -z "$PROBE_LINE" ]; then
         cat >&2 <<HOOKEOF
 BLOCKED: Diff touches transformation code but commit is missing both
