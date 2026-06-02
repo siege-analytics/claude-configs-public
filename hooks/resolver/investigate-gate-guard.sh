@@ -244,6 +244,48 @@ $RESULT
 EOF
 fi
 
+# Level 2.5: Scope mismatch check.
+# If the investigate-gate ticket doesn't match the current branch's ticket,
+# warn about stale/mismatched scope (#323).
+SCOPE_WARN=""
+BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+if [ -n "$BRANCH_NAME" ] && [ "$BRANCH_NAME" != "HEAD" ]; then
+    SIGNAL_TICKET=$(python3 -c "
+import json, re, sys
+try:
+    data = json.load(open('$INVESTIGATE_GATE'))
+    raw = data.get('ticket', '')
+    m = re.search(r'#(\d+)', raw)
+    if m:
+        print(m.group(1))
+    else:
+        m = re.search(r'([A-Z]+-\d+)', raw)
+        if m:
+            print(m.group(1))
+except:
+    pass
+" 2>/dev/null || echo "")
+
+    BRANCH_TICKETS=$(echo "$BRANCH_NAME" | grep -oE '([0-9]+|[A-Z]+-[0-9]+)' | head -5)
+
+    if [ -n "$SIGNAL_TICKET" ] && [ -n "$BRANCH_TICKETS" ]; then
+        if ! echo "$BRANCH_TICKETS" | grep -qF "$SIGNAL_TICKET"; then
+            DISPLAY_TICKET="${SIGNAL_TICKET}"
+            if echo "$SIGNAL_TICKET" | grep -qE '^[0-9]+$'; then DISPLAY_TICKET="#${SIGNAL_TICKET}"; fi
+            SCOPE_WARN="SCOPE MISMATCH: investigate-gate.json is for ${DISPLAY_TICKET} but current branch is '${BRANCH_NAME}'.
+Update the signal file for the current task or archive the stale one."
+        fi
+    fi
+fi
+
+if [ -n "$SCOPE_WARN" ]; then
+    cat <<EOF
+<investigate-gate>
+$SCOPE_WARN
+</investigate-gate>
+EOF
+fi
+
 # Level 3: Disposition validation (Sagan assumption universe enforcement).
 # Checks that verifiedShapes entries include a dispositions array with
 # valid PROBED/ATTESTED/SKIPPED entries. V1 signal files (no dispositions
