@@ -17,13 +17,25 @@ CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 
 # Match `git commit` anywhere in the command, not just at the start, so
 # forms like `cd /tmp/foo && git commit ...` and `bash -c "git commit ..."`
-# don't slip through. Known limitations (see issues #97, #98): commands
-# that invoke a script which itself runs git commit (`bash wrapper.sh`)
-# are not inspected; `git -C <path> commit` without a leading `cd` is not
-# parsed for its target path.
+# don't slip through. Known limitation (see issue #97): `git -C <path>
+# commit` without a leading `cd` is not parsed for its target path.
 # Word boundaries via portable character-class form (not BSD-incompatible `\b`);
 # see issue #106 (same fix that landed for self-review.sh in same PR).
-if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'; then
+HAS_GIT_COMMIT=false
+if echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'; then
+    HAS_GIT_COMMIT=true
+fi
+
+# Issue #98: catch script-wrapper bypass. When the command executes a shell
+# script (bash/sh/source/.), the script may contain git commit internally.
+# We can't inspect script contents reliably, but we CAN check whether we're
+# on a protected branch — if so, block with a warning regardless.
+RUNS_SCRIPT=false
+if echo "$COMMAND" | grep -qE '(^|[;&|]+[[:space:]]*)(bash|sh|source|\.)[[:space:]]+[^[:space:]-]'; then
+    RUNS_SCRIPT=true
+fi
+
+if [ "$HAS_GIT_COMMIT" = "false" ] && [ "$RUNS_SCRIPT" = "false" ]; then
     exit 0
 fi
 
@@ -85,7 +97,20 @@ fi
 PROTECTED="^(main|master|develop|dev|development|staging|next|integration)$"
 
 if [[ "$BRANCH" =~ $PROTECTED ]]; then
-    cat >&2 <<EOF
+    if [ "$RUNS_SCRIPT" = "true" ] && [ "$HAS_GIT_COMMIT" = "false" ]; then
+        cat >&2 <<EOF
+BLOCKED: Running a shell script on protected branch '$BRANCH'.
+
+The script may contain git commit or other write operations that bypass
+hook inspection. Create a feature branch first, or run the script's
+commands directly so hooks can inspect them.
+
+  git checkout -b feature/your_description
+
+This is enforced by the branch-guard hook (see issue #98).
+EOF
+    else
+        cat >&2 <<EOF
 BLOCKED: Direct commit to '$BRANCH' is not allowed.
 
 Create a feature branch first:
@@ -93,6 +118,7 @@ Create a feature branch first:
 
 This is enforced by the develop-guard and branch skills.
 EOF
+    fi
     exit 2
 fi
 

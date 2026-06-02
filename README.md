@@ -179,7 +179,7 @@ echo '{"tool_input":{"message":"see [skill:think]"}}' \
 echo "exit=$?"
 ```
 
-If exit is 0 instead of 2, the hook is on disk but not executable -- run `chmod +x ~/.craft-agent/workspaces/<ws>/hooks/agent-comms/*.sh ~/.craft-agent/workspaces/<ws>/hooks/git/*.sh ~/.craft-agent/workspaces/<ws>/hooks/infrastructure/*.sh ~/.craft-agent/workspaces/<ws>/hooks/resolver/*.sh`. If the hook never fires from a real `mcp__session__send_agent_message` call, settings.json is malformed -- validate with `python3 -c 'import json; json.load(open("~/.claude/settings.json"))'`.
+If exit is 0 instead of 2, the hook is on disk but not executable -- run `chmod +x ~/.craft-agent/workspaces/<ws>/hooks/agent-comms/*.sh ~/.craft-agent/workspaces/<ws>/hooks/git/*.sh ~/.craft-agent/workspaces/<ws>/hooks/infrastructure/*.sh ~/.craft-agent/workspaces/<ws>/hooks/resolver/*.sh`. If the hook never fires from a real `mcp__session__send_agent_message` call, settings.json is malformed -- validate with `python3 -c 'import json, os; json.load(open(os.path.expanduser("~/.claude/settings.json")))'`.
 
 To upgrade later:
 

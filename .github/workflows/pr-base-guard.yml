@@ -1,0 +1,42 @@
+name: pr-base-guard
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize]
+
+jobs:
+  check-base:
+    name: Require develop-role head for main-targeted PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check head branch
+        run: |
+          HEAD="${{ github.head_ref }}"
+          LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
+
+          # Allow hotfix bypasses
+          if echo "$LABELS" | grep -q '"hotfix-direct-to-main"'; then
+            echo "Hotfix label present — allowing direct-to-main PR."
+            exit 0
+          fi
+
+          # Allow promote branches (develop → main promotion)
+          if echo "$HEAD" | grep -qE '^(develop|promote/)'; then
+            echo "Head branch '$HEAD' is develop-role — allowed."
+            exit 0
+          fi
+
+          # Allow release tags
+          if echo "$HEAD" | grep -qE '^release/'; then
+            echo "Head branch '$HEAD' is a release branch — allowed."
+            exit 0
+          fi
+
+          echo "BLOCKED: PR head '$HEAD' targets main but is not a develop-role branch."
+          echo ""
+          echo "PRs to main must come from 'develop' or 'promote/*' branches."
+          echo "If this is a hotfix, add the 'hotfix-direct-to-main' label."
+          echo ""
+          echo "See: skills/coding/develop-guard/SKILL.md"
+          exit 1
