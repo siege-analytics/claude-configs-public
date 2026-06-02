@@ -36,7 +36,8 @@ workspace = '$WORKSPACE_ROOT'
 
 try:
     data = json.load(open(signal_path))
-except Exception:
+except Exception as e:
+    print(f'WARN: think-gate.json is malformed ({e}). Pipeline enforcement skipped.')
     sys.exit(0)
 
 status = data.get('status', '')
@@ -126,7 +127,8 @@ if not warnings:
         found.append(f'investigate: {os.path.basename(invest)}')
     if premortem:
         found.append(f'pre-mortem: {os.path.basename(premortem)}')
-    print(f'Pipeline for {task}: artifacts present ({', '.join(found)}).')
+    summary = ', '.join(found)
+    print(f'Pipeline for {task}: artifacts present ({summary}).')
 else:
     print(f'Pipeline for {task}: {len(warnings)} artifact(s) missing.')
     print()
