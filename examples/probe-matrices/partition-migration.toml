@@ -1,0 +1,223 @@
+# Starter probe matrix: partition-migration shape.
+#
+# This file is the FULL UNIVERSE of assumptions for a partition migration.
+# Per the Sagan-parody design (#284): you do not delete entries from this
+# file. You either:
+#   (a) fill in the `probe` command and run it, OR
+#   (b) attest with `probe_type = "manual_attestation"` and fill `fields`, OR
+#   (c) explicitly skip with `skip = "<>=20 chars, not 'n/a' / 'trivial'>"`.
+#
+# The `partition_key_cardinality_bounded` operational probe is the one that
+# would have caught the failure shape from electinfo/airflow#147 / #148
+# (24 assumed, 179 actual). The `partition_column_meaning` semantic
+# attestation is the DEEPER catcher: it forces you to write down what
+# `cycle` actually means in the source schema. In #147/#148 the agent
+# assumed cycle=2024 meant "transactions from 2024." It actually means
+# "FEC filing cycle 2024," which can contain line items with contribution
+# dates spanning decades. No row count catches that; only the attestation
+# does.
+
+version = 1
+operation = "INSERT OVERWRITE <target> PARTITION (<cols>)"
+target_repo = "electinfo/airflow"
+target_pr = 0
+starter_pattern = "partition-migration"
+
+# =========================================================================
+# Layer 1: PHYSICAL — the infrastructure is reachable and responsive
+# =========================================================================
+
+[[assumption]]
+id = "spark_connect_reachable"
+description = "Spark Connect server responds to a trivial query within 30s."
+probe = "echo 'EDIT: spark-sql -e \"SELECT 1\"'"
+threshold = { type = "int_gt", value = 0 }
+
+[[assumption]]
+id = "catalog_responds"
+description = "The catalog (Unity / Hive / Glue) responds to a SHOW DATABASES within 30s. If the catalog is slow under load, file-commit will also be slow — Spark catalog operations serialize on the catalog API."
+probe = "echo 'EDIT: spark-sql -e \"SHOW DATABASES\" | wc -l'"
+threshold = { type = "int_gt", value = 0 }
+
+[[assumption]]
+id = "storage_writable"
+description = "The target storage location accepts a probe write."
+probe = "echo 'EDIT: kubectl exec <pod> -- touch <storage_path>/.probe-$$ && rm <storage_path>/.probe-$$ && echo ok'"
+threshold = { type = "string_contains", value = "ok" }
+
+[[assumption]]
+id = "user_has_read_permission_on_source"
+description = "The service account running the migration can read from the source. Fails closed: SELECT 1 row to surface permission errors before INSERT."
+probe = "echo 'EDIT: spark-sql -e \"SELECT * FROM <source> LIMIT 1\" | wc -l'"
+threshold = { type = "int_gt", value = 0 }
+
+[[assumption]]
+id = "user_has_write_permission_on_target"
+description = "The service account can write to the target location. Surface as an explicit probe rather than discovering at INSERT time, because INSERT failures may leave the target half-written."
+probe = "echo 'EDIT: spark-sql -e \"CREATE TABLE IF NOT EXISTS <target>_permprobe (x int)\" && spark-sql -e \"DROP TABLE <target>_permprobe\" && echo ok'"
+threshold = { type = "string_contains", value = "ok" }
+
+# =========================================================================
+# Layer 2: SCHEMATIC — the schema shape is what we think it is
+# =========================================================================
+
+[[assumption]]
+id = "source_table_exists"
+description = "Source table is in the catalog. Fails before INSERT plans the read."
+probe = "echo 'EDIT: spark-sql -e \"DESCRIBE <source>\" | wc -l'"
+threshold = { type = "int_gt", value = 0 }
+
+[[assumption]]
+id = "target_table_state_known"
+description = "Target either exists (for INSERT OVERWRITE) with a matching schema, or doesn't exist (for CREATE) so the CREATE doesn't collide. Decide which operation this is and probe accordingly."
+probe = "echo 'EDIT: spark-sql -e \"SHOW TABLES LIKE \\\"<target_short_name>\\\"\" | wc -l'"
+threshold = { type = "int_ge", value = 0 }
+
+[[assumption]]
+id = "partition_columns_present_in_source"
+description = "Every column named in PARTITION (...) exists in the source. Fails BEFORE the planner does, so the error message is clearer than INCOMPATIBLE_COLUMN_TYPE."
+probe = "echo 'EDIT: spark-sql -e \"DESCRIBE <source>\" | grep -c -E \"^<partition_col_1>|^<partition_col_2>\"'"
+threshold = { type = "int_ge", value = 1 }
+
+[[assumption]]
+id = "partition_column_types_match_target_spec"
+description = "Each partition column's type in the source matches the type the target's CREATE TABLE specifies. Mismatch causes silent coercion (UTF-8 vs binary) or hard failure."
+probe = "echo 'EDIT: python3 scripts/compare_types.py <source> <target_spec.yaml>'"
+threshold = { type = "string_contains", value = "TYPES_MATCH" }
+
+[[assumption]]
+id = "non_partition_column_count_matches"
+description = "Number of non-partition columns in the rendered SELECT equals the number expected by the target CREATE schema. Off-by-one here is the writing-code:19 failure mode."
+probe = "echo 'EDIT: python3 -c \"print(len(rendered_select_cols) - len(partition_cols))\"'"
+threshold = { type = "int_eq", value = 0 }   # EDIT: replace with expected diff against target
+
+[[assumption]]
+id = "generated_sql_parses"
+description = "The rendered SQL passes a sqlparse / spark catalyst dry-parse. Cheap syntactic sanity check."
+probe = "echo 'EDIT: python3 -c \"import sqlparse; sqlparse.parse(open(\\\"rendered.sql\\\").read())\" && echo OK'"
+threshold = { type = "string_contains", value = "OK" }
+
+[[assumption]]
+id = "no_reserved_word_collisions"
+description = "Columns named with reserved-words (year, month, table, order, ...) are quoted in the generated SQL. Catches the half-fixed-by-Spark-but-not-by-Hive surface area."
+probe = "echo 'EDIT: grep -E \"\\\\b(year|month|table|order|cycle)\\\\b\" rendered.sql | grep -vc \"`\"'"
+threshold = { type = "int_eq", value = 0 }
+
+# =========================================================================
+# Layer 3: SEMANTIC — what the columns MEAN (the Sagan-deep layer)
+# =========================================================================
+
+[[assumption]]
+id = "partition_column_meaning"
+description = "What does each partition column actually MEAN? Not its type — its domain semantics. The #147/#148 failure: agent assumed cycle=2024 means 'transactions from 2024.' It means 'FEC filing cycle 2024,' which contains line items from any contribution_date the filer reports on. Required: meaning (plain language); source (file:line, URL, or quoted ticket discussion the operator can verify); value_examples (5+ distinct values from the actual source)."
+probe_type = "manual_attestation"
+required_fields = ["meaning", "source", "value_examples"]
+[assumption.fields]
+meaning = "EDIT: cycle is the FEC filing cycle (2-year window for federal candidates, 4-year for presidential)."
+source = "EDIT: docs/glossary.md:42 OR https://www.fec.gov/help-candidates-and-committees/dates-and-deadlines/  OR ticket #N comment quote"
+value_examples = "EDIT: 5+ distinct values observed in the actual source, e.g. ['2020', '2022', '2024', '2026']"
+
+[[assumption]]
+id = "partition_column_relationship_to_other_columns"
+description = "What does the partition column's value DEPEND ON in the source row? (Is year_month derived from contribution_date? from filing_date? from some other column?) This is the chain you need to trace to know what cardinality to expect. In #147/#148, year_month derives from contribution_date, not from cycle. Filers reporting in cycle=2024 can include line items with contribution_date back to 1998 — hence 179 distinct year_months."
+probe_type = "manual_attestation"
+required_fields = ["dependency_description", "source"]
+[assumption.fields]
+dependency_description = "EDIT: year_month is DATE_FORMAT(contribution_date, 'yyyy-MM'). It depends on contribution_date, not on cycle. Cardinality is therefore bounded by the historical range of contributions, not by the cycle's calendar window."
+source = "EDIT: airflow/dags/silver_canonical/sa.sql.j2:115  OR docs/data-model.md:section-3"
+
+[[assumption]]
+id = "partition_column_sentinel_values"
+description = "What sentinel / out-of-domain values appear? NULL? Empty string? 'unknown'? 'N/A'? The 'unknown' bucket in #147/#148 was a real distinct partition value; if the matrix doesn't name it, the partitioning silently creates an 'unknown' partition directory and the read-path consumers don't know it's there."
+probe_type = "manual_attestation"
+required_fields = ["sentinels_observed", "source"]
+[assumption.fields]
+sentinels_observed = "EDIT: list every distinct sentinel observed in the actual source, e.g. ['', 'unknown', NULL]"
+source = "EDIT: query result file:path  OR  spark-sql output captured in dryrun-log"
+
+[[assumption]]
+id = "target_business_purpose"
+description = "Who consumes the output of this transformation, and what guarantee do they rely on? (Recon checks row counts and totals. Gold MV refreshes pull recent partitions. Attestation reads cycle-scoped aggregates.) This determines what invariants the migration must preserve. Without naming the consumer, the agent can ship a 'syntactically correct' migration that breaks the consumer's expectations."
+probe_type = "manual_attestation"
+required_fields = ["consumers", "invariants", "source"]
+[assumption.fields]
+consumers = "EDIT: list of consuming jobs/queries, e.g. ['recon_daily DAG', 'gold.mv_canonical_summary', 'attestation_*']"
+invariants = "EDIT: what each consumer expects, e.g. ['row count preserved per cycle', 'sum(amount) preserved per cycle', 'partition pruning when filtering by cycle']"
+source = "EDIT: docs/data-contracts.md  OR  recon DAG source file:line"
+
+[[assumption]]
+id = "rollback_path_known"
+description = "If this migration fails midway, what's the recovery path? DROP + recreate requires a known backup; INSERT OVERWRITE requires no backup but assumes the new write succeeds. Name the rollback explicitly so it exists before it's needed."
+probe_type = "manual_attestation"
+required_fields = ["rollback_steps", "source"]
+[assumption.fields]
+rollback_steps = "EDIT: e.g. 'Restore from delta_log version N-1' or 'Re-run the previous _materialize() against backup snapshot at s3://...'"
+source = "EDIT: ticket #N where the rollback was discussed  OR  runbook path"
+
+# =========================================================================
+# Layer 4: OPERATIONAL — scale-bounded behavior
+# =========================================================================
+
+[[assumption]]
+id = "source_row_count"
+description = "Total rows in scope. Recorded for the row-count invariant check in Layer 5. Also the input to runtime / file-count estimates."
+probe = "echo 'EDIT: spark-sql -e \"SELECT COUNT(*) FROM <source> WHERE <filter>\"'"
+threshold = { type = "int_gt", value = 0 }
+
+[[assumption]]
+id = "partition_cardinality_bounded"
+description = "Distinct values of (partition_keys) within the scope. This is the 179-vs-24 catcher. The empirical threshold for EE pipeline + Unity Catalog dynamic partition writes is 50; above this, the file-commit phase stalls. Do NOT raise this number without measuring the file-commit phase against the actual workload. If your cardinality exceeds 50, you need either (a) DISTRIBUTE BY with smaller fan-in, (b) a different partition scheme, or (c) static per-partition writes with explicit serialization."
+probe = "echo 'EDIT: spark-sql -e \"SELECT COUNT(DISTINCT <partition_col>) FROM <source> WHERE <filter>\"'"
+threshold = { type = "int_lt", value = 50 }
+
+[[assumption]]
+id = "estimated_file_count_under_catalog_limit"
+description = "Estimated final file count = (partition cardinality * shuffle partitions / coalesce factor). Unity Catalog metadata operations slow above ~10000 files per table — choose coalesce factor / DISTRIBUTE BY shape accordingly."
+probe = "echo 'EDIT: python3 estimate_files.py <source> <partition_spec> <coalesce_factor>'"
+threshold = { type = "int_lt", value = 10000 }
+
+[[assumption]]
+id = "estimated_runtime_within_budget"
+description = "Estimated runtime from row_count + cluster_size + previous similar runs. Block if estimate exceeds the time budget for this operation (typically 30 min for a single materialization)."
+probe = "echo 'EDIT: python3 estimate_runtime.py <row_count> <cluster_config>'"
+threshold = { type = "int_lt", value = 1800 }   # seconds; EDIT to operation budget
+
+[[assumption]]
+id = "distribute_by_in_plan"
+description = "EXPLAIN COST of the generated INSERT shows a hash-partition Exchange on the partition keys. Without this exchange, every map task writes to every partition directory — N(tasks) * N(partitions) file commits. With it, ~N(partitions) commits."
+probe = "echo 'EDIT: spark-sql -e \"EXPLAIN COST <generated_insert>\" | grep -c \"hashpartitioning(<partition_cols>\"'"
+threshold = { type = "int_ge", value = 1 }
+
+[[assumption]]
+id = "partition_pruning_active"
+description = "EXPLAIN COST of a representative consumer query against the new partitioned target shows PartitionFilters. If pruning is absent, the migration is pure write-side overhead with no read-side benefit."
+probe = "echo 'EDIT: spark-sql -e \"EXPLAIN COST SELECT * FROM <target> WHERE <partition_filter>\" | grep -c \"PartitionFilters:\"'"
+threshold = { type = "int_ge", value = 1 }
+
+# =========================================================================
+# Layer 5: CORRECTNESS — invariants that must hold across the migration
+# =========================================================================
+
+[[assumption]]
+id = "row_count_invariant"
+description = "Row count after migration equals row count before. Probe the source rows in scope (re-uses source_row_count's query) and store; the post-migration check is the same query against the new target. This probe is the PRE-migration measurement; the POST is by-hand or follow-up."
+probe = "echo 'EDIT: spark-sql -e \"SELECT COUNT(*) FROM <source> WHERE <filter>\"'"
+threshold = { type = "int_gt", value = 0 }
+
+[[assumption]]
+id = "sum_invariant_for_amount_columns"
+description = "Sum of monetary / count columns is preserved. List the columns whose sums must be invariant; probe each."
+probe = "echo 'EDIT: spark-sql -e \"SELECT SUM(amount) FROM <source> WHERE <filter>\"'"
+threshold = { type = "int_gt", value = 0 }
+
+[[assumption]]
+id = "no_null_partition_keys"
+description = "Partition columns have no NULLs in the source. NULL handling under dynamic-partition mode varies by engine; safer to refuse rather than guess. If NULLs exist, either coalesce upstream or extend the partition spec to handle them explicitly."
+probe = "echo 'EDIT: spark-sql -e \"SELECT COUNT(*) FROM <source> WHERE <partition_col> IS NULL\"'"
+threshold = { type = "int_eq", value = 0 }
+
+[[assumption]]
+id = "no_duplicate_keys_introduced"
+description = "If the source has a logical primary key, the migration must not introduce duplicates. Probe by counting (key, key, ...) groupings with count > 1 in the source; the post-migration check is the same against the target."
+probe = "echo 'EDIT: spark-sql -e \"SELECT COUNT(*) FROM (SELECT <key_cols>, COUNT(*) c FROM <source> WHERE <filter> GROUP BY <key_cols> HAVING c > 1)\"'"
+threshold = { type = "int_eq", value = 0 }
