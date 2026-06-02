@@ -33,7 +33,13 @@ else
 fi
 
 if [ ! -f "$RESOLVER" ]; then
-  echo "[resolver-hook] RESOLVER.md not found at $RESOLVER — skills enforcement not injected." >&2
+  cat <<WARN
+<resolver-warning>
+RESOLVER.md not found at $RESOLVER.
+Skills enforcement is NOT active. Set CLAUDE_RESOLVER_PATH or ensure
+RESOLVER.md exists at the repo root.
+</resolver-warning>
+WARN
   exit 0
 fi
 

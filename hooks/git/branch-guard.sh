@@ -51,7 +51,13 @@ fi
 # block or false-negative pass. See issue #101 for the characterization.
 CD_COUNT=$(echo "$COMMAND" | grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null | wc -l | tr -d ' ')
 if [[ "$CD_COUNT" -gt 0 ]]; then
-    if [[ "$CD_COUNT" -gt 1 ]] || echo "$COMMAND" | grep -qE $'\n|;|\\|\\|'; then
+    # Use case instead of grep for newline/semicolon/|| detection.
+    # BSD grep on macOS chokes on $'\n' in alternation patterns.
+    # See self-review.sh for the same fix.
+    case "$COMMAND" in
+        *$'\n'*|*';'*|*'||'*) exit 0 ;;
+    esac
+    if [[ "$CD_COUNT" -gt 1 ]]; then
         exit 0
     fi
 fi
