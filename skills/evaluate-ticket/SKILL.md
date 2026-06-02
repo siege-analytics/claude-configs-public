@@ -1,7 +1,6 @@
 ---
 name: evaluate-ticket
 description: "Always-on. Before any non-trivial work begins, verify the cited ticket is structurally fit for execution. Six-criterion rubric (title shape, required sections, investigated facts, /think link, Assumptions block, falsification for behavior-change tickets). Invoked by think/SKILL.md Step 0, self-review/SKILL.md Goal source verification, and coding/code-review/SKILL.md Pre-review section. The skill is the prose layer; scripts/discipline/evaluate-ticket.sh is the enforcement layer; they stay in sync."
-disable-model-invocation: true
 allowed-tools: Bash
 ---
 
