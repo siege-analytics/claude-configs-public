@@ -188,6 +188,53 @@ $RESULT
 EOF
 fi
 
+# Level 1.5: Scope mismatch check.
+# If the signal file's ticket doesn't match the current branch's ticket number,
+# warn about stale/mismatched scope. Prevents a signal from ticket X giving a
+# clean pass while working on ticket Y (#323).
+SCOPE_WARN=""
+BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+if [ -n "$BRANCH_NAME" ] && [ "$BRANCH_NAME" != "HEAD" ]; then
+    SIGNAL_TICKET=$(python3 -c "
+import json, re, sys
+try:
+    data = json.load(open('$SIGNAL_FILE'))
+    raw = data.get('ticket', '')
+    # Normalize: strip repo prefix, extract bare number or PROJ-NNN
+    m = re.search(r'#(\d+)', raw)
+    if m:
+        print(m.group(1))
+    else:
+        m = re.search(r'([A-Z]+-\d+)', raw)
+        if m:
+            print(m.group(1))
+except:
+    pass
+" 2>/dev/null || echo "")
+
+    # Extract ticket number(s) from branch name
+    BRANCH_TICKETS=$(echo "$BRANCH_NAME" | grep -oE '([0-9]+|[A-Z]+-[0-9]+)' | head -5)
+
+    if [ -n "$SIGNAL_TICKET" ] && [ -n "$BRANCH_TICKETS" ]; then
+        if ! echo "$BRANCH_TICKETS" | grep -qF "$SIGNAL_TICKET"; then
+            # Format ticket: add # prefix only for bare numbers
+            DISPLAY_TICKET="${SIGNAL_TICKET}"
+            if echo "$SIGNAL_TICKET" | grep -qE '^[0-9]+$'; then DISPLAY_TICKET="#${SIGNAL_TICKET}"; fi
+            SCOPE_WARN="SCOPE MISMATCH: think-gate.json is for ${DISPLAY_TICKET} but current branch is '${BRANCH_NAME}'.
+Update the signal file for the current task or archive the stale one.
+A mismatched signal file cannot validate your current design."
+        fi
+    fi
+fi
+
+if [ -n "$SCOPE_WARN" ]; then
+    cat <<EOF
+<think-gate>
+$SCOPE_WARN
+</think-gate>
+EOF
+fi
+
 # Level 2: Design note structure check.
 # If the design note is a local file, verify it contains key section headings.
 # Warnings only — format varies by task complexity.
