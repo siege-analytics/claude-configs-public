@@ -446,7 +446,7 @@ if [ -n "$DIFF_FILES" ]; then
         TRANSFORM_CONTENT_RE='(CREATE[[:space:]]+TABLE|INSERT[[:space:]]+INTO|UNION[[:space:]]+ALL|\.write\.|\.saveAsTable|\.to_sql)'
         for f in $DIFF_FILES; do
             FULL_PATH="$EFFECTIVE_CWD/$f"
-            if [ -f "$FULL_PATH" ] && grep -qlE "$TRANSFORM_CONTENT_RE" "$FULL_PATH" 2>/dev/null; then
+            if [ -f "$FULL_PATH" ] && grep -qE "$TRANSFORM_CONTENT_RE" "$FULL_PATH" 2>/dev/null; then
                 IS_TRANSFORM=true
                 break
             fi
