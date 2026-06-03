@@ -506,6 +506,31 @@ the work touches:
    describe it ships a lie -- think Step 5 makes this a required
    deliverable, and the Lead must verify it was delivered.
 
+5. **Did the Junior run the mechanical verification gates?**
+   The Peer review section must contain evidence lines for every
+   applicable gate. The Lead verifies structural presence -- the
+   lines exist, the exit codes are zero, the commands are the ones
+   specified in the gate definitions (not paraphrased variants).
+
+   - Gate 1 (syntax): evidence line for `ast.parse` on changed `.py`
+     files. Always required when `.py` files are in the diff.
+   - Gate 2 (test suite): evidence line for `pytest`. Always required.
+   - Gate 3 (doc build): evidence line for `sphinx-build`. Required
+     when any file under `docs/` was modified. Must state "N/A (no
+     docs/ changes)" explicitly if not applicable.
+
+   A Peer review section that lacks gate evidence is structurally
+   incomplete regardless of what else it contains. "Doc-only,"
+   "config-only," and "test-only" are not exemptions -- they are the
+   exact rationalizations the gates exist to block.
+
+   **Incident justification:** Session 260603-golden-shark. Four PRs
+   merged without a single pytest or sphinx-build invocation. Each
+   self-review declared "trivial" and the Lead (being the same agent)
+   accepted the Junior's rationalization. The Lead must treat missing
+   gate evidence the way it treats missing ticket references: a
+   structural block, not a judgment call.
+
 Lead section format: domain-tagged. "In <domain>: <standard> holds
 because <evidence>" or "In <domain>: <standard> not shelved, applied
 judgment per <argument>." Both are honest and auditable.
