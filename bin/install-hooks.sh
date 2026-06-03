@@ -119,6 +119,21 @@ fi
 echo "Installed hooks settings to: $TARGET"
 echo "Hook paths point at:          $HOOKS_ROOT/hooks/"
 echo
+
+# Configure native git hooks (commit-msg, etc.) if .githooks/ exists.
+# These fire for ALL commit sources (Craft Agent, Claude Code, manual git).
+GITHOOKS_DIR="$REPO_ROOT/.githooks"
+if [[ -d "$GITHOOKS_DIR" ]]; then
+    CURRENT_HOOKS_PATH=$(cd "$REPO_ROOT" && git config core.hooksPath 2>/dev/null || true)
+    if [[ "$CURRENT_HOOKS_PATH" != ".githooks" ]]; then
+        (cd "$REPO_ROOT" && git config core.hooksPath .githooks)
+        echo "Configured native git hooks: core.hooksPath = .githooks"
+        echo "  (replaces .git/hooks/ — existing hooks there will not fire)"
+    else
+        echo "Native git hooks already configured: core.hooksPath = .githooks"
+    fi
+fi
+echo
 echo "Verify a hook fires (should print BLOCKED... and exit 2):"
 echo "  echo '{\"tool_input\":{\"message\":\"see [skill:think]\"}}' | $HOOKS_ROOT/hooks/agent-comms/no-slug-form-outbound.sh"
 echo "  echo \"exit=\$?\""
