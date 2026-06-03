@@ -103,6 +103,76 @@ present, but nobody asked "does it parse?" The file was broken on develop
 for 24+ hours. This floor exists because the most basic mechanical check
 is also the most commonly skipped.
 
+### Gate 2: Test suite execution
+
+Before push, run the project's test suite. At minimum, run smoke or
+quick-pass tests. Paste the command, exit code, and summary in the
+Peer review section.
+
+For siege_utilities:
+```bash
+pytest tests/ -x -q -o "addopts=" -m smoke 2>&1 | tail -5
+```
+
+If the project has no `smoke` marker, run collect-only to verify imports:
+```bash
+pytest --co -q -o "addopts=" 2>&1 | tail -5
+```
+
+**The Junior's rationalization is the failure mode.** "It's doc-only,"
+"it's config-only," "it's test-only" — these are exactly the categories
+where skipping tests feels efficient and causes the most damage. A
+config change to `pyproject.toml` can break the test runner. A new
+notebook can import a renamed function. A test-only change can conflict
+with existing fixtures. The gate applies to ALL pushes, not just code
+pushes.
+
+**Evidence format in Peer review section:**
+```
+Test suite: `pytest tests/ -x -q -o "addopts=" -m smoke` → N passed in Xs (exit 0)
+```
+
+An empty or missing test-suite line when a push is pending is a visible
+absence — the same enforcement shape as Gate 1.
+
+**Incident justification:** Session 260529-golden-shark merged 4 PRs to
+main (tickets #816, #580, #970, #572) without a single `pytest`
+invocation. Each was rationalized as doc-only or config-only. The
+existing mechanical floor (Gate 1: syntax check) did not catch this
+because it only verifies parse-ability, not import-ability or behavioral
+correctness. Gate 2 closes the gap.
+
+### Gate 3: Doc build verification
+
+If ANY file under `docs/` was modified in the diff, run the doc builder
+before push. Paste the command, exit code, and warning count in the
+Peer review section.
+
+For Sphinx projects:
+```bash
+sphinx-build -q docs/source/ /tmp/docs-verify 2>&1 | tail -3
+```
+
+The gate is **"does it build"** (exit code 0), not "zero warnings."
+Known noise (PEP 562 duplicate object descriptions, missing optional
+intersphinx targets) does not block. New warnings introduced by THIS
+diff should be noted.
+
+**Evidence format in Peer review section:**
+```
+Doc build: `sphinx-build -q docs/source/ /tmp/docs-verify` → succeeded, N warnings (exit 0)
+```
+
+If no files under `docs/` were modified, this gate does not apply —
+state "Doc build: N/A (no docs/ changes)" explicitly rather than
+omitting silently.
+
+**Incident justification:** Same session (260529-golden-shark) created 3
+new RST files for #970 (conf.rst, development.rst, oss_unity_catalog.rst),
+added toctree entries, and merged without running `sphinx-build`. A
+toctree entry referencing a nonexistent file would have broken the
+deployed GitHub Pages docs on the next main push.
+
 ## Pre-author-inventory field
 
 The `Pre-author-inventory:` field in the Assumptions section is a **required
