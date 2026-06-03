@@ -81,6 +81,15 @@ Scan every error path, every parameter, every return type, every docstring claim
 
 **P5 -- Demo code (SU-3).** Bare `except: pass`, hardcoded credentials/paths, silent fallbacks, non-actionable error messages in examples and notebooks.
 
+**P6 -- Notebook API fidelity.** Every function call in a notebook must correspond to a real method in the library with the correct signature. Every narrative claim about what a function does must match the function's actual behavior. Every cell output must be consistent with the narrative that frames it.
+
+Scan methodology:
+1. **Method existence**: for each `siege_utilities` call in a notebook, grep the source for that method name on the class or module referenced. `manager.get()` is only valid if `get` exists on `CredentialManager`. Aliased names count only if `__getattr__` or an explicit alias wires them.
+2. **Narrative-output consistency**: read each markdown cell's claims, then read the following code cell's output. If the narrative says "these will match" and the output says `All match: False`, that is an S2 finding (silent wrong answer to the reader).
+3. **Capability claims**: if a notebook says a function "reorders names" or "handles format X", grep the function source for that logic. Aspirational descriptions of what the function *should* do are SU-2 violations when presented as documentation of what it *does*.
+
+**Incident justification:** Session 260603-golden-shark. Three S2 findings: `CredentialManager.get()` doesn't exist (actual: `get_credential()`); `normalize_name_v1` narrative claims reordering but function only lowercases/strips; entity identification outputs contradict the matching narrative. All three shipped because nobody checked calls against source.
+
 ### Layer 2: Composition and architecture
 
 This is the Adversary's unique contribution. The Lead reviews one PR. You review the PR in the context of the library as a thesaurus.
@@ -115,11 +124,12 @@ The Adversary audits not just the code but the process that produced it. The Jun
 
 6. **Do the quantified claims check out?** Every specific count in the PR body or commit messages -- was there a command that produced that number? (writing-claims:8)
 
-7. **Were the mechanical verification gates executed?** The self-review artifact must contain evidence lines for Gates 1-3 (syntax, test suite, doc build). Check for the exact evidence format strings defined in the self-review skill. A self-review artifact with no gate evidence passed both the Junior and the Lead -- both failed.
+7. **Were the mechanical verification gates executed?** The self-review artifact must contain evidence lines for Gates 1-4 (syntax, test suite, doc build, notebook API). Check for the exact evidence format strings defined in the self-review skill. A self-review artifact with no gate evidence passed both the Junior and the Lead -- both failed.
 
    The Adversary checks:
    - Does the Peer review section contain a `Test suite:` evidence line with an exit code?
    - Does the Peer review section contain a `Doc build:` evidence line (or explicit "N/A") when `docs/` files are in the diff?
+   - Does the Peer review section contain a `Notebook API check:` evidence line (or explicit "N/A") when `.ipynb` files are in the diff?
    - Are the commands in the evidence lines the actual gate commands, or paraphrased versions that might not have run?
    - Did the Lead's Phase B item 5 explicitly verify gate evidence, or did the Lead skip it too?
 
