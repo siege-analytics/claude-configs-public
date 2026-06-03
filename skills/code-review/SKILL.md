@@ -1,17 +1,18 @@
 ---
 name: code-review
-description: "MANDATORY review gate for any PR / diff / session-end code. Pre-review (run first): evaluate-ticket against the PR's linked ticket; produce Reviewer Assumptions block (Working as / Reading for / Failure shapes). THEN: mechanical pre-flight scanner + six-layer review (correctness, security, data integrity, performance, readability, ticket-discipline). Reciprocal of self-review's author-side discipline. Do NOT skip this skill; reviewing a diff without first reading the ticket reviews against the reviewer's mental model, not the author's intent."
+description: "MANDATORY review gate for any PR / diff / session-end code. Pre-review (run first): evaluate-ticket against the PR's linked ticket; produce Reviewer Assumptions block (Working as / Reading for / Failure shapes). THEN: mechanical pre-flight scanner + eight-layer review (correctness, security, data integrity, performance, error handling, domain correctness, resource management, readability). Layers 6-7 added from hostile-review round 9 findings (domain invariant enforcement, resource leak prevention). Reciprocal of self-review's author-side discipline. Do NOT skip this skill; reviewing a diff without first reading the ticket reviews against the reviewer's mental model, not the author's intent."
 allowed-tools: Read Grep Glob
 ---
 
 # Code Review
 
-## Companion shelves
+## Companion skills and shelves
 
 Anchor each review dimension in:
 - [`clean-code`](../shelves/engineering-principles/clean-code/SKILL.md) -- naming, function size, comment discipline (the *why* behind most review comments).
 - [`design-patterns`](../shelves/engineering-principles/design-patterns/SKILL.md) -- when to suggest a pattern (and when not to).
 - [`refactoring-patterns`](../shelves/engineering-principles/refactoring-patterns/SKILL.md) -- name the safe transformation, don't hand-wave.
+- [`hostile-review`](../hostile-review/SKILL.md) -- full-codebase adversarial audit (9 categories with grep methodology). Use for periodic audits; this skill is for PR-level review.
 - For Spark/JVM PRs: [`effective-java`](../shelves/languages/effective-java/SKILL.md), [`effective-kotlin`](../shelves/languages/effective-kotlin/SKILL.md).
 
 The Siege-specific catches below (catalog bypass, NULL drops, partition skew) stay here.
@@ -85,7 +86,7 @@ If the review surfaces a finding that maps to a recurring pattern *not* yet in t
 
 ## Review Order
 
-Review in this order. Stop at each layer before proceeding -- a correctness bug matters more than a style nit.
+Review in this order. Stop at each layer before proceeding -- a correctness bug matters more than a style nit. Layers 1-5 are universal; layers 6-7 apply when the code has domain semantics (geospatial, temporal, financial) or manages external resources.
 
 ### 1. Correctness
 
@@ -241,7 +242,73 @@ f.close()  # never reached if process() throws
 # Use: with open(path) as f:
 ```
 
-### 6. Readability
+### 6. Domain Correctness
+
+Does the code produce correct answers in its problem domain? These bugs are
+the worst class because no error is raised -- the code runs cleanly and
+returns a wrong answer.
+
+**Check:**
+- For geospatial: do geometry operations check CRS agreement before combining inputs?
+- For geospatial: are area/distance/length calculations on projected (not WGS84) geometries?
+- For temporal: are datetimes timezone-aware when the domain has temporal semantics?
+- For domain models: does the schema enforce domain invariants (no impossible states)?
+- For multi-source data: are column names, types, and conventions consistent across sources?
+- For numerical: are floating-point comparisons using tolerance, not `==`?
+
+**Red flags:**
+```python
+# CRS mismatch in spatial join (silent wrong answer)
+result = gpd.sjoin(points_4326, boundaries_state_plane)
+# The CRS must match or the join is nonsense. Check: left.crs == right.crs
+
+# Area on unprojected geometry (returns degrees-squared, not square meters)
+area = district_geometry.area  # if CRS is EPSG:4326, this is meaningless
+# Fix: reproject to equal-area CRS first
+
+# Naive datetime in temporal domain
+created = datetime.now()  # ambiguous timezone -- which "now"?
+# Fix: datetime.now(tz=timezone.utc)
+
+# Schema allows impossible state
+class Seat(Model):
+    state = ForeignKey(State, null=True)  # NULL valid only for President
+    # But no constraint enforces this -- any office can have null state
+```
+
+### 7. Resource Management
+
+Will this code leak resources under sustained use?
+
+**Check:**
+- Are connections, sessions, and file handles used with context managers (or closed in finally)?
+- Do HTTP calls have timeouts?
+- Are download sizes bounded?
+- Do convenience functions that instantiate clients also clean them up?
+- Are module-level caches bounded (max size, TTL, eviction)?
+
+**Red flags:**
+```python
+# Session leak via convenience function
+def fetch_data(url):
+    client = APIClient()  # creates requests.Session() internally
+    return client.get(url)
+    # Session never closed -- leaks TCP connection per call
+
+# Missing timeout (hung server blocks caller forever)
+response = requests.get(url)  # no timeout parameter
+# Fix: requests.get(url, timeout=30)
+
+# Unbounded module-level cache
+_cache = {}
+def lookup(key):
+    if key not in _cache:
+        _cache[key] = expensive_fetch(key)
+    return _cache[key]
+# In a long-running process, _cache grows until OOM
+```
+
+### 8. Readability
 
 Can someone unfamiliar with this code understand it in one pass?
 
