@@ -1,0 +1,97 @@
+#!/bin/bash
+# Native git commit-msg hook for claude-configs-public.
+#
+# Enforces Self-Review trailers and ticket references on all commits
+# regardless of execution environment (Craft Agent, Claude Code, manual).
+#
+# This is the Layer 3 enforcement referenced in self-review/SKILL.md's
+# "Cross-environment enforcement" section. It fires for all push sources
+# because it is a native git hook, not a Claude Code PreToolUse hook.
+#
+# Bypass: git commit --no-verify (visible, intentional)
+# Escape: [no-review] in commit message for genuinely trivial commits
+#
+# Install: git config core.hooksPath .githooks
+# Or run: bin/install-hooks.sh
+#
+# Ref: claude-configs-public#355
+
+set -euo pipefail
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Allow merge commits and rebases through unconditionally
+if echo "$COMMIT_MSG" | head -1 | grep -qE '^(Merge|Revert|fixup!|squash!)'; then
+    exit 0
+fi
+
+# [no-review] escape for genuinely trivial commits
+if echo "$COMMIT_MSG" | grep -qF '[no-review]'; then
+    exit 0
+fi
+
+# Parse trailers from the commit message
+TRAILERS=$(echo "$COMMIT_MSG" | git interpret-trailers --parse 2>/dev/null || true)
+
+# Check for Self-Review trailer
+if ! echo "$TRAILERS" | grep -qi '^Self-Review:'; then
+    echo ""
+    echo "BLOCKED: Missing Self-Review: trailer."
+    echo ""
+    echo "Every commit to configs-public requires a Self-Review artifact."
+    echo "Add these trailers to your commit message:"
+    echo ""
+    echo "  Self-Review: <one-line summary>"
+    echo "  Self-Review-Source: <path or URL to artifact>"
+    echo ""
+    echo "For genuinely trivial commits (typo fix, whitespace):"
+    echo "  Include [no-review] in the commit message."
+    echo ""
+    echo "See: skills/self-review/SKILL.md"
+    echo "Ref: #355"
+    exit 1
+fi
+
+# Check for Self-Review-Source trailer
+if ! echo "$TRAILERS" | grep -qi '^Self-Review-Source:'; then
+    echo ""
+    echo "BLOCKED: Missing Self-Review-Source: trailer."
+    echo "Add: Self-Review-Source: <path or URL to the self-review artifact>"
+    exit 1
+fi
+
+# Check for ticket reference
+if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
+    echo ""
+    echo "BLOCKED: Missing ticket reference."
+    echo "Include #NNN in the commit message, or [no-ticket] if exempt."
+    exit 1
+fi
+
+# If Self-Review-Source is a file path (not a URL), verify it exists
+SOURCE_VALUE=$(echo "$TRAILERS" | grep -i '^Self-Review-Source:' | head -1 | sed 's/^[^:]*:[[:space:]]*//')
+if [ -n "$SOURCE_VALUE" ] && ! echo "$SOURCE_VALUE" | grep -qE '^https?://'; then
+    if [ -f "$SOURCE_VALUE" ]; then
+        MISSING_SECTIONS=""
+        for SECTION in "## Assumptions" "## Peer review" "## Lead review" "## Quantified claims"; do
+            if ! grep -qF "$SECTION" "$SOURCE_VALUE"; then
+                MISSING_SECTIONS="$MISSING_SECTIONS\n  - $SECTION"
+            fi
+        done
+        if [ -n "$MISSING_SECTIONS" ]; then
+            echo ""
+            echo "BLOCKED: Self-review artifact missing required sections:"
+            echo -e "$MISSING_SECTIONS"
+            echo ""
+            echo "See: skills/self-review/SKILL.md"
+            exit 1
+        fi
+    else
+        echo ""
+        echo "WARNING: Self-Review-Source file not found: $SOURCE_VALUE"
+        echo "(Proceeding — source may be a URL or external reference)"
+    fi
+fi
+
+exit 0
