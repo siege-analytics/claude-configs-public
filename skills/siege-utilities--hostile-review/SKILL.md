@@ -240,7 +240,7 @@ git grep -n "class.*Engine\|register.*engine\|SUPPORTED_ENGINES" -- "siege_utili
 
 ```bash
 # N+1 query patterns
-git grep -n "for.*in.*:" -- "siege_utilities/**/*.py" | xargs grep -l "\.query\|\.execute\|\.get("
+git grep -l "for.*in.*:" -- "siege_utilities/**/*.py" | xargs grep -l "\.query\|\.execute\|\.get("
 # Flag: database/API call inside loop body
 
 # Quadratic DataFrame operations
@@ -290,6 +290,7 @@ The Adversary audits not just the code but the process that produced it. The Jun
 7. **Were the mechanical verification gates executed?** The self-review artifact must contain evidence lines for Gates 1-4 (syntax, test suite, doc build, notebook API). Check for the exact evidence format strings defined in the self-review skill. A self-review artifact with no gate evidence passed both the Junior and the Lead -- both failed.
 
    The Adversary checks:
+   - Does the Peer review section contain a `Syntax check:` evidence line with `ast.parse` when `.py` files are in the diff?
    - Does the Peer review section contain a `Test suite:` evidence line with an exit code?
    - Does the Peer review section contain a `Doc build:` evidence line (or explicit "N/A") when `docs/` files are in the diff?
    - Does the Peer review section contain a `Notebook API check:` evidence line (or explicit "N/A") when `.ipynb` files are in the diff?
