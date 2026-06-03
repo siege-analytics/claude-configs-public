@@ -42,7 +42,7 @@ Before ANY of the following, you MUST read `skills/thinking/think/SKILL.md` and 
 - Building a new skill, hook, or enforcement mechanism (yes, including this resolver itself)
 - Any task estimated > 30 minutes
 
-**Explicit exemptions** (from `think` skill): trivial fixes, following step-by-step instructions from the user, research/read-only work, non-code tasks.
+**Explicit exemptions** (from `think` skill): changes to non-executable content only (markdown prose, comments with no functional effect, whitespace), following step-by-step instructions from the user, research/read-only work. Any change to executable code (`.sh`, `.py`, `.sql`, `.js`, `.ts`, etc.) requires the full pipeline. See #338.
 
 The `think` gate is not a pattern-match entry below — it is the **first gate**. Every other pattern in this resolver assumes `think` has already fired.
 
@@ -245,7 +245,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 
 These fire for every non-trivial action, regardless of whether a pattern above matched:
 
-0. **THINK FIRST** (the non-negotiable gate): for anything beyond a trivial mechanical change, read `skills/thinking/think/SKILL.md` and write a design note. If you can't state what you're about to do, why, what could go wrong, and what the rollback looks like — you are not ready to act. Every serious failure in this session traces back to skipping this. **Signal file:** after producing the design note, write `<workspace>/think-gate.json` with falsifiable claims encoding design premises. The `think-gate-guard.sh` hook verifies claims every turn; stale claims force re-examination. When encountering a stale signal file from a prior task, read the referenced design note, post a disposition comment on the prior ticket, then update or delete the signal file. See #262.
+0. **THINK FIRST** (the non-negotiable gate): for anything beyond a change to non-executable content only (markdown prose, comments with no functional effect, whitespace), read `skills/thinking/think/SKILL.md` and write a design note. Any change to `.sh`, `.py`, `.sql`, `.js`, `.ts`, or other executable code is non-trivial — the Junior cannot classify code changes out of the pipeline. If you can't state what you're about to do, why, what could go wrong, and what the rollback looks like — you are not ready to act. Every serious failure in this session traces back to skipping this. **Signal file:** after producing the design note, write `<workspace>/think-gate.json` with falsifiable claims encoding design premises. The `think-gate-guard.sh` hook verifies claims every turn; stale claims force re-examination. When encountering a stale signal file from a prior task, read the referenced design note, post a disposition comment on the prior ticket, then update or delete the signal file. **Class-of-bug fixes** (same pattern in multiple files) require at least one Schema A claim (file + grep + expected) asserting zero remaining unguarded instances. See #262, #338.
 
 1. **Catalog-first**: if the action touches data that lives under a catalog (Unity Catalog, Hive Metastore), go through the catalog. Never write raw paths to bucket locations the catalog manages. Confirm the table's registered location BEFORE writing.
 
@@ -389,6 +389,18 @@ These fire for every non-trivial action, regardless of whether a pattern above m
     **Mechanical test:** if you are about to end a response during a standing order without either (a) a ScheduleWakeup call in this response, or (b) all work items exhausted, you are violating this check. The `standing-order-guard.sh` hook will remind you on the next turn, but you should not need the reminder.
 
     **Incident justification:** Epic #776 dogfood session (2026-05-28/29). Agent went idle 7 hours overnight (no ScheduleWakeup after last agent completed) and produced "No response requested" twice when loop prompts stacked up. Root cause: rules alone don't prevent the agent from rationalizing inaction. The signal file + hook injection makes the standing order mechanically persistent — it cannot be "forgotten" or rationalized away because it is re-injected on every turn.
+
+13. **Verify-before-push**: the self-review skill's mechanical verification floor (Gates 1–3) is **non-negotiable**. Before any `git push`, all applicable gates must have run and their evidence must appear in the self-review artifact:
+
+    - **Gate 1** — `ast.parse` on every changed `.py` file.
+    - **Gate 2** — `pytest tests/ -x -q -o "addopts=" -m smoke` (exit 0).
+    - **Gate 3** — `sphinx-build -q docs/source/ /tmp/docs-verify` (exit 0), required when any file under `docs/` was modified.
+
+    **Scope rationalizations are the exact failure mode these gates exist to prevent.** "Doc-only changes can't break tests," "config-only changes don't need a build," "test-only changes are self-verifying" — these are the sentences the Junior says right before pushing a broken commit. The gates are fast (seconds). The rework from skipping them is hours.
+
+    **Mechanical test:** if a self-review artifact lacks Gate 1 and Gate 2 evidence lines, the push MUST NOT proceed. If `docs/` was modified and Gate 3 evidence is missing, the push MUST NOT proceed.
+
+    **Incident justification:** Session 260603-golden-shark (2026-06-03). Four PRs merged across #816, #580, #970 without running `pytest` or `sphinx-build` once. Every self-review declared "trivial — doc/notebook only" and skipped verification. Zero of the four were actually verified before push. The agent will always find a rationalization to skip a judgment-dependent gate; only mechanical enforcement prevents this.
 
 ---
 
