@@ -173,6 +173,46 @@ added toctree entries, and merged without running `sphinx-build`. A
 toctree entry referencing a nonexistent file would have broken the
 deployed GitHub Pages docs on the next main push.
 
+### Gate 4: Notebook API verification
+
+If ANY notebook (`.ipynb`) is in the diff, verify every library call
+in the notebook against the actual source before push. This is not
+"run the notebook" — it is "grep the library for the methods the
+notebook calls."
+
+For each `siege_utilities` function or method call in the notebook:
+1. Identify the class or module being called
+2. Grep the source for that method name on that class/module
+3. Verify parameter names match the actual signature
+
+For narrative claims (markdown cells describing what a function does):
+1. Read the actual function's docstring and source
+2. Confirm the narrative matches actual behavior
+3. Check that cell outputs are consistent with the narrative
+
+**Evidence format in Peer review section:**
+```
+Notebook API check: N calls verified against source in M notebooks (0 mismatches)
+```
+
+If no notebooks are in the diff, state "Notebook API check: N/A (no
+notebook changes)" explicitly.
+
+**The failure mode is fabrication, not malice.** The Junior writes
+a notebook narrative describing what a function *should* do based
+on the function name, without reading the source. The narrative
+becomes documentation. Users copy the pattern. The function doesn't
+do what the notebook says. This is an SU-3 violation (demo code
+ships with the package) compounded by SU-2 (does it do what it
+says?).
+
+**Incident justification:** Session 260603-golden-shark hostile review
+found 3 S2 bugs in notebooks: `CredentialManager.get()` doesn't
+exist (should be `get_credential()`); `normalize_name_v1` narrative
+claims name reordering but function only lowercases; entity
+identification outputs "All match: False" while narrative implies
+matching. All three were written against imagined APIs.
+
 ## Pre-author-inventory field
 
 The `Pre-author-inventory:` field in the Assumptions section is a **required
@@ -518,6 +558,9 @@ the work touches:
    - Gate 3 (doc build): evidence line for `sphinx-build`. Required
      when any file under `docs/` was modified. Must state "N/A (no
      docs/ changes)" explicitly if not applicable.
+   - Gate 4 (notebook API): evidence line for API verification.
+     Required when any `.ipynb` is in the diff. Must state "N/A (no
+     notebook changes)" explicitly if not applicable.
 
    A Peer review section that lacks gate evidence is structurally
    incomplete regardless of what else it contains. "Doc-only,"
