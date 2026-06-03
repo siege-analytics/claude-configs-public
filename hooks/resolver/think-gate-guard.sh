@@ -87,7 +87,7 @@ except Exception as e:
 ticket = data.get('ticket', 'unknown')
 # Support both schema field names
 design_note = data.get('design_note') or data.get('design_note_location', 'not specified')
-repo_root = data.get('repo_root', '')
+repo_root = data.get('repo_root', '') or '$WORKSPACE_ROOT'
 claims = data.get('claims', [])
 status = data.get('status', '')
 
