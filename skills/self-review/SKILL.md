@@ -81,7 +81,7 @@ Work commit: <paste `git rev-parse HEAD`>
 Verification: <paste output of `git merge-base --is-ancestor <first-added> <work-commit>; echo $?` -- must be 0>
 ```
 
-## Mechanical verification floor
+### Gate 1: Syntax check
 
 Before the self-review artifact is considered complete, **every modified
 file must pass its language's syntax check.** This is the non-negotiable
@@ -95,6 +95,14 @@ git diff --name-only HEAD~1 | grep '\.py$' | xargs -I{} python3 -c "import ast; 
 For batch changes (>3 files), run this on ALL modified files, not just
 the ones you think you changed meaningfully. Paste the output (or
 "all N files parse") in the Peer review section.
+
+**Evidence format in Peer review section:**
+```
+Syntax check: `ast.parse` on N changed `.py` files → all parse clean (exit 0)
+```
+
+If no `.py` files were modified, state "Syntax check: N/A (no .py changes)"
+explicitly rather than omitting silently.
 
 **Incident justification:** The SU-1 broad-except sweep (commit 31286bf,
 2026-05-28) introduced a SyntaxError in `geocoding.py` that broke the
@@ -193,7 +201,15 @@ For narrative claims (markdown cells describing what a function does):
 **Evidence format in Peer review section:**
 ```
 Notebook API check: N calls verified against source in M notebooks (0 mismatches)
+Per-call evidence (paste actual grep commands and output):
+- `grep -rn "method_name" siege_utilities/module/` → file:line confirmation
+- `grep -rn "other_call" siege_utilities/other/` → file:line confirmation
 ```
+
+The per-call evidence is what distinguishes mechanical verification from
+self-reported compliance. A summary count ("N calls verified") is necessary
+but not sufficient -- the pasted grep commands make fabrication visible to
+the Adversary.
 
 If no notebooks are in the diff, state "Notebook API check: N/A (no
 notebook changes)" explicitly.
@@ -554,7 +570,9 @@ the work touches:
 
    - Gate 1 (syntax): evidence line for `ast.parse` on changed `.py`
      files. Always required when `.py` files are in the diff.
-   - Gate 2 (test suite): evidence line for `pytest`. Always required.
+   - Gate 2 (test suite): evidence line for `pytest`. Always required
+     for projects with a test suite. If the project has no test suite,
+     state "Test suite: N/A (no test suite)" explicitly.
    - Gate 3 (doc build): evidence line for `sphinx-build`. Required
      when any file under `docs/` was modified. Must state "N/A (no
      docs/ changes)" explicitly if not applicable.
