@@ -345,51 +345,6 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     **Incident justification:** Epic #776 dogfood session (2026-05-28/29). Agent went idle 7 hours overnight (no ScheduleWakeup after last agent completed) and produced "No response requested" twice when loop prompts stacked up. Root cause: rules alone don't prevent the agent from rationalizing inaction. The signal file + hook injection makes the standing order mechanically persistent — it cannot be "forgotten" or rationalized away because it is re-injected on every turn.
 
-12. **Standing-order continuity**: when the user gives a standing instruction to work autonomously until a specified time or condition ("work until 10:00 AM", "keep going overnight", "clear as much ground as you can"), that instruction is a **standing order**. Think of it as shift work: you know what you are supposed to be doing, do it according to the rules, and only ask for help when it becomes necessary.
-
-    ### Signal file
-
-    Standing orders are mechanically enforced via a signal file at `<workspace>/standing-order.json`. The `standing-order-guard.sh` hook reads this file on every `UserPromptSubmit` and injects the shift directive. This means **even loop prompts and stacked messages** carry the standing order.
-
-    **Lifecycle:**
-    - **Activation:** When you receive a standing order, write the signal file:
-      ```json
-      {
-        "active": true,
-        "deadline": "2026-05-29T10:00:00-05:00",
-        "directive": "Work Epic #776 tickets using the skills pipeline",
-        "work_queue": ["#816", "#768"]
-      }
-      ```
-    - **Update:** Keep `work_queue` current as items complete.
-    - **Deactivation:** When the deadline passes, all work exhausts, or the user cancels, delete the file or set `"active": false`.
-
-    ### Rules of the shift
-
-    a. **Idle state is a violation.** At no point during a standing order may the agent be idle — defined as: no running agents, no scheduled wakeup, no active tool call, AND pending work remains. All three absent simultaneously with work remaining is equivalent to ignoring a direct instruction.
-
-    b. **"No response requested" is never valid during a standing order.** The standing order IS the request. Only the user, the deadline, or the exhaustion of all work items terminates it. Stacked loop prompts, absence of user messages, and "the user said no response requested to an earlier message" are not termination signals.
-
-    c. **ScheduleWakeup is mandatory, not optional.** When the agent's turn ends with background agents still running, it MUST schedule a wakeup. Failure to schedule a wakeup when agents are running is the mechanical root cause of the overnight-idle incident.
-
-    d. **End-of-turn saturation.** Before ending any turn during a standing order, verify: "Is there work I could spawn right now that I'm not spawning?" If the answer is yes and resources allow, spawn it.
-
-    ### Mandatory loop prompt template
-
-    When scheduling a ScheduleWakeup during a standing order, the `prompt` field MUST be a directive, not a description. Use this template:
-
-    ```
-    Standing order active — [DIRECTIVE]. Check on running agents, spawn
-    new work for any completed items, update the signal file work queue.
-    Do not stop until the deadline or all work is exhausted.
-    ```
-
-    Do NOT use prompts like "check on progress" or "continue if needed" — these create an off-ramp the agent will take.
-
-    **Mechanical test:** if you are about to end a response during a standing order without either (a) a ScheduleWakeup call in this response, or (b) all work items exhausted, you are violating this check. The `standing-order-guard.sh` hook will remind you on the next turn, but you should not need the reminder.
-
-    **Incident justification:** Epic #776 dogfood session (2026-05-28/29). Agent went idle 7 hours overnight (no ScheduleWakeup after last agent completed) and produced "No response requested" twice when loop prompts stacked up. Root cause: rules alone don't prevent the agent from rationalizing inaction. The signal file + hook injection makes the standing order mechanically persistent — it cannot be "forgotten" or rationalized away because it is re-injected on every turn.
-
 13. **Verify-before-push**: the self-review skill's mechanical verification floor (Gates 1–4) is **non-negotiable**. Before any `git push`, all applicable gates must have run and their evidence must appear in the self-review artifact:
 
     - **Gate 1** — `ast.parse` on every changed `.py` file.
