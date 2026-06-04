@@ -191,7 +191,7 @@ git rebase -X theirs origin/master master
 git push origin master
 ```
 
-`-X theirs` resolves any conflict in the local commits' favor (the user's bootstrap content is typically a placeholder you intend to overwrite).
+`-X theirs` resolves any conflict in the local commits' favor. Verify the user's bootstrap commit is a placeholder before rebasing -- if they wrote real content, use `-X ours` or merge manually instead.
 
 When an investigation will produce multiple new wikis at once, batch the bootstrap asks into a single message rather than serializing them.
 
