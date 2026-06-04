@@ -42,6 +42,20 @@ Like government, every level serves a different audience and purpose. Missing a 
 
 **Abstraction increases as you move up.** Inline docs describe *how*. File docs describe *what and why*. Repo docs describe *architecture and decisions*. KMS docs describe *strategy and relationships*.
 
+## Greenfield vs. recovery / forensic mode
+
+The four-level model assumes documentation is *describing the system you are building*. When the project is in recovery mode -- prior maintainers gone, codebase partly abandoned, the goal is to map the actual state rather than the intended one -- the output shapes change. The same four levels still apply, but the audience is investigators, executives, and incoming engineers who need honest information about what is real now.
+
+Documentation in recovery / forensic mode adds these shapes:
+
+- **Last-shipped inventories.** Per-surface tables of when something was last built, last deployed, last touched in source. Stale state is information.
+- **Deviation catalogues.** Departures from convention with severity ratings (Critical / Major / Minor / Suggestion). What's wrong, why it matters, what would fix it.
+- **Open-question sections that feed tracking tickets.** Anything the investigation can't answer without domain knowledge becomes a labeled question and a ticket reference (see [Level 3 to Level 4 federation](#level-3-to-level-4-federation) under sync patterns).
+- **"What this repo does well" framing.** When one repo holds patterns worth importing back into sibling repos, name them explicitly so future investigators know where to look for good examples.
+- **Anomaly logs.** Name / domain / repo mismatches. Branches still pinned to stale upstreams. Env vars wired without code references. The forensic value is in surfacing the surprise.
+
+In recovery mode the deliverable of an investigation may be wiki pages plus a ticket tree, with no code PR. Definition-of-done applies to the wiki PR directly; the epic plus sub-issue chain is the audit trail.
+
 # Documentation levels
 
 ## Level 1: Inline documentation
@@ -152,6 +166,54 @@ ls mkdocs.yml 2>/dev/null
    - Small project → GitHub wiki is sufficient
 3. If no, ensure Level 2 docs (README, docs/) are thorough enough to compensate
 
+### GitHub wiki: enable vs. bootstrap (two-step)
+
+Enabling a GitHub wiki is two steps that the API only does the first of:
+
+1. **Enable the feature.** `gh api -X PATCH repos/{owner}/{repo} -f has_wiki=true` flips the `has_wiki` boolean.
+2. **Bootstrap the wiki repo.** GitHub does not create the underlying `<repo>.wiki.git` until a human clicks **Create the first page** on the wiki tab on github.com. Until that click, `git push origin master` against the wiki URL returns `Repository not found.`
+
+When an agent needs to push to a wiki that's been enabled but not bootstrapped, stage the commits locally:
+
+```bash
+git init -q -b master
+git remote add origin https://github.com/{owner}/{repo}.wiki.git
+# ... write SKILL.md, Home.md, etc. ...
+git add . && git commit -m "..."
+# do not push yet -- repo does not exist on the remote
+```
+
+Then ask the user for a one-click bootstrap. Once they confirm, reconcile with their bootstrap commit:
+
+```bash
+git fetch origin
+git rebase -X theirs origin/master master
+git push origin master
+```
+
+`-X theirs` resolves any conflict in the local commits' favor (the user's bootstrap content is typically a placeholder you intend to overwrite).
+
+When an investigation will produce multiple new wikis at once, batch the bootstrap asks into a single message rather than serializing them.
+
+### Multi-repo projects: the consolidating-hub pattern
+
+When a project spans multiple repos and each repo has its own wiki, designate one wiki as the **consolidating hub**. The hub's Home includes a navigation table (often called "How the rest of the system fits") that lists every other wiki with one-line scope and links to it. Every reader landing on any wiki page should be able to walk back to the hub in one hop.
+
+Choose the hub based on which repo holds the system of record. Common choices:
+
+- The backend / API repo when the project is FE-and-BE
+- The platform repo when the project is a SaaS with multiple client SDKs
+- The orchestrator repo when the project is a fleet of services
+
+Once the hub is named, the federation rules are:
+
+- **Hub Home lists every federated wiki** with one-line scope. Drop the row when the wiki is no longer relevant.
+- **Each federated wiki links back to the hub** in its own Home, ideally in the first paragraph.
+- **Cross-wiki contradictions are findings.** When investigation finds two wikis disagreeing, the contradiction is tracked at the more-canonical claim and a delta is proposed to whichever side is wrong.
+- **Updates to a federated wiki don't bypass the hub.** If the hub Home's federation table needs a new row, new scope text, or a removed row, the same PR touches both wikis.
+
+If the project doesn't have a hub yet, naming one is itself a Level 3 contribution. Propose it explicitly, then update the federation table on the hub Home.
+
 ## Level 4: Knowledge management system
 
 Company-wide: Linear, Confluence, Notion, or equivalent.
@@ -238,7 +300,39 @@ Documentation levels may feed each other through automated or semi-automated tra
 | Docstrings (L1) | API reference (L3) | Sphinx autodoc, MkDocs mkdocstrings |
 | CHANGELOG.md (L2) | Release notes (L3/L4) | GitHub Releases, `gh release create --notes-file` |
 | Design docs (L2) | Wiki pages (L3) | Manual sync or git submodule |
+| Polished repo docs (L2) | Wiki pages (L3) | [Repo-canonical lift](#repo-canonical-lift) -- bidirectional |
+| Wiki section (L3) ↔ Tracking ticket (L4) | each other | [Level 3 to Level 4 federation](#level-3-to-level-4-federation) -- bidirectional |
 | Tickets (L4) | ROADMAP.md (L2) | Manual sync -- update ROADMAP when epics close |
+
+### Repo-canonical lift
+
+When a repo has polished documentation files (HANDOFF.md, DEPLOY.md, MIGRATION.md, ARCHITECTURE.md) and the goal is to make them discoverable in a wiki, **lift them with a top-of-page admonition** rather than rewriting from scratch:
+
+```markdown
+# Deploy -- {service}, {key-property}
+
+> Source: lifted from the repo's [`DEPLOY.md`](https://github.com/{owner}/{repo}/blob/main/DEPLOY.md).
+> That file in the repo is the source of truth -- when it changes, this wiki page should be
+> updated to match (or vice versa, and PR back).
+
+{lifted content}
+```
+
+The repo file remains canonical. The wiki page is a mirror with a bidirectional update obligation: editing either side without updating the other is a violation visible to readers.
+
+Cross-repo references in the original (`[DEPLOY.md](DEPLOY.md)`, `[MIGRATION.md](MIGRATION.md)`) rewrite to wiki cross-links (`[Deploy](Deploy)`, `[Database Setup](Database-Setup)`). Absolute filesystem paths (`~/Documents/Code/<repo>`) genericize (`/path/to/your/clone/<repo>`). Repo file references in the original keep their absolute URLs so they survive the wiki rendering context.
+
+### Level 3 to Level 4 federation
+
+When wiki documentation surfaces a decision or unanswered question, federate it across Level 3 (wiki) and Level 4 (tracking tickets) bidirectionally:
+
+- The wiki page's "Open questions" section names the question and links to the tracking ticket. Example phrasing: *"Tracked as urgent on the {owner}/{repo} repo: issue #N. Answer in that thread; this section gets rewritten with the resolutions when the ticket closes."*
+- The tracking ticket links back to the specific wiki section so anyone reading the ticket can find the forensic detail.
+- Decisions requiring leadership input roll up to an epic. Each sub-issue is self-contained for an executive reading it, cross-linking to the most-relevant wiki section and to the parent epic.
+
+When a decision closes, the wiki section is rewritten with the resolution (delete the question, replace with the answer + commit/PR reference) in the same PR that closes the ticket. Wiki and ticket are then back in sync.
+
+This pattern works equally well for non-recovery investigations -- any time the wiki captures decisions that need more than a docs-only fix, the bidirectional sync prevents the ticket and the wiki from drifting apart.
 
 ### When updating syncs
 
