@@ -1,5 +1,5 @@
 ---
-name: shelf-geospatial
+name: shelves--geospatial
 description: Router for geospatial book skills. Dispatches to geocomputation-with-r (applied / code-first) or spatial-data-science (theory / methodology) based on task signals. Read this when the task involves CRS choice, spatial joins, raster vs vector decisions, areal interpolation, MAUP / ecological fallacy / scale effects, or any geographic analysis that needs methodological grounding beyond engine-specific code. For engine-specific syntax see coding/postgis, coding/geopandas, coding/sedona, coding/duckdb-spatial.
 ---
 

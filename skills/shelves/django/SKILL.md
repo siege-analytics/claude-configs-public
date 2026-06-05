@@ -1,5 +1,5 @@
 ---
-name: shelf-django
+name: shelves--django
 description: 'Router for Django book skills. Dispatches to two-scoops-django, high-performance-django, or django-design-patterns based on task signals. Read this when building Django applications, scaling Django for production traffic, refactoring legacy Django codebases, or applying Django best practices to project layout, settings, models, views, and deployment.'
 ---
 
@@ -15,26 +15,26 @@ incremental refactoring, test harness bootstrapping).
 
 | Task signal | Book to read |
 |---|---|
-| Starting a new Django project, project layout, settings management | [skill:two-scoops-django] |
-| Django best practices, CBV vs FBV, forms, security checklist | [skill:two-scoops-django] |
-| Django performance, caching, scaling, load balancing, deployment | [skill:high-performance-django] |
-| High-traffic Django, database optimization, Celery, Redis | [skill:high-performance-django] |
-| Legacy Django code, refactoring Django, design patterns, anti-patterns | [skill:django-design-patterns] |
-| Inheriting a Django codebase, fat models/views, strangler fig | [skill:django-design-patterns] |
-| Django REST framework patterns, API design in Django | [skill:two-scoops-django] |
-| Django GraphQL, Ariadne, schema-first API | [skill:two-scoops-django] |
-| Django admin customization, user model, AbstractUser | [skill:two-scoops-django] |
-| Django security checklist, HSTS, CSP, mass assignment | [skill:two-scoops-django] |
-| Django Celery patterns, task retry, idempotent tasks | [skill:django-design-patterns] |
-| Django Channels, WebSocket, real-time features | [skill:django-design-patterns] |
-| Django feature flags, django-waffle, gradual rollout | [skill:django-design-patterns] |
-| Django deployment checklist, production readiness | [skill:high-performance-django] |
+| Starting a new Django project, project layout, settings management | [skill:shelves--two-scoops-django] |
+| Django best practices, CBV vs FBV, forms, security checklist | [skill:shelves--two-scoops-django] |
+| Django performance, caching, scaling, load balancing, deployment | [skill:shelves--high-performance-django] |
+| High-traffic Django, database optimization, Celery, Redis | [skill:shelves--high-performance-django] |
+| Legacy Django code, refactoring Django, design patterns, anti-patterns | [skill:shelves--django-design-patterns] |
+| Inheriting a Django codebase, fat models/views, strangler fig | [skill:shelves--django-design-patterns] |
+| Django REST framework patterns, API design in Django | [skill:shelves--two-scoops-django] |
+| Django GraphQL, Ariadne, schema-first API | [skill:shelves--two-scoops-django] |
+| Django admin customization, user model, AbstractUser | [skill:shelves--two-scoops-django] |
+| Django security checklist, HSTS, CSP, mass assignment | [skill:shelves--two-scoops-django] |
+| Django Celery patterns, task retry, idempotent tasks | [skill:shelves--django-design-patterns] |
+| Django Channels, WebSocket, real-time features | [skill:shelves--django-design-patterns] |
+| Django feature flags, django-waffle, gradual rollout | [skill:shelves--django-design-patterns] |
+| Django deployment checklist, production readiness | [skill:shelves--high-performance-django] |
 
 ## Books in this shelf
 
-- [skill:two-scoops-django] -- Feldroy. Two Scoops of Django 3.x (5th ed). Best-practices bible covering project layout, settings, models, views, forms, security, testing, deployment. FULL -- all 37 chapters absorbed.
-- [skill:high-performance-django] -- Baumgartner & Malet (Lincoln Loop). High Performance Django. Scaling blueprint: caching tiers, DB optimization, load balancing, deployment automation. Free online. FULL -- all 7 chapters absorbed.
-- [skill:django-design-patterns] -- Ravindran. Django Design Patterns and Best Practices (2nd ed). Design patterns, anti-patterns, legacy rescue, Celery/Channels async architecture. FULL -- all 13 chapters absorbed.
+- [skill:shelves--two-scoops-django] -- Feldroy. Two Scoops of Django 3.x (5th ed). Best-practices bible covering project layout, settings, models, views, forms, security, testing, deployment. FULL -- all 37 chapters absorbed.
+- [skill:shelves--high-performance-django] -- Baumgartner & Malet (Lincoln Loop). High Performance Django. Scaling blueprint: caching tiers, DB optimization, load balancing, deployment automation. Free online. FULL -- all 7 chapters absorbed.
+- [skill:shelves--django-design-patterns] -- Ravindran. Django Design Patterns and Best Practices (2nd ed). Design patterns, anti-patterns, legacy rescue, Celery/Channels async architecture. FULL -- all 13 chapters absorbed.
 
 ## Disambiguation
 
@@ -52,10 +52,10 @@ incremental refactoring, test harness bootstrapping).
 
 ## When NOT to use this shelf
 
-- General Python best practices without Django context -- see [skill:shelf-languages] (Python entries)
-- Distributed systems design beyond Django -- see [skill:shelf-systems-architecture]
+- General Python best practices without Django context -- see [skill:shelves--languages] (Python entries)
+- Distributed systems design beyond Django -- see [skill:shelves--systems-architecture]
 - Frontend framework choices (React, Vue, etc.) -- these books focus on Django's server side
-- Database design independent of Django ORM -- see [skill:shelf-data-and-pipelines]
+- Database design independent of Django ORM -- see [skill:shelves--data-and-pipelines]
 
 ## Production case studies (reference context)
 

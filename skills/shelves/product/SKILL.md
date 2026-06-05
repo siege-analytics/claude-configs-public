@@ -1,5 +1,5 @@
 ---
-name: shelf-product
+name: shelves--product
 description: Router for product-discovery and product-strategy book skills. Dispatches to jobs-to-be-done, continuous-discovery, design-sprint, lean-startup, lean-ux, inspired-product, mom-test, or improve-retention based on task signals. Read this when scoping a feature, running discovery interviews, validating an idea, or improving retention.
 ---
 

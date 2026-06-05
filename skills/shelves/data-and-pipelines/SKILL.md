@@ -1,5 +1,5 @@
 ---
-name: shelf-data-and-pipelines
+name: shelves--data-and-pipelines
 description: Router for data-and-pipelines book skills. Currently dispatches to data-pipelines (Densmore -- Data Pipelines Pocket Reference). Read this when designing batch/stream pipelines, scheduled jobs, ingestion frameworks, or moving data between systems.
 ---
 

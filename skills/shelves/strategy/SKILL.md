@@ -1,5 +1,5 @@
 ---
-name: shelf-strategy
+name: shelves--strategy
 description: Router for strategy book skills. Dispatches to blue-ocean-strategy, crossing-the-chasm, traction-eos, or obviously-awesome based on task signals. Read this when working on market entry, positioning, operating system for the company, or strategic differentiation.
 ---
 

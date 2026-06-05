@@ -1,5 +1,5 @@
 ---
-name: shelf-team
+name: shelves--team
 description: Router for team / ways-of-working / staff-engineering book skills. Dispatches to drive-motivation, 37signals-way, or staff-engineer based on task signals. Read this when working on motivation, autonomy, team operating-model questions, or Staff-plus IC role craft.
 ---
 

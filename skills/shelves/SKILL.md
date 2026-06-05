@@ -25,8 +25,8 @@ This pattern keeps the description budget small: one slot per shelf, not one per
 | [`design`](../shelves/design/SKILL.md) | UI, UX heuristics, typography, microinteractions |
 | [`team`](../shelves/team/SKILL.md) | Motivation, ways of working |
 | [`storytelling`](../shelves/storytelling/SKILL.md) | Communicating data, slide animation |
-| `shelf-geospatial` (planned) | CRS / spatial joins / MAUP / areal interpolation / spatial statistics -- geographic analysis grounded in methodology |
-| `shelf-statistical-inference` (planned) | Causal inference (theory + applied), Bayesian / multilevel, applied EDA / hypothesis testing -- analytical rigor for any statistical claim |
+| `shelves--geospatial` (planned) | CRS / spatial joins / MAUP / areal interpolation / spatial statistics -- geographic analysis grounded in methodology |
+| `shelves--statistical-inference` (planned) | Causal inference (theory + applied), Bayesian / multilevel, applied EDA / hypothesis testing -- analytical rigor for any statistical claim |
 
 ## How shelves work
 

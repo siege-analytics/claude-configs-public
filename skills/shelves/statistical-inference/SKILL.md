@@ -1,5 +1,5 @@
 ---
-name: shelf-statistical-inference
+name: shelves--statistical-inference
 description: Router for statistical-inference book skills covering causal inference (theory + applied), Bayesian inference, and applied exploratory / computational statistics. Dispatches to causal-inference-what-if (rigorous causal foundations), causal-inference-mixtape (applied causal designs), statistical-rethinking-course (Bayesian + multilevel), or think-stats (applied EDA + simulation). Read this when the task involves any causal claim from observational data, Bayesian modeling, multilevel structure, hypothesis testing, or "is this analysis methodologically sound." Pairs with spatial-data-science for spatial-statistics edge cases.
 ---
 

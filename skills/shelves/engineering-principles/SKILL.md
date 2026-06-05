@@ -1,5 +1,5 @@
 ---
-name: shelf-engineering-principles
+name: shelves--engineering-principles
 description: Router for engineering-principles book skills. Dispatches to clean-code, clean-architecture, design-patterns, domain-driven-design, refactoring-patterns, pragmatic-programmer, or software-design-philosophy based on task signals. Read this when the task involves code quality, design, refactoring, architecture rationale, or principles arguments -- it will tell you which book to read in full.
 ---
 

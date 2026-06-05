@@ -638,22 +638,22 @@ discipline holds. Performance ensures it works under load.
 ## When this skill does NOT apply
 
 - Pure performance infrastructure (caching tiers, load balancing, Varnish,
-  horizontal scaling) -- see [skill:high-performance-django]
+  horizontal scaling) -- see [skill:shelves--high-performance-django]
 - Rescuing a legacy codebase that did not follow these practices -- see
-  [skill:django-design-patterns] for the rescue methodology
-- Non-Django Python projects -- see [skill:shelf-languages]
+  [skill:shelves--django-design-patterns] for the rescue methodology
+- Non-Django Python projects -- see [skill:shelves--languages]
 - Frontend framework architecture (React, Vue) -- Two Scoops focuses on
   server-side Django; see Section 4 for the enhancement-vs-SPA decision
 - Distributed system design beyond Django (microservices, event sourcing,
-  CQRS) -- see [skill:shelf-systems-architecture]
+  CQRS) -- see [skill:shelves--systems-architecture]
 
 ## Companions
 
-- [skill:high-performance-django] -- after building correctly, scale it
-- [skill:django-design-patterns] -- legacy rescue and pattern vocabulary
-- [skill:clean-code] -- general code quality principles
-- [skill:pragmatic-programmer] -- broader engineering discipline
-- [skill:data-intensive] -- database internals beyond Django's ORM
+- [skill:shelves--high-performance-django] -- after building correctly, scale it
+- [skill:shelves--django-design-patterns] -- legacy rescue and pattern vocabulary
+- [skill:shelves--clean-code] -- general code quality principles
+- [skill:shelves--pragmatic-programmer] -- broader engineering discipline
+- [skill:shelves--data-intensive] -- database internals beyond Django's ORM
 
 ## Source and license
 

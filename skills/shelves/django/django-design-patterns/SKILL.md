@@ -571,24 +571,24 @@ error tracking (Sentry).
 ## When this skill does NOT apply
 
 - Greenfield Django projects following best practices from the start --
-  see [skill:two-scoops-django]
+  see [skill:shelves--two-scoops-django]
 - Performance optimization of structurally sound code -- see
-  [skill:high-performance-django] (fix correctness before speed)
+  [skill:shelves--high-performance-django] (fix correctness before speed)
 - General refactoring patterns outside Django -- see
-  [skill:refactoring-patterns] or [skill:clean-code]
+  [skill:shelves--refactoring-patterns] or [skill:shelves--clean-code]
 - Non-Django legacy codebases -- the Django-specific patterns (MTV,
   ORM managers, URL routing as seams) are central to this framework
 
 ## Companions
 
-- [skill:two-scoops-django] -- the target state for legacy rescue.
+- [skill:shelves--two-scoops-django] -- the target state for legacy rescue.
   Refactoring means moving toward Two Scoops conventions.
-- [skill:high-performance-django] -- after structural rescue, optimize
+- [skill:shelves--high-performance-django] -- after structural rescue, optimize
   for performance
-- [skill:clean-code] -- general code quality principles
-- [skill:refactoring-patterns] -- broader refactoring catalog beyond
+- [skill:shelves--clean-code] -- general code quality principles
+- [skill:shelves--refactoring-patterns] -- broader refactoring catalog beyond
   Django-specific patterns
-- [skill:release-it] -- production resilience patterns (circuit breakers,
+- [skill:shelves--release-it] -- production resilience patterns (circuit breakers,
   bulkheads) that complement deployment readiness
 
 ## Source and license
