@@ -1,5 +1,5 @@
 ---
-name: shelf-storytelling
+name: shelves--storytelling
 description: Router for storytelling / data-presentation book skills. Dispatches to storytelling-with-data, tufte-data-viz, or animation-at-work based on task signals. Read this when communicating findings, building decks, designing or implementing charts, or animating in slides/web.
 ---
 

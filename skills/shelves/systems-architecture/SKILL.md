@@ -1,5 +1,5 @@
 ---
-name: shelf-systems-architecture
+name: shelves--systems-architecture
 description: Router for systems-architecture book skills. Dispatches to data-intensive, system-design, microservices-patterns, release-it, high-perf-browser, or system-design-interview based on task signals. Read this when designing distributed systems, choosing storage engines, planning replication or partitioning, hardening for production failure modes, or preparing for system-design interviews.
 ---
 

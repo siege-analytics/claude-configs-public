@@ -1,5 +1,5 @@
 ---
-name: shelf-sales
+name: shelves--sales
 description: Router for sales book skills. Dispatches to predictable-revenue, negotiation, influence-psychology, or hundred-million-offers based on task signals. Read this when working on pipeline, pricing, negotiation strategy, or offer construction.
 ---
 

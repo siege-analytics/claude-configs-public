@@ -113,11 +113,11 @@ When adding a book to an existing shelf:
 When creating a new shelf:
 
 1. Write `skills/shelves/<shelf>/SKILL.md` with frontmatter `name:
-   shelf-<shelf>`, description, trigger table, book list, disambiguation,
+   shelves--<shelf>`, description, trigger table, book list, disambiguation,
    when-to-use / when-not-to-use, always-on companions, origin.
 2. Update `skills/shelves/SKILL.md` top-level router:
    - Bump shelf count in description.
-   - Add row to the Shelves trigger table referencing `[skill:shelf-<new>]`.
+   - Add row to the Shelves trigger table referencing `[skill:shelves--<new>]`.
 
 ## Self-review (per `[`self-review`](../self-review/SKILL.md)`)
 

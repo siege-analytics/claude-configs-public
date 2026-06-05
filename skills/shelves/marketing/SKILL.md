@@ -1,5 +1,5 @@
 ---
-name: shelf-marketing
+name: shelves--marketing
 description: Router for marketing book skills. Dispatches to cro-methodology, storybrand-messaging, contagious, made-to-stick, scorecard-marketing, one-page-marketing, or hooked-ux based on task signals. Read this when working on messaging, positioning, conversion, or growth copy.
 ---
 

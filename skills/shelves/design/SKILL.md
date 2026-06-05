@@ -1,5 +1,5 @@
 ---
-name: shelf-design
+name: shelves--design
 description: Router for design book skills. Dispatches to refactoring-ui, ios-hig-design, ux-heuristics, web-typography, top-design, design-everyday-things, or microinteractions based on task signals. Read this when working on UI, UX, visual hierarchy, typography, or interaction polish.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: shelf-languages
+name: shelves--languages
 description: Router for language-idiom book skills. Dispatches to Effective Python/Java/Kotlin/TypeScript, Kotlin in Action, Spring Boot in Action, Programming with Rust, Rust in Action, Using Asyncio in Python, or Web Scraping with Python based on the language and task. Read this when writing or reviewing code in a specific language and you want canonical idioms beyond the project's house style.
 ---
 
