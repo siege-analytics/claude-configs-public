@@ -253,21 +253,31 @@ def find_skills(source: Path) -> dict[str, Path]:
     Includes both leaf skills AND routers (skills that have child SKILL.md files). The
     distinction matters at runtime (routers dispatch; leaves act) but not at build time
     (both need slug-token resolution). Slugs must be globally unique.
+
+    Shelf-class skills under `skills/shelves/<slug>/` are namespaced as
+    `shelves--<slug>` so they can coexist with a top-level skill of the same
+    name (e.g. `django` top-level vs the `shelves/django` shelf). Token
+    references resolve by their full namespaced slug.
     """
     skills: dict[str, Path] = {}
     for skill_md in source.rglob("SKILL.md"):
         skill_dir = skill_md.parent
+        rel = skill_dir.relative_to(source)
         slug = skill_dir.name
         if PROJECT_SEP in slug:
             continue
+        # Shelves-class skills get the `shelves--` namespace prefix to prevent
+        # collision with top-level skills of the same directory name.
+        if len(rel.parts) > 1 and rel.parts[0] == "shelves":
+            slug = f"shelves{PROJECT_SEP}{slug}"
         if slug in skills:
             raise BuildError(
                 f"Slug collision on '{slug}':\n"
                 f"  {skills[slug]}\n"
-                f"  {skill_dir.relative_to(source)}\n"
+                f"  {rel}\n"
                 f"Slugs must be globally unique across categories."
             )
-        skills[slug] = skill_dir.relative_to(source)
+        skills[slug] = rel
     return skills
 
 
