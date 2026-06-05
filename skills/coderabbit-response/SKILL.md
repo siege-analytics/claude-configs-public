@@ -169,7 +169,7 @@ If still BLOCKED, check:
 
 ### 8. Feed the lessons-learned ledger
 
-For each FIXed thread, ask: "is this a recurring pattern, or a one-off?" If recurring (you've seen it before in this repo, or it points at a project-wide invariant), invoke [`lessons-learned`](../lessons-learned/SKILL.md) to log or bump the corresponding entry in `LESSONS.md`.
+For each FIXed thread, ask: "is this a recurring pattern, or a one-off?" If recurring (you've seen it before in this repo, or it points at a project-wide invariant), invoke [skill:lessons-learned] to log or bump the corresponding entry in `LESSONS.md`.
 
 Heuristic -- log when **any** of these are true:
 

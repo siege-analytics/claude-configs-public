@@ -1,19 +1,19 @@
 ---
 name: detect-ai-fingerprints
-description: "Mechanical scanner for AI-fingerprint rules across the per-act rule files. Covers writing-prose:1-4, writing-code:2, writing-tests:3-4, writing-claims:2-3, writing-releases:2 in staged diffs, working-tree diffs, GitHub PR diffs, or commit/PR message bodies. Reports file:line violations and a 0/1 exit code. The remaining rules require [`code-review`](../code-review/SKILL.md) judgment and are not in scope."
+description: "Mechanical scanner for AI-fingerprint rules across the per-act rule files. Covers writing-prose:1-4, writing-code:2, writing-tests:3-4, writing-claims:2-3, writing-releases:2 in staged diffs, working-tree diffs, GitHub PR diffs, or commit/PR message bodies. Reports file:line violations and a 0/1 exit code. The remaining rules require [skill:code-review] judgment and are not in scope."
 allowed-tools: Bash Read
 ---
 
 # Detect AI Fingerprints
 
-Mechanical pre-flight scan for the AI-fingerprint rules across the per-act rule files. Catches what a human reviewer reliably misses on a long diff: em-dashes, banned adverbs, structured rationale blocks in commit messages, bullets and headers in commit bodies, history references in code comments, countable / completeness claims missing the `Verified-by:` trailer, skip messages without actionable remediation, mocks instantiated without `spec=`. The structural rules (vacuous tests, cargo-culted patterns, speculative abstractions, asserting non-existent symbols, scope-of-fix, hypothetical code, doc-edit symmetry, silent error swallowing, untested exception handlers, conditional-import callsite hygiene, BREAKING-changelog determination) are not mechanically detectable and stay in `[`code-review`](../code-review/SKILL.md)` and (for `[`writing-code`](../_writing-code-rules.md)` writing-code:5) `[`commit`](../commit/SKILL.md)` step 4.
+Mechanical pre-flight scan for the AI-fingerprint rules across the per-act rule files. Catches what a human reviewer reliably misses on a long diff: em-dashes, banned adverbs, structured rationale blocks in commit messages, bullets and headers in commit bodies, history references in code comments, countable / completeness claims missing the `Verified-by:` trailer, skip messages without actionable remediation, mocks instantiated without `spec=`. The structural rules (vacuous tests, cargo-culted patterns, speculative abstractions, asserting non-existent symbols, scope-of-fix, hypothetical code, doc-edit symmetry, silent error swallowing, untested exception handlers, conditional-import callsite hygiene, BREAKING-changelog determination) are not mechanically detectable and stay in `[skill:code-review]` and (for `[rule:writing-code]` writing-code:5) `[skill:commit]` step 4.
 
 ## When to invoke
 
 The scanner runs as a sub-routine of three callers:
 
-1. `[`commit`](../commit/SKILL.md)` step 3 (pre-review gate): scan the staged diff and the proposed commit message before code-review starts. Block the commit on violations.
-2. `[`code-review`](../code-review/SKILL.md)` start: scan the diff under review (staged or PR). Surface violations as findings before the six-layer human review begins, so attention is not wasted on em-dash hunting.
+1. `[skill:commit]` step 3 (pre-review gate): scan the staged diff and the proposed commit message before code-review starts. Block the commit on violations.
+2. `[skill:code-review]` start: scan the diff under review (staged or PR). Surface violations as findings before the six-layer human review begins, so attention is not wasted on em-dash hunting.
 3. Direct invocation as `/detect-ai-fingerprints` for ad-hoc use (PR triage, post-merge spot checks, scanning your own draft before committing).
 
 ## Invocation
@@ -49,7 +49,7 @@ Exit code is 0 when clean, 1 when any violation is found, 2 on usage error.
 bash <this-skill-dir>/scan.sh --ignore 'skills/meta/detect-ai-fingerprints/*'
 ```
 
-Production gates (`[`commit`](../commit/SKILL.md)` step 3, `[`code-review`](../code-review/SKILL.md)` start) do **not** pass `--ignore`. The flag is for ad-hoc inspection and for the bootstrap commit that lands changes to the scanner itself. Using it elsewhere is a smell: if you find yourself excluding paths to make the scanner shut up, the rules are firing for a reason.
+Production gates (`[skill:commit]` step 3, `[skill:code-review]` start) do **not** pass `--ignore`. The flag is for ad-hoc inspection and for the bootstrap commit that lands changes to the scanner itself. Using it elsewhere is a smell: if you find yourself excluding paths to make the scanner shut up, the rules are firing for a reason.
 
 ## Output format
 
@@ -67,7 +67,7 @@ sample.py:2:writing-prose-3-adverb(notably):     """Say hello -- crucially, this
 COMMIT_EDITMSG:5:writing-prose-4-header: ## Summary
 COMMIT_EDITMSG:6:writing-prose-4-bullet: - thing one
 
-scanned: writing-prose:1-4 (stylistic), writing-code:2 (history references in code comments), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable claims and completeness claims need Verified-by trailer), writing-releases:2 (skip-count trending). The rest require [`code-review`](../code-review/SKILL.md) judgment.
+scanned: writing-prose:1-4 (stylistic), writing-code:2 (history references in code comments), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable claims and completeness claims need Verified-by trailer), writing-releases:2 (skip-count trending). The rest require [skill:code-review] judgment.
 violations: 4
 ```
 
@@ -75,22 +75,22 @@ The trailing reminder is not decoration. It exists so a clean scan does not get 
 
 ## What the scanner covers
 
-- **`[`writing-prose`](../_writing-prose-rules.md)` writing-prose:1** (em-dashes U+2014 and en-dashes U+2013) anywhere in added lines or message bodies.
-- **`[`writing-prose`](../_writing-prose-rules.md)` writing-prose:2** (`Why:` / `How to apply:` structured blocks) in commit/PR message bodies. Heuristic: line beginning with `Why:` or `## Why` or `**Why:**` etc.
-- **`[`writing-prose`](../_writing-prose-rules.md)` writing-prose:3** (banned adverbs): `deliberately`, `intentionally`, `explicitly`, `fundamentally`, `essentially`, `crucially`, `notably`. Every match per line is reported.
-- **`[`writing-prose`](../_writing-prose-rules.md)` writing-prose:4** (bullets and `##` headers in commit-message bodies). Subject line is exempt; first blank line is skipped.
-- **`[`writing-code`](../_writing-code-rules.md)` writing-code:2** (history references in code comments): `PR #N`, `Sprint X`, `vN.N.N hardening`, `issue #N`, `TICKET-N` in lines that look like code comments (start with `#` or `//`).
-- **`[`writing-tests`](../_writing-tests-rules.md)` writing-tests:3** (skip messages in `.py` files): pattern `pytest.skip(...)`, `pytest.xfail(...)`, `@pytest.mark.skipif(...)`, `self.skipTest(...)`, `unittest.skip(...)`. The skip message must contain at least one actionable verb (`install`, `set`, `configure`, `run`, `enable`, `start`, `provide`, `export`) plus an identifier-shaped token (env var, command name, file path, package name). Without both, the line is reported.
-- **`[`writing-tests`](../_writing-tests-rules.md)` writing-tests:4** mock-without-spec sub-check: `MagicMock()` / `Mock()` without `spec=<RealClass>` or `spec_set=<RealClass>` or an explicit `# noqa: writing-tests:4-spec` rationale.
-- **`[`writing-claims`](../_writing-claims-rules.md)` writing-claims:2** (countable claims) in commit/PR message bodies. Trigger phrases: "all N", "all X engines/connectors/call sites", "every (call site/engine/caller/connector)", "no remaining", "fully covers", "completes the X surface". When a trigger fires, the body must contain a `Verified-by: <command output excerpt>` trailer.
-- **`[`writing-claims`](../_writing-claims-rules.md)` writing-claims:3** (completeness claims): extends the writing-claims:2 trigger set to unquantified phrases ("I have completed", "addressed all", "ready to ship", "loop closed"). Same `Verified-by:` trailer requirement.
-- **`[`writing-releases`](../_writing-releases-rules.md)` writing-releases:2** (skip-count trending) in `--pr <n>` mode: counts new `pytest.skip(...)` / `@pytest.mark.skipif(...)` / `@pytest.mark.skip(...)` sites in the PR diff and requires a `New-skip: <count>; <reason>` trailer when the count increased.
-- **`[`writing-code`](../_writing-code-rules.md)` writing-code:4 -- Django ORM kwarg validation** (v1, same-file models). For each `<Model>.objects.<method>(...)` call where `<Model>` is a class defined IN THE SAME FILE with at least one `<X>Field(...)` attribute, the scanner verifies each direct kwarg key (and each key inside a `defaults={...}` dict literal for `get_or_create` / `update_or_create`) maps to a declared field. Lookups like `field__gte` decompose to `field` before matching. Reports `writing-code-4-django-orm-kwarg(unknown-field)`. **Scope limitation:** cross-file model resolution is not in v1 -- calls referencing models imported from other modules are silently skipped (no false positives, also no coverage). Use the survey-context skill at author time to close the cross-file gap.
+- **`[rule:writing-prose]` writing-prose:1** (em-dashes U+2014 and en-dashes U+2013) anywhere in added lines or message bodies.
+- **`[rule:writing-prose]` writing-prose:2** (`Why:` / `How to apply:` structured blocks) in commit/PR message bodies. Heuristic: line beginning with `Why:` or `## Why` or `**Why:**` etc.
+- **`[rule:writing-prose]` writing-prose:3** (banned adverbs): `deliberately`, `intentionally`, `explicitly`, `fundamentally`, `essentially`, `crucially`, `notably`. Every match per line is reported.
+- **`[rule:writing-prose]` writing-prose:4** (bullets and `##` headers in commit-message bodies). Subject line is exempt; first blank line is skipped.
+- **`[rule:writing-code]` writing-code:2** (history references in code comments): `PR #N`, `Sprint X`, `vN.N.N hardening`, `issue #N`, `TICKET-N` in lines that look like code comments (start with `#` or `//`).
+- **`[rule:writing-tests]` writing-tests:3** (skip messages in `.py` files): pattern `pytest.skip(...)`, `pytest.xfail(...)`, `@pytest.mark.skipif(...)`, `self.skipTest(...)`, `unittest.skip(...)`. The skip message must contain at least one actionable verb (`install`, `set`, `configure`, `run`, `enable`, `start`, `provide`, `export`) plus an identifier-shaped token (env var, command name, file path, package name). Without both, the line is reported.
+- **`[rule:writing-tests]` writing-tests:4** mock-without-spec sub-check: `MagicMock()` / `Mock()` without `spec=<RealClass>` or `spec_set=<RealClass>` or an explicit `# noqa: writing-tests:4-spec` rationale.
+- **`[rule:writing-claims]` writing-claims:2** (countable claims) in commit/PR message bodies. Trigger phrases: "all N", "all X engines/connectors/call sites", "every (call site/engine/caller/connector)", "no remaining", "fully covers", "completes the X surface". When a trigger fires, the body must contain a `Verified-by: <command output excerpt>` trailer.
+- **`[rule:writing-claims]` writing-claims:3** (completeness claims): extends the writing-claims:2 trigger set to unquantified phrases ("I have completed", "addressed all", "ready to ship", "loop closed"). Same `Verified-by:` trailer requirement.
+- **`[rule:writing-releases]` writing-releases:2** (skip-count trending) in `--pr <n>` mode: counts new `pytest.skip(...)` / `@pytest.mark.skipif(...)` / `@pytest.mark.skip(...)` sites in the PR diff and requires a `New-skip: <count>; <reason>` trailer when the count increased.
+- **`[rule:writing-code]` writing-code:4 -- Django ORM kwarg validation** (v1, same-file models). For each `<Model>.objects.<method>(...)` call where `<Model>` is a class defined IN THE SAME FILE with at least one `<X>Field(...)` attribute, the scanner verifies each direct kwarg key (and each key inside a `defaults={...}` dict literal for `get_or_create` / `update_or_create`) maps to a declared field. Lookups like `field__gte` decompose to `field` before matching. Reports `writing-code-4-django-orm-kwarg(unknown-field)`. **Scope limitation:** cross-file model resolution is not in v1 -- calls referencing models imported from other modules are silently skipped (no false positives, also no coverage). Use the survey-context skill at author time to close the cross-file gap.
 
 ## What the scanner does NOT cover
 
-- `[`writing-code`](../_writing-code-rules.md)` writing-code:1 (multi-paragraph docstrings on internal helpers): requires distinguishing public from internal API, which the scanner cannot do mechanically without project-namespace and `__all__` detection.
-- `[`writing-code`](../_writing-code-rules.md)` writing-code:3, :5, :6, :7, :8 (note: writing-code:4 has partial Django-ORM coverage above; the broader "verify symbol exists" surface is still judgment-bound); `[`writing-tests`](../_writing-tests-rules.md)` writing-tests:1, :2, :5; `[`writing-claims`](../_writing-claims-rules.md)` writing-claims:1; `[`writing-releases`](../_writing-releases-rules.md)` writing-releases:1: judgment-bound. These belong in `[`code-review`](../code-review/SKILL.md)` and (for `[`writing-code`](../_writing-code-rules.md)` writing-code:5) `[`commit`](../commit/SKILL.md)` step 4 (the affected-tests gate). See `_coverage.md` for the per-rule prevention-path noting what tooling would mechanize each judgment row.
+- `[rule:writing-code]` writing-code:1 (multi-paragraph docstrings on internal helpers): requires distinguishing public from internal API, which the scanner cannot do mechanically without project-namespace and `__all__` detection.
+- `[rule:writing-code]` writing-code:3, :5, :6, :7, :8 (note: writing-code:4 has partial Django-ORM coverage above; the broader "verify symbol exists" surface is still judgment-bound); `[rule:writing-tests]` writing-tests:1, :2, :5; `[rule:writing-claims]` writing-claims:1; `[rule:writing-releases]` writing-releases:1: judgment-bound. These belong in `[skill:code-review]` and (for `[rule:writing-code]` writing-code:5) `[skill:commit]` step 4 (the affected-tests gate). See `_coverage.md` for the per-rule prevention-path noting what tooling would mechanize each judgment row.
 
 A clean scan does not mean clean code. It means the mechanical checks passed. The judgment checks still need a reviewer.
 
@@ -112,7 +112,7 @@ There is no override flag in the scanner. Address the violation or accept that i
 
 ```
 $ bash skills/meta/detect-ai-fingerprints/scan.sh
-clean. scanned: writing-prose:1-4 (stylistic), writing-code:2 (history references in code comments), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable / completeness claims), writing-releases:2 (skip-count trending). The rest require [`code-review`](../code-review/SKILL.md) judgment.
+clean. scanned: writing-prose:1-4 (stylistic), writing-code:2 (history references in code comments), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable / completeness claims), writing-releases:2 (skip-count trending). The rest require [skill:code-review] judgment.
 $ echo $?
 0
 ```
@@ -123,13 +123,13 @@ $ echo $?
 $ bash skills/meta/detect-ai-fingerprints/scan.sh
 src/parser.py:42:writing-prose-3-adverb(deliberately):     # We deliberately drop NULLs here
 
-scanned: writing-prose:1-4 (stylistic), writing-code:2 (history references in code comments), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable / completeness claims), writing-releases:2 (skip-count trending). The rest require [`code-review`](../code-review/SKILL.md) judgment.
+scanned: writing-prose:1-4 (stylistic), writing-code:2 (history references in code comments), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable / completeness claims), writing-releases:2 (skip-count trending). The rest require [skill:code-review] judgment.
 violations: 1
 $ echo $?
 1
 ```
 
-The `[`commit`](../commit/SKILL.md)` pre-review gate checks the exit code; non-zero stops the commit until the violation is fixed.
+The `[skill:commit]` pre-review gate checks the exit code; non-zero stops the commit until the violation is fixed.
 
 ### Scanning a PR before review
 
@@ -150,10 +150,10 @@ The diff parser handles only added lines (`+` prefix in unified diff), not remov
 
 ## Cross-references
 
-- The per-act rule files `[`writing-prose`](../_writing-prose-rules.md)`, `[`writing-code`](../_writing-code-rules.md)`, `[`writing-tests`](../_writing-tests-rules.md)`, `[`writing-claims`](../_writing-claims-rules.md)`, `[`writing-releases`](../_writing-releases-rules.md)` are the rules this skill enforces. Mechanical coverage is enumerated in "What the scanner covers" above; everything else requires `[`code-review`](../code-review/SKILL.md)` judgment. See `_coverage.md` for the per-rule prevention-path that names what tooling would mechanize each judgment row.
-- `[`commit`](../commit/SKILL.md)` calls this skill in step 3 (pre-review gate). A non-zero exit blocks the commit.
-- `[`code-review`](../code-review/SKILL.md)` calls this skill at the start of the review pass. Findings prefix the six-layer review.
+- The per-act rule files `[rule:writing-prose]`, `[rule:writing-code]`, `[rule:writing-tests]`, `[rule:writing-claims]`, `[rule:writing-releases]` are the rules this skill enforces. Mechanical coverage is enumerated in "What the scanner covers" above; everything else requires `[skill:code-review]` judgment. See `_coverage.md` for the per-rule prevention-path that names what tooling would mechanize each judgment row.
+- `[skill:commit]` calls this skill in step 3 (pre-review gate). A non-zero exit blocks the commit.
+- `[skill:code-review]` calls this skill at the start of the review pass. Findings prefix the six-layer review.
 
 ## Attribution
 
-Defers to `[`output`](../_output-rules.md)`. No AI / agent attribution in scanner output, in commits that follow it, or anywhere else.
+Defers to `[rule:output]`. No AI / agent attribution in scanner output, in commits that follow it, or anywhere else.

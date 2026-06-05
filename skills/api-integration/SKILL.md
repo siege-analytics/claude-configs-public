@@ -12,9 +12,9 @@ Architectural doctrine for the contract between frontends and backends. Not fram
 
 ## Companion shelves
 
-- [`vue`](../vue/SKILL.md) -- FE framework conventions (Pinia, routes, composables).
-- [`django`](../django/SKILL.md) -- Backend framework conventions (models, views, serializers).
-- [`pour-now-triage`](../pour-now-triage/SKILL.md) -- restoration overrides that freeze specific contract changes during triage.
+- [skill:vue] -- FE framework conventions (Pinia, routes, composables).
+- [skill:django] -- Backend framework conventions (models, views, serializers).
+- [skill:pour-now-triage] -- restoration overrides that freeze specific contract changes during triage.
 
 ## 1. Decision tree
 
@@ -177,4 +177,4 @@ These are not covered because pour-now does not have them. The skill should be e
 
 ## Attribution Policy
 
-See [`_output-rules.md`](../_output-rules.md). NEVER include AI or agent attribution.
+See [rule:output]. NEVER include AI or agent attribution.

@@ -162,4 +162,4 @@ The triage loop for new findings:
 
 ## Attribution Policy
 
-See [`_output-rules.md`](../_output-rules.md). NEVER include AI or agent attribution.
+See [rule:output]. NEVER include AI or agent attribution.

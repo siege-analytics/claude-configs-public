@@ -9,24 +9,24 @@ description: Router for product-discovery and product-strategy book skills. Disp
 
 | Task signal | Book to read |
 |---|---|
-| "What job is the customer hiring this for?", segment by motivation | [`jobs-to-be-done`](../../shelves/product/jobs-to-be-done/SKILL.md) |
-| Weekly customer-interview cadence, opportunity-solution trees (Torres) | [`continuous-discovery`](../../shelves/product/continuous-discovery/SKILL.md) |
-| 5-day design sprint, structured prototype + test | [`design-sprint`](../../shelves/product/design-sprint/SKILL.md) |
-| MVP, build-measure-learn, validated learning, pivots (Ries) | [`lean-startup`](../../shelves/product/lean-startup/SKILL.md) |
-| Lean UX -- small experiments, hypothesis canvases | [`lean-ux`](../../shelves/product/lean-ux/SKILL.md) |
-| Product-team operating model, discovery + delivery (Cagan) | [`inspired-product`](../../shelves/product/inspired-product/SKILL.md) |
-| Customer-interview question design, avoiding compliments | [`mom-test`](../../shelves/product/mom-test/SKILL.md) |
-| Retention diagnosis, cohort analysis, habit loops | [`improve-retention`](../../shelves/product/improve-retention/SKILL.md) |
+| "What job is the customer hiring this for?", segment by motivation | [skill:shelves--jobs-to-be-done] |
+| Weekly customer-interview cadence, opportunity-solution trees (Torres) | [skill:shelves--continuous-discovery] |
+| 5-day design sprint, structured prototype + test | [skill:shelves--design-sprint] |
+| MVP, build-measure-learn, validated learning, pivots (Ries) | [skill:shelves--lean-startup] |
+| Lean UX -- small experiments, hypothesis canvases | [skill:shelves--lean-ux] |
+| Product-team operating model, discovery + delivery (Cagan) | [skill:shelves--inspired-product] |
+| Customer-interview question design, avoiding compliments | [skill:shelves--mom-test] |
+| Retention diagnosis, cohort analysis, habit loops | [skill:shelves--improve-retention] |
 
 ## Books
 
-- [`jobs-to-be-done`](../../shelves/product/jobs-to-be-done/SKILL.md) -- JTBD framework
-- [`continuous-discovery`](../../shelves/product/continuous-discovery/SKILL.md) -- Teresa Torres
-- [`design-sprint`](../../shelves/product/design-sprint/SKILL.md) -- Knapp et al.
-- [`lean-startup`](../../shelves/product/lean-startup/SKILL.md) -- Eric Ries
-- [`lean-ux`](../../shelves/product/lean-ux/SKILL.md) -- Gothelf & Seiden
-- [`inspired-product`](../../shelves/product/inspired-product/SKILL.md) -- Marty Cagan
-- [`mom-test`](../../shelves/product/mom-test/SKILL.md) -- Rob Fitzpatrick
-- [`improve-retention`](../../shelves/product/improve-retention/SKILL.md) -- retention playbook
+- [skill:shelves--jobs-to-be-done] -- JTBD framework
+- [skill:shelves--continuous-discovery] -- Teresa Torres
+- [skill:shelves--design-sprint] -- Knapp et al.
+- [skill:shelves--lean-startup] -- Eric Ries
+- [skill:shelves--lean-ux] -- Gothelf & Seiden
+- [skill:shelves--inspired-product] -- Marty Cagan
+- [skill:shelves--mom-test] -- Rob Fitzpatrick
+- [skill:shelves--improve-retention] -- retention playbook
 
 All wondelai/skills imports -- see footers and `THIRD_PARTY_NOTICES.md`.

@@ -11,29 +11,29 @@ Language-specific idiom and best-practice books. Pair these with the always-on `
 
 | Language / task | Book to read |
 |---|---|
-| Pythonic style, idioms, stdlib usage | [`effective-python`](../../shelves/languages/effective-python/SKILL.md) |
-| Async I/O in Python, `asyncio`, event loop, concurrency primitives | [`using-asyncio-python`](../../shelves/languages/using-asyncio-python/SKILL.md) |
-| HTTP scraping, parsing, anti-bot, polite crawling | [`web-scraping-python`](../../shelves/languages/web-scraping-python/SKILL.md) |
-| Java idioms -- `equals`/`hashCode`, immutability, generics, exceptions | [`effective-java`](../../shelves/languages/effective-java/SKILL.md) |
-| Kotlin idioms -- null safety, scope functions, DSLs, coroutines | [`effective-kotlin`](../../shelves/languages/effective-kotlin/SKILL.md) |
-| Kotlin from-the-ground-up -- language features and patterns | [`kotlin-in-action`](../../shelves/languages/kotlin-in-action/SKILL.md) |
-| Spring Boot apps, autoconfiguration, starters | [`spring-boot-in-action`](../../shelves/languages/spring-boot-in-action/SKILL.md) |
-| Rust ownership, traits, lifetimes, error handling | [`programming-with-rust`](../../shelves/languages/programming-with-rust/SKILL.md) |
-| Rust applied -- networking, I/O, embedded, performance | [`rust-in-action`](../../shelves/languages/rust-in-action/SKILL.md) |
-| TypeScript types, narrowing, generics, structural typing | [`effective-typescript`](../../shelves/languages/effective-typescript/SKILL.md) |
+| Pythonic style, idioms, stdlib usage | [skill:shelves--effective-python] |
+| Async I/O in Python, `asyncio`, event loop, concurrency primitives | [skill:shelves--using-asyncio-python] |
+| HTTP scraping, parsing, anti-bot, polite crawling | [skill:shelves--web-scraping-python] |
+| Java idioms -- `equals`/`hashCode`, immutability, generics, exceptions | [skill:shelves--effective-java] |
+| Kotlin idioms -- null safety, scope functions, DSLs, coroutines | [skill:shelves--effective-kotlin] |
+| Kotlin from-the-ground-up -- language features and patterns | [skill:shelves--kotlin-in-action] |
+| Spring Boot apps, autoconfiguration, starters | [skill:shelves--spring-boot-in-action] |
+| Rust ownership, traits, lifetimes, error handling | [skill:shelves--programming-with-rust] |
+| Rust applied -- networking, I/O, embedded, performance | [skill:shelves--rust-in-action] |
+| TypeScript types, narrowing, generics, structural typing | [skill:shelves--effective-typescript] |
 
 ## Books in this shelf
 
-- [`effective-python`](../../shelves/languages/effective-python/SKILL.md) -- Brett Slatkin
-- [`using-asyncio-python`](../../shelves/languages/using-asyncio-python/SKILL.md) -- Caleb Hattingh
-- [`web-scraping-python`](../../shelves/languages/web-scraping-python/SKILL.md) -- Ryan Mitchell
-- [`effective-java`](../../shelves/languages/effective-java/SKILL.md) -- Joshua Bloch
-- [`effective-kotlin`](../../shelves/languages/effective-kotlin/SKILL.md) -- Marcin Moskała
-- [`kotlin-in-action`](../../shelves/languages/kotlin-in-action/SKILL.md) -- Jemerov & Isakova
-- [`spring-boot-in-action`](../../shelves/languages/spring-boot-in-action/SKILL.md) -- Craig Walls
-- [`programming-with-rust`](../../shelves/languages/programming-with-rust/SKILL.md) -- Donis Marshall
-- [`rust-in-action`](../../shelves/languages/rust-in-action/SKILL.md) -- Tim McNamara
-- [`effective-typescript`](../../shelves/languages/effective-typescript/SKILL.md) -- Dan Vanderkam
+- [skill:shelves--effective-python] -- Brett Slatkin
+- [skill:shelves--using-asyncio-python] -- Caleb Hattingh
+- [skill:shelves--web-scraping-python] -- Ryan Mitchell
+- [skill:shelves--effective-java] -- Joshua Bloch
+- [skill:shelves--effective-kotlin] -- Marcin Moskała
+- [skill:shelves--kotlin-in-action] -- Jemerov & Isakova
+- [skill:shelves--spring-boot-in-action] -- Craig Walls
+- [skill:shelves--programming-with-rust] -- Donis Marshall
+- [skill:shelves--rust-in-action] -- Tim McNamara
+- [skill:shelves--effective-typescript] -- Dan Vanderkam
 
 ## Why JVM books matter for Python-first work
 

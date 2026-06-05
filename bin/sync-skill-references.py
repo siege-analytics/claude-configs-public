@@ -62,14 +62,22 @@ def find_markdown_files(root: Path) -> list[Path]:
     return [p for p in root.rglob("*.md") if "dist" not in p.parts]
 
 
-def convert_skill_links(content: str) -> tuple[str, int]:
+def convert_skill_links(content: str, source_path: Path) -> tuple[str, int]:
     count = 0
 
     def repl(match: re.Match[str]) -> str:
         nonlocal count
+        prefix = match.group("prefix")
         slug = match.group("slug")
-        # Don't convert if the link target is the source's own SKILL.md (no slug to extract)
-        # — but our regex ensures `slug` is the immediate parent dir, so we're safe.
+        target_rel = prefix + slug + "/SKILL.md"
+        target_abs = (source_path.parent / target_rel).resolve()
+        try:
+            rel_to_skills = target_abs.relative_to(SOURCE_SKILLS)
+            parts = rel_to_skills.parts
+            if len(parts) > 1 and parts[0] == "shelves":
+                slug = f"shelves--{slug}"
+        except ValueError:
+            pass
         count += 1
         return f"[skill:{slug}]"
 
@@ -104,7 +112,7 @@ def main() -> int:
     for path in files:
         original = path.read_text()
         converted = original
-        converted, n_skill = convert_skill_links(converted)
+        converted, n_skill = convert_skill_links(converted, path)
         converted, n_rule = convert_rule_links(converted)
         if converted != original:
             changed_files.append(path)

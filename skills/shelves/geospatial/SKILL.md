@@ -11,13 +11,13 @@ Books grounding geographic analysis: the principles that make spatial computing 
 
 | Task signal | Book to read |
 |---|---|
-| CRS / reprojection / spatial-operations / vector vs raster choice; "how do I do this in R / Python / PostGIS" applied questions | [`geocomputation-with-r`](../../shelves/geospatial/geocomputation-with-r/SKILL.md) |
-| Support / MAUP / ecological fallacy / scale effects / areal interpolation / geostatistics / spatial regression; "what does this concept actually mean" questions | [`spatial-data-science`](../../shelves/geospatial/spatial-data-science/SKILL.md) |
+| CRS / reprojection / spatial-operations / vector vs raster choice; "how do I do this in R / Python / PostGIS" applied questions | [skill:shelves--geocomputation-with-r] |
+| Support / MAUP / ecological fallacy / scale effects / areal interpolation / geostatistics / spatial regression; "what does this concept actually mean" questions | [skill:shelves--spatial-data-science] |
 
 ## Books in this shelf
 
-- [`geocomputation-with-r`](../../shelves/geospatial/geocomputation-with-r/SKILL.md) -- Lovelace, Nowosad, Muenchow. *Geocomputation with R*. Applied / code-first; 16 chapters covering classes, operations, CRS, raster-vector, I/O, mapping. Full free online at r.geocompx.org.
-- [`spatial-data-science`](../../shelves/geospatial/spatial-data-science/SKILL.md) -- Pebesma & Bivand. *Spatial Data Science: With Applications in R*. Theory / methodology-first; 17+ chapters across spatial-data, R-tooling, models-for-spatial-data. Full free online at r-spatial.org/book.
+- [skill:shelves--geocomputation-with-r] -- Lovelace, Nowosad, Muenchow. *Geocomputation with R*. Applied / code-first; 16 chapters covering classes, operations, CRS, raster-vector, I/O, mapping. Full free online at r.geocompx.org.
+- [skill:shelves--spatial-data-science] -- Pebesma & Bivand. *Spatial Data Science: With Applications in R*. Theory / methodology-first; 17+ chapters across spatial-data, R-tooling, models-for-spatial-data. Full free online at r-spatial.org/book.
 
 ## Disambiguation
 

@@ -13,18 +13,18 @@ This pattern keeps the description budget small: one slot per shelf, not one per
 
 | Shelf | When to load |
 |---|---|
-| [`engineering-principles`](../shelves/engineering-principles/SKILL.md) | Code quality, design, refactoring rationale, principles arguments |
-| [`systems-architecture`](../shelves/systems-architecture/SKILL.md) | Distributed-system design, storage choice, replication, scaling, system-design interview |
-| [`django`](../shelves/django/SKILL.md) | Django best practices, scaling for production, legacy codebase rescue |
-| [`languages`](../shelves/languages/SKILL.md) | Idioms and best practices for Python, JVM (Java/Kotlin/Scala-on-Spark), TypeScript, Rust |
-| [`data-and-pipelines`](../shelves/data-and-pipelines/SKILL.md) | Pipeline design, batch/stream, scheduled jobs |
-| [`product`](../shelves/product/SKILL.md) | Discovery, JTBD, lean experimentation, retention |
-| [`marketing`](../shelves/marketing/SKILL.md) | Messaging, copy, conversion, positioning |
-| [`sales`](../shelves/sales/SKILL.md) | Pipeline, pricing, negotiation, influence |
-| [`strategy`](../shelves/strategy/SKILL.md) | Market entry, positioning, EOS, blue ocean |
-| [`design`](../shelves/design/SKILL.md) | UI, UX heuristics, typography, microinteractions |
-| [`team`](../shelves/team/SKILL.md) | Motivation, ways of working |
-| [`storytelling`](../shelves/storytelling/SKILL.md) | Communicating data, slide animation |
+| [skill:shelves--engineering-principles] | Code quality, design, refactoring rationale, principles arguments |
+| [skill:shelves--systems-architecture] | Distributed-system design, storage choice, replication, scaling, system-design interview |
+| [skill:shelves--django] | Django best practices, scaling for production, legacy codebase rescue |
+| [skill:shelves--languages] | Idioms and best practices for Python, JVM (Java/Kotlin/Scala-on-Spark), TypeScript, Rust |
+| [skill:shelves--data-and-pipelines] | Pipeline design, batch/stream, scheduled jobs |
+| [skill:shelves--product] | Discovery, JTBD, lean experimentation, retention |
+| [skill:shelves--marketing] | Messaging, copy, conversion, positioning |
+| [skill:shelves--sales] | Pipeline, pricing, negotiation, influence |
+| [skill:shelves--strategy] | Market entry, positioning, EOS, blue ocean |
+| [skill:shelves--design] | UI, UX heuristics, typography, microinteractions |
+| [skill:shelves--team] | Motivation, ways of working |
+| [skill:shelves--storytelling] | Communicating data, slide animation |
 | `shelves--geospatial` (planned) | CRS / spatial joins / MAUP / areal interpolation / spatial statistics -- geographic analysis grounded in methodology |
 | `shelves--statistical-inference` (planned) | Causal inference (theory + applied), Bayesian / multilevel, applied EDA / hypothesis testing -- analytical rigor for any statistical claim |
 

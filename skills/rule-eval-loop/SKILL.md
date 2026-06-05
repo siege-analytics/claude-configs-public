@@ -121,10 +121,10 @@ When in doubt, run the loop. The cost of an over-fit rule is paid by every consu
 
 ## Cross-references
 
-- `[`lessons-learned`](../lessons-learned/SKILL.md)`: Tier-1 ledger; eval-loop instances get filed there as evidence before being promoted into this skill.
-- `[`rules-audit`](../rules-audit/SKILL.md)`: cross-tier hygiene pass; complements this skill at the maintenance level (this skill is about rule design; rules-audit is about rule consistency over time).
-- `[`distill-lessons`](../distill-lessons/SKILL.md)`: Tier-1 to Tier-2 promotion mechanics.
+- `[skill:lessons-learned]`: Tier-1 ledger; eval-loop instances get filed there as evidence before being promoted into this skill.
+- `[skill:rules-audit]`: cross-tier hygiene pass; complements this skill at the maintenance level (this skill is about rule design; rules-audit is about rule consistency over time).
+- `[skill:distill-lessons]`: Tier-1 to Tier-2 promotion mechanics.
 
 ## Attribution
 
-Defers to `[`output`](../_output-rules.md)`. No AI / agent attribution in this skill or its instances.
+Defers to `[rule:output]`. No AI / agent attribution in this skill or its instances.

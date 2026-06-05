@@ -8,7 +8,7 @@ allowed-tools: Read Grep Glob Bash
 
 This skill captures the procedure for generating the `dist/flat/` artifact, verifying that structural changes in `skills/` and `hooks/` actually reach the published flat tag, and confirming a consumer can sync the result. The repository builds two layouts via `bin/build.py`; this skill scopes specifically to the flat layout because that is the surface Craft Agent and similar consumers read directly without the resolver hook's nested-path traversal.
 
-For the broader consumer-side verification discipline, see `[`writing-releases`](../_writing-releases-rules.md)` writing-releases:5. This skill is the operational implementation of that rule for this repo's flat-layout consumer surface.
+For the broader consumer-side verification discipline, see `[rule:writing-releases]` writing-releases:5. This skill is the operational implementation of that rule for this repo's flat-layout consumer surface.
 
 ## When to invoke
 
@@ -93,8 +93,8 @@ Then run Step 3 against an actual consumer workspace per `UPSTREAM-UPDATE.md` (r
 
 ## Cross-references
 
-- `[`writing-releases`](../_writing-releases-rules.md)` writing-releases:5: verify the published artifact loads in its consumption environment before declaring release done. This skill is the consumer-shape-specific implementation for the flat layout.
-- `[`writing-releases`](../_writing-releases-rules.md)` writing-releases:1: BREAKING in changelog when public surface changes. Structural changes to skills/ or hooks/ that affect consumer integration may also be BREAKING (e.g., a renamed skill slug breaks consumer wiring); both rules apply.
+- `[rule:writing-releases]` writing-releases:5: verify the published artifact loads in its consumption environment before declaring release done. This skill is the consumer-shape-specific implementation for the flat layout.
+- `[rule:writing-releases]` writing-releases:1: BREAKING in changelog when public surface changes. Structural changes to skills/ or hooks/ that affect consumer integration may also be BREAKING (e.g., a renamed skill slug breaks consumer wiring); both rules apply.
 - `bin/build.py`: the build script. The `find_rules()`, `ROOT_FILES`, and `copy_skill_dir()` symbols are the pattern-matching sites most likely to need updating when a structural change adds a new file shape.
 - `.github/workflows/build-and-publish.yml`: the publish workflow that runs `bin/build.py` and rsyncs to `release/<layout>`.
 - `UPSTREAM-UPDATE.md`: the consumer-side sync procedure (rsync from the flat tag into a workspace).
@@ -103,4 +103,4 @@ Then run Step 3 against an actual consumer workspace per `UPSTREAM-UPDATE.md` (r
 
 ## Attribution
 
-Defers to `[`output`](../_output-rules.md)`. No AI / agent attribution in this skill or its outputs.
+Defers to `[rule:output]`. No AI / agent attribution in this skill or its outputs.

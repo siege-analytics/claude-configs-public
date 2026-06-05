@@ -119,7 +119,7 @@ When creating a new shelf:
    - Bump shelf count in description.
    - Add row to the Shelves trigger table referencing `[skill:shelves--<new>]`.
 
-## Self-review (per `[`self-review`](../self-review/SKILL.md)`)
+## Self-review (per `[skill:self-review]`)
 
 Every shelf absorption is a substantive PR that requires the standard
 self-review artifact in `<session>/plans/review-shelf-<book-slug>.md`

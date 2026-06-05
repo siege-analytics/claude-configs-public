@@ -11,21 +11,21 @@ Books on designing distributed systems, choosing storage and compute primitives,
 
 | Task signal | Book to read |
 |---|---|
-| Storage engine choice (LSM vs B-tree, SQL vs NoSQL), replication, partitioning, transactions, consistency models, batch vs stream | [`data-intensive`](../../shelves/systems-architecture/data-intensive/SKILL.md) |
-| End-to-end system design -- load balancers, caches, queues, capacity estimation, back-of-envelope math | [`system-design`](../../shelves/systems-architecture/system-design/SKILL.md) |
-| Service decomposition, sagas, API gateway, service discovery, distributed data patterns | [`microservices-patterns`](../../shelves/systems-architecture/microservices-patterns/SKILL.md) |
-| Production failure modes -- circuit breakers, bulkheads, timeouts, capacity, "what breaks at 3am" | [`release-it`](../../shelves/systems-architecture/release-it/SKILL.md) |
-| Browser performance, latency budgets, HTTP/2/3, CDN, image optimization, critical-path render | [`high-perf-browser`](../../shelves/systems-architecture/high-perf-browser/SKILL.md) |
-| Tech-interview prep -- design YouTube, Twitter, Uber, Dropbox; capacity drills | [`system-design-interview`](../../shelves/systems-architecture/system-design-interview/SKILL.md) |
+| Storage engine choice (LSM vs B-tree, SQL vs NoSQL), replication, partitioning, transactions, consistency models, batch vs stream | [skill:shelves--data-intensive] |
+| End-to-end system design -- load balancers, caches, queues, capacity estimation, back-of-envelope math | [skill:shelves--system-design] |
+| Service decomposition, sagas, API gateway, service discovery, distributed data patterns | [skill:shelves--microservices-patterns] |
+| Production failure modes -- circuit breakers, bulkheads, timeouts, capacity, "what breaks at 3am" | [skill:shelves--release-it] |
+| Browser performance, latency budgets, HTTP/2/3, CDN, image optimization, critical-path render | [skill:shelves--high-perf-browser] |
+| Tech-interview prep -- design YouTube, Twitter, Uber, Dropbox; capacity drills | [skill:shelves--system-design-interview] |
 
 ## Books in this shelf
 
-- [`data-intensive`](../../shelves/systems-architecture/data-intensive/SKILL.md) -- *Designing Data-Intensive Applications* (Kleppmann). Storage engines, replication, partitioning, transactions, batch + stream.
-- [`system-design`](../../shelves/systems-architecture/system-design/SKILL.md) -- System design fundamentals: load balancing, caching, queues, capacity planning.
-- [`microservices-patterns`](../../shelves/systems-architecture/microservices-patterns/SKILL.md) -- Chris Richardson. Service decomposition, sagas, distributed data, API gateway.
-- [`release-it`](../../shelves/systems-architecture/release-it/SKILL.md) -- Michael Nygard. Stability and capacity patterns; production failure modes.
-- [`high-perf-browser`](../../shelves/systems-architecture/high-perf-browser/SKILL.md) -- *High Performance Browser Networking* (Grigorik). Network primitives and frontend latency.
-- [`system-design-interview`](../../shelves/systems-architecture/system-design-interview/SKILL.md) -- Alex Xu. Common interview design problems, walkthroughs.
+- [skill:shelves--data-intensive] -- *Designing Data-Intensive Applications* (Kleppmann). Storage engines, replication, partitioning, transactions, batch + stream.
+- [skill:shelves--system-design] -- System design fundamentals: load balancing, caching, queues, capacity planning.
+- [skill:shelves--microservices-patterns] -- Chris Richardson. Service decomposition, sagas, distributed data, API gateway.
+- [skill:shelves--release-it] -- Michael Nygard. Stability and capacity patterns; production failure modes.
+- [skill:shelves--high-perf-browser] -- *High Performance Browser Networking* (Grigorik). Network primitives and frontend latency.
+- [skill:shelves--system-design-interview] -- Alex Xu. Common interview design problems, walkthroughs.
 
 ## Disambiguation
 

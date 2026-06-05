@@ -9,12 +9,12 @@ description: Router for design book skills. Dispatches to refactoring-ui, ios-hi
 
 | Task signal | Book to read |
 |---|---|
-| Visual hierarchy, color, spacing, polish for non-designers (Wathan & Schoger) | [`refactoring-ui`](../../shelves/design/refactoring-ui/SKILL.md) |
-| iOS HIG, native iOS / iPadOS app design | [`ios-hig-design`](../../shelves/design/ios-hig-design/SKILL.md) |
-| Heuristic evaluation (Nielsen 10) | [`ux-heuristics`](../../shelves/design/ux-heuristics/SKILL.md) |
-| Web typography -- pairing, scale, vertical rhythm | [`web-typography`](../../shelves/design/web-typography/SKILL.md) |
-| Top-down composition, design fundamentals | [`top-design`](../../shelves/design/top-design/SKILL.md) |
-| Affordances, signifiers, mappings (Don Norman) | [`design-everyday-things`](../../shelves/design/design-everyday-things/SKILL.md) |
-| Microinteractions -- triggers, rules, feedback, loops (Saffer) | [`microinteractions`](../../shelves/design/microinteractions/SKILL.md) |
+| Visual hierarchy, color, spacing, polish for non-designers (Wathan & Schoger) | [skill:shelves--refactoring-ui] |
+| iOS HIG, native iOS / iPadOS app design | [skill:shelves--ios-hig-design] |
+| Heuristic evaluation (Nielsen 10) | [skill:shelves--ux-heuristics] |
+| Web typography -- pairing, scale, vertical rhythm | [skill:shelves--web-typography] |
+| Top-down composition, design fundamentals | [skill:shelves--top-design] |
+| Affordances, signifiers, mappings (Don Norman) | [skill:shelves--design-everyday-things] |
+| Microinteractions -- triggers, rules, feedback, loops (Saffer) | [skill:shelves--microinteractions] |
 
 All wondelai/skills imports -- see footers and `THIRD_PARTY_NOTICES.md`.

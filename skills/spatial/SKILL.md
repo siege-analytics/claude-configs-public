@@ -114,11 +114,11 @@ If the core question is about **connections between entities** rather than **pos
 
 | Available | Use | Why |
 |-----------|-----|-----|
-| PostgreSQL with PostGIS | [`postgis`](../postgis/SKILL.md) | Battle-tested, rich functions, ACID, persistent indexes |
-| Spark cluster | [`sedona`](../sedona/SKILL.md) | Distributed spatial joins; PySpark + Scala scaffolding |
-| Python only, full GDAL stack | [`geopandas`](../geopandas/SKILL.md) | Pandas-style; rich I/O |
-| Python only, no GDAL (Lambda, slim images) | [`duckdb-spatial`](../duckdb-spatial/SKILL.md) | Bundles GEOS/GDAL/PROJ; SQL on Parquet |
-| Single-node, want SQL idiom on Parquet | [`duckdb-spatial`](../duckdb-spatial/SKILL.md) | Faster than GeoPandas for batch SQL |
+| PostgreSQL with PostGIS | [skill:postgis] | Battle-tested, rich functions, ACID, persistent indexes |
+| Spark cluster | [skill:sedona] | Distributed spatial joins; PySpark + Scala scaffolding |
+| Python only, full GDAL stack | [skill:geopandas] | Pandas-style; rich I/O |
+| Python only, no GDAL (Lambda, slim images) | [skill:duckdb-spatial] | Bundles GEOS/GDAL/PROJ; SQL on Parquet |
+| Single-node, want SQL idiom on Parquet | [skill:duckdb-spatial] | Faster than GeoPandas for batch SQL |
 | SQLite / embedded | SpatiaLite | Zero-config, local lookups |
 | Browser / web app | Turf.js or H3 | Client-side operations |
 | Nothing -- minimal deps | Haversine + bounding box | Surprisingly effective |

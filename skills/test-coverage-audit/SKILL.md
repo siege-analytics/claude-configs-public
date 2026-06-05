@@ -7,7 +7,7 @@ user-invocable: false
 
 # Test Coverage Audit
 
-Audit error-path test coverage for a Python module. This skill cross-references exception-handling sites in production code against tests that exercise those paths. It enforces `[`writing-tests`](../_writing-tests-rules.md)` writing-tests:5: every `except` block in production code must be exercised by a test that forces it to fire.
+Audit error-path test coverage for a Python module. This skill cross-references exception-handling sites in production code against tests that exercise those paths. It enforces `[rule:writing-tests]` writing-tests:5: every `except` block in production code must be exercised by a test that forces it to fire.
 
 ## When this skill applies
 
@@ -157,6 +157,6 @@ Both carve-outs require a one-line comment in the source code naming why no test
 
 ## Cross-references
 
-- `[`writing-tests`](../_writing-tests-rules.md)` writing-tests:5 -- the rule this skill enforces
+- `[rule:writing-tests]` writing-tests:5 -- the rule this skill enforces
 - ``hostile-review` (planned)` -- uses this audit as input for Priority 4 (SU-4b) findings
-- `[`code-review`](../code-review/SKILL.md)` -- review checklist item for `except` block coverage
+- `[skill:code-review]` -- review checklist item for `except` block coverage

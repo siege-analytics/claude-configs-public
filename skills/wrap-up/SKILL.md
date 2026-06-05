@@ -12,7 +12,7 @@ When wrapping up a session, complete these steps in order:
 
 ### 0. Definition of Done verification
 
-Before any commit/cleanup, verify all five criteria from [`definition-of-done`](../_definition-of-done-rules.md) for the session's work:
+Before any commit/cleanup, verify all five criteria from [rule:definition-of-done] for the session's work:
 
 - [ ] **(a) Code-reviewed** -- every behavior change reviewed (CodeRabbit on PR; self-review of diffs; human review where required)
 - [ ] **(b) Edge cases explored** -- checklist applied to every behavior change
@@ -49,7 +49,7 @@ Read the `**Last audit:**` line in `<repo>/LESSONS.md`. If the date is more than
 
 > Heads up: rules-audit hasn't run in N days. Consider `/rules-audit` before the next session.
 
-This is **not a blocker** -- the user decides whether to run [`rules-audit`](../rules-audit/SKILL.md). The nudge just ensures the question gets asked.
+This is **not a blocker** -- the user decides whether to run [skill:rules-audit]. The nudge just ensures the question gets asked.
 
 ### 4. Sweep for lessons-learned entries
 
@@ -60,7 +60,7 @@ Before updating CLAUDE.md, sweep the session for findings worth logging in the p
 - Did any human reviewer comment flag "we keep getting this"?
 - Did any production incident or near-miss happen during the session?
 
-For each pattern that qualifies, invoke [`lessons-learned`](../lessons-learned/SKILL.md) to append or bump the entry. Threshold guidance:
+For each pattern that qualifies, invoke [skill:lessons-learned] to append or bump the entry. Threshold guidance:
 
 - Critical (security, data loss): log at recurrence 1
 - Production incident: log at recurrence 1
@@ -118,7 +118,7 @@ If this session changed architecture, data models, pipeline structure, or system
 - [ ] README.md updated with current state
 - [ ] ROADMAP.md updated with next steps
 - [ ] Checked rules-audit cadence -- nudged user if last audit >60 days ago
-- [ ] LESSONS.md ledger updated for any recurring patterns surfaced this session (via [`lessons-learned`](../lessons-learned/SKILL.md))
+- [ ] LESSONS.md ledger updated for any recurring patterns surfaced this session (via [skill:lessons-learned])
 - [ ] CLAUDE.md updated with session-scoped notes (durable patterns went to LESSONS.md, not here)
 - [ ] Notion updated if architecture, models, or capabilities changed
 - [ ] Architecture Update page created if significant changes were made

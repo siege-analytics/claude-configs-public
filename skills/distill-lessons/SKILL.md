@@ -8,16 +8,16 @@ allowed-tools: Read Grep Glob Bash Edit Write
 
 This skill promotes a single eligible Tier-1 entry from `LESSONS.md` into a Tier-2 project rule at `<repo>/.claude/rules/<topic>.md`. It is intentionally **one rule at a time** -- distillation is a high-stakes act that benefits from focused attention, not batch processing.
 
-For the source ledger spec, see [`lessons-learned`](../lessons-learned/SKILL.md). For cross-tier hygiene and finding what to promote, see [`rules-audit`](../rules-audit/SKILL.md).
+For the source ledger spec, see [skill:lessons-learned]. For cross-tier hygiene and finding what to promote, see [skill:rules-audit].
 
 ## When to use
 
-Run after [`rules-audit`](../rules-audit/SKILL.md) surfaces a "promotion overdue" worklist, or directly when you know a specific entry is ready (e.g., a 🔴 Critical finding logged once that needs immediate codification).
+Run after [skill:rules-audit] surfaces a "promotion overdue" worklist, or directly when you know a specific entry is ready (e.g., a 🔴 Critical finding logged once that needs immediate codification).
 
 Do **not** use this skill for:
 - Promoting from Tier 2 → Tier 3 -- that's always a human PR with cited evidence
-- Capturing a new lesson -- that's [`lessons-learned`](../lessons-learned/SKILL.md)
-- Auditing the system as a whole -- that's [`rules-audit`](../rules-audit/SKILL.md)
+- Capturing a new lesson -- that's [skill:lessons-learned]
+- Auditing the system as a whole -- that's [skill:rules-audit]
 
 ## Eligibility
 
@@ -94,7 +94,7 @@ Once the user confirms wording:
 
 If the rule is code-checkable, propose the enforcement mechanism (lint rule config, pre-commit hook, CI test) as a follow-up ticket. **Do not write the enforcement here** -- that's a separate piece of work with its own review.
 
-If the rule is not code-checkable, ensure it's wired into [`code-review`](../code-review/SKILL.md) by updating the project's `.claude/rules/<topic>.md` (which `code-review` reads at the top of every review).
+If the rule is not code-checkable, ensure it's wired into [skill:code-review] by updating the project's `.claude/rules/<topic>.md` (which `code-review` reads at the top of every review).
 
 ### 8. Commit
 
@@ -115,9 +115,9 @@ A `.claude/rules/<topic>.md` file:
 ```markdown
 # <Topic> Rules
 
-Project-local Tier-2 rules for `<topic>`. Distilled from `LESSONS.md` entries by [`distill-lessons`](../distill-lessons/SKILL.md). Loaded by [`code-review`](../code-review/SKILL.md) at the start of every review.
+Project-local Tier-2 rules for `<topic>`. Distilled from `LESSONS.md` entries by [skill:distill-lessons]. Loaded by [skill:code-review] at the start of every review.
 
-For the promotion process, see [`distill-lessons`](../distill-lessons/SKILL.md). For the source ledger, see [`lessons-learned`](../lessons-learned/SKILL.md).
+For the promotion process, see [skill:distill-lessons]. For the source ledger, see [skill:lessons-learned].
 
 ---
 
@@ -140,4 +140,4 @@ For the promotion process, see [`distill-lessons`](../distill-lessons/SKILL.md).
 
 ## Attribution
 
-Defers to [`output`](../_output-rules.md). No AI / agent attribution in commits, ledger updates, or rule entries.
+Defers to [rule:output]. No AI / agent attribution in commits, ledger updates, or rule entries.

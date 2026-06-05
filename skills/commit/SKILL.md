@@ -6,7 +6,7 @@ allowed-tools: Read Grep Glob Bash
 
 # Instructions
 
-0. **Verify-before-execute** -- emit the verification block from [`verify-before-execute`](../_verify-before-execute-rules.md) for the commit you are about to make. The Standards line must include `[`commit`](../commit/SKILL.md)` and the relevant project/language rules; the Intent line must summarize what the commit accomplishes; the Evidence line (if this is a fix) must reference same-turn tool calls demonstrating the bug. Skipping requires `[verify-skip: <reason>]` -- and `[verify-skip]` does NOT exempt the commit from any later step in this skill.
+0. **Verify-before-execute** -- emit the verification block from [rule:verify-before-execute] for the commit you are about to make. The Standards line must include `[skill:commit]` and the relevant project/language rules; the Intent line must summarize what the commit accomplishes; the Evidence line (if this is a fix) must reference same-turn tool calls demonstrating the bug. Skipping requires `[verify-skip: <reason>]` -- and `[verify-skip]` does NOT exempt the commit from any later step in this skill.
 
 0.5. **Branch guard -- verify you are NOT on a protected branch**
    1. Run `git branch --show-current` to get the current branch name
@@ -25,8 +25,8 @@ allowed-tools: Read Grep Glob Bash
    3. Stage specific files by name -- avoid `git add -A` or `git add .` which can accidentally include secrets, build artifacts, or large binaries
    4. Never commit `.env`, credentials, tokens, or other sensitive files
 3. **Run the AI-fingerprint scanner first, then code review** (see Pre-review gate below)
-   1. Invoke [`detect-ai-fingerprints`](../detect-ai-fingerprints/SKILL.md) against the staged diff. Non-zero exit blocks the commit; resolve every reported violation before proceeding (no override).
-   2. Invoke [`code-review`](../code-review/SKILL.md) against `git diff --cached` for the structural rules and the six-layer methodology.
+   1. Invoke [skill:detect-ai-fingerprints] against the staged diff. Non-zero exit blocks the commit; resolve every reported violation before proceeding (no override).
+   2. Invoke [skill:code-review] against `git diff --cached` for the structural rules and the six-layer methodology.
    3. Resolve every Blocker; resolve Majors or document why they're being deferred.
    4. If the user overrides in writing, mark the commit with `[review-skip]`. Note: `[review-skip]` does not exempt the fingerprint scan; that scan has no override.
 4. **Run affected tests** (see Affected-tests gate below)
@@ -34,7 +34,7 @@ allowed-tools: Read Grep Glob Bash
    2. Per-repo override: if `.claude/affected-tests.toml` exists, use its source-glob to test-glob mapping instead of the default heuristic.
    3. 60-second timeout per affected-test run. Tests slower than that get marked `slow` and run at PR-open time only.
    4. Non-zero exit blocks the commit. No silent skip: if the heuristic finds no test files for a touched source file, that itself is reported and the agent decides whether to write a test or proceed with `[run-skip: <reason>]`.
-   5. Override syntax: `[run-skip: <reason>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per `[`writing-code`](../_writing-code-rules.md)` writing-code:5 escape hatch. Track override frequency; using it more than once per session is a smell.
+   5. Override syntax: `[run-skip: <reason>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per `[rule:writing-code]` writing-code:5 escape hatch. Track override frequency; using it more than once per session is a smell.
 5. **Check for a ticket reference** (see Ticket enforcement below)
    1. If no ticket exists for this work, stop and create one first
    2. If the user explicitly overrides, mark the commit with `[no-ticket]`
@@ -56,11 +56,11 @@ A commit is a unit of meaning, not a unit of time. Each commit should represent 
 
 # Pre-review gate
 
-**Every commit gets a code-review pass before it lands.** This is the operationalization of criterion (a) of [`definition-of-done`](../_definition-of-done-rules.md) at the pre-commit transition -- not just at PR-open.
+**Every commit gets a code-review pass before it lands.** This is the operationalization of criterion (a) of [rule:definition-of-done] at the pre-commit transition -- not just at PR-open.
 
 ## What runs
 
-After staging and before writing the message, invoke [`code-review`](../code-review/SKILL.md) with the staged diff as input:
+After staging and before writing the message, invoke [skill:code-review] with the staged diff as input:
 
 ```bash
 git diff --cached
@@ -99,11 +99,11 @@ Catching findings at commit time is cheaper than catching them at PR time:
 - No collaborators are blocked -- no one is waiting on the PR.
 - Findings turn into the next commit instead of a force-push.
 
-The pre-PR review (in [`create-pr`](../create-pr/SKILL.md)) still runs -- it's a second pass over the cumulative diff and catches things that only emerge across multiple commits (architectural drift, accidental scope creep). The two reviews are complementary, not redundant.
+The pre-PR review (in [skill:create-pr]) still runs -- it's a second pass over the cumulative diff and catches things that only emerge across multiple commits (architectural drift, accidental scope creep). The two reviews are complementary, not redundant.
 
 # Affected-tests gate
 
-Mechanical enforcement of `[`writing-code`](../_writing-code-rules.md)` writing-code:5 (no hypothetical code). Before the commit lands, the tests that cover the touched code must be run and must pass.
+Mechanical enforcement of `[rule:writing-code]` writing-code:5 (no hypothetical code). Before the commit lands, the tests that cover the touched code must be run and must pass.
 
 ## What runs
 
@@ -133,7 +133,7 @@ The `{stem}` template variable substitutes the basename without extension. Use t
 
 If a touched source file has no candidate tests under the heuristic (or the configured mapping), the agent must decide:
 
-- Write a test in the same commit (preferred; `[`writing-tests`](../_writing-tests-rules.md)` writing-tests:1 requires it for behaviour changes anyway).
+- Write a test in the same commit (preferred; `[rule:writing-tests]` writing-tests:1 requires it for behaviour changes anyway).
 - Override with `[run-skip: <reason>]` in the commit body. Legitimate cases: pure refactor with no behaviour change, deletion of dead code, docstring-only edits to a public symbol that should also be running R-17.
 
 A missing test file is not a silent pass. The agent must surface it and the operator sees the `[run-skip]` if one is used.
@@ -148,7 +148,7 @@ Using `[run-skip]` more than once per session is a smell. The threshold is wrong
 
 ## Why this exists
 
-`[`writing-code`](../_writing-code-rules.md)` writing-code:5 requires that code depending on a library, service, or external API exercises the real dependency before claiming the code works. The honor-system version of that rule is "I checked." The mechanical version is "the tests ran and passed in the same commit-attempt." This gate is the mechanical version.
+`[rule:writing-code]` writing-code:5 requires that code depending on a library, service, or external API exercises the real dependency before claiming the code works. The honor-system version of that rule is "I checked." The mechanical version is "the tests ran and passed in the same commit-attempt." This gate is the mechanical version.
 
 # Ticket enforcement
 
@@ -266,8 +266,8 @@ Write a few sentences of plain prose covering whichever of these the change actu
 ### What to omit
 
 - Bullets and section headers. Bullets in commit bodies are a tell; the commit body is prose.
-- Self-justifying adverbs (the seven words named in `[`writing-prose`](../_writing-prose-rules.md)` writing-prose:3); see that rule for the list.
-- Em-dashes (`--`). Use `--`, a comma, or a period. Per `[`writing-prose`](../_writing-prose-rules.md)` writing-prose:1.
+- Self-justifying adverbs (the seven words named in `[rule:writing-prose]` writing-prose:3); see that rule for the list.
+- Em-dashes (`--`). Use `--`, a comma, or a period. Per `[rule:writing-prose]` writing-prose:1.
 - Play-by-play of the diff ("Changed line 48 from int to str").
 - Filler ("This commit updates the code to...").
 - Attribution to tools or assistants (see Attribution policy below).
@@ -398,13 +398,13 @@ If it was already committed, remove it from history and rotate the credential im
 
 # Checklist
 
-- [ ] **[`verify-before-execute`](../_verify-before-execute-rules.md) block emitted** -- Standards, Intent, and (for fixes) same-turn Evidence
+- [ ] **[rule:verify-before-execute] block emitted** -- Standards, Intent, and (for fixes) same-turn Evidence
 - [ ] **Not on a protected branch** (main, develop, etc.) -- or user explicitly overrode with `[direct-commit]`
 - [ ] Changes are grouped into logical, single-purpose commits
 - [ ] Files are staged by name, not with `git add -A`
 - [ ] No sensitive files (secrets, credentials, keys) are staged
-- [ ] **[`detect-ai-fingerprints`](../detect-ai-fingerprints/SKILL.md) ran clean** on the staged diff and the proposed commit message (no override)
-- [ ] **[`code-review`](../code-review/SKILL.md) ran on the staged diff** -- Blockers resolved, Majors addressed or deferred-with-ticket, or `[review-skip]` documented in commit body
+- [ ] **[skill:detect-ai-fingerprints] ran clean** on the staged diff and the proposed commit message (no override)
+- [ ] **[skill:code-review] ran on the staged diff** -- Blockers resolved, Majors addressed or deferred-with-ticket, or `[review-skip]` documented in commit body
 - [ ] **Affected tests ran and passed** -- per the heuristic or `.claude/affected-tests.toml`, or `[run-skip: <reason>]` documented in commit body
 - [ ] Subject line: type prefix, imperative mood, under 72 chars, specific
 - [ ] Body explains the why (if the change is non-trivial)

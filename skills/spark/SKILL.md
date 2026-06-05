@@ -9,12 +9,12 @@ routed-by: coding-standards
 ## Companion shelves
 
 Spark on Databricks is JVM underneath -- the cost model and failure modes are JVM. Load these for code-level idioms:
-- [`effective-java`](../shelves/languages/effective-java/SKILL.md) -- equals/hashCode for Dataset[T], immutability, exception handling in UDFs.
-- [`effective-kotlin`](../shelves/languages/effective-kotlin/SKILL.md) -- null-safety idioms (≈ Scala Option/Either).
-- [`data-intensive`](../shelves/systems-architecture/data-intensive/SKILL.md) -- partitioning, shuffle, replication theory.
+- [skill:shelves--effective-java] -- equals/hashCode for Dataset[T], immutability, exception handling in UDFs.
+- [skill:shelves--effective-kotlin] -- null-safety idioms (≈ Scala Option/Either).
+- [skill:shelves--data-intensive] -- partitioning, shuffle, replication theory.
 
-Always-on: [`jvm`](../_jvm-rules.md) is loaded when Spark/JVM code is touched.
-For Scala notebooks specifically, see also [`scala-on-spark`](../scala-on-spark/SKILL.md).
+Always-on: [rule:jvm] is loaded when Spark/JVM code is touched.
+For Scala notebooks specifically, see also [skill:scala-on-spark].
 
 Apply these patterns when writing PySpark jobs, Delta Lake pipelines, or Spark-based ETL. See [reference.md](reference.md) for full code templates, Delta operations, and performance tuning.
 

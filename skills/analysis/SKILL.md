@@ -11,7 +11,7 @@ Select the appropriate analysis methodology based on the problem type.
 
 ## First question: is your tabular representation trustworthy?
 
-Before routing to any methodology, apply [`data-trust`](../_data-trust-rules.md). In Siege civic / Census / FEC / redistricting work, the tabular representation is usually wrong, stale, or missing rows. Spatial methods exist *precisely because* the identifiers are dirty -- if your join key isn't trustworthy, you don't get to skip geometry by reaching for a crosswalk. You skip the crosswalk *because* you have geometry.
+Before routing to any methodology, apply [rule:data-trust]. In Siege civic / Census / FEC / redistricting work, the tabular representation is usually wrong, stale, or missing rows. Spatial methods exist *precisely because* the identifiers are dirty -- if your join key isn't trustworthy, you don't get to skip geometry by reaching for a crosswalk. You skip the crosswalk *because* you have geometry.
 
 The same premise applies to entity resolution (the names don't match, that's why you need fuzzy matching) and to graph analysis (the explicit FK relationships are missing or wrong, that's why you need to reconstruct edges). Each sub-skill assumes you've already failed the trust check on the easy path.
 
@@ -19,7 +19,7 @@ The same premise applies to entity resolution (the names don't match, that's why
 
 | Signal | Sub-Skill | Path |
 |--------|-----------|------|
-| Geographic data, coordinates, polygons, boundaries, PostGIS, spatial joins | Spatial analysis | [`spatial`](../spatial/SKILL.md) |
+| Geographic data, coordinates, polygons, boundaries, PostGIS, spatial joins | Spatial analysis | [skill:spatial] |
 | Statistical modeling, regression, hypothesis testing, distributions, sampling | Statistical methods | `statistical` (planned) |
 | Network/graph data, entity relationships, community detection, path finding | Graph analysis | `graph` (planned) |
 | Record linkage, deduplication, fuzzy matching, identity resolution | Entity resolution | `entity-resolution` (planned) |

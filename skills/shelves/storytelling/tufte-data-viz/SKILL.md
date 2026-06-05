@@ -243,16 +243,16 @@ Before presenting any chart, verify:
 
 ## When this skill does NOT apply
 
-- **Slide / presentation design (non-chart elements).** This skill covers chart generation. For slide composition, narrative arc, audience-facing storytelling decisions, see [`storytelling-with-data`](../../../shelves/storytelling/storytelling-with-data/SKILL.md) (Knaflic).
+- **Slide / presentation design (non-chart elements).** This skill covers chart generation. For slide composition, narrative arc, audience-facing storytelling decisions, see [skill:shelves--storytelling-with-data] (Knaflic).
 - **Map cartography.** Tufte's chart principles are not a substitute for cartographic conventions. For map design, see the `geospatial` shelf.
 - **UI / dashboard layout (the wrapping interface, not the charts inside).** For dashboard frame, navigation, and IA decisions, see the `design` shelf (`refactoring-ui`, `ux-heuristics`).
 - **Exploratory analysis.** Tufte's rules are calibrated for the explanatory artifact (the chart you ship). During exploration, default chartjunk that helps the analyst see patterns fast is fine -- apply Tufte at the explanatory boundary, not before.
 
 ## Composes with
 
-- [`storytelling-with-data`](../../../shelves/storytelling/storytelling-with-data/SKILL.md) (Knaflic). Read both for a data-presentation task: Knaflic asks "who is the audience, what's the action, what's the Big Idea, what story does the data tell?" Tufte asks "given the chart is needed, what is the highest-data-ink, lowest-chartjunk implementation?" The pair compose without overlap -- Knaflic handles the upstream framing decisions; Tufte handles the chart-pixel decisions.
-- `[`writing-claims`](../../../_writing-claims-rules.md)` writing-claims:5. Validation checklist item "Numbers are formatted for readability" + "Title states the finding, not the axis description" both cross-reference the workspace's claim-discipline (countable claims need same-turn evidence; a chart title that asserts a finding is a countable claim).
-- `[`authoring-against-state`](../../../_authoring-against-state-rules.md)` rule 1 (data-shape contact). Before writing chart code that consumes data, measure the data's shape. Tufte's "Don't chart what a sentence can say" (rule 22) presupposes the author has measured the data -- without rule 1's measurement, the rule-22 judgment ("is this data chart-worthy?") is uncalibrated.
+- [skill:shelves--storytelling-with-data] (Knaflic). Read both for a data-presentation task: Knaflic asks "who is the audience, what's the action, what's the Big Idea, what story does the data tell?" Tufte asks "given the chart is needed, what is the highest-data-ink, lowest-chartjunk implementation?" The pair compose without overlap -- Knaflic handles the upstream framing decisions; Tufte handles the chart-pixel decisions.
+- `[rule:writing-claims]` writing-claims:5. Validation checklist item "Numbers are formatted for readability" + "Title states the finding, not the axis description" both cross-reference the workspace's claim-discipline (countable claims need same-turn evidence; a chart title that asserts a finding is a countable claim).
+- `[rule:authoring-against-state]` rule 1 (data-shape contact). Before writing chart code that consumes data, measure the data's shape. Tufte's "Don't chart what a sentence can say" (rule 22) presupposes the author has measured the data -- without rule 1's measurement, the rule-22 judgment ("is this data chart-worthy?") is uncalibrated.
 
 ## Source + license
 

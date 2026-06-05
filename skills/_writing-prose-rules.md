@@ -6,7 +6,7 @@ description: Always-on. Stylistic discipline for natural-language output -- chat
 
 These five rules apply whenever the agent generates natural-language prose: chat to the operator, commit-message bodies, PR descriptions, agent-to-agent messages, code comments that are predominantly explanatory rather than load-bearing. Rules 1-4 are the stylistic fingerprints whose cumulative effect is "this reads like AI output"; rule 5 is the integrity check for future-tense commitments.
 
-For code-comment-specific rules (no PR/sprint/issue references in code comments) see `[`writing-code`](_writing-code-rules.md)` writing-code:2. For docstring discipline (default to no docstring or one-liner; multi-paragraph reserved for public API) see `[`writing-code`](_writing-code-rules.md)` writing-code:1. Both are code-authoring acts and live with the code-writing rules.
+For code-comment-specific rules (no PR/sprint/issue references in code comments) see `[rule:writing-code]` writing-code:2. For docstring discipline (default to no docstring or one-liner; multi-paragraph reserved for public API) see `[rule:writing-code]` writing-code:1. Both are code-authoring acts and live with the code-writing rules.
 
 ## The five prose rules
 
@@ -30,7 +30,7 @@ This rule extends what was previously a dashes-only rule. Consumers grepping LES
 
 **writing-prose:3. Strip self-justifying adverbs.** Do not write "deliberately," "intentionally," "explicitly," "fundamentally," "essentially," "crucially," or "notably." If a reader could disagree with the design, the diff and the test cover it; the comment does not need to argue.
 
-**writing-prose:4. Commit messages: subject line + plain-prose body, as long as the explanation genuinely needs and no longer.** No bulleted "what this PR does" lists. No structural headers (`## Summary`, `## Why`, `## Test plan`) in the commit body. No self-justifying adverbs (writing-prose:3 applies). No narrating the diff ("This commit changes line 48 to use StringType"). Length is determined by what the why genuinely requires: a typo fix is one line, a non-obvious rewrite may be three paragraphs. Padding to look thorough is a tell; truncating to look terse is a different tell. PR bodies may have a short summary and a test plan; the commit body is prose only. See `[`commit`](commit/SKILL.md)` Body section for the commit-message-specific format.
+**writing-prose:4. Commit messages: subject line + plain-prose body, as long as the explanation genuinely needs and no longer.** No bulleted "what this PR does" lists. No structural headers (`## Summary`, `## Why`, `## Test plan`) in the commit body. No self-justifying adverbs (writing-prose:3 applies). No narrating the diff ("This commit changes line 48 to use StringType"). Length is determined by what the why genuinely requires: a typo fix is one line, a non-obvious rewrite may be three paragraphs. Padding to look thorough is a tell; truncating to look terse is a different tell. PR bodies may have a short summary and a test plan; the commit body is prose only. See `[skill:commit]` Body section for the commit-message-specific format.
 
 **writing-prose:5. Prose commitments to future action require a same-turn mechanism call, or an explicit disclaimer of prose-only intent.** A statement that the agent will do something at a later turn -- "I'll monitor X," "I'll check back in N minutes," "wakeup scheduled at T," "I'll watch for Y," "I'll keep an eye on Z," "I'll loop back when W happens" -- creates an implicit promise the agent has no way to keep without an operationalizing tool call in the same response. The qualifying mechanisms are:
 
@@ -65,9 +65,9 @@ These rules are mandatory. There is no `[prose-skip]` override. The rule-2 carve
 
 ## Cross-references
 
-- `[`writing-code`](_writing-code-rules.md)` writing-code:1 (docstring discipline) and writing-code:2 (no history references in code comments) are the code-act sibling rules; they apply when the prose lives in a code file.
-- `[`commit`](commit/SKILL.md)` implements writing-prose:4 directly and enforces the artifact-specific format (subject line conventions, ticket-reference footer).
-- `[`detect-ai-fingerprints`](detect-ai-fingerprints/SKILL.md)` mechanically scans writing-prose:1, :2, :3, :4 on staged diffs and commit message bodies. writing-prose:5 is outside that scanner's scope because it targets the live assistant response, not staged-diff text; Phase 2 of #266 proposes a separate Stop-hook scanner for that surface.
+- `[rule:writing-code]` writing-code:1 (docstring discipline) and writing-code:2 (no history references in code comments) are the code-act sibling rules; they apply when the prose lives in a code file.
+- `[skill:commit]` implements writing-prose:4 directly and enforces the artifact-specific format (subject line conventions, ticket-reference footer).
+- `[skill:detect-ai-fingerprints]` mechanically scans writing-prose:1, :2, :3, :4 on staged diffs and commit message bodies. writing-prose:5 is outside that scanner's scope because it targets the live assistant response, not staged-diff text; Phase 2 of #266 proposes a separate Stop-hook scanner for that surface.
 
 ## Migration note (v2.0.x only)
 
@@ -75,4 +75,4 @@ This file is derived from rules 1, 2, 4, 5 of the deprecated `_no-ai-fingerprint
 
 ## Attribution
 
-Defers to `[`output`](_output-rules.md)`. No AI / agent attribution in prose, code, commits, PRs, or comments.
+Defers to `[rule:output]`. No AI / agent attribution in prose, code, commits, PRs, or comments.

@@ -6,7 +6,7 @@ description: Always-on. Investigation-as-deliverable discipline for code, config
 
 These rules apply whenever the agent writes code, configuration, or commands whose runtime behavior depends on the state of an external resource the author has not just inventoried in the same response.
 
-The existing shelves treat the diff as the unit of work. `[`writing-code`](_writing-code-rules.md)` verifies symbols and shapes within the code; `[`writing-claims`](_writing-claims-rules.md)` verifies facts the diff asserts; `[`verify-before-execute`](_verify-before-execute-rules.md)` requires same-turn evidence for any side-effecting action. None compel the author to measure the **external** state -- the state of the cluster, the data, the runtime topology, the version actually resolved at runtime -- that the code will encounter.
+The existing shelves treat the diff as the unit of work. `[rule:writing-code]` verifies symbols and shapes within the code; `[rule:writing-claims]` verifies facts the diff asserts; `[rule:verify-before-execute]` requires same-turn evidence for any side-effecting action. None compel the author to measure the **external** state -- the state of the cluster, the data, the runtime topology, the version actually resolved at runtime -- that the code will encounter.
 
 Tonight's failure mode (recurring across electinfo/enterprise#2076-#2093 between 2026-05-22 and 2026-05-23): correctly-written code, shipped under correctness-shaped review, that assumed a runtime reality which had drifted from the author's mental model. The diff was right relative to imagined state. It was wrong relative to measured state. Six distinct production failures in one backfill cycle, each preventable by a one-line measurement command run before the code was written.
 
@@ -41,7 +41,7 @@ The measurement output goes in the authoring artifact -- commit body trailer (`I
 
 **Trigger:** any change to pipeline transformation code (DLT MV bodies, Spark SQL, ETL job logic, materialization functions) where the upstream data could have changed shape since the last time the agent worked in this area. New session counts as new -- prior-session memory of data shape is stale by default.
 
-**Composes with `[`writing-claims`](_writing-claims-rules.md)` writing-claims:1.** writing-claims:1 says "grep before declaring complete." authoring-against-state:1 says "measure before declaring the consumer code will fit." The two together close the "wrote code that's right against imagined data, wrong against measured data" failure mode.
+**Composes with `[rule:writing-claims]` writing-claims:1.** writing-claims:1 says "grep before declaring complete." authoring-against-state:1 says "measure before declaring the consumer code will fit." The two together close the "wrote code that's right against imagined data, wrong against measured data" failure mode.
 
 **authoring-against-state:2. Config-state contact -- read the actual cluster config before writing code that runs under it.**
 
@@ -95,7 +95,7 @@ kubectl get pod -n <ns> <pod> -o jsonpath='{.spec.nodeSelector}'
 
 **Carve-out:** trivial commands (status reads, log fetches, single-line kubectl get) do not require a topology measurement -- the cost-to-recover from a failed read is low. The rule fires when the cost-to-recover is high (a multi-minute job kicked and lost mid-run).
 
-**Composes with `[`writing-code`](_writing-code-rules.md)` writing-code:15 (every blocking I/O call declares a timeout).** writing-code:15 protects against unbounded hangs in the code; authoring-against-state:3 protects against kicking into a degraded runtime in the first place. The hang protection is the floor; the topology check is the ceiling.
+**Composes with `[rule:writing-code]` writing-code:15 (every blocking I/O call declares a timeout).** writing-code:15 protects against unbounded hangs in the code; authoring-against-state:3 protects against kicking into a degraded runtime in the first place. The hang protection is the floor; the topology check is the ceiling.
 
 **authoring-against-state:4. Plan-shape contact -- measure the structural complexity of the plan you are about to author against the serializer's tolerance.**
 
@@ -120,7 +120,7 @@ If the planned union depth exceeds ~25 in a linear chain, the author has two cho
 
 **Trigger:** code that chains unions, joins, or other multi-input plan nodes over a set whose size is parameterized by another part of the system (e.g. "one upstream per subschedule" where subschedule count can grow).
 
-**Composes with `[`writing-code`](_writing-code-rules.md)` writing-code:3 (no speculative abstractions).** writing-code:3 says "don't build a balanced-tree helper when a linear loop would do." authoring-against-state:4 says "and inversely, don't write a linear loop when the input count would exceed serializer tolerance." Both are forms of fitting the code to the actual scale.
+**Composes with `[rule:writing-code]` writing-code:3 (no speculative abstractions).** writing-code:3 says "don't build a balanced-tree helper when a linear loop would do." authoring-against-state:4 says "and inversely, don't write a linear loop when the input count would exceed serializer tolerance." Both are forms of fitting the code to the actual scale.
 
 **authoring-against-state:5. Version-resolution contact -- measure which version actually resolves at runtime before authoring symbols whose import paths are shadowable.**
 
@@ -284,13 +284,13 @@ The shape is identical to the Spark/PSQL example -- inputs, enumerated questions
 
 **Trigger:** any change that triggers ANY of rules 1-5 (the contact-point rules). Rule 6 is the meta-rule that wraps them: the 5 rules dictate WHAT to measure; rule 6 dictates WHERE the measurement record lives and WHICH inputs frame the measurement.
 
-**Composes with `[`writing-claims`](_writing-claims-rules.md)` writing-claims:1 + writing-claims:2.** writing-claims:1 says "grep before declaring fix complete." Rule 6 says "and write the grep output into the ticket so it survives the session." writing-claims:2 says "countable claims need same-turn evidence." Rule 6 says "and the evidence belongs in the ticket, not in a chat-window message that will be compacted away."
+**Composes with `[rule:writing-claims]` writing-claims:1 + writing-claims:2.** writing-claims:1 says "grep before declaring fix complete." Rule 6 says "and write the grep output into the ticket so it survives the session." writing-claims:2 says "countable claims need same-turn evidence." Rule 6 says "and the evidence belongs in the ticket, not in a chat-window message that will be compacted away."
 
-**Composes with `[`definition-of-done`](_definition-of-done-rules.md)`.** Definition-of-done already requires the ticket exists and gets updated. Rule 6 specifies what the *initial* update looks like (the inventory section) -- before any authoring -- and treats it as a precondition to authoring rather than a closeout step.
+**Composes with `[rule:definition-of-done]`.** Definition-of-done already requires the ticket exists and gets updated. Rule 6 specifies what the *initial* update looks like (the inventory section) -- before any authoring -- and treats it as a precondition to authoring rather than a closeout step.
 
-**Composes with `[`writing-rules`](_writing-rules-rules.md)` writing-rules:3.** Memory entries are correction layers, not enforcement substitutes. Rule 6 acknowledges that: the inventory cannot live in agent memory across sessions, because that's invisible to the next actor. The ticket is the durable record.
+**Composes with `[rule:writing-rules]` writing-rules:3.** Memory entries are correction layers, not enforcement substitutes. Rule 6 acknowledges that: the inventory cannot live in agent memory across sessions, because that's invisible to the next actor. The ticket is the durable record.
 
-**Composes with `[`verify-before-execute`](_verify-before-execute-rules.md)`.** verify-before-execute's Evidence clause requires same-turn evidence for any side-effecting action. Rule 6 refines that clause: it specifies WHERE the evidence lives (the ticket body, not the chat-window scratchpad) and WHEN it gets recorded (before the side-effecting authoring act begins, not after). Rule 6 is the verify-before-execute Evidence clause operationalized for state-touching authoring.
+**Composes with `[rule:verify-before-execute]`.** verify-before-execute's Evidence clause requires same-turn evidence for any side-effecting action. Rule 6 refines that clause: it specifies WHERE the evidence lives (the ticket body, not the chat-window scratchpad) and WHEN it gets recorded (before the side-effecting authoring act begins, not after). Rule 6 is the verify-before-execute Evidence clause operationalized for state-touching authoring.
 
 **Empirical evidence:** electinfo/enterprise#2094 silver_exp.sb Delta-format regression (2026-05-23). The work was authored without inventorying:
 
@@ -352,7 +352,7 @@ Refutation: the action waits for the inventory. If time is genuinely tight, the 
 
 Operator authorization is granted ON TOP OF the rule, not in lieu of it. A fast `yes` means the operator trusts the author's judgment on the proposal; it does not mean the operator wants the rule skipped. The cheat is laundering operator-trust into rule-skip-license -- using the operator's velocity as a substitute for the author's discipline.
 
-Refutation: the operator `yes` authorizes the *plan*. The inventory remains a precondition to executing the plan. If the operator wants the rule waived for a specific action, that requires explicit `[`authoring-against-state`](_authoring-against-state-rules.md):6 waived for <reason>` in the ticket -- not implied by an unmarked `yes`. Operator latitude does not include skip-the-rule unless the operator says skip-the-rule.
+Refutation: the operator `yes` authorizes the *plan*. The inventory remains a precondition to executing the plan. If the operator wants the rule waived for a specific action, that requires explicit `[rule:authoring-against-state]:6 waived for <reason>` in the ticket -- not implied by an unmarked `yes`. Operator latitude does not include skip-the-rule unless the operator says skip-the-rule.
 
 **5. "Retrigger isn't authoring."**
 
@@ -426,7 +426,7 @@ Empirical: the memory entry cross-referencing the entity_match_stats bug was cre
 
 ## Trivial-change declaration
 
-A change that does not introduce a new authoring-against-state contact-point trigger may be declared trivial in the commit body, but the declaration is itself a `[`writing-rules`](_writing-rules-rules.md)` writing-rules:4 claim ("this doesn't apply") and requires the same evidence chain as a "this happened" claim.
+A change that does not introduce a new authoring-against-state contact-point trigger may be declared trivial in the commit body, but the declaration is itself a `[rule:writing-rules]` writing-rules:4 claim ("this doesn't apply") and requires the same evidence chain as a "this happened" claim.
 
 Format:
 
@@ -437,7 +437,7 @@ Evidence: <grep output, file paths, command output, or other same-turn evidence 
 Falsification: <the observation that would prove the Reason wrong, e.g. "if `grep -rn 'spark.read' <files>` returns a match, this declaration is incorrect">
 ```
 
-Acceptable Reason categories (controlled list per `[`writing-rules`](_writing-rules-rules.md)` writing-rules:5):
+Acceptable Reason categories (controlled list per `[rule:writing-rules]` writing-rules:5):
 
 - `docs-only` -- pure documentation change, no code touched. Falsification: `git diff --name-only HEAD~1 | grep -v -E '\.(md|rst|txt)$'` returns nothing.
 - `comment-only` -- comment-only change to existing code. Falsification: `git diff HEAD~1` shows only added/removed lines beginning with `#` (Python), `//` (JS), or equivalent comment markers; no executable code lines changed.
@@ -483,7 +483,7 @@ Same shape as the rule cohort across `_writing-prose-rules.md`, `_writing-code-r
 
 ## Cross-references
 
-- `[`writing-code`](_writing-code-rules.md)` is the verify-before-touching-code sibling. Rules in that file fire when editing code; rules in this file fire when the code being edited has a contact-point dependency on external state.
-- `[`writing-claims`](_writing-claims-rules.md)` is the verify-before-claiming sibling. Rules in that file fire when stating facts in commit/PR bodies or chat; rules in this file fire one step earlier, when the code being authored makes implicit factual claims about the state of the runtime.
-- `[`verify-before-execute`](_verify-before-execute-rules.md)` is the parent meta-rule. Its Evidence clause already requires same-turn evidence for any side-effecting action; this file refines that clause to specify which evidence is required for each of five contact categories.
-- `[`environment-preflight`](_environment-preflight-rules.md)` is the one-time-per-repo inventory of interpreters, services, credentials. This file extends environment-preflight to PER-PR inventory of mutable state.
+- `[rule:writing-code]` is the verify-before-touching-code sibling. Rules in that file fire when editing code; rules in this file fire when the code being edited has a contact-point dependency on external state.
+- `[rule:writing-claims]` is the verify-before-claiming sibling. Rules in that file fire when stating facts in commit/PR bodies or chat; rules in this file fire one step earlier, when the code being authored makes implicit factual claims about the state of the runtime.
+- `[rule:verify-before-execute]` is the parent meta-rule. Its Evidence clause already requires same-turn evidence for any side-effecting action; this file refines that clause to specify which evidence is required for each of five contact categories.
+- `[rule:environment-preflight]` is the one-time-per-repo inventory of interpreters, services, credentials. This file extends environment-preflight to PER-PR inventory of mutable state.

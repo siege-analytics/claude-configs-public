@@ -6,7 +6,7 @@ allowed-tools: Read Grep Glob Bash Edit Write
 
 # Rules Audit
 
-This skill is the **meta-curation** layer of the rules pipeline. The per-tier skills ([`lessons-learned`](../lessons-learned/SKILL.md) for Tier 1 capture, [`distill-lessons`](../distill-lessons/SKILL.md) for Tier 1 → Tier 2 promotion) each handle a single transition. This skill owns the **health of the system as a whole**: what's overdue, what's stale, what conflicts, what's ready to promote upstream.
+This skill is the **meta-curation** layer of the rules pipeline. The per-tier skills ([skill:lessons-learned] for Tier 1 capture, [skill:distill-lessons] for Tier 1 → Tier 2 promotion) each handle a single transition. This skill owns the **health of the system as a whole**: what's overdue, what's stale, what conflicts, what's ready to promote upstream.
 
 It produces **worklists for human review** -- never auto-acts. Every output is a decision the user makes, not an action the skill takes.
 
@@ -14,7 +14,7 @@ It produces **worklists for human review** -- never auto-acts. Every output is a
 
 Two triggers:
 
-1. **On-demand** -- `/rules-audit` (or via [`wrap-up`](../wrap-up/SKILL.md)'s 60-day nudge).
+1. **On-demand** -- `/rules-audit` (or via [skill:wrap-up]'s 60-day nudge).
 2. **Project events** -- after a significant LESSONS.md import, before a quarterly retrospective, when starting work on a long-untouched repo.
 
 The audit is read-mostly and idempotent. Re-running it does no harm.
@@ -32,7 +32,7 @@ Read every entry in `LESSONS.md`. For each, check:
 | Entry has no link | **Evidence missing** | Find the link or remove the entry |
 | Phrased as advice ("be careful", "consider") | **Phrasing weak** | Rewrite as imperative rule, or drop |
 | Recurrence = 1 AND >6 months old | **Stale candidate** | Archive (move to `LESSONS-archive.md`) or justify keeping |
-| Eligible for promotion (per [`distill-lessons`](../distill-lessons/SKILL.md) thresholds) but not yet promoted | **Promotion overdue** | Run [`distill-lessons`](../distill-lessons/SKILL.md) for this entry |
+| Eligible for promotion (per [skill:distill-lessons] thresholds) but not yet promoted | **Promotion overdue** | Run [skill:distill-lessons] for this entry |
 | Marked `**Conflicts-with:**` and not resolved | **Unresolved conflict** | Resolve before any further updates to either entry |
 
 ### Phase 2 -- Tier 2 hygiene (`<repo>/.claude/rules/*.md`)
@@ -63,8 +63,8 @@ For Phase 3 to work, the audit needs a list of "known repos" to scan. Default be
 | Check | Worklist label | Action |
 |---|---|---|
 | Topic with ≥5 Tier-1 entries but no Tier-2 rule file yet | **Missing topic file** | Create `.claude/rules/<topic>.md` and start promoting the eligible entries |
-| Tier-2 rule not loaded by [`code-review`](../code-review/SKILL.md) (no path-form reference under `.claude/rules/`) | **Wiring gap** | Verify [`code-review`](../code-review/SKILL.md)'s glob covers the file location |
-| LESSONS.md hasn't been touched in 90+ days but the repo has had commits in that window | **Capture gap** | Likely indicates [`lessons-learned`](../lessons-learned/SKILL.md) isn't being invoked -- flag for retrospective |
+| Tier-2 rule not loaded by [skill:code-review] (no path-form reference under `.claude/rules/`) | **Wiring gap** | Verify [skill:code-review]'s glob covers the file location |
+| LESSONS.md hasn't been touched in 90+ days but the repo has had commits in that window | **Capture gap** | Likely indicates [skill:lessons-learned] isn't being invoked -- flag for retrospective |
 
 ## Output format
 
@@ -114,7 +114,7 @@ After writing the report, **update the audit timestamp** in `LESSONS.md`'s heade
 
 ## Cadence and the wrap-up nudge
 
-[`wrap-up`](../wrap-up/SKILL.md) reads the `**Last audit:**` line in `LESSONS.md`. If the date is more than 60 days ago, it prints a single-line nudge:
+[skill:wrap-up] reads the `**Last audit:**` line in `LESSONS.md`. If the date is more than 60 days ago, it prints a single-line nudge:
 
 > Heads up: rules-audit hasn't run in N days. Consider `/rules-audit` before the next session.
 
@@ -122,8 +122,8 @@ The nudge is **not a blocker**. Hygiene-as-theater is worse than no hygiene. The
 
 ## What this skill does NOT do
 
-- **It doesn't promote entries.** That's [`distill-lessons`](../distill-lessons/SKILL.md), invoked one entry at a time.
-- **It doesn't capture new lessons.** That's [`lessons-learned`](../lessons-learned/SKILL.md).
+- **It doesn't promote entries.** That's [skill:distill-lessons], invoked one entry at a time.
+- **It doesn't capture new lessons.** That's [skill:lessons-learned].
 - **It doesn't open upstream PRs.** Phase 3 surfaces candidates; the human opens the PR with cited evidence.
 - **It doesn't enforce hardening.** Phase 2 surfaces "code-checkable rule with no enforcement"; the human writes the lint rule / pre-commit / CI test as a follow-up ticket.
 - **It doesn't auto-archive stale entries.** Phase 1 surfaces stale candidates; the human decides whether to archive.
@@ -135,8 +135,8 @@ The discipline is: surface, never auto-act. Decisions about what stays, what goe
 - **Running the audit and not acting on it.** The report is worthless if it accumulates. If the worklist is consistently ignored, raise the frequency or shrink the scope.
 - **Treating worklist items as automation candidates.** They're judgment calls, not mechanical tasks. Auto-archiving stale entries silently is exactly the failure mode that killed the previous attempt at rule curation.
 - **Skipping Phase 3 because it's manual.** Cross-repo promotion is the highest-leverage output of this whole pipeline -- that's where org-wide standards actually evolve. If you're not doing Phase 3, you're not getting the value.
-- **Editing entries during the audit.** The audit is read-only with respect to rules. Findings get written to the audit report; rule edits happen via [`lessons-learned`](../lessons-learned/SKILL.md) or [`distill-lessons`](../distill-lessons/SKILL.md) in a separate pass.
+- **Editing entries during the audit.** The audit is read-only with respect to rules. Findings get written to the audit report; rule edits happen via [skill:lessons-learned] or [skill:distill-lessons] in a separate pass.
 
 ## Attribution
 
-Defers to [`output`](../_output-rules.md). No AI / agent attribution in audit reports, commits, or comments.
+Defers to [rule:output]. No AI / agent attribution in audit reports, commits, or comments.

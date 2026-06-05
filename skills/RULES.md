@@ -26,7 +26,7 @@ For mapping failure modes to rules (the inverse question: "is this failure mode 
 |---|---|
 | `_verify-before-execute-rules.md` | Same-turn evidence requirement for any side-effecting action and for factual claims. Parent of the claim-grounding rules. |
 | `_definition-of-done-rules.md` | Five hard criteria (code-reviewed, edge cases, tests, ticket update, ticket exists) before declaring work done. |
-| `_environment-preflight-rules.md` | One-time-per-repo inventory of interpreters, services, credentials, CI parity. Companion to `[`writing-code`](_writing-code-rules.md)` writing-code:2. |
+| `_environment-preflight-rules.md` | One-time-per-repo inventory of interpreters, services, credentials, CI parity. Companion to `[rule:writing-code]` writing-code:2. |
 | `_output-rules.md` | Output formatting and attribution policy (no AI / agent attribution in any user-visible artifact). |
 | `_principles-rules.md`, `_python-rules.md`, `_jvm-rules.md`, `_rust-rules.md`, `_typescript-rules.md`, `_data-trust-rules.md`, `_siege-utilities-rules.md` | Language and domain rules; orthogonal to the per-act split. |
 
@@ -42,7 +42,7 @@ Read the matrix when:
 
 ## How rules get promoted into this set
 
-Three-tier pipeline. Findings start as Tier-1 entries in a consumer repo's `LESSONS.md`, get distilled into Tier-2 project rules at `<repo>/.claude/rules/<topic>.md`, and become Tier-3 rules in this directory only via human PR with cited evidence from at least two Tier-2 projects (or a language/framework justification from one). See `CONTRIBUTING.md` for the Tier-3 PR requirements. The `[`lessons-learned`](lessons-learned/SKILL.md)`, `[`distill-lessons`](distill-lessons/SKILL.md)`, and `[`rules-audit`](rules-audit/SKILL.md)` skills implement the pipeline. The `[`rule-eval-loop`](rule-eval-loop/SKILL.md)` meta-skill documents the design discipline for new Tier-3 rules (three-arc framing, three-samples-before-ship, cross-pass + fix-exercise validation).
+Three-tier pipeline. Findings start as Tier-1 entries in a consumer repo's `LESSONS.md`, get distilled into Tier-2 project rules at `<repo>/.claude/rules/<topic>.md`, and become Tier-3 rules in this directory only via human PR with cited evidence from at least two Tier-2 projects (or a language/framework justification from one). See `CONTRIBUTING.md` for the Tier-3 PR requirements. The `[skill:lessons-learned]`, `[skill:distill-lessons]`, and `[skill:rules-audit]` skills implement the pipeline. The `[skill:rule-eval-loop]` meta-skill documents the design discipline for new Tier-3 rules (three-arc framing, three-samples-before-ship, cross-pass + fix-exercise validation).
 
 ## Identifier scheme
 

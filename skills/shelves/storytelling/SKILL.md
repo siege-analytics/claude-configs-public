@@ -9,9 +9,9 @@ description: Router for storytelling / data-presentation book skills. Dispatches
 
 | Task signal | Book to read |
 |---|---|
-| Charts, decks, presenting findings to a non-technical audience (Knaflic) | [`storytelling-with-data`](../../shelves/storytelling/storytelling-with-data/SKILL.md) |
-| Tufte chart-implementation rules -- data-ink ratio, direct labels, range-frame axes, per-library config (Recharts / ECharts / Chart.js / matplotlib / Plotly / D3) | [`tufte-data-viz`](../../shelves/storytelling/tufte-data-viz/SKILL.md) |
-| When and how to use animation in interfaces and slides (Nabors) | [`animation-at-work`](../../shelves/storytelling/animation-at-work/SKILL.md) |
+| Charts, decks, presenting findings to a non-technical audience (Knaflic) | [skill:shelves--storytelling-with-data] |
+| Tufte chart-implementation rules -- data-ink ratio, direct labels, range-frame axes, per-library config (Recharts / ECharts / Chart.js / matplotlib / Plotly / D3) | [skill:shelves--tufte-data-viz] |
+| When and how to use animation in interfaces and slides (Nabors) | [skill:shelves--animation-at-work] |
 
 ## Disambiguation: Tufte vs Knaflic
 

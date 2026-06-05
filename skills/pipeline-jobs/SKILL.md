@@ -9,8 +9,8 @@ routed-by: coding-standards
 ## Companion shelves
 
 For pipeline-design rationale and structural cleanliness:
-- [`data-pipelines`](../shelves/data-and-pipelines/data-pipelines/SKILL.md) -- ingestion, scheduling, observability patterns.
-- [`clean-architecture`](../shelves/engineering-principles/clean-architecture/SKILL.md) -- separate orchestration from transformation.
+- [skill:shelves--data-pipelines] -- ingestion, scheduling, observability patterns.
+- [skill:shelves--clean-architecture] -- separate orchestration from transformation.
 
 The logic lives in Python. The scheduler (Rundeck, Airflow, cron) is just the wrapper that calls it. If you move schedulers, the Python doesn't change.
 

@@ -335,4 +335,4 @@ Because `originating_arc` is structured, the matrix is queryable. Examples of us
 
 ## Attribution
 
-Defers to `[`output`](_output-rules.md)`. No AI / agent attribution in this file or its updates.
+Defers to `[rule:output]`. No AI / agent attribution in this file or its updates.

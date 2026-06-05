@@ -9,9 +9,9 @@ description: Router for sales book skills. Dispatches to predictable-revenue, ne
 
 | Task signal | Book to read |
 |---|---|
-| Outbound prospecting machine, SDR specialization (Aaron Ross) | [`predictable-revenue`](../../shelves/sales/predictable-revenue/SKILL.md) |
-| Negotiation tactics, BATNA, anchoring (Voss / Fisher) | [`negotiation`](../../shelves/sales/negotiation/SKILL.md) |
-| Influence principles -- reciprocity, scarcity, authority, etc. (Cialdini) | [`influence-psychology`](../../shelves/sales/influence-psychology/SKILL.md) |
-| Constructing irresistible offers, value-stacking, pricing (Hormozi) | [`hundred-million-offers`](../../shelves/sales/hundred-million-offers/SKILL.md) |
+| Outbound prospecting machine, SDR specialization (Aaron Ross) | [skill:shelves--predictable-revenue] |
+| Negotiation tactics, BATNA, anchoring (Voss / Fisher) | [skill:shelves--negotiation] |
+| Influence principles -- reciprocity, scarcity, authority, etc. (Cialdini) | [skill:shelves--influence-psychology] |
+| Constructing irresistible offers, value-stacking, pricing (Hormozi) | [skill:shelves--hundred-million-offers] |
 
 All wondelai/skills imports -- see footers and `THIRD_PARTY_NOTICES.md`.

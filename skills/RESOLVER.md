@@ -6,21 +6,21 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 
 | File | Purpose |
 |---|---|
-| [`output`](_output-rules.md) | Commit trailers, attribution policy, docstring minimums, markdown style -- shared across all skills that write anything |
-| [`data-trust`](_data-trust-rules.md) | Default assumption: tabular data lies. Validate at boundaries. -- applied before any spatial / identifier work |
-| [`principles`](_principles-rules.md) | Clean Code maxims (naming, function size, error handling) -- always-on for any code task |
-| [`python`](_python-rules.md) | Effective Python idioms -- applied when touching `*.py` |
-| [`jvm`](_jvm-rules.md) | Effective Java + Effective Kotlin merged -- applied when touching JVM languages, including Scala on Spark |
-| [`typescript`](_typescript-rules.md) | Effective TypeScript idioms -- applied when touching `*.ts` / `*.tsx` |
-| [`rust`](_rust-rules.md) | Rust idioms -- applied when touching `*.rs` |
-| [`siege-utilities`](_siege-utilities-rules.md) | Prefer `siege_utilities` for utility-shaped problems before writing a new helper. If `siege_utilities` almost solves it but doesn't, consider a PR upstream. |
-| [`definition-of-done`](_definition-of-done-rules.md) | Five hard criteria for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists. Behavior changes are not finished until all five pass. |
-| [`robustness`](_robustness-rules.md) | Robust Python (Viafore) -- type safety, invariant enforcement, fail fast, constrain mutability. Applied when writing or reviewing Python code. |
-| [`architecture-patterns`](_architecture-patterns-rules.md) | Architecture Patterns with Python (Percival & Gregory) -- repository pattern, service layer, dependency inversion. Applied when designing service layers or data-access boundaries. |
-| [`property-testing`](_property-testing-rules.md) | Hypothesis property-testing patterns -- strategies, round-trip/invariant/oracle properties. Applied when writing tests for functions with numeric, string, or collection inputs. |
-| [`scipy-spec`](_scipy-spec-rules.md) | Scientific Python SPECs 0, 4, 6 -- version support, deprecation timelines, lazy loading. Applied when managing dependency versions or API lifecycle in library packages. |
-| [`packaging`](_packaging-rules.md) | PyPA Packaging Guide -- pyproject.toml, dependency spec, version management. Applied when modifying pyproject.toml, managing dependencies, or publishing packages. |
-| [`security-scanning`](_security-scanning-rules.md) | Bandit/OWASP security standards -- injection prevention, credential handling, TLS, serialization safety. Applied when writing code that handles user input, credentials, shell commands, or network requests. |
+| [rule:output] | Commit trailers, attribution policy, docstring minimums, markdown style -- shared across all skills that write anything |
+| [rule:data-trust] | Default assumption: tabular data lies. Validate at boundaries. -- applied before any spatial / identifier work |
+| [rule:principles] | Clean Code maxims (naming, function size, error handling) -- always-on for any code task |
+| [rule:python] | Effective Python idioms -- applied when touching `*.py` |
+| [rule:jvm] | Effective Java + Effective Kotlin merged -- applied when touching JVM languages, including Scala on Spark |
+| [rule:typescript] | Effective TypeScript idioms -- applied when touching `*.ts` / `*.tsx` |
+| [rule:rust] | Rust idioms -- applied when touching `*.rs` |
+| [rule:siege-utilities] | Prefer `siege_utilities` for utility-shaped problems before writing a new helper. If `siege_utilities` almost solves it but doesn't, consider a PR upstream. |
+| [rule:definition-of-done] | Five hard criteria for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists. Behavior changes are not finished until all five pass. |
+| [rule:robustness] | Robust Python (Viafore) -- type safety, invariant enforcement, fail fast, constrain mutability. Applied when writing or reviewing Python code. |
+| [rule:architecture-patterns] | Architecture Patterns with Python (Percival & Gregory) -- repository pattern, service layer, dependency inversion. Applied when designing service layers or data-access boundaries. |
+| [rule:property-testing] | Hypothesis property-testing patterns -- strategies, round-trip/invariant/oracle properties. Applied when writing tests for functions with numeric, string, or collection inputs. |
+| [rule:scipy-spec] | Scientific Python SPECs 0, 4, 6 -- version support, deprecation timelines, lazy loading. Applied when managing dependency versions or API lifecycle in library packages. |
+| [rule:packaging] | PyPA Packaging Guide -- pyproject.toml, dependency spec, version management. Applied when modifying pyproject.toml, managing dependencies, or publishing packages. |
+| [rule:security-scanning] | Bandit/OWASP security standards -- injection prevention, credential handling, TLS, serialization safety. Applied when writing code that handles user input, credentials, shell commands, or network requests. |
 
 ## Routing table
 
@@ -28,28 +28,28 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 
 | Trigger | Skill |
 |---|---|
-| Writing or reviewing any `.py`, `.sql`, `.ts`, `.go`, `.tsx`, `.jsx` | [`coding`](coding/SKILL.md) router |
-| "Review this PR", "review this diff" | [`code-review`](code-review/SKILL.md) |
-| Library code architecture -- DRY, dataclass discipline, interface integrity, runtime types | [`python-patterns`](python-patterns/SKILL.md) |
-| "Why is this try/except too broad?", silent-failure patterns, `except Exception: pass` | [`python-exceptions`](python-exceptions/SKILL.md) |
-| Django models, views, forms, migrations, settings | [`django`](django/SKILL.md) |
-| Data pipeline, scheduled job, Rundeck YAML, Airflow DAG | [`pipeline-jobs`](pipeline-jobs/SKILL.md) |
-| PySpark DataFrame work, tuning, shuffle / skew | [`spark`](spark/SKILL.md) |
-| Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | [`scala-on-spark`](scala-on-spark/SKILL.md) |
-| SQL query structure, joins, window functions, Postgres performance | [`sql`](sql/SKILL.md) |
-| PostGIS -- ST_* functions, spatial indexes, spatial joins | [`postgis`](postgis/SKILL.md) |
-| GeoPandas + Shapely -- `import geopandas`, `gpd.`, `.sjoin`, raw `from shapely.geometry import` | [`geopandas`](geopandas/SKILL.md) |
-| Apache Sedona -- `from sedona`, `SedonaContext`, ST_* in Spark SQL, `%scala` Sedona | [`sedona`](sedona/SKILL.md) |
-| DuckDB-spatial -- `import duckdb` + `INSTALL spatial` / `LOAD spatial` / `ST_Read` (single-node SQL on Parquet, GDAL-less) | [`duckdb-spatial`](duckdb-spatial/SKILL.md) |
-| QML component review -- properties-in / signals-out, MuseScore plugins, Qt Quick decomposition | [`qml-component-review`](qml-component-review/SKILL.md) |
-| Auditing error-path test coverage, writing-tests:5 compliance | [`test-coverage-audit`](test-coverage-audit/SKILL.md) |
-| Fix a bug or issue identified by code review / audit / static analysis | [`think`](think/SKILL.md) Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per [`evaluate-ticket`](evaluate-ticket/SKILL.md) criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
+| Writing or reviewing any `.py`, `.sql`, `.ts`, `.go`, `.tsx`, `.jsx` | [skill:coding] router |
+| "Review this PR", "review this diff" | [skill:code-review] |
+| Library code architecture -- DRY, dataclass discipline, interface integrity, runtime types | [skill:python-patterns] |
+| "Why is this try/except too broad?", silent-failure patterns, `except Exception: pass` | [skill:python-exceptions] |
+| Django models, views, forms, migrations, settings | [skill:django] |
+| Data pipeline, scheduled job, Rundeck YAML, Airflow DAG | [skill:pipeline-jobs] |
+| PySpark DataFrame work, tuning, shuffle / skew | [skill:spark] |
+| Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | [skill:scala-on-spark] |
+| SQL query structure, joins, window functions, Postgres performance | [skill:sql] |
+| PostGIS -- ST_* functions, spatial indexes, spatial joins | [skill:postgis] |
+| GeoPandas + Shapely -- `import geopandas`, `gpd.`, `.sjoin`, raw `from shapely.geometry import` | [skill:geopandas] |
+| Apache Sedona -- `from sedona`, `SedonaContext`, ST_* in Spark SQL, `%scala` Sedona | [skill:sedona] |
+| DuckDB-spatial -- `import duckdb` + `INSTALL spatial` / `LOAD spatial` / `ST_Read` (single-node SQL on Parquet, GDAL-less) | [skill:duckdb-spatial] |
+| QML component review -- properties-in / signals-out, MuseScore plugins, Qt Quick decomposition | [skill:qml-component-review] |
+| Auditing error-path test coverage, writing-tests:5 compliance | [skill:test-coverage-audit] |
+| Fix a bug or issue identified by code review / audit / static analysis | [skill:think] Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per [skill:evaluate-ticket] criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
 
 ### Analysis
 
 | Trigger | Skill |
 |---|---|
-| Geospatial data -- pick engine + GDAL-availability path, cross-engine principles | [`spatial`](spatial/SKILL.md) (router; dispatches to `coding/{postgis,geopandas,sedona,duckdb-spatial}/`) |
+| Geospatial data -- pick engine + GDAL-availability path, cross-engine principles | [skill:spatial] (router; dispatches to `coding/{postgis,geopandas,sedona,duckdb-spatial}/`) |
 | Statistical modeling, regression, hypothesis tests | `analysis/statistical/SKILL.md` (if present) |
 | Graph / network analysis, entity relationships | `analysis/graph/SKILL.md` (if present) |
 | Record linkage, dedup, fuzzy matching | `analysis/entity-resolution/SKILL.md` (if present) |
@@ -59,79 +59,79 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 
 | Trigger | Skill |
 |---|---|
-| Renaming a public function, changing a default, dropping a column | [`library-api-evolution`](library-api-evolution/SKILL.md) |
-| Redundant docs across repos, "same thing in five places" | [`consolidate`](consolidate/SKILL.md) |
+| Renaming a public function, changing a default, dropping a column | [skill:library-api-evolution] |
+| Redundant docs across repos, "same thing in five places" | [skill:consolidate] |
 
 ### Git workflow
 
 | Trigger | Skill |
 |---|---|
-| Create a new branch | [`branch`](branch/SKILL.md) |
-| Commit changes | [`commit`](commit/SKILL.md) |
-| Open a PR | [`create-pr`](create-pr/SKILL.md) |
-| Merge a PR | [`merge`](merge/SKILL.md) |
-| Protect `develop` / `main` | [`develop-guard`](develop-guard/SKILL.md) |
-| Ensure a ticket destination exists before non-trivial work | [`ticket-guard`](ticket-guard/SKILL.md) |
+| Create a new branch | [skill:branch] |
+| Commit changes | [skill:commit] |
+| Open a PR | [skill:create-pr] |
+| Merge a PR | [skill:merge] |
+| Protect `develop` / `main` | [skill:develop-guard] |
+| Ensure a ticket destination exists before non-trivial work | [skill:ticket-guard] |
 
 ### Session
 
 | Trigger | Skill |
 |---|---|
-| CodeRabbit or other bot review on a PR | [`coderabbit-response`](coderabbit-response/SKILL.md) |
-| Inline PR discussion threads | [`pr-comments`](pr-comments/SKILL.md) |
-| End-of-session summary, close the loop | [`wrap-up`](wrap-up/SKILL.md) |
-| "Drive while I'm gone," "monitor X overnight," any continuous-cadence handoff longer than a typical turn | [`drive-while-away`](drive-while-away/SKILL.md) -- sibling of `[`writing-prose`](_writing-prose-rules.md)` writing-prose:5; the rule says "use a mechanism," this skill says "which mechanism for which cadence" and mandates the same-turn `ScheduleWakeup` call. |
+| CodeRabbit or other bot review on a PR | [skill:coderabbit-response] |
+| Inline PR discussion threads | [skill:pr-comments] |
+| End-of-session summary, close the loop | [skill:wrap-up] |
+| "Drive while I'm gone," "monitor X overnight," any continuous-cadence handoff longer than a typical turn | [skill:drive-while-away] -- sibling of `[rule:writing-prose]` writing-prose:5; the rule says "use a mechanism," this skill says "which mechanism for which cadence" and mandates the same-turn `ScheduleWakeup` call. |
 
 ### Planning
 
 | Trigger | Skill |
 |---|---|
-| Create a Linear / Jira / GitHub issue | [`create-ticket`](create-ticket/SKILL.md) |
-| Update ticket status | [`update-ticket`](update-ticket/SKILL.md) |
-| Close a ticket | [`close-ticket`](close-ticket/SKILL.md) |
+| Create a Linear / Jira / GitHub issue | [skill:create-ticket] |
+| Update ticket status | [skill:update-ticket] |
+| Close a ticket | [skill:close-ticket] |
 | "What should I work on next?", opportunity surfacing | `im-feeling-lucky` (planned) |
-| Starting work on a ticket -- claim it, mark in-progress, branch, then code | [`pre-work-check`](pre-work-check/SKILL.md) |
-| Create ≥2 tickets in one session (epic breakdown, audit findings, batch triage) | [`create-ticket`](create-ticket/SKILL.md) + [`evaluate-ticket`](evaluate-ticket/SKILL.md) per ticket. **Test-before-bulk applies:** create the first ticket, run `evaluate-ticket`, fix gaps until it PASSes, THEN continue to the next. Each ticket is an independent act of investigation, not a line item in a list. |
-| Making or recognizing a strategic decision (scope, architecture, deferral, standing approval, completion claim) | [`decision-to-ticket`](decision-to-ticket/SKILL.md) -- fires in real time during work, not at PR time. Consumes the destination configured by [`ticket-guard`](ticket-guard/SKILL.md). |
+| Starting work on a ticket -- claim it, mark in-progress, branch, then code | [skill:pre-work-check] |
+| Create ≥2 tickets in one session (epic breakdown, audit findings, batch triage) | [skill:create-ticket] + [skill:evaluate-ticket] per ticket. **Test-before-bulk applies:** create the first ticket, run `evaluate-ticket`, fix gaps until it PASSes, THEN continue to the next. Each ticket is an independent act of investigation, not a line item in a list. |
+| Making or recognizing a strategic decision (scope, architecture, deferral, standing approval, completion claim) | [skill:decision-to-ticket] -- fires in real time during work, not at PR time. Consumes the destination configured by [skill:ticket-guard]. |
 
 ### Documentation
 
 | Trigger | Skill |
 |---|---|
-| Central docs consolidation across repos | [`cascading-documentation`](cascading-documentation/SKILL.md) |
-| Notion knowledge base | [`notion-knowledge-base`](notion-knowledge-base/SKILL.md) |
+| Central docs consolidation across repos | [skill:cascading-documentation] |
+| Notion knowledge base | [skill:notion-knowledge-base] |
 
 ### Thinking
 
 | Trigger | Skill |
 |---|---|
-| Break down a problem, decision framework | [`think`](think/SKILL.md) |
+| Break down a problem, decision framework | [skill:think] |
 
 ### Meta
 
 | Trigger | Skill |
 |---|---|
-| "Create a skill", "audit skills", "fix this skill" | [`skillbuilder`](skillbuilder/SKILL.md) |
+| "Create a skill", "audit skills", "fix this skill" | [skill:skillbuilder] |
 | "Is every skill reachable from the resolver?" | `check-resolvable` (planned) |
 | "Test that the right skill fires for each input" | `resolver-evals` (planned) |
 
 ### Shelves (book-derived libraries)
 
-DBrain book-skill library. Each shelf is itself a router -- load the shelf, it tells you which book to read in full. See [`shelves`](shelves/SKILL.md) for the meta-router.
+DBrain book-skill library. Each shelf is itself a router -- load the shelf, it tells you which book to read in full. See [skill:shelves--shelves] for the meta-router.
 
 | Trigger | Shelf |
 |---|---|
-| Engineering practice question, code review rationale, refactoring justification | [`engineering-principles`](shelves/engineering-principles/SKILL.md) |
-| Distributed system design, storage engine choice, replication, scaling | [`systems-architecture`](shelves/systems-architecture/SKILL.md) |
-| Language-specific idiom or best practice (Python, JVM, TS, Rust) | [`languages`](shelves/languages/SKILL.md) |
-| Data pipeline design, scheduled-job patterns, batch/stream | [`data-and-pipelines`](shelves/data-and-pipelines/SKILL.md) |
-| Product discovery, feature scoping, JTBD, user research | [`product`](shelves/product/SKILL.md) |
-| Marketing copy, conversion, positioning messaging | [`marketing`](shelves/marketing/SKILL.md) |
-| Sales motion, pricing, negotiation | [`sales`](shelves/sales/SKILL.md) |
-| Strategy, market entry, competitive positioning | [`strategy`](shelves/strategy/SKILL.md) |
-| UI/UX design, visual hierarchy, typography, microinteractions | [`design`](shelves/design/SKILL.md) |
-| Team motivation, ways of working, organizational practice | [`team`](shelves/team/SKILL.md) |
-| Communicating data, presenting findings, animation in slides | [`storytelling`](shelves/storytelling/SKILL.md) |
+| Engineering practice question, code review rationale, refactoring justification | [skill:shelves--engineering-principles] |
+| Distributed system design, storage engine choice, replication, scaling | [skill:shelves--systems-architecture] |
+| Language-specific idiom or best practice (Python, JVM, TS, Rust) | [skill:shelves--languages] |
+| Data pipeline design, scheduled-job patterns, batch/stream | [skill:shelves--data-and-pipelines] |
+| Product discovery, feature scoping, JTBD, user research | [skill:shelves--product] |
+| Marketing copy, conversion, positioning messaging | [skill:shelves--marketing] |
+| Sales motion, pricing, negotiation | [skill:shelves--sales] |
+| Strategy, market entry, competitive positioning | [skill:shelves--strategy] |
+| UI/UX design, visual hierarchy, typography, microinteractions | [skill:shelves--design] |
+| Team motivation, ways of working, organizational practice | [skill:shelves--team] |
+| Communicating data, presenting findings, animation in slides | [skill:shelves--storytelling] |
 
 > **Status:** shelves are added incrementally via the `feat/dbrain-*` PR stack. Rows above pointing at not-yet-merged shelf files will resolve as PRs land.
 
@@ -139,9 +139,9 @@ DBrain book-skill library. Each shelf is itself a router -- load the shelf, it t
 
 | Trigger | Skill |
 |---|---|
-| Databricks workspace, jobs, DLT, Delta, Unity Catalog, Photon, liquid clustering | [`databricks`](databricks/SKILL.md) |
-| Unity Catalog permissioning specifics (standalone) | [`unity-catalog`](unity-catalog/SKILL.md) |
-| Operating shared infra -- cyberpower, K8s, Rundeck -- process and concurrency limits | [`ops`](ops/SKILL.md) |
+| Databricks workspace, jobs, DLT, Delta, Unity Catalog, Photon, liquid clustering | [skill:databricks] |
+| Unity Catalog permissioning specifics (standalone) | [skill:unity-catalog] |
+| Operating shared infra -- cyberpower, K8s, Rundeck -- process and concurrency limits | [skill:ops] |
 
 ## Project-specific rules and skills
 
@@ -155,7 +155,7 @@ Some repositories have project-specific rules and skills that supplement (and ca
 | `projects/<project>/_rules.md` | `<project>--rules` | `skills/_<project>--rules.md` |
 | `projects/<project>/PROJECT.md` | (not a routing target) | `projects/<project>/PROJECT.md` |
 
-Tokens use the prefixed slug directly: `[`siege-utilities--hostile-review`](siege-utilities--hostile-review/SKILL.md)`, `[`siege-utilities--rules`](_siege-utilities--rules.md)`.
+Tokens use the prefixed slug directly: `[skill:siege-utilities--hostile-review]`, `[rule:siege-utilities-]`.
 
 ### Precedence model
 
@@ -171,7 +171,7 @@ Items marked **[build-enforced]** are validated by `bin/build.py`. Items marked 
 
 | Project | Repo | Rules | Skills |
 |---|---|---|---|
-| `siege-utilities` | `siege-analytics/siege_utilities` | [`siege-utilities--rules`](_siege-utilities--rules.md) | [`siege-utilities--hostile-review`](siege-utilities--hostile-review/SKILL.md), [`siege-utilities--notebook-impact`](siege-utilities--notebook-impact/SKILL.md), [`siege-utilities--error-path-tests`](siege-utilities--error-path-tests/SKILL.md) |
+| `siege-utilities` | `siege-analytics/siege_utilities` | [rule:siege-utilities-] | [skill:siege-utilities--hostile-review], [skill:siege-utilities--notebook-impact], [skill:siege-utilities--error-path-tests] |
 
 ### siege-utilities-specific routing
 
@@ -179,13 +179,13 @@ These triggers apply only when the working directory matches `siege-analytics/si
 
 | Trigger | Skill |
 |---|---|
-| Any PR or code review in siege_utilities | [`siege-utilities--hostile-review`](siege-utilities--hostile-review/SKILL.md) |
-| Any change to a function signature, return type, or exception contract | [`siege-utilities--notebook-impact`](siege-utilities--notebook-impact/SKILL.md) |
-| Adding or backfilling error-path tests, SU-4b compliance | [`siege-utilities--error-path-tests`](siege-utilities--error-path-tests/SKILL.md) |
-| Auditing error-path test coverage for any module | [`test-coverage-audit`](test-coverage-audit/SKILL.md) |
-| `except Exception: pass` or `except: pass` anywhere | Bug -- see [`siege-utilities--rules`](_siege-utilities--rules.md) (SU-1) |
-| Function returns empty DataFrame/list/dict/string on error path | Bug -- see [`siege-utilities--rules`](_siege-utilities--rules.md) (SU-1) |
-| Code under `examples/` or `notebooks/` | Held to library standard -- see [`siege-utilities--rules`](_siege-utilities--rules.md) (SU-3) |
+| Any PR or code review in siege_utilities | [skill:siege-utilities--hostile-review] |
+| Any change to a function signature, return type, or exception contract | [skill:siege-utilities--notebook-impact] |
+| Adding or backfilling error-path tests, SU-4b compliance | [skill:siege-utilities--error-path-tests] |
+| Auditing error-path test coverage for any module | [skill:test-coverage-audit] |
+| `except Exception: pass` or `except: pass` anywhere | Bug -- see [rule:siege-utilities-] (SU-1) |
+| Function returns empty DataFrame/list/dict/string on error path | Bug -- see [rule:siege-utilities-] (SU-1) |
+| Code under `examples/` or `notebooks/` | Held to library standard -- see [rule:siege-utilities-] (SU-3) |
 
 ## Universal pre-action checks
 
@@ -193,11 +193,11 @@ These skills fire automatically before non-trivial work, regardless of which rou
 
 | Check | Skill | When it fires |
 |---|---|---|
-| Branch correctness | [`develop-guard`](develop-guard/SKILL.md) | Before any branch creation or merge that touches `develop` / `main` |
-| Ticket destination exists | [`ticket-guard`](ticket-guard/SKILL.md) | Before non-trivial work begins (once per session, memoized). Ensures strategic decisions have a durable, human-visible home. |
-| Strategic decisions surfaced | [`decision-to-ticket`](decision-to-ticket/SKILL.md) | When making scope, architecture, sequencing, deferral, standing approval, or completion claim decisions. Fires in real time during work, not at session end. Includes a completion guard that prevents scope-reduction rationalization. |
-| Evidentiary fact-finding | [`investigate`](investigate/SKILL.md) | After think Step 7 approves, before implementation begins. Required for any work that touches existing entities, modifies data flow, or changes downstream behavior. Produces a Fact Sheet artifact with file:line citations. **Mechanically enforced**: `investigate-gate-guard.sh` blocks implementation writes when think-gate exists but investigate-gate does not. Level 2 spot-checks file:line citations. Self-review enforces artifact reference at push time (v1.3). For transformation code (SQL, DataFrame pipelines), Level 3 requires `Pre-ship-dry-run:` trailer with behavioral verification evidence (#255, #275). |
-| Adversarial risk classification | [`pre-mortem`](pre-mortem/SKILL.md) | After investigate completes, before implementation begins. Classifies failure scenarios as Tiger/Paper Tiger/Elephant. Launch-Blocking Tigers halt implementation. Self-review enforces artifact reference at push time (v1.3). |
+| Branch correctness | [skill:develop-guard] | Before any branch creation or merge that touches `develop` / `main` |
+| Ticket destination exists | [skill:ticket-guard] | Before non-trivial work begins (once per session, memoized). Ensures strategic decisions have a durable, human-visible home. |
+| Strategic decisions surfaced | [skill:decision-to-ticket] | When making scope, architecture, sequencing, deferral, standing approval, or completion claim decisions. Fires in real time during work, not at session end. Includes a completion guard that prevents scope-reduction rationalization. |
+| Evidentiary fact-finding | [skill:investigate] | After think Step 7 approves, before implementation begins. Required for any work that touches existing entities, modifies data flow, or changes downstream behavior. Produces a Fact Sheet artifact with file:line citations. **Mechanically enforced**: `investigate-gate-guard.sh` blocks implementation writes when think-gate exists but investigate-gate does not. Level 2 spot-checks file:line citations. Self-review enforces artifact reference at push time (v1.3). For transformation code (SQL, DataFrame pipelines), Level 3 requires `Pre-ship-dry-run:` trailer with behavioral verification evidence (#255, #275). |
+| Adversarial risk classification | [skill:pre-mortem] | After investigate completes, before implementation begins. Classifies failure scenarios as Tiger/Paper Tiger/Elephant. Launch-Blocking Tigers halt implementation. Self-review enforces artifact reference at push time (v1.3). |
 
 ## Disambiguation rules
 

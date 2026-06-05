@@ -220,8 +220,8 @@ v2 (deferred): CI scanner walks the `## Post-error revision` blocks across the r
 - writing-rules:4 -- every "this doesn't apply" claim requires the same evidence chain as a "this happened" claim. The `Observed:` field inherits this requirement.
 - writing-rules:5 -- Trivial-change declarations with Cannot-produce-error claims; Falsification field is the writing-rules:6 trigger.
 - writing-rules:6 -- the rule this skill implements.
-- [`evaluate-ticket`](../evaluate-ticket/SKILL.md) -- used to confirm the originating ticket's Assumptions block exists and is well-formed before quoting from it.
-- [`self-review`](../self-review/SKILL.md) -- when the Trivial-change Falsification observable surfaces during self-review of a later PR, that self-review must cross-reference this skill before drafting any fix.
+- [skill:evaluate-ticket] -- used to confirm the originating ticket's Assumptions block exists and is well-formed before quoting from it.
+- [skill:self-review] -- when the Trivial-change Falsification observable surfaces during self-review of a later PR, that self-review must cross-reference this skill before drafting any fix.
 - `scripts/discipline/check-post-error-revision.sh` -- block-structure validator (canonical).
 - `hooks/git/post-error-revision-required.sh` -- trailer requirement on revert / regression-fix commits.
 

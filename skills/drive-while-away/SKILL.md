@@ -39,7 +39,7 @@ If you cannot call `ScheduleWakeup` (tool unavailable in this runtime, no time h
 
 > "I don't have a continuation mechanism for this. If <event> happens, you'll need to tell me."
 
-Per `[`writing-prose`](../_writing-prose-rules.md)` writing-prose:5 and `[`writing-claims`](../_writing-claims-rules.md)` writing-claims:9, "I'll drive" + no mechanism is a lie of omission.
+Per `[rule:writing-prose]` writing-prose:5 and `[rule:writing-claims]` writing-claims:9, "I'll drive" + no mechanism is a lie of omission.
 
 ## Cadence → mechanism mapping
 
@@ -140,10 +140,10 @@ This skill exists because the rule (writing-prose:5) tells the agent that future
 
 ## Cross-references
 
-- `[`writing-prose`](../_writing-prose-rules.md)` writing-prose:5 -- the speech-time rule that requires a mechanism call for future-action commitments. This skill is the operational playbook for which mechanism in which cadence.
-- `[`writing-claims`](../_writing-claims-rules.md)` writing-claims:9 -- applies when the agent claims state about what's happening between wakeups ("the build took effect"). Each fired wakeup must probe before claiming.
-- `[`wrap-up`](../wrap-up/SKILL.md)` -- the symmetric session-end skill. Use wrap-up when the work is genuinely done; use this skill when the work continues past the operator's availability.
-- `[`think`](../think/SKILL.md)` -- for non-trivial drive-while-away setups (overnight, multi-day, cross-system), run think first to design the loop's termination, escalation, and rollback paths before scheduling.
+- `[rule:writing-prose]` writing-prose:5 -- the speech-time rule that requires a mechanism call for future-action commitments. This skill is the operational playbook for which mechanism in which cadence.
+- `[rule:writing-claims]` writing-claims:9 -- applies when the agent claims state about what's happening between wakeups ("the build took effect"). Each fired wakeup must probe before claiming.
+- `[skill:wrap-up]` -- the symmetric session-end skill. Use wrap-up when the work is genuinely done; use this skill when the work continues past the operator's availability.
+- `[skill:think]` -- for non-trivial drive-while-away setups (overnight, multi-day, cross-system), run think first to design the loop's termination, escalation, and rollback paths before scheduling.
 
 ## Escalation
 

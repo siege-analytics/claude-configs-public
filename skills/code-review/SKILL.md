@@ -9,11 +9,11 @@ allowed-tools: Read Grep Glob
 ## Companion skills and shelves
 
 Anchor each review dimension in:
-- [`clean-code`](../shelves/engineering-principles/clean-code/SKILL.md) -- naming, function size, comment discipline (the *why* behind most review comments).
-- [`design-patterns`](../shelves/engineering-principles/design-patterns/SKILL.md) -- when to suggest a pattern (and when not to).
-- [`refactoring-patterns`](../shelves/engineering-principles/refactoring-patterns/SKILL.md) -- name the safe transformation, don't hand-wave.
-- [`hostile-review`](../hostile-review/SKILL.md) -- full-codebase adversarial audit (9 categories with grep methodology). Use for periodic audits; this skill is for PR-level review.
-- For Spark/JVM PRs: [`effective-java`](../shelves/languages/effective-java/SKILL.md), [`effective-kotlin`](../shelves/languages/effective-kotlin/SKILL.md).
+- [skill:shelves--clean-code] -- naming, function size, comment discipline (the *why* behind most review comments).
+- [skill:shelves--design-patterns] -- when to suggest a pattern (and when not to).
+- [skill:shelves--refactoring-patterns] -- name the safe transformation, don't hand-wave.
+- [skill:hostile-review] -- full-codebase adversarial audit (9 categories with grep methodology). Use for periodic audits; this skill is for PR-level review.
+- For Spark/JVM PRs: [skill:shelves--effective-java], [skill:shelves--effective-kotlin].
 
 The Siege-specific catches below (catalog bypass, NULL drops, partition skew) stay here.
 
@@ -63,14 +63,14 @@ The existing scanner + judgement layers fire after the ticket and Reviewer Assum
 
 ## Mechanical pre-flight (run first)
 
-Before the six-layer human review, run [`detect-ai-fingerprints`](../detect-ai-fingerprints/SKILL.md) against the diff under review:
+Before the six-layer human review, run [skill:detect-ai-fingerprints] against the diff under review:
 
 ```bash
 bash <skills-dir>/meta/detect-ai-fingerprints/scan.sh         # for staged diffs
 bash <skills-dir>/meta/detect-ai-fingerprints/scan.sh --pr 43  # for a GitHub PR
 ```
 
-The scanner catches the four stylistic prose rules (`[`writing-prose`](../_writing-prose-rules.md)` writing-prose:1, :2, :3, :4) plus the history-reference detection in code comments (`[`writing-code`](../_writing-code-rules.md)` writing-code:2), the test-discipline mechanical checks (`[`writing-tests`](../_writing-tests-rules.md)` writing-tests:3 actionable-skip-messages, writing-tests:4 mock-without-spec), the claim-grounding mechanical checks (`[`writing-claims`](../_writing-claims-rules.md)` writing-claims:2 countable-claims-need-Verified-by-trailer, writing-claims:3 confidence-calibration), and the release-discipline check (`[`writing-releases`](../_writing-releases-rules.md)` writing-releases:2 skip-count-trending). Surface its findings as the first batch of review comments and fix them before opening the human review. The scanner is silent on the rest; those require the judgment layer below. Two judgment-only checks worth calling out specifically: `[`writing-tests`](../_writing-tests-rules.md)` writing-tests:5 (every `except` block has a paired test that forces it via `pytest.raises(<ExcClass>)` / `assertRaises(<ExcClass>)` / `with raises(<ExcClass>)`, or via a documented inducing fixture or monkeypatch) and `[`writing-code`](../_writing-code-rules.md)` writing-code:8 (every callsite of an optionally-imported symbol checks the availability flag, with the guard producing a clear failure message naming the missing package and the install command). Mechanical detection for both is tracked at upstream issues #56 and #57 for v1.6.2.
+The scanner catches the four stylistic prose rules (`[rule:writing-prose]` writing-prose:1, :2, :3, :4) plus the history-reference detection in code comments (`[rule:writing-code]` writing-code:2), the test-discipline mechanical checks (`[rule:writing-tests]` writing-tests:3 actionable-skip-messages, writing-tests:4 mock-without-spec), the claim-grounding mechanical checks (`[rule:writing-claims]` writing-claims:2 countable-claims-need-Verified-by-trailer, writing-claims:3 confidence-calibration), and the release-discipline check (`[rule:writing-releases]` writing-releases:2 skip-count-trending). Surface its findings as the first batch of review comments and fix them before opening the human review. The scanner is silent on the rest; those require the judgment layer below. Two judgment-only checks worth calling out specifically: `[rule:writing-tests]` writing-tests:5 (every `except` block has a paired test that forces it via `pytest.raises(<ExcClass>)` / `assertRaises(<ExcClass>)` / `with raises(<ExcClass>)`, or via a documented inducing fixture or monkeypatch) and `[rule:writing-code]` writing-code:8 (every callsite of an optionally-imported symbol checks the availability flag, with the guard producing a clear failure message naming the missing package and the install command). Mechanical detection for both is tracked at upstream issues #56 and #57 for v1.6.2.
 
 ## Project-local rules (load first)
 
@@ -80,9 +80,9 @@ Before applying the generic checklist below, load any **project-local Tier-2 rul
 ls .claude/rules/*.md 2>/dev/null
 ```
 
-If `.claude/rules/<topic>.md` files exist, read each one and treat its rules as a project-specific checklist appended to the generic layers below. These rules were promoted from the project's `LESSONS.md` ledger by [`distill-lessons`](../distill-lessons/SKILL.md) -- they encode patterns this codebase has actually been bitten by, so they take priority over generic guidance when they apply.
+If `.claude/rules/<topic>.md` files exist, read each one and treat its rules as a project-specific checklist appended to the generic layers below. These rules were promoted from the project's `LESSONS.md` ledger by [skill:distill-lessons] -- they encode patterns this codebase has actually been bitten by, so they take priority over generic guidance when they apply.
 
-If the review surfaces a finding that maps to a recurring pattern *not* yet in the ledger, log it via [`lessons-learned`](../lessons-learned/SKILL.md) before closing the review. That's how the loop closes.
+If the review surfaces a finding that maps to a recurring pattern *not* yet in the ledger, log it via [skill:lessons-learned] before closing the review. That's how the loop closes.
 
 ## Review Order
 
@@ -100,7 +100,7 @@ Does the code do what it claims to do?
 - For data transforms: does every row make it through, or are rows silently dropped?
 - For SQL: does the JOIN type match the intent? (INNER drops non-matches, LEFT keeps them)
 
-**Edge-case checklist** -- criterion (b) of [`definition-of-done`](../_definition-of-done-rules.md). Every behavior change must be reasoned through against these, and tested in code where appropriate:
+**Edge-case checklist** -- criterion (b) of [rule:definition-of-done]. Every behavior change must be reasoned through against these, and tested in code where appropriate:
 
 - [ ] **Empty input** -- `[]`, `""`, `None`, missing key, zero rows
 - [ ] **Boundary values** -- zero, one, max, min, off-by-one neighbors
@@ -371,18 +371,18 @@ arbitrary SQL by submitting `'; DROP TABLE donors; --` as the search term.
 
 Before approving:
 
-- [ ] **[`detect-ai-fingerprints`](../detect-ai-fingerprints/SKILL.md) ran clean** on the diff (or every reported violation was fixed before review opened)
+- [ ] **[skill:detect-ai-fingerprints] ran clean** on the diff (or every reported violation was fixed before review opened)
 - [ ] Loaded any project-local rules from `.claude/rules/*.md` and applied them
 - [ ] Read every line of the diff (not just the files you know)
 - [ ] Check that tests exist for new behavior and pass
 - [ ] Check that tests test the *right thing* (not just that they pass)
-- [ ] **`[`writing-tests`](../_writing-tests-rules.md)` writing-tests:5**: every `except` block in the diff has a paired test using `pytest.raises(<ExcClass>)` / `assertRaises(<ExcClass>)` / `with raises(<ExcClass>)`, OR a documented inducing fixture or monkeypatch. The two carve-outs (`finally` best-effort, `__del__` / signal handlers) require a one-line comment naming why no test exists.
-- [ ] **`[`writing-code`](../_writing-code-rules.md)` writing-code:8**: every callsite of an optionally-imported symbol (where the module declares a `try: import X; X_AVAILABLE = True; except: X_AVAILABLE = False` pattern or equivalent) checks the availability flag inline before the call, OR is inside a private helper (leading-underscore) whose docstring asserts the flag has been checked by the caller. The guard's failure message must name the missing package and the install command.
+- [ ] **`[rule:writing-tests]` writing-tests:5**: every `except` block in the diff has a paired test using `pytest.raises(<ExcClass>)` / `assertRaises(<ExcClass>)` / `with raises(<ExcClass>)`, OR a documented inducing fixture or monkeypatch. The two carve-outs (`finally` best-effort, `__del__` / signal handlers) require a one-line comment naming why no test exists.
+- [ ] **`[rule:writing-code]` writing-code:8**: every callsite of an optionally-imported symbol (where the module declares a `try: import X; X_AVAILABLE = True; except: X_AVAILABLE = False` pattern or equivalent) checks the availability flag inline before the call, OR is inside a private helper (leading-underscore) whose docstring asserts the flag has been checked by the caller. The guard's failure message must name the missing package and the install command.
 - [ ] Verify no secrets, credentials, or PII in the diff
 - [ ] Verify no `TODO` or `FIXME` without a linked issue
 - [ ] Run the code locally if the change is non-trivial
 - [ ] Check for unintended changes (auto-formatted files, lock file churn, moved files)
-- [ ] Logged any recurring finding to `LESSONS.md` via [`lessons-learned`](../lessons-learned/SKILL.md)
+- [ ] Logged any recurring finding to `LESSONS.md` via [skill:lessons-learned]
 
 ### When to Approve vs. Request Changes
 

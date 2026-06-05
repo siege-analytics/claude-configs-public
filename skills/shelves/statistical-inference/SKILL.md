@@ -11,17 +11,17 @@ Books grounding analytical rigor -- the methodologies that make statistical clai
 
 | Task signal | Book to read |
 |---|---|
-| Causal inference theory; potential outcomes; g-methods; exchangeability / positivity / consistency; target trial; "is this confounded?" | [`causal-inference-what-if`](../../shelves/statistical-inference/causal-inference-what-if/SKILL.md) |
-| Applied causal designs; regression discontinuity (RD); instrumental variables (IV); difference-in-differences (DiD); synthetic control; natural experiment | [`causal-inference-mixtape`](../../shelves/statistical-inference/causal-inference-mixtape/SKILL.md) |
-| Bayesian inference; multilevel / hierarchical models; MCMC / Stan / PyMC; "what priors should I use"; regression-as-thinking | [`statistical-rethinking-course`](../../shelves/statistical-inference/statistical-rethinking-course/SKILL.md) |
-| Applied EDA; distributions (PMF / CDF / PDF); hypothesis testing; permutation tests / bootstrap; effect sizes; time series; survival analysis | [`think-stats`](../../shelves/statistical-inference/think-stats/SKILL.md) |
+| Causal inference theory; potential outcomes; g-methods; exchangeability / positivity / consistency; target trial; "is this confounded?" | [skill:shelves--causal-inference-what-if] |
+| Applied causal designs; regression discontinuity (RD); instrumental variables (IV); difference-in-differences (DiD); synthetic control; natural experiment | [skill:shelves--causal-inference-mixtape] |
+| Bayesian inference; multilevel / hierarchical models; MCMC / Stan / PyMC; "what priors should I use"; regression-as-thinking | [skill:shelves--statistical-rethinking-course] |
+| Applied EDA; distributions (PMF / CDF / PDF); hypothesis testing; permutation tests / bootstrap; effect sizes; time series; survival analysis | [skill:shelves--think-stats] |
 
 ## Books in this shelf
 
-- [`causal-inference-what-if`](../../shelves/statistical-inference/causal-inference-what-if/SKILL.md) -- Hernán & Robins. *Causal Inference: What If*. Theoretical foundation of modern causal inference; potential outcomes + g-methods for time-varying confounding. Free PDF at miguelhernan.org/whatifbook.
-- [`causal-inference-mixtape`](../../shelves/statistical-inference/causal-inference-mixtape/SKILL.md) -- Cunningham. *Causal Inference: The Mixtape*. Applied identification strategies (DAGs, RD, IV, DiD, synthetic control). Full free online at mixtape.scunning.com.
-- [`statistical-rethinking-course`](../../shelves/statistical-inference/statistical-rethinking-course/SKILL.md) -- McElreath. Bayesian course companion (lectures + slides + multi-language code). Free at github.com/rmcelreath/stat_rethinking_2024; book itself paid.
-- [`think-stats`](../../shelves/statistical-inference/think-stats/SKILL.md) -- Downey. *Think Stats 3e*. Computational / Python-first applied statistics. Free Jupyter notebooks at allendowney.github.io/ThinkStats.
+- [skill:shelves--causal-inference-what-if] -- Hernán & Robins. *Causal Inference: What If*. Theoretical foundation of modern causal inference; potential outcomes + g-methods for time-varying confounding. Free PDF at miguelhernan.org/whatifbook.
+- [skill:shelves--causal-inference-mixtape] -- Cunningham. *Causal Inference: The Mixtape*. Applied identification strategies (DAGs, RD, IV, DiD, synthetic control). Full free online at mixtape.scunning.com.
+- [skill:shelves--statistical-rethinking-course] -- McElreath. Bayesian course companion (lectures + slides + multi-language code). Free at github.com/rmcelreath/stat_rethinking_2024; book itself paid.
+- [skill:shelves--think-stats] -- Downey. *Think Stats 3e*. Computational / Python-first applied statistics. Free Jupyter notebooks at allendowney.github.io/ThinkStats.
 
 ## Disambiguation
 

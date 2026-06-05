@@ -11,11 +11,11 @@ paths: "**/*.vue,**/*.ts,**/router/**,**/store/**,**/features/**"
 ## Companion shelves
 
 For cross-boundary contract rules:
-- [`api-integration`](../api-integration/SKILL.md) -- FE-backend contract (error envelope, JWT, X-Business-ID).
-- [`pour-now-triage`](../pour-now-triage/SKILL.md) -- restoration overrides that freeze specific migrations during triage.
+- [skill:api-integration] -- FE-backend contract (error envelope, JWT, X-Business-ID).
+- [skill:pour-now-triage] -- restoration overrides that freeze specific migrations during triage.
 
 For general TypeScript discipline:
-- [`_typescript-rules.md`](../_typescript-rules.md) -- strictNullChecks, noUncheckedIndexedAccess, no ts-ignore without explanation.
+- [rule:typescript] -- strictNullChecks, noUncheckedIndexedAccess, no ts-ignore without explanation.
 
 Apply when editing `.vue` files, Pinia stores, route definitions, or composables. Draws from:
 - Vue Style Guide (vuejs.org/style-guide) -- Priority A (Essential) and B (Strongly Recommended) rules
@@ -199,7 +199,7 @@ await campaignApi.updateCampaign(id, payload)
 
 ## 7. TypeScript discipline
 
-Defers to [`_typescript-rules.md`](../_typescript-rules.md) for core rules. Vue-specific additions:
+Defers to [rule:typescript] for core rules. Vue-specific additions:
 
 - **No `as Component` casts.** If TypeScript can't infer the component type, the import path or generic is wrong. Fix the type, don't cast.
 - **Prefer narrowing over assertion.** `if (value !== null) { ... }` beats `value!.something`.
@@ -239,4 +239,4 @@ These are known deviations that are explicitly sanctioned during triage. Don't f
 
 ## Attribution Policy
 
-See [`_output-rules.md`](../_output-rules.md). NEVER include AI or agent attribution.
+See [rule:output]. NEVER include AI or agent attribution.

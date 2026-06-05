@@ -15,15 +15,15 @@ The block is mandatory. It is not a private check. It is an artifact the user ca
 - **Standards:** <which rules/skills/checklists apply to this action>
 - **Intent:** <one sentence linking the goal to this specific change>
 - **Evidence:** <for corrections only -- the observed failure and the same-turn tool call that demonstrated it>
-- **Design:** <for non-trivial actions -- reference to the same-conversation [`think`](think/SKILL.md) workflow that produced the design this action implements>
+- **Design:** <for non-trivial actions -- reference to the same-conversation [skill:think] workflow that produced the design this action implements>
 ```
 
 ### Standards
 
 Name the rules and skills that apply, by token:
-- Always-on rules: `[`python`](_python-rules.md)`, `[`jvm`](_jvm-rules.md)`, `[`output`](_output-rules.md)`, `[`definition-of-done`](_definition-of-done-rules.md)`, etc.
+- Always-on rules: `[rule:python]`, `[rule:jvm]`, `[rule:output]`, `[rule:definition-of-done]`, etc.
 - Project-local rules: `.claude/rules/<topic>.md`
-- Skill checklists: `[`commit`](commit/SKILL.md)`, `[`create-pr`](create-pr/SKILL.md)`, `[`code-review`](code-review/SKILL.md)`, etc.
+- Skill checklists: `[skill:commit]`, `[skill:create-pr]`, `[skill:code-review]`, etc.
 
 If you cannot name at least one applicable rule or skill, you have not understood the action well enough to take it.
 
@@ -57,15 +57,15 @@ If the action is not a correction (it's a feature, a refactor, a new file, scaff
 
 The same-turn evidence requirement covers factual claims made in chat to the operator, in PR bodies, in commit messages, and in agent-to-agent messages. Sending a message that says "all four engines call the validator" or "the loop is closed" or "no remaining occurrences" is itself a side-effecting action whose justification depends on a verifiable fact. The grep, the read, the test run that establishes the fact must be in the same response or the same tool sequence. A claim grounded in a prior turn's tool call is grounded in stale evidence.
 
-This is the explicit cross-rule clause for `[`writing-claims`](_writing-claims-rules.md)` writing-claims:2 (countable claims must be preceded by the falsifying grep) and writing-claims:3 (confidence calibration on unquantified completeness claims). Those rules name the specific failure modes; this clause is the underlying discipline that covers any factual claim, countable or not.
+This is the explicit cross-rule clause for `[rule:writing-claims]` writing-claims:2 (countable claims must be preceded by the falsifying grep) and writing-claims:3 (confidence calibration on unquantified completeness claims). Those rules name the specific failure modes; this clause is the underlying discipline that covers any factual claim, countable or not.
 
 State the evidence, then make the claim. The order matters because reversing it ("I'll claim it and then verify if pushed") is exactly the failure mode the rule is meant to prevent.
 
 ### Design (non-trivial actions only)
 
-Non-trivial actions require a same-conversation `[`think`](think/SKILL.md)` workflow before the verification block. The Design line names where in this conversation the think workflow happened (turn, message, or summary), so the Standards/Intent answers can be traced back to a structured design rather than a snap judgment.
+Non-trivial actions require a same-conversation `[skill:think]` workflow before the verification block. The Design line names where in this conversation the think workflow happened (turn, message, or summary), so the Standards/Intent answers can be traced back to a structured design rather than a snap judgment.
 
-**An action is non-trivial if any of these fire -- they are exactly the triggers from `[`think`](think/SKILL.md)`'s "When This Skill Applies" section:**
+**An action is non-trivial if any of these fire -- they are exactly the triggers from `[skill:think]`'s "When This Skill Applies" section:**
 
 - Adding a new feature or capability
 - Refactoring existing code
@@ -81,7 +81,7 @@ Non-trivial actions require a same-conversation `[`think`](think/SKILL.md)` work
 - It is a documentation-only edit, a git operation, a non-code task
 - It is one of the trivial actions that already qualify for `[verify-skip]` (see Skipping the block)
 
-This carve-out is quoted from `[`think`](think/SKILL.md)`'s own exemption list. Where think exempts, verify exempts.
+This carve-out is quoted from `[skill:think]`'s own exemption list. Where think exempts, verify exempts.
 
 **What "reference the think workflow" looks like:**
 
@@ -95,7 +95,7 @@ This carve-out is quoted from `[`think`](think/SKILL.md)`'s own exemption list. 
 - "It's the obvious approach." -- if the approach is obvious, the action is trivial and the Design line is omitted; if it's not obvious, the obviousness claim is itself the failure mode.
 - A reference to a prior conversation or session. Same-conversation, like Evidence's same-response constraint, exists because designs go stale across conversation boundaries.
 
-If a non-trivial action lacks a Design line, the action stops. Run `[`think`](think/SKILL.md)` (or extended thinking) first; then return to the verification block with the Design line filled in.
+If a non-trivial action lacks a Design line, the action stops. Run `[skill:think]` (or extended thinking) first; then return to the verification block with the Design line filled in.
 
 ## Skipping the block
 
@@ -127,7 +127,7 @@ Example with evidence chain:
 - **Re-running a failed command with a small change in the hope that this time it works.** The change must be justified by evidence of why the previous attempt failed.
 - **Trusting a memory or a prior conversation summary about file contents instead of re-reading the file.** Memories drift; files change between turns.
 - **Treating a tool call from a prior turn as evidence for an action in this turn.** Same-turn evidence is the bar. The reason is that anything older may have been invalidated by intervening actions you didn't notice.
-- **Producing a verification block that doesn't actually map to the action.** The block must reference the specific change, not a generic disclaimer. "Standards: follows project conventions" is not standards; "Standards: `[`python`](_python-rules.md)` (no bare excepts), `[`commit`](commit/SKILL.md)` checklist" is.
+- **Producing a verification block that doesn't actually map to the action.** The block must reference the specific change, not a generic disclaimer. "Standards: follows project conventions" is not standards; "Standards: `[rule:python]` (no bare excepts), `[skill:commit]` checklist" is.
 - **Skipping the Design line on a non-trivial action with "it's straightforward."** If you can name a way it could go wrong, it's not straightforward -- run think. If the user asks "have you thought about X?" and you have to start thinking about X *now*, you skipped the Design step.
 - **Treating a prior session's design as the Design line for this conversation.** Designs go stale. The think workflow must have happened in this conversation.
 
@@ -140,7 +140,7 @@ Example with evidence chain:
 > Assistant:
 > ```
 > **Verify-before-execute**
-> - **Standards:** `[`python`](_python-rules.md)` (no implicit type coercion), project `.claude/rules/data-types.md` (FEC IDs as StringType)
+> - **Standards:** `[rule:python]` (no implicit type coercion), project `.claude/rules/data-types.md` (FEC IDs as StringType)
 > - **Intent:** Cast committee_id to str before parsing so leading zeros survive the bronze→silver transform.
 > - **Evidence:** `Read` of `transforms/silver.py:48` (in this response) shows `committee_id = int(row["committee_id"])`; `Bash` of `pytest tests/test_silver.py::test_zero_padded_committee_id -x` (in this response) shows `assert "C00000547" == "C547"` failing on line 22.
 > ```
@@ -150,7 +150,7 @@ Example with evidence chain:
 
 > ```
 > **Verify-before-execute**
-> - **Standards:** `[`skillbuilder`](skillbuilder/SKILL.md)` (frontmatter spec), `[`output`](_output-rules.md)` (no AI attribution)
+> - **Standards:** `[skill:skillbuilder]` (frontmatter spec), `[rule:output]` (no AI attribution)
 > - **Intent:** Scaffold the new `lessons-learned` skill at `skills/meta/lessons-learned/SKILL.md` per the design we agreed in this conversation.
 > - **Design:** think workflow ran across the multi-turn discussion above; user selected the three-tier pipeline (Tier-1 ledger → Tier-2 project rules → Tier-3 org rules) and approved staging across PRs B, then C, then D.
 > ```
@@ -181,15 +181,15 @@ Memory-tier rules are discoverable only by agents who have loaded the relevant m
 
 Carve-out: batches of identical-shape, side-effect-free reads (e.g. 100 `gh issue view` calls in a status sweep) do not require the 3-5-sample test. The rule applies when the batch is a write surface where mistakes are visible to others or hard to reverse: ticket creates, PR creates, file generates, API mutations, DB writes.
 
-Same shape as `[`writing-claims`](_writing-claims-rules.md)` writing-claims:1 (grep before declaring a fix complete): both demand a falsifying check before declaring success. Test-before-bulk demands the same check before COMMITTING to scale.
+Same shape as `[rule:writing-claims]` writing-claims:1 (grep before declaring a fix complete): both demand a falsifying check before declaring success. Test-before-bulk demands the same check before COMMITTING to scale.
 
 ## Relationship to other rules
 
-- **`[`think`](think/SKILL.md)`** is the design gate that runs *before* verify-before-execute on non-trivial actions. Where think exempts (single-line fixes, step-by-step user instructions, doc-only edits, git ops), the Design line is omitted from the verify block. Where think fires, the Design line names where in this conversation think happened. The two are paired: think produces the design; verify references it.
-- **`[`definition-of-done`](_definition-of-done-rules.md)`** is the post-hoc gate ("is this finished?"). Verify-before-execute is the pre-hoc gate ("should I take this action?"). Different cadence; both apply.
-- **`[`code-review`](code-review/SKILL.md)`** operates on a diff after it exists. Verify-before-execute operates on the intent before the diff exists. Both apply to the same change at different points.
-- **`[`commit`](commit/SKILL.md)`** invokes verify-before-execute as part of its step 0 (before any other check). The rule is broader than commits; the commit skill is one consumer.
-- **`[`output`](_output-rules.md)`** governs the *content* of what you write to commits/PRs/comments. Verify-before-execute governs whether you should be writing it at all.
+- **`[skill:think]`** is the design gate that runs *before* verify-before-execute on non-trivial actions. Where think exempts (single-line fixes, step-by-step user instructions, doc-only edits, git ops), the Design line is omitted from the verify block. Where think fires, the Design line names where in this conversation think happened. The two are paired: think produces the design; verify references it.
+- **`[rule:definition-of-done]`** is the post-hoc gate ("is this finished?"). Verify-before-execute is the pre-hoc gate ("should I take this action?"). Different cadence; both apply.
+- **`[skill:code-review]`** operates on a diff after it exists. Verify-before-execute operates on the intent before the diff exists. Both apply to the same change at different points.
+- **`[skill:commit]`** invokes verify-before-execute as part of its step 0 (before any other check). The rule is broader than commits; the commit skill is one consumer.
+- **`[rule:output]`** governs the *content* of what you write to commits/PRs/comments. Verify-before-execute governs whether you should be writing it at all.
 
 ## Why this rule exists
 
@@ -199,4 +199,4 @@ This rule exists to make investigation observable. Invisible discipline decays; 
 
 ## Attribution
 
-Defers to `[`output`](_output-rules.md)`. No AI / agent attribution in the verification block, in commits that follow it, or anywhere else.
+Defers to `[rule:output]`. No AI / agent attribution in the verification block, in commits that follow it, or anywhere else.

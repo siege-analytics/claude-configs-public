@@ -11,12 +11,12 @@ Books on building data pipelines, scheduling, and moving data between systems.
 
 | Task signal | Book to read |
 |---|---|
-| Designing an ingestion pipeline, choosing batch vs stream, scheduling, reliability | [`data-pipelines`](../../shelves/data-and-pipelines/data-pipelines/SKILL.md) |
-| Storage-engine choice or distributed-data internals (load this *and* DDIA) | also [`data-intensive`](../../shelves/systems-architecture/data-intensive/SKILL.md) |
+| Designing an ingestion pipeline, choosing batch vs stream, scheduling, reliability | [skill:shelves--data-pipelines] |
+| Storage-engine choice or distributed-data internals (load this *and* DDIA) | also [skill:shelves--data-intensive] |
 
 ## Books in this shelf
 
-- [`data-pipelines`](../../shelves/data-and-pipelines/data-pipelines/SKILL.md) -- *Data Pipelines Pocket Reference* (James Densmore). Practical patterns for ingestion, transformation, scheduling, and observability.
+- [skill:shelves--data-pipelines] -- *Data Pipelines Pocket Reference* (James Densmore). Practical patterns for ingestion, transformation, scheduling, and observability.
 
 ## Disambiguation
 
