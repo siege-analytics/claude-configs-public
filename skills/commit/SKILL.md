@@ -309,8 +309,8 @@ Part-of: #38
 
 For cross-repo references:
 ```
-Fixes: electinfo/enterprise#42
-Refs: siege-analytics/siege_utilities#335
+Fixes: <org-a>/<repo-a>#42
+Refs: <org-b>/<repo-b>#335
 ```
 
 ### Ticket reference patterns by platform
