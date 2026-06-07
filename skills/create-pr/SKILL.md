@@ -70,7 +70,7 @@ The PR description must contain a `## Tickets` section listing every ticket this
 
 - Fixes #42
 - Refs #38
-- Part-of electinfo/enterprise#357
+- Part-of <org>/<repo>#357
 ```
 
 - Use `Fixes` / `Closes` when the PR fully resolves the ticket
@@ -257,12 +257,12 @@ gh pr create \
 - Fixes #42
 EOF
 )" \
-  --assignee dheerajchand \
+  --assignee <github-handle> \
   --label "bug,data-quality" \
-  --project "electinfo/tasks"
+  --project "<org>/tasks"
 
 # After creating, update tickets with PR link
-gh issue comment 42 --repo electinfo/enterprise --body "PR opened: electinfo/enterprise#123
+gh issue comment 42 --repo <org>/<repo> --body "PR opened: <org>/<repo>#123
 Branch: bugfix/fix_committee_id_leading_zeros
 Status: Ready for review"
 ```
@@ -270,7 +270,7 @@ Status: Ready for review"
 ### Adding to project board
 
 ```bash
-gh project item-add 1 --owner electinfo --url <pr-url>
+gh project item-add 1 --owner <org> --url <pr-url>
 ```
 
 ### Requesting review

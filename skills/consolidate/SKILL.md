@@ -20,7 +20,7 @@ Reduce documentation redundancy across repositories by:
 Scan the last 10 commits touching markdown files across all project repositories:
 
 ```bash
-cd ~/git/electinfo
+cd ~/git/<org>
 for repo in */; do
   if [ -d "$repo/.git" ]; then
     echo "=== $repo ==="
@@ -99,8 +99,8 @@ Add liberal cross-references from `docs/` into repo-specific material:
 ## Spark Deployment
 
 For detailed Spark cluster configuration, see:
-- [ops/app-spark/](https://github.com/electinfo/ops/tree/main/app-spark) - Kubernetes manifests
-- [zeppelin/CLAUDE.md](../zeppelin/CLAUDE.md) - Spark interpreter configuration
+- `ops/app-spark/` in your ops repo - Kubernetes manifests
+- `zeppelin/CLAUDE.md` in your analytics repo - Spark interpreter configuration
 ```
 
 ### 6. Verify and Report

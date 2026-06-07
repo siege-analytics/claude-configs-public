@@ -75,22 +75,13 @@ Use CLAUDE.md for **session-scoped** notes that don't belong in the durable Tier
 
 Durable, recurring patterns belong in `LESSONS.md` (step 4 above), not CLAUDE.md.
 
-### 6. Update Notion Knowledge Base (if architecture changed)
+### 6. Update project knowledge base (if applicable)
 
-If this session changed architecture, data models, pipeline structure, or system capabilities:
-- Run affected Notion sync jobs: `python -m sync.run roadmap dashboard automated_skills`
-- Create an "Architecture Update -- YYYY-MM-DD" page under Telemetry describing what changed and why, at 5th-grade reading level
-- Update the Project Roadmap if project status or dependencies changed
-- Update the Automated Skills page if new skills or automation were added
+If the project has a knowledge base (Notion, Confluence, internal wiki, etc.) that is intentionally written for non-engineering readers, and this session changed architecture, data models, pipeline structure, or system capabilities, update it.
 
-**Provenance tagging:** Every Notion page must declare how it is maintained:
-- **Sync pages** (rebuilt by cron jobs) already have footers via `notion.provenance_footer("sync")`
-- **Agent-created pages** (like Architecture Updates) must append `notion.provenance_footer("agent")` as the last blocks
-- **Manual pages** are tagged by the Content Registry
-- After creating an agent page, add it to `CONTENT_REGISTRY` in `sync/config/__init__.py` with `"type": "agent"`
-- If the page needs human follow-up (e.g., creating a form, configuring a DB), add an entry to `PENDING_HUMAN_ACTIONS` in `content_registry.py`
+The mechanics are project-specific (which pages exist, how sync jobs are run, whether agent-authored pages need a provenance tag, where the content registry lives). Project-specific wrap-up overlays should extend this skill with the concrete commands, page taxonomy, and provenance conventions for their knowledge base. The generic rule is just: if architecture changed AND the audience for the knowledge base includes the people who would need to know, update it as part of wrap-up.
 
-**Trigger:** Ask yourself -- "Would Leena or a new team member need to know about this?" If yes, it belongs in Notion.
+**Trigger:** ask "would a non-engineering reader (PM, ops, sales, future hire) need to know about this?" If yes and a knowledge base exists for that audience, update it.
 
 ## Example CLAUDE.md Addition
 
@@ -120,5 +111,4 @@ If this session changed architecture, data models, pipeline structure, or system
 - [ ] Checked rules-audit cadence -- nudged user if last audit >60 days ago
 - [ ] LESSONS.md ledger updated for any recurring patterns surfaced this session (via [skill:lessons-learned])
 - [ ] CLAUDE.md updated with session-scoped notes (durable patterns went to LESSONS.md, not here)
-- [ ] Notion updated if architecture, models, or capabilities changed
-- [ ] Architecture Update page created if significant changes were made
+- [ ] Project knowledge base updated if architecture, models, or capabilities changed (per project-specific wrap-up overlay if one exists)

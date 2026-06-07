@@ -103,9 +103,9 @@ Mechanical enforcement candidate: `[skill:detect-ai-fingerprints]` trigger-set e
 
 Acceptable shapes:
 
-- *Inline:* "Phase 3 took effect -- grep result: 0 empty-cand-FEC-ID edges in gold_edges (was 3,469)."
-- *Inline:* "Hypothesis: bulk-collapse drives the F3 gap. Probe: top-5 donor row inspection -- `SELECT donor_name, contribution_amount FROM ...` → top-5 are committees, not bulk-collapsed lines → hypothesis falsified."
-- *Referenced:* "Phase 3 took effect (verified at electinfo/enterprise#2210 comment 2026-05-30 10:45 CDT -- probe inlined there)."
+- *Inline:* "Phase 3 took effect -- grep result: 0 violating rows in <output-table> (was 3,469)."
+- *Inline:* "Hypothesis: <upstream-pattern> drives the gap. Probe: top-5 row inspection -- `SELECT <key>, <metric> FROM ...` → top-5 are <observed-shape>, not <hypothesized-shape> → hypothesis falsified."
+- *Referenced:* "Phase 3 took effect (verified at <ticket-comment-url> -- probe inlined there)."
 
 Banned shapes:
 
@@ -113,7 +113,7 @@ Banned shapes:
 - "Phase 3 took effect (per my earlier investigation)." (reference too vague -- no artifact pointer)
 - "The DAG produces the 68.34% baseline." (causal claim about runtime output without a same-turn probe of the actual DAG run)
 
-**Incident justification.** Operator-observed recurrence pattern (2026-05-31, claude-configs-public#268): six wrong causal claims stated as fact in one ~6h session, each falsified after the fact at half-hour-or-more cost per incident -- bulk-collapse-as-F3-driver, Pass 3 closing residual gaps, silver_part2 phantom DAG fail, Phase 3 taking effect after re-mat, bronze/fec_filings.py bidirectional drift, 68.34%-within-±5% as DAG output. Every existing verify-before-X rule gates an *action* (Edit / Write / Bash). Verbal claims happen at the LLM-output layer, which no PreToolUse hook intercepts. This rule gates *claims*, not actions, and lives at the speech-time enforcement surface alongside writing-prose:5.
+**Incident justification.** Operator-observed recurrence pattern in claude-configs-public#268: six wrong causal claims stated as fact in one ~6h session, each falsified after the fact at half-hour-or-more cost per incident. The pattern: claims about "X took effect" / "Y drives Z" / "the DAG produces N" stated without same-turn probe, falsified later. Every existing verify-before-X rule gates an *action* (Edit / Write / Bash). Verbal claims happen at the LLM-output layer, which no PreToolUse hook intercepts. This rule gates *claims*, not actions, and lives at the speech-time enforcement surface alongside writing-prose:5.
 
 **Detection markers for Phase 2 scanner** (case-insensitive; intended for a future `hooks/resolver/post-claim-guard.sh` Stop-hook scanner, same re-injection pattern as `standing-order-guard.sh`):
 
@@ -131,13 +131,13 @@ Non-regex flag (LLM-eval for Phase 2 tuning, not a regex trigger): `(because|sin
 
 Scanner flagging policy: flag any causal-marker hit without (a) inline probe in the same response, or (b) a URL / `#<NNN>` / `memory:<file>` / `session:<id>` reference within ±200 characters of the claim. Conservative default; operator-tunable false-positive rate.
 
-**writing-claims:10. Before claiming a change to runtime-loaded code took effect, verify the consuming path matches the edited path.** Any deployment topology with separate write surfaces (worker-image-baked vs git-sync; vendored vs upstream; baked container vs config-loaded; Lambda zip vs source; CDN-cached vs source; firmware-baked vs config-loaded) has at least two paths only one of which the runtime loads. The path you edited and the path the runtime reads are not the same claim until the inspection matches on both. Verification probe must target the consuming path explicitly -- e.g., `kubectl exec <runtime-pod> -- grep <pattern> <consuming-path>`, `ls -la /opt/ee_pipelines/...` on the worker, equivalent inspection of the loaded artifact.
+**writing-claims:10. Before claiming a change to runtime-loaded code took effect, verify the consuming path matches the edited path.** Any deployment topology with separate write surfaces (worker-image-baked vs git-sync; vendored vs upstream; baked container vs config-loaded; Lambda zip vs source; CDN-cached vs source; firmware-baked vs config-loaded) has at least two paths only one of which the runtime loads. The path you edited and the path the runtime reads are not the same claim until the inspection matches on both. Verification probe must target the consuming path explicitly -- e.g., `kubectl exec <runtime-pod> -- grep <pattern> <consuming-path>`, `ls -la /opt/<project>/...` on the worker, equivalent inspection of the loaded artifact.
 
 This is the operational core of the writing-claims:9 failure mode for runtime-loaded code: agent edits source path A, runtime loads source path B, agent claims the change took effect, runtime never saw it. The cheap test is grepping the consuming path before stating the claim.
 
 **Anticipated Phase 2 hook path:** `hooks/resolver/post-claim-guard.sh` (shared with writing-claims:9 -- see that rule's Phase 2 section). The consuming-path detection is harder to mechanize than the causal-marker grep because it requires knowing the deployment topology (which path the runtime loads). Likely Phase 2 approach: an opt-in per-repo `consuming-paths.json` manifest the hook consults; absent the manifest, the rule remains operator-auditable only.
 
-**Incident justification.** Two silent no-ops in the same 2026-05-31 session: Phase 3 gold MVs (claimed effective; runtime continued reading the worker-image-baked path; required unblocker electinfo/airflow#137) and PR #2212 recon SQL (claimed running; the scheduled DAG was reading stale vendor SQL, not the edited path; required unblocker electinfo/airflow#138). Both came from the same shape -- editing the wrong of two equivalent-looking paths. The generalization to non-Kubernetes topologies (Lambda, CDN, vendored deps, firmware) makes this a writing-claims:9 special-case worth promoting to its own line so the failure mode names itself.
+**Incident pattern.** Two silent no-ops in the same observed session: (a) materialized views claimed effective, but the runtime continued reading a worker-image-baked path instead of the edited registry path -- required a separate unblocker PR to bake the new path. (b) Recon SQL claimed running, but the scheduled DAG was reading stale vendored SQL, not the edited path -- required a separate unblocker PR to refresh the vendor sync. Both came from the same shape: editing the wrong of two equivalent-looking paths when the consuming runtime resolved by deployment-time decision (image bake, vendor sync), not by edit-time path. The generalization to non-Kubernetes topologies (Lambda, CDN, vendored deps, firmware) makes this a writing-claims:9 special-case worth promoting to its own line so the failure mode names itself.
 
 ## Override
 
