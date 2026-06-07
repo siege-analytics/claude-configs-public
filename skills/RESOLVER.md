@@ -99,7 +99,6 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Trigger | Skill |
 |---|---|
 | Central docs consolidation across repos | [skill:cascading-documentation] |
-| Notion knowledge base | [skill:notion-knowledge-base] |
 
 ### Thinking
 
