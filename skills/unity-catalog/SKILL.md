@@ -12,7 +12,7 @@ This skill fires when you are about to:
 - Write Delta / Parquet / Iceberg / ORC to any S3 path.
 - Call `df.write.save(...)`, `df.write.parquet(...)`, `df.write.format("delta").save(...)`, `df.write.format("iceberg").save(...)`.
 - Call `df.write.saveAsTable(...)`.
-- Touch paths under `s3a://hive-warehouse/*`, `s3://silver/*`, `s3://gold/*`, `s3://bronze/*`, or any other bucket that backs a catalog-managed schema.
+- Touch paths under any S3 bucket that backs a catalog-managed schema (warehouse buckets, medallion-layer buckets like `s3://bronze/*` / `s3://silver/*` / `s3://gold/*`, etc.).
 - Register a table in Hive Metastore or Unity Catalog.
 - Modify a `SparkApplication` CRD that writes Delta/Parquet to shared storage.
 
@@ -34,7 +34,7 @@ The catalog (UC in this environment) is the source of truth for:
 
 Writing directly to `s3a://...` bypasses all of it. Downstream readers querying `SELECT * FROM catalog.schema.table` will not see your data because the catalog points elsewhere. You will either:
 
-1. **Be invisible** -- your output lives at a path nobody queries; Consumer sees stale data.
+1. **Be invisible** -- your output lives at a path nobody queries; downstream readers see stale data.
 2. **Corrupt state** -- you overwrite a path that another process manages, causing schema/format drift.
 3. **Orphan data** -- storage fills up with writes nobody owns and nobody cleans.
 
@@ -48,37 +48,37 @@ All three have happened. The fix is always the same: use the catalog.
 
 ```python
 # UC-managed table (catalog chooses location):
-df.write.format("delta").mode("overwrite").saveAsTable("enterprise_bulk.individual_contributions")
+df.write.format("delta").mode("overwrite").saveAsTable("analytics.daily_events")
 
 # If the schema doesn't exist yet:
-spark.sql("CREATE SCHEMA IF NOT EXISTS enterprise_bulk")
-df.write.format("delta").mode("overwrite").saveAsTable("enterprise_bulk.individual_contributions")
+spark.sql("CREATE SCHEMA IF NOT EXISTS analytics")
+df.write.format("delta").mode("overwrite").saveAsTable("analytics.daily_events")
 
 # If you need overwriteSchema on a repeated run:
 (df.write.format("delta")
    .mode("overwrite")
    .option("overwriteSchema", "true")
-   .saveAsTable("enterprise_bulk.individual_contributions"))
+   .saveAsTable("analytics.daily_events"))
 ```
 
 ### Writing via SQL
 
 ```python
 df.createOrReplaceTempView("src")
-spark.sql("INSERT OVERWRITE TABLE enterprise_bulk.individual_contributions SELECT * FROM src")
+spark.sql("INSERT OVERWRITE TABLE analytics.daily_events SELECT * FROM src")
 ```
 
 ### Never (without explicit direction)
 
 ```python
 # WRONG: bypasses catalog entirely
-df.write.format("delta").save("s3a://hive-warehouse/enterprise_bulk/individual_contributions")
+df.write.format("delta").save("s3a://<warehouse-bucket>/analytics/daily_events")
 
 # WRONG: same bucket, same bypass
-df.write.parquet("s3a://silver/enterprise_bulk/individual_contributions")
+df.write.parquet("s3a://<silver-bucket>/analytics/daily_events")
 
 # WRONG: raw Delta path write "for testing" -- this is how orphans start
-df.write.format("delta").mode("overwrite").save("s3a://hive-warehouse/enterprise_bulk_v2/...")
+df.write.format("delta").mode("overwrite").save("s3a://<warehouse-bucket>/analytics_v2/...")
 ```
 
 Raw-path writes are only acceptable for **private, non-catalog-managed locations** like a scratch bucket the catalog doesn't cover, and even then the path must be outside any warehouse prefix.
@@ -91,7 +91,7 @@ Before writing, verify the target table's catalog state:
 
 ```bash
 # Hit the UC REST API directly for truth
-curl -sS "http://app-unity-catalog.electinfo.svc.cluster.local:8080/api/2.1/unity-catalog/tables?catalog_name=electinfo&schema_name=<schema>" \
+curl -sS "http://<uc-service-host>:<port>/api/2.1/unity-catalog/tables?catalog_name=<catalog>&schema_name=<schema>" \
   | python3 -m json.tool
 ```
 
@@ -109,17 +109,17 @@ If any of these fail, **stop and fix the registration before writing**.
 
 ## Spark session requirements
 
-For `saveAsTable` to reach UC, the Spark session must be configured with the UC catalog:
+For `saveAsTable` to reach UC, the Spark session must be configured with the UC catalog implementation, its URI, and the catalog name:
 
 ```
-spark.sql.catalog.spark_catalog=info.elect.spark.catalog.PatchedUCSingleCatalog
-spark.sql.catalog.spark_catalog.uri=http://app-unity-catalog.electinfo.svc.cluster.local:8080
-spark.sql.catalog.spark_catalog.uc-catalog=electinfo
+spark.sql.catalog.spark_catalog=<UC catalog implementation class>
+spark.sql.catalog.spark_catalog.uri=http://<uc-service-host>:<port>
+spark.sql.catalog.spark_catalog.uc-catalog=<catalog-name>
 ```
 
-This is already set on `spark-connect-server` (see `spark-on-kubernetes/manifests/spark-connect/base/spark-connect-server.yaml`). For `SparkApplication` CRDs (Spark Operator), add those three `sparkConf` keys to the driver + executor config.
+The implementation class varies by deployment (e.g. `io.unitycatalog.spark.UCSingleCatalog` or a project-patched variant). Confirm what your Spark Connect server / SparkApplication CRDs are configured with before assuming.
 
-Spark Connect clients get the UC catalog automatically when they remote into the configured server -- no extra config needed.
+Spark Connect clients inherit the catalog from the configured server. For `SparkApplication` CRDs (Spark Operator), add the same three `sparkConf` keys to driver + executor config.
 
 ---
 
@@ -139,7 +139,7 @@ spark.sql("""
     CREATE TABLE IF NOT EXISTS <schema>.<table>
     (col1 STRING, col2 DECIMAL(14,2), ...)
     USING DELTA
-    LOCATION 's3a://hive-warehouse/<managed-path>/<schema>/<table>'
+    LOCATION 's3a://<warehouse-bucket>/<managed-path>/<schema>/<table>'
 """)
 df.write.format("delta").mode("overwrite").insertInto("<schema>.<table>")
 ```
@@ -166,7 +166,7 @@ If any answer is "no" or "I don't know" -- stop and resolve it before writing.
 Symptoms: `generateTemporaryTableCredentials` returns 400 `FAILED_PRECONDITION`, or `DESCRIBE TABLE` fails, or the table has 0 columns registered.
 
 - **Do not work around by writing to a raw path.** That creates orphans and doesn't solve the downstream-read problem.
-- **Diagnose**: query UC REST directly to see the registration state. Check whether the `storage_location` bucket is covered by UC's storage credentials (`s3.bucketPath.N` in `app-unity-catalog` configmap).
+- **Diagnose**: query UC REST directly to see the registration state. Check whether the `storage_location` bucket is covered by UC's storage credentials (`s3.bucketPath.N` in UC's configmap / config).
 - **Coordinate**: if UC needs a new storage credential binding or the table needs re-registration, this is a config/ops change -- surface it as a ticket and get confirmation before touching UC's configuration.
 - **Do not re-register existing production tables without explicit authorization.** They may be referenced by consumers, views, or jobs you don't know about.
 
@@ -174,13 +174,5 @@ Symptoms: `generateTemporaryTableCredentials` returns 400 `FAILED_PRECONDITION`,
 
 ## Related
 
-- `skills/coding/spark/SKILL.md` -- broader Spark patterns
-- `skills/coding/pipeline-jobs/SKILL.md` -- pipeline orchestration
-- `electinfo_claude_skills/skills/pipeline-guard/SKILL.md` -- don't bypass Spark Operator for batch jobs
-- `electinfo_claude_skills/skills/rundeck-job/SKILL.md` -- Rundeck YAML for pipeline jobs
-
----
-
-## History
-
-This skill was written after repeatedly writing Delta files directly to `s3a://hive-warehouse/enterprise_bulk/*` paths that bypassed UC. The "cutover" was invisible to Consumer (whose reader resolves `enterprise_bulk.*` through UC), and left 99 orphaned objects in shared storage. The rule existed in `pipeline-guard` ("Register in Unity Catalog") but as a footnote, not an enforced trigger. This skill exists so the rule fires before the write, not after.
+- [skill:spark] -- broader Spark patterns
+- [skill:pipeline-jobs] -- pipeline orchestration

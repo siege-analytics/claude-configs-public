@@ -40,8 +40,8 @@ git log --oneline main..feature/fix-committee-ids
 If commits span multiple repositories, gather from each:
 
 ```bash
-git -C ~/git/electinfo/enterprise log --oneline --grep="#42"
-git -C ~/git/siege-analytics/siege_utilities log --oneline --grep="#42"
+git -C ~/git/<org>/<repo-a> log --oneline --grep="#42"
+git -C ~/git/<org>/<repo-b> log --oneline --grep="#42"
 ```
 
 # Closing comment
@@ -95,14 +95,14 @@ follow-up, known limitations, things that were explicitly descoped.
 
 ```bash
 # Add closing comment
-gh issue comment 42 --repo electinfo/enterprise --body "$(cat <<'EOF'
+gh issue comment 42 --repo <org>/<repo> --body "$(cat <<'EOF'
 ## Resolution
 ...closing comment body...
 EOF
 )"
 
 # Close the issue
-gh issue close 42 --repo electinfo/enterprise --reason completed
+gh issue close 42 --repo <org>/<repo> --reason completed
 ```
 
 ## GitLab
@@ -117,7 +117,7 @@ glab issue close 42
 
 ## Cross-platform sync
 
-If the ticket is dual-tracked (e.g., GitHub `electinfo/enterprise` and GitLab `siege-analytics/fec/pure-translation`):
+If the ticket is dual-tracked across platforms (e.g., GitHub `<org>/<repo>` and a GitLab mirror at `<gl-org>/<gl-repo>`):
 
 1. Write the closing comment on the primary platform
 2. Copy the same closing comment to the mirror platform

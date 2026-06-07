@@ -109,7 +109,7 @@ This skill is a **universal pre-action check** -- it fires before any non-trivia
 ## Edge cases
 
 ### Multiple repos in one workspace
-A workspace may have multiple projects with different ticket destinations (e.g., `siege-utilities` uses GitHub Issues, `electinfo` uses Linear). The destination is scoped to the working directory's remote, not the workspace globally.
+A workspace may have multiple projects with different ticket destinations (e.g., one project uses GitHub Issues, another uses Linear, a third uses Jira). The destination is scoped to the working directory's remote, not the workspace globally.
 
 ### Offline / air-gapped work
 If the ticket destination is unreachable (no network, API down), the guard should:

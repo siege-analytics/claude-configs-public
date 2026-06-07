@@ -14,7 +14,6 @@ Architectural doctrine for the contract between frontends and backends. Not fram
 
 - [skill:vue] -- FE framework conventions (Pinia, routes, composables).
 - [skill:django] -- Backend framework conventions (models, views, serializers).
-- [skill:pour-now-triage] -- restoration overrides that freeze specific contract changes during triage.
 
 ## 1. Decision tree
 
@@ -39,7 +38,7 @@ START: I'm calling or receiving from an external service
   |   |
   |   +-- Backend --> backend (internal service call)
   |       HTTP or message queue, not direct DB writes across service
-  |       boundaries. See pour-now-triage for the catalog-write-API plan.
+  |       boundaries.
   |
   +-- Am I changing the contract shape?
       +-- YES --> both sides must update in the same release window (section 2)
@@ -70,15 +69,13 @@ interface ApiError {                     {
    - New error code: FE's discriminated union falls through to default; add the new code to the FE type before the backend starts returning it.
 3. **`error_message` is human-readable and safe to display.** The backend is the copy source; the FE does not rewrite error messages (except for toast formatting).
 
-Backend produces this shape in `apps/api/exceptions.py::exception_handler` and `pournow/urls.py::django_500_handler`. FE consumes it in `src/services/api.ts` and `src/utils/normalizeApiErrorResponse`. See [business-backend wiki -- API Surface SS Custom error envelope](https://github.com/pour-now/business-backend/wiki/API-Surface#custom-error-envelope) and [business-admin wiki -- API Client SS Error handling contract](https://github.com/pour-now/business-admin/wiki/API-Client#error-handling-contract).
+The backend produces this shape from a DRF `exception_handler` (project-defined) and the 500 handler in the project's root `urls.py`. The FE normalizes it (typically `normalizeApiErrorResponse` in the axios layer) before toasting. If the backend returns a bare DRF exception or an HTML error page, the normalizer's contract is violated -- fix the producer, not the normalizer.
 
 ## 3. JWT + refresh rotation
 
-**Current state (pour-now):** the FE stores `access` only; ignores `refresh`. The backend issues `{ access, refresh }` from `/auth/login/` with a [99999-day lifetime](https://github.com/pour-now/business-backend/wiki/Django-Deviations#12-jwt-lifetime-of-99999-days). No 401-retry-with-refresh exists in the axios interceptor.
+**The coupled-change rule:** reducing the backend's `ACCESS_TOKEN_LIFETIME` **breaks every open FE tab** unless the FE has a 401-retry-with-refresh interceptor. The two PRs must merge on the same day.
 
-**The coupled-change rule:** reducing the backend's `ACCESS_TOKEN_LIFETIME` **breaks every open FE tab** until the FE adds a 401-retry-with-refresh interceptor. The two PRs must merge on the same day.
-
-**When rotation is enabled, the interceptor pattern:**
+**The interceptor pattern when rotation is enabled:**
 
 ```ts
 api.interceptors.response.use(
@@ -98,48 +95,39 @@ api.interceptors.response.use(
 ```
 
 **Rules:**
-- Store both `access` and `refresh` when rotation is active. `refresh` goes in localStorage alongside `access` (or httpOnly cookies if the team migrates -- see pour-now-triage).
+- Store both `access` and `refresh` when rotation is active. `refresh` lives in localStorage alongside `access`, OR in httpOnly cookies (more secure; requires CORS/CSRF alignment with the backend).
 - The retry must be one-shot (`_retry` flag). Infinite retry loops on a truly-revoked token are a livelock.
 - The 401 handler must NOT trigger logout on the first 401 -- it must attempt refresh first. Logout fires only when refresh itself fails.
-- When rotation is disabled (current state): the 401 handler toasts and logs out immediately. This is correct for the 99999-day-lifetime regime.
-
-See [business-admin wiki -- State Management SS JWT lifecycle](https://github.com/pour-now/business-admin/wiki/State-Management#jwt-lifecycle) and [business-backend wiki -- Django Deviations SS1.2](https://github.com/pour-now/business-backend/wiki/Django-Deviations#12-jwt-lifetime-of-99999-days).
+- When rotation is disabled (long-lived access tokens, no refresh wired): the 401 handler should toast and log out immediately. This is correct for the no-rotation regime but is a known anti-pattern -- track removal of the long lifetime as a coordinated FE+BE change.
 
 ## 4. Multi-tenant headers
 
-The `X-Business-ID` pattern:
+For multi-tenant backends, the FE sends a per-request tenant header (e.g. `X-Tenant-ID`, `X-Business-ID`, `X-Org-ID`). The exact name is project-specific; the pattern is universal.
 
 ```ts
-// FE request interceptor
-config.headers['X-Business-ID'] = useBusinessStore().selectedBusiness?.id
+// FE request interceptor (illustrative)
+const tenantId = useTenantStore().selectedTenant?.id
+if (tenantId) config.headers['X-Tenant-ID'] = tenantId
 ```
 
 **Rules:**
 
-1. **Set explicitly, not by undefined-omission.** The current code sets the header to `undefined` when `selectedBusiness` is null, relying on axios to omit undefined headers from the wire. This works but is fragile. Prefer an explicit guard:
-   ```ts
-   const businessId = useBusinessStore().selectedBusiness?.id
-   if (businessId) config.headers['X-Business-ID'] = businessId
-   ```
-2. **Backend `SKIP_NAMESPACES`** (`admin`, `moderation`, `business`) exempt specific URL namespaces from the `X-Business-ID` requirement. The FE's "list my businesses" call (`GET /businesses/`) runs in the `business` namespace and works without the header. Everything else requires it.
-3. **The header is the tenant boundary.** A request without `X-Business-ID` to a non-skipped endpoint returns 401 from `JWTAuthentication`. This is auth-layer enforcement, not view-layer.
-4. **When adding a new endpoint** that should work without tenant context (cross-tenant lookup, shared resource), register its URL name in `JWTAuthentication.SKIP_URL_NAMES` on the backend AND verify the FE's interceptor still sets the header for everything else.
-
-See [business-backend wiki -- API Surface SS JWTAuthentication](https://github.com/pour-now/business-backend/wiki/API-Surface#jwtauthentication--tenancy-enforcement-at-the-auth-layer) and [business-admin wiki -- API Client SS Request interceptor](https://github.com/pour-now/business-admin/wiki/API-Client#request-interceptor--adds-auth--tenancy-on-every-call).
+1. **Set explicitly, not by undefined-omission.** Don't assign `undefined` to a header and rely on the HTTP client to strip it. Guard the assignment.
+2. **Define skip-namespaces on the backend, not by URL inspection on the FE.** The backend's auth class is the source of truth for "this URL doesn't need a tenant header." The FE sends the header on every request; the backend decides what's required.
+3. **The tenant header is an auth-layer boundary, not a view-layer concern.** A request without the header to a non-skipped endpoint should fail at the auth class (401), not deep inside a view.
+4. **When adding a cross-tenant endpoint** (shared resource, cross-tenant lookup), register it in the backend's skip list AND verify the FE's interceptor still sends the header for everything else.
 
 ## 5. Distributed tracing
 
-**Current state (pour-now):** broken. The FE's `tracePropagationTargets` is set to the Sentry quickstart placeholder (`/^https:\/\/yourserver\.io\/api/`), so FE traces never propagate to the backend. The backend has three separate APM stacks (Sentry errors-only, New Relic, AWS Application Signals) with no inbound trace context from the FE.
-
 **The rules:**
 
-1. **`tracePropagationTargets` must match the actual API host.** Replace the placeholder with the real backend URL pattern:
+1. **`tracePropagationTargets` must match the actual API host.** Sentry's quickstart placeholder (`/^https:\/\/yourserver\.io\/api/`) is dead config; if you see it in a real project, traces are not propagating. Replace with the real backend URL pattern:
    ```ts
    tracePropagationTargets: ['localhost', /^https:\/\/api\.yourdomain\.com/]
    ```
-2. **Pick one tracing stack.** Either Sentry propagation works end-to-end (FE -> backend), or document that "Sentry is errors-only; AWS Application Signals does tracing" and don't pretend otherwise.
-3. **`tracesSampleRate`** should not be 1.0 in production for a high-traffic SPA. The current 100% sample rate is a cost concern; reduce to 0.1-0.2 once the propagation target is fixed.
-4. **Cross-boundary incident correlation** without trace propagation requires manual timestamp + user/business-ID matching across two stacks. This is the current operational reality.
+2. **Pick one tracing stack.** Either Sentry propagation works end-to-end (FE -> backend), or document that the FE and backend tracing stacks are intentionally separate and accept the manual-correlation cost.
+3. **`tracesSampleRate`** should not be 1.0 in production for a high-traffic SPA. Reduce to 0.1-0.2 once the propagation target is fixed.
+4. **Cross-boundary incident correlation** without trace propagation requires manual timestamp + user/tenant-ID matching across stacks -- expensive at incident time. Fix the propagation rather than relying on this.
 
 ## 6. External SDK wrappers
 
@@ -160,20 +148,20 @@ Every external SDK gets a wrapper:
 
 The inbound-webhook pattern (backend):
 
-1. **Separate auth class** (`WebhookTokenAuthentication`). Never reuse `JWTAuthentication` for webhooks -- the identity model is different (partner token vs user JWT).
+1. **Separate auth class** (e.g. `WebhookTokenAuthentication`). Never reuse the user-JWT auth class for webhooks -- the identity model is different (partner token vs user JWT) and conflating them creates privilege-escalation pathways.
 2. **Audit fields per-request:** `last_used_at`, `request_count`, `last_request_ip`. Written on every authenticated request.
 3. **Hot-row caveat:** at high inbound volume, per-request `UPDATE` on the webhook-user row is a contention point. Mitigation: batched async write or periodic aggregation from the API log.
-4. **Webhook endpoints are in `SKIP_NAMESPACES`** (no `X-Business-ID` required). The webhook payload carries its own tenant context.
+4. **Webhook endpoints typically belong in the tenant-header skip list** -- the webhook payload carries its own tenant context; the request doesn't have an interactive user to provide one.
 
-## 8. What this skill is silent on
+## 8. Topics this skill is silent on
 
-These are not covered because pour-now does not have them. The skill should be extended when they're introduced:
+These are not covered because they vary heavily by project. Extend the skill when introducing them, with explicit contract rules for each:
 
-- **Feature flags / A-B testing infrastructure.** No feature-flag service is integrated. Feature gating is done by route-level `visibleEntityTypes` meta or backend permission checks, not by flag evaluation.
-- **Real-time / WebSockets.** No WebSocket, SSE, or polling-based real-time updates. The SPA is request-response only.
-- **GraphQL.** The API is REST (DRF). No GraphQL layer exists or is planned.
-- **BFF (Backend-for-Frontend).** The SPA talks directly to the multi-service backend. There is no aggregation layer.
-- **Rate-limit backoff on the FE.** The FE has no 429-aware retry logic. When the backend returns 429, the user sees a toast and retries manually. Backoff handling should be added alongside any backend rate-limit hardening.
+- **Feature flags / A-B testing infrastructure.** If a flag service is added, document where flag evaluation happens (FE? BE? both?) and how the contract crosses the boundary.
+- **Real-time / WebSockets / SSE.** Reconnect semantics, message envelope, auth-on-connect -- all need explicit contracts.
+- **GraphQL.** Schema versioning, error shape (GraphQL puts errors in a per-field array, not in a top-level envelope -- the rules in section 2 don't apply directly).
+- **BFF (Backend-for-Frontend).** If introduced, the SPA-to-BFF and BFF-to-services contracts both need their own envelope/auth rules.
+- **Rate-limit backoff on the FE.** When the backend returns 429, the FE needs explicit `Retry-After` handling -- don't toast-and-pray.
 
 ## Attribution Policy
 
