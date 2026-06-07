@@ -800,6 +800,15 @@ def build_rules_bundle(
         f"Mount it as a system-prompt addendum if your runtime does not run\n"
         f"`.claude/settings.json` hooks (e.g. Craft Agent, Cursor, Cody).\n"
         f"\n"
+        f"**Craft Agent (verified 2026-06-07):** rename this file to `CLAUDE.md`\n"
+        f"(or symlink it) and place it in the session's working directory. CA\n"
+        f"auto-injects CLAUDE.md / AGENTS.md content from cwd and its\n"
+        f"subdirectories. CA does NOT walk parent directories, so the file\n"
+        f"must be at or below the session's cwd. For workspace-wide coverage,\n"
+        f"set Settings -> Workspace Settings -> Default Working Directory to\n"
+        f"the directory that contains the CLAUDE.md. `bin/install.sh --deploy`\n"
+        f"handles the symlink automatically.\n"
+        f"\n"
         f"For hook-capable runtimes (Claude Code CLI), hooks remain the preferred\n"
         f"path. This bundle is a fallback, not a replacement.\n"
         f"{project_note}"
@@ -954,8 +963,35 @@ def deploy_to_workspace() -> None:
     # Deploy rules bundle to workspace.
     bundle_md = DIST / "RULES_BUNDLE.md"
     if bundle_md.exists():
-        shutil.copy2(bundle_md, CRAFT_WORKSPACE / "RULES_BUNDLE.md")
+        bundle_dst = CRAFT_WORKSPACE / "RULES_BUNDLE.md"
+        shutil.copy2(bundle_md, bundle_dst)
         print(f"  Copied RULES_BUNDLE.md to {CRAFT_WORKSPACE}/")
+
+        # Craft Agent auto-injects CLAUDE.md / AGENTS.md content from cwd and
+        # its subdirectories on every session start. Wire the bundle into that
+        # mechanism by symlinking CLAUDE.md -> RULES_BUNDLE.md at the workspace
+        # root. Sessions whose cwd is set to the workspace root (via Settings
+        # -> Workspace Settings -> Default Working Directory) pick up the
+        # bundle automatically. Empirically verified 2026-06-07 against a
+        # probe session reporting `# claudeMd` content injection in its
+        # initial system prompt.
+        claudemd_dst = CRAFT_WORKSPACE / "CLAUDE.md"
+        if claudemd_dst.is_symlink() or not claudemd_dst.exists():
+            # Safe to (re)create: either it's already our symlink, or no file
+            # exists at that path. Replace to point at the freshly deployed bundle.
+            if claudemd_dst.is_symlink():
+                claudemd_dst.unlink()
+            claudemd_dst.symlink_to("RULES_BUNDLE.md")
+            print(f"  Symlinked CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount)")
+        else:
+            # A non-symlink CLAUDE.md already exists. Don't clobber operator
+            # content; surface the situation and let them resolve it.
+            print(
+                f"  [warn] {claudemd_dst} exists as a regular file; not overwriting.\n"
+                f"         To wire the bundle into CA auto-inject, either rename your\n"
+                f"         existing CLAUDE.md and re-run --deploy, or append the\n"
+                f"         contents of RULES_BUNDLE.md to your CLAUDE.md manually."
+            )
 
     print(f"  Deployed to {CRAFT_WORKSPACE}/ ({stripped_count} files stripped)")
 
