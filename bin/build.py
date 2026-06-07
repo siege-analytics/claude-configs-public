@@ -3,11 +3,12 @@
 
 Resolves [skill:slug] and [rule:slug] tokens to layout-appropriate paths.
 Generates RESOLVER.md from RESOLVER.template.md for each layout.
+Generates dist/RULES_BUNDLE.md and dist/RULES_BUNDLE.json for non-hook runtimes.
 Validates that every token references an existing skill/rule.
 Validates project manifests: required frontmatter, repo uniqueness, status lifecycle.
 
 Usage:
-    python bin/build.py            # build both layouts
+    python bin/build.py            # build both layouts + rules bundle
     python bin/build.py --check    # validate tokens only, no output
 """
 from __future__ import annotations
@@ -689,6 +690,108 @@ def write_build_info(
 
 
 # ---------------------------------------------------------------------------
+# Rules bundle (runtime-agnostic)
+# ---------------------------------------------------------------------------
+
+def _strip_frontmatter(content: str) -> str:
+    """Remove YAML frontmatter (--- ... ---) from markdown content."""
+    if not content.startswith("---\n"):
+        return content
+    end = content.find("\n---\n", 4)
+    if end == -1:
+        return content
+    return content[end + 5:].lstrip("\n")
+
+
+def _get_version() -> str:
+    """Read VERSION file, fall back to 'dev'."""
+    version_file = REPO_ROOT / "VERSION"
+    if version_file.exists():
+        return version_file.read_text().strip()
+    return "dev"
+
+
+def build_rules_bundle(rules_src: dict[str, Path]) -> None:
+    """Concatenate RULES.md + all _*-rules.md into a single bundle.
+
+    Emits:
+      dist/RULES_BUNDLE.md  -- for system-prompt mounting
+      dist/RULES_BUNDLE.json -- for selective injection / staleness hashing
+    """
+    DIST.mkdir(parents=True, exist_ok=True)
+
+    version = _get_version()
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=REPO_ROOT,
+            text=True,
+        ).strip()
+    except Exception:
+        commit = "unknown"
+    built_at = datetime.now(timezone.utc).isoformat()
+
+    # Read RULES.md (entry point)
+    rules_entry = SOURCE_SKILLS / "RULES.md"
+    entry_content = ""
+    if rules_entry.exists():
+        entry_content = _strip_frontmatter(rules_entry.read_text())
+
+    # Read each _*-rules.md in sorted order
+    rule_contents: dict[str, str] = {}
+    for slug in sorted(rules_src.keys()):
+        src_path = SOURCE_SKILLS / rules_src[slug]
+        if src_path.exists():
+            rule_contents[slug] = _strip_frontmatter(src_path.read_text())
+
+    # Build markdown bundle
+    banner = (
+        f"# Rules Bundle\n"
+        f"\n"
+        f"**Version:** {version} | **Commit:** {commit} | **Built:** {built_at}\n"
+        f"\n"
+        f"This file concatenates the always-on rule set from claude-configs-public.\n"
+        f"Mount it as a system-prompt addendum if your runtime does not run\n"
+        f"`.claude/settings.json` hooks (e.g. Craft Agent, Cursor, Cody).\n"
+        f"\n"
+        f"For hook-capable runtimes (Claude Code CLI), hooks remain the preferred\n"
+        f"path. This bundle is a fallback, not a replacement.\n"
+        f"\n"
+        f"Source: siege-analytics/claude-configs-public @ {commit}\n"
+        f"\n"
+        f"---\n"
+    )
+
+    sections = [banner]
+
+    if entry_content:
+        sections.append(f"\n{entry_content}\n")
+
+    for slug in sorted(rule_contents.keys()):
+        sections.append(f"\n---\n\n## `_{slug}-rules`\n\n{rule_contents[slug]}\n")
+
+    md_bundle = "".join(sections)
+    (DIST / "RULES_BUNDLE.md").write_text(md_bundle)
+
+    # Build JSON bundle
+    json_bundle = {
+        "version": version,
+        "source_commit": commit,
+        "built_at": built_at,
+        "rule_count": len(rule_contents),
+        "rules": rule_contents,
+    }
+    if entry_content:
+        json_bundle["entry_point"] = entry_content
+
+    (DIST / "RULES_BUNDLE.json").write_text(json.dumps(json_bundle, indent=2) + "\n")
+
+    print(f"  Rules bundle: {len(rule_contents)} rules, {len(md_bundle)} chars")
+    print(f"  -> dist/RULES_BUNDLE.md")
+    print(f"  -> dist/RULES_BUNDLE.json")
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
@@ -776,6 +879,12 @@ def deploy_to_workspace() -> None:
         hooks_count = sum(1 for _ in ws_hooks.rglob("*.sh"))
         print(f"  Synced {hooks_count} hook script(s) to {ws_hooks}/")
 
+    # Deploy rules bundle to workspace.
+    bundle_md = DIST / "RULES_BUNDLE.md"
+    if bundle_md.exists():
+        shutil.copy2(bundle_md, CRAFT_WORKSPACE / "RULES_BUNDLE.md")
+        print(f"  Copied RULES_BUNDLE.md to {CRAFT_WORKSPACE}/")
+
     print(f"  Deployed to {CRAFT_WORKSPACE}/ ({stripped_count} files stripped)")
 
 
@@ -850,6 +959,10 @@ def main() -> int:
         print(f"  → dist/{layout}/")
 
     warn_unknown()
+
+    print("\nBuilding rules bundle...")
+    build_rules_bundle(rules_src)
+
     print(f"\nDone. Output: {DIST}/")
 
     if args.deploy:
