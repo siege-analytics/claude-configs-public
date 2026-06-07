@@ -16,6 +16,10 @@ For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zsh
 | `skills/_*-rules.md` | **Always-on conventions** -- applied across every skill that touches code, data, or output. See [Conventions](#always-on-conventions). |
 | `skills/shelves/` | **DBrain book-skill library** -- book-derived skills (Clean Code, DDIA, Effective Python, etc.) organized into 11 topic shelves. See [DBrain](#dbrain--book-skill-library). |
 | `hooks/` | Shell hooks (PreToolUse, UserPromptSubmit) that enforce the resolver. |
+| `dist/RULES_BUNDLE.md` | **Rules bundle** -- concatenation of all always-on rules for non-hook runtimes. See [Rules bundle](#rules-bundle). |
+| `dist/RULES_BUNDLE.json` | Same content as JSON for selective injection / staleness hashing. |
+| `bin/install.sh` | **Single-command install** -- detects Craft Agent, builds, deploys, installs hooks. See [Quick Start](#quick-start). |
+| `bin/scaffold-project.py` | Scaffold new project skill directories (in-tree or satellite). |
 | `templates/` | Project templates (CLAUDE.md, settings.local.json). |
 
 ## The Skill Resolver
@@ -53,6 +57,38 @@ Files at the root of `skills/` named `_*-rules.md` are loaded by the resolver Co
 | [`_rust-rules.md`](skills/_rust-rules.md) | Rust idioms | Touching `*.rs` |
 | [`_siege-utilities-rules.md`](skills/_siege-utilities-rules.md) | Prefer [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) for utility-shaped problems before writing a new helper. Consider PRs upstream when the gap is generic. | Writing Python utilities |
 | [`_definition-of-done-rules.md`](skills/_definition-of-done-rules.md) | Five hard criteria for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists. | Every behavior change |
+
+## Rules bundle
+
+The always-on rules reach the agent in hook-capable runtimes (Claude Code CLI) via the resolver injection hook. For runtimes that don't support hooks (Craft Agent, Cursor, Cody), the build emits a **rules bundle** -- a single file concatenating all `_*-rules.md` content:
+
+| Artifact | Format | Use |
+|---|---|---|
+| `dist/RULES_BUNDLE.md` | Markdown | Mount as a system-prompt addendum |
+| `dist/RULES_BUNDLE.json` | JSON with per-rule keys | Selective injection, staleness hashing |
+
+The bundle includes a version/commit banner and is regenerated on every build from source. `bin/install.sh` deploys it to the Craft Agent workspace automatically.
+
+**Tier A (hook-capable):** hooks remain preferred -- they re-inject every turn and handle staleness. The bundle is a fallback.
+
+**Tier B (non-hook):** mount `RULES_BUNDLE.md` as a system-prompt addendum via whatever mechanism the runtime provides. The bundle gets the content in front of the agent; it does not provide mechanical enforcement (tool-call blocking), which requires hook support.
+
+## Project scaffolding
+
+`bin/scaffold-project.py` creates project-specific skill directories:
+
+```bash
+# In-tree project (under projects/ in this repo)
+python bin/scaffold-project.py init my-project --repo org/my-repo --owner me@example.com
+
+# Standalone satellite repo (flat-sync pattern)
+python bin/scaffold-project.py satellite my-project --repo org/my-repo --owner me@example.com
+
+# Add a skill to an existing project
+python bin/scaffold-project.py add-skill my-project my-new-skill
+```
+
+See `python bin/scaffold-project.py --help` for all options.
 
 ## Skills
 
@@ -139,7 +175,24 @@ Auto-applied by Claude when relevant. Not behind a router.
 
 ## Quick Start
 
-### Pin to a release tag (recommended)
+### One-command install (recommended)
+
+Clone the repo and run the install script. It detects your environment and does the right thing:
+
+```bash
+git clone https://github.com/siege-analytics/claude-configs-public.git
+cd claude-configs-public
+bash bin/install.sh
+```
+
+**What it does:**
+
+- **Craft Agent detected** (`~/.craft-agent/workspaces/` exists): builds the flat layout + rules bundle, deploys skills/hooks/resolver/bundle to your workspace, installs hook settings, validates the deployment.
+- **No Craft Agent**: builds both layouts, installs hooks to `.claude/settings.local.json` for Claude Code CLI.
+
+Options: `--workspace <slug>` to target a specific workspace (default: `my-workspace`), `--no-craft-agent` to force CLI-only mode.
+
+### Pin to a release tag
 
 This repo publishes **two release-branch artifacts per tag** for two consumer runtimes -- see [Distribution layouts](#distribution-layouts) below for the full explanation.
 
