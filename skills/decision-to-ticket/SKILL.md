@@ -144,4 +144,4 @@ If the ticket system is down or unreachable:
 3. Queue the ticket for when connectivity returns
 
 ### Disagreement about whether something is strategic
-If you're uncertain whether a decision is strategic, err on the side of filing. A lightweight ticket comment costs 30 seconds. A missed decision costs hours of retroactive filing (as demonstrated by electinfo/enterprise#2169).
+If you're uncertain whether a decision is strategic, err on the side of filing. A lightweight ticket comment costs 30 seconds. A missed decision costs hours of retroactive filing.
