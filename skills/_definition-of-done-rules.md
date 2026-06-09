@@ -66,6 +66,16 @@ Every behavior change starts from a ticket. Tickets exist to:
 
 If you find yourself coding without a ticket, stop and write one (or invoke [skill:create-ticket]). The ticket can be a one-liner; what matters is that it exists and is reachable from the commit.
 
+### f. Multi-layer work is decomposed (opt-in)
+
+When a project declares `testing.layers` in PROJECT.md (see `[rule:testing-frameworks]`), work touching more than one declared layer must be decomposed into per-layer tickets under a parent epic before implementation begins. Each per-layer ticket names its test framework, test directory, and assertion classification.
+
+Single-layer work is exempt -- one ticket suffices when only one declared layer is touched. The decomposition table posted on the parent epic is the auditable artifact.
+
+This criterion is opt-in: projects without `testing.layers` in PROJECT.md are unaffected.
+
+**Operationalized by:** [skill:ticket-decomposition] (authoring + consumer protocols).
+
 ## What "done" means at each transition
 
 | Transition | Done check |
@@ -84,6 +94,7 @@ If you find yourself coding without a ticket, stop and write one (or invoke [ski
 | (c) Tests | [skill:python] "Tests and Documentation" section; [skill:coding] Rule 6 |
 | (d) Ticket update | [skill:update-ticket], [skill:close-ticket] |
 | (e) Ticket exists | [skill:pre-work-check], [skill:create-ticket] |
+| (f) Multi-layer decomposition (opt-in) | [skill:ticket-decomposition] |
 
 The PR-creation gate ([skill:create-pr]) checks all five before opening.
 
