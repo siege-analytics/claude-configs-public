@@ -14,13 +14,15 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | [rule:typescript] | Effective TypeScript idioms -- applied when touching `*.ts` / `*.tsx` |
 | [rule:rust] | Rust idioms -- applied when touching `*.rs` |
 | [rule:siege-utilities] | Prefer `siege_utilities` for utility-shaped problems before writing a new helper. If `siege_utilities` almost solves it but doesn't, consider a PR upstream. |
-| [rule:definition-of-done] | Five hard criteria for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists. Behavior changes are not finished until all five pass. |
+| [rule:definition-of-done] | Five hard criteria plus one opt-in for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists, KB delta validated. Behavior changes are not finished until all five mandatory criteria pass. |
+| [rule:knowledge-base] | Knowledge-base consultation discipline -- read before claiming, tag every assumption, update on contradiction, silence is a finding. Applied when the project declares `knowledge_base:` in PROJECT.md. |
 | [rule:robustness] | Robust Python (Viafore) -- type safety, invariant enforcement, fail fast, constrain mutability. Applied when writing or reviewing Python code. |
 | [rule:architecture-patterns] | Architecture Patterns with Python (Percival & Gregory) -- repository pattern, service layer, dependency inversion. Applied when designing service layers or data-access boundaries. |
 | [rule:property-testing] | Hypothesis property-testing patterns -- strategies, round-trip/invariant/oracle properties. Applied when writing tests for functions with numeric, string, or collection inputs. |
 | [rule:scipy-spec] | Scientific Python SPECs 0, 4, 6 -- version support, deprecation timelines, lazy loading. Applied when managing dependency versions or API lifecycle in library packages. |
 | [rule:packaging] | PyPA Packaging Guide -- pyproject.toml, dependency spec, version management. Applied when modifying pyproject.toml, managing dependencies, or publishing packages. |
 | [rule:security-scanning] | Bandit/OWASP security standards -- injection prevention, credential handling, TLS, serialization safety. Applied when writing code that handles user input, credentials, shell commands, or network requests. |
+| [rule:testing-frameworks] | Test framework declaration and enforcement -- projects declare frameworks per layer in PROJECT.md; agents use the declared frameworks; `test-guard.sh` verifies test evidence at push time. Applied when writing tests or choosing a test runner. |
 
 ## Routing table
 
@@ -43,6 +45,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | DuckDB-spatial -- `import duckdb` + `INSTALL spatial` / `LOAD spatial` / `ST_Read` (single-node SQL on Parquet, GDAL-less) | [skill:duckdb-spatial] |
 | QML component review -- properties-in / signals-out, MuseScore plugins, Qt Quick decomposition | [skill:qml-component-review] |
 | Auditing error-path test coverage, writing-tests:5 compliance | [skill:test-coverage-audit] |
+| Choosing a test framework, declaring test layers in PROJECT.md, test-guard enforcement | [skill:testing-frameworks] |
 | Fix a bug or issue identified by code review / audit / static analysis | [skill:think] Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per [skill:evaluate-ticket] criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
 
 ### Analysis
@@ -92,6 +95,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | "What should I work on next?", opportunity surfacing | `im-feeling-lucky` (planned) |
 | Starting work on a ticket -- claim it, mark in-progress, branch, then code | [skill:pre-work-check] |
 | Create ≥2 tickets in one session (epic breakdown, audit findings, batch triage) | [skill:create-ticket] + [skill:evaluate-ticket] per ticket. **Test-before-bulk applies:** create the first ticket, run `evaluate-ticket`, fix gaps until it PASSes, THEN continue to the next. Each ticket is an independent act of investigation, not a line item in a list. |
+| Decomposing multi-layer work into per-layer tickets, creating an epic with layer-scoped children | [skill:ticket-decomposition] |
 | Making or recognizing a strategic decision (scope, architecture, deferral, standing approval, completion claim) | [skill:decision-to-ticket] -- fires in real time during work, not at PR time. Consumes the destination configured by [skill:ticket-guard]. |
 
 ### Documentation
@@ -105,6 +109,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Trigger | Skill |
 |---|---|
 | Break down a problem, decision framework | [skill:think] |
+| Consulting project knowledge base, tagging assumptions against docs, updating KB on contradiction | [skill:knowledge-base] |
 
 ### Meta
 
