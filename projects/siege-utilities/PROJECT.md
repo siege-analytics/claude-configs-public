@@ -29,6 +29,17 @@ This project definition activates when the working directory matches the `siege-
 
 Project-specific rules and skills live in this directory. They take precedence over general rules within this project's scope. See the Precedence Model section in the resolver for how conflicts are handled.
 
+## Testing
+
+```yaml
+testing:
+  layers:
+    - name: library
+      framework: pytest
+      test_dir: tests/
+      pattern: "test_{stem}.py"
+```
+
 ## Knowledge base
 
 ```yaml

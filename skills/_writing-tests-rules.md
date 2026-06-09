@@ -84,7 +84,8 @@ These rules are mandatory. No `[test-skip]` override. The rule-7 grep ("test fil
 
 ## Cross-references
 
-- `[skill:commit]` step 4 (affected-tests gate) is the mechanical enforcement of writing-tests:1: tests covering the touched code must run and pass before the commit lands. See `[rule:writing-code]` writing-code:5 (no hypothetical code) for the rule the gate enforces.
+- `[skill:commit]` step 4 (affected-tests gate) is the mechanical enforcement of writing-tests:1: tests covering the touched code must run and pass before the commit lands. See `[rule:writing-code]` writing-code:5 (no hypothetical code) for the rule the gate enforces. Step 4.6 writes `test-gate.json` for push-time verification; see `[rule:testing-frameworks]` testing-frameworks:3.
+- `[rule:testing-frameworks]` governs _which_ frameworks to use per architectural layer. Projects declare their frameworks in PROJECT.md; the `test-guard.sh` hook verifies test evidence at push time. See `[skill:testing-frameworks]` for framework recommendations.
 - `[rule:writing-code]` writing-code:3 (no speculative abstractions) is the sibling discipline on the code side; helpers and base classes are introduced only when a second caller already exists. The test-side application here covers fixtures.
 - `[rule:writing-claims]` rules apply to claims a test makes about coverage ("this test covers all four connectors") and to commit/PR messages that describe what the tests do.
 
