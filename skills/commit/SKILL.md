@@ -35,6 +35,7 @@ allowed-tools: Read Grep Glob Bash
    3. 60-second timeout per affected-test run. Tests slower than that get marked `slow` and run at PR-open time only.
    4. Non-zero exit blocks the commit. No silent skip: if the heuristic finds no test files for a touched source file, that itself is reported and the agent decides whether to write a test or proceed with `[run-skip: <reason>]`.
    5. Override syntax: `[run-skip: <reason>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per `[rule:writing-code]` writing-code:5 escape hatch. Track override frequency; using it more than once per session is a smell.
+   6. After all affected tests pass, write `test-gate.json` to the workspace root (or project root) recording test evidence. The `test-guard.sh` hook reads this file at push time. See `[rule:testing-frameworks]` testing-frameworks:3 for the schema and `[skill:testing-frameworks]` for framework guidance.
 5. **Check for a ticket reference** (see Ticket enforcement below)
    1. If no ticket exists for this work, stop and create one first
    2. If the user explicitly overrides, mark the commit with `[no-ticket]`
