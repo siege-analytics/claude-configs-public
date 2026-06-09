@@ -1,12 +1,12 @@
 ---
-description: Always-on. Standing conditional instructions ("do X when Y") decay over the trajectory; compliance drops 2–21% under load (Tian et al. 2026). This rule names the mitigations: repeat the conditional in each verification block; re-quote standing constraints at decision points; treat self-checks as cognitive-load-dependent and prefer mechanical hooks where available. Sibling to `[rule:standing-approval]` which defines how to PARSE the conditional; this rule defines how to RETAIN it.
+description: Always-on. Standing conditional instructions ("do X when Y") decay over the trajectory; compliance drops 2–21% under load (Mittal 2026). This rule names the mitigations: repeat the conditional in each verification block; re-quote standing constraints at decision points; treat self-checks as cognitive-load-dependent and prefer mechanical hooks where available. Sibling to `[rule:standing-approval]` which defines how to PARSE the conditional; this rule defines how to RETAIN it.
 ---
 
 # Prospective Memory
 
 A standing instruction with a conditional gate — "merge when reviewed," "ship when CI green," "send when she signs off" — is a **prospective memory** task: the agent must hold the conditional in active attention and only execute when the condition fires later in the trajectory. LLMs are empirically poor at this.
 
-[Tian et al. (2026), "Did You Forget What I Asked? Prospective Memory Failures in Large Language Models"](https://arxiv.org/pdf/2603.23530) measures compliance drops of **2–21%** under concurrent task load, with **"terminal constraints" (instructions at the end of prompts) most vulnerable** to being forgotten or ignored. The failure mode parallels human cognitive psychology on prospective memory: the harder the trajectory loads working attention, the more likely the conditional gate decays into a soft suggestion.
+[Mittal (2026), "Did You Forget What I Asked? Prospective Memory Failures in Large Language Models"](https://arxiv.org/pdf/2603.23530) finds, verbatim from the abstract: "Across three model families and over 8,000 prompts, compliance drops by 2-21% under concurrent task load. Vulnerability is highly type-dependent: terminal constraints (requiring action at the response boundary) degrade most, with drops up to 50%, while avoidance constraints remain comparatively robust." The failure mode parallels human cognitive psychology on prospective memory: the harder the trajectory loads working attention, the more likely the conditional gate decays into a soft suggestion.
 
 The sibling rule `[rule:standing-approval]` defines how to PARSE a "do X when Y" instruction — what "Y" means, what the gate requires. This rule defines how to RETAIN the parsed instruction over a long trajectory so it actually fires at execution time. Both are needed; either alone is insufficient.
 
@@ -21,11 +21,11 @@ The sibling rule `[rule:standing-approval]` defines how to PARSE a "do X when Y"
 
 The conditional is quoted verbatim, not paraphrased, because paraphrase is where the decay shows. If you can't quote the conditional verbatim, you've already lost it — re-read the originating message before acting.
 
-This mitigation is from Tian et al.'s "explicit reminders" + "repeat critical instructions" finding.
+This mitigation is from Mittal's "salience-enhanced format (explicit instruction framing plus a trailing reminder)" finding (per the abstract: this format "recovers much of the lost compliance").
 
 **prospective-memory:2. Position constraints at the FRONT of any plan, not at the terminal end.** When authoring multi-step plans (in commit messages, PR bodies, agent-to-agent handoffs, task lists), put the conditional gate FIRST, not last. "After CI passes, merge" is more reliable than "merge — after CI passes."
 
-This mitigation is from Tian et al.'s "terminal constraints most vulnerable" finding: instructions positioned at the end of long contexts are forgotten more often. Front-loading is mechanical defeat of position-based decay.
+This mitigation is from Mittal's finding (verbatim from abstract): "terminal constraints (requiring action at the response boundary) degrade most, with drops up to 50%". Front-loading is mechanical defeat of position-based decay.
 
 **prospective-memory:3. Cognitive load reduces compliance; mechanical hooks beat self-checks under load.** The empirically measured drop (2–21%) applies UNDER LOAD. When the agent is in a high-load state — long conversation, dense tool-call cycles, multiple parallel artifacts, time pressure — self-checks decay. Mechanical interventions (CI blocks, PreToolUse hooks, tool-layer permission tiers per Anthropic's [Claude Code auto mode](https://www.anthropic.com/engineering/claude-code-auto-mode)) do not decay.
 
@@ -62,7 +62,7 @@ Mechanism 2a (training selection toward completion) is not addressable at the ru
 
 ## Empirical references
 
-- Tian et al. (2026), "Did You Forget What I Asked? Prospective Memory Failures in Large Language Models," [arxiv 2603.23530](https://arxiv.org/pdf/2603.23530)
+- Mittal (2026), "Did You Forget What I Asked? Prospective Memory Failures in Large Language Models," [arxiv 2603.23530](https://arxiv.org/pdf/2603.23530)
 - "Check Yourself Before You Wreck Yourself: Selectively Quitting Improves LLM Agent Safety," [arxiv 2510.16492](https://arxiv.org/pdf/2510.16492)
 - "Sycophancy in Large Language Models: Causes and Mitigations," [arxiv 2411.15287](https://arxiv.org/html/2411.15287v1)
 - "AGENTIF: Benchmarking Instruction Following of Large Language Models in Agentic Scenarios," [arxiv 2505.16944](https://arxiv.org/pdf/2505.16944)
