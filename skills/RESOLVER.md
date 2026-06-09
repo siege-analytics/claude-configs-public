@@ -95,6 +95,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | "What should I work on next?", opportunity surfacing | `im-feeling-lucky` (planned) |
 | Starting work on a ticket -- claim it, mark in-progress, branch, then code | [skill:pre-work-check] |
 | Create ≥2 tickets in one session (epic breakdown, audit findings, batch triage) | [skill:create-ticket] + [skill:evaluate-ticket] per ticket. **Test-before-bulk applies:** create the first ticket, run `evaluate-ticket`, fix gaps until it PASSes, THEN continue to the next. Each ticket is an independent act of investigation, not a line item in a list. |
+| Decomposing multi-layer work into per-layer tickets, creating an epic with layer-scoped children | [skill:ticket-decomposition] |
 | Making or recognizing a strategic decision (scope, architecture, deferral, standing approval, completion claim) | [skill:decision-to-ticket] -- fires in real time during work, not at PR time. Consumes the destination configured by [skill:ticket-guard]. |
 
 ### Documentation

@@ -1,5 +1,5 @@
 ---
-description: Always-on Definition of Done. Applied to every behavior change. Five hard criteria plus one opt-in -- review, edge cases, tests, ticket update, ticket existence, KB delta. No soft carve-outs on (a)-(e).
+description: Always-on Definition of Done. Applied to every behavior change. Five hard criteria plus two opt-in -- review, edge cases, tests, ticket update, ticket existence, KB delta, multi-layer decomposition. No soft carve-outs on (a)-(e).
 ---
 
 # Definition of Done
@@ -76,6 +76,16 @@ This criterion is opt-in: projects without `knowledge_base:` in PROJECT.md are u
 
 **Operationalized by:** [skill:knowledge-base] (read-tag-update protocol); `[rule:knowledge-base]` knowledge-base:3 (update on contradiction); think-gate-guard.sh Level 3 (advisory warning).
 
+### g. Multi-layer work is decomposed (opt-in)
+
+When a project declares `testing.layers` in PROJECT.md (see `[rule:testing-frameworks]`), work touching more than one declared layer must be decomposed into per-layer tickets under a parent epic before implementation begins. Each per-layer ticket names its test framework, test directory, and assertion classification.
+
+Single-layer work is exempt -- one ticket suffices when only one declared layer is touched. The decomposition table posted on the parent epic is the auditable artifact.
+
+This criterion is opt-in: projects without `testing.layers` in PROJECT.md are unaffected.
+
+**Operationalized by:** [skill:ticket-decomposition] (authoring + consumer protocols).
+
 ## What "done" means at each transition
 
 | Transition | Done check |
@@ -95,6 +105,7 @@ This criterion is opt-in: projects without `knowledge_base:` in PROJECT.md are u
 | (d) Ticket update | [skill:update-ticket], [skill:close-ticket] |
 | (e) Ticket exists | [skill:pre-work-check], [skill:create-ticket] |
 | (f) KB delta (opt-in) | [skill:knowledge-base], `[rule:knowledge-base]` knowledge-base:3 |
+| (g) Multi-layer decomposition (opt-in) | [skill:ticket-decomposition] |
 
 The PR-creation gate ([skill:create-pr]) checks all five before opening.
 
