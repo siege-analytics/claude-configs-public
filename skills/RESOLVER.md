@@ -14,7 +14,8 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | [rule:typescript] | Effective TypeScript idioms -- applied when touching `*.ts` / `*.tsx` |
 | [rule:rust] | Rust idioms -- applied when touching `*.rs` |
 | [rule:siege-utilities] | Prefer `siege_utilities` for utility-shaped problems before writing a new helper. If `siege_utilities` almost solves it but doesn't, consider a PR upstream. |
-| [rule:definition-of-done] | Five hard criteria for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists. Behavior changes are not finished until all five pass. |
+| [rule:definition-of-done] | Five hard criteria plus one opt-in for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists, KB delta validated. Behavior changes are not finished until all five mandatory criteria pass. |
+| [rule:knowledge-base] | Knowledge-base consultation discipline -- read before claiming, tag every assumption, update on contradiction, silence is a finding. Applied when the project declares `knowledge_base:` in PROJECT.md. |
 | [rule:robustness] | Robust Python (Viafore) -- type safety, invariant enforcement, fail fast, constrain mutability. Applied when writing or reviewing Python code. |
 | [rule:architecture-patterns] | Architecture Patterns with Python (Percival & Gregory) -- repository pattern, service layer, dependency inversion. Applied when designing service layers or data-access boundaries. |
 | [rule:property-testing] | Hypothesis property-testing patterns -- strategies, round-trip/invariant/oracle properties. Applied when writing tests for functions with numeric, string, or collection inputs. |
@@ -107,6 +108,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Trigger | Skill |
 |---|---|
 | Break down a problem, decision framework | [skill:think] |
+| Consulting project knowledge base, tagging assumptions against docs, updating KB on contradiction | [skill:knowledge-base] |
 
 ### Meta
 

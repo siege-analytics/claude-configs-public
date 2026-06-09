@@ -40,6 +40,18 @@ testing:
       pattern: "test_{stem}.py"
 ```
 
+## Knowledge base
+
+```yaml
+knowledge_base:
+  - url: docs/
+    scope: API reference, module documentation, changelog
+  - url: CLAUDE.md
+    scope: architecture decisions, conventions, package structure
+  - url: notebooks/
+    scope: integration examples, capability demonstrations
+```
+
 ## Key invariants
 
 1. **Errors are not data.** Functions must not return valid-shaped empty results (empty DataFrame, `[]`, `0.0`, `{}`, `""`) on failure. Raise or log — never lie to the caller.
