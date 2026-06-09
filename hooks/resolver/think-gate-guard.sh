@@ -332,4 +332,88 @@ if [ -n "$DESIGN_NOTE_PATH" ] && [ -f "$DESIGN_NOTE_PATH" ]; then
     fi
 fi
 
+# Level 3: Knowledge-base consultation check.
+# If any PROJECT.md in the repo declares knowledge_base:, check whether the
+# signal file has a kb section with tags. Warns only — advisory enforcement.
+# Projects without knowledge_base: are unaffected. Ref: #387
+KB_WARN=$(python3 -c "
+import json, sys, os, glob
+
+signal_file = '$SIGNAL_FILE'
+workspace_root = '$WORKSPACE_ROOT'
+
+try:
+    data = json.load(open(signal_file))
+except:
+    sys.exit(0)
+
+status = data.get('status', '')
+if status in ('disposed', 'done-awaiting-pr'):
+    sys.exit(0)
+
+# Find PROJECT.md files that declare knowledge_base:
+has_kb_project = False
+project_files = []
+
+# Check workspace-root PROJECT.md
+root_project = os.path.join(workspace_root, 'PROJECT.md')
+if os.path.isfile(root_project):
+    project_files.append(root_project)
+
+# Check projects/*/PROJECT.md (claude-configs-public layout)
+projects_dir = os.path.join(workspace_root, 'projects')
+if os.path.isdir(projects_dir):
+    for p in glob.glob(os.path.join(projects_dir, '*/PROJECT.md')):
+        project_files.append(p)
+
+for pf in project_files:
+    try:
+        content = open(pf).read()
+        if 'knowledge_base:' in content:
+            has_kb_project = True
+            break
+    except:
+        continue
+
+if not has_kb_project:
+    sys.exit(0)
+
+# Project declares knowledge_base: — check signal file for kb section
+kb = data.get('kb')
+warnings = []
+
+if kb is None:
+    warnings.append('Signal file has no kb section. Project declares knowledge_base: in PROJECT.md.')
+    warnings.append('Consult the declared knowledge sources before forming claims.')
+    warnings.append('See [skill:knowledge-base] for the read-tag-update protocol.')
+elif not kb.get('consulted', False):
+    warnings.append('kb.consulted is false — knowledge sources declared but not read.')
+    warnings.append('Read the relevant KB pages and update the signal file.')
+else:
+    tags = kb.get('tags', {})
+    if not tags or all(len(v) == 0 for v in tags.values() if isinstance(v, list)):
+        warnings.append('kb section present but tags are empty — tag every assumption.')
+    # Check for unresolved contradictions (no delta reference)
+    contradicted = tags.get('contradicted', [])
+    unresolved = [c for c in contradicted if 'delta:' not in c.lower() and '#' not in c]
+    if unresolved:
+        warnings.append(f'{len(unresolved)} kb-contradicted entry(s) without delta references:')
+        for u in unresolved[:3]:
+            warnings.append(f'  - {u}')
+        warnings.append('File a KB update or ticket for each contradiction.')
+
+if warnings:
+    for w in warnings:
+        print(w)
+" 2>/dev/null || true)
+
+if [ -n "$KB_WARN" ]; then
+    cat <<EOF
+<think-gate>
+KB CONSULTATION CHECK (Level 3, advisory):
+$KB_WARN
+</think-gate>
+EOF
+fi
+
 exit 0

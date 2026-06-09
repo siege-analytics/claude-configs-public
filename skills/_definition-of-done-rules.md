@@ -1,5 +1,5 @@
 ---
-description: Always-on Definition of Done. Applied to every behavior change. Five hard criteria -- review, edge cases, tests, ticket update, ticket existence. No soft carve-outs.
+description: Always-on Definition of Done. Applied to every behavior change. Five hard criteria plus two opt-in -- review, edge cases, tests, ticket update, ticket existence, KB delta, multi-layer decomposition. No soft carve-outs on (a)-(e).
 ---
 
 # Definition of Done
@@ -66,7 +66,17 @@ Every behavior change starts from a ticket. Tickets exist to:
 
 If you find yourself coding without a ticket, stop and write one (or invoke [skill:create-ticket]). The ticket can be a one-liner; what matters is that it exists and is reachable from the commit.
 
-### f. Multi-layer work is decomposed (opt-in)
+### f. Knowledge-base delta validated (opt-in)
+
+When a project declares `knowledge_base:` in PROJECT.md, any `kb-contradicted` finding during investigation must have a filed delta before Done. A delta is a KB update PR, docs/ edit, wiki page change, or ticket for deferred update. The delta does not have to be merged -- a filed PR or ticket referencing the contradiction is sufficient. What matters is that the correction entered the work-tracking system.
+
+`kb-silent` findings that investigation resolved should produce a KB addition or a ticket for the addition. Gaps are debt, not lies -- lower urgency than contradictions, but tracked.
+
+This criterion is opt-in: projects without `knowledge_base:` in PROJECT.md are unaffected. Once declared, criterion (f) becomes part of the gate alongside (a)-(e).
+
+**Operationalized by:** [skill:knowledge-base] (read-tag-update protocol); `[rule:knowledge-base]` knowledge-base:3 (update on contradiction); think-gate-guard.sh Level 3 (advisory warning).
+
+### g. Multi-layer work is decomposed (opt-in)
 
 When a project declares `testing.layers` in PROJECT.md (see `[rule:testing-frameworks]`), work touching more than one declared layer must be decomposed into per-layer tickets under a parent epic before implementation begins. Each per-layer ticket names its test framework, test directory, and assertion classification.
 
@@ -94,7 +104,8 @@ This criterion is opt-in: projects without `testing.layers` in PROJECT.md are un
 | (c) Tests | [skill:python] "Tests and Documentation" section; [skill:coding] Rule 6 |
 | (d) Ticket update | [skill:update-ticket], [skill:close-ticket] |
 | (e) Ticket exists | [skill:pre-work-check], [skill:create-ticket] |
-| (f) Multi-layer decomposition (opt-in) | [skill:ticket-decomposition] |
+| (f) KB delta (opt-in) | [skill:knowledge-base], `[rule:knowledge-base]` knowledge-base:3 |
+| (g) Multi-layer decomposition (opt-in) | [skill:ticket-decomposition] |
 
 The PR-creation gate ([skill:create-pr]) checks all five before opening.
 
