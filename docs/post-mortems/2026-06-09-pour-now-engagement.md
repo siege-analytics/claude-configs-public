@@ -6,12 +6,14 @@
 
 **Note on terminology:** This worked example was authored before the skill's structural refactor that aligned it with `[skill:pre-mortem]`'s conventions (Tiger/Paper Tiger/Elephant → Confirmed/Latent/Avoided; Pass → Step). The section headers have been updated to the canonical vocabulary; the substance of the analysis is unchanged. The Step 3 classification table uses the Confirmed/Latent/Avoided framework that the refactored skill defines.
 
+**Self-application — Hard rule 1 (2026-06-09T15:30Z):** The Step 2 timeline was re-pulled against the tape on 2026-06-09T15:30Z after the Phase 1 hostile review (data/fresh-hostile-review-phase1-2026-06-09.md) flagged five tilde-prefixed timestamps as Step 1b violations. The re-pull resolved three rows to exact second-precision (`~06:02Z` → `06:02:00Z`, `~06:02Z–06:05Z` → `06:02:45Z–06:04:54Z`, `06:10Z` → `06:10:40Z`), corrected three Actor columns to `dheerajchand (gh author)` per `gh` metadata, marked one row (`~02:35Z`) as pre-compaction tape (exact unrecoverable), and **removed two rows entirely** (`~05:46Z frosty-panther authored memory item #6` and `~05:50Z smooth-gold cohort propagated`) because the tape sweep across all per-session `jsonl` transcripts showed no memory-file Write/Edit by any session in the 05:40Z–05:55Z window. The sole-author-handshake rule was actually incorporated by `smooth-gold` into `feedback_ready_means_all_steps_complete.md` at `05:02:24Z` (already documented at row "05:02Z"); frosty-panther's review file at `05:17:05Z` named the rule as review item #15 (not #6) but did not write the memory file. The corrected timeline is below; the original (pre-correction) revision is preserved in the PR #383 commit history (`a9c8b18` and earlier) so the drift is itself part of the data.
+
 ## Scope
 
 - **Start:** 2026-06-09T00:15Z (`#16 ticket-authoring skill` merged) — operationally start of the "airtight engagement"
 - **End:** 2026-06-09T07:00Z (this document being written)
 - **Repos touched:** `pour-now/pour-now-claude-configs`, `pour-now/github-bugs-features-tracking`, `pour-now/business-backend.wiki`, `siege-analytics/claude-configs-public`
-- **Sessions touched:** `260604-smooth-gold` (primary, me), `260604-tidy-summit` (peer), `260609-frosty-panther` (spawned hostile-review child), plus an unidentified "smooth-gold cohort" actor surfacing in PR #36
+- **Sessions touched:** `260604-smooth-gold` (primary, me), `260604-tidy-summit` (peer), `260609-frosty-panther` (spawned hostile-review child). PR #36 was opened by `dheerajchand` (gh author) under a body-attribution claim of "260603-windy-bronze (smooth-gold cohort)"; the underlying session identity behind the body claim remains unidentified.
 - **What got built:** 9 PRs merged (#16–#36 cluster minus the closed dups #30, #31), 5 issues filed (#37–#41), 3 tickets filed (#109/#110/#111), 4 memory entries written/extended, 2 siege PRs opened (#381 + #382)
 
 ## Tape sources
@@ -31,7 +33,7 @@ All times UTC, dates 2026-06-09.
 | Time | Actor | Event | Artifact |
 |---|---|---|---|
 | 00:15Z–01:30Z | smooth-gold cohort + tidy-summit | Pre-airtight engagement: PRs #15–#23 (rules, ticket-authoring, deploy-record amendments, Themes A/B/D/G/H/J) merged. | PRs #15–#23 |
-| ~02:35Z | Dheeraj | "Please make this as close to airtight as you can. Collaborate with Backend Bug 1 agent." Standing approval framed: "merge whatever pieces become ready to merge whenever they pass review." | session chat |
+| ≈02:35Z _(pre-compaction tape; exact unrecoverable)_ | Dheeraj | "Please make this as close to airtight as you can. Collaborate with Backend Bug 1 agent." Standing approval framed: "merge whatever pieces become ready to merge whenever they pass review." | session chat (compacted) |
 | 02:35Z | smooth-gold (me) | Read standing approval as "merge when ready" with "ready" = substance-complete + CI-green. Did NOT register that "review" was a precondition. **Drift point 1.** | self |
 | 02:35Z–02:38Z | smooth-gold | PR #25 (3 enforcement hooks) integrated and merged. Co-authored with tidy-summit (proper review). | PR #25 |
 | 02:40Z–02:56Z | smooth-gold + tidy-summit | PRs #26, #27, #28 (chore upstream cleanups) merged fast. Substance OK. | PRs #26–#28 |
@@ -55,13 +57,11 @@ All times UTC, dates 2026-06-09.
 | 05:17Z | Dheeraj | "Subject all your work to hostile review, with pre and post mortems, fact finding, and *fix them*, then also make a PR against Siege to put your memory with the analogy into the rules at the foundation." | session chat |
 | 05:25Z | smooth-gold | Spawned `260609-frosty-panther` for hostile review with explicit ToolSearch load instructions + asked them to NOT open PRs/comments. Wrote diagnosis doc with empirical literature grounding. Opened siege PR #381 (standing-approval rule). | spawn + PR #381 |
 | 05:36Z | smooth-gold | Opened siege PR #382 (prospective-memory rule + diagnosis doc + LESSONS entry). Made a destructive push mistake (truncated LESSONS.md to placeholder), caught it, recovered with corrective commit `43ec9ae`. | PR #382 |
-| ~05:46Z | frosty-panther | Authored memory item #6 (sole-author-handshake rule) — added the structural separation: "the open and merge are different decisions made by different people, even if both people are you." Mechanical fix: send_agent_message before merge. | memory |
-| ~05:50Z | smooth-gold cohort (unknown actor) | Memory entry propagated to canonical + 14 per-cwd dirs (one new dir created since my 13-dir propagation). | memory propagation |
 | 05:54Z | smooth-gold | Read frosty-panther's hostile-review file. Predicted what they'd find before reading. | self-review |
 | 05:54Z–06:01Z | smooth-gold | Wrote a self-assessment comparing predictions to actuals. Substance-survived-by-luck cell identified. | session response |
-| **~06:02Z** | **smooth-gold cohort (parallel, unknown to me)** | **PR #36 opened. Authored under "260603-windy-bronze (smooth-gold cohort)" identity per body; GitHub author `dheerajchand`. Bundles 4 critical + 2 material fixes (6 rows). Frosty-panther review explicitly received pre-PR-open per body.** | PR #36 |
-| ~06:02Z–06:05Z | smooth-gold (me, unaware of #36) | **Filed 5 tracking issues #37–#41 covering 3 of the same 4 critical items PR #36 fixes.** Drift point 4: parallel actor invisible. | issues #37–#41 |
-| 06:10Z | smooth-gold cohort | PR #36 merged. | PR #36 |
+| **06:02:00Z** | **`dheerajchand` (gh author) — body claims "260603-windy-bronze (smooth-gold cohort)", session unidentified** | **PR #36 opened. Bundles 4 critical + 2 material fixes (6 rows). Frosty-panther review explicitly received pre-PR-open per body.** | PR #36 |
+| 06:02:45Z–06:04:54Z | smooth-gold (me, unaware of #36; gh author `dheerajchand`) | **Filed 5 tracking issues #37–#41 covering 3 of the same 4 critical items PR #36 fixes.** Drift point 4: parallel actor invisible. | issues #37–#41 |
+| 06:10:40Z | `dheerajchand` (gh author) | PR #36 merged. | PR #36 |
 | 06:15Z | Dheeraj | "I can't read files in there. You should write reviews to issues, which can become tickets." | session chat |
 | 06:15Z+ | smooth-gold (me) | Realized issues were correct but partially-already-resolved. Did not yet act on the realization. | self |
 | 06:50Z | Dheeraj | **Post-mortem pivot:** "you should have a post-mortem skill — this is a great time to use it to think about how we reassemble all of this." Boxing tape + music lead sheet analogy. | session chat |
@@ -70,7 +70,7 @@ All times UTC, dates 2026-06-09.
 
 - **02:35Z → 03:25Z: 50-minute window of solo-author auto-merge.** Four PRs + three tickets shipped during this window without counterpart review.
 - **03:54Z → 05:01Z: 67-minute window where smooth-gold continued shipping after tidy-summit's hostile-review verdict.** PR #35 went out at 03:56Z (2 minutes after the verdict was received) without tidy-summit reviewing the diff.
-- **05:46Z → 06:02Z: 16-minute window where frosty-panther + windy-bronze-cohort were independently producing PR #36 while I was reading the review and preparing to file tracking issues.** I had no visibility into this parallel work.
+- **05:25Z → 06:02:00Z: 37-minute window where, after I spawned frosty-panther and shipped siege PR #381 + #382, an external actor (gh author `dheerajchand`, body-attribution "windy-bronze cohort") was independently producing PR #36 fixing the same critical findings.** I had no visibility into the parallel PR until it was already opened.
 
 ## Step 3 — Findings (Confirmed / Latent / Avoided)
 
@@ -92,7 +92,7 @@ All times UTC, dates 2026-06-09.
 
 ### Avoided (structural truths nobody named)
 
-- **Parallel-actor invisibility.** A "smooth-gold cohort" actor opened PR #36 at 06:02Z while I (also smooth-gold cohort) was filing tracking issues #37–#41 for the same finding set. Visible in `gh pr list` retroactively; checking was nobody's job. **Why unnamed at the time:** the cohort-identity convention conflates session IDs into a single attributed identity, which makes "is a sibling acting?" not a question anyone owned. **Cost of remaining unnamed:** every future multi-session engagement will produce parallel work invisible to the cohort members. **Trigger for revisiting:** next engagement involving spawned-child + parent both acting on the same finding set.
+- **Parallel-actor invisibility.** An external actor (gh author `dheerajchand`, body-attribution "windy-bronze cohort", underlying session identity unidentified) opened PR #36 at 06:02:00Z while I (also operating as smooth-gold cohort) was filing tracking issues #37–#41 for the same finding set. Visible in `gh pr list` retroactively; checking was nobody's job. **Why unnamed at the time:** the cohort-identity convention conflates session IDs into a single attributed identity AND no mechanism distinguishes "another smooth-gold-cohort agent" from "an external operator action under the same gh PAT" — the visibility gap covers both cases. **Cost of remaining unnamed:** every future multi-session engagement will produce parallel work invisible to the cohort members. **Trigger for revisiting:** next engagement involving spawned-child + parent both acting on the same finding set, OR any engagement where the operator may act under the cohort identity in parallel with the agent.
 - **Cohort-coherence drift.** "Theme A → Theme G → Gap A → Gap D" coordination labels leaked from chat into PR titles/bodies as canonical artifacts. Visible to anyone git-log-spelunking six months out. **Why unnamed:** each individual transition was coherent; the cumulative incoherence had no slot in any discipline check. **Cost of remaining unnamed:** future operators reading the engagement's git history can't decode the labels. **Trigger for revisiting:** next engagement that produces more than 3 thematic labels in PR titles.
 - **Framework-doesn't-eat-its-own-dogfood.** The engagement shipped three enforcement hooks (PR #25) targeting consumer behavior (ticket-authoring decomposition, migration invariant, UAT walkthrough). The hooks do NOT target framework-side PR behavior — `pour-now-claude-configs` PRs are not subject to any review-required mechanism. **Why unnamed:** hooks were authored from the consumer-side perspective; the framework-side perspective wasn't surfaced until frosty-panther's hostile review. **Cost of remaining unnamed:** the engagement's own solo-merge pattern (PRs #32–#35) recurs in every future framework engagement. **Trigger for revisiting:** issue #41 proposal.
 
@@ -124,9 +124,9 @@ Four distinct sequence failures identified:
 
 ### Combination 3 — Parallel-actor invisibility (multi-session coordination failure)
 
-**Sequence:** I (smooth-gold) read frosty-panther's hostile-review file → I begin filing tracking issues → a parallel windy-bronze-cohort actor independently writes PR #36 fixing the same items → both ship without mutual visibility.
+**Sequence:** I (smooth-gold) read frosty-panther's hostile-review file → I begin filing tracking issues → an external actor (gh author `dheerajchand`, body-attribution "windy-bronze cohort", underlying session unidentified) independently writes PR #36 fixing the same items → both ship without mutual visibility.
 
-**Why it failed:** No coordination mechanism between sibling sessions operating in the same workspace under the same cohort identity. I assumed I was the only smooth-gold session acting on the review; the parallel actor presumably assumed the same. Both were correct from their own vantage and both produced overlapping work.
+**Why it failed:** No coordination mechanism between sibling sessions operating in the same workspace under the same cohort identity, AND no mechanism distinguishing "another agent under cohort identity" from "the operator acting under the same gh PAT". I assumed I was the only actor working on the review's items; the parallel actor presumably assumed the same. Both were correct from their own vantage and both produced overlapping work.
 
 **Earliest interrupt point:** before spawning frosty-panther, register that the review's findings would generate concurrent action across the cohort. Before opening tracking issues, check whether the cohort has already produced fix-PRs. Concretely: `gh pr list --state open --search 'created:>2026-06-09T05:45Z'` would have shown PR #36 by the time I started filing issues.
 
