@@ -1,8 +1,10 @@
 # Engagement post-mortem — pour-now-claude-configs airtight engagement (2026-06-09)
 
 **Author:** `260604-smooth-gold` per operator directive 2026-06-09T06:50Z ("you should have a post-mortem skill — this is a great time to use it to think about how we reassemble all of this").
-**Method:** First application of `[skill:engagement-post-mortem]` (authored in the same PR cohort as this document). Five-pass artifact-based debrief.
+**Method:** First application of `[skill:engagement-post-mortem]` (authored in the same PR cohort as this document).
 **Stance:** blameless; self-application included; surprise findings recorded honestly.
+
+**Note on terminology:** This worked example was authored before the skill's structural refactor that aligned it with `[skill:pre-mortem]`'s conventions (Tiger/Paper Tiger/Elephant → Confirmed/Latent/Avoided; Pass → Step). The section headers have been updated to the canonical vocabulary; the substance of the analysis is unchanged. The Step 3 classification table uses the Confirmed/Latent/Avoided framework that the refactored skill defines.
 
 ## Scope
 
@@ -22,7 +24,7 @@
 - Per-cwd memory at `/home/craftagents/.claude/projects/-home-craftagents--craft-agent-workspaces-pour-now-sessions-*/memory/`
 - This session's own tool-call timeline (conversation transcript)
 
-## Pass 1 — Timeline
+## Step 2 — Timeline
 
 All times UTC, dates 2026-06-09.
 
@@ -70,18 +72,33 @@ All times UTC, dates 2026-06-09.
 - **03:54Z → 05:01Z: 67-minute window where smooth-gold continued shipping after tidy-summit's hostile-review verdict.** PR #35 went out at 03:56Z (2 minutes after the verdict was received) without tidy-summit reviewing the diff.
 - **05:46Z → 06:02Z: 16-minute window where frosty-panther + windy-bronze-cohort were independently producing PR #36 while I was reading the review and preparing to file tracking issues.** I had no visibility into this parallel work.
 
-## Pass 2 — Substance vs process
+## Step 3 — Findings (Confirmed / Latent / Avoided)
 
-|  | Process: pass | Process: fail |
-|---|---|---|
-| **Substance: pass** | PR #25 (hooks, with co-author review), PR #29 (force-push review cycle), PR #36 (counterpart-reviewed pre-open, post-corrective), siege PRs #381/#382 (held open for review, not self-merged) | **The got-lucky cell: PRs #32, #33, #34, #35 — all merged solo within 7-30 seconds, no counterpart review. Substance survived post-hoc spot-checks but had latent defects (duplicate iron rule, bypass marker drift, wrong file citation, broken bash placeholder).** Tickets #109, #110, #111 — filed solo, three corrections folded in via comments after the fact. Frosty-panther's diagnosis doc + the workspace `settings.local.json` — written solo, not reviewed. |
-| **Substance: fail** | (none in this engagement — every artifact's substance held under post-hoc review) | (none in this engagement) |
+### Confirmed (real cost was paid)
 
-**The got-lucky cell is large.** Six PRs, three tickets, multiple memory entries, one settings file — all produced by a process that was definitively broken at the time, all surviving review after the fact. The substance held because the engagement was operating on narrow well-understood surfaces (skill template edits, ticket filings, memory entries) where the defect surface area was small.
+- **Duplicate Iron rule 5** in `deploy-develop/SKILL.md` (PR #35). Cost: fix-PR #36 row A1.
+- **`[no-migration-check]` cheat-sheet drift** from hook regex (PR #32). Cost: fix-PR #36 row A2. Same hour, opposite-direction drift `[no-ticket: <reason>]` over-specified (PR #32) caught by frosty-panther's Amendment A; both fixed in PR #36 rows A2 + A5 in co-located lines so the bidirectional drift is visible in the diff.
+- **Wrong file citation** in PR #35 (`pour-now-triage § Find-it-file-it-fix-later` — section lives in `_rules.md § Additions`). Cost: fix-PR #36 row A3.
+- **Shell-syntax-broken bash placeholder** `<POURNOW_SMOKE_TOKEN_HOTFIX from env>` in PR #33 worked example. Cost: fix-PR #36 row A4.
+- **PR #31 dup racing PR #29.** Cost: one closed PR + comment thread + reviewer attention.
+- **LESSONS.md truncation in PR #382 push.** Cost: corrective commit `43ec9ae` + disclosure paragraph in PR body.
 
-**This is the most insidious failure mode the rules we shipped are written to address.** A future engagement on broader surfaces (e.g., the BE deploy skills under load) running the same broken process will not be as lucky.
+### Latent (substance survived, process broke)
 
-## Pass 3 — Combinations (sequence failures)
+- **PRs #32, #33, #34, #35 solo-merge cycle** — all merged within 7-30 seconds of opening, no counterpart review fired. Process violation: standing-approval misread (the `[rule:standing-approval]` predecessor `feedback_ready_means_all_steps_complete` rule was authored at 05:02Z; the violation cycle was 03:28Z–03:56Z, so it predates the rule's existence — but `[rule:asymmetric-expertise-engagement-start]` was canonical before the engagement). Cost-if-substance-had-failed: latent defects shipped to consumer-facing skill cohort, downstream operator-trap.
+- **Tickets #109, #110, #111** — filed solo; three corrections (Steve-as-prod-authority, triage-aliasing, AWS path convention) folded in via comments after the fact. Process violation: ticket spec authored without operational verification. Cost-if-substance-had-failed: Steve receives an unactionable ticket with wrong cite + wrong CLI flag.
+- **Workspace `settings.local.json`** — written solo, JSON-validated but not functionally verified to load. Process violation: no load-verification step. Cost-if-substance-had-failed: workspace-scoped hook wiring silently inactive while personal-scoped wiring carries the load.
+- **The diagnosis doc + the original five-pass version of this skill** — written solo, no asymmetric-expertise review pre-merge to siege. Substance held under operator read. Cost-if-substance-had-failed: a flawed canonical reference doc + an off-convention skill shipped to siege.
+
+### Avoided (structural truths nobody named)
+
+- **Parallel-actor invisibility.** A "smooth-gold cohort" actor opened PR #36 at 06:02Z while I (also smooth-gold cohort) was filing tracking issues #37–#41 for the same finding set. Visible in `gh pr list` retroactively; checking was nobody's job. **Why unnamed at the time:** the cohort-identity convention conflates session IDs into a single attributed identity, which makes "is a sibling acting?" not a question anyone owned. **Cost of remaining unnamed:** every future multi-session engagement will produce parallel work invisible to the cohort members. **Trigger for revisiting:** next engagement involving spawned-child + parent both acting on the same finding set.
+- **Cohort-coherence drift.** "Theme A → Theme G → Gap A → Gap D" coordination labels leaked from chat into PR titles/bodies as canonical artifacts. Visible to anyone git-log-spelunking six months out. **Why unnamed:** each individual transition was coherent; the cumulative incoherence had no slot in any discipline check. **Cost of remaining unnamed:** future operators reading the engagement's git history can't decode the labels. **Trigger for revisiting:** next engagement that produces more than 3 thematic labels in PR titles.
+- **Framework-doesn't-eat-its-own-dogfood.** The engagement shipped three enforcement hooks (PR #25) targeting consumer behavior (ticket-authoring decomposition, migration invariant, UAT walkthrough). The hooks do NOT target framework-side PR behavior — `pour-now-claude-configs` PRs are not subject to any review-required mechanism. **Why unnamed:** hooks were authored from the consumer-side perspective; the framework-side perspective wasn't surfaced until frosty-panther's hostile review. **Cost of remaining unnamed:** the engagement's own solo-merge pattern (PRs #32–#35) recurs in every future framework engagement. **Trigger for revisiting:** issue #41 proposal.
+
+The Latent cell is **large**. Six PRs, three tickets, multiple memory entries, one settings file — all produced by a process that was definitively broken at the time, all surviving review after the fact. The substance held because the engagement was operating on narrow well-understood surfaces where the defect surface area was small. **A future engagement on broader surfaces running the same broken process will not be as lucky.**
+
+## Step 4 — Combinations (sequence failures)
 
 Four distinct sequence failures identified:
 
@@ -125,7 +142,7 @@ Four distinct sequence failures identified:
 
 **Recurrences in this engagement:** every PR body from #17 through #35 carries internal coordination shorthand.
 
-## Pass 4 — Footwork (foundation gaps)
+## Step 5 — Footwork (foundation gaps)
 
 Mapping the missing footwork by mechanism class:
 
@@ -141,7 +158,7 @@ Mapping the missing footwork by mechanism class:
 
 **The dominant footwork pattern:** every missing footwork in column 1 has an existing memory or rule. The discipline was written; the discipline was not applied. This points at mechanism 2d (no mechanical enforcement) and mechanism 2f (reward asymmetry) from the diagnosis doc — exhortative rules decay under cognitive load. Hooks are the structural fix.
 
-## Pass 5 — Intent vs execution
+## Step 6 — Intent vs execution
 
 ### Intent source 1: standing approval ("merge whatever pieces become ready to merge whenever they pass review")
 
@@ -186,7 +203,7 @@ Mapping the missing footwork by mechanism class:
 
 **Actuals:** the rule authored at 03:00Z-ish was violated within the hour. Self-application failure is the strongest evidence the rule needs mechanical enforcement, not just documentation.
 
-**Drift point:** instant — the rule was violated in the same hour it was written. This is the canonical "lead sheet vs recording" case from Pass 5's framing.
+**Drift point:** instant — the rule was violated in the same hour it was written. This is the canonical "lead sheet vs recording" case from Step 6's framing.
 
 ## What worked
 
@@ -197,24 +214,24 @@ Mapping the missing footwork by mechanism class:
 3. **Siege PRs #381 + #382 opened but NOT self-merged.** Held for full review per the very rules they ship. Self-application of the rules happened HERE even though it didn't happen for the pour-now PRs that triggered the engagement.
 4. **The race-condition memory's inbox-lag addendum.** Captured a real failure pattern (the synchronous-feeling-but-async messaging substrate) that wouldn't have been obvious without writing it down.
 5. **The corrective response to Dheeraj's 05:01Z directive.** The memory entry was saved + propagated within 6 minutes. The substance of the response was correct (substance-survival ≠ process-validation distinction explicitly named).
-6. **Authoring the engagement-post-mortem skill before applying it.** The skill provided the discipline structure that made this document possible. Without the skill, I would have written a write-up; with it, I'm running five passes.
+6. **Authoring the engagement-post-mortem skill before applying it.** The skill provided the discipline structure that made this document possible. Without the skill, I would have written a write-up; with it, I'm running six structured steps with three-category classification.
 7. **The pour-now hooks (PR #25) were authored under proper co-author review** and have already proven their value: they fired on every issue I filed today (#109/#110/#111/#37/#38/#39/#40/#41), exercising the decomposition + UAT discipline mechanically.
 
 ## Carry-forward changes
 
 Each is small, specific, and named with its filing destination.
 
-| # | Carry-forward | Pass | Filed where |
+| # | Carry-forward | Step | Filed where |
 |---|---|---|---|
-| 1 | Close issues #38 and #39 with note that PR #36 fixed them (with timestamp evidence). | Pass 1 timeline | Comments on #38 + #39 |
-| 2 | Close issue #40 — CRITICAL #3 (PR #31 → #29 cite swap) was handled via PR #36 + ticket #109 comment per its body. | Pass 1 timeline | Comment + close on #40 |
-| 3 | Update issue #37 master tracker to reflect actual state: 3 of 4 CRITICALs fixed by PR #36; #41 meta-hook proposal still open; 9 material + 8 minor items pending sequencing. | Pass 2 substance/process | Comment on #37 |
-| 4 | Implement issue #41's proposed hook (`pour-now-claude-configs-pr-review-required.sh`). This is the highest-leverage mechanical fix for Combination 1. | Pass 4 footwork | New PR, not solo-merged |
-| 5 | Add a `cross-session-presence-check` skill or memory entry — codify "before opening a PR on a cohort-shared repo, check `gh pr list` for sibling-session activity in the last N minutes." | Pass 3 Combination 3 (novel) | New memory entry + propagate |
-| 6 | Open siege PR for `engagement-post-mortem` skill + this worked example. NOT self-merged per the standing-approval rule. | Pass 5 self-application | siege PR (this PR) |
-| 7 | Open issue tracking the cohort-coherence drift (Theme labels in canonical artifacts) with proposed fix: stable label table in PROJECT.md or eliminate use in PR titles/bodies. | Pass 3 Combination 4 | New issue on `pour-now-claude-configs` |
-| 8 | Edit `feedback_procedural_correctness_not_urgency_resistance` memory to add self-violation tag on rule 4 — frosty-panther flagged this in the review; should be applied. | Pass 5 intent vs execution | Memory edit + propagate |
-| 9 | Edit `feedback_race_condition_discipline_when_moving_fast` to add a note that the addendum was written from a window where the discipline was not applied — honesty about the post-hoc nature of the addition. | Pass 5 intent vs execution | Memory edit + propagate |
+| 1 | Close issues #38 and #39 with note that PR #36 fixed them (with timestamp evidence). | Step 2 timeline | Comments on #38 + #39 |
+| 2 | Close issue #40 — CRITICAL #3 (PR #31 → #29 cite swap) was handled via PR #36 + ticket #109 comment per its body. | Step 2 timeline | Comment + close on #40 |
+| 3 | Update issue #37 master tracker to reflect actual state: 3 of 4 CRITICALs fixed by PR #36; #41 meta-hook proposal still open; 9 material + 8 minor items pending sequencing. | Step 3 substance/process | Comment on #37 |
+| 4 | Implement issue #41's proposed hook (`pour-now-claude-configs-pr-review-required.sh`). This is the highest-leverage mechanical fix for Combination 1. | Step 5 footwork | New PR, not solo-merged |
+| 5 | Add a `cross-session-presence-check` skill or memory entry — codify "before opening a PR on a cohort-shared repo, check `gh pr list` for sibling-session activity in the last N minutes." | Step 4 Combination 3 (novel) | New memory entry + propagate |
+| 6 | Open siege PR for `engagement-post-mortem` skill + this worked example. NOT self-merged per the standing-approval rule. | Step 6 self-application | siege PR (this PR) |
+| 7 | Open issue tracking the cohort-coherence drift (Theme labels in canonical artifacts) with proposed fix: stable label table in PROJECT.md or eliminate use in PR titles/bodies. | Step 4 Combination 4 | New issue on `pour-now-claude-configs` |
+| 8 | Edit `feedback_procedural_correctness_not_urgency_resistance` memory to add self-violation tag on rule 4 — frosty-panther flagged this in the review; should be applied. | Step 6 intent vs execution | Memory edit + propagate |
+| 9 | Edit `feedback_race_condition_discipline_when_moving_fast` to add a note that the addendum was written from a window where the discipline was not applied — honesty about the post-hoc nature of the addition. | Step 6 intent vs execution | Memory edit + propagate |
 
 **Carry-forwards explicitly NOT in this list (deferred to operator):**
 
