@@ -39,8 +39,8 @@ echo "$FILE_PATH" | grep -qE "parsers/schemas/.*\.py" \
 echo "$FILE_PATH" | grep -qE "\.(parquet|delta)$|/(silver|gold|bronze|hive-warehouse|bullion|platinum|quicksilver)/.*(_delta_log|\.delta)" \
   && block "infrastructure/unity-catalog" "Delta/Parquet writes to catalog paths must go through Unity Catalog skill."
 
-# Workspace skill or source config changes
-echo "$FILE_PATH" | grep -qE "\.craft-agent/workspaces/.+/skills/|\.craft-agent/workspaces/.+/sources/" \
-  && block "workspace-backup" "Workspace config changes should use the workspace-backup skill to ensure changes are versioned."
+# NOTE: the workspace skill/source-config backup block was extracted to the
+# opt-in hooks/write/workspace-backup-guard.sh — it was workspace-specific
+# discipline and false-fired cross-workspace from this always-on chain.
 
 exit 0
