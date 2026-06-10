@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented here. Versioning follows [SemVer](https://semver.org/).
 
+## [3.4.0] -- 2026-06-09
+
+Three enforcement stacks generalized from pour-now into upstream, completing epic #385. Two new rule cohorts for engagement discipline. Definition of Done expanded from 5 mandatory criteria to 5 mandatory + 2 opt-in.
+
+### Added
+
+- **testing-frameworks enforcement stack** (#386, PR #391): `[skill:testing-frameworks]` framework guidance with [PROVEN]/[RECOMMENDED]/[EXPERIMENTAL] confidence tags. `[rule:testing-frameworks]` 3 always-on rules (declare in PROJECT.md, use declared, record evidence). `hooks/git/test-guard.sh` PreToolUse hook blocking pushes when `testing:` declared but evidence missing. 7-scenario test suite.
+- **knowledge-base enforcement stack** (#387, PR #392): `[skill:knowledge-base]` platform-agnostic read-tag-update protocol with 4 KB tags (kb-confirmed / kb-contradicted / kb-silent / kb-not-applicable). `[rule:knowledge-base]` 4 always-on rules. think-gate-guard.sh Level 3 advisory KB consultation check.
+- **ticket-decomposition skill** (#388, PR #393): merged authoring + consumer protocol for multi-layer work decomposition. Reads layers from PROJECT.md `testing.layers`. Assertion classification vocabulary (spec'd / current / invariant).
+- **Definition of Done criterion (f):** KB delta validated (opt-in per project).
+- **Definition of Done criterion (g):** multi-layer work decomposed (opt-in per project).
+- **standing-approval rules** (#381): `_standing-approval-rules.md` — how to interpret "do X when ready."
+- **prospective-memory rules** (#382): `_prospective-memory-rules.md` — how to retain "do X when Y." Includes diagnosis doc and LESSONS entry.
+- **engagement-post-mortem skill** (#383): structured post-mortem for engagement failures, with 2026-06-09 pour-now worked example.
+- **siege-utilities PROJECT.md:** added `testing:` and `knowledge_base:` sections as reference implementations.
+
 ## [Unreleased]
 
 Single-rule cohort: writing-claims:4 (invented framework signals require existing artifact backing). Operator-stated framing 2026-05-14: "you guys have been building a very elaborate ruleset with nothing that compels you to follow it, like people writing a D&D supplementary manual"; "authoring rules without absorbing them"; "inventing meta-patterns to dress up failures". Closes the gap left by writing-claims:1-3, which cover claims-about-actions but do not cover the implicit claim "this pattern applies" when the pattern is being coined in the same response.
