@@ -132,8 +132,19 @@ fi
 # signal file. (Previously the existence check ran before diff inspection, so
 # every push without test-gate.json blocked once testing: was declared — even
 # docs-only pushes that touch no source and need no evidence.)
-MERGE_BASE=$(git -C "$EFFECTIVE_CWD" merge-base HEAD origin/develop 2>/dev/null || \
-             git -C "$EFFECTIVE_CWD" merge-base HEAD origin/main 2>/dev/null || echo "")
+#
+# Merge base against the repo's integration branch. Try develop, then main,
+# then master, then the remote's resolved default branch — so the hook works
+# on main-default AND master-default repos (e.g. business-backend uses master
+# with no main/develop, where the old develop||main chain yielded and skipped
+# enforcement entirely).
+DEFAULT_REF=$(git -C "$EFFECTIVE_CWD" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || echo "")
+MERGE_BASE=""
+for ref in origin/develop origin/main origin/master "$DEFAULT_REF"; do
+    [[ -z "$ref" ]] && continue
+    MB=$(git -C "$EFFECTIVE_CWD" merge-base HEAD "$ref" 2>/dev/null || echo "")
+    if [[ -n "$MB" ]]; then MERGE_BASE="$MB"; break; fi
+done
 
 if [[ -z "$MERGE_BASE" ]]; then
     echo "WARNING: test-guard: cannot determine merge base. Yielding." >&2
