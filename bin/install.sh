@@ -196,6 +196,21 @@ install_craft_agent() {
         errors=$((errors + 1))
     fi
 
+    # CA enforcement artifacts
+    if [[ -f "$ws_path/enforcement-manifest.json" ]]; then
+        local gate_count
+        gate_count="$(python3 -c "import json; print(len(json.load(open('$ws_path/enforcement-manifest.json'))['gates']))" 2>/dev/null || echo 0)"
+        echo "  [ok] enforcement-manifest.json present ($gate_count gates)"
+    else
+        echo "  [warn] enforcement-manifest.json not found (CA enforcement not active)"
+    fi
+
+    if [[ -d "$ws_path/.githooks" ]] && [[ -f "$ws_path/.githooks/pre-push" ]]; then
+        echo "  [ok] .githooks/pre-push installed"
+    else
+        echo "  [warn] .githooks/pre-push not found (push-time enforcement not active)"
+    fi
+
     echo
     if [[ $errors -gt 0 ]]; then
         echo "Deployment completed with $errors error(s)." >&2
@@ -207,6 +222,9 @@ install_craft_agent() {
     echo "The rules bundle is deployed but Craft Agent does not yet auto-mount"
     echo "it as a system prompt addendum. Until that feature ships, the rules"
     echo "are available at: $ws_path/RULES_BUNDLE.md"
+    echo
+    echo "CA enforcement is active: UserPromptSubmit gates block via continue:false."
+    echo "Native git pre-push hooks are at: $ws_path/.githooks/"
     return 0
 }
 
