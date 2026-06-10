@@ -4,11 +4,13 @@
 # Trigger: PreToolUse on Bash(git push *), Bash(gh pr create *), Bash(gh pr merge *)
 #
 # Blocks pushes/PR-creates/PR-merges when the project declares a
-# testing: section in PROJECT.md and the test-gate.json signal file
-# is missing or lacks evidence for touched source files.
+# testing: section in PROJECT.md and the push touches source files that
+# lack evidence in the test-gate.json signal file.
 #
 # Projects without a testing: section in PROJECT.md are unaffected
-# (exit 0). Once a project declares testing, it demands evidence.
+# (exit 0). Once a project declares testing, source-touching pushes demand
+# evidence. Pushes that touch no source (docs/config/test-only) pass through
+# without requiring a signal file.
 #
 # Override: [run-skip: reason] in the latest commit message.
 #
@@ -124,35 +126,12 @@ if echo "$LATEST_MSG" | grep -qE '\[run-skip:[[:space:]]'; then
     exit 0
 fi
 
-# --- Check for test-gate.json ---
-# Look in workspace root first (Craft Agent), then repo root.
-SIGNAL_FILE=""
-WORKSPACE_ROOT="${CRAFT_WORKSPACE_ROOT:-}"
-if [[ -n "$WORKSPACE_ROOT" ]] && [[ -f "$WORKSPACE_ROOT/test-gate.json" ]]; then
-    SIGNAL_FILE="$WORKSPACE_ROOT/test-gate.json"
-elif [[ -f "$REPO_ROOT/test-gate.json" ]]; then
-    SIGNAL_FILE="$REPO_ROOT/test-gate.json"
-fi
-
-if [[ -z "$SIGNAL_FILE" ]]; then
-    cat >&2 <<EOF
-BLOCKED: Project declares testing: in PROJECT.md but no test-gate.json found.
-
-The test-guard hook requires test evidence before pushing. Run affected
-tests via [skill:commit] step 4, which writes test-gate.json after tests
-pass.
-
-If tests are genuinely inapplicable, add [run-skip: reason] to the
-commit message body.
-
-See [skill:testing-frameworks] and [rule:testing-frameworks] for details.
-Ref: #386
-EOF
-    exit 2
-fi
-
-# --- Verify evidence covers touched files ---
-# Get list of source files changed relative to the merge base.
+# --- Determine touched source files FIRST (before requiring the signal file) ---
+# The test-gate.json existence requirement applies ONLY when the push actually
+# touches source. A docs/config/test-only push must not be blocked for lacking a
+# signal file. (Previously the existence check ran before diff inspection, so
+# every push without test-gate.json blocked once testing: was declared — even
+# docs-only pushes that touch no source and need no evidence.)
 MERGE_BASE=$(git -C "$EFFECTIVE_CWD" merge-base HEAD origin/develop 2>/dev/null || \
              git -C "$EFFECTIVE_CWD" merge-base HEAD origin/main 2>/dev/null || echo "")
 
@@ -180,11 +159,41 @@ while IFS= read -r f; do
     esac
 done <<< "$TOUCHED_FILES"
 
+# No source files touched (docs/config/test-only push) — nothing demands
+# evidence; allow the push without requiring a signal file.
 if [[ -z "$SOURCE_FILES" ]]; then
     exit 0
 fi
 
-# Check each source file against the signal file evidence
+# --- Source files ARE touched: now require the test-gate.json signal file ---
+# Look in workspace root first (Craft Agent), then repo root.
+SIGNAL_FILE=""
+WORKSPACE_ROOT="${CRAFT_WORKSPACE_ROOT:-}"
+if [[ -n "$WORKSPACE_ROOT" ]] && [[ -f "$WORKSPACE_ROOT/test-gate.json" ]]; then
+    SIGNAL_FILE="$WORKSPACE_ROOT/test-gate.json"
+elif [[ -f "$REPO_ROOT/test-gate.json" ]]; then
+    SIGNAL_FILE="$REPO_ROOT/test-gate.json"
+fi
+
+if [[ -z "$SIGNAL_FILE" ]]; then
+    cat >&2 <<EOF
+BLOCKED: This push touches source files in a project that declares testing:
+in PROJECT.md, but no test-gate.json was found.
+
+The test-guard hook requires test evidence before pushing source changes. Run
+affected tests via [skill:commit] step 4, which writes test-gate.json after
+tests pass.
+
+If tests are genuinely inapplicable, add [run-skip: reason] to the
+commit message body.
+
+See [skill:testing-frameworks] and [rule:testing-frameworks] for details.
+Ref: #386
+EOF
+    exit 2
+fi
+
+# --- Verify evidence covers touched source files ---
 MISSING=""
 while IFS= read -r src; do
     [[ -z "$src" ]] && continue
