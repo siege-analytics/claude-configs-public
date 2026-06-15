@@ -29,10 +29,12 @@ testing:
       framework: pytest
       test_dir: tests/
       pattern: "test_{stem}.py"
+      source: ["siege_utilities/**/*.py"]
     - name: frontend
       framework: vitest
       test_dir: src/__tests__/
       pattern: "{stem}.spec.ts"
+      source: ["src/**/*.ts", "src/**/*.vue"]
     - name: e2e
       framework: playwright
       test_dir: tests/e2e/
@@ -40,6 +42,10 @@ testing:
 ```
 
 If the project has no `testing.layers`, decomposition falls back to flat: file one ticket, no layer table. Decomposition is most valuable when layers are declared; without them, the skill degrades gracefully.
+
+## Mechanical enforcement: decomposition-guard
+
+When layers declare `source:` globs (the optional field documented in `[skill:testing-frameworks]`), the `hooks/git/decomposition-guard.sh` hook enforces this skill's one-ticket/PR-per-layer rule mechanically. At push / PR time it maps each touched source file to its layer (longest-literal-prefix wins) and **warns** when a single PR spans more than one layer. This is the push-time backstop for the authoring-time decomposition table below: the table is behavioral (the agent can skip it), the hook is mechanical. V1 is warning-only. Intentional multi-layer pushes (Step-1/2 plumbing, explicit cross-referenced waivers) carry `[multi-layer-ok: <reason>]` in the latest commit body. Projects without `source:` globs are unaffected.
 
 ## Authoring protocol
 
@@ -145,7 +151,8 @@ This vocabulary is documented here for reference. See `[rule:writing-tests]` for
 ## Cross-references
 
 - `[rule:testing-frameworks]` testing-frameworks:1 -- projects declare layers in PROJECT.md
-- `[skill:testing-frameworks]` -- framework guidance per layer
+- `[skill:testing-frameworks]` -- framework guidance per layer, and the optional `source:` glob field
+- `hooks/git/decomposition-guard.sh` -- push-time one-PR-per-layer warning (requires `source:` globs)
 - `[rule:definition-of-done]` criterion (g) -- multi-layer decomposition (opt-in)
 - `[skill:create-ticket]` -- ticket creation mechanics
 - `[skill:pre-work-check]` -- pre-work verification including ticket existence
