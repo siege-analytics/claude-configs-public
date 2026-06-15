@@ -66,6 +66,24 @@ affirmative standards: does it hold, with evidence?
 Approach-fit verdict. Blast radius declared. Sequencing assumption
 that has to hold for this to be the right move.
 
+## Findings
+Classify each Lead finding by priority. The pre-push hook blocks
+on unresolved P1 rows. Format:
+
+| ID | Priority | Description | Resolution |
+|----|----------|-------------|------------|
+
+Priority levels (aligned with hostile-review S1/S2/S3):
+- P1 (≈S1): Blocks push. Wrong on normal input, exploitable, or
+  violates a stated invariant. Resolution must be "fixed".
+- P2 (≈S2): Does not block push. Edge-case data issues, resource
+  leaks, missing validation. Agent files a ticket; resolution is
+  "ticket #NNN".
+- P3 (≈S3): Noted in artifact. Design debt, defense-in-depth gaps.
+  Resolution is "noted".
+
+"No findings." is valid when the Lead produced none.
+
 ## Quantified claims
 For every specific count stated in this PR's body, commit messages,
 or this artifact itself, paste the command and output that produced it.
@@ -632,6 +650,49 @@ The Lead's verdict on any "design choice" dismissal must be one of:
 - **Bug**: there is no invariant; promote to finding.
 
 "Debatable" is not a verdict.
+
+### Phase C: Findings triage
+
+After Phases A and B, the Lead classifies every finding into the
+`## Findings` table in the artifact. Each finding gets one row with an
+ID (`F1`, `F2`, ...), a priority, a one-line description, and a
+resolution.
+
+**Priority definitions** (aligned with hostile-review severity scale):
+
+| Priority | Hostile-review equivalent | Meaning | Required resolution |
+|----------|--------------------------|---------|---------------------|
+| **P1** | S1 | Exploitable in production, silently wrong on normal input, or violates a stated invariant | `fixed` — must be resolved before push |
+| **P2** | S2 | Silent data issues in edge cases, resource leaks under load, missing validation at boundaries | `ticket #NNN` — agent files a ticket before push |
+| **P3** | S3 | Design debt, defense-in-depth gaps, style concerns | `noted` — documented in artifact, no action required |
+
+**P1 is mechanically enforced.** The pre-push hook scans the
+`## Findings` section for rows containing `P1` where the Resolution
+column does not contain `fixed`. Any unresolved P1 blocks the push.
+
+**P2 requires a real ticket number.** "ticket TBD" or "will file later"
+is not a valid P2 resolution. The ticket must exist before push so the
+finding is tracked in a durable system, not lost when the session ends.
+
+**"No findings." is valid.** If Phases A and B produced no findings,
+write `No findings.` under the `## Findings` header. An empty section
+is also acceptable. The hook only blocks when P1 rows exist without
+`fixed` resolution.
+
+**Worked example:**
+
+```
+## Findings
+
+| ID | Priority | Description | Resolution |
+|----|----------|-------------|------------|
+| F1 | P1 | buffer() called on EPSG:4326 geometry — produces degree-unit buffer, not meters | fixed (switched to equal-area projection before buffer in commit a1b2c3d) |
+| F2 | P2 | HTTP client in geocoder fallback has no timeout — could hang indefinitely under network partition | ticket #425 |
+| F3 | P3 | Variable `df` in spatial_join could be more descriptive (`parcels_with_demographics`) | noted |
+```
+
+In this example, the push is allowed because F1's resolution is `fixed`.
+F2 has a ticket filed. F3 is documented.
 
 ## Recursion
 
