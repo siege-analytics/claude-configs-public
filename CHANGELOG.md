@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented here. Versioning follows [SemVer](https://semver.org/).
 
+## [3.5.0] -- 2026-06-15
+
+Compound Engineering adoption across the pipeline, completing epic #418. Five features integrating the Every.to CE framework into self-review, investigation, solutions catalog, and post-merge compounding. Three hook fixes hardening test-guard and write-guard enforcement. CA enforcement artifact generation from build pipeline.
+
+### Added
+
+- **P1/P2/P3 priority classification** (#419, PR #425): findings triage in self-review Lead phase. P1 blocks push (hook-enforced via `self-review.sh` v1.10), P2 requires filed ticket, P3 noted only. Worked example in skill body.
+- **Conditional reviewer activation** (#420, PR #427): RESOLVER-pattern domain-specific checklists triggered by diff content grep. 7 domains: geospatial, SQL safety, lazy-loading integrity, credential safety, error handling SU-1, notebook coherence, packaging truth.
+- **Searchable solutions catalog** (#421, PR #426): `solutions/` directory with YAML frontmatter (title, category, tags, ticket, date, severity, source). `[skill:solutions-catalog]` authoring protocol. 8-category taxonomy. Build validation in `bin/build.py` Phase 1b. 3 seed entries from prior incidents.
+- **Success compounding step** (#422, PR #428): `[skill:compound]` post-merge skill with 3-question framework (what worked that wasn't obvious, discoverable, skill/rule update needed). Integrated into merge skill checklist and RESOLVER routing.
+- **Parallel investigation phases** (#423, PR #429): dependency graph for investigate skill phases. Phases 1, 2, 4 run in parallel; Phase 3 depends on Phase 2; Phase 5 depends on all. Focused-tier exemption. Cross-phase consistency check in Phase 5.
+- **Compound Engineering comparison document** (#418, PR #424): credit and comparison of CE framework against existing pipeline conventions.
+- **CA enforcement artifact** (#409, PR #410): `bin/build.py` generates enforcement artifact from build pipeline output.
+
+### Fixed
+
+- **write-guard:** extract workspace-backup block to opt-in hook (#412).
+- **test-guard:** detect touched source before requiring `test-gate.json` (#413).
+- **test-guard:** resolve merge base against repo default branch (#414).
+
 ## [3.4.0] -- 2026-06-09
 
 Three enforcement stacks generalized from pour-now into upstream, completing epic #385. Two new rule cohorts for engagement discipline. Definition of Done expanded from 5 mandatory criteria to 5 mandatory + 2 opt-in.
