@@ -389,6 +389,8 @@ Inspiration for the shelves model: [GBrain](https://github.com/garrytan/gbrain).
 
 The PostGIS skill draws on *Mastering PostGIS* (Witkowski, Chojnacki, Mackiewicz, 2017), Paul Ramsey's blog, *PostGIS in Action* 3rd ed. (Obe & Hsu, 2021), and Crunchy Data's geospatial materials. See per-skill citations.
 
+The skill pipeline's compounding model (solutions catalog, success compounding step, conditional review routing, priority classification) draws on **[Compound Engineering](https://every.to/guides/compound-engineering)** by [Every](https://every.to). CE's thesis -- each unit of work should make subsequent units easier -- validated our independent direction and identified specific gaps we're now closing. See [`docs/compound-engineering-comparison.md`](docs/compound-engineering-comparison.md) for the full comparison and design divergence.
+
 See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for full attribution, commit pins, and per-book source mapping.
 
 ## License
