@@ -510,6 +510,124 @@ checked, cite the evidence (grep output, file path read, test result).
 For shelves the diff doesn't engage, omit the section -- the omission
 itself is auditable.
 
+## Conditional review routing
+
+The RESOLVER routes implementation skills by file pattern. This
+section applies the same pattern to review: based on what the diff
+touches, activate domain-specific checklists that add targeted depth
+to the Lead review.
+
+### Activation
+
+Before the Lead review, determine which domain checklists apply:
+
+```bash
+CHANGED_FILES=$(git diff --name-only HEAD~1)
+DIFF_CONTENT=$(git diff HEAD~1)
+```
+
+Match against the routing table. Multiple domains can activate on a
+single diff. The universal Lead checklist (Phases A, B, C) always
+runs regardless of which domain checklists activate.
+
+### Routing table
+
+| Pattern (file or content) | Domain checklist |
+|---|---|
+| `geo/`, `spatial`, `crs`, `epsg`, `projection` | Geospatial |
+| `.sql`, `execute(`, `cursor.`, `SELECT `, `INSERT ` | SQL safety |
+| `__init__.py`, `__getattr__`, `__all__` | Lazy-loading integrity |
+| `auth`, `token`, `secret`, `credential`, `password` | Credential safety |
+| `except`, `try:`, `raise`, `logging.error` | Error handling (SU-1) |
+| `notebooks/`, `.ipynb` | Notebook coherence |
+| `setup.cfg`, `pyproject.toml`, `extras_require` | Packaging truth |
+
+### Domain checklists
+
+**Geospatial** (activates when diff touches `geo/` or spatial primitives):
+
+1. CRS agreement: all inputs to spatial operations share the same CRS,
+   or there is an explicit transform before the operation.
+2. Projection fitness: CRS matches the operation type -- 4326 for
+   storage, equal-area for buffer/area, web-mercator for tiles.
+3. Coordinate order: x,y usage is consistent (no lat/lon vs lon/lat
+   confusion across function boundaries).
+4. Spatial index: `sindex` or equivalent is used before spatial
+   predicates on datasets with >100 rows.
+
+**SQL safety** (activates when diff contains SQL or database calls):
+
+1. Parameterized queries: no string interpolation in SQL (f-strings,
+   `.format()`, `%` operator with user-controlled values).
+2. Join correctness: join keys match in type and semantics, not just
+   column name.
+3. NULL handling: NULLs are explicitly handled in WHERE/JOIN conditions
+   where they could produce silent row drops.
+
+**Lazy-loading integrity** (activates when diff touches `__init__.py`
+or import machinery):
+
+1. PEP 562 compliance: `__getattr__` raises `AttributeError` for
+   unknown names, never catches `ImportError` to return a stub.
+2. `__all__` agreement: every name in `__all__` is importable via the
+   module's lazy-loading path.
+3. Import cycle: no circular import between `__init__.py` and
+   submodules it lazily loads.
+
+**Credential safety** (activates when diff touches auth or secrets):
+
+1. No hardcoded secrets: no quoted strings near auth/token/secret/
+   credential keywords that look like actual values.
+2. Environment-variable sourcing: credentials come from env vars,
+   `op` CLI, or Databricks secret scopes -- not inline.
+3. Log redaction: credential values are not logged in any logging
+   statement near credential access.
+
+**Error handling (SU-1)** (activates when diff touches exception paths):
+
+1. SU-1 compliance: no bare `except: pass`, no returning valid-shaped
+   empty results on failure (empty DataFrame, empty list, `None`
+   where the caller cannot distinguish from success).
+2. Exception specificity: `except Exception` only with re-raise or
+   explicit comment naming why the broad catch is necessary.
+3. Caller distinguishability: the caller can tell failure from
+   empty-result without reading logs.
+
+**Notebook coherence** (activates when diff touches `.ipynb` files):
+
+1. API verification: every `siege_utilities` call in the notebook
+   exists in the current source (Gate 4 depth, not just presence).
+2. Narrative accuracy: markdown cells describe what the code actually
+   does, verified by reading the function source.
+3. Output consistency: cell outputs are consistent with the
+   narrative's claims.
+
+**Packaging truth** (activates when diff touches `setup.cfg`,
+`pyproject.toml`, or extras):
+
+1. Declared dependencies match actual imports added in the diff.
+2. extras_require groups are non-overlapping and correctly scoped.
+3. Version pins have justification (not cargo-culted from another
+   package).
+
+### Using activated checklists in the Lead review
+
+Activated domain checklists produce findings in the Lead review
+section, tagged by domain. Format:
+
+> In geospatial: CRS agreement holds -- both inputs use EPSG:4326,
+> transform to equal-area before buffer (verified at
+> geo/spatial_data.py:142).
+
+Findings from domain checklists use the P1/P2/P3 classification
+from Phase C. A CRS mismatch producing wrong results is P1. A
+missing spatial index on a small dataset is P3. A hardcoded
+credential is P1.
+
+If no domain checklists activate (pure prose or config change),
+note: "Conditional review: no domain checklists activated
+(file patterns: <list changed files>)."
+
 ## Lead review: the Lead's adversarial pass
 
 The shelves are the Junior's checklist. The Lead review is not a
