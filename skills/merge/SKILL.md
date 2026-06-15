@@ -189,6 +189,24 @@ After merging develop into main:
 2. **Update milestone** if applicable
 3. **Notify the team** if the project has a release communication channel
 
+# Post-merge: success compounding
+
+After the merge completes and tickets are updated, run the compound
+step before cleaning up the branch. See `[skill:compound]` for the
+full framework.
+
+The compound step asks three questions:
+1. What worked that wasn't obvious?
+2. Would a future session find this solution without re-deriving it?
+3. Does any existing skill or rule need updating?
+
+It produces one of: a solutions catalog entry, a skill-update ticket,
+or a "nothing novel" declaration posted as a PR comment.
+
+This step is advisory — it does not block branch cleanup or any
+downstream action. Skipping it produces a visible absence (no
+compound comment on the PR) but is not a process violation.
+
 # Branch cleanup
 
 After every merge, delete the source branch (unless it's `develop` or `main`):
@@ -235,6 +253,7 @@ The `--merge` flag creates a merge commit (equivalent to `--no-ff`). Avoid `--sq
 - [ ] If merging to main: user has explicitly approved
 - [ ] Merge conflicts resolved with user awareness (not silently)
 - [ ] Tickets updated with merge status and commit links
+- [ ] Compound step completed (solutions entry, skill-update ticket, or "nothing novel" declaration)
 - [ ] Source branch deleted after merge (local and remote)
 - [ ] If merged to main: back-merged into develop
 - [ ] No AI/agent attribution in merge commits, tags, or release notes
