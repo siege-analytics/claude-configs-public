@@ -1,6 +1,6 @@
 ---
 name: testing-frameworks
-description: "Framework guidance for test writing. Projects declare their test frameworks per architectural layer in PROJECT.md; this skill recommends frameworks by language ecosystem and enforces consistent usage. Pairs with _testing-frameworks-rules.md (always-on) and hooks/git/test-guard.sh (mechanical enforcement at push time)."
+description: "Framework guidance for test writing. Projects declare their test frameworks per architectural layer in PROJECT.md; this skill recommends frameworks by language ecosystem and enforces consistent usage. Pairs with _testing-frameworks-rules.md (always-on) and hooks/git/test-guard.sh (mechanical enforcement at push time). The optional per-layer source globs additionally drive hooks/git/decomposition-guard.sh (one-PR-per-layer warning)."
 allowed-tools: Read Grep Glob Bash
 ---
 
@@ -28,10 +28,12 @@ testing:
       framework: pytest
       test_dir: tests/
       pattern: "test_{stem}.py"
+      source: ["src/**/*.py", "app/**/*.py"]
     - name: frontend
       framework: vitest
       test_dir: src/**/__tests__/
       pattern: "{stem}.spec.ts"
+      source: ["src/**/*.vue", "src/**/*.ts"]
     - name: e2e
       framework: playwright
       test_dir: tests/e2e/
@@ -43,8 +45,20 @@ Each layer names:
 - **framework** — the test runner for this layer
 - **test_dir** — where test files live (glob-compatible)
 - **pattern** — naming convention (`{stem}` = source file basename without extension)
+- **source** *(optional)* — glob list of production source files that belong to this layer. Drives `hooks/git/decomposition-guard.sh`: each touched file maps to exactly one layer (longest-literal-prefix wins), and a push or PR spanning more than one layer is flagged. Layers without `source:` (e.g. e2e/flow layers) are layer-neutral and never counted.
 
 Projects without a `testing:` section are unaffected by the hook. Once declared, testing is demanded — the hook blocks pushes without test evidence.
+
+## Source globs and decomposition enforcement
+
+The optional `source:` field on each layer lists the production files that belong to that layer. It turns the prose `[skill:ticket-decomposition]` doctrine — *one ticket/PR per architectural layer* — into a mechanical check:
+
+- `hooks/git/decomposition-guard.sh` maps every touched source file to exactly one layer (longest-literal-prefix wins) at push / PR time.
+- When a single push or PR spans more than one layer, the hook **warns** (V1 is warning-only; it never blocks).
+- Files matching no `source:` glob (tests, docs, config, scaffolding) are layer-neutral and never counted.
+- Override an intentional multi-layer push with `[multi-layer-ok: <reason>]` in the latest commit body.
+
+`source:` is optional and independent of `test_dir`/`pattern`: a project can adopt test enforcement (`test-guard.sh`) without decomposition enforcement, or both. Projects with no `source:` globs are unaffected by `decomposition-guard.sh`.
 
 ## Framework recommendations by ecosystem
 
@@ -161,3 +175,5 @@ The `test-guard.sh` hook reads this file at push time and verifies evidence cove
 - `[rule:testing-frameworks]` — always-on rules for framework declaration and usage
 - `[skill:commit]` step 4 — the affected-tests gate that runs tests and writes the signal file
 - `hooks/git/test-guard.sh` — mechanical enforcement at push time
+- `hooks/git/decomposition-guard.sh` — one-PR-per-layer warning at push time, driven by the per-layer `source:` globs
+- `[skill:ticket-decomposition]` — the one-ticket/PR-per-layer doctrine that `source:` globs make mechanically checkable
