@@ -87,6 +87,56 @@ Record Phase 0 results at the top of the Fact Sheet under `### Prior Knowledge`.
 
 ## The investigation loop
 
+### Phase execution order
+
+Phase 0 (Prior Knowledge) must run first -- it is the brain-first
+gate that prevents re-deriving documented knowledge.
+
+Phases 1, 2, and 4 are independent reads and MAY run in parallel
+when the investigation tier is Full and the execution environment
+supports concurrent agents:
+
+- **Phase 1** (Impact Chain) reads upstream/downstream code
+- **Phase 2** (Data Shape Verification) reads signatures, types, schemas
+- **Phase 4** (Environmental Readiness) reads imports, tests, environment
+
+None of these phases reads from another's output. Each writes to its
+own numbered section in the Fact Sheet.
+
+**Phase 3** (Logic Tracing) depends on Phase 2 -- it needs verified
+data shapes to trace concrete execution paths. Wait for Phase 2 to
+complete before starting Phase 3.
+
+**Phase 5** (Coherence Check) depends on all phases -- it synthesizes
+findings and checks cross-phase consistency. Wait for all phases to
+complete before starting Phase 5.
+
+```
+Dependency graph:
+
+    Phase 0 (serial)
+        │
+        ├─── Phase 1 (Impact Chain)      ─┐
+        ├─── Phase 2 (Data Shape)         ─┼─── Phase 3 (Logic Tracing)
+        └─── Phase 4 (Env Readiness)      ─┘         │
+                                                       │
+                                               Phase 5 (Coherence)
+```
+
+**Focused-tier investigations:** run all phases sequentially. The
+overhead of spawning parallel agents exceeds the time saved on 1-2
+file investigations.
+
+**Fallback:** if parallelization infrastructure is unavailable (no
+Agent tool, single-session environment, Focused tier), sequential
+execution is always valid. The evidence bar and Fact Sheet structure
+are identical regardless of execution order.
+
+**Parallel agent guidance:** when spawning parallel phases, each
+agent receives the Phase 0 output (prior knowledge) as context and
+produces its section of the Fact Sheet as output. The parent agent
+assembles the sections into the final Fact Sheet before Phase 5.
+
 ### Phase 1: Impact Chain
 
 Before reading any code, map the impact chain for the task:
@@ -175,6 +225,7 @@ Before stating the hypothesis, check the Fact Sheet's own internal coherence. Th
 - Do the knowledge loci's "current state" descriptions match the verified shapes?
 - If Phase 3 traced a logic path, does it use the field names and types from Phase 2 -- or different ones?
 - Are there assumptions in one phase that contradict findings in another?
+- **Cross-phase consistency** (especially after parallel execution): do Phase 1's entity names match Phase 2's verified definitions? Does Phase 4's import verification cover all entities named in Phases 1-3? If parallel agents produced the sections independently, contradictions here are the expected failure mode -- Phase 5 is the safety net.
 
 An internally incoherent Fact Sheet means one of the phases got something wrong. Resolve the contradiction before proceeding -- the hypothesis cannot be sound if the evidence it rests on contradicts itself.
 
