@@ -706,5 +706,30 @@ HOOKEOF
     fi
 fi
 
+# v1.10: P1 findings block (#419, compound engineering adoption).
+# If ## Findings section exists in the artifact and contains P1 rows
+# where Resolution is NOT "fixed", block the push. P2 and P3 are not
+# hook-enforced — P2 ticket-existence is agent discipline, P3 is
+# documentation-only.
+if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qF '## Findings' "$SOURCE_PATH"; then
+    FINDINGS_BLOCK=$(sed -n '/^## Findings$/,/^## /{ /^## Findings$/d; /^## /d; p; }' "$SOURCE_PATH")
+    UNRESOLVED_P1=$(echo "$FINDINGS_BLOCK" | grep -E '^\|[^|]*\|[[:space:]]*P1[[:space:]]*\|' | grep -viE '\|[[:space:]]*fixed' || true)
+    if [[ -n "$UNRESOLVED_P1" ]]; then
+        cat >&2 <<HOOKEOF
+BLOCKED: Self-review artifact has unresolved P1 findings:
+
+$UNRESOLVED_P1
+
+P1 findings must be resolved (Resolution: fixed) before push.
+P2 findings must have a ticket number (ticket #NNN).
+P3 findings are noted — no action required.
+
+See skills/self-review/SKILL.md Phase C: Findings triage.
+Ref: #419
+HOOKEOF
+        exit 2
+    fi
+fi
+
 # All checks passed.
 exit 0
