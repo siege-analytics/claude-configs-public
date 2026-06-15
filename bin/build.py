@@ -27,6 +27,7 @@ from typing import Optional
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_SKILLS = REPO_ROOT / "skills"
 SOURCE_PROJECTS = REPO_ROOT / "projects"
+SOURCE_SOLUTIONS = REPO_ROOT / "solutions"
 DIST = REPO_ROOT / "dist"
 
 CRAFT_WORKSPACE = Path.home() / ".craft-agent" / "workspaces" / "my-workspace"
@@ -242,6 +243,86 @@ def validate_project_manifests(projects_root: Path) -> dict[str, ProjectManifest
                 print(f"  [warn] Retired project '{slug}' has no successor: field")
 
     return active_manifests
+
+
+# ---------------------------------------------------------------------------
+# Solutions catalog validation (#421)
+# ---------------------------------------------------------------------------
+
+VALID_CATEGORIES = (
+    "conventions",
+    "data-integrity",
+    "packaging-truth",
+    "pipeline-operations",
+    "spatial-domain",
+    "architecture-patterns",
+    "security-issues",
+    "performance-issues",
+)
+
+VALID_SEVERITIES = ("S1", "S2", "S3", "enhancement")
+
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def validate_solutions(solutions_root: Path) -> int:
+    """Validate YAML frontmatter of all solutions/*.md files (excluding README.md).
+
+    Returns the number of valid entries. Raises BuildError on validation failures.
+    """
+    if not solutions_root.exists():
+        return 0
+
+    errors: list[str] = []
+    count = 0
+
+    for entry in sorted(solutions_root.iterdir()):
+        if not entry.is_file() or entry.suffix.lower() != ".md":
+            continue
+        if entry.name.lower() == "readme.md":
+            continue
+
+        content = entry.read_text()
+        fm = _parse_yaml_frontmatter(content)
+        rel = entry.relative_to(REPO_ROOT)
+
+        if not fm:
+            errors.append(f"{rel}: missing or unparseable YAML frontmatter")
+            continue
+
+        for field in ("title", "category", "date", "severity"):
+            if field not in fm or not fm[field]:
+                errors.append(f"{rel}: missing required field '{field}'")
+
+        if "category" in fm:
+            cat = str(fm["category"])
+            if cat not in VALID_CATEGORIES:
+                errors.append(
+                    f"{rel}: invalid category '{cat}'. "
+                    f"Must be one of: {', '.join(VALID_CATEGORIES)}"
+                )
+
+        if "severity" in fm:
+            sev = str(fm["severity"])
+            if sev not in VALID_SEVERITIES:
+                errors.append(
+                    f"{rel}: invalid severity '{sev}'. "
+                    f"Must be one of: {', '.join(VALID_SEVERITIES)}"
+                )
+
+        if "date" in fm:
+            date_val = str(fm["date"])
+            if not _DATE_RE.match(date_val):
+                errors.append(f"{rel}: invalid date format '{date_val}'. Must be YYYY-MM-DD")
+
+        count += 1
+
+    if errors:
+        raise BuildError(
+            "Solutions catalog validation failed:\n  " + "\n  ".join(errors)
+        )
+
+    return count
 
 
 # ---------------------------------------------------------------------------
@@ -1140,6 +1221,15 @@ def main() -> int:
         print(f"BUILD ERROR: {e}", file=sys.stderr)
         return 1
     print(f"  {len(active_projects)} active project(s)")
+
+    # Phase 1b: Validate solutions catalog (#421).
+    print("Validating solutions catalog...")
+    try:
+        solutions_count = validate_solutions(SOURCE_SOLUTIONS)
+    except BuildError as e:
+        print(f"BUILD ERROR: {e}", file=sys.stderr)
+        return 1
+    print(f"  {solutions_count} solution(s) validated")
 
     # Phase 2: Discover general skills and rules.
     print(f"Source: {SOURCE_SKILLS}")

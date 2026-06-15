@@ -75,6 +75,7 @@ Before investigating code, read what already exists about the entities you're ab
 | **Prior investigation artifacts** | Fact Sheets from earlier sessions that touched the same code | Check the ticket for linked Fact Sheets; grep PR bodies for "Investigation Fact Sheet" |
 | **Post-error revisions** | Revised models from prior errors in the same code area -- what was wrong and what the corrected understanding is | Search tickets and linked tickets for `## Post-error revision` sections; check git log for commits with `Post-error-revision:` trailers touching the same files |
 | **Knowledge locus for each entity** | Where the canonical understanding of this entity lives -- the place someone would go to learn how it works | For each entity touched: identify whether the locus is a ticket, doc page, CLAUDE.md section, module docstring, wiki article, or notebook. Record it -- this is where corrections go when errors surface. The Fact Sheet is NOT a valid knowledge locus -- it is an investigation artifact, not a canonical knowledge source. |
+| **Solutions catalog** | Prior solved problems matching this failure shape or code area -- documented root causes, solutions, and prevention mechanisms | `grep -ri <keywords> solutions/` with 2-3 domain terms from the task. If a match is found, read the entry's Solution and Prevention sections before starting fresh investigation. |
 
 **Hard rule:** If a prior investigation exists for the same code entity and is less than 30 days old, start from its findings -- don't re-derive from scratch. Cite it in your Fact Sheet's "Prior art" section. If it's stale, note what changed.
 
@@ -345,6 +346,7 @@ Scope justification: <why Focused tier -- must name: files touched (1-2),
 ### Prior Knowledge (Phase 0)
 - Ticket body read: YES/NO -- <key findings>
 - Post-error revisions found: <citation or "none found">
+- Solutions catalog: <grep results or "no matches">
 - Recent git history: <notable commits or "no recent changes">
 
 ### Knowledge Loci
