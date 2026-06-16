@@ -183,6 +183,7 @@ See [projects/CONTRIBUTING.md](projects/CONTRIBUTING.md) for the full authoring 
 | Write a Python utility, helper, formatter, validator, file/path/HTTP/spatial helper | `skills/_siege-utilities-rules.md` (check `siege_utilities` first) |
 | Do any spatial work — pick engine, write spatial SQL/Python/Scala, run a spatial join | `skills/analysis/spatial/SKILL.md` (router; dispatches to `coding/postgis`, `coding/geopandas`, `coding/sedona`, `coding/duckdb-spatial`) |
 | Fix a bug or issue identified by code review / audit / static analysis | `skills/thinking/think/SKILL.md` Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per `evaluate-ticket` criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
+| Audit a repo for over-engineering, find bloat, identify what to delete or simplify | `skills/over-engineering-audit/SKILL.md` — one-shot ranked report. Five tags: delete, stdlib, platform, yagni, shrink. Lists findings, applies nothing. Complexity only — correctness and security go to normal review. |
 
 ### Design & planning
 
