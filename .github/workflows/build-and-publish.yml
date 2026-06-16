@@ -47,13 +47,32 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build dist/nested and dist/flat
-        run: python3 bin/build.py
-
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Resolve release version
+        id: resolve-version
+        if: github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
+        run: |
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          while git rev-parse "v${MAJOR}.${MINOR}.${PATCH}" >/dev/null 2>&1; do
+            PATCH=$((PATCH + 1))
+          done
+          RESOLVED="${MAJOR}.${MINOR}.${PATCH}"
+          if [ "$RESOLVED" != "$VERSION" ]; then
+            echo "$RESOLVED" > VERSION
+          fi
+          echo "version=$RESOLVED" >> "$GITHUB_OUTPUT"
+          echo "tag=v${RESOLVED}" >> "$GITHUB_OUTPUT"
+          echo "bumped=$( [ "$RESOLVED" != "$VERSION" ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+
+      - name: Build dist/nested and dist/flat
+        run: python3 bin/build.py
 
       - name: Publish dist/nested → release/nested branch
         run: |
@@ -80,20 +99,19 @@ jobs:
           (cd /tmp/release-flat && git add -A && git commit -m "Publish flat layout from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
           (cd /tmp/release-flat && git push origin release/flat --force)
 
-      - name: Auto-tag from VERSION on main push
+      - name: Commit version bump and tag
         id: auto-tag
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
         run: |
-          VERSION=$(cat VERSION | tr -d '[:space:]')
-          TAG="v${VERSION}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping auto-tag"
-            echo "tag=" >> "$GITHUB_OUTPUT"
-          else
-            git tag "$TAG"
-            git push origin "$TAG"
-            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          TAG="${{ steps.resolve-version.outputs.tag }}"
+          if [ "${{ steps.resolve-version.outputs.bumped }}" = "true" ]; then
+            git add VERSION
+            git commit -m "chore(release): bump VERSION to ${{ steps.resolve-version.outputs.version }} [skip ci]"
+            git push origin main
           fi
+          git tag "$TAG"
+          git push origin "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Tag release branches
         if: startsWith(github.ref, 'refs/tags/v') || steps.auto-tag.outputs.tag != ''
