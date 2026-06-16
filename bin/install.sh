@@ -168,6 +168,22 @@ install_craft_agent() {
         errors=$((errors + 1))
     fi
 
+    if [[ -L "$ws_path/CLAUDE.md" ]]; then
+        local link_target
+        link_target="$(readlink "$ws_path/CLAUDE.md")"
+        if [[ "$link_target" == "RULES_BUNDLE.md" ]]; then
+            echo "  [ok] CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount wired)"
+        else
+            echo "  [warn] CLAUDE.md is a symlink but points at '$link_target', not RULES_BUNDLE.md"
+        fi
+    elif [[ -f "$ws_path/CLAUDE.md" ]]; then
+        echo "  [warn] CLAUDE.md exists as a regular file (operator-owned); bundle NOT auto-mounted"
+        echo "         (rename or append to wire the bundle into CA auto-inject)"
+    else
+        echo "  [warn] CLAUDE.md missing; bundle present but CA will not auto-inject it"
+        errors=$((errors + 1))
+    fi
+
     if [[ -f "$ws_path/RESOLVER.md" ]]; then
         echo "  [ok] RESOLVER.md present"
     else
@@ -219,12 +235,25 @@ install_craft_agent() {
 
     echo "Deployment complete. Workspace '$WORKSPACE_SLUG' is ready."
     echo
-    echo "The rules bundle is deployed but Craft Agent does not yet auto-mount"
-    echo "it as a system prompt addendum. Until that feature ships, the rules"
-    echo "are available at: $ws_path/RULES_BUNDLE.md"
+    echo "Bundle mount status (Craft Agent):"
+    echo "  RULES_BUNDLE.md  -> $ws_path/RULES_BUNDLE.md (always written)"
+    echo "  CLAUDE.md        -> symlink to RULES_BUNDLE.md (if no operator CLAUDE.md present)"
+    echo
+    echo "CA auto-injects CLAUDE.md content into the system prompt of any session whose"
+    echo "working directory is at or above the CLAUDE.md (CA walks cwd and its"
+    echo "subdirectories; it does NOT walk parents). For workspace-wide coverage:"
+    echo
+    echo "  1. Open Settings -> Workspace Settings -> Default Working Directory"
+    echo "  2. Set it to: $ws_path"
+    echo "  3. New sessions in this workspace will start with cwd there and pick"
+    echo "     up CLAUDE.md (= RULES_BUNDLE.md) on first system-prompt render."
+    echo
+    echo "Existing sessions inherit their old cwd; restart them to apply the new mount."
     echo
     echo "CA enforcement is active: UserPromptSubmit gates block via continue:false."
     echo "Native git pre-push hooks are at: $ws_path/.githooks/"
+    echo
+    echo "Verified empirically 2026-06-07 via probe sessions (claude-configs-public#380)."
     return 0
 }
 
