@@ -792,14 +792,35 @@ def _get_version() -> str:
     return "dev"
 
 
-def build_rules_bundle(rules_src: dict[str, Path]) -> None:
-    """Concatenate RULES.md + all _*-rules.md into a single bundle.
+def build_rules_bundle(
+    rules_src: dict[str, Path],
+    project_rules_src: Optional[dict[str, Path]] = None,
+    rule_provenance: Optional[dict[str, str]] = None,
+) -> None:
+    """Concatenate RULES.md + general _*-rules.md + project _rules.md into a bundle.
+
+    `rules_src` carries the general rule cohort discovered by `find_rules`
+    (paths relative to SOURCE_SKILLS). `project_rules_src` and
+    `rule_provenance` carry the active-project rule files discovered by
+    `find_project_rules` (paths relative to REPO_ROOT; provenance maps each
+    prefixed key like `siege-utilities--rules` to its project slug).
+
+    Both project params default to None so consumers calling the bundle
+    without project awareness (older callsites, wrapper repos that don't
+    use the `projects/` convention) keep working unchanged.
+
+    Layout of the bundle:
+      banner -> RULES.md entry -> general rules (sorted) ->
+      optional `## Project rules` section -> per-project rule sections (sorted).
 
     Emits:
       dist/RULES_BUNDLE.md  -- for system-prompt mounting
       dist/RULES_BUNDLE.json -- for selective injection / staleness hashing
     """
     DIST.mkdir(parents=True, exist_ok=True)
+
+    project_rules_src = project_rules_src or {}
+    rule_provenance = rule_provenance or {}
 
     version = _get_version()
     try:
@@ -818,14 +839,39 @@ def build_rules_bundle(rules_src: dict[str, Path]) -> None:
     if rules_entry.exists():
         entry_content = _strip_frontmatter(rules_entry.read_text())
 
-    # Read each _*-rules.md in sorted order
-    rule_contents: dict[str, str] = {}
+    # Read each general rule (path is relative to SOURCE_SKILLS).
+    general_contents: dict[str, str] = {}
     for slug in sorted(rules_src.keys()):
         src_path = SOURCE_SKILLS / rules_src[slug]
         if src_path.exists():
-            rule_contents[slug] = _strip_frontmatter(src_path.read_text())
+            general_contents[slug] = _strip_frontmatter(src_path.read_text())
 
-    # Build markdown bundle
+    # Read each project rule (path is relative to REPO_ROOT).
+    project_contents: dict[str, str] = {}
+    for prefixed_slug in sorted(project_rules_src.keys()):
+        src_path = REPO_ROOT / project_rules_src[prefixed_slug]
+        if src_path.exists():
+            project_contents[prefixed_slug] = _strip_frontmatter(src_path.read_text())
+
+    # Provenance: every key marked as 'general' or '<project-slug>'. Consumers
+    # who want to filter to one cohort (e.g. drop project rules for a session
+    # that isn't working in any project's domain) read this dict.
+    provenance: dict[str, str] = {slug: "general" for slug in general_contents}
+    for prefixed_slug in project_contents:
+        provenance[prefixed_slug] = rule_provenance.get(prefixed_slug, "unknown-project")
+
+    # ---- Markdown bundle ----
+
+    project_note = ""
+    if project_contents:
+        project_summary = ", ".join(sorted({rule_provenance.get(k, "?") for k in project_contents}))
+        project_note = (
+            f"\nIncludes project-namespaced rules for active project(s): "
+            f"**{project_summary}**. Project rules apply only when the session is\n"
+            f"working in that project's domain; treat them as scoped extensions of\n"
+            f"the general cohort, not always-on rules across every project.\n"
+        )
+
     banner = (
         f"# Rules Bundle\n"
         f"\n"
@@ -835,8 +881,18 @@ def build_rules_bundle(rules_src: dict[str, Path]) -> None:
         f"Mount it as a system-prompt addendum if your runtime does not run\n"
         f"`.claude/settings.json` hooks (e.g. Craft Agent, Cursor, Cody).\n"
         f"\n"
+        f"**Craft Agent (verified 2026-06-07):** rename this file to `CLAUDE.md`\n"
+        f"(or symlink it) and place it in the session's working directory. CA\n"
+        f"auto-injects CLAUDE.md / AGENTS.md content from cwd and its\n"
+        f"subdirectories. CA does NOT walk parent directories, so the file\n"
+        f"must be at or below the session's cwd. For workspace-wide coverage,\n"
+        f"set Settings -> Workspace Settings -> Default Working Directory to\n"
+        f"the directory that contains the CLAUDE.md. `bin/install.sh --deploy`\n"
+        f"handles the symlink automatically.\n"
+        f"\n"
         f"For hook-capable runtimes (Claude Code CLI), hooks remain the preferred\n"
         f"path. This bundle is a fallback, not a replacement.\n"
+        f"{project_note}"
         f"\n"
         f"Source: siege-analytics/claude-configs-public @ {commit}\n"
         f"\n"
@@ -848,26 +904,51 @@ def build_rules_bundle(rules_src: dict[str, Path]) -> None:
     if entry_content:
         sections.append(f"\n{entry_content}\n")
 
-    for slug in sorted(rule_contents.keys()):
-        sections.append(f"\n---\n\n## `_{slug}-rules`\n\n{rule_contents[slug]}\n")
+    for slug in sorted(general_contents.keys()):
+        sections.append(f"\n---\n\n## `_{slug}-rules`\n\n{general_contents[slug]}\n")
+
+    if project_contents:
+        sections.append(
+            "\n---\n\n## Project rules\n\n"
+            "The rule files below ship with active projects. Each applies only\n"
+            "when the session is working in that project's domain (e.g. editing\n"
+            "code in the project's repo, running its CI, deploying its\n"
+            "artifacts). When working outside any project's domain, treat these\n"
+            "sections as reference rather than active discipline.\n"
+        )
+        for prefixed_slug in sorted(project_contents.keys()):
+            project = rule_provenance.get(prefixed_slug, "unknown-project")
+            sections.append(
+                f"\n---\n\n### `{prefixed_slug}` (project: `{project}`)\n\n"
+                f"{project_contents[prefixed_slug]}\n"
+            )
 
     md_bundle = "".join(sections)
     (DIST / "RULES_BUNDLE.md").write_text(md_bundle)
 
-    # Build JSON bundle
+    # ---- JSON bundle ----
+
+    merged_rules: dict[str, str] = {**general_contents, **project_contents}
     json_bundle = {
         "version": version,
         "source_commit": commit,
         "built_at": built_at,
-        "rule_count": len(rule_contents),
-        "rules": rule_contents,
+        "rule_count": len(merged_rules),
+        "general_rule_count": len(general_contents),
+        "project_rule_count": len(project_contents),
+        "rules": merged_rules,
+        "provenance": provenance,
     }
     if entry_content:
         json_bundle["entry_point"] = entry_content
 
     (DIST / "RULES_BUNDLE.json").write_text(json.dumps(json_bundle, indent=2) + "\n")
 
-    print(f"  Rules bundle: {len(rule_contents)} rules, {len(md_bundle)} chars")
+    project_suffix = f" (+{len(project_contents)} project)" if project_contents else ""
+    print(
+        f"  Rules bundle: {len(general_contents)} general{project_suffix} rules, "
+        f"{len(md_bundle)} chars"
+    )
     print(f"  -> dist/RULES_BUNDLE.md")
     print(f"  -> dist/RULES_BUNDLE.json")
 
@@ -1111,7 +1192,7 @@ def _merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
     print(f"  Merged CA enforcement into {dst}")
 
 
-def deploy_to_workspace() -> None:
+def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
     """Sync flat layout to the Craft Agent workspace.
 
     Copies dist/flat/skills/ → ~/.craft-agent/workspaces/my-workspace/skills/,
@@ -1119,12 +1200,12 @@ def deploy_to_workspace() -> None:
     and RESOLVER.md → ~/.craft-agent/workspaces/my-workspace/RESOLVER.md.
     Strips Craft-incompatible frontmatter keys from .md files during copy.
     """
-    ws_skills = CRAFT_WORKSPACE / "skills"
+    ws_skills = craft_workspace / "skills"
     flat_skills = DIST / "flat" / "skills"
     if not flat_skills.exists():
         raise BuildError("dist/flat/skills/ does not exist — run build first")
-    if not CRAFT_WORKSPACE.exists():
-        print(f"  Workspace not found at {CRAFT_WORKSPACE}, skipping deploy")
+    if not craft_workspace.exists():
+        print(f"  Workspace not found at {craft_workspace}, skipping deploy")
         return
     preserved_root_files: dict[str, str] = {}
     if ws_skills.exists():
@@ -1158,13 +1239,13 @@ def deploy_to_workspace() -> None:
     resolver_src = REPO_ROOT / "RESOLVER.md"
     if resolver_src.exists():
         original = resolver_src.read_text()
-        (CRAFT_WORKSPACE / "RESOLVER.md").write_text(
+        (craft_workspace / "RESOLVER.md").write_text(
             strip_craft_incompatible_keys(original)
         )
 
     # Sync hooks/ to workspace (closes #261: hooks were missing from deploy).
     src_hooks = DIST / "flat" / "hooks"
-    ws_hooks = CRAFT_WORKSPACE / "hooks"
+    ws_hooks = craft_workspace / "hooks"
     if src_hooks.exists():
         if ws_hooks.exists():
             shutil.rmtree(ws_hooks)
@@ -1175,8 +1256,44 @@ def deploy_to_workspace() -> None:
     # Deploy rules bundle to workspace.
     bundle_md = DIST / "RULES_BUNDLE.md"
     if bundle_md.exists():
-        shutil.copy2(bundle_md, CRAFT_WORKSPACE / "RULES_BUNDLE.md")
-        print(f"  Copied RULES_BUNDLE.md to {CRAFT_WORKSPACE}/")
+        bundle_dst = craft_workspace / "RULES_BUNDLE.md"
+        shutil.copy2(bundle_md, bundle_dst)
+        print(f"  Copied RULES_BUNDLE.md to {craft_workspace}/")
+
+        # Craft Agent auto-injects CLAUDE.md / AGENTS.md content from cwd and
+        # its subdirectories on every session start. Wire the bundle into that
+        # mechanism by symlinking CLAUDE.md -> RULES_BUNDLE.md at the workspace
+        # root. Sessions whose cwd is set to the workspace root (via Settings
+        # -> Workspace Settings -> Default Working Directory) pick up the
+        # bundle automatically. Empirically verified 2026-06-07 against a
+        # probe session reporting `# claudeMd` content injection in its
+        # initial system prompt.
+        claudemd_dst = craft_workspace / "CLAUDE.md"
+        if claudemd_dst.is_symlink():
+            # Only replace a symlink we own (one already pointing at
+            # RULES_BUNDLE.md). An operator-owned symlink to some other
+            # target is left untouched.
+            if claudemd_dst.readlink() == Path("RULES_BUNDLE.md"):
+                claudemd_dst.unlink()
+                claudemd_dst.symlink_to("RULES_BUNDLE.md")
+                print("  Symlinked CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount)")
+            else:
+                print(
+                    f"  [warn] {claudemd_dst} is a symlink to "
+                    f"{claudemd_dst.readlink()}; not overwriting operator-owned CLAUDE.md."
+                )
+        elif not claudemd_dst.exists():
+            claudemd_dst.symlink_to("RULES_BUNDLE.md")
+            print("  Symlinked CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount)")
+        else:
+            # A non-symlink CLAUDE.md already exists. Don't clobber operator
+            # content; surface the situation and let them resolve it.
+            print(
+                f"  [warn] {claudemd_dst} exists as a regular file; not overwriting.\n"
+                f"         To wire the bundle into CA auto-inject, either rename your\n"
+                f"         existing CLAUDE.md and re-run --deploy, or append the\n"
+                f"         contents of RULES_BUNDLE.md to your CLAUDE.md manually."
+            )
 
     # Deploy CA enforcement artifacts.
     ca_dist = DIST / "craft-agent"
@@ -1184,11 +1301,11 @@ def deploy_to_workspace() -> None:
         # Copy enforcement manifest for auditability.
         manifest_src = ca_dist / "enforcement-manifest.json"
         if manifest_src.exists():
-            shutil.copy2(manifest_src, CRAFT_WORKSPACE / "enforcement-manifest.json")
+            shutil.copy2(manifest_src, craft_workspace / "enforcement-manifest.json")
 
         # Install native git hooks (.githooks/pre-push).
         githooks_src = ca_dist / ".githooks"
-        ws_githooks = CRAFT_WORKSPACE / ".githooks"
+        ws_githooks = craft_workspace / ".githooks"
         if githooks_src.exists():
             ws_githooks.mkdir(parents=True, exist_ok=True)
             for hook_file in githooks_src.iterdir():
@@ -1199,11 +1316,11 @@ def deploy_to_workspace() -> None:
 
         # Merge CA enforcement settings into .claude/settings.json.
         settings_src = ca_dist / "settings-enforcement.json"
-        settings_dst = CRAFT_WORKSPACE / ".claude" / "settings.json"
+        settings_dst = craft_workspace / ".claude" / "settings.json"
         if settings_src.exists() and settings_dst.exists():
             _merge_ca_enforcement_settings(settings_src, settings_dst)
 
-    print(f"  Deployed to {CRAFT_WORKSPACE}/ ({stripped_count} files stripped)")
+    print(f"  Deployed to {craft_workspace}/ ({stripped_count} files stripped)")
 
 
 def main() -> int:
@@ -1211,6 +1328,7 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="Validate tokens; do not write output")
     parser.add_argument("--layout", choices=("nested", "flat", "both"), default="both")
     parser.add_argument("--deploy", action="store_true", help="After building, sync flat layout to Craft Agent workspace")
+    parser.add_argument("--craft-workspace", type=Path, default=CRAFT_WORKSPACE, help="Target Craft Agent workspace path for --deploy (default: %(default)s)")
     args = parser.parse_args()
 
     # Phase 1: Validate project manifests (repo uniqueness, required fields, status).
@@ -1288,7 +1406,7 @@ def main() -> int:
     warn_unknown()
 
     print("\nBuilding rules bundle...")
-    build_rules_bundle(rules_src)
+    build_rules_bundle(rules_src, project_rules_src, rule_provenance)
 
     print("\nBuilding CA enforcement artifacts...")
     build_ca_enforcement()
@@ -1304,7 +1422,7 @@ def main() -> int:
                 project_skills_src, project_rules_src,
                 skill_provenance, active_projects,
             )
-        deploy_to_workspace()
+        deploy_to_workspace(args.craft_workspace.expanduser())
 
     return 0
 
