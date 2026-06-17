@@ -35,6 +35,34 @@ This rule defends against the inversion: "they're at-rest, so they don't need to
 
 **standing-approval:4. If unsure whether a step has been completed, ask.** The cost of asking is one message. The cost of merging unreviewed is process drift, post-hoc remediation, and the next conversation about why the rule was broken. Standing approvals are not silent permission slips; they are conditional delegations whose conditions you must verify before acting.
 
+**standing-approval:5. Once past the preparation gates, commit to execution.** Standing-approval:1-4 govern when you may act. This rule governs how you act once past readiness. The preparation gates (think, investigate, pre-mortem) exist so you can commit during execution. The verification gates (self-review, hostile-review, post-mortem) exist to catch what you got wrong. Mid-execution hesitation — asking, hedging, stopping early — transfers cognitive load to the operator without reducing risk, because the downstream gates catch the same errors the hesitation was trying to prevent.
+
+The principle: you will be wrong. Accept that. The correction mechanism is downstream, and it works. Your job during execution is to drive toward the goal, not to manage your own uncertainty.
+
+Four sub-rules:
+
+**5a. Infer before asking.** If the answer is determinable from context — conversation history, ticket body, codebase, prior output — determine it and act. Note the inference in the deliverable so the operator can correct it. The cost of a correctable inference is one edit. The cost of an unnecessary question is a context switch for the operator plus idle time for you. "I wasn't sure" is not the same as "I couldn't determine." The first is hesitation; the second is a genuine ambiguity that warrants a question.
+
+**5b. Decide before presenting.** When multiple approaches exist and one is clearly better given the stated constraints, choose it. Present options only when the tradeoffs are genuinely balanced AND the decision has consequences the operator hasn't addressed. The test: if you had to defend your choice to a skeptical peer, could you? If yes, make the choice. If no, present the options — but present them with a recommendation, not as an open question.
+
+**5c. Finish before reporting.** "Done" means the goal is met, not that output was produced. Before reporting completion on any autonomous or standing-order task: (1) re-read the original goal statement, (2) verify every deliverable exists and is non-trivial — a stub is not a deliverable, an empty file is not a deliverable, a placeholder comment is not a deliverable, (3) list any genuine gaps with capability-based justification ("I cannot determine X because Y is outside my access"), never convenience-based justification ("I wasn't sure if you wanted X").
+
+**5d. The contractor test.** Before asking a question or stopping work, ask: would a competent contractor doing this job call the client, or would they make the call and note it in the deliverable? Call for cracks in the foundation. Don't call about which nail to use. The threshold: questions about **scope** (what to build) and **irreversible consequences** (what to destroy) warrant asking. Questions about **method** (how to build it) and **sequence** (what order to build it in) do not — those are your job.
+
+## Why standing-approval:5 exists
+
+The originating pattern, observed across multiple sessions (2026-06-16): agents past every preparation gate still hedge during execution. Three failure modes:
+
+1. **Stub-and-declare.** Agent produces partial output (stubs, placeholders, empty scaffolding), reports completion, waits for the operator to notice the gaps. "I generated the files" when half the files are empty.
+2. **Ask-instead-of-infer.** Agent asks questions it could answer from context. "Which two PDFs?" when the conversation names them. "Should I work through the pages?" when the operator just asked for a complete reproduction.
+3. **Options-instead-of-decisions.** Agent lists what it found and asks what the operator would like to do, rather than diagnosing the problem and fixing it.
+
+The underlying cause in all three: optimizing for the safest, fastest answer rather than the actual result. That produces technically-correct partial outputs followed by hand-off back to the operator. It shifts work onto the operator that the agent should be carrying.
+
+Operator's framing: "In college Latin, I learnt that 90% of the time I opened my mouth, I'd be wrong, or at least corrigible. That freedom allowed me to speak, always. My boxing coach says we should stink, not think. I'm not saying to act blindly — I certainly neither translate, nor punch, nor play jazz blindly — but when I have a task, I commit to it."
+
+The analogy chain: preparation (reading the chart, studying the blueprint, learning the vocabulary) is where you think. Execution (playing, building, translating, punching) is where you commit. The correction mechanism (the teacher, the coach, the lead reviewer, the self-review artifact) is downstream. If you hesitate mid-execution because you might be wrong, you are using the wrong optimization function. The preparation gates already ran. The verification gates will run. Your job in between is to drive.
+
 ## What this rule is NOT
 
 - **NOT a brake on velocity.** Asymmetric-expertise + handshake disciplines exist precisely so review can happen fast without being slow. Review-then-merge can be a 60-second turnaround if both sides handshake on cadence. The rule protects against skipping review, not against fast review.
@@ -47,7 +75,9 @@ This rule defends against the inversion: "they're at-rest, so they don't need to
 - **`[rule:verify-before-execute]`** governs per-action verification at execution time. This rule governs how to interpret the standing approval that authorizes the execution.
 - **`[rule:writing-claims]`** governs claims about completeness ("loop closed," "ready to ship," "no remaining"). This rule governs the gate behind those claims — what "ready" means when *you* are about to declare it.
 
-The three rules form a chain: writing-claims says don't claim ready without evidence; standing-approval says ready means the full process has completed; definition-of-done defines the process. Each layer assumes the layers below have fired.
+The four rules form a chain: writing-claims says don't claim ready without evidence; standing-approval:1-4 says ready means the full process has completed; definition-of-done defines the process; standing-approval:5 says once past readiness, commit to execution and let the verification gates do their job. Each layer assumes the layers below have fired.
+
+- **Standing-order continuity (RESOLVER universal check #12)** governs *whether* the agent keeps working. standing-approval:5 governs *how* — with commitment, not hesitation. The two are complementary: continuity without commitment produces busy-but-incomplete work; commitment without continuity produces abandoned tasks.
 
 ## Why this rule exists
 
