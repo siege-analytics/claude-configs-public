@@ -99,16 +99,19 @@ jobs:
           (cd /tmp/release-flat && git add -A && git commit -m "Publish flat layout from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
           (cd /tmp/release-flat && git push origin release/flat --force)
 
-      - name: Commit version bump and tag
+      - name: Tag resolved version
         id: auto-tag
         if: github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
         run: |
+          # The resolve-version step walks past existing tags to pick the next
+          # free version and already wrote it to the working-tree VERSION, so the
+          # build embedded it. The tag is the release identity. We do NOT commit
+          # VERSION back to main: main is a protected branch and CI cannot push to
+          # it (GH006 "Changes must be made through a pull request"), which failed
+          # every release run since this step was introduced. VERSION-in-repo is a
+          # floor only -- bump it via a normal PR for minor/major changes; patch
+          # auto-increment is driven entirely by the tag walk above.
           TAG="${{ steps.resolve-version.outputs.tag }}"
-          if [ "${{ steps.resolve-version.outputs.bumped }}" = "true" ]; then
-            git add VERSION
-            git commit -m "chore(release): bump VERSION to ${{ steps.resolve-version.outputs.version }} [skip ci]"
-            git push origin main
-          fi
           git tag "$TAG"
           git push origin "$TAG"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
