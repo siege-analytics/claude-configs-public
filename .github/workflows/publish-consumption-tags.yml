@@ -1,0 +1,83 @@
+name: publish-consumption-tags
+
+# Safety net for consumption-tag publishing.
+#
+# Problem this fixes:
+#   The `publish` job in build-and-publish.yml mints the `${TAG}-flat` /
+#   `${TAG}-nested` consumption tags only on the tag-triggered run, and that job
+#   shares a collapsible concurrency group (`publish-release-branches`,
+#   cancel-in-progress: false) with the main/develop push runs. When a tag push
+#   coincides with branch pushes (the normal case for a release: VERSION bump on
+#   main -> auto-tag -> tag push, all within seconds), GitHub keeps the
+#   in-progress run plus the newest pending run and CANCELS the older pending
+#   one. That older pending run is the tag run -- so the consumption tags are
+#   silently never created and the release is unconsumable. Observed for v3.0.0
+#   and again for v3.5.0 (its tag run was cancelled at 20:50:28Z; v3.5.0-flat
+#   was never published; downstream consumers that clone `${TAG}-flat` break).
+#
+# Why this workflow is robust:
+#   - Triggers on `release: published`, which fires reliably once per release and
+#     is not part of the push-concurrency collapse.
+#   - Uses a per-tag concurrency group, so it is never collapsed by branch runs.
+#   - Reads the already-published `release/flat` / `release/nested` branches via
+#     ls-remote (no checkout, no force-push) -- it only ADDS tags, so it cannot
+#     race the branch-publishing force-pushes in build-and-publish.yml.
+#   - Idempotent: skips a consumption tag that already exists, so it composes
+#     safely with the existing tag-run path when that path does survive.
+#   - Fails loudly if a release branch is missing, surfacing an unconsumable
+#     release instead of shipping it silently.
+
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: consumption-tags-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Mint -flat / -nested consumption tags
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tag release branches as ${TAG}-flat / ${TAG}-nested
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          missing=0
+          for layout in flat nested; do
+            branch="release/${layout}"
+            tag="${TAG}-${layout}"
+
+            if ! git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+              echo "::error::$branch not found; cannot mint $tag (was the build-and-publish run for this release skipped or cancelled?)"
+              missing=1
+              continue
+            fi
+
+            if git ls-remote --exit-code --tags origin "$tag" >/dev/null 2>&1; then
+              echo "$tag already exists; nothing to do"
+              continue
+            fi
+
+            sha=$(git ls-remote origin "refs/heads/$branch" | cut -f1)
+            git tag "$tag" "$sha"
+            git push origin "$tag"
+            echo "minted $tag -> $sha"
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            echo "::error::one or more release branches were missing; the release is not fully consumable"
+            exit 1
+          fi
