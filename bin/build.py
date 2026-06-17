@@ -949,8 +949,8 @@ def build_rules_bundle(
         f"  Rules bundle: {len(general_contents)} general{project_suffix} rules, "
         f"{len(md_bundle)} chars"
     )
-    print("  -> dist/RULES_BUNDLE.md")
-    print("  -> dist/RULES_BUNDLE.json")
+    print(f"  -> dist/RULES_BUNDLE.md")
+    print(f"  -> dist/RULES_BUNDLE.json")
 
 
 # ---------------------------------------------------------------------------
@@ -1109,9 +1109,9 @@ def build_ca_enforcement() -> None:
     print(f"  CA enforcement: {len(CA_ENFORCEMENT_GATES)} gates")
     print(f"    {sum(1 for g in CA_ENFORCEMENT_GATES if g['surface'] == 'UserPromptSubmit')} UserPromptSubmit (continue:false)")
     print(f"    {len(push_gates)} native git pre-push")
-    print("  -> dist/craft-agent/enforcement-manifest.json")
-    print("  -> dist/craft-agent/settings-enforcement.json")
-    print("  -> dist/craft-agent/.githooks/pre-push")
+    print(f"  -> dist/craft-agent/enforcement-manifest.json")
+    print(f"  -> dist/craft-agent/settings-enforcement.json")
+    print(f"  -> dist/craft-agent/.githooks/pre-push")
 
 
 # ---------------------------------------------------------------------------
@@ -1195,9 +1195,9 @@ def _merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
 def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
     """Sync flat layout to the Craft Agent workspace.
 
-    Copies dist/flat/skills/ → <craft_workspace>/skills/,
-    dist/flat/hooks/ → <craft_workspace>/hooks/,
-    and RESOLVER.md → <craft_workspace>/RESOLVER.md.
+    Copies dist/flat/skills/ → ~/.craft-agent/workspaces/my-workspace/skills/,
+    dist/flat/hooks/ → ~/.craft-agent/workspaces/my-workspace/hooks/,
+    and RESOLVER.md → ~/.craft-agent/workspaces/my-workspace/RESOLVER.md.
     Strips Craft-incompatible frontmatter keys from .md files during copy.
     """
     ws_skills = craft_workspace / "skills"
