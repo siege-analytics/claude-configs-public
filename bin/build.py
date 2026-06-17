@@ -949,8 +949,8 @@ def build_rules_bundle(
         f"  Rules bundle: {len(general_contents)} general{project_suffix} rules, "
         f"{len(md_bundle)} chars"
     )
-    print(f"  -> dist/RULES_BUNDLE.md")
-    print(f"  -> dist/RULES_BUNDLE.json")
+    print("  -> dist/RULES_BUNDLE.md")
+    print("  -> dist/RULES_BUNDLE.json")
 
 
 # ---------------------------------------------------------------------------
@@ -1109,9 +1109,9 @@ def build_ca_enforcement() -> None:
     print(f"  CA enforcement: {len(CA_ENFORCEMENT_GATES)} gates")
     print(f"    {sum(1 for g in CA_ENFORCEMENT_GATES if g['surface'] == 'UserPromptSubmit')} UserPromptSubmit (continue:false)")
     print(f"    {len(push_gates)} native git pre-push")
-    print(f"  -> dist/craft-agent/enforcement-manifest.json")
-    print(f"  -> dist/craft-agent/settings-enforcement.json")
-    print(f"  -> dist/craft-agent/.githooks/pre-push")
+    print("  -> dist/craft-agent/enforcement-manifest.json")
+    print("  -> dist/craft-agent/settings-enforcement.json")
+    print("  -> dist/craft-agent/.githooks/pre-push")
 
 
 # ---------------------------------------------------------------------------
@@ -1192,20 +1192,20 @@ def _merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
     print(f"  Merged CA enforcement into {dst}")
 
 
-def deploy_to_workspace() -> None:
+def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
     """Sync flat layout to the Craft Agent workspace.
 
-    Copies dist/flat/skills/ → ~/.craft-agent/workspaces/my-workspace/skills/,
-    dist/flat/hooks/ → ~/.craft-agent/workspaces/my-workspace/hooks/,
-    and RESOLVER.md → ~/.craft-agent/workspaces/my-workspace/RESOLVER.md.
+    Copies dist/flat/skills/ → <craft_workspace>/skills/,
+    dist/flat/hooks/ → <craft_workspace>/hooks/,
+    and RESOLVER.md → <craft_workspace>/RESOLVER.md.
     Strips Craft-incompatible frontmatter keys from .md files during copy.
     """
-    ws_skills = CRAFT_WORKSPACE / "skills"
+    ws_skills = craft_workspace / "skills"
     flat_skills = DIST / "flat" / "skills"
     if not flat_skills.exists():
         raise BuildError("dist/flat/skills/ does not exist — run build first")
-    if not CRAFT_WORKSPACE.exists():
-        print(f"  Workspace not found at {CRAFT_WORKSPACE}, skipping deploy")
+    if not craft_workspace.exists():
+        print(f"  Workspace not found at {craft_workspace}, skipping deploy")
         return
     preserved_root_files: dict[str, str] = {}
     if ws_skills.exists():
@@ -1239,13 +1239,13 @@ def deploy_to_workspace() -> None:
     resolver_src = REPO_ROOT / "RESOLVER.md"
     if resolver_src.exists():
         original = resolver_src.read_text()
-        (CRAFT_WORKSPACE / "RESOLVER.md").write_text(
+        (craft_workspace / "RESOLVER.md").write_text(
             strip_craft_incompatible_keys(original)
         )
 
     # Sync hooks/ to workspace (closes #261: hooks were missing from deploy).
     src_hooks = DIST / "flat" / "hooks"
-    ws_hooks = CRAFT_WORKSPACE / "hooks"
+    ws_hooks = craft_workspace / "hooks"
     if src_hooks.exists():
         if ws_hooks.exists():
             shutil.rmtree(ws_hooks)
@@ -1256,9 +1256,9 @@ def deploy_to_workspace() -> None:
     # Deploy rules bundle to workspace.
     bundle_md = DIST / "RULES_BUNDLE.md"
     if bundle_md.exists():
-        bundle_dst = CRAFT_WORKSPACE / "RULES_BUNDLE.md"
+        bundle_dst = craft_workspace / "RULES_BUNDLE.md"
         shutil.copy2(bundle_md, bundle_dst)
-        print(f"  Copied RULES_BUNDLE.md to {CRAFT_WORKSPACE}/")
+        print(f"  Copied RULES_BUNDLE.md to {craft_workspace}/")
 
         # Craft Agent auto-injects CLAUDE.md / AGENTS.md content from cwd and
         # its subdirectories on every session start. Wire the bundle into that
@@ -1268,14 +1268,23 @@ def deploy_to_workspace() -> None:
         # bundle automatically. Empirically verified 2026-06-07 against a
         # probe session reporting `# claudeMd` content injection in its
         # initial system prompt.
-        claudemd_dst = CRAFT_WORKSPACE / "CLAUDE.md"
-        if claudemd_dst.is_symlink() or not claudemd_dst.exists():
-            # Safe to (re)create: either it's already our symlink, or no file
-            # exists at that path. Replace to point at the freshly deployed bundle.
-            if claudemd_dst.is_symlink():
+        claudemd_dst = craft_workspace / "CLAUDE.md"
+        if claudemd_dst.is_symlink():
+            # Only replace a symlink we own (one already pointing at
+            # RULES_BUNDLE.md). An operator-owned symlink to some other
+            # target is left untouched.
+            if claudemd_dst.readlink() == Path("RULES_BUNDLE.md"):
                 claudemd_dst.unlink()
+                claudemd_dst.symlink_to("RULES_BUNDLE.md")
+                print("  Symlinked CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount)")
+            else:
+                print(
+                    f"  [warn] {claudemd_dst} is a symlink to "
+                    f"{claudemd_dst.readlink()}; not overwriting operator-owned CLAUDE.md."
+                )
+        elif not claudemd_dst.exists():
             claudemd_dst.symlink_to("RULES_BUNDLE.md")
-            print(f"  Symlinked CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount)")
+            print("  Symlinked CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount)")
         else:
             # A non-symlink CLAUDE.md already exists. Don't clobber operator
             # content; surface the situation and let them resolve it.
@@ -1292,11 +1301,11 @@ def deploy_to_workspace() -> None:
         # Copy enforcement manifest for auditability.
         manifest_src = ca_dist / "enforcement-manifest.json"
         if manifest_src.exists():
-            shutil.copy2(manifest_src, CRAFT_WORKSPACE / "enforcement-manifest.json")
+            shutil.copy2(manifest_src, craft_workspace / "enforcement-manifest.json")
 
         # Install native git hooks (.githooks/pre-push).
         githooks_src = ca_dist / ".githooks"
-        ws_githooks = CRAFT_WORKSPACE / ".githooks"
+        ws_githooks = craft_workspace / ".githooks"
         if githooks_src.exists():
             ws_githooks.mkdir(parents=True, exist_ok=True)
             for hook_file in githooks_src.iterdir():
@@ -1307,11 +1316,11 @@ def deploy_to_workspace() -> None:
 
         # Merge CA enforcement settings into .claude/settings.json.
         settings_src = ca_dist / "settings-enforcement.json"
-        settings_dst = CRAFT_WORKSPACE / ".claude" / "settings.json"
+        settings_dst = craft_workspace / ".claude" / "settings.json"
         if settings_src.exists() and settings_dst.exists():
             _merge_ca_enforcement_settings(settings_src, settings_dst)
 
-    print(f"  Deployed to {CRAFT_WORKSPACE}/ ({stripped_count} files stripped)")
+    print(f"  Deployed to {craft_workspace}/ ({stripped_count} files stripped)")
 
 
 def main() -> int:
@@ -1319,6 +1328,7 @@ def main() -> int:
     parser.add_argument("--check", action="store_true", help="Validate tokens; do not write output")
     parser.add_argument("--layout", choices=("nested", "flat", "both"), default="both")
     parser.add_argument("--deploy", action="store_true", help="After building, sync flat layout to Craft Agent workspace")
+    parser.add_argument("--craft-workspace", type=Path, default=CRAFT_WORKSPACE, help="Target Craft Agent workspace path for --deploy (default: %(default)s)")
     args = parser.parse_args()
 
     # Phase 1: Validate project manifests (repo uniqueness, required fields, status).
@@ -1412,7 +1422,7 @@ def main() -> int:
                 project_skills_src, project_rules_src,
                 skill_provenance, active_projects,
             )
-        deploy_to_workspace()
+        deploy_to_workspace(args.craft_workspace.expanduser())
 
     return 0
 

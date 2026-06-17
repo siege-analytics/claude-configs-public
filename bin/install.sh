@@ -136,7 +136,7 @@ install_craft_agent() {
 
     # Build flat layout + rules bundle and deploy to workspace
     echo "--- Building and deploying ---"
-    python3 "$REPO_ROOT/bin/build.py" --layout flat --deploy
+    python3 "$REPO_ROOT/bin/build.py" --layout flat --deploy --craft-workspace "$ws_path"
     echo
 
     # Install hooks settings
