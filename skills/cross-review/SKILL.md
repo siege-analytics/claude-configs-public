@@ -75,7 +75,7 @@ spawn_session(
   name: "Cross-review: <provider> reviews <filename>",
   llmConnection: "<resolved-connection-slug>",
   model: "<resolved-model>",
-  permissionMode: "safe",
+  permissionMode: "allow-all",
   enabledSourceSlugs: [<inherit from parent session>],
   labels: ["cross-review"],
   prompt: <see Prompt Template below>,
