@@ -34,6 +34,15 @@ SKILL_SEARCH_PATHS = [
 
 MAX_FILE_LINES = 8000
 
+# Hard wall-clock bound on every provider API call (seconds). An unbounded
+# call hangs the review with no recovery; see writing-code:15.
+REQUEST_TIMEOUT_S = 180
+
+# read_file() is confined to this root so an arbitrary host path (e.g. an SSH
+# key) cannot be read and forwarded to a third-party provider. Defaults to the
+# server's invocation directory; override with CROSS_REVIEW_ROOT.
+ALLOWED_ROOT = Path(os.environ.get("CROSS_REVIEW_ROOT", Path.cwd())).resolve()
+
 
 # ---------------------------------------------------------------------------
 # Provider registry
@@ -70,7 +79,10 @@ def _review_openai(client: Any, model: str, system: str, user: str) -> str:
             {"role": "user", "content": user},
         ],
     )
-    return response.choices[0].message.content
+    content = response.choices[0].message.content
+    if content is None:
+        raise RuntimeError("OpenAI returned no content for the review request.")
+    return content
 
 
 def _review_anthropic(client: Any, model: str, system: str, user: str) -> str:
@@ -167,13 +179,17 @@ class ProviderCollection:
     def _make_client(provider: str, key: str) -> Any:
         if provider == "openai":
             import openai
-            return openai.OpenAI(api_key=key)
+            return openai.OpenAI(api_key=key, timeout=REQUEST_TIMEOUT_S)
         if provider == "anthropic":
             import anthropic
-            return anthropic.Anthropic(api_key=key)
+            return anthropic.Anthropic(api_key=key, timeout=REQUEST_TIMEOUT_S)
         if provider == "google":
             from google import genai
-            return genai.Client(api_key=key)
+            from google.genai import types
+            return genai.Client(
+                api_key=key,
+                http_options=types.HttpOptions(timeout=REQUEST_TIMEOUT_S * 1000),
+            )
         raise ValueError(f"Unknown provider: {provider}")
 
     def review(self, provider: str, model: str | None, system: str, user: str) -> tuple[str, str]:
@@ -216,17 +232,22 @@ def resolve_skill(slug: str) -> str:
 
 def read_file(path: str) -> str:
     p = Path(path).expanduser().resolve()
+    if not p.is_relative_to(ALLOWED_ROOT):
+        raise ValueError(
+            f"Refusing to read {p}: outside the allowed root {ALLOWED_ROOT}. "
+            f"Set CROSS_REVIEW_ROOT to change the review scope."
+        )
     if not p.exists():
         raise FileNotFoundError(f"File not found: {path}")
 
-    lines = p.read_text().splitlines()
+    content = p.read_text()
+    lines = content.splitlines()
     if len(lines) > MAX_FILE_LINES:
-        truncated = lines[:MAX_FILE_LINES]
         return (
-            "\n".join(truncated)
+            "\n".join(lines[:MAX_FILE_LINES])
             + f"\n\n[TRUNCATED: file has {len(lines)} lines, showing first {MAX_FILE_LINES}]"
         )
-    return p.read_text()
+    return content
 
 
 # ---------------------------------------------------------------------------
