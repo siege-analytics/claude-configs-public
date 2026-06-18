@@ -1,0 +1,20 @@
+---
+name: shelves--design
+description: Router for design book skills. Dispatches to refactoring-ui, ios-hig-design, ux-heuristics, web-typography, top-design, design-everyday-things, or microinteractions based on task signals. Read this when working on UI, UX, visual hierarchy, typography, or interaction polish.
+---
+
+# Design -- Shelf
+
+## Trigger table
+
+| Task signal | Book to read |
+|---|---|
+| Visual hierarchy, color, spacing, polish for non-designers (Wathan & Schoger) | [`shelves--refactoring-ui`](../../shelves/design/refactoring-ui/SKILL.md) |
+| iOS HIG, native iOS / iPadOS app design | [`shelves--ios-hig-design`](../../shelves/design/ios-hig-design/SKILL.md) |
+| Heuristic evaluation (Nielsen 10) | [`shelves--ux-heuristics`](../../shelves/design/ux-heuristics/SKILL.md) |
+| Web typography -- pairing, scale, vertical rhythm | [`shelves--web-typography`](../../shelves/design/web-typography/SKILL.md) |
+| Top-down composition, design fundamentals | [`shelves--top-design`](../../shelves/design/top-design/SKILL.md) |
+| Affordances, signifiers, mappings (Don Norman) | [`shelves--design-everyday-things`](../../shelves/design/design-everyday-things/SKILL.md) |
+| Microinteractions -- triggers, rules, feedback, loops (Saffer) | [`shelves--microinteractions`](../../shelves/design/microinteractions/SKILL.md) |
+
+All wondelai/skills imports -- see footers and `THIRD_PARTY_NOTICES.md`.
