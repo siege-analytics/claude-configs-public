@@ -52,23 +52,60 @@ ALLOWED_ROOT = Path(os.environ.get("CROSS_REVIEW_ROOT", Path.cwd())).resolve()
 # Provider registry
 # ---------------------------------------------------------------------------
 
+class CredentialLookupError(RuntimeError):
+    """A credential source was found but the lookup itself failed."""
+
+
 def _op_get(title: str) -> str | None:
+    """Return a credential from 1Password, or None if `op` is not installed.
+
+    Raises CredentialLookupError when `op` is present but the lookup fails
+    (timeout, bad JSON, non-zero exit) so the caller can distinguish "not
+    configured" from "broken."
+    """
     try:
         result = subprocess.run(
             ["op", "item", "get", title, "--fields", "credential", "--format", "json"],
             capture_output=True, text=True, timeout=10,
         )
-        if result.returncode == 0:
-            data = json.loads(result.stdout)
-            if isinstance(data, dict):
-                return data.get("value") or data.get("credential")
-            return str(data).strip() if data else None
-    except (subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError):
-        pass
-    return None
+    except FileNotFoundError:
+        return None
+    except subprocess.TimeoutExpired:
+        raise CredentialLookupError(
+            f"1Password CLI timed out looking up '{title}'. "
+            "Is the vault locked or the network unreachable?"
+        )
+
+    if result.returncode != 0:
+        raise CredentialLookupError(
+            f"1Password CLI returned exit code {result.returncode} for '{title}': "
+            f"{result.stderr.strip()}"
+        )
+
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise CredentialLookupError(
+            f"1Password CLI returned unparseable JSON for '{title}': {exc}"
+        ) from exc
+
+    if isinstance(data, dict):
+        value = data.get("value") or data.get("credential")
+    else:
+        value = str(data).strip() if data else None
+
+    if not value:
+        raise CredentialLookupError(
+            f"1Password item '{title}' exists but contains no credential value."
+        )
+    return value
 
 
 def _resolve_credential(env_var: str, op_title: str) -> str | None:
+    """Return an API key from env or 1Password, None if neither is configured.
+
+    Raises CredentialLookupError if 1Password is present but the lookup fails.
+    """
     value = os.environ.get(env_var)
     if value:
         return value
@@ -156,24 +193,36 @@ PROVIDER_DEFS: dict[str, dict[str, Any]] = {
 class ProviderCollection:
     def __init__(self) -> None:
         self._available: dict[str, dict[str, Any]] = {}
+        self._errors: dict[str, str] = {}
         self._clients: dict[str, Any] = {}
         self._discover()
 
     def _discover(self) -> None:
         for name, defn in PROVIDER_DEFS.items():
-            key = _resolve_credential(defn["env_var"], defn["op_title"])
+            try:
+                key = _resolve_credential(defn["env_var"], defn["op_title"])
+            except CredentialLookupError as exc:
+                self._errors[name] = str(exc)
+                continue
             if key:
                 self._available[name] = {**defn, "_key": key}
 
-    def list_providers(self) -> list[dict[str, Any]]:
-        return [
-            {
-                "name": name,
-                "models": defn["models"],
-                "default_model": defn["default_model"],
+    def list_providers(self) -> dict[str, Any]:
+        result: dict[str, Any] = {
+            "providers": [
+                {
+                    "name": name,
+                    "models": defn["models"],
+                    "default_model": defn["default_model"],
+                }
+                for name, defn in self._available.items()
+            ],
+        }
+        if self._errors:
+            result["errors"] = {
+                name: msg for name, msg in self._errors.items()
             }
-            for name, defn in self._available.items()
-        ]
+        return result
 
     def get_client(self, provider: str) -> Any:
         if provider not in self._available:
@@ -358,22 +407,15 @@ def create_server(providers: ProviderCollection) -> Server:
     @server.call_tool()
     async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         if name == "list_providers":
-            available = providers.list_providers()
-            if not available:
-                return [TextContent(
-                    type="text",
-                    text=(
-                        "No providers available.\n\n"
-                        "To enable providers, set API keys:\n"
-                        + "\n".join(
-                            f"  - {n}: export {d['env_var']}=<key>"
-                            for n, d in PROVIDER_DEFS.items()
-                        )
-                    ),
-                )]
+            result = providers.list_providers()
+            if not result["providers"]:
+                result["setup_hints"] = {
+                    name: f"export {defn['env_var']}=<key>"
+                    for name, defn in PROVIDER_DEFS.items()
+                }
             return [TextContent(
                 type="text",
-                text=json.dumps({"providers": available}, indent=2),
+                text=json.dumps(result, indent=2),
             )]
 
         if name == "review":
@@ -408,7 +450,13 @@ def create_server(providers: ProviderCollection) -> Server:
                 }, indent=2),
             )]
 
-        return [TextContent(type="text", text=f"Unknown tool: {name}")]
+        return [TextContent(
+            type="text",
+            text=json.dumps({
+                "error": f"Unknown tool: {name}",
+                "available_tools": ["list_providers", "review"],
+            }, indent=2),
+        )]
 
     return server
 
