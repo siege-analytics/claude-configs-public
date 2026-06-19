@@ -163,29 +163,44 @@ When findings arrive (via `send_agent_message` reply or ticket comment):
 
 ## Reviewer session lifecycle (originating agent owns cleanup)
 
-The agent that spawned the reviewer is responsible for closing it down once the
-review task is resolved -- whether the underlying work was **merged** or
-**abandoned**. Do not rely on the reviewer self-closing: a spawned reviewer that
-errors or stalls (e.g. a provider rejects every turn) cannot always set its own
-status to done, and a lingering reviewer clutters the session list.
+The agent that spawned the reviewer is responsible for closing its **session**
+once the review task reaches a terminal state. Do not rely on the reviewer
+self-closing: a reviewer that errors or stalls (e.g. a provider rejects every
+turn) cannot always set its own status to done, and a lingering reviewer
+clutters the session list.
 
-Track the `sessionId` returned by `spawn_session` for each reviewer. When the
-review task reaches a terminal state, close the reviewer with:
+Track the `sessionId` returned by `spawn_session` for each reviewer -- persist
+it somewhere durable that survives a parent restart (the self-review artifact, a
+ticket comment, or session labels) so cleanup can resume if the parent is
+interrupted. When the review task reaches a terminal state, close the reviewer
+with:
 
 ```
 set_session_status(sessionId: "<spawned-session-id>", status: "done")
 ```
 
-(`set_session_status` accepts a `sessionId`, so the parent can close any
-reviewer it spawned directly.) This applies in both terminal cases:
+(`set_session_status` accepts a `sessionId`, so the parent can close any reviewer
+it spawned directly. Setting `done` is idempotent -- harmless if the reviewer
+already self-closed -- so close it whenever it is still open.)
 
-- **Merged / review served its purpose** -- confirm the reviewer delivered its
-  findings, then close it.
-- **Abandoned** -- PR closed without merge, review no longer needed, or the
-  reviewer wedged on an error -- close it anyway.
+Keep two things distinct: the **review task** (has independent review coverage
+actually been obtained?) and the **reviewer session** (is the spawned session
+still open?). Terminal cases:
 
-Closing every reviewer it spawned is part of the originating agent's definition
-of done. The task is not complete while a reviewer it spawned is still open.
+- **Merged / review served its purpose** -- the reviewer delivered findings and
+  they were incorporated. Close the session.
+- **Abandoned** -- the PR was closed without merge or the review is no longer
+  needed. Close the session.
+- **Reviewer wedged or errored** -- closing the dead session is cleanup, but it
+  does NOT by itself satisfy the review task. If the underlying work is still
+  active, first obtain review coverage another way (spawn a replacement reviewer,
+  fall back to the MCP cross-review server, or explicitly record that
+  cross-review was waived/failed), THEN close the wedged session. Do not treat
+  "I closed the reviewer" as "the work was reviewed."
+
+The MCP fallback path spawns no session, so it needs no cleanup. Closing every
+reviewer session it spawned is part of the originating agent's definition of
+done; the task is not complete while a reviewer it spawned is still open.
 
 ## Attribution Policy
 
