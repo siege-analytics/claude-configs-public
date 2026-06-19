@@ -161,6 +161,32 @@ When findings arrive (via `send_agent_message` reply or ticket comment):
 4. Update the self-review artifact with a "Cross-review" section noting
    provider, model, and finding count
 
+## Reviewer session lifecycle (originating agent owns cleanup)
+
+The agent that spawned the reviewer is responsible for closing it down once the
+review task is resolved -- whether the underlying work was **merged** or
+**abandoned**. Do not rely on the reviewer self-closing: a spawned reviewer that
+errors or stalls (e.g. a provider rejects every turn) cannot always set its own
+status to done, and a lingering reviewer clutters the session list.
+
+Track the `sessionId` returned by `spawn_session` for each reviewer. When the
+review task reaches a terminal state, close the reviewer with:
+
+```
+set_session_status(sessionId: "<spawned-session-id>", status: "done")
+```
+
+(`set_session_status` accepts a `sessionId`, so the parent can close any
+reviewer it spawned directly.) This applies in both terminal cases:
+
+- **Merged / review served its purpose** -- confirm the reviewer delivered its
+  findings, then close it.
+- **Abandoned** -- PR closed without merge, review no longer needed, or the
+  reviewer wedged on an error -- close it anyway.
+
+Closing every reviewer it spawned is part of the originating agent's definition
+of done. The task is not complete while a reviewer it spawned is still open.
+
 ## Attribution Policy
 
 NEVER include AI or agent attribution in review findings, ticket comments,
