@@ -34,6 +34,10 @@ SKILL_SEARCH_PATHS = [
 
 MAX_FILE_LINES = 8000
 
+# Hard cap on bytes pulled from any single file, so a huge (or single-line)
+# file can't be read into memory before line-truncation applies.
+MAX_FILE_BYTES = 2_000_000
+
 # Hard wall-clock bound on every provider API call (seconds). An unbounded
 # call hangs the review with no recovery; see writing-code:15.
 REQUEST_TIMEOUT_S = 180
@@ -220,6 +224,24 @@ class ProviderCollection:
 # Skill resolution
 # ---------------------------------------------------------------------------
 
+def _read_text_bounded(p: Path) -> str:
+    """Read a text file capped at MAX_FILE_BYTES and MAX_FILE_LINES."""
+    with p.open(encoding="utf-8", errors="replace") as fh:
+        text = fh.read(MAX_FILE_BYTES + 1)
+    truncated = len(text) > MAX_FILE_BYTES
+    if truncated:
+        text = text[:MAX_FILE_BYTES]
+    lines = text.splitlines(keepends=True)
+    if len(lines) > MAX_FILE_LINES:
+        text = "".join(lines[:MAX_FILE_LINES])
+        truncated = True
+    if truncated:
+        text = text.rstrip("\n") + (
+            f"\n\n[TRUNCATED: capped at {MAX_FILE_LINES} lines / {MAX_FILE_BYTES} bytes]"
+        )
+    return text
+
+
 def resolve_skill(slug: str) -> str:
     candidate = Path(slug)
     if candidate.is_absolute():
@@ -230,17 +252,22 @@ def resolve_skill(slug: str) -> str:
                 f"{ALLOWED_ROOT}. Set CROSS_REVIEW_ROOT to change the scope."
             )
         if resolved.is_file():
-            return resolved.read_text()
+            return _read_text_bounded(resolved)
 
     for base in SKILL_SEARCH_PATHS:
+        base_resolved = base.resolve()
         candidates = [
             base / slug / "SKILL.md",
             base / f"{slug}.md",
             base / slug,
         ]
         for path in candidates:
-            if path.is_file():
-                text = path.read_text()
+            resolved = path.resolve()
+            # Reject a slug that escapes its search dir via `../` or a symlink.
+            if not resolved.is_relative_to(base_resolved):
+                continue
+            if resolved.is_file():
+                text = _read_text_bounded(resolved)
                 if text.startswith("---"):
                     end = text.find("---", 3)
                     if end != -1:
@@ -266,20 +293,7 @@ def read_file(path: str) -> str:
     if not p.is_file():
         raise ValueError(f"Refusing to read non-regular file (FIFO/device/dir): {path}")
 
-    # Read at most MAX_FILE_LINES + 1 lines so a huge (or endless) file can't
-    # exhaust memory before truncation.
-    lines: list[str] = []
-    truncated = False
-    with p.open(encoding="utf-8", errors="replace") as fh:
-        for i, line in enumerate(fh):
-            if i >= MAX_FILE_LINES:
-                truncated = True
-                break
-            lines.append(line)
-    text = "".join(lines)
-    if truncated:
-        text += f"\n\n[TRUNCATED: showing first {MAX_FILE_LINES} lines]"
-    return text
+    return _read_text_bounded(p)
 
 
 # ---------------------------------------------------------------------------
