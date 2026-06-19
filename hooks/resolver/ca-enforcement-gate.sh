@@ -10,7 +10,10 @@
 # enforcement surface by:
 #   1. Running each gate and capturing its output
 #   2. Scanning for blocking keywords (STALE DESIGN, BLOCKED, STALE INVESTIGATION)
-#   3. Emitting {"continue": false} on the final stdout line when any gate blocks
+#   3. Emitting a SINGLE {"continue": false, "systemMessage": ...} JSON object as
+#      the sole stdout when any gate blocks. NB: mixed human-text + JSON on stdout
+#      does NOT parse and does NOT block under Craft Agent (empirically verified,
+#      #416) — the JSON must be the only thing on stdout.
 #
 # The wrapper always exits 0 — blocking is done via continue:false, not exit code.
 #
@@ -18,7 +21,7 @@
 # When CLAUDE_CA_ENFORCE is unset or empty, this hook is a no-op (the original
 # hooks still fire and produce advisory output via their own settings entries).
 #
-# Refs: #409, #335, #325
+# Refs: #409, #335, #325, #416
 
 set -euo pipefail
 
@@ -76,8 +79,8 @@ run_gate "$HOOK_DIR/think-gate-guard.sh" "think-gate"
 run_gate "$HOOK_DIR/investigate-gate-guard.sh" "investigate-gate"
 
 if [[ "$blocking" == "true" ]]; then
-    # Emit the gate output so the agent sees the explanation.
-    echo "$gate_output"
-    # Block the agent from proceeding.
-    echo '{"continue": false}'
+    # Emit a SINGLE clean JSON object as the sole stdout. Mixed human-text + a
+    # later JSON line does NOT parse and does NOT block under Craft Agent
+    # (empirically verified, #416). The gate explanation rides in systemMessage.
+    printf '%s' "$gate_output" | python3 -c 'import json,sys; print(json.dumps({"continue": False, "systemMessage": (sys.stdin.read().strip() or "Blocked by CA enforcement gate.")}))'
 fi
