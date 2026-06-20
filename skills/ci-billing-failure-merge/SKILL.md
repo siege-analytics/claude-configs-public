@@ -1,6 +1,6 @@
 ---
 name: "CI Billing-Failure Merge Override"
-description: "Authorizes admin-merge of PRs when all CI checks fail solely due to GitHub Actions org-level billing failure, provided the PR meets the substitute-review criteria. Two tiers: pre-authorized for non-runtime PRs (docs, read-only tooling); per-merge operator-approved (conditional tier) for runtime-adjacent paths like recon SQL."
+description: "Authorizes admin-merge of PRs when all CI checks fail solely due to GitHub Actions org-level billing failure, provided the PR meets the substitute-review criteria. Three tiers: pre-authorized for non-runtime PRs (docs, read-only tooling); per-merge operator-approved (conditional tier) for runtime-adjacent paths like recon SQL and silver_canonical; standing delegation for time-bounded blanket approval of a work-package."
 alwaysAllow:
   - "Bash"
 ---
@@ -30,7 +30,7 @@ The PR must satisfy ALL of these -- CI's billing-induced absence is not a free p
 
 1. **Non-runtime scope OR conditional-tier coverage.** Either the PR matches the pre-authorized scope above, or it matches the conditional-tier scope below with explicit operator approval. DOES NOT QUALIFY (out of scope entirely): pipeline transformation code (gold/silver MV definitions), DAG files baked into worker images, Tekton task definitions, Dockerfile changes, Helm chart changes that the running worker consumes.
 2. **Self-review artifact present.** The PR (or one of its commits) references a self-review artifact, OR the PR description includes Assumptions / Peer review / Lead review sections per the `self-review` skill. The artifact-existence floor is non-negotiable.
-3. **At least one runtime validation outside of CI.** For SQL PRs: a dry-run against the actual target (Spark Connect / PostGIS / OpenSearch / etc.) producing the expected output shape. For docs PRs: markdown lint clean + visible-on-GitHub-render check.
+3. **At least one runtime validation outside of CI.** For SQL PRs: a dry-run against the actual target (Spark Connect / PostGIS / OpenSearch / etc.) producing the expected output shape. For docs PRs: markdown lint clean + visible-on-GitHub-render check. For YAML rule/template PRs (silver_canonical): validate YAML syntax + dry-run of affected schedule against the target engine confirming the output schema matches expectations.
 4. **No reviewer block.** If a reviewer has requested changes, the changes are addressed and the reviewer hasn't re-blocked. Auto-passes if no review was requested.
 5. **The agent has read and understood every line of the diff.** Not "the model glanced at it" -- the agent narrates the change in the merge-time report.
 
@@ -41,7 +41,7 @@ Some PR scopes that the pre-authorization does NOT cover CAN be merged under thi
 **Conditional-scope PRs** (require operator approval per merge, unless an active standing delegation covers them per the section below):
 - `airflow/vendor/ee_pipelines/recon/**/*.sql` -- recon SQL files. These are read-only `SELECT`-only falsification queries run on-demand by the recon DAG. They are git-sync'd into the worker pod, not baked into the image, so a broken query breaks the recon DAG run but not the worker image build itself.
 - `enterprise/rundeck/pipelines/recon/**/*.sql` -- equivalent recon SQL for the Rundeck side.
-- `airflow/vendor/ee_pipelines/silver_canonical/**/*` -- silver canonicalization layer (Python rule_loader, YAML rules under `rules/<schedule>/<cycle>.yaml`, SQL templates per schedule, tests, README). Per design at electinfo/enterprise#2168. Same rationale as recon SQL: read-only data normalization, git-sync'd into worker pod, NOT baked into worker image. A broken canonical query breaks the daily DAG run but not the worker image build.
+- `airflow/vendor/ee_pipelines/silver_canonical/**/*.{sql,yaml,yml,md}` -- silver canonicalization layer declarative files only: YAML rules under `rules/<schedule>/<cycle>.yaml`, SQL templates per schedule, tests, README. Per design at electinfo/enterprise#2168. Same rationale as recon SQL: read-only data normalization, git-sync'd into worker pod, NOT baked into worker image. A broken canonical query breaks the daily DAG run but not the worker image build. **Excludes** Python files (`*.py`) in this subtree -- Python changes to `rule_loader` or other runtime code are out of scope and require full CI or per-merge operator approval with explicit Python-specific runtime validation (import + dry-run of affected schedule).
 
 **Per-merge operator approval mechanism:**
 
@@ -58,13 +58,20 @@ The operator can grant a **standing delegation** for a specific work-package (a 
 
 1. All five Substitute-review criteria from the section above. Standing delegation does NOT waive any of them.
 2. Self-review artifact per merge per the `self-review` skill, predating the work commit.
-3. Hostile review with fix-in-same-PR per `feedback_never_ship_tech_debt`. If hostile review surfaces a defect, fix it in the same PR before merging; do NOT file a follow-up ticket.
+3. Hostile review per the `hostile-review` skill with fix-in-same-PR. If hostile review surfaces a defect, fix it in the same PR before merging; do NOT file a follow-up ticket.
 4. Runtime validation outside CI per substitute-review criterion 3.
 5. The merge commit body must **cite the standing-delegation source** (chat timestamp + workspace memory entry path) so future readers can audit the delegation chain without consulting chat history.
 
 **Time-bounding:** a standing delegation expires when the operator says it does, or implicitly at the work-package's acceptance gate (e.g., a Phase 1 standing delegation expires when Phase 1 acceptance criteria pass). After expiry, conditional-scope merges in that scope return to per-merge operator approval.
 
-**Discovery:** workspace-specific active standing delegations live in workspace-local memory entries (e.g., `project_<work_package>_standing_merge_approval.md`), not in this public skill. The skill documents the mechanism; the memory documents the active instances.
+**Discovery and required schema:** workspace-specific active standing delegations live in workspace-local memory entries (e.g., `project_<work_package>_standing_merge_approval.md`), not in this public skill. The skill documents the mechanism; the memory documents the active instances. The memory entry MUST contain all of the following fields -- an entry missing any field is not a valid delegation:
+
+- **Operator grant:** verbatim quote of the operator's approving message (not paraphrased)
+- **Grant source:** chat session ID + timestamp where the operator gave approval
+- **Scope:** exact file paths or glob patterns covered (must be a subset of the conditional-scope list above)
+- **Work-package:** ticket/epic/branch tree the delegation covers
+- **Expiry:** explicit condition or date when the delegation ends
+- **Created by:** session ID that created the memory entry (must differ from any session that later invokes the delegation -- an agent cannot both grant and consume a delegation)
 
 **Conditional tier does NOT cover** -- these stay out of scope regardless of delegation:
 - Worker-image-baked code (Dockerfile, Helm chart values consumed by the image build, Tekton pipeline definitions, base-image pins).
