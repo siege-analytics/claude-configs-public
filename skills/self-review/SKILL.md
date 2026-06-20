@@ -728,6 +728,24 @@ the work touches:
    gate evidence the way it treats missing ticket references: a
    structural block, not a judgment call.
 
+6. **Does this change belong here?** (library-surface trigger)
+   When the work touches a library's public surface -- new exports,
+   new modules, new subpackages -- the Lead asks:
+   - Does this module belong in this library, or is it here because
+     it was convenient at the time?
+   - Does this export make the API more discoverable or more
+     cluttered?
+   - Is there an existing module that does 80% of what this new one
+     does?
+   - What is the organizing principle of this library, and does this
+     change strengthen or weaken it?
+
+   A library that grows by accretion -- where the organizing
+   principle is "when did the Junior need this" rather than "what
+   kind of thing is this" -- will eventually become unmaintainable
+   by anyone other than its original author. The Lead's job is to
+   notice when a convenience addition is eroding the structure.
+
 Lead section format: domain-tagged. "In <domain>: <standard> holds
 because <evidence>" or "In <domain>: <standard> not shelved, applied
 judgment per <argument>." Both are honest and auditable.
