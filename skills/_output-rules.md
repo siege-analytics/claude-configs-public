@@ -8,6 +8,29 @@ Shared conventions for every skill that writes code, commits, docstrings, or doc
 
 If a process (e.g. `git commit` template) adds one automatically, strip it before pushing.
 
+## Author Identity
+
+Git commit authorship is determined by session labels, not by the machine's
+git config. Check session labels before every commit.
+
+| Session label | `user.name` | `user.email` |
+|---|---|---|
+| _(none)_ | `Craft Agent` | `agents-noreply@craft.do` |
+| `dheeraj` | `Dheeraj Chand` | `dheeraj@siegeanalytics.com` |
+| `steve` | `Steve Blackmon` | `steve@blackmon.org` |
+
+Apply via `-c` flags on every `git commit` invocation:
+
+```bash
+git -c user.name="Craft Agent" -c user.email="agents-noreply@craft.do" commit -m "..."
+```
+
+If both `dheeraj` and `steve` labels are present, that is an error — ask the
+user which identity to use.
+
+**Scope:** This controls git commit authorship only. The `gh` CLI PR author
+remains whichever GitHub account is authenticated (`gh auth status`).
+
 ## Commit messages
 
 Format: `type(scope): imperative summary under 72 chars`
