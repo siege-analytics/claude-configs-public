@@ -13,11 +13,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
+
+log = logging.getLogger(__name__)
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -268,6 +271,91 @@ class ProviderCollection:
         review_text = defn["review_fn"](client, model, system, user)
         return model, review_text
 
+    def _fallback_order(
+        self, requested: str, requested_model: str | None,
+    ) -> list[tuple[str, str | None]]:
+        """Return (provider, model) pairs to try after the primary fails.
+
+        Order: other available providers first (cross-vendor independence),
+        then same provider with a different model.
+        """
+        candidates: list[tuple[str, str | None]] = []
+
+        for name in self._available:
+            if name != requested:
+                candidates.append((name, None))
+
+        if requested in self._available:
+            defn = self._available[requested]
+            skip = requested_model or defn["default_model"]
+            for alt in defn["models"]:
+                if alt != skip:
+                    candidates.append((requested, alt))
+
+        return candidates
+
+    def review_with_fallback(
+        self,
+        provider: str,
+        model: str | None,
+        system: str,
+        user: str,
+    ) -> dict[str, Any]:
+        """Try the requested provider; on failure, try alternatives."""
+        errors: list[dict[str, str]] = []
+
+        try:
+            used_model, review_text = self.review(provider, model, system, user)
+            return {
+                "provider": provider,
+                "model": used_model,
+                "review": review_text,
+                "fallback_used": False,
+            }
+        except Exception as exc:
+            errors.append({
+                "provider": provider,
+                "model": model or "(default)",
+                "error": str(exc),
+            })
+            log.warning(
+                "Primary review failed (%s/%s): %s",
+                provider, model or "default", exc,
+            )
+
+        for fb_provider, fb_model in self._fallback_order(provider, model):
+            try:
+                used_model, review_text = self.review(
+                    fb_provider, fb_model, system, user,
+                )
+                return {
+                    "provider": fb_provider,
+                    "model": used_model,
+                    "review": review_text,
+                    "fallback_used": True,
+                    "original_provider": provider,
+                    "original_model": model,
+                    "original_error": errors[0]["error"],
+                    "attempts": errors,
+                }
+            except Exception as exc:
+                errors.append({
+                    "provider": fb_provider,
+                    "model": fb_model or "(default)",
+                    "error": str(exc),
+                })
+                log.warning(
+                    "Fallback review failed (%s/%s): %s",
+                    fb_provider, fb_model or "default", exc,
+                )
+
+        raise RuntimeError(
+            "All providers exhausted. Errors:\n"
+            + "\n".join(
+                f"  {e['provider']}/{e['model']}: {e['error']}" for e in errors
+            )
+        )
+
 
 # ---------------------------------------------------------------------------
 # Skill resolution
@@ -398,6 +486,15 @@ def create_server(providers: ProviderCollection) -> Server:
                             "type": "string",
                             "description": "Model to use. Optional — defaults to provider's default.",
                         },
+                        "fallback": {
+                            "type": "boolean",
+                            "description": (
+                                "If true (default), automatically try other available "
+                                "providers when the requested provider fails. Set to "
+                                "false to fail immediately on provider unavailability."
+                            ),
+                            "default": True,
+                        },
                     },
                     "required": ["file_path", "skill_slug", "provider"],
                 },
@@ -423,6 +520,7 @@ def create_server(providers: ProviderCollection) -> Server:
             skill_slug = arguments["skill_slug"]
             provider = arguments["provider"]
             model = arguments.get("model")
+            fallback = arguments.get("fallback", True)
 
             skill_text = resolve_skill(skill_slug)
             code_text = read_file(file_path)
@@ -435,19 +533,27 @@ def create_server(providers: ProviderCollection) -> Server:
                 "----- END FILE -----"
             )
 
-            used_model, review_text = providers.review(
-                provider, model, skill_text, user_prompt,
-            )
-
-            return [TextContent(
-                type="text",
-                text=json.dumps({
+            if fallback:
+                result = providers.review_with_fallback(
+                    provider, model, skill_text, user_prompt,
+                )
+                result["skill"] = skill_slug
+                result["file"] = file_path
+            else:
+                used_model, review_text = providers.review(
+                    provider, model, skill_text, user_prompt,
+                )
+                result = {
                     "provider": provider,
                     "model": used_model,
                     "skill": skill_slug,
                     "file": file_path,
                     "review": review_text,
-                }, indent=2),
+                }
+
+            return [TextContent(
+                type="text",
+                text=json.dumps(result, indent=2),
             )]
 
         return [TextContent(
