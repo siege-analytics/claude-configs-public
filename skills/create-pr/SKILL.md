@@ -337,6 +337,13 @@ gh pr ready <number>
 
 If a PR is large, explain in the description why it can't be split and suggest a review strategy.
 
+# Author identity
+
+Before creating any commits on the branch, check session labels and apply
+the identity mapping from `_output-rules.md` §Author Identity. Default is
+`Craft Agent <agents-noreply@craft.do>` unless the session has a `dheeraj`
+or `steve` label.
+
 # Attribution policy
 
 **NEVER** include AI or agent attribution in PR titles, descriptions, or metadata. This includes:
