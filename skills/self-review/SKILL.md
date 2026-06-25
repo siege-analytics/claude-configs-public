@@ -52,6 +52,7 @@ Plan reference: <path-or-link to the design note this diff implements>
 Pre-author-inventory: <ticket-link#pre-author-inventory | plans/path.md#pre-author-inventory | NONE>
 Investigate-artifact: <ticket-comment-link | committed-file-path | plans/investigate-*.md | TRIVIAL (with declaration below)>
 Pre-mortem-artifact: <ticket-comment-link | committed-file-path | plans/pre-mortem-*.md | TRIVIAL (with declaration below)>
+Hostile-review-artifact: <ticket-comment-URL | file path | session ID | WAIVED (with waiver declaration below)>
 
 ## Peer review (the Junior's checklist -- mechanics, correctness, craft floor)
 For each applicable shelf: what was checked, what was found.
@@ -365,6 +366,49 @@ enforcement. By requiring the artifact paths in self-review, the
 enforcement happens at the push boundary -- the agent cannot push without
 either producing the artifacts or explicitly declaring the work trivial
 with falsifiable evidence.
+
+## Hostile-review-artifact field
+
+The `Hostile-review-artifact:` field links to the findings from an
+independent hostile review (cross-review, MCP cross-review, or
+same-provider hostile review). Independent review is the only
+validation in the pipeline where the reviewer is architecturally
+separate from the author. Every other gate (investigate, pre-mortem,
+self-review) is the agent reviewing its own work.
+
+Valid values:
+
+- **Ticket comment URL** — hostile review findings posted to the ticket
+- **File path** — local or repo path to the review findings
+- **Session ID** — spawned cross-review session that delivered findings
+- **`WAIVED`** — accepted only with `## Hostile-review-waiver` block
+
+### Hostile-review-waiver declaration
+
+```
+## Hostile-review-waiver
+
+Category: <prose-only-docs | config-only | trivial-single-line>
+Cannot produce error: <falsifiable claim why hostile review would not
+                       have surfaced additional findings>
+Evidence: <command output proving no executable files changed -- e.g.
+          `git diff --name-only HEAD~1 | grep -E '\.(sh|py|sql|js|ts)$'`
+          returns no rows>
+Falsification: <observable that would prove skipping hostile review was
+                wrong -- e.g. "a reviewer finds an S1 or S2 in the
+                prose changes that I missed">
+```
+
+**Mechanical constraint:** The hook rejects `WAIVED` when the diff
+contains executable files (`.sh`, `.py`, `.sql`, `.js`, `.ts`, `.jsx`,
+`.tsx`). Executable code changes are never waivable — they always
+require independent review.
+
+**Incident justification:** #468 (review-gate infrastructure) shipped
+to main without any hostile review. The self-review classified a new
+141-line `.sh` hook as "trivial — extending an existing pattern."
+Five layers of failure cascaded, the last being that hostile review
+had no mechanical enforcement at all. This field closes that gap.
 
 ## Trivial-change declaration (when no ticket cited)
 
