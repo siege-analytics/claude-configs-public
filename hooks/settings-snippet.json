@@ -48,6 +48,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "/path/to/claude-configs-public/hooks/bash/destructive-guard.sh",
             "timeout": 10
           },
