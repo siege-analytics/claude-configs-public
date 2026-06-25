@@ -29,6 +29,11 @@
 #   - Pre-mortem-artifact prose quality: if the artifact file exists,
 #     checks for minimum content (>=5 non-header lines) and at least one
 #     Tiger entry with severity classification. Empty/header-only = blocked.
+# v1.10 (this version):
+#   - Hostile-review-artifact: field present and non-empty in Assumptions.
+#     WAIVED accepted only with ## Hostile-review-waiver declaration (4
+#     required fields). WAIVED rejected when diff contains executable
+#     files (.sh, .py, .sql, .js, .ts, .jsx, .tsx). Ref: #470.
 # v2 scope (deferred follow-ups, tracked in SKILL.md):
 #   - Goal source does not point at the commit being pushed
 #   - Lead section's role-tagged affirmative standard format
@@ -463,6 +468,94 @@ HOOKEOF
             fi
         fi
     done
+
+    # v1.10: Hostile-review-artifact field must be present and non-empty.
+    # WAIVED is accepted only with a ## Hostile-review-waiver declaration
+    # block AND the diff must not contain executable files. Executable code
+    # changes are never waivable — they always require independent review.
+    # Ref: #470 (hostile-review enforcement gap found when #468 shipped
+    # without any hostile review).
+    HOSTILE_VALUE=$(grep -E '^Hostile-review-artifact:[[:space:]]+\S' "$SOURCE_PATH" | head -1 | sed -E 's/^Hostile-review-artifact:[[:space:]]+'// || true)
+    if [[ -z "$HOSTILE_VALUE" ]]; then
+        cat >&2 <<HOOKEOF
+BLOCKED: Self-Review-Source: $SOURCE_PATH is missing
+'Hostile-review-artifact:' in the Assumptions section.
+
+Independent hostile review is required. Provide one of:
+  Hostile-review-artifact: <ticket-comment-URL with review findings>
+  Hostile-review-artifact: <file path to review findings>
+  Hostile-review-artifact: <session ID of cross-review session>
+  Hostile-review-artifact: WAIVED (with ## Hostile-review-waiver declaration)
+
+WAIVED is rejected when the diff contains executable files
+(.sh, .py, .sql, .js, .ts, .jsx, .tsx). See skills/self-review/SKILL.md.
+Ref: #470
+HOOKEOF
+        exit 2
+    fi
+
+    if [[ "$HOSTILE_VALUE" == "WAIVED" ]]; then
+        if ! grep -qF '## Hostile-review-waiver' "$SOURCE_PATH"; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Hostile-review-artifact: is WAIVED in $SOURCE_PATH but no
+## Hostile-review-waiver declaration is present.
+
+WAIVED requires a declaration with all four fields:
+  Category / Cannot produce error / Evidence / Falsification
+
+See skills/self-review/SKILL.md.
+HOOKEOF
+            exit 2
+        fi
+        # Validate declaration has the four required fields.
+        HOSTILE_DECL=$(awk '/^## Hostile-review-waiver/{flag=1; next} /^## /{flag=0} flag' "$SOURCE_PATH")
+        for HOSTILE_FIELD in "Category:" "Cannot produce error:" "Evidence:" "Falsification:"; do
+            if ! echo "$HOSTILE_DECL" | grep -qF "$HOSTILE_FIELD"; then
+                cat >&2 <<HOOKEOF
+BLOCKED: ## Hostile-review-waiver in $SOURCE_PATH is missing
+required field: $HOSTILE_FIELD
+
+All four fields are required: Category / Cannot produce error / Evidence /
+Falsification. See skills/self-review/SKILL.md.
+HOOKEOF
+                exit 2
+            fi
+        done
+        # Executable-file guard: reject waiver when the diff contains
+        # executable files. These changes always require independent review.
+        EXEC_FILES=$(git -C "$EFFECTIVE_CWD" diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null | grep -E '\.(sh|py|sql|js|ts|jsx|tsx)$' || true)
+        if [[ -n "$EXEC_FILES" ]]; then
+            EXEC_COUNT=$(echo "$EXEC_FILES" | wc -l | tr -d ' ')
+            cat >&2 <<HOOKEOF
+BLOCKED: Hostile-review-artifact: is WAIVED but the diff contains
+$EXEC_COUNT executable file(s):
+$(echo "$EXEC_FILES" | head -5 | sed 's/^/  /')
+
+Executable code changes (.sh, .py, .sql, .js, .ts, .jsx, .tsx) are
+never waivable — they always require independent hostile review.
+Remove the waiver and provide a hostile review artifact, or remove
+the executable files from this commit.
+Ref: #470
+HOOKEOF
+            exit 2
+        fi
+    elif [[ "$HOSTILE_VALUE" =~ \.(md|txt)$ ]] || [[ "$HOSTILE_VALUE" == /* ]] || [[ "$HOSTILE_VALUE" == ./* ]]; then
+        # Value looks like a file path — verify the file exists.
+        case "$HOSTILE_VALUE" in
+            /*) HOSTILE_PATH="$HOSTILE_VALUE" ;;
+            *)  HOSTILE_PATH="$EFFECTIVE_CWD/$HOSTILE_VALUE" ;;
+        esac
+        if [[ ! -f "$HOSTILE_PATH" ]]; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Hostile-review-artifact: points at $HOSTILE_VALUE which does
+not exist at $HOSTILE_PATH.
+
+Either fix the path, produce the artifact, or post findings to the
+ticket and use the ticket comment URL instead.
+HOOKEOF
+            exit 2
+        fi
+    fi
 
     # Peer review section must cite at least one shelf.
     SHELF_RE='writing-(code|tests|claims|prose|releases):'
