@@ -247,6 +247,35 @@ claims name reordering but function only lowercases; entity
 identification outputs "All match: False" while narrative implies
 matching. All three were written against imagined APIs.
 
+### Gate 5: Review-gate check
+
+Before push, check whether a `review-gate.json` signal file exists
+(workspace root for Craft Agent, repo root `.review-gate.json` for
+Claude Code). If it exists and the current branch has new commits
+since `reviewed_commit`, the push is blocked until the review is
+re-fired on the current code.
+
+```bash
+# Check for review-gate signal
+[ -f review-gate.json ] && python3 -c "
+import json, subprocess
+d = json.load(open('review-gate.json'))
+if d.get('verdict') == 'approve': exit(0)
+head = subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip()
+if head != d.get('reviewed_commit',''):
+    print(f'BLOCKED: {d[\"branch\"]} has new commits since review. Re-review required.')
+    exit(1)
+"
+```
+
+**Evidence format in Peer review section:**
+```
+Review-gate: no signal file (N/A) | cleared (approved) | re-reviewed at <commit>
+```
+
+If no review-gate signal exists, this gate does not apply — state
+"Review-gate: N/A (no signal file)" explicitly.
+
 ## Pre-author-inventory field
 
 The `Pre-author-inventory:` field in the Assumptions section is a **required

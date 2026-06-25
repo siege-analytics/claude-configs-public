@@ -202,6 +202,57 @@ The MCP fallback path spawns no session, so it needs no cleanup. Closing every
 reviewer session it spawned is part of the originating agent's definition of
 done; the task is not complete while a reviewer it spawned is still open.
 
+## Review-Gate Lifecycle
+
+The review-gate signal file ensures that fixes pushed after a review
+automatically trigger re-review. This works in both Craft Agent and
+pure Claude Code.
+
+### On request-changes verdict
+
+After the review produces a request-changes verdict, write the signal
+file so the hook can detect when fixes land:
+
+**Craft Agent:** `<workspace>/review-gate.json`
+**Claude Code:** `<repo>/.review-gate.json`
+
+```json
+{
+  "ticket": "owner/repo#NNN",
+  "branch": "<current-branch>",
+  "reviewed_commit": "<HEAD at review time>",
+  "skill": "<review-skill-slug>",
+  "provider": "<provider-name>",
+  "verdict": "request-changes",
+  "findings_location": "<ticket-comment-URL or file path>",
+  "created": "<ISO 8601 timestamp>",
+  "lastChecked": "<ISO 8601 timestamp>"
+}
+```
+
+### On approve verdict
+
+Delete the signal file:
+
+```bash
+rm review-gate.json          # Craft Agent
+rm .review-gate.json         # Claude Code
+```
+
+### How re-review triggers
+
+The `review-gate-guard.sh` hook runs on every turn. When it detects
+that the branch has new commits since `reviewed_commit`, it emits a
+re-review directive. The agent must then re-fire the review on the
+current code before pushing.
+
+After re-review, update `reviewed_commit` to the current HEAD.
+
+### Cross-runtime compatibility
+
+The signal file is just JSON on disk. The hook uses only `git` and
+`python3`. No Craft Agent primitives required.
+
 ## Attribution Policy
 
 NEVER include AI or agent attribution in review findings, ticket comments,
