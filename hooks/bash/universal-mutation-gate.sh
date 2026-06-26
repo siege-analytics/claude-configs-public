@@ -1,6 +1,6 @@
 #!/bin/bash
-# Hook: bash/universal-mutation-gate (v1)
-# Enforces: fail-closed mutation gating (#473, parent #415)
+# Hook: bash/universal-mutation-gate (v2)
+# Enforces: fail-closed mutation gating (#473, hardened #477)
 # Trigger: PreToolUse on Bash — MUST be FIRST in the Bash hook list
 #
 # Inverts the enforcement default: instead of listing guarded mutations
@@ -11,14 +11,13 @@
 # Decision flow:
 #   1. Extract command from stdin JSON
 #   2. Match against SAFE_PATTERNS -> PASS
-#   3. Check think-gate.json status=implementing -> PASS
-#   4. Check for [mutation-acknowledged] in command -> PASS (one-shot)
+#   3. Check think-gate.json status=designing|reviewing -> PASS
+#   4. Check think-gate.json status=implementing + artifact checks -> PASS
 #   5. BLOCK (exit 2)
 #
-# Escape hatches:
-#   1. think-gate.json with status=implementing (normal workflow)
-#   2. [mutation-acknowledged] inline in the command (audit trail)
-#   3. CLAUDE_MUTATION_GATE=off env var (emergency disable, discouraged)
+# No escape hatches. If the gate blocks a legitimate command, the fix is
+# adding it to SAFE_PATTERNS or producing the required artifacts.
+# See #477 for rationale.
 
 set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
@@ -30,10 +29,8 @@ COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/nu
 
 [[ -z "$COMMAND" ]] && exit 0
 
-# Emergency disable
-if [[ "${CLAUDE_MUTATION_GATE:-}" == "off" ]]; then
-    exit 0
-fi
+# No emergency disable. To disable the gate, comment out the hook in
+# settings.json — that produces an auditable change. (#477)
 
 # --- SAFE_PATTERNS: read-only commands that pass without check ---
 # Each pattern is an extended regex. Order does not matter.
@@ -113,11 +110,9 @@ if [[ "$COMPOUND_MUTATION" == "false" ]]; then
     done
 fi
 
-# --- Check for [mutation-acknowledged] escape ---
-if [[ "$COMMAND" == *'[mutation-acknowledged]'* ]]; then
-    echo "[universal-mutation-gate] One-shot bypass: mutation-acknowledged" >&2
-    exit 0
-fi
+# [mutation-acknowledged] bypass removed (#477). Self-authorization is the
+# problem, not the solution. If a command is legitimately safe, add it to
+# SAFE_PATTERNS. If the pipeline is incomplete, complete it.
 
 # --- Check think-gate.json ---
 # Search order: CLAUDE_THINK_GATE env, workspace root, repo .think-gate.json
@@ -143,14 +138,72 @@ if [[ -n "$THINK_GATE" ]]; then
     TG_STATUS=$(python3 -c "
 import json, sys
 try:
-    d = json.load(open('$THINK_GATE'))
+    d = json.load(open(sys.argv[1]))
     print(d.get('status', ''))
 except Exception:
     pass
-" 2>/dev/null || true)
+" "$THINK_GATE" 2>/dev/null || true)
 
-    if [[ "$TG_STATUS" == "implementing" || "$TG_STATUS" == "designing" || "$TG_STATUS" == "reviewing" ]]; then
+    if [[ "$TG_STATUS" == "designing" || "$TG_STATUS" == "reviewing" ]]; then
         exit 0
+    fi
+
+    if [[ "$TG_STATUS" == "implementing" ]]; then
+        # Artifact checks: investigation and pre-mortem must exist (#477)
+        WORKSPACE_CANDIDATE="$(dirname "$(dirname "$HOOK_DIR")")"
+        MISSING=""
+
+        # Check investigate-gate.json
+        INVEST_GATE=""
+        if [[ -n "${CRAFT_AGENT_WORKSPACE:-}" ]] && [[ -f "$CRAFT_AGENT_WORKSPACE/investigate-gate.json" ]]; then
+            INVEST_GATE="$CRAFT_AGENT_WORKSPACE/investigate-gate.json"
+        elif [[ -f "$WORKSPACE_CANDIDATE/investigate-gate.json" ]]; then
+            INVEST_GATE="$WORKSPACE_CANDIDATE/investigate-gate.json"
+        fi
+        if [[ -z "$INVEST_GATE" ]]; then
+            MISSING="investigate-gate.json (Fact Sheet)"
+        fi
+
+        # Check pre-mortem artifact in plans directories
+        PREMORTEM_FOUND=false
+        for plans_dir in \
+            "${CRAFT_AGENT_PLANS_PATH:-__none__}" \
+            "$WORKSPACE_CANDIDATE/plans" \
+            ; do
+            if [[ -d "$plans_dir" ]]; then
+                for f in "$plans_dir"/pre-mortem* "$plans_dir"/premortem* "$plans_dir"/risk*; do
+                    if [[ -f "$f" ]]; then
+                        PREMORTEM_FOUND=true
+                        break 2
+                    fi
+                done
+            fi
+        done
+        if [[ "$PREMORTEM_FOUND" == "false" ]]; then
+            if [[ -n "$MISSING" ]]; then
+                MISSING="$MISSING, pre-mortem artifact"
+            else
+                MISSING="pre-mortem artifact"
+            fi
+        fi
+
+        if [[ -z "$MISSING" ]]; then
+            exit 0
+        fi
+
+        cat >&2 <<ARTEOF
+BLOCKED by universal-mutation-gate (#477): artifacts missing
+
+think-gate.json status=implementing, but required artifacts are missing:
+  $MISSING
+
+The gate requires both an investigation artifact (investigate-gate.json)
+and a pre-mortem artifact (plans/pre-mortem-*.md) before allowing
+mutations during implementation.
+
+Produce the missing artifacts, then retry.
+ARTEOF
+        exit 2
     fi
 fi
 
@@ -162,21 +215,20 @@ if [[ ${#COMMAND} -gt 120 ]]; then
 fi
 
 cat >&2 <<HOOKEOF
-BLOCKED by universal-mutation-gate (v1, #473)
+BLOCKED by universal-mutation-gate (v2, #473/#477)
 
 Command: $CMD_SHORT
 
 This command is not on the read-only safelist and no valid think-gate.json
-was found with status=implementing.
+was found with an active status.
 
-To proceed, choose one:
+To proceed:
   1. Produce a design note (think gate) and write think-gate.json
-     with status=implementing — this is the normal workflow.
-  2. Add [mutation-acknowledged] to the command for a one-shot bypass.
-  3. If this command is genuinely read-only and should be on the safelist,
+     with status=designing — this is the normal workflow.
+  2. If this command is genuinely read-only and should be on the safelist,
      add its pattern to hooks/bash/universal-mutation-gate.sh SAFE_PATTERNS.
 
-The enforcement default is fail-closed: unknown commands are blocked,
-not passed. See #473 for rationale.
+There are no bypass mechanisms. The enforcement default is fail-closed.
+See #473 (original gate) and #477 (hardening).
 HOOKEOF
 exit 2
