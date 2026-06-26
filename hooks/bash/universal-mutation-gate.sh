@@ -44,13 +44,14 @@ SAFE_PATTERNS=(
     '^(grep|egrep|fgrep|rg|ag|ack|ripgrep) '
 
     # Git reads (status, log, diff, show, branch listing, tag listing, etc.)
-    '^(cd .* &&[[:space:]]*)?(git )(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( |$)'
+    # Note: git config is read-only only for --get/--list/--get-regexp forms;
+    # bare 'git config' can write. Narrow to read-only subcommands.
+    '^(cd .* &&[[:space:]]*)?(git )(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config (--get|--list|--get-regexp|--get-all)|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( |$)'
 
     # GitHub CLI reads
     '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api .* --method GET|run (view|list))( |$)'
 
-    # Python read-only operations
-    '^python3? -c .*(import ast|import sys|import json|print\().*$'
+    # Python read-only operations (no arbitrary -c; only known-safe modules)
     '^(pip|pip3) (list|show|freeze|check)( |$)'
     '^python3? -m (pip (list|show|freeze)|pytest|py_compile)( |$)'
 
@@ -81,12 +82,17 @@ MUTATION_INDICATORS=(
     'gh (issue (create|comment|close|edit|delete|reopen|transfer)|pr (create|merge|close|edit|comment|review)|release (create|delete|edit)|repo (create|delete|fork|rename))'
     'glab (issue (create|close|note)|mr (create|merge|close|note|approve))'
     'rm (-[rRf]|--force|--recursive)'
+    '\brm [^-]'
+    'sed -i|sed --in-place'
+    'awk -i inplace'
+    '\bpatch '
     'curl.* -X (POST|PUT|DELETE|PATCH)'
     'pip[3]? install'
     'npm install|yarn add|pnpm add'
-    'cat .* >|tee |> |>> '
+    'cat .* >|tee |>[^ ]|> |>> '
     'mkdir |touch |mv |cp '
     'chmod |chown |chgrp '
+    'git config (--global|--system|--local|--unset|--add|--replace-all)'
     'docker |kubectl |helm '
     'psql .* -c|mysql .* -e'
     'aws s3 (cp|mv|rm|sync)'
