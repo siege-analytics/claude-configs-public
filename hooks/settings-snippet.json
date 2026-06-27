@@ -48,6 +48,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "/path/to/claude-configs-public/hooks/bash/destructive-guard.sh",
             "timeout": 10
           },
@@ -154,12 +159,44 @@
         ]
       },
       {
+        "matcher": "NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/write-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "mcp__session__send_agent_message",
         "hooks": [
           {
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/agent-comms/no-slug-form-outbound.sh",
             "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/vergil-quote.sh",
+            "timeout": 5
           }
         ]
       }

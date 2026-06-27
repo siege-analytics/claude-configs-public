@@ -1115,6 +1115,138 @@ def build_ca_enforcement() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Consumer packages (claude-code, craft-agent)
+# ---------------------------------------------------------------------------
+
+# Matchers that only exist in Craft Agent (MCP session tools).
+# Filtered from the claude-code settings snippet.
+CA_ONLY_MATCHERS = {
+    "mcp__session__send_agent_message",
+    "mcp__session__spawn_session",
+    "mcp__session__browser_tool",
+}
+
+
+def _filter_settings_for_claude_code(settings: dict) -> dict:
+    """Remove CA-only matchers from a settings snippet for Claude Code."""
+    import copy
+    filtered = copy.deepcopy(settings)
+    hooks = filtered.get("hooks", {})
+    for event_name, groups in list(hooks.items()):
+        if not isinstance(groups, list):
+            continue
+        hooks[event_name] = [
+            g for g in groups
+            if g.get("matcher", "") not in CA_ONLY_MATCHERS
+        ]
+        if not hooks[event_name]:
+            del hooks[event_name]
+    return filtered
+
+
+def build_consumer_packages() -> None:
+    """Build dist/claude-code/ and dist/craft-agent/ consumer packages.
+
+    Each package is self-contained: hooks/, lib/, settings-snippet.json,
+    skills/ (flat layout), and validate-hooks.py. The craft-agent package
+    additionally includes enforcement artifacts from build_ca_enforcement().
+
+    The claude-code package filters CA-only matchers from settings-snippet.json
+    (tools like mcp__session__* don't exist in Claude Code).
+    """
+    snippet_path = REPO_ROOT / "hooks" / "settings-snippet.json"
+    settings = json.loads(snippet_path.read_text())
+
+    version = _get_version()
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=REPO_ROOT, text=True,
+        ).strip()
+    except Exception:
+        commit = "unknown"
+
+    for target in ("claude-code", "craft-agent"):
+        pkg_dir = DIST / target
+        pkg_dir.mkdir(parents=True, exist_ok=True)
+
+        # Copy hooks (shell scripts + lib helpers)
+        src_hooks = REPO_ROOT / "hooks"
+        dst_hooks = pkg_dir / "hooks"
+        if dst_hooks.exists():
+            shutil.rmtree(dst_hooks)
+        dst_hooks.mkdir()
+
+        for subdir in ("bash", "git", "write", "resolver", "infrastructure", "agent-comms", "lib"):
+            src_sub = src_hooks / subdir
+            if not src_sub.exists():
+                continue
+            dst_sub = dst_hooks / subdir
+            dst_sub.mkdir(parents=True, exist_ok=True)
+            for f in src_sub.iterdir():
+                if f.is_file() and not f.name.startswith(".") and " " not in f.name:
+                    shutil.copy2(f, dst_sub / f.name)
+
+        # Copy _test/ for hook validation
+        test_src = src_hooks / "_test"
+        if test_src.exists():
+            shutil.copytree(test_src, dst_hooks / "_test", dirs_exist_ok=True)
+
+        # Write settings snippet (filtered for claude-code)
+        if target == "claude-code":
+            pkg_settings = _filter_settings_for_claude_code(settings)
+        else:
+            pkg_settings = settings
+        (pkg_dir / "hooks" / "settings-snippet.json").write_text(
+            json.dumps(pkg_settings, indent=2) + "\n"
+        )
+
+        # Copy skills from flat layout
+        flat_skills = DIST / "flat" / "skills"
+        if flat_skills.exists():
+            dst_skills = pkg_dir / "skills"
+            if dst_skills.exists():
+                shutil.rmtree(dst_skills)
+            shutil.copytree(flat_skills, dst_skills)
+            if target == "craft-agent":
+                # Strip Craft-incompatible keys from skills
+                for md_file in dst_skills.rglob("*.md"):
+                    original = md_file.read_text()
+                    processed = strip_craft_incompatible_keys(original)
+                    if processed != original:
+                        md_file.write_text(processed)
+
+        # Copy validate-hooks.py
+        validator = REPO_ROOT / "bin" / "validate-hooks.py"
+        if validator.exists():
+            (pkg_dir / "bin").mkdir(exist_ok=True)
+            shutil.copy2(validator, pkg_dir / "bin" / "validate-hooks.py")
+
+        # Write package manifest
+        pkg_manifest = {
+            "package": target,
+            "version": version,
+            "source_commit": commit,
+            "built_at": datetime.now(timezone.utc).isoformat(),
+        }
+        (pkg_dir / "package.json").write_text(
+            json.dumps(pkg_manifest, indent=2) + "\n"
+        )
+
+        # Copy root files
+        for root_file in ROOT_FILES:
+            src = REPO_ROOT / root_file
+            if src.exists():
+                shutil.copy2(src, pkg_dir / root_file)
+
+        hook_count = sum(1 for _ in dst_hooks.rglob("*.sh"))
+        print(f"  {target}: {hook_count} hook scripts, settings-snippet.json")
+
+    print(f"  -> dist/claude-code/")
+    print(f"  -> dist/craft-agent/")
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
@@ -1410,6 +1542,9 @@ def main() -> int:
 
     print("\nBuilding CA enforcement artifacts...")
     build_ca_enforcement()
+
+    print("\nBuilding consumer packages...")
+    build_consumer_packages()
 
     print(f"\nDone. Output: {DIST}/")
 
