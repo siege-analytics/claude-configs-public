@@ -24,6 +24,18 @@ jobs:
       - name: Validate token resolution (build --check)
         run: python3 bin/build.py --check
 
+      - name: Full build for hook validation
+        run: python3 bin/build.py
+
+      - name: Validate hook installation (claude-code)
+        run: python3 bin/validate-hooks.py dist/claude-code/
+
+      - name: Validate hook installation (craft-agent)
+        run: python3 bin/validate-hooks.py dist/craft-agent/
+
+      - name: Validate repo hooks match snippet
+        run: python3 bin/validate-hooks.py
+
   publish:
     name: Build and publish to release branches
     needs: validate
@@ -99,6 +111,24 @@ jobs:
           (cd /tmp/release-flat && git add -A && git commit -m "Publish flat layout from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
           (cd /tmp/release-flat && git push origin release/flat --force)
 
+      - name: Publish dist/claude-code → release/claude-code branch
+        run: |
+          rm -rf /tmp/release-claude-code
+          git branch -D release/claude-code 2>/dev/null || true
+          git worktree add --orphan -B release/claude-code /tmp/release-claude-code
+          rsync -a --delete --exclude='.git' dist/claude-code/ /tmp/release-claude-code/
+          (cd /tmp/release-claude-code && git add -A && git commit -m "Publish claude-code package from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
+          (cd /tmp/release-claude-code && git push origin release/claude-code --force)
+
+      - name: Publish dist/craft-agent → release/craft-agent branch
+        run: |
+          rm -rf /tmp/release-craft-agent
+          git branch -D release/craft-agent 2>/dev/null || true
+          git worktree add --orphan -B release/craft-agent /tmp/release-craft-agent
+          rsync -a --delete --exclude='.git' dist/craft-agent/ /tmp/release-craft-agent/
+          (cd /tmp/release-craft-agent && git add -A && git commit -m "Publish craft-agent package from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
+          (cd /tmp/release-craft-agent && git push origin release/craft-agent --force)
+
       - name: Tag resolved version
         id: auto-tag
         if: github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
@@ -126,9 +156,13 @@ jobs:
           fi
           NESTED_SHA=$(git -C /tmp/release-nested rev-parse HEAD)
           FLAT_SHA=$(git -C /tmp/release-flat rev-parse HEAD)
+          CC_SHA=$(git -C /tmp/release-claude-code rev-parse HEAD)
+          CA_SHA=$(git -C /tmp/release-craft-agent rev-parse HEAD)
           git tag "${TAG}-nested" "$NESTED_SHA"
           git tag "${TAG}-flat" "$FLAT_SHA"
-          git push origin "${TAG}-nested" "${TAG}-flat"
+          git tag "${TAG}-claude-code" "$CC_SHA"
+          git tag "${TAG}-craft-agent" "$CA_SHA"
+          git push origin "${TAG}-nested" "${TAG}-flat" "${TAG}-claude-code" "${TAG}-craft-agent"
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v') || steps.auto-tag.outputs.tag != ''
@@ -140,7 +174,11 @@ jobs:
           else
             TAG=${GITHUB_REF#refs/tags/}
           fi
+          tar -czf "claude-code-${TAG}.tar.gz" -C dist/claude-code .
+          tar -czf "craft-agent-${TAG}.tar.gz" -C dist/craft-agent .
           gh release create "$TAG" \
             --title "$TAG" \
-            --notes "Release ${TAG}. Consumption tags: \`${TAG}-nested\` and \`${TAG}-flat\` on the corresponding release branches." \
-            --latest
+            --notes "Release ${TAG}. Consumer packages: \`${TAG}-claude-code\` and \`${TAG}-craft-agent\`. Layout tags: \`${TAG}-nested\` and \`${TAG}-flat\`." \
+            --latest \
+            "claude-code-${TAG}.tar.gz#Claude Code hooks package" \
+            "craft-agent-${TAG}.tar.gz#Craft Agent hooks package"
