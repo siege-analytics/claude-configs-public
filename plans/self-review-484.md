@@ -5,13 +5,15 @@ ticket_refs:
 ## Self-Review: #484 — Artifact gates must verify ticket association
 
 ## Assumptions
+Working as: software engineer
 Domain(s): software engineering
 Geospatial cross-cut: no
 Goal source: ticket #484
 Plan reference: https://github.com/siege-analytics/claude-configs-public/issues/484#issuecomment-4815190462
 Pre-author-inventory: NONE
+Trivial-against-state: no authoring-against-state contact — changes are to hook infrastructure (shell scripts, Python blocks), not to domain content, skills, or rules that reference external state
 Investigate-artifact: TRIVIAL (bug found during integration test, fix is mechanical)
-Pre-mortem-artifact: ticket comment (inline with design note)
+Pre-mortem-artifact: plans/pre-mortem-484.md
 
 ## Trivial-investigation declaration
 The bug was discovered during the #482 integration test: pipeline-state-guard
@@ -21,6 +23,10 @@ field comparison). No investigation needed beyond reading the two affected
 files, which was done inline.
 
 ## Peer review
+
+writing-code: no violations — changes are to hook infrastructure (shell/Python
+blocks inside hook scripts), not application code. No domain rules, skills,
+or writing-rules shelves are engaged by this diff.
 
 ### Shell correctness
 - `bash -n hooks/bash/universal-mutation-gate.sh` → exit 0

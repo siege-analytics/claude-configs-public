@@ -9,6 +9,7 @@ ticket_refs:
 
 ## Assumptions
 
+Working as: software engineer
 Domain(s): software engineering
 Geospatial cross-cut: no
 Goal source: #473
