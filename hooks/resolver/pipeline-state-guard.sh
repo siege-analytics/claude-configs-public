@@ -45,6 +45,7 @@ if status in ('disposed', 'done-awaiting-pr'):
     sys.exit(0)
 
 task = data.get('task', data.get('ticket', 'unknown'))
+current_ticket = data.get('ticket', '')
 warnings = []
 
 # Scan common artifact locations
@@ -65,22 +66,56 @@ for d in glob.glob(os.path.join(workspace, 'sessions/*/plans')):
     if os.path.isdir(d):
         plan_dirs.append(d)
 
-def find_artifact(patterns):
+def ticket_slug(ticket_ref):
+    \"\"\"Extract repo#N from full ticket ref (e.g. 'siege-analytics/repo#123' -> '#123').\"\"\"
+    if not ticket_ref:
+        return ''
+    if '#' in ticket_ref:
+        return '#' + ticket_ref.split('#')[-1]
+    return ticket_ref
+
+def file_references_ticket(filepath, ticket_ref):
+    \"\"\"Check if a file's content references the current ticket.\"\"\"
+    if not ticket_ref:
+        return True  # no ticket to check = pass
+    try:
+        content = open(filepath).read(4096)
+    except Exception:
+        return False
+    slug = ticket_slug(ticket_ref)
+    return ticket_ref in content or slug in content
+
+def find_artifact(patterns, require_ticket=True):
     for d in plan_dirs:
         for p in patterns:
             matches = glob.glob(os.path.join(d, p))
-            if matches:
-                return matches[0]
+            for m in sorted(matches):
+                if require_ticket and current_ticket:
+                    if file_references_ticket(m, current_ticket):
+                        return m
+                else:
+                    return m
     return None
 
 # 1. Investigation artifact
 invest_patterns = ['fact-sheet*', 'investigate*', 'investigation*', 'Fact-Sheet*']
 invest = find_artifact(invest_patterns)
+# Also check investigate-gate.json (ticket association via JSON ticket field)
+if not invest:
+    invest_gate_path = os.path.join(workspace, 'investigate-gate.json')
+    if os.path.isfile(invest_gate_path):
+        try:
+            ig = json.load(open(invest_gate_path))
+            ig_ticket = ig.get('ticket', '')
+            if ig_ticket == current_ticket or not current_ticket:
+                invest = invest_gate_path
+        except Exception:
+            pass
 if not invest:
     warnings.append(
-        'INVESTIGATE: No investigation artifact found.\\n'
+        f'INVESTIGATE: No investigation artifact found FOR {current_ticket or \"current task\"}.\\n'
         '  Produce a Fact Sheet before writing code.\\n'
-        '  Expected: plans/fact-sheet-*.md or plans/investigate-*.md\\n'
+        '  Expected: plans/fact-sheet-*.md or plans/investigate-*.md (must reference current ticket)\\n'
         '  Read: skills/thinking/investigate/SKILL.md'
     )
 
@@ -89,9 +124,9 @@ premortem_patterns = ['pre-mortem*', 'premortem*', 'risk*', 'Pre-mortem*']
 premortem = find_artifact(premortem_patterns)
 if not premortem:
     warnings.append(
-        'PRE-MORTEM: No pre-mortem artifact found.\\n'
+        f'PRE-MORTEM: No pre-mortem artifact found FOR {current_ticket or \"current task\"}.\\n'
         '  Classify risks before writing code.\\n'
-        '  Expected: plans/pre-mortem-*.md or plans/risk-*.md\\n'
+        '  Expected: plans/pre-mortem-*.md (must reference current ticket in ticket_refs)\\n'
         '  Read: skills/thinking/pre-mortem/SKILL.md'
     )
 

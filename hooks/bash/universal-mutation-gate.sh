@@ -155,59 +155,107 @@ except Exception:
     fi
 
     if [[ "$TG_STATUS" == "implementing" ]]; then
-        # Artifact checks: investigation and pre-mortem must exist (#477)
+        # Artifact checks with ticket association (#477, #484)
+        # Artifacts must exist AND reference the current ticket.
         WORKSPACE_CANDIDATE="$(dirname "$(dirname "$HOOK_DIR")")"
-        MISSING=""
 
-        # Check investigate-gate.json
-        INVEST_GATE=""
-        if [[ -n "${CRAFT_AGENT_WORKSPACE:-}" ]] && [[ -f "$CRAFT_AGENT_WORKSPACE/investigate-gate.json" ]]; then
-            INVEST_GATE="$CRAFT_AGENT_WORKSPACE/investigate-gate.json"
-        elif [[ -f "$WORKSPACE_CANDIDATE/investigate-gate.json" ]]; then
-            INVEST_GATE="$WORKSPACE_CANDIDATE/investigate-gate.json"
-        fi
-        if [[ -z "$INVEST_GATE" ]]; then
-            MISSING="investigate-gate.json (Fact Sheet)"
-        fi
+        MISSING=$(python3 -c "
+import json, sys, os, glob
 
-        # Check pre-mortem artifact in plans directories
-        PREMORTEM_FOUND=false
-        for plans_dir in \
-            "${CRAFT_AGENT_PLANS_PATH:-__none__}" \
-            "$WORKSPACE_CANDIDATE/plans" \
-            ; do
-            if [[ -d "$plans_dir" ]]; then
-                for f in "$plans_dir"/pre-mortem* "$plans_dir"/premortem* "$plans_dir"/risk*; do
-                    if [[ -f "$f" ]]; then
-                        PREMORTEM_FOUND=true
-                        break 2
-                    fi
-                done
-            fi
-        done
-        if [[ "$PREMORTEM_FOUND" == "false" ]]; then
-            if [[ -n "$MISSING" ]]; then
-                MISSING="$MISSING, pre-mortem artifact"
-            else
-                MISSING="pre-mortem artifact"
-            fi
-        fi
+think_gate_path = sys.argv[1]
+workspace = sys.argv[2]
+plans_path = sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] != '__none__' else ''
+
+try:
+    tg = json.load(open(think_gate_path))
+except Exception:
+    sys.exit(0)
+
+current_ticket = tg.get('ticket', '')
+
+def ticket_slug(ref):
+    if not ref or '#' not in ref:
+        return ref or ''
+    return '#' + ref.split('#')[-1]
+
+def file_references_ticket(path, ticket):
+    if not ticket:
+        return True
+    try:
+        content = open(path).read(4096)
+    except Exception:
+        return False
+    return ticket in content or ticket_slug(ticket) in content
+
+missing = []
+
+# 1. Check investigate-gate.json (ticket field must match)
+invest_found = False
+for candidate in [
+    os.environ.get('CRAFT_AGENT_WORKSPACE', '') + '/investigate-gate.json',
+    os.path.join(workspace, 'investigate-gate.json'),
+]:
+    if os.path.isfile(candidate):
+        try:
+            ig = json.load(open(candidate))
+            if ig.get('ticket', '') == current_ticket or not current_ticket:
+                invest_found = True
+                break
+        except Exception:
+            pass
+if not invest_found:
+    missing.append('investigate-gate.json for ' + (current_ticket or 'current task'))
+
+# 2. Check pre-mortem artifact (must reference current ticket)
+premortem_found = False
+plan_dirs = []
+if plans_path and os.path.isdir(plans_path):
+    plan_dirs.append(plans_path)
+ca_ws = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
+if ca_ws:
+    ca_plans = os.path.join(ca_ws, 'plans')
+    if os.path.isdir(ca_plans):
+        plan_dirs.append(ca_plans)
+repo_plans = os.path.join(workspace, 'plans')
+if os.path.isdir(repo_plans):
+    plan_dirs.append(repo_plans)
+
+for d in plan_dirs:
+    for pattern in ['pre-mortem*', 'premortem*', 'risk*']:
+        for f in glob.glob(os.path.join(d, pattern)):
+            if os.path.isfile(f) and file_references_ticket(f, current_ticket):
+                premortem_found = True
+                break
+        if premortem_found:
+            break
+    if premortem_found:
+        break
+
+if not premortem_found:
+    missing.append('pre-mortem artifact for ' + (current_ticket or 'current task'))
+
+print('|'.join(missing))
+" "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" 2>/dev/null || true)
 
         if [[ -z "$MISSING" ]]; then
             exit 0
         fi
 
-        cat >&2 <<ARTEOF
-BLOCKED by universal-mutation-gate (#477): artifacts missing
+        # Format the missing list for display
+        MISSING_DISPLAY=$(echo "$MISSING" | tr '|' '\n' | sed 's/^/  - /')
 
-think-gate.json status=implementing, but required artifacts are missing:
-  $MISSING
+        cat >&2 <<ARTEOF
+BLOCKED by universal-mutation-gate (#477/#484): artifacts missing or wrong ticket
+
+think-gate.json status=implementing, but required artifacts are missing
+or do not reference the current ticket:
+$MISSING_DISPLAY
 
 The gate requires both an investigation artifact (investigate-gate.json)
-and a pre-mortem artifact (plans/pre-mortem-*.md) before allowing
-mutations during implementation.
+and a pre-mortem artifact (plans/pre-mortem-*.md) that reference the
+CURRENT ticket. Artifacts from prior tasks do not satisfy the gate.
 
-Produce the missing artifacts, then retry.
+Produce the missing artifacts for the current ticket, then retry.
 ARTEOF
         exit 2
     fi
