@@ -1,6 +1,7 @@
 ## Self-Review: #480 — NotebookEdit hooks + validate-hooks.py
 
 ## Assumptions
+Working as: software engineer
 Domain(s): software engineering
 Geospatial cross-cut: no
 Goal source: ticket #480

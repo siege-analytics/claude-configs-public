@@ -1,6 +1,7 @@
 ## Self-Review: #477 — Harden universal-mutation-gate (v2)
 
 ## Assumptions
+Working as: software engineer
 Domain(s): software engineering
 Geospatial cross-cut: no
 Goal source: ticket #477

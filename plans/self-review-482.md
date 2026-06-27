@@ -5,6 +5,7 @@ ticket_refs:
 ## Self-Review: #482 — Vergil Quote Hook (Pipeline Integration Test)
 
 ## Assumptions
+Working as: software engineer
 Domain(s): software engineering
 Geospatial cross-cut: no
 Goal source: ticket #482

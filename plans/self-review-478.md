@@ -1,6 +1,7 @@
 ## Self-Review: #478 — Consumer packages (claude-code, craft-agent)
 
 ## Assumptions
+Working as: software engineer
 Domain(s): software engineering
 Geospatial cross-cut: no
 Goal source: ticket #478
