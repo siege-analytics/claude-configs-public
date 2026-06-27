@@ -216,9 +216,16 @@ if ca_ws:
     ca_plans = os.path.join(ca_ws, 'plans')
     if os.path.isdir(ca_plans):
         plan_dirs.append(ca_plans)
-repo_plans = os.path.join(workspace, 'plans')
-if os.path.isdir(repo_plans):
-    plan_dirs.append(repo_plans)
+ws_plans = os.path.join(workspace, 'plans')
+if os.path.isdir(ws_plans):
+    plan_dirs.append(ws_plans)
+
+# Repo plans/ (from think-gate.json repo_root field)
+repo_root = tg.get('repo_root', '')
+if repo_root:
+    repo_plans = os.path.join(repo_root, 'plans')
+    if os.path.isdir(repo_plans) and repo_plans not in plan_dirs:
+        plan_dirs.append(repo_plans)
 
 for d in plan_dirs:
     for pattern in ['pre-mortem*', 'premortem*', 'risk*']:

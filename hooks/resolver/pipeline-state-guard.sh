@@ -56,10 +56,17 @@ craft_plans = os.environ.get('CRAFT_AGENT_PLANS_PATH', '')
 if craft_plans and os.path.isdir(craft_plans):
     plan_dirs.append(craft_plans)
 
-# Repo plans/
-repo_plans = os.path.join(workspace, 'plans')
-if os.path.isdir(repo_plans):
-    plan_dirs.append(repo_plans)
+# Workspace plans/
+ws_plans = os.path.join(workspace, 'plans')
+if os.path.isdir(ws_plans):
+    plan_dirs.append(ws_plans)
+
+# Repo plans/ (from think-gate.json repo_root field)
+repo_root = data.get('repo_root', '')
+if repo_root:
+    repo_plans = os.path.join(repo_root, 'plans')
+    if os.path.isdir(repo_plans) and repo_plans not in plan_dirs:
+        plan_dirs.append(repo_plans)
 
 # Session-local plans in workspace
 for d in glob.glob(os.path.join(workspace, 'sessions/*/plans')):

@@ -40,12 +40,21 @@ files, which was done inline.
 1. **universal-mutation-gate.sh**: replaced shell-level artifact existence
    checks with Python block that reads think-gate.json ticket field and
    verifies investigate-gate.json ticket match + pre-mortem file content match.
-   Added CRAFT_AGENT_WORKSPACE/plans/ to plan_dirs search.
+   Added CRAFT_AGENT_WORKSPACE/plans/ to plan_dirs search. Added repo_root
+   plans/ search path from think-gate.json.
 
 2. **pipeline-state-guard.sh**: added `current_ticket` extraction from
    think-gate.json. Replaced `find_artifact` with ticket-aware version that
    checks file content for ticket reference. Added investigate-gate.json
-   ticket field check. Error messages now name the specific ticket.
+   ticket field check. Error messages now name the specific ticket. Added
+   repo_root plans/ search path from think-gate.json.
+
+3. **repo_root plan search** (follow-up fix): both gates now read
+   `repo_root` from think-gate.json and add `repo_root/plans/` to the
+   plan_dirs search. This fixes the case where hooks run from the workspace
+   (`~/.craft-agent/workspaces/my-workspace/hooks/`) but plans live in the
+   git clone (`~/Documents/.../claude-configs-public/plans/`). Without this,
+   the deployed workspace gate couldn't find repo-local artifacts.
 
 ## Lead review
 
