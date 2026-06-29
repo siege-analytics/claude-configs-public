@@ -110,6 +110,19 @@ def file_references_ticket(filepath, ticket_ref):
     slug = ticket_slug(ticket_ref)
     return ticket_ref in content or slug in content
 
+import re as _re
+def premortem_has_risks(filepath):
+    try:
+        content = open(filepath).read(8192)
+    except Exception:
+        return False
+    lower = content.lower()
+    return bool(
+        'severity:' in lower
+        or '**urgency:**' in lower
+        or _re.search(r'(?:tiger|paper tiger|elephant)\s+\d', lower)
+    )
+
 def find_artifact(patterns, require_ticket=True):
     for d in plan_dirs:
         for p in patterns:
@@ -134,6 +147,12 @@ if not invest:
             ig_ticket = ig.get('ticket', '')
             if ig_ticket == current_ticket or not current_ticket:
                 invest = invest_gate_path
+                if not ig.get('findings', []):
+                    warnings.append(
+                        f'INVESTIGATE: investigate-gate.json exists but has no findings FOR {current_ticket or \"current task\"}.\\n'
+                        '  Add at least one finding before proceeding.\\n'
+                        '  The mutation gate will block until findings are present.'
+                    )
         except Exception:
             pass
 if not invest:
@@ -153,6 +172,12 @@ if not premortem:
         '  Classify risks before writing code.\\n'
         '  Expected: plans/pre-mortem-*.md (must reference current ticket in ticket_refs)\\n'
         '  Read: skills/thinking/pre-mortem/SKILL.md'
+    )
+elif not premortem_has_risks(premortem):
+    warnings.append(
+        f'PRE-MORTEM: Pre-mortem artifact exists but has no classified risks FOR {current_ticket or \"current task\"}.\\n'
+        '  Add at least one risk with Severity: or Tiger/Elephant classification.\\n'
+        '  The mutation gate will block until risks are present.'
     )
 
 # 3. Self-review artifact (only warn when code changes exist)

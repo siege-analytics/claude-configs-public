@@ -203,6 +203,19 @@ def file_references_ticket(path, ticket):
         return False
     return ticket in content or ticket_slug(ticket) in content
 
+import re
+def premortem_has_risks(path):
+    try:
+        content = open(path).read(8192)
+    except Exception:
+        return False
+    lower = content.lower()
+    return bool(
+        'severity:' in lower
+        or '**urgency:**' in lower
+        or re.search(r'(?:tiger|paper tiger|elephant)\s+\d', lower)
+    )
+
 missing = []
 
 # 1. Check investigate-gate.json (ticket field must match)
@@ -215,6 +228,9 @@ for candidate in [
         try:
             ig = json.load(open(candidate))
             if ig.get('ticket', '') == current_ticket or not current_ticket:
+                findings = ig.get('findings', [])
+                if not findings:
+                    missing.append('investigation has no findings (investigate-gate.json for ' + (current_ticket or 'current task') + ')')
                 invest_found = True
                 break
         except Exception:
@@ -243,11 +259,14 @@ if repo_root:
     if os.path.isdir(repo_plans) and repo_plans not in plan_dirs:
         plan_dirs.append(repo_plans)
 
+premortem_empty = False
 for d in plan_dirs:
     for pattern in ['pre-mortem*', 'premortem*', 'risk*']:
         for f in glob.glob(os.path.join(d, pattern)):
             if os.path.isfile(f) and file_references_ticket(f, current_ticket):
                 premortem_found = True
+                if not premortem_has_risks(f):
+                    premortem_empty = True
                 break
         if premortem_found:
             break
@@ -256,6 +275,8 @@ for d in plan_dirs:
 
 if not premortem_found:
     missing.append('pre-mortem artifact for ' + (current_ticket or 'current task'))
+elif premortem_empty:
+    missing.append('pre-mortem artifact has no classified risks (need Severity: or Tiger/Elephant entries)')
 
 # 3. Check junior-senior-gate.json (#492)
 js_gate_found = False
