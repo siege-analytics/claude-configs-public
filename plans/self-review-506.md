@@ -13,7 +13,7 @@ Goal source verification: ticket describes empty artifacts passing the mutation 
 Plan reference: #506 ticket body
 Pre-author-inventory: investigate-gate.json (ticket siege-analytics/claude-configs-public#506)
 Investigate-artifact: investigate-gate.json (ticket siege-analytics/claude-configs-public#506)
-Pre-mortem-artifact: plans/pre-mortem-506.md
+Pre-mortem-artifact: https://github.com/siege-analytics/claude-configs-public/issues/506#issuecomment-4836779878
 Trivial-against-state: no — adds new validation logic to two enforcement hooks
 
 ## Peer review
