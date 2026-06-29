@@ -731,5 +731,129 @@ HOOKEOF
     fi
 fi
 
+# v2.0: Deploy-after-hook-change check (#489 component D).
+# If the diff touches hooks, skills, rules, or RESOLVER.md, verify that
+# build.py --deploy was run AFTER the latest commit touching those files.
+# Detection: deploy-stamp.json in the workspace must exist and its commit
+# hash must match HEAD.
+INFRA_PATTERNS='(^hooks/|^skills/|rules.*\.md$|^RESOLVER\.md$)'
+if [ -n "$DIFF_FILES" ] && echo "$DIFF_FILES" | grep -qE "$INFRA_PATTERNS" 2>/dev/null; then
+    DEPLOY_STAMP=""
+    for STAMP_CANDIDATE in \
+        "$HOME/.craft-agent/workspaces/my-workspace/deploy-stamp.json" \
+        "$EFFECTIVE_CWD/deploy-stamp.json"; do
+        if [ -f "$STAMP_CANDIDATE" ]; then
+            DEPLOY_STAMP="$STAMP_CANDIDATE"
+            break
+        fi
+    done
+
+    if [ -z "$DEPLOY_STAMP" ]; then
+        cat >&2 <<HOOKEOF
+BLOCKED: Diff touches hook/skill/rule infrastructure but no deploy-stamp.json
+found in the workspace. Run \`python3 bin/build.py --deploy\` and retry.
+
+Changed infrastructure files:
+$(echo "$DIFF_FILES" | grep -E "$INFRA_PATTERNS" | head -10)
+
+Ref: #489 (deploy-after-hook-change enforcement)
+HOOKEOF
+        exit 2
+    fi
+
+    STAMP_COMMIT=$(python3 -c "
+import json, sys
+try:
+    d = json.load(open('$DEPLOY_STAMP'))
+    print(d.get('commit', ''))
+except:
+    print('')
+" 2>/dev/null || echo "")
+    HEAD_COMMIT=$(git -C "$EFFECTIVE_CWD" rev-parse HEAD 2>/dev/null || echo "")
+
+    if [ -n "$HEAD_COMMIT" ] && [ "$STAMP_COMMIT" != "$HEAD_COMMIT" ]; then
+        cat >&2 <<HOOKEOF
+BLOCKED: Diff touches hook/skill/rule infrastructure but deploy-stamp.json
+is stale (deployed commit: ${STAMP_COMMIT:-unknown}, HEAD: $HEAD_COMMIT).
+
+Run \`python3 bin/build.py --deploy\` after your latest commit and retry.
+
+Ref: #489 (deploy-after-hook-change enforcement)
+HOOKEOF
+        exit 2
+    fi
+fi
+
+# v2.1: TRIVIAL rejection for executable code (#489 component E).
+# If commit is using [no-review] to skip self-review (i.e., Self-Review:
+# trailer is absent AND [no-review] is in the message), check that the
+# diff doesn't exceed the executable-code threshold. Only fires when the
+# commit is actually claiming triviality — mentioning [no-review] in
+# prose body text while having a Self-Review: trailer is not a claim.
+TRIVIAL_LINE_THRESHOLD=20
+if [ -z "$REVIEW_LINE" ] && echo "$COMMIT_MSG" | grep -qF '[no-review]'; then
+    EXEC_EXTENSIONS='\.py$|\.sh$|\.js$|\.ts$|\.sql$'
+    EXEC_LINES=0
+    if [ -n "$DIFF_FILES" ]; then
+        EXEC_FILES=$(echo "$DIFF_FILES" | grep -E "$EXEC_EXTENSIONS" || true)
+        if [ -n "$EXEC_FILES" ]; then
+            EXEC_LINES=$(git -C "$EFFECTIVE_CWD" diff-tree --no-commit-id -p -r HEAD -- $EXEC_FILES 2>/dev/null \
+                | grep -cE '^\+[^+]|^-[^-]' || echo "0")
+        fi
+    fi
+
+    if [ "$EXEC_LINES" -gt "$TRIVIAL_LINE_THRESHOLD" ]; then
+        cat >&2 <<HOOKEOF
+BLOCKED: Commit declares [no-review] but modifies $EXEC_LINES lines of
+executable code (threshold: $TRIVIAL_LINE_THRESHOLD).
+
+[no-review] is for genuinely trivial changes (typo fixes, whitespace,
+doc-only edits). $EXEC_LINES lines of .py/.sh/.js/.ts/.sql changes
+requires a full self-review artifact.
+
+Remove [no-review] from the commit message, produce a self-review
+artifact, and add Self-Review: / Self-Review-Source: trailers.
+
+Ref: #489 (TRIVIAL rejection enforcement)
+HOOKEOF
+        exit 2
+    fi
+fi
+
+# v2.2: Rework ledger verification (#489 component C).
+# If the self-review artifact exists and the branch shows rework evidence,
+# the ## Rework ledger section must have at least one data row.
+if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]] && grep -qF '## Rework ledger' "$SOURCE_PATH"; then
+    # Detect rework evidence: amend/fixup in branch commit messages.
+    MERGE_BASE=$(git -C "$EFFECTIVE_CWD" merge-base HEAD origin/develop 2>/dev/null || echo "")
+    REWORK_EVIDENCE=0
+    if [ -n "$MERGE_BASE" ]; then
+        REWORK_EVIDENCE=$(git -C "$EFFECTIVE_CWD" log --format=%s "$MERGE_BASE"..HEAD 2>/dev/null \
+            | grep -ciE 'amend|fixup|retry|re-deploy|rework' || echo "0")
+    fi
+
+    if [ "$REWORK_EVIDENCE" -gt 0 ]; then
+        # Check for data rows in the ledger table (lines with | that aren't header/separator).
+        LEDGER_BLOCK=$(awk '/^## Rework ledger/{flag=1; next} /^## /{flag=0} flag' "$SOURCE_PATH")
+        LEDGER_DATA_ROWS=$(echo "$LEDGER_BLOCK" | grep -E '^\|[^-]' | grep -cvE '^\| Rework trigger' || echo "0")
+
+        if [ "$LEDGER_DATA_ROWS" -eq 0 ]; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Branch history shows $REWORK_EVIDENCE rework indicators
+(amend/fixup/retry commits) but the ## Rework ledger in $SOURCE_PATH
+has no data rows.
+
+Log each rework cycle:
+| Rework trigger | Root skip | Check cost | Rework cost | Ratio |
+|---|---|---|---|---|
+| <what triggered rework> | <what check was skipped> | <cost of check> | <cost of rework> | <ratio> |
+
+Ref: #489 (rework ledger enforcement)
+HOOKEOF
+            exit 2
+        fi
+    fi
+fi
+
 # All checks passed.
 exit 0

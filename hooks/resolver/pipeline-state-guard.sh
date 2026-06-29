@@ -163,6 +163,75 @@ if has_changes:
             '  Read: skills/self-review/SKILL.md'
         )
 
+# 4. Pre-implementation comprehension check (#489 component A).
+# When status is 'implementing', check the ticket for Junior's task
+# description with the 5 required elements.
+if status == 'implementing' and current_ticket:
+    junior_found = False
+    senior_found = False
+    junior_stems = [
+        'current behavior', 'intended behavior', 'steps to get there',
+        'success criteria', 'what could go wrong',
+    ]
+    senior_stems = [
+        'hasty mistakes', 'observable behavior', 'over-focusing',
+        'leave out', 'prior work', 'right environment',
+        'failure case', 'instance or class', 'done match',
+        'skip if nobody',
+    ]
+    try:
+        # Extract owner/repo and issue number from ticket ref.
+        if '#' in current_ticket:
+            parts = current_ticket.split('#')
+            issue_num = parts[-1]
+            repo_slug = parts[0].rstrip('/') if len(parts) > 1 and parts[0] else ''
+        else:
+            issue_num = current_ticket
+            repo_slug = ''
+
+        if issue_num.isdigit():
+            if repo_slug:
+                api_path = f'repos/{repo_slug}/issues/{issue_num}/comments'
+            else:
+                api_path = f'repos/siege-analytics/claude-configs-public/issues/{issue_num}/comments'
+
+            result = subprocess.run(
+                ['gh', 'api', api_path, '--paginate', '-q', '.[].body'],
+                capture_output=True, text=True, timeout=15
+            )
+            if result.returncode == 0:
+                comments = result.stdout.lower()
+                junior_hits = sum(1 for s in junior_stems if s in comments)
+                if junior_hits >= 3:
+                    junior_found = True
+
+                senior_hits = sum(1 for s in senior_stems if s in comments)
+                if senior_hits >= 5:
+                    senior_found = True
+    except Exception:
+        pass
+
+    if not junior_found:
+        warnings.append(
+            f'PRE-IMPLEMENTATION COMPREHENSION: No Junior task description found on {current_ticket}.\\n'
+            '  Before writing code, post a maximal description with:\\n'
+            '  1. Current behavior (with evidence)\\n'
+            '  2. Intended behavior (observable, not code-to-write)\\n'
+            '  3. Steps to get there\\n'
+            '  4. Success criteria (testable in target environment)\\n'
+            '  5. What could go wrong\\n'
+            '  Read: skills/self-review/SKILL.md (Pre-implementation comprehension)'
+        )
+
+    # 5. Senior adversarial checklist (#489 component B).
+    if not senior_found:
+        warnings.append(
+            f'SENIOR ADVERSARIAL CHECKLIST: No Senior checklist response found on {current_ticket}.\\n'
+            '  After the Junior posts the task description, the Senior must run\\n'
+            '  the 10 presumptive questions and post responses on the ticket.\\n'
+            '  Read: skills/self-review/SKILL.md (Senior adversarial checklist)'
+        )
+
 if not warnings:
     found = []
     if invest:
