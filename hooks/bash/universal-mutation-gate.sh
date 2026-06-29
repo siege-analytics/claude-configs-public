@@ -344,6 +344,46 @@ for ap_candidate in [
 if not ap_gate_found:
     missing.append('Artifacts-posted check (artifacts-posted-gate.json) for ' + (current_ticket or 'current task'))
 
+# 5. Check review-gate.json (#526)
+# If a review was done and HEAD has moved since, block until re-review.
+# No file = no review = no block (not every task has a review).
+import subprocess as _sp
+for rg_candidate in [
+    os.environ.get('CRAFT_AGENT_WORKSPACE', '') + '/review-gate.json',
+    os.path.join(workspace, 'review-gate.json'),
+]:
+    if os.path.isfile(rg_candidate):
+        try:
+            rg = json.load(open(rg_candidate))
+            rg_verdict = rg.get('verdict', '')
+            if rg_verdict == 'approve':
+                break
+            rg_branch = rg.get('branch', '')
+            rg_commit = rg.get('reviewed_commit', '')
+            if not rg_branch or not rg_commit:
+                break
+            try:
+                cur_branch = _sp.check_output(
+                    ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                    text=True, timeout=5
+                ).strip()
+            except Exception:
+                break
+            if cur_branch != rg_branch:
+                break
+            try:
+                head = _sp.check_output(
+                    ['git', 'rev-parse', 'HEAD'],
+                    text=True, timeout=5
+                ).strip()
+            except Exception:
+                break
+            if not head.startswith(rg_commit) and not rg_commit.startswith(head):
+                missing.append('Re-review required: new commits since last review on ' + rg_branch)
+        except Exception:
+            pass
+        break
+
 print('|'.join(missing))
 " "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" 2>/dev/null || true)
 
