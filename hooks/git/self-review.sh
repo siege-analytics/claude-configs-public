@@ -481,6 +481,29 @@ HOOKEOF
         exit 2
     fi
 
+    # v1.11: Gate 1-4 evidence check (#518).
+    # Peer review cites a shelf (checked above), but does it contain
+    # actual verification evidence? Grep for output markers from Gates 1-4
+    # (syntax check, test suite, doc build, notebook API).
+    GATE_EVIDENCE_RE='(exit [0-9]|→|PASS|pass(ed)?|CLEAN|clean|N/A|no errors|\[no-gates\])'
+    if ! echo "$PEER_BLOCK" | grep -qE "$GATE_EVIDENCE_RE"; then
+        cat >&2 <<HOOKEOF
+BLOCKED: Self-Review-Source: $SOURCE_PATH '## Peer review' section cites
+a shelf but contains no gate evidence.
+
+Expected at least one evidence marker from Gates 1-4:
+  - Syntax check output (e.g. "bash -n → exit 0")
+  - Test suite results (e.g. "pytest → 7 passed")
+  - Doc build output (e.g. "sphinx-build → clean")
+  - Notebook API check (e.g. "N/A — no notebooks affected")
+  - Or [no-gates] if this commit genuinely has no gate-checkable artifacts
+
+The Peer review section must show evidence of mechanical verification,
+not just declare a shelf.
+HOOKEOF
+        exit 2
+    fi
+
     # v1.4: Post-mortem awareness check. If the commit message indicates
     # a revert or regression fix, the self-review should acknowledge
     # post-mortem applicability. This is a WARNING, not a block — the
