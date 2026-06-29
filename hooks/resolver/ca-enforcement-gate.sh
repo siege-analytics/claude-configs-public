@@ -41,6 +41,7 @@ BLOCK_PATTERNS=(
     "^BLOCKED:"
     "investigation has been completed.*missing"
     "EXPIRED SIGNAL"
+    "SCOPE MISMATCH"
 )
 
 # Collect output from each gate, check for blocking signals.

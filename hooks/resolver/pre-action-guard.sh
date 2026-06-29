@@ -27,6 +27,11 @@ fi
 PROTECTED="^(main|master|develop|dev|development|staging|next|integration)$"
 
 if [ "$BRANCH" = "HEAD" ]; then
+    if [[ "${CLAUDE_CA_ENFORCE:-}" == "1" ]]; then
+        python3 -c "import json,sys; print(json.dumps({'continue': False, 'systemMessage': sys.argv[1]}))" \
+            "BLOCKED: Working directory is in DETACHED HEAD state. Create a feature branch first: git checkout -b feat/<scope>-<description>. Ref: #261, #450"
+        exit 0
+    fi
     cat <<EOF
 <pre-action-guard>
 WARNING: Your working directory is in DETACHED HEAD state.
@@ -43,6 +48,11 @@ EOF
 fi
 
 if echo "$BRANCH" | grep -qE "$PROTECTED"; then
+    if [[ "${CLAUDE_CA_ENFORCE:-}" == "1" ]]; then
+        MSG="BLOCKED: Working directory is on protected branch '$BRANCH'. Do NOT commit directly. Create a feature branch first: git checkout -b feat/<scope>-<description>. Ref: #261, #450"
+        python3 -c "import json,sys; print(json.dumps({'continue': False, 'systemMessage': sys.argv[1]}))" "$MSG"
+        exit 0
+    fi
     cat <<EOF
 <pre-action-guard>
 WARNING: Working directory is on protected branch '$BRANCH'.

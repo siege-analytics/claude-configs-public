@@ -24,6 +24,11 @@ fi
 PROTECTED="^(main|master|develop|dev|development|staging|next|integration)$"
 
 if [[ "$BRANCH" =~ $PROTECTED ]]; then
+    if [[ "${CLAUDE_CA_ENFORCE:-}" == "1" ]]; then
+        python3 -c "import json,sys; print(json.dumps({'continue': False, 'systemMessage': sys.argv[1]}))" \
+            "BLOCKED: On protected branch '$BRANCH'. Do NOT commit directly. Create a feature branch: git checkout -b feat/<description>. Ref: #261, #450"
+        exit 0
+    fi
     cat <<EOF
 <branch-state>
 WARNING: You are on protected branch '$BRANCH'.
