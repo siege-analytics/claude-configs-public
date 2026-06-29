@@ -222,7 +222,11 @@ def premortem_has_launch_blocker(path):
     except Exception:
         return False
     lower = content.lower()
-    return 'implementation may proceed: no' in lower or 'blocks-launch' in lower
+    if 'implementation may proceed: no' in lower:
+        return True
+    if re.search(r'\*\*status:\*\*\s*blocks-launch', lower):
+        return True
+    return False
 
 missing = []
 

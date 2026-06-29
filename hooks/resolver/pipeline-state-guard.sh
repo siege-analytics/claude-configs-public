@@ -129,7 +129,11 @@ def premortem_has_launch_blocker(filepath):
     except Exception:
         return False
     lower = content.lower()
-    return 'implementation may proceed: no' in lower or 'blocks-launch' in lower
+    if 'implementation may proceed: no' in lower:
+        return True
+    if _re.search(r'\*\*status:\*\*\s*blocks-launch', lower):
+        return True
+    return False
 
 def find_artifact(patterns, require_ticket=True):
     for d in plan_dirs:
