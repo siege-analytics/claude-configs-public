@@ -255,8 +255,14 @@ the design (prose) and the enforcement (hook).
 
 ### Creating a signal file
 
-After the design note is posted to the ticket (Step 7), write
-`think-gate.json` to the workspace root with these fields:
+After the design note is posted to the ticket (Step 7), write the
+signal file to the workspace root. Use a **repo-scoped filename**
+`think-gate-<slug>.json` where `<slug>` is the basename of the repo
+root (e.g., `think-gate-siege_utilities.json` for a repo at
+`.../Code/siege_utilities`). This allows concurrent sessions on
+different repos to maintain independent gates (#494).
+
+Include `repo_root` so hooks can verify scope:
 
 ```json
 {
@@ -264,9 +270,13 @@ After the design note is posted to the ticket (Step 7), write
   "task": "brief description",
   "design_note_location": "URL to ticket comment",
   "status": "implementing",
-  "lastUpdated": "2026-01-15T14:30:00Z"
+  "lastUpdated": "2026-01-15T14:30:00Z",
+  "repo_root": "/path/to/repo"
 }
 ```
+
+The legacy filename `think-gate.json` is still supported for backward
+compatibility but should not be used for new work.
 
 The `lastUpdated` field (ISO 8601) is consumed by the temporal decay
 check. Omitting it forces the hook to fall back to file modification
@@ -342,15 +352,17 @@ string — not the wrapper function or class name you expect to find.
 
 ### Cleanup before creating
 
-Before writing a new signal file, check for an existing one. If a
-signal file exists from a prior task:
+Before writing a new signal file, check for an existing one for the
+same repo. If a signal file exists from a prior task on the same repo:
 
 1. Verify the prior task's disposition was posted to its ticket
-2. Delete the old signal file: `rm think-gate.json`
+2. Delete the old signal file: `rm think-gate-<slug>.json`
 3. Then create the new one
 
 A stale signal file from task X gives misleading status on task Y.
 The scope mismatch check catches this, but cleanup is better than warning.
+With repo-scoped gates, different repos can have independent signal
+files — only clean up the one for YOUR repo.
 
 ### Updating during work
 
@@ -366,11 +378,11 @@ When the PR is merged and work is complete:
 
 1. Set `status` to `done-awaiting-pr` with a `disposition` summarizing outcome
 2. Post the disposition to the ticket if not already there
-3. Delete the signal file: `rm think-gate.json`
+3. Delete the signal file: `rm think-gate-<slug>.json`
 
-The signal file is a workspace singleton. Leaving done signals around
-causes scope mismatch warnings on the next task and archive prompts
-after 4h.
+Signal files are scoped per-repo. Leaving done signals around causes
+scope mismatch warnings on the next task for that repo and archive
+prompts after 4h.
 
 ## Attribution Policy
 
