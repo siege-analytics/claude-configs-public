@@ -11,6 +11,8 @@ Geospatial cross-cut: no
 Goal source: ticket #507
 Goal source verification: ticket describes gh api GET calls blocked during this session
 Plan reference: #507 ticket body
+Pre-author-inventory: NONE
+Trivial-against-state: this change modifies a regex pattern in a safelist — no state-dependent authoring categories apply. The change is mechanical: broadening a read-only pattern and adding write-detection indicators.
 Investigate-artifact: investigate-gate.json (ticket siege-analytics/claude-configs-public#507)
 Pre-mortem-artifact: plans/pre-mortem-507.md (workspace)
 
