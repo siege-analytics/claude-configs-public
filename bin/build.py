@@ -1452,6 +1452,23 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
         if settings_src.exists() and settings_dst.exists():
             _merge_ca_enforcement_settings(settings_src, settings_dst)
 
+    # Write deploy-stamp.json so the pre-push hook can verify deployment
+    # happened after the last commit touching hooks/skills/rules (#489).
+    try:
+        head_commit = subprocess.check_output(
+            ["git", "-C", str(REPO_ROOT), "rev-parse", "HEAD"],
+            text=True, timeout=5,
+        ).strip()
+    except Exception:
+        head_commit = "unknown"
+    stamp = {
+        "commit": head_commit,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "repo_root": str(REPO_ROOT),
+    }
+    stamp_path = craft_workspace / "deploy-stamp.json"
+    stamp_path.write_text(json.dumps(stamp, indent=2) + "\n")
+
     print(f"  Deployed to {craft_workspace}/ ({stripped_count} files stripped)")
 
 
