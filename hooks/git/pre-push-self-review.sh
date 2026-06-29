@@ -46,7 +46,10 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
         # commits, not the upstream commits that got rebased in.
         RANGE="$LOCAL_SHA --not --remotes"
     else
-        RANGE="$REMOTE_SHA..$LOCAL_SHA"
+        # Only check commits not yet on ANY remote branch. This avoids
+        # re-validating commits already pushed to develop when they arrive
+        # on main via promotion merge. See #491.
+        RANGE="$LOCAL_SHA --not --remotes"
     fi
 
     # Iterate commits in push range
