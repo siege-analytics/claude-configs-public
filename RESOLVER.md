@@ -6,6 +6,28 @@ This is the enforcement layer for every skill in this collection and the electin
 
 ---
 
+## Disposition: slow is smooth, smooth is fast
+
+Every gate in this resolver exists because a 2-second check prevents
+a 2-hour rework. The Junior experiences verification as friction —
+something that slows down the "real work" of writing code. This is
+backwards. **Verification IS the work.** Code is the easy part. Knowing
+that the code does what you think it does, in the environment where
+it will actually run, is the hard part.
+
+The agent's seconds are cheap. The human's hours are not. When the
+agent skips a 30-second check, it is not saving the agent's time — it
+is gambling the human's time at 20:1. This is not caution. This is
+the correct resource allocation given the actual cost function.
+
+Speed comes from precision, not velocity. The fastest path through
+a task is doing it right the first time. Every shortcut that skips
+verification borrows time from the human at compound interest. When
+a check feels like friction, that feeling is the signal that the
+check matters.
+
+---
+
 ## Trivial vs. Non-Trivial
 
 **Trivial** — no skill consultation required:
@@ -266,6 +288,14 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 8. **No-attribution**: never add Claude/AI attribution to commits, PRs, or public-facing content.
 
 9. **Measure twice, cut once**: for destructive or irreversible actions (drops, deletes, force-push, hard-reset), confirm scope first. More broadly: the Junior optimizes for speed of one task; the Lead optimizes for speed of the project. Every 2-second check the agent skips costs the human operator hours of rework. The agent's seconds are cheap; the human's hours are not. This is not caution — it is resource allocation.
+
+    **Done is not "code committed."** Done is all four:
+    - (a) code committed on feature branch
+    - (b) deployed to target environment (if applicable — hooks, configs, skills)
+    - (c) tested in target environment (not just the repo checkout)
+    - (d) pipeline-gate green (no warnings, no missing artifacts)
+
+    Each of (b), (c), (d) is a verification step. Each costs seconds. Skipping any of them is the Junior borrowing time from the human. If any of (a)–(d) is not satisfied, the task is in progress, not done.
 
 10. **Batch-execution is not one action**: when executing multiple tickets, issues, or tasks in sequence (epic breakdown, audit remediation, batch triage fixes), each ticket is a separate non-trivial action. Each gets its own `think` gate (design note), its own branch, its own self-review artifact. "I'm doing 8 tickets" is 8 actions, not 1 action done 8 times. No amortization of investigation, design, or review across tickets. The agent will take any excuse to skip per-ticket discipline during batch work — speed, momentum, "they're all similar," "I already understand the pattern." These are the Junior's rationalizations. The gates exist precisely for the moments when skipping them feels efficient.
 
