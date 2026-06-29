@@ -53,6 +53,80 @@ Pre-author-inventory: <ticket-link#pre-author-inventory | plans/path.md#pre-auth
 Investigate-artifact: <ticket-comment-link | committed-file-path | plans/investigate-*.md | TRIVIAL (with declaration below)>
 Pre-mortem-artifact: <ticket-comment-link | committed-file-path | plans/pre-mortem-*.md | TRIVIAL (with declaration below)>
 
+## Pre-implementation comprehension (the Junior's first deliverable)
+
+Before writing any code, the Junior must post on the ticket a maximal
+description of what the task consists of. "Maximal" means over-describe.
+The cost of over-describing is one extra paragraph. The cost of
+under-describing is implementing the wrong thing.
+
+The description must include:
+1. **Current behavior** — what happens now, with evidence (command
+   output, file contents, hook output). Not "the gate doesn't check
+   tickets" but "running pipeline-state-guard.sh with pre-mortem-476.md
+   for ticket #482 produces 'artifacts present' — it should produce
+   BLOCKED."
+2. **Intended behavior** — what should happen instead, stated as
+   observable behavior, not code to write.
+3. **Steps to get there** — what files change, in what order, with
+   what dependencies between them.
+4. **Success criteria** — how you will verify the intended result was
+   achieved. This must be testable in the target environment (not just
+   the repo checkout).
+5. **What could go wrong** — at least one risk. If the Junior says
+   "nothing," the Junior hasn't thought about it.
+
+## Senior adversarial checklist (pre-implementation verification)
+
+After the Junior posts the task description, the Senior runs these
+10 questions. The questions are presumptive — they assume mistakes
+exist and ask what they are. The Senior cannot answer "nothing" to
+question 1 without demonstrating they checked each category.
+
+1. **What hasty mistakes did the Junior make in this description?**
+   Name at least one thing the Junior got wrong, glossed over, or
+   left vague. If the Senior says "none," the Senior isn't looking
+   hard enough. The Junior always makes hasty mistakes — the question
+   is which ones, not whether.
+2. **Did the Junior state the intended result as observable behavior?**
+   "Add a ticket check" is code-to-write. "Wrong-ticket artifacts are
+   blocked" is observable behavior. If the Junior described means
+   instead of ends, send it back.
+3. **Is the Junior over-focusing on one part?**
+   What's getting all the Junior's attention, and what's being
+   neglected? Tunnel vision on the code fix while ignoring deployment,
+   testing, environment differences, or documentation is the most
+   common form.
+4. **What did the Junior leave out or minimize?**
+   Adjacent concerns, deployment steps, environmental factors,
+   edge cases, backwards compatibility.
+5. **Has the Junior read the relevant prior work?**
+   Prior tickets, skill files, documentation, existing hooks,
+   recent git history. Can the Junior cite specific details, or
+   are they working from assumptions?
+6. **Is the Junior in the right environment?**
+   Right repo, right branch, right directory. Does the Junior know
+   where the deployed code runs vs. where the repo checkout lives?
+7. **Does the Junior's plan test the failure case?**
+   Happy-path-only testing is not testing. If the task is "block
+   wrong-ticket artifacts," the test must include a wrong-ticket
+   artifact that gets blocked.
+8. **Instance or class?**
+   Is the Junior fixing one occurrence or every occurrence? If the
+   bug exists in one gate, does it also exist in the other?
+9. **Does "done" match the ticket?**
+   The Junior's definition of done is "code committed." The ticket's
+   definition of done is "intended behavior observable in production."
+   These are different.
+10. **What would the Junior skip if nobody was watching?**
+    Model the Junior's incentives. The Junior optimizes for speed.
+    Which verification steps will the Junior rationalize away?
+    Pre-commit to not skipping them.
+
+Implementation does not begin until the Senior is satisfied.
+Post both the Junior's description and the Senior's response on
+the ticket.
+
 ## Peer review (the Junior's checklist -- mechanics, correctness, craft floor)
 For each applicable shelf: what was checked, what was found.
 Grep / test-output / file-read evidence inline per `_writing-claims-rules.md`.
@@ -91,6 +165,17 @@ Format:
   - "<quoted claim>" -- `<command>` → <output>
 An empty section when the PR body contains specific counts is a
 writing-claims:8 violation visible to anyone reading the artifact.
+
+## Rework ledger
+For every rework cycle in this task (commit-amend, re-deploy,
+hook block → fix → retry, test failure → fix → rerun), log:
+
+| Rework trigger | Root skip | Check cost | Rework cost | Ratio |
+|---|---|---|---|---|
+
+An empty ledger is valid (no rework occurred). A missing ledger
+when rework visibly occurred (amend commits in the branch log,
+multiple deploy cycles) is a writing-claims violation.
 
 ## Evidence-predates-work
 Artifact: <path to this artifact>

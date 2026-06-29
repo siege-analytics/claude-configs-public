@@ -171,6 +171,8 @@ if not warnings:
         found.append(f'pre-mortem: {os.path.basename(premortem)}')
     summary = ', '.join(found)
     print(f'Pipeline for {task}: artifacts present ({summary}).')
+    if status == 'implementing':
+        print('Slow is smooth: what have you not yet verified about the deployed state?')
 else:
     print(f'Pipeline for {task}: {len(warnings)} artifact(s) missing.')
     print()
