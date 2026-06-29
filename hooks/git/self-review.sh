@@ -421,13 +421,14 @@ except:
                 if [[ "$SIGNAL_ENTITY_COUNT" != "$PROSE_ENTITY_COUNT" ]] && \
                    [[ "$SIGNAL_ENTITY_COUNT" -gt 0 ]] && [[ "$PROSE_ENTITY_COUNT" -gt 0 ]]; then
                     cat >&2 <<HOOKEOF
-WARNING: Entity count mismatch between investigate-artifact prose
+BLOCKED: Entity count mismatch between investigate-artifact prose
 ($PROSE_ENTITY_COUNT entities) and investigate-gate.json ($SIGNAL_ENTITY_COUNT
-entries). This may indicate drift between the investigation and the signal file.
+entries). The investigation and signal file are out of sync.
 
-Verify both artifacts are in sync before proceeding.
+Verify both artifacts are in sync and retry.
+Ref: #531 (promoted from warning to block).
 HOOKEOF
-                    # WARNING only — do not exit 2
+                    exit 2
                 fi
             fi
         fi
