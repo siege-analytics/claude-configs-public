@@ -255,6 +255,30 @@ for d in plan_dirs:
 if not premortem_found:
     missing.append('pre-mortem artifact for ' + (current_ticket or 'current task'))
 
+# 3. Check junior-senior-gate.json (#492)
+js_gate_found = False
+for js_candidate in [
+    os.environ.get('CRAFT_AGENT_WORKSPACE', '') + '/junior-senior-gate.json',
+    os.path.join(workspace, 'junior-senior-gate.json'),
+]:
+    if os.path.isfile(js_candidate):
+        try:
+            js = json.load(open(js_candidate))
+            if js.get('ticket', '') == current_ticket or not current_ticket:
+                if js.get('junior_found') and js.get('senior_found'):
+                    js_gate_found = True
+                else:
+                    if not js.get('junior_found'):
+                        missing.append('Junior task description on ' + (current_ticket or 'ticket'))
+                    if not js.get('senior_found'):
+                        missing.append('Senior adversarial checklist on ' + (current_ticket or 'ticket'))
+                    js_gate_found = True  # file found, just incomplete
+                break
+        except Exception:
+            pass
+if not js_gate_found:
+    missing.append('Junior/Senior comments (junior-senior-gate.json) for ' + (current_ticket or 'current task'))
+
 print('|'.join(missing))
 " "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" 2>/dev/null || true)
 
