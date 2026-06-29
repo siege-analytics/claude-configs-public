@@ -422,6 +422,8 @@ else:
         warnings.append('File a KB update or ticket for each contradiction.')
 
 if warnings:
+    # Prefix with BLOCKED: so ca-enforcement-gate catches it (#411).
+    print('BLOCKED: knowledge-base consultation required.')
     for w in warnings:
         print(w)
 " 2>/dev/null || true)
@@ -429,7 +431,7 @@ if warnings:
 if [ -n "$KB_WARN" ]; then
     cat <<EOF
 <think-gate>
-KB CONSULTATION CHECK (Level 3, advisory):
+KB CONSULTATION CHECK (Level 3):
 $KB_WARN
 </think-gate>
 EOF
