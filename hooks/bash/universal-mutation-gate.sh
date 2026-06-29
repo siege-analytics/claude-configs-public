@@ -321,6 +321,27 @@ for js_candidate in [
 if not js_gate_found:
     missing.append('Junior/Senior comments (junior-senior-gate.json) for ' + (current_ticket or 'current task'))
 
+# 4. Check artifacts-posted-gate.json (#513)
+ap_gate_found = False
+for ap_candidate in [
+    os.environ.get('CRAFT_AGENT_WORKSPACE', '') + '/artifacts-posted-gate.json',
+    os.path.join(workspace, 'artifacts-posted-gate.json'),
+]:
+    if os.path.isfile(ap_candidate):
+        try:
+            ap = json.load(open(ap_candidate))
+            if ap.get('ticket', '') == current_ticket or not current_ticket:
+                if not ap.get('investigate_posted'):
+                    missing.append('Investigation not posted to ticket ' + (current_ticket or ''))
+                if not ap.get('premortem_posted'):
+                    missing.append('Pre-mortem not posted to ticket ' + (current_ticket or ''))
+                ap_gate_found = True
+                break
+        except Exception:
+            pass
+if not ap_gate_found:
+    missing.append('Artifacts-posted check (artifacts-posted-gate.json) for ' + (current_ticket or 'current task'))
+
 print('|'.join(missing))
 " "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" 2>/dev/null || true)
 
