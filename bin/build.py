@@ -992,6 +992,14 @@ CA_ENFORCEMENT_GATES = [
         "blocking": True,
         "condition": "Commit to protected branch",
     },
+    {
+        "id": "test-guard",
+        "rule_source": "_testing-frameworks-rules.md",
+        "hook": "hooks/git/test-guard.sh",
+        "surface": "native-git-pre-push",
+        "blocking": True,
+        "condition": "Push without test evidence (opt-in via testing: in PROJECT.md)",
+    },
 ]
 
 
