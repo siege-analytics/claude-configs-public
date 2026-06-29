@@ -335,6 +335,8 @@ for ap_candidate in [
                     missing.append('Investigation not posted to ticket ' + (current_ticket or ''))
                 if not ap.get('premortem_posted'):
                     missing.append('Pre-mortem not posted to ticket ' + (current_ticket or ''))
+                if 'selfreview_posted' in ap and not ap.get('selfreview_posted'):
+                    missing.append('Self-review not posted to ticket ' + (current_ticket or ''))
                 ap_gate_found = True
                 break
         except Exception:
