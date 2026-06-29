@@ -123,21 +123,32 @@ fi
 # problem, not the solution. If a command is legitimately safe, add it to
 # SAFE_PATTERNS. If the pipeline is incomplete, complete it.
 
-# --- Check think-gate.json ---
-# Search order: CLAUDE_THINK_GATE env, workspace root, repo .think-gate.json
+# --- Check think-gate signal file ---
+# Repo-scoped resolution: think-gate-<slug>.json per repo (#494)
+# Fallback: legacy think-gate.json for backward compat
+RESOLVE_TG="$HOOK_DIR/../lib/resolve-think-gate.py"
+WORKSPACE_CANDIDATE="$(dirname "$(dirname "$HOOK_DIR")")"
+CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+
+# Derive repo root from CWD (git toplevel)
+REPO_ROOT=""
+if [[ -n "$CWD" ]]; then
+    REPO_ROOT=$(cd "$CWD" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null || true)
+fi
+
+WORKSPACE_FOR_RESOLVE="${CRAFT_AGENT_WORKSPACE:-$WORKSPACE_CANDIDATE}"
 THINK_GATE=""
+
 if [[ -n "${CLAUDE_THINK_GATE:-}" ]] && [[ -f "$CLAUDE_THINK_GATE" ]]; then
     THINK_GATE="$CLAUDE_THINK_GATE"
-elif [[ -n "${CRAFT_AGENT_WORKSPACE:-}" ]] && [[ -f "$CRAFT_AGENT_WORKSPACE/think-gate.json" ]]; then
-    THINK_GATE="$CRAFT_AGENT_WORKSPACE/think-gate.json"
-else
-    # Derive workspace from hook path: hooks/bash/ -> two levels up from hooks/
-    WORKSPACE_CANDIDATE="$(dirname "$(dirname "$HOOK_DIR")")"
-    if [[ -f "$WORKSPACE_CANDIDATE/think-gate.json" ]]; then
-        THINK_GATE="$WORKSPACE_CANDIDATE/think-gate.json"
+elif [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
+    THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --repo-root "$REPO_ROOT" --env-override "${CLAUDE_THINK_GATE:-}" 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
+fi
+# Fallback: if resolver returned empty or wasn't available, try legacy paths
+if [[ -z "$THINK_GATE" ]]; then
+    if [[ -f "$WORKSPACE_FOR_RESOLVE/think-gate.json" ]]; then
+        THINK_GATE="$WORKSPACE_FOR_RESOLVE/think-gate.json"
     fi
-    # Also check CWD for Claude Code (repo-local .think-gate.json)
-    CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
     if [[ -z "$THINK_GATE" ]] && [[ -n "$CWD" ]] && [[ -f "$CWD/.think-gate.json" ]]; then
         THINK_GATE="$CWD/.think-gate.json"
     fi
