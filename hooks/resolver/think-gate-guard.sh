@@ -59,7 +59,26 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SIGNAL_FILE="${CLAUDE_THINK_GATE:-$WORKSPACE_ROOT/think-gate.json}"
+# Repo-scoped resolution (#494): check think-gate-*.json first, fall back to think-gate.json
+RESOLVE_TG="$SCRIPT_DIR/../lib/resolve-think-gate.py"
+SIGNAL_FILE="${CLAUDE_THINK_GATE:-}"
+if [[ -z "$SIGNAL_FILE" ]] && [[ -f "$RESOLVE_TG" ]]; then
+    # Find the first active think-gate (any repo)
+    SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --all 2>/dev/null | python3 -c "
+import json, sys
+gates = json.load(sys.stdin)
+for g in gates:
+    s = g.get('data', {}).get('status', '')
+    if s not in ('disposed', 'done-awaiting-pr', 'complete'):
+        print(g['path'])
+        sys.exit(0)
+if gates:
+    print(gates[0]['path'])
+" 2>/dev/null || true)
+fi
+if [[ -z "$SIGNAL_FILE" ]]; then
+    SIGNAL_FILE="$WORKSPACE_ROOT/think-gate.json"
+fi
 
 if [ ! -f "$SIGNAL_FILE" ]; then
     cat <<EOF
