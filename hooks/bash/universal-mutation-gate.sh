@@ -51,6 +51,9 @@ SAFE_PATTERNS=(
     # GitHub CLI reads
     '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api .* --method GET|run (view|list))( |$)'
 
+    # GitHub CLI issue management (administrative, not code mutations)
+    '^(cd .* &&[[:space:]]*)?(gh )(issue (create|comment|close|edit|reopen|label))( |$)'
+
     # Python read-only operations (no arbitrary -c; only known-safe modules)
     '^(pip|pip3) (list|show|freeze|check)( |$)'
     '^python3? -m (pip (list|show|freeze)|pytest|py_compile)( |$)'
@@ -79,7 +82,7 @@ SAFE_PATTERNS=(
 # in the command, skip the safelist and fall through to think-gate check.
 MUTATION_INDICATORS=(
     'git (push|commit|reset|checkout|rebase|merge|cherry-pick|revert|stash (pop|drop|apply|clear)|clean|tag -[adf]|branch -[dDmM])'
-    'gh (issue (create|comment|close|edit|delete|reopen|transfer)|pr (create|merge|close|edit|comment|review)|release (create|delete|edit)|repo (create|delete|fork|rename))'
+    'gh (issue (delete|transfer)|pr (create|merge|close|edit|comment|review)|release (create|delete|edit)|repo (create|delete|fork|rename))'
     'glab (issue (create|close|note)|mr (create|merge|close|note|approve))'
     'rm (-[rRf]|--force|--recursive)'
     '\brm [^-]'
