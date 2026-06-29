@@ -437,7 +437,7 @@ HOOKEOF
         # classification. An empty or header-only pre-mortem is not a pre-mortem.
         if [[ "$FIELD_NAME" == "Pre-mortem-artifact" ]] && \
            [[ -n "${FIELD_PATH:-}" ]] && [[ -f "${FIELD_PATH:-}" ]]; then
-            TIGER_COUNT=$(grep -ciE 'severity:\s*(HIGH|MEDIUM|LOW|CRITICAL)' "$FIELD_PATH" || true)
+            TIGER_COUNT=$(grep -ciE '\*?\*?severity:\*?\*?\s*(HIGH|MEDIUM|LOW|CRITICAL)' "$FIELD_PATH" || true)
             TIGER_HEADER_COUNT=$(grep -cE '^\*\*Tiger|^### Tiger|^- \*\*Tiger' "$FIELD_PATH" || true)
             CONTENT_LINES=$(grep -cvE '^\s*$|^#|^---' "$FIELD_PATH" || true)
 
@@ -455,11 +455,15 @@ HOOKEOF
 
             if [[ "$TIGER_COUNT" -eq 0 ]] && [[ "$TIGER_HEADER_COUNT" -eq 0 ]]; then
                 cat >&2 <<HOOKEOF
-WARNING: Pre-mortem-artifact at $FIELD_PATH has no Tiger entries with
-severity classification (expected "Severity: HIGH|MEDIUM|LOW|CRITICAL"
-or "**Tiger" headings). The pre-mortem may lack substantive risk analysis.
+BLOCKED: Pre-mortem-artifact at $FIELD_PATH has no Tiger entries with
+severity classification (expected "**Severity:** HIGH|MEDIUM|LOW|CRITICAL"
+or "**Tiger" / "### Tiger" headings).
+
+A pre-mortem must contain at least one classified risk. If the task
+genuinely has no risks, use Pre-mortem-artifact: TRIVIAL.
+Ref: #525 (promoted from warning to block).
 HOOKEOF
-                # WARNING only — formatting varies
+                exit 2
             fi
         fi
     done
@@ -532,23 +536,26 @@ HOOKEOF
     fi
 fi
 
-# v1.5: Design-Note-Source trailer check.
-# Non-trivial commits should reference the design note that authorized
-# the work. WARNING only (not a block) — the trailer is new (#262).
-# Promotes to a block in v2 after adoption stabilizes.
-DESIGN_NOTE_LINE=$(echo "$COMMIT_MSG" | grep -cE '^Design-Note-Source:[[:space:]]+\S')
-if [[ "$DESIGN_NOTE_LINE" -eq 0 ]]; then
-    cat >&2 <<HOOKEOF
-WARNING: Latest commit has no Design-Note-Source: trailer.
+# v1.5 / v2 (#524): Design-Note-Source trailer check.
+# Non-trivial commits must reference the design note that authorized
+# the work. Promoted from WARNING to BLOCK in v2.
+# Exempt: [no-review] commits (promote merges, trivial changes).
+if ! echo "$COMMIT_MSG" | grep -qF '[no-review]'; then
+    DESIGN_NOTE_LINE=$(echo "$COMMIT_MSG" | grep -cE '^Design-Note-Source:[[:space:]]+\S')
+    if [[ "$DESIGN_NOTE_LINE" -eq 0 ]]; then
+        cat >&2 <<HOOKEOF
+BLOCKED: Latest commit has no Design-Note-Source: trailer.
 
-Non-trivial commits should reference the design note that authorized
+Non-trivial commits must reference the design note that authorized
 the work:
   Design-Note-Source: https://github.com/org/repo/issues/N#issuecomment-...
   Design-Note-Source: #N (ticket with design note in comments)
 
-This is a warning, not a block. See #262.
+Add the trailer, or use [no-review] for genuinely trivial changes.
+Ref: #262 (original), #524 (promoted to block).
 HOOKEOF
-    # WARNING only — do not exit 2
+        exit 2
+    fi
 fi
 
 # v1.6: Pre-ship-dry-run check for transformation code.
