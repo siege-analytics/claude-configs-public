@@ -200,6 +200,7 @@ elif premortem_has_launch_blocker(premortem):
     )
 
 # 3. Self-review artifact (only warn when code changes exist)
+review = None
 try:
     import subprocess
     staged = subprocess.run(
@@ -331,6 +332,32 @@ if status == 'implementing' and current_ticket:
             '  The mutation gate will block until the pre-mortem is posted.'
         )
 
+    # 7. Check if self-review was posted to ticket (#519).
+    # Only check when a local self-review artifact exists (review variable
+    # from section 3). Self-review comes after implementation, so absence
+    # of a local artifact means posting is not yet relevant.
+    selfreview_posted = True
+    if review:
+        selfreview_posted = False
+        selfreview_stems = [
+            'peer review', 'lead review', 'syntax check',
+            'rework ledger', 'findings',
+        ]
+        try:
+            if result.returncode == 0 and comments:
+                sr_hits = sum(1 for s in selfreview_stems if s in comments)
+                if sr_hits >= 3:
+                    selfreview_posted = True
+        except Exception:
+            pass
+
+        if not selfreview_posted:
+            warnings.append(
+                f'SELF-REVIEW-ON-TICKET: Self-review artifact exists locally but not found on {current_ticket}.\\n'
+                '  Post the self-review to the ticket before pushing.\\n'
+                '  The mutation gate will block until the self-review is posted.'
+            )
+
     # Write junior-senior-gate.json signal file (#492)
     # The mutation gate reads this to block when Junior/Senior are missing.
     import datetime
@@ -348,11 +375,12 @@ if status == 'implementing' and current_ticket:
     except Exception:
         pass
 
-    # Write artifacts-posted-gate.json signal file (#513)
+    # Write artifacts-posted-gate.json signal file (#513, #519)
     posted_data = {
         'ticket': current_ticket,
         'investigate_posted': investigate_posted,
         'premortem_posted': premortem_posted,
+        'selfreview_posted': selfreview_posted,
         'lastChecked': datetime.datetime.now().astimezone().isoformat(),
     }
     posted_path = os.path.join(workspace, 'artifacts-posted-gate.json')
