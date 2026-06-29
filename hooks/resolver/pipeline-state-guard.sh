@@ -250,6 +250,23 @@ if status == 'implementing' and current_ticket:
             '  Read: skills/self-review/SKILL.md (Senior adversarial checklist)'
         )
 
+    # Write junior-senior-gate.json signal file (#492)
+    # The mutation gate reads this to block when Junior/Senior are missing.
+    import datetime
+    gate_data = {
+        'ticket': current_ticket,
+        'junior_found': junior_found,
+        'senior_found': senior_found,
+        'lastChecked': datetime.datetime.now().astimezone().isoformat(),
+    }
+    gate_path = os.path.join(workspace, 'junior-senior-gate.json')
+    try:
+        with open(gate_path, 'w') as f:
+            json.dump(gate_data, f, indent=2)
+            f.write('\\n')
+    except Exception:
+        pass
+
 if not warnings:
     found = []
     if invest:
