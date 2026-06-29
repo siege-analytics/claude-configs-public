@@ -25,8 +25,16 @@ EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 
+# Native git hook path: when called from .githooks/pre-push, stdin is the
+# ref list (not PreToolUse JSON). Detect and set COMMAND/CWD so the rest
+# of the hook works unchanged. Ref: #411
 if [[ -z "$COMMAND" ]]; then
-    exit 0
+    if git rev-parse --git-dir >/dev/null 2>&1; then
+        COMMAND="git push"
+        CWD="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+    else
+        exit 0
+    fi
 fi
 
 # Trigger on git push, gh pr create / merge (GitHub), or glab mr create / merge
