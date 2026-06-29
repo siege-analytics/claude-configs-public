@@ -123,6 +123,18 @@ def premortem_has_risks(filepath):
         or _re.search(r'(?:tiger|paper tiger|elephant)\s+\d', lower)
     )
 
+def premortem_has_launch_blocker(filepath):
+    try:
+        content = open(filepath).read(8192)
+    except Exception:
+        return False
+    lower = content.lower()
+    if 'implementation may proceed: no' in lower:
+        return True
+    if _re.search(r'\*\*status:\*\*\s*blocks-launch', lower):
+        return True
+    return False
+
 def find_artifact(patterns, require_ticket=True):
     for d in plan_dirs:
         for p in patterns:
@@ -178,6 +190,13 @@ elif not premortem_has_risks(premortem):
         f'PRE-MORTEM: Pre-mortem artifact exists but has no classified risks FOR {current_ticket or \"current task\"}.\\n'
         '  Add at least one risk with Severity: or Tiger/Elephant classification.\\n'
         '  The mutation gate will block until risks are present.'
+    )
+elif premortem_has_launch_blocker(premortem):
+    warnings.append(
+        f'LAUNCH-BLOCKING TIGER: Pre-mortem ({os.path.basename(premortem)}) contains a Launch-Blocking Tiger.\\n'
+        '  Implementation is halted until the Tiger is mitigated.\\n'
+        '  Update the pre-mortem to remove Blocks-Launch status or set \"Implementation may proceed: YES\".\\n'
+        '  The mutation gate will block until the Launch-Blocking Tiger is resolved.'
     )
 
 # 3. Self-review artifact (only warn when code changes exist)
