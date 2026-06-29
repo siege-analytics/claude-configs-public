@@ -216,6 +216,14 @@ def premortem_has_risks(path):
         or re.search(r'(?:tiger|paper tiger|elephant)\s+\d', lower)
     )
 
+def premortem_has_launch_blocker(path):
+    try:
+        content = open(path).read(8192)
+    except Exception:
+        return False
+    lower = content.lower()
+    return 'implementation may proceed: no' in lower or 'blocks-launch' in lower
+
 missing = []
 
 # 1. Check investigate-gate.json (ticket field must match)
@@ -260,13 +268,18 @@ if repo_root:
         plan_dirs.append(repo_plans)
 
 premortem_empty = False
+premortem_launch_blocked = False
+premortem_path = ''
 for d in plan_dirs:
     for pattern in ['pre-mortem*', 'premortem*', 'risk*']:
         for f in glob.glob(os.path.join(d, pattern)):
             if os.path.isfile(f) and file_references_ticket(f, current_ticket):
                 premortem_found = True
+                premortem_path = f
                 if not premortem_has_risks(f):
                     premortem_empty = True
+                if premortem_has_launch_blocker(f):
+                    premortem_launch_blocked = True
                 break
         if premortem_found:
             break
@@ -277,6 +290,8 @@ if not premortem_found:
     missing.append('pre-mortem artifact for ' + (current_ticket or 'current task'))
 elif premortem_empty:
     missing.append('pre-mortem artifact has no classified risks (need Severity: or Tiger/Elephant entries)')
+elif premortem_launch_blocked:
+    missing.append('pre-mortem contains Launch-Blocking Tiger (' + os.path.basename(premortem_path) + ') — mitigate before implementation')
 
 # 3. Check junior-senior-gate.json (#492)
 js_gate_found = False
