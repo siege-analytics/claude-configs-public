@@ -294,6 +294,43 @@ if status == 'implementing' and current_ticket:
             '  Read: skills/self-review/SKILL.md (Senior adversarial checklist)'
         )
 
+    # 6. Check if investigation and pre-mortem were posted to ticket (#513).
+    investigate_posted = False
+    premortem_posted = False
+    invest_stems = [
+        'findings', 'citations', 'disposition', 'fact sheet',
+        'investigation', 'verified', 'evidence',
+    ]
+    premortem_stems = [
+        'severity:', 'tiger', 'risks', 'pre-mortem',
+        'elephant', 'paper tiger', 'mitigation',
+    ]
+    try:
+        if result.returncode == 0 and comments:
+            invest_hits = sum(1 for s in invest_stems if s in comments)
+            if invest_hits >= 3:
+                investigate_posted = True
+
+            premortem_hits = sum(1 for s in premortem_stems if s in comments)
+            if premortem_hits >= 3:
+                premortem_posted = True
+    except Exception:
+        pass
+
+    if not investigate_posted:
+        warnings.append(
+            f'INVESTIGATE-ON-TICKET: Investigation artifact not found on {current_ticket}.\\n'
+            '  Post the investigation (Fact Sheet or findings) to the ticket.\\n'
+            '  The mutation gate will block until the investigation is posted.'
+        )
+
+    if not premortem_posted:
+        warnings.append(
+            f'PRE-MORTEM-ON-TICKET: Pre-mortem artifact not found on {current_ticket}.\\n'
+            '  Post the pre-mortem (risks/Tigers) to the ticket.\\n'
+            '  The mutation gate will block until the pre-mortem is posted.'
+        )
+
     # Write junior-senior-gate.json signal file (#492)
     # The mutation gate reads this to block when Junior/Senior are missing.
     import datetime
@@ -307,6 +344,21 @@ if status == 'implementing' and current_ticket:
     try:
         with open(gate_path, 'w') as f:
             json.dump(gate_data, f, indent=2)
+            f.write('\\n')
+    except Exception:
+        pass
+
+    # Write artifacts-posted-gate.json signal file (#513)
+    posted_data = {
+        'ticket': current_ticket,
+        'investigate_posted': investigate_posted,
+        'premortem_posted': premortem_posted,
+        'lastChecked': datetime.datetime.now().astimezone().isoformat(),
+    }
+    posted_path = os.path.join(workspace, 'artifacts-posted-gate.json')
+    try:
+        with open(posted_path, 'w') as f:
+            json.dump(posted_data, f, indent=2)
             f.write('\\n')
     except Exception:
         pass
