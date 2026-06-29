@@ -34,6 +34,7 @@ PATTERNS=(
     'co-authored-by.*anthropic'
     'co-authored-by.*openai'
     'co-authored-by.*codex'
+    'co-authored-by.*craft'
     'generated with claude'
     'made with cursor'
     'built with codex'
