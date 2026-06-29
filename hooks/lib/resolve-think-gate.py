@@ -18,11 +18,14 @@ Output (JSON):
     or null / [] if none found.
 """
 
+from __future__ import annotations
+
 import json
 import os
 import re
 import sys
 import glob
+from typing import Optional
 
 
 def repo_slug(repo_root: str) -> str:
@@ -31,7 +34,7 @@ def repo_slug(repo_root: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_-]", "_", base)
 
 
-def find_think_gate_for_repo(workspace: str, repo_root: str, env_override: str = "") -> dict | None:
+def find_think_gate_for_repo(workspace: str, repo_root: str, env_override: str = "") -> Optional[dict]:
     """Find the think-gate signal file for a specific repo.
 
     Search order:
@@ -64,7 +67,7 @@ def find_think_gate_for_repo(workspace: str, repo_root: str, env_override: str =
     return None
 
 
-def find_all_think_gates(workspace: str) -> list[dict]:
+def find_all_think_gates(workspace: str) -> "list[dict]":
     """Find all think-gate signal files in the workspace."""
     results = []
 
@@ -76,7 +79,7 @@ def find_all_think_gates(workspace: str) -> list[dict]:
     return results
 
 
-def _load(path: str) -> dict | None:
+def _load(path: str) -> Optional[dict]:
     try:
         with open(path) as f:
             data = json.load(f)

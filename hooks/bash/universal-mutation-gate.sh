@@ -143,8 +143,9 @@ if [[ -n "${CLAUDE_THINK_GATE:-}" ]] && [[ -f "$CLAUDE_THINK_GATE" ]]; then
     THINK_GATE="$CLAUDE_THINK_GATE"
 elif [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
     THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --repo-root "$REPO_ROOT" --env-override "${CLAUDE_THINK_GATE:-}" 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
-else
-    # No repo root available — fall back to legacy singleton lookup
+fi
+# Fallback: if resolver returned empty or wasn't available, try legacy paths
+if [[ -z "$THINK_GATE" ]]; then
     if [[ -f "$WORKSPACE_FOR_RESOLVE/think-gate.json" ]]; then
         THINK_GATE="$WORKSPACE_FOR_RESOLVE/think-gate.json"
     fi
