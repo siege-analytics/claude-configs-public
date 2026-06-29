@@ -48,8 +48,8 @@ SAFE_PATTERNS=(
     # bare 'git config' can write. Narrow to read-only subcommands.
     '^(cd .* &&[[:space:]]*)?(git )(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config (--get|--list|--get-regexp|--get-all)|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( |$)'
 
-    # GitHub CLI reads
-    '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api .* --method GET|run (view|list))( |$)'
+    # GitHub CLI reads (gh api defaults to GET; write methods caught by MUTATION_INDICATORS)
+    '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api |run (view|list))( |$)'
 
     # GitHub CLI issue management (administrative, not code mutations)
     '^(cd .* &&[[:space:]]*)?(gh )(issue (create|comment|close|edit|reopen|label))( |$)'
@@ -90,6 +90,8 @@ MUTATION_INDICATORS=(
     'awk -i inplace'
     '\bpatch '
     'curl.* -X (POST|PUT|DELETE|PATCH)'
+    'gh api .* (--method|-X) (POST|PUT|DELETE|PATCH)'
+    'gh api .* (--input|--raw-field|-f )'
     'pip[3]? install'
     'npm install|yarn add|pnpm add'
     'cat .* >|tee |>[^ ]|> |>> '
