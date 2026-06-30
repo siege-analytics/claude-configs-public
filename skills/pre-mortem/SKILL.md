@@ -112,6 +112,55 @@ These are recurring failure shapes identified through dogfooding. Check for each
 
 **Grounding incident:** Dogfood session on #836 -- the agent wrote a test that mocked `_load_credential_backends()`, the exact function the fix modified. The test asserted the new error was raised, but the assertion was against the mock's behavior, not the real credential-loading logic. A regression in the real function would pass the test.
 
+### Tiger severity scoring
+
+For each Tiger, score severity across five dimensions (0-100 each)
+to produce a composite priority that is more informative than the
+binary urgency tier alone. The urgency tier (Launch-Blocking /
+Fast-Follow / Track) remains as the action label; the composite
+score provides the quantitative backing for the tier assignment.
+
+| Dimension | Weight | What it measures |
+|---|---|---|
+| Data integrity | 25% | Risk of data corruption, loss, or silent wrong answers |
+| User impact scope | 25% | How many users, workflows, or downstream systems are affected |
+| Reversibility | 20% | How hard to undo if the Tiger materializes (rollback difficulty) |
+| Dependency chain | 15% | Number of downstream systems that would propagate the failure |
+| Detection latency | 15% | Time between failure and discovery (silent = high, loud error = low) |
+
+**Composite score** = weighted sum of dimension scores.
+
+| Score | Priority tier | Maps to urgency |
+|---|---|---|
+| 80-100 | Emergency-stop | Launch-Blocking |
+| 60-79 | Mitigate-before-ship | Launch-Blocking or Fast-Follow |
+| 40-59 | Monitor-after-ship | Fast-Follow or Track |
+| 0-39 | Accept-and-document | Track |
+
+**Scoring a Tiger (worked example):**
+
+> **Tiger: API returns paginated results but fetch_all() reads only page 1**
+>
+> | Dimension | Score | Rationale |
+> |---|---|---|
+> | Data integrity | 80 | Silent data truncation — callers get partial results |
+> | User impact scope | 70 | Every caller of fetch_all() affected |
+> | Reversibility | 30 | Fix is a code change, no data migration needed |
+> | Dependency chain | 60 | 3 downstream modules call fetch_all() |
+> | Detection latency | 90 | Silent — no error, just fewer rows |
+>
+> Composite = (80×.25) + (70×.25) + (30×.20) + (60×.15) + (90×.15)
+>           = 20 + 17.5 + 6 + 9 + 13.5 = **66** → Mitigate-before-ship
+
+Use the composite score to justify the urgency tier. A Tiger that
+"feels" Launch-Blocking but scores 45 should be re-examined — either
+the scoring missed a dimension or the gut feeling is wrong. A Tiger
+that "feels" minor but scores 75 should be escalated.
+
+The scoring dimensions can be overridden per project in PROJECT.md
+(different weights for data-heavy vs. UI-heavy projects). The
+defaults above apply when no project override exists.
+
 ### Step 4: Launch-Blocking gate
 
 If any Tiger is classified Launch-Blocking:
@@ -143,6 +192,7 @@ Design note: <ticket-comment-link | committed-file-path | plans/think-*.md>
 #### Tiger 1: <name>
 - **Scenario:** <what happens>
 - **Evidence:** <Fact Sheet citation with file:line>
+- **Severity:** <composite score> (<priority tier>)
 - **Urgency:** Launch-Blocking | Fast-Follow | Track
 - **Trigger condition:** <specific input or state that causes this>
 - **Mitigation:** <what prevents or handles the failure>
