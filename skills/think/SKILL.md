@@ -56,7 +56,32 @@ Understand what exists and what's changing. Start from the ticket's accumulated 
 - What works today that must keep working?
 - What prompted this change? (Bug, feature request, tech debt, new requirement)
 - What is the scope boundary? (What is explicitly NOT part of this work)
-- **Public API blast radius:** does this change a return type, add/remove a parameter, or change the contract of a public function? If yes, note who calls it and what breaks.
+- **Public API blast radius:** does this change a return type, add/remove a parameter, or change the contract of a public function? If yes, score the blast radius (see below) and note who calls it and what breaks.
+
+#### Blast radius scoring
+
+For every entity the design modifies (function, class, module, config
+key, schema), run `grep -rn <entity-name>` across the codebase and
+count distinct call sites. The call-site count drives the tier:
+
+| Tier | Call sites | Definition |
+|---|---|---|
+| CRITICAL | 5+ | Wide fan-out — breakage propagates across multiple modules or repos |
+| HIGH | 3-4 | Cross-module impact — callers in more than one package or layer |
+| MEDIUM | 1-2 | Single-module impact — internal callers only |
+| LOW | 0 | Isolated change — no external callers affected |
+
+Record the blast radius in the design note:
+
+```
+### Blast radius
+- <entity>: <TIER> (<N> call sites: <brief list>)
+```
+
+The tier informs proposal selection in Step 3: a CRITICAL entity
+favors backward-compatible approaches (add new function, deprecate
+old) over breaking changes. A LOW entity permits aggressive
+refactoring.
 
 Read the relevant files. Don't guess about the current state.
 
