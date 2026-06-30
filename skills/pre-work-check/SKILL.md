@@ -14,6 +14,15 @@ Before you mark a ticket In Progress, assign it to yourself, or write the first 
 
 Work done outside a project drifts from the roadmap and is never deprioritized correctly. Work that starts with open blockers produces rework when the blocker resolves and changes requirements. The dependency graph exists precisely to show the order things must happen in -- ignoring it builds on an unstable foundation.
 
+## Prerequisite: ticket-guard
+
+Before running this checklist, `ticket-guard` must have run for this
+session (it fires once, then memoizes). If no ticket destination is
+configured, `ticket-guard` will prompt the user to set one. This skill
+assumes a ticket destination exists — `ticket-guard` ensures it does.
+
+See `skills/ticket-guard/SKILL.md`.
+
 ## Checklist
 
 ### 1. Ticket is well-formed
