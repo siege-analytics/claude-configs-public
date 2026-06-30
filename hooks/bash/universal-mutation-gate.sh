@@ -10,10 +10,16 @@
 #
 # Decision flow:
 #   1. Extract command from stdin JSON
-#   2. Match against SAFE_PATTERNS -> PASS
-#   3. Check think-gate.json status=designing|reviewing -> PASS
-#   4. Check think-gate.json status=implementing + artifact checks -> PASS
-#   5. BLOCK (exit 2)
+#   2. Scan for MUTATION_INDICATORS in the full command
+#   3. If no mutation indicator found -> match SAFE_PATTERNS -> PASS
+#   4. Check think-gate.json status=designing|reviewing:
+#      - no mutation indicator -> PASS (non-safelist reads allowed)
+#      - mutation indicator found -> BLOCK (mutations need implementing)
+#   5. Check think-gate.json status=implementing + artifact checks -> PASS
+#   6. BLOCK (exit 2)
+#
+# Designing/reviewing no longer bypasses all commands (#574). Only
+# non-mutation commands pass during design; mutations require implementing.
 #
 # No escape hatches. If the gate blocks a legitimate command, the fix is
 # adding it to SAFE_PATTERNS or producing the required artifacts.
@@ -167,7 +173,32 @@ except Exception:
 " "$THINK_GATE" 2>/dev/null || true)
 
     if [[ "$TG_STATUS" == "designing" || "$TG_STATUS" == "reviewing" ]]; then
-        exit 0
+        # Designing/reviewing allows non-safelist commands ONLY if they
+        # are not known mutations. Mutation-indicated commands require
+        # status=implementing with full artifacts. Ref: #574.
+        if [[ "$COMPOUND_MUTATION" == "false" ]]; then
+            exit 0
+        fi
+        CMD_SHORT_DESIGN="${COMMAND:0:120}"
+        if [[ ${#COMMAND} -gt 120 ]]; then
+            CMD_SHORT_DESIGN="${CMD_SHORT_DESIGN}..."
+        fi
+        cat >&2 <<DESIGNEOF
+BLOCKED by universal-mutation-gate (#574): mutations not allowed during designing/reviewing
+
+Command: $CMD_SHORT_DESIGN
+
+Status '$TG_STATUS' allows read-only and investigation commands, but this
+command matches a known mutation indicator. Mutation commands require
+status=implementing with full artifacts (investigate-gate, pre-mortem,
+junior/senior, artifacts-posted).
+
+To proceed:
+  1. Complete your design, then update think-gate.json status to 'implementing'
+  2. Ensure all required artifacts reference the current ticket
+  3. Retry the command
+DESIGNEOF
+        exit 2
     fi
 
     if [[ "$TG_STATUS" == "implementing" ]]; then
