@@ -31,6 +31,9 @@ EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 
+# Block-event logging (#602): record every block for classification.
+source "$HOOK_DIR/../lib/log-block.sh" 2>/dev/null || true
+
 # Fast exit if no command extractable.
 [[ -z "$COMMAND" ]] && exit 0
 
@@ -165,4 +168,7 @@ done
     echo "use the allow-list. If the command is genuinely destructive and"
     echo "deliberate, use the evidence-chain override with a reason."
 } >&2
+MATCHED_REASON="${MATCHED_BLOCKS[0]#*|}"
+MATCHED_REASON="${MATCHED_REASON%%|*}"
+log_block_event "destructive-guard" "$MATCHED_REASON" "$COMMAND"
 exit 2
