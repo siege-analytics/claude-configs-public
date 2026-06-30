@@ -19,8 +19,10 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-# Only check git add commands
-if ! echo "$COMMAND" | grep -qE '^git add\b'; then
+# Match git add anywhere in the command (not just at start) so
+# `cd /path && git add` doesn't bypass. Uses portable word boundary
+# via character-class form (see branch-guard.sh, issue #106).
+if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git add([^[:alnum:]]|$)'; then
     exit 0
 fi
 
