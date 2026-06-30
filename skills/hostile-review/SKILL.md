@@ -70,6 +70,19 @@ git grep -rn "except:" -- "examples/" "notebooks/"
 git grep -rn "Users/\|C:\\\\" -- "examples/" "notebooks/"
 ```
 
+**External-binary dependency audit.**
+Scripts and hooks that call external binaries must verify presence or fail loudly.
+
+```bash
+# Scan: external binary invocations in hooks and scripts
+git grep -rn 'which \|command -v \|$(.*)\|`.*`' -- "*.sh"
+# Scan: optional imports with silent fallback
+git grep -rn "except ImportError" -- "*.py" | grep -i "pass\|None\|return"
+# Confirm: is every external binary either (a) guaranteed-present (bash, git, python3)
+# or (b) guarded with a loud error on absence? Silent skip = S2.
+# Ref: #280 (14 jq calls silently failing), #286
+```
+
 ---
 
 ### Category 2: Security
