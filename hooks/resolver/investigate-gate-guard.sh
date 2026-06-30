@@ -83,7 +83,24 @@ fi
 if [[ -z "$THINK_GATE" ]]; then
     THINK_GATE="$WORKSPACE_ROOT/think-gate.json"
 fi
-INVESTIGATE_GATE="${CLAUDE_INVESTIGATE_GATE:-$WORKSPACE_ROOT/investigate-gate.json}"
+# Repo-scoped investigate-gate resolution (#578)
+INVESTIGATE_GATE="${CLAUDE_INVESTIGATE_GATE:-}"
+if [[ -z "$INVESTIGATE_GATE" ]] && [[ -f "$THINK_GATE" ]] && [[ -f "$RESOLVE_TG" ]]; then
+    TG_REPO_ROOT=$(python3 -c "
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(d.get('repo_root', ''))
+except:
+    pass
+" "$THINK_GATE" 2>/dev/null || true)
+    if [[ -n "$TG_REPO_ROOT" ]]; then
+        INVESTIGATE_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$TG_REPO_ROOT" --gate-name investigate-gate 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
+    fi
+fi
+if [[ -z "$INVESTIGATE_GATE" ]]; then
+    INVESTIGATE_GATE="$WORKSPACE_ROOT/investigate-gate.json"
+fi
 
 # No think-gate → no pipeline active → nothing to enforce
 if [ ! -f "$THINK_GATE" ]; then

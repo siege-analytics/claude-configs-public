@@ -432,14 +432,25 @@ HOOKEOF
             # counts between prose and signal file (drift detection).
             GATE_FILE="${CLAUDE_INVESTIGATE_GATE:-}"
             if [[ -z "$GATE_FILE" ]]; then
-                # Infer workspace root from the skill convention.
-                for CANDIDATE in "$EFFECTIVE_CWD/investigate-gate.json" \
-                    "$HOME/.craft-agent/workspaces/my-workspace/investigate-gate.json"; do
-                    if [[ -f "$CANDIDATE" ]]; then
-                        GATE_FILE="$CANDIDATE"
-                        break
+                # Repo-scoped resolution (#578)
+                RESOLVE_TG_SR="$(cd "$(dirname "$0")" && pwd)/../lib/resolve-think-gate.py"
+                WORKSPACE_SR="$HOME/.craft-agent/workspaces/my-workspace"
+                if [[ -f "$RESOLVE_TG_SR" ]] && [[ -n "$EFFECTIVE_CWD" ]]; then
+                    REPO_TOP_SR=$(git -C "$EFFECTIVE_CWD" rev-parse --show-toplevel 2>/dev/null || true)
+                    if [[ -n "$REPO_TOP_SR" ]]; then
+                        GATE_FILE=$(python3 "$RESOLVE_TG_SR" --workspace "$WORKSPACE_SR" --repo-root "$REPO_TOP_SR" --gate-name investigate-gate 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
                     fi
-                done
+                fi
+                # Legacy fallback
+                if [[ -z "$GATE_FILE" ]]; then
+                    for CANDIDATE in "$EFFECTIVE_CWD/investigate-gate.json" \
+                        "$HOME/.craft-agent/workspaces/my-workspace/investigate-gate.json"; do
+                        if [[ -f "$CANDIDATE" ]]; then
+                            GATE_FILE="$CANDIDATE"
+                            break
+                        fi
+                    done
+                fi
             fi
             if [[ -n "$GATE_FILE" ]] && [[ -f "$GATE_FILE" ]]; then
                 SIGNAL_ENTITY_COUNT=$(python3 -c "

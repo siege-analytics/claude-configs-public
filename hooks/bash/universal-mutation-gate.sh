@@ -206,12 +206,19 @@ DESIGNEOF
         # Artifacts must exist AND reference the current ticket.
         WORKSPACE_CANDIDATE="$(dirname "$(dirname "$HOOK_DIR")")"
 
+        # Resolve repo-scoped gate paths in one call (#578)
+        GATE_PATHS_JSON="{}"
+        if [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
+            GATE_PATHS_JSON=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --repo-root "$REPO_ROOT" --resolve-many "investigate-gate,junior-senior-gate,artifacts-posted-gate,review-gate" 2>/dev/null || echo "{}")
+        fi
+
         MISSING=$(python3 -c "
 import json, sys, os, glob
 
 think_gate_path = sys.argv[1]
 workspace = sys.argv[2]
 plans_path = sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] != '__none__' else ''
+gate_paths = json.loads(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4] not in ('', '__none__') else {}
 
 try:
     tg = json.load(open(think_gate_path))
@@ -263,10 +270,16 @@ missing = []
 
 # 1. Check investigate-gate.json (ticket field must match)
 invest_found = False
-for candidate in [
-    os.environ.get('CRAFT_AGENT_WORKSPACE', '') + '/investigate-gate.json',
-    os.path.join(workspace, 'investigate-gate.json'),
-]:
+invest_candidates = []
+resolved_invest = gate_paths.get('investigate-gate')
+if resolved_invest:
+    invest_candidates.append(resolved_invest)
+else:
+    caws = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
+    if caws:
+        invest_candidates.append(caws + '/investigate-gate.json')
+    invest_candidates.append(os.path.join(workspace, 'investigate-gate.json'))
+for candidate in invest_candidates:
     if os.path.isfile(candidate):
         try:
             ig = json.load(open(candidate))
@@ -330,10 +343,16 @@ elif premortem_launch_blocked:
 
 # 3. Check junior-senior-gate.json (#492)
 js_gate_found = False
-for js_candidate in [
-    os.environ.get('CRAFT_AGENT_WORKSPACE', '') + '/junior-senior-gate.json',
-    os.path.join(workspace, 'junior-senior-gate.json'),
-]:
+js_candidates = []
+resolved_js = gate_paths.get('junior-senior-gate')
+if resolved_js:
+    js_candidates.append(resolved_js)
+else:
+    caws_js = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
+    if caws_js:
+        js_candidates.append(caws_js + '/junior-senior-gate.json')
+    js_candidates.append(os.path.join(workspace, 'junior-senior-gate.json'))
+for js_candidate in js_candidates:
     if os.path.isfile(js_candidate):
         try:
             js = json.load(open(js_candidate))
@@ -354,10 +373,16 @@ if not js_gate_found:
 
 # 4. Check artifacts-posted-gate.json (#513)
 ap_gate_found = False
-for ap_candidate in [
-    os.environ.get('CRAFT_AGENT_WORKSPACE', '') + '/artifacts-posted-gate.json',
-    os.path.join(workspace, 'artifacts-posted-gate.json'),
-]:
+ap_candidates = []
+resolved_ap = gate_paths.get('artifacts-posted-gate')
+if resolved_ap:
+    ap_candidates.append(resolved_ap)
+else:
+    caws_ap = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
+    if caws_ap:
+        ap_candidates.append(caws_ap + '/artifacts-posted-gate.json')
+    ap_candidates.append(os.path.join(workspace, 'artifacts-posted-gate.json'))
+for ap_candidate in ap_candidates:
     if os.path.isfile(ap_candidate):
         try:
             ap = json.load(open(ap_candidate))
@@ -379,10 +404,16 @@ if not ap_gate_found:
 # If a review was done and HEAD has moved since, block until re-review.
 # No file = no review = no block (not every task has a review).
 import subprocess as _sp
-for rg_candidate in [
-    os.environ.get('CRAFT_AGENT_WORKSPACE', '') + '/review-gate.json',
-    os.path.join(workspace, 'review-gate.json'),
-]:
+rg_candidates = []
+resolved_rg = gate_paths.get('review-gate')
+if resolved_rg:
+    rg_candidates.append(resolved_rg)
+else:
+    caws_rg = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
+    if caws_rg:
+        rg_candidates.append(caws_rg + '/review-gate.json')
+    rg_candidates.append(os.path.join(workspace, 'review-gate.json'))
+for rg_candidate in rg_candidates:
     if os.path.isfile(rg_candidate):
         try:
             rg = json.load(open(rg_candidate))
@@ -416,7 +447,7 @@ for rg_candidate in [
         break
 
 print('|'.join(missing))
-" "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" 2>/dev/null || true)
+" "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" "$GATE_PATHS_JSON" 2>/dev/null || true)
 
         if [[ -z "$MISSING" ]]; then
             exit 0
