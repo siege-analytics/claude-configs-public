@@ -6,7 +6,7 @@ user-invocable: false
 paths: "**/*.py,**/*.scala,**/*.sql"
 ---
 
-# Apache Sedona -- Distributed Spatial on Spark
+# Apache Sedona -- Distributed Spatial on Spark [RECOMMENDED]
 
 Use Sedona when:
 - Data is bigger than one machine's RAM and a Spark cluster is available.
