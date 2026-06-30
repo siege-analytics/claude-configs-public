@@ -38,6 +38,11 @@
 #     code. Proves authoring-against-state measurement was recorded in the
 #     commit history. Exempted when Trivial-against-state: declaration exists
 #     in self-review artifact. Ref: #205.
+# v2.5 (this version):
+#   - Propagation-deferred resolution warning: when the diff includes files
+#     with propagation-deferred: frontmatter, warns that artifact-to-ticket
+#     propagation has not been resolved. Advisory (stderr), not blocking.
+#     Ref: #251.
 # v2 scope (deferred follow-ups, tracked in SKILL.md):
 #   - Goal source does not point at the commit being pushed
 #   - Lead section's role-tagged affirmative standard format
@@ -1032,6 +1037,41 @@ HOOKEOF
                 exit 2
             fi
         fi
+    fi
+fi
+
+# v2.5: Propagation-deferred resolution warning (#251).
+# When the diff includes files with propagation-deferred: in YAML frontmatter,
+# warn that artifact-to-ticket propagation has not been resolved.
+# Advisory only (stderr warning, exit 0) — can escalate to block in v2.6.
+if [ -n "${DIFF_FILES:-}" ]; then
+    DEFERRED_FILES=""
+    while IFS= read -r DF; do
+        [ -z "$DF" ] && continue
+        case "$DF" in
+            *.md)
+                FULL_DF="$EFFECTIVE_CWD/$DF"
+                if [ -f "$FULL_DF" ] && head -20 "$FULL_DF" 2>/dev/null | grep -q 'propagation-deferred:'; then
+                    DEFERRED_FILES="${DEFERRED_FILES}  - ${DF}\n"
+                fi
+                ;;
+        esac
+    done <<< "$DIFF_FILES"
+
+    if [ -n "$DEFERRED_FILES" ]; then
+        cat >&2 <<HOOKEOF
+WARNING: These files have propagation-deferred: frontmatter and are being
+pushed without resolution:
+
+$(printf '%b' "$DEFERRED_FILES")
+Per #251, artifacts with ticket references should be posted to their
+tickets before the PR is merged. Either:
+  1. Post the artifact content to the referenced ticket(s)
+  2. Change propagation-deferred: to ticket_refs: with posting status
+  3. If genuinely not ready, this warning is informational — proceed.
+
+Ref: #251 (artifact-to-ticket propagation)
+HOOKEOF
     fi
 fi
 
