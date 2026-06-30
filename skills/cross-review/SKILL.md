@@ -160,6 +160,8 @@ When findings arrive (via `send_agent_message` reply or ticket comment):
    providers agree on more heavily — cross-provider consensus is strong signal
 4. Update the self-review artifact with a "Cross-review" section noting
    provider, model, and finding count
+5. Record the review location in the self-review artifact's
+   `Hostile-review-artifact:` field (ticket comment link or file path)
 
 ## Reviewer session lifecycle (originating agent owns cleanup)
 
