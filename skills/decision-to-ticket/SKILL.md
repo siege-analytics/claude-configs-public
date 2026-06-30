@@ -129,6 +129,76 @@ The completion guard would additionally have caught the scope-reduction pattern 
 - "CI infrastructure is fixed" while 13+34 test failures remained → deferral, not completion
 - "Stopping dogfooding work" without filing a continuation ticket → deferral, not completion
 
+## Rejection tracking (DO_NOT_RESURFACE)
+
+Decisions can be rejected. A rejected decision is not just absent — it
+is explicitly vetoed. Without a rejection log, agents gradually
+reintroduce vetoed ideas across sessions because the veto is not
+mechanically discoverable.
+
+### Recording a rejection
+
+When the user rejects a proposal (scope, architecture, approach):
+
+1. **File the rejection on the ticket** as a comment with this format:
+
+   ```
+   ## Decision rejected
+   Decision: <what was proposed>
+   Category: <scope | architecture | sequencing | acceptance | ...>
+   Rejected-by: <user | lead-review | pre-mortem>
+   Reason: <why it was rejected — quote the user if possible>
+   Fingerprint: <first 120 chars of the proposal, normalized to lowercase>
+   DO_NOT_RESURFACE: true
+   ```
+
+2. **Log in the signal file** (optional, for cross-session persistence).
+   If a `rejections.json` file exists in the workspace root, append:
+
+   ```json
+   {
+     "ticket": "owner/repo#NNN",
+     "proposal": "<first 120 chars, lowercase>",
+     "reason": "<rejection reason>",
+     "rejected_at": "2026-01-15T14:30:00Z",
+     "rejected_by": "user"
+   }
+   ```
+
+### Checking before proposing
+
+Before presenting a new proposal in think Step 3, check:
+
+1. **Ticket history:** scan prior comments on the ticket for
+   `DO_NOT_RESURFACE: true`. Compare the new proposal's first 120
+   characters (lowercase) against each rejection fingerprint using
+   `difflib.SequenceMatcher` (Python stdlib). A ratio >= 0.70 is a
+   match.
+
+2. **Signal file:** if `rejections.json` exists, check against all
+   entries for the same ticket.
+
+### On match (>= 70% similarity)
+
+If a new proposal matches a rejected fingerprint:
+
+- **BLOCK the proposal** from being presented without qualification.
+- Inform the proposer: "This is similar to a previously rejected
+  decision: [quote rejection]. To re-propose, you must cite what
+  changed since the rejection."
+- The "what changed" citation must be falsifiable — not "I think
+  it's different now" but "PR #NNN landed a new constraint that
+  changes the tradeoff" or "the user's requirements shifted per
+  comment on #NNN."
+
+### Why 70%
+
+70% catches rephrasings ("use Redis for caching" vs "add Redis as a
+cache layer") while allowing genuinely different proposals about the
+same system ("use Redis for caching" vs "use Redis for pub/sub" =
+~55% match, correctly allowed). The threshold can be overridden
+per-project in PROJECT.md.
+
 ## Edge cases
 
 ### Rapid-fire decisions during design
