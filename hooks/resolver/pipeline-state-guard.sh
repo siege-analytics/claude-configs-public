@@ -151,8 +151,16 @@ def find_artifact(patterns, require_ticket=True):
 invest_patterns = ['fact-sheet*', 'investigate*', 'investigation*', 'Fact-Sheet*']
 invest = find_artifact(invest_patterns)
 # Also check investigate-gate.json (ticket association via JSON ticket field)
+# Repo-scoped resolution (#578): check <gate>-<slug>.json first
 if not invest:
-    invest_gate_path = os.path.join(workspace, 'investigate-gate.json')
+    invest_gate_path = ''
+    if repo_root:
+        _slug = _re.sub(r'[^a-zA-Z0-9_-]', '_', os.path.basename(repo_root.rstrip('/')))
+        _scoped = os.path.join(workspace, f'investigate-gate-{_slug}.json')
+        if os.path.isfile(_scoped):
+            invest_gate_path = _scoped
+    if not invest_gate_path:
+        invest_gate_path = os.path.join(workspace, 'investigate-gate.json')
     if os.path.isfile(invest_gate_path):
         try:
             ig = json.load(open(invest_gate_path))
@@ -358,8 +366,7 @@ if status == 'implementing' and current_ticket:
                 '  The mutation gate will block until the self-review is posted.'
             )
 
-    # Write junior-senior-gate.json signal file (#492)
-    # The mutation gate reads this to block when Junior/Senior are missing.
+    # Write junior-senior-gate.json signal file (#492, repo-scoped #578)
     import datetime
     gate_data = {
         'ticket': current_ticket,
@@ -367,7 +374,11 @@ if status == 'implementing' and current_ticket:
         'senior_found': senior_found,
         'lastChecked': datetime.datetime.now().astimezone().isoformat(),
     }
-    gate_path = os.path.join(workspace, 'junior-senior-gate.json')
+    if repo_root:
+        _js_slug = _re.sub(r'[^a-zA-Z0-9_-]', '_', os.path.basename(repo_root.rstrip('/')))
+        gate_path = os.path.join(workspace, f'junior-senior-gate-{_js_slug}.json')
+    else:
+        gate_path = os.path.join(workspace, 'junior-senior-gate.json')
     try:
         with open(gate_path, 'w') as f:
             json.dump(gate_data, f, indent=2)
@@ -375,7 +386,7 @@ if status == 'implementing' and current_ticket:
     except Exception:
         pass
 
-    # Write artifacts-posted-gate.json signal file (#513, #519)
+    # Write artifacts-posted-gate.json signal file (#513, #519, repo-scoped #578)
     posted_data = {
         'ticket': current_ticket,
         'investigate_posted': investigate_posted,
@@ -383,7 +394,11 @@ if status == 'implementing' and current_ticket:
         'selfreview_posted': selfreview_posted,
         'lastChecked': datetime.datetime.now().astimezone().isoformat(),
     }
-    posted_path = os.path.join(workspace, 'artifacts-posted-gate.json')
+    if repo_root:
+        _ap_slug = _re.sub(r'[^a-zA-Z0-9_-]', '_', os.path.basename(repo_root.rstrip('/')))
+        posted_path = os.path.join(workspace, f'artifacts-posted-gate-{_ap_slug}.json')
+    else:
+        posted_path = os.path.join(workspace, 'artifacts-posted-gate.json')
     try:
         with open(posted_path, 'w') as f:
             json.dump(posted_data, f, indent=2)

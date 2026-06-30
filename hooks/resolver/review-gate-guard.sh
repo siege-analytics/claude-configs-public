@@ -36,16 +36,22 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+RESOLVE_TG="$SCRIPT_DIR/../lib/resolve-think-gate.py"
 
-# Search order: env override, workspace root, git repo root
+# Search order: env override, repo-scoped (#578), workspace singleton, repo-local
 SIGNAL_FILE="${CLAUDE_REVIEW_GATE:-}"
 
 if [ -z "$SIGNAL_FILE" ]; then
-    if [ -f "$WORKSPACE_ROOT/review-gate.json" ]; then
-        SIGNAL_FILE="$WORKSPACE_ROOT/review-gate.json"
-    else
-        REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-        if [ -n "$REPO_ROOT" ] && [ -f "$REPO_ROOT/.review-gate.json" ]; then
+    REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+    # Repo-scoped resolution (#578)
+    if [ -n "$REPO_ROOT" ] && [ -f "$RESOLVE_TG" ]; then
+        SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" --gate-name review-gate 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
+    fi
+    # Legacy fallback
+    if [ -z "$SIGNAL_FILE" ]; then
+        if [ -f "$WORKSPACE_ROOT/review-gate.json" ]; then
+            SIGNAL_FILE="$WORKSPACE_ROOT/review-gate.json"
+        elif [ -n "$REPO_ROOT" ] && [ -f "$REPO_ROOT/.review-gate.json" ]; then
             SIGNAL_FILE="$REPO_ROOT/.review-gate.json"
         fi
     fi
