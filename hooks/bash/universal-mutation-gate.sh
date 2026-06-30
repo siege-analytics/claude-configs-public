@@ -33,6 +33,9 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 
+# Block-event logging (#602): record every block for classification.
+source "$HOOK_DIR/../lib/log-block.sh" 2>/dev/null || true
+
 [[ -z "$COMMAND" ]] && exit 0
 
 # No emergency disable. To disable the gate, comment out the hook in
@@ -198,6 +201,7 @@ To proceed:
   2. Ensure all required artifacts reference the current ticket
   3. Retry the command
 DESIGNEOF
+        log_block_event "universal-mutation-gate" "mutations require implementing status" "$COMMAND"
         exit 2
     fi
 
@@ -475,6 +479,7 @@ CURRENT ticket. Artifacts from prior tasks do not satisfy the gate.
 
 Produce the missing artifacts for the current ticket, then retry.
 ARTEOF
+        log_block_event "universal-mutation-gate" "implementing artifacts incomplete" "$COMMAND"
         exit 2
     fi
 fi
@@ -503,4 +508,5 @@ To proceed:
 There are no bypass mechanisms. The enforcement default is fail-closed.
 See #473 (original gate) and #477 (hardening).
 HOOKEOF
+log_block_event "universal-mutation-gate" "command not on safelist, no think-gate" "$COMMAND"
 exit 2
