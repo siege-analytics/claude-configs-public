@@ -1579,6 +1579,14 @@ def main() -> int:
     print("\nBuilding consumer packages...")
     build_consumer_packages()
 
+    print("\nScoring skill quality...")
+    all_skill_slugs = set(skills_src) | set(project_skills_src)
+    all_rule_slugs = set(rules_src) | set(project_rules_src)
+    quality_scores = score_skill_quality(skills_src, all_skill_slugs, all_rule_slugs, SOURCE_SKILLS)
+    low_count = report_skill_quality(quality_scores)
+    if low_count:
+        print(f"  WARNING: {low_count} skill(s) scored D or F")
+
     print(f"\nDone. Output: {DIST}/")
 
     if args.deploy:
@@ -1593,6 +1601,134 @@ def main() -> int:
         deploy_to_workspace(args.craft_workspace.expanduser())
 
     return 0
+
+
+@dataclass
+class SkillScore:
+    slug: str
+    structure: float = 0.0
+    cross_refs: float = 0.0
+    provenance: float = 0.0
+    completeness: float = 0.0
+
+    @property
+    def total(self) -> float:
+        return (self.structure + self.cross_refs + self.provenance + self.completeness) / 4
+
+    @property
+    def grade(self) -> str:
+        t = self.total
+        if t >= 90:
+            return "A"
+        if t >= 80:
+            return "B"
+        if t >= 70:
+            return "C"
+        if t >= 60:
+            return "D"
+        return "F"
+
+
+def score_skill_quality(
+    skills_src: dict[str, Path],
+    known_skills: set[str],
+    known_rules: set[str],
+    source: Path,
+) -> list[SkillScore]:
+    """Score each skill on structure, cross-references, provenance, completeness."""
+    scores: list[SkillScore] = []
+    for slug, rel in sorted(skills_src.items()):
+        skill_path = source / rel / "SKILL.md"
+        if not skill_path.exists():
+            continue
+        text = skill_path.read_text(encoding="utf-8", errors="replace")
+        lines = text.splitlines()
+        sc = SkillScore(slug=slug)
+
+        # Structure (25%): frontmatter, sections, line count
+        has_frontmatter = text.startswith("---")
+        fm_fields = 0
+        if has_frontmatter:
+            fm_end = text.find("---", 3)
+            if fm_end > 0:
+                fm_block = text[3:fm_end]
+                for key in ("name:", "description:"):
+                    if key in fm_block:
+                        fm_fields += 1
+        section_count = sum(1 for ln in lines if ln.startswith("## "))
+        line_count = len(lines)
+        structure = 0.0
+        if has_frontmatter:
+            structure += 30
+        structure += min(fm_fields * 15, 30)
+        structure += min(section_count * 5, 20)
+        if 20 <= line_count <= 500:
+            structure += 20
+        elif line_count > 500:
+            structure += 10
+        sc.structure = min(structure, 100)
+
+        # Cross-references (25%): [skill:X] and [rule:X] tokens resolve
+        skill_refs = SKILL_TOKEN.findall(text)
+        rule_refs = RULE_TOKEN.findall(text)
+        total_refs = len(skill_refs) + len(rule_refs)
+        if total_refs == 0:
+            sc.cross_refs = 50
+        else:
+            resolved = sum(1 for s in skill_refs if s in known_skills)
+            resolved += sum(1 for r in rule_refs if r in known_rules)
+            sc.cross_refs = (resolved / total_refs) * 100
+
+        # Provenance (25%): citations of incidents, sessions, PRs, issues
+        provenance_patterns = [
+            r"#\d{2,}",
+            r"PR\s*#\d+",
+            r"session\s+\d{6}",
+            r"incident",
+            r"Ref:",
+        ]
+        prov_hits = sum(
+            1 for pat in provenance_patterns
+            if re.search(pat, text, re.IGNORECASE)
+        )
+        sc.provenance = min(prov_hits * 20, 100)
+
+        # Completeness (25%): enforcement, override, cross-references section
+        completeness_markers = [
+            "## Override",
+            "## Cross-reference",
+            "Enforcement:",
+            "Enforced-by:",
+            "## Attribution",
+        ]
+        comp_hits = sum(1 for m in completeness_markers if m in text)
+        sc.completeness = min(comp_hits * 20, 100)
+
+        scores.append(sc)
+    return scores
+
+
+def report_skill_quality(scores: list[SkillScore]) -> int:
+    """Print quality report and return count of D/F grades."""
+    if not scores:
+        return 0
+    low_grades = [s for s in scores if s.grade in ("D", "F")]
+    if low_grades:
+        print("\n--- Skill quality warnings ---")
+        for s in sorted(low_grades, key=lambda x: x.total):
+            print(
+                f"  {s.slug}: {s.grade} ({s.total:.0f}%) "
+                f"[struct={s.structure:.0f} xref={s.cross_refs:.0f} "
+                f"prov={s.provenance:.0f} comp={s.completeness:.0f}]"
+            )
+    graded = {}
+    for s in scores:
+        graded.setdefault(s.grade, []).append(s.slug)
+    grade_summary = ", ".join(
+        f"{g}: {len(slugs)}" for g, slugs in sorted(graded.items())
+    )
+    print(f"  Skill quality: {grade_summary}")
+    return len(low_grades)
 
 
 def warn_unknown() -> None:
