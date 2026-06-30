@@ -95,16 +95,29 @@ Repeated workarounds mask bugs. Instead of running this command again:
 2. Investigate why this keeps happening
 3. Fix the underlying issue
 
-To override: include [workaround-acknowledged: <ticket-ref>] in the command.
+To override: include [workaround-acknowledged: #<ticket> Reason: <why>; Evidence: <obs>; Falsification: <disproof>] in the command.
 \"\"\", file=sys.stderr)
     sys.exit(2)
 " 2>&1
 
 EXIT_CODE=$?
 
-# Allow override via acknowledged marker
-if [[ $EXIT_CODE -ne 0 ]] && echo "$COMMAND" | grep -qE '\[workaround-acknowledged:[[:space:]]+#[0-9]+\]'; then
-    exit 0
+if [[ $EXIT_CODE -ne 0 ]]; then
+    # Structured override with evidence chain: accepted per writing-rules:4.
+    if echo "$COMMAND" | grep -qE '\[workaround-acknowledged:[[:space:]]+#[0-9]+[[:space:]]+Reason:[^]]+;[[:space:]]*Evidence:[^]]+;[[:space:]]*Falsification:[^]]+\]'; then
+        exit 0
+    fi
+    # Bare override (ticket ref only, no evidence chain): blocked. Ref: #581.
+    if echo "$COMMAND" | grep -qE '\[workaround-acknowledged:[[:space:]]+#[0-9]+\]'; then
+        cat >&2 <<HOOKEOF
+BLOCKED: '[workaround-acknowledged]' override now requires evidence chain.
+
+Format: [workaround-acknowledged: #<ticket> Reason: <why this workaround is acceptable>; Evidence: <what you observed>; Falsification: <what would prove the workaround is wrong>]
+
+Example: [workaround-acknowledged: #123 Reason: build cache corrupted by prior run; Evidence: stale .pyc files from wrong branch; Falsification: if fresh checkout also fails, root cause is not cache]
+HOOKEOF
+        exit 2
+    fi
 fi
 
 exit $EXIT_CODE
