@@ -542,6 +542,62 @@ HOOKEOF
         exit 2
     fi
 
+    # v2.7: Project-contribution field check (#571).
+    # If the project's PROJECT.md has a ## Mission section, the self-review
+    # artifact must have a non-empty Project-contribution: field that does
+    # not simply echo the ticket title or commit subject.
+    CONTRIBUTION_VALUE=$(grep -E '^Project-contribution:[[:space:]]+\S' "$SOURCE_PATH" | head -1 | sed -E 's/^Project-contribution:[[:space:]]+'// || true)
+    if [[ -z "$CONTRIBUTION_VALUE" ]]; then
+        # Check if project has a mission statement (look for PROJECT.md with ## Mission)
+        HAS_MISSION=false
+        if [[ -n "$EFFECTIVE_CWD" ]]; then
+            REPO_TOP=$(git -C "$EFFECTIVE_CWD" rev-parse --show-toplevel 2>/dev/null || true)
+            if [[ -n "$REPO_TOP" ]]; then
+                for PM_CANDIDATE in \
+                    "$REPO_TOP/projects/"*/PROJECT.md \
+                    "$REPO_TOP/PROJECT.md"; do
+                    if [[ -f "$PM_CANDIDATE" ]] && grep -qF '## Mission' "$PM_CANDIDATE" 2>/dev/null; then
+                        HAS_MISSION=true
+                        break
+                    fi
+                done
+            fi
+        fi
+
+        if [[ "$HAS_MISSION" == "true" ]]; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Self-Review-Source: $SOURCE_PATH is missing 'Project-contribution:'
+in the Assumptions section.
+
+The project has a ## Mission statement in PROJECT.md. The self-review must
+state what this work produces beyond itself — the project-level outcome.
+
+  Project-contribution: <concrete deliverable advancing the project mission>
+
+The value must not be the ticket title or commit subject (echo-only).
+
+Ref: #571 (mission-alignment gate)
+HOOKEOF
+            exit 2
+        fi
+    else
+        # Check for echo-only: value should not be identical to the commit
+        # subject line (first line of commit message).
+        COMMIT_SUBJECT=$(echo "$COMMIT_MSG" | head -1)
+        if [[ "$CONTRIBUTION_VALUE" == "$COMMIT_SUBJECT" ]]; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Project-contribution: in $SOURCE_PATH is identical to the commit
+subject line. This is an echo, not a contribution statement.
+
+The Project-contribution must describe what this work produces for the
+PROJECT beyond the immediate ticket — not restate the commit message.
+
+Ref: #571 (mission-alignment gate)
+HOOKEOF
+            exit 2
+        fi
+    fi
+
     # v1.4: Post-mortem awareness check. If the commit message indicates
     # a revert or regression fix, the self-review should acknowledge
     # post-mortem applicability. This is a WARNING, not a block — the

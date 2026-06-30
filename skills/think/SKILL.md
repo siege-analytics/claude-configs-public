@@ -162,6 +162,27 @@ For each of these, state what changes and where the update goes:
 
 These are the **designated knowledge loci** for the entities this task touches. Investigation Phase 0 identifies them in the Fact Sheet's "Knowledge Loci" section. If investigation found loci that describe behavior this task will change, updating those loci is a required deliverable -- not a follow-up. A PR that changes behavior without updating the knowledge loci that describe it ships a lie.
 
+### Step 5b: Mission Alignment (required when PROJECT.md has a ## Mission section)
+
+If the project's `PROJECT.md` has a `## Mission` section, the design note must include a `## Mission alignment` section that connects this work to the project's stated purpose. This section is enforced by the self-review hook via the `Project-contribution:` field.
+
+Include:
+1. **Mission quote** — the project mission from PROJECT.md (one sentence)
+2. **Project-level outcome** — what this ticket produces beyond itself (not "completed the ticket" or restating the ticket title)
+3. **Falsifiable claim** — a claim the think-gate can verify that proves this work advances the mission
+
+```
+## Mission alignment
+
+Mission: "<quote from PROJECT.md ## Mission>"
+
+Project-level outcome: <concrete deliverable proving advancement>
+
+Falsifiable claim: <what would prove this work doesn't serve the mission>
+```
+
+If the project has no `## Mission` section in PROJECT.md, skip this step.
+
 ### Step 6: Implementation Gate
 
 Present the design to the user. Wait for explicit approval before writing any code.

@@ -53,6 +53,7 @@ Pre-author-inventory: <ticket-link#pre-author-inventory | plans/path.md#pre-auth
 Investigate-artifact: <ticket-comment-link | committed-file-path | plans/investigate-*.md | TRIVIAL (with declaration below)>
 Pre-mortem-artifact: <ticket-comment-link | committed-file-path | plans/pre-mortem-*.md | TRIVIAL (with declaration below)>
 Hostile-review-artifact: <ticket-comment-link | path to cross-review artifact | WAIVED (prose-only, with ## Hostile-review-waiver below)>
+Project-contribution: <what this work produces beyond itself — the project-level outcome, not "completed the ticket">
 
 ## Pre-implementation comprehension (the Junior's first deliverable)
 
