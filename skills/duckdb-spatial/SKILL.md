@@ -6,7 +6,7 @@ user-invocable: false
 paths: "**/*.py,**/*.sql"
 ---
 
-# DuckDB Spatial
+# DuckDB Spatial [EXPERIMENTAL]
 
 DuckDB's `spatial` extension ships GEOS, GDAL, and PROJ inside a single in-process binary. It gives you SQL spatial queries on Parquet/CSV files without standing up a server, and -- critically -- it's the **strongest single tool for GDAL-less environments**. The DuckDB binary bundles its own spatial libraries; the host system doesn't need GDAL installed.
 

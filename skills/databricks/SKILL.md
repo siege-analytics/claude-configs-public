@@ -27,7 +27,7 @@ Draws from:
 
 Each section below applies one of these.
 
-## Unity Catalog discipline
+## Unity Catalog discipline [PROVEN]
 
 Three-level namespace is non-negotiable in new workspaces:
 
@@ -93,13 +93,13 @@ TBLPROPERTIES (
 );
 ```
 
-## Partitioning -- prefer liquid clustering
+## Partitioning -- prefer liquid clustering [RECOMMENDED]
 
 - **Partition by date** only if: (a) you're on an older runtime, (b) you need explicit partition isolation for compliance, or (c) you always query by date.
 - **Liquid clustering** otherwise: `CLUSTER BY (col1, col2)`. Adapts to query patterns.
 - **Never partition on high-cardinality columns.** Classic mistake: partitioning by `user_id`.
 
-## Jobs over notebooks-in-cron
+## Jobs over notebooks-in-cron [PROVEN]
 
 Production workloads are **jobs**, not notebooks on a schedule.
 
@@ -132,7 +132,7 @@ resources:
 - **DBR versions** pinned (`15.4.x-scala2.12`) -- don't float the runtime
 - **Deploy via `databricks bundle deploy`** -- no clicking in the UI
 
-## DLT (Delta Live Tables) -- when declarative helps
+## DLT (Delta Live Tables) -- when declarative helps [RECOMMENDED]
 
 Use DLT when:
 - You have a multi-step pipeline with clear bronze → silver → gold stages
