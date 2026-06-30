@@ -126,12 +126,30 @@ if [[ "$HAS_TESTING" = "false" ]]; then
     exit 0
 fi
 
-# --- Check for [run-skip: reason] override in latest commit ---
+# --- Check for [run-skip: ...] override in latest commit ---
+# Structured override with evidence chain: accepted per writing-rules:4.
+# Bare override without evidence: blocked. Ref: #579.
 LATEST_MSG=$(git -C "$EFFECTIVE_CWD" log -1 --format=%B 2>/dev/null || echo "")
-if echo "$LATEST_MSG" | grep -qE '\[run-skip:[[:space:]]'; then
-    echo "WARNING: test-guard: [run-skip] override found in latest commit." >&2
-    echo "Test evidence verification skipped. Track override frequency." >&2
+if echo "$LATEST_MSG" | grep -qE '\[run-skip:[[:space:]]+Reason:[^]]+;[[:space:]]*Evidence:[^]]+;[[:space:]]*Falsification:[^]]+\]'; then
+    echo "WARNING: test-guard: [run-skip] override with evidence chain found in latest commit." >&2
+    echo "Test evidence verification skipped per structured override." >&2
     exit 0
+fi
+if echo "$LATEST_MSG" | grep -qE '\[run-skip(\]|:[[:space:]]*\]|:[[:space:]]+[^R])'; then
+    cat >&2 <<HOOKEOF
+BLOCKED: '[run-skip]' override now requires evidence chain.
+
+Per writing-rules:4, every "this doesn't apply" claim requires the
+evidence chain. Replace bare '[run-skip: reason]' with:
+
+  [run-skip: Reason: <falsifiable why tests aren't needed>;
+             Evidence: <observable supporting the claim>;
+             Falsification: <what would prove tests ARE needed>]
+
+If the override doesn't fit that shape, this push needs test evidence.
+Ref: #579
+HOOKEOF
+    exit 2
 fi
 
 # --- Determine touched source files FIRST (before requiring the signal file) ---
