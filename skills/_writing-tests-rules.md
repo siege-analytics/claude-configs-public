@@ -78,6 +78,119 @@ Forward-only. Existing inspection tests are eligible for promotion to behavior t
 
 The session's concrete instances: two PRs in the same session shipped source-grep tests that read DRF decorator wrappers instead of the decorated functions (PR #122 boundary_detail decorator; PR #153 helper-call assertions). Both had to be rewritten to read the file as text. A third PR (#157) shipped a source-grep that matched its own explanatory comment in the production file; rewritten with comment-stripping.
 
+## Structural test smells
+
+Named patterns detectable by static analysis (grep or AST). These
+complement the writing-tests rules by naming structural anti-patterns
+that indicate test quality problems. Severity: warn (inform review)
+unless noted as block.
+
+**sleepy_test** -- test contains `time.sleep()` or `asyncio.sleep()`.
+Sleeping in tests masks timing-dependent failures and slows the suite.
+
+```bash
+# Detection
+git grep -n 'time\.sleep\|asyncio\.sleep' -- "test_*.py" "*_test.py"
+```
+
+Severity: warn. Remediation: use polling with a timeout, or mock the
+time-dependent component. If the sleep is genuinely required (hardware
+test, rate-limit compliance), add a `# sleepy_test: <reason>` comment.
+
+**conditional_test_logic** -- test body contains `if`, `for`, or `while`
+that controls which assertions run. Tests with conditional logic test
+different things depending on state, making failures non-reproducible.
+
+```bash
+# Detection (grep approximation; AST check is more precise)
+git grep -n '^\s*if \|^\s*for \|^\s*while ' -- "test_*.py" "*_test.py" | grep -v 'def \|#\|import'
+```
+
+Severity: warn. Remediation: split into multiple test cases, one per
+branch. Use `@pytest.mark.parametrize` for data-driven variation.
+Exception: fixture setup loops and context managers in test setup are
+acceptable.
+
+**missing_assertions** -- test function body has no `assert`, no
+`pytest.raises`, no `self.assert*`, and no `mock.assert_*` call.
+A test without assertions is a test that cannot fail.
+
+```bash
+# Detection
+for f in $(git diff --name-only HEAD~1 | grep 'test_.*\.py$'); do
+  python3 -c "
+import ast, sys
+tree = ast.parse(open('$f').read())
+for node in ast.walk(tree):
+    if isinstance(node, ast.FunctionDef) and node.name.startswith('test_'):
+        src = ast.get_source_segment(open('$f').read(), node)
+        if src and 'assert' not in src and 'raises' not in src:
+            print(f'$f:{node.lineno}: {node.name} has no assertions')
+"
+done
+```
+
+Severity: block (writing-tests:1 violation). Remediation: add
+assertions that verify the expected behavior. A test that only calls
+production code without checking results is an invocation, not a test.
+Complements writing-tests:1 (tests must fail if production breaks).
+
+**giant_test** -- test function exceeds 50 lines (excluding blank
+lines and comments). Long tests obscure what is being tested and make
+failures harder to diagnose.
+
+```bash
+# Detection (approximate line count per test function)
+git grep -n '^def test_' -- "test_*.py" "*_test.py"
+# Manual check: count lines between consecutive test function definitions
+```
+
+Severity: warn. Remediation: extract setup into fixtures, split into
+focused test cases. Each test should verify one behavior.
+
+**mock_heavy** -- test file has more `Mock()` or `MagicMock()`
+instantiations than `assert` statements. When mocks outnumber
+assertions, the test is testing the mock setup, not production code.
+
+```bash
+# Detection
+for f in $(git diff --name-only HEAD~1 | grep 'test_.*\.py$'); do
+  MOCKS=$(grep -c 'Mock()\|MagicMock(' "$f" 2>/dev/null || echo 0)
+  ASSERTS=$(grep -c 'assert\|raises' "$f" 2>/dev/null || echo 0)
+  if [ "$MOCKS" -gt "$ASSERTS" ]; then
+    echo "$f: $MOCKS mocks vs $ASSERTS assertions"
+  fi
+done
+```
+
+Severity: warn. Remediation: reduce mocking by using real objects,
+fixtures from recorded responses (writing-tests:4), or dependency
+injection. Complements writing-tests:4 (mock fidelity).
+
+**shared_mutable_state** -- test module uses module-level mutable
+variables (`list`, `dict`, `set` defined outside functions/classes)
+that tests read and write. Shared mutable state causes test ordering
+dependencies and non-deterministic failures.
+
+```bash
+# Detection (approximate -- flags module-level assignments to mutable types)
+git grep -n '^\w.*= \[\]\|^\w.*= {}\|^\w.*= set()' -- "test_*.py" "*_test.py"
+```
+
+Severity: warn. Remediation: move shared state into fixtures with
+appropriate scope (`function` for isolation, `session` only when
+truly read-only). Use `copy.deepcopy()` in fixtures that return
+mutable data.
+
+### Cross-references to writing-tests rules
+
+| Smell | Complements | Relationship |
+|-------|-------------|--------------|
+| missing_assertions | writing-tests:1 | Tests that cannot fail cannot go red on revert |
+| mock_heavy | writing-tests:4 | Mock-dominated tests verify setup, not behavior |
+| conditional_test_logic | writing-tests:2 | Conditional tests are a form of cargo-cult (one shape serving multiple purposes) |
+| sleepy_test | writing-tests:5 | Sleeps often mask untested timing-dependent exception paths |
+
 ## Override
 
 These rules are mandatory. No `[test-skip]` override. The rule-7 grep ("test files importing their module under test") and the rule-15 skip-message check land in `[skill:detect-ai-fingerprints]` as mechanical enforcement; the mock-fidelity rule lands as `[skill:code-review]` judgment until project-namespace detection for the mechanical check is built.
