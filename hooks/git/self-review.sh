@@ -29,6 +29,10 @@
 #   - Pre-mortem-artifact prose quality: if the artifact file exists,
 #     checks for minimum content (>=5 non-header lines) and at least one
 #     Tiger entry with severity classification. Empty/header-only = blocked.
+# v2.3 (this version):
+#   - Hostile-review-artifact: field required when diff touches executable
+#     code. Accepts file path (verified), ticket link, or WAIVED with
+#     ## Hostile-review-waiver declaration (Reason/Scope/Compensating-control).
 # v2 scope (deferred follow-ups, tracked in SKILL.md):
 #   - Goal source does not point at the commit being pushed
 #   - Lead section's role-tagged affirmative standard format
@@ -889,6 +893,90 @@ Log each rework cycle:
 | <what triggered rework> | <what check was skipped> | <cost of check> | <cost of rework> | <ratio> |
 
 Ref: #489 (rework ledger enforcement)
+HOOKEOF
+            exit 2
+        fi
+    fi
+fi
+
+# v2.3: Hostile-review-artifact check (#470).
+# If the self-review artifact exists and the diff touches executable code,
+# require a Hostile-review-artifact: field pointing at cross-review evidence
+# or a WAIVED declaration with ## Hostile-review-waiver block.
+# Follows the same structural pattern as Investigate-artifact (v1.3).
+if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]]; then
+    HOSTILE_VALUE=$(grep -E '^Hostile-review-artifact:[[:space:]]+\S' "$SOURCE_PATH" | head -1 | sed -E 's/^Hostile-review-artifact:[[:space:]]+'// || true)
+    if [[ -z "$HOSTILE_VALUE" ]]; then
+        # Only block if the diff touches executable code.
+        EXEC_RE='\.(py|sh|js|ts|sql|rb|go|rs|java|c|cpp|h)$'
+        HAS_EXEC=false
+        if [ -n "${DIFF_FILES:-}" ]; then
+            if echo "$DIFF_FILES" | grep -qE "$EXEC_RE" 2>/dev/null; then
+                HAS_EXEC=true
+            fi
+        fi
+
+        if [ "$HAS_EXEC" = "true" ]; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Self-Review-Source: $SOURCE_PATH is missing 'Hostile-review-artifact:'
+and the diff touches executable code.
+
+Hostile review (adversarial cross-review by a separate agent or human) is
+required for commits that modify executable files. Provide one of:
+
+  Hostile-review-artifact: <ticket-comment-link to cross-review>
+  Hostile-review-artifact: <path to cross-review artifact>
+  Hostile-review-artifact: WAIVED (with ## Hostile-review-waiver below)
+
+WAIVED requires a ## Hostile-review-waiver declaration block with:
+  Reason: <why hostile review cannot be obtained for this commit>
+  Scope: <what executable files are touched>
+  Compensating-control: <what alternative verification was performed>
+
+Ref: #470 (hostile-review-artifact enforcement)
+HOOKEOF
+            exit 2
+        fi
+    elif [[ "$HOSTILE_VALUE" == "WAIVED" ]]; then
+        if ! grep -qF '## Hostile-review-waiver' "$SOURCE_PATH"; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Hostile-review-artifact: is WAIVED in $SOURCE_PATH but no
+## Hostile-review-waiver declaration block is present.
+
+WAIVED requires a declaration with all three fields:
+  Reason / Scope / Compensating-control
+
+See skills/self-review/SKILL.md.
+Ref: #470
+HOOKEOF
+            exit 2
+        fi
+        WAIVER_BLOCK=$(awk '/^## Hostile-review-waiver/{flag=1; next} /^## /{flag=0} flag' "$SOURCE_PATH")
+        for WAIVER_FIELD in "Reason:" "Scope:" "Compensating-control:"; do
+            if ! echo "$WAIVER_BLOCK" | grep -qF "$WAIVER_FIELD"; then
+                cat >&2 <<HOOKEOF
+BLOCKED: ## Hostile-review-waiver in $SOURCE_PATH is missing
+required field: $WAIVER_FIELD
+
+All three fields are required: Reason / Scope / Compensating-control.
+Ref: #470
+HOOKEOF
+                exit 2
+            fi
+        done
+    elif [[ "$HOSTILE_VALUE" =~ \.(md|txt)$ ]] || [[ "$HOSTILE_VALUE" == /* ]] || [[ "$HOSTILE_VALUE" == ./* ]]; then
+        case "$HOSTILE_VALUE" in
+            /*) HOSTILE_PATH="$HOSTILE_VALUE" ;;
+            *)  HOSTILE_PATH="$EFFECTIVE_CWD/$HOSTILE_VALUE" ;;
+        esac
+        if [[ ! -f "$HOSTILE_PATH" ]]; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Hostile-review-artifact: points at $HOSTILE_VALUE which does not
+exist at $HOSTILE_PATH.
+
+Either fix the path, produce the artifact, or post the cross-review to
+the ticket and use the ticket comment link instead.
+Ref: #470
 HOOKEOF
             exit 2
         fi
