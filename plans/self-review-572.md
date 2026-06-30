@@ -5,6 +5,7 @@ type: self-review
 ---
 
 ## Assumptions
+Working as: software engineer
 Domain(s): software engineering
 Geospatial cross-cut: no
 Goal source: ticket #572
