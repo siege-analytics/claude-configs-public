@@ -273,6 +273,32 @@ When auditing, check each skill for:
 | Supporting files | Reference material extracted if SKILL.md > 300 lines |
 | Tool specification | `allowed-tools` lists only what's needed |
 | Arguments | `argument-hint` present if `$ARGUMENTS` used in body |
+| Confidence tags | Framework/tool recommendations tagged (see below) |
+
+### Confidence tags on recommendations
+
+When a skill recommends a framework, library, or tool, tag the
+recommendation with one of three confidence levels:
+
+| Tag | Meaning | Criteria |
+|---|---|---|
+| **[PROVEN]** | Battle-tested | Used across 3+ real projects with documented outcomes |
+| **[RECOMMENDED]** | Strong evidence | Multiple credible sources, limited direct validation in our projects |
+| **[EXPERIMENTAL]** | Promising | Limited validation, risk notes required alongside the recommendation |
+
+Apply the tag inline, typically in a heading or table cell:
+
+```markdown
+### Python [PROVEN]
+### Rust [EXPERIMENTAL]
+| PostGIS [PROVEN] | Data > 5 GB, persistent multi-user |
+```
+
+Reference implementation: `testing-frameworks/SKILL.md` (#386).
+
+Not every skill needs tags — only those that make tool/framework
+selection recommendations. Pure process skills (think, self-review,
+pre-mortem) do not recommend tools and need no tags.
 
 ### Report Format
 

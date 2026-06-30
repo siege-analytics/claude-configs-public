@@ -12,14 +12,14 @@ Pandas-style spatial operations in-process, single-node. The default Python tool
 
 ## When to use GeoPandas vs alternatives
 
-| Situation | Use |
-|---|---|
-| Data fits in RAM, exploration, notebook work | **GeoPandas** |
-| Inputs are WKT strings or coordinate dicts, no files | **Raw Shapely** (see [`shapely-direct.md`](references/shapely-direct.md)) |
-| GDAL not available in the environment | **GeoPandas with `pyogrio` + WKB** or fall through to DuckDB-spatial -- see [`no-gdal-fallbacks.md`](references/no-gdal-fallbacks.md) |
-| Data > 5 GB or persistent multi-user reads | **PostGIS** ([skill:postgis]) |
-| Data > RAM, distributed compute available | **Sedona** ([skill:sedona]) |
-| You have parquet, want SQL, no server | **DuckDB-spatial** ([skill:duckdb-spatial]) |
+| Situation | Use | Confidence |
+|---|---|---|
+| Data fits in RAM, exploration, notebook work | **GeoPandas** | [PROVEN] |
+| Inputs are WKT strings or coordinate dicts, no files | **Raw Shapely** (see [`shapely-direct.md`](references/shapely-direct.md)) | [PROVEN] |
+| GDAL not available in the environment | **GeoPandas with `pyogrio` + WKB** or fall through to DuckDB-spatial -- see [`no-gdal-fallbacks.md`](references/no-gdal-fallbacks.md) | [RECOMMENDED] |
+| Data > 5 GB or persistent multi-user reads | **PostGIS** ([skill:postgis]) | [PROVEN] |
+| Data > RAM, distributed compute available | **Sedona** ([skill:sedona]) | [RECOMMENDED] |
+| You have parquet, want SQL, no server | **DuckDB-spatial** ([skill:duckdb-spatial]) | [EXPERIMENTAL] |
 
 ## References
 
