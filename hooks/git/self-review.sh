@@ -47,6 +47,12 @@
 #     with propagation-deferred: frontmatter, warns that artifact-to-ticket
 #     propagation has not been resolved. Advisory (stderr), not blocking.
 #     Ref: #251.
+# v2.6 (this version):
+#   - Enforcement-pairing scanner: when the diff includes skill or memory
+#     files with imperative rules (must/always/never/required/mandatory/
+#     blocked) but no Enforcement: field AND no hook/CI files in the diff,
+#     warns about writing-rules:1 enforcement pairing gap. Advisory, not
+#     blocking. Ref: #145.
 # v2 scope (deferred follow-ups, tracked in SKILL.md):
 #   - Goal source does not point at the commit being pushed
 #   - Lead section's role-tagged affirmative standard format
@@ -1102,6 +1108,55 @@ tickets before the PR is merged. Either:
 
 Ref: #251 (artifact-to-ticket propagation)
 HOOKEOF
+    fi
+fi
+
+# v2.6: Enforcement-pairing scanner (#145).
+# When the diff includes skill or memory files that contain imperative
+# rules ("must", "always", "never", "required", "mandatory", "blocked")
+# without an Enforcement: field AND the diff does not also include hook
+# or CI files, warn that writing-rules:1 enforcement pairing may be
+# missing. Advisory only (stderr warning, exit 0).
+if [ -n "${DIFF_FILES:-}" ]; then
+    # Check if diff includes enforcement files (hooks, CI, lint)
+    HAS_ENFORCEMENT_IN_DIFF=false
+    if echo "$DIFF_FILES" | grep -qE '(hooks/|\.github/|scripts/discipline/|\.pre-commit)' 2>/dev/null; then
+        HAS_ENFORCEMENT_IN_DIFF=true
+    fi
+
+    if [ "$HAS_ENFORCEMENT_IN_DIFF" = "false" ]; then
+        UNPAIRED_FILES=""
+        while IFS= read -r EF; do
+            [ -z "$EF" ] && continue
+            case "$EF" in
+                skills/*.md|memory/*.md)
+                    FULL_EF="$EFFECTIVE_CWD/$EF"
+                    if [ ! -f "$FULL_EF" ]; then
+                        continue
+                    fi
+                    # Check for imperative language
+                    if grep -qiE '\b(must|shall|always|never|required|mandatory|blocked|enforced)\b' "$FULL_EF" 2>/dev/null; then
+                        # Check for Enforcement: or Enforced-by: field
+                        if ! grep -qiE '^Enforcement:|^Enforced-by:' "$FULL_EF" 2>/dev/null; then
+                            UNPAIRED_FILES="${UNPAIRED_FILES}  - ${EF}\n"
+                        fi
+                    fi
+                    ;;
+            esac
+        done <<< "$DIFF_FILES"
+
+        if [ -n "$UNPAIRED_FILES" ]; then
+            cat >&2 <<HOOKEOF
+WARNING (writing-rules:1): These skill/memory files contain imperative rules
+but the diff does not include paired enforcement (hook, CI, or lint check):
+
+$(printf '%b' "$UNPAIRED_FILES")
+Consider adding an Enforcement: field citing the hook/CI that enforces
+the rule, or adding enforcement alongside the rule.
+
+Ref: #145 (enforcement pairing scanner)
+HOOKEOF
+        fi
     fi
 fi
 
