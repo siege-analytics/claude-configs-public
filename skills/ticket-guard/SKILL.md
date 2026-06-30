@@ -105,6 +105,7 @@ This skill is a **universal pre-action check** -- it fires before any non-trivia
 - **Check #5 (Ticket-required)** says "work requires a ticket." Ticket-guard says "and here's where tickets live." They're complementary.
 - **Check #6 (Branch-correct / develop-guard)** says "be on the right branch." Ticket-guard says "have a place to file." Same structural pattern.
 - **`decision-to-ticket` skill** consumes the destination this guard configures. If ticket-guard hasn't run, decision-to-ticket triggers it.
+- **`pre-work-check` skill** is the per-ticket companion. Ticket-guard runs once per session (system-level: "where do tickets go?"). Pre-work-check runs per ticket (item-level: "is this ticket ready to work?"). Pre-work-check declares ticket-guard as a prerequisite. See #237.
 
 ## Edge cases
 
