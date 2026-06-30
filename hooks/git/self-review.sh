@@ -994,7 +994,7 @@ fi
 if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]]; then
     HOSTILE_VALUE=$(grep -E '^Hostile-review-artifact:[[:space:]]+\S' "$SOURCE_PATH" | head -1 | sed -E 's/^Hostile-review-artifact:[[:space:]]+'// || true)
     if [[ -z "$HOSTILE_VALUE" ]]; then
-        # Only block if the diff touches executable code.
+        # Only block if the diff touches executable code or enforcement paths.
         EXEC_RE='\.(py|sh|js|ts|sql|rb|go|rs|java|c|cpp|h)$'
         HAS_EXEC=false
         if [ -n "${DIFF_FILES:-}" ]; then
@@ -1003,24 +1003,39 @@ if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]]; then
             fi
         fi
 
-        if [ "$HAS_EXEC" = "true" ]; then
+        # Enforcement path guard (#605): skills/, RESOLVER.md, hooks/
+        # require hostile review regardless of file extension.
+        ENFORCEMENT_RE='^(skills/|hooks/|RESOLVER\.md$)'
+        HAS_ENFORCEMENT=false
+        if [ -n "${DIFF_FILES:-}" ]; then
+            if echo "$DIFF_FILES" | grep -qE "$ENFORCEMENT_RE" 2>/dev/null; then
+                HAS_ENFORCEMENT=true
+            fi
+        fi
+
+        if [ "$HAS_EXEC" = "true" ] || [ "$HAS_ENFORCEMENT" = "true" ]; then
             cat >&2 <<HOOKEOF
 BLOCKED: Self-Review-Source: $SOURCE_PATH is missing 'Hostile-review-artifact:'
-and the diff touches executable code.
+and the diff touches executable code or enforcement paths.
 
 Hostile review (adversarial cross-review by a separate agent or human) is
-required for commits that modify executable files. Provide one of:
+required for commits that modify executable files or enforcement paths
+(skills/, hooks/, RESOLVER.md). Provide one of:
 
   Hostile-review-artifact: <ticket-comment-link to cross-review>
   Hostile-review-artifact: <path to cross-review artifact>
   Hostile-review-artifact: WAIVED (with ## Hostile-review-waiver below)
+
+NOTE: WAIVED is NOT accepted for enforcement paths (skills/, hooks/,
+RESOLVER.md). Rules execute in reasoning — gaming vectors in rules are
+security vulnerabilities. Actual hostile review required. Ref: #605.
 
 WAIVED requires a ## Hostile-review-waiver declaration block with:
   Reason: <why hostile review cannot be obtained for this commit>
   Scope: <what executable files are touched>
   Compensating-control: <what alternative verification was performed>
 
-Ref: #470 (hostile-review-artifact enforcement)
+Ref: #470 (hostile-review-artifact enforcement), #605 (enforcement paths)
 HOOKEOF
             exit 2
         fi
@@ -1074,6 +1089,33 @@ Executable files in this diff:
 $(echo "$DIFF_FILES" | grep -E "$EXEC_RE_V23W" | sed 's/^/  - /' | head -10)
 
 Ref: #470, #471 (executable-file guard on hostile-review waivers)
+HOOKEOF
+            exit 2
+        fi
+        # Enforcement path guard (#605): WAIVED not accepted for
+        # skills/, hooks/, RESOLVER.md regardless of file extension.
+        ENFORCEMENT_RE_V23E='^(skills/|hooks/|RESOLVER\.md$)'
+        HAS_ENFORCEMENT_V23E=false
+        if [ -n "${DIFF_FILES:-}" ]; then
+            if echo "$DIFF_FILES" | grep -qE "$ENFORCEMENT_RE_V23E" 2>/dev/null; then
+                HAS_ENFORCEMENT_V23E=true
+            fi
+        fi
+        if [ "$HAS_ENFORCEMENT_V23E" = "true" ]; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Hostile-review-artifact: is WAIVED but the diff touches enforcement
+paths. Waivers are not accepted for files that constrain agent behavior —
+rules execute in reasoning and gaming vectors are security vulnerabilities.
+
+For enforcement path changes, obtain actual hostile review:
+  - Spawn a cross-review session (skills/cross-review/SKILL.md)
+  - Use the MCP cross-review server
+  - Post review findings on the ticket and cite the comment link
+
+Enforcement files in this diff:
+$(echo "$DIFF_FILES" | grep -E "$ENFORCEMENT_RE_V23E" | sed 's/^/  - /' | head -10)
+
+Ref: #605 (hostile review mandatory for rule/enforcement changes)
 HOOKEOF
             exit 2
         fi
