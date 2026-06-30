@@ -33,6 +33,11 @@
 #   - Hostile-review-artifact: field required when diff touches executable
 #     code. Accepts file path (verified), ticket link, or WAIVED with
 #     ## Hostile-review-waiver declaration (Reason/Scope/Compensating-control).
+# v2.4 (this version):
+#   - Inventoried-shape: commit trailer required when diff touches executable
+#     code. Proves authoring-against-state measurement was recorded in the
+#     commit history. Exempted when Trivial-against-state: declaration exists
+#     in self-review artifact. Ref: #205.
 # v2 scope (deferred follow-ups, tracked in SKILL.md):
 #   - Goal source does not point at the commit being pushed
 #   - Lead section's role-tagged affirmative standard format
@@ -979,6 +984,53 @@ the ticket and use the ticket comment link instead.
 Ref: #470
 HOOKEOF
             exit 2
+        fi
+    fi
+fi
+
+# v2.4: Inventoried-shape commit trailer check (#205).
+# When the diff touches executable code, the commit message must carry an
+# Inventoried-shape: trailer recording the authoring-against-state measurement.
+# Exempted when the self-review artifact contains a Trivial-against-state:
+# declaration (already validated by v1.2 as paired with Pre-author-inventory: NONE).
+if [ -n "${DIFF_FILES:-}" ]; then
+    EXEC_RE_V24='\.(py|sh|js|ts|sql|rb|go|rs|java|c|cpp|h)$'
+    HAS_EXEC_V24=false
+    if echo "$DIFF_FILES" | grep -qE "$EXEC_RE_V24" 2>/dev/null; then
+        HAS_EXEC_V24=true
+    fi
+
+    if [ "$HAS_EXEC_V24" = "true" ]; then
+        INVENTORIED_SHAPE=$(echo "$COMMIT_MSG" | { grep -E '^Inventoried-shape:[[:space:]]+\S' || true; } | head -1)
+        if [[ -z "$INVENTORIED_SHAPE" ]]; then
+            HAS_TRIVIAL_AGAINST_STATE=false
+            if [[ -n "${SOURCE_PATH:-}" ]] && [[ -f "${SOURCE_PATH:-}" ]]; then
+                if grep -qF 'Trivial-against-state:' "$SOURCE_PATH" 2>/dev/null; then
+                    HAS_TRIVIAL_AGAINST_STATE=true
+                fi
+            fi
+
+            if [ "$HAS_TRIVIAL_AGAINST_STATE" = "false" ]; then
+                cat >&2 <<HOOKEOF
+BLOCKED: Commit is missing 'Inventoried-shape:' trailer and the diff
+touches executable code.
+
+Per _authoring-against-state-rules.md:1, measure the actual data/config/plan
+shapes BEFORE authoring code that depends on them. Record the measurement
+in the commit trailer:
+
+  Inventoried-shape: DataFrame has columns [id, geoid, pop] (verified via df.dtypes)
+  Inventoried-shape: branch base is develop (verified via git config)
+  Inventoried-shape: N/A — new code, no pre-existing shapes to measure
+
+If this change genuinely does not trigger any authoring-against-state
+contact (rules 1-5), add a Trivial-against-state: declaration to the
+self-review artifact instead.
+
+Ref: #205 (inventoried-shape enforcement)
+HOOKEOF
+                exit 2
+            fi
         fi
     fi
 fi
