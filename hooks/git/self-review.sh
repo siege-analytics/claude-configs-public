@@ -33,6 +33,10 @@
 #   - Hostile-review-artifact: field required when diff touches executable
 #     code. Accepts file path (verified), ticket link, or WAIVED with
 #     ## Hostile-review-waiver declaration (Reason/Scope/Compensating-control).
+#   - v2.3.1 (#471): WAIVED is rejected when the diff touches executable
+#     code — waivers are only accepted for prose-only diffs. Executable
+#     changes require actual hostile review (cross-review session, MCP
+#     server, or ticket-posted findings).
 # v2.4 (this version):
 #   - Inventoried-shape: commit trailer required when diff touches executable
 #     code. Proves authoring-against-state measurement was recorded in the
@@ -974,6 +978,32 @@ HOOKEOF
                 exit 2
             fi
         done
+        # Executable-file guard: WAIVED is not accepted when the diff
+        # touches executable code (#471). Actual hostile review required.
+        EXEC_RE_V23W='\.(py|sh|js|ts|sql|rb|go|rs|java|c|cpp|h)$'
+        HAS_EXEC_V23W=false
+        if [ -n "${DIFF_FILES:-}" ]; then
+            if echo "$DIFF_FILES" | grep -qE "$EXEC_RE_V23W" 2>/dev/null; then
+                HAS_EXEC_V23W=true
+            fi
+        fi
+        if [ "$HAS_EXEC_V23W" = "true" ]; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Hostile-review-artifact: is WAIVED but the diff touches executable
+code. Waivers are only accepted for prose-only (non-executable) diffs.
+
+For executable code changes, obtain actual hostile review:
+  - Spawn a cross-review session (skills/cross-review/SKILL.md)
+  - Use the MCP cross-review server
+  - Post review findings on the ticket and cite the comment link
+
+Executable files in this diff:
+$(echo "$DIFF_FILES" | grep -E "$EXEC_RE_V23W" | sed 's/^/  - /' | head -10)
+
+Ref: #470, #471 (executable-file guard on hostile-review waivers)
+HOOKEOF
+            exit 2
+        fi
     elif [[ "$HOSTILE_VALUE" =~ \.(md|txt)$ ]] || [[ "$HOSTILE_VALUE" == /* ]] || [[ "$HOSTILE_VALUE" == ./* ]]; then
         case "$HOSTILE_VALUE" in
             /*) HOSTILE_PATH="$HOSTILE_VALUE" ;;

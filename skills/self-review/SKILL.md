@@ -52,6 +52,7 @@ Plan reference: <path-or-link to the design note this diff implements>
 Pre-author-inventory: <ticket-link#pre-author-inventory | plans/path.md#pre-author-inventory | NONE>
 Investigate-artifact: <ticket-comment-link | committed-file-path | plans/investigate-*.md | TRIVIAL (with declaration below)>
 Pre-mortem-artifact: <ticket-comment-link | committed-file-path | plans/pre-mortem-*.md | TRIVIAL (with declaration below)>
+Hostile-review-artifact: <ticket-comment-link | path to cross-review artifact | WAIVED (prose-only, with ## Hostile-review-waiver below)>
 
 ## Pre-implementation comprehension (the Junior's first deliverable)
 
@@ -450,6 +451,34 @@ enforcement. By requiring the artifact paths in self-review, the
 enforcement happens at the push boundary -- the agent cannot push without
 either producing the artifacts or explicitly declaring the work trivial
 with falsifiable evidence.
+
+## Hostile-review-artifact field
+
+The `Hostile-review-artifact:` field in the Assumptions section links the
+self-review to independent hostile review evidence. The pre-push hook
+enforces this field when the diff touches executable code.
+
+Valid values:
+
+- **Ticket comment link** -- URL of a cross-review findings comment on the
+  ticket (preferred; most durable).
+- **File path** -- path to a committed cross-review artifact or session
+  plans file. The hook verifies the file exists.
+- **WAIVED** -- accepted ONLY when the diff does not touch executable code
+  (`.py`, `.sh`, `.js`, `.ts`, `.sql`, `.rb`, `.go`, `.rs`, `.java`, `.c`,
+  `.cpp`, `.h`). Requires a `## Hostile-review-waiver` declaration:
+
+```
+## Hostile-review-waiver
+Reason: <why hostile review cannot be obtained>
+Scope: <what files are touched>
+Compensating-control: <alternative verification performed>
+```
+
+The executable-file guard exists because hostile review is the only
+independent validation in the pipeline. Every other artifact (investigate,
+pre-mortem, self-review) is produced by the same agent that wrote the code.
+For executable changes, independent review is non-waivable.
 
 ## Trivial-change declaration (when no ticket cited)
 
