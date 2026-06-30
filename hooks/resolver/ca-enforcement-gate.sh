@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
-# UserPromptSubmit hook — Craft Agent enforcement wrapper.
+# UserPromptSubmit hook — enforcement wrapper.
 #
 # Calls existing gate hooks (think-gate-guard, investigate-gate-guard) and
-# converts their advisory output into a blocking {"continue": false} signal
-# when running under Craft Agent enforcement mode.
+# converts their advisory output into a blocking {"continue": false} signal.
 #
-# Under Claude Code CLI, the PreToolUse hooks block via exit 2. Under Craft
-# Agent, exit 2 is advisory only (#335). This wrapper provides the CA
-# enforcement surface by:
+# Blocking mechanism:
 #   1. Running each gate and capturing its output
 #   2. Scanning for blocking keywords (STALE DESIGN, BLOCKED, STALE INVESTIGATION)
 #   3. Emitting a SINGLE {"continue": false, "systemMessage": ...} JSON object as
@@ -17,18 +14,12 @@
 #
 # The wrapper always exits 0 — blocking is done via continue:false, not exit code.
 #
-# Activation: set CLAUDE_CA_ENFORCE=1 in the environment (the installer does this).
-# When CLAUDE_CA_ENFORCE is unset or empty, this hook is a no-op (the original
-# hooks still fire and produce advisory output via their own settings entries).
+# Always active — no env var required. The CLAUDE_CA_ENFORCE gate was removed
+# in #572 because an opt-in enforcement switch is an honor-system gap.
 #
-# Refs: #409, #335, #325, #416
+# Refs: #409, #335, #325, #416, #572
 
 set -euo pipefail
-
-# Only enforce when CA enforcement mode is active.
-if [[ "${CLAUDE_CA_ENFORCE:-}" != "1" ]]; then
-    exit 0
-fi
 
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 
