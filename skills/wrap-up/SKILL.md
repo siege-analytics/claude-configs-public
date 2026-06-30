@@ -83,6 +83,100 @@ The mechanics are project-specific (which pages exist, how sync jobs are run, wh
 
 **Trigger:** ask "would a non-engineering reader (PM, ops, sales, future hire) need to know about this?" If yes and a knowledge base exists for that audience, update it.
 
+## Session retrospective analytics
+
+Before writing wrap-up notes, run these diagnostics against the
+session's git history. They surface patterns the procedural checklist
+above cannot see.
+
+### 1. Churn hotspot scoring
+
+Files changed most often within the session, weighted by author
+diversity and recency. High churn on a single file across multiple
+commits signals rework or unclear design.
+
+```bash
+git log --since="<session-start>" --name-only --pretty=format: | \
+  sort | uniq -c | sort -rn | head -10
+```
+
+Score = `changes × unique_authors × recency_weight` (recency_weight:
+1.0 for today, 0.5 for yesterday, 0.25 for older). Files scoring
+above the session median by 2× are hotspots — note them in wrap-up.
+
+### 2. Session detection (timestamp gap analysis)
+
+Identify distinct work sessions within the git history. A gap of
+>2 hours between consecutive commits marks a session boundary.
+
+```bash
+git log --format='%aI' --reverse | \
+  awk -F'T' '{print $1, $2}' | head -20
+```
+
+Report the number of distinct sessions and their durations. Multiple
+short sessions on one ticket may indicate context-switching overhead.
+
+### 3. Bus factor
+
+Files touched by only one author in the session diff. High bus-factor
+files are knowledge silos.
+
+```bash
+git log --since="<session-start>" --format='%aN' --name-only | \
+  awk '/^$/{next} /^[^ ]/{author=$0;next} {print author, $0}' | \
+  sort -k2 | uniq | awk '{print $NF}' | sort | uniq -c | \
+  awk '$1==1 {print $2}'
+```
+
+### 4. Oscillation detection
+
+Lines added then removed (or vice versa) within the session. High
+oscillation signals trial-and-error rather than design-first work.
+
+```bash
+git log --since="<session-start>" --numstat --pretty=format: | \
+  awk 'NF==3 {add[$3]+=$1; del[$3]+=$2} END {
+    for (f in add) {
+      osc = (add[f] < del[f]) ? add[f] : del[f]
+      if (osc > 10) printf "%d\t%s\n", osc, f
+    }
+  }' | sort -rn
+```
+
+Oscillation = `min(lines_added, lines_deleted)` per file. A file
+with 50 added and 45 deleted has oscillation 45 — nearly all work
+was rewritten. Note oscillation > 10 in wrap-up.
+
+### 5. Carry-over tracking
+
+Tickets referenced in commit messages but not closed during the
+session. These are carry-overs for the next session.
+
+```bash
+git log --since="<session-start>" --format='%s %b' | \
+  grep -oE '#[0-9]+' | sort -u
+```
+
+Cross-reference against the ticket tracker. Tickets still open are
+carry-overs — list them in the wrap-up notes with current status.
+
+### Using the diagnostics
+
+Run the applicable metrics after Step 0 (Definition of Done) and
+before Step 4 (lessons sweep). Include notable findings in the
+wrap-up notes:
+
+```markdown
+### Session diagnostics
+- **Churn hotspots:** config/settings.py (7 changes), models/user.py (5 changes)
+- **Oscillation:** tests/test_auth.py (32 lines oscillated — reworked test approach)
+- **Carry-over:** #234 (blocked on API access), #267 (partial — needs edge-case tests)
+- **Bus factor:** 3 files touched by single author only
+```
+
+These metrics are diagnostic aids, not enforcement gates.
+
 ## Example CLAUDE.md Addition
 
 ```markdown
