@@ -201,6 +201,12 @@ DESIGNEOF
         exit 2
     fi
 
+    # Terminal statuses: pipeline is complete, all artifacts were validated
+    # during implementing. Allow all commands without re-checking. Ref: #592.
+    if [[ "$TG_STATUS" == "done-awaiting-pr" || "$TG_STATUS" == "disposed" || "$TG_STATUS" == "complete" ]]; then
+        exit 0
+    fi
+
     if [[ "$TG_STATUS" == "implementing" ]]; then
         # Artifact checks with ticket association (#477, #484)
         # Artifacts must exist AND reference the current ticket.
