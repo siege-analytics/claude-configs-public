@@ -1,17 +1,17 @@
 #!/bin/bash
-# UserPromptSubmit hook — inject branch and ticket warnings.
+# UserPromptSubmit hook — block on wrong branch state.
 #
 # Closes the enforcement gap where PreToolUse hooks (branch-guard,
 # ticket-required) do not fire in Craft Agent sessions.
 # See: claude-configs-public#261
 #
 # On every turn:
-# 1. If cwd is a git repo on a protected branch → inject branch warning
-# 2. If detached HEAD → inject detached HEAD warning
+# 1. If cwd is a git repo on a protected branch → emit JSON block
+# 2. If detached HEAD → emit JSON block
 # 3. Otherwise → silent exit
 #
-# Advisory, not blocking. Fires every turn so the directive is present
-# before every action, not just at commit time.
+# Always active — no env var required. CLAUDE_CA_ENFORCE gate removed
+# in #572 (honor-system gap).
 #
 # Fail-open: exits 0 if not in a git repo, if git is unavailable, or if
 # on a feature branch (the happy path).
@@ -27,46 +27,14 @@ fi
 PROTECTED="^(main|master|develop|dev|development|staging|next|integration)$"
 
 if [ "$BRANCH" = "HEAD" ]; then
-    if [[ "${CLAUDE_CA_ENFORCE:-}" == "1" ]]; then
-        python3 -c "import json,sys; print(json.dumps({'continue': False, 'systemMessage': sys.argv[1]}))" \
-            "BLOCKED: Working directory is in DETACHED HEAD state. Create a feature branch first: git checkout -b feat/<scope>-<description>. Ref: #261, #450"
-        exit 0
-    fi
-    cat <<EOF
-<pre-action-guard>
-WARNING: Your working directory is in DETACHED HEAD state.
-
-Do NOT write code or commit in this state. Create or switch to a
-feature branch first:
-  git checkout -b feat/<scope>-<description>
-
-This warning fires every turn because PreToolUse branch-guard does
-not fire in Craft Agent sessions. Ref: #261
-</pre-action-guard>
-EOF
+    python3 -c "import json,sys; print(json.dumps({'continue': False, 'systemMessage': sys.argv[1]}))" \
+        "BLOCKED: Working directory is in DETACHED HEAD state. Create a feature branch first: git checkout -b feat/<scope>-<description>. Ref: #261, #450, #572"
     exit 0
 fi
 
 if echo "$BRANCH" | grep -qE "$PROTECTED"; then
-    if [[ "${CLAUDE_CA_ENFORCE:-}" == "1" ]]; then
-        MSG="BLOCKED: Working directory is on protected branch '$BRANCH'. Do NOT commit directly. Create a feature branch first: git checkout -b feat/<scope>-<description>. Ref: #261, #450"
-        python3 -c "import json,sys; print(json.dumps({'continue': False, 'systemMessage': sys.argv[1]}))" "$MSG"
-        exit 0
-    fi
-    cat <<EOF
-<pre-action-guard>
-WARNING: Working directory is on protected branch '$BRANCH'.
-
-Do NOT commit directly to '$BRANCH'. Create a feature branch first:
-  git checkout -b feat/<scope>-<description>
-
-Every commit needs a ticket reference (#NNN, PROJ-NNN).
-Override: [no-ticket] in the commit message (use sparingly).
-
-This warning fires every turn because PreToolUse branch-guard and
-ticket-required do not fire in Craft Agent sessions. Ref: #261
-</pre-action-guard>
-EOF
+    python3 -c "import json,sys; print(json.dumps({'continue': False, 'systemMessage': sys.argv[1]}))" \
+        "BLOCKED: Working directory is on protected branch '$BRANCH'. Do NOT commit directly. Create a feature branch first: git checkout -b feat/<scope>-<description>. Ref: #261, #450, #572"
     exit 0
 fi
 

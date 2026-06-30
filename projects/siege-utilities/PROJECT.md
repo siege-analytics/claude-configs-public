@@ -19,6 +19,10 @@ owners:
 
 `siege_utilities` is the shared Python utility library for Siege Analytics. It provides geo/spatial helpers, reporting tools, config management, data connectors, and convenience wrappers used across all Siege projects.
 
+## Mission
+
+Engineer the instruments that count, locate, and report. siege_utilities provides the tools to measure phenomena in space and time — geocoding events to coordinates, binding them to boundaries, overlaying demographics, computing what proximity implies. Geography and spatial relationships are primary determinants of patterns: where things are explains why they happen. The library handles the full chain: count the thing, log what it took to count it, scale the counting across engines (pandas, DuckDB, Spark, PostGIS), and present the findings as reports, choropleths, and data products.
+
 ## Strategic goal
 
 A library other Siege projects can depend on with confidence: functions do what they say, errors are not data, contracts are stable, and notebooks demonstrate every capability.

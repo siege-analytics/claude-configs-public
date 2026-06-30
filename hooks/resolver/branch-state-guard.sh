@@ -1,13 +1,16 @@
 #!/bin/bash
-# UserPromptSubmit hook -- warn when the agent is on a protected branch.
+# UserPromptSubmit hook -- block when the agent is on a protected branch.
 #
 # This is the UserPromptSubmit equivalent of hooks/git/branch-guard.sh
 # (which is PreToolUse and does not fire in Craft Agent sessions).
-# Fires every turn. Injects a persistent warning until the agent
-# switches to a feature branch.
+# Fires every turn. Emits {"continue": false} JSON block until the
+# agent switches to a feature branch.
+#
+# Always active — no env var required. CLAUDE_CA_ENFORCE gate removed
+# in #572 (honor-system gap).
 #
 # Fail-open: if git is unavailable or not in a repo, exit silently.
-# Ref: claude-configs-public#261 (workaround for PreToolUse gap)
+# Ref: claude-configs-public#261, #572
 
 set -euo pipefail
 
@@ -24,23 +27,9 @@ fi
 PROTECTED="^(main|master|develop|dev|development|staging|next|integration)$"
 
 if [[ "$BRANCH" =~ $PROTECTED ]]; then
-    if [[ "${CLAUDE_CA_ENFORCE:-}" == "1" ]]; then
-        python3 -c "import json,sys; print(json.dumps({'continue': False, 'systemMessage': sys.argv[1]}))" \
-            "BLOCKED: On protected branch '$BRANCH'. Do NOT commit directly. Create a feature branch: git checkout -b feat/<description>. Ref: #261, #450"
-        exit 0
-    fi
-    cat <<EOF
-<branch-state>
-WARNING: You are on protected branch '$BRANCH'.
-
-Do NOT commit directly to this branch. Create a feature branch first:
-  git checkout -b feat/your-description
-  git checkout -b fix/your-description
-
-This warning will repeat every turn until you switch branches.
-Ref: develop-guard skill, branch-guard hook (#261 workaround)
-</branch-state>
-EOF
+    python3 -c "import json,sys; print(json.dumps({'continue': False, 'systemMessage': sys.argv[1]}))" \
+        "BLOCKED: On protected branch '$BRANCH'. Do NOT commit directly. Create a feature branch: git checkout -b feat/<description>. Ref: #261, #450, #572"
+    exit 0
 fi
 
 exit 0

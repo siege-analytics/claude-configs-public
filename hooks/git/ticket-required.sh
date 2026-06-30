@@ -26,8 +26,10 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-# Only check git commit commands
-if ! echo "$COMMAND" | grep -qE '^git commit\b'; then
+# Match git commit anywhere in the command (not just at start) so
+# `cd /path && git commit` doesn't bypass. Uses portable word boundary
+# via character-class form (see branch-guard.sh, issue #106).
+if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'; then
     exit 0
 fi
 
@@ -36,9 +38,29 @@ if echo "$COMMAND" | grep -qE -- '--amend|--no-edit'; then
     exit 0
 fi
 
-# Search the entire command for the override marker
-if echo "$COMMAND" | grep -q '\[no-ticket\]'; then
+# Structured override with evidence chain: accepted per writing-rules:4.
+# Bare [no-ticket] without evidence: blocked. Ref: #580.
+if echo "$COMMAND" | grep -qE '\[no-ticket:[[:space:]]+Reason:[^]]+;[[:space:]]*Evidence:[^]]+;[[:space:]]*Falsification:[^]]+\]'; then
     exit 0
+fi
+if echo "$COMMAND" | grep -qE '\[no-ticket\]|\[no-ticket:[[:space:]]*\]'; then
+    cat >&2 <<HOOKEOF
+BLOCKED: '[no-ticket]' override now requires evidence chain.
+
+Per writing-rules:4, every "this doesn't apply" claim requires the
+evidence chain. Replace bare '[no-ticket]' with:
+
+  [no-ticket: Reason: <falsifiable why no ticket applies>;
+              Evidence: <observable supporting the claim>;
+              Falsification: <what would prove a ticket IS needed>]
+
+Alternatives that don't need the evidence chain:
+  - #NNN or PROJ-NNN in the commit message (any tracker)
+  - [task: <description>] for non-tracker work (spreadsheet, shared doc)
+
+Ref: #580
+HOOKEOF
+    exit 2
 fi
 
 # [task: ...] marker for work tracked outside issue trackers (spreadsheets,
@@ -77,10 +99,10 @@ Every commit must reference a ticket or task. Accepted formats:
   Non-tracker work (spreadsheet, shared doc, etc.):
     [task: Sprint Q2 sheet row 14 — geocoder refactor]
 
-  Nuclear override (use sparingly):
-    [no-ticket]
+  Override with evidence (requires Reason/Evidence/Falsification):
+    [no-ticket: Reason: <why>; Evidence: <obs>; Falsification: <disproof>]
 
 This is enforced by the commit skill (ticket enforcement section).
-Ref: claude-configs-public#320
+Ref: claude-configs-public#320, #580
 HOOKEOF
 exit 2
