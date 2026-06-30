@@ -18,8 +18,10 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-# Only check git add commands
-if ! echo "$COMMAND" | grep -qE '^git add\b'; then
+# Match git add anywhere in the command (not just at start) so
+# `cd /path && git add` doesn't bypass. Uses portable word boundary
+# via character-class form (see branch-guard.sh, issue #106).
+if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git add([^[:alnum:]]|$)'; then
     exit 0
 fi
 
@@ -41,8 +43,8 @@ SENSITIVE_PATTERNS=(
 )
 
 # Extract files from the git add command
-# Remove "git add" prefix and any flags
-FILES=$(echo "$COMMAND" | sed 's/^git add\s*//' | sed 's/\s*-[a-zA-Z]\+\s*//g')
+# Strip everything before "git add", then remove "git add" and any flags
+FILES=$(echo "$COMMAND" | sed 's/.*git add\s*//' | sed 's/\s*-[a-zA-Z]\+\s*//g')
 
 for file in $FILES; do
     basename=$(basename "$file")

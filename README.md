@@ -1,5 +1,11 @@
 # Claude Code Configurations (Public)
 
+## Mission
+
+Make good engineering practices mechanically mandatory for AI agents — fail-closed enforcement through hooks, skills, and gates, not honor-system guidelines. Every rule must be compellable by a machine check, not dependent on the agent's judgment or good faith. The test of the pipeline is not whether a compliant agent can follow it, but whether a corner-cutting agent cannot evade it.
+
+---
+
 Reusable Claude Code skills and project initialization templates.
 
 For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zshrc) or standalone. Pin to a release tag -- see [Quick Start](#quick-start).
