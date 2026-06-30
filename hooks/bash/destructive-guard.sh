@@ -1,28 +1,25 @@
 #!/bin/bash
-# Hook: bash/destructive-guard (v1, prod-destructive tier only)
+# Hook: bash/destructive-guard (v2, all tiers enforced)
 # Enforces: discipline against destructive Bash commands at PreToolUse time.
 # Trigger: PreToolUse on Bash
 #
-# Closes claude-configs-public#127 v1 (per operator decision 2026-05-18:
-# "ship C but we should build towards A"). v1 only enforces the
-# prod-destructive tier; shared-resource and general-mutation tiers are
-# catalogued for v2 and logged as [v2-deferred] without blocking. The
-# tier-tagged structure lets v2 layer per-tier gates without reshaping.
+# Closes claude-configs-public#127 v1 (prod-destructive tier) and #582 v2
+# (shared-resource, general-mutation tiers promoted to mechanical).
 #
 # Logic:
 #   - For each (tier, pattern, reason) in DENY_PATTERNS, regex-match command.
-#   - If match AND tier == prod-destructive AND no escape -> BLOCK (exit 2).
-#   - If match AND tier in {shared-resource, general-mutation} -> log
-#     [v2-deferred:<tier>] to stderr at exit 0 (no block).
+#   - If match AND no escape -> BLOCK (exit 2).
 #   - Otherwise -> exit 0.
 #
-# Escape hatches (v1, prod-destructive tier):
-#   1. Latest commit on HEAD has an `Authorized: <reason>` trailer.
+# Escape hatches (all tiers):
+#   1. Evidence-chain override in command text:
+#      [destructive-ok: Reason: <why>; Evidence: <obs>; Falsification: <disproof>]
+#   2. Latest commit on HEAD has an `Authorized: <reason>` trailer.
 #      One-shot; expires on the next commit.
-#   2. Pattern is in the allow-list file (project-scoped
+#   3. Pattern is in the allow-list file (project-scoped
 #      <repo>/.claude/destructive-bash-allowlist.txt, falls back to
 #      ~/.claude/destructive-bash-allowlist.txt). One regex per line.
-#   3. Env var CLAUDE_DESTRUCTIVE_BASH=allow set for the subprocess.
+#   4. Env var CLAUDE_DESTRUCTIVE_BASH=allow set for the subprocess.
 #      Discouraged.
 
 set -uo pipefail
@@ -66,11 +63,12 @@ DENY_PATTERNS=(
     # kubectl writes (caller can allow-list dev contexts)
     "prod-destructive|kubectl[[:space:]]+(apply|delete|replace|patch|edit|scale|rollout)[[:space:]]|kubectl mutation"
 
-    # v2-deferred tiers -- logged but not blocked at v1. These exist so the
-    # firing log shows what v2 would gate; remove the comment and tighten
-    # gates when v2 work begins.
+    # shared-resource tier: commands that affect shared state (GitHub issues, releases).
+    # Promoted from v2-deferred to mechanical in #582.
     "shared-resource|gh[[:space:]]+issue[[:space:]]+(create|comment|edit)|github issue write"
     "shared-resource|gh[[:space:]]+release[[:space:]]+create|github release create"
+    # general-mutation tier: network mutations via curl.
+    # Promoted from v2-deferred to mechanical in #582.
     "general-mutation|curl[[:space:]]+.*-X[[:space:]]+(POST|PUT|PATCH|DELETE)|network mutation via curl"
 )
 
@@ -116,6 +114,11 @@ if [[ -n "$CWD" ]] && git -C "$CWD" rev-parse --git-dir >/dev/null 2>&1; then
     fi
 fi
 
+# Evidence-chain override (escape 1). Ref: #582.
+if echo "$COMMAND" | grep -qE '\[destructive-ok:[[:space:]]+Reason:[^]]+;[[:space:]]*Evidence:[^]]+;[[:space:]]*Falsification:[^]]+\]'; then
+    exit 0
+fi
+
 # Walk deny-list, dispatch per tier.
 MATCHED_BLOCKS=()
 for entry in "${DENY_PATTERNS[@]}"; do
@@ -127,19 +130,10 @@ for entry in "${DENY_PATTERNS[@]}"; do
     pattern=$(printf '%s' "$entry" | awk -F'|' '{for(i=2;i<NF;i++){printf "%s%s",$i,(i<NF-1?"|":"")}}')
 
     if echo "$COMMAND" | grep -qE -- "$pattern"; then
-        case "$tier" in
-            prod-destructive)
-                # Trailer escape applies only to prod-destructive tier in v1.
-                if [[ "$HAS_AUTHORIZED_TRAILER" -eq 1 ]]; then
-                    continue
-                fi
-                MATCHED_BLOCKS+=("$tier|$reason|$pattern")
-                ;;
-            shared-resource|general-mutation)
-                # v2-deferred: log to stderr, do not block.
-                echo "[destructive-guard v2-deferred:$tier] $reason (pattern: $pattern)" >&2
-                ;;
-        esac
+        if [[ "$HAS_AUTHORIZED_TRAILER" -eq 1 ]]; then
+            continue
+        fi
+        MATCHED_BLOCKS+=("$tier|$reason|$pattern")
     fi
 done
 
@@ -157,16 +151,18 @@ done
     done
     echo ""
     echo "Escape hatches (in order of preference):"
-    echo "  1. Add an Authorized: <reason> trailer to the latest commit"
+    echo "  1. Include an evidence-chain override in the command:"
+    echo "     [destructive-ok: Reason: <why>; Evidence: <obs>; Falsification: <disproof>]"
+    echo "  2. Add an Authorized: <reason> trailer to the latest commit"
     echo "     (one-shot; expires on next commit)."
-    echo "  2. Add the exact regex to your allow-list:"
+    echo "  3. Add the exact regex to your allow-list:"
     echo "       <repo>/.claude/destructive-bash-allowlist.txt   (project)"
     echo "       ~/.claude/destructive-bash-allowlist.txt        (global)"
-    echo "  3. CLAUDE_DESTRUCTIVE_BASH=allow as a process env var"
-    echo "     (discouraged; bypasses ALL prod-destructive patterns)."
+    echo "  4. CLAUDE_DESTRUCTIVE_BASH=allow as a process env var"
+    echo "     (discouraged; bypasses ALL patterns)."
     echo ""
     echo "If the pattern is firing as a false positive on legitimate work,"
     echo "use the allow-list. If the command is genuinely destructive and"
-    echo "deliberate, add the Authorized: trailer with a reason."
+    echo "deliberate, use the evidence-chain override with a reason."
 } >&2
 exit 2
