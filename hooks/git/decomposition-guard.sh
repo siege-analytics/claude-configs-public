@@ -1,12 +1,12 @@
 #!/bin/bash
 # Hook: decomposition-guard
-# Enforces: wiki Testing-Cross-Layer §4.1 (one PR per touched layer) — V1 WARN-not-block.
+# Enforces: wiki Testing-Cross-Layer §4.1 (one PR per touched layer).
 # Trigger: PreToolUse on git push / gh pr create|merge / glab mr create|merge.
 #
 # Maps each touched SOURCE file to its layer via the testing.layers `source:`
 # globs in PROJECT.md (longest-literal-prefix wins; each file -> exactly one
-# layer), counts distinct layers touched within this repo, and WARNS (prints +
-# exit 0) when a single PR spans more than one layer.
+# layer), counts distinct layers touched within this repo, and BLOCKS when a
+# single PR spans more than one layer.
 #
 # Scope notes:
 # - SOURCE files only. Files matching no layer's source glob (scaffolding,
@@ -19,8 +19,7 @@
 # Override: [multi-layer-ok: <reason>] in the latest commit body (the mechanical
 # surface for §4.1's explicit-waiver / explicit-cross-reference tolerance).
 #
-# V1 is WARN-ONLY: it never blocks (always exit 0). Promote to block after
-# observing the false-positive rate.
+# V2: promoted from warn-only to blocking (exit 2). Ref: #575.
 
 set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
@@ -180,10 +179,16 @@ if len(layers_touched) > 1:
         for f in by[ln]:
             sys.stderr.write("    - %s\n" % f)
     sys.stderr.write(
-        "Per wiki Testing-Cross-Layer §4.1, production/test changes are one PR per layer.\n"
+        "BLOCKED: per Testing-Cross-Layer §4.1, production/test changes are one PR per layer.\n"
         "If intentional (Step-1/2 hooks/harness plumbing, or an explicit cross-referenced waiver),\n"
-        "add [multi-layer-ok: <reason>] to the latest commit body. (V1 is a warning, not a block.)\n")
+        "add [multi-layer-ok: <reason>] to the latest commit body.\n")
+    sys.exit(1)
 PYEOF
+PYEXIT=$?
 rm -f "$TMP"
+
+if [[ "$PYEXIT" -ne 0 ]]; then
+    exit 2
+fi
 
 exit 0
