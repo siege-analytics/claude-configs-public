@@ -1000,6 +1000,14 @@ CA_ENFORCEMENT_GATES = [
         "blocking": True,
         "condition": "Push without test evidence (opt-in via testing: in PROJECT.md)",
     },
+    {
+        "id": "skill-enforcement-gate",
+        "rule_source": "_definition-of-done-rules.md",
+        "hook": "hooks/resolver/skill-enforcement-gate.sh",
+        "surface": "UserPromptSubmit",
+        "blocking": True,
+        "condition": "SKILL.md not Read when think-gate status=implementing",
+    },
 ]
 
 

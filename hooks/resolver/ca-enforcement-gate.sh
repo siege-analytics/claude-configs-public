@@ -78,6 +78,7 @@ run_gate() {
 # Push-time gates (self-review, branch-guard) are handled by native git hooks.
 run_gate "$HOOK_DIR/think-gate-guard.sh" "think-gate"
 run_gate "$HOOK_DIR/investigate-gate-guard.sh" "investigate-gate"
+run_gate "$HOOK_DIR/skill-enforcement-gate.sh" "skill-enforcement"
 
 if [[ "$blocking" == "true" ]]; then
     # Emit a SINGLE clean JSON object as the sole stdout. Mixed human-text + a
