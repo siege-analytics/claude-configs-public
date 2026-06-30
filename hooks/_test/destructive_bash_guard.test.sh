@@ -1,8 +1,9 @@
 #!/bin/bash
 # Test: hooks/bash/destructive-guard.sh
 #
-# Exercises prod-destructive blocks, allow-list escape, trailer escape,
-# env-var escape, v2-deferred tier logging, and false-positive shapes.
+# Exercises prod-destructive blocks, shared-resource and general-mutation
+# blocks (v2), evidence-chain override, allow-list escape, trailer escape,
+# env-var escape, and false-positive shapes.
 
 set -uo pipefail
 
@@ -47,10 +48,15 @@ expect_pass "(h) git push origin feature/x (no --force)" "$HOOK" "$(make_payload
 expect_pass "(i) psql -h localhost -c DELETE  (localhost carve-out)" "$HOOK" "$(make_payload 'psql -h localhost -c \"DELETE FROM users WHERE id=1\"')"
 expect_pass "(j) rm -rf /tmp/scratch (not root/home)" "$HOOK" "$(make_payload 'rm -rf /tmp/scratch')"
 
-# --- v2-deferred tier logs but does not block ---
+# --- v2 promoted tiers: shared-resource and general-mutation now block ---
 
-expect_pass "(k) gh issue create (v2-deferred:shared-resource, logs only)" "$HOOK" "$(make_payload 'gh issue create --title test')"
-expect_pass "(l) curl -X POST (v2-deferred:general-mutation, logs only)" "$HOOK" "$(make_payload 'curl -X POST https://example.com/api')"
+expect_block "(k) gh issue create (shared-resource, blocks)" "$HOOK" "$(make_payload 'gh issue create --title test')"
+expect_block "(l) curl -X POST (general-mutation, blocks)" "$HOOK" "$(make_payload 'curl -X POST https://example.com/api')"
+
+# --- evidence-chain override escapes v2 blocks ---
+
+expect_pass "(k2) gh issue create with evidence-chain override" "$HOOK" "$(make_payload 'gh issue create --title test [destructive-ok: Reason: posting artifact; Evidence: pipeline requires it; Falsification: if manual posting works, this is unnecessary]')"
+expect_pass "(l2) curl -X POST with evidence-chain override" "$HOOK" "$(make_payload 'curl -X POST https://example.com/api [destructive-ok: Reason: webhook test; Evidence: endpoint is staging; Falsification: if prod URL, should not call]')"
 
 # --- escape hatches ---
 
