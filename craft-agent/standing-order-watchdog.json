@@ -1,0 +1,43 @@
+{
+  "id": "standing-order-watchdog",
+  "version": 1,
+  "purpose": "Prevent standing-order and batch directives from degrading into one-item completion followed by idle praise-seeking.",
+  "failure_case": "The operator says: download thirty shapefiles, load them all into PostGIS, then compute overlaps. The agent downloads one shapefile, reports progress, and stops for affirmation while twenty-nine items remain.",
+  "runtime_split": {
+    "claude_code_or_codex": {
+      "mechanism": "Resolver rule plus hooks/resolver/standing-order-guard.sh reading standing-order.json on UserPromptSubmit.",
+      "artifact": "hooks/settings-snippet.json in the claude-code package wires the hook. No Craft automation is required."
+    },
+    "craft_agent": {
+      "mechanism": "The same signal-file hook plus this package's automations-snippet.json. SchedulerTick creates a watchdog session that audits active standing orders and re-prompts sessions that went idle with work remaining.",
+      "artifact": "dist/craft-agent/automations-snippet.json"
+    }
+  },
+  "signal_file": {
+    "path": "<workspace>/standing-order.json",
+    "schema": {
+      "active": true,
+      "deadline": "2026-05-29T10:00:00-05:00",
+      "directive": "Work the batch queue until complete, blocked, or deadline reached.",
+      "work_queue": ["item-1", "item-2"]
+    },
+    "lifecycle": {
+      "activation": "Write the signal when the operator gives a multi-step, batch, overnight, or deadline-bound directive.",
+      "update": "Remove completed work items as they finish and refresh any continuation notes.",
+      "deactivation": "Set active=false or delete the file only when the queue is exhausted, the deadline has passed, the user cancels, or the work is genuinely blocked."
+    }
+  },
+  "completion_criteria": [
+    "All items in work_queue are complete, or",
+    "A real blocker is recorded with the next question needed from the operator, or",
+    "The deadline has passed, or",
+    "The operator cancels the standing order in clear terms"
+  ],
+  "non_compliant_behavior": [
+    "Completing one item in a batch and stopping for praise or affirmation",
+    "Ending a turn while work remains and no continuation/wakeup/sub-session exists",
+    "Treating 'no response requested' as valid while an active standing order exists",
+    "Using vague check-in prompts such as 'continue if needed' instead of directive continuation prompts"
+  ],
+  "platform_limit": "This watchdog is a periodic/remedial Craft Agent automation. It can spawn a watchdog prompt and re-inject continuation; it is not a platform-level end-of-turn hard block. If Craft Agent adds a first-class Stop or end-of-turn action gate, move this invariant there."
+}
