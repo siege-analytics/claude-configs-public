@@ -32,9 +32,9 @@ These rules are mandatory. The carve-out in rule 2 (operator override) lives ins
 
 ## Cross-references
 
-- `[`writing-claims`](_writing-claims-rules.md)` writing-claims:1-3 cover claims about prior actions. Declaring "I am at-rest" is itself a claim about what you will and will not do next; honor it (rule 2) or rescind it explicitly via the operator-override carve-out.
-- `[`writing-prose`](_writing-prose-rules.md)` writing-prose:5 covers future-tense commitments to action. A baton declaration is the present-tense sibling: "the next move is yours, not mine."
-- `[`drive-while-away`](drive-while-away/SKILL.md)` handles operator-handoff cadence for autonomous sessions. session-coordination rules are the agent-to-agent analog.
+- `[rule:writing-claims]` writing-claims:1-3 cover claims about prior actions. Declaring "I am at-rest" is itself a claim about what you will and will not do next; honor it (rule 2) or rescind it through the operator-override carve-out.
+- `[rule:writing-prose]` writing-prose:5 covers future-tense commitments to action. A baton declaration is the present-tense sibling: "the next move is yours, not mine."
+- `[skill:drive-while-away]` handles operator-handoff cadence for autonomous sessions. session-coordination rules are the agent-to-agent analog.
 
 ## Originating evidence
 
@@ -44,7 +44,7 @@ The incident is recurrence-1 for the cohort. Per writing-claims:4's carve-out (a
 
 ## Tooling status
 
-Judgment-enforced via `[`code-review`](code-review/SKILL.md)` and `[`hostile-review`](hostile-review/SKILL.md)` at v3.x.
+Judgment-enforced via `[skill:code-review]` and `[skill:hostile-review]` at v3.x.
 
 Mechanical detection candidates for v3.x.y, ordered by tractability:
 
@@ -68,4 +68,4 @@ Tooling-status counts after update: mechanical 16 (unchanged); judgment 18 -> 22
 
 ## Attribution
 
-Defers to `[`output`](_output-rules.md)`. No AI / agent attribution in coordination messages, rule files, PR bodies, or commit messages.
+Defers to `[rule:output]`. No AI / agent attribution in coordination messages, rule files, PR bodies, or commit messages.
