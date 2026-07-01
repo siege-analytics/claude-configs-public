@@ -1165,7 +1165,8 @@ def build_consumer_packages() -> None:
 
     Each package is self-contained: hooks/, lib/, settings-snippet.json,
     skills/ (flat layout), and validate-hooks.py. The craft-agent package
-    additionally includes enforcement artifacts from build_ca_enforcement().
+    additionally includes enforcement artifacts from build_ca_enforcement()
+    plus Craft-native automation/reference snippets.
 
     The claude-code package filters CA-only matchers from settings-snippet.json
     (tools like mcp__session__* don't exist in Claude Code).
@@ -1231,6 +1232,14 @@ def build_consumer_packages() -> None:
                     processed = strip_craft_incompatible_keys(original)
                     if processed != original:
                         md_file.write_text(processed)
+
+        # Copy Craft Agent automation/reference artifacts.
+        if target == "craft-agent":
+            ca_artifact_dir = REPO_ROOT / "craft-agent"
+            for artifact_name in ("automations-snippet.json", "standing-order-watchdog.json"):
+                artifact_src = ca_artifact_dir / artifact_name
+                if artifact_src.exists():
+                    shutil.copy2(artifact_src, pkg_dir / artifact_name)
 
         # Copy validate-hooks.py
         validator = REPO_ROOT / "bin" / "validate-hooks.py"
