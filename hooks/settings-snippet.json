@@ -1,0 +1,200 @@
+{
+  "_comment_": "Unified hooks snippet. Merge into ~/.claude/settings.json or project .claude/settings.local.json. Replace the literal path segments with an absolute path to this repo \u2014 see hooks/README.md.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/inject-resolver.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/standing-order-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/pre-action-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/think-gate-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/investigate-gate-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/branch-state-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/resolver/pipeline-state-guard.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/bash/destructive-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/infrastructure/catalog-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/no-attribution.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/ticket-required.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/no-sensitive-files.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/no-broad-staging.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/self-review.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/survey-context.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/detect-ai-fingerprints.sh",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/post-error-revision-required.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/pre-push-self-review.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/fix-shape-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/pr-base-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/write-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/write-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/write-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/vergil-quote.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
