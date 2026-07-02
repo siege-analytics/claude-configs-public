@@ -12,6 +12,17 @@ against a ticket's intent), hostile-review scans the ENTIRE codebase for
 latent defects using mechanical grep patterns followed by contextual
 reasoning.
 
+Hostile reviews are normally performed by a fresh agent session, not by the
+author in the same session and not by a human reviewer. Human hostile reviews
+are exceptional override cases; record why an agent review was unavailable if a
+human review is used. The author agent and reviewer agent must coordinate on
+findings and come to consensus on fixes before the work is considered reviewed.
+The reviewer is not done when it posts findings, and the author is not done when
+it patches code. The hostile-review task is complete only after the agreed fixes
+are deployed to the production target and production UAT evidence is recorded,
+or after the review artifact records that production UAT is not applicable with
+a falsifiable reason.
+
 ## When to Use
 
 - Inheriting a codebase (first week)

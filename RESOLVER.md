@@ -258,8 +258,8 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 | About to… | Read first |
 |---|---|
 | End a session / hand off work | `skills/session/wrap-up/SKILL.md` |
-| Spawn sub-sessions / delegate work to parallel agents | Universal check #11 (spawn-protocol). Requires: worktree isolation, checkpoint-and-wait in prompt, artifact attachment to tickets, Phase 0 read instruction. |
-| Receive a standing "work until X" instruction from user | Universal check #12 (standing-order continuity). Maintain running agents + ScheduleWakeup at all times. Never go idle with pending work. |
+| Spawn sub-sessions / delegate work to parallel agents | Universal check #12 (spawn-protocol). Requires: execute/allow-all for sessions that must act or reply, explicit model/source selection, high-reasoning fresh sessions for reviews, worktree isolation, checkpoint-and-wait in prompt, artifact attachment to tickets, Phase 0 read instruction. |
+| Receive a standing "work until X" instruction from user | Universal check #13 (standing-order continuity). Maintain running agents + ScheduleWakeup at all times. Never go idle with pending work. |
 | Recover from a magnum / enterprise-runner outage | `electinfo_claude_skills/skills/monitor-magnum/SKILL.md` |
 | SSH to a shared server / launch a batch job / triage server health | `skills/infrastructure/ops/SKILL.md` |
 | Create a new skill | `skills/meta/skillbuilder/SKILL.md` |
@@ -333,9 +333,11 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     e. **Investigation reads existing knowledge.** The spawn prompt must instruct the session to check for prior investigations, related tickets, and existing documentation before starting its own investigation (see `investigate` skill Phase 0). Re-deriving facts already documented elsewhere is wasted work.
 
-    **Mechanical test:** if you are about to call `spawn_session` without (a) checking for existing WIP branches AND (b) either checkpoint instructions (unsupervised) or ticket-posting instructions (supervised) in the prompt, you are violating this check.
+    f. **Spawn with the right permissions, model, reasoning level, and sources at creation time.** A spawned session that must edit files, run commands, post artifacts, or reply through `send_agent_message` must be created in execute/allow-all mode, not safe/read-only mode. A review session must be a fresh session with the strongest appropriate review model available and high or higher reasoning enabled; do not use a weaker/default model for hostile, security, or bypass review when a better model is available. Every spawn call/prompt must name the intended model class, reasoning level, and enabled sources/tools required for the task. If a needed source is unavailable, either authenticate/enable it before spawning or state the degraded source set in the prompt and the artifact. Do not rely on inherited defaults for permission, model, reasoning, or source selection.
 
-12. **Standing-order continuity**: when the user gives a standing instruction to work autonomously until a specified time or condition ("work until 10:00 AM", "keep going overnight", "clear as much ground as you can"), that instruction is a **standing order**. Think of it as shift work: you know what you are supposed to be doing, do it according to the rules, and only ask for help when it becomes necessary.
+    **Mechanical test:** if you are about to call `spawn_session` without (a) checking for existing WIP branches, (b) either checkpoint instructions (unsupervised) or ticket-posting instructions (supervised) in the prompt, and (c) explicit permission mode, model/reasoning selection, and required source/tool selection, you are violating this check.
+
+13. **Standing-order continuity**: when the user gives a standing instruction to work autonomously until a specified time or condition ("work until 10:00 AM", "keep going overnight", "clear as much ground as you can"), that instruction is a **standing order**. Think of it as shift work: you know what you are supposed to be doing, do it according to the rules, and only ask for help when it becomes necessary.
 
     ### Signal file
 
@@ -380,7 +382,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     **Incident justification:** Epic #776 dogfood session (2026-05-28/29). Agent went idle 7 hours overnight (no ScheduleWakeup after last agent completed) and produced "No response requested" twice when loop prompts stacked up. Root cause: rules alone don't prevent the agent from rationalizing inaction. The signal file + hook injection makes the standing order mechanically persistent — it cannot be "forgotten" or rationalized away because it is re-injected on every turn.
 
-13. **Verify-before-push**: the self-review skill's mechanical verification floor (Gates 1–4) is **non-negotiable**. Before any `git push`, all applicable gates must have run and their evidence must appear in the self-review artifact:
+14. **Verify-before-push**: the self-review skill's mechanical verification floor (Gates 1-4) is **non-negotiable**. Before any `git push`, all applicable gates must have run and their evidence must appear in the self-review artifact:
 
     - **Gate 1** — `ast.parse` on every changed `.py` file.
     - **Gate 2** — `pytest tests/ -x -q -o "addopts=" -m smoke` (exit 0).

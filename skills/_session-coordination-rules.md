@@ -26,6 +26,15 @@ Escalation language ("stuck," "hung," "death spiral") implies a specific failure
 
 Baton declarations name the action expected of the partner ("present the unified plan to operator," "open the consolidation PR," "merge after CI green") so the next move is unambiguous. An implicit baton -- "I'm done" without naming what the partner should now do -- is rule-4 non-compliance and produces the same read-error as a missing at-rest declaration.
 
+## Spawn-session discipline
+
+When creating a new session for review, implementation, investigation, or any work that must act or communicate back, configure the session correctly at creation time. Do not rely on inherited defaults.
+
+- **Permissions:** sessions that must edit files, run commands, post artifacts, or reply through `send_agent_message` must be spawned in execute/allow-all mode. Safe/read-only sessions are only for passive analysis that never needs to report through tools.
+- **Model and reasoning:** review, hostile-review, security, bypass, or regression-analysis sessions must use the strongest appropriate model available with high or higher reasoning. Do not use a cheaper/default model for review when a better review model is available.
+- **Sources/tools:** enable the sources and tools the child needs by name. If a needed source cannot be enabled or authenticated, state the degraded source set in the prompt and in the review artifact.
+- **Prompt contract:** name the permission mode, model class, reasoning level, enabled sources/tools, expected reply channel, and status-setting requirement in the spawn prompt. A child that cannot reply is not a reviewer; it is an unobservable background task.
+
 ## Override
 
 These rules are mandatory. The carve-out in rule 2 (operator override) lives inside the rule body, not as an external flag. There is no `[coordination-skip]` override.
