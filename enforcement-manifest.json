@@ -1,0 +1,55 @@
+{
+  "version": "3.5.13",
+  "source_commit": "6ccc427",
+  "built_at": "2026-07-02T20:54:28.473521+00:00",
+  "gates": [
+    {
+      "id": "think-gate",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/resolver/think-gate-guard.sh",
+      "surface": "UserPromptSubmit",
+      "blocking": true,
+      "condition": "No design note registered before non-trivial work"
+    },
+    {
+      "id": "investigate-gate",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/resolver/investigate-gate-guard.sh",
+      "surface": "UserPromptSubmit",
+      "blocking": true,
+      "condition": "Think gate exists but no investigation artifact"
+    },
+    {
+      "id": "self-review",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/git/self-review.sh",
+      "surface": "native-git-pre-push",
+      "blocking": true,
+      "condition": "Push without Self-Review trailers"
+    },
+    {
+      "id": "branch-guard",
+      "rule_source": "_writing-code-rules.md",
+      "hook": "hooks/git/branch-guard.sh",
+      "surface": "native-git-pre-push",
+      "blocking": true,
+      "condition": "Commit to protected branch"
+    },
+    {
+      "id": "test-guard",
+      "rule_source": "_testing-frameworks-rules.md",
+      "hook": "hooks/git/test-guard.sh",
+      "surface": "native-git-pre-push",
+      "blocking": true,
+      "condition": "Push without test evidence (opt-in via testing: in PROJECT.md)"
+    },
+    {
+      "id": "skill-enforcement-gate",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/resolver/skill-enforcement-gate.sh",
+      "surface": "UserPromptSubmit",
+      "blocking": true,
+      "condition": "SKILL.md not Read when think-gate status=implementing"
+    }
+  ]
+}
