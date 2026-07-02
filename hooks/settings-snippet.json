@@ -58,6 +58,11 @@
           },
           {
             "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/bash/coordinator-status-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "/path/to/claude-configs-public/hooks/infrastructure/catalog-guard.sh",
             "timeout": 10
           },
@@ -179,6 +184,16 @@
           {
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__session__spawn_session",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/agent-comms/spawn-guard.sh",
             "timeout": 10
           }
         ]

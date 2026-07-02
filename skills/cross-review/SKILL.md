@@ -70,33 +70,45 @@ Search paths for skills (in order):
 
 ### Step 5: Spawn the reviewer
 
+The spawn call must satisfy `spawn-guard.sh`: explicit permission, model,
+reasoning level, source list, and rule binding. Review sessions use high or
+higher reasoning and the strongest suitable model available.
+
 ```
 spawn_session(
   name: "Cross-review: <provider> reviews <filename>",
   llmConnection: "<resolved-connection-slug>",
-  model: "<resolved-model>",
+  model: "<resolved-strong-review-model>",
   permissionMode: "allow-all",
-  enabledSourceSlugs: [<inherit from parent session>],
+  thinkingLevel: "high",
+  enabledSourceSlugs: [<explicit required source slugs, or [] if none>],
   labels: ["cross-review"],
   prompt: <see Prompt Template below>,
   attachments: [
     { path: "<file-under-review>" },
-    { path: "<skill-file>", name: "review-skill.md" }
+    { path: "<skill-file>", name: "review-skill.md" },
+    { path: "<repo>/dist/flat/RULES_BUNDLE.md or <repo>/RESOLVER.md", name: "rules-bundle.md" }
   ]
 )
 ```
 
+If no built rules bundle exists, attach `RESOLVER.md` and any required rule
+files directly, or inline their relevant sections in the prompt. Do not spawn an
+unbound reviewer.
+
 ### Step 6: Request findings delivery
 
-After spawning, send a follow-up message:
+After spawning, send a follow-up message only for clarification. The reviewer
+must return findings to the parent through `send_agent_message`; the parent,
+which remains hook-bound, posts any ticket comment after reviewing the proposed
+body.
 
 ```
 send_agent_message(
   sessionId: "<spawned-session-id>",
-  message: "When done, post your findings as a comment on <ticket-ref>
-            using `gh issue comment`. Then set your session status to done.
-            If gh is unavailable, send findings back to me via
-            send_agent_message with session ID <parent-session-id>."
+  message: "When done, send findings back to parent session <parent-session-id>
+            via send_agent_message. Do not call gh issue comment or mutate
+            issue/PR status directly. Then call set_session_status done."
 )
 ```
 
@@ -127,9 +139,12 @@ Review the attached file using the review methodology in review-skill.md.
 
 ## Rules
 
+- Follow the attached RULES_BUNDLE/RESOLVER/session-coordination rules.
 - You are a reviewer, not an implementer. Do not modify any files.
 - Cite file:line for every finding.
 - Rate severity per the review skill's scale.
+- Return findings to parent via send_agent_message; do not post ticket/PR comments directly.
+- When complete, call set_session_status done.
 - Do not add AI/assistant attribution to any output.
 ```
 
@@ -147,8 +162,8 @@ cross-review review(
 ```
 
 This path is single-shot (no tool access, no ticket posting) but works in
-CLI and CI environments. The invoking agent is responsible for posting the
-returned findings to the ticket.
+CLI and CI environments. The invoking agent is responsible for validating and posting the returned
+findings to the ticket from the hook-bound parent runtime.
 
 ## Incorporating Results
 
