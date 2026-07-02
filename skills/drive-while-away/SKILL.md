@@ -15,8 +15,12 @@ The operator's message contains any of these shapes:
 - "Drive while I'm gone" / "drive while I'm out" / "drive while I'm away"
 - "Monitor X" / "watch X" / "keep an eye on Y" -- paired with a time horizon longer than the typical turn
 - "Keep going" / "keep the work moving" / "keep doing X" -- when the operator is leaving
+- "Keep going and keep updating me" / "keep going while I ..." / "keep working through ..."
+- "Merge all ..." / "do all ..." / "work through ..." when paired with multi-ticket, multi-PR, or operator-unavailable context
 - "Check back periodically on Z" / "loop back when W happens"
 - "I'll be gone for a few hours, can you handle ...?"
+- "I'll be back in ..." / "check on me in ..." / "while I'm out"
+- Standing-delegation invocations that grant authority to continue without per-item approval
 - Any explicit time-bounded handoff: "for the next hour," "overnight," "until I'm back"
 
 If the request is a one-shot wait for a single known-completing task ("wait until the build finishes"), use the `Monitor` tool alone. This skill is for *driving* -- continuous, multi-target, possibly multi-action work that has no single terminal event.
@@ -96,6 +100,12 @@ List every concrete thing each fire will check. For each target:
 
 If a target is too vague to encode this way, ask the operator to narrow it before scheduling. Do not loop on vague targets.
 
+### Step 2.5: Pre-stage the work inventory
+
+Before scheduling, write or present a work inventory that the fired turns can consume. The inventory must name productive work available after the immediate probe finishes: PRs to review or merge, tickets to update, self-review artifacts to backfill, hostile-review drafts, verification commands, release checks, follow-up tickets to file, or design/investigation artifacts to produce.
+
+Use a durable artifact when the runtime permits writes, for example `/data/drive_mode_inventory_<timestamp>.md`; otherwise include the inventory in the scheduler prompt. A handoff without an inventory is incomplete because the next fired turn has no fallback when the first check is unchanged.
+
 ### Step 3: Pick the cadence and mechanism
 
 Use the Mechanism selection section above. If the operator did not type `/loop`, you are using `CronCreate`.
@@ -104,7 +114,7 @@ Use the Mechanism selection section above. If the operator did not type `/loop`,
 
 Call `CronCreate` (or `ScheduleWakeup` for `/loop`) with:
 
-- **For `CronCreate`:** `cron` expression per the cadence table, `recurring: true` (default), `durable: false` unless the operator wants cross-session persistence. `prompt` = the full digested directive + target list + termination criteria + an `iteration_count: 0` field.
+- **For `CronCreate`:** `cron` expression per the cadence table, `recurring: true` (default), `durable: false` unless the operator wants cross-session persistence. `prompt` = the full digested directive + target list + work inventory + productive-turn bar + termination criteria + an `iteration_count: 0` field.
 - **For `ScheduleWakeup`:** `delaySeconds` per the cadence table. `prompt` = the same `/loop` input the user provided (so the next firing repeats it), OR the `<<autonomous-loop-dynamic>>` sentinel for autonomous `/loop`.
 
 Record the returned job ID (for `CronCreate`) so you can `CronDelete` it later.
@@ -128,14 +138,29 @@ End the response. The scheduler will fire the next turn. Do not "stand by" -- th
 
 Each fired turn runs this loop:
 
-1. Read the digested directive + target list from the fired prompt.
+1. Read the digested directive + target list + work inventory from the fired prompt.
 2. Increment `iteration_count` (track in working memory or back into the next schedule call).
 3. Run the check for each target. Use real tool calls; "I'll check" without checking is the writing-claims:9 failure mode.
 4. Take the prescribed action per result.
-5. Decide whether to **terminate the loop** (see termination criteria below). If terminating: call `CronDelete <job-id>` (or omit `ScheduleWakeup` for `/loop`).
-6. **Hand back silently.** Do not present a progress report unless an escalation criterion fired (see Escalation below).
+5. Produce at least one operator-visible artifact unless all work is genuinely blocked or exhausted. Acceptable artifacts include: ticket filed or updated, PR comment, self-review or hostile-review artifact, branch push, verification output captured in `/data/`, durable investigation note, or status update that names concrete forward motion. A pure "nothing changed" probe is not a productive turn.
+6. Run the end-of-turn self-check: "Will the next operator-visible message contain a new artifact since the last pickup?" If no, continue working the inventory before yielding.
+7. Decide whether to **terminate the loop** (see termination criteria below). If terminating: call `CronDelete <job-id>` (or omit `ScheduleWakeup` for `/loop`).
+8. **Hand back silently** only after the productive-turn requirement and self-check pass. Do not present a progress report unless an escalation criterion fired (see Escalation below).
 
-The cron schedule does NOT need to be refreshed. It fires automatically on its own cadence. The agent's job per fire is to do the work and decide whether to stop -- not to remember to keep going.
+The cron schedule does NOT need to be refreshed. It fires automatically on its own cadence. The agent's job per fire is to do the work, produce forward motion, and decide whether to stop -- not to remember to keep going.
+
+## Productive-turn bar
+
+A drive-mode turn is productive only if it changes external state or leaves durable evidence the operator can inspect later. At least one of the following must happen before the turn yields:
+
+- ticket filed, updated, moved, or closed with evidence,
+- PR opened, commented, reviewed, merged, or moved with evidence,
+- branch pushed or commit created,
+- self-review / hostile-review / investigation / pre-mortem artifact written,
+- verification output captured in a durable file or ticket comment,
+- blocker escalated with `Blocked because` / `Waiting on` / `Unblocks when` evidence.
+
+If none is possible, stop the loop with an explicit blocker rather than silently re-looping.
 
 ## **DO NOT** present progress reports between fires
 

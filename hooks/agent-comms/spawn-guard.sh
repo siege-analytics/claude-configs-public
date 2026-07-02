@@ -18,6 +18,7 @@ INPUT_JSON="$INPUT" python3 - <<'PY'
 import json
 import os
 import re
+import subprocess
 import sys
 
 try:
@@ -34,6 +35,7 @@ name = str(tool_input.get("name") or "")
 model = str(tool_input.get("model") or "")
 permission = str(tool_input.get("permissionMode") or "")
 thinking = str(tool_input.get("thinkingLevel") or "")
+working_directory = str(tool_input.get("workingDirectory") or os.getcwd())
 labels = " ".join(map(str, tool_input.get("labels") or []))
 attachments = tool_input.get("attachments") or []
 source_key_present = "enabledSourceSlugs" in tool_input
@@ -70,6 +72,24 @@ rules_bound = any(token in haystack or token in attachment_text for token in [
 ])
 if not rules_bound:
     errors.append("prompt/attachments must carry RULES_BUNDLE/RESOLVER/session-coordination rules for the child runtime")
+
+write_like = bool(re.search(r'\b(implement|fix|edit|write|commit|push|pr|pull request|modify|change files)\b', haystack))
+read_only_declared = bool(re.search(r'\b(do not modify|no file edits|read-only|passive analysis|reviewer, not an implementer)\b', haystack))
+worktree_declared = bool(re.search(r'\b(git worktree|worktree-isolated|worktree isolated|/worktrees?/|\.worktrees/)\b', haystack + "\n" + working_directory.lower()))
+if write_like and not read_only_declared and not worktree_declared:
+    try:
+        inside_git = subprocess.run(
+            ["git", "-C", working_directory, "rev-parse", "--is-inside-work-tree"],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=2,
+        ).stdout.strip() == "true"
+    except Exception:
+        inside_git = False
+    if inside_git:
+        errors.append("write-capable child sessions in a Git repo must use a git worktree or be declared read-only/no-file-edits")
 
 if re.search(r'\bsend_agent_message\b|\bset_session_status\b|\breply back\b|\breturn findings\b', haystack):
     if "send_agent_message" not in haystack:

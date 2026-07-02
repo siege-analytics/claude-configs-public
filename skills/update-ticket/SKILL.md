@@ -71,15 +71,21 @@ Brief narrative of what was accomplished and what remains.
 
 # Updating ticket fields
 
-Only update fields that have actually changed. Common field updates:
+Ticket lifecycle status is proactive, not passive. Apply `[rule:ticket-lifecycle]` whenever the action changes the ticket's real-world lane. Only update fields that have actually changed.
 
-| Situation | Fields to update |
-|-----------|-----------------|
-| Work has started | status -> in progress, assignee (if unset) |
-| Blocked by another ticket | add blocker label, comment explaining the dependency |
+| Situation | Required status/field update |
+|-----------|------------------------------|
+| Work has started | status -> In Progress, assignee if unset, comment naming branch/artifact |
+| PR opened | status -> In Review, comment with PR URL and branch |
+| Testing/UAT/QA handoff | status -> In Testing / Awaiting UAT / QA, comment with owner, environment, evidence, pass/fail criteria |
+| Blocked by another ticket/system/person | status -> Blocked, add blocker label if available, comment with Blocked because / Waiting on / Unblocks when |
+| Unblocked/resumed | status -> In Progress or In Review, comment with evidence that blocker cleared and next action |
+| Merged + verified | status -> Done/Closed only after merge, target branch, deployment/release, and UAT/verification evidence |
 | Scope changed | update title if needed, comment explaining the change, adjust size/priority |
 | Reassigning | assignee, comment explaining why |
-| Partial progress | comment with commits and remaining checklist |
+| Partial progress | comment with commits and remaining checklist; status remains the active lane |
+
+If the platform has no mutable status field through the available CLI/API, add a comment with exact prefix `Status: <state>` and include the evidence that would have justified the field update.
 
 # Writing comments
 
