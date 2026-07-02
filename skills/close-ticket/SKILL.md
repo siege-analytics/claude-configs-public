@@ -18,9 +18,11 @@ allowed-tools: Read Grep Glob Bash
    1. Read all comments to understand the arc of work
    2. Check that acceptance criteria are satisfied
    3. Identify all commits related to this ticket
+   4. Verify `[rule:ticket-lifecycle]` Done evidence: merge/target branch, deployment/release or N/A, and testing/UAT/production validation or N/A
 4. Write a closing comment (see Closing comment below)
-5. Close the ticket
-6. Handle cross-platform sync if the ticket is dual-tracked
+5. Move status to Done/Closed or add `Status: Done` fallback comment with evidence
+6. Close the ticket
+7. Handle cross-platform sync if the ticket is dual-tracked
 
 # Gathering commits
 
@@ -128,9 +130,10 @@ If the ticket is dual-tracked across platforms (e.g., GitHub `<org>/<repo>` and 
 
 Some projects distinguish between "close" (done, verified) and "move to In Review" (done, awaiting human review). Check the project's workflow:
 
-- If the project has an In Review status and the operator has not explicitly asked to close, move to In Review instead of closing. Add the closing comment either way.
-- If the operator explicitly says to close, close it.
-- Never move tickets to Done autonomously -- that is the operator's call.
+- If the project has an In Review status and the operator has not asked to close, move to In Review instead of closing. Add the closing comment either way.
+- If testing/UAT evidence is pending, move to In Testing / Awaiting UAT instead of closing.
+- If merge/release/UAT evidence is present or not applicable with a falsifiable reason, move to Done/Closed and close it.
+- Do not mark Done based on a promise to test later; comments about future gates are not verification evidence.
 
 # Attribution policy
 

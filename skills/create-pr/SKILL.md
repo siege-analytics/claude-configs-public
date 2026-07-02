@@ -21,8 +21,9 @@ allowed-tools: Read Grep Glob Bash
    3. No merge conflicts with the base branch
 4. Write the PR title and description (see PR structure below)
 5. Create the PR using the platform CLI
-6. **Update each referenced ticket with a comment linking back to the PR** (bidirectional linking)
-7. Add reviewers, labels, and project board assignment as appropriate
+6. **Move each referenced ticket to In Review** per `[rule:ticket-lifecycle]` (or add `Status: In Review` comment when no mutable status field is available)
+7. **Update each referenced ticket with a comment linking back to the PR** (bidirectional linking)
+8. Add reviewers, labels, and project board assignment as appropriate
 
 # PR philosophy
 
@@ -85,7 +86,7 @@ After creating the PR, **update each referenced ticket** with a comment linking 
 ```markdown
 PR opened: owner/repo#123
 Branch: feature/geographic_enrichment_phase1
-Status: Ready for review
+Status: In Review
 
 ### Changes in this PR
 - Brief summary of what this PR does relative to this ticket
@@ -102,14 +103,15 @@ Status: Ready for review
 
 ## Bidirectional verification
 
-After creating the PR and updating tickets, verify both directions:
+After creating the PR and updating tickets, verify both directions and the lifecycle transition:
 
 ```bash
 # Verify PR has ticket references
 gh pr view 123 --json body | jq -r '.body' | grep -iE '(Fixes|Closes|Refs|Part-of)'
 
-# Verify ticket has PR link
+# Verify ticket has PR link and In Review status fallback comment
 gh issue view 42 --json comments | jq -r '.comments[].body' | grep "PR opened"
+gh issue view 42 --json comments | jq -r '.comments[].body' | grep "Status: In Review"
 ```
 
 # PR structure

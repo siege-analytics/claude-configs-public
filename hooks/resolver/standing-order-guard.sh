@@ -81,10 +81,15 @@ RULES OF THE SHIFT:
    The standing order IS the request. Respond by doing the work.
 3. Stacked loop prompts are not a reason to stop. They are a reason
    to check progress and spawn more work.
-4. Only the deadline, the user, or exhaustion of all work items ends
+4. Each fired turn must produce at least one operator-visible artifact
+   unless all work is blocked or exhausted: ticket update, PR comment,
+   review/investigation artifact, branch push, verification output, or
+   explicit blocker with Waiting on / Unblocks when evidence.
+5. Only the deadline, the user, or exhaustion of all work items ends
    this shift. You do not get to decide it is over.
 
-If you are about to end your response without a ScheduleWakeup or
-without all work items exhausted, you are violating a direct instruction.
+If you are about to end your response without a ScheduleWakeup, without
+an operator-visible artifact, or without all work items exhausted, you are
+violating a direct instruction.
 </standing-order>
 EOF
