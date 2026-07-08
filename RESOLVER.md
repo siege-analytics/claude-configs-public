@@ -259,7 +259,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 |---|---|
 | End a session / hand off work | `skills/session/wrap-up/SKILL.md` |
 | Spawn sub-sessions / delegate work to parallel agents | Universal check #12 (spawn-protocol). Requires: execute/allow-all for sessions that must act or reply, explicit model/source selection, high-reasoning fresh sessions for reviews, worktree isolation, checkpoint-and-wait in prompt, artifact attachment to tickets, Phase 0 read instruction. |
-| Receive a standing "work until X" instruction from user | Universal check #13 (standing-order continuity). Maintain running agents + ScheduleWakeup at all times. Never go idle with pending work. |
+| Receive a standing "work until X" instruction from user | Universal check #13 (standing-order continuity). Maintain running agents plus a runtime-available re-entry mechanism when one exists. Never go idle with pending work; never claim operator-visible cadence from async tools unless this deployment proves visibility. |
 | Recover from a magnum / enterprise-runner outage | `electinfo_claude_skills/skills/monitor-magnum/SKILL.md` |
 | SSH to a shared server / launch a batch job / triage server health | `skills/infrastructure/ops/SKILL.md` |
 | Create a new skill | `skills/meta/skillbuilder/SKILL.md` |
@@ -362,7 +362,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     b. **"No response requested" is never valid during a standing order.** The standing order IS the request. Only the user, the deadline, or the exhaustion of all work items terminates it. Stacked loop prompts, absence of user messages, and "the user said no response requested to an earlier message" are not termination signals.
 
-    c. **ScheduleWakeup is mandatory, not optional.** When the agent's turn ends with background agents still running, it MUST schedule a wakeup. Failure to schedule a wakeup when agents are running is the mechanical root cause of the overnight-idle incident.
+    c. **Re-entry is mandatory, not optional, when the runtime supports it.** When the agent's turn ends with background agents still running, it MUST schedule a wakeup or other available re-entry mechanism. If no such mechanism exists, it must continue foreground work or leave durable external evidence of the blocked re-entry condition. Failure to arrange re-entry when a mechanism exists is the mechanical root cause of the overnight-idle incident. A scheduled re-entry is not proof of operator-visible chat cadence unless this deployment proves that surfacing.
 
     d. **End-of-turn saturation.** Before ending any turn during a standing order, verify: "Is there work I could spawn right now that I'm not spawning?" If the answer is yes and resources allow, spawn it.
 
@@ -370,7 +370,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     ### Mandatory loop prompt template
 
-    When scheduling a ScheduleWakeup during a standing order, the `prompt` field MUST be a directive, not a description. Use this template:
+    When scheduling a ScheduleWakeup or equivalent re-entry during a standing order, the `prompt` field MUST be a directive, not a description. Use this template:
 
     ```
     Standing order active — [DIRECTIVE]. Check on running agents, spawn
@@ -380,7 +380,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     Do NOT use prompts like "check on progress" or "continue if needed" — these create an off-ramp the agent will take.
 
-    **Mechanical test:** if you are about to end a response during a standing order without either (a) a ScheduleWakeup call in this response, or (b) all work items exhausted, you are violating this check. The `standing-order-guard.sh` hook will remind you on the next turn, but you should not need the reminder.
+    **Mechanical test:** if you are about to end a response during a standing order without either (a) a runtime-available re-entry mechanism in this response, (b) continued foreground work/tool activity, or (c) all work items exhausted, you are violating this check. If no scheduler exists, name that as a blocker and produce durable evidence rather than pretending a hidden loop will notify the operator. The `standing-order-guard.sh` hook will remind you on the next turn, but you should not need the reminder.
 
     **Incident justification:** Epic #776 dogfood session (2026-05-28/29). Agent went idle 7 hours overnight (no ScheduleWakeup after last agent completed) and produced "No response requested" twice when loop prompts stacked up. Root cause: rules alone don't prevent the agent from rationalizing inaction. The signal file + hook injection makes the standing order mechanically persistent — it cannot be "forgotten" or rationalized away because it is re-injected on every turn.
 

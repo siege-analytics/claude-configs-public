@@ -83,7 +83,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | CodeRabbit or other bot review on a PR | [skill:coderabbit-response] |
 | Inline PR discussion threads | [skill:pr-comments] |
 | End-of-session summary, close the loop | [skill:wrap-up] |
-| "Drive while I'm gone," "monitor X overnight," any continuous-cadence handoff longer than a typical turn | [skill:drive-while-away] -- sibling of `[rule:writing-prose]` writing-prose:5; the rule says "use a mechanism," this skill says "which mechanism for which cadence" and mandates the same-turn `ScheduleWakeup` call. |
+| "Drive while I'm gone," "monitor X overnight," any continuous-cadence handoff longer than a typical turn | [skill:drive-while-away] -- sibling of `[rule:writing-prose]` writing-prose:5; the rule says "use a mechanism," this skill says which mechanism fits the runtime and forbids claiming operator-visible cadence from async tools unless the deployment proves visibility. |
 
 ### Planning
 

@@ -46,6 +46,8 @@ If none of those is present in the same response, the prose must be rephrased to
 
 This is the sibling of writing-claims:2 (past-tense countable claims require same-turn grep evidence) applied to the future-tense direction. Writing-claims grounds claims about what happened; writing-prose:5 grounds claims about what will happen. The artifact (the tool call, the signal file write, the cron commit, or the disclaimer) is the discipline; the prose is the conclusion.
 
+A continuation mechanism is not automatically an operator-visible notification mechanism. If scheduler or monitor events are known to be agent-internal, or their UI surfacing is unproven in the current deployment, the prose must not promise live chat updates. Promise only what the mechanism guarantees: re-entry, durable artifact creation, external tracker updates, or a visible foreground tool result.
+
 The failure mode this rule prevents: agent says "wakeup scheduled at 4pm UTC to verify the deploy," next turn arrives via the user's next prompt, no wakeup ever fires, the deploy either succeeded silently or hung and nobody noticed until much later. The promise was ungrounded; the next-turn continuation thread did not exist; the prose was a lie of omission.
 
 **Detection markers** (case-insensitive, intended for mechanical scan):
