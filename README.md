@@ -77,7 +77,7 @@ The bundle includes a version/commit banner and is regenerated on every build fr
 
 **Tier A (hook-capable):** hooks remain preferred -- they re-inject every turn and handle staleness. The bundle is a fallback.
 
-**Tier B (non-hook):** mount `RULES_BUNDLE.md` as a system-prompt addendum via whatever mechanism the runtime provides. The bundle gets the content in front of the agent; it does not provide mechanical enforcement (tool-call blocking), which requires hook support.
+**Tier B (non-hook):** mount `RULES_BUNDLE.md` as a system-prompt addendum via whatever mechanism the runtime provides. The bundle gets the content in front of the agent; it does not provide mechanical enforcement (tool-call blocking), which requires hook support. **Cursor IDE** is a Tier B consumer — see [`cursor/CURSOR.md`](cursor/CURSOR.md) and `bash bin/install.sh --cursor`.
 
 ## Project scaffolding
 
@@ -194,9 +194,10 @@ bash bin/install.sh
 **What it does:**
 
 - **Craft Agent detected** (`~/.craft-agent/workspaces/` exists): builds the flat layout + rules bundle, deploys skills/hooks/resolver/bundle to your workspace, installs hook settings, validates the deployment.
+- **Cursor install** (`bash bin/install.sh --cursor`): builds `dist/cursor/` and installs skills to `~/.cursor/skills/`, resolver and rules bundle to `~/.cursor/`. See [`cursor/CURSOR.md`](cursor/CURSOR.md).
 - **No Craft Agent**: builds both layouts, installs hooks to `.claude/settings.local.json` for Claude Code CLI.
 
-Options: `--workspace <slug>` to target a specific workspace (default: `my-workspace`), `--no-craft-agent` to force CLI-only mode.
+Options: `--cursor` for Cursor IDE install, `--workspace <slug>` to target a specific Craft Agent workspace (default: `my-workspace`), `--no-craft-agent` to force CLI-only mode.
 
 ### Pin to a release tag
 
@@ -362,6 +363,7 @@ The same source serves two consumer runtimes via a build step. Pick the layout t
 | **flat** | `release/flat`, `vX.Y.Z-flat` | Leaf skills at `skills/<slug>/`; routers stay at category root | **Craft Agent** (slash-command pane) |
 | **claude-code package** | GitHub Release archive | Flat skills, hooks, settings snippet, resolver/rules bundle | Claude Code / Codex-style runtimes |
 | **craft-agent package** | GitHub Release archive | Flat skills, hooks, settings/enforcement files, Craft automation snippets | Craft Agent workspaces |
+| **cursor package** | GitHub Release archive, `release/cursor` | Flat skill directories (no loose rules), resolver, rules bundle, install docs | Cursor IDE (Tier B — skills + User Rules) |
 
 Both layouts contain identical content; only the file-tree shape differs. The build resolves `[skill:slug]` and `[rule:slug]` tokens to layout-appropriate paths so cross-references work in both worlds without manual maintenance.
 
@@ -381,10 +383,12 @@ Versions follow [SemVer](https://semver.org/). Major version bumps for incompati
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the per-version diff.
 
-**Tag scheme.** Each source tag (`v1.0.0` on `main`) produces two consumer-facing tags via CI:
+**Tag scheme.** Each source tag (`v1.0.0` on `main`) produces consumer-facing tags via CI:
 
 - `v1.0.0-nested` on the `release/nested` branch -- pull this for Claude Code with the resolver hook
 - `v1.0.0-flat` on the `release/flat` branch -- pull this for Craft Agent
+- `v1.0.0-claude-code` / `v1.0.0-craft-agent` -- hook-capable consumer packages (GitHub Release tarballs)
+- `v1.0.0-cursor` on the `release/cursor` branch -- pull this for Cursor IDE (`cursor-v1.0.0.tar.gz` on the GitHub Release)
 
 `main` is the rolling source-of-truth (with build infrastructure and unresolved tokens). Always pin downstream consumers to one of the resolved release-branch tags.
 

@@ -7,6 +7,7 @@
 #
 # Usage:
 #   bash bin/install.sh                         # auto-detect CA, default workspace
+#   bash bin/install.sh --cursor              # build + install Cursor package
 #   bash bin/install.sh --workspace my-workspace  # explicit workspace slug
 #   bash bin/install.sh --no-craft-agent        # skip CA detection, direct-clone only
 #
@@ -18,17 +19,20 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CA_ROOT="$HOME/.craft-agent/workspaces"
 WORKSPACE_SLUG=""
 FORCE_NO_CA=false
+INSTALL_CURSOR=false
 
 usage() {
     cat <<'USAGE'
 Usage: bash bin/install.sh [options]
 
 Options:
+  --cursor             Build dist/cursor/ and install to ~/.cursor/skills/
   --workspace <slug>   Craft Agent workspace slug (default: auto-detect or my-workspace)
   --no-craft-agent     Skip CA detection; direct-clone mode only
   -h, --help           Show this help
 
 Modes:
+  --cursor:              build cursor package, run install-cursor.sh
   Craft Agent detected:  build flat + bundle, deploy to workspace, install hooks
   No Craft Agent:        build both layouts, install hooks to .claude/settings.local.json
 USAGE
@@ -46,6 +50,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-craft-agent)
             FORCE_NO_CA=true
+            shift
+            ;;
+        --cursor)
+            INSTALL_CURSOR=true
             shift
             ;;
         -h|--help)
@@ -124,6 +132,24 @@ detect_craft_agent() {
     echo "  ${workspaces[*]}" >&2
     echo "Use --workspace <slug> to specify which one." >&2
     exit 1
+}
+
+# -- Install: Cursor mode --
+
+install_cursor() {
+    echo "=== Cursor install ==="
+    echo
+
+    echo "--- Building cursor package ---"
+    python3 "$REPO_ROOT/bin/build.py"
+    echo
+
+    echo "--- Installing to ~/.cursor/skills/ ---"
+    bash "$REPO_ROOT/bin/install-cursor.sh" --package-root "$REPO_ROOT/dist/cursor"
+    echo
+
+    echo "--- Validating cursor package ---"
+    python3 "$REPO_ROOT/bin/validate-cursor.py" "$REPO_ROOT/dist/cursor/"
 }
 
 # -- Install: Craft Agent mode --
@@ -278,7 +304,9 @@ install_direct_clone() {
 
 # -- Main --
 
-if detect_craft_agent; then
+if [[ "$INSTALL_CURSOR" == "true" ]]; then
+    install_cursor
+elif detect_craft_agent; then
     install_craft_agent
 else
     install_direct_clone

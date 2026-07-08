@@ -36,6 +36,14 @@ CRAFT_WORKSPACE = Path.home() / ".craft-agent" / "workspaces" / "my-workspace"
 # Stripped during --deploy. Matches electinfo_claude_skills/scripts/build.py.
 CRAFT_INCOMPATIBLE_KEYS = {"disable-model-invocation", "argument-hint"}
 
+# Frontmatter keys that Cursor does not use (Claude Code / Craft Agent conventions).
+CURSOR_INCOMPATIBLE_KEYS = {"allowed-tools", "argument-hint"}
+
+# Loose rule files at flat skills root — excluded from dist/cursor/ (rules live in RULES_BUNDLE).
+CURSOR_SKILLS_ROOT_EXCLUDE = re.compile(
+    r"^(_[a-z0-9-]+-rules\.md|RULES\.md|_coverage\.md)$"
+)
+
 # Separator joining project slug and skill/rule slug in the prefix-flatten convention.
 # Project skill `hostile-review` in project `siege-utilities` becomes flat slug
 # `siege-utilities--hostile-review`. Project rules file becomes `<project>--rules`
@@ -890,6 +898,10 @@ def build_rules_bundle(
         f"the directory that contains the CLAUDE.md. `bin/install.sh --deploy`\n"
         f"handles the symlink automatically.\n"
         f"\n"
+        f"**Cursor IDE (Tier B):** install with `bash bin/install.sh --cursor` or\n"
+        f"see `cursor/CURSOR.md` in the cursor consumer package. Skills go to\n"
+        f"`~/.cursor/skills/`; mount `RULES_BUNDLE.md` via User Rules.\n"
+        f"\n"
         f"For hook-capable runtimes (Claude Code CLI), hooks remain the preferred\n"
         f"path. This bundle is a fallback, not a replacement.\n"
         f"{project_note}"
@@ -1271,6 +1283,122 @@ def build_consumer_packages() -> None:
     print(f"  -> dist/craft-agent/")
 
 
+def strip_cursor_incompatible_keys(text: str) -> str:
+    """Remove frontmatter keys that Cursor does not interpret."""
+    lines = text.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return text
+    result = [lines[0]]
+    closed = False
+    for line in lines[1:]:
+        if not closed:
+            if line.strip() == "---":
+                closed = True
+                result.append(line)
+                continue
+            key = line.split(":")[0].strip() if ":" in line else ""
+            if key in CURSOR_INCOMPATIBLE_KEYS:
+                continue
+        result.append(line)
+    return "".join(result)
+
+
+def _is_cursor_skills_root_loose_file(name: str) -> bool:
+    return bool(CURSOR_SKILLS_ROOT_EXCLUDE.match(name))
+
+
+def build_cursor_package() -> None:
+    """Build dist/cursor/ consumer package for Cursor IDE.
+
+    Ships flat-layout skill directories only (no loose rule files at skills
+    root), RESOLVER.md, RULES_BUNDLE artifacts, cursor docs/templates, and
+    install/validate scripts.
+    """
+    pkg_dir = DIST / "cursor"
+    if pkg_dir.exists():
+        shutil.rmtree(pkg_dir)
+    pkg_dir.mkdir(parents=True)
+
+    flat_skills = DIST / "flat" / "skills"
+    if not flat_skills.exists():
+        raise BuildError("dist/flat/skills/ does not exist — run flat layout build first")
+
+    dst_skills = pkg_dir / "skills"
+    dst_skills.mkdir()
+    skill_count = 0
+
+    for entry in sorted(flat_skills.iterdir()):
+        if entry.is_dir():
+            shutil.copytree(entry, dst_skills / entry.name)
+            skill_count += 1
+        elif entry.is_file() and not _is_cursor_skills_root_loose_file(entry.name):
+            shutil.copy2(entry, dst_skills / entry.name)
+
+    for md_file in dst_skills.rglob("*.md"):
+        original = md_file.read_text()
+        processed = strip_cursor_incompatible_keys(original)
+        if processed != original:
+            md_file.write_text(processed)
+
+    flat_resolver = DIST / "flat" / "RESOLVER.md"
+    if not flat_resolver.exists():
+        flat_resolver = DIST / "flat" / "skills" / "RESOLVER.md"
+    if not flat_resolver.exists():
+        for fallback in (REPO_ROOT / "RESOLVER.md", SOURCE_SKILLS / "RESOLVER.md"):
+            if fallback.exists():
+                flat_resolver = fallback
+                break
+    if flat_resolver.exists():
+        resolver_text = flat_resolver.read_text()
+        (pkg_dir / "RESOLVER.md").write_text(strip_cursor_incompatible_keys(resolver_text))
+
+    for bundle_name in ("RULES_BUNDLE.md", "RULES_BUNDLE.json"):
+        bundle_src = DIST / bundle_name
+        if bundle_src.exists():
+            shutil.copy2(bundle_src, pkg_dir / bundle_name)
+
+    cursor_src = REPO_ROOT / "cursor"
+    if cursor_src.exists():
+        shutil.copytree(cursor_src, pkg_dir / "cursor")
+
+    pkg_bin = pkg_dir / "bin"
+    pkg_bin.mkdir()
+    for script_name in ("install-cursor.sh", "validate-cursor.py"):
+        script_src = REPO_ROOT / "bin" / script_name
+        if script_src.exists():
+            shutil.copy2(script_src, pkg_bin / script_name)
+            if script_name.endswith(".sh"):
+                (pkg_bin / script_name).chmod(0o755)
+
+    version = _get_version()
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=REPO_ROOT, text=True,
+        ).strip()
+    except Exception:
+        commit = "unknown"
+
+    pkg_manifest = {
+        "package": "cursor",
+        "version": version,
+        "source_commit": commit,
+        "built_at": datetime.now(timezone.utc).isoformat(),
+    }
+    (pkg_dir / "package.json").write_text(json.dumps(pkg_manifest, indent=2) + "\n")
+
+    build_info = {
+        "package": "cursor",
+        "source_commit": commit,
+        "built_at": datetime.now(timezone.utc).isoformat(),
+        "skill_count": skill_count,
+    }
+    (pkg_dir / "build-info.json").write_text(json.dumps(build_info, indent=2) + "\n")
+
+    print(f"  cursor: {skill_count} skill directories")
+    print(f"  -> dist/cursor/")
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
@@ -1587,6 +1715,9 @@ def main() -> int:
 
     print("\nBuilding consumer packages...")
     build_consumer_packages()
+
+    print("\nBuilding Cursor consumer package...")
+    build_cursor_package()
 
     print("\nScoring skill quality...")
     all_skill_slugs = set(skills_src) | set(project_skills_src)

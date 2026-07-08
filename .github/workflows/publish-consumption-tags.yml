@@ -37,7 +37,7 @@ concurrency:
 
 jobs:
   tag:
-    name: Mint -flat / -nested consumption tags
+    name: Mint -flat / -nested / -cursor consumption tags
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -56,7 +56,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           missing=0
-          for layout in flat nested; do
+          for layout in flat nested cursor; do
             branch="release/${layout}"
             tag="${TAG}-${layout}"
 

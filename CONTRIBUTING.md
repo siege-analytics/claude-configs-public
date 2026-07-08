@@ -1,6 +1,6 @@
 # Contributing
 
-This repo serves two runtimes from one source: Claude Code (with the resolver hook) and Craft Agent (with the skills pane). The dual-output build keeps the source single while emitting layout-appropriate artifacts.
+This repo serves three consumer runtimes from one source: Claude Code (with the resolver hook), Craft Agent (with the skills pane), and Cursor IDE (skills + rules bundle as Tier B guidance). The multi-output build keeps the source single while emitting layout-appropriate artifacts.
 
 If you're adding a skill or editing one, the only conventions you need to know are below.
 
@@ -127,6 +127,18 @@ Or pin to a specific version (`release/flat` → `v1.0.0-flat`).
 
 The local workspace's `UPSTREAM-UPDATE.md` documents the canonical sync flow.
 
+### Cursor IDE (cursor package)
+
+```bash
+bash bin/install.sh --cursor
+# or from a release tarball / release/cursor branch:
+bash bin/install-cursor.sh --package-root dist/cursor/
+```
+
+See [`cursor/CURSOR.md`](cursor/CURSOR.md) for User Rule templates, project rules, and Tier B limitations. The cursor package excludes loose rule files at the skills root (rules live in `RULES_BUNDLE.md`) and strips Claude Code-specific frontmatter keys (`allowed-tools`, `argument-hint`).
+
+Pin to `v1.0.0-cursor` or clone `release/cursor`.
+
 ## Releases & versioning
 
 Versions follow [SemVer](https://semver.org/):
@@ -137,7 +149,7 @@ Versions follow [SemVer](https://semver.org/):
 
 Every tag on `main` produces matching tags on the release branches:
 
-- `v1.0.0` (source) → `v1.0.0-nested` and `v1.0.0-flat` (release branches)
+- `v1.0.0` (source) → `v1.0.0-nested`, `v1.0.0-flat`, and `v1.0.0-cursor` (release branches)
 
 Pin downstream consumers to a release-branch tag, not the source tag -- the source tag is on `main`, which has the build infrastructure but not the resolved skills.
 

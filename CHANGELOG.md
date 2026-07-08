@@ -40,6 +40,18 @@ Three enforcement stacks generalized from pour-now into upstream, completing epi
 
 ## [Unreleased]
 
+### Added — Cursor consumer package
+
+First-class Cursor IDE support alongside Claude Code and Craft Agent:
+
+- `dist/cursor/` consumer package built by `build_cursor_package()` — flat skill directories only (excludes loose `_*-rules.md`, `RULES.md`, `_coverage.md` at skills root), strips `allowed-tools` and `argument-hint` frontmatter keys
+- `cursor/CURSOR.md` install/runtime guide, User Rule and project rule templates
+- `bin/install-cursor.sh` — installs to `~/.cursor/skills/`, `~/.cursor/siege-resolver.md`, `~/.cursor/siege-rules-bundle.md`; supports `--package-root`, `--project`, `--dry-run`; never touches `~/.cursor/skills-cursor/`
+- `bin/validate-cursor.py` — CI validation of the cursor package
+- `bin/install.sh --cursor` — build and install in one command
+- CI publishes `release/cursor` branch, `vX.Y.Z-cursor` tag, and `cursor-vX.Y.Z.tar.gz` GitHub Release asset
+- `RULES_BUNDLE.md` banner includes Cursor install one-liner
+
 Single-rule cohort: writing-claims:4 (invented framework signals require existing artifact backing). Operator-stated framing 2026-05-14: "you guys have been building a very elaborate ruleset with nothing that compels you to follow it, like people writing a D&D supplementary manual"; "authoring rules without absorbing them"; "inventing meta-patterns to dress up failures". Closes the gap left by writing-claims:1-3, which cover claims-about-actions but do not cover the implicit claim "this pattern applies" when the pattern is being coined in the same response.
 
 Negotiated 2026-05-15 in one round; operator approved concrete-bad-example-phrases (vs abstract definitions) and Option A override structure (carve-out in rule body, no flag -- matches cohort pattern across `_writing-prose-rules.md`, `_writing-code-rules.md`, `_writing-tests-rules.md`, `_writing-releases-rules.md`).

@@ -1,0 +1,27 @@
+---
+description: Siege Analytics engineering discipline — project-scoped reminders for claude-configs-public skills
+alwaysApply: true
+---
+
+# Siege project discipline
+
+This project uses skills from [claude-configs-public](https://github.com/siege-analytics/claude-configs-public). Personal skills live in `~/.cursor/skills/`; project-specific skills may live in `.cursor/skills/`.
+
+## Before implementation
+
+For non-trivial work, follow the `think` skill: design note with ticket context, blast radius, alternatives, and explicit approval before code changes.
+
+## Git and tickets
+
+- Branch naming: `type/descriptive-string` (see `branch` skill)
+- Commits reference tickets (see `commit` skill)
+- PRs link tickets bidirectionally (see `create-pr` skill)
+- Claim tickets with `pre-work-check` before starting work
+
+## Always-on rules
+
+Policy is in `~/.cursor/siege-rules-bundle.md` (personal install). Key cohorts: definition-of-done, writing-prose, writing-code, data-trust, principles.
+
+## Cursor limitation
+
+Hooks and PreToolUse gates from Claude Code are not available in Cursor. Compliance is via skill adherence and explicit self-review — not mechanical blocking.
