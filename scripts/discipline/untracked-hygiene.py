@@ -32,19 +32,20 @@ SPACE_COPY_RE = re.compile(r"(^|/)[^/]+ [0-9]+(\.[^/]+)?(/|$)")
 
 def git_untracked(repo: Path) -> list[str]:
     out = subprocess.check_output(
-        ["git", "status", "--porcelain", "--untracked-files=all"],
+        ["git", "status", "--porcelain=v1", "-z", "--untracked-files=all"],
         cwd=repo,
-        text=True,
     )
     paths: list[str] = []
-    for line in out.splitlines():
-        if line.startswith("?? "):
-            paths.append(line[3:])
+    for record in out.split(b"\0"):
+        if not record:
+            continue
+        if record.startswith(b"?? "):
+            paths.append(record[3:].decode("utf-8", errors="surrogateescape"))
     return paths
 
 
 def classify(path: str) -> Entry:
-    normalized = path.strip('"')
+    normalized = path
     if normalized == ".idea" or normalized.startswith(".idea/"):
         return Entry(path, "IDE local config", "ignorable", "covered by .gitignore")
     if normalized.endswith(".pyc") or "/__pycache__/" in normalized or normalized.endswith("/__pycache__"):
