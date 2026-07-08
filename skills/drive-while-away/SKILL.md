@@ -1,6 +1,6 @@
 ---
 name: drive-while-away
-description: When the operator hands off continuous work for an extended period ("drive while I'm gone," "monitor X overnight," "keep going while I'm out," "watch this and handle it"), set up an autonomous-re-entry mechanism (CronCreate for regular sessions, ScheduleWakeup for /loop sessions) in the same response. Continuation is automatic via the scheduler; stopping requires an active decision. Forbids the "do one task, present a progress report, wait for praise" anti-pattern.
+description: When the operator hands off continuous work for an extended period ("drive while I'm gone," "monitor X overnight," "keep going while I'm out," "watch this and handle it"), set up an autonomous-re-entry mechanism (CronCreate for regular Claude/Codex sessions, ScheduleWakeup for /loop sessions) when available, but do not claim operator-visible cadence unless the runtime proves those events render in the operator UI. In Craft Agent, use foreground tool calls, durable artifacts, and issue/PR updates for visible evidence; treat async wakeups as agent-internal until proven otherwise. Continuation is automatic only when the scheduler exists and is wired; stopping requires an active decision. Forbids the "do one task, present a progress report, wait for praise" anti-pattern.
 allowed-tools: Read Grep Glob Bash Write Edit
 ---
 
@@ -23,7 +23,7 @@ The operator's message contains any of these shapes:
 - Standing-delegation invocations that grant authority to continue without per-item approval
 - Any explicit time-bounded handoff: "for the next hour," "overnight," "until I'm back"
 
-If the request is a one-shot wait for a single known-completing task ("wait until the build finishes"), use the `Monitor` tool alone. This skill is for *driving* -- continuous, multi-target, possibly multi-action work that has no single terminal event.
+If the request is a one-shot wait for a single known-completing task ("wait until the build finishes"), use `Monitor` only in runtimes where it exists, and describe its visibility honestly. If `Monitor` events are agent-internal or unproven, do not promise the operator they will see live updates. This skill is for *driving* -- continuous, multi-target, possibly multi-action work that has no single terminal event.
 
 ## The two failure modes this skill prevents
 
@@ -35,13 +35,16 @@ Both modes have the same shape: **the agent treated continuation as optional and
 
 ## Mechanism selection (read this section every time)
 
-Two autonomous-re-entry tools exist. They are **deferred tools** -- they are NOT in your function list by default. You MUST load them via `ToolSearch` before you can call them (see Step 0 below).
+Two autonomous-re-entry tools may exist in Claude/Codex-style runtimes. They are **deferred tools** -- they are NOT in your function list by default. You MUST load them via `ToolSearch` before you can call them (see Step 0 below). Craft Agent sessions may not expose these tools; use the tools actually present in the session.
+
+**Visibility boundary:** autonomous re-entry is not the same as operator-visible cadence. `CronCreate`, `ScheduleWakeup`, and `Monitor` may wake the agent or add agent-context events without rendering messages to the operator's chat UI. Unless the current runtime has proven operator-visible delivery in this deployment, phrase them as agent-internal scheduling aids and provide visible evidence through foreground tool calls, durable files, issue/PR comments, branch pushes, or release artifacts.
 
 | Session context | Tool | Why |
 |---|---|---|
-| Regular session, operator says "drive while I'm gone" | **`CronCreate`** (recurring) | The cron scheduler fires the agent on schedule automatically. Continuation does not depend on the agent remembering to reschedule. |
-| User has invoked `/loop` (with or without an interval) | **`ScheduleWakeup`** | `ScheduleWakeup` is purpose-built for `/loop` dynamic-mode pacing. Pass the same `/loop` input back as `prompt` so the next firing repeats the loop. For autonomous `/loop` (no operator prompt) use the sentinel `<<autonomous-loop-dynamic>>`. |
-| Work needs to survive across sessions (cross-restart, multi-day, persistent watchdog) | **`CronCreate`** with `durable: true` | Default `CronCreate` lives only in this session; `durable: true` persists to `.claude/scheduled_tasks.json`. |
+| Regular Claude/Codex session, operator says "drive while I'm gone" | **`CronCreate`** (recurring), if available | The cron scheduler fires the agent on schedule. This is re-entry, not proof the operator sees live chat updates. |
+| Craft Agent session without Cron/Schedule tools | **Foreground work + durable artifacts + issue/PR updates** | Do not invent unavailable scheduler tools. Keep working in the current turn, use visible tool results and external artifacts, and state that future turns require operator/platform re-entry unless an automation exists. |
+| User has invoked `/loop` (with or without an interval) and `ScheduleWakeup` exists | **`ScheduleWakeup`** | `ScheduleWakeup` is purpose-built for `/loop` dynamic-mode pacing. Pass the same `/loop` input back as `prompt` so the next firing repeats the loop. Treat visibility as unproven unless the runtime confirms operator delivery. |
+| Work needs to survive across sessions (cross-restart, multi-day, persistent watchdog) | **`CronCreate` with `durable: true`**, if available; otherwise a platform automation or external scheduler | Default `CronCreate` lives only in this session; `durable: true` persists to `.claude/scheduled_tasks.json`. In Craft Agent, use configured automations or operator-visible tracker artifacts rather than promising hidden async updates. |
 
 **Default if you are unsure:** if the operator did not type `/loop`, use `CronCreate`. The `/loop` indicator is the user's explicit signal that ScheduleWakeup applies.
 
@@ -123,8 +126,9 @@ Record the returned job ID (for `CronCreate`) so you can `CronDelete` it later.
 
 Tell the operator:
 
-- The mechanism used (`CronCreate` vs `ScheduleWakeup`) and the cadence.
-- The first scheduled fire time in their local timezone.
+- The mechanism used (`CronCreate`, `ScheduleWakeup`, configured automation, or no scheduler available) and what it actually guarantees.
+- Whether the mechanism is proven operator-visible in this runtime. If not proven, say that it is agent-internal/re-entry only and that visible evidence will be durable artifacts or foreground tool results when the agent is active.
+- The first scheduled fire time in their local timezone, if a scheduler exists.
 - The targets being watched and the action per result.
 - The termination conditions (what makes you stop on your own).
 - How they can stop the loop (`/cron-delete <id>`, ping you, change standing instructions, etc.).
@@ -201,13 +205,17 @@ Surface to the operator AND stop the cron when:
 
 When escalating, write a clear message to the operator naming what stopped you and what you need, then `CronDelete` the job. The next operator interaction restarts the work.
 
-## If no autonomy tool is available
+## If no autonomy tool is available or visible cadence is unproven
 
-If neither `CronCreate` nor `ScheduleWakeup` exists in this runtime (different deployment, tools genuinely unavailable after `ToolSearch`), say so explicitly:
+If neither `CronCreate` nor `ScheduleWakeup` exists in this runtime (different deployment, tools genuinely unavailable after `ToolSearch`), say so:
 
-> "I cannot keep driving in this runtime -- no autonomous-re-entry mechanism is available. If you want continuation across the time gap, [option A: have an external scheduler ping me on a cadence; option B: run me under `/loop`; option C: leave me a list of checkpoints you'll resume from when back]. As-is, when you leave my next turn does not happen until you return."
+> "I cannot promise autonomous time-based re-entry in this runtime -- no scheduler tool is available. I can keep working during this active turn and leave durable artifacts, but future turns require an operator/platform trigger."
 
-Do NOT silently accept the handoff. Per `[rule:writing-prose]` writing-prose:5 and `[rule:writing-claims]` writing-claims:9, "I'll drive" + no mechanism is a lie of omission.
+If a scheduler exists but operator-visible delivery is unproven or known broken, say so:
+
+> "I can use the scheduler for agent re-entry, but I cannot promise you will see live chat updates from those fires in this UI. I will make progress visible through durable artifacts such as issue comments, PR updates, branch pushes, and verification files."
+
+Do NOT silently accept the handoff. Per `[rule:writing-prose]` writing-prose:5 and `[rule:writing-claims]` writing-claims:9, "I'll drive" + no mechanism, or "you will see updates" + unproven visibility, is a lie of omission.
 
 ## Anti-patterns this skill prevents
 

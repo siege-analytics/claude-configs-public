@@ -144,7 +144,9 @@ Work queue: $WORK_QUEUE
 
 RULES OF THE SHIFT:
 1. You may NOT go idle. If background agents are running, schedule a
-   ScheduleWakeup. If no agents are running and work remains, spawn one.
+   runtime-available re-entry mechanism when one exists. If no scheduler
+   exists, keep doing foreground work or leave durable external blocker
+   evidence. If no agents are running and work remains, spawn one.
 2. "No response requested" is NEVER valid during a standing order.
    The standing order IS the request. Respond by doing the work.
 3. Stacked loop prompts are not a reason to stop. They are a reason
@@ -159,8 +161,10 @@ RULES OF THE SHIFT:
 6. Only the deadline, the user, or exhaustion of all work items ends
    this shift. You do not get to decide it is over.
 
-If you are about to end your response without a ScheduleWakeup, without
-an operator-visible artifact, without starting the next available item, or
-without all work items exhausted, you are violating a direct instruction.
+If you are about to end your response without runtime-available re-entry,
+without an operator-visible artifact, without starting the next available
+item, or without all work items exhausted, you are violating a direct
+instruction. Do not claim async events are operator-visible unless this
+runtime has proven that delivery path.
 </standing-order>
 EOF
