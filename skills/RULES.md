@@ -27,6 +27,7 @@ For mapping failure modes to rules (the inverse question: "is this failure mode 
 | `_verify-before-execute-rules.md` | Same-turn evidence requirement for any side-effecting action and for factual claims. Parent of the claim-grounding rules. |
 | `_definition-of-done-rules.md` | Five hard criteria (code-reviewed, edge cases, tests, ticket update, ticket exists) before declaring work done. |
 | `_ticket-lifecycle-rules.md` | Proactive ticket status transitions at work start, PR open, testing/UAT handoff, blocked/unblocked, and Done/Closed. Platform fallback is an evidence-bearing `Status: <state>` comment. |
+| `_work-item-ownership-rules.md` | Work sessions stamp owned tickets/cards with `maintained-by: <session-id>` and report material state changes to their coordinator. |
 | `_environment-preflight-rules.md` | One-time-per-repo inventory of interpreters, services, credentials, CI parity. Companion to `[rule:writing-code]` writing-code:2. |
 | `_output-rules.md` | Output formatting and attribution policy (no AI / agent attribution in any user-visible artifact). |
 | `_principles-rules.md`, `_python-rules.md`, `_jvm-rules.md`, `_rust-rules.md`, `_typescript-rules.md`, `_data-trust-rules.md`, `_siege-utilities-rules.md` | Language and domain rules; orthogonal to the per-act split. |
