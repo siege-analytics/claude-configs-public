@@ -17,6 +17,7 @@ Pre-author-inventory: NONE
 Trivial-against-state: no — new consumer runtime packaging
 Investigate-artifact: investigate-gate.json (ticket #457)
 Pre-mortem-artifact: plans/pre-mortem-457.md
+Project-contribution: Ships a validated Tier B install path so hookless IDEs receive the same skill corpus, resolver, and rules bundle as hook-capable runtimes — extending mechanical discipline to environments where PreToolUse gates cannot run but advisory skills and User Rules can still compel process.
 
 ## Peer review
 
