@@ -22,3 +22,9 @@ downloads/
 file-history/
 session-env/
 dist/
+dist.stale/
+__pycache__/
+*.py[cod]
+
+# Machine-local editor state
+.idea/
