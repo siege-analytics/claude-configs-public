@@ -1,10 +1,10 @@
 #!/bin/bash
 # UserPromptSubmit hook — inject standing-order directive when active.
 #
-# Checks for standing-order.json in the workspace root (co-located with
-# the hook). If present and active, injects a shift-work directive into
-# every turn — including loop prompts, stacked messages, and "no
-# response requested" situations.
+# Checks for a session-scoped standing-order.json first, then legacy
+# workspace-root standing-order.json. If present and active, injects a
+# shift-work directive into every turn, including loop prompts, stacked
+# messages, and "no response requested" situations.
 #
 # The signal file is written by the agent when it receives a standing
 # order and deleted when the order ends. Format:
@@ -16,17 +16,85 @@
 #     "work_queue": ["#816", "#768"]
 #   }
 #
-# Location: <workspace>/standing-order.json, derived from the script's
-# own path (hooks/resolver/standing-order-guard.sh → ../../).
-# Override: CLAUDE_STANDING_ORDER env var.
+# Preferred locations:
+#   - CLAUDE_STANDING_ORDER env var (explicit override)
+#   - CLAUDE_SIGNAL_DIR/standing-order.json or CRAFT_AGENT_SIGNAL_DIR/standing-order.json
+#   - CRAFT_AGENT_SESSION_DIR/standing-order.json or CLAUDE_SESSION_DIR/standing-order.json
+#   - <workspace>/sessions/<session-id>/standing-order.json
+# Legacy fallback: <workspace>/standing-order.json.
 #
 # Fail-open: if the file doesn't exist, emit nothing and exit 0.
 
 set -euo pipefail
 
+HOOK_INPUT_JSON=$(cat 2>/dev/null || true)
+export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SIGNAL_FILE="${CLAUDE_STANDING_ORDER:-$WORKSPACE_ROOT/standing-order.json}"
+safe_session_id() {
+  printf '%s' "$1" | tr -c 'A-Za-z0-9_.-' '_'
+}
+
+hook_input_session_id() {
+  python3 - <<'PY' 2>/dev/null || true
+import json, os, re
+
+def find(obj):
+    if isinstance(obj, dict):
+        for key in ("sessionId", "session_id", "sessionID", "id"):
+            value = obj.get(key)
+            if isinstance(value, str) and value.strip():
+                return value
+        for key in ("session", "conversation", "metadata"):
+            value = find(obj.get(key))
+            if value:
+                return value
+        transcript = obj.get("transcript_path") or obj.get("transcriptPath")
+        if isinstance(transcript, str):
+            match = re.search(r"/sessions/([^/]+)/", transcript)
+            if match:
+                return match.group(1)
+    return ""
+
+raw = os.environ.get("CCP_HOOK_INPUT_JSON", "").strip()
+if raw:
+    try:
+        value = find(json.loads(raw))
+        if value:
+            print(value)
+    except Exception:
+        pass
+PY
+}
+
+SIGNAL_FILE="${CLAUDE_STANDING_ORDER:-}"
+if [ -z "$SIGNAL_FILE" ]; then
+  for dir in "${CLAUDE_SIGNAL_DIR:-}" "${CRAFT_AGENT_SIGNAL_DIR:-}" "${CRAFT_AGENT_SESSION_DIR:-}" "${CLAUDE_SESSION_DIR:-}"; do
+    if [ -n "$dir" ] && [ -f "$dir/standing-order.json" ]; then
+      SIGNAL_FILE="$dir/standing-order.json"
+      break
+    fi
+  done
+fi
+if [ -z "$SIGNAL_FILE" ]; then
+  RAW_SESSION_ID="${CRAFT_AGENT_SESSION_ID:-${CLAUDE_SESSION_ID:-${SESSION_ID:-}}}"
+  if [ -z "$RAW_SESSION_ID" ]; then
+    RAW_SESSION_ID="$(hook_input_session_id)"
+  fi
+  if [ -n "$RAW_SESSION_ID" ]; then
+    SID=$(safe_session_id "$RAW_SESSION_ID")
+    for candidate in "$WORKSPACE_ROOT/sessions/$SID/standing-order.json" "$WORKSPACE_ROOT/session-signals/$SID/standing-order.json"; do
+      if [ -f "$candidate" ]; then
+        SIGNAL_FILE="$candidate"
+        break
+      fi
+    done
+  fi
+fi
+if [ -z "$SIGNAL_FILE" ]; then
+  SIGNAL_FILE="$WORKSPACE_ROOT/standing-order.json"
+fi
 
 if [ ! -f "$SIGNAL_FILE" ]; then
   exit 0

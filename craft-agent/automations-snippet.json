@@ -10,7 +10,7 @@
         "actions": [
           {
             "type": "prompt",
-            "prompt": "Standing-order watchdog tick. Inspect sessions for active standing-order continuity. A standing order is active when a session has an active standing-order.json signal or an explicit multi-step/batch directive whose work queue is not exhausted. If work remains and the target session has no active tool call, no running sub-session, and no scheduled wakeup/continuation, send that session a direct continuation prompt: Standing order active - continue the work queue until complete, blocked, or deadline reached; do not stop after one item for affirmation. If no active standing orders exist, report 'no active standing orders' and set this watchdog session status to done. Do not modify user files."
+            "prompt": "Standing-order watchdog tick. Inspect sessions for active standing-order continuity. A standing order is active when a session has an active session-scoped standing-order.json signal or an explicit multi-step/batch directive whose work queue is not exhausted. Do not treat another session's signal file as belonging to the target session. If work remains and the target session has no active tool call, no running sub-session, and no scheduled wakeup/continuation, send that session a direct continuation prompt: Standing order active - continue the work queue until complete, blocked, or deadline reached; do not stop after one item for affirmation. If no active standing orders exist, report 'no active standing orders' and set this watchdog session status to done. Do not modify user files."
           }
         ]
       }

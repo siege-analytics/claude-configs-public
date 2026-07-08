@@ -270,7 +270,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 
 These fire for every non-trivial action, regardless of whether a pattern above matched:
 
-0. **THINK FIRST** (the non-negotiable gate): for anything beyond a change to non-executable content only (markdown prose, comments with no functional effect, whitespace), read `skills/thinking/think/SKILL.md` and write a design note. Any change to `.sh`, `.py`, `.sql`, `.js`, `.ts`, or other executable code is non-trivial — the Junior cannot classify code changes out of the pipeline. If you can't state what you're about to do, why, what could go wrong, and what the rollback looks like — you are not ready to act. Every serious failure in this session traces back to skipping this. **Signal file:** after producing the design note, write `<workspace>/think-gate.json` with falsifiable claims encoding design premises. The `think-gate-guard.sh` hook verifies claims every turn; stale claims force re-examination. When encountering a stale signal file from a prior task, read the referenced design note, post a disposition comment on the prior ticket, then update or delete the signal file. **Class-of-bug fixes** (same pattern in multiple files) require at least one Schema A claim (file + grep + expected) asserting zero remaining unguarded instances. See #262, #338.
+0. **THINK FIRST** (the non-negotiable gate): for anything beyond a change to non-executable content only (markdown prose, comments with no functional effect, whitespace), read `skills/thinking/think/SKILL.md` and write a design note. Any change to `.sh`, `.py`, `.sql`, `.js`, `.ts`, or other executable code is non-trivial - the Junior cannot classify code changes out of the pipeline. If you can't state what you're about to do, why, what could go wrong, and what the rollback looks like - you are not ready to act. Every serious failure in this session traces back to skipping this. **Signal file:** after producing the design note, write a session-scoped `think-gate.json` with falsifiable claims encoding design premises; preferred paths are `$CLAUDE_SIGNAL_DIR/think-gate.json`, `$CRAFT_AGENT_SESSION_DIR/think-gate.json`, or `<workspace>/sessions/<session-id>/think-gate.json`. Workspace-root `<workspace>/think-gate.json` is legacy fallback only and must not be shared by concurrent agents. The `think-gate-guard.sh` hook verifies claims every turn; stale claims force re-examination. When encountering a stale signal file from a prior task, read the referenced design note, post a disposition comment on the prior ticket, then update or delete the signal file. **Class-of-bug fixes** (same pattern in multiple files) require at least one Schema A claim (file + grep + expected) asserting zero remaining unguarded instances. See #262, #338.
 
 1. **Catalog-first**: if the action touches data that lives under a catalog (Unity Catalog, Hive Metastore), go through the catalog. Never write raw paths to bucket locations the catalog manages. Confirm the table's registered location BEFORE writing.
 
@@ -341,10 +341,10 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     ### Signal file
 
-    Standing orders are mechanically enforced via a signal file at `<workspace>/standing-order.json`. The `standing-order-guard.sh` hook reads this file on every `UserPromptSubmit` and injects the shift directive. This means **even loop prompts and stacked messages** carry the standing order.
+    Standing orders are mechanically enforced via a session-scoped signal file, not a workspace-global singleton. Preferred paths are `$CLAUDE_SIGNAL_DIR/standing-order.json`, `$CRAFT_AGENT_SESSION_DIR/standing-order.json`, or `<workspace>/sessions/<session-id>/standing-order.json`. Legacy `<workspace>/standing-order.json` is fallback only. The `standing-order-guard.sh` hook reads the session-scoped file on every `UserPromptSubmit` and injects the shift directive. This means **even loop prompts and stacked messages** carry the standing order.
 
     **Lifecycle:**
-    - **Activation:** When you receive a standing order, write the signal file:
+    - **Activation:** When you receive a standing order, write the session-scoped signal file:
       ```json
       {
         "active": true,

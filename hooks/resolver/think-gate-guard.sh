@@ -57,6 +57,9 @@
 
 set -euo pipefail
 
+HOOK_INPUT_JSON=$(cat 2>/dev/null || true)
+export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # Repo-scoped resolution (#494): check think-gate-*.json first, fall back to think-gate.json

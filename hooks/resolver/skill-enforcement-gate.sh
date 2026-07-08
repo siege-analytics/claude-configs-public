@@ -17,6 +17,9 @@
 
 set -uo pipefail
 
+HOOK_INPUT_JSON=$(cat 2>/dev/null || true)
+export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
@@ -34,8 +37,18 @@ THINK_GATE=""
 if [[ -n "${CLAUDE_THINK_GATE:-}" ]] && [[ -f "$CLAUDE_THINK_GATE" ]]; then
     THINK_GATE="$CLAUDE_THINK_GATE"
 elif [[ -f "$RESOLVE_TG" ]]; then
-    THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" 2>/dev/null \
-        | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
+    THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --all 2>/dev/null \
+        | python3 -c "
+import json, sys
+gates = json.load(sys.stdin)
+for g in gates:
+    s = g.get('data', {}).get('status', '')
+    if s not in ('disposed', 'done-awaiting-pr', 'complete'):
+        print(g['path'])
+        sys.exit(0)
+if gates:
+    print(gates[0]['path'])
+" 2>/dev/null || true)
 fi
 if [[ -z "$THINK_GATE" ]] && [[ -f "$WORKSPACE_ROOT/think-gate.json" ]]; then
     THINK_GATE="$WORKSPACE_ROOT/think-gate.json"

@@ -230,8 +230,9 @@ pure Claude Code.
 After the review produces a request-changes verdict, write the signal
 file so the hook can detect when fixes land:
 
-**Craft Agent:** `<workspace>/review-gate.json`
-**Claude Code:** `<repo>/.review-gate.json`
+**Session-scoped (preferred):** `$CLAUDE_SIGNAL_DIR/review-gate.json`, `$CRAFT_AGENT_SESSION_DIR/review-gate.json`, or `<workspace>/sessions/<session-id>/review-gate.json`
+**Claude Code repo-local fallback:** `<repo>/.review-gate.json`
+**Legacy workspace fallback:** `<workspace>/review-gate.json`
 
 ```json
 {
@@ -252,8 +253,9 @@ file so the hook can detect when fixes land:
 Delete the signal file:
 
 ```bash
-rm review-gate.json          # Craft Agent
-rm .review-gate.json         # Claude Code
+rm "$CLAUDE_SIGNAL_DIR/review-gate.json"       # session-scoped
+rm "$CRAFT_AGENT_SESSION_DIR/review-gate.json" # session-scoped
+rm .review-gate.json                          # repo-local fallback
 ```
 
 ### How re-review triggers
