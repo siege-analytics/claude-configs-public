@@ -174,11 +174,14 @@ jobs:
           else
             TAG=${GITHUB_REF#refs/tags/}
           fi
+          python3 scripts/ci/release-notes.py --version "$TAG" --out /tmp/release-notes.md
+          printf '\nConsumer packages: `%s-claude-code` and `%s-craft-agent`.\n' "$TAG" "$TAG" >> /tmp/release-notes.md
+          printf 'Layout tags: `%s-nested` and `%s-flat`.\n' "$TAG" "$TAG" >> /tmp/release-notes.md
           tar -czf "claude-code-${TAG}.tar.gz" -C dist/claude-code .
           tar -czf "craft-agent-${TAG}.tar.gz" -C dist/craft-agent .
           gh release create "$TAG" \
             --title "$TAG" \
-            --notes "Release ${TAG}. Consumer packages: \`${TAG}-claude-code\` and \`${TAG}-craft-agent\`. Layout tags: \`${TAG}-nested\` and \`${TAG}-flat\`." \
+            --notes-file /tmp/release-notes.md \
             --latest \
             "claude-code-${TAG}.tar.gz#Claude Code hooks package" \
             "craft-agent-${TAG}.tar.gz#Craft Agent hooks package"

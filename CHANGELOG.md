@@ -2,6 +2,74 @@
 
 All notable changes to this project are documented here. Versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Release-note enforcement (#610): release workflow now generates GitHub Release notes from `CHANGELOG.md` and fails when neither the target version nor `[Unreleased]` has meaningful content. This prevents behavior-changing package releases from publishing only boilerplate asset text.
+
+### Fixed
+
+- Backfilled the v3.5.11-v3.5.18 governance/release history so downstream consumers can see behavior-changing always-on rule, hook, and packaging changes without diffing tags.
+
+## [3.5.18] -- 2026-07-08
+
+### Fixed
+
+- Untracked hygiene quoted-path handling (#621): `scripts/discipline/untracked-hygiene.py` now parses NUL-delimited Git porcelain output so dry-run deletion templates target real paths such as `example 2.md` instead of quote-wrapped display strings.
+
+## [3.5.17] -- 2026-07-08
+
+### Added
+
+- Untracked workspace hygiene policy (#617): added `docs/untracked-hygiene.md` and `scripts/discipline/untracked-hygiene.py` for read-only classification of local clutter plus echo-prefixed duplicate cleanup templates.
+
+## [3.5.16] -- 2026-07-08
+
+### Fixed
+
+- Work-item ownership rule prose cleanup (#618): removed literal U+2014 glyphs from `_work-item-ownership-rules.md` to keep rule files scanner-clean.
+
+## [3.5.15] -- 2026-07-08
+
+### Added
+
+- Work-item ownership rules (#614): added `_work-item-ownership-rules.md` and wired it into `skills/RULES.md` so coordinated/background sessions stamp owned work items and report material state changes to coordinators.
+
+## [3.5.14] -- 2026-07-08
+
+### Fixed
+
+- Session-scoped signal files (#615): gate and standing-order signal resolution now prefers session-scoped files, with env and hook-input session identity support, before legacy workspace-root fallback.
+
+## [3.5.13] -- 2026-07-02
+
+### Added
+
+- Ticket lifecycle rules (#612): added `_ticket-lifecycle-rules.md` and wired update/create/close ticket skills to drive status transitions with evidence-bearing fallback comments.
+
+### Fixed
+
+- Spawn worktree isolation (#248): parent-side spawn guard now requires write-capable child sessions in Git repos to use worktree isolation or be declared read-only.
+- Drive-while-away continuity (#345): strengthened handoff/productive-turn expectations and standing-order artifact requirements.
+
+## [3.5.12] -- 2026-07-02
+
+### Fixed
+
+- Coordinator status evidence guard (#609): added mechanical blocking for unsafe GitHub issue/PR status transitions without maintainer signoff, merge evidence, and deployment/UAT evidence or falsifiable N/A.
+- Child session rule binding (#609): added spawn guard requirements for explicit permission, model, reasoning, source selection, and attached rules bundle for acting/reviewing child sessions.
+
+## [3.5.11] -- 2026-07-01
+
+### Added
+
+- Craft standing-order watchdog package artifacts (#478): added Craft Agent automation/watchdog snippets and resolver hook support so batch/standing-order work continues until complete, blocked, or deadline reached.
+
+### Fixed
+
+- Synced session-coordination references after standing-order watchdog packaging (#478).
+
 ## [3.5.0] -- 2026-06-15
 
 Compound Engineering adoption across the pipeline, completing epic #418. Five features integrating the Every.to CE framework into self-review, investigation, solutions catalog, and post-merge compounding. Three hook fixes hardening test-guard and write-guard enforcement. CA enforcement artifact generation from build pipeline.
@@ -38,7 +106,7 @@ Three enforcement stacks generalized from pour-now into upstream, completing epi
 - **engagement-post-mortem skill** (#383): structured post-mortem for engagement failures, with 2026-06-09 pour-now worked example.
 - **siege-utilities PROJECT.md:** added `testing:` and `knowledge_base:` sections as reference implementations.
 
-## [Unreleased]
+## [2.8.0] -- 2026-05-15
 
 Single-rule cohort: writing-claims:4 (invented framework signals require existing artifact backing). Operator-stated framing 2026-05-14: "you guys have been building a very elaborate ruleset with nothing that compels you to follow it, like people writing a D&D supplementary manual"; "authoring rules without absorbing them"; "inventing meta-patterns to dress up failures". Closes the gap left by writing-claims:1-3, which cover claims-about-actions but do not cover the implicit claim "this pattern applies" when the pattern is being coined in the same response.
 
