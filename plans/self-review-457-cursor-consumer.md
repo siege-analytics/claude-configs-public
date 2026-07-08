@@ -20,6 +20,8 @@ Pre-mortem-artifact: plans/pre-mortem-457.md
 
 ## Peer review
 
+Shelf references: writing-releases:5 (verify published artifact loads in consumption environment — validate-cursor.py + install dry-run), writing-code:4 (symbol exists — build_cursor_package references dist/flat paths that build.py creates), packaging-rules:1 (consumer package self-contained layout mirrors claude-code/craft-agent).
+
 ### Build validation
 
 - `python3 bin/build.py` → exit 0; cursor package reports 72 skill directories
