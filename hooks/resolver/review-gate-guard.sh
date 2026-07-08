@@ -34,6 +34,9 @@
 
 set -euo pipefail
 
+HOOK_INPUT_JSON=$(cat 2>/dev/null || true)
+export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 RESOLVE_TG="$SCRIPT_DIR/../lib/resolve-think-gate.py"

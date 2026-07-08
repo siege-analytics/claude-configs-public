@@ -500,6 +500,8 @@ Each verifiedShape entry should include a `dispositions` array encoding the assu
 
 Signal files without dispositions (v1 schema) produce a warning, not a block, for backward compatibility. New investigations should always use the v2 schema.
 
+Write `investigate-gate.json` beside the session-scoped `think-gate.json` (for example `$CLAUDE_SIGNAL_DIR/investigate-gate.json`, `$CRAFT_AGENT_SESSION_DIR/investigate-gate.json`, or `<workspace>/sessions/<session-id>/investigate-gate.json`). Workspace-root `investigate-gate.json` is legacy fallback only and must not be shared by concurrent agents.
+
 The guard performs four checks:
 1. **Existence** -- investigate-gate.json must exist when think-gate.json exists.
 2. **Freshness** -- investigate-gate.json must be newer than think-gate.json (design changes after investigation require re-investigation).

@@ -302,11 +302,18 @@ the design (prose) and the enforcement (hook).
 ### Creating a signal file
 
 After the design note is posted to the ticket (Step 7), write the
-signal file to the workspace root. Use a **repo-scoped filename**
-`think-gate-<slug>.json` where `<slug>` is the basename of the repo
-root (e.g., `think-gate-siege_utilities.json` for a repo at
-`.../Code/siege_utilities`). This allows concurrent sessions on
-different repos to maintain independent gates (#494).
+signal file to the current session's signal directory, not the shared
+workspace root. Preferred locations:
+
+1. `$CLAUDE_SIGNAL_DIR/think-gate.json` or `$CRAFT_AGENT_SIGNAL_DIR/think-gate.json`
+2. `$CRAFT_AGENT_SESSION_DIR/think-gate.json` or `$CLAUDE_SESSION_DIR/think-gate.json`
+3. `<workspace>/sessions/<session-id>/think-gate.json`
+
+If several repos are active inside the same session, use a repo-scoped
+filename inside the session directory: `think-gate-<slug>.json` where
+`<slug>` is the basename of the repo root (e.g.,
+`think-gate-siege_utilities.json`). This allows concurrent sessions and
+concurrent repos to maintain independent gates (#494, #615).
 
 Include `repo_root` so hooks can verify scope:
 
@@ -321,8 +328,9 @@ Include `repo_root` so hooks can verify scope:
 }
 ```
 
-The legacy filename `think-gate.json` is still supported for backward
-compatibility but should not be used for new work.
+The legacy workspace-root filename `think-gate.json` is still supported
+for backward compatibility but should not be used for new work because it
+is shared by all sessions in the workspace.
 
 The `lastUpdated` field (ISO 8601) is consumed by the temporal decay
 check. Omitting it forces the hook to fall back to file modification

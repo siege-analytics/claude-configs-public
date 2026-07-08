@@ -5,7 +5,7 @@
   "failure_case": "The operator says: download thirty shapefiles, load them all into PostGIS, then compute overlaps. The agent downloads one shapefile, reports progress, and stops for affirmation while twenty-nine items remain.",
   "runtime_split": {
     "claude_code_or_codex": {
-      "mechanism": "Resolver rule plus hooks/resolver/standing-order-guard.sh reading standing-order.json on UserPromptSubmit.",
+      "mechanism": "Resolver rule plus hooks/resolver/standing-order-guard.sh reading session-scoped standing-order.json on UserPromptSubmit, with workspace-root legacy fallback.",
       "artifact": "hooks/settings-snippet.json in the claude-code package wires the hook. No Craft automation is required."
     },
     "craft_agent": {
@@ -14,7 +14,7 @@
     }
   },
   "signal_file": {
-    "path": "<workspace>/standing-order.json",
+    "path": "<workspace>/sessions/<session-id>/standing-order.json",
     "schema": {
       "active": true,
       "deadline": "2026-05-29T10:00:00-05:00",
