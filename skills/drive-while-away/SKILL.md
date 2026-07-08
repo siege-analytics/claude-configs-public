@@ -29,7 +29,7 @@ If the request is a one-shot wait for a single known-completing task ("wait unti
 
 **Failure mode A: silent-after-handoff.** Agent says "I'll drive" or "standing by" and goes silent for hours. Next user prompt is the only thing that wakes it.
 
-**Failure mode B: one-iteration-then-stop-looking-for-praise.** Agent does one task, presents a progress report ("Here's what I did..."), and ends the turn waiting for operator acknowledgment. The next iteration never fires because no further mechanism was scheduled and the agent's `Brief the operator` instinct ended the turn.
+**Failure mode B: progress-summary-then-stop.** Agent does one or several tasks, presents a progress report ("Here's what I did..."), and ends the turn waiting for operator acknowledgment while backlog remains. The next iteration never fires because no further mechanism was scheduled and the agent's `Brief the operator` instinct ended the turn. Doing several items first does not make the stop valid.
 
 Both modes have the same shape: **the agent treated continuation as optional and stopping as the default.** This skill inverts that: continuation is the default (the scheduler keeps firing), stopping is the active decision (cancel the scheduler).
 
@@ -162,7 +162,7 @@ A drive-mode turn is productive only if it changes external state or leaves dura
 
 If none is possible, stop the loop with an explicit blocker rather than silently re-looping.
 
-## **DO NOT** present progress reports between fires
+## **DO NOT** stop at progress reports between fires
 
 This is the inversion of the failure mode that makes the loop die.
 
@@ -173,7 +173,7 @@ After completing a checkpoint, do NOT:
 - Ask "Should I continue?" or "Want me to keep going?"
 - Wait for operator acknowledgment.
 
-The operator handed off the keyboard. They are NOT WATCHING. A progress report between fires is wasted output the operator cannot see in real time, and ending the turn for acknowledgment is the praise-seeking pattern that kills the loop.
+The operator handed off the keyboard. They are NOT WATCHING. A progress report between fires is wasted output the operator cannot see in real time, and ending the turn for acknowledgment is the progress-summary stop pattern that kills the loop. If a backlog remains, write the durable status artifact and then start the next item in the same turn.
 
 **The fired turn should be as quiet as possible.** Do the work, decide if done, hand back. The scheduler fires the next turn. The operator reads the conversation when they return.
 

@@ -366,6 +366,8 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     d. **End-of-turn saturation.** Before ending any turn during a standing order, verify: "Is there work I could spawn right now that I'm not spawning?" If the answer is yes and resources allow, spawn it.
 
+    e. **Progress-summary stops are violations.** A chat summary of completed work is not completion, not blockage, and not a handoff when pending work remains. If the operator's directive is to finish a queue (for example, "there should never be open issues" or "keep moving"), the next action after a status snapshot is to select and start the next open item in the same turn. Do not end on a status report unless all work items are exhausted, blocked with evidence, or the deadline/user terminates the order.
+
     ### Mandatory loop prompt template
 
     When scheduling a ScheduleWakeup during a standing order, the `prompt` field MUST be a directive, not a description. Use this template:
