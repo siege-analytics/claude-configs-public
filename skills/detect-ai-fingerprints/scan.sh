@@ -87,6 +87,8 @@ WHY_BLOCK_RE='^[[:space:]]*(\*\*|##+ )?(Why|How to apply)[:\*]'
 COUNTABLE_RE='\b(all [0-9]+|all [a-z]+ engines?|all [a-z]+ connectors?|all call sites?|every (call site|engine|caller|connector)|no remaining|fully covers|completes the [a-z]+ surface)\b'
 # writing-claims:2 / :3: required Verified-by trailer when a countable claim is present.
 VERIFIED_BY_RE='^[[:space:]]*Verified-by:[[:space:]]+'
+RULE_ID_RE='\b(writing-(prose|code|tests|claims|releases|rules)|verify-before-execute|definition-of-done|ticket-lifecycle|environment-preflight|output|data-trust|siege-utilities|session-coordination|work-item-ownership|authoring-against-state):[0-9]+\b'
+RULE_EXECUTED_RE='^[[:space:]]*Rule-executed:[[:space:]]+((writing-(prose|code|tests|claims|releases|rules)|verify-before-execute|definition-of-done|ticket-lifecycle|environment-preflight|output|data-trust|siege-utilities|session-coordination|work-item-ownership|authoring-against-state):[0-9]+)[[:space:]]+[^[:space:]]+'
 # writing-tests:3: actionable-skip-message verbs. Heuristic; tune over time.
 SKIP_VERBS_RE='\b(install|set|configure|run|enable|start|provide|export)\b'
 # writing-tests:3: a skip message is matched against pytest.skip / pytest.xfail / unittest skip.
@@ -195,8 +197,12 @@ scan_message_stdin() {
     # then check whether the message contains a Verified-by: trailer. If claims
     # are present without the trailer, each claim line gets a writing-claims:2 / :3 violation.
     local has_verified_by=0
+    local executed_rule_ids=" "
     declare -a claim_lines=()
     declare -a claim_excerpts=()
+    declare -a rule_citation_lines=()
+    declare -a rule_citation_excerpts=()
+    declare -a rule_citation_ids=()
 
     while IFS= read -r line || [[ -n "$line" ]]; do
         line_no=$((line_no + 1))
@@ -215,6 +221,19 @@ scan_message_stdin() {
         if [[ "$line" =~ ^[[:space:]]*Verified-by:[[:space:]]+ ]]; then
             has_verified_by=1
         fi
+
+        # Rule-citation execution guard (#282): citation is not compliance.
+        if grep -qE "$RULE_EXECUTED_RE" <<< "$line"; then
+            executed_id=$(sed -E 's/^[[:space:]]*Rule-executed:[[:space:]]+([^[:space:]]+).*/\1/' <<< "$line")
+            [[ -n "$executed_id" ]] && executed_rule_ids+="$executed_id "
+        fi
+        while IFS= read -r cited_id; do
+            if [[ -n "$cited_id" ]]; then
+                rule_citation_lines+=("$line_no")
+                rule_citation_excerpts+=("$line")
+                rule_citation_ids+=("$cited_id")
+            fi
+        done < <(grep -oE "$RULE_ID_RE" <<< "$line")
 
         # writing-claims:2 / :3 claim detection (collect for end-of-message decision).
         if grep -qiE "$COUNTABLE_RE" <<< "$line"; then
@@ -245,6 +264,17 @@ scan_message_stdin() {
             emit "$virtual_file" "$line_no" "writing-prose-4-header" "$line"
         fi
     done
+
+    # Rule-citation execution guard (#282): each cited rule ID needs a matching executed-artifact pointer.
+    if (( ${#rule_citation_lines[@]} > 0 )); then
+        local j cited
+        for (( j = 0; j < ${#rule_citation_lines[@]}; j++ )); do
+            cited="${rule_citation_ids[$j]}"
+            if [[ "$executed_rule_ids" != *" $cited "* ]]; then
+                emit "$virtual_file" "${rule_citation_lines[$j]}" "writing-claims-rule-citation-no-rule-executed($cited)" "${rule_citation_excerpts[$j]}"
+            fi
+        done
+    fi
 
     # writing-claims:2 / :3 end-of-message decision: claims present without a Verified-by trailer.
     if (( ${#claim_lines[@]} > 0 && has_verified_by == 0 )); then
@@ -354,7 +384,7 @@ if [[ "$mode" == staged || "$mode" == working || "$mode" == pr ]]; then
     fi
 fi
 
-COVERAGE_NOTE='scanned: writing-prose:1-4 (stylistic; broader Unicode class as of v2.2.0), writing-code:2 (history references in code comments), writing-code:7 (silent error swallowing; AST scanner as of v2.3.1.1), writing-code:9 (silently-dropped parameters; AST scanner), writing-code:15 (unbounded blocking I/O; AST scanner as of v2.6.0), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable claims and completeness claims need Verified-by trailer), writing-releases:2 (skip-count trending), writing-releases:3 (deprecation messages name a removal target; AST scanner). The rest require [skill:code-review] judgment.'
+COVERAGE_NOTE='scanned: writing-prose:1-4 (stylistic; broader Unicode class as of v2.2.0), writing-code:2 (history references in code comments), writing-code:7 (silent error swallowing; AST scanner as of v2.3.1.1), writing-code:9 (silently-dropped parameters; AST scanner), writing-code:15 (unbounded blocking I/O; AST scanner as of v2.6.0), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable claims and completeness claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:2 (skip-count trending), writing-releases:3 (deprecation messages name a removal target; AST scanner). The rest require [skill:code-review] judgment.'
 
 if (( violations > 0 )); then
     # Summary to stderr to avoid bash 3.2 SIGSEGV on stdout buffer flush
