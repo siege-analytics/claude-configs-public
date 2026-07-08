@@ -718,6 +718,34 @@ HOOKEOF
         exit 2
     fi
 
+    # v1.8: prose dry-runs need scale + falsification coverage (#283).
+    # Probe-Matrix is machine-validated below, so this extra prose gate only
+    # applies to Pre-ship-dry-run trailers.
+    if [ -n "$DRYRUN_LINE" ] && [ -z "$PROBE_LINE" ]; then
+        SCALE_LINE=$(echo "$COMMIT_MSG" | { grep -E '^Dry-run-scale:[[:space:]]+\S' || true; } | head -1)
+        FALSIFY_LINE=$(echo "$COMMIT_MSG" | { grep -E '^Dry-run-falsification:[[:space:]]+\S' || true; } | head -1)
+        if [ -z "$SCALE_LINE" ] || [ -z "$FALSIFY_LINE" ]; then
+            cat >&2 <<HOOKEOF
+BLOCKED: Transformation-code commit uses prose Pre-ship-dry-run evidence
+but is missing Dry-run-scale: and/or Dry-run-falsification: trailers.
+
+Pre-ship-dry-run evidence is not enough by form alone. It must say what
+production scale it exercised and which failure modes it falsified.
+
+Required trailers:
+  Pre-ship-dry-run: <URL or path to evidence>
+  Dry-run-scale: <rows / partitions / files / target scale, or explicit gap>
+  Dry-run-falsification: <schema / planner / partition-cardinality / file-commit / catalog behavior covered or not covered>
+
+If the dry-run cannot cover production scale, say so in Dry-run-scale and
+name the remaining gap. Do not let a toy probe stand in for scale evidence.
+
+Ref: #283 (dry-run artifact rationalization)
+HOOKEOF
+            exit 2
+        fi
+    fi
+
     # v1.7: if Probe-Matrix: trailer is present, validate the result file.
     if [ -n "$PROBE_LINE" ]; then
         # Extract the path (everything after "Probe-Matrix:" + leading whitespace).

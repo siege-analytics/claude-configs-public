@@ -518,7 +518,13 @@ When the task involves transformation code (SQL templates, DataFrame pipelines, 
 
 The dry-run artifact proves behavioral correctness, not just structural correctness. "The columns match" (structural) is necessary but not sufficient -- "the query returns 47 rows from the expected partition, not 44.59M rows from the whole table" (behavioral) is what prevents production incidents.
 
-At push time, `self-review.sh` checks for a `Pre-ship-dry-run:` trailer on commits touching transformation-code patterns. The trailer points at the dry-run evidence (ticket comment URL or committed file).
+At push time, `self-review.sh` checks commits touching transformation-code patterns. Machine-form evidence can use `Probe-Matrix:`. Prose-form evidence must include all three trailers:
+
+- `Pre-ship-dry-run:` ticket comment URL or committed file with the dry-run evidence.
+- `Dry-run-scale:` rows / partitions / files / target scale exercised, or the explicit scale gap.
+- `Dry-run-falsification:` failure modes falsified by the artifact, and any material failure modes not covered.
+
+A toy probe can prove an API exists, but it does not prove production-scale behavior unless the scale trailer says why it is representative.
 
 **Then continue autonomously to the next pipeline gate** (pre-mortem, per the RESOLVER). Do not wait for parent approval or operator acknowledgement to proceed. The pipeline is self-driving: produce the artifact, post it, advance.
 
