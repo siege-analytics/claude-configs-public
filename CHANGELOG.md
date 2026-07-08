@@ -6,6 +6,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Fixed
 
+- Standing-order progress-summary continuity (#628): standing-order rules and runtime injection now state that a progress summary is not a stopping point while backlog remains; the agent must start the next item unless complete, blocked, or the user/deadline terminates the order.
 - Dry-run artifact quality (#283): prose `Pre-ship-dry-run:` evidence for transformation-code commits now requires `Dry-run-scale:` and `Dry-run-falsification:` trailers, so a toy probe cannot stand in for production-scale evidence without naming the gap.
 - Release-note freshness (#625): backfilled v3.5.20 and converted the previously reused `[Unreleased]` notes into v3.5.19 so generated release notes do not describe an older shipped change.
 
