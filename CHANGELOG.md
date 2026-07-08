@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed
+
+- Release-note freshness (#625): backfilled v3.5.20 and converted the previously reused `[Unreleased]` notes into v3.5.19 so generated release notes do not describe an older shipped change.
+
+## [3.5.20] -- 2026-07-08
+
+### Added
+
+- Rule-citation execution guard (#282): scanner message mode now requires matching `Rule-executed: <rule-id> <artifact>` evidence when commit or PR bodies cite numbered rule IDs, preventing citation-as-compliance.
+
+## [3.5.19] -- 2026-07-08
+
 ### Added
 
 - Release-note enforcement (#610): release workflow now generates GitHub Release notes from `CHANGELOG.md` and fails when neither the target version nor `[Unreleased]` has meaningful content. This prevents behavior-changing package releases from publishing only boilerplate asset text.
