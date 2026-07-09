@@ -371,6 +371,36 @@ def is_router(skill_relpath: Path, all_skill_paths: dict[str, Path]) -> bool:
     return False
 
 
+def validate_flat_skill_paths(skill_out_paths: dict[str, str], skills_src: dict[str, Path]) -> None:
+    """Ensure Craft Agent flat layout exposes bare skill slugs at skills/<slug>/.
+
+    Craft Agent's host resolver matches slash-command/bare skill names against
+    top-level skill directories. A nested leaf like skills/coding/code-review/
+    is unreachable there even when its SKILL.md frontmatter name is code-review.
+    Routers and shelves keep their documented paths; all other general skills
+    must be available as top-level slug directories in the flat layout.
+    """
+
+    errors: list[str] = []
+    for slug, src in sorted(skills_src.items()):
+        out = skill_out_paths.get(slug)
+        if out is None:
+            errors.append(f"{slug}: missing output path")
+            continue
+        if src.parts and src.parts[0] == "shelves":
+            continue
+        if is_router(src, skills_src):
+            continue
+        if Path(out) != Path(slug):
+            errors.append(f"{slug}: expected flat top-level path '{slug}', got '{out}'")
+
+    if errors:
+        raise BuildError(
+            "Flat skill layout validation failed; Craft Agent resolves bare slugs "
+            "against top-level skills/<slug>/ directories:\n  " + "\n  ".join(errors)
+        )
+
+
 def find_rules(source: Path) -> dict[str, Path]:
     """Return {slug: source_path_relative_to_skills} for every _*-rules.md file at skills root."""
     rules: dict[str, Path] = {}
@@ -657,6 +687,9 @@ def build_layout(
                 skill_out_paths[slug] = slug
     else:
         raise BuildError(f"Unknown layout: {layout}")
+
+    if layout == "flat":
+        validate_flat_skill_paths(skill_out_paths, skills_src)
 
     # Project skills: always flat-named (<project>--<skill>) in both layouts.
     for prefixed_slug in project_skills_src:
@@ -1226,6 +1259,15 @@ def build_consumer_packages() -> None:
                 shutil.rmtree(dst_skills)
             shutil.copytree(flat_skills, dst_skills)
             if target == "craft-agent":
+                missing_top_level = [
+                    slug for slug in ("code-review", "qml-component-review")
+                    if not (dst_skills / slug / "SKILL.md").exists()
+                ]
+                if missing_top_level:
+                    raise BuildError(
+                        "Craft Agent package is missing top-level flat skill(s): "
+                        + ", ".join(missing_top_level)
+                    )
                 # Strip Craft-incompatible keys from skills
                 for md_file in dst_skills.rglob("*.md"):
                     original = md_file.read_text()

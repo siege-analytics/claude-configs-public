@@ -27,6 +27,9 @@ jobs:
       - name: Full build for hook validation
         run: python3 bin/build.py
 
+      - name: Validate Craft Agent flat skill layout
+        run: bash scripts/ci/test_flat_skill_layout.sh
+
       - name: Validate hook installation (claude-code)
         run: python3 bin/validate-hooks.py dist/claude-code/
 
