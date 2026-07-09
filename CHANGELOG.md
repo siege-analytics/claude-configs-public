@@ -6,6 +6,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Fixed
 
+- Goal-mode intention-feint continuity (#635): standing-order and drive guidance now state that action announcements such as "continuing now" are not work unless paired with same-turn action, re-entry, or blocker evidence.
 - Non-git mutation inversion design (#128): documented the target model for making git/workflow the low-friction mutation path, with evidence requirements, escape hatches, and phased coverage for Bash, MCP/API, browser, and external-state writes.
 - Craft Agent flat skill layout (#196): build and CI now validate that Craft Agent flat/package outputs expose nested leaf skills such as `code-review` and `qml-component-review` as top-level bare-slug directories, and README documents `release/flat` as the required Craft Agent consumption layout.
 - Skill-token chat safety (#197): added guidance and a sanitizer for discussing skill/rule references in operator-facing text without emitting raw resolver-looking bracketed tokens that can trigger host skill-load popups.
