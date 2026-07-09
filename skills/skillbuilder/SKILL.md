@@ -104,6 +104,19 @@ The `routed-by` field is not in Anthropic's spec -- Claude ignores unknown field
 
 **When to create a router:** When a category has (or will soon have) more than 5 skills sharing a common classification and invocation pattern.
 
+## Chat-safe skill references
+
+When writing operator-facing chat, issue comments, PR comments, handoffs, or postmortems, do not emit raw bracketed skill or rule reference tokens unless the intent is to invoke or test the host resolver. Some Craft Agent deployments parse those tokens in chat before Markdown rendering, including inside code formatting.
+
+Safe explanatory forms:
+
+- `skill:code-review` without brackets.
+- `[skill colon code-review]` when the bracketed shape matters.
+- `the code-review skill` in prose.
+- Sanitized generated text via `python3 scripts/discipline/skill-token-chat-safe.py`.
+
+Repository skill files may still use raw bracketed references where they are part of runtime routing. The safety boundary is operator-facing explanatory text. See `docs/skill-token-chat-safety.md`.
+
 ## Anthropic Specification Reference
 
 ### File Structure
