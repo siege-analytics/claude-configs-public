@@ -6,6 +6,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Fixed
 
+- Skill-token chat safety (#197): added guidance and a sanitizer for discussing skill/rule references in operator-facing text without emitting raw resolver-looking bracketed tokens that can trigger host skill-load popups.
 - Operator-visible cadence honesty (#257): drive-while-away and standing-order guidance now distinguish scheduler re-entry from operator-visible chat updates, with Craft Agent fallback guidance for durable artifacts and foreground tool results when async surfacing is unavailable or unproven.
 - Standing-order progress-summary continuity (#628): standing-order rules and runtime injection now state that a progress summary is not a stopping point while backlog remains; the agent must start the next item unless complete, blocked, or the user/deadline terminates the order.
 - Dry-run artifact quality (#283): prose `Pre-ship-dry-run:` evidence for transformation-code commits now requires `Dry-run-scale:` and `Dry-run-falsification:` trailers, so a toy probe cannot stand in for production-scale evidence without naming the gap.
