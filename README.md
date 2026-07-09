@@ -365,6 +365,8 @@ The same source serves two consumer runtimes via a build step. Pick the layout t
 
 Both layouts contain identical content; only the file-tree shape differs. The build resolves `[skill:slug]` and `[rule:slug]` tokens to layout-appropriate paths so cross-references work in both worlds without manual maintenance.
 
+Craft Agent consumers must use `release/flat` or the `craft-agent` package. The host resolver matches bare skill slugs against top-level `skills/<slug>/SKILL.md` directories; nested leaf paths such as `skills/coding/code-review/SKILL.md` are not reachable by bare slug in affected workspaces. CI validates that the flat layout and Craft Agent package expose known nested leaf skills, including `code-review` and `qml-component-review`, at top level.
+
 Standing-order continuity is shipped in both runtime forms. Claude Code / Codex-style consumers use the resolver rule plus `hooks/resolver/standing-order-guard.sh` from the flat hook package. Craft Agent consumers receive the same hook plus `automations-snippet.json` and `standing-order-watchdog.json`, which package the periodic watchdog for batch directives that must continue until complete, blocked, or deadline reached.
 
 `main` is the source of truth (nested layout with tokens). Build outputs are published to `release/nested` and `release/flat` by CI on every push to main and every tag. **Pin downstream consumers to a release-branch tag (`v1.0.0-nested` / `v1.0.0-flat`), not the source tag** -- the source has the build infrastructure but tokens are unresolved.
