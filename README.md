@@ -377,6 +377,8 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the slug-token convention, build-sc
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short version: skills cross-reference each other by `[skill:slug]` token (not file path); the build emits two layouts; CI enforces token form on every PR.
 
+For shared-state writes outside the normal git/PR path, see [`docs/non-git-mutation-inversion.md`](docs/non-git-mutation-inversion.md). The target model is git/workflow first, external mutation only with durable evidence, and no self-authorized bypasses.
+
 ## Releases & versioning
 
 Versions follow [SemVer](https://semver.org/). Major version bumps for incompatible discovery / build / token-format changes; minor for additive skills or shelves; patch for fixes inside existing skills.
