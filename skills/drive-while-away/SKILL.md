@@ -31,7 +31,9 @@ If the request is a one-shot wait for a single known-completing task ("wait unti
 
 **Failure mode B: progress-summary-then-stop.** Agent does one or several tasks, presents a progress report ("Here's what I did..."), and ends the turn waiting for operator acknowledgment while backlog remains. The next iteration never fires because no further mechanism was scheduled and the agent's `Brief the operator` instinct ended the turn. Doing several items first does not make the stop valid.
 
-Both modes have the same shape: **the agent treated continuation as optional and stopping as the default.** This skill inverts that: continuation is the default (the scheduler keeps firing), stopping is the active decision (cancel the scheduler).
+**Failure mode C: intention-feint-then-stop.** Agent writes "continuing to the next ticket now," "I'll check the reviewer," or "watching release now" and then yields without the tool call or durable artifact. The sentence is a feint: it consumes the conversational turn while leaving no external motion.
+
+All modes have the same shape: **the agent treated continuation as optional and stopping as the default.** This skill inverts that: continuation is the default (the scheduler keeps firing), stopping is the active decision (cancel the scheduler).
 
 ## Mechanism selection (read this section every time)
 
@@ -174,10 +176,11 @@ After completing a checkpoint, do NOT:
 
 - Summarize what was just done.
 - Say "Here's the status so far."
+- Say "continuing now," "I'll check," "watching release," or any other action announcement without the same-turn tool call or blocker.
 - Ask "Should I continue?" or "Want me to keep going?"
 - Wait for operator acknowledgment.
 
-The operator handed off the keyboard. They are NOT WATCHING. A progress report between fires is wasted output the operator cannot see in real time, and ending the turn for acknowledgment is the progress-summary stop pattern that kills the loop. If a backlog remains, write the durable status artifact and then start the next item in the same turn.
+The operator handed off the keyboard. They are NOT WATCHING. A progress report between fires is wasted output the operator cannot see in real time, and ending the turn for acknowledgment is the progress-summary stop pattern that kills the loop. An intention announcement without the action is the same failure in future tense. If a backlog remains, write the durable status artifact and then start the next item in the same turn.
 
 **The fired turn should be as quiet as possible.** Do the work, decide if done, hand back. The scheduler fires the next turn. The operator reads the conversation when they return.
 
@@ -223,6 +226,7 @@ Do NOT silently accept the handoff. Per `[rule:writing-prose]` writing-prose:5 a
 |---|---|---|
 | Saying "I'll drive" without scheduling | Last assistant message ends with "Standing by; will probe when it lands." Zero tool calls follow. | No continuation mechanism. Next turn is the operator's next prompt, which may not come for hours. |
 | **One iteration then stop, looking for praise** | First fire does the task, presents a `Here's what I did` summary, ends the turn. No next fire scheduled or already-recurring cron got CronDelete'd. | The praise-seeking pattern. The operator is not watching; the summary is wasted output and the ended turn kills the loop. |
+| **Intention feint** | Last assistant line says "continuing to #111 now" or "watching release now," but no tool call or durable state change follows. | Future-tense chat is not work. In goal mode, action announcements require same-turn action, re-entry, or blocker evidence. |
 | Trying to call `ScheduleWakeup`/`CronCreate` without loading the tool first | The agent reads the skill, calls the tool, gets a tool-not-found error, falls into the "I cannot drive" disclaim path. | Deferred tools need `ToolSearch` to load first. Step 0 above is mandatory. |
 | Using `ScheduleWakeup` in a non-`/loop` session | Single `ScheduleWakeup` call in a regular conversation that needed `CronCreate`. | `ScheduleWakeup` is for `/loop` dynamic-mode pacing; without `/loop` context it isn't the right tool. |
 | Self-rescheduling per fire | Each fired turn calls `ScheduleWakeup` to schedule the next one. Any forgotten call kills the loop. | Use a recurring `CronCreate`. The cron does the rescheduling; the agent only has to remember when to `CronDelete`. |

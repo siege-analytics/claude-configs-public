@@ -158,13 +158,18 @@ RULES OF THE SHIFT:
 5. A progress summary is NOT a stopping point while work remains. If you
    just summarized progress and the queue is not empty, immediately start
    the next item in this same turn.
-6. Only the deadline, the user, or exhaustion of all work items ends
+6. Intention announcements are NOT work. Do not write "continuing now",
+   "I'll check", "watching release", or similar future-tense transition
+   text unless this same response contains the tool call, re-entry
+   mechanism, or blocker evidence that makes the statement true.
+7. Only the deadline, the user, or exhaustion of all work items ends
    this shift. You do not get to decide it is over.
 
 If you are about to end your response without runtime-available re-entry,
 without an operator-visible artifact, without starting the next available
 item, or without all work items exhausted, you are violating a direct
-instruction. Do not claim async events are operator-visible unless this
+instruction. Future-tense action text without same-turn action is also a
+violation. Do not claim async events are operator-visible unless this
 runtime has proven that delivery path.
 </standing-order>
 EOF
