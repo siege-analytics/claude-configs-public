@@ -55,9 +55,13 @@ def merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
         existing = json.loads(dst.read_text())
     except json.JSONDecodeError as e:
         raise SystemExit(f"ERROR: {dst} is not valid JSON: {e}")
+    if not isinstance(existing, dict):
+        raise SystemExit(f"ERROR: {dst} top-level is not a JSON object; refusing to merge")
 
     generated = json.loads(src.read_text())
     existing.setdefault("hooks", {}).setdefault("UserPromptSubmit", [])
+    if not isinstance(existing["hooks"].get("UserPromptSubmit"), list):
+        raise SystemExit(f"ERROR: {dst} hooks.UserPromptSubmit is not a list; refusing to merge")
 
     # Resolve the path placeholder to the workspace hooks root.
     ws_root = dst.parent.parent  # .claude/settings.json -> workspace root
@@ -67,13 +71,19 @@ def merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
             if "command" in hook:
                 hook["command"] = hook["command"].replace("/path/to", str(ws_root))
 
-    # Idempotent: drop any existing ca-enforcement-gate entry first.
+    # Idempotent: strip any existing ca-enforcement-gate hook from each group,
+    # then drop groups the strip left empty so re-runs do not accumulate empty
+    # hook groups. The fresh wrapper group is appended once.
     for group in existing["hooks"]["UserPromptSubmit"]:
-        if "hooks" in group:
+        if isinstance(group, dict) and "hooks" in group:
             group["hooks"] = [
                 h for h in group["hooks"]
                 if "ca-enforcement-gate" not in h.get("command", "")
             ]
+    existing["hooks"]["UserPromptSubmit"] = [
+        g for g in existing["hooks"]["UserPromptSubmit"]
+        if not (isinstance(g, dict) and "hooks" in g and not g["hooks"])
+    ]
     existing["hooks"]["UserPromptSubmit"].extend(gen_hooks)
 
     dst.write_text(json.dumps(existing, indent=2) + "\n")
@@ -85,8 +95,9 @@ def register_ca_automations(snippet: Path, dst: Path) -> None:
 
     Idempotent by (event, name): a re-run replaces the matching entry rather
     than appending a duplicate. Every other entry (operator automations, a
-    consumer's own skills-sync job) is preserved. A timestamped backup is
-    written and restored if the merged result does not parse.
+    consumer's own skills-sync job) is preserved. A single rolling backup
+    (automations.json.bak) is written and restored if the merged result does
+    not parse.
     """
     if not snippet.exists():
         print(f"  [warn] {snippet} not found; skipping automation registration")
@@ -101,26 +112,41 @@ def register_ca_automations(snippet: Path, dst: Path) -> None:
     except json.JSONDecodeError:
         raise SystemExit(f"ERROR: {dst} is not valid JSON; refusing to merge")
 
+    # Validate the shape up front, before writing anything, so an odd-but-valid
+    # JSON file produces a clear refusal instead of a half-merged workspace and
+    # a raw traceback. A consumer's automations.json is load-bearing.
+    if not isinstance(existing, dict):
+        raise SystemExit(f"ERROR: {dst} top-level is not a JSON object; refusing to merge")
+    existing.setdefault("version", 2)
+    existing.setdefault("automations", {})
+    if not isinstance(existing["automations"], dict):
+        raise SystemExit(f"ERROR: {dst} 'automations' is not a JSON object; refusing to merge")
+    for event, bucket in existing["automations"].items():
+        if not isinstance(bucket, list):
+            raise SystemExit(f"ERROR: {dst} automations['{event}'] is not a list; refusing to merge")
+
+    # Single rolling backup (bounded): the recurring harmonise job runs often,
+    # so a per-run timestamped backup would grow without limit.
     backup = None
     if dst.exists():
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        backup = dst.with_name(f"automations.json.bak-{stamp}")
+        backup = dst.with_name("automations.json.bak")
         backup.write_text(dst.read_text())
 
     generated = json.loads(snippet.read_text())
-    existing.setdefault("version", generated.get("version", 2))
-    existing.setdefault("automations", {})
 
     added = 0
     for event, entries in generated.get("automations", {}).items():
         bucket = existing["automations"].setdefault(event, [])
         for entry in entries:
             name = entry.get("name")
-            existing["automations"][event] = [
-                e for e in bucket if e.get("name") != name
+            # Drop only matching-name dict entries; preserve every other entry,
+            # including non-dict entries we do not understand.
+            bucket = [
+                e for e in bucket
+                if not (isinstance(e, dict) and e.get("name") == name)
             ]
-            bucket = existing["automations"][event]
             bucket.append(entry)
+            existing["automations"][event] = bucket
             added += 1
 
     merged = json.dumps(existing, indent=2) + "\n"

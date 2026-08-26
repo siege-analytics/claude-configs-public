@@ -96,6 +96,18 @@ GATE="$HOOKS_ROOT/resolver/ca-enforcement-gate.sh"
 if [[ ! -f "$GATE" ]]; then
     fail "ca-enforcement-gate.sh not deployed (looked in $HOOKS_ROOT/resolver/)"
 else
+    # The wrapper silently skips a gate guard it cannot execute
+    # (ca-enforcement-gate.sh: [[ ! -x "$gate_script" ]] && return 0). A
+    # wrapper with no guards behind it therefore never blocks. The mock block
+    # test below proves the wrapper's conversion logic, but only asserting the
+    # DEPLOYED guards are present and executable proves the deployed workspace
+    # can actually block. Check both.
+    for guard in think-gate-guard.sh investigate-gate-guard.sh skill-enforcement-gate.sh; do
+        if [[ ! -x "$HOOKS_ROOT/resolver/$guard" ]]; then
+            fail "gate guard missing or not executable: resolver/$guard (the wrapper would skip it and never block)"
+        fi
+    done
+
     probe_dir="$(mktemp -d)"
     trap 'rm -rf "$probe_dir"' EXIT
     mock_resolver="$probe_dir/hooks/resolver"
@@ -129,17 +141,31 @@ if [[ ! -f "$SETTINGS" ]]; then
     fail "settings file missing: $SETTINGS (hooks not registered)"
 elif ! python3 -c "import json; json.load(open('$SETTINGS'))" 2>/dev/null; then
     fail "settings file is not valid JSON: $SETTINGS"
-elif python3 - "$SETTINGS" <<'PY'
+else
+    # Extract the registered wrapper command's script path (the first token, so
+    # any trailing args are stripped). A substring match alone would pass a
+    # stale or typo'd path that resolves to nothing at runtime, so assert the
+    # path is an executable file, not just that the name appears.
+    gate_cmd="$(python3 - "$SETTINGS" <<'PY'
 import json, sys
 s = json.load(open(sys.argv[1]))
 ups = s.get("hooks", {}).get("UserPromptSubmit", [])
-cmds = [h.get("command", "") for grp in ups for h in grp.get("hooks", [])]
-sys.exit(0 if any("ca-enforcement-gate.sh" in c for c in cmds) else 1)
+for grp in ups:
+    for h in grp.get("hooks", []):
+        c = h.get("command", "")
+        if "ca-enforcement-gate.sh" in c:
+            print(c.split()[0])
+            sys.exit(0)
+sys.exit(0)
 PY
-then
-    ok "settings register ca-enforcement-gate.sh on UserPromptSubmit"
-else
-    fail "settings do NOT register ca-enforcement-gate.sh (blocking wrapper not wired)"
+)"
+    if [[ -z "$gate_cmd" ]]; then
+        fail "settings do NOT register ca-enforcement-gate.sh (blocking wrapper not wired)"
+    elif [[ ! -x "$gate_cmd" ]]; then
+        fail "registered ca-enforcement-gate.sh path is not an executable file: $gate_cmd"
+    else
+        ok "settings register ca-enforcement-gate.sh (resolves to executable)"
+    fi
 fi
 
 # --- Check 3: RULES_BUNDLE present -------------------------------------------

@@ -35,6 +35,7 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CA_ROOT="$HOME/.craft-agent/workspaces"
 PASSTHROUGH=()
+DIRECT_MODE=false
 
 usage() {
     cat <<'USAGE'
@@ -50,9 +51,17 @@ USAGE
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help) usage; exit 0 ;;
+        --no-craft-agent) DIRECT_MODE=true; PASSTHROUGH+=("$1"); shift ;;
         *) PASSTHROUGH+=("$1"); shift ;;
     esac
 done
+
+# If no Craft Agent workspace exists, install.sh falls back to direct-clone
+# mode, which install-hooks.sh handles but which the CA continue:false probe
+# does not cover. Detect that so the success message does not overclaim.
+if [[ ! -d "$CA_ROOT" ]] || [[ -z "$(ls -A "$CA_ROOT" 2>/dev/null)" ]]; then
+    DIRECT_MODE=true
+fi
 
 echo "=== harmonize: wiring enforcement from $REPO_ROOT ==="
 echo
@@ -62,7 +71,14 @@ echo
 # the blocking gate, registers the watchdog automation, and self-verifies.
 if bash "$REPO_ROOT/bin/install.sh" "${PASSTHROUGH[@]}"; then
     echo
-    echo "HARMONIZE OK: enforcement wired and verified live."
+    if [[ "$DIRECT_MODE" == "true" ]]; then
+        echo "HARMONIZE OK: direct-clone hooks installed (Claude Code)."
+        echo "NOTE: the Craft Agent continue:false enforcement probe does not apply to"
+        echo "direct-clone mode. Verify settings.local.json hooks and native git hooks"
+        echo "manually; automated direct-mode verification is a follow-up (#96)."
+    else
+        echo "HARMONIZE OK: enforcement wired and verified live."
+    fi
     exit 0
 fi
 

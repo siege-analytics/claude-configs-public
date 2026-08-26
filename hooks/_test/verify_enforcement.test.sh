@@ -7,6 +7,8 @@
 #   2. runs a real live block test (continue:false) against the deployed gate
 #   3. FAILS a skills-only fixture (the advisory-only failure mode of #96)
 #   4. FAILS when the blocking wrapper is absent from settings.json
+#   5. FAILS when a deployed gate guard is missing (F1) or the registered
+#      wrapper path does not resolve (F2)
 #
 # No jq dependency; uses python3 for JSON, matching verify-enforcement.sh.
 #
@@ -33,6 +35,12 @@ WIRED="$TMP/wired"
 mkdir -p "$WIRED/hooks/resolver" "$WIRED/.claude"
 cp "$REAL_GATE" "$WIRED/hooks/resolver/ca-enforcement-gate.sh"
 chmod +x "$WIRED/hooks/resolver/ca-enforcement-gate.sh"
+# The wrapper silently skips guards it cannot execute, so the probe requires
+# the deployed guards to be present and executable. Provide clean stubs.
+for guard in think-gate-guard.sh investigate-gate-guard.sh skill-enforcement-gate.sh; do
+    printf '#!/usr/bin/env bash\n' > "$WIRED/hooks/resolver/$guard"
+    chmod +x "$WIRED/hooks/resolver/$guard"
+done
 : > "$WIRED/RULES_BUNDLE.md"
 : > "$WIRED/RESOLVER.md"
 (cd "$WIRED" && ln -s RULES_BUNDLE.md CLAUDE.md)
@@ -74,6 +82,30 @@ if bash "$PROBE" --target "$NOWRAP" --mode craft-agent >/dev/null 2>&1; then
     bad "fixture missing the blocking wrapper should FAIL but passed"
 else
     ok "fixture missing ca-enforcement-gate registration fails the probe"
+fi
+
+# --- FAIL fixture: wrapper present but a deployed gate guard is missing (F1) --
+
+NOGUARD="$TMP/noguard"
+cp -r "$WIRED" "$NOGUARD"
+rm -f "$NOGUARD/hooks/resolver/think-gate-guard.sh"
+if bash "$PROBE" --target "$NOGUARD" --mode craft-agent >/dev/null 2>&1; then
+    bad "fixture with a missing gate guard should FAIL but passed"
+else
+    ok "fixture with a missing deployed gate guard fails the probe"
+fi
+
+# --- FAIL fixture: registered wrapper path does not resolve (F2) --------------
+
+BADPATH="$TMP/badpath"
+cp -r "$WIRED" "$BADPATH"
+cat > "$BADPATH/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"/nonexistent/typo/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$BADPATH" --mode craft-agent >/dev/null 2>&1; then
+    bad "fixture with a non-resolving wrapper path should FAIL but passed"
+else
+    ok "fixture with a non-resolving ca-enforcement-gate path fails the probe"
 fi
 
 echo
