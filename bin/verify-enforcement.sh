@@ -142,19 +142,23 @@ if [[ ! -f "$SETTINGS" ]]; then
 elif ! python3 -c "import json; json.load(open('$SETTINGS'))" 2>/dev/null; then
     fail "settings file is not valid JSON: $SETTINGS"
 else
-    # Extract the registered wrapper command's script path (the first token, so
-    # any trailing args are stripped). A substring match alone would pass a
-    # stale or typo'd path that resolves to nothing at runtime, so assert the
-    # path is an executable file, not just that the name appears.
+    # Extract the registered wrapper's script path and assert it is an
+    # executable file. A substring match alone would pass a stale or typo'd
+    # path that resolves to nothing at runtime. The command is a bare
+    # (unquoted) path, which may contain spaces, so anchor on the script name
+    # rather than splitting on whitespace: take everything up to and including
+    # ca-enforcement-gate.sh. This preserves spaces and requires the executable
+    # token to actually be the gate, not merely to mention it in an argument.
     gate_cmd="$(python3 - "$SETTINGS" <<'PY'
 import json, sys
 s = json.load(open(sys.argv[1]))
 ups = s.get("hooks", {}).get("UserPromptSubmit", [])
+marker = "ca-enforcement-gate.sh"
 for grp in ups:
     for h in grp.get("hooks", []):
         c = h.get("command", "")
-        if "ca-enforcement-gate.sh" in c:
-            print(c.split()[0])
+        if marker in c:
+            print((c.split(marker)[0] + marker).strip())
             sys.exit(0)
 sys.exit(0)
 PY

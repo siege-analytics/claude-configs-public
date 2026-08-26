@@ -57,6 +57,8 @@ def merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
         raise SystemExit(f"ERROR: {dst} is not valid JSON: {e}")
     if not isinstance(existing, dict):
         raise SystemExit(f"ERROR: {dst} top-level is not a JSON object; refusing to merge")
+    if not isinstance(existing.get("hooks", {}), dict):
+        raise SystemExit(f"ERROR: {dst} 'hooks' is not a JSON object; refusing to merge")
 
     generated = json.loads(src.read_text())
     existing.setdefault("hooks", {}).setdefault("UserPromptSubmit", [])
