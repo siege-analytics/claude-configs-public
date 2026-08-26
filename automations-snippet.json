@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "automations": {
+    "SchedulerTick": [
+      {
+        "name": "Standing-order watchdog",
+        "cron": "*/10 * * * *",
+        "timezone": "America/Chicago",
+        "permissionMode": "safe",
+        "actions": [
+          {
+            "type": "prompt",
+            "prompt": "Standing-order watchdog tick. Inspect sessions for active standing-order continuity. A standing order is active when a session has an active session-scoped standing-order.json signal or an explicit multi-step/batch directive whose work queue is not exhausted. Do not treat another session's signal file as belonging to the target session. If work remains and the target session has no active tool call, no running sub-session, and no scheduled wakeup/continuation, send that session a direct continuation prompt: Standing order active - continue the work queue until complete, blocked, or deadline reached; do not stop after one item for affirmation. If no active standing orders exist, report 'no active standing orders' and set this watchdog session status to done. Do not modify user files."
+          }
+        ]
+      }
+    ],
+    "SessionStatusChange": [
+      {
+        "name": "Standing-order completion audit",
+        "matcher": "^(done|blocked)$",
+        "permissionMode": "safe",
+        "actions": [
+          {
+            "type": "prompt",
+            "prompt": "A session changed status to $CRAFT_NEW_STATE. If that session is governed by an active standing order or batch directive, verify the work queue is exhausted or genuinely blocked before accepting the terminal status. If the session stopped after one item while work remains, send a continuation prompt to the target session: Standing order active - continue the remaining work queue; do not stop for affirmation between items. If the status is valid, record a brief audit note and set this watchdog session status to done."
+          }
+        ]
+      }
+    ]
+  }
+}
