@@ -146,6 +146,15 @@ install_craft_agent() {
         --hooks-root "$ws_path"
     echo
 
+    # Wire the blocking enforcement layer LAST. install-hooks.sh overwrites
+    # settings.json from the base snippet (advisory injectors only), so the
+    # blocking ca-enforcement-gate.sh wrapper and the watchdog automations must
+    # be merged after it or they are clobbered. This is the step whose absence
+    # left consumers advisory-only even after a correct install.
+    echo "--- Wiring enforcement (blocking gate + watchdog automations) ---"
+    python3 "$REPO_ROOT/bin/wire-enforcement.py" --workspace "$ws_path"
+    echo
+
     # Validate
     echo "--- Validating deployment ---"
     local errors=0
@@ -200,7 +209,8 @@ install_craft_agent() {
             errors=$((errors + 1))
         fi
     else
-        echo "  [warn] .claude/settings.json not found (hooks may not fire in CLI mode)"
+        echo "  [FAIL] .claude/settings.json not found (hooks are not registered; enforcement dark)" >&2
+        errors=$((errors + 1))
     fi
 
     if [[ -d "$ws_path/hooks" ]]; then
@@ -218,7 +228,8 @@ install_craft_agent() {
         gate_count="$(python3 -c "import json; print(len(json.load(open('$ws_path/enforcement-manifest.json'))['gates']))" 2>/dev/null || echo 0)"
         echo "  [ok] enforcement-manifest.json present ($gate_count gates)"
     else
-        echo "  [warn] enforcement-manifest.json not found (CA enforcement not active)"
+        echo "  [FAIL] enforcement-manifest.json not found (CA enforcement not deployed)" >&2
+        errors=$((errors + 1))
     fi
 
     if [[ -d "$ws_path/.githooks" ]] && [[ -f "$ws_path/.githooks/pre-push" ]]; then
@@ -227,9 +238,20 @@ install_craft_agent() {
         echo "  [warn] .githooks/pre-push not found (push-time enforcement not active)"
     fi
 
+    # Authoritative gate: prove enforcement is actually LIVE, not just that the
+    # files are present. This runs a live block test (drives the deployed
+    # ca-enforcement-gate.sh and asserts continue:false) plus the wiring
+    # assertions. A green file inventory that fails this probe is exactly the
+    # advisory-only failure this install is meant to make impossible.
+    echo
+    echo "--- Verifying enforcement is live ---"
+    if ! bash "$REPO_ROOT/bin/verify-enforcement.sh" --target "$ws_path" --mode craft-agent; then
+        errors=$((errors + 1))
+    fi
+
     echo
     if [[ $errors -gt 0 ]]; then
-        echo "Deployment completed with $errors error(s)." >&2
+        echo "Deployment completed with $errors error(s). Enforcement may not be live." >&2
         return 1
     fi
 
