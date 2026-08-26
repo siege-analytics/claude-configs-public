@@ -65,6 +65,19 @@ Generated artifacts (`enforcement-manifest.json`, `settings-enforcement.json`,
 `.githooks/pre-push`) are emitted under `dist/craft-agent/` by
 `build_ca_enforcement()` and deployed by `deploy_to_workspace()`.
 
+## Automation permission mode
+
+The watchdog and completion-audit automations run in `allow-all` (execute)
+mode, not `safe`. They set session status to `done` and send continuation
+prompts to other sessions -- both are mutations that `safe` (read-only /
+Explore) mode blocks, so a `safe` watchdog finishes its inspection and then
+cannot set its own status, stalling in a can't-finish state. Their prompts are
+constrained to inspection + continuation and to not modifying user files, so
+`allow-all` is the correct level: enough privilege to act, narrowed by prompt.
+This matches the session-coordination spawn discipline -- an automation that
+must act runs with execute permission, never read-only. Do not lower these back
+to `safe`.
+
 ## The install / harmonise contract
 
 1. `bin/build.py --layout flat --deploy --craft-workspace <ws>` builds and
