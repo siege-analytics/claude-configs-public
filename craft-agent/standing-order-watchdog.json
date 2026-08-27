@@ -9,7 +9,10 @@
       "artifact": "hooks/settings-snippet.json in the claude-code package wires the hook. No Craft automation is required."
     },
     "craft_agent": {
-      "mechanism": "The same signal-file hook plus this package's automations-snippet.json. SchedulerTick creates a watchdog session that audits active standing orders and re-prompts sessions that went idle with work remaining.",
+      "default": "off (opt-in)",
+      "mechanism": "The same signal-file hook. The periodic watchdog in automations-snippet.json is opt-in and not wired by default: on SchedulerTick it creates a watchdog session that audits active standing orders and re-prompts sessions that went idle with work remaining.",
+      "session_cost": "Each SchedulerTick tick spawns a watchdog session (~144/day at the shipped */10 cadence) and each done/blocked SessionStatusChange spawns an audit session; these accumulate in the session list.",
+      "enable": "Merge craft-agent/automations-snippet.json into the workspace automations.json only when periodic batch-continuity enforcement is wanted and the session cost is acceptable.",
       "artifact": "dist/craft-agent/automations-snippet.json"
     }
   },
@@ -19,7 +22,10 @@
       "active": true,
       "deadline": "2026-05-29T10:00:00-05:00",
       "directive": "Work the batch queue until complete, blocked, or deadline reached.",
-      "work_queue": ["item-1", "item-2"]
+      "work_queue": [
+        "item-1",
+        "item-2"
+      ]
     },
     "lifecycle": {
       "activation": "Write the signal when the operator gives a multi-step, batch, overnight, or deadline-bound directive.",
