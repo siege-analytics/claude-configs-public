@@ -43,6 +43,7 @@ When mocking an external library (a third-party package on PyPI or equivalent re
 - Use the library's real exception classes via `from <pkg>.exceptions import X`, not `Exception` reassignment.
 - At least one test in the module must use a fixture built from a real response captured from the library (recorded once, committed as JSON), not a hand-rolled stub.
 - Every `MagicMock()` and `Mock()` instantiation that stands in for an external-library object must pass either `spec=<RealClass>` (rejects calls to non-existent methods), `spec_set=<RealClass>` (stricter; rejects attribute writes too), or an explicit `# noqa: writing-tests:4-spec` inline comment with a rationale naming why the real class cannot be used.
+- **Async surfaces:** when the spec class defines any `async def` method, use `AsyncMock(spec=<RealClass>)` or `create_autospec(<RealClass>, spec_set=True)`. Plain `MagicMock` / `Mock` on a class with async methods is a writing-tests:4 violation — the mock returns a `MagicMock` where the code expects a coroutine, and the coroutine-shape mismatch typically surfaces as `TypeError: object MagicMock can't be used in 'await' expression` at runtime rather than at test-write time. Grep-verifiable: for any `Mock()` / `MagicMock()` whose spec class has `async def`, replace with `AsyncMock(spec=...)`.
 
 The session's worst case: a Facebook test fed a plain dict where the SDK returns `AbstractObject`. The test read correctly; the mock just was not the real thing, so production-only `AttributeError` did not surface. `MagicMock(spec=AdAccount)` would have caught the divergence.
 
@@ -182,6 +183,43 @@ appropriate scope (`function` for isolation, `session` only when
 truly read-only). Use `copy.deepcopy()` in fixtures that return
 mutable data.
 
+**tautology_assert** -- assertion whose truth is trivially satisfied
+by construction and thus cannot fail on any revert of the code under
+test. Common shapes: `assert True`, `assert 1 == 1`, `assert x == x`,
+`assert isinstance(x, type(x))`, `assert len(list_i_just_built) == len(list_i_just_built)`.
+Distinct from `missing_assertions` (which detects zero-assertion
+tests) — a tautology test HAS assertions, they just never fail.
+
+```bash
+# Detection (AST-based; matches literal-vs-literal, x-vs-x)
+python3 -c "
+import ast, sys, pathlib
+for p in pathlib.Path('tests').rglob('test_*.py'):
+    tree = ast.parse(p.read_text())
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assert): continue
+        t = node.test
+        # assert True / assert 1
+        if isinstance(t, ast.Constant) and t.value:
+            print(f'{p}:{node.lineno}: assert <constant>')
+        # assert x == x / assert x is x
+        elif (isinstance(t, ast.Compare) and len(t.comparators) == 1
+              and isinstance(t.left, ast.Name)
+              and isinstance(t.comparators[0], ast.Name)
+              and t.left.id == t.comparators[0].id):
+            print(f'{p}:{node.lineno}: assert <name> op <same-name>')
+"
+```
+
+Severity: block (writing-tests:1 violation). Remediation: replace with
+an assertion that binds to production behavior — assert the observed
+return value equals an expected constant, assert the exception type
+raised, assert a log record was emitted. If no meaningful assertion
+exists, the test is not testing production behavior and should be
+deleted or rewritten. Complements writing-tests:1 (tests must fail if
+production breaks) — a tautology test is a subclass of "cannot fail
+if production breaks."
+
 ### Cross-references to writing-tests rules
 
 | Smell | Complements | Relationship |
@@ -190,6 +228,7 @@ mutable data.
 | mock_heavy | writing-tests:4 | Mock-dominated tests verify setup, not behavior |
 | conditional_test_logic | writing-tests:2 | Conditional tests are a form of cargo-cult (one shape serving multiple purposes) |
 | sleepy_test | writing-tests:5 | Sleeps often mask untested timing-dependent exception paths |
+| tautology_assert | writing-tests:1 | Subclass of missing_assertions — the assert exists but its truth is trivial |
 
 ## Override
 
