@@ -201,6 +201,7 @@ These rules are mandatory. No `[test-skip]` override. The rule-7 grep ("test fil
 - `[rule:testing-frameworks]` governs _which_ frameworks to use per architectural layer. Projects declare their frameworks in PROJECT.md; the `test-guard.sh` hook verifies test evidence at push time. See `[skill:testing-frameworks]` for framework recommendations.
 - `[rule:writing-code]` writing-code:3 (no speculative abstractions) is the sibling discipline on the code side; helpers and base classes are introduced only when a second caller already exists. The test-side application here covers fixtures.
 - `[rule:writing-claims]` rules apply to claims a test makes about coverage ("this test covers all four connectors") and to commit/PR messages that describe what the tests do.
+- `[rule:property-testing]` is the sibling discipline for functions whose input domain is large or combinatorial (CRS transforms, geometry operations, aggregations, normalization, serialization round-trips). When example-based tests would require enumerating dozens of cases to feel complete, reach for property tests instead. Property tests complement, not replace, example-based tests. Data-heavy libraries (geo, time-series, DataFrame ops) are especially high-ROI for this pattern.
 
 ## Migration note (v2.0.x only)
 
