@@ -104,7 +104,7 @@ MUTATION_INDICATORS=(
     'gh api .* (--input|--raw-field|-f )'
     'pip[3]? install'
     'npm install|yarn add|pnpm add'
-    'cat .* >|tee |(^|[^0-9&>])>[^ 0-9&]|(^|[^0-9&>])> |(^|[^0-9&>])>> '
+    'cat .* >|(^|[;|[:space:]])tee[[:space:]]|(^|[^0-9&>])>[^ 0-9&]|(^|[^0-9&>])> |(^|[^0-9&>])>> '
     'mkdir |touch |mv |cp '
     'chmod |chown |chgrp '
     'git config (--global|--system|--local|--unset|--add|--replace-all)'
