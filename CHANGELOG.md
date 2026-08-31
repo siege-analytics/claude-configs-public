@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Added
+
+- ticket-decomposition skill: Automation block per child ticket (#658). Step 5's decomposition table gains `Tool` and `Stub` columns (from PROJECT.md `assertion_tools[0]` + `automation_template`); Step 4 instructs authors to name the tool + stub per child ticket per writing-tests:7; consumer-protocol Step 3 picks up the two new schema fields alongside framework/test_dir; new `### Automation block` subsection documents the shape the scaffold hook (#661) consumes.
+- Part-of epic #655; #658 threads the falsifiable-AC + auto-gen chain through multi-layer decomposition.
+
 ### Fixed
 
 - Non-git mutation inversion design (#128): documented the target model for making git/workflow the low-friction mutation path, with evidence requirements, escape hatches, and phased coverage for Bash, MCP/API, browser, and external-state writes.
