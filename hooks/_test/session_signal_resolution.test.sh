@@ -68,4 +68,45 @@ else
   printf '         output: %s\n' "${out:0:300}"
 fi
 
+# Cross-session --all contamination: a brand-new session with NO gate of
+# its own must not inherit a foreign session's stale, non-terminal
+# workspace-root think-gate. Reproduces a bug where a foreign session's
+# think-gate-<slug>.json got picked up by --all for every other session
+# in a shared workspace and blocked their Bash calls on an unrelated
+# ticket's missing artifacts.
+cat >"$TMP/think-gate-foreign.json" <<'JSON'
+{"ticket":"#foreign","repo_root":"/tmp/foreign-repo","status":"implementing","session":"session-foreign"}
+JSON
+
+resolved_all_new_session=$(CRAFT_AGENT_SESSION_ID=session-brand-new python3 "$RESOLVER" --workspace "$TMP" --all 2>/dev/null | python3 -c '
+import json, sys
+gates = json.load(sys.stdin)
+tickets = [g["data"].get("ticket") for g in gates]
+print(",".join(tickets) if tickets else "NONE")
+')
+if [[ "$resolved_all_new_session" != *"#foreign"* ]]; then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1))
+  printf '  [PASS] new session --all does not inherit foreign session think-gate\n'
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+  _HARNESS_FAILED_NAMES+=("new session --all does not inherit foreign session think-gate")
+  printf '  [FAIL] new session --all does not inherit foreign session think-gate (got: %s)\n' "$resolved_all_new_session"
+fi
+
+# The owning session's own --all resolution must still see its gate.
+resolved_all_owning_session=$(CRAFT_AGENT_SESSION_ID=session-foreign python3 "$RESOLVER" --workspace "$TMP" --all 2>/dev/null | python3 -c '
+import json, sys
+gates = json.load(sys.stdin)
+tickets = [g["data"].get("ticket") for g in gates]
+print(",".join(tickets) if tickets else "NONE")
+')
+if [[ "$resolved_all_owning_session" == *"#foreign"* ]]; then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1))
+  printf '  [PASS] owning session --all still sees its own workspace-root think-gate\n'
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+  _HARNESS_FAILED_NAMES+=("owning session --all still sees its own workspace-root think-gate")
+  printf '  [FAIL] owning session --all still sees its own workspace-root think-gate (got: %s)\n' "$resolved_all_owning_session"
+fi
+
 report
