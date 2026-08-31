@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Added
+
+- Test-stub skeleton templates (#660): seven skeletons under `templates/tests/` (pytest unit, pytest integration, Playwright e2e, Vitest component, Schemathesis contract, Great Expectations suite, k6 scenario), each parameterized on `{ticket_id}`, `{ac_id}`, `{feature}` and each engineered to fail with a message naming the AC when run against an unimplemented target. Consumed by the scaffold hook (#661) once it lands.
+- Part-of epic #655; supplies the `templates/tests` set referenced by the `automation_template` schema field (#659) and by the writing-tests:7 rule (#656).
+
 ### Fixed
 
 - Non-git mutation inversion design (#128): documented the target model for making git/workflow the low-friction mutation path, with evidence requirements, escape hatches, and phased coverage for Bash, MCP/API, browser, and external-state writes.
