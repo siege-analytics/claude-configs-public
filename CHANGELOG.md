@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Added
+
+- create-ticket skill: falsifiable acceptance criteria (#657). Ticket template AC block now requires a paired `Falsifiable-by:` observation and `Tool:` name (drawn from the touched layer's `assertion_tools` in `PROJECT.md`). New section `## Falsifiable acceptance criteria` documents the layer-tool table pointing at the seven shipped stub templates (#660) and six availability probes (#662), the tool-availability-probe invocation pattern, multi-layer handling via `[skill:ticket-decomposition]`, and the "surface the schema gap" behavior when a layer has no `assertion_tools` declared.
+- Part-of epic #655; #657 updates `skills/create-ticket/SKILL.md` to compose with writing-tests:7 (#656).
+
 ### Fixed
 
 - Non-git mutation inversion design (#128): documented the target model for making git/workflow the low-friction mutation path, with evidence requirements, escape hatches, and phased coverage for Bash, MCP/API, browser, and external-state writes.
