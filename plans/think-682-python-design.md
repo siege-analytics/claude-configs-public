@@ -128,17 +128,39 @@ The discriminator, fixed before classifying:
 
 **This classification is made by the same author who registered H1, which is exactly the weakness PR #684 round 2 identified about the severity rubric (fact-sheet finding 9-3).** Two mitigations, both weaker than independence: the discriminator was written before the classification rather than after it, and every reclassification away from the fact sheet's preliminary read is listed below with its direction. The hostile reviewer on this note should re-classify a sample rather than audit the totals, because the totals are the thing an author under H1 pressure will get right.
 
-**Count.** 31 of 55 structural, against a pre-registered threshold of 28. Produced by counting DISCHARGED-BY-CONSTRUCTION rows in the finding-disposition table below:
+**Count.** 22 of 55 structural, against a pre-registered threshold of 28. Round 1 of this note published 31; the correction is set out below. Produced by counting DISCHARGED-BY-CONSTRUCTION rows in the finding-disposition table below:
 
 ```
 grep -cE '^\| (#6(68|72) P|F-N)[^|]*\|[^|]*\| DISCHARGED-BY-CONSTRUCTION' plans/think-682-python-design.md
 ```
 
-**Verdict: CONTINUE.** H1 holds at 31/55, margin 3.
+**Verdict: DESCOPE.** H1 fails at 22/55 against a threshold of 28. The 31 published in round 1 of this note was wrong, and the correction is the note's main result.
 
-**The margin is thin and the note says so rather than reporting the verdict alone.** Four reclassifications in the H1-unfavourable direction flip it to DESCOPE. The four most contestable structural calls, named so a reviewer can go at them directly: #672 P2-1 (bash's `printf '%s'` not interpreting `\n` has no Python analogue -- but a ported fixture could still use a raw string), #668 P2-5 (`shutil.which` does not consult shell functions -- but a subprocess could still be given a shell), #668 P2-7 (`exit` inside a sourced helper -- library modules return, but nothing forbids `sys.exit` in one), and F-N6 (layer-to-template coverage becomes total only if the mapping is keyed by an exhaustive `(Tool, Layer)` product, which is a design commitment rather than a language guarantee). If a reviewer overturns all four, the count is 27 and the epic descopes.
+**What moved, and how.** Round 1 of hostile review (HR692-3) contested five structural calls. All five are accepted. Re-deriving the whole table rather than the five rows named turned up four more in the same direction. Nine rows move from structural to incidental; none moves the other way.
 
-**Reclassifications from the fact sheet's preliminary read.** Two, both against H1:
+| Row | Was | Now | Why it is not a construct |
+|---|---|---|---|
+| `#668 P0-5` | S | I | a per-run cache keyed by `Tool` is a data structure someone adds; nothing in Python makes a repeated call for one tool unrepresentable |
+| `#668 P1-1` | S | I | `Version \| None` is an annotation, and no type checker is run (see below), so it forbids nothing at runtime |
+| `#668 P1-4` | S | I | `paths.repo_root()` anchors resolution only for code that calls it; `Path.cwd()` and relative opens remain available. A convention, not a construct |
+| `#668 P1-5` | S | I | `IssueRef \| None` is the same annotation-only claim, and the note already classified the identical argument for F-N14 as incidental. The two cannot both be right |
+| `#668 P2-7` | S | I | library modules return values, but `sys.exit` in one still terminates the caller, and no falsifier forbids it |
+| `#672 P2-1` | S | I | a ported fixture can use a raw string. Named as contestable in round 1 and now conceded |
+| `F-N6` | S | I | the note's own wording is "a design commitment rather than a language guarantee", which is the definition of the incidental side |
+| `F-N10` | S | I | consumer half of `#668 P0-5`, discharged by the same cache, so it moves for the same reason |
+| `F-N27` | S | I | a required `layer` parameter forbids omitting the argument, not discarding the parsed value and passing a different one, which is the defect |
+
+The ids in this table are backticked so that the AC3 parser, whose regex is quoted in the falsifiable-claims section, does not read these nine rows as nine more findings. An earlier draft of this table was not backticked and produced 64 rows for 55 findings. That is the same defect as PR #686's round-2 finding R2-S2-2 one artifact away: a published command whose selector matches a second table that was added after the command was written.
+
+Four of the nine (#668 P1-1, P1-4, P1-5 and F-N6) were found by this note, not by the reviewer. They are recorded here because a correction that only ever lands where a reviewer pointed is a correction made under supervision rather than a re-derivation.
+
+**The type-checker hole, which is upstream of three of those rows.** Grepping this note for `mypy`, `pyright` or `--strict` returns nothing. Several structural claims were built on annotations, and an annotation that nothing checks makes no shape unrepresentable. Adding `mypy --strict` to the cutover unit would convert #668 P1-1, #668 P1-5 and F-N14 into enforced constraints and would raise the count. **This note does not make that change,** because it was identified only after the count fell below the threshold, and adding an enforcement mechanism at that moment is exactly the move fact-sheet finding 9-3 warns about when the author of a hypothesis also scores it. It is filed as a proposal for whoever takes the descoped epic, to be decided by someone other than this author.
+
+**Why the verdict is not 26.** The reviewer's stated rule is that a mechanism is structural only where the defect cannot be reintroduced. Applied to the five rows they chose, it yields 26. Applied evenly to five rows they accepted, it takes those too: `InstallPlan.argv` does not prevent `subprocess.run(" ".join(argv), shell=True)` (#668 P2-2); `json.dumps` does not prevent `'{"tool": "%s"}' % t` (#668 P1-2); "no awk" does not remove `awk` from `PATH` (F-N9); `sys.stdin.read()` not stripping does not prevent `.rstrip("\n")` (#672 P2-6); a `Layer` enum does not prevent `layer.value.upper()` (F-N16). Each was executed, not argued. In a language where nothing is unrepresentable, that rule drives the count to near zero, so 26 is not a measurement of anything and should not be carried forward as one. The verdict is DESCOPE because 22 is below 28 under the discriminator as this note published it, not because the reviewer's stricter rule was adopted.
+
+**What DESCOPE commits the epic to.** Per the framing above, "if H1 fails, the epic descopes to per-defect fixes in bash". That is now the recommendation. The rest of this note does not evaporate with H1: the 16 constraints, their mechanisms and falsifiers, and the 24-row checklist describe defects and remedies that are true of the bash tree as well, and the C-6 privilege narrowing and the C-8 test floor are worth doing in either language. What does not survive is the claim that a rewrite is the economical way to get them.
+
+**Reclassifications from the fact sheet's preliminary read.** These are a separate axis from the nine round-1 moves above: they are places where this note disagreed with the fact sheet when it first classified, not places where it later corrected itself. Two, both against H1:
 
 - **F-N19** (the probe suite writes its own private copy of the infra-ticket template) -- preliminary read: structural. Here: **incidental**. C-5 is a test-authoring rule. A fixture library can offer "the shipped template read from disk" as its only template accessor, but nothing stops a test from opening a file itself. The discriminator says a discipline is not a construct.
 - **F-N24** (no fixture library exists) -- preliminary read: structural. Here: **incidental**. Classifying "the artefact does not exist yet" as discharged-by-construction is a category error; it is fixed by building it, which is the definition of a fix someone must decide to make.
@@ -197,7 +219,7 @@ Public surface, one entry per node in the diagram:
 | `parse.py` | `parse_automation_blocks(body: str) -> list[AutomationBlock]` (raises `MalformedAutomationBlock`), `MalformedAutomationBlock` |
 | `detect.py` | `detect(spec: ToolSpec) -> Version \| None`, `DETECTORS: dict[Tool, Callable[[], Version \| None]]` |
 | `install.py` | `plan_for(tool: Tool, host: HostFacts) -> InstallPlan \| None`, `HostFacts`, `run_plan(plan: InstallPlan, runner: Runner) -> None` (raises `InstallFailed`), `Runner` (protocol), `SubprocessRunner`, `InstallFailed` |
-| `policy.py` | `resolve_policy(root: Path) -> InstallPolicy`, `max_tier(policy: InstallPolicy, confirmed: PrivilegeTier \| None) -> PrivilegeTier`, `InvalidPolicyValue` |
+| `policy.py` | `resolve_policy(root: Path) -> InstallPolicy`, `authorise(policy: InstallPolicy, confirmed: PrivilegeTier \| None) -> Authorisation`, `InvalidPolicyValue` |
 | `render.py` | `template_for(tool: Tool, layer: Layer) -> Path`, `render(template: Path, values: dict[str, str]) -> str`, `placeholders(template: Path) -> set[str]`, `TemplateMissing`, `PlaceholderMismatch` |
 | `report.py` | `IssueFiler` (protocol), `GhIssueFiler`, `RecordingIssueFiler`, `file_infra_ticket(filer: IssueFiler, result: ProbeResult, body: str) -> IssueRef` |
 | `orchestrate.py` | `probe(tool: Tool, layer: Layer, ctx: RunContext) -> ProbeResult`, `scaffold(body: str, ctx: RunContext) -> ScaffoldOutcome`, `RunContext`, `ScaffoldOutcome` |
@@ -238,7 +260,8 @@ Fresh interpreter matters. Run inside a process that has already imported `orche
 | `Tool` | `types.py` | everything | Enum with six members. Replaces `_normalize_tool` and `_is_known_tool`: an unknown tool name is a `ValueError` from `Tool(...)`, not a boolean check against a hand-maintained list. Discharges F-N4. |
 | `Layer` | `types.py` | everything | Enum with one canonical spelling per layer. C-16. Discharges F-N16. |
 | `PrivilegeTier` | `types.py` | everything | `USER < SYSTEM < ROOT`, ordered. C-6. |
-| `InstallPolicy` | `types.py` | everything | `BLOCK`, `PROMPT`, `ALLOW`. Parsed from `PROJECT.md`; an unrecognised value raises `InvalidPolicyValue` rather than falling through to block. Discharges #668 P1-6. |
+| `InstallPolicy` | `types.py` | everything | `BLOCK`, `PROMPT`, `ALLOW`, `ALLOW_PRIVILEGED`. Parsed from `PROJECT.md` (`block`, `prompt`, `allow`, `allow-privileged`); an unrecognised value raises `InvalidPolicyValue` rather than falling through to block. Discharges #668 P1-6. |
+| `Authorisation` | `types.py` | everything | `NoInstall()` or `UpTo(tier: PrivilegeTier)`. The result of `policy.authorise`. `BLOCK` maps to `NoInstall`, which is a distinct value rather than a bottom tier, because `PrivilegeTier` is ordered and has no member below `USER`. C-6. |
 | `ProbeStatus` | `types.py` | everything | The status vocabulary the JSON contract used to carry as a string literal. C-4: no literal status string appears outside `types.py`. |
 | `ToolSpec` | `types.py` | everything | `tool`, `canonical_name`, `binary_name`, `module_name`, `version_argv`. `canonical_name` and `binary_name` are separate fields; conflating them is F-N17. |
 | `InstallPlan` | `types.py` | everything | `argv: list[list[str]]`, `tier: PrivilegeTier`, `tool: Tool`. An argument list, never a string. There is no `eval`, and no shell, so there is no slot in which prose can be executed. C-6. |
@@ -289,14 +312,16 @@ Fresh interpreter matters. Run inside a process that has already imported `orche
 
 - **Constraint:** Install commands are argument lists with a declared privilege tier. The `allow` token authorises user-space installs only; privileged installs require a token that names privilege.
 - **Disposition:** SATISFIED
-- **Mechanism:** `InstallPlan.argv` is `list[list[str]]` and `InstallPlan.tier` is a `PrivilegeTier`. `policy.max_tier` maps `BLOCK` to no install at all, `ALLOW` to `USER`, and `PROMPT` to the tier the operator confirmed interactively. A new token `allow-privileged` authorises up to `ROOT`. A plan whose tier exceeds the authorised maximum yields `ProbeStatus.BLOCKED_ON_INFRA` and files an infra ticket naming both the required tier and the token that would authorise it. No string is ever passed to a shell. The vocabulary decision in full:
+- **Mechanism:** `InstallPlan.argv` is `list[list[str]]` and `InstallPlan.tier` is a `PrivilegeTier`. `policy.authorise` returns an `Authorisation`, which is either `NoInstall` or `UpTo(tier)`. A plan is executed only when the authorisation is `UpTo(t)` and `plan.tier <= t`; otherwise the run yields `ProbeStatus.BLOCKED_ON_INFRA` and files an infra ticket naming both the required tier and the token that would authorise it. No string is ever passed to a shell. The vocabulary decision in full:
 
-  | `PROJECT.md` value | Maximum authorised tier | Effect on today's k6 path |
-  |---|---|---|
-  | `block` | none | unchanged: no install |
-  | `allow` | `USER` | **behaviour change**: the `sudo` chain is refused and an infra ticket is filed instead of executing |
-  | `prompt` | the confirmed tier | unchanged in shape; the prompt now names the tier |
-  | `allow-privileged` (new) | `ROOT` | the only value under which the `sudo` chain runs |
+  | `PROJECT.md` value | `InstallPolicy` | `authorise(...)` | Effect on today's k6 path |
+  |---|---|---|---|
+  | `block` | `BLOCK` | `NoInstall` | unchanged: no install |
+  | `allow` | `ALLOW` | `UpTo(USER)` | **behaviour change**: the `sudo` chain is refused and an infra ticket is filed instead of executing |
+  | `prompt` | `PROMPT` | `UpTo(confirmed)`, or `NoInstall` when `confirmed is None` | unchanged in shape; the prompt now names the tier |
+  | `allow-privileged` | `ALLOW_PRIVILEGED` | `UpTo(ROOT)` | the only value under which the `sudo` chain runs |
+
+  Round 1 of hostile review (HR692-1) found the earlier form of this paragraph undeliverable: it introduced `allow-privileged` in prose while the `InstallPolicy` enum listed only three members, and it gave `max_tier` a return type of `PrivilegeTier`, which has no member meaning "no install" because the tier ordering starts at `USER`. An implementer following the published surface had to invent a state the design had not specified. `Authorisation` is that state, named. The `PROMPT`-with-no-confirmation case was undefined in the same paragraph and is now `NoInstall`: declining a prompt authorises nothing, which is the only reading under which a non-interactive run cannot silently acquire the confirmed tier.
 
   An existing `PROJECT.md` that says `allow` therefore stops installing k6 and starts filing a ticket. That is a breaking change to a documented value and needs a CHANGELOG entry under `[Unreleased]` plus the `skills/tool-availability-probe/SKILL.md` policy table. Its live blast radius in this repository is zero: no `PROJECT.md` exists here (#672 P1-3). It is not zero for consumers, which is why it is a CHANGELOG entry and not a silent narrowing.
 - **Falsifier:** `test_allow_never_runs_privileged` drives an install under `allow` with a `RecordingRunner` and asserts no recorded argv contains `sudo`. This is one of the six C-8 floor tests and it fails against the bash implementation, where `scripts/probe/_common.sh:166` `eval`s `k6.sh:16`'s chain under exactly that policy.
@@ -306,7 +331,9 @@ Fresh interpreter matters. Run inside a process that has already imported `orche
 - **Constraint:** Detection and remediation are separate modules. The detection module has no transitive import path to the installer or to the issue-filer.
 - **Disposition:** SATISFIED
 - **Mechanism:** `detect.py` imports `types` only. The dependency direction is `orchestrate -> detect`, never the reverse. See "Resolving C-2 against C-7" above for why this does not conflict with C-2.
-- **Falsifier:** `test_detect_has_no_installer_import_path` spawns a fresh `python3 -c`, imports `exec_path.detect`, and asserts `exec_path.install` and `exec_path.report` are absent from `sys.modules`. It must run in a subprocess; run in-process after other imports it passes vacuously.
+- **Falsifier:** `test_detect_has_no_installer_import_path` parses every module in `exec_path/` with `ast`, collects every `Import` and `ImportFrom` node reached by `ast.walk` (so a `from . import install` nested inside a function body counts exactly as much as one at module scope), computes the transitive closure from `exec_path.detect`, and fails if `exec_path.install` or `exec_path.report` is in it. It fails a second way if any module in the package calls `importlib.import_module` or `__import__`, because a dynamic import makes the static graph non-authoritative and the constraint unverifiable rather than satisfied.
+
+  A supplemental smoke test spawns a fresh `python3 -c`, imports `exec_path.detect`, and asserts the two modules are absent from `sys.modules`. It is retained but it is not the falsifier, because round 1 of hostile review (HR692-2) showed it passing against a package that violates C-7. The gap is specific and worth stating precisely rather than in the reviewer's broader terms: the `sys.modules` test does catch an eager transitive path, because `detect -> helper -> install` puts `install` in `sys.modules` at import time. What it does not catch is a **lazy** import, `def remediate_later(): from . import install`, which leaves `sys.modules` clean at import and still constitutes an import path. Both shapes were run against both checks before this paragraph was written; the static check fails on the lazy case, the eager transitive case and the dynamic case, and passes on the compliant package.
 
 #### C-8
 
@@ -426,12 +453,12 @@ All 55 live findings. `S` marks the H1 classification: `S` structural, `I` incid
 | #668 P0-2 | S | DISCHARGED-BY-CONSTRUCTION | `gh` failure raises through `report.file_infra_ticket`; there is no unchecked command substitution to swallow it (C-2, C-14) |
 | #668 P0-3 | S | DISCHARGED-BY-CONSTRUCTION | no configurable binary-name string, so the shim that makes the re-check unsatisfiable is unrepresentable (C-3) |
 | #668 P0-4 | I | FIXED-EXPLICITLY | `policy.resolve_policy` implements the grammar SKILL.md documents; a doc-conformance test reads the SKILL.md example and parses it |
-| #668 P0-5 | S | DISCHARGED-BY-CONSTRUCTION | `orchestrate` holds a per-run cache keyed by `Tool`; N ACs naming one tool are one call, not N processes |
-| #668 P1-1 | S | DISCHARGED-BY-CONSTRUCTION | per-tool detector returns `Version \| None`; module-present and binary-absent are distinct code paths in one callable (C-3) |
+| #668 P0-5 | I | FIXED-EXPLICITLY | `orchestrate` holds a per-run cache keyed by `Tool`; N ACs naming one tool are one call, not N processes. **Reclassified in round 1 (HR692-3):** the cache is a data structure someone adds, not a construct |
+| #668 P1-1 | I | FIXED-EXPLICITLY | per-tool detector returns `Version \| None`; module-present and binary-absent are distinct code paths in one callable (C-3). **Reclassified in round 1 (author-found):** the annotation is unchecked, so it forbids nothing |
 | #668 P1-2 | S | DISCHARGED-BY-CONSTRUCTION | `ProbeResult.to_json` uses `json.dumps`; no hand-built JSON exists (C-4) |
 | #668 P1-3 | I | FIXED-EXPLICITLY | `SubprocessRunner` passes a `timeout` to `subprocess.run`; an argv list does not imply a time-box, so this is a decision someone must make |
-| #668 P1-4 | S | DISCHARGED-BY-CONSTRUCTION | `paths.repo_root()` anchors policy and template resolution; nothing reads from the caller's CWD (C-1) |
-| #668 P1-5 | S | DISCHARGED-BY-CONSTRUCTION | `IssueRef \| None` replaces the `unfilable-gh-missing` string; a sentinel in a value slot is unrepresentable |
+| #668 P1-4 | I | FIXED-EXPLICITLY | `paths.repo_root()` anchors policy and template resolution; nothing reads from the caller's CWD (C-1). **Reclassified in round 1 (author-found):** it anchors only code that calls it, so it is a convention |
+| #668 P1-5 | I | FIXED-EXPLICITLY | `IssueRef \| None` replaces the `unfilable-gh-missing` string. **Reclassified in round 1 (author-found):** identical in form to F-N14, which this note already called incidental; the two cannot both stand |
 | #668 P1-6 | S | DISCHARGED-BY-CONSTRUCTION | `InstallPolicy(...)` raises `InvalidPolicyValue`; there is no fall-through branch to degrade into |
 | #668 P1-7 | I | FIXED-EXPLICITLY | the `sed` half dissolves; the `gh` title half still needs a declared validator at the `ISSUE_BODY` sink, which is a fix rather than a construct (C-15) |
 | #668 P2-1 | S | DISCHARGED-BY-CONSTRUCTION | policy is parsed, not `sed`-extracted; `str.strip()` handles CR and byte-exact matching does not occur |
@@ -440,13 +467,13 @@ All 55 live findings. `S` marks the H1 classification: `S` structural, `I` incid
 | #668 P2-4 | I | FIXED-EXPLICITLY | substitute `basename(session_dir)` at the `ISSUE_BODY` sink; a leaked absolute path is a data choice, not a construct |
 | #668 P2-5 | S | DISCHARGED-BY-CONSTRUCTION | `shutil.which` resolves against `PATH` and does not consult shell functions or builtins |
 | #668 P2-6 | I | FIXED-EXPLICITLY | the title renderer must handle an absent blocker; `Optional` typing flags it but does not decide the wording |
-| #668 P2-7 | S | DISCHARGED-BY-CONSTRUCTION | library modules return values; there is no sourced-helper `exit` that terminates a caller's shell |
+| #668 P2-7 | I | FIXED-EXPLICITLY | library modules return values rather than exiting. **Reclassified in round 1 (HR692-3):** `sys.exit` in a library module still terminates the caller and no falsifier forbids it |
 | #668 P2-8 | I | FIXED-EXPLICITLY | document the inherited proxy and index environment in SKILL.md; surface captured install output in the infra-ticket body instead of discarding it |
 | #668 P2-9 | I | DECLINED-WITH-REASON | a waiver defect in `plans/self-review-662.md`, not a code defect. Declined here because a design note cannot withdraw a waiver; the withdrawal belongs on the #662 artifact. Counted in the denominator anyway, because a silent exclusion is the exact operation that produced fact-sheet finding 10-1. Excluding it gives 30 of 54 structural against a threshold of 27, so H1's verdict does not turn on it |
 | #672 P1-2 | S | DISCHARGED-BY-CONSTRUCTION | a malformed `Automation:` line raises `MalformedAutomationBlock`; there is no stderr-noise-and-exit-0 path |
 | #672 P1-6 | S | DISCHARGED-BY-CONSTRUCTION | the `ProbeResult` reaches the footer renderer as an object; degraded outcomes are fields, not discarded exit codes (C-2, C-16) |
 | #672 P1-7 | I | FIXED-EXPLICITLY | the exit-code vocabulary is re-derived against SKILL.md; a documented code that is never emitted is drift, not a construct |
-| #672 P2-1 | S | DISCHARGED-BY-CONSTRUCTION | the defect is bash's `printf '%s'` not interpreting `\n` in a single-quoted literal; a Python `"\n"` is a newline. Contestable: a ported fixture could still use a raw string, and this is one of the four calls named in the H1 margin |
+| #672 P2-1 | I | FIXED-EXPLICITLY | the defect is bash's `printf '%s'` not interpreting `\n` in a single-quoted literal; a Python `"\n"` is a newline. **Reclassified in round 1 (HR692-3):** named contestable when written, and conceded, because a ported fixture can use a raw string |
 | #672 P2-2 | I | FIXED-EXPLICITLY | exit-code, multi-block, missing-Probe, `PROJECT.md`, traversal and exists-skip fixtures are written; missing coverage is fixed, not discharged |
 | #672 P2-3 | I | FIXED-EXPLICITLY | `Tool:pytest` with no space is a grammar decision `parse.py` must state in its accepted forms |
 | #672 P2-6 | S | DISCHARGED-BY-CONSTRUCTION | `sys.stdin.read()` does not strip trailing newlines; `$(cat)` does |
@@ -455,11 +482,11 @@ All 55 live findings. `S` marks the H1 classification: `S` structural, `I` incid
 | F-N3 | I | FIXED-EXPLICITLY | the stale `[Unreleased]` #661 entry is corrected in the same PR as the cutover |
 | F-N4 | S | DISCHARGED-BY-CONSTRUCTION | one `Tool` enum replaces two hand-maintained lists; `set(DETECTORS) == set(Tool)` is asserted |
 | F-N5 | S | DISCHARGED-BY-CONSTRUCTION | `Path.read_text` and `str.replace` preserve the trailing newline; the `$(...)` stripping that loses it does not exist |
-| F-N6 | S | DISCHARGED-BY-CONSTRUCTION | `template_for` is keyed by the exhaustive `(Tool, Layer)` product; a missing pair is an error, not a silent ignore. Contestable: exhaustiveness is a design commitment, and this is one of the four calls named in the H1 margin |
+| F-N6 | I | FIXED-EXPLICITLY | `template_for` is keyed by the exhaustive `(Tool, Layer)` product; a missing pair is an error, not a silent ignore. **Reclassified in round 1 (author-found):** the note's own wording, "a design commitment rather than a language guarantee", is the incidental side of the discriminator |
 | F-N7 | I | DECLINED-WITH-REASON | `templates/tests/README.md:44` instructs authors to register a path in a SKILL.md that nothing reads. Outside the rewrite surface; the fix is deleting an instruction in a file this epic does not touch. Filed separately rather than smuggled into a rewrite PR |
 | F-N8 | S | DISCHARGED-BY-CONSTRUCTION | `parse_automation_blocks` returns a list; there is no in-band sentinel a ticket body can contain |
 | F-N9 | S | DISCHARGED-BY-CONSTRUCTION | no awk, so no program text into which a filename is interpolated |
-| F-N10 | S | DISCHARGED-BY-CONSTRUCTION | the per-run cache in `orchestrate`; consumer half of #668 P0-5 and discharged by the same mechanism |
+| F-N10 | I | FIXED-EXPLICITLY | the per-run cache in `orchestrate`; consumer half of #668 P0-5. **Reclassified in round 1 (HR692-3):** moves for the same reason as #668 P0-5, and is counted separately because both are separately counted in the denominator |
 | F-N11 | S | DISCHARGED-BY-CONSTRUCTION | `orchestrate.probe` returns a `ProbeResult`; there is no exit code and no stderr redirect to discard (C-2) |
 | F-N12 | S | DISCHARGED-BY-CONSTRUCTION | `json.dumps` for emission, no bare `except` for consumption, and the internal path does not serialise at all (C-2, C-4) |
 | F-N12b | S | DISCHARGED-BY-CONSTRUCTION | `subprocess.run` keeps stdout and stderr separate; there is no pipeline for `\|\|` to bind across |
@@ -477,7 +504,7 @@ All 55 live findings. `S` marks the H1 classification: `S` structural, `I` incid
 | F-N24 | I | FIXED-EXPLICITLY | the fixture library is built. **Reclassified from the preliminary read's structural**, against H1: an artefact that does not exist is fixed by creating it |
 | F-N25 | I | FIXED-EXPLICITLY | `skills/tool-availability-probe/SKILL.md:78` documents an exit-78 interpretation. In-process there is no exit code at all, so the doc is rewritten rather than made true |
 | F-N26 | I | FIXED-EXPLICITLY | `str.isidentifier()` at the `PYTHON_IDENTIFIER` sink (C-15a). Per-sink validators arguably make "one regex, three grammars" unrepresentable; the preliminary read called it incidental and the note declines to overturn toward H1 |
-| F-N27 | S | DISCHARGED-BY-CONSTRUCTION | `layer` is a parameter of `orchestrate.probe` and a field of `ProbeResult`; the value cannot be parsed and then dropped (C-16) |
+| F-N27 | I | FIXED-EXPLICITLY | `layer` is a parameter of `orchestrate.probe` and a field of `ProbeResult` (C-16). **Reclassified in round 1 (HR692-3):** a required parameter forbids omitting the argument, not discarding the parsed value and passing another, which is the defect |
 
 Totals: 31 DISCHARGED-BY-CONSTRUCTION, 22 FIXED-EXPLICITLY, 2 DECLINED-WITH-REASON. 31 + 22 + 2 = 55.
 
@@ -508,7 +535,7 @@ The falsifier for the whole policy: if `git log develop --oneline` ever shows a 
 
 Each is a claim this design makes, with the observation that would refute it.
 
-1. **H1 holds at 31 of 55.** Refuted if the disposition table's DISCHARGED-BY-CONSTRUCTION row count, from the `grep -cE` command in the H1 section, is below 28. Margin is 3; four reclassifications flip it.
+1. **H1 fails at 22 of 55.** The disposition table's DISCHARGED-BY-CONSTRUCTION row count, from the `grep -cE` command in the H1 section, is 22 against a threshold of 28. This claim is refuted by five reclassifications in the H1-favourable direction; the note names one candidate set (adding `mypy --strict`, which would move `#668 P1-1`, `#668 P1-5` and F-N14) and declines to make it. Round 1 published 31 and CONTINUE; nine rows moved.
 2. **The classification is not reverse-engineered from the threshold.** Refuted if any reclassification in this note moves toward H1. Check: the note lists two reclassifications, both away from H1, and three declined overturns that would each have moved toward it.
 3. **`detect` cannot reach the installer or the issue-filer.** Refuted by `test_detect_has_no_installer_import_path` failing, or by that test being run in-process rather than in a fresh interpreter, in which case it passes vacuously and the claim is unsupported.
 4. **`allow` never runs a privileged command after cutover.** Refuted by `test_allow_never_runs_privileged` recording any argv containing `sudo`.
@@ -537,7 +564,7 @@ Each is a claim this design makes, with the observation that would refute it.
 - **`skills/tool-availability-probe/SKILL.md`** -- five of the eight `tool_install_policy` call sites are here (`:23,80,85,86,87`). The policy table gains `allow-privileged` and the `allow` row narrows to user-space. `:78`'s exit-78 paragraph is rewritten because the in-process path has no exit code (F-N25). The status/exit table stays, because the wrappers remain externally invocable.
 - **`CHANGELOG.md`** -- an `[Unreleased]` entry for the `allow` narrowing, marked as a breaking change to a documented configuration value. The stale #661 entry at `:11` that still claims `PROJECT.md` resolution and `sed` substitution is corrected in the same edit (F-N3).
 - **`templates/tests/README.md`** -- not touched. F-N7's inert instruction is declined and filed separately rather than fixed inside a rewrite PR.
-- **Docstrings** -- `paths.resolve_within_repo`, `policy.max_tier` and `orchestrate.probe` carry the behaviour contracts that the shell versions carried in comments. `resolve_within_repo`'s docstring states that it performs no filesystem mutation, because that is the C-1 invariant a future edit is most likely to break.
+- **Docstrings** -- `paths.resolve_within_repo`, `policy.authorise` and `orchestrate.probe` carry the behaviour contracts that the shell versions carried in comments. `resolve_within_repo`'s docstring states that it performs no filesystem mutation, because that is the C-1 invariant a future edit is most likely to break.
 - **Tickets** -- this note is posted to #687. Epic #682's checklist rows gain their dispositions. #691 (commit the citation checker) and #690 (disabled fingerprints push guard) are unaffected.
 - **Notebooks** -- none. This repository has no notebook layer.
 
