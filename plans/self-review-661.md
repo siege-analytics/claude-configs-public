@@ -109,3 +109,38 @@ Cycle-2 rework log:
 - First rewrite used heredoc `<<'PYEOF'` + `<<< "$BODY"` to feed python3 both script and stdin; bash resolved the later redirect (`<<<`) as stdin, so python read `$BODY` as script and returned empty. Fixed by switching to `python3 -c '...' <<< "$BODY"`.
 - Second rewrite used `${json@Q}` bash 4.4+ quote-transformation; macOS default bash is 3.2. Fixed by passing JSON via `PROBE_JSON` env var and reading `os.environ` inside python3.
 
+## Round 3 (Opus 5 hostile-review remediation)
+
+The Claude Opus 5 sibling `260831-lucid-fox` posted a second hostile review on PR #672 at 2026-08-31 21:00 CDT with 19 findings across three tiers: 5 P0, 8 P1, 6 P2. Overlap analysis vs Round 2:
+- All 5 P0 either overlapped with Round 1 (4) or were new (P0-4 zero-byte-stub-locks-AC).
+- Round 2's remediation of P0-1 introduced a latent P0: `Tool: ../../../x` becomes a live arbitrary-execution vector via `scripts/probe/${tool}.sh` once the probe branch is reachable.
+
+Round 3 addresses 5/5 P0 + 6/8 P1:
+- **P0-1**: already fixed in Round 2 (added `|| true` inside `_field`).
+- **P0-2**: already fixed in Round 2 (canonicalize stub_path + prefix check).
+- **P0-3**: already fixed in Round 2 (bash parameter expansion, not sed).
+- **P0-4**: NOW fixed via atomic write (mktemp in stub_dir + mv -n). Zero-byte-stub cleanup + concurrent-write safety.
+- **P0-5**: already fixed in Round 2 (python3 JSON parser via PROBE_JSON env).
+- **Latent Tool traversal**: NOW fixed via `KNOWN_TOOLS` allowlist + `_is_known_tool` check before any path construction.
+- **P1-1**: already fixed in Round 2 (fence-strip via python3).
+- **P1-3**: NOW fixed by DELETING the untestable PROJECT.md YAML scanner. Template resolution now lives in the case-statement fallback, exercised by every fixture.
+- **P1-4**: NOW fixed via `_normalize_tool` (underscore -> dash) + `Layer:` field routing between `pytest-unit.py.tmpl` and `pytest-integration.py.tmpl`.
+- **P1-5**: NOW fixed by renaming `TMPDIR` -> `SCRATCH_DIR` so the exported `TMPDIR` env var is not clobbered or `rm -rf`'d for the caller.
+- **P1-6**: NOW fixed via `SKIPPED=()` array + `Skipped:` section in the emitted body footer. Every degraded outcome (missing Tool, unknown tool, unsafe value, escaping path, existing file, missing template, empty render, concurrent-write loss) is now recorded in the ticket body.
+- **P1-8**: NOW fixed as a side-effect of P0-4's atomic-write pattern (`mv -n` is atomic on same filesystem).
+
+Deferred to follow-up #675:
+- **P1-2** (guard/splitter regex mismatch): partially mitigated in Round 3 by `touch`-ing the blocks file so the awk-empty case no longer leaks stderr. Full fix (loud diagnostic when guard matches but no blocks) deferred.
+- **P1-7** (documented exit 3 never emitted): header keeps `3 = internal error` labeled "in reserve"; delete-or-implement deferred.
+- All 6 P2: cosmetic / test-quality / arg-parsing polish. Documented in #675.
+
+Round-3 test run: `bash hooks/_test/scaffold_test_stub.test.sh` -> `Summary: 15 passed, 0 failed`. Six new fixtures beyond Round 2:
+- `test_unknown_tool_rejected` (Tool: ../../../evil -> Skipped, no file rendered)
+- `test_layer_selects_integration` (Layer: integration uses integration template, not unit)
+- `test_tool_normalization` (Tool: great_expectations resolves to great-expectations template)
+- `test_tmpdir_not_clobbered` (caller's TMPDIR survives hook exit)
+- `test_probe_missing_surfaced` (probe absence surfaces to body OR stub renders anyway)
+- `test_no_zero_byte_stub` (rendered stub is non-empty)
+
+On the Opus 5 waiver critique: the review challenges my Round-1 hostile-review-waiver falsification as "wrong test" -- I said "waiver invalid if hook auto-wired into git" but the actual risk is "waiver invalid if body content can influence a filesystem path or executed command." Both are now falsified by P0-2 (path traversal) and the latent Tool traversal. Round-3 remediation is the acknowledgment that the waiver should not have been granted at Round-1 time. Retrofitting the waiver falsification per Opus 5's suggested wording: this waiver is invalid if any field of an Automation block can influence a filesystem path or an executed command. With the current allowlist + containment + literal substitution, it is no longer invalid; but the correct order was hostile-review-first, waiver-after.
+
