@@ -15,11 +15,18 @@ Geospatial cross-cut: no
 Goal source: ticket #683 (epic #682)
 Goal source verification: `PASS: ticket 683 is fit for execution`
 Plan reference: https://github.com/siege-analytics/claude-configs-public/issues/682 (epic body carries the 24-item functions checklist this fact sheet is measured against)
-Pre-author-inventory: NONE
+Pre-author-inventory: NONE (see `## Trivial-against-state declaration`)
+Trivial-against-state: this diff authors no runtime artifact; see the declaration block below
 Investigate-artifact: https://github.com/siege-analytics/claude-configs-public/issues/683#issuecomment-5488627863
 Pre-mortem-artifact: TRIVIAL (see `## Trivial-investigation declaration`)
 Hostile-review-artifact: WAIVED (see `## Hostile-review-waiver`)
 Project-contribution: establishes the falsifiable baseline the epic #682 rewrite is measured against — which of PR #668's and PR #672's findings are still live at the branch being replaced, what is newly broken, and which existing test fixtures actively protect defects. Without this, "the Python rewrite passes the same tests" would have been an acceptance signal, and it is not one.
+
+## Trivial-against-state declaration
+
+Reason: none of the five authoring-against-state contact categories is engaged. The diff authors no runtime artifact — it adds two prose documents under `plans/`. Data-shape: no schema, query, or dataframe is written or read. Config-state: no config file is authored or consumed; the artifact *reports* that `PROJECT.md` is absent rather than authoring against it. Topology: no service, path, or dependency wiring changes. Plan-shape: no execution plan, DAG, or pipeline definition is produced. Version-resolution: no dependency, pin, or lockfile is touched.
+Evidence: `git diff --stat HEAD~2 --name-only` → `plans/investigate-682-executable-path.md`, `plans/self-review-683.md`. Both `.md`, both new, both under `plans/`. No file with a runtime extension (`.py`, `.sh`, `.json`, `.yaml`, `.toml`, `.lock`) appears in the diff, and no file under `hooks/`, `skills/`, `scripts/`, or `templates/` is modified.
+Falsification: a reviewer identifies a runtime consumer that reads either of these two files and changes behaviour as a result. The session-scoped `investigate-gate-claude-configs-public.json` written alongside this work *is* read by the guard hooks, and it is deliberately outside the repo and outside this diff; if that file were committed here, this declaration would be wrong and a real pre-author inventory of the guard's schema would be required.
 
 ## Trivial-investigation declaration
 
