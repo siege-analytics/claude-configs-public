@@ -20,7 +20,7 @@ It is four months after the rewrite merged. `hooks/create-ticket/` and `scripts/
 
 The fact sheet makes three claims that shape every answer:
 
-1. Both existing suites are green while five P0 findings are live, and five fixtures pass *because of* what they fail to assert. Green is not an acceptance signal on this surface. (The fact sheet's prose says six; see the correction check below.)
+1. Both existing suites are green while four P0 findings are live, and five fixtures pass *because of* what they fail to assert. Green is not an acceptance signal on this surface.
 2. Seven inter-file contracts are enforced by hand-maintained naming conventions and nothing else.
 3. `probe_run` (`scripts/probe/_common.sh:145`) has zero test coverage and contains every dangerous operation in the system.
 
@@ -28,13 +28,24 @@ A rewrite is the moment when all three of those are simultaneously in play: the 
 
 ## Fact-sheet correction check
 
-`[skill:pre-mortem]` Step 1b requires checking whether the evidence base changed since the design was derived. There is no design yet, so the check reduces to auditing the counts this document depends on. One correction was needed.
+`[skill:pre-mortem]` Step 1b requires checking whether the evidence base changed since the design was derived. There is no design yet, so the check reduces to auditing the counts this document depends on. It has been run twice.
 
-The fact sheet's severity totals line reads `6 P0, 13 P1, 7 P2`. Counting the table it summarises returns 5 P0, 14 P1, 7 P2. Command: `sed -n '632,661p' plans/investigate-682-executable-path.md | grep -oE '^\| F-N[0-9]+b? \| P[012]' | awk '{print $4}' | sort | uniq -c`. The total (26) agrees; the P0/P1 split is off by one. The five P0 rows are F-N1, F-N11, F-N13, F-N14 and F-N22. This document uses 5.
+**First run, at first draft.** The fact sheet's severity totals line read `6 P0, 13 P1, 7 P2` over "25 new findings". Counting the table it summarised returned `5 P0, 14 P1, 7 P2` over 26 rows. This document used the counted values and recorded the discrepancy as belonging to the hostile review on PR #684 rather than fixing it here.
 
-Two other counts differ from the fact sheet's prose and are corrected here. The fact sheet says "25 new findings" in several places while the table carries 26 distinct IDs (`F-N12b` is the extra one); `grep -oE '^\| F-N[0-9]+b?' | sort -u | wc -l` returns 26. The live-defect total is therefore 29 prior plus 26 new, 55, not 54.
+**Second run, after the PR #684 round-1 hostile review.** The review found the same arithmetic independently (finding 1-1) and two live defects the fact sheet had recorded as something weaker than findings. The fact sheet is corrected at commit `cd91ccb` and this document is restated against it. The numbers that changed:
 
-Neither correction changes which failure modes exist, because every failure mode below cites specific finding IDs rather than counts. They change the numeric thresholds in C-8 and in the kill criteria, which are stated against the corrected values. Resolving the discrepancy in the fact sheet itself belongs to the hostile review on PR #684, not here.
+| Quantity | First draft | Now | Cause |
+|---|---|---|---|
+| New findings | 26 counted (25 in the prose) | 28 | F-N26 and F-N27 added by the review |
+| Severity split | `5 P0, 14 P1, 7 P2` | `4 P0, 17 P1, 7 P2` | the two new findings are P1; F-N14 downgraded P0 to P1 on the reviewer's repro |
+| P0 rows | F-N1, F-N11, F-N13, F-N14, F-N22 | F-N1, F-N11, F-N13, F-N22 | F-N14 downgraded |
+| Live-defect total | 55 (29 prior + 26 new) | 57 (29 prior + 28 new) | the two new findings |
+
+Command for the split: `grep -oE '^\| F-N[0-9]+b? \| P[012]' plans/investigate-682-executable-path.md | awk '{print $4}' | sort | uniq -c`.
+
+The downgrade of F-N14 is the consequential one. It was the fact-sheet basis for FM-3 and one of the five P0s named in C-8, and E-3 below predicted in advance that a downgrade would re-weight rather than delete the mode resting on it. That is what happened: FM-3 keeps its Launch-Blocking tier because its tier is set by its own blast radius (spurious public issues on every successful install) rather than by the severity label on its citation, and C-8's threshold moves from five tests to four plus one, which is stated in C-8 itself. Recording the prediction and then recording that it held is the point of E-3; a pre-mortem whose revisit triggers never fire is not being checked.
+
+The two new findings are not absorbed into existing modes. F-N26 and F-N27 are failure modes of the rewrite in their own right and are written up as FM-15 and FM-16.
 
 ## Failure modes
 
@@ -113,8 +124,8 @@ Neither correction changes which failure modes exist, because every failure mode
 - **Mechanism:** the rewrite is validated by porting the 15 hook fixtures and 4 probe tests to pytest. They pass. The port is declared behaviour-preserving. But `test_path_traversal_rejected` passes with the escaped directory present (F-N22), `test_happy_path` and `test_no_zero_byte_stub` pass with the trailing newline missing (F-N5), and no fixture asserts byte-exact rendered content (F-N21). Preserving those fixtures preserves the defects they cover for.
 - **Fact-sheet basis:** F-N22 at `hooks/_test/scaffold_test_stub.test.sh:276`; F-N5 at `hooks/create-ticket/scaffold-test-stub.sh:146` with the fixtures at `hooks/_test/scaffold_test_stub.test.sh:67` and `hooks/_test/scaffold_test_stub.test.sh:522`; F-N21
 - **Probability:** high. "All existing tests still pass" is the default acceptance argument for a rewrite, and it is the argument the fact sheet's hypothesis H2 already falsifies.
-- **Blast radius:** the entire acceptance basis for the epic. If green is the signal, five P0 findings ship into Python and the epic's stated purpose is unmet while appearing met.
-- **Mitigation:** the ported suite is a floor, not a ceiling. Each of the five P0 findings (F-N1, F-N11, F-N13, F-N14, F-N22) gets a test that fails against the current bash before it is written against the Python. `test_happy_path` and `test_path_traversal_rejected` must be *modified*, and each modification carries its own justification in the PR body at the same evidence standard as a code change.
+- **Blast radius:** the entire acceptance basis for the epic. If green is the signal, four P0 findings ship into Python and the epic's stated purpose is unmet while appearing met.
+- **Mitigation:** the ported suite is a floor, not a ceiling. Each of the four P0 findings (F-N1, F-N11, F-N13, F-N22) plus F-N14, which was P0 until the PR #684 review downgraded it and whose `eval` remains the most dangerous single statement on the surface, gets a test that fails against the current bash before it is written against the Python. `test_happy_path` and `test_path_traversal_rejected` must be *modified*, and each modification carries its own justification in the PR body at the same evidence standard as a code change.
 - **Detection signal:** run each new P0 test against the bash implementation first; a test that passes against bash is not testing the fix. Numeric floor: at least 5 tests that fail on `HEAD` of `epic/682-python-executable-path` and pass after the rewrite.
 - **Owning ticket:** step-3 design ticket (unfiled); the constraint is C-8 below.
 
@@ -145,7 +156,7 @@ Neither correction changes which failure modes exist, because every failure mode
 - **Probability:** high. 29 findings is more than any single PR review will hold in working memory, and the rewrite diff will be large enough to hide all of them.
 - **Blast radius:** reviewability of the whole epic. An unreviewable rewrite of a security-relevant parsing surface is worse than the bash, because the bash at least has 29 findings written down against it.
 - **Mitigation:** a disposition table, one row per live finding, with values DISCHARGED-BY-CONSTRUCTION, FIXED-EXPLICITLY, or DECLINED-WITH-REASON. The table is an acceptance criterion of the implementation ticket, not of this one. H1's structural-versus-incidental classification is the same exercise and should produce the same table.
-- **Detection signal:** row count of that table equals 55, the 29 live prior findings plus the 26 distinct `F-N` findings; any implementation PR whose diff touches a file named in a finding without that finding having a row is incomplete.
+- **Detection signal:** row count of that table equals 57, the 29 live prior findings plus the 28 distinct `F-N` findings; any implementation PR whose diff touches a file named in a finding without that finding having a row is incomplete.
 - **Owning ticket:** implementation ticket (unfiled); the constraint is C-11 below.
 
 ### FM-12: python3 becomes a hard dependency of a git hook and fails opaquely
@@ -178,6 +189,26 @@ Neither correction changes which failure modes exist, because every failure mode
 - **Detection signal:** a session-scoped autouse fixture that fails the run if the real `gh` binary is resolvable during tests; plus `gh issue list --search 'in:title tool-install' --state open` returning no issues created during a CI window.
 - **Owning ticket:** step-3 design ticket (unfiled); the constraint is C-14 below.
 
+### FM-15: the port carries `_safe_value`'s charset to a sink that cannot accept it
+- **Category:** faithful-port
+- **Mechanism:** `_safe_value` rejects anything outside `[A-Za-z0-9._-]`, which reads as a tight allowlist and is one. It was chosen to keep shell metacharacters away from `sed -E`. The rendered `Feature` value then reaches `templates/tests/pytest-unit.py.tmpl:15` as `def test_ac{ac_id}_{feature}() -> None:`, where `-` and `.` are permitted by the guard and illegal in a Python identifier. A port that reimplements the guard as `re.fullmatch(r'[A-Za-z0-9._-]+', value)` is a faithful translation of a guard that was never validating for this sink.
+- **Fact-sheet basis:** F-N26 at `hooks/create-ticket/scaffold-test-stub.sh:141` with the sink at `templates/tests/pytest-unit.py.tmpl:15`
+- **Probability:** high. Hyphenated feature names are the normal case in ticket bodies, the guard visibly permits them, and the defect is one the rewrite has a strong reason to preserve: changing the charset looks like tightening an unrelated security guard, which is the kind of change a careful implementer defers.
+- **Blast radius:** every generated stub whose `Feature` contains a hyphen or a dot is a Python file that fails at import. Reproduced on this branch: `SyntaxError: expected '('`. Loud once the file is run, invisible at the moment the hook reports success, and the hook is the only thing the ticket author sees.
+- **Mitigation:** validation is per-sink, not global. The design states one validator per destination: a shell-safety validator where a value reaches a subprocess, and an identifier validator that calls `str.isidentifier()` where a value becomes Python. A single `_safe_value` successor serving both sinks is the defect, so the constraint is that no validator may be shared across sinks with different alphabets.
+- **Detection signal:** a test that renders a stub with `Feature: user-login` and calls `compile()` or `ast.parse()` on the result. No fixture in either suite parses a rendered stub today, which is why the defect is invisible.
+- **Owning ticket:** step-3 design ticket (unfiled); the constraint is C-15 below.
+
+### FM-16: the port silently decides what to do with the parsed-then-discarded `Layer:`
+- **Category:** contract-drift
+- **Mechanism:** the main loop parses `Layer:` to choose a template and then does not pass it to the probe (`probe_json=$("$probe_script" "$ticket_id" ...)`, one positional argument). The rewrite faces a fork with no correct-by-default branch. Preserving the drop carries a field that is parsed, validated, and thrown away, which every future reader will try to use. Passing it changes what the probe receives, and no test covers the probe's behaviour with a layer argument because no caller has ever sent one. F-N16 makes the second branch worse: the layer token has three spellings across the surface, so "pass the layer through" has no single correct value to pass.
+- **Fact-sheet basis:** F-N27 at `hooks/create-ticket/scaffold-test-stub.sh:286`; the three token spellings are F-N16
+- **Probability:** high. The fork is unavoidable, both branches are defensible, and neither is signalled by a failing test, which means it gets decided by whoever writes the line rather than by the design.
+- **Blast radius:** bounded but load-bearing. If the drop is preserved, the probe can never make a layer-dependent decision and the field stays decorative. If the drop is removed without normalising the token, the probe receives one of three spellings and any layer-dependent branch is wrong for two of them. Silent in both directions.
+- **Mitigation:** the layer is an enum with one canonical spelling, defined in the same module as the probe result dataclass, and the design states in one sentence whether the probe consumes it. If it does not, the field is not passed and the design says why. A parsed field with no consumer and no stated reason is not permitted to survive the rewrite.
+- **Detection signal:** a test asserting the probe's signature accepts exactly the fields the parser produces, or a documented exclusion list checked against the parser's field set. Any parsed field absent from both fails the test.
+- **Owning ticket:** step-3 design ticket (unfiled); the constraint is C-16 below.
+
 ## Risk classification
 
 Composite severity is the `[skill:pre-mortem]` weighted sum: data integrity 25%, user impact scope 25%, reversibility 20%, dependency chain 15%, detection latency 15%.
@@ -198,6 +229,8 @@ Composite severity is the `[skill:pre-mortem]` weighted sum: data integrity 25%,
 | FM-12 | operational | medium | ticket creation breaks, opaque | Tiger | 44 | Fast-Follow | yes (C-12) |
 | FM-13 | operational | medium | maintenance doubles, value unmet | Elephant | 41 | Track | yes (C-13) |
 | FM-14 | operational | medium | real public issues from a test run | Tiger | 63 | Mitigate-before-ship | yes (C-14) |
+| FM-15 | faithful-port | high | every stub with a hyphenated Feature | Tiger | 39 | Fast-Follow | yes (C-15) |
+| FM-16 | contract-drift | high | a parsed field with no consumer, or three spellings reaching one | Tiger | 54 | Fast-Follow | yes (C-16) |
 
 Worked score for FM-6, the highest, since the skill requires the composite to justify the tier rather than the reverse:
 
@@ -211,7 +244,7 @@ Worked score for FM-6, the highest, since the skill requires the composite to ju
 
 Composite = (70 x .25) + (85 x .25) + (90 x .20) + (80 x .15) + (95 x .15) = 17.5 + 21.25 + 18 + 12 + 14.25 = **85**, Emergency-stop, Launch-Blocking.
 
-Counts: 14 failure modes, 13 classified Tiger and 1 Elephant, across 6 categories. 5 Launch-Blocking, 3 Mitigate-before-ship, 5 Fast-Follow, 1 Track.
+Counts: 16 failure modes, 15 classified Tiger and 1 Elephant, across 6 categories. 5 Launch-Blocking, 3 Mitigate-before-ship, 7 Fast-Follow, 1 Track. FM-15 and FM-16 were added after the PR #684 round-1 hostile review surfaced F-N26 and F-N27; neither changes the Launch-Blocking set.
 
 ## Paper tigers
 
@@ -225,11 +258,13 @@ Scenarios that sound alarming against this surface and are already handled. Reco
 
 ## Elephants
 
-**E-1: this rewrite is being justified by a hypothesis that has not been tested (FM-13's cousin).** H1 claims a majority of the 55 findings are structural and dissolve under a dataclass plus a shared renderer. The fact sheet's own preliminary read classifies 9 as structural and 4 as incidental out of 55, and defers the full classification to the design ticket. If the true split comes back below 50%, the epic's premise is that a large rewrite of a security-relevant surface is worth doing to fix a minority of the defects by construction and the rest by hand, which is a different and weaker argument than the one the epic is currently making. Deferred because the classification is genuinely the design ticket's first deliverable and doing it here would duplicate it. Cost of deferral: the epic runs one more unit of work before its own premise is confirmed. Trigger for revisiting: the design ticket's structural-versus-incidental table; if structural is below 50%, the epic is re-scoped rather than continued.
+**E-1: this rewrite is being justified by a hypothesis that has not been tested (FM-13's cousin).** H1 claims a majority of the 57 findings are structural and dissolve under a dataclass plus a shared renderer. The fact sheet's own preliminary read classifies 9 as structural and 4 as incidental out of 57, and defers the full classification to the design ticket. If the true split comes back below 50%, the epic's premise is that a large rewrite of a security-relevant surface is worth doing to fix a minority of the defects by construction and the rest by hand, which is a different and weaker argument than the one the epic is currently making. Deferred because the classification is genuinely the design ticket's first deliverable and doing it here would duplicate it. Cost of deferral: the epic runs one more unit of work before its own premise is confirmed. Trigger for revisiting: the design ticket's structural-versus-incidental table; if structural is below 50%, the epic is re-scoped rather than continued.
 
 **E-2: nothing in this repository executes the surface being rewritten except its own tests.** Three workflows, none referencing `scripts/probe`. The hook fires on ticket creation for whoever has it installed locally. There is no production, no telemetry, and no user report channel, which means every "detection signal" named above is a test somebody has to write and run, not an alarm that will fire on its own. Deferred because building observability for a git hook is out of the epic's scope. Cost of deferral: every mitigation in this document degrades to a promise unless its detection signal ships as a test in the same PR as the mitigation. Trigger for revisiting: the first FM that materialises and is found by a human rather than by a test.
 
-**E-3: the hostile review on PR #684 may revise the severities this document rests on.** Ticket #685's own assumptions say a downgraded P0 re-weights rather than deletes the failure modes resting on it. FM-1, FM-2, FM-3 and FM-8 all rest on P0 findings. If the review downgrades F-N13 or F-N22, four of the five Launch-Blocking entries change tier. Deferred because the review is in flight and blocking on it would violate the epic's continuity requirement. Cost of deferral: this document may need a revision commit. Trigger for revisiting: the hostile-review comment landing on PR #684.
+**E-3: the hostile review on PR #684 may revise the severities this document rests on. FIRED, and the prediction held.** Round 1 landed with recommendation Block. It downgraded F-N14 from P0 to P1 on an executed repro and added two findings. The re-weighting rule stated here in advance was applied rather than reconsidered: FM-3 rests on F-N14 and keeps Launch-Blocking, because its tier was set by its own blast radius rather than by the severity label on its citation, and C-8's threshold is restated as four plus one instead of five. FM-15 and FM-16 are new. The Launch-Blocking set is unchanged.
+
+The elephant is not retired, because round 2 is in flight and is targeted at F-N11 and F-N22, the two remaining P0s with no executed repro. F-N22 is the basis for FM-8's `test_path_traversal_rejected` claim and appears in a kill criterion; F-N11 is the whole of FM-2. Cost of deferral: unchanged, one revision commit. Trigger for revisiting: the round-2 comment on PR #684. If either is downgraded, the re-weighting rule above is applied again and this section records the second firing.
 
 ## Design constraints this pre-mortem imposes
 
@@ -242,33 +277,36 @@ Each constraint is traceable to the failure mode it prevents. The step-3 design 
 - **C-5 (FM-5).** Rendering tests read shipped templates from disk. No test contains a copy of a template. A placeholder-set equality test asserts renderer and template agree in both directions.
 - **C-6 (FM-6).** Install commands are argument lists with a declared privilege tier. The `allow` token authorises user-space installs only; privileged installs require a token that names privilege.
 - **C-7 (FM-7).** Detection and remediation are separate modules. The detection module has no transitive import path to the installer or to the issue-filer.
-- **C-8 (FM-8).** The ported suite is a floor. At least five tests must fail against the bash implementation at `epic/682-python-executable-path` and pass against the rewrite, one per P0 (F-N1, F-N11, F-N13, F-N14, F-N22). `test_happy_path` and `test_path_traversal_rejected` are expected to change, and each change is justified in the PR body.
+- **C-8 (FM-8).** The ported suite is a floor. At least five tests must fail against the bash implementation at `epic/682-python-executable-path` and pass against the rewrite: one per P0 (F-N1, F-N11, F-N13, F-N22) plus one for F-N14, which the PR #684 review downgraded to P1 while leaving its `eval` the most dangerous single statement on the surface. `test_happy_path` and `test_path_traversal_rejected` are expected to change, and each change is justified in the PR body.
 - **C-9 (FM-9).** The probe/hook contract is exercised against a real probe object and a faked tool environment. Mocking is permitted below the subprocess boundary only. `probe_run`'s successor is covered before any wrapper is ported.
 - **C-10 (FM-10).** All 24 epic checklist items carry a PORT / REDESIGN / CREATE disposition in the design note, and CREATE items are sequenced first.
 - **C-11 (FM-11).** Every live finding from PR #668 and PR #672 and every `F-N` finding carries a disposition of DISCHARGED-BY-CONSTRUCTION, FIXED-EXPLICITLY, or DECLINED-WITH-REASON.
 - **C-12 (FM-12).** The entrypoint checks the Python version and fails with a message naming the interpreter and the required version.
 - **C-13 (FM-13).** The design names the cutover unit and states whether a partial merge is permitted; if it is, the interim cross-language contract is a schema file both sides read.
 - **C-14 (FM-14).** The issue-filer is injected. The test default is a recording fake, and reaching the real `gh` requires a concrete implementation no test constructs.
+- **C-15 (FM-15).** Validation is per-sink. No validator is shared between destinations with different legal alphabets; a value that becomes a Python identifier is checked with `str.isidentifier()` at that sink, independently of any shell-safety check.
+- **C-16 (FM-16).** Every field the parser produces either reaches a consumer or appears in a documented exclusion list with a reason. The layer is an enum with one canonical spelling, defined alongside the probe result dataclass.
 
-Mandatory-category coverage check: faithful-port is mitigated by C-1 (FM-1), C-2 (FM-2) and C-3 (FM-3); coverage-theatre is mitigated by C-8 (FM-8) and C-9 (FM-9); blast-radius is mitigated by C-6 (FM-6) and C-7 (FM-7).
+Mandatory-category coverage check: faithful-port is mitigated by C-1 (FM-1), C-2 (FM-2), C-3 (FM-3) and C-15 (FM-15); coverage-theatre is mitigated by C-8 (FM-8) and C-9 (FM-9); blast-radius is mitigated by C-6 (FM-6) and C-7 (FM-7).
 
 ## Kill criteria
 
 Observables that would say the rewrite should be abandoned or descoped rather than continued. Each is a command, a numeric threshold, or a named test.
 
-- The structural-versus-incidental classification required by C-11 returns fewer than 28 of 55 findings as structural. H1 is falsified at its own stated threshold and the epic's premise does not hold; descope to per-defect fixes in bash.
+- The structural-versus-incidental classification required by C-11 returns fewer than 29 of 57 findings as structural. H1 is falsified at its own stated threshold and the epic's premise does not hold; descope to per-defect fixes in bash.
 - Fewer than 5 tests fail against `epic/682-python-executable-path` and pass against the rewrite, measured by running the new suite against both trees. C-8 is unmet and green is being used as the acceptance signal after this document said it could not be.
 - `grep -rn 'shell=True' hooks/ scripts/` returns a non-zero count on the implementation branch. C-6 is unmet at the highest-severity path in the system (composite 85) and the rewrite has not improved the thing it most needed to improve.
 - `grep -rn '"status"' hooks/ scripts/` returns matches in more than one file after the contract module lands. C-4 is unmet; the rewrite has moved the contract drift rather than removing it, and the epic's main value claim is false.
 - `ls scripts/probe/*.sh hooks/create-ticket/*.sh 2>/dev/null | wc -l` returns non-zero at the point the epic is proposed for close. C-13 is unmet and the surface has two implementations.
 - `test_path_traversal_rejected`, in whatever form it takes after the rewrite, passes while an escaped directory exists on disk. FM-1 has shipped and FM-8 has shipped with it; the two Launch-Blocking modes with the highest probability are both live.
+- A rendered stub whose `Feature` contains a hyphen fails `ast.parse()` on the implementation branch. C-15 is unmet and the rewrite has carried a validator across a sink boundary it was never checked against, which is the defect FM-15 names.
 - The implementation diff exceeds 2000 changed lines in a single PR. Not a correctness threshold but a reviewability one: FM-11's blast radius is reviewability, and the mitigation is a disposition table that a reviewer cannot check against a diff that size. Split the ticket.
 
 ## Launch-blocking assessment
 
 - [x] Every Tiger has a mitigation stated as a design constraint (C-1 through C-14; the coverage check above enumerates the mandatory three).
 - [x] Every Tiger mitigation is grounded in a fact-sheet finding or a `file:line` in the current shell code; the AC3 check resolves every citation.
-- [x] Elephants E-1, E-2 and E-3 have deferral rationale and revisit triggers.
+- [x] Elephants E-1, E-2 and E-3 have deferral rationale and revisit triggers. E-3's trigger has fired once and the outcome is recorded in place rather than in a new elephant.
 - [ ] No Launch-Blocking Tiger remains unmitigated **in implementation**. Five are Launch-Blocking (FM-1, FM-2, FM-3, FM-6, FM-8) and all five are mitigated *on paper only*, because the design does not exist yet.
 
 Implementation may proceed: **NO**. Not because a Tiger is unmitigated, but because the mitigations are constraints on a design that has not been written. The step-3 design ticket is the gate. It may proceed immediately and must satisfy or decline C-1 through C-14, with a reason on each declination.
@@ -277,8 +315,8 @@ Implementation may proceed: **NO**. Not because a Tiger is unmitigated, but beca
 
 | AC | Requirement | Check | Result |
 |---|---|---|---|
-| AC1 | at least one `### FM-` entry per category | `grep -c '^- \*\*Category:\*\* <token>'` for each of the six | faithful-port 3, contract-drift 2, blast-radius 2, coverage-theatre 2, scope 2, operational 3 |
-| AC2 | eight subheaders on every entry | `grep -c` per subheader against N = count of `^### FM-` | 14 each |
+| AC1 | at least one `### FM-` entry per category | `grep -c '^- \*\*Category:\*\* <token>'` for each of the six | faithful-port 4, contract-drift 3, blast-radius 2, coverage-theatre 2, scope 2, operational 3 |
+| AC2 | eight subheaders on every entry | `grep -c` per subheader against N = count of `^### FM-` | 16 each |
 | AC3 | every Fact-sheet basis citation resolves | python3: finding IDs present in the fact sheet, `file:line` within file length | 0 unresolved |
 | AC4 | the three mandatory categories restated in Design constraints | grep the coverage-check line for each category and its FM ids | present |
-| AC5 | kill criteria are observables | every bullet contains a command, a numeric threshold, or a named test | 7 of 7 |
+| AC5 | kill criteria are observables | every bullet contains a command, a numeric threshold, or a named test | 8 of 8 |
