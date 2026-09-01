@@ -88,3 +88,24 @@ Verified-by: `git status -sb` shows CHANGELOG modified + 3 new (hook + test + se
 ## Evidence-predates-work
 
 All AC greps + test-run captured pre-commit.
+
+## Round 2 (post-hostile-review)
+
+The GPT-5.5 sibling `260831-still-cosmos` posted a hostile review on PR #672 at 2026-08-31 20:52 CDT with 6 findings across 3 categories: 1 P0 (auto-probe branch unreachable under `set -euo pipefail`), 5 P1 (blocked-on-infra JSON `.ticket` extraction, Stub path placeholder substitution, fenced-code false-positive, path traversal, sed metacharacter corruption), plus test-adequacy gap.
+
+All six findings confirmed and remediated in this branch:
+
+- **1-1 P0**: `_field` now returns empty on missing field instead of aborting under `pipefail` (added `|| true` inside the function body).
+- **1-2 P1**: Probe JSON parsed via python3 through `PROBE_JSON` env var; both `.status` and `.ticket` extracted. Legacy `Probe: blocked-on-infra:URL` form retained for backward compatibility.
+- **1-3 P1**: `Stub:` path itself now runs through the same `{ticket_id}`/`{ac_id}`/`{feature}` substitution as template content.
+- **1-4 P1**: Fenced markdown code blocks (` ``` ` and `~~~`) stripped from a working copy of the body before Automation-block parsing. Original body preserved for output.
+- **2-1 P1**: Post-substitution stub path canonicalized via `pwd -P` and rejected unless the resulting path is under `REPO_ROOT_ABS/`.
+- **2-2 P1**: Substitution switched from `sed` to bash parameter expansion (literal, not regex). `ticket_id` / `ac_id` / `feature` validated against `^[A-Za-z0-9._-]+$` before use; unsafe values cause the block to skip with a stderr diagnostic.
+- **9-1**: Test fixture count grew from 3 to 9, adding one per finding plus explicit auto-probe / real-JSON / stub-placeholder coverage.
+
+Round-2 test run: `bash hooks/_test/scaffold_test_stub.test.sh` → `Summary: 9 passed, 0 failed`. Cross-provider check pending (Opus 5 sibling `260831-lucid-fox` still working on the same PR; will address any additional findings on top of this round's fixes).
+
+Cycle-2 rework log:
+- First rewrite used heredoc `<<'PYEOF'` + `<<< "$BODY"` to feed python3 both script and stdin; bash resolved the later redirect (`<<<`) as stdin, so python read `$BODY` as script and returned empty. Fixed by switching to `python3 -c '...' <<< "$BODY"`.
+- Second rewrite used `${json@Q}` bash 4.4+ quote-transformation; macOS default bash is 3.2. Fixed by passing JSON via `PROBE_JSON` env var and reading `os.environ` inside python3.
+
