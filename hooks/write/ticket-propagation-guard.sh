@@ -40,9 +40,10 @@ fi
 # --- Path filter: only fire for artifact paths ---
 BASENAME=$(basename "$FILE_PATH")
 
-# Must be a markdown file
-[[ "$BASENAME" != *.md ]] && exit 0
-
+# A separate `*.md` test used to sit here. Every pattern in the case block below
+# already ends in `.md`, so it could be deleted with no scenario changing, which
+# is the definition of a check that is not doing anything.
+#
 # scratch-* prefix is the exploratory-draft escape hatch
 [[ "$BASENAME" == scratch-* ]] && exit 0
 

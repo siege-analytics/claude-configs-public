@@ -214,6 +214,27 @@ expect_block "(l) Write payload, 200KB, WITHOUT frontmatter is still blocked" "$
 expect_block "(m) Write payload, unterminated --- opener, fails closed" "$HOOK" \
     "$(write_payload "$TMP/plans/unterminated.md")"
 
+# The three above build their payload by reading the same file the payload
+# targets, so payload content and disk content are identical and a resolver that
+# ignored the payload entirely would pass all three. Write's whole point is that
+# the two differ: a new file, or an overwrite. These two pin that difference in
+# both directions, on a path that does not exist on disk at all.
+new_write_payload() {
+    python3 -c 'import json,sys; print(json.dumps({"tool_name":"Write","tool_input":{"file_path":sys.argv[1],"content":sys.argv[2]}}))' "$1" "$2"
+}
+
+expect_block "(z) Write creating a NEW non-compliant file is blocked" "$HOOK" \
+    "$(new_write_payload "$TMP/plans/does-not-exist.md" "# New
+
+$BODY_REF
+")"
+expect_pass "(z2) Write creating a NEW compliant file is allowed" "$HOOK" \
+    "$(new_write_payload "$TMP/plans/does-not-exist-ok.md" "$FRONTMATTER
+# New
+
+$BODY_REF
+")"
+
 # --- Round-2 hostile review (PR #689). One scenario per finding.
 
 # R2-F1: an indented fenced block is still ordinary Markdown body. CommonMark
@@ -407,6 +428,31 @@ expect_block "(s) docs/investigations artifact WITHOUT frontmatter is blocked" "
     "$(payload "$TMP/docs/investigations/probe.md")"
 expect_pass "(t) docs/investigations artifact WITH ticket_refs is allowed" "$HOOK" \
     "$(payload "$TMP/docs/investigations/probe-ok.md")"
+
+# Found by widening the mutation set past the reviewer's findings, not by review.
+#
+# (y) The markdown-only filter is deliberate scope, so deleting it has to break
+# something. Every other fixture in this file is `.md`, which is why removing the
+# filter left the suite green: the mutant widens the guard onto files it was
+# never meant to govern and no scenario stood on that ground.
+printf '%s\n' "$BODY_REF" > "$TMP/plans/notes.txt"
+expect_pass "(y) a non-markdown file in plans/ is out of scope" "$HOOK" \
+    "$(payload "$TMP/plans/notes.txt")"
+
+# (y2) A *truly* unterminated opener: `---` on line 1 and no second `---`
+# anywhere in the document. Scenarios (g), (h), (m) and (n) all contain a later
+# horizontal rule, so they exit the split through the shape check rather than
+# through the end-of-document path, and a mutant that returned the whole
+# remainder as frontmatter with an empty body survived all four. An empty body
+# has no refs, so that mutant is fail-open.
+cat > "$TMP/plans/no-closer.md" <<EOF
+---
+title: an opener that is never closed
+$BODY_REF
+propagation-deferred: quoted in prose, not declared in metadata
+EOF
+expect_block "(y2) an opener with no closing --- anywhere fails closed" "$HOOK" \
+    "$(payload "$TMP/plans/no-closer.md")"
 
 # R2-F3: both helpers are fail-open dependencies. With either removed the guard
 # used to produce empty halves and allow a non-compliant artifact.

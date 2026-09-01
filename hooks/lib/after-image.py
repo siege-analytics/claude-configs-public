@@ -20,9 +20,6 @@ as an empty document.
 import json
 import sys
 
-WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
-
-
 def target_path(ti: dict) -> str:
     for key in ("file_path", "path", "notebook_path"):
         value = ti.get(key)
@@ -97,8 +94,9 @@ def main() -> int:
     if sys.argv[1] == "path":
         sys.stdout.write(path)
         return 0
-    if tool not in WRITE_TOOLS:
-        return 3
+    # The set of handled tools was also listed as a WRITE_TOOLS constant checked
+    # here, which made the raise below unreachable and so unkillable by any
+    # scenario. One list, in the dispatch itself.
     try:
         sys.stdout.write(after_image(tool, ti, path))
     except ValueError as exc:
