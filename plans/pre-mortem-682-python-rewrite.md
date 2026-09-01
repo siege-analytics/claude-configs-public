@@ -39,9 +39,11 @@ A rewrite is the moment when all three of those are simultaneously in play: the 
 | New findings | 26 counted (25 in the prose) | 28 | F-N26 and F-N27 added by the review |
 | Severity split | `5 P0, 14 P1, 7 P2` | `4 P0, 17 P1, 7 P2` | the two new findings are P1; F-N14 downgraded in round 1, F-N22 in round 2, F-N18 raised in the rubric self-falsification pass |
 | P0 rows | F-N1, F-N11, F-N13, F-N14, F-N22 | F-N1, F-N11, F-N13, F-N18 | two downgrades and one upgrade |
-| Live-defect total | 55 (29 prior + 26 new) | 57 (29 prior + 28 new) | the two new findings |
+| Live-defect total | 55 (29 prior + 26 new) | 55 (27 prior + 28 new) | two new findings added and two prior-live findings removed; see the fourth run |
 
 Command for the split: `grep -oE '^\| F-N[0-9]+b? \| P[012]' plans/investigate-682-executable-path.md | awk '{print $4}' | sort | uniq -c`.
+
+The last row is the one to distrust. It reads 55 in both columns, so a check comparing only the totals returns "unchanged" across a revision in which both addends moved. The addends are the quantity here; the total agreeing with itself is a coincidence.
 
 **Third run, after round 2.** Round 2 downgraded F-N22 from P0 to P1 and established the root cause of all three severity corrections: there was no written severity rubric, so no assignment could be checked against anything. The fact sheet now has one, and its first rule is that a coverage gap does not inherit the severity of the defect it hides. F-N22 is a coverage gap whose only consequence is that F-N1 is invisible. The reviewer also established something stronger than the finding claimed: `test_path_traversal_rejected` creates its escape target with `mktemp -d` at `hooks/_test/scaffold_test_stub.test.sh:283` before invoking the hook, so the fixture could not observe the escaped directory even if it asserted on one. That makes FM-8 worse rather than better, and it is written into FM-8's Mechanism.
 
@@ -52,6 +54,36 @@ FM-3's tier does still hold, on its blast radius, and the trace was run at sourc
 What F-N14's downgrade actually moves is C-8's threshold, which counts modes the ported suite must newly detect rather than P0 labels. That is handled in C-8 itself and needs no rule.
 
 The two new findings are not absorbed into existing modes. F-N26 and F-N27 are failure modes of the rewrite in their own right and are written up as FM-15 and FM-16.
+
+**Fourth run, against the PR base at `7d50cce`.** The fact sheet's post-round-2 self-audit (its finding 10-1) found that `## Live-defect ledger` presented itself as a partition of the two source reviews and was not one: the prior-live figure of 29 was not reachable from either source comment. The repaired partition is `P0-2..P0-5, P1-1..P1-7, P2-1..P2-9` for #668, which is 20, and `P1-2, P1-6, P1-7, P2-1, P2-2, P2-3, P2-6` for #672, which is 7. Prior-live is therefore **27**, H1's denominator is **55**, and the threshold for a majority is **28**. The preliminary structural read moved with it, to **10 structural, 5 incidental, 40 unclassified**.
+
+Re-derived from the ledger's own LIVE column rather than transcribed from its prose total, since trusting a summary line over the table under it is the operation that produced 10-1. The rule: expand every `Pn-a..Pn-b` range, add every bare `Pn-a`, take the set, per source row.
+
+```text
+$ git show 7d50cce:plans/investigate-682-executable-path.md > /tmp/fs.md
+$ python3 - /tmp/fs.md <<'PY'
+import re, sys
+tot = 0
+for line in open(sys.argv[1]):
+    m = re.match(r'\| (PR #6(?:68|72)) [^|]*\|[^|]*\|([^|]*)\|', line)
+    if not m:
+        continue
+    live, ids = m.group(2), set()
+    for r in re.finditer(r'P(\d)-(\d+)\.\.P(\d)-(\d+)', live):
+        for n in range(int(r.group(2)), int(r.group(4)) + 1):
+            ids.add('P%s-%d' % (r.group(1), n))
+    for s in re.findall(r'P\d-\d+', re.sub(r'P\d-\d+\.\.P\d-\d+', '', live)):
+        ids.add(s)
+    print(m.group(1), len(ids))
+    tot += len(ids)
+print('prior-live', tot, '| denominator', tot + 28, '| threshold', (tot + 28) // 2 + 1)
+PY
+PR #668 20
+PR #672 7
+prior-live 27 | denominator 55 | threshold 28
+```
+
+The two ledger rows are at `plans/investigate-682-executable-path.md:634-635` in that commit. This is the count every executable mechanism below is stated over: FM-11's detection signal, C-11's disposition table, E-1's classification base and the H1 kill criterion. The severity split is untouched by this run, because it is computed over the 28 new findings alone and none of those moved.
 
 ## Failure modes
 
@@ -155,14 +187,14 @@ The two new findings are not absorbed into existing modes. F-N26 and F-N27 are f
 - **Detection signal:** the design note contains a 24-row table with a disposition per row; `grep -c '^| ' ` on that table returns 24 plus the header rows. Absence of the table is the signal that this failure mode is active.
 - **Owning ticket:** step-3 design ticket (unfiled); the constraint is C-10 below.
 
-### FM-11: 29 live findings from the prior reviews become implicit scope
+### FM-11: 27 live findings from the prior reviews become implicit scope
 - **Category:** scope
-- **Mechanism:** the fact sheet's live-defect ledger carries 24 findings from PR #668 and 5 from PR #672 that are still live on the epic branch. A rewrite touches every line those findings live on. Without a stated disposition per finding, the implementer either fixes them silently (making the diff unreviewable) or preserves them silently (making the epic's value claim false), and either way the PR body says "rewrite in Python".
+- **Mechanism:** the fact sheet's live-defect ledger carries 20 findings from PR #668 and 7 from PR #672 that are still live on the epic branch. A rewrite touches every line those findings live on. Without a stated disposition per finding, the implementer either fixes them silently (making the diff unreviewable) or preserves them silently (making the epic's value claim false), and either way the PR body says "rewrite in Python".
 - **Fact-sheet basis:** the live-defect ledger; representative entries are `#668 P0-3` (gh stderr suppressed, empty ticket field), `#668 P1-4` (repo root resolved from process CWD, repro executed at `scripts/probe/_common.sh:86`), `#672 P1-7` (documented exit code 3 never emitted, `skills/tool-availability-probe/SKILL.md:78` documents a channel that does not exist per F-N25)
-- **Probability:** high. 29 findings is more than any single PR review will hold in working memory, and the rewrite diff will be large enough to hide all of them.
-- **Blast radius:** reviewability of the whole epic. An unreviewable rewrite of a security-relevant parsing surface is worse than the bash, because the bash at least has 29 findings written down against it.
+- **Probability:** high. 27 findings is more than any single PR review will hold in working memory, and the rewrite diff will be large enough to hide all of them.
+- **Blast radius:** reviewability of the whole epic. An unreviewable rewrite of a security-relevant parsing surface is worse than the bash, because the bash at least has 27 findings written down against it.
 - **Mitigation:** a disposition table, one row per live finding, with values DISCHARGED-BY-CONSTRUCTION, FIXED-EXPLICITLY, or DECLINED-WITH-REASON. The table is an acceptance criterion of the implementation ticket, not of this one. H1's structural-versus-incidental classification is the same exercise and should produce the same table.
-- **Detection signal:** row count of that table equals 57, the 29 live prior findings plus the 28 distinct `F-N` findings; any implementation PR whose diff touches a file named in a finding without that finding having a row is incomplete.
+- **Detection signal:** row count of that table equals 55, the 27 live prior findings plus the 28 distinct `F-N` findings; any implementation PR whose diff touches a file named in a finding without that finding having a row is incomplete.
 - **Owning ticket:** implementation ticket (unfiled); the constraint is C-11 below.
 
 ### FM-12: python3 becomes a hard dependency of a git hook and fails opaquely
@@ -319,7 +351,7 @@ The qualifier matters and an earlier revision did not have it; the PR #686 round
 
 ## Elephants
 
-**E-1: this rewrite is being justified by a hypothesis that has not been tested (FM-13's cousin).** H1 claims a majority of the 57 findings are structural and dissolve under a dataclass plus a shared renderer. The fact sheet's own preliminary read classifies 9 as structural and 4 as incidental out of 57, and defers the full classification to the design ticket. If the true split comes back below 50%, the epic's premise is that a large rewrite of a security-relevant surface is worth doing to fix a minority of the defects by construction and the rest by hand, which is a different and weaker argument than the one the epic is currently making. Deferred because the classification is genuinely the design ticket's first deliverable and doing it here would duplicate it. Cost of deferral: the epic runs one more unit of work before its own premise is confirmed. Trigger for revisiting: the design ticket's structural-versus-incidental table; if structural is below 50%, the epic is re-scoped rather than continued.
+**E-1: this rewrite is being justified by a hypothesis that has not been tested (FM-13's cousin).** H1 claims a majority of the 55 findings are structural and dissolve under a dataclass plus a shared renderer. The fact sheet's own preliminary read classifies 10 as structural and 5 as incidental out of 55, leaving 40 unclassified, and defers the full classification to the design ticket. If the true split comes back below 50%, the epic's premise is that a large rewrite of a security-relevant surface is worth doing to fix a minority of the defects by construction and the rest by hand, which is a different and weaker argument than the one the epic is currently making. Deferred because the classification is genuinely the design ticket's first deliverable and doing it here would duplicate it. Cost of deferral: the epic runs one more unit of work before its own premise is confirmed. Trigger for revisiting: the design ticket's structural-versus-incidental table; if structural is below 50%, the epic is re-scoped rather than continued.
 
 **E-2: nothing in this repository executes the surface being rewritten except its own tests.** Three workflows, none referencing `scripts/probe`. The hook fires on ticket creation for whoever has it installed locally. There is no production, no telemetry, and no user report channel, which means every "detection signal" named above is a test somebody has to write and run, not an alarm that will fire on its own. Deferred because building observability for a git hook is out of the epic's scope. Cost of deferral: every mitigation in this document degrades to a promise unless its detection signal ships as a test in the same PR as the mitigation. Trigger for revisiting: the first FM that materialises and is found by a human rather than by a test.
 
@@ -358,7 +390,7 @@ Mandatory-category coverage check: faithful-port is mitigated by C-1 (FM-1), C-2
 
 Observables that would say the rewrite should be abandoned or descoped rather than continued. Each is a command, a numeric threshold, or a named test.
 
-- The structural-versus-incidental classification required by C-11 returns fewer than 29 of 57 findings as structural. H1 is falsified at its own stated threshold and the epic's premise does not hold; descope to per-defect fixes in bash.
+- The structural-versus-incidental classification required by C-11 returns fewer than 28 of 55 findings as structural. H1 is falsified at its own stated threshold and the epic's premise does not hold; descope to per-defect fixes in bash.
 - Fewer than 6 tests fail against `epic/682-python-executable-path` and pass against the rewrite, measured by running the new suite against both trees. C-8 is unmet and green is being used as the acceptance signal after this document said it could not be.
 - `grep -rn 'shell=True' hooks/ scripts/` returns a non-zero count on the implementation branch. C-6 is unmet at the highest-severity path in the system (composite 83) and the rewrite has not improved the thing it most needed to improve.
 - `grep -rn '"status"' hooks/ scripts/` returns matches in more than one file after the contract module lands. C-4 is unmet; the rewrite has moved the contract drift rather than removing it, and the epic's main value claim is false.
