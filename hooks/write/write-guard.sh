@@ -40,7 +40,11 @@ echo "$FILE_PATH" | grep -qE "\.(parquet|delta)$|/(silver|gold|bronze|hive-wareh
   && block "infrastructure/unity-catalog" "Delta/Parquet writes to catalog paths must go through Unity Catalog skill."
 
 # Workspace skill or source config changes
-echo "$FILE_PATH" | grep -qE "\.craft-agent/workspaces/.+/skills/|\.craft-agent/workspaces/.+/sources/" \
+# Scoped to electinfo workspaces only — the workspace-backup skill targets
+# electinfo/craft-agents (the discipline doesn't apply cross-workspace).
+# Other workspaces (e.g. pour-now) have their own backup/versioning discipline
+# in their project framework — see e.g. [skill:pour-now--workspace-backup].
+echo "$FILE_PATH" | grep -qE "\.craft-agent/workspaces/electinfo[^/]*/skills/|\.craft-agent/workspaces/electinfo[^/]*/sources/" \
   && block "workspace-backup" "Workspace config changes should use the workspace-backup skill to ensure changes are versioned."
 
 exit 0

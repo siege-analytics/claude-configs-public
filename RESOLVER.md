@@ -1,5 +1,15 @@
 # Skill Resolver
 
+> **Scope: electinfo only.** This resolver, its task patterns, and the skills
+> it references are written for the **electinfo** project (git repo
+> `~/git/electinfo/` and Craft Agent workspaces `electinfo-4` / `electinfo-5`).
+> They do **not** apply in other Craft Agent workspaces (`moshi-ai`,
+> `satsuma-ai`, `Ringer-Sciences`, `steve`, etc.) or in unrelated repos.
+> The injector hook (`hooks/resolver/inject-resolver.sh`) enforces this by
+> only firing when `pwd` is inside an electinfo path; if you see the
+> `<skill-resolver>` block injected outside that scope, the guard has been
+> bypassed or misconfigured.
+
 **You MUST consult this resolver as the first step of any non-trivial task.** When a task pattern below matches what you're about to do, READ the mapped skill(s) before proceeding. Not after. Not "I know what it says." Read.
 
 This is the enforcement layer for every skill in this collection and the electinfo collection. Skills are only useful if they fire before action.
