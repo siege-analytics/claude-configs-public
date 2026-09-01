@@ -67,15 +67,21 @@ fi
 
 [[ -z "$CONTENT" ]] && exit 0
 
-# --- Extract frontmatter (between first pair of --- markers) ---
-FRONTMATTER=$(echo "$CONTENT" | sed -n '/^---$/,/^---$/p' | sed '1d;$d')
-
-# --- Scan body (below frontmatter) for ticket references ---
-# Body = everything after the second --- marker. If no frontmatter, body is everything.
-if echo "$CONTENT" | head -1 | grep -q '^---$'; then
-    # Has frontmatter: skip past the closing ---
-    BODY=$(echo "$CONTENT" | awk 'BEGIN{n=0} /^---$/{n++; if(n==2){found=1; next}} found{print}')
+# --- Split frontmatter from body ---
+# Everything here avoids `cmd | grep -q` and `cmd | head` on large variables.
+# Under `set -o pipefail` those pipelines fail spuriously once the variable
+# exceeds the pipe buffer: the reader exits early, the writer takes SIGPIPE,
+# and 141 becomes the pipeline's status. That made the guard ignore valid
+# frontmatter on large artifacts only, which is #688.
+#
+# The old frontmatter extraction also used `sed -n '/^---$/,/^---$/p'`, whose
+# range restarts at every `---` in the body. On a document with horizontal
+# rules that captured most of the file as "frontmatter".
+if [[ "${CONTENT%%$'\n'*}" == "---" ]]; then
+    FRONTMATTER=$(awk 'NR>1 { if ($0 == "---") exit; print }' <<< "$CONTENT")
+    BODY=$(awk 'BEGIN{n=0} /^---$/{n++; if(n==2){found=1; next}} found{print}' <<< "$CONTENT")
 else
+    FRONTMATTER=""
     BODY="$CONTENT"
 fi
 
@@ -91,22 +97,24 @@ FOUND_REFS=$(echo "$BODY" | { grep -oE "$TICKET_REGEX" || true; } | sort -u)
 
 # Check for ticket_refs: with at least one entry
 HAS_TICKET_REFS=false
-if echo "$FRONTMATTER" | grep -qE '^ticket_refs:'; then
-    # Verify it's not empty (must have at least one line with - after it)
-    REFS_BLOCK=$(echo "$CONTENT" | sed -n '/^ticket_refs:/,/^[^[:space:]-]/p' | tail -n +2 | grep -E '^\s+-' || true)
-    if [[ -n "$REFS_BLOCK" ]]; then
-        HAS_TICKET_REFS=true
-    fi
+# Scoped to FRONTMATTER, so a `ticket_refs:` line in the body cannot satisfy it.
+REFS_BLOCK=$(awk '
+    /^ticket_refs:/ { f = 1; next }
+    f && /^[[:space:]]+-/ { print; next }
+    f { exit }
+' <<< "$FRONTMATTER")
+if [[ -n "$REFS_BLOCK" ]]; then
+    HAS_TICKET_REFS=true
 fi
 
 # Check for propagation-deferred: with a non-empty, non-boolean reason
 HAS_DEFERRED=false
-if echo "$FRONTMATTER" | grep -qE '^propagation-deferred:'; then
-    DEFERRED_VALUE=$(echo "$FRONTMATTER" | grep -E '^propagation-deferred:' | sed 's/^propagation-deferred:[[:space:]]*//')
-    # Reject empty, false, true — must be a real reason string
-    if [[ -n "$DEFERRED_VALUE" ]] && [[ "$DEFERRED_VALUE" != "false" ]] && [[ "$DEFERRED_VALUE" != "true" ]]; then
-        HAS_DEFERRED=true
-    fi
+DEFERRED_VALUE=$(awk '
+    sub(/^propagation-deferred:[[:space:]]*/, "") { print; exit }
+' <<< "$FRONTMATTER")
+# Reject empty, false, true: must be a real reason string
+if [[ -n "$DEFERRED_VALUE" ]] && [[ "$DEFERRED_VALUE" != "false" ]] && [[ "$DEFERRED_VALUE" != "true" ]]; then
+    HAS_DEFERRED=true
 fi
 
 if [[ "$HAS_TICKET_REFS" == "true" ]] || [[ "$HAS_DEFERRED" == "true" ]]; then
