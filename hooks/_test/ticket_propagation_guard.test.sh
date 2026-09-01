@@ -470,4 +470,73 @@ done
 
 rm -rf "$HOOK_COPY_DIR"
 
+# --- Round-3 findings. Both are fail-open: the guard exits 0 on a document it
+# is meant to block, so no existing scenario could see either one. Every fixture
+# below is paired with a control that must come back positive, because a
+# scenario asserting BLOCK on a broken path filter would also pass if the guard
+# blocked unconditionally.
+
+# R3-F1: a repo-relative file_path skipped the path filter entirely. Every arm
+# of the case required a leading path component: `*` matches the empty string
+# but the literal `/` before `plans` still has to be there, so `plans/a.md` fell
+# through to ALLOW while `./plans/a.md` blocked.
+
+R3_PWD="$PWD"
+cd "$TMP" || exit 1
+
+make_artifact "$TMP/plans/relative.md" no-fm 1000
+make_artifact "$TMP/plans/relative-ok.md" with-fm 1000
+make_artifact "$TMP/docs/investigations/relative.md" no-fm 1000
+
+expect_block "(aa) a repo-relative plans/ path is in scope" "$HOOK" \
+    "$(payload "plans/relative.md")"
+expect_pass "(ab) a repo-relative plans/ path with ticket_refs is allowed" "$HOOK" \
+    "$(payload "plans/relative-ok.md")"
+expect_block "(ac) a repo-relative docs/investigations/ path is in scope" "$HOOK" \
+    "$(payload "docs/investigations/relative.md")"
+
+# (ab) alone does not prove the relative path reached the guard, because a path
+# that is still out of scope also exits 0. This is the discriminator: a relative
+# path the guard does not claim must stay allowed, so (aa) and (ac) cannot be
+# satisfied by widening the filter to every relative path.
+
+printf '%s\n' "$BODY_REF" > "$TMP/notes-at-root.md"
+expect_pass "(ab2) a relative path outside the artifact directories stays out of scope" "$HOOK" \
+    "$(payload "notes-at-root.md")"
+
+cd "$R3_PWD" || exit 1
+
+# R3-F2: GitHub treats owner, repo and host casing as equivalent, so a
+# mixed-case reference addresses the same issue as the lower-case spelling while
+# evading a case-sensitive TICKET_REGEX. No refs found means nothing to enforce,
+# which is the guard's earliest exit and so its widest fail-open.
+
+printf '%s\n' \
+    '# Artifact' \
+    '' \
+    'Body cites Siege-Analytics/Claude-Configs-Public#251 and is unpropagated.' > "$TMP/plans/mixed-case.md"
+
+expect_block "(ad) a mixed-case owner reference is still a ticket reference" "$HOOK" \
+    "$(payload "$TMP/plans/mixed-case.md")"
+
+printf '%s\n' \
+    '# Artifact' \
+    '' \
+    'Body cites GitHub.com/siege-analytics/claude-configs-public/issues/251 unpropagated.' > "$TMP/plans/mixed-case-host.md"
+
+expect_block "(ae) a mixed-case github.com host in a full URL is still a reference" "$HOOK" \
+    "$(payload "$TMP/plans/mixed-case-host.md")"
+
+# The control for both. Matching case-insensitively must not turn every document
+# into a match: text that names no governed org still carries no obligation, and
+# a guard that blocked it would satisfy (ad) and (ae) for the wrong reason.
+
+printf '%s\n' \
+    '# Artifact' \
+    '' \
+    'Body cites Some-Other-Org/unrelated-repo#251, which this guard does not govern.' > "$TMP/plans/foreign-org.md"
+
+expect_pass "(af) a reference to an org the guard does not govern is not a match" "$HOOK" \
+    "$(payload "$TMP/plans/foreign-org.md")"
+
 report

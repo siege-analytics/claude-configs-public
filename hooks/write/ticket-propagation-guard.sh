@@ -47,12 +47,21 @@ BASENAME=$(basename "$FILE_PATH")
 # scratch-* prefix is the exploratory-draft escape hatch
 [[ "$BASENAME" == scratch-* ]] && exit 0
 
-# Only match artifact directories
+# Only match artifact directories.
+#
+# Every arm needs a bare-relative twin. `*/plans/*.md` requires a leading path
+# component, so `./plans/a.md` matches and `plans/a.md` does not: `*` can match
+# the empty string but the literal `/` before `plans` still has to be there.
+# A caller that passes a repo-relative path skipped the guard entirely, which is
+# round-3 finding R3-F1.
 ARTIFACT_PATH=false
 case "$FILE_PATH" in
     */plans/*.md|*/plans/**/*.md)       ARTIFACT_PATH=true ;;
+    plans/*.md|plans/**/*.md)           ARTIFACT_PATH=true ;;
     */docs/investigations/*.md)          ARTIFACT_PATH=true ;;
     */docs/investigations/**/*.md)       ARTIFACT_PATH=true ;;
+    docs/investigations/*.md)            ARTIFACT_PATH=true ;;
+    docs/investigations/**/*.md)         ARTIFACT_PATH=true ;;
 esac
 [[ "$ARTIFACT_PATH" == "false" ]] && exit 0
 
@@ -107,9 +116,15 @@ if [[ "$SPLIT_STATUS" -ne 0 ]] || [[ "$BODY_STATUS" -ne 0 ]]; then
 fi
 
 # Ticket reference patterns (org-qualified only, no bare #N)
+#
+# Matched case-insensitively (R3-F2). GitHub treats owner, repo and host casing
+# as equivalent, so `Siege-Analytics/repo#1` and `GitHub.com/...` address the
+# same issues as the lower-case spellings while evading a case-sensitive match.
+# The full-URL arm appeared to survive mixed-case owners only because `[^/]+`
+# is broad after the host; the host itself was still anchored lower-case.
 TICKET_REGEX='(siege-analytics|electinfo)/[^#[:space:]]+#[0-9]+|github\.com/[^/]+/[^/]+/(issues|pull)/[0-9]+'
 
-FOUND_REFS=$(echo "$BODY" | { grep -oE "$TICKET_REGEX" || true; } | sort -u)
+FOUND_REFS=$(echo "$BODY" | { grep -oEi "$TICKET_REGEX" || true; } | sort -u)
 
 # No ticket refs in body → nothing to enforce
 [[ -z "$FOUND_REFS" ]] && exit 0
