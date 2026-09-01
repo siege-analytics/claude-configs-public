@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Added
+
+- scaffold-test-stub hook (#661): `hooks/create-ticket/scaffold-test-stub.sh` reads a ticket body containing Automation blocks (per #658), invokes tool-availability probes (per #662) when the block lacks a Probe field, resolves the layer's `automation_template` from `PROJECT.md`, sed-substitutes `{ticket_id}`/`{ac_id}`/`{feature}` into the named Stub path, and appends `Generated stubs:` + `Blocked-by:` lines to the ticket body. Silent no-op when body has no Automation block. Test fixture at `hooks/_test/scaffold_test_stub.test.sh` covers no-op, happy-path, and blocked-path.
+- Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
+- Tool-availability-probe skill and scripts (#662): `skills/tool-availability-probe/SKILL.md` documents the check-install-escalate protocol; six probe shell scripts ship under `scripts/probe/` for pytest, playwright, vitest, schemathesis, great-expectations, k6. On absent + `tool_install_policy: block` (or install failure), probe files an infra ticket via `gh` from `templates/infra-ticket-tool-install.md` (#663) and returns exit 78 so the scaffold hook (#661) can record `Blocked-by:` while still rendering the stub.
+- Part-of epic #655; child ticket #662 closes the environment-gap check between writing-tests:7 tool declaration and the scaffold hook's stub-render step; adds a new tool-availability-probe skill under `skills/`.
+
 ### Fixed
 
 - Non-git mutation inversion design (#128): documented the target model for making git/workflow the low-friction mutation path, with evidence requirements, escape hatches, and phased coverage for Bash, MCP/API, browser, and external-state writes.
