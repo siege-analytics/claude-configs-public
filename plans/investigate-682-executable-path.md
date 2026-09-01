@@ -228,6 +228,7 @@ not reintroduce it. `NEW` = first recorded here.
 - **Known failures:**
   - `#672 P0-3 / 2-2 REMEDIATED` by `5292825` -- this allowlist is the guard that made `&` in a `Feature` value harmless. Combined with the move from `sed` to bash parameter expansion in `_substitute`, the silent-corruption class is closed. Covered by `test_sed_metachars_rejected`.
   - `NEW (F-N4) LIVE` -- the allowlist is applied to `Ticket-id`, `AC-id`, `Feature`, and `Layer`, but **not** to `Stub` (only path containment guards it) and **not** to `Tool` (the `KNOWN_TOOLS` allowlist guards it). That split is correct but undocumented; the header comment at `:25` says "Substitution values must match `^[A-Za-z0-9._-]+$`" without naming which fields are substitution values.
+  - `NEW (F-N26) LIVE` -- the allowlist admits `.`, `_` and `-`, but `Feature` and `AC-id` are substituted into a Python identifier at `templates/tests/pytest-unit.py.tmpl:15`. Repro executed on this branch: `Feature: has-hyphen` rendered `tests/test_ac1_has-hyphen.py`, and `python3 -m py_compile` returned `SyntaxError: expected '('`. The assumption noted below was true and should have been recorded as a finding; the PR #684 hostile review (2-1) promoted it.
   - The regex admits a leading `-`, so a `Feature` of `-rf` is "safe" here and only becomes harmless because no value is ever passed as an argv element to another command.
 - **Test coverage:** `test_sed_metachars_rejected` (`hooks/_test/scaffold_test_stub.test.sh:309`) covers rejection of `&`-bearing values. No fixture covers a leading-dash value or a value containing `/`.
 - **Assumptions:** (to verify at rewrite time) that the same character class is right for all four fields -- `Feature` becomes a Python identifier in the pytest templates, so `.` and `-` produce syntactically invalid Python (`def test_ac1_a-b()`). The rewrite should validate per-field against the target language's identifier rules, not with one shared class.
@@ -334,6 +335,7 @@ not reintroduce it. `NEW` = first recorded here.
   - `#672 P2-5 REMEDIATED` -- `--body-file`/`--out-file`/`--repo-root` with no value now exit 2 (`:48-65`).
   - `NEW (F-N10) LIVE` -- the probe is invoked once per Automation block (`:286`), with no per-run cache. This is the consumer half of `#668 P0-5`: five pytest-backed ACs on a machine without pytest file five public issues. `#668`'s review explicitly assigned per-run caching to this side.
   - `NEW (F-N11) LIVE` -- `probe_json=$("$probe_script" "$ticket_id" 2>/dev/null || true)` at `:286` discards both the probe's stderr and its exit code. The probe's carefully distinguished exits (0 / 2 / 78) are unobservable to the hook, which is why `#668 P1-5`'s `unfilable-gh-missing` sentinel cannot be told apart from a real ticket.
+  - `NEW (F-N27) LIVE` -- `Layer:` is parsed and used for template selection, then dropped: the probe is invoked as `"$probe_script" "$ticket_id"` at `:286` with no layer argument. Every infra ticket the probe files carries the wrapper's hard-coded layer instead of the AC's. Found by the PR #684 hostile review (2-2).
 - **Test coverage:** all 15 fixtures in `hooks/_test/scaffold_test_stub.test.sh` drive this loop. **Uncovered:** multi-block bodies, exit-code assertions on failure paths, a body with no trailing newline, `probe-missing` actually surfacing, per-run probe caching, and the pre-containment `mkdir`.
 - **Assumptions:** (to verify at rewrite time) that the ticket body is the authoritative input and the filesystem is the output -- i.e. that a partial failure should still emit a body (current behavior; correct). That rendering is idempotent -- it is, via the `-e` check at `:341` plus `mv -n`, but "already exists" is indistinguishable from "we generated it last run". That `$REPO_ROOT_ABS` is trustworthy -- it is caller-supplied and never validated as a git repository.
 
@@ -356,7 +358,7 @@ not reintroduce it. `NEW` = first recorded here.
 - **Callees:** `command -v playwright`, `command -v npx`, `npx --no-install playwright --version`; then either `_probe_emit_json:31` directly at `:26`, or `probe_run:145` at `:33`.
 - **Side effects:** on the installed branch, writes JSON and `exit 0` at `:27` -- **bypassing `probe_run` entirely**. On the absent branch, hands a deliberately-unfindable shim binary name to `probe_run`, which then runs the npm install under `allow` policy (mutating `node_modules` and downloading browser binaries with `--with-deps`, which on Linux invokes `sudo apt-get`).
 - **Known failures:**
-  - **F-N12 (NEW, P1).** `:26` interpolates `$ver` into a hand-built JSON string with no escaping. `playwright --version` output containing `"` or `\` produces malformed JSON, which `_parse_probe_json:215` then greps with a regex that will silently mis-extract. Same class as #668 P1-2 but in a second location that the #668 review did not enumerate.
+  - **F-N12 (NEW, P1).** `:26` interpolates `$ver` into a hand-built JSON string with no escaping. `playwright --version` output containing `"` or `\` produces malformed JSON, which `_parse_probe_json:215` then feeds to `json.loads`, whose bare `except Exception` at `:224` swallows the failure and returns empty strings for both `status` and `ticket`. Same class as #668 P1-2 but in a second location that the #668 review did not enumerate.
   - **F-N13 (NEW, P0).** The `__playwright_absent__` shim defeats `probe_run`'s post-install verification. `probe_run` re-runs `_probe_check_bin "$bin_name"` after `eval "$install_cmd"`; with a shim name that check can never succeed, so a *successful* `npm install -D @playwright/test` is still reported as an install failure and still files an infra ticket. Every `allow`-policy playwright run produces a spurious GitHub issue.
   - **F-N12b.** `:25` `ver=$( (command -v playwright >/dev/null 2>&1 && playwright --version) || npx --no-install playwright --version 2>&1 | head -1 )` -- the `||` binds to the whole pipeline, and `2>&1` on the fallback means stderr is captured as the version string when npx fails partway.
   - Empty `VERSION_BIN` (`""`) at `:33` means `_probe_get_version:72` cannot report a version on the absent path; the infra ticket's `{version_requested}` is always `any`.
@@ -404,7 +406,7 @@ not reintroduce it. `NEW` = first recorded here.
 - **Callees:** `uname -s`, `command -v brew`, `command -v apt-get`; then `probe_run:145`.
 - **Side effects:** the `apt-get` branch at `:16` emits a string containing `sudo gpg`, `sudo tee /etc/apt/sources.list.d/k6.list`, `sudo apt-get update`, `sudo apt-get install -y k6` -- which `probe_run` passes to `eval` under `tool_install_policy: allow`. That is an unattended root-level package-source mutation triggered by a git hook parsing an issue body.
 - **Known failures:**
-  - **F-N14 (NEW, P0).** `:18` returns the prose string `unsupported-os: please install k6 manually per https://k6.io/docs/getting-started/installation/` on any non-Darwin/non-apt host. That string is not a guard -- it flows into `INSTALL_CMD` and is `eval`ed verbatim under `allow` policy. `eval` splits on the colon-terminated first word and attempts to run a command named `unsupported-os:`; the failure is then reported as an *install failure* (indistinguishable from a real one) rather than as "no install route on this platform". The URL fragment also contains `//` and `:` which are inert here but demonstrate the value was never intended as shell input.
+  - **F-N14 (NEW, P1; downgraded from P0 by the PR #684 hostile review, finding 2-3).** `:18` returns the prose string `unsupported-os: please install k6 manually per https://k6.io/docs/getting-started/installation/` on any non-Darwin/non-apt host. That string is not a guard -- it flows into `INSTALL_CMD` and is `eval`ed verbatim under `allow` policy. `eval` splits on the colon-terminated first word and attempts to run a command named `unsupported-os:`; the failure is then reported as an *install failure* (indistinguishable from a real one) rather than as "no install route on this platform". The URL fragment also contains `//` and `:` which are inert here but demonstrate the value was never intended as shell input.
   - The `sudo` chain in `:16` is the single highest-blast-radius line in the whole executable path and has no policy gate distinct from `pip install --user`. `_probe_resolve_policy:36` returns one `allow|prompt|block` token for all tools; there is no per-tool or per-privilege tier. **F-N18 (NEW, P1)**: policy granularity is insufficient for the range of install commands actually shipped (userspace pip ↔ root apt source addition).
   - Empty `VERSION_BIN` at `:23` -- `k6 version` (not `--version`) is the real invocation, so no version can be reported even though k6 is present.
 - **Test coverage:** none. Neither the Darwin, apt, nor unsupported-os branch is exercised by any fixture.
@@ -578,7 +580,7 @@ Ten external binaries, none version-pinned, none checked before use. `set -euo p
 
 | Contract | Producer | Consumer | Enforced by | Status |
 |---|---|---|---|---|
-| Probe JSON `{status, tool, version, ticket}` | `_probe_emit_json:31`, `playwright.sh:26`, `vitest.sh:22` | `_parse_probe_json:215` | nothing -- regex extraction, no schema | 3 producers, 1 grep-based consumer (F-N12) |
+| Probe JSON `{status, tool, version, ticket}` | `_probe_emit_json:31`, `playwright.sh:26`, `vitest.sh:22` | `_parse_probe_json:215` | nothing -- `json.loads` with a bare `except` that degrades any parse failure to empty strings; no schema, no typed result | 3 string-building producers, 1 fail-silent consumer (F-N12) |
 | Exit codes 0 / 2 / 78 | `probe_run:145` and direct `exit 0` in 2 wrappers | hook main loop `:286` | nothing -- **exit code is discarded** (F-N11) | broken |
 | Tool allowlist | `_is_known_tool:124` | wrapper filenames in `scripts/probe/` | nothing -- two hand-maintained lists | drifts (F-N4) |
 | Layer token | wrapper `probe_run` arg 5 | infra ticket `{layer}`, `templates/tests/README.md`, `skills/testing-frameworks/SKILL.md` | nothing | 3 spellings (F-N16) |
@@ -602,7 +604,7 @@ All commands below were executed on branch `feat/683-investigate-executable-path
 | `pytest` | `_probe_check_bin pytest pytest` | present -> the installed branch is the only one `test_auto_probe_installed` can reach |
 | `great_expectations` | `python3 -c 'import great_expectations'` | **absent** -> used as the vehicle for the LIVE repro of #668 P1-4 |
 
-Both suites are green and both were green while F-N1, F-N5, F-N11, F-N13, F-N14, F-N17 and F-N22 were live. **Green is not evidence of correctness on this surface.** The rewrite must not treat "both suites still pass" as an acceptance signal; ticket #683's successors need assertions that fail today.
+Both suites are green and both were green while F-N1, F-N5, F-N11, F-N13, F-N14, F-N17, F-N22 and F-N26 were live. **Green is not evidence of correctness on this surface.** The rewrite must not treat "both suites still pass" as an acceptance signal; ticket #683's successors need assertions that fail today.
 
 ## Coherence
 
@@ -642,10 +644,10 @@ Discovered during this investigation; not present in either hostile review. Numb
 | F-N9 | P1 | awk splitter `:161-191` | `$BLOCKS_FILE` is interpolated into the awk *program* text rather than passed via `-v`. |
 | F-N10 | P1 | main loop `:282-300` | No per-run probe cache; N ACs naming the same tool spawn N probes, each independently able to install software or file an issue. Consumer half of #668 P0-5. |
 | F-N11 | P0 | main loop `:286` | `probe_json=$("$probe_script" "$ticket_id" 2>/dev/null \|\| true)` -- stderr discarded, exit code discarded. Exit 2 / 78, the probe's entire signalling channel, is unobservable to its only caller. |
-| F-N12 | P1 | `playwright.sh:26`, `vitest.sh:22` | `$ver` interpolated into hand-built JSON with no escaping; a version string containing `"` or `\` yields malformed JSON that `_parse_probe_json` greps anyway. |
+| F-N12 | P1 | `playwright.sh:26`, `vitest.sh:22` | `$ver` interpolated into hand-built JSON with no escaping; a version string containing `"` or `\` yields malformed JSON. `_parse_probe_json:215` parses with `json.loads` and its bare `except Exception` at `:224` turns the parse failure into empty `status` and `ticket`, so the hook silently degrades to `probe="unknown"` rather than reporting a malformed payload. |
 | F-N12b | P2 | `playwright.sh:25`, `vitest.sh:21` | `||` binds across the pipeline and `2>&1` captures stderr as the version value on partial failure. |
 | F-N13 | P0 | `playwright.sh:33`, `vitest.sh:26` | `__playwright_absent__` / `__vitest_absent__` shim bin names make `probe_run`'s post-install re-check (`_common.sh:167`) unsatisfiable. A *successful* npm install is reported as failure and files a spurious GitHub issue on every `allow`-policy run. |
-| F-N14 | P0 | `k6.sh:18` | On non-Darwin/non-apt hosts `_probe_install_cmd_k6` returns the prose string `unsupported-os: ...`, which reaches `eval` in `probe_run` under `allow`. A sentinel value is executed as a command; the resulting failure is indistinguishable from a real install failure. |
+| F-N14 | P1 | `k6.sh:18` | On non-Darwin/non-apt hosts `_probe_install_cmd_k6` returns the prose string `unsupported-os: ...`, which reaches `eval` in `probe_run` under `allow`. A sentinel value is executed as a command; the resulting failure is indistinguishable from a real install failure. **Downgraded P0 -> P1** by the PR #684 hostile review (finding 2-3), which reproduced the path (`rc=78`, `blocked-on-infra`) and established that the command name is fixed by the script rather than ticket-controlled, and that the branch is reached only on hosts with neither brew nor apt-get. The high-severity `eval` risk belongs to F-N18. |
 | F-N15 | P2 | `playwright.sh` / `vitest.sh` | ~90% duplicate files; every defect above exists twice and must be fixed twice. |
 | F-N16 | P2 | wrapper arg 5 | Layer token has three spellings across four files (`api-contract` / "API contract" / the SKILL.md vocabulary) with no source of truth; `{layer}` in filed issues is not machine-groupable. |
 | F-N17 | P1 | `templates/infra-ticket-tool-install.md:34` | The generated verification block renders `command -v great-expectations`, but the installed binary is `great_expectations`. The infra ticket tells the installer to verify with a command that fails after a correct install. Only tool where canonical name ≠ binary name. |
@@ -658,14 +660,17 @@ Discovered during this investigation; not present in either hostile review. Numb
 | F-N24 | P1 | -- | No fixture library exists. The #682 checklist item names an artefact that must be *created*, not ported. Consequence: two mutually-unaware `gh` stubs and two infra-ticket templates. |
 
 | F-N25 | P1 | `skills/tool-availability-probe/SKILL.md:78` | Documents "the hook interprets exit 78 as ...", but the hook discards the exit code (F-N11). The documented control channel does not exist; correct behaviour is re-derived from the JSON `status` field by coincidence. |
+| F-N26 | P1 | `_safe_value:141` + `templates/tests/pytest-unit.py.tmpl:15` | `_safe_value` admits `.`, `_` and `-`, but `{feature}` and `{ac_id}` are substituted into a Python *identifier* (`def test_ac{ac_id}_{feature}()`). A `Feature:` value the hook accepts, such as `has-hyphen`, renders a stub that is a `SyntaxError`. **Repro executed on this branch:** `Feature: has-hyphen` rendered `tests/test_ac1_has-hyphen.py`; `python3 -m py_compile` returned `SyntaxError: expected '('` at line 15. The template's intended failure is an assertion message; the actual failure is at collection time. One shell-safe regex is guarding three sinks with different grammars. Found by the PR #684 hostile review, finding 2-1. |
+| F-N27 | P1 | main loop `:286` vs wrapper arg 5 | The hook parses `Layer:` and uses it to choose a template, then invokes the probe as `"$probe_script" "$ticket_id"` -- the layer is never passed. Every infra ticket the probe files carries the *wrapper's* hard-coded layer, not the AC's. `Tool: pytest` + `Layer: integration` selects the integration template and files a ticket labelled with pytest.sh's layer token. This is a data-loss boundary, distinct from F-N16's vocabulary drift: the value is not merely spelled three ways, it is discarded. Found by the PR #684 hostile review, finding 2-2. |
 
-Severity totals: **6 P0**, **13 P1**, **7 P2**.
+Unit of analysis, fixed before counting (PR #684 hostile review, finding 1-3): one row of the table above is one finding, and `F-N12b` is a row. That gives **28 new findings** after F-N26 and F-N27 were added by the same review. Severity totals over those 28 rows: **4 P0**, **17 P1**, **7 P2**, produced by `grep -oE '^\| F-N[0-9]+b? \| P[012]' plans/investigate-682-executable-path.md | awk '{print $4}' | sort | uniq -c`. An earlier revision of this line said `6 P0, 13 P1, 7 P2` over 25 findings; neither half summed to the table and both were wrong. The four remaining P0 findings are F-N1, F-N11, F-N13 and F-N22; F-N14 was downgraded to P1 per finding 2-3.
 
 ## Hypothesis and falsification
 
 **H1.** *The executable path's defects are predominantly consequences of bash's lack of structured data, not of individual coding mistakes; therefore a Python rewrite that introduces a typed probe-result object and a single template renderer eliminates a majority of them without needing a per-defect fix.*
 
-- Falsifiable by: classify all 29 live findings (#668's 24 + #672's 5) plus the 25 new ones as *structural* (removed by having a dataclass/JSON schema/shared renderer/exception propagation) or *incidental* (requires a bespoke fix regardless of language). H1 holds iff structural ≥ 50%. Preliminary read: F-N12, F-N12b, F-N13, F-N15, F-N16, F-N19, F-N24, #668 P0-3, P1-2 are structural; F-N1, F-N14, F-N17, F-N22 are incidental. The classification is the first deliverable of the design ticket, not of this one.
+- Unit of analysis, fixed before counting (PR #684 hostile review, finding 1-3): one row of the new-findings table is one finding, `F-N12b` included. 28 new findings after F-N26 and F-N27, plus 29 live prior findings, is a denominator of **57**. H1 holds iff at least **29** of the 57 are structural.
+- Falsifiable by: classify all 29 live findings (#668's 24 + #672's 5) plus the 28 new ones as *structural* (removed by having a dataclass/JSON schema/shared renderer/exception propagation) or *incidental* (requires a bespoke fix regardless of language). Preliminary read: F-N12, F-N12b, F-N13, F-N15, F-N16, F-N19, F-N24, #668 P0-3, P1-2 are structural; F-N1, F-N14, F-N17, F-N22, F-N26 are incidental; F-N27 is structural. The classification is now 10 structural, 5 incidental, 42 unclassified. The classification is the first deliverable of the design ticket, not of this one.
 
 **H2.** *Both existing suites can be kept green throughout the rewrite while the rewrite is nonetheless correct, because the suites assert observable output rather than implementation.*
 
@@ -677,7 +682,7 @@ Severity totals: **6 P0**, **13 P1**, **7 P2**.
 
 ## Findings summary for the epic
 
-1. The rewrite target is not "the same behaviour in Python". Six P0s exist that a faithful port would preserve, and two green test fixtures actively protect two of them.
+1. The rewrite target is not "the same behaviour in Python". Four P0s exist that a faithful port would preserve, and two green test fixtures actively protect two of them.
 2. Seven inter-file contracts are enforced by hand-maintained naming conventions and nothing else. Making five of them structurally enforced is the rewrite's main value; it should be stated as the design ticket's acceptance criterion, not left implicit.
 3. `probe_run` has zero test coverage and contains every dangerous operation in the system (`eval` of install commands, including a `sudo` chain). It is the highest-risk unit and must be the first one covered.
 4. Test infrastructure needs to be *built*, not ported: there is no fixture library, no shared `gh` stub, no template-drift test, and no byte-exact rendering assertion.
@@ -723,10 +728,10 @@ Assumption universe for the executable path, with dispositions. `PROBED` = execu
       ],
       "schematic": [
         {
-          "claim": "Probe -> hook contract is stdout JSON with keys status/tool/version/ticket, consumed by regex not by a parser.",
+          "claim": "Probe -> hook contract is stdout JSON with keys status/tool/version/ticket, built by string interpolation on three producers and parsed by json.loads on one consumer whose bare except degrades any failure to empty strings.",
           "disposition": "ATTESTED",
-          "evidence": "read of _probe_emit_json and _parse_probe_json; no json module or jq on either side",
-          "citations": ["scripts/probe/_common.sh:31", "hooks/create-ticket/scaffold-test-stub.sh:215"]
+          "evidence": "read of _probe_emit_json and _parse_probe_json; producers interpolate strings, consumer shells to python3 json.loads at :217-227 with a bare except at :224",
+          "citations": ["scripts/probe/_common.sh:31", "hooks/create-ticket/scaffold-test-stub.sh:215", "hooks/create-ticket/scaffold-test-stub.sh:224"]
         },
         {
           "claim": "There are three independent producers of that JSON, two of which bypass probe_run.",
@@ -837,7 +842,7 @@ Assumption universe for the executable path, with dispositions. `PROBED` = execu
           "citations": ["scripts/probe/_common.sh:86"]
         },
         {
-          "claim": "Both suites are green while six P0 findings are live; green is therefore not evidence of correctness on this surface.",
+          "claim": "Both suites are green while four P0 findings are live; green is therefore not evidence of correctness on this surface.",
           "disposition": "PROBED",
           "evidence": "suite runs above combined with the F-N1 and F-N5 repros",
           "citations": ["hooks/_test/scaffold_test_stub.test.sh:1", "scripts/probe/_test_probe_common.sh:1"]
@@ -880,11 +885,33 @@ Assumption universe for the executable path, with dispositions. `PROBED` = execu
       "correctness": 6,
       "skipped": 4,
       "probed": 17,
-      "attested": 5
+      "attested": 5,
+      "newFindings": 28,
+      "newFindingSeverity": {"P0": 4, "P1": 17, "P2": 7},
+      "livePriorFindings": 29,
+      "h1Denominator": 57,
+      "hostileReviewFindingsAccepted": 6
     }
   }
 }
 ```
+
+## Hostile-review remediation (PR #684, round 1)
+
+A sibling session on GPT-5.5 reviewed this artifact against `4a81bf5` and returned six findings, recommending Block. All six are accepted; none is disputed. The reviewer ran its own repros in temp repos with stubbed `gh`, `npm`, `npx` and `uname`.
+
+| Finding | Sev | Substance | Disposition |
+|---|---|---|---|
+| 1-1 | S1 | The severity totals line said `6 P0, 13 P1, 7 P2` over "25 new findings". The table had 26 rows and `5 P0, 14 P1, 7 P2`. Neither half summed. | FIXED. The unit of analysis is now stated before the count, the totals are produced by a command that is quoted inline, and the same correction is applied to the PR body and `plans/self-review-683.md`. |
+| 1-2 | S1 | The artifact claimed in four places that the probe JSON is "consumed by regex not by a parser" with "no json module on either side". False: `_parse_probe_json:215` shells to `python3` and calls `json.loads`. The citation resolved to a real line while contradicting it. | FIXED. All four sites now state the real mechanism: three string-building producers, one `json.loads` consumer whose bare `except Exception` at `:224` degrades any parse failure to empty `status` and `ticket`. Verified by reading `:215-228` on this branch. The defect class survives the correction; the mechanism was wrong. |
+| 1-3 | S2 | H1's denominator used the false 25 count and treated `F-N12b` inconsistently. | FIXED. The unit of analysis is fixed before the count, the denominator is 57 (29 live prior + 28 new), and the threshold is restated as 29 of 57 rather than as a percentage. |
+| 2-1 | S2 | A `Feature` value that `_safe_value` admits (`has-hyphen`) renders a stub that is a `SyntaxError`, because `{feature}` lands inside a Python identifier. The artifact had this as an assumption under `_safe_value`, not as a finding. | FIXED. Promoted to **F-N26 (P1)**. Repro re-run independently on this branch before accepting: `python3 -m py_compile tests/test_ac1_has-hyphen.py` returned `SyntaxError: expected '('` at line 15. |
+| 2-2 | S2 | The hook parses `Layer:` for template selection and then invokes the probe without it, so filed infra tickets carry the wrapper's hard-coded layer. Distinct from F-N16's vocabulary drift. | FIXED. Promoted to **F-N27 (P1)**. Verified independently by reading `:286`, which passes only `"$ticket_id"`. |
+| 2-3 | S2 | F-N14 was P0. The reviewer reproduced it (`rc=78`, `blocked-on-infra`) and established that the executed command name is fixed by the script rather than ticket-controlled, and that the branch requires a host with neither brew nor apt-get. | FIXED. Downgraded to **P1**, with the reviewer's reasoning recorded in the findings table. The high-severity `eval` exposure stays with F-N18. |
+
+The two S1 findings are the ones worth naming as a pattern. Both are failures of the same kind: a claim carried forward from an internal belief and never checked against the source it cites. 1-1 is a count that a five-second command falsifies. 1-2 is worse, because the citation *resolved* -- the line number was right and the line said something else. The citation-resolution pass this artifact ran checks that a line exists, not that it supports the claim attached to it. That gap is now recorded as L-6 in `plans/self-review-683.md`, and it is the strongest argument in this epic for keeping a hostile reviewer on every unit.
+
+Net effect on the counts this epic depends on: 28 new findings (4 P0, 17 P1, 7 P2), 29 live prior findings, denominator 57 for H1.
 
 ## AC verification for ticket #683
 
