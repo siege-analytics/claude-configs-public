@@ -77,16 +77,25 @@ check "empty claude var does not signal claude-code" unknown \
 check "empty craft var falls through to claude-code" claude-code \
     "$(detect_with CRAFT_IS_PACKAGED= CLAUDECODE=1)"
 
-# --- per-session variables are signals too ---
+# --- the one genuine per-session signal ---
 #
-# These are set when the server spawns the agent subprocess, not in the server's
-# own environment — so they are present exactly where hooks run. Probing only
-# the daemon would miss them, which is how they came to be omitted at first.
+# CRAFT_SESSION_DIR is injected into the agent subprocess (pi-agent.ts),
+# alongside CRAFT_DEBUG — those two are the only per-session additions. It is
+# absent from the server's own environment, so probing the daemon misses it.
 
 check "craft via CRAFT_SESSION_DIR" craft \
     "$(detect_with CRAFT_SESSION_DIR=/home/craftagents/.craft-agent/workspaces/x/sessions/y)"
-check "craft via CRAFT_SESSION_ID" craft "$(detect_with CRAFT_SESSION_ID=260901-cool-gold)"
-check "craft via CRAFT_SESSION_NAME" craft "$(detect_with CRAFT_SESSION_NAME=cool-gold)"
+
+# CRAFT_SESSION_ID and CRAFT_SESSION_NAME are automation template variables,
+# not session variables — absent from a hook's environment. CRAFT_SESSION_NAME
+# derives from a user-typed label, so treating it as a signal would let anything
+# claim to be craft.
+check "CRAFT_SESSION_ID is not a signal (automation var)" unknown \
+    "$(detect_with CRAFT_SESSION_ID=260901-cool-gold)"
+check "CRAFT_SESSION_NAME is not a signal (user-typed label)" unknown \
+    "$(detect_with CRAFT_SESSION_NAME=cool-gold)"
+check "CRAFT_DEBUG is not a signal (developer flag)" unknown \
+    "$(detect_with CRAFT_DEBUG=1)"
 
 # --- names that are set by nothing must never be signals ---
 #
@@ -112,25 +121,40 @@ check "oauth token alone is not a host signal" unknown \
 # the function does not exist, the substitution is empty, no arm matches, and
 # the caller proceeds as though nothing applied.
 
+# This runs the recipe EXACTLY as the header documents it. If the header
+# changes, this must change with it — a test of a recipe nobody is told to use
+# proves nothing. Each arm echoes something distinct, so "detects correctly" is
+# distinguishable from "merely avoided the catch-all".
 guarded_recipe() {
     local lib="$1"; shift
     env -i PATH="$PATH" HOME="$HOME" "$@" bash -c '
-        if ! . "$1" 2>/dev/null || ! command -v detect_host >/dev/null 2>&1; then
-            HOST=unknown
-        else
-            HOST="$(detect_host)"
-        fi
+        HOST=unknown
+        _dh="$1"
+        [ -r "$_dh" ] && . "$_dh" && command -v detect_host >/dev/null 2>&1 \
+            && HOST="$(detect_host)"
         case "$HOST" in
-            craft)       echo BLOCKS ;;
-            claude-code) echo BLOCKS ;;
+            craft)       echo GOT-CRAFT ;;
+            claude-code) echo GOT-CLAUDE ;;
             *)           echo LEAST-CAPABLE ;;
         esac' _ "$lib" 2>/dev/null
 }
 
-check "documented recipe reaches a defined arm when the library is missing" \
+check "recipe: missing library reaches the catch-all" \
     "LEAST-CAPABLE" "$(guarded_recipe /nonexistent/detect-host.sh)"
-check "documented recipe still detects when the library is present" \
-    "BLOCKS" "$(guarded_recipe "$DETECT" CRAFT_IS_PACKAGED=true)"
+check "recipe: present library detects craft specifically" \
+    "GOT-CRAFT" "$(guarded_recipe "$DETECT" CRAFT_IS_PACKAGED=true)"
+check "recipe: present library detects claude-code specifically" \
+    "GOT-CLAUDE" "$(guarded_recipe "$DETECT" CLAUDECODE=1)"
+
+# A library that exists but is broken must also reach the catch-all rather than
+# taking the caller down with it.
+_broken="$(mktemp)"; printf 'detect_host() {\n  echo unterminated\n' >"$_broken"
+check "recipe: syntactically broken library reaches the catch-all" \
+    "LEAST-CAPABLE" "$(guarded_recipe "$_broken" CRAFT_IS_PACKAGED=true)"
+_unreadable="$(mktemp)"; printf 'detect_host(){ echo craft; }\n' >"$_unreadable"; chmod 000 "$_unreadable"
+check "recipe: unreadable library reaches the catch-all" \
+    "LEAST-CAPABLE" "$(guarded_recipe "$_unreadable" CRAFT_IS_PACKAGED=true)"
+rm -f "$_broken"; chmod 600 "$_unreadable" 2>/dev/null; rm -f "$_unreadable"
 
 # --- sourceable as well as executable ---
 
