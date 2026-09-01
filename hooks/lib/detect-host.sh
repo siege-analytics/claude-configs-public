@@ -2,13 +2,24 @@
 # Shared library: detect-host.sh
 # Answers "which agent runtime am I running under?" — once, for everyone.
 #
-# Usage as a library:
-#   source "$HOOK_DIR/../lib/detect-host.sh"
-#   case "$(detect_host)" in
+# Usage as a library. Note the guard and the catch-all — both matter:
+#
+#   if ! . "$HOOK_DIR/../lib/detect-host.sh" 2>/dev/null \
+#      || ! command -v detect_host >/dev/null 2>&1; then
+#       HOST=unknown          # library missing or unreadable
+#   else
+#       HOST="$(detect_host)"
+#   fi
+#   case "$HOST" in
 #       craft)       ... ;;
 #       claude-code) ... ;;
-#       unknown)     ... ;;   # assume the least capable runtime
+#       *)           ... ;;   # unknown, or anything unexpected: least capable
 #   esac
+#
+# A `case` without a `*)` arm is a silent fail-open: if this file is missing,
+# the sourced function does not exist, `$(detect_host)` expands to the empty
+# string, no arm matches, and the caller proceeds as though nothing applied.
+# That is the same shape as the guards that stopped guarding today.
 #
 # Usage as a command (for python, make, CI):
 #   host=$(bash hooks/lib/detect-host.sh)
@@ -35,15 +46,35 @@
 #
 # Ref: #696
 
-# Variables that identify each host. Any one of them is sufficient; they are
-# listed most-stable first. CRAFT_CLAUDE_OAUTH_TOKEN is deliberately NOT used
-# as a signal — it is a credential, and reading it here would spread it.
+# Variables that identify each host. Any one is sufficient. Evidence for every
+# entry is captured in docs/probes/craft-env.md — prose claims about environment
+# state are what put the non-existent CRAFT_AGENT_* names into this codebase.
+#
+# Two families, and both are needed:
+#
+#   Per-session — set by the server when it spawns the agent subprocess, which
+#   is where hooks actually run. Absent from the server's own environment, so
+#   probing the daemon alone will not reveal them.
+#
+#   Process-wide — carried by the server and inherited by children.
+#
+# CRAFT_CLAUDE_OAUTH_TOKEN is deliberately NOT a signal: it is a credential, and
+# reading it here would spread it.
 _DETECT_HOST_CRAFT_VARS=(
+    CRAFT_SESSION_DIR
+    CRAFT_SESSION_ID
+    CRAFT_SESSION_NAME
     CRAFT_IS_PACKAGED
     CRAFT_RESOURCES_PATH
     CRAFT_BUNDLED_ASSETS_ROOT
     CRAFT_RPC_PORT
 )
+
+# Names that look plausible and are set by nothing. Kept here so the regression
+# test can assert they are never treated as signals: `CRAFT_AGENT_SESSION_ID`,
+# `CRAFT_AGENT_SESSION_DIR` and `CRAFT_AGENT_WORKSPACE` are read in
+# resolve-think-gate.py, standing-order-guard.sh and log-block.sh, and every
+# branch behind them is dead. The real names carry no `AGENT`.
 
 _DETECT_HOST_CLAUDE_VARS=(
     CLAUDECODE

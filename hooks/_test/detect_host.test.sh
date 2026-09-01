@@ -77,10 +77,60 @@ check "empty claude var does not signal claude-code" unknown \
 check "empty craft var falls through to claude-code" claude-code \
     "$(detect_with CRAFT_IS_PACKAGED= CLAUDECODE=1)"
 
+# --- per-session variables are signals too ---
+#
+# These are set when the server spawns the agent subprocess, not in the server's
+# own environment — so they are present exactly where hooks run. Probing only
+# the daemon would miss them, which is how they came to be omitted at first.
+
+check "craft via CRAFT_SESSION_DIR" craft \
+    "$(detect_with CRAFT_SESSION_DIR=/home/craftagents/.craft-agent/workspaces/x/sessions/y)"
+check "craft via CRAFT_SESSION_ID" craft "$(detect_with CRAFT_SESSION_ID=260901-cool-gold)"
+check "craft via CRAFT_SESSION_NAME" craft "$(detect_with CRAFT_SESSION_NAME=cool-gold)"
+
+# --- names that are set by nothing must never be signals ---
+#
+# CRAFT_AGENT_SESSION_ID, CRAFT_AGENT_SESSION_DIR and CRAFT_AGENT_WORKSPACE are
+# read by three live hooks and exported by no runtime. If one of them ever
+# starts satisfying this detector, the detector has acquired the same defect.
+
+check "CRAFT_AGENT_SESSION_ID is not a signal" unknown \
+    "$(detect_with CRAFT_AGENT_SESSION_ID=session-a)"
+check "CRAFT_AGENT_SESSION_DIR is not a signal" unknown \
+    "$(detect_with CRAFT_AGENT_SESSION_DIR=/tmp/x)"
+check "CRAFT_AGENT_WORKSPACE is not a signal" unknown \
+    "$(detect_with CRAFT_AGENT_WORKSPACE=electinfo-4)"
+
 # --- credentials are never used as a signal ---
 
 check "oauth token alone is not a host signal" unknown \
     "$(detect_with CRAFT_CLAUDE_OAUTH_TOKEN=sk-ant-oat01-placeholder)"
+
+# --- the documented usage pattern fails safe ---
+#
+# A `case` without a `*)` arm is a silent fail-open when the library is absent:
+# the function does not exist, the substitution is empty, no arm matches, and
+# the caller proceeds as though nothing applied.
+
+guarded_recipe() {
+    local lib="$1"; shift
+    env -i PATH="$PATH" HOME="$HOME" "$@" bash -c '
+        if ! . "$1" 2>/dev/null || ! command -v detect_host >/dev/null 2>&1; then
+            HOST=unknown
+        else
+            HOST="$(detect_host)"
+        fi
+        case "$HOST" in
+            craft)       echo BLOCKS ;;
+            claude-code) echo BLOCKS ;;
+            *)           echo LEAST-CAPABLE ;;
+        esac' _ "$lib" 2>/dev/null
+}
+
+check "documented recipe reaches a defined arm when the library is missing" \
+    "LEAST-CAPABLE" "$(guarded_recipe /nonexistent/detect-host.sh)"
+check "documented recipe still detects when the library is present" \
+    "BLOCKS" "$(guarded_recipe "$DETECT" CRAFT_IS_PACKAGED=true)"
 
 # --- sourceable as well as executable ---
 
