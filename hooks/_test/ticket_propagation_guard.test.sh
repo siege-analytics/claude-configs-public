@@ -40,8 +40,13 @@ make_artifact() {
     python3 -c "import sys; n=int(sys.argv[1]); sys.stdout.write(('---\n\nfiller paragraph text\n\n')*(n//30))" "$bytes" >> "$path"
 }
 
+# The guard now evaluates the content an edit would produce, not the file on
+# disk, so an edit payload has to be a real edit. The identity replacement below
+# is the one that leaves the artifact unchanged; the previous `a` -> `b` dummy
+# rewrote `propagation` to `propbgation` and made scenario (i) block for a
+# reason the scenario was not about. Every fixture in this file contains #251.
 payload() {
-    printf '{"tool_name":"Edit","tool_input":{"file_path":"%s","old_string":"a","new_string":"b"}}' "$1"
+    printf '{"tool_name":"Edit","tool_input":{"file_path":"%s","old_string":"#251","new_string":"#251"}}' "$1"
 }
 
 # --- Large artifacts: the #688 regression. 200KB clears any platform pipe buffer.
@@ -208,5 +213,215 @@ expect_block "(l) Write payload, 200KB, WITHOUT frontmatter is still blocked" "$
     "$(write_payload "$TMP/plans/large-noncompliant.md")"
 expect_block "(m) Write payload, unterminated --- opener, fails closed" "$HOOK" \
     "$(write_payload "$TMP/plans/unterminated.md")"
+
+# --- Round-2 hostile review (PR #689). One scenario per finding.
+
+# R2-F1: an indented fenced block is still ordinary Markdown body. CommonMark
+# permits up to three spaces of indentation, and the previous shape check
+# accepted any indented line, so scenario (g)'s bypass reopened by indenting it.
+
+printf '%s\n' \
+    '---' \
+    'title: notes on the guard' \
+    '' \
+    ' # Doc' \
+    '' \
+    ' Quoting the guard resolution text:' \
+    '' \
+    ' ```' \
+    'propagation-deferred: workspace-only draft, will propagate after review' \
+    ' ```' \
+    '' \
+    '---' \
+    '' \
+    'Body cites siege-analytics/claude-configs-public#251 and is unpropagated.' > "$TMP/plans/indented-fence.md"
+
+expect_block "(n) an INDENTED fenced block is body, not frontmatter" "$HOOK" \
+    "$(payload "$TMP/plans/indented-fence.md")"
+
+# R2-F2: the edit that introduces the first ticket reference. Judged against the
+# pre-image this artifact is clean, so every earlier Edit scenario passed while
+# the one edit that creates the obligation went unchecked.
+
+printf '%s\n' '---' 'title: clean' '---' '' 'No ticket references yet.' > "$TMP/plans/add-ref.md"
+
+expect_block "(o) Edit that ADDS the first ticket reference is judged on the after-image" "$HOOK" \
+    '{"tool_name":"Edit","tool_input":{"file_path":"'"$TMP"'/plans/add-ref.md","old_string":"No ticket references yet.","new_string":"Body cites siege-analytics/claude-configs-public#251."}}'
+
+# The same after-image on a compliant artifact must still be allowed, so (o)
+# cannot pass by the guard blocking every Edit.
+
+printf '%s\n' '---' 'ticket_refs:' '  - siege-analytics/claude-configs-public#688: comment pending' '---' '' 'No ticket references yet.' > "$TMP/plans/add-ref-ok.md"
+
+expect_pass "(p) the same after-image WITH ticket_refs frontmatter is allowed" "$HOOK" \
+    '{"tool_name":"Edit","tool_input":{"file_path":"'"$TMP"'/plans/add-ref-ok.md","old_string":"No ticket references yet.","new_string":"Body cites siege-analytics/claude-configs-public#251."}}'
+
+# R2-F5: MultiEdit and NotebookEdit carry no `content` key, so the guard read an
+# empty document and allowed them. Both are now resolved to their after-image.
+
+expect_block "(q) MultiEdit payload is checked" "$HOOK" \
+    '{"tool_name":"MultiEdit","tool_input":{"file_path":"'"$TMP"'/plans/add-ref.md","edits":[{"old_string":"No ticket references yet.","new_string":"Body cites siege-analytics/claude-configs-public#251."}]}}'
+
+expect_block "(r) NotebookEdit payload is checked" "$HOOK" \
+    '{"tool_name":"NotebookEdit","tool_input":{"notebook_path":"'"$TMP"'/plans/add-ref.md","new_source":"Body cites siege-analytics/claude-configs-public#251."}}'
+
+# Blocking MultiEdit would also satisfy (q), because an unresolved payload fails
+# closed. This scenario is what distinguishes resolving the payload from
+# refusing it: dropping MultiEdit from the resolver turns this into a block.
+
+expect_pass "(q2) a compliant MultiEdit is RESOLVED, not merely refused" "$HOOK" \
+    '{"tool_name":"MultiEdit","tool_input":{"file_path":"'"$TMP"'/plans/add-ref-ok.md","edits":[{"old_string":"No ticket references yet.","new_string":"Body cites siege-analytics/claude-configs-public#251."}]}}'
+
+expect_pass "(r2) a compliant NotebookEdit is RESOLVED, not merely refused" "$HOOK" \
+    '{"tool_name":"NotebookEdit","tool_input":{"notebook_path":"'"$TMP"'/plans/add-ref-ok.md","new_source":"Body cites siege-analytics/claude-configs-public#251."}}'
+
+# The indented-line rule has two clauses and (n) exercises only one: its quoted
+# prose is not key-shaped, so it is rejected even if indentation alone were
+# accepted. Here every indented line IS key-shaped, so the region is admitted as
+# frontmatter unless indentation is required to follow a key with no inline
+# value. `title:` has one, which makes the block below body text.
+
+printf '%s\n' \
+    '---' \
+    'title: notes on the guard' \
+    '  quoted: example frontmatter from the docs' \
+    'propagation-deferred: workspace-only draft, will propagate after review' \
+    '---' \
+    '' \
+    'Body cites siege-analytics/claude-configs-public#251 and is unpropagated.' > "$TMP/plans/indent-after-value.md"
+
+expect_block "(n2) an indented block under a key that already has a value is not frontmatter" "$HOOK" \
+    "$(payload "$TMP/plans/indent-after-value.md")"
+
+# And the legitimate shape it must not break: a key with no inline value opening
+# a nested block.
+
+printf '%s\n' \
+    '---' \
+    'ticket_refs:' \
+    '  - siege-analytics/claude-configs-public#688: comment pending' \
+    '---' \
+    '' \
+    'Body cites siege-analytics/claude-configs-public#251.' > "$TMP/plans/nested-ok.md"
+
+expect_pass "(n3) a key with no inline value still opens a nested block" "$HOOK" \
+    "$(payload "$TMP/plans/nested-ok.md")"
+
+# The other clause: once a mapping IS open, its indented content still has to be
+# a list item or a key. (n2) cannot reach this, because there the mapping is
+# closed. Without this clause the region below is admitted and its column-0
+# `propagation-deferred:` satisfies the guard.
+
+printf '%s\n' \
+    '---' \
+    'notes:' \
+    '  Quoting the guard resolution text, which is prose and not YAML.' \
+    'propagation-deferred: workspace-only draft, will propagate after review' \
+    '---' \
+    '' \
+    'Body cites siege-analytics/claude-configs-public#251 and is unpropagated.' > "$TMP/plans/prose-in-open-mapping.md"
+
+expect_block "(n4) prose indented under an OPEN mapping is not frontmatter" "$HOOK" \
+    "$(payload "$TMP/plans/prose-in-open-mapping.md")"
+
+# A block scalar makes every following line a string value rather than a key, so
+# a column-0 `propagation-deferred:` after one is body text that the caller's
+# column-anchored check would otherwise honour.
+
+printf '%s\n' \
+    '---' \
+    'notes: |' \
+    'propagation-deferred: workspace-only draft, will propagate after review' \
+    '---' \
+    '' \
+    'Body cites siege-analytics/claude-configs-public#251 and is unpropagated.' > "$TMP/plans/block-scalar.md"
+
+expect_block "(n5) a block scalar does not open a region where keys are honoured" "$HOOK" \
+    "$(payload "$TMP/plans/block-scalar.md")"
+
+# An unhandled write tool must block rather than resolve to an empty document.
+# This is the branch that made MultiEdit and NotebookEdit pass before they were
+# resolved, and it stays covered as new write tools appear.
+
+expect_block "(v) a write tool the resolver does not handle fails closed" "$HOOK" \
+    '{"tool_name":"FutureWriteTool","tool_input":{"file_path":"'"$TMP"'/plans/add-ref.md","payload":"anything"}}'
+
+# A column-0 line that is not a key. Scenarios (f), (g) and (n2) each carry a
+# second violation, so none of them requires this clause on its own. The line
+# below contains a colon, so relaxing the key check admits it rather than
+# crashing on the split -- which is what makes this fixture discriminating.
+
+printf '%s\n' \
+    '---' \
+    'Quoting the guard resolution text: see the block below.' \
+    'propagation-deferred: workspace-only draft, will propagate after review' \
+    '---' \
+    '' \
+    'Body cites siege-analytics/claude-configs-public#251 and is unpropagated.' > "$TMP/plans/prose-at-col0.md"
+
+expect_block "(n6) a column-0 line that is not a key disqualifies the region" "$HOOK" \
+    "$(payload "$TMP/plans/prose-at-col0.md")"
+
+# --- The resolver's replacement count, asserted directly.
+# The guard's verdict is insensitive to over-replacement in most documents, so
+# no exit-code scenario pins this. An Edit without replace_all replaces the
+# first occurrence only, and an after-image that replaces every occurrence is a
+# different document from the one the write would produce.
+
+AFTER_IMAGE="$REPO_ROOT/hooks/lib/after-image.py"
+printf 'alpha\nalpha\n' > "$TMP/plans/count.md"
+count_out=$(printf '{"tool_name":"Edit","tool_input":{"file_path":"%s","old_string":"alpha","new_string":"beta"}}' \
+    "$TMP/plans/count.md" | python3 "$AFTER_IMAGE" content)
+
+# $(...) strips trailing newlines, so the fixture is compared without one.
+if [[ "$count_out" == $'beta\nalpha' ]]; then
+    printf '  [PASS] (w) an Edit without replace_all resolves to a single replacement\n'
+    _HARNESS_PASS=$((_HARNESS_PASS + 1))
+else
+    printf '  [FAIL] (w) expected only the first occurrence replaced, got %q\n' "$count_out"
+    _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+    _HARNESS_FAILED_NAMES+=("(w) single replacement without replace_all")
+fi
+
+count_all=$(printf '{"tool_name":"Edit","tool_input":{"file_path":"%s","old_string":"alpha","new_string":"beta","replace_all":true}}' \
+    "$TMP/plans/count.md" | python3 "$AFTER_IMAGE" content)
+
+if [[ "$count_all" == $'beta\nbeta' ]]; then
+    printf '  [PASS] (x) replace_all resolves to every occurrence replaced\n'
+    _HARNESS_PASS=$((_HARNESS_PASS + 1))
+else
+    printf '  [FAIL] (x) expected every occurrence replaced, got %q\n' "$count_all"
+    _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+    _HARNESS_FAILED_NAMES+=("(x) replace_all replaces every occurrence")
+fi
+
+# R2-F4: the docs/investigations scope was registered and documented but no
+# scenario covered it, so deleting that case from the path filter left the suite
+# green while disabling half the artifact surface.
+
+mkdir -p "$TMP/docs/investigations"
+make_artifact "$TMP/docs/investigations/probe.md" no-fm 1000
+make_artifact "$TMP/docs/investigations/probe-ok.md" with-fm 1000
+
+expect_block "(s) docs/investigations artifact WITHOUT frontmatter is blocked" "$HOOK" \
+    "$(payload "$TMP/docs/investigations/probe.md")"
+expect_pass "(t) docs/investigations artifact WITH ticket_refs is allowed" "$HOOK" \
+    "$(payload "$TMP/docs/investigations/probe-ok.md")"
+
+# R2-F3: both helpers are fail-open dependencies. With either removed the guard
+# used to produce empty halves and allow a non-compliant artifact.
+
+HOOK_COPY_DIR=$(mktemp -d)
+cp -R "$REPO_ROOT/hooks" "$HOOK_COPY_DIR/hooks"
+COPY_HOOK="$HOOK_COPY_DIR/hooks/write/ticket-propagation-guard.sh"
+
+for helper in split-frontmatter after-image; do
+    mv "$HOOK_COPY_DIR/hooks/lib/$helper.py" "$HOOK_COPY_DIR/$helper.bak"
+    expect_block "(u:$helper) a missing hooks/lib/$helper.py fails closed" "$COPY_HOOK" \
+        "$(payload "$TMP/plans/small-noncompliant.md")"
+    mv "$HOOK_COPY_DIR/$helper.bak" "$HOOK_COPY_DIR/hooks/lib/$helper.py"
+done
+
+rm -rf "$HOOK_COPY_DIR"
 
 report

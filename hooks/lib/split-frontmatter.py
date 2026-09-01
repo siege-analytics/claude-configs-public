@@ -17,15 +17,38 @@ prints the whole document, so an unterminated `---` fails closed.
 import re
 import sys
 
-KEY = re.compile(r"^[A-Za-z_][A-Za-z0-9_.-]*:")
+KEY = re.compile(r"^[A-Za-z_][A-Za-z0-9_.-]*:(?=\s|$)")
+ITEM = re.compile(r"^-(?=\s|$)")
+BLOCK_SCALAR = re.compile(r"^[|>][+-]?$")
 
 
-def is_yaml_shaped(line: str) -> bool:
-    if not line.strip() or line.lstrip().startswith("#"):
-        return True
-    if line[:1] in (" ", "\t"):
-        return True
-    return bool(KEY.match(line))
+def is_yaml_shaped(lines: "list[str]") -> bool:
+    """Whether the candidate region is a YAML block mapping.
+
+    Accepting every indented line makes the check vacuous. CommonMark permits a
+    fenced code block indented by up to three spaces, so indentation alone does
+    not distinguish metadata from quoted prose. An indented line is metadata
+    only while the mapping is open -- that is, when the preceding top-level key
+    had no inline value. Block scalars are rejected rather than modelled: no key
+    in this schema takes one, and they would admit arbitrary prose as a value.
+    """
+    mapping_open = False
+    for line in lines:
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if line[:1] in (" ", "\t"):
+            if not mapping_open:
+                return False
+            inner = line.strip()
+            if not (ITEM.match(inner) or KEY.match(inner)):
+                return False
+            continue
+        if not KEY.match(line):
+            return False
+        if BLOCK_SCALAR.match(line.split(":", 1)[1].strip()):
+            return False
+        mapping_open = line.split(":", 1)[1].strip() == ""
+    return True
 
 
 def split(text: str) -> "tuple[list[str], list[str]]":
@@ -35,7 +58,7 @@ def split(text: str) -> "tuple[list[str], list[str]]":
     for i in range(1, len(lines)):
         if lines[i] == "---":
             candidate = lines[1:i]
-            if candidate and all(is_yaml_shaped(x) for x in candidate):
+            if candidate and is_yaml_shaped(candidate):
                 return candidate, lines[i + 1:]
             return [], lines
     return [], lines

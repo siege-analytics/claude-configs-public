@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Hook: write/ticket-propagation-guard
 # Enforces: artifact-to-ticket propagation (#251)
-# Trigger: PreToolUse on Write and Edit
+# Trigger: PreToolUse on Write, Edit, MultiEdit and NotebookEdit
 #
 # When an agent writes an artifact (plans/*.md, docs/investigations/*.md)
 # whose body contains ticket references, this hook requires either:
@@ -21,10 +21,19 @@ set -uo pipefail
 INPUT=$(cat)
 
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
-EXTRACT="$HOOK_DIR/../lib/extract-json.py"
+AFTER_IMAGE="$HOOK_DIR/../lib/after-image.py"
 
-# --- Parse file_path ---
-FILE_PATH=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.file_path tool_input.path 2>/dev/null || echo "")
+# --- Parse the target path ---
+FILE_PATH=$(printf '%s' "$INPUT" | python3 "$AFTER_IMAGE" path)
+PATH_STATUS=$?
+
+# A missing or broken helper must not silently empty the path and allow the
+# write. `path` succeeds for any payload, so a non-zero status here is the
+# helper failing, not an irrelevant tool.
+if [[ "$PATH_STATUS" -ne 0 ]]; then
+    printf '\nBLOCKED by ticket-propagation-guard: hooks/lib/after-image.py failed (status %d).\nThe guard fails closed when its payload resolver is unavailable.\n\n' "$PATH_STATUS" >&2
+    exit 2
+fi
 
 [[ -z "$FILE_PATH" ]] && exit 0
 
@@ -46,23 +55,22 @@ case "$FILE_PATH" in
 esac
 [[ "$ARTIFACT_PATH" == "false" ]] && exit 0
 
-# --- Extract content ---
-# For Write: tool_input.content
-# For Edit: read existing file from disk (frontmatter may already exist)
-TOOL_NAME=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_name 2>/dev/null || echo "")
+# --- Extract the content this write would leave on disk ---
+# Reading the file from disk checks the wrong document: an Edit that introduces
+# the first ticket reference into a clean artifact is judged against the clean
+# pre-image and allowed. See hooks/lib/after-image.py.
+#
+# Exit 3 means the payload is a write whose result cannot be determined -- an
+# unhandled tool, or malformed edit strings. That must block rather than fall
+# through as an empty document, which is how MultiEdit and NotebookEdit payloads
+# passed unchecked.
+CONTENT=$(printf '%s' "$INPUT" | python3 "$AFTER_IMAGE" content)
+AFTER_IMAGE_STATUS=$?
 
-if [[ "$TOOL_NAME" == "Edit" ]]; then
-    # For Edit, read the file from disk to check existing frontmatter.
-    # If the file already has valid frontmatter, allow the edit.
-    if [[ -f "$FILE_PATH" ]]; then
-        CONTENT=$(cat "$FILE_PATH")
-    else
-        # File doesn't exist yet (unusual for Edit), allow
-        exit 0
-    fi
-else
-    # Write tool: extract content from tool_input
-    CONTENT=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.content 2>/dev/null || echo "")
+if [[ "$AFTER_IMAGE_STATUS" -ne 0 ]]; then
+    printf '\nBLOCKED by ticket-propagation-guard: cannot determine the result of this write for %s (hooks/lib/after-image.py status %d).\nThe guard fails closed on payloads it cannot resolve.\n\n' \
+        "$FILE_PATH" "$AFTER_IMAGE_STATUS" >&2
+    exit 2
 fi
 
 [[ -z "$CONTENT" ]] && exit 0
@@ -86,7 +94,16 @@ fi
 # See hooks/lib/split-frontmatter.py.
 SPLIT="$HOOK_DIR/../lib/split-frontmatter.py"
 FRONTMATTER=$(printf '%s' "$CONTENT" | python3 "$SPLIT" frontmatter)
+SPLIT_STATUS=$?
 BODY=$(printf '%s' "$CONTENT" | python3 "$SPLIT" body)
+BODY_STATUS=$?
+
+# A missing or failing helper must not empty both halves and allow the write.
+if [[ "$SPLIT_STATUS" -ne 0 ]] || [[ "$BODY_STATUS" -ne 0 ]]; then
+    printf '\nBLOCKED by ticket-propagation-guard: hooks/lib/split-frontmatter.py failed (status %d/%d).\nThe guard fails closed when its frontmatter split is unavailable.\n\n' \
+        "$SPLIT_STATUS" "$BODY_STATUS" >&2
+    exit 2
+fi
 
 # Ticket reference patterns (org-qualified only, no bare #N)
 TICKET_REGEX='(siege-analytics|electinfo)/[^#[:space:]]+#[0-9]+|github\.com/[^/]+/[^/]+/(issues|pull)/[0-9]+'
