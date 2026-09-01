@@ -448,6 +448,12 @@ Two items say PORT rather than REDESIGN, and the distinction is load-bearing: `p
 
 All 55 live findings. `S` marks the H1 classification: `S` structural, `I` incidental. DISCHARGED-BY-CONSTRUCTION rows are exactly the `S` rows.
 
+**The discriminator is binary and has no cell for a finding that partly dissolves, so every mixed row rounds to `I`.** That rounding is directional: it can only lower the count, never raise it, so the published 22 is a floor rather than a point estimate. `#668 P1-7` at `:463` is the clearest instance -- its own mechanism text reads "the `sed` half dissolves; the `gh` title half still needs a declared validator" -- and it is recorded as `I`.
+
+Seven `I` rows concede a structural component in their own mechanism text: `#668 P1-7`, `#668 P2-6` (`:469`), F-N1 (`:480`), F-N14 (`:494`), F-N17 (`:497`), F-N19 (`:499`) and F-N26 (`:506`). Rounding those the other way gives 29 against a threshold of 28. Removing any single one of the seven still gives 28. **The verdict is therefore not stable under the alternative reading of this table's own tie-break rule.** DESCOPE rests on the rounding rule being the correct rule, not on a margin, and the rounding rule is asserted here rather than independently evidenced. It is the thing to attack.
+
+A second and worse dependency runs through `#668 P1-1` at `:457`. It is classified `I` on the stated ground that "the annotation is unchecked, so it forbids nothing". Under `mypy --strict` the annotation is checked and does forbid something, so that row's classification is a consequence of this note's own decision at `:157` to mandate no type checker rather than an independent judgement about the design. The tooling decision partly determines the incidental count, and the incidental count is the verdict. That loop was undeclared before this revision.
+
 | ID | H1 | Disposition | Mechanism or reason |
 |---|---|---|---|
 | #668 P0-2 | S | DISCHARGED-BY-CONSTRUCTION | `gh` failure raises through `report.file_infra_ticket`; there is no unchecked command substitution to swallow it (C-2, C-14) |
@@ -535,7 +541,7 @@ The falsifier for the whole policy: if `git log develop --oneline` ever shows a 
 
 Each is a claim this design makes, with the observation that would refute it.
 
-1. **H1 fails at 22 of 55.** The disposition table's DISCHARGED-BY-CONSTRUCTION row count, from the `grep -cE` command in the H1 section, is 22 against a threshold of 28. This claim is refuted by six reclassifications in the H1-favourable direction, six being the shortfall; the note names one candidate set (adding `mypy --strict`, which would move `#668 P1-1`, `#668 P1-5` and F-N14) and declines to make it. Round 1 published 31 and CONTINUE; nine rows moved.
+1. **H1 fails at 22 of 55.** The disposition table's DISCHARGED-BY-CONSTRUCTION row count, from the `grep -cE` command in the H1 section, is 22 against a threshold of 28. This claim is refuted by **one** reclassification in the H1-favourable direction beyond the six the binary rounding rule already suppresses, not by six: seven `I` rows concede a structural component in their own mechanism text, and rounding them the other way gives 29 against the threshold of 28. The shortfall is a property of the tie-break rule and not a margin. The note names one candidate set (adding `mypy --strict`, which would move `#668 P1-1`, `#668 P1-5` and F-N14) and declines to make it, and that decline is itself load-bearing for the count. Round 1 published 31 and CONTINUE; nine rows moved.
 2. **The classification is not reverse-engineered from the threshold.** Refuted if any reclassification in this note moves toward H1. Check: the note lists two reclassifications, both away from H1, and three declined overturns that would each have moved toward it.
 3. **`detect` cannot reach the installer or the issue-filer.** Refuted by `test_detect_has_no_installer_import_path` failing, or by that test being run in-process rather than in a fresh interpreter, in which case it passes vacuously and the claim is unsupported.
 4. **`allow` never runs a privileged command after cutover.** Refuted by `test_allow_never_runs_privileged` recording any argv containing `sudo`.
