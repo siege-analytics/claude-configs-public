@@ -124,4 +124,89 @@ printf '%s\n' \
 expect_block "(f) body-level propagation-deferred between --- rules does not satisfy the guard" "$HOOK" \
     "$(payload "$TMP/plans/deferred-in-body.md")"
 
+# --- The same bypass through an UNTERMINATED opener. Scenario (f) covers a
+# document with no frontmatter at all; this one opens with `---` and never
+# closes it, so the first horizontal rule becomes the closing delimiter and the
+# prose above it is read as metadata. The first #688 fix closed (f) and left
+# this open, and the hostile review on the PR reproduced it (F-1). The split
+# now requires the candidate region to be YAML-shaped, so an opener that is
+# never closed fails closed.
+
+printf '%s\n' \
+    '---' \
+    'title: notes on the guard' \
+    '' \
+    '# Doc' \
+    '' \
+    'Quoting the guard resolution text:' \
+    '' \
+    '```' \
+    'propagation-deferred: workspace-only draft, will propagate after review' \
+    '```' \
+    '' \
+    '---' \
+    '' \
+    'Body cites siege-analytics/claude-configs-public#251 and is unpropagated.' > "$TMP/plans/unterminated.md"
+
+expect_block "(g) unterminated --- opener does not turn body prose into frontmatter" "$HOOK" \
+    "$(payload "$TMP/plans/unterminated.md")"
+
+# Same shape above the pipe buffer. The guard on origin/develop blocked this by
+# accident, via the very SIGPIPE #688 fixes, so the first fix silently widened
+# it from BLOCK to ALLOW. Pinning the size pair keeps the fix from trading one
+# defect for another.
+
+cp "$TMP/plans/unterminated.md" "$TMP/plans/unterminated-large.md"
+python3 -c "import sys; sys.stdout.write(('\nfiller paragraph text\n')*10000)" >> "$TMP/plans/unterminated-large.md"
+
+expect_block "(h) unterminated --- opener above the pipe buffer also fails closed" "$HOOK" \
+    "$(payload "$TMP/plans/unterminated-large.md")"
+
+# --- Positive coverage for the escape hatch. Every scenario above asserts the
+# guard blocks, or that ticket_refs allows; none asserted that a real
+# propagation-deferred declaration allows. Deleting the escape hatch outright
+# therefore kept the suite green, which the hostile review found by mutation
+# (F-3). This is the scenario that kills that mutant.
+
+printf '%s\n' \
+    '---' \
+    'propagation-deferred: workspace-only draft, will propagate after review' \
+    '---' \
+    '' \
+    '# Artifact' \
+    '' \
+    'Body cites siege-analytics/claude-configs-public#251.' > "$TMP/plans/deferred-ok.md"
+
+expect_pass "(i) propagation-deferred with a reason in real frontmatter is allowed" "$HOOK" \
+    "$(payload "$TMP/plans/deferred-ok.md")"
+
+# A boolean value is not a reason, and the guard is documented to reject it.
+printf '%s\n' \
+    '---' \
+    'propagation-deferred: true' \
+    '---' \
+    '' \
+    '# Artifact' \
+    '' \
+    'Body cites siege-analytics/claude-configs-public#251.' > "$TMP/plans/deferred-bool.md"
+
+expect_block "(j) propagation-deferred: true is not a reason and still blocks" "$HOOK" \
+    "$(payload "$TMP/plans/deferred-bool.md")"
+
+# --- The Write path. Every scenario above uses an Edit payload, which makes the
+# guard read the file from disk. Write carries the content inline through
+# tool_input.content, which is the larger of the two variables and the one the
+# #688 SIGPIPE actually bit. Zero scenarios covered it (F-3).
+
+write_payload() {
+    python3 -c 'import json,sys; print(json.dumps({"tool_name":"Write","tool_input":{"file_path":sys.argv[1],"content":open(sys.argv[1]).read()}}))' "$1"
+}
+
+expect_pass "(k) Write payload, 200KB, WITH ticket_refs frontmatter is allowed" "$HOOK" \
+    "$(write_payload "$TMP/plans/large-compliant.md")"
+expect_block "(l) Write payload, 200KB, WITHOUT frontmatter is still blocked" "$HOOK" \
+    "$(write_payload "$TMP/plans/large-noncompliant.md")"
+expect_block "(m) Write payload, unterminated --- opener, fails closed" "$HOOK" \
+    "$(write_payload "$TMP/plans/unterminated.md")"
+
 report

@@ -77,13 +77,16 @@ fi
 # The old frontmatter extraction also used `sed -n '/^---$/,/^---$/p'`, whose
 # range restarts at every `---` in the body. On a document with horizontal
 # rules that captured most of the file as "frontmatter".
-if [[ "${CONTENT%%$'\n'*}" == "---" ]]; then
-    FRONTMATTER=$(awk 'NR>1 { if ($0 == "---") exit; print }' <<< "$CONTENT")
-    BODY=$(awk 'BEGIN{n=0} /^---$/{n++; if(n==2){found=1; next}} found{print}' <<< "$CONTENT")
-else
-    FRONTMATTER=""
-    BODY="$CONTENT"
-fi
+#
+# Treating the first `---` after line 1 as the closing delimiter is not enough
+# either. A document whose opener is never closed has the prose above its first
+# horizontal rule read as metadata, which lets a `propagation-deferred:` line
+# quoted inside a fenced code block satisfy this guard. The split therefore
+# requires the candidate region to be YAML-shaped and fails closed otherwise.
+# See hooks/lib/split-frontmatter.py.
+SPLIT="$HOOK_DIR/../lib/split-frontmatter.py"
+FRONTMATTER=$(printf '%s' "$CONTENT" | python3 "$SPLIT" frontmatter)
+BODY=$(printf '%s' "$CONTENT" | python3 "$SPLIT" body)
 
 # Ticket reference patterns (org-qualified only, no bare #N)
 TICKET_REGEX='(siege-analytics|electinfo)/[^#[:space:]]+#[0-9]+|github\.com/[^/]+/[^/]+/(issues|pull)/[0-9]+'
