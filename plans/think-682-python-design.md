@@ -128,13 +128,13 @@ The discriminator, fixed before classifying:
 
 **This classification is made by the same author who registered H1, which is exactly the weakness PR #684 round 2 identified about the severity rubric (fact-sheet finding 9-3).** Two mitigations, both weaker than independence: the discriminator was written before the classification rather than after it, and every reclassification away from the fact sheet's preliminary read is listed below with its direction. The hostile reviewer on this note should re-classify a sample rather than audit the totals, because the totals are the thing an author under H1 pressure will get right.
 
-**Count.** 22 of 55 structural, against a pre-registered threshold of 28. Round 1 of this note published 31; the correction is set out below. Produced by counting DISCHARGED-BY-CONSTRUCTION rows in the finding-disposition table below:
+**Count.** 21 of 55 structural, against a pre-registered threshold of 28. The count is disclosed above as path-dependent rather than measured; it is reported because the note pre-registered it, not because it is precise. Round 1 of this note published 31; the correction is set out below. Produced by counting DISCHARGED-BY-CONSTRUCTION rows in the finding-disposition table below:
 
 ```
 grep -cE '^\| (#6(68|72) P|F-N)[^|]*\|[^|]*\| DISCHARGED-BY-CONSTRUCTION' plans/think-682-python-design.md
 ```
 
-**Verdict: DESCOPE.** H1 fails at 22/55 against a threshold of 28. The 31 published in round 1 of this note was wrong, and the correction is the note's main result.
+**Verdict: DESCOPE.** H1 fails at 21/55 against a threshold of 28, and fails under every defensible reading of the classification, which is the claim that carries weight rather than the figure. The 31 published in round 1 of this note was wrong, and the correction is the note's main result.
 
 **What moved, and how.** Round 1 of hostile review (HR692-3) contested five structural calls. All five are accepted. Re-deriving the whole table rather than the five rows named turned up four more in the same direction. Nine rows move from structural to incidental; none moves the other way.
 
@@ -448,11 +448,17 @@ Two items say PORT rather than REDESIGN, and the distinction is load-bearing: `p
 
 All 55 live findings. `S` marks the H1 classification: `S` structural, `I` incidental. DISCHARGED-BY-CONSTRUCTION rows are exactly the `S` rows.
 
-**The discriminator is binary and has no cell for a finding that partly dissolves, so every mixed row rounds to `I`.** That rounding is directional: it can only lower the count, never raise it, so the published 22 is a floor rather than a point estimate. `#668 P1-7` at `:463` is the clearest instance -- its own mechanism text reads "the `sed` half dissolves; the `gh` title half still needs a declared validator" -- and it is recorded as `I`.
+**The count below is not a measurement, and the strongest evidence for that is a single closed loop that needs no arithmetic.** `#668 P1-1` at `:457` is classified `I` on the stated ground that "the annotation is unchecked, so it forbids nothing". Under `mypy --strict` the annotation is checked and does forbid something. `:157` is where this note decides not to mandate a type checker. So the tooling decision partly determines the incidental count, and the incidental count is the verdict. One row, one section, both quoted. That loop was undeclared before this revision and it survives every objection to the row-counting below.
 
-Seven `I` rows concede a structural component in their own mechanism text: `#668 P1-7`, `#668 P2-6` (`:469`), F-N1 (`:480`), F-N14 (`:494`), F-N17 (`:497`), F-N19 (`:499`) and F-N26 (`:506`). Rounding those the other way gives 29 against a threshold of 28. Removing any single one of the seven still gives 28. **The verdict is therefore not stable under the alternative reading of this table's own tie-break rule.** DESCOPE rests on the rounding rule being the correct rule, not on a margin, and the rounding rule is asserted here rather than independently evidenced. It is the thing to attack.
+**The discriminator is binary and has no cell for a finding that partly dissolves. Mixed rows do not round in a direction; they keep whatever class they already had.** An earlier revision of this paragraph called the rule directional and said mixed rows round to `I`. That was half the rule and the wrong half. Mixed rows on the `I` side stay `I`, three of them explicitly because "the preliminary read called it incidental" (F-N14 at `:494`, F-N17 at `:497`, F-N26 at `:506`). Mixed rows on the `S` side stay `S` with no comment at all (`#668 P2-1` at `:470`, F-N12 at `:497`).
 
-A second and worse dependency runs through `#668 P1-1` at `:457`. It is classified `I` on the stated ground that "the annotation is unchecked, so it forbids nothing". Under `mypy --strict` the annotation is checked and does forbid something, so that row's classification is a consequence of this note's own decision at `:157` to mandate no type checker rather than an independent judgement about the design. The tooling decision partly determines the incidental count, and the incidental count is the verdict. That loop was undeclared before this revision.
+The rule is stickiness, not direction. That is worse, because a directional rule biases a count by a knowable amount, while a sticky one makes the count **path-dependent on the preliminary read and on which rows hostile review happened to point at.** Round 1 moved nine rows and all nine moved down, which looked like over-correction. It was the same mechanism: attention fell on those rows. It is now holding an unexamined set up.
+
+Both directions are populated. Seven `I` rows concede a structural component in their own text (`#668 P1-7`, `#668 P2-6`, F-N1, F-N14, F-N17, F-N19, F-N26), which read the other way reaches 28. And the round-1 predicate used to demote F-N6 at `:491` -- "a design commitment rather than a language guarantee is the incidental side of the discriminator" -- was never run against the `S` column, where at least three rows rest on exactly that shape: `#668 P1-2` at `:464` ("no hand-built JSON exists"), F-N2 at `:487` ("no regex is built from a field name") and F-N12 at `:497` ("no bare `except`"). Nothing in Python forbids any of the three, and in the case of `#668 P1-2` **this note already makes that argument against its own classification**: `:159` says "`json.dumps` does not prevent `'{"tool": "%s"}' % t`" while the row remains `S`. A further inconsistency has no defence at all: F-N15 at `:501` is `S` for replacing ~90% duplicate files with two `ToolSpec` literals, while F-N23 at `:509` is `I` for replacing 15 inline heredocs with one corpus. The two rows are the same shape.
+
+**No interval is published here.** Defensible readings span roughly 15 to 32, the threshold of 28 sits inside that, and an interval containing the decision boundary is noise rather than a result. Publishing a range would imply a reproducibility this classification does not have. What survives is the closed loop above, the stickiness, and the direction of the verdict.
+
+These were found by hostile review round 2 (HR692, sessions `260901-ivory-island`). Only F-N18 is reclassified below, because only its stated premise was false rather than contested; the rest are disclosed and left where they are, since moving contested rows one at a time is what produced the path-dependence in the first place.
 
 | ID | H1 | Disposition | Mechanism or reason |
 |---|---|---|---|
@@ -501,7 +507,7 @@ A second and worse dependency runs through `#668 P1-1` at `:457`. It is classifi
 | F-N15 | S | DISCHARGED-BY-CONSTRUCTION | one `detect.py` and one `install.py`; the ~90% duplicate files become two `ToolSpec` literals |
 | F-N16 | S | DISCHARGED-BY-CONSTRUCTION | `Layer` enum with one canonical spelling (C-16) |
 | F-N17 | I | FIXED-EXPLICITLY | `ToolSpec` separates `canonical_name` from `binary_name` and the template uses the latter, but choosing the right field is a fix; the preliminary read called it incidental |
-| F-N18 | S | DISCHARGED-BY-CONSTRUCTION | `PrivilegeTier` on every `InstallPlan`; one token cannot authorise both tiers because `allow` maps to `USER` (C-6) |
+| F-N18 | I | FIXED-EXPLICITLY | `PrivilegeTier` on every `InstallPlan` narrows the surface, and the defect is not discharged by construction. **Reclassified in round 2 (HR692, R2-3):** the previous ground read "one token cannot authorise both tiers because `allow` maps to `USER`", which reads only the `allow` row of the C-6 table at `:321` and is refuted by the `prompt` row of the same table -- `authorise(PROMPT, confirmed=ROOT)` returns `UpTo(ROOT)`, so one token does authorise USER and ROOT. Not a judgement call; the stated premise was false (C-6) |
 | F-N19 | I | FIXED-EXPLICITLY | the fixture library's only template accessor reads the shipped file, but nothing stops a test from opening its own copy. **Reclassified from the preliminary read's structural**, against H1 |
 | F-N20 | I | FIXED-EXPLICITLY | `orchestrate.probe` is covered by the C-9 matrix before any wrapper is ported; coverage is written, not discharged |
 | F-N21 | I | FIXED-EXPLICITLY | a byte-exactness assertion against the shipped template is added (C-5) |
@@ -512,7 +518,7 @@ A second and worse dependency runs through `#668 P1-1` at `:457`. It is classifi
 | F-N26 | I | FIXED-EXPLICITLY | `str.isidentifier()` at the `PYTHON_IDENTIFIER` sink (C-15a). Per-sink validators arguably make "one regex, three grammars" unrepresentable; the preliminary read called it incidental and the note declines to overturn toward H1 |
 | F-N27 | I | FIXED-EXPLICITLY | `layer` is a parameter of `orchestrate.probe` and a field of `ProbeResult` (C-16). **Reclassified in round 1 (HR692-3):** a required parameter forbids omitting the argument, not discarding the parsed value and passing another, which is the defect |
 
-Totals: 22 DISCHARGED-BY-CONSTRUCTION, 31 FIXED-EXPLICITLY, 2 DECLINED-WITH-REASON. 22 + 31 + 2 = 55.
+Totals: 21 DISCHARGED-BY-CONSTRUCTION, 32 FIXED-EXPLICITLY, 2 DECLINED-WITH-REASON. 21 + 32 + 2 = 55.
 
 ### Cutover
 
@@ -541,7 +547,7 @@ The falsifier for the whole policy: if `git log develop --oneline` ever shows a 
 
 Each is a claim this design makes, with the observation that would refute it.
 
-1. **H1 fails at 22 of 55.** The disposition table's DISCHARGED-BY-CONSTRUCTION row count, from the `grep -cE` command in the H1 section, is 22 against a threshold of 28. This claim is refuted by **one** reclassification in the H1-favourable direction beyond the six the binary rounding rule already suppresses, not by six: seven `I` rows concede a structural component in their own mechanism text, and rounding them the other way gives 29 against the threshold of 28. The shortfall is a property of the tie-break rule and not a margin. The note names one candidate set (adding `mypy --strict`, which would move `#668 P1-1`, `#668 P1-5` and F-N14) and declines to make it, and that decline is itself load-bearing for the count. Round 1 published 31 and CONTINUE; nine rows moved.
+1. **H1 fails at 21 of 55, and fails under every defensible reading of the classification.** The disposition table's DISCHARGED-BY-CONSTRUCTION row count, from the `grep -cE` command in the H1 section, is 21 against a threshold of 28. The figure is not the claim: the classification is sticky rather than directional, so the count is path-dependent on the preliminary read and on which rows review touched, and defensible readings span roughly 15 to 32. What refutes this claim is not a single reclassification but a rule under which the structural set reaches 28 and which is applied to the whole table rather than to the rows attention fell on. The note names one candidate (adding `mypy --strict`, which would move `#668 P1-1`, `#668 P1-5` and F-N14) and declines it, and that decline is itself load-bearing for the count. Round 1 published 31 and CONTINUE; nine rows moved, all downward.
 2. **The classification is not reverse-engineered from the threshold.** Refuted if any reclassification in this note moves toward H1. Check: the note lists two reclassifications, both away from H1, and three declined overturns that would each have moved toward it.
 3. **`detect` cannot reach the installer or the issue-filer.** Refuted by `test_detect_has_no_installer_import_path` failing, or by that test being run in-process rather than in a fresh interpreter, in which case it passes vacuously and the claim is unsupported.
 4. **`allow` never runs a privileged command after cutover.** Refuted by `test_allow_never_runs_privileged` recording any argv containing `sudo`.
