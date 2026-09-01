@@ -448,7 +448,7 @@ Two of six wrappers exit before `probe_run` ever runs, so any invariant `probe_r
 - **Side effects:** creates/removes temp repos; `git init` per fixture; stubs `gh` and (for probe fixtures) `scripts/probe/*.sh` on `PATH`/in the fake repo.
 - **Known failures:**
   - **F-N21 (NEW, P1).** Every fixture asserts on the hook's *observable output* (files written, SKIPPED lines, stderr text). None asserts on the **byte-exact content** of a rendered stub against the shipped template. This is why **F-N5** (trailing-newline loss: template ends `0a`, rendered file ends `22`) passes 15/15 green.
-  - **F-N22 (NEW, P0).** `test_path_traversal_rejected` asserts only that the hook *refuses to write the file* and emits a SKIPPED line. It does not assert that no directory was created. **F-N1** -- the `mkdir -p "$stub_dir"` at the pre-containment position -- therefore passes this fixture while still creating `ESCAPED_DIR` outside the repo root. The test's name overstates what it verifies: it is `test_path_traversal_file_not_written`, not `..._rejected`.
+  - **F-N22 (NEW, P1).** `test_path_traversal_rejected` asserts only that the hook *refuses to write the file* and emits a SKIPPED line. It does not assert that no directory was created. **F-N1** -- the `mkdir -p "$stub_dir"` at the pre-containment position -- therefore passes this fixture while still creating `ESCAPED_DIR` outside the repo root. The test's name overstates what it verifies: it is `test_path_traversal_file_not_written`, not `..._rejected`.
   - **F-N23 (NEW, P2).** Fixtures synthesise issue bodies inline as heredocs. There is no shared fixture corpus, so the "what does a real ticket body look like" contract lives in 15 places and drifts from `[rule:writing-tests]` writing-tests:7's actual AC format.
   - No fixture invokes a *real* probe wrapper other than pytest; `playwright.sh`, `vitest.sh`, `schemathesis.sh`, `great-expectations.sh`, `k6.sh` are stubbed or absent from every path.
 - **Test coverage:** N/A -- it *is* the coverage. Passing state verified on this branch: `Summary: 15 passed, 0 failed`.
@@ -655,7 +655,7 @@ Discovered during this investigation; not present in either hostile review. Numb
 | F-N19 | P1 | `_test_probe_common.sh` | The suite writes its own private copy of the infra-ticket template instead of reading the shipped one; template drift is untestable. This is how F-N17 survived. |
 | F-N20 | P1 | `_test_probe_common.sh` | Calls `_probe_file_infra_ticket` directly. `probe_run` -- all policy branching, the `eval`, the post-install re-check -- has zero coverage. |
 | F-N21 | P1 | `scaffold_test_stub.test.sh` | No fixture asserts byte-exact rendered-stub content against the shipped template. This is how F-N5 stays green. |
-| F-N22 | P0 | `scaffold_test_stub.test.sh` | `test_path_traversal_rejected` asserts only that the *file* was not written. F-N1's escaped directory passes it. The fixture name overstates the assertion. |
+| F-N22 | P1 | `scaffold_test_stub.test.sh` | `test_path_traversal_rejected` asserts only that the *file* was not written. F-N1's escaped directory passes it. The fixture name overstates the assertion. Downgraded from P0 per round-2 finding 9-1: this is a coverage gap whose entire consequence is that F-N1 is invisible, so P0 double-counted F-N1's blast radius. The fixture also could not detect the escaped directory even if it asserted on it, because `mktemp -d` at `hooks/_test/scaffold_test_stub.test.sh:283` creates the target before the hook runs. |
 | F-N23 | P2 | both suites | Issue bodies synthesised inline as heredocs in 15 places; no shared corpus, so the "real ticket body" contract drifts from `[rule:writing-tests]` writing-tests:7. |
 | F-N24 | P1 | -- | No fixture library exists. The #682 checklist item names an artefact that must be *created*, not ported. Consequence: two mutually-unaware `gh` stubs and two infra-ticket templates. |
 
@@ -663,7 +663,7 @@ Discovered during this investigation; not present in either hostile review. Numb
 | F-N26 | P1 | `_safe_value:141` + `templates/tests/pytest-unit.py.tmpl:15` | `_safe_value` admits `.`, `_` and `-`, but `{feature}` and `{ac_id}` are substituted into a Python *identifier* (`def test_ac{ac_id}_{feature}()`). A `Feature:` value the hook accepts, such as `has-hyphen`, renders a stub that is a `SyntaxError`. **Repro executed on this branch:** `Feature: has-hyphen` rendered `tests/test_ac1_has-hyphen.py`; `python3 -m py_compile` returned `SyntaxError: expected '('` at line 15. The template's intended failure is an assertion message; the actual failure is at collection time. One shell-safe regex is guarding three sinks with different grammars. Found by the PR #684 hostile review, finding 2-1. |
 | F-N27 | P1 | main loop `:286` vs wrapper arg 5 | The hook parses `Layer:` and uses it to choose a template, then invokes the probe as `"$probe_script" "$ticket_id"` -- the layer is never passed. Every infra ticket the probe files carries the *wrapper's* hard-coded layer, not the AC's. `Tool: pytest` + `Layer: integration` selects the integration template and files a ticket labelled with pytest.sh's layer token. This is a data-loss boundary, distinct from F-N16's vocabulary drift: the value is not merely spelled three ways, it is discarded. Found by the PR #684 hostile review, finding 2-2. |
 
-Unit of analysis, fixed before counting (PR #684 hostile review, finding 1-3): one row of the table above is one finding, and `F-N12b` is a row. That gives **28 new findings** after F-N26 and F-N27 were added by the same review. Severity totals over those 28 rows: **4 P0**, **17 P1**, **7 P2**, produced by `grep -oE '^\| F-N[0-9]+b? \| P[012]' plans/investigate-682-executable-path.md | awk '{print $4}' | sort | uniq -c`. An earlier revision of this line said `6 P0, 13 P1, 7 P2` over 25 findings; neither half summed to the table and both were wrong. The four remaining P0 findings are F-N1, F-N11, F-N13 and F-N22; F-N14 was downgraded to P1 per finding 2-3.
+Unit of analysis, fixed before counting (PR #684 hostile review, finding 1-3): one row of the table above is one finding, and `F-N12b` is a row. That gives **28 new findings** after F-N26 and F-N27 were added by the same review. Severity totals over those 28 rows: **3 P0**, **18 P1**, **7 P2**, produced by `grep -oE '^\| F-N[0-9]+b? \| P[012]' plans/investigate-682-executable-path.md | awk '{print $4}' | sort | uniq -c`. The three P0 findings are F-N1, F-N11 and F-N13. Two revisions preceded this one: `6 P0, 13 P1, 7 P2` over 25 findings, which matched neither the table nor itself, and `4 P0, 17 P1, 7 P2`, which was correct against the table but applied a severity rubric that had never been written down. F-N14 was downgraded to P1 per round-1 finding 2-3 and F-N22 per round-2 finding 9-1; the rubric that should have caught both at authoring time is stated below.
 
 ## Hypothesis and falsification
 
@@ -674,7 +674,7 @@ Unit of analysis, fixed before counting (PR #684 hostile review, finding 1-3): o
 
 **H2.** *Both existing suites can be kept green throughout the rewrite while the rewrite is nonetheless correct, because the suites assert observable output rather than implementation.*
 
-- Falsifiable by: F-N5 and F-N1 mean correct behaviour will **change** observable output (a trailing newline appears; a directory stops being created). At least two fixtures must therefore be *modified*, not merely preserved. H2 is **already falsified** by F-N5 + F-N22. Consequence for sequencing: the rewrite ticket must be allowed to change `test_happy_path` and `test_path_traversal_rejected`, and each change needs its own justification in the PR -- "the test was wrong" is a claim requiring the same evidence standard as a code change.
+- Falsifiable by: F-N5 and F-N1 mean correct behaviour will **change** observable output (a trailing newline appears; a directory stops being created). At least two fixtures must therefore be *modified*, not merely preserved. H2 is **already falsified** by F-N5 and F-N1. Consequence for sequencing: the rewrite ticket must be allowed to change `test_happy_path` and `test_path_traversal_rejected`, and each change needs its own justification in the PR -- "the test was wrong" is a claim requiring the same evidence standard as a code change.
 
 **H3.** *`probe_run`'s exit-code contract (0/2/78) is dead code, because its only caller discards it (F-N11).*
 
@@ -682,7 +682,7 @@ Unit of analysis, fixed before counting (PR #684 hostile review, finding 1-3): o
 
 ## Findings summary for the epic
 
-1. The rewrite target is not "the same behaviour in Python". Four P0s exist that a faithful port would preserve, and two green test fixtures actively protect two of them.
+1. The rewrite target is not "the same behaviour in Python". Three P0s exist that a faithful port would preserve, and two green test fixtures actively protect two of them.
 2. Seven inter-file contracts are enforced by hand-maintained naming conventions and nothing else. Making five of them structurally enforced is the rewrite's main value; it should be stated as the design ticket's acceptance criterion, not left implicit.
 3. `probe_run` has zero test coverage and contains every dangerous operation in the system (`eval` of install commands, including a `sudo` chain). It is the highest-risk unit and must be the first one covered.
 4. Test infrastructure needs to be *built*, not ported: there is no fixture library, no shared `gh` stub, no template-drift test, and no byte-exact rendering assertion.
@@ -842,7 +842,7 @@ Assumption universe for the executable path, with dispositions. `PROBED` = execu
           "citations": ["scripts/probe/_common.sh:86"]
         },
         {
-          "claim": "Both suites are green while four P0 findings are live; green is therefore not evidence of correctness on this surface.",
+          "claim": "Both suites are green while three P0 findings are live; green is therefore not evidence of correctness on this surface.",
           "disposition": "PROBED",
           "evidence": "suite runs above combined with the F-N1 and F-N5 repros",
           "citations": ["hooks/_test/scaffold_test_stub.test.sh:1", "scripts/probe/_test_probe_common.sh:1"]
@@ -850,7 +850,7 @@ Assumption universe for the executable path, with dispositions. `PROBED` = execu
         {
           "claim": "H2 is falsified: correct behaviour changes observable output, so at least test_happy_path and test_path_traversal_rejected must be modified by the rewrite.",
           "disposition": "PROBED",
-          "evidence": "F-N5 and F-N22 repros",
+          "evidence": "F-N5 repro plus F-N1 repro and a source read of test_path_traversal_rejected; F-N22 itself has no repro and is established by reading the fixture",
           "citations": ["hooks/_test/scaffold_test_stub.test.sh:1"]
         }
       ]
@@ -896,6 +896,23 @@ Assumption universe for the executable path, with dispositions. `PROBED` = execu
 }
 ```
 
+## Severity rubric
+
+This section did not exist when the findings were first assigned, which is the root cause of three of the eight hostile-review findings across two rounds (1-1 on the totals, 2-3 on F-N14, 9-1 on F-N22). Severities were assigned by judgement against no written scale, so there was nothing for a reader or for me to check an assignment against. The rubric is stated here and every assignment in the tables above is made against it.
+
+**P0.** A defect in the shipped surface whose blast radius is a wrong or dangerous production answer, reachable from a ticket body that a normal author could write, and not observable from the hook's own output. Filesystem mutation outside the repository root, a dead signalling channel, and a verification step that cannot fail are the three that qualify here.
+
+**P1.** Either a production defect whose reachability is bounded by something outside the ticket author's control, or a defect that produces a wrong answer that is observable when it happens. A coverage gap belongs at P1 when it is the reason a P0 is invisible.
+
+**P2.** A defect with no wrong production answer: drift, duplication, naming, or an inert instruction.
+
+Two rules follow from this, and both were being violated:
+
+1. **A coverage gap does not inherit the severity of the defect it hides.** F-N22's entire consequence is that F-N1 is invisible to the suite. Rating both P0 counted F-N1's blast radius twice and inflated the implementation ordering, which is round-2 finding 9-1. Coverage gaps are P1 at most, and they name the finding they hide.
+2. **Severity follows blast radius, not rhetorical weight.** F-N22 is load-bearing for this artifact's central thesis, that green is not an acceptance signal. That makes it important to the argument and does not make it P0. The two are separate axes and conflating them is how a severity table becomes an emphasis table.
+
+The rubric does not apply retroactively to the 29 findings inherited from PR #668 and PR #672. Those carry the severities their own reviews assigned, and re-ranking them is out of scope for this ticket; the design ticket dispositions them without changing their labels.
+
 ## Hostile-review remediation (PR #684, round 1)
 
 A sibling session on GPT-5.5 reviewed this artifact against `4a81bf5` and returned six findings, recommending Block. All six are accepted; none is disputed. The reviewer ran its own repros in temp repos with stubbed `gh`, `npm`, `npx` and `uname`.
@@ -911,7 +928,20 @@ A sibling session on GPT-5.5 reviewed this artifact against `4a81bf5` and return
 
 The two S1 findings are the ones worth naming as a pattern. Both are failures of the same kind: a claim carried forward from an internal belief and never checked against the source it cites. 1-1 is a count that a five-second command falsifies. 1-2 is worse, because the citation *resolved* -- the line number was right and the line said something else. The citation-resolution pass this artifact ran checks that a line exists, not that it supports the claim attached to it. That gap is now recorded as L-6 in `plans/self-review-683.md`, and it is the strongest argument in this epic for keeping a hostile reviewer on every unit.
 
-Net effect on the counts this epic depends on: 28 new findings (4 P0, 17 P1, 7 P2), 29 live prior findings, denominator 57 for H1.
+Net effect on the counts this epic depends on after round 1: 28 new findings (4 P0, 17 P1, 7 P2), 29 live prior findings, denominator 57 for H1. Round 2 moved the split again; see below.
+
+## Hostile-review remediation (PR #684, round 2)
+
+The same sibling re-reviewed against `cd91ccb` on the two narrow targets named in the round-1 reply. It confirmed the round-1 corrections by re-deriving them: 28 rows with `4 P0, 17 P1, 7 P2`, 55 citation entries with 0 unresolved, the four restated contract sites checked against `scripts/probe/_common.sh:31-34` and `hooks/create-ticket/scaffold-test-stub.sh:215-228`, and both suites re-run green. It reproduced F-N11 independently in a temp repo: a probe writing to stderr and exiting 78 produced `rc=0`, `stub_exists=yes`, `stderr_len=0` at the hook. F-N11 holds at P0. Two new findings, both accepted.
+
+| Finding | Sev | Substance | Disposition |
+|---|---|---|---|
+| 9-1 | S2 | F-N22 was P0. It is a coverage gap whose only consequence is that F-N1 is invisible, so P0 double-counted F-N1's blast radius. The fixture also cannot detect the escaped directory even in principle, because `mktemp -d` creates the target before the hook runs. | FIXED. Verified independently by reading `hooks/_test/scaffold_test_stub.test.sh:276-301`: `sibling` is created at `:283` and the assertion at `:297` tests only `-f "$sibling/escaped.py"`. Downgraded to **P1**. Totals are now `3 P0, 18 P1, 7 P2` and the P0 set is F-N1, F-N11, F-N13. |
+| 9-2 | S3 | The `verifiedShapes` entry for H2 gave its evidence as "F-N5 and F-N22 repros". F-N5 has a byte-level repro and F-N1 has a directory-creation repro; F-N22 has neither and is a source read. | FIXED. Verified by grepping the artifact for any F-N22 repro transcript and finding none. The evidence label now names what was actually run, and H2's falsification line cites F-N5 and F-N1 rather than F-N5 and F-N22. |
+
+The reviewer classified 9-2 as the same class as round-1's 1-2, and that is the right reading. 1-2 was a claim whose `file:line` citation resolved and contradicted it. 9-2 is an evidence label that names a repro that was never run. Both survive a resolution pass, both survive a count audit, and neither is detectable by any check this artifact ran on itself. Three of the eight findings across the two rounds are severity assignments; the `## Severity rubric` section above is the structural response, and it is a section that should have existed before the first severity was assigned rather than after the third one was corrected.
+
+Net effect on the counts this epic depends on: 28 new findings (3 P0, 18 P1, 7 P2), 29 live prior findings, denominator 57 for H1. The P0 set is F-N1, F-N11, F-N13.
 
 ## AC verification for ticket #683
 
