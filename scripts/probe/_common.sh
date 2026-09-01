@@ -99,15 +99,36 @@ _probe_file_infra_ticket() {
     local template="$repo_root/templates/infra-ticket-tool-install.md"
     local body
     if [[ -f "$template" ]]; then
-        body=$(sed \
-            -e "s|{tool}|$tool|g" \
-            -e "s|{version_requested}|any|g" \
-            -e "s|{install_commands}|$install_cmd|g" \
-            -e "s|{blocking_tickets}|$blocking|g" \
-            -e "s|{layer}|$layer|g" \
-            -e "s|{repo}|$(basename "$repo_root")|g" \
-            -e "s|{requester_session}|${CRAFT_AGENT_SESSION_DIR:-unknown-session}|g" \
-            "$template")
+        # #676 (P0-1): replaced sed-based substitution with python3 str.replace
+        # to prevent corruption/abort when install_cmd contains sed metacharacters
+        # (& expands to match; | terminates s-command with default delimiter).
+        # Playwright's && chain and k6's apt-route | actively triggered this.
+        body=$(
+            TOOL_NAME="$tool" \
+            INSTALL_CMD="$install_cmd" \
+            BLOCKING="$blocking" \
+            LAYER="$layer" \
+            REPO_NAME="$(basename "$repo_root")" \
+            REQUESTER="${CRAFT_AGENT_SESSION_DIR:-unknown-session}" \
+            VERSION_REQ="any" \
+            TEMPLATE_PATH="$template" \
+            python3 -c '
+import os, sys
+tmpl = open(os.environ["TEMPLATE_PATH"]).read()
+mapping = {
+    "{tool}":               os.environ.get("TOOL_NAME", ""),
+    "{version_requested}":  os.environ.get("VERSION_REQ", "any"),
+    "{install_commands}":   os.environ.get("INSTALL_CMD", ""),
+    "{blocking_tickets}":   os.environ.get("BLOCKING", ""),
+    "{layer}":              os.environ.get("LAYER", ""),
+    "{repo}":               os.environ.get("REPO_NAME", ""),
+    "{requester_session}":  os.environ.get("REQUESTER", ""),
+}
+for k, v in mapping.items():
+    tmpl = tmpl.replace(k, v)
+sys.stdout.write(tmpl)
+'
+        )
     else
         body="Tool install request: $tool
 Blocking: $blocking
