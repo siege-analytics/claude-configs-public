@@ -223,26 +223,57 @@ The Band column is mechanical: it is the label the skill's table at `skills/pre-
 
 | FM | Category | Probability | Blast radius | Class | Composite | Band | Urgency | Mitigated by a constraint |
 |---|---|---|---|---|---|---|---|---|
-| FM-1 | faithful-port | high | dirs created outside repo root, silent | Tiger | 71 | Mitigate-before-ship | Launch-Blocking | yes (C-1) |
-| FM-2 | faithful-port | high | probe signalling channel dead, silent | Tiger | 68 | Mitigate-before-ship | Launch-Blocking | yes (C-2) |
-| FM-3 | faithful-port | medium | one spurious public issue per working dir | Tiger | 66 | Mitigate-before-ship | Launch-Blocking | yes (C-3) |
-| FM-4 | contract-drift | medium | the one cross-module contract | Tiger | 62 | Mitigate-before-ship | Launch-Blocking | yes (C-4) |
-| FM-5 | contract-drift | high | every rendered ticket and stub | Tiger | 58 | Monitor-after-ship | Fast-Follow | yes (C-5) |
+| FM-1 | faithful-port | high | dirs created outside repo root, silent | Tiger | 51 | Monitor-after-ship | Launch-Blocking (override) | yes (C-1) |
+| FM-2 | faithful-port | high | probe signalling channel dead, silent | Tiger | 59 | Monitor-after-ship | Launch-Blocking (override) | yes (C-2) |
+| FM-3 | faithful-port | medium | one spurious public issue per working dir | Tiger | 41 | Monitor-after-ship | Launch-Blocking (override) | yes (C-3) |
+| FM-4 | contract-drift | medium | the one cross-module contract | Tiger | 64 | Mitigate-before-ship | Launch-Blocking | yes (C-4) |
+| FM-5 | contract-drift | high | every rendered ticket and stub | Tiger | 56 | Monitor-after-ship | Fast-Follow | yes (C-5) |
 | FM-6 | blast-radius | medium | root-level package mutation | Tiger | 83 | Emergency-stop | Launch-Blocking | yes (C-6) |
-| FM-7 | blast-radius | medium | unbounded future callers | Tiger | 59 | Monitor-after-ship | Fast-Follow | yes (C-7) |
-| FM-8 | coverage-theatre | high | the epic's whole acceptance basis | Tiger | 74 | Mitigate-before-ship | Launch-Blocking | yes (C-8) |
-| FM-9 | coverage-theatre | high | false confidence on the contract | Tiger | 64 | Mitigate-before-ship | Fast-Follow | yes (C-9) |
-| FM-10 | scope | high | test infra that FM-8/FM-9 rest on | Tiger | 48 | Monitor-after-ship | Fast-Follow | yes (C-10) |
-| FM-11 | scope | high | reviewability of the epic | Tiger | 55 | Monitor-after-ship | Fast-Follow | yes (C-11) |
-| FM-12 | operational | medium | ticket creation breaks, opaque | Tiger | 44 | Monitor-after-ship | Fast-Follow | yes (C-12) |
-| FM-13 | operational | medium | maintenance doubles, value unmet | Elephant | 41 | Monitor-after-ship | Track | yes (C-13) |
-| FM-14 | operational | medium | real public issues from a test run | Tiger | 63 | Mitigate-before-ship | Launch-Blocking | yes (C-14) |
+| FM-7 | blast-radius | medium | unbounded future callers | Tiger | 54 | Monitor-after-ship | Fast-Follow | yes (C-7) |
+| FM-8 | coverage-theatre | high | the epic's whole acceptance basis | Tiger | 67 | Mitigate-before-ship | Launch-Blocking | yes (C-8) |
+| FM-9 | coverage-theatre | high | false confidence on the contract | Tiger | 50 | Monitor-after-ship | Fast-Follow | yes (C-9) |
+| FM-10 | scope | high | test infra that FM-8/FM-9 rest on | Tiger | 46 | Monitor-after-ship | Fast-Follow | yes (C-10) |
+| FM-11 | scope | high | reviewability of the epic | Tiger | 45 | Monitor-after-ship | Fast-Follow | yes (C-11) |
+| FM-12 | operational | medium | ticket creation breaks, opaque | Tiger | 41 | Monitor-after-ship | Fast-Follow | yes (C-12) |
+| FM-13 | operational | medium | maintenance doubles, value unmet | Elephant | 43 | Monitor-after-ship | Track (override) | yes (C-13) |
+| FM-14 | operational | medium | real public issues from a test run | Tiger | 50 | Monitor-after-ship | Launch-Blocking (override) | yes (C-14) |
 | FM-15 | faithful-port | high | every stub with a hyphenated Feature | Tiger | 32 | Accept-and-document | Fast-Follow (override) | yes (C-15) |
 | FM-16 | contract-drift | high | a parsed field with no consumer, or three spellings reaching one | Tiger | 54 | Monitor-after-ship | Fast-Follow | yes (C-16) |
 
 The three tiers the S2-2 correction had to choose, with the reason on each. **FM-4 is Launch-Blocking:** the contract it protects is the only structured value crossing the hook/probe boundary, and C-2's typed-object constraint is meaningless if the key names it carries drift, so shipping FM-4 unmitigated would silently void a Launch-Blocking mitigation. **FM-9 is Fast-Follow:** it is a missing test rather than a defect, its blast radius is confidence rather than behaviour, and the behaviour it would cover is already the subject of FM-4's constraint, so the mode is real but the design is not blocked on it. **FM-14 is Launch-Blocking:** its blast radius is real public issues in a real repository filed by a test run, which is an externally visible action taken without an operator, and the mode exists specifically because a test forgot a stub -- the class of mistake that recurs.
 
-Worked score for FM-6, the highest, since the skill requires the composite to justify the tier rather than the reverse:
+### Every composite is derived
+
+An earlier revision showed the dimension breakdown for FM-6 only and asserted the other fifteen totals. The PR #686 round-1 review found three separate defects downstream of that (S2-2, S2-3, S3-1), and the self-review's own L-2 recorded the residue as unfixed. Deriving the remaining fourteen is the fix, and it was not cosmetic: **eleven of the sixteen composites moved down, two moved up, three were already right, five moved by ten points or more, and the count of entries scoring 60 or above fell from eight to three.** The mean change is -6.6. A distribution that moves almost entirely in one direction when it is finally computed is the signature of scores reverse-engineered from tiers already chosen, which is what L-2 alleged and could not previously demonstrate.
+
+| FM | Data integrity (25%) | User impact (25%) | Reversibility (20%) | Dependency chain (15%) | Detection latency (15%) | Composite | Was |
+|---|---|---|---|---|---|---|---|
+| FM-1 | 60 | 55 | 25 | 20 | 95 | 51 | 71 |
+| FM-2 | 40 | 80 | 30 | 65 | 90 | 59 | 68 |
+| FM-3 | 20 | 60 | 45 | 25 | 55 | 41 | 66 |
+| FM-4 | 55 | 75 | 35 | 80 | 85 | 64 | 62 |
+| FM-5 | 45 | 70 | 40 | 50 | 80 | 56 | 58 |
+| FM-6 | 70 | 85 | 90 | 80 | 95 | 83 | 83 |
+| FM-7 | 50 | 45 | 55 | 60 | 70 | 54 | 59 |
+| FM-8 | 35 | 85 | 60 | 90 | 75 | 67 | 74 |
+| FM-9 | 25 | 60 | 40 | 55 | 80 | 50 | 64 |
+| FM-10 | 20 | 55 | 45 | 70 | 50 | 46 | 48 |
+| FM-11 | 15 | 50 | 65 | 45 | 60 | 45 | 55 |
+| FM-12 | 30 | 55 | 25 | 40 | 60 | 41 | 44 |
+| FM-13 | 20 | 45 | 70 | 55 | 30 | 43 | 41 |
+| FM-14 | 40 | 70 | 65 | 35 | 30 | 50 | 63 |
+| FM-15 | 30 | 55 | 10 | 15 | 40 | 32 | 32 |
+| FM-16 | 45 | 60 | 35 | 65 | 75 | 54 | 54 |
+
+Composites are the weighted sum rounded to the nearest integer. The producing command is in the self-review's quantified-claims block and re-derives the whole column from the five dimension columns, so a reader can falsify any row by disputing a dimension rather than by disputing a total.
+
+The three largest drops share a cause. **FM-3 falls 66 to 41** because the S2-1 correction shrank its blast radius from "one issue per hook run" to "one issue per working directory per tool" and nobody propagated that into the score; a corrected blast radius that leaves the composite untouched is a score that was not reading the blast radius. **FM-14 falls 63 to 50** and **FM-9 falls 64 to 50** for the ordinary reason: both score low on data integrity and dependency chain, which carry 40% of the weight between them, and both had been placed at 60-plus to sit alongside modes they felt comparable to.
+
+**Six of the sixteen tiers now override their band, and the overrides run in both directions.** FM-1, FM-2, FM-3 and FM-14 are Launch-Blocking against a Monitor-after-ship band; FM-15 is Fast-Follow against Accept-and-document; FM-13 is Track against Monitor-after-ship. Six overrides out of sixteen is too many to treat as six independent judgement calls, and the common factor is the one named at FM-15 below: three of the formula's five dimensions -- data integrity, reversibility and dependency chain, 60% of the weight -- measure how far and how permanently damage *spreads*. Probability is not a dimension at all. The formula is built for defects that corrupt shared state, and most of this epic's failure modes instead make the deliverable silently wrong on a machine the operator can repair by hand. FM-1 is the clearest case: a stray directory outside the repository root is trivially reversible and nothing depends on it, so the formula scores it 51, while the reason it is Launch-Blocking is that a git hook wrote outside its containment boundary and said nothing. That is a property the five dimensions cannot express.
+
+The honest reading is that the composite is a useful check and a poor decision procedure for this surface, and that saying so with a derived column and six recorded overrides is worth more than a column of numbers tuned until no override was needed. Falsifier: a reviewer takes any of the six overridden rows and shows the band was right, which would mean the tier is wrong rather than the formula.
+
+Worked rationale for FM-6, the highest, since the skill requires the composite to justify the tier rather than the reverse:
 
 | Dimension | Score | Rationale |
 |---|---|---|
@@ -270,7 +301,7 @@ Composite = (30 x .25) + (55 x .25) + (10 x .20) + (15 x .15) + (40 x .15) = 7.5
 
 **FM-15's Fast-Follow is a stated override of the band, not an oversight.** The reviewer read the contradiction the other way, as evidence that the composite of 39 was too low and should rise. Deriving the dimensions moves it *down*, to 32, so the composite is not the error and the reviewer's proposed direction is wrong. The error is that the band was never checked and the tier was assigned by feel. Both halves are now explicit. The override stands because three of the formula's five dimensions -- data integrity, reversibility, dependency chain, 60% of the weight between them -- measure how far and how permanently damage spreads, and FM-15's damage does not spread at all: it stops at one file that the author can fix by hand. The formula therefore has no way to express "the deliverable is wrong on production, and it is wrong on the common input", which is what FM-15 is. Probability does not appear in the formula either, and FM-15's is high. Track would mean shipping a generator that emits syntactically invalid Python for hyphenated feature names and writing it down. Falsifier for the override: C-15's detection signal is one `ast.parse()` call on a rendered stub, so if the design ticket lands that test with its mitigation the override costs nothing to honour; if it turns out to cost more than a Fast-Follow's worth of design, or if a reviewer shows the 55 on user impact scope is inflated and the real figure is under 40, the override collapses and FM-15 goes to Track. The disagreement with the reviewer about which half was wrong is recorded rather than smoothed over, because a reviewer and an author reaching the same fix from opposite diagnoses is worth a third opinion.
 
-Counts: 16 failure modes, 15 classified Tiger and 1 Elephant, across 6 categories. 7 Launch-Blocking (FM-1, FM-2, FM-3, FM-4, FM-6, FM-8, FM-14), 8 Fast-Follow, 1 Track. The Launch-Blocking set grew from 5 to 7 in this revision, because FM-4 and FM-14 had a band in their urgency column instead of a tier and were not counted anywhere. FM-15 and FM-16 were added after the PR #684 round-1 hostile review surfaced F-N26 and F-N27; neither is Launch-Blocking.
+Counts: 16 failure modes, 15 classified Tiger and 1 Elephant, across 6 categories. 7 Launch-Blocking (FM-1, FM-2, FM-3, FM-4, FM-6, FM-8, FM-14), 8 Fast-Follow, 1 Track. Six of those tiers are marked `(override)` because they disagree with the derived band, and the reason for the disagreement is the formula critique above rather than a separate argument per row. The Launch-Blocking set grew from 5 to 7 in this revision, because FM-4 and FM-14 had a band in their urgency column instead of a tier and were not counted anywhere. FM-15 and FM-16 were added after the PR #684 round-1 hostile review surfaced F-N26 and F-N27; neither is Launch-Blocking.
 
 ## Paper tigers
 
