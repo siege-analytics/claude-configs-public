@@ -10,6 +10,8 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 - Tool-availability-probe skill and scripts (#662): `skills/tool-availability-probe/SKILL.md` documents the check-install-escalate protocol; six probe shell scripts ship under `scripts/probe/` for pytest, playwright, vitest, schemathesis, great-expectations, k6. On absent + `tool_install_policy: block` (or install failure), probe files an infra ticket via `gh` from `templates/infra-ticket-tool-install.md` (#663) and returns exit 78 so the scaffold hook (#661) can record `Blocked-by:` while still rendering the stub.
 - Part-of epic #655; child ticket #662 closes the environment-gap check between writing-tests:7 tool declaration and the scaffold hook's stub-render step; adds a new tool-availability-probe skill under `skills/`.
+- Test-stub skeleton templates (#660): seven skeletons under `templates/tests/` (pytest unit, pytest integration, Playwright e2e, Vitest component, Schemathesis contract, Great Expectations suite, k6 scenario), each parameterized on `{ticket_id}`, `{ac_id}`, `{feature}` and each engineered to fail with a message naming the AC when run against an unimplemented target. Consumed by the scaffold hook (#661) once it lands.
+- Part-of epic #655; supplies the `templates/tests` set referenced by the `automation_template` schema field (#659) and by the writing-tests:7 rule (#656).
 
 ### Fixed
 
