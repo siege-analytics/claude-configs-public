@@ -31,10 +31,22 @@ def is_yaml_shaped(lines: "list[str]") -> bool:
     only while the mapping is open -- that is, when the preceding top-level key
     had no inline value. Block scalars are rejected rather than modelled: no key
     in this schema takes one, and they would admit arbitrary prose as a value.
+
+    A blank line ends the region rather than being skipped. Skipping it let an
+    unterminated opener run past a paragraph break, across a Markdown heading and
+    a prose lead-in, to a quoted `propagation-deferred:` line. None of the 314
+    real frontmatter regions in this repository contains a blank line, so this
+    rejects no artifact that exists.
+
+    `#` lines are still skipped. YAML comments are legitimate here and are used
+    by the (e) fixture, so rejecting them would be a rule about the corpus rather
+    than about the schema.
     """
     mapping_open = False
     for line in lines:
-        if not line.strip() or line.lstrip().startswith("#"):
+        if not line.strip():
+            return False
+        if line.lstrip().startswith("#"):
             continue
         if line[:1] in (" ", "\t"):
             if not mapping_open:

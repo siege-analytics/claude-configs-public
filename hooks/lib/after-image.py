@@ -29,10 +29,17 @@ def target_path(ti: dict) -> str:
 
 
 def on_disk(path: str) -> str:
+    """Read the pre-image, distinguishing absence from failure.
+
+    Only a missing file legitimately means an empty pre-image. Catching every
+    `OSError` made an unreadable file indistinguishable from one, so the caller
+    saw empty content and allowed the write. Any other `OSError` raises and
+    takes the guard's existing non-zero path, which blocks.
+    """
     try:
         with open(path, encoding="utf-8", errors="replace") as handle:
             return handle.read()
-    except OSError:
+    except FileNotFoundError:
         return ""
 
 
