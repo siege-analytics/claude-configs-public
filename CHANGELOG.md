@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Added
+
+- Epic #655 close-out (#664): falsifiable acceptance criteria + auto-gen test stubs, delivered end-to-end.
+- epic #655 rule + skills: `writing-tests:7` (#656) requires every AC to carry a paired `Falsifiable-by:` observation and a `Tool:` name drawn from the touched layer's `assertion_tools`. `[skill:create-ticket]` (#657) embeds the Falsifiable-by + Tool shape in ticket bodies; `[skill:ticket-decomposition]` (#658) threads it through multi-layer decomposition.
+- epic #655 schema + templates: PROJECT.md `testing.layers` extension adds two optional per-layer fields, `assertion_tools` and `automation_template` (#659). Seven skeleton templates under `templates/tests/` cover pytest / playwright / vitest / schemathesis / great-expectations / k6 layers (#660).
+- epic #655 hook + probes + infra: scaffold-test-stub hook at `hooks/create-ticket/scaffold-test-stub.sh` (#661) reads Automation blocks and renders per-AC stubs. `[skill:tool-availability-probe]` with six per-tool probe scripts under `scripts/probe/` (#662) checks tool presence and, on absent + install-blocked, files an infra ticket via `templates/infra-ticket-tool-install.md` (#663) while still permitting the stub to land so it becomes runnable the moment the tool arrives.
+- epic #655 end-to-end flow: `[skill:create-ticket]` emits a ticket body with Automation blocks; scaffold hook parses each block and invokes the tool-availability probe; on installed, renders the stub from the layer's template; on blocked-on-infra, files an infra ticket AND renders the stub anyway with `Blocked-by:` recorded. AC verification is grep-verifiable from the ticket body against production state.
+
 ### Fixed
 
 - Non-git mutation inversion design (#128): documented the target model for making git/workflow the low-friction mutation path, with evidence requirements, escape hatches, and phased coverage for Bash, MCP/API, browser, and external-state writes.
