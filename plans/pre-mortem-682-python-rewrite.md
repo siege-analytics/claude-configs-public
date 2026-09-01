@@ -20,7 +20,7 @@ It is four months after the rewrite merged. `hooks/create-ticket/` and `scripts/
 
 The fact sheet makes three claims that shape every answer:
 
-1. Both existing suites are green while four P0 findings are live, and five fixtures pass *because of* what they fail to assert. Green is not an acceptance signal on this surface.
+1. Both existing suites are green while three P0 findings are live, and five fixtures pass *because of* what they fail to assert. Green is not an acceptance signal on this surface.
 2. Seven inter-file contracts are enforced by hand-maintained naming conventions and nothing else.
 3. `probe_run` (`scripts/probe/_common.sh:145`) has zero test coverage and contains every dangerous operation in the system.
 
@@ -37,11 +37,13 @@ A rewrite is the moment when all three of those are simultaneously in play: the 
 | Quantity | First draft | Now | Cause |
 |---|---|---|---|
 | New findings | 26 counted (25 in the prose) | 28 | F-N26 and F-N27 added by the review |
-| Severity split | `5 P0, 14 P1, 7 P2` | `4 P0, 17 P1, 7 P2` | the two new findings are P1; F-N14 downgraded P0 to P1 on the reviewer's repro |
-| P0 rows | F-N1, F-N11, F-N13, F-N14, F-N22 | F-N1, F-N11, F-N13, F-N22 | F-N14 downgraded |
+| Severity split | `5 P0, 14 P1, 7 P2` | `3 P0, 18 P1, 7 P2` | the two new findings are P1; F-N14 downgraded in round 1, F-N22 in round 2 |
+| P0 rows | F-N1, F-N11, F-N13, F-N14, F-N22 | F-N1, F-N11, F-N13 | both downgrades |
 | Live-defect total | 55 (29 prior + 26 new) | 57 (29 prior + 28 new) | the two new findings |
 
 Command for the split: `grep -oE '^\| F-N[0-9]+b? \| P[012]' plans/investigate-682-executable-path.md | awk '{print $4}' | sort | uniq -c`.
+
+**Third run, after round 2.** Round 2 downgraded F-N22 from P0 to P1 and established the root cause of all three severity corrections: there was no written severity rubric, so no assignment could be checked against anything. The fact sheet now has one, and its first rule is that a coverage gap does not inherit the severity of the defect it hides. F-N22 is a coverage gap whose only consequence is that F-N1 is invisible. The reviewer also established something stronger than the finding claimed: `test_path_traversal_rejected` creates its escape target with `mktemp -d` at `hooks/_test/scaffold_test_stub.test.sh:283` before invoking the hook, so the fixture could not observe the escaped directory even if it asserted on one. That makes FM-8 worse rather than better, and it is written into FM-8's Mechanism.
 
 The downgrade of F-N14 is the consequential one. It was the fact-sheet basis for FM-3 and one of the five P0s named in C-8, and E-3 below predicted in advance that a downgrade would re-weight rather than delete the mode resting on it. That is what happened: FM-3 keeps its Launch-Blocking tier because its tier is set by its own blast radius (spurious public issues on every successful install) rather than by the severity label on its citation, and C-8's threshold moves from five tests to four plus one, which is stated in C-8 itself. Recording the prediction and then recording that it held is the point of E-3; a pre-mortem whose revisit triggers never fire is not being checked.
 
@@ -121,11 +123,11 @@ The two new findings are not absorbed into existing modes. F-N26 and F-N27 are f
 
 ### FM-8: the 19 ported fixtures pass, and five of them pass on defective behaviour
 - **Category:** coverage-theatre
-- **Mechanism:** the rewrite is validated by porting the 15 hook fixtures and 4 probe tests to pytest. They pass. The port is declared behaviour-preserving. But `test_path_traversal_rejected` passes with the escaped directory present (F-N22), `test_happy_path` and `test_no_zero_byte_stub` pass with the trailing newline missing (F-N5), and no fixture asserts byte-exact rendered content (F-N21). Preserving those fixtures preserves the defects they cover for.
+- **Mechanism:** the rewrite is validated by porting the 15 hook fixtures and 4 probe tests to pytest. They pass. The port is declared behaviour-preserving. But `test_path_traversal_rejected` passes with the escaped directory present (F-N22), `test_happy_path` and `test_no_zero_byte_stub` pass with the trailing newline missing (F-N5), and no fixture asserts byte-exact rendered content (F-N21). Preserving those fixtures preserves the defects they cover for. The traversal fixture is the sharpest case and the PR #684 round-2 review established why: it creates its own escape target with `mktemp -d` at `hooks/_test/scaffold_test_stub.test.sh:283` before the hook runs, so adding the missing assertion to the ported fixture would not make it fail either. A port that carries the fixture's *setup* carries a test that cannot detect the defect it is named for, which is a stronger form of coverage theatre than a missing assertion.
 - **Fact-sheet basis:** F-N22 at `hooks/_test/scaffold_test_stub.test.sh:276`; F-N5 at `hooks/create-ticket/scaffold-test-stub.sh:146` with the fixtures at `hooks/_test/scaffold_test_stub.test.sh:67` and `hooks/_test/scaffold_test_stub.test.sh:522`; F-N21
 - **Probability:** high. "All existing tests still pass" is the default acceptance argument for a rewrite, and it is the argument the fact sheet's hypothesis H2 already falsifies.
-- **Blast radius:** the entire acceptance basis for the epic. If green is the signal, four P0 findings ship into Python and the epic's stated purpose is unmet while appearing met.
-- **Mitigation:** the ported suite is a floor, not a ceiling. Each of the four P0 findings (F-N1, F-N11, F-N13, F-N22) plus F-N14, which was P0 until the PR #684 review downgraded it and whose `eval` remains the most dangerous single statement on the surface, gets a test that fails against the current bash before it is written against the Python. `test_happy_path` and `test_path_traversal_rejected` must be *modified*, and each modification carries its own justification in the PR body at the same evidence standard as a code change.
+- **Blast radius:** the entire acceptance basis for the epic. If green is the signal, three P0 findings ship into Python and the epic's stated purpose is unmet while appearing met.
+- **Mitigation:** the ported suite is a floor, not a ceiling. Each of the three P0 findings (F-N1, F-N11, F-N13) plus F-N14 and F-N22, both P0 until the PR #684 review downgraded them and both still the basis for a Launch-Blocking mode, gets a test that fails against the current bash before it is written against the Python. `test_happy_path` and `test_path_traversal_rejected` must be *modified*, and each modification carries its own justification in the PR body at the same evidence standard as a code change.
 - **Detection signal:** run each new P0 test against the bash implementation first; a test that passes against bash is not testing the fix. Numeric floor: at least 5 tests that fail on `HEAD` of `epic/682-python-executable-path` and pass after the rewrite.
 - **Owning ticket:** step-3 design ticket (unfiled); the constraint is C-8 below.
 
@@ -264,7 +266,9 @@ Scenarios that sound alarming against this surface and are already handled. Reco
 
 **E-3: the hostile review on PR #684 may revise the severities this document rests on. FIRED, and the prediction held.** Round 1 landed with recommendation Block. It downgraded F-N14 from P0 to P1 on an executed repro and added two findings. The re-weighting rule stated here in advance was applied rather than reconsidered: FM-3 rests on F-N14 and keeps Launch-Blocking, because its tier was set by its own blast radius rather than by the severity label on its citation, and C-8's threshold is restated as four plus one instead of five. FM-15 and FM-16 are new. The Launch-Blocking set is unchanged.
 
-The elephant is not retired, because round 2 is in flight and is targeted at F-N11 and F-N22, the two remaining P0s with no executed repro. F-N22 is the basis for FM-8's `test_path_traversal_rejected` claim and appears in a kill criterion; F-N11 is the whole of FM-2. Cost of deferral: unchanged, one revision commit. Trigger for revisiting: the round-2 comment on PR #684. If either is downgraded, the re-weighting rule above is applied again and this section records the second firing.
+Round 2 has since landed and the trigger fired a second time, as predicted. F-N11 was reproduced and holds at P0, so FM-2 is unchanged. F-N22 was downgraded to P1 and FM-8 keeps Launch-Blocking under the same rule, which is now the second consecutive time the rule has been applied in my own favour. The defence is weaker by repetition and should be argued rather than accepted: FM-8's blast radius is the epic's entire acceptance basis, and round 2 made that worse rather than better by showing the traversal fixture's setup pre-creates its escape target. The tier rests on that, not on F-N22's label.
+
+The elephant is retired as a prediction and reopened as a different one. Both rounds on #684 are complete. What remains is that PR #686, this document, has had no hostile review at all, and the constraint set it produces is what the step-3 design will be checked against. Cost of deferral: a revision commit on this document. Trigger for revisiting: the round-1 comment on PR #686.
 
 ## Design constraints this pre-mortem imposes
 
@@ -277,7 +281,7 @@ Each constraint is traceable to the failure mode it prevents. The step-3 design 
 - **C-5 (FM-5).** Rendering tests read shipped templates from disk. No test contains a copy of a template. A placeholder-set equality test asserts renderer and template agree in both directions.
 - **C-6 (FM-6).** Install commands are argument lists with a declared privilege tier. The `allow` token authorises user-space installs only; privileged installs require a token that names privilege.
 - **C-7 (FM-7).** Detection and remediation are separate modules. The detection module has no transitive import path to the installer or to the issue-filer.
-- **C-8 (FM-8).** The ported suite is a floor. At least five tests must fail against the bash implementation at `epic/682-python-executable-path` and pass against the rewrite: one per P0 (F-N1, F-N11, F-N13, F-N22) plus one for F-N14, which the PR #684 review downgraded to P1 while leaving its `eval` the most dangerous single statement on the surface. `test_happy_path` and `test_path_traversal_rejected` are expected to change, and each change is justified in the PR body.
+- **C-8 (FM-8).** The ported suite is a floor. At least five tests must fail against the bash implementation at `epic/682-python-executable-path` and pass against the rewrite: one per P0 (F-N1, F-N11, F-N13) plus one for F-N14 and one for F-N22, both downgraded to P1 by the PR #684 review while remaining the basis for Launch-Blocking modes. The threshold stays at five because it counts modes the suite must newly detect, not P0 labels. `test_path_traversal_rejected` must be rewritten rather than extended: its `mktemp -d` setup at `hooks/_test/scaffold_test_stub.test.sh:283` pre-creates the escape target, so an added assertion would still pass. `test_happy_path` is expected to change, and each change is justified in the PR body.
 - **C-9 (FM-9).** The probe/hook contract is exercised against a real probe object and a faked tool environment. Mocking is permitted below the subprocess boundary only. `probe_run`'s successor is covered before any wrapper is ported.
 - **C-10 (FM-10).** All 24 epic checklist items carry a PORT / REDESIGN / CREATE disposition in the design note, and CREATE items are sequenced first.
 - **C-11 (FM-11).** Every live finding from PR #668 and PR #672 and every `F-N` finding carries a disposition of DISCHARGED-BY-CONSTRUCTION, FIXED-EXPLICITLY, or DECLINED-WITH-REASON.
