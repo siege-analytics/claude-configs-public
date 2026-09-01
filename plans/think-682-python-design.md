@@ -98,7 +98,7 @@ Decisions not yet made when this note started, and their resolutions. Each was a
 ### Assumptions
 
 - The fact sheet and the pre-mortem are the factual basis. This note dispositions findings; it does not re-derive them.
-- Both artifacts are under hostile review (PR #684 round 3, PR #686 round 2). If either review adds or revises a finding, the affected disposition is restated and the H1 denominator moves with the finding count. The H1 margin below is 3, which is small enough that this is a live risk rather than a formality.
+- Both artifacts are under hostile review (PR #684 round 3, PR #686 round 2). If either review adds or revises a finding, the affected disposition is restated and the H1 denominator moves with the finding count. H1 fails below by 6, which is wide enough that a single added or revised finding will not reverse it, but the denominator is still not final and the shortfall is what would move.
 - `python3` is available wherever the git hook runs. The pre-mortem's FM-12 records this as unverified; C-12 makes the failure legible rather than removing the dependency.
 - A constraint may be declined. A decline with a reason and a falsifier is a valid outcome; a constraint silently unaddressed is not.
 
@@ -165,7 +165,7 @@ Four of the nine (#668 P1-1, P1-4, P1-5 and F-N6) were found by this note, not b
 - **F-N19** (the probe suite writes its own private copy of the infra-ticket template) -- preliminary read: structural. Here: **incidental**. C-5 is a test-authoring rule. A fixture library can offer "the shipped template read from disk" as its only template accessor, but nothing stops a test from opening a file itself. The discriminator says a discipline is not a construct.
 - **F-N24** (no fixture library exists) -- preliminary read: structural. Here: **incidental**. Classifying "the artefact does not exist yet" as discharged-by-construction is a category error; it is fixed by building it, which is the definition of a fix someone must decide to make.
 
-No reclassification runs in the H1-favourable direction. Three were considered and rejected in order to keep it that way: F-N1 (a `ValidatedPath` newtype would make the pre-containment `mkdir` unrepresentable, but nothing prevents an `os.makedirs` call before validation, so it stays incidental as the preliminary read had it); F-N14 (an `InstallPlan | None` return makes the `unsupported-os:` prose sentinel unrepresentable, which is a strong structural argument, but the preliminary read called it incidental and overturning it moves the count to 32 in the direction that flatters the hypothesis, so it stays incidental); and F-N26 (per-sink validators make "one regex guarding three grammars" unrepresentable, same argument, same decision). **If the hostile reviewer accepts any of these three, the margin widens; the note declines to claim them.**
+No reclassification runs in the H1-favourable direction. Three were considered and rejected in order to keep it that way: F-N1 (a `ValidatedPath` newtype would make the pre-containment `mkdir` unrepresentable, but nothing prevents an `os.makedirs` call before validation, so it stays incidental as the preliminary read had it); F-N14 (an `InstallPlan | None` return makes the `unsupported-os:` prose sentinel unrepresentable, which is a strong structural argument, but the preliminary read called it incidental and overturning it moves the count to 23 in the direction that flatters the hypothesis, so it stays incidental); and F-N26 (per-sink validators make "one regex guarding three grammars" unrepresentable, same argument, same decision). **If the hostile reviewer accepts any of these three, the shortfall narrows; the note declines to claim them.** Before round 1 this sentence read "the margin widens", which was true when the count was 31 and the verdict CONTINUE. It is one of five downstream restatements the round-1 remediation left on the old number, listed in the self-review.
 
 ### Module layout
 
@@ -469,7 +469,7 @@ All 55 live findings. `S` marks the H1 classification: `S` structural, `I` incid
 | #668 P2-6 | I | FIXED-EXPLICITLY | the title renderer must handle an absent blocker; `Optional` typing flags it but does not decide the wording |
 | #668 P2-7 | I | FIXED-EXPLICITLY | library modules return values rather than exiting. **Reclassified in round 1 (HR692-3):** `sys.exit` in a library module still terminates the caller and no falsifier forbids it |
 | #668 P2-8 | I | FIXED-EXPLICITLY | document the inherited proxy and index environment in SKILL.md; surface captured install output in the infra-ticket body instead of discarding it |
-| #668 P2-9 | I | DECLINED-WITH-REASON | a waiver defect in `plans/self-review-662.md`, not a code defect. Declined here because a design note cannot withdraw a waiver; the withdrawal belongs on the #662 artifact. Counted in the denominator anyway, because a silent exclusion is the exact operation that produced fact-sheet finding 10-1. Excluding it gives 30 of 54 structural against a threshold of 27, so H1's verdict does not turn on it |
+| #668 P2-9 | I | DECLINED-WITH-REASON | a waiver defect in `plans/self-review-662.md`, not a code defect. Declined here because a design note cannot withdraw a waiver; the withdrawal belongs on the #662 artifact. Counted in the denominator anyway, because a silent exclusion is the exact operation that produced fact-sheet finding 10-1. Excluding it gives 22 of 54 structural against a threshold of 27, so H1's verdict does not turn on it -- which before round 1 meant it still passed and now means it still fails |
 | #672 P1-2 | S | DISCHARGED-BY-CONSTRUCTION | a malformed `Automation:` line raises `MalformedAutomationBlock`; there is no stderr-noise-and-exit-0 path |
 | #672 P1-6 | S | DISCHARGED-BY-CONSTRUCTION | the `ProbeResult` reaches the footer renderer as an object; degraded outcomes are fields, not discarded exit codes (C-2, C-16) |
 | #672 P1-7 | I | FIXED-EXPLICITLY | the exit-code vocabulary is re-derived against SKILL.md; a documented code that is never emitted is drift, not a construct |
@@ -506,7 +506,7 @@ All 55 live findings. `S` marks the H1 classification: `S` structural, `I` incid
 | F-N26 | I | FIXED-EXPLICITLY | `str.isidentifier()` at the `PYTHON_IDENTIFIER` sink (C-15a). Per-sink validators arguably make "one regex, three grammars" unrepresentable; the preliminary read called it incidental and the note declines to overturn toward H1 |
 | F-N27 | I | FIXED-EXPLICITLY | `layer` is a parameter of `orchestrate.probe` and a field of `ProbeResult` (C-16). **Reclassified in round 1 (HR692-3):** a required parameter forbids omitting the argument, not discarding the parsed value and passing another, which is the defect |
 
-Totals: 31 DISCHARGED-BY-CONSTRUCTION, 22 FIXED-EXPLICITLY, 2 DECLINED-WITH-REASON. 31 + 22 + 2 = 55.
+Totals: 22 DISCHARGED-BY-CONSTRUCTION, 31 FIXED-EXPLICITLY, 2 DECLINED-WITH-REASON. 22 + 31 + 2 = 55.
 
 ### Cutover
 
@@ -535,7 +535,7 @@ The falsifier for the whole policy: if `git log develop --oneline` ever shows a 
 
 Each is a claim this design makes, with the observation that would refute it.
 
-1. **H1 fails at 22 of 55.** The disposition table's DISCHARGED-BY-CONSTRUCTION row count, from the `grep -cE` command in the H1 section, is 22 against a threshold of 28. This claim is refuted by five reclassifications in the H1-favourable direction; the note names one candidate set (adding `mypy --strict`, which would move `#668 P1-1`, `#668 P1-5` and F-N14) and declines to make it. Round 1 published 31 and CONTINUE; nine rows moved.
+1. **H1 fails at 22 of 55.** The disposition table's DISCHARGED-BY-CONSTRUCTION row count, from the `grep -cE` command in the H1 section, is 22 against a threshold of 28. This claim is refuted by six reclassifications in the H1-favourable direction, six being the shortfall; the note names one candidate set (adding `mypy --strict`, which would move `#668 P1-1`, `#668 P1-5` and F-N14) and declines to make it. Round 1 published 31 and CONTINUE; nine rows moved.
 2. **The classification is not reverse-engineered from the threshold.** Refuted if any reclassification in this note moves toward H1. Check: the note lists two reclassifications, both away from H1, and three declined overturns that would each have moved toward it.
 3. **`detect` cannot reach the installer or the issue-filer.** Refuted by `test_detect_has_no_installer_import_path` failing, or by that test being run in-process rather than in a fresh interpreter, in which case it passes vacuously and the claim is unsupported.
 4. **`allow` never runs a privileged command after cutover.** Refuted by `test_allow_never_runs_privileged` recording any argv containing `sudo`.
