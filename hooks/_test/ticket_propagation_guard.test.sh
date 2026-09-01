@@ -454,14 +454,18 @@ EOF
 expect_block "(y2) an opener with no closing --- anywhere fails closed" "$HOOK" \
     "$(payload "$TMP/plans/no-closer.md")"
 
-# R2-F3: both helpers are fail-open dependencies. With either removed the guard
-# used to produce empty halves and allow a non-compliant artifact.
+# R2-F3: these helpers are fail-open dependencies. With any of them removed the
+# guard used to produce an empty value and allow a non-compliant artifact.
+#
+# canonical-path.py joined the list in round 4. It is here rather than inline in
+# the guard for exactly this reason: an inline resolver's failure branch has no
+# reachable trigger, so the suite could not tell the check from its deletion.
 
 HOOK_COPY_DIR=$(mktemp -d)
 cp -R "$REPO_ROOT/hooks" "$HOOK_COPY_DIR/hooks"
 COPY_HOOK="$HOOK_COPY_DIR/hooks/write/ticket-propagation-guard.sh"
 
-for helper in split-frontmatter after-image; do
+for helper in split-frontmatter after-image canonical-path; do
     mv "$HOOK_COPY_DIR/hooks/lib/$helper.py" "$HOOK_COPY_DIR/$helper.bak"
     expect_block "(u:$helper) a missing hooks/lib/$helper.py fails closed" "$COPY_HOOK" \
         "$(payload "$TMP/plans/small-noncompliant.md")"
@@ -538,5 +542,70 @@ printf '%s\n' \
 
 expect_pass "(af) a reference to an org the guard does not govern is not a match" "$HOOK" \
     "$(payload "$TMP/plans/foreign-org.md")"
+
+# --- Round-4 findings. Both are the same shape as R3-F1 and one level deeper:
+# a path that names a governed file without spelling it the way the filter
+# expects. R3-F1 was answered by adding arms. That answer was wrong in kind,
+# because the set of strings naming a given file is unbounded: case variants on a
+# case-insensitive filesystem, symlinks, and any combination of the two. The fix
+# canonicalizes before matching rather than enumerating, and these scenarios are
+# what makes the difference between the two answers observable.
+#
+# Every one of them is a path-shape assertion, so none depends on the host
+# filesystem being case-insensitive. The guard is handed a string and must decide
+# scope from it. On a case-sensitive filesystem `PLANS/a.md` is a different file
+# and treating it as governed is over-blocking, which is the fail-closed
+# direction and is the behaviour asserted here deliberately.
+
+make_artifact "$TMP/plans/r4.md" no-fm 1000
+make_artifact "$TMP/docs/investigations/r4.md" no-fm 1000 2>/dev/null || {
+    mkdir -p "$TMP/docs/investigations"
+    make_artifact "$TMP/docs/investigations/r4.md" no-fm 1000
+}
+
+expect_block "(ag) an upper-case plans/ component still names a governed artifact" "$HOOK" \
+    "$(payload "$TMP/PLANS/r4.md")"
+expect_block "(ah) a mixed-case docs/investigations/ component is still governed" "$HOOK" \
+    "$(payload "$TMP/Docs/Investigations/r4.md")"
+
+# Control. Case-folding the comparison must not fold every directory into scope,
+# or (ag) and (ah) are satisfied by a filter that claims everything.
+printf '%s\n' "$BODY_REF" > "$TMP/NOTES-at-root.md"
+expect_pass "(ai) an upper-case directory that is not an artifact directory stays out of scope" "$HOOK" \
+    "$(payload "$TMP/NOTES-at-root.md")"
+
+# Symlink aliases. `alias/` is outside the artifact directories and every path
+# under it opens a file inside `plans/`.
+mkdir -p "$TMP/outside"
+ln -sfn "$TMP/plans" "$TMP/alias"
+ln -sf "$TMP/plans/r4.md" "$TMP/outside/link.md"
+printf '%s\n' "$BODY_REF" > "$TMP/outside/real.md"
+ln -sf "$TMP/outside/real.md" "$TMP/plans/outward.md"
+
+expect_block "(aj) a symlinked directory into plans/ is still writing a governed artifact" "$HOOK" \
+    "$(payload "$TMP/alias/r4.md")"
+expect_block "(ak) a symlinked file resolving into plans/ is still governed" "$HOOK" \
+    "$(payload "$TMP/outside/link.md")"
+
+# Control, and the one that stops (aj) and (ak) being satisfied by resolving
+# nothing and blocking every symlink: a link that lives *inside* plans/ and
+# resolves *outward* is writing an ungoverned file and must stay allowed.
+expect_pass "(al) a link inside plans/ resolving to an ungoverned file stays out of scope" "$HOOK" \
+    "$(payload "$TMP/plans/outward.md")"
+
+# The scratch- escape hatch under the same treatment. Canonicalizing the path
+# moves the basename the hatch is tested against, and case-folding the comparison
+# would widen the hatch, which is the one change in this fix that could open a
+# hole rather than close one. Both directions are pinned.
+make_artifact "$TMP/plans/scratch-draft.md" no-fm 1000
+make_artifact "$TMP/plans/SCRATCH-draft.md" no-fm 1000
+ln -sf "$TMP/plans/r4.md" "$TMP/plans/scratch-alias.md"
+
+expect_pass "(am) a lower-case scratch- artifact is still exempt" "$HOOK" \
+    "$(payload "$TMP/plans/scratch-draft.md")"
+expect_block "(an) an upper-case SCRATCH- prefix is not the escape hatch" "$HOOK" \
+    "$(payload "$TMP/plans/SCRATCH-draft.md")"
+expect_block "(ao) a scratch- symlink onto a real artifact does not exempt the target" "$HOOK" \
+    "$(payload "$TMP/plans/scratch-alias.md")"
 
 report

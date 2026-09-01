@@ -38,30 +38,50 @@ fi
 [[ -z "$FILE_PATH" ]] && exit 0
 
 # --- Path filter: only fire for artifact paths ---
-BASENAME=$(basename "$FILE_PATH")
-
-# A separate `*.md` test used to sit here. Every pattern in the case block below
-# already ends in `.md`, so it could be deleted with no scenario changing, which
-# is the definition of a check that is not doing anything.
 #
-# scratch-* prefix is the exploratory-draft escape hatch
+# The filter canonicalizes before it decides scope. Round 3 answered a
+# bare-relative bypass by adding `case` arms; round 4 then found upper-case
+# components and symlink aliases naming the same governed files, because the set
+# of strings that name a given file is unbounded and an arm list can only ever
+# chase it. realpath collapses that set to one member per file, so `plans/a.md`,
+# `./plans/a.md`, `PLANS/a.md` and a symlink pointing into plans/ all arrive at
+# the filter as the same string.
+#
+# It lives in hooks/lib rather than inline so that its fail-closed branch is
+# reachable from a test. Inline, the branch could only fire if python3 itself
+# were missing, in which case the after-image call above blocks first: no
+# scenario could distinguish the check from its deletion, and a check the suite
+# cannot distinguish from its absence is the same non-check as the `*.md` test
+# that used to sit below this comment.
+CANONICAL="$HOOK_DIR/../lib/canonical-path.py"
+REAL_PATH=$(printf '%s' "$FILE_PATH" | python3 "$CANONICAL")
+REALPATH_STATUS=$?
+
+if [[ "$REALPATH_STATUS" -ne 0 ]] || [[ -z "$REAL_PATH" ]]; then
+    printf '\nBLOCKED by ticket-propagation-guard: cannot canonicalize %s (hooks/lib/canonical-path.py status %d).\nThe guard fails closed when it cannot determine which file a path names.\n\n' \
+        "$FILE_PATH" "$REALPATH_STATUS" >&2
+    exit 2
+fi
+
+# The escape hatch is deliberately the one test that stays case-sensitive and
+# reads the resolved name. Case-folding it would make `SCRATCH-` exempt, and
+# reading the unresolved name would let a `scratch-` symlink exempt whatever
+# real artifact it points at: both widen an exemption, which is the only
+# direction in a guard that can create a bypass.
+BASENAME=$(basename "$REAL_PATH")
 [[ "$BASENAME" == scratch-* ]] && exit 0
 
-# Only match artifact directories.
-#
-# Every arm needs a bare-relative twin. `*/plans/*.md` requires a leading path
-# component, so `./plans/a.md` matches and `plans/a.md` does not: `*` can match
-# the empty string but the literal `/` before `plans` still has to be there.
-# A caller that passes a repo-relative path skipped the guard entirely, which is
-# round-3 finding R3-F1.
+# macOS ships bash 3.2, so `${VAR,,}` is unavailable.
+MATCH_PATH=$(printf '%s' "$REAL_PATH" | tr '[:upper:]' '[:lower:]')
+
+# realpath returns an absolute path, so the leading `/` is always present and
+# the bare-relative twins are unnecessary. `*` matches `/` in a bash `case`, so
+# `*/plans/*.md` already covers arbitrarily nested paths; the recursive `**`
+# twins were pattern-identical to their neighbours and are gone.
 ARTIFACT_PATH=false
-case "$FILE_PATH" in
-    */plans/*.md|*/plans/**/*.md)       ARTIFACT_PATH=true ;;
-    plans/*.md|plans/**/*.md)           ARTIFACT_PATH=true ;;
-    */docs/investigations/*.md)          ARTIFACT_PATH=true ;;
-    */docs/investigations/**/*.md)       ARTIFACT_PATH=true ;;
-    docs/investigations/*.md)            ARTIFACT_PATH=true ;;
-    docs/investigations/**/*.md)         ARTIFACT_PATH=true ;;
+case "$MATCH_PATH" in
+    */plans/*.md)               ARTIFACT_PATH=true ;;
+    */docs/investigations/*.md) ARTIFACT_PATH=true ;;
 esac
 [[ "$ARTIFACT_PATH" == "false" ]] && exit 0
 
