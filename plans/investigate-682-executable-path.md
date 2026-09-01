@@ -627,12 +627,21 @@ Each of the three is a case of a correct-sounding invariant enforced at the wron
 
 Cited, not re-derived, from the two hostile-review comments (PR #668 comment 1, PR #672 comments 1 and 2). Disposition established by same-turn repro on this branch.
 
+The table below partitions each source review's complete finding set: every distinct ID appearing in the source comment is in exactly one column. That property did not hold until finding 10-1 below, and its absence is what carried a denominator no source supported. The ID sets, from `grep -oE '\bP[012]-[0-9]+\b' | sort -u` over the two comments, are `P0-1..P0-5, P1-1..P1-7, P2-1..P2-9` for #668 (21 findings) and `P0-1..P0-5, P1-1..P1-8, P2-1..P2-6` for #672 (19 findings).
+
 | Source | Findings REMEDIATED at this branch | Findings still LIVE at this branch |
 |---|---|---|
-| PR #668 (probe layer) | P0-1 (by `ef237b7`) | P0-2, P0-3, P0-4, P0-5, P1-1..P1-7, P2-1, P2-2, P2-4..P2-8 |
-| PR #672 (hook layer) | P0-1..P0-5, P1-1, P1-3, P1-4, P1-5, P1-8, P2-4, P2-5, latent tool-traversal (by `5292825` / `1381371`) | P1-2 (partial), P1-6 (partial), P1-7, P2-3, P2-6 |
+| PR #668 (probe layer), 21 total | P0-1 (by `ef237b7`) -- 1 | P0-2..P0-5, P1-1..P1-7, P2-1..P2-9 -- 20 |
+| PR #672 (hook layer), 19 total | P0-1..P0-5, P1-1, P1-3, P1-4, P1-5, P1-8, P2-4, P2-5, and the latent tool-traversal (by `5292825` / `1381371`) -- 12 | P1-2 (partial), P1-6 (partial), P1-7, P2-1, P2-2 (partial), P2-3, P2-6 -- 7 |
 
-24 findings from #668 and 5 from #672 remain live. The rewrite discharges them by construction or explicitly declines each one with a reason; it does not inherit them silently.
+20 findings from #668 and 7 from #672 remain live, a prior-live total of **27**. The rewrite discharges them by construction or explicitly declines each one with a reason; it does not inherit them silently.
+
+Four live entries were in neither column of the previous revision. Their dispositions were established by repro on this branch when the partition was repaired:
+
+- **#668 P2-3 (no tests) LIVE.** `scripts/probe/_test_probe_common.sh` is 182 lines carrying four scenarios, all of them the #676 `sed`-substitution regression. There is no fake `gh`, no per-policy `PROJECT.md` fixture, and none of the six status/exit combinations. `probe_run` has zero coverage, which is F-N20 approached from the other side.
+- **#668 P2-9 (waiver) LIVE.** `plans/self-review-662.md:14` reads `Hostile-review-artifact: WAIVED`, and `:39` states the waiver is "invalid if this PR wires any hook to invoke the probes. It does not." The hook does invoke them, so the waiver's own stated invalidation condition is met. Whether a waiver defect belongs in a code-defect denominator is arguable; it is counted here because the source review raised it as a finding, and dropping it silently is the move that produced this section.
+- **#672 P2-1 LIVE verbatim.** `hooks/_test/scaffold_test_stub.test.sh:54` still reads `local body='## Context\nSome ticket body\n\n## AC\n- [ ] AC1'` fed through `printf '%s'`, so the escapes are never interpreted and the no-op fixture still exercises a single-line body.
+- **#672 P2-2 PARTIALLY REMEDIATED, counted live.** The no-Probe fixtures now exist (`test_auto_probe_installed`, `test_auto_probe_blocked_real_json`, `test_probe_missing_surfaced`) and a traversal fixture exists. Still absent are `PROJECT.md`, multi-block and exists-skip fixtures, and 1 of 15 fixtures captures an exit code (`:326`).
 
 ## New findings
 
@@ -678,8 +687,8 @@ Three revisions preceded this one, and the sequence matters because the current 
 
 **H1.** *The executable path's defects are predominantly consequences of bash's lack of structured data, not of individual coding mistakes; therefore a Python rewrite that introduces a typed probe-result object and a single template renderer eliminates a majority of them without needing a per-defect fix.*
 
-- Unit of analysis, fixed before counting (PR #684 hostile review, finding 1-3): one row of the new-findings table is one finding, `F-N12b` included. 28 new findings after F-N26 and F-N27, plus 29 live prior findings, is a denominator of **57**. H1 holds iff at least **29** of the 57 are structural.
-- Falsifiable by: classify all 29 live findings (#668's 24 + #672's 5) plus the 28 new ones as *structural* (removed by having a dataclass/JSON schema/shared renderer/exception propagation) or *incidental* (requires a bespoke fix regardless of language). Preliminary read: F-N12, F-N12b, F-N13, F-N15, F-N16, F-N19, F-N24, #668 P0-3, P1-2 are structural; F-N1, F-N14, F-N17, F-N22, F-N26 are incidental; F-N27 is structural. The classification is now 10 structural, 5 incidental, 42 unclassified. The classification is the first deliverable of the design ticket, not of this one.
+- Unit of analysis, fixed before counting (PR #684 hostile review, finding 1-3): one row of the new-findings table is one finding, `F-N12b` included. 28 new findings after F-N26 and F-N27, plus 27 live prior findings, is a denominator of **55**. H1 holds iff at least **28** of the 55 are structural. The prior-live figure was 29 and the denominator 57 through round 2; both were unreachable from the source reviews and were corrected by finding 10-1 below.
+- Falsifiable by: classify all 27 live prior findings (#668's 20 + #672's 7) plus the 28 new ones as *structural* (removed by having a dataclass/JSON schema/shared renderer/exception propagation) or *incidental* (requires a bespoke fix regardless of language). Preliminary read: F-N12, F-N12b, F-N13, F-N15, F-N16, F-N19, F-N24, #668 P0-3, P1-2 are structural; F-N1, F-N14, F-N17, F-N22, F-N26 are incidental; F-N27 is structural. The classification is now 10 structural, 5 incidental, 40 unclassified. The classification is the first deliverable of the design ticket, not of this one.
 
 **H2.** *Both existing suites can be kept green throughout the rewrite while the rewrite is nonetheless correct, because the suites assert observable output rather than implementation.*
 
@@ -897,8 +906,8 @@ Assumption universe for the executable path, with dispositions. `PROBED` = execu
       "attested": 5,
       "newFindings": 28,
       "newFindingSeverity": {"P0": 4, "P1": 17, "P2": 7},
-      "livePriorFindings": 29,
-      "h1Denominator": 57,
+      "livePriorFindings": 27,
+      "h1Denominator": 55,
       "hostileReviewFindingsAccepted": 6
     }
   }
@@ -925,7 +934,7 @@ Three rules follow. The first two were being violated when the rubric was writte
 
 The closest call that did *not* move is F-N26: a `Feature:` value that `_safe_value` admits renders a stub that is a `SyntaxError`. It is reachable from an ordinary ticket body with no configuration gate at all, which argues P0. It stays P1 because the wrong answer is loudly observable -- the file does not compile the first time anyone runs it -- and the second clause of P1 is exactly that. Recording it here because it is the assignment most likely to be wrong.
 
-The rubric does not apply retroactively to the 29 findings inherited from PR #668 and PR #672. Those carry the severities their own reviews assigned, and re-ranking them is out of scope for this ticket; the design ticket dispositions them without changing their labels.
+The rubric does not apply retroactively to the 27 findings inherited from PR #668 and PR #672. Those carry the severities their own reviews assigned, and re-ranking them is out of scope for this ticket; the design ticket dispositions them without changing their labels.
 
 ## Hostile-review remediation (PR #684, round 1)
 
@@ -935,14 +944,14 @@ A sibling session on GPT-5.5 reviewed this artifact against `4a81bf5` and return
 |---|---|---|---|
 | 1-1 | S1 | The severity totals line said `6 P0, 13 P1, 7 P2` over "25 new findings". The table had 26 rows and `5 P0, 14 P1, 7 P2`. Neither half summed. | FIXED. The unit of analysis is now stated before the count, the totals are produced by a command that is quoted inline, and the same correction is applied to the PR body and `plans/self-review-683.md`. |
 | 1-2 | S1 | The artifact claimed in four places that the probe JSON is "consumed by regex not by a parser" with "no json module on either side". False: `_parse_probe_json:215` shells to `python3` and calls `json.loads`. The citation resolved to a real line while contradicting it. | FIXED. All four sites now state the real mechanism: three string-building producers, one `json.loads` consumer whose bare `except Exception` at `:224` degrades any parse failure to empty `status` and `ticket`. Verified by reading `:215-228` on this branch. The defect class survives the correction; the mechanism was wrong. |
-| 1-3 | S2 | H1's denominator used the false 25 count and treated `F-N12b` inconsistently. | FIXED. The unit of analysis is fixed before the count, the denominator is 57 (29 live prior + 28 new), and the threshold is restated as 29 of 57 rather than as a percentage. |
+| 1-3 | S2 | H1's denominator used the false 25 count and treated `F-N12b` inconsistently. | FIXED, then **superseded by finding 10-1**. The unit of analysis is fixed before the count and the threshold is stated as a count rather than a percentage; both of those hold. The denominator this row settled on, 57 (29 live prior + 28 new), was itself wrong: the 28 is correct, the 29 was not derivable from either source review. The corrected figure is 55 (27 live prior + 28 new), threshold 28. This row is left as written because the fact that a denominator correction produced another wrong denominator is the substance of 10-1. |
 | 2-1 | S2 | A `Feature` value that `_safe_value` admits (`has-hyphen`) renders a stub that is a `SyntaxError`, because `{feature}` lands inside a Python identifier. The artifact had this as an assumption under `_safe_value`, not as a finding. | FIXED. Promoted to **F-N26 (P1)**. Repro re-run independently on this branch before accepting: `python3 -m py_compile tests/test_ac1_has-hyphen.py` returned `SyntaxError: expected '('` at line 15. |
 | 2-2 | S2 | The hook parses `Layer:` for template selection and then invokes the probe without it, so filed infra tickets carry the wrapper's hard-coded layer. Distinct from F-N16's vocabulary drift. | FIXED. Promoted to **F-N27 (P1)**. Verified independently by reading `:286`, which passes only `"$ticket_id"`. |
 | 2-3 | S2 | F-N14 was P0. The reviewer reproduced it (`rc=78`, `blocked-on-infra`) and established that the executed command name is fixed by the script rather than ticket-controlled, and that the branch requires a host with neither brew nor apt-get. | FIXED. Downgraded to **P1**, with the reviewer's reasoning recorded in the findings table. The high-severity `eval` exposure stays with F-N18. |
 
 The two S1 findings are the ones worth naming as a pattern. Both are failures of the same kind: a claim carried forward from an internal belief and never checked against the source it cites. 1-1 is a count that a five-second command falsifies. 1-2 is worse, because the citation *resolved* -- the line number was right and the line said something else. The citation-resolution pass this artifact ran checks that a line exists, not that it supports the claim attached to it. That gap is now recorded as L-6 in `plans/self-review-683.md`, and it is the strongest argument in this epic for keeping a hostile reviewer on every unit.
 
-Net effect on the counts this epic depends on after round 1: 28 new findings (4 P0, 17 P1, 7 P2), 29 live prior findings, denominator 57 for H1. Round 2 moved the split again; see below.
+Net effect on the counts this epic depends on after round 1: 28 new findings (4 P0, 17 P1, 7 P2), 29 live prior findings, denominator 57 for H1. Round 2 moved the severity split again and the post-round-2 audit moved the prior-live figure to 27 and the denominator to 55; see below.
 
 ## Hostile-review remediation (PR #684, round 2)
 
@@ -961,13 +970,41 @@ The reviewer classified 9-2 as the same class as round-1's 1-2, and that is the 
 
 Two of the ten, 9-3 and 9-4, are the only ones this artifact found on itself, and both came out of the same pass: applying the rubric to its own table, then re-checking the citations that pass produced. It is worth being precise about what that does and does not show. It shows that the rubric has some normative content: run against 28 rows written before it existed, it disagreed with one. It does not show much more than that. One disagreement out of 28 is also what a rubric reverse-engineered from the corrections would produce if the reverse-engineering were slightly imperfect, and this rubric was written by the same author who assigned the severities it was then used to audit. The honest reading is that 9-3 is weak evidence for the rubric being a standard rather than a description, and that the strong evidence would be a rubric applied by someone who did not assign the original labels. That is a job for the design ticket, not a claim this section can make about itself.
 
-Net effect on the counts this epic depends on: 28 new findings (4 P0, 17 P1, 7 P2), 29 live prior findings, denominator 57 for H1. The P0 set is F-N1, F-N11, F-N13, F-N18.
+Net effect on the counts this epic depends on: 28 new findings (4 P0, 17 P1, 7 P2), 27 live prior findings, denominator 55 for H1, threshold 28. The P0 set is F-N1, F-N11, F-N13, F-N18. The prior-live figure and the denominator were 29 and 57 in the revision this section originally described; finding 10-1 below corrected them, and the severity split is unaffected because it runs over the 28 new findings alone.
 
-The citation pass was then re-run with the two gaps 9-4 exposed closed: bare basenames resolved against the tree, and range upper bounds checked rather than only the lower bound. The rule the re-run enforces, stated so it can be re-executed rather than trusted: take every backticked token matching `path.ext:N` or `path.ext:N-M` where `ext` is a source or document extension; resolve a bare basename against `git ls-files`; assert the file exists and that *both* bounds of a range fall within its line count. Over this artifact that is **98 entries, 2 unresolved**. Over this artifact together with `plans/self-review-683.md` it is **105 entries, 4 unresolved**.
+The citation pass was then re-run with the two gaps 9-4 exposed closed: bare basenames resolved against the tree, and range upper bounds checked rather than only the lower bound. The rule the re-run enforces, stated so it can be re-executed rather than trusted: take every backticked token matching `path.ext:N` or `path.ext:N-M` where `ext` is a source or document extension; resolve a bare basename against `git ls-files`; assert the file exists and that *both* bounds of a range fall within its line count. Over this artifact that is **100 entries, 2 unresolved**. Over this artifact together with `plans/self-review-683.md` it is **107 entries, 4 unresolved**. These were 98/2 and 105/4 at `7b5f6a1`; finding 10-1's ledger repair added citations, so the figures moved with the artifact and were re-derived rather than carried forward. That is the behaviour ticket #691's AC1 assumption calls for, and it is the reason #691 exists: a figure that has to be re-derived by hand on every edit is a figure that will eventually be carried forward instead.
 
 All four non-resolutions are the same string, `_test_probe_common.sh:1-183`, which is the defect 9-4 fixed, quoted rather than used -- once in 9-4's row, once in this paragraph, twice in the self-review. The checker flags all four and should: a checker that resolved a quoted wrong citation would be broken. Two further shapes are excluded by the rule rather than failed by it, and were confirmed by hand instead: `PROJECT.md`, whose absence is the substance of F-N3 and is evidenced inline by `git ls-tree`, and `tests/t.py`, `tests/test_ac1_exec_path.py` and `tests/test_ac1_has-hyphen.py`, which are outputs of repros run this session and not files in the tree. None carries a line number, so none is a citation under the rule.
 
-An earlier revision gave this figure as "105" for this artifact alone and `plans/self-review-683.md` gave it as "106", and neither reproduced when the pass was re-run to write this paragraph. The rule as it was written down there -- "every `file.ext[:N[-M]]` in backticks" -- returns 209 for this artifact as it now stands, because it counts bare file references with no line number. The pass that produced 105 must have required a line number, which the stated rule does not say, and 105 turns out to be the figure for both files together rather than for this one. That is finding 9-6: a quantified claim whose producing command was described loosely enough that the number could not be re-derived from the description. What the pass still does not do is check that a resolved line supports the sentence citing it. That check has caught three defects in this epic (1-2, 9-4, and the `:145` instances) and remains manual.
+An earlier revision gave this figure as "105" for this artifact alone and `plans/self-review-683.md` gave it as "106", and neither reproduced when the pass was re-run to write this paragraph. The rule as it was written down there -- "every `file.ext[:N[-M]]` in backticks" -- returned 209 for this artifact at `7b5f6a1` and returns 215 at this revision, because it counts bare file references with no line number. The pass that produced 105 must have required a line number, which the stated rule does not say, and 105 turns out to be the figure for both files together rather than for this one. That is finding 9-6: a quantified claim whose producing command was described loosely enough that the number could not be re-derived from the description. What the pass still does not do is check that a resolved line supports the sentence citing it. That check has caught three defects in this epic (1-2, 9-4, and the `:145` instances) and remains manual.
+
+## Post-round-2 self-audit: the denominator (finding 10-1)
+
+Raised by the author while starting ticket #687, whose first deliverable is a disposition for every live finding. Dispositioning them required enumerating them, which nobody had done since the ledger was written.
+
+**10-1, S1: `## Live-defect ledger` presented itself as a partition and was not one, and the prose count above H1 was unreachable from either source.**
+
+The two hostile-review comments contain 21 distinct finding IDs (#668) and 19 (#672), by `grep -oE '\bP[012]-[0-9]+\b' | sort -u`. The ledger as written accounted for 19 of #668's 21 -- `P2-3` and `P2-9` appeared in neither column -- and 17 of #672's 19, omitting `P2-1` and `P2-2`. The prose beneath it claimed 24 live from #668. That figure is not merely wrong, it is out of range: #668 has 21 findings and the ledger marks one remediated, so 20 is the maximum any reading can support, and the ledger's own enumeration gave 18. The sentence disagreed with the table it sat under and with the source the table cited.
+
+H1's denominator was built on it:
+
+```
+ledger-enumerated prior live      23   ->  denominator 51,  threshold 26
+if all four unaccounted are live  27   ->  denominator 55,  threshold 28
+claimed                           29   ->  denominator 57,  threshold 29
+```
+
+All four unaccounted findings were then dispositioned by repro on this branch, and all four are live; the repros are recorded in the ledger section. So the middle row is the correct one: **27 prior live, denominator 55, threshold 28.** The 28 new findings were recounted at the same time and are correct -- 28 rows, `4 P0, 17 P1, 7 P2`, `F-N12b` included.
+
+The claimed 29 was above the maximum the sources support, so the threshold it produced was higher than the evidence licenses. That is the conservative direction for H1 and is not a defence: a bar set by an unsupported number is not a bar, whichever way it errs.
+
+**Why three prior passes missed it.** This is the fourth count defect in this artifact, after round-1 finding 1-1 (severity totals matching neither the table nor each other), round-1 finding 1-3 (H1's denominator taken over the new findings alone), and 9-6 (the citation pass not reproducible from its stated rule). Round 1, round 2 and the 9-3/9-4/9-6 self-audit all passed over it, and the reason is structural rather than inattention: **every one of those checks verified a total against the table, and the table was itself incomplete against its source.** A recount that starts from the artifact cannot find a finding the artifact never mentions. It took starting from the two review comments and treating the ledger as a claim about them.
+
+That generalises past this document. A summary table is trusted as the source of truth for everything downstream of it, so the one check nobody runs is the one that would catch it: whether the table covers its own input. The mechanical form is cheap -- enumerate the source's IDs, enumerate the table's, assert set equality -- and no artifact in this epic ran it. It is the sibling of finding 9-6's lesson: 9-6 said a control described in prose drifts from the control that runs; 10-1 says a control that only ever reads the artifact cannot check the artifact against the world.
+
+Two consequences carried forward. The ledger now states its partition property explicitly and gives per-column counts that sum to the source totals, so the next reader can falsify it in one line rather than reconstructing it. And ticket #687's finding-disposition deliverable now enumerates from the two review comments rather than from this table, which is where the defect surfaced in the first place.
+
+**What this does not fix.** #668 P2-9 is a waiver defect in `plans/self-review-662.md`, not a code defect, and counting it in a *code*-defect denominator is defensible but not obviously right. It is counted, and flagged here rather than quietly excluded, because a silent exclusion is exactly the operation that produced 10-1. If the design ticket decides waiver defects do not belong in H1's denominator, the figure becomes 26 prior live, denominator 54, threshold 27, and that decision should be recorded where the classification is made.
 
 ## AC verification for ticket #683
 
