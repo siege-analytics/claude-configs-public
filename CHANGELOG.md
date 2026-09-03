@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Added
+
+- Falsifiable acceptance criteria rule (#656): `writing-tests:7` requires every ticket AC carry a paired `Falsifiable-by:` clause and a named test tool drawn from the touched layer's `assertion_tools` in `PROJECT.md`'s `testing.layers`. Composes with `[rule:testing-frameworks]` testing-frameworks:1 (layer schema source), `[skill:ticket-decomposition]` (per-layer tool selection), and `[rule:writing-claims]` writing-claims:2 (same-turn evidence, deferred to ticket-close). Judgment-enforced at v1 via `[skill:code-review]`; ticket-body scanner queued as follow-up.
+- Part-of epic #655 (falsifiable AC + auto-gen test stubs): first foundation rule; remaining scope covers create-ticket / ticket-decomposition / PROJECT.md schema / templates / scaffold hook / tool-availability-probe / infra-ticket template / meta ratchet.
+
 ### Fixed
 
 - Non-git mutation inversion design (#128): documented the target model for making git/workflow the low-friction mutation path, with evidence requirements, escape hatches, and phased coverage for Bash, MCP/API, browser, and external-state writes.
