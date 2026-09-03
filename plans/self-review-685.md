@@ -72,7 +72,7 @@ The 2000-line diff limit is a judgement about where to put a threshold on a quan
 
 The PR #686 round-1 review is what turned that admission into evidence. It found three separate things that only an underived score can produce. FM-6's composite appeared as 85, 84 and 85 in three places for one score, and the arithmetic under it has always been 83 (S3-1) -- three inconsistent copies of a number nobody had added. Three rows carried the band `Mitigate-before-ship` in the Urgency column, so FM-4, FM-9 and FM-14 recorded no tier at all and two of them turned out to be Launch-Blocking (S2-2). And FM-15 sat at Fast-Follow with a composite whose band says Track, which nobody noticed because nobody had checked a band (S2-3). All three are downstream of the same skip. L-2 is re-rated from P2 to P1 on that basis, and the P2 rationale in its row -- "deriving fifteen more tables would add length without changing a single tier" -- is now falsified: deriving one of them, FM-15, moved its score by seven points, and checking the bands moved two tiers.
 
-**Blast radius.** Zero at push: two prose files, nothing executes, no `hooks/` or `skills/` change. Load-bearing at merge in the same way #683 is: the step-3 design is scoped against these sixteen constraints, so a missing failure mode becomes a missing constraint becomes a defect that ships.
+**Blast radius.** Near zero at push: two prose files plus one new standalone checker, `scripts/discipline/check-doc-anchors.py`, which reads the two documents and writes nothing. No `hooks/` or `skills/` change, and nothing on any existing execution path calls it. Round 5 added the checker; before that this bullet read "two prose files, nothing executes", and it is corrected here rather than left to be true of an earlier revision. Load-bearing at merge in the same way #683 is: the step-3 design is scoped against these sixteen constraints, so a missing failure mode becomes a missing constraint becomes a defect that ships.
 
 **The uncomfortable one.** The document's own E-1 says the epic's premise (H1: a majority of findings dissolve structurally) is untested and that the fact sheet's preliminary read is 10 structural to 5 incidental out of 55, which is 15 of 55 classified at all. I wrote a kill criterion against that threshold. I should be clear that writing a kill criterion is not the same as being willing to pull it: if the classification comes back at 27 of 55, one short of the threshold, the correct action is to descope a multi-ticket epic that has already consumed two units of work, and the pressure at that point will be to argue the threshold rather than honour it. Naming that here is the only mechanism this document has against it.
 
@@ -88,7 +88,8 @@ The PR #686 round-1 review is what turned that admission into evidence. It found
 | L-6 | P1 | The first version of this document was written against a fact sheet whose severity counts were wrong in both halves and which contained a claim contradicting the line it cited. The `## Fact-sheet correction check` caught the arithmetic and stated that fixing it belonged to the PR #684 review. It did not catch the contradicted claim, because the check audited counts and nothing else. | fixed at the document level -- the correction check now has a second run with a before/after table and the two new findings are written up as FM-15 and FM-16 rather than absorbed. Not fixed at the method level: a count audit cannot find a false mechanism claim, and the only control that found this one was a second reader. |
 | L-7 | P0 | The document claimed F-N14 was FM-3's fact-sheet basis, and built E-3's "the rule fired and the prediction held" narrative and this artifact's headline self-examination on that dependency. FM-3's basis is F-N13, which was never downgraded. There was no tension and nothing for the rule to resolve. Found by the PR #686 round-1 review (S1-1), not by me, after two of my own passes over the same paragraph. | fixed -- struck from the pre-mortem at the correction-check section and at E-3, and rewritten here. P0 because it is L-6's class again in a merged-candidate artifact, and worse than L-6: L-6 inherited a false claim from upstream, L-7 manufactured one. The mechanism is written up in `## Upstream review revision` -- I had a pre-registered rule ready for "a P0 was downgraded", saw a P0 downgraded, and applied it without checking which failure mode the finding sat under. A pre-registered rule creates an appetite for the situation it governs. |
 | L-8 | P1 | The round-2 remediation bundled two unrelated corrections into one "deferred, and why" paragraph and justified the pair with the reason that applied to only one of them. The denominator correction (57/29/9/4 to 55/27/10/5) was already committed at `7d50cce` in this PR's own base; the severity split (`4 P0, 17 P1, 7 P2` to `5 P0, 14 P1, 9 P2`) genuinely is not. Nine sites carried the superseded denominator into a merge candidate, three of them executable mechanisms. Found by the PR #686 round-3 review (R3-S2-3). | fixed -- the denominator is propagated in round 3 and the severity split stays deferred with its own reason, stated separately. The method-level residue is not closed: a bundled deferral is remembered by its strongest justification, so the weak half is never re-read. The check is per-item and cheap -- name the commit each deferred figure lives in and ask whether it is reachable from the PR base -- and I did not run it because the paragraph read as already-justified. This is the same shape as L-1 and L-6, an inherited claim treated as settled, with the twist that the claim was one I wrote myself one round earlier. |
-| L-9 | P1 | Document-relative citations were written as a bare `` `:N` ``, a form the published citation resolver does not match, so 21 of them across two files were checked by nothing and every one silently drifted when round 3 inserted lines above them. | fixed at the class level rather than the instance level: all 21 are replaced with named anchors that carry no line number. The 17 surviving bare `` `:N` `` are shorthand for a line in an external file named earlier in the same sentence and do not drift with this document |
+| L-9 | P1 | Document-relative citations were written as a bare `` `:N` ``, a form the published citation resolver does not match, so 21 of them across two files were checked by nothing and every one silently drifted when round 3 inserted lines above them. | fixed at the class level rather than the instance level: all 21 are replaced with named anchors that carry no line number. 21 bare `` `:N` `` survive across the two files: 17 are shorthand for a line in an external file named earlier in the same sentence and do not drift with this document, and 4 are specimens quoted inside the round-4 write-up, now pinned to `72ab56a`. Round 5 corrected this row, which published the 17 as if it were the total (R5-S2-1). The replacement anchors are checked by `scripts/discipline/check-doc-anchors.py` (R5-S2-2) |
+| L-10 | P1 | L-9's fix replaced an unchecked citation form with an unchecked anchor form. Round 4 verified anchor uniqueness by hand and reported it clean, which was possible only by applying a definition-versus-reference rule that was written down nowhere. A convention held only by the author is not checkable by a reviewer, which is the property the class fix was meant to buy. | fixed. The four permitted definition forms are declared in `scripts/discipline/check-doc-anchors.py`, which asserts exactly one definition site per anchor and exits non-zero otherwise. Falsified by duplicating a definition site. The rule this generalises to: when writing "this is now checkable", write the checker first |
 
 L-6 and L-7 are P1 and P0 and both are resolved at the document level with their method-level residue stated rather than closed. L-2 is now P1 and is resolved by derivation rather than by argument, and the derivation is what turned it from an admission into a result: the scores were inflated in one direction, and the five band overrides that fall out of correcting them are a finding about the scoring formula that no amount of further asserting would have produced. The method-level residue on L-6 and L-7 is the same in both cases and is not closed: a count audit cannot find a false mechanism claim, and both were found by a second reader.
 
@@ -289,13 +290,19 @@ round 3's insertion and would break on round 4's. The citation audit that certif
 "70 citations, 0 unresolved" is structurally blind to the reference form that failed,
 so the count was never evidence about them. The fix is to remove the form: every
 document-relative reference now names a heading, a table row or a quoted phrase, and
-there is no line number left to drift. The count that matters after this change is
-not 70-and-0 but 21-to-0, the number of unchecked references remaining.
+the only line numbers left are the four pinned specimens in the next paragraph, which
+quote a past revision by hash and so cannot drift. The count that matters after this
+change is not 70-and-0 but 21-to-0, the number of unchecked references remaining.
+Round 5 found that this paragraph stated the survivor count too widely and that the
+anchors it introduces need a written convention to be checkable at all; both are
+corrected in the round-5 section.
 
 **A twenty-second instance the review did not find.** Enumerating the class to fix it
-turned up one more. The R3-S2-1 disposition row said the two override sites were
-fixed at `` `:82` `` and `` `:89` ``. `` `:82` `` is the L-2 row and is right;
-`` `:89` `` is a blank line. The second site is the `L-6 and L-7 are P1 and P0`
+turned up one more. Line numbers in this paragraph are quoted as they stood in
+`plans/self-review-685.md` at `72ab56a`, the round-3 commit, and are pinned to that
+hash rather than to the current file. The R3-S2-1 disposition row said the two override
+sites were fixed at `` `:82` `` and `` `:89` ``. `` `:82` `` is the L-2 row and is
+right; `` `:89` `` is a blank line. The second site is the `L-6 and L-7 are P1 and P0`
 paragraph, which sat at 89 before round 3 inserted the L-8 row above it and at 90
 after. So the reference was computed against pre-round-3 numbering inside the
 round-3 commit, which is R4-S2-1's mechanism exactly, in the one row that was
@@ -316,6 +323,113 @@ would have been the same defect this document has recorded four times: publishin
 count that was not derived here.
 
 
+## Hostile-review remediation (PR #686, round 5)
+
+Two findings, both reproduced against the branch at `233d3fa` before disposition.
+One is accepted outright. One is accepted in substance and rejected in its stated
+measure, and the difference is written out rather than smoothed over.
+
+| ID | Sev | Finding | Disposition |
+|---|---|---|---|
+| R5-S2-1 | S2 | L-9 said 17 bare `` `:N` `` survive and that all of them are external-file shorthand. The two files contain 21, and 4 are document-relative | accepted and fixed. 17 was the count of one category published as the total of two. L-9 now gives both, and the 4 specimens are pinned to `72ab56a` so they cannot drift |
+| R5-S2-2 | S2 | The replacement anchor `L-6 and L-7 are P1 and P0` is not unique in the file it points at, so line-number drift was traded for anchor ambiguity | substance accepted, measure rejected. The review counts substring occurrences, which counts references to an anchor alongside its definition. What was actually missing is a written definition-site convention. It is now written and enforced by `scripts/discipline/check-doc-anchors.py` |
+
+**R5-S2-1: the count was right about a category and published as a total.** The
+reproduction is exact:
+
+```text
+$ python3 - <<'PY'
+from pathlib import Path
+import re
+for p in ['plans/pre-mortem-682-python-rewrite.md','plans/self-review-685.md']:
+    n = sum(len(re.findall(r'`:[0-9]+', l)) for l in Path(p).read_text().splitlines())
+    print(f'{p}: {n}')
+PY
+plans/pre-mortem-682-python-rewrite.md: 16
+plans/self-review-685.md: 5
+```
+
+16 plus the one at the FM-7 grounding sentence is 17, and those 17 are external-file
+shorthand exactly as claimed. The other 4 are in the `A twenty-second instance the
+review did not find` paragraph, and they are quotations of the defect that paragraph
+describes rather than live references. That distinction is real, and it does not
+rescue the sentence: L-9 said 17 survive, 21 survive, and a reader checking the claim
+with a grep gets 21 and concludes the row is false. The reviewer is right that the
+correction landed where the class was argued and missed where it was restated, which
+is the same shape as R3-S2-1 two rounds ago.
+
+**R5-S2-2: the finding is right and the measurement in it is not.** The review's
+script counts every line containing the phrase. Under that measure 7 of the 8 anchors
+in these two files are ambiguous, including `Every composite is derived`, which is a
+`###` heading appearing once as a heading and six times as a reference to it. A
+citation scheme in which naming a heading is a defect is not a scheme anyone can use.
+The measure that matters is whether the *definition* site is unique:
+
+```text
+$ python3 scripts/discipline/check-doc-anchors.py
+OK   heading    def=1 ref=1  pre-mortem-682-python-rewrite.md -> Every composite is derived
+OK   bullet     def=1 ref=2  self-review-685.md -> eleven moved down, two up
+OK   bold-lead  def=1 ref=1  pre-mortem-682-python-rewrite.md -> What the round-2 correction costs this argument
+OK   bold-lead  def=1 ref=3  self-review-685.md -> Did the severity scoring do any work
+OK   bullet     def=1 ref=2  self-review-685.md -> 7 Launch-Blocking, 8 Fast-Follow, 1 Track
+OK   bullet     def=1 ref=4  self-review-685.md -> 5 of 16 tiers override their band
+OK   para-lead  def=1 ref=2  self-review-685.md -> F-N14 is not FM-3's fact-sheet basis
+OK   para-lead  def=1 ref=3  self-review-685.md -> L-6 and L-7 are P1 and P0
+
+8 anchors, 0 with a non-unique definition site
+```
+
+But that output is only meaningful because the convention it applies is now written
+down. Before this round it was not written anywhere: I had checked anchor uniqueness
+by hand in round 4 and reported it clean, and I could do that only by silently
+applying a definition-versus-reference rule that existed nowhere but in my head. That
+is the finding, and it is worse than the one the review stated. An anchor whose
+definition site is recognisable only to its author is not checkable by anyone, which
+is the property the whole class fix was supposed to buy. `check-doc-anchors.py`
+declares the four permitted forms and asserts one definition site per anchor.
+
+**The check found a ninth defect on its first run.** My anchor table declared
+`What the round-2 correction costs this argument` as `para-lead`; it is `bold-lead`,
+and the check returned `FAIL def=0`. A hand pass reading for intent does not notice
+that, because a human reads past the `**`. This is direct evidence for the round-4
+claim that the class fix was right for a reason beyond drift: the hand method cannot
+find its own misclassifications.
+
+**Falsified both ways.** The check must go red when a definition site really is
+duplicated, or its green is worth nothing:
+
+```text
+$ mkdir -p /tmp/e682/falsify/plans
+$ cp plans/self-review-685.md plans/pre-mortem-682-python-rewrite.md /tmp/e682/falsify/plans/
+$ cp scripts/discipline/check-doc-anchors.py /tmp/e682/falsify/
+$ python3 - <<'PY'
+from pathlib import Path
+p = Path('/tmp/e682/falsify/plans/self-review-685.md')
+lines = p.read_text().splitlines()
+idx = next(i for i,l in enumerate(lines) if l.startswith('L-6 and L-7 are P1 and P0'))
+lines.insert(idx+40, lines[idx])
+p.write_text("\n".join(lines) + "\n")
+PY
+$ cd /tmp/e682/falsify && python3 check-doc-anchors.py; echo "exit=$?"
+...
+FAIL para-lead  def=2 ref=7  self-review-685.md -> L-6 and L-7 are P1 and P0
+
+8 anchors, 1 with a non-unique definition site
+exit=1
+```
+
+**What rounds 4 and 5 have in common.** Round 4 found that a citation form the
+resolver did not match was checked by nothing. Round 5 found that the replacement
+form was checked by nothing either, for a different reason: not that the checker
+skipped it, but that no checker could exist until the convention was written. Both
+rounds are the same error one level up. I replaced an unchecked mechanism with
+another unchecked mechanism and reported the replacement as the fix, because at each
+step the thing I had done was visible to me and the thing I had not done was not.
+The countermeasure that would have caught both is the same and is cheap: when a
+claim of the form "this is now checkable" is made, write the checker before writing
+the claim. That is now L-10.
+
+
 ## Rework ledger
 
 | Rework trigger | Root skip | Check cost | Rework cost | Ratio |
@@ -327,8 +441,11 @@ count that was not derived here.
 | Shipped a merge candidate carrying a denominator its own PR base had already corrected (L-8, R3-S2-3) | wrote a deferral naming the branch it was waiting on and then never asked whether that branch had moved; "deferred" became a state rather than a condition with a resumption trigger | `git log HEAD..origin/feat/683-investigate-executable-path`, ~2s | merge the base, propagate 55/27/10/5 across nine sites, re-derive the two counts the edit invalidates, write the finding up, ~30 min | ~900x |
 | The round-2 override sweep missed two sites in the file the sweep was written in (R3-S2-1) | reported the sweep's own thoroughness in prose, which made it the passage least likely to be re-swept | re-running the sweep's own anchored grep against the word forms as well as the digit, ~5s | two edits plus the write-up of why the previous fix went stale, ~5 min | ~60x |
 | 21 document-relative citations went stale inside the commit that inserted lines above them, and the citation audit could not see any of them (R4-S2-1) | wrote citations in a form (`` `:N` ``) that the resolver I had just published does not match, then reported the resolver's count as coverage | running the published resolver's regex against the reference forms actually used in the file, rather than only against the ones it matches, ~10s | rewriting 21 references to named anchors across two files plus the class write-up, ~40 min | ~240x |
+| Reported round 4's anchor replacements as verified unique after a hand pass, and published a survivor count of 17 that was one category of a total of 21 (R5-S2-1, R5-S2-2) | asserted that the new reference form was checkable without writing the check that would make it so, and counted one category while writing the sentence as a total | writing `check-doc-anchors.py` before the claim, ~15 min, and one `grep -c` for the survivor total, ~5s | a second review round, the checker, pinning four specimens, correcting L-9 and the blast-radius bullet, and the round-5 write-up, ~50 min | ~3x on the checker, ~600x on the count |
 
-Seven rows. Four are the #683 ledger's stated pattern, acting on an internal belief that a sub-ten-second command would have checked, and the deferral row is the worst instance of it by ratio in either ticket: the command was not only available, it was implied by a sentence I had already written naming the branch. The branch cut is the one that is new in kind, an assumption about *git state* rather than about file contents. The sweep row is new in a different way: the skip was not a missing check but a narrated one, where writing down that the check ran displaced running it again. The prose-scan row is the one I have no excuse for, because the previous ticket's ledger names it and the fix was to scan first. The citation row is the highest ratio in either ticket, and its skip is a new kind again: not a check I failed to run but a check I ran and then over-read, because a resolver reports on the references it matches and says nothing about the ones it silently skips. A count of zero unresolved citations is a statement about the denominator, and I read it as a statement about the file.
+Eight rows. Four are the #683 ledger's stated pattern, acting on an internal belief that a sub-ten-second command would have checked, and the deferral row is the worst instance of it by ratio in either ticket: the command was not only available, it was implied by a sentence I had already written naming the branch. The branch cut is the one that is new in kind, an assumption about *git state* rather than about file contents. The sweep row is new in a different way: the skip was not a missing check but a narrated one, where writing down that the check ran displaced running it again. The prose-scan row is the one I have no excuse for, because the previous ticket's ledger names it and the fix was to scan first. The citation row is the highest ratio in either ticket, and its skip is a new kind again: not a check I failed to run but a check I ran and then over-read, because a resolver reports on the references it matches and says nothing about the ones it silently skips. A count of zero unresolved citations is a statement about the denominator, and I read it as a statement about the file.
+
+The eighth row is that same skip taken one level up, and it is the reason this ticket has needed five rounds rather than four. The citation row's fix was to move to a form that could be checked; the eighth row is that I then did not check it, and said I had. Rows seven and eight are not two errors, they are one error and its recurrence in the fix for itself, which is the strongest argument in this document for the rule it produced: a sentence claiming something is now verifiable is a sentence that should not be written before the verifier runs.
 
 ## Evidence-predates-work
 
