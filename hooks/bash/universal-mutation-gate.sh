@@ -45,6 +45,16 @@ source "$HOOK_DIR/../lib/log-block.sh" 2>/dev/null || true
 # --- SAFE_PATTERNS: read-only commands that pass without check ---
 # Each pattern is an extended regex. Order does not matter.
 # Add new patterns conservatively: if unsure whether a command mutates, leave it off.
+
+# Shared argument grammar for the text-reader entries below (#704). An
+# argument is either a bare token containing no shell metacharacter, or a
+# single-quoted string containing no single quote (so the quote cannot be
+# closed early). This is what keeps process substitution, command
+# substitution, redirects and chaining out of the safelisted forms:
+# `diff <(id) <(id)` and `jq . $(id)` both fail to match.
+_SQ="'"
+_SAFE_ARG="([^ ;&|<>()\$\`\"${_SQ}]+|${_SQ}[^${_SQ}]*${_SQ})"
+
 SAFE_PATTERNS=(
     # File reads
     '^(cat|head|tail|less|more|wc|file|stat|du|df|find|tree|which|type|readlink|realpath|md5|sha256sum|shasum|xxd|od|hexdump) '
@@ -52,6 +62,29 @@ SAFE_PATTERNS=(
 
     # Content search
     '^(grep|egrep|fgrep|rg|ag|ack|ripgrep) '
+
+    # Text readers with no write or exec form (#704).
+    # jq has no write or exec builtin; diff and comm write only to stdout.
+    "^(jq|diff|comm)( +${_SAFE_ARG})*\$"
+
+    # sed: ONLY line-range printing, and only in this exact shape.
+    # sed cannot be safelisted by name, and `sed -n` is not read-only:
+    #   printf 'x\n' | sed -n '1w /tmp/probe'   creates /tmp/probe
+    # GNU sed additionally has `e`, which executes a shell command. The
+    # script body below admits digits, an optional comma, and `p`, so `w`,
+    # `e`, `r` and `s` are unreachable by construction rather than by
+    # enumeration. The file argument is a single bare token, which is what
+    # stops `sed -n '1,2p' -i file` from smuggling in-place editing past
+    # MUTATION_INDICATORS (that array matches the literal string "sed -i",
+    # which does not appear when the flag is permuted after the script).
+    "^sed -n ${_SQ}[0-9]+(,[0-9]+)?p${_SQ} [^ ;&|<>()\$\`\"${_SQ}]+\$"
+
+    # awk is deliberately NOT safelisted, in any form. It is a general
+    # purpose language with two confirmed shell-exec vectors:
+    #   awk 'BEGIN{system("id")}'
+    #   awk 'BEGIN{ "id" | getline r; print r}'
+    # plus `print > "file"`. Do not add it here for symmetry with sed; use
+    # sed range printing, head or tail instead. Ref: #704.
 
     # Git reads (status, log, diff, show, branch listing, tag listing, etc.)
     # Note: git config is read-only only for --get/--list/--get-regexp forms;
