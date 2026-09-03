@@ -77,6 +77,21 @@ else
     bad "no-watchdog fixture should PASS (watchdog opt-in) but failed"
 fi
 
+# --- PASS fixture: fully wired but automations.json ABSENT -------------------
+# Check 7 has two downgraded branches: watchdog-automation-absent (covered by
+# NOWATCHDOG above) and automations.json-file-absent. Cover the second: a target
+# with no automations.json at all (watchdog never configured) must also PASS.
+# Goes red if the file-absent branch is reverted to `fail`.
+
+NOAUTOMATIONS="$TMP/noautomations"
+cp -r "$WIRED" "$NOAUTOMATIONS"
+rm -f "$NOAUTOMATIONS/automations.json"
+if bash "$PROBE" --target "$NOAUTOMATIONS" --mode craft-agent >/dev/null 2>&1; then
+    ok "fully-wired-but-no-automations.json fixture passes (watchdog is advisory)"
+else
+    bad "no-automations.json fixture should PASS (watchdog opt-in) but failed"
+fi
+
 # --- FAIL fixture: skills only, nothing wired --------------------------------
 
 DARK="$TMP/dark"
