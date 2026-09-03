@@ -444,6 +444,18 @@ After posting the Fact Sheet to the ticket, write `<workspace>/investigate-gate.
   "factSheetLocation": "https://github.com/.../issues/NNN#issuecomment-...",
   "timestamp": "2026-06-01T18:00:00Z",
   "tier": "full",
+  "findings": [
+    {
+      "claim": "codification_summary.py reads self.urbanicity.category_distribution",
+      "evidence": "siege_utilities/reports/codification_summary.py:88; the dataclass at siege_utilities/geo/urbanicity.py:31 declares `distribution`, not `category_distribution`",
+      "disposition": "CONFIRMED"
+    },
+    {
+      "claim": "no other caller reads the same attribute",
+      "evidence": "grep -rn 'category_distribution' siege_utilities/ returns one line, the one above",
+      "disposition": "CONFIRMED"
+    }
+  ],
   "verifiedShapes": [
     {
       "entity": "human-readable entity name",
@@ -479,6 +491,55 @@ After posting the Fact Sheet to the ticket, write `<workspace>/investigate-gate.
   "designNote": "plans/design-note.md or ticket URL"
 }
 ```
+
+**`findings` and `verifiedShapes` are both required, and they are not the same thing.**
+
+The signal file carries two separate arrays. They are read by different hooks,
+they hold different content, and their entries share no field. Omitting either
+one has a consequence, but the consequences are not equally loud, which is why
+the difference is stated here rather than left to be discovered.
+
+| Key | Holds | Entry shape | If absent or empty |
+|---|---|---|---|
+| `findings` | what the investigation concluded | `{claim, evidence, disposition}` | **hard block.** `universal-mutation-gate.sh:298` refuses the next mutation with "investigation has no findings", and `pipeline-state-guard.sh:173` records the artifact as not posted |
+| `verifiedShapes` | which code shapes were read | `{entity, file, line, grep, status, dispositions}` | **warning only.** `investigate-gate-guard.sh:191` prints "No citations to spot-check. Proceeding, but this is suspicious." and exits 0 |
+
+The asymmetry is worth internalizing. `verifiedShapes` is the key with the
+elaborate validation, the citation spot-check and the disposition rules below,
+so it is the one that feels like the requirement. It is not the blocking one. A
+signal file with a rich `verifiedShapes` array and no `findings` passes the
+guard that inspects it in detail and is refused by the gate that only asks
+whether the array is non-empty.
+
+**findings requirements:**
+
+- One entry per conclusion the investigation reached. Findings are answers, not
+  citations: `verifiedShapes` records that you read `models.py:42`, `findings`
+  records what reading it told you about the task.
+- `claim` states the conclusion in one sentence.
+- `evidence` gives the file:line or the command output the claim rests on. A
+  claim with no evidence is an assumption wearing a finding's clothes.
+- `disposition` records what the claim means for the task. `CONFIRMED` (the
+  ticket's premise held), `REFUTED` (it did not), `OPEN` (could not be settled;
+  the risk carries into the design).
+
+**What is enforced, and what is only recommended.** Neither reader validates
+entry shape. Both check `if not findings`, so a non-empty array of anything
+satisfies them. The three fields above are a recommendation, not a contract,
+and the recommendation is worth stating precisely because practice has drifted:
+four signal files on disk in one workspace carried four different shapes.
+
+| Signal file for | findings entry keys |
+|---|---|
+| #683 | `claim`, `evidence`, `disposition` |
+| #704 | `id`, `statement`, `status`, `verifiedBy` |
+| #718 | `id`, `finding`, `surface`, `evidence`, `severity` |
+| (untagged archive) | `finding`, `source` |
+
+Every one of those passes the gate. None is wrong by any check the repository
+runs. Use the three fields above for new investigations so the array is
+readable by a human comparing two tickets, and do not expect a hook to correct
+you if you do not.
 
 **verifiedShapes requirements:**
 
