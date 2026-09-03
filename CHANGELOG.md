@@ -4,6 +4,10 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Added
+
+- Orphan-dispatch protocol for hostile-review (#718): `skills/hostile-review/SKILL.md` gains a `## Dispatch verification and orphan fallback` subsection defining the observable orphan signal (`messageCount`, `outputTokens`, `lastMessageAt`, `lastMessageRole` thresholds), a four-step retry ladder (same-provider respawn once, different-provider respawn once, cross-review MCP if available, review-deferred artifact + move to next unit), a review-deferred artifact schema, and a continuous-work invariant that prevents orphan-blocked reviews from stalling the epic. `skills/_session-coordination-rules.md` gains a companion `## Orphan dispatch` subsection pointing at hostile-review as the canonical implementation. Fixes the discipline gap observed live in bright-gust epic-682 sibling-spawn retry loop on ticket #688 pre-mortem review.
+
 ### Fixed
 
 - Non-git mutation inversion design (#128): documented the target model for making git/workflow the low-friction mutation path, with evidence requirements, escape hatches, and phased coverage for Bash, MCP/API, browser, and external-state writes.
