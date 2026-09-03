@@ -52,7 +52,9 @@ Compensating-control: all five ACs verified mechanically rather than by reading 
 
 **writing-tests:4 (mock fidelity).** Load-bearing here as subject matter rather than as a diff property, and it is the source of two of the sixteen failure modes. FM-9 is the named test-fragility pattern from `[skill:pre-mortem]` applied forward: the natural pytest port mocks the probe, which is the layer being rewritten. FM-5 is the same rule applied to templates: `scripts/probe/_test_probe_common.sh` writes its own copy of the shipped template, which is a fidelity failure and is the recorded mechanism by which F-N17 survived. Both produce constraints (C-9, C-5) rather than observations.
 
-**writing-tests:7 (every AC names a falsifiable observable).** AC5 of this ticket is itself a writing-tests:7 check applied to prose: a kill criterion must contain a command, a numeric threshold, or a named test. Eight of eight pass, and the classifier that says so is reproduced below. The one bullet that is a judgement dressed as a threshold is the 2000-line diff limit, and the document says so in the bullet rather than hiding it.
+**writing-tests:7 (every AC names a falsifiable observable).** AC5 of this ticket is itself a writing-tests:7 check applied to prose: a kill criterion must contain a command, a numeric threshold, or a named test. Eight of eight pass, and the classifier that says so is reproduced below. Two bullets are judgements dressed as thresholds, not one. The PR #686 round-4 review found the second and it is the worse of the two.
+
+The 2000-line diff limit is a judgement about where to put a threshold on a quantity that is objectively measurable, and the bullet says so. The H1 criterion ("fewer than 28 of 55 findings return as structural") is a judgement about the measurement itself: "structural" is defined only by a parenthetical, no per-finding rule is pre-registered, 40 of the 55 findings are unclassified per E-1, and the classification would be produced by the design ticket of the epic the criterion would kill. Nor would it plausibly fire. The classified head runs 10 structural to 5 incidental; to land under 28 of 55 the unclassified 40 must come back more than 20 points worse than the head, as scored by the party with an interest in the outcome. E-1 names the untested hypothesis honestly and the criterion written against it is not the falsifier E-1 asks for. Both are now stated in their bullets. This is a `writing-claims:11` failure: "the one bullet" is a class-completion claim and the class had two members.
 
 **writing-prose:1 and writing-prose:3.** Scanned before asserting, this time. The banned-character scan over the pre-mortem returns 0 across all fourteen codepoints in the rule. The adverb scan initially returned six hits (`deliberate` once, `explicit`/`explicitly` five times); all six were rephrased and the rescan is clean. This is the direct correction of the #683 rework-ledger row where compliance was asserted before the scan was run. No AI or assistant attribution appears in either file or in the commit message, and the commit is authored by passing `-c user.name` / `-c user.email` on the command line.
 
@@ -86,6 +88,7 @@ The PR #686 round-1 review is what turned that admission into evidence. It found
 | L-6 | P1 | The first version of this document was written against a fact sheet whose severity counts were wrong in both halves and which contained a claim contradicting the line it cited. The `## Fact-sheet correction check` caught the arithmetic and stated that fixing it belonged to the PR #684 review. It did not catch the contradicted claim, because the check audited counts and nothing else. | fixed at the document level -- the correction check now has a second run with a before/after table and the two new findings are written up as FM-15 and FM-16 rather than absorbed. Not fixed at the method level: a count audit cannot find a false mechanism claim, and the only control that found this one was a second reader. |
 | L-7 | P0 | The document claimed F-N14 was FM-3's fact-sheet basis, and built E-3's "the rule fired and the prediction held" narrative and this artifact's headline self-examination on that dependency. FM-3's basis is F-N13, which was never downgraded. There was no tension and nothing for the rule to resolve. Found by the PR #686 round-1 review (S1-1), not by me, after two of my own passes over the same paragraph. | fixed -- struck from the pre-mortem at the correction-check section and at E-3, and rewritten here. P0 because it is L-6's class again in a merged-candidate artifact, and worse than L-6: L-6 inherited a false claim from upstream, L-7 manufactured one. The mechanism is written up in `## Upstream review revision` -- I had a pre-registered rule ready for "a P0 was downgraded", saw a P0 downgraded, and applied it without checking which failure mode the finding sat under. A pre-registered rule creates an appetite for the situation it governs. |
 | L-8 | P1 | The round-2 remediation bundled two unrelated corrections into one "deferred, and why" paragraph and justified the pair with the reason that applied to only one of them. The denominator correction (57/29/9/4 to 55/27/10/5) was already committed at `7d50cce` in this PR's own base; the severity split (`4 P0, 17 P1, 7 P2` to `5 P0, 14 P1, 9 P2`) genuinely is not. Nine sites carried the superseded denominator into a merge candidate, three of them executable mechanisms. Found by the PR #686 round-3 review (R3-S2-3). | fixed -- the denominator is propagated in round 3 and the severity split stays deferred with its own reason, stated separately. The method-level residue is not closed: a bundled deferral is remembered by its strongest justification, so the weak half is never re-read. The check is per-item and cheap -- name the commit each deferred figure lives in and ask whether it is reachable from the PR base -- and I did not run it because the paragraph read as already-justified. This is the same shape as L-1 and L-6, an inherited claim treated as settled, with the twist that the claim was one I wrote myself one round earlier. |
+| L-9 | P1 | Document-relative citations were written as a bare `` `:N` ``, a form the published citation resolver does not match, so 21 of them across two files were checked by nothing and every one silently drifted when round 3 inserted lines above them. | fixed at the class level rather than the instance level: all 21 are replaced with named anchors that carry no line number. The 17 surviving bare `` `:N` `` are shorthand for a line in an external file named earlier in the same sentence and do not drift with this document |
 
 L-6 and L-7 are P1 and P0 and both are resolved at the document level with their method-level residue stated rather than closed. L-2 is now P1 and is resolved by derivation rather than by argument, and the derivation is what turned it from an admission into a result: the scores were inflated in one direction, and the five band overrides that fall out of correcting them are a finding about the scoring formula that no amount of further asserting would have produced. The method-level residue on L-6 and L-7 is the same in both cases and is not closed: a count audit cannot find a false mechanism claim, and both were found by a second reader.
 
@@ -94,7 +97,7 @@ L-6 and L-7 are P1 and P0 and both are resolved at the document level with their
 - "16 failure modes" -- `grep -c '^### FM-' plans/pre-mortem-682-python-rewrite.md` -> `16`. It was 14 at first push; FM-15 and FM-16 were added from F-N26 and F-N27, both surfaced by the PR #684 round-1 review
 - "eight subheaders on every entry" -- `for h in Category Mechanism "Fact-sheet basis" Probability "Blast radius" Mitigation "Detection signal" "Owning ticket"; do grep -c "^- \*\*$h:\*\*" ...; done` -> `16 16 16 16 16 16 16 16`
 - "all six categories present" -- `for c in faithful-port contract-drift blast-radius coverage-theatre scope operational; do grep -c "^- \*\*Category:\*\* $c$" ...; done` -> `4 3 2 2 2 3`
-- "0 unresolved citations" -- two passes, each stated precisely enough to re-derive, because #683's L-11 records a claim of this exact shape whose stated rule returned a different number than the one published. Pass one, finding IDs: over the sixteen `- **Fact-sheet basis:**` lines, take every `F-N<n>[b]` and every `#668 P<x>-<y>` / `#672 P<x>-<y>` token and assert it appears in `plans/investigate-682-executable-path.md` -> `basis lines: 16, finding IDs checked: 29, unresolved: 0`. Pass two, file:line: over the whole document, take every backticked token matching `path.ext:N` or `path.ext:N-M` where `ext` is a source or document extension, resolve a bare basename against `git ls-files`, and assert the file exists and that *both* bounds of a range fall within its line count -> `entries checked: 59, unresolved: 0`. Over this document together with `plans/self-review-685.md` the same pass gives `70, 0`; the figure moves when this bullet itself names a `file:line`, which it does twice below, and it is quoted after the last such edit rather than before. Round 2 published `58` and `65` against an artifact measuring 58 and 69 at `f4f3090`, so exactly one of the two was stale, and which one is the finding. The single-file figure survived because the round-2 remediation added no citation to the pre-mortem; every one of the four it added went into this file, which is the figure the sentence claiming "quoted after the last such edit" was written to protect and did not (R3-S3-1). A claim guarding an ordering can be false while every number it guards except one stays true, and the one that moves is the one the guard was for. The stated rule is also ambiguous about whether the whole backticked span must be the token or whether tokens are extracted from inside it. Both readings are implemented and both return `59 / 11 / 70`, so the ambiguity does not bite here; it is named because a rule that two implementations happen to agree on is not the same as a rule that specifies one. Resolution is not support: no pass checks that a cited line means what the sentence citing it says, which is the failure the PR #686 review found twice (S2-1, and the FM-6 basis line where `k6.sh:12` and `_common.sh:145` both resolved and neither said what was claimed)
+- "0 unresolved citations" -- two passes, each stated precisely enough to re-derive, because #683's L-11 records a claim of this exact shape whose stated rule returned a different number than the one published. Pass one, finding IDs: over the sixteen `- **Fact-sheet basis:**` lines, take every `F-N<n>[b]` and every `#668 P<x>-<y>` / `#672 P<x>-<y>` token and assert it appears in `plans/investigate-682-executable-path.md` -> `basis lines: 16, finding IDs checked: 29, unresolved: 0`. Pass two, file:line: over the whole document, take every backticked token matching `path.ext:N` or `path.ext:N-M` where `ext` is a source or document extension, resolve a bare basename against `git ls-files`, and assert the file exists and that *both* bounds of a range fall within its line count -> `entries checked: 58, unresolved: 0`. Over this document together with `plans/self-review-685.md` the same pass gives `71, 0`; the figure moves when this bullet itself names a `file:line`, which it does twice below, and it is quoted after the last such edit rather than before. Round 2 published `58` and `65` against an artifact measuring 58 and 69 at `f4f3090`, so exactly one of the two was stale, and which one is the finding. The single-file figure survived because the round-2 remediation added no citation to the pre-mortem; every one of the four it added went into this file, which is the figure the sentence claiming "quoted after the last such edit" was written to protect and did not (R3-S3-1). A claim guarding an ordering can be false while every number it guards except one stays true, and the one that moves is the one the guard was for. The stated rule is also ambiguous about whether the whole backticked span must be the token or whether tokens are extracted from inside it. Both readings are implemented and both return `58 / 13 / 71`, so the ambiguity does not bite here; it is named because a rule that two implementations happen to agree on is not the same as a rule that specifies one. Resolution is not support: no pass checks that a cited line means what the sentence citing it says, which is the failure the PR #686 review found twice (S2-1, and the FM-6 basis line where `k6.sh:12` and `_common.sh:145` both resolved and neither said what was claimed)
 - "the three mandatory categories are restated in Design constraints with FM ids" -- `python3` regex over the Design-constraints section -> `faithful-port OK, coverage-theatre OK, blast-radius OK`
 - "8 of 8 kill criteria are observables" -- per-bullet classifier for a backticked command, a digit, or a `test_` name -> `AC5: 8/8`
 - "4 P0 findings" -- `grep -oE '^\| F-N[0-9]+b? \| P[012]' plans/investigate-682-executable-path.md | awk '{print $4}' | sort | uniq -c` -> `4 P0, 17 P1, 7 P2`. At first push this was `5 P0, 14 P1, 7 P2` against a fact sheet whose own prose said `6 P0, 13 P1, 7 P2`; the round-1 review corrected the fact sheet and downgraded F-N14
@@ -116,7 +119,17 @@ L-6 and L-7 are P1 and P0 and both are resolved at the document level with their
 - "5 of 16 tiers override their band" -- `grep -cE '^\| FM-.*\(override\)' plans/pre-mortem-682-python-rewrite.md` -> `5`, split 5 upward (FM-1, FM-2, FM-3, FM-14 from `Monitor-after-ship` to `Launch-Blocking`; FM-15 from `Accept-and-document` to `Fast-Follow`), 0 downward. Two corrections here, both round 2. The count was 6 and included FM-13, whose composite of 43 puts it in `Monitor-after-ship`, a band whose permitted urgencies are `Fast-Follow or Track`; FM-13 is `Track`, so it was inside its band and the `(override)` marker was wrong (R2-S2-1). And the published command was `grep -c '(override)'` unanchored, which the bullet described as being "over the risk table rows" -- a narrowing the command does not contain. **The unanchored command returns `7` at both revisions, and that stability is the trap rather than a reassurance.** Before the fix the 7 was 6 table rows plus one prose restatement; after it, it is 5 table rows plus two prose mentions, because the paragraph recording the correction names `(override)` as well. The figure the bullet exists to report went 6 to 5 while the command offered as its evidence never moved, so running that command to check this fix would have confirmed a number that had changed. Anchored, `grep -cE '^\| FM-.*\(override\)'` returns `6` before the FM-13 fix and `5` after, which is the discrimination the unanchored form lacks. This is R2-S2-2's third instance in this one verification list
 - "16 design constraints" -- `grep -c '^- \*\*C-'` -> `16`
 - "3 paper tigers, 3 elephants" -- `grep -c '^\*\*PT-'` -> `3`; `grep -c '^\*\*E-'` -> `3`
-- "419 lines" -- `wc -l < plans/pre-mortem-682-python-rewrite.md` -> `419`. It was 326 before the round-2 remediation, 387 after it, and 419 after round 3. Round 2's 61 lines are the Band column preamble, the three per-row tier reasons, the FM-15 worked-score table and override, the C-15 completeness clause, the PT-2 second paragraph, and the `### Every composite is derived` section with its sixteen-row table. Round 3's 32 are the fourth count-audit run with its derivation fence and the distrust note under the count table. The figure published at round 2 was `385` against an artifact of 387, because it was quoted from the middle of the remediation rather than after its last edit (R3-S3-1); this bullet and the citation bullet above are both re-derived as the final action before this commit, which is the only ordering under which either can be true
+- "421 lines" -- `wc -l < plans/pre-mortem-682-python-rewrite.md` -> `421`. Provenance per round, taken from git rather than from memory:
+
+  ```
+  $ for c in c369879 a9e8600 f4f3090 72ab56a; do printf "%s %s\n" "$c" "$(git show $c:plans/pre-mortem-682-python-rewrite.md | wc -l | tr -d ' ')"; done
+  c369879 326
+  a9e8600 385
+  f4f3090 387
+  72ab56a 419
+  ```
+
+  So 326 to 385 is round 1 (+59), 385 to 387 is round 2 (+2), 387 to 419 is round 3 (+32), and 419 to 421 is round 4 (+2). Round 1's 59 lines are the Band column preamble, the three per-row tier reasons, the FM-15 worked-score table and override, the C-15 completeness clause, the PT-2 second paragraph, and the `### Every composite is derived` section with its sixteen-row table. Round 2's 2 lines are the FM-13 override-marker correction and nothing else. Round 3's 32 are the fourth count-audit run with its derivation fence and the distrust note under the count table. Round 4's 2 are the descope-survival split on the H1 kill criterion. The figure published at round 2 was `385` against an artifact of 387, because it was quoted from the middle of the remediation rather than after its last edit (R3-S3-1)
 - "0 banned prose characters" -- `python3` count over the fourteen codepoints named in writing-prose:1 -> `total banned: 0`
 - "ticket #685 is fit for execution" -- `bash scripts/discipline/evaluate-ticket.sh 685` -> `PASS`
 
@@ -136,7 +149,7 @@ Round 2 is where the rule actually fired, and once rather than twice. F-N11 was 
 
 The upstream review also produced a finding I should have caught here and did not. Three of the eight #684 findings were severity corrections, and the root cause was that no severity rubric had ever been written down. This document's own composite scores had the same defect in a milder form: the five-dimension weights come from `[skill:pre-mortem]`, so the scale existed, but only FM-6's score was derived from it and the other fifteen were asserted against it. That is L-2, filed as P2.
 
-The sequence from there is worth recording, because the severity was wrong in the same direction and for the same reason as the three #684 severity corrections. L-2 was filed P2 on the reasoning that an asserted score is a presentation defect. The round-1 review supplied the evidence that moved it: an unchecked scale had already produced three separate corrections upstream, which makes it a correctness defect, so L-2 was raised to P1. It is now closed, by the `### Every composite is derived` table, which re-derives all sixteen composites from their five dimension columns under the published 25/25/20/15/15 weights and agrees with the risk table on all sixteen rows. Deriving them was not cosmetic: eleven composites moved down, two up, three were unchanged, and the count at 60-plus fell from 8 to 3, which is the record at `:105`.
+The sequence from there is worth recording, because the severity was wrong in the same direction and for the same reason as the three #684 severity corrections. L-2 was filed P2 on the reasoning that an asserted score is a presentation defect. The round-1 review supplied the evidence that moved it: an unchecked scale had already produced three separate corrections upstream, which makes it a correctness defect, so L-2 was raised to P1. It is now closed, by the `### Every composite is derived` table, which re-derives all sixteen composites from their five dimension columns under the published 25/25/20/15/15 weights and agrees with the risk table on all sixteen rows. Deriving them was not cosmetic: eleven composites moved down, two up, three were unchanged, and the count at 60-plus fell from 8 to 3, which is the record in the `eleven moved down, two up` bullet under Quantified claims.
 
 The part still worth carrying is not the finding but its severity. P2 was too low, and the reason it was too low is the same reason the three #684 assignments were too low, which is that "the number is asserted rather than derived" was being scored as a documentation gap instead of as an unverified claim.
 
@@ -147,26 +160,29 @@ being accepted, and all fixed here.
 
 | ID | Sev | Finding | Disposition |
 |---|---|---|---|
-| R2-S2-1 | S2 | FM-13 is marked `(override)` and is not one. Composite 43 is the `Monitor-after-ship` band, whose permitted urgencies are `Fast-Follow or Track` per `skills/pre-mortem/SKILL.md:133-138`; FM-13 is `Track`, inside its band | fixed. `:238` drops the marker; the override count goes 6 to 5 at four sites; the concession that the "both directions" argument does not survive is written into the pre-mortem at `:276` and here at `:69` |
-| R2-S2-2 | S2 | The two published count commands select `/^\| FM-/`, which matches the risk table and the `### Every composite is derived` table both. The published outputs reproduce only under two undisclosed normalizations and one undisclosed exclusion | fixed. Both commands at `:102` and `:106` are replaced with forms scoped to the risk table and disclosing the suffix strip. The underlying claims were true and stay true |
-| R2-S2-3 | S2 | `:127` still said only FM-6's composite is derived, the other fifteen asserted, and L-2 open at P2. `:82` already said L-2 is fixed. The document contradicted itself | fixed. `:127` rewritten to record the sequence (filed P2, raised to P1 on the round-1 evidence, closed by the derivation table) and to keep the part still worth carrying, which is that P2 was too low for the same reason the three #684 severity assignments were |
-| R2-S3-1 | S3 | `plans/pre-mortem-682-python-rewrite.md:48` cites `plans/self-review-685.md:112` for the struck F-N14/FM-3 claim. Line 112 is blank | fixed. Citation moved to `:119-121`, which is the supporting text |
+| R2-S2-1 | S2 | FM-13 is marked `(override)` and is not one. Composite 43 is the `Monitor-after-ship` band, whose permitted urgencies are `Fast-Follow or Track` per `skills/pre-mortem/SKILL.md:133-138`; FM-13 is `Track`, inside its band | fixed. The pre-mortem's FM-13 risk-table row drops the marker; the override count goes 6 to 5 at four sites; the concession that the "both directions" argument does not survive is written into the pre-mortem's `What the round-2 correction costs this argument` paragraph and into the `Did the severity scoring do any work` section here |
+| R2-S2-2 | S2 | The two published count commands select `/^\| FM-/`, which matches the risk table and the `### Every composite is derived` table both. The published outputs reproduce only under two undisclosed normalizations and one undisclosed exclusion | fixed. Both commands, in the `7 Launch-Blocking, 8 Fast-Follow, 1 Track` bullet and the `5 of 16 tiers override their band` bullet, are replaced with forms scoped to the risk table and disclosing the suffix strip. The underlying claims were true and stay true |
+| R2-S2-3 | S2 | The `The upstream review also produced a finding` paragraph still said only FM-6's composite is derived, the other fifteen asserted, and L-2 open at P2. The L-2 row already said L-2 is fixed. The document contradicted itself | fixed. That paragraph rewritten to record the sequence (filed P2, raised to P1 on the round-1 evidence, closed by the derivation table) and to keep the part still worth carrying, which is that P2 was too low for the same reason the three #684 severity assignments were |
+| R2-S3-1 | S3 | `plans/pre-mortem-682-python-rewrite.md:48` cites `plans/self-review-685.md:112` for the struck F-N14/FM-3 claim. Line 112 is blank | fixed. Citation moved to the `F-N14 is not FM-3's fact-sheet basis` paragraph, which is the supporting text |
 
 **Three findings inside the remediation, all author-found, recorded rather than
 repaired quietly.**
 
 The first is the L-6 sweep doing its job. The first draft of the R2-S2-1 fix
-named `:238` and the override paragraph, because those are where the correction is
-*argued*. Four further sites restate the count without arguing it: `:274` and
-`:306` in the pre-mortem, and `:106` and `:69` here. `:69` is the one worth naming:
+named the FM-13 risk-table row and the override paragraph, because those are where
+the correction is *argued*. Four further sites restate the count without arguing
+it: the `The honest reading` and `Counts:` passages in the pre-mortem, and the
+`5 of 16 tiers override their band` bullet and the `Did the severity scoring do
+any work` section here. That last one is the one worth naming:
 it spells the figure as the word "six" and states the "in both directions" claim in
 a paragraph about whether the scoring is decoration, several sections away from any
 override discussion. A grep for the digit would have missed it.
 
 The second is a citation defect committed inside the document that fixes a citation
 defect. The first draft of this section cited `plans/self-review-685.md:105` for the
-override count; `:105` is the composite-movement claim and the override line is
-`:106`. That is R2-S3-1's class exactly, a citation that resolves and supports
+override count; that bullet is the composite-movement claim, and the override
+count lives in the `5 of 16 tiers override their band` bullet. That is R2-S3-1's
+class exactly, a citation that resolves and supports
 something other than what it is offered for, and the epic now has four instances of
 it. It is left on the record because the frequency is the evidence for ticket #691,
 and a suppressed instance is a datapoint removed from the case for the checker that
@@ -217,7 +233,7 @@ being accepted, and all fixed here.
 
 | ID | Sev | Finding | Disposition |
 |---|---|---|---|
-| R3-S2-1 | S2 | The R2-S2-1 override sweep missed two present-tense statements in this file that still said six. | fixed at `:82` and `:89`. Re-derived rather than accepted: `grep -cE '^\| FM-.*\(override\)' plans/pre-mortem-682-python-rewrite.md` -> `5`, and the five rows are FM-1, FM-2, FM-3, FM-14 upward and FM-15 upward |
+| R3-S2-1 | S2 | The R2-S2-1 override sweep missed two present-tense statements in this file that still said six. | fixed at the L-2 row and the `L-6 and L-7 are P1 and P0` paragraph. Re-derived rather than accepted: `grep -cE '^\| FM-.*\(override\)' plans/pre-mortem-682-python-rewrite.md` -> `5`, and the five rows are FM-1, FM-2, FM-3, FM-14 upward and FM-15 upward |
 | R3-S2-2 | S2 | R2-S2-2 named two commands with one defect and the remediation fixed one of them. The Band command was still unscoped and still published an output it does not print. | fixed at the band bullet: same `RISK` scoping as the tier bullet, and the output is now printed in a fence beside it rather than paraphrased inline |
 | R3-S2-3 | S2 | The deferred 57/29/9/4 propagation became a live base mismatch once `7d50cce` entered this PR's base. | fixed. Nine sites propagated to 55/27/10/5, threshold 28. Base merged into the branch so the cited fact-sheet lines resolve against the version that will merge. Written up as L-8 |
 | R3-S3-1 | S3 | The remediation created two fresh stale counts: the pre-mortem line count and the two-file citation total. | fixed. Both re-derived after the last edit of this commit rather than transcribed from the review; see the quantified-claims bullets |
@@ -226,7 +242,8 @@ being accepted, and all fixed here.
 
 The first is about the round-2 sweep, and it is sharper than a missed grep. That
 sweep is written up above as "the L-6 sweep doing its job": it found four restatement
-sites and singled out `:69` for spelling the figure as a word. It then missed two
+sites and singled out the `Did the severity scoring do any work` section for
+spelling the figure as a word. It then missed two
 more sites in this same file, one of which also spells it as a word. A sweep that
 narrates its own thoroughness is the least likely thing in the document to be
 re-swept, because the narration reads as evidence that the sweep ran. That is the
@@ -252,6 +269,53 @@ are exactly the kind of claim that is never re-read: they are written once, chec
 by nobody, and cited later as evidence of who reviewed what. The check is
 `list_sessions` filtered to the label, and it takes one call.
 
+## Hostile-review remediation (PR #686, round 4)
+
+Four reviewer findings. Every one was reproduced against the branch before being
+accepted, and all four are fixed here. The review also re-ran every command in the
+round-3 remediation reply and found all four round-3 fixes correct, which is
+recorded because a remediation that is checked and holds is evidence too.
+
+| ID | Sev | Finding | Disposition |
+|---|---|---|---|
+| R4-S2-1 | S2 | The R2-S3-1 citation fix went stale inside the commit that made it, and all 21 document-relative bare `` `:N` `` references drifted with round 3's insertions. The published resolver requires `path.ext:N` and so cannot see any of them | fixed at the class level. See L-9 |
+| R4-S2-2 | S2 | The line-count provenance bullet attributed six items and 61 lines to round 2. Git says round 2 is +2 lines and all six items are round 1 | fixed. The bullet now shows the per-commit `wc -l` output and derives the split from it |
+| R4-S3-1 | S3 | FM-11's fact-sheet basis cited `skills/tool-availability-probe/SKILL.md:78` for "documented exit code 3 never emitted". That line and the F-N25 it invokes are both about exit 78 | fixed. The citation now points at `hooks/create-ticket/scaffold-test-stub.sh:37`, where the exit-3 reservation actually is |
+| R4-S3-2 | S3 | "The one bullet that is a judgement dressed as a threshold" is a class-completion claim with two members, and the descope branch never says which constraints survive it | fixed. Both bullets are named, and the kill criterion now carries the constraint split |
+
+**The mechanism, not the instances.** R4-S2-1 is the finding that mattered and the
+reviewer said why: patching the 21 numbers would not hold, because they broke on
+round 3's insertion and would break on round 4's. The citation audit that certifies
+"70 citations, 0 unresolved" is structurally blind to the reference form that failed,
+so the count was never evidence about them. The fix is to remove the form: every
+document-relative reference now names a heading, a table row or a quoted phrase, and
+there is no line number left to drift. The count that matters after this change is
+not 70-and-0 but 21-to-0, the number of unchecked references remaining.
+
+**A twenty-second instance the review did not find.** Enumerating the class to fix it
+turned up one more. The R3-S2-1 disposition row said the two override sites were
+fixed at `` `:82` `` and `` `:89` ``. `` `:82` `` is the L-2 row and is right;
+`` `:89` `` is a blank line. The second site is the `L-6 and L-7 are P1 and P0`
+paragraph, which sat at 89 before round 3 inserted the L-8 row above it and at 90
+after. So the reference was computed against pre-round-3 numbering inside the
+round-3 commit, which is R4-S2-1's mechanism exactly, in the one row that was
+supposed to be its counterexample. It is recorded rather than quietly fixed because
+it is the strongest available evidence that the class fix was the right call: a
+round of hostile review looked directly at this table and did not catch it, because
+checking bare `` `:N` `` by hand is what nobody does.
+
+**R4-S3-2 is accepted and the numbers are mine.** The review proposed an 8 / 8 split
+of the sixteen constraints across the descope branch. Sorting them myself returns
+6 / 5 / 5: six presuppose a Python artifact, five are language-independent, and five
+have a language-independent intent stated through a Python mechanism and would need
+restating rather than dropping. The disagreement is C-8 in particular, which the
+review placed among the survivors; its text makes the ported suite the floor and
+measures it by tests failing against bash, so it does not survive the branch that
+cancels the port. The split is in the kill criterion. Adopting the reviewer's figure
+would have been the same defect this document has recorded four times: publishing a
+count that was not derived here.
+
+
 ## Rework ledger
 
 | Rework trigger | Root skip | Check cost | Rework cost | Ratio |
@@ -262,8 +326,9 @@ by nobody, and cited later as evidence of who reviewed what. The check is
 | Six writing-prose:3 adverb hits found after the document was written | wrote the whole document before running the scan, again, despite this being a row in the #683 ledger | running the two prose scans against each chunk as written, ~5s | scripted rephrase of six sites plus rescan, ~2 min | ~24x |
 | Shipped a merge candidate carrying a denominator its own PR base had already corrected (L-8, R3-S2-3) | wrote a deferral naming the branch it was waiting on and then never asked whether that branch had moved; "deferred" became a state rather than a condition with a resumption trigger | `git log HEAD..origin/feat/683-investigate-executable-path`, ~2s | merge the base, propagate 55/27/10/5 across nine sites, re-derive the two counts the edit invalidates, write the finding up, ~30 min | ~900x |
 | The round-2 override sweep missed two sites in the file the sweep was written in (R3-S2-1) | reported the sweep's own thoroughness in prose, which made it the passage least likely to be re-swept | re-running the sweep's own anchored grep against the word forms as well as the digit, ~5s | two edits plus the write-up of why the previous fix went stale, ~5 min | ~60x |
+| 21 document-relative citations went stale inside the commit that inserted lines above them, and the citation audit could not see any of them (R4-S2-1) | wrote citations in a form (`` `:N` ``) that the resolver I had just published does not match, then reported the resolver's count as coverage | running the published resolver's regex against the reference forms actually used in the file, rather than only against the ones it matches, ~10s | rewriting 21 references to named anchors across two files plus the class write-up, ~40 min | ~240x |
 
-Six rows. Four are the #683 ledger's stated pattern, acting on an internal belief that a sub-ten-second command would have checked, and the deferral row is the worst instance of it by ratio in either ticket: the command was not only available, it was implied by a sentence I had already written naming the branch. The branch cut is the one that is new in kind, an assumption about *git state* rather than about file contents. The sweep row is new in a different way: the skip was not a missing check but a narrated one, where writing down that the check ran displaced running it again. The prose-scan row is the one I have no excuse for, because the previous ticket's ledger names it and the fix was to scan first.
+Seven rows. Four are the #683 ledger's stated pattern, acting on an internal belief that a sub-ten-second command would have checked, and the deferral row is the worst instance of it by ratio in either ticket: the command was not only available, it was implied by a sentence I had already written naming the branch. The branch cut is the one that is new in kind, an assumption about *git state* rather than about file contents. The sweep row is new in a different way: the skip was not a missing check but a narrated one, where writing down that the check ran displaced running it again. The prose-scan row is the one I have no excuse for, because the previous ticket's ledger names it and the fix was to scan first. The citation row is the highest ratio in either ticket, and its skip is a new kind again: not a check I failed to run but a check I ran and then over-read, because a resolver reports on the references it matches and says nothing about the ones it silently skips. A count of zero unresolved citations is a statement about the denominator, and I read it as a statement about the file.
 
 ## Evidence-predates-work
 
