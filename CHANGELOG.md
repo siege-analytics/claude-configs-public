@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Added
+
+- PROJECT.md testing.layers schema extension (#659): two optional per-layer fields, `assertion_tools` (list of tools that can run falsifying observations for ACs touching this layer) and `automation_template` (skeleton test-file path the scaffold hook renders per AC). Documented in `skills/testing-frameworks/SKILL.md` with a new `## Assertion tools and stub templates` subsection cross-referencing `[rule:writing-tests]` writing-tests:7, `[skill:ticket-decomposition]`, and `[skill:tool-availability-probe]`.
+- Part-of epic #655 (falsifiable AC + auto-gen test stubs): second foundation ticket #659; supplies the `assertion_tools` schema that #656's writing-tests:7 rule references.
+
 ### Fixed
 
 - Non-git mutation inversion design (#128): documented the target model for making git/workflow the low-friction mutation path, with evidence requirements, escape hatches, and phased coverage for Bash, MCP/API, browser, and external-state writes.
