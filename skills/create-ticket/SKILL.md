@@ -128,8 +128,12 @@ Other tickets, infrastructure issues, or decisions that must be resolved first.
 (If applicable) What is happening now that deviates from the intended behaviour.
 
 ## Acceptance criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
+- [ ] AC1: Criterion 1
+    - Falsifiable-by: <observation that would prove AC1 false>
+    - Tool: <tool name from the touched layer's assertion_tools in PROJECT.md>
+- [ ] AC2: Criterion 2
+    - Falsifiable-by: <observation that would prove AC2 false>
+    - Tool: <tool name from the touched layer's assertion_tools in PROJECT.md>
 
 ## QA / Verification
 How a quality assurance team can review this ticket. Applicable examples include:
@@ -137,6 +141,47 @@ How a quality assurance team can review this ticket. Applicable examples include
 - Integration, regression, or unit tests
 - Data quality checks, known scripts or processes
 ```
+
+## Falsifiable acceptance criteria
+
+Rule `[rule:writing-tests]` writing-tests:7 (epic #655) requires every acceptance criterion to carry a paired `Falsifiable-by:` clause and a `Tool:` name. Prose ACs without both are wishes, not criteria. The tool must be drawn from the touched layer's `assertion_tools` list in `PROJECT.md`'s `testing.layers` (schema extension landed via #659). Free-form tool names ("manual QA", "some test") do not count.
+
+### Layer-tool table (v1)
+
+| Layer | Framework | Stub template | Availability probe |
+|---|---|---|---|
+| backend | pytest | `templates/tests/pytest-unit.py.tmpl` | `scripts/probe/pytest.sh` |
+| backend/integration | pytest + fixture | `templates/tests/pytest-integration.py.tmpl` | `scripts/probe/pytest.sh` |
+| frontend | vitest | `templates/tests/vitest-component.spec.ts.tmpl` | `scripts/probe/vitest.sh` |
+| e2e | playwright | `templates/tests/playwright-e2e.spec.ts.tmpl` | `scripts/probe/playwright.sh` |
+| api-contract | schemathesis | `templates/tests/schemathesis-contract.yaml.tmpl` | `scripts/probe/schemathesis.sh` |
+| data-pipeline | great-expectations | `templates/tests/great-expectations-suite.json.tmpl` | `scripts/probe/great-expectations.sh` |
+| performance | k6 | `templates/tests/k6-scenario.js.tmpl` | `scripts/probe/k6.sh` |
+
+Additional templates and probes land as follow-ups; see `templates/tests/README.md` for how to add a new one.
+
+### Tool availability check
+
+Before rendering a stub or asserting a tool is usable, invoke `[skill:tool-availability-probe]` (`scripts/probe/<tool>.sh <ticket-id>`). Three outcomes:
+
+1. **installed** or **installed-just-now**: proceed normally.
+2. **blocked-on-infra**: the probe filed an infra ticket via `gh`. Add `Blocked-by: <infra-ticket-url>` to the ticket body and still render the stub file so it's ready when the tool lands. Rendering the stub anyway is deliberate: the work of drafting the failing test does not wait on infra.
+
+Stub rendering itself is the scaffold hook's job (`hooks/create-ticket/scaffold-test-stub.sh`, #661). If that hook isn't installed in the current environment, note the intended stub paths in the ticket body under `Automation:` and let the implementer create them by hand.
+
+### Multi-layer work
+
+Per `[skill:ticket-decomposition]`, tickets that touch more than one architectural layer decompose into per-layer child tickets under a parent epic. Each child ticket names one layer, and its ACs draw only from that layer's `assertion_tools`. Do not mix tools from different layers on one ticket.
+
+### When the touched layer has no `assertion_tools`
+
+If the layer's `assertion_tools` field is missing from `PROJECT.md`, do NOT invent a tool. Instead:
+
+1. Add a first sub-ticket updating PROJECT.md to declare `assertion_tools` for that layer.
+2. Make the current ticket `Blocked-by:` that sub-ticket.
+3. Then draft the ACs.
+
+Surfacing the schema gap is the intended behavior.
 
 # Creating epics
 
@@ -190,9 +235,15 @@ joined back to the FEC bulk download. Example: `C00000547` becomes `547`,
 which collides with `C00000000547` (a different entity).
 
 ## Acceptance criteria
-- [ ] `committee_id` remains a zero-padded string (9 chars) through the full pipeline
-- [ ] Round-trip test: bronze → silver → re-read matches original FEC file
-- [ ] No regression in row counts (silver should still have >= 6.8M records)
+- [ ] AC1: `committee_id` remains a zero-padded string (9 chars) through the full pipeline
+    - Falsifiable-by: `SELECT COUNT(*) FROM silver WHERE LENGTH(committee_id) != 9` returns non-zero.
+    - Tool: pytest (backend layer's `assertion_tools`).
+- [ ] AC2: Round-trip test: bronze read then silver write then re-read matches the original FEC file byte-for-byte on `committee_id`.
+    - Falsifiable-by: `pytest tests/silver/test_committee_id_roundtrip.py -x` returns non-zero on a fixture ingested from `fixtures/fec_100rows.csv`.
+    - Tool: pytest.
+- [ ] AC3: No regression in row counts (silver should still have at least 6.8M records).
+    - Falsifiable-by: `SELECT COUNT(*) FROM silver` on the post-fix run returns less than 6.8M.
+    - Tool: great-expectations (data-pipeline layer's `assertion_tools`).
 
 ## QA / Verification
 - Unit test: assert `transform_committee("C00000547")` preserves the string
