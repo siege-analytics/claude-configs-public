@@ -87,20 +87,35 @@ For each layer marked "yes" or "unclear" (after investigation resolves to "yes")
    - The test framework (from `testing.layers`)
    - The test file path pattern (from `testing.layers`)
    - The assertion class for key tests (spec'd / current / invariant)
+   - The falsifying observation and tool per AC (per `[rule:writing-tests]` writing-tests:7, epic #655). Tool is drawn from the layer's `assertion_tools[0]` unless the AC calls for a different entry from the same list.
+   - The stub file path from the layer's `automation_template` (rendered with `{ticket_id}`, `{ac_id}`, `{feature}`) so the scaffold hook (`hooks/create-ticket/scaffold-test-stub.sh`, #661) has a target.
 
 ### Step 5: Post decomposition table
 
-Post the filled decomposition table as a comment on the parent epic. Include a maintainer marker so the table is findable:
+Post the filled decomposition table as a comment on the parent epic. Include a maintainer marker so the table is findable. Two new columns come from `PROJECT.md`'s `testing.layers`: `Tool` (from `assertion_tools[0]`) and `Stub` (from `automation_template`, rendered per child ticket).
 
 ```markdown
 ## Decomposition table (maintainer)
 
-| Layer | Touched? | Why | Ticket |
-|---|---|---|---|
-| library | yes | New boundary function | #401 |
-| e2e | yes | Smoke test for new endpoint | #402 |
-| frontend | no | No UI changes | -- |
+| Layer | Touched? | Why | Ticket | Tool | Stub |
+|---|---|---|---|---|---|
+| library | yes | New boundary function | #401 | pytest | tests/test_boundary.py |
+| e2e | yes | Smoke test for new endpoint | #402 | playwright | tests/e2e/boundary_flow.spec.ts |
+| frontend | no | No UI changes | -- | -- | -- |
 ```
+
+### Automation block
+
+Each per-layer child ticket carries an Automation block that names the tool and stub the scaffold hook (#661) will render. The block feeds the `Falsifiable-by:` + `Tool:` pairing on the ticket's ACs (per `[skill:create-ticket]`).
+
+```markdown
+Automation:
+Tool: <from PROJECT.md testing.layers[].assertion_tools[0]>
+Stub: <from testing.layers[].automation_template rendered with {ticket_id}, {ac_id}, {feature}>
+Probe: <result of [skill:tool-availability-probe] -- installed | installed-just-now | blocked-on-infra:#N>
+```
+
+If the touched layer has no `assertion_tools` or `automation_template` in `PROJECT.md`, emit `Automation: not declared for layer <name>` and file a sub-ticket to update PROJECT.md before the current ticket lands (per `[skill:create-ticket]`'s "surface the schema gap" behavior).
 
 ## Consumer protocol
 
@@ -120,7 +135,7 @@ The decomposition table was created at authoring time. Validate it against the c
 
 ### Step 3: Pick per-layer framework
 
-Read `testing.layers` in PROJECT.md to identify the correct test framework, test directory, and file naming pattern for your layer's ticket.
+Read `testing.layers` in PROJECT.md to identify the correct test framework, test directory, and file naming pattern for your layer's ticket. Also pick up `assertion_tools` (the tool set the ticket's Falsifiable-by ACs draw from per `[rule:writing-tests]` writing-tests:7) and `automation_template` (the stub-file path the scaffold hook renders per AC). If either is missing, follow the "surface the schema gap" behavior in `[skill:create-ticket]` before continuing.
 
 ### Step 4: Classify assertions
 
