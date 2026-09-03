@@ -20,10 +20,6 @@ cd "$TMP_REPO"
 git init -q
 git config user.email "t@example.test"
 git config user.name "test"
-# Symlink the scanner into the temp repo so the hook's upward-walk finds it.
-mkdir -p skills/meta/detect-ai-fingerprints
-ln -s "$REPO_ROOT/skills/meta/detect-ai-fingerprints/scan.sh" skills/meta/detect-ai-fingerprints/scan.sh
-ln -s "$REPO_ROOT/skills/meta/detect-ai-fingerprints/scan_ast.py" skills/meta/detect-ai-fingerprints/scan_ast.py
 
 commit_with_body() {
     local subject="$1"

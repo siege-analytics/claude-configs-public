@@ -74,8 +74,17 @@ expect_block "(q) [task:] with no description" "$HOOK" \
 
 # --- ALLOWS: overrides ---
 
-expect_pass "(r) [no-ticket] override" "$HOOK" \
-    "$(make_payload 'git commit -m "chore: formatting [no-ticket]"')"
+# The bare [no-ticket] form this scenario used was blocked on purpose by #580,
+# which requires the Reason/Evidence/Falsification chain. The scenario still
+# pins down that a valid override opens the gate; the accepted shape changed.
+expect_pass "(r) structured [no-ticket] override" "$HOOK" \
+    "$(make_payload 'git commit -m "chore: formatting [no-ticket: Reason: whitespace only; Evidence: diff is all trailing spaces; Falsification: any semantic change in the diff]"')"
+
+# The bare form is now blocked rather than allowed; assert that too, so a
+# regression that re-opens it fails here rather than passing by omission.
+expect_block_because "(r2) bare [no-ticket] is blocked" "$HOOK" \
+    "$(make_payload 'git commit -m "chore: formatting [no-ticket]"')" \
+    "'\[no-ticket\]' override now requires evidence chain"
 
 # --- ALLOWS: non-commit commands (not in scope) ---
 

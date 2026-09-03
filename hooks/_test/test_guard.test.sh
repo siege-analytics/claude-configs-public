@@ -77,8 +77,18 @@ expect_pass "(b) project without testing: section is unaffected" "$HOOK" \
     "$(make_payload 'git push origin develop' "$TMPDIR/no-testing")"
 
 # --- BLOCK: project with testing: but no signal file ---
-expect_block "(c) project with testing: but no test-gate.json" "$HOOK" \
-    "$(make_payload 'git push origin develop' "$TMPDIR/with-testing")"
+# The setup above pushed develop, so HEAD matches origin/develop and the
+# merge-base diff is empty. The hook exits 0 on an empty touched-file set,
+# which is correct: a push carrying no source change demands no evidence.
+# Leave an unpushed source change so the scenario reaches the rule it names.
+cd "$TMPDIR/with-testing"
+echo 'def added(): return 2' >> src/app.py
+git add src/app.py
+git commit -q -m "touch source #386"
+
+expect_block_because "(c) project with testing: but no test-gate.json" "$HOOK" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/with-testing")" \
+    'no test-gate.json was found'
 
 # --- PASS: project with testing: and valid signal file ---
 cat > "$TMPDIR/with-testing/test-gate.json" <<'SIGEOF'
@@ -94,15 +104,30 @@ SIGEOF
 expect_pass "(d) project with testing: and valid evidence" "$HOOK" \
     "$(make_payload 'git push origin develop' "$TMPDIR/with-testing")"
 
-# --- PASS: [run-skip: reason] override ---
+# --- PASS: structured [run-skip] override ---
+# The bare [run-skip: reason] form this scenario used was blocked on purpose by
+# #579, which requires the Reason/Evidence/Falsification chain. The scenario
+# still pins down that a valid override opens the gate; only the accepted shape
+# of the override changed.
 rm "$TMPDIR/with-testing/test-gate.json"
 cd "$TMPDIR/with-testing"
 echo 'def goodbye(): return 0' >> src/app.py
 git add -A
-git commit -q -m "add goodbye [run-skip: test infra under repair] [no-ticket]"
+git commit -q -m "add goodbye #386 [run-skip: Reason: test infra under repair; Evidence: pytest exits 4 on collection; Falsification: a passing collection run]"
 
-expect_pass "(e) [run-skip: reason] override allows push" "$HOOK" \
+expect_pass "(e) structured [run-skip] override allows push" "$HOOK" \
     "$(make_payload 'git push origin develop' "$TMPDIR/with-testing")"
+
+# The bare form is now blocked rather than allowed. Asserted so that a
+# regression re-opening it fails here rather than passing by omission.
+cd "$TMPDIR/with-testing"
+echo 'def farewell(): return 3' >> src/app.py
+git add -A
+git commit -q -m "add farewell #386 [run-skip: test infra under repair]"
+
+expect_block_because "(e2) bare [run-skip: reason] is blocked" "$HOOK" \
+    "$(make_payload 'git push origin develop' "$TMPDIR/with-testing")" \
+    "'\[run-skip\]' override now requires evidence chain"
 
 # --- BLOCK: evidence exists but doesn't cover a touched file ---
 cd "$TMPDIR/with-testing"

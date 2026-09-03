@@ -1,6 +1,6 @@
 #!/bin/bash
 # Hook: detect-ai-fingerprints (commit-body scan)
-# Enforces: skills/meta/detect-ai-fingerprints/SKILL.md at push/pr-create/pr-merge time.
+# Enforces: skills/detect-ai-fingerprints/SKILL.md at push/pr-create/pr-merge time.
 # Trigger: PreToolUse on Bash(git push *), Bash(gh pr create *), Bash(gh pr merge *)
 #
 # Calls scan.sh --message-file <temp> against the latest commit body. Blocks
@@ -66,12 +66,12 @@ if [[ -z "$EFFECTIVE_CWD" ]] || ! git -C "$EFFECTIVE_CWD" rev-parse --git-dir >/
 fi
 
 # Locate scan.sh. Walk up from this hook file's directory to find the repo
-# root that contains skills/meta/detect-ai-fingerprints/scan.sh.
+# root that contains skills/detect-ai-fingerprints/scan.sh.
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SCAN_SH=""
 search="$SCRIPT_DIR"
 while [[ "$search" != "/" && -n "$search" ]]; do
-    candidate="$search/skills/meta/detect-ai-fingerprints/scan.sh"
+    candidate="$search/skills/detect-ai-fingerprints/scan.sh"
     if [[ -x "$candidate" ]]; then
         SCAN_SH="$candidate"
         break
@@ -116,7 +116,7 @@ violations. Fix the commit message and amend, then retry:
 Scanner output:
 $SCAN_OUT
 
-See skills/meta/detect-ai-fingerprints/SKILL.md for the rule catalogue
+See skills/detect-ai-fingerprints/SKILL.md for the rule catalogue
 and the rationale for each. Common offenders:
   - em-dashes (U+2014) and en-dashes (U+2013): use ASCII -- or rewrite.
   - Banned adverbs (deliberately, intentionally, explicitly,
