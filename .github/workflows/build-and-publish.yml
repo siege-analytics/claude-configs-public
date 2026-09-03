@@ -39,6 +39,12 @@ jobs:
       - name: Validate repo hooks match snippet
         run: python3 bin/validate-hooks.py
 
+      - name: Settings-drift check fixtures
+        run: python3 bin/_test/settings_drift_test.py
+
+      - name: NotebookEdit write-guard fixtures
+        run: python3 bin/_test/notebook_edit_guards_test.py
+
   publish:
     name: Build and publish to release branches
     needs: validate
