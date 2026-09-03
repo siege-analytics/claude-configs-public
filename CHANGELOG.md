@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Added
+
+- Infra-ticket body template (#663): `templates/infra-ticket-tool-install.md` provides the standardized body the tool-availability probe (#662) renders when a test tool is missing on a shared machine and cannot be installed by the running agent. Substitution uses plain `sed` with seven required placeholders.
+- Part-of epic #655; unblocks #662's blocked-on-infra path via `templates/infra-ticket-tool-install.md` with a uniform body Steve's queue can act on.
+
 ### Fixed
 
 - Non-git mutation inversion design (#128): documented the target model for making git/workflow the low-friction mutation path, with evidence requirements, escape hatches, and phased coverage for Bash, MCP/API, browser, and external-state writes.
