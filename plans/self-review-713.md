@@ -26,10 +26,12 @@ Lead review.
    `skills/detect-ai-fingerprints/scan.sh` in all four package layouts, with the
    hook at `hooks/git/`, so the upward walk reaches it. A dual-path search is
    therefore unnecessary.
-2. **The 9 previously passing files pass on ubuntu-latest.** Design assumption 2,
-   still open at the time of writing and settled by the CI run rather than by
-   argument. Several files build temporary git repositories, so a platform
-   difference surfaces there first. This is the one residual inside the unit.
+2. **The 9 previously passing files pass on ubuntu-latest.** Design assumption 2.
+   Settled by the CI run, and it was wrong: 11 of 12 passed and
+   `test_guard.test.sh` failed. See S-7. The assumption is now closed rather
+   than open, and the prediction that "several files build temporary git
+   repositories, so a platform difference surfaces there first" was right about
+   the mechanism and wrong about it being a platform difference.
 3. **A scenario named for one rule should fail when that rule stops being
    enforced.** Asserted rather than assumed at the outset, and the measurement
    below shows the first version of three corrected scenarios failed it.
@@ -52,6 +54,9 @@ Lead review.
 | open PR branches whose HEAD body the scanner refuses | 10 of 19 | same scanner, `origin/<headRefName>` |
 | step body verdict, non-last file fails | exit 1 | step text extracted from the workflow and run |
 | naive `for` loop verdict, same tree | exit 0 | same tree, same files |
+| files passing on the first ubuntu-latest run | 11 of 12 | run 33715787987, step 11 |
+| test files creating repos without a declared identity | 1 of 5 | `grep -n 'git init\|user.email' hooks/_test/*.test.sh` |
+| `test_guard` scenarios passing vacuously with setup broken | 4 of 8 | fix reverted under an empty global git config |
 
 ## Findings
 
@@ -151,6 +156,42 @@ Its bare-form regex is narrower than `test-guard.sh`'s and matches only
 falls through to the general no-reference check, and exits 2. Recorded because
 it was proposed and could otherwise be re-proposed by a reviewer.
 
+**S-7, P1: the new CI step failed on its first run, and the reason is that
+`test_guard.test.sh` had been passing on ambient machine state it never
+declared.** Step 11 ran and reported 11 of 12 files passing.
+`test_guard.test.sh` is the one that failed, and it is a file this commit
+touches.
+
+The file calls `git init` twice and, alone among the five test files that
+create repositories, never sets a repo-local identity. Four others set
+`user.email` and `user.name` immediately after `git init`. On the runner there
+is no global git config, so every commit in the setup failed with `empty ident
+name`, the push failed with `src refspec develop does not match any`,
+`origin/develop` was never created, and the hook yielded on an unresolvable
+merge base with `WARNING: test-guard: cannot determine merge base. Yielding.`
+
+Two properties of that failure matter more than the missing config line.
+
+First, it is the same shape as S-3 one level up. With the setup broken, the
+four `expect_pass` scenarios still reported PASS, because a hook that yields
+exit 0 is indistinguishable from a hook that allows for the right reason. Only
+the scenarios using `expect_block_because` and `expect_block` failed. Reverting
+the fix under runner conditions gives 4 passed and 4 failed: the four passes
+are vacuous. `expect_pass` is degenerate in exactly the way `expect_block` was,
+and the fix for it is not a harness change but a setup assertion, since the
+scenarios cannot tell the difference by construction.
+
+Second, this is the CI step earning its place inside the commit that adds it.
+The file passed on macOS in every local run because the author's machine has a
+global git identity. Nothing in the repository declared that dependency. The
+step found it on the first run.
+
+Two corrections: the two `git init` calls now set a repo-local identity, and
+the setup asserts `origin/develop` resolves after the push and exits 1 naming
+the consequence if it does not. Falsified by reverting both under
+`GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null` with a scratch
+`HOME`, which reproduces the runner result.
+
 ## Peer review
 
 writing-claims:3 -- every figure in the table names its derivation. The two
@@ -194,7 +235,21 @@ test covered the scenarios this commit touches. The rest are untested against
 that standard, and the honest statement is that they are unknown rather than
 sound.
 
-Risk accepted: assumption 2. The 12 files pass on macOS with the repo's own
-tooling and have never run on ubuntu-latest. The step is not called done until
-the Actions API shows it ran and reported, which is the same standard applied to
-#703's two steps rather than a green job colour.
+Assumption 2 is closed rather than accepted as a risk. The step was not called
+done on a job colour: the step list was read from the Actions API, which showed
+step 11 present and reporting rather than skipped, and showed it failing. That
+read is what produced S-7. Had the standard been "the job is red, rebase and
+retry", the vacuous-pass property of `expect_pass` would have shipped.
+
+Scope grew once more, by the two `test_guard` setup corrections. Same test as
+before: the commit adds a CI step whose purpose is to make `hooks/_test/`
+non-decorative, and the step's first run showed one of those files was
+decorative on any machine without a global git identity. Shipping the step
+with that file failing, or with the file passing vacuously, would instantiate
+the defect the commit removes.
+
+Still not settled: whether the other four repository-creating test files have
+setup steps that can fail silently in the same way. They set an identity, which
+was the failure here, but none of them asserts that its setup succeeded. The
+honest statement is that they are unknown rather than sound, which is the same
+statement made above about the remaining `expect_block` calls.

@@ -28,6 +28,12 @@ git init -q --bare "$TMPDIR/with-testing-bare"
 mkdir -p "$TMPDIR/with-testing"
 cd "$TMPDIR/with-testing"
 git init -q
+# Without a repo-local identity the commits below fail on any machine that has
+# no global git config, the pushes fail with "src refspec develop does not
+# match any", origin/develop never exists, and the hook yields on an
+# unresolvable merge base instead of reaching the rule under test.
+git config user.email "t@example.test"
+git config user.name "test"
 git checkout -q -b develop
 cat > PROJECT.md <<'PROJEOF'
 name: test-project
@@ -46,10 +52,21 @@ git commit -q -m "initial [no-ticket]"
 git remote add origin "$TMPDIR/with-testing-bare"
 git push -q origin develop
 
+# Every scenario below needs origin/develop to resolve a merge base. When it is
+# absent the hook yields with exit 0, which reads as a pass on the expect_pass
+# scenarios and hides the failure. Fail loudly here instead.
+if ! git rev-parse --verify -q origin/develop >/dev/null; then
+    echo "SETUP FAILED: origin/develop does not exist after push." >&2
+    echo "Scenarios would yield exit 0 on an unresolvable merge base." >&2
+    exit 1
+fi
+
 # Repo WITHOUT testing: section
 mkdir -p "$TMPDIR/no-testing"
 cd "$TMPDIR/no-testing"
 git init -q
+git config user.email "t@example.test"
+git config user.name "test"
 git checkout -q -b develop
 cat > PROJECT.md <<'PROJEOF'
 name: no-test-project
