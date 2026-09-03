@@ -60,6 +60,23 @@ else
     bad "fully-wired fixture should pass but did not"
 fi
 
+# --- PASS fixture: fully wired but NO watchdog automation ---------------------
+# The standing-order watchdog is opt-in and not wired by default (README.md);
+# its absence is advisory, not an enforcement failure. A fully-wired target
+# whose only "gap" is the missing watchdog must PASS. Goes red if Check 7 is
+# reverted to `fail`.
+
+NOWATCHDOG="$TMP/nowatchdog"
+cp -r "$WIRED" "$NOWATCHDOG"
+cat > "$NOWATCHDOG/automations.json" <<'JSON'
+{"version":2,"automations":{"SchedulerTick":[{"name":"Skills sync","cron":"0 * * * *","actions":[{"type":"prompt","prompt":"x"}]}]}}
+JSON
+if bash "$PROBE" --target "$NOWATCHDOG" --mode craft-agent >/dev/null 2>&1; then
+    ok "fully-wired-but-no-watchdog fixture passes (watchdog is advisory)"
+else
+    bad "no-watchdog fixture should PASS (watchdog opt-in) but failed"
+fi
+
 # --- FAIL fixture: skills only, nothing wired --------------------------------
 
 DARK="$TMP/dark"
