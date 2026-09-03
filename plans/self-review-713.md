@@ -192,6 +192,42 @@ the consequence if it does not. Falsified by reverting both under
 `GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null` with a scratch
 `HOME`, which reproduces the runner result.
 
+**S-8, P1: this ticket duplicates four open tickets that were never searched
+for, and two of them had already reached S-1's conclusion.** #713 was filed
+without checking the open issue list. The overlap is total, not partial:
+
+| Open ticket | Covers |
+|---|---|
+| #690 | the scanner path, naming `f76ea4d` and the same fail-open branch |
+| #693 | `test_guard` (e) and `ticket_required` (r), the override syntax |
+| #694 | `test_guard` (c), and the same fixture-not-hook determination |
+| #700 | CI for the hook test suite |
+
+The same failure produced #716, which duplicates #707.
+
+Two things follow, and they point in opposite directions.
+
+Against the work: #716's own Falsification clause reads "an existing open issue
+already covering the exec bit on universal-mutation-gate.sh." That check was
+written down and not run. The cost is duplicated filing and a self-review
+crediting itself with determinations the repository had already recorded.
+
+For the work: #694 and #693 are independent derivations of S-1. S-1 is the
+finding most exposed to the charge of being self-serving, since it converts
+three test failures into "the fixture was wrong" and so into "the author's code
+is fine." Two tickets written by someone else, before this ticket existed,
+reach the same conclusion on the same scenarios for the same stated reasons.
+That is stronger corroboration than anything measured inside this unit, and the
+only reason it is available is that the duplication was found before merge
+rather than after.
+
+One divergence is not a duplicate. #700 asks for an explicit known-failing
+baseline so that "new failure" is distinguishable from "still failing." This
+commit does not build that. It fails on any failure, which is a stricter gate
+and is only viable because all 12 files now pass, leaving the baseline empty.
+If a file is ever allowed to stay red, #700's requirement returns and is unmet.
+Stated here rather than claimed as satisfied.
+
 ## Peer review
 
 writing-claims:3 -- every figure in the table names its derivation. The two
