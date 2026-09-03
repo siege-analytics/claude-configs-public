@@ -136,3 +136,77 @@ patterns their first live exercise.
 - `awk` remains blocked, so any diagnostic that genuinely needs awk is still
   in the Class 4 condition. I judged that better than safelisting a language
   with `system()`.
+
+## Round-1 hostile review: BLOCK, accepted and remediated
+
+Working as: software engineer.
+
+Reviewer session 260902-aware-river (GPT-5.5) returned BLOCK on PR #705 with a
+reproduced bypass. I reproduced it independently before accepting it, in my own
+harness (`git rev-parse --show-toplevel` empty, `CRAFT_AGENT_WORKSPACE` at a
+fresh empty dir, `CLAUDE_THINK_GATE` cleared) against the unpatched worktree at
+3bec34b:
+
+```
+control: head (should be 0)                          rc=0
+control: python3 script direct (2)                   rc=2
+SMUGGLE jq + newline + python3 (want 2)              rc=0
+SMUGGLE diff + newline + python3 (2)                 rc=0
+SMUGGLE comm + newline + python3 (2)                 rc=0
+SMUGGLE sed + newline + id (want 2)                  rc=0
+SMUGGLE jq + tab + python3 (want 2)                  rc=0
+```
+
+The two controls are what make the five rc=0 lines mean something: `head`
+passing proves the hook ran, and the same `python3 <script>` blocking with
+rc=2 when submitted directly proves the safelist was live and fail-closed.
+
+Cause, as the reviewer diagnosed it and as I confirmed by reading the
+grammar: `_SAFE_ARG` excluded a literal space but not the rest of
+`[:space:]`. A bash newline is a command separator, and in `[[ =~ ]]` the `$`
+anchor matches end-of-string rather than end-of-line, so the newline was
+consumed as part of a bare argument and the whole two-line program matched as
+one `jq` invocation. Bash then ran line two. `jq .<newline>touch x` still
+blocked, but only because `touch ` is in MUTATION_INDICATORS; anything
+carrying no indicator substring went through.
+
+The tab case was not in the review. I added it to the probe and it was
+vulnerable too, which is what decided the fix shape: exclude the whole
+`[:space:]` class rather than enumerate newline.
+
+Remediation:
+
+- `_SAFE_ARG` bare tokens now exclude `[:space:]`, not `" "`.
+- The `sed -n` filename token gets the same treatment. It was the same bug in
+  a copy of the same class, which is itself an argument for the shared
+  grammar being shared rather than duplicated.
+- Single-quoted content now excludes `[:cntrl:]`. A newline inside single
+  quotes is a legitimate single shell word and is not a bypass, so this is
+  strictly conservative. I took it anyway: reasoning about quote pairing
+  across a multi-line string is exactly what was wrong the first time, and
+  the cost is a rare multi-line jq filter blocking, which is the safe
+  direction.
+
+The reviewer's second finding (MEDIUM) was that the 31-scenario suite was
+green while covering no multi-line payload, so it did not protect the
+load-bearing `_SAFE_ARG` claim. That is correct and is the more serious of
+the two findings, because it is the reason the BLOCKER shipped: I wrote
+adversarial cases for the metacharacters I had thought of and none for the
+separator I had not. Six scenarios added. Falsification, measured both ways:
+
+- Against the unpatched hook at 3bec34b: `Results: 31 passed, 6 failed`, with
+  all six new scenarios in the failure list.
+- Against the patched hook: `Results: 37 passed, 0 failed`.
+
+The smuggled tails deliberately carry no MUTATION_INDICATORS substring. Had
+they carried one, the scenarios would block on the indicator scan without
+ever reaching the safelist loop and would prove nothing about the grammar.
+
+## Method failure this exposes
+
+I published "31 green" as evidence that the argument grammar was sound. The
+count was true and the inference was not: a suite is evidence about the cases
+it contains. I had reasoned about `$(...)`, `<(...)`, redirects and quote
+closing, and treated the absence of a failure across those as coverage of the
+grammar. The gap was a character class I wrote by enumerating what I feared
+instead of by naming what an argument is.

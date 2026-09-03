@@ -52,8 +52,17 @@ source "$HOOK_DIR/../lib/log-block.sh" 2>/dev/null || true
 # closed early). This is what keeps process substitution, command
 # substitution, redirects and chaining out of the safelisted forms:
 # `diff <(id) <(id)` and `jq . $(id)` both fail to match.
+#
+# Bare tokens exclude the whole [:space:] class, not a literal space. A
+# newline is a bash command separator, and in `[[ =~ ]]` the `$` anchor
+# matches end-of-string rather than end-of-line, so a class excluding only
+# " " lets `jq .<newline>python3 x.py` match as a single jq invocation with
+# a bare argument, and bash then runs the second line. Quoted content
+# excludes [:cntrl:] for the same reason: a newline there is a legitimate
+# shell word, but reasoning about quote pairing is what was wrong the first
+# time, so the grammar refuses instead.
 _SQ="'"
-_SAFE_ARG="([^ ;&|<>()\$\`\"${_SQ}]+|${_SQ}[^${_SQ}]*${_SQ})"
+_SAFE_ARG="([^[:space:];&|<>()\$\`\"${_SQ}]+|${_SQ}[^${_SQ}[:cntrl:]]*${_SQ})"
 
 SAFE_PATTERNS=(
     # File reads
@@ -77,7 +86,7 @@ SAFE_PATTERNS=(
     # stops `sed -n '1,2p' -i file` from smuggling in-place editing past
     # MUTATION_INDICATORS (that array matches the literal string "sed -i",
     # which does not appear when the flag is permuted after the script).
-    "^sed -n ${_SQ}[0-9]+(,[0-9]+)?p${_SQ} [^ ;&|<>()\$\`\"${_SQ}]+\$"
+    "^sed -n ${_SQ}[0-9]+(,[0-9]+)?p${_SQ} [^[:space:];&|<>()\$\`\"${_SQ}]+\$"
 
     # awk is deliberately NOT safelisted, in any form. It is a general
     # purpose language with two confirmed shell-exec vectors:

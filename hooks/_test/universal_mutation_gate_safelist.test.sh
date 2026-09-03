@@ -214,6 +214,50 @@ expect_block \
   "$HOOK" \
   "$(payload "bash scripts/discipline/evaluate-ticket.sh 704")"
 
+# --- Preservation: whitespace cannot smuggle a second command ------------
+# A bash newline is a command separator, and in `[[ =~ ]]` the `$` anchor
+# matches end-of-string, not end-of-line. A bare-argument class excluding
+# only " " therefore matched `jq .<newline>python3 x.py` as one jq call with
+# one argument, and bash then ran the second line. Round-1 hostile review of
+# PR #705 reproduced this and proved the tail executed.
+#
+# The tails below carry no MUTATION_INDICATORS substring on purpose. If one
+# did, these would block on the indicator scan without ever reaching the
+# safelist loop, and would prove nothing about the argument grammar. The
+# "running a python script still blocks" scenario above establishes that
+# this exact tail blocks on the safelist path.
+SMUGGLE_TAIL="python3 bin/validate-hooks.py"
+
+expect_block \
+  "newline cannot smuggle a command past jq" \
+  "$HOOK" \
+  "$(payload "$(printf 'jq .\n%s' "$SMUGGLE_TAIL")")"
+
+expect_block \
+  "newline cannot smuggle a command past diff" \
+  "$HOOK" \
+  "$(payload "$(printf 'diff /tmp/a\n%s /tmp/b' "$SMUGGLE_TAIL")")"
+
+expect_block \
+  "newline cannot smuggle a command past comm" \
+  "$HOOK" \
+  "$(payload "$(printf 'comm -23 /tmp/a\n%s /tmp/b' "$SMUGGLE_TAIL")")"
+
+expect_block \
+  "newline cannot smuggle a zero-arg command past sed -n Np" \
+  "$HOOK" \
+  "$(payload "$(printf "sed -n '1p' README.md\nid")")"
+
+expect_block \
+  "tab cannot smuggle an argument past jq" \
+  "$HOOK" \
+  "$(payload "$(printf 'jq .\t%s' "$SMUGGLE_TAIL")")"
+
+expect_block \
+  "newline inside a single-quoted argument still blocks" \
+  "$HOOK" \
+  "$(payload "$(printf "jq '.\nid'")")"
+
 # --- Filesystem proof ----------------------------------------------------
 # Asserting exit 2 tests the gate's opinion. This tests the filesystem: the
 # write probes above must not have left anything behind, and the write they
