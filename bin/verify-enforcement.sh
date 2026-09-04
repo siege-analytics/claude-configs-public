@@ -222,10 +222,17 @@ if [[ "$MODE" == "craft-agent" ]]; then
         fail "CLAUDE.md missing (CA has nothing to auto-inject; rules never enter the system prompt)"
     fi
 
-    # Check 7: the standing-order watchdog automation must be registered.
+    # Check 7: the standing-order watchdog automation (advisory).
+    #
+    # The watchdog is opt-in and NOT wired by default -- README.md: each
+    # SchedulerTick tick spawns a watchdog session (~144/day) and floods the
+    # session list, so standing-order continuity is delivered by the always-on
+    # injected resolver rules instead. Its absence is therefore not an
+    # enforcement failure; warn (advisory), do not fail. The load-bearing
+    # pass/fail is the blocking gate's live block test (Checks 1-6).
     AUTO="$TARGET/automations.json"
     if [[ ! -f "$AUTO" ]]; then
-        fail "automations.json missing (standing-order watchdog not registered)"
+        warn "automations.json has no standing-order watchdog (opt-in; continuity via injected rules)"
     elif python3 - "$AUTO" <<'PY'
 import json, sys
 try:
@@ -242,7 +249,7 @@ PY
     then
         ok "standing-order watchdog automation registered"
     else
-        fail "standing-order watchdog automation not registered in automations.json"
+        warn "standing-order watchdog automation not registered (opt-in; continuity via injected rules)"
     fi
 fi
 

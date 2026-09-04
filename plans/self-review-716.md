@@ -107,6 +107,26 @@ Had the duplicate been found after merge instead of before, this unit would
 have shipped a one-line chmod with the narrow `hooks/**` audit behind it and
 left #707 open against a claim it had already been done.
 
+**S-5, P2: PR #712 already contains the identical mode change, so this branch
+duplicates open work as well as an open ticket.** `git diff
+origin/develop...HEAD --summary` on `fix/703-hook-wiring-drift` reports `mode
+change 100644 => 100755 hooks/bash/universal-mutation-gate.sh`. #712 reached
+the same file by a different route: it wired the gate, and wiring it is what
+made `validate-hooks.py` walk it and see the mode.
+
+Whichever merges first makes the other's mode change a no-op, which git handles
+without a conflict, so this is wasted effort rather than a hazard. This branch
+is kept rather than closed because `develop` is red now and #712 is a large
+change under review, so the one-line unblock should not wait on it. If #712
+merges first, the correct action is to close this PR unmerged and keep #707
+closed by #712.
+
+Note that #712's own self-review states the mode fact and a hostile reviewer
+called it false, having measured against a local `develop` ref 8 commits stale
+that predates the commit which dropped the bit. Three independent parties
+touched this one bit and two of them got a wrong answer from a ref that was not
+what it was named.
+
 ## Peer review
 
 writing-claims:3 -- every figure names its derivation. The before and after
