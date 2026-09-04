@@ -35,8 +35,8 @@ destroys one of the two.
 |---|---|---|
 | `hooks/bash/universal-mutation-gate.sh:298` | `findings` | blocks, "investigation has no findings" |
 | `hooks/resolver/pipeline-state-guard.sh:173` | `findings` | records the artifact as not posted |
-| `hooks/resolver/investigate-gate-guard.sh:191` | `verifiedShapes` | warns and proceeds, "no citations to spot-check" |
-| `hooks/resolver/investigate-gate-guard.sh:390` | `verifiedShapes` | disposition validation, nothing to validate |
+| `hooks/resolver/investigate-gate-guard.sh:214` | `verifiedShapes` | warns and proceeds, "no citations to spot-check" |
+| `hooks/resolver/investigate-gate-guard.sh:411` | `verifiedShapes` | disposition validation, nothing to validate |
 | `hooks/git/self-review.sh:460` | `verifiedShapes` | counts zero |
 | `skills/investigate/SKILL.md` | `verifiedShapes` only | documents one of the two required keys |
 
@@ -76,7 +76,7 @@ conclusions pass the conclusions check.
 
 1. **The two keys are semantically distinct rather than a historical accident.**
    Checked, not carried: their entry shapes share no field, and the guard at
-   `investigate-gate-guard.sh:199-209` greps `file`, `line` and `grep` out of
+   `investigate-gate-guard.sh:226-244` greps `file`, `line` and `grep` out of
    `verifiedShapes` entries, which `findings` entries do not have.
 2. **No reader treats the two as interchangeable today.** Checked by reading
    every file that mentions `investigate-gate`. The table above is the result.

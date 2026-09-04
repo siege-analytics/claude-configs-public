@@ -502,7 +502,7 @@ the difference is stated here rather than left to be discovered.
 | Key | Holds | Entry shape | If absent or empty |
 |---|---|---|---|
 | `findings` | what the investigation concluded | `{claim, evidence, disposition}` | **hard block.** `universal-mutation-gate.sh:298` refuses the next mutation with "investigation has no findings", and `pipeline-state-guard.sh:173` records the artifact as not posted |
-| `verifiedShapes` | which code shapes were read | `{entity, file, line, grep, status, dispositions}` | **warning only.** `investigate-gate-guard.sh:191` prints "No citations to spot-check. Proceeding, but this is suspicious." and exits 0 |
+| `verifiedShapes` | which code shapes were read | `{entity, file, line, grep, status, dispositions}` | **warning only.** `investigate-gate-guard.sh:214` prints "No citations to spot-check. Proceeding, but this is suspicious." and exits 0 |
 
 The asymmetry is worth internalizing. `verifiedShapes` is the key with the
 elaborate validation, the citation spot-check and the disposition rules below,
