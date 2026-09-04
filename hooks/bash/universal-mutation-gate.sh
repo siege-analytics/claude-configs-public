@@ -59,7 +59,7 @@ SAFE_PATTERNS=(
     '^(cd .* &&[[:space:]]*)?(git )(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config (--get|--list|--get-regexp|--get-all)|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( |$)'
 
     # GitHub CLI reads (gh api defaults to GET; write methods caught by MUTATION_INDICATORS)
-    '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api |run (view|list))( |$)'
+    '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api|run (view|list))( |$)'
 
     # GitHub CLI issue management (administrative, not code mutations)
     '^(cd .* &&[[:space:]]*)?(gh )(issue (create|comment|close|edit|reopen|label))( |$)'
@@ -156,9 +156,24 @@ if [[ -n "${CLAUDE_THINK_GATE:-}" ]] && [[ -f "$CLAUDE_THINK_GATE" ]]; then
 elif [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
     THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --repo-root "$REPO_ROOT" --env-override "${CLAUDE_THINK_GATE:-}" 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
 fi
-# Fallback: if resolver returned empty or wasn't available, try legacy paths
+# Fallback: if resolver returned empty or wasn't available, try legacy paths.
+# The workspace-root file is shared by every concurrent session, so it may only
+# be consulted when this session has no signal directory of its own. This is the
+# fail-closed gate: reading a stranger's stale signal here is what blocked every
+# Bash call in the 2026-08-31 incident. The repo-local file below is per-checkout
+# rather than shared, so it stays available either way.
+UMG_SESSION_KNOWN=0
+if [[ -f "$RESOLVE_TG" ]]; then
+    # See the note in the resolver guards: 0 on failure keeps the shared-state
+    # fallback, which may over-block but never under-enforces. Warn so a degraded
+    # check is visible rather than looking healthy.
+    if ! UMG_SESSION_KNOWN=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --session-known 2>/dev/null); then
+        UMG_SESSION_KNOWN=0
+        echo "[universal-mutation-gate] WARN: session scope unresolved; using shared-state fallback" >&2
+    fi
+fi
 if [[ -z "$THINK_GATE" ]]; then
-    if [[ -f "$WORKSPACE_FOR_RESOLVE/think-gate.json" ]]; then
+    if [[ "$UMG_SESSION_KNOWN" != "1" ]] && [[ -f "$WORKSPACE_FOR_RESOLVE/think-gate.json" ]]; then
         THINK_GATE="$WORKSPACE_FOR_RESOLVE/think-gate.json"
     fi
     if [[ -z "$THINK_GATE" ]] && [[ -n "$CWD" ]] && [[ -f "$CWD/.think-gate.json" ]]; then
@@ -206,10 +221,33 @@ DESIGNEOF
         exit 2
     fi
 
-    # Terminal statuses: pipeline is complete, all artifacts were validated
-    # during implementing. Allow all commands without re-checking. Ref: #592.
+    # Terminal statuses claim the pipeline ran and its artifacts were validated.
+    # That claim is only worth honouring if the artifacts exist: writing
+    # {"status":"disposed"} into a think-gate otherwise turns every gate green
+    # permanently, which makes the whole system satisfiable by assertion rather
+    # than by producing anything. See invariant 2 in
+    # docs/craft-agents/gate-architecture.md, and #69 item 6.
+    #
+    # An unearned terminal status falls through to the implementing checks, which
+    # report exactly which artifacts are missing. Ref: #592 (which introduced the
+    # shortcut), #69 (which found the hole).
     if [[ "$TG_STATUS" == "done-awaiting-pr" || "$TG_STATUS" == "disposed" || "$TG_STATUS" == "complete" ]]; then
-        exit 0
+        TERMINAL_EVIDENCE=""
+        if [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
+            TERMINAL_EVIDENCE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" \
+                --repo-root "$REPO_ROOT" --gate-name investigate-gate 2>/dev/null \
+                | python3 -c "import json,sys
+try:
+    r = json.load(sys.stdin)
+    print(r['path'] if r else '')
+except Exception:
+    print('')" 2>/dev/null || true)
+        fi
+        if [[ -n "$TERMINAL_EVIDENCE" ]] && [[ -f "$TERMINAL_EVIDENCE" ]]; then
+            exit 0
+        fi
+        echo "[universal-mutation-gate] status '$TG_STATUS' has no investigation artifact behind it; checking as if implementing" >&2
+        TG_STATUS="implementing"
     fi
 
     if [[ "$TG_STATUS" == "implementing" ]]; then
@@ -420,6 +458,9 @@ resolved_rg = gate_paths.get('review-gate')
 if resolved_rg:
     rg_candidates.append(resolved_rg)
 else:
+    # repo-local first: per-checkout, not shared between sessions
+    if repo_root:
+        rg_candidates.append(os.path.join(repo_root, '.review-gate.json'))
     caws_rg = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
     if caws_rg:
         rg_candidates.append(caws_rg + '/review-gate.json')
