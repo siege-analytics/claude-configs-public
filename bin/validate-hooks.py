@@ -196,6 +196,19 @@ def main():
     for script in sorted(on_disk):
         if script.resolve() not in referenced_files:
             warnings.append(f"Unreferenced hook: {script.relative_to(base)}")
+        # Exec-bit check on ALL hook scripts, not just referenced ones (#723).
+        # An unreferenced hook that loses its exec bit surfaces here rather
+        # than at the point of a future rewire. Test files under hooks/_test/
+        # are invoked via `bash <path>` in CI (see build-and-publish.yml) so
+        # they don't need the bit, but they're consistent-with-siblings; the
+        # scanner reports missing exec bits on production hooks as errors
+        # and on _test/ files as warnings.
+        if not os.access(script, os.X_OK):
+            rel = script.relative_to(base)
+            if "/_test/" in str(rel) or str(rel).startswith("hooks/_test/"):
+                warnings.append(f"Test file not executable: {rel}")
+            else:
+                errors.append(f"Hook script not executable: {rel}")
 
     print(f"Validated {len(hook_paths)} hook paths in {base}")
     if warnings:
