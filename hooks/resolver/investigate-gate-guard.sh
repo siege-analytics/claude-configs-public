@@ -19,6 +19,13 @@
 #     "factSheetLocation": "URL or file path to posted Fact Sheet",
 #     "timestamp": "ISO 8601",
 #     "tier": "full" | "focused",
+#     "findings": [                    // NOT read by this hook; see note below.
+#       {                              // Entry shape is recommended, not
+#         "claim": "...",              // validated. Both readers test only that
+#         "evidence": "file:line",     // the array is non-empty, and signal
+#         "disposition": "CONFIRMED"   // files on disk use several shapes.
+#       }                              // CONFIRMED | REFUTED | OPEN.
+#     ],
 #     "verifiedShapes": [
 #       {
 #         "entity": "human-readable name",
@@ -51,8 +58,22 @@
 #   Both exist, citations fail       → WARN: N citation(s) could not be verified
 #   Both exist, citations pass       → "Investigation current. Proceed."
 #
+# The findings key and this hook (#709):
+#   This hook reads verifiedShapes and never reads findings. Do not infer from
+#   that the key is optional. universal-mutation-gate.sh:298 refuses the next
+#   mutation when findings is absent or empty, and pipeline-state-guard.sh:173
+#   records the artifact as not posted. The two keys carry different content:
+#   findings holds what the investigation concluded, verifiedShapes holds which
+#   code shapes were read. They share no field and neither substitutes for the
+#   other.
+#
+#   The asymmetry to remember when editing either hook: the key with the
+#   elaborate validation below is the one whose absence only warns, and the key
+#   this hook ignores is the one whose absence hard-blocks. A signal file
+#   written to satisfy this hook alone will be refused by the mutation gate.
+#
 # Location: <workspace>/investigate-gate.json
-# Ref: claude-configs-public#255
+# Ref: claude-configs-public#255, #709
 #
 # Levels 1-3 enforcement ladder (standard, always active):
 #   L1: gate existence (this hook)

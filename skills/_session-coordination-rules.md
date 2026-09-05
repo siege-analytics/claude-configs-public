@@ -35,6 +35,36 @@ When creating a new session for review, implementation, investigation, or any wo
 - **Sources/tools:** enable the sources and tools the child needs by name. If a needed source cannot be enabled or authenticated, state the degraded source set in the prompt and in the review artifact.
 - **Prompt contract:** name the permission mode, model class, reasoning level, enabled sources/tools, expected reply channel, and status-setting requirement in the spawn prompt. A child that cannot reply is not a reviewer; it is an unobservable background task.
 
+## Orphan dispatch
+
+Rule 3 above distinguishes slow from stuck for partners that ARE producing
+output. Orphan dispatch is the different failure mode where the partner
+never produces any output: `spawn_session` returns a sessionId but the
+target session's model layer never fires. The parent must not conflate
+"slow" with "orphaned"; they have different remediations and different
+observable signals.
+
+The canonical observable-signal definition and the retry ladder for
+orphan dispatch live in `[skill:hostile-review]` under the
+`## Dispatch verification and orphan fallback` subsection. That skill is
+the primary consumer of spawn-based coordination and the canonical
+implementation of the fallback. Other skills that spawn (spawn-session
+tests, script-sandbox coordinators, downstream helpers) SHOULD cite the
+same protocol rather than reinventing it.
+
+Observable orphan signal (summary; see `[skill:hostile-review]` for the
+full definition and example): at least ten minutes after spawn, three or
+more of the following are true, `messageCount` at most three,
+`outputTokens` under one hundred, `lastMessageRole` in `{user, error}`,
+and `lastMessageAt` within sixty seconds of `createdAt`. Canonical case:
+`260831-vast-marsh` (all four true; Opus 5 dispatch orphaned).
+
+Retry ladder (summary): same-provider respawn once, different-provider
+respawn once, cross-review MCP if available, review-deferred artifact
+and move to next unit. Full spec in `[skill:hostile-review]`. Continuous
+work is preserved: orphan-blocked reviews do not block progression on
+other units in the epic.
+
 ## Override
 
 These rules are mandatory. The carve-out in rule 2 (operator override) lives inside the rule body, not as an external flag. There is no `[coordination-skip]` override.
