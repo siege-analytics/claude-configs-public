@@ -6,6 +6,18 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Added
 
+- scaffold-test-stub hook (#661): `hooks/create-ticket/scaffold-test-stub.sh` reads a ticket body containing Automation blocks (per #658), invokes tool-availability probes (per #662) when the block lacks a Probe field, resolves the layer's `automation_template` from `PROJECT.md`, sed-substitutes `{ticket_id}`/`{ac_id}`/`{feature}` into the named Stub path, and appends `Generated stubs:` + `Blocked-by:` lines to the ticket body. Silent no-op when body has no Automation block. Test fixture at `hooks/_test/scaffold_test_stub.test.sh` covers no-op, happy-path, and blocked-path.
+- Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
+- Tool-availability-probe skill and scripts (#662): `skills/tool-availability-probe/SKILL.md` documents the check-install-escalate protocol; six probe shell scripts ship under `scripts/probe/` for pytest, playwright, vitest, schemathesis, great-expectations, k6. On absent + `tool_install_policy: block` (or install failure), probe files an infra ticket via `gh` from `templates/infra-ticket-tool-install.md` (#663) and returns exit 78 so the scaffold hook (#661) can record `Blocked-by:` while still rendering the stub.
+- Part-of epic #655; child ticket #662 closes the environment-gap check between writing-tests:7 tool declaration and the scaffold hook's stub-render step; adds a new tool-availability-probe skill under `skills/`.
+- Test-stub skeleton templates (#660): seven skeletons under `templates/tests/` (pytest unit, pytest integration, Playwright e2e, Vitest component, Schemathesis contract, Great Expectations suite, k6 scenario), each parameterized on `{ticket_id}`, `{ac_id}`, `{feature}` and each engineered to fail with a message naming the AC when run against an unimplemented target. Consumed by the scaffold hook (#661) once it lands.
+- Part-of epic #655; supplies the `templates/tests` set referenced by the `automation_template` schema field (#659) and by the writing-tests:7 rule (#656).
+- Infra-ticket body template (#663): `templates/infra-ticket-tool-install.md` provides the standardized body the tool-availability probe (#662) renders when a test tool is missing on a shared machine and cannot be installed by the running agent. Substitution uses plain `sed` with seven required placeholders.
+- Part-of epic #655; unblocks #662's blocked-on-infra path via `templates/infra-ticket-tool-install.md` with a uniform body Steve's queue can act on.
+
+### Fixed
+>>>>>>> origin/develop
+
 - Epic #655 close-out (#664): falsifiable acceptance criteria + auto-gen test stubs, delivered end-to-end.
 - epic #655 rule + skills: `writing-tests:7` (#656) requires every AC to carry a paired `Falsifiable-by:` observation and a `Tool:` name drawn from the touched layer's `assertion_tools`. `[skill:create-ticket]` (#657) embeds the Falsifiable-by + Tool shape in ticket bodies; `[skill:ticket-decomposition]` (#658) threads it through multi-layer decomposition.
 - epic #655 schema + templates: PROJECT.md `testing.layers` extension adds two optional per-layer fields, `assertion_tools` and `automation_template` (#659). Seven skeleton templates under `templates/tests/` cover pytest / playwright / vitest / schemathesis / great-expectations / k6 layers (#660).
@@ -13,8 +25,6 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - epic #655 end-to-end flow: `[skill:create-ticket]` emits a ticket body with Automation blocks; scaffold hook parses each block and invokes the tool-availability probe; on installed, renders the stub from the layer's template; on blocked-on-infra, files an infra ticket AND renders the stub anyway with `Blocked-by:` recorded. AC verification is grep-verifiable from the ticket body against production state.
 
 ### Fixed
->>>>>>> origin/develop
-
 - ticket-decomposition skill: Automation block per child ticket (#658). Step 5's decomposition table gains `Tool` and `Stub` columns (from PROJECT.md `assertion_tools[0]` + `automation_template`); Step 4 instructs authors to name the tool + stub per child ticket per writing-tests:7; consumer-protocol Step 3 picks up the two new schema fields alongside framework/test_dir; new `### Automation block` subsection documents the shape the scaffold hook (#661) consumes.
 - Part-of epic #655; #658 threads the falsifiable-AC + auto-gen chain through multi-layer decomposition.
 
