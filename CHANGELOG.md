@@ -6,6 +6,12 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Added
 
+- ticket-decomposition skill: Automation block per child ticket (#658). Step 5's decomposition table gains `Tool` and `Stub` columns (from PROJECT.md `assertion_tools[0]` + `automation_template`); Step 4 instructs authors to name the tool + stub per child ticket per writing-tests:7; consumer-protocol Step 3 picks up the two new schema fields alongside framework/test_dir; new `### Automation block` subsection documents the shape the scaffold hook (#661) consumes.
+- Part-of epic #655; #658 threads the falsifiable-AC + auto-gen chain through multi-layer decomposition.
+
+### Fixed
+>>>>>>> origin/develop
+
 - create-ticket skill: falsifiable acceptance criteria (#657). Ticket template AC block now requires a paired `Falsifiable-by:` observation and `Tool:` name (drawn from the touched layer's `assertion_tools` in `PROJECT.md`). New section `## Falsifiable acceptance criteria` documents the layer-tool table pointing at the seven shipped stub templates (#660) and six availability probes (#662), the tool-availability-probe invocation pattern, multi-layer handling via `[skill:ticket-decomposition]`, and the "surface the schema gap" behavior when a layer has no `assertion_tools` declared.
 - Part-of epic #655; #657 updates `skills/create-ticket/SKILL.md` to compose with writing-tests:7 (#656).
 
@@ -16,8 +22,6 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Fixed
 =======
->>>>>>> origin/develop
-
 - Test-stub skeleton templates (#660): seven skeletons under `templates/tests/` (pytest unit, pytest integration, Playwright e2e, Vitest component, Schemathesis contract, Great Expectations suite, k6 scenario), each parameterized on `{ticket_id}`, `{ac_id}`, `{feature}` and each engineered to fail with a message naming the AC when run against an unimplemented target. Consumed by the scaffold hook (#661) once it lands.
 - Part-of epic #655; supplies the `templates/tests` set referenced by the `automation_template` schema field (#659) and by the writing-tests:7 rule (#656).
 
