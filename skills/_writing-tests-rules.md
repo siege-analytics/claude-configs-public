@@ -79,6 +79,20 @@ Forward-only. Existing inspection tests are eligible for promotion to behavior t
 
 The session's concrete instances: two PRs in the same session shipped source-grep tests that read DRF decorator wrappers instead of the decorated functions (PR #122 boundary_detail decorator; PR #153 helper-call assertions). Both had to be rewritten to read the file as text. A third PR (#157) shipped a source-grep that matched its own explanatory comment in the production file; rewritten with comment-stripping.
 
+**writing-tests:7. Every acceptance criterion names a falsifying observable and a test tool from the touched layer's `assertion_tools`.**
+
+Prose acceptance criteria without a paired `Falsifiable-by:` clause and a named tool are not acceptance criteria — they are wishes. An AC of "search returns paginated results" is unactionable until it becomes "AC1: search returns paginated results. Falsifiable-by: request page 2 with a distinct cursor value; assert the returned cursor differs from page 1. Tool: playwright." The Falsifiable-by clause states an observation that would prove the criterion false; the tool names what runs the observation. Both must be present per AC.
+
+The tool must be drawn from the touched layer's `assertion_tools` list in `PROJECT.md`'s `testing.layers` schema (see `[rule:testing-frameworks]` testing-frameworks:1 for the schema shape and its `assertion_tools` extension). Free-form tool names ("some test," "manual QA," "the CI") do not count: the discipline requires the tool be one the project has already declared it uses for that layer, so the ticket links to real infrastructure rather than an aspiration. If the touched layer has no `assertion_tools` declared, the ticket is invalid until `PROJECT.md` is updated — the ticket-writing act surfaces the schema gap rather than papering over it.
+
+Same-turn evidence discipline applies at ticket-close time, not ticket-open time: the person closing the ticket runs the falsifying tool against the merged code and pastes the output. This is the `[rule:writing-claims]` writing-claims:2 shape ("countable claims require same-turn evidence") applied to acceptance-criterion closure — the tool's output is the evidence, and the tool is named at open-time precisely so there's no ambiguity about what evidence would count.
+
+Multi-layer work (per `[skill:ticket-decomposition]`) means multiple `assertion_tools` — one per touched layer. The decomposition table on the parent epic names the tool per child ticket, and each child ticket's ACs use only tools from its own layer's list.
+
+**Composes with `[rule:testing-frameworks]` testing-frameworks:1** (which defines the `testing.layers` schema this rule reads from) and **`[skill:ticket-decomposition]`** (which is where the tool per layer gets selected). Composes with **`[rule:writing-claims]` writing-claims:2** at ticket-close: the paired Falsifiable-by + tool is the same-turn-evidence contract, deferred to close-time.
+
+Enforcement: judgment-enforced via `[skill:code-review]` at v1 (reviewer checks each AC has Falsifiable-by + a valid tool from PROJECT.md). Mechanical enforcement candidate for a follow-up: a ticket-body scanner that grepped for `AC\d+` lines and required a matching `Falsifiable-by:` + `Tool:` pair within N lines, cross-referenced against the repo's PROJECT.md `assertion_tools` for the touched layer.
+
 ## Structural test smells
 
 Named patterns detectable by static analysis (grep or AST). These
