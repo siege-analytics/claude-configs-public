@@ -29,15 +29,21 @@ testing:
       test_dir: tests/
       pattern: "test_{stem}.py"
       source: ["src/**/*.py", "app/**/*.py"]
+      assertion_tools: [pytest, hypothesis]
+      automation_template: templates/tests/pytest-unit.py.tmpl
     - name: frontend
       framework: vitest
       test_dir: src/**/__tests__/
       pattern: "{stem}.spec.ts"
       source: ["src/**/*.vue", "src/**/*.ts"]
+      assertion_tools: [vitest, playwright]
+      automation_template: templates/tests/vitest-component.spec.ts.tmpl
     - name: e2e
       framework: playwright
       test_dir: tests/e2e/
       pattern: "{stem}.spec.ts"
+      assertion_tools: [playwright]
+      automation_template: templates/tests/playwright-e2e.spec.ts.tmpl
 ```
 
 Each layer names:
@@ -46,6 +52,19 @@ Each layer names:
 - **test_dir** — where test files live (glob-compatible)
 - **pattern** — naming convention (`{stem}` = source file basename without extension)
 - **source** *(optional)* — glob list of production source files that belong to this layer. Drives `hooks/git/decomposition-guard.sh`: each touched file maps to exactly one layer (longest-literal-prefix wins), and a push or PR spanning more than one layer is flagged. Layers without `source:` (e.g. e2e/flow layers) are layer-neutral and never counted.
+- **assertion_tools** *(optional)*: list of tools that can run a falsifying observation for an acceptance criterion touching this layer. Consumed by `[rule:writing-tests]` writing-tests:7 (every AC names a tool from this list) and by `[skill:ticket-decomposition]` (per-layer tool selection). Free-form tool names are refused by writing-tests:7; the tool must appear in this list. Layers without `assertion_tools:` cannot carry falsifiable-AC tickets until the field is declared.
+- **automation_template** *(optional)*: path to a skeleton test file the scaffold hook (`hooks/create-ticket/scaffold-test-stub.sh`, #661) renders per acceptance criterion at ticket-creation time. The template is parameterized on `{ticket_id}`, `{ac_id}`, `{feature}` and MUST fail with a message naming the AC when run against an unimplemented target. Layers without `automation_template:` skip stub generation and emit `Automation: not declared for layer <name>` in the ticket body.
+
+## Assertion tools and stub templates
+
+The `assertion_tools` and `automation_template` fields form the input to the falsifiable-acceptance-criteria discipline (epic #655):
+
+- `[rule:writing-tests]` writing-tests:7 requires every ticket AC to name a `Falsifiable-by:` observable and a tool drawn from the touched layer's `assertion_tools`. Tools not on the list are rejected; the discipline forces tickets to link to real declared infrastructure rather than aspirational tools.
+- `[skill:ticket-decomposition]` reads the layer's `assertion_tools[0]` as the default tool per child ticket in the decomposition table; agents may pick a different entry from the same list when the AC calls for it.
+- `[skill:tool-availability-probe]` (#662) checks whether the named tool is installed in the target environment before ticket-creation renders the stub; if missing, it attempts install per policy, and on failure files an infra ticket while still rendering the stub so it's runnable the moment the tool lands.
+- The `automation_template` file is a skeleton the scaffold hook expands per AC. The `templates/tests/` directory (#660) seeds skeletons for `pytest`, `playwright`, `vitest`, `schemathesis`, `great-expectations`, and `k6`; projects may declare additional templates.
+
+Both fields are optional and independent of `source:` / `test_dir` / `pattern`. A project can adopt test enforcement without falsifiable-AC discipline, or vice-versa.
 
 Projects without a `testing:` section are unaffected by the hook. Once declared, testing is demanded — the hook blocks pushes without test evidence.
 
