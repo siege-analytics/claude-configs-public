@@ -9,7 +9,8 @@
 #   Jira/Linear:    PROJ-NNN, ELE-NNN, SU-NNN
 #   URL:            https://jira.example.com/browse/PROJ-123, etc.
 #   Spreadsheet:    [task: <description>] marker for non-tracker work
-# Override: [no-ticket] in the message body (per commit skill convention)
+# Override: [no-ticket: Reason: ...; Evidence: ...; Falsification: ...] in the
+#   message body. The bare [no-ticket] form is blocked (#580).
 #
 # Ref: claude-configs-public#320
 
