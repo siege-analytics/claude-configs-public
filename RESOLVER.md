@@ -368,6 +368,8 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     e. **Progress-summary stops are violations.** A chat summary of completed work is not completion, not blockage, and not a handoff when pending work remains. If the operator's directive is to finish a queue (for example, "there should never be open issues" or "keep moving"), the next action after a status snapshot is to select and start the next open item in the same turn. Do not end on a status report unless all work items are exhausted, blocked with evidence, or the deadline/user terminates the order.
 
+    f. **Goal mode forbids intention feints.** Under a standing order, future-tense transition text is not work. A line like "continuing to #111 now," "I'll check the reviewer," or "watching release now" is valid only when the same response contains the tool call, durable re-entry mechanism, or falsifiable blocker that makes it true. If the next action is known, do the action before chatting about it. If the next action cannot be done, name the blocker and leave durable evidence. Do not end a turn on an announcement of intended work.
+
     ### Mandatory loop prompt template
 
     When scheduling a ScheduleWakeup or equivalent re-entry during a standing order, the `prompt` field MUST be a directive, not a description. Use this template:
@@ -380,7 +382,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     Do NOT use prompts like "check on progress" or "continue if needed" — these create an off-ramp the agent will take.
 
-    **Mechanical test:** if you are about to end a response during a standing order without either (a) a runtime-available re-entry mechanism in this response, (b) continued foreground work/tool activity, or (c) all work items exhausted, you are violating this check. If no scheduler exists, name that as a blocker and produce durable evidence rather than pretending a hidden loop will notify the operator. The `standing-order-guard.sh` hook will remind you on the next turn, but you should not need the reminder.
+    **Mechanical test:** if you are about to end a response during a standing order without either (a) a runtime-available re-entry mechanism in this response, (b) continued foreground work/tool activity, or (c) all work items exhausted, you are violating this check. If the response contains future-tense action text but no same-turn action, treat it as a failed goal-mode check. If no scheduler exists, name that as a blocker and produce durable evidence rather than pretending a hidden loop will notify the operator. The `standing-order-guard.sh` hook will remind you on the next turn, but you should not need the reminder.
 
     **Incident justification:** Epic #776 dogfood session (2026-05-28/29). Agent went idle 7 hours overnight (no ScheduleWakeup after last agent completed) and produced "No response requested" twice when loop prompts stacked up. Root cause: rules alone don't prevent the agent from rationalizing inaction. The signal file + hook injection makes the standing order mechanically persistent — it cannot be "forgotten" or rationalized away because it is re-injected on every turn.
 
