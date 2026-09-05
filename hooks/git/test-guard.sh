@@ -12,7 +12,8 @@
 # evidence. Pushes that touch no source (docs/config/test-only) pass through
 # without requiring a signal file.
 #
-# Override: [run-skip: reason] in the latest commit message.
+# Override: [run-skip: Reason: ...; Evidence: ...; Falsification: ...] in the
+# latest commit message. The bare [run-skip: reason] form is blocked (#579).
 #
 # Ref: claude-configs-public#386
 
@@ -221,8 +222,12 @@ The test-guard hook requires test evidence before pushing source changes. Run
 affected tests via [skill:commit] step 4, which writes test-gate.json after
 tests pass.
 
-If tests are genuinely inapplicable, add [run-skip: reason] to the
-commit message body.
+If tests are genuinely inapplicable, add the structured override to the
+commit message body. The bare form is blocked; see #579:
+
+  [run-skip: Reason: <why tests aren't needed>;
+             Evidence: <observable supporting the claim>;
+             Falsification: <what would prove tests ARE needed>]
 
 See [skill:testing-frameworks] and [rule:testing-frameworks] for details.
 Ref: #386
@@ -256,8 +261,10 @@ The following files were modified but have no recorded test evidence
 in test-gate.json:
 
 ${MISSING}
-Run affected tests via [skill:commit] step 4 to update test-gate.json,
-or add [run-skip: reason] to the commit body if tests are inapplicable.
+Run affected tests via [skill:commit] step 4 to update test-gate.json, or
+add the structured override to the commit body if tests are inapplicable:
+
+  [run-skip: Reason: <why>; Evidence: <obs>; Falsification: <disproof>]
 
 See [skill:testing-frameworks] and [rule:testing-frameworks] for details.
 Ref: #386
