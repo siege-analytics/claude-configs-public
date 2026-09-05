@@ -153,6 +153,46 @@
         ]
       },
       {
+        "matcher": "NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/write/write-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/write/write-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "mcp__session__send_agent_message",
         "hooks": [
           {
