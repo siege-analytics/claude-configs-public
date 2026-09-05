@@ -45,4 +45,24 @@ expect_block "(g) ls; tee /tmp/out.txt (real tee, after semicolon)" "$HOOK" "$(m
 
 expect_pass "(h) cat attendee-list.txt ('tee' mid-word, no following space match)" "$HOOK" "$(make_payload 'cat attendee-list.txt')"
 
+# --- Class-2 false positive: quoted '>' / '->' must not be read as a redirect ---
+# The redirect-family indicator scanned the raw command including quoted content,
+# so any read-only command containing '->' (an arrow) or '>' inside a quoted
+# grep pattern / echo string was wrongly blocked. Same #591-shape as the
+# tee/committee bug above.
+
+expect_pass "(i) grep \"a->b\" data.txt (arrow in grep pattern)" "$HOOK" "$(make_payload 'grep \"a->b\" data.txt')"
+expect_pass "(j) grep flow->next app.log (bare arrow in grep args)" "$HOOK" "$(make_payload 'grep flow->next app.log')"
+expect_pass "(k) echo \"migrate 2026->2027\" (arrow in echo string)" "$HOOK" "$(make_payload 'echo \"migrate 2026->2027\"')"
+expect_pass "(l) grep \"cat .* >\" report.txt (literal redirect op in grep pattern)" "$HOOK" "$(make_payload 'grep \"cat .* >\" report.txt')"
+expect_pass "(m) grep \"append >> file\" report.txt (literal >> in grep pattern)" "$HOOK" "$(make_payload 'grep \"append >> file\" report.txt')"
+
+# --- True-positive preservation: real redirects must still block ---
+
+expect_block "(n) echo hi > /tmp/out.txt (real redirect, spaced)" "$HOOK" "$(make_payload 'echo hi > /tmp/out.txt')"
+expect_block "(o) cat a.txt > b.txt (real redirect via cat)" "$HOOK" "$(make_payload 'cat a.txt > b.txt')"
+expect_block "(p) echo \"safe text\" > realfile.txt (redirect OUTSIDE quotes, quoted content present)" "$HOOK" "$(make_payload 'echo \"safe text\" > realfile.txt')"
+expect_block "(q) echo x >> /tmp/out.txt (real append redirect)" "$HOOK" "$(make_payload 'echo x >> /tmp/out.txt')"
+expect_block "(r) bash -c \"echo x > /tmp/out\" (eval-wrapper: quoted redirect IS executed)" "$HOOK" "$(make_payload 'bash -c \"echo x > /tmp/out\"')"
+
 report
