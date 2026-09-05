@@ -47,7 +47,7 @@ where the repo is cloned to a fixed path and the snippet's
 ### 1. Make scripts executable
 
 ```bash
-chmod +x hooks/git/*.sh hooks/agent-comms/*.sh hooks/infrastructure/*.sh hooks/resolver/*.sh hooks/write/*.sh
+chmod +x hooks/bash/*.sh hooks/git/*.sh hooks/agent-comms/*.sh hooks/infrastructure/*.sh hooks/resolver/*.sh hooks/write/*.sh
 ```
 
 ### 2. Add hooks to your project settings
@@ -66,6 +66,21 @@ Replace `/path/to/claude-configs-public` with the actual path:
 sed 's|/path/to/claude-configs-public|<absolute path to this repo>|g' \
     hooks/settings-snippet.json
 ```
+
+### 2a. This repo's own `.claude/settings.json` is generated, not edited
+
+`hooks/settings-snippet.json` is canonical. This repository's
+`.claude/settings.json` is generated from it by:
+
+```bash
+bash bin/install-hooks.sh --relative
+```
+
+Do not hand-edit `.claude/settings.json`. Adding a hook to the snippet and not
+regenerating is how this repository came to wire 27 of the snippet's 35
+`(event, matcher, path)` triples, with a whole `NotebookEdit` matcher group
+absent so that notebook writes passed every write guard. `bin/validate-hooks.py`
+now compares the two files on triples and fails the build when they disagree.
 
 ### 3. Or install globally
 
