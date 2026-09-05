@@ -47,17 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "hooks/bash/universal-mutation-gate.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
             "command": "hooks/bash/destructive-guard.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "hooks/bash/coordinator-status-guard.sh",
             "timeout": 10
           },
           {
@@ -113,11 +103,6 @@
           {
             "type": "command",
             "command": "hooks/git/pre-push-self-review.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "hooks/git/fix-shape-guard.sh",
             "timeout": 10
           },
           {
@@ -188,11 +173,21 @@
         ]
       },
       {
-        "matcher": "mcp__session__spawn_session",
+        "matcher": "MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "hooks/agent-comms/spawn-guard.sh",
+            "command": "hooks/write/write-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/ticket-propagation-guard.sh",
             "timeout": 10
           }
         ]
@@ -204,18 +199,6 @@
             "type": "command",
             "command": "hooks/agent-comms/no-slug-form-outbound.sh",
             "timeout": 10
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "hooks/git/vergil-quote.sh",
-            "timeout": 5
           }
         ]
       }

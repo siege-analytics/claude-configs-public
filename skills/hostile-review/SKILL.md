@@ -23,6 +23,94 @@ are deployed to the production target and production UAT evidence is recorded,
 or after the review artifact records that production UAT is not applicable with
 a falsifiable reason.
 
+## Dispatch verification and orphan fallback
+
+Sibling spawn dispatch is unreliable in practice. A spawn can return a
+sessionId without the target session ever producing substantive output. The
+parent must verify the sibling dispatched, retry once on a different provider,
+try cross-review as a fallback, and defer with a documented gap when all three
+fail. Without this protocol the parent gets stuck in a spawn-retry loop
+(observed live in bright-gust epic-682 for 75 minutes on ticket 688
+pre-mortem review; see #718).
+
+### Observable orphan signal
+
+Read the sibling's `~/.craft-agent/workspaces/<ws>/sessions/<id>/session.jsonl`
+header (line 1) at least ten minutes after spawn. The session is orphaned
+when three or more of the following are true:
+
+- `messageCount` at most three (only the initial user prompt and one
+  or two tool acknowledgements landed).
+- `outputTokens` under one hundred.
+- `lastMessageRole` is `user` or `error`.
+- `lastMessageAt` is within sixty seconds of `createdAt` (the dispatch
+  never advanced past the initial turn).
+
+Canonical example: session `260831-vast-marsh` (siege-analytics workspace,
+2026-08-31) shows all four conditions and produced zero review output
+despite being spawned on Opus 5.
+
+### Retry ladder
+
+Apply in strict order per orphaned unit:
+
+1. **Same-provider respawn once.** Give dispatch a second chance on the
+   same model class. If the second spawn is also orphaned by the
+   ten-minute threshold above, do NOT keep respawning.
+2. **Different-provider respawn once.** If the first attempt used Claude,
+   try GPT-5.5 or an OpenAI equivalent, and vice versa. Same
+   ten-minute observable threshold.
+3. **Cross-review MCP.** If `mcp__cross-review__list_providers` shows any
+   provider with valid credits, call `mcp__cross-review__review` with the
+   `hostile-review` skill slug against the target file directly. This
+   is a single-shot review without spawn overhead. It is OPTIONAL in
+   the ladder because credit availability is not guaranteed.
+4. **Review-deferred artifact.** If the ladder exhausts without a
+   delivered review, write `plans/review-deferred-<ticket>.md` per the
+   schema below, label the ticket `review-deferred`, and MOVE TO THE
+   NEXT UNIT. Do not self-merge. Do not stall the epic.
+
+### Review-deferred artifact schema
+
+```markdown
+# Review deferred: <ticket>
+
+## What was reviewed by whom
+- <session-id or MCP provider>: <what they covered, one line>
+
+## What remains unreviewed and why
+- <ticket / file / concern>: <reason review dispatch failed, with
+  same-turn evidence: session ids that orphaned, cross-review error
+  message, ten-minute observable-signal readings>
+
+## Retry command
+<the exact spawn or cross-review invocation to re-attempt later>
+
+## Severity self-assessment
+<what the parent believes might be missed by skipping external review;
+label as low / medium / high impact>
+
+## Followup
+<owner and target date to re-attempt the review, or the sweep skill
+that will pick it up>
+```
+
+The artifact is SUPPLEMENTAL evidence, not a substitute for the
+standard `Self-Review:` and `Hostile-Review-Source:` commit trailers.
+The parent still writes its own self-review; the deferred artifact
+documents the missing external voice.
+
+### Continuous-work invariant
+
+Orphan-blocked reviews DO NOT block progression on other units in the
+epic. The parent files the deferred artifact and moves on. A later
+scheduled sweep (see follow-up work) picks up deferred reviews and
+retries the ladder. This is an explicit exception to the general
+completion criterion in the prose above: dispatch orphan is a
+recognized deferral, not a completion. The general rule that hostile
+review is required for merge is not weakened; the deferral simply
+means "not yet reviewed, tracked, do not merge until resolved."
+
 ## When to Use
 
 - Inheriting a codebase (first week)
