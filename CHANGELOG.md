@@ -5,8 +5,12 @@ All notable changes to this project are documented here. Versioning follows [Sem
 ## [Unreleased]
 
 ### Added
-<<<<<<< HEAD
 
+- create-ticket skill: falsifiable acceptance criteria (#657). Ticket template AC block now requires a paired `Falsifiable-by:` observation and `Tool:` name (drawn from the touched layer's `assertion_tools` in `PROJECT.md`). New section `## Falsifiable acceptance criteria` documents the layer-tool table pointing at the seven shipped stub templates (#660) and six availability probes (#662), the tool-availability-probe invocation pattern, multi-layer handling via `[skill:ticket-decomposition]`, and the "surface the schema gap" behavior when a layer has no `assertion_tools` declared.
+- Part-of epic #655; #657 updates `skills/create-ticket/SKILL.md` to compose with writing-tests:7 (#656).
+
+### Fixed
+<<<<<<< HEAD
 - Infra-ticket body template (#663): `templates/infra-ticket-tool-install.md` provides the standardized body the tool-availability probe (#662) renders when a test tool is missing on a shared machine and cannot be installed by the running agent. Substitution uses plain `sed` with seven required placeholders.
 - Part-of epic #655; unblocks #662's blocked-on-infra path via `templates/infra-ticket-tool-install.md` with a uniform body Steve's queue can act on.
 
