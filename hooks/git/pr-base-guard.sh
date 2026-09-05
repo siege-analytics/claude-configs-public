@@ -29,13 +29,21 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-# Match `gh pr create` (GitHub) or `glab mr create` (GitLab) anywhere in
-# the command. Portable word-boundary form (BSD grep does not support
-# `\b`); see issue #106 fix for self-review. Both platforms use the same
-# develop-first rule (CCP#201); the parser below switches on which CLI
-# matched to handle the per-CLI flag shapes (--base vs --target-branch).
+# Match `gh pr create` (GitHub) or `glab mr create` (GitLab) as the invoked
+# subcommand, not as substring in a quoted body. #648 caught a false positive
+# where `gh issue create --body 'use gh pr create --base main'` tripped this
+# hook because TRIGGER matched the string inside the quoted body.
+#
+# The fix: strip single-quoted and double-quoted string content before matching,
+# so only the actual command surface is scanned. Portable word-boundary form
+# (BSD grep does not support `\b`); see issue #106 fix for self-review.
+#
+# Both platforms use the same develop-first rule (CCP#201); the parser below
+# switches on which CLI matched to handle the per-CLI flag shapes (--base
+# vs --target-branch).
+COMMAND_UNQUOTED=$(printf '%s' "$COMMAND" | sed -E "s/'[^']*'//g; s/\"[^\"]*\"//g")
 TRIGGER='(^|[^[:alnum:]])(gh[[:space:]]+pr[[:space:]]+create|glab[[:space:]]+mr[[:space:]]+create)([^[:alnum:]]|$)'
-if ! echo "$COMMAND" | grep -qE "$TRIGGER"; then
+if ! echo "$COMMAND_UNQUOTED" | grep -qE "$TRIGGER"; then
     exit 0
 fi
 
@@ -139,7 +147,35 @@ if echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])--label=hotfix-direct-to-main([^[
     exit 0
 fi
 
-HEAD_BRANCH=$(git -C "$EFFECTIVE_CWD" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+# Resolve the head branch. Per #648: prefer the explicit --head arg (or
+# glab's -H / --source-branch) if present. Only fall back to the cwd branch
+# when no head arg is passed. Reading git-rev-parse unconditionally caused
+# a false-block when the operator invoked `gh pr create --head promote/foo`
+# from a feature branch: the cwd branch was reported (feature/*) but the
+# operator's intent was promote/foo, which is an allowed shape.
+HEAD_BRANCH=""
+if echo "$COMMAND_UNQUOTED" | grep -qE '(^|[^[:alnum:]])glab[[:space:]]+mr[[:space:]]+create([^[:alnum:]]|$)'; then
+    # GitLab: -H / --source-branch
+    if [[ "$COMMAND" =~ --source-branch[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+        HEAD_BRANCH="${BASH_REMATCH[1]}"
+    elif [[ "$COMMAND" =~ --source-branch=([A-Za-z0-9_/.-]+) ]]; then
+        HEAD_BRANCH="${BASH_REMATCH[1]}"
+    elif [[ "$COMMAND" =~ (^|[[:space:]])-H[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+        HEAD_BRANCH="${BASH_REMATCH[2]}"
+    fi
+else
+    # GitHub: --head / -H (no --head= form is documented but accept it for symmetry)
+    if [[ "$COMMAND" =~ --head[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+        HEAD_BRANCH="${BASH_REMATCH[1]}"
+    elif [[ "$COMMAND" =~ --head=([A-Za-z0-9_/.-]+) ]]; then
+        HEAD_BRANCH="${BASH_REMATCH[1]}"
+    elif [[ "$COMMAND" =~ (^|[[:space:]])-H[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+        HEAD_BRANCH="${BASH_REMATCH[2]}"
+    fi
+fi
+if [[ -z "$HEAD_BRANCH" ]]; then
+    HEAD_BRANCH=$(git -C "$EFFECTIVE_CWD" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+fi
 if [[ -z "$HEAD_BRANCH" ]]; then
     exit 0
 fi

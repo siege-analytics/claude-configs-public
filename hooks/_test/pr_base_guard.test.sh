@@ -118,6 +118,32 @@ expect_pass "(ad) glab feature/foo -> develop" "$HOOK" \
 expect_pass "(ae) glab mr list (not mr create)" "$HOOK" \
     "$(make_payload 'glab mr list --target-branch main' 'feature/foo')"
 
+# --- #648: false positive on gh issue create with 'gh pr create' inside --body ---
+#
+# The bug: TRIGGER at hooks/git/pr-base-guard.sh:37 matches 'gh pr create' as a
+# substring anywhere in the command, including inside a single-quoted body
+# passed to `gh issue create --body`. This produces spurious blocks on
+# innocent commands that just happen to reference the CLI in their body prose.
+
+expect_pass "(af) #648: gh issue create with 'gh pr create' inside --body body" "$HOOK" \
+    "$(make_payload $'gh issue create --title x --body \'use gh pr create --base main\'' 'feature/foo')"
+
+# --- #648: read --head arg instead of git branch when passed ---
+#
+# The bug: HEAD_BRANCH at hooks/git/pr-base-guard.sh:142 reads `git rev-parse
+# --abbrev-ref HEAD` on EFFECTIVE_CWD. If the operator passes --head explicitly
+# to gh, that arg must win over the cwd branch. Otherwise a cwd on a feature
+# branch spuriously blocks a promote/* --head PR the operator intended.
+
+expect_pass "(ag) #648: --head promote/foo wins over cwd feature/foo branch" "$HOOK" \
+    "$(make_payload 'gh pr create --base main --head promote/foo --title x' 'feature/foo')"
+
+expect_pass "(ah) #648: --head release/v1 wins over cwd feature/foo branch" "$HOOK" \
+    "$(make_payload 'gh pr create --base main --head release/v1 --title x' 'feature/foo')"
+
+expect_block "(ai) #648: --head feature/y on cwd promote/x still blocks (head arg wins)" "$HOOK" \
+    "$(make_payload 'gh pr create --base main --head feature/y --title x' 'promote/x')"
+
 if [[ "${_HARNESS_FAIL:-0}" -gt 0 ]]; then
     printf '\nFAIL: %d test(s) failed.\n' "$_HARNESS_FAIL" >&2
     exit 1
