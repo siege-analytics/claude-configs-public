@@ -45,6 +45,25 @@ source "$HOOK_DIR/../lib/log-block.sh" 2>/dev/null || true
 # --- SAFE_PATTERNS: read-only commands that pass without check ---
 # Each pattern is an extended regex. Order does not matter.
 # Add new patterns conservatively: if unsure whether a command mutates, leave it off.
+
+# Shared argument grammar for the text-reader entries below (#704). An
+# argument is either a bare token containing no shell metacharacter, or a
+# single-quoted string containing no single quote (so the quote cannot be
+# closed early). This is what keeps process substitution, command
+# substitution, redirects and chaining out of the safelisted forms:
+# `diff <(id) <(id)` and `jq . $(id)` both fail to match.
+#
+# Bare tokens exclude the whole [:space:] class, not a literal space. A
+# newline is a bash command separator, and in `[[ =~ ]]` the `$` anchor
+# matches end-of-string rather than end-of-line, so a class excluding only
+# " " lets `jq .<newline>python3 x.py` match as a single jq invocation with
+# a bare argument, and bash then runs the second line. Quoted content
+# excludes [:cntrl:] for the same reason: a newline there is a legitimate
+# shell word, but reasoning about quote pairing is what was wrong the first
+# time, so the grammar refuses instead.
+_SQ="'"
+_SAFE_ARG="([^[:space:];&|<>()\$\`\"${_SQ}]+|${_SQ}[^${_SQ}[:cntrl:]]*${_SQ})"
+
 SAFE_PATTERNS=(
     # File reads
     '^(cat|head|tail|less|more|wc|file|stat|du|df|find|tree|which|type|readlink|realpath|md5|sha256sum|shasum|xxd|od|hexdump) '
@@ -53,13 +72,36 @@ SAFE_PATTERNS=(
     # Content search
     '^(grep|egrep|fgrep|rg|ag|ack|ripgrep) '
 
+    # Text readers with no write or exec form (#704).
+    # jq has no write or exec builtin; diff and comm write only to stdout.
+    "^(jq|diff|comm)( +${_SAFE_ARG})*\$"
+
+    # sed: ONLY line-range printing, and only in this exact shape.
+    # sed cannot be safelisted by name, and `sed -n` is not read-only:
+    #   printf 'x\n' | sed -n '1w /tmp/probe'   creates /tmp/probe
+    # GNU sed additionally has `e`, which executes a shell command. The
+    # script body below admits digits, an optional comma, and `p`, so `w`,
+    # `e`, `r` and `s` are unreachable by construction rather than by
+    # enumeration. The file argument is a single bare token, which is what
+    # stops `sed -n '1,2p' -i file` from smuggling in-place editing past
+    # MUTATION_INDICATORS (that array matches the literal string "sed -i",
+    # which does not appear when the flag is permuted after the script).
+    "^sed -n ${_SQ}[0-9]+(,[0-9]+)?p${_SQ} [^[:space:];&|<>()\$\`\"${_SQ}]+\$"
+
+    # awk is deliberately NOT safelisted, in any form. It is a general
+    # purpose language with two confirmed shell-exec vectors:
+    #   awk 'BEGIN{system("id")}'
+    #   awk 'BEGIN{ "id" | getline r; print r}'
+    # plus `print > "file"`. Do not add it here for symmetry with sed; use
+    # sed range printing, head or tail instead. Ref: #704.
+
     # Git reads (status, log, diff, show, branch listing, tag listing, etc.)
     # Note: git config is read-only only for --get/--list/--get-regexp forms;
     # bare 'git config' can write. Narrow to read-only subcommands.
     '^(cd .* &&[[:space:]]*)?(git )(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config (--get|--list|--get-regexp|--get-all)|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( |$)'
 
     # GitHub CLI reads (gh api defaults to GET; write methods caught by MUTATION_INDICATORS)
-    '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api |run (view|list))( |$)'
+    '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api|run (view|list))( |$)'
 
     # GitHub CLI issue management (administrative, not code mutations)
     '^(cd .* &&[[:space:]]*)?(gh )(issue (create|comment|close|edit|reopen|label))( |$)'
@@ -104,7 +146,7 @@ MUTATION_INDICATORS=(
     'gh api .* (--input|--raw-field|-f )'
     'pip[3]? install'
     'npm install|yarn add|pnpm add'
-    'cat .* >|tee |(^|[^0-9&>])>[^ 0-9&]|(^|[^0-9&>])> |(^|[^0-9&>])>> '
+    'cat .* >|(^|[;|[:space:]])tee[[:space:]]|(^|[^0-9&>])>[^ 0-9&]|(^|[^0-9&>])> |(^|[^0-9&>])>> '
     'mkdir |touch |mv |cp '
     'chmod |chown |chgrp '
     'git config (--global|--system|--local|--unset|--add|--replace-all)'
@@ -156,9 +198,24 @@ if [[ -n "${CLAUDE_THINK_GATE:-}" ]] && [[ -f "$CLAUDE_THINK_GATE" ]]; then
 elif [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
     THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --repo-root "$REPO_ROOT" --env-override "${CLAUDE_THINK_GATE:-}" 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
 fi
-# Fallback: if resolver returned empty or wasn't available, try legacy paths
+# Fallback: if resolver returned empty or wasn't available, try legacy paths.
+# The workspace-root file is shared by every concurrent session, so it may only
+# be consulted when this session has no signal directory of its own. This is the
+# fail-closed gate: reading a stranger's stale signal here is what blocked every
+# Bash call in the 2026-08-31 incident. The repo-local file below is per-checkout
+# rather than shared, so it stays available either way.
+UMG_SESSION_KNOWN=0
+if [[ -f "$RESOLVE_TG" ]]; then
+    # See the note in the resolver guards: 0 on failure keeps the shared-state
+    # fallback, which may over-block but never under-enforces. Warn so a degraded
+    # check is visible rather than looking healthy.
+    if ! UMG_SESSION_KNOWN=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --session-known 2>/dev/null); then
+        UMG_SESSION_KNOWN=0
+        echo "[universal-mutation-gate] WARN: session scope unresolved; using shared-state fallback" >&2
+    fi
+fi
 if [[ -z "$THINK_GATE" ]]; then
-    if [[ -f "$WORKSPACE_FOR_RESOLVE/think-gate.json" ]]; then
+    if [[ "$UMG_SESSION_KNOWN" != "1" ]] && [[ -f "$WORKSPACE_FOR_RESOLVE/think-gate.json" ]]; then
         THINK_GATE="$WORKSPACE_FOR_RESOLVE/think-gate.json"
     fi
     if [[ -z "$THINK_GATE" ]] && [[ -n "$CWD" ]] && [[ -f "$CWD/.think-gate.json" ]]; then
@@ -206,10 +263,33 @@ DESIGNEOF
         exit 2
     fi
 
-    # Terminal statuses: pipeline is complete, all artifacts were validated
-    # during implementing. Allow all commands without re-checking. Ref: #592.
+    # Terminal statuses claim the pipeline ran and its artifacts were validated.
+    # That claim is only worth honouring if the artifacts exist: writing
+    # {"status":"disposed"} into a think-gate otherwise turns every gate green
+    # permanently, which makes the whole system satisfiable by assertion rather
+    # than by producing anything. See invariant 2 in
+    # docs/craft-agents/gate-architecture.md, and #69 item 6.
+    #
+    # An unearned terminal status falls through to the implementing checks, which
+    # report exactly which artifacts are missing. Ref: #592 (which introduced the
+    # shortcut), #69 (which found the hole).
     if [[ "$TG_STATUS" == "done-awaiting-pr" || "$TG_STATUS" == "disposed" || "$TG_STATUS" == "complete" ]]; then
-        exit 0
+        TERMINAL_EVIDENCE=""
+        if [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
+            TERMINAL_EVIDENCE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" \
+                --repo-root "$REPO_ROOT" --gate-name investigate-gate 2>/dev/null \
+                | python3 -c "import json,sys
+try:
+    r = json.load(sys.stdin)
+    print(r['path'] if r else '')
+except Exception:
+    print('')" 2>/dev/null || true)
+        fi
+        if [[ -n "$TERMINAL_EVIDENCE" ]] && [[ -f "$TERMINAL_EVIDENCE" ]]; then
+            exit 0
+        fi
+        echo "[universal-mutation-gate] status '$TG_STATUS' has no investigation artifact behind it; checking as if implementing" >&2
+        TG_STATUS="implementing"
     fi
 
     if [[ "$TG_STATUS" == "implementing" ]]; then
@@ -420,6 +500,9 @@ resolved_rg = gate_paths.get('review-gate')
 if resolved_rg:
     rg_candidates.append(resolved_rg)
 else:
+    # repo-local first: per-checkout, not shared between sessions
+    if repo_root:
+        rg_candidates.append(os.path.join(repo_root, '.review-gate.json'))
     caws_rg = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
     if caws_rg:
         rg_candidates.append(caws_rg + '/review-gate.json')

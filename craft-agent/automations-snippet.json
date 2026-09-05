@@ -6,7 +6,7 @@
         "name": "Standing-order watchdog",
         "cron": "*/10 * * * *",
         "timezone": "America/Chicago",
-        "permissionMode": "safe",
+        "permissionMode": "allow-all",
         "actions": [
           {
             "type": "prompt",
@@ -19,11 +19,11 @@
       {
         "name": "Standing-order completion audit",
         "matcher": "^(done|blocked)$",
-        "permissionMode": "safe",
+        "permissionMode": "allow-all",
         "actions": [
           {
             "type": "prompt",
-            "prompt": "A session changed status to $CRAFT_NEW_STATE. If that session is governed by an active standing order or batch directive, verify the work queue is exhausted or genuinely blocked before accepting the terminal status. If the session stopped after one item while work remains, send a continuation prompt to the target session: Standing order active - continue the remaining work queue; do not stop for affirmation between items. If the status is valid, record a brief audit note and set this watchdog session status to done."
+            "prompt": "A session changed status to $CRAFT_NEW_STATE. If that session is governed by an active standing order or batch directive, verify the work queue is exhausted or genuinely blocked before accepting the terminal status. If the session stopped after one item while work remains, send a continuation prompt to the target session: Standing order active - continue the remaining work queue; do not stop for affirmation between items. If the status is valid, record a brief audit note and set this watchdog session status to done. Do not modify user files."
           }
         ]
       }

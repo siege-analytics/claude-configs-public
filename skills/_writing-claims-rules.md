@@ -139,6 +139,22 @@ This is the operational core of the writing-claims:9 failure mode for runtime-lo
 
 **Incident pattern.** Two silent no-ops in the same observed session: (a) materialized views claimed effective, but the runtime continued reading a worker-image-baked path instead of the edited registry path -- required a separate unblocker PR to bake the new path. (b) Recon SQL claimed running, but the scheduled DAG was reading stale vendored SQL, not the edited path -- required a separate unblocker PR to refresh the vendor sync. Both came from the same shape: editing the wrong of two equivalent-looking paths when the consuming runtime resolved by deployment-time decision (image bake, vendor sync), not by edit-time path. The generalization to non-Kubernetes topologies (Lambda, CDN, vendored deps, firmware) makes this a writing-claims:9 special-case worth promoting to its own line so the failure mode names itself.
 
+**writing-claims:11. Class-level or family-level completion claims must enumerate the set with a producing command AND reference follow-up tickets for any deferred members.**
+
+When a PR body or agent message claims completion of a *class* or *family* of related fixes ("fixed all connector auth", "migrated every reporting engine", "closed the SU-1 sweep across the tree"), the claim must:
+
+1. Enumerate the set — a specific list of the class members (per writing-claims:2 countable-claims discipline) OR the command that produces the list (per writing-claims:8 specific-count evidence). "All N connectors" without naming N or the command is a writing-claims:8 violation.
+2. Identify which members are IN the current change vs which are deferred.
+3. For every deferred member, reference a follow-up ticket (per writing-code:17 for shims / writing-code:19 for placeholders).
+
+The failure mode: half-implementation reported as full. Agent fixes 2 of 5 same-shape sites, ships the PR describing it as "the SU-1 sweep" or "the connector fix," reader assumes class-completeness. Discovered later by a hostile-review round or a downstream regression on the un-fixed member.
+
+**Composition with writing-rules:7 (session-scale).** writing-rules:7's Spark Connect five-PR case is the canonical evidence — same-shape fixes across a session where each PR individually passed writing-claims but the class-level completeness was silently absent. writing-claims:11 makes the class-level enumeration a claim-time requirement rather than a session-wrap-up hope.
+
+**Composition with writing-claims:8.** If the count comes from a command (grep, ls, wc -l), writing-claims:8's `Verified-by:` trailer discipline applies. This rule adds the enumeration and deferred-member-tracking layers on top.
+
+**Empirical evidence:** writing-rules:7 body cites the Spark Connect five-PR sequence (2026-05, N=1). Session 260819-awake-crow SU-4b hostile-review Round 7 caught 10 bugs across a family that had been reported as complete (N=2). Multiple operator memory entries prescribe the discipline (N=3+ with operator authority per `feedback_named_constants_need_provenance.md`, `feedback_no_pausing_after_pr.md`, `feedback_continue_means_continue.md`).
+
 ## Override
 
 These rules are mandatory. No `[claim-skip]` override and no `[padding-skip]` override. The same-turn-evidence constraint and the artifact-backing requirement are the entire point; an override defeats the rule. The writing-claims:4 carve-out for new-rule-authoring is in the rule, not an override. `[skill:detect-ai-fingerprints]` trigger-set extension for writing-claims:4 pattern-naming detection is tracked as a v2.x.y follow-up.
