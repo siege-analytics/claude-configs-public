@@ -5,6 +5,14 @@ All notable changes to this project are documented here. Versioning follows [Sem
 ## [Unreleased]
 
 ### Added
+<<<<<<< HEAD
+
+- Infra-ticket body template (#663): `templates/infra-ticket-tool-install.md` provides the standardized body the tool-availability probe (#662) renders when a test tool is missing on a shared machine and cannot be installed by the running agent. Substitution uses plain `sed` with seven required placeholders.
+- Part-of epic #655; unblocks #662's blocked-on-infra path via `templates/infra-ticket-tool-install.md` with a uniform body Steve's queue can act on.
+
+### Fixed
+=======
+>>>>>>> origin/develop
 
 - Test-stub skeleton templates (#660): seven skeletons under `templates/tests/` (pytest unit, pytest integration, Playwright e2e, Vitest component, Schemathesis contract, Great Expectations suite, k6 scenario), each parameterized on `{ticket_id}`, `{ac_id}`, `{feature}` and each engineered to fail with a message naming the AC when run against an unimplemented target. Consumed by the scaffold hook (#661) once it lands.
 - Part-of epic #655; supplies the `templates/tests` set referenced by the `automation_template` schema field (#659) and by the writing-tests:7 rule (#656).
