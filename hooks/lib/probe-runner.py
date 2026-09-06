@@ -69,9 +69,13 @@ def now_utc() -> str:
 def resolve_session_id(explicit: str | None) -> str:
     if explicit:
         return explicit
-    env = os.environ.get("CRAFT_AGENT_SESSION_ID")
-    if env:
-        return env
+    # Craft Agents sets CRAFT_SESSION_ID at runtime; the CRAFT_AGENT_ prefix
+    # was never actually exported (#697). Prefer the real var; fall back to
+    # the aspirational name for backward compat with any explicit exporter.
+    for name in ("CRAFT_SESSION_ID", "CRAFT_AGENT_SESSION_ID"):
+        env = os.environ.get(name)
+        if env:
+            return env
     try:
         result = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],

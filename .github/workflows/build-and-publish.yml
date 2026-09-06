@@ -39,6 +39,39 @@ jobs:
       - name: Validate repo hooks match snippet
         run: python3 bin/validate-hooks.py
 
+      - name: Settings-drift check fixtures
+        run: python3 bin/_test/settings_drift_test.py
+
+      - name: NotebookEdit write-guard fixtures
+        run: python3 bin/_test/notebook_edit_guards_test.py
+# A bare `for f in ...; do bash "$f"; done` exits with the status of the
+      # LAST file, so a failure in any other file is invisible. Failures are
+      # accumulated and the step exits non-zero if any file failed. An empty
+      # glob is a failure rather than a silent pass. Ref: #713
+      - name: Hook scenario tests
+        run: |
+          shopt -s nullglob
+          files=(hooks/_test/*.test.sh)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No files matched hooks/_test/*.test.sh; refusing to report success."
+            exit 1
+          fi
+          failed=""
+          for f in "${files[@]}"; do
+            echo "::group::$f"
+            if bash "$f"; then
+              echo "PASS $f"
+            else
+              echo "FAIL $f"
+              failed="$failed $f"
+            fi
+            echo "::endgroup::"
+          done
+          if [ -n "$failed" ]; then
+            echo "Failing hook test files:$failed"
+            exit 1
+          fi
+          echo "All ${#files[@]} hook test files passed."
   publish:
     name: Build and publish to release branches
     needs: validate
@@ -177,6 +210,18 @@ jobs:
           else
             TAG=${GITHUB_REF#refs/tags/}
           fi
+          # #633: promote CHANGELOG [Unreleased] to [<version>] before cutting
+          # notes. Without this, every auto-cut release reads from the same
+          # growing [Unreleased] block and each release body describes changes
+          # that partly shipped in earlier releases. The promoter is idempotent
+          # (no-op when [<version>] already exists) and refuses to create an
+          # empty versioned section (which would poison future promotions).
+          # The mutation is workflow-local: dist/ is what gets published,
+          # CHANGELOG.md's promotion is committed by the release-notes step
+          # below only when running on a real tag push.
+          python3 scripts/ci/promote-unreleased.py --version "$TAG" || {
+            echo "::warning::promote-unreleased.py returned non-zero; falling back to release-notes.py alone"
+          }
           python3 scripts/ci/release-notes.py --version "$TAG" --out /tmp/release-notes.md
           printf '\nConsumer packages: `%s-claude-code` and `%s-craft-agent`.\n' "$TAG" "$TAG" >> /tmp/release-notes.md
           printf 'Layout tags: `%s-nested` and `%s-flat`.\n' "$TAG" "$TAG" >> /tmp/release-notes.md

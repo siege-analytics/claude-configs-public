@@ -12,6 +12,7 @@ INPUT=$(cat)
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
+CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 
 # If parse fails or command is empty, allow
 if [[ -z "$COMMAND" ]]; then
@@ -23,6 +24,17 @@ fi
 # via character-class form (see branch-guard.sh, issue #106).
 if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'; then
     exit 0
+fi
+
+# Content-scope check (#699). Skip out-of-scope repositories so this
+# guard doesn't fire in moshi-ai / Ringer-Sciences / etc. workspaces
+# on a shared Craft server. CLAUDE_SCOPED_OWNERS can override the
+# default (siege-analytics).
+if [[ -f "$HOOK_DIR/../lib/scope-check.sh" ]]; then
+    source "$HOOK_DIR/../lib/scope-check.sh"
+    if ! _scope_in_scope "$COMMAND" "${CWD:-$PWD}"; then
+        exit 0
+    fi
 fi
 
 # Extract everything after "git commit" as the message area

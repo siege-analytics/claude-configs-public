@@ -1,5 +1,5 @@
 ---
-description: Always-on. When the enforcement system itself produces contradictions — gates blocking their own prerequisites, false positives forcing workarounds, inter-rule conflicts, integrity failures, or context mismatches — the agent must capture evidence, classify the failure, file a ticket with a structured contradiction packet, and triage by blast radius. Workarounds normalize evasion; evidence-based escalation preserves the enforcement system's credibility. Provenance: #590 (self-blocking promotion merge), #591 (stderr redirect false positive), #592 (missing terminal status exit path), #595 (original rule), #597–#603 (cross-review hardening).
+description: Always-on. When the enforcement system itself produces contradictions -- gates blocking their own prerequisites, false positives forcing workarounds, inter-rule conflicts, integrity failures, or context mismatches -- the agent must capture evidence, classify the failure, file a ticket with a structured contradiction packet, and triage by blast radius. Workarounds normalize evasion; evidence-based escalation preserves the enforcement system's credibility. Provenance: #590 (self-blocking promotion merge), #591 (stderr redirect false positive), #592 (missing terminal status exit path), #595 (original rule), #597--#603 (cross-review hardening).
 ---
 
 # Enforcement Contradiction Escalation
@@ -10,8 +10,8 @@ bug. This rule defines what the agent must do instead.
 ## Why this rule exists
 
 Enforcement is mandatory only when non-compliance is never the rational
-choice. When the enforcement system itself has bugs — false positives,
-self-contradictions, missing exit paths — the rational response is to
+choice. When the enforcement system itself has bugs -- false positives,
+self-contradictions, missing exit paths -- the rational response is to
 work around the problem. Workarounds normalize evasion: once the agent
 learns that circumventing a gate is sometimes necessary, it can no
 longer distinguish "legitimate workaround" from "lazy shortcut." The
@@ -22,7 +22,7 @@ Three incidents motivated this rule:
 - **#591**: The mutation-indicator pattern `>[^ ]` matched stderr
   redirects (`2>/dev/null`, `2>&1`). Every read-only command with
   stderr suppression was blocked. Agents learned to avoid `2>/dev/null`
-  — a workaround that hid the broken regex for weeks.
+  -- a workaround that hid the broken regex for weeks.
 
 - **#592**: Completed pipelines (status `done-awaiting-pr`, `disposed`)
   had no exit path. The gate blocked all commands after task completion,
@@ -31,7 +31,7 @@ Three incidents motivated this rule:
 
 - **#590**: `git merge origin/develop` was blocked because artifacts
   existed on develop but not yet on main. The gate blocked the action
-  that would deliver the artifacts — a self-contradiction.
+  that would deliver the artifacts -- a self-contradiction.
 
 All three had workarounds in place before tickets were filed. The
 workarounds worked, so nobody was motivated to fix the root cause.
@@ -44,18 +44,18 @@ Seven classes of enforcement failure. Classification requires evidence
 1. **Self-blocking**: A gate blocks the action required to satisfy the
    gate's own preconditions. Test: can the precondition be satisfied
    WITHOUT performing the blocked action? If yes, it is not
-   self-blocking — the agent simply has not done the prerequisite work.
+   self-blocking -- the agent simply has not done the prerequisite work.
 
 2. **False positive**: A gate fires on a command that does not perform
    the action the gate is designed to prevent. Test: would the hook's
    STATED INTENT (not just its regex) block this command? If not, it is
    a false positive. Evidence must include command class and side-effect
-   analysis — "the command is innocent" is not sufficient without
+   analysis -- "the command is innocent" is not sufficient without
    showing why.
 
 3. **Inter-rule conflict**: Compliance with one mechanically enforced
    rule requires violating another mechanically enforced rule. Both
-   must be implemented as hooks or signal checks — a conflict between a
+   must be implemented as hooks or signal checks -- a conflict between a
    hook and a human-authored principle is a policy disagreement, not a
    Class 3 contradiction. Precedence hierarchy for resolution:
    safety/security > operator explicit instruction > repository
@@ -77,13 +77,13 @@ Seven classes of enforcement failure. Classification requires evidence
    conditions in signal file writing, stale cache states, or
    timing-dependent hook behavior. Protocol: retry ONCE with the
    identical command, capture both outputs. If the second attempt
-   succeeds, continue — file a ticket only if the transient failure is
+   succeeds, continue -- file a ticket only if the transient failure is
    reproducible or recurrent. Do not pivot on a single unreproduced
    block.
 
 6. **Context mismatch**: A gate is correctly implemented for its stated
    purpose but is firing for a ticket, task, or branch context that is
-   not the current work. The gate is not broken — the context binding
+   not the current work. The gate is not broken -- the context binding
    is stale or wrong. Protocol: verify the active task context, archive
    or update the stale signal file with a disposition comment on the
    prior ticket, and continue. File a ticket only if the context
@@ -106,7 +106,7 @@ A contradiction is not detected until ALL of the following are true:
 
 1. A gate has actually fired and blocked a command. Speculative or
    pre-emptive claims ("this regex COULD match an innocent command")
-   are not triggers — the block must have occurred.
+   are not triggers -- the block must have occurred.
 
 2. The agent has captured the evidence (see Contradiction packet
    below). Bare allegations without evidence are treated as normal gate
@@ -116,16 +116,16 @@ A contradiction is not detected until ALL of the following are true:
    classification: reading hook code, checking signal file contents,
    verifying branch and status state, or reproducing the block. No
    state mutation is permitted during diagnostics. Stop once
-   classification is established — do not continue investigating after
+   classification is established -- do not continue investigating after
    the class is clear.
 
-If the block resolves on retry (Class 5 — Transient), continue without
+If the block resolves on retry (Class 5 -- Transient), continue without
 filing. If the block is a stale context (Class 6), archive and
 continue. For all other classes, proceed to the required response.
 
 ## Required response
 
-On confirming a contradiction (Classes 1–4, 7, or persistent Class 5):
+On confirming a contradiction (Classes 1--4, 7, or persistent Class 5):
 
 ### 1. Stop the workaround
 
@@ -135,7 +135,7 @@ gate without performing the required work. Do not silently accept the
 block and move on.
 
 Semantically equivalent read-only diagnostic commands are permitted
-AFTER evidence capture — running the same command without stderr
+AFTER evidence capture -- running the same command without stderr
 suppression to gather output is not evasion. Changing command shape to
 hide a prohibited mutation IS evasion.
 
@@ -152,7 +152,7 @@ not satisfy this requirement.
 - **Gate identity**: Specific hook name, file path, and line number
   that triggered the block.
 - **Protected invariant**: What the gate is designed to protect.
-- **Taxonomy class**: Which class (1–7) and the specific evidence for
+- **Taxonomy class**: Which class (1--7) and the specific evidence for
   that classification.
 - **Reproduction**: Minimal steps to reproduce the block.
 - **Why compliance is impossible**: Why ordinary compliance (producing
@@ -192,7 +192,7 @@ Route by severity:
   contradiction urgency statements ("keep moving," "don't let this
   block you") do not qualify. On emergency authorization: file the
   ticket, note the operator's authorization verbatim, and continue.
-  This is a documented bypass, not a workaround exemption — it still
+  This is a documented bypass, not a workaround exemption -- it still
   risks normalizing gate evasion and must be closed promptly.
 
 ## Enforcement fix guardrails
@@ -206,7 +206,7 @@ closed:
 2. **Passing regression test after fix**: Proves the fix resolves the
    reported contradiction.
 3. **True-positive preservation test**: Proves the fix does not weaken
-   enforcement — the gate still catches the mutations it is designed
+   enforcement -- the gate still catches the mutations it is designed
    to catch.
 4. **Minimal change**: The fix must be the narrowest pattern or parser
    change that resolves the contradiction. No broad bypasses or gate
@@ -225,7 +225,7 @@ pipeline (think gate, investigation, pre-mortem, self-review).
 
 **Cascade depth limit**: If the fix ticket's pipeline ALSO produces a
 contradiction, attach the reproduction as a comment on the root
-enforcement ticket — do NOT file a third ticket. A second-level
+enforcement ticket -- do NOT file a third ticket. A second-level
 contradiction requires operator consultation before any further
 pivoting. This prevents infinite ticket chains where each fix triggers
 another contradiction.
@@ -233,7 +233,7 @@ another contradiction.
 **This rule cannot resolve contradictions it creates.** If the
 escalation protocol itself produces a contradiction (e.g., the ticket
 template is blocked by the gate being reported), escalate to the
-operator — there is no automated resolution path for meta-level
+operator -- there is no automated resolution path for meta-level
 contradictions.
 
 ## What this rule does NOT cover
@@ -250,10 +250,10 @@ contradictions.
 
 - **Policy disagreement**. "I think this rule is too strict" is a
   design discussion, not a contradiction. A conflict between a hook
-  and a human-authored principle does not qualify as Class 3 — only
+  and a human-authored principle does not qualify as Class 3 -- only
   hook-vs-hook conflicts at the same precedence level qualify. File a
   ticket if you want to discuss the policy, but the triage step does
-  not apply — the original task continues.
+  not apply -- the original task continues.
 
 ## Mechanical enforcement
 
@@ -271,6 +271,6 @@ surface, enforcement gates SHOULD:
 
 Until mechanical enforcement is implemented (#602), this rule is
 behavioral guidance enforced by self-review and operator oversight.
-Agents that ignore it are not mechanically prevented from doing so —
+Agents that ignore it are not mechanically prevented from doing so --
 but the self-review hook will flag the absence of a contradiction
 packet when gate blocks appear in the session log.

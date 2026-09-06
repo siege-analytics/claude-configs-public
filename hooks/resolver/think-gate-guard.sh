@@ -62,21 +62,47 @@ export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-# Repo-scoped resolution (#494): check think-gate-*.json first, fall back to think-gate.json
+# Repo-scoped resolution (#494 / #653): resolve the gate for the CURRENT
+# session and repo, not "any active gate anywhere in the workspace."
+# The prior --all lookup returned another session's stale gate to every
+# spawned session in the workspace, blocking sessions with zero relationship
+# to the gate's ticket (#653). Now uses find_gate_for_repo which is session-
+# and repo-scoped: session-scoped signal file first, then repo-slug'd
+# workspace-root file, then the legacy singleton only if its repo_root
+# matches the current repo's basename.
 RESOLVE_TG="$SCRIPT_DIR/../lib/resolve-think-gate.py"
 SIGNAL_FILE="${CLAUDE_THINK_GATE:-}"
 if [[ -z "$SIGNAL_FILE" ]] && [[ -f "$RESOLVE_TG" ]]; then
-    # Find the first active think-gate (any repo)
-    SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --all 2>/dev/null | python3 -c "
+    # Derive repo_root from the hook input's cwd (Claude Code hook payload).
+    # If no cwd is available, fall back to the workspace root; find_gate_for_repo
+    # will still filter the legacy singleton by repo_root basename match.
+    REPO_ROOT=$(printf '%s' "$HOOK_INPUT_JSON" | python3 -c '
+import json, sys, os, subprocess
+try:
+    data = json.loads(sys.stdin.read() or "{}")
+    cwd = data.get("cwd") or os.getcwd()
+except Exception:
+    cwd = os.getcwd()
+try:
+    result = subprocess.run(
+        ["git", "-C", cwd, "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, timeout=5
+    )
+    if result.returncode == 0:
+        print(result.stdout.strip())
+    else:
+        print(cwd)
+except Exception:
+    print(cwd)
+' 2>/dev/null || echo "$WORKSPACE_ROOT")
+    SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" 2>/dev/null | python3 -c "
 import json, sys
-gates = json.load(sys.stdin)
-for g in gates:
-    s = g.get('data', {}).get('status', '')
-    if s not in ('disposed', 'done-awaiting-pr', 'complete'):
-        print(g['path'])
-        sys.exit(0)
-if gates:
-    print(gates[0]['path'])
+try:
+    data = json.load(sys.stdin)
+    if data and data.get('path'):
+        print(data['path'])
+except Exception:
+    pass
 " 2>/dev/null || true)
 fi
 if [[ -z "$SIGNAL_FILE" ]]; then
@@ -87,7 +113,7 @@ if [ ! -f "$SIGNAL_FILE" ]; then
     cat <<EOF
 <think-gate>
 No design note registered. Before writing code for any non-trivial
-change, produce a design note (read skills/thinking/think/SKILL.md)
+change, produce a design note (read skills/think/SKILL.md)
 and write a think-gate.json signal file with falsifiable claims.
 
 Signal file location: $SIGNAL_FILE

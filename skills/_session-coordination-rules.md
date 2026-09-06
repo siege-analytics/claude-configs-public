@@ -1,12 +1,12 @@
 ---
-description: Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Four rules covering when to declare your processing state, when to stop pinging, how to distinguish slow from stuck, and how to hand off the baton. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.
+description: Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Six rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, and operator control-surface preservation. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.
 ---
 
 # Session coordination
 
-These four rules apply to multi-session work where two or more agents exchange `send_agent_message` to coordinate. Originating evidence is a 2026-06-05 incident where two pour-now sessions (`260605-brisk-spring` testing-strategy, `260604-clear-lagoon` Playwright) entered a queue-lag spiral. One was sending updates faster than the other could process. The receiver went silent intentionally to drain its queue. The operator read the silence as a stall. Workspace governance (`260604-smooth-gold`) verified the silent partner was alive and processing -- session.jsonl mtime under two minutes -- and that the silence was a deliberate cadence choice, not a session failure. The four rules below name the discipline failures that produced the operator read-error: missing at-rest declaration with explicit re-engagement signal (rule 1), continued pinging past at-rest declaration (rule 2), "stuck" / "death spiral" framing applied to slow processing (rule 3), implicit-but-unstated baton hand-off after the signoff (rule 4).
+These six rules apply to multi-session work where two or more agents exchange `send_agent_message` to coordinate. Originating evidence is a 2026-06-05 incident where two pour-now sessions (`260605-brisk-spring` testing-strategy, `260604-clear-lagoon` Playwright) entered a queue-lag spiral. One was sending updates faster than the other could process. The receiver went silent intentionally to drain its queue. The operator read the silence as a stall. Workspace governance (`260604-smooth-gold`) verified the silent partner was alive and processing -- session.jsonl mtime under two minutes -- and that the silence was a deliberate cadence choice, not a session failure. The first four rules name the discipline failures that produced the operator read-error: missing at-rest declaration with explicit re-engagement signal (rule 1), continued pinging past at-rest declaration (rule 2), "stuck" / "death spiral" framing applied to slow processing (rule 3), implicit-but-unstated baton hand-off after the signoff (rule 4). Rules 5 and 6 cover the later hub/COO failure mode where user decisions are dumped as a vague bundle and the main session is captured by foreground spoke-coordination churn.
 
-## The four coordination rules
+## The six coordination rules
 
 **session-coordination:1. Declare your processing state when you cannot immediately respond.** When inbound messages from a partner are accumulating faster than you can substantively reply -- deep in another task, slow tool calls, queue backlog -- send a brief `at-rest` or `queue-draining` acknowledgment to the partner before going silent. Silence without declaration looks like a stall to the partner and to any operator monitoring the thread. The declaration must say what you are draining (specific thread, specific queue, specific predicate for re-engaging) and the form of the next signal you will emit.
 
@@ -25,6 +25,22 @@ Escalation language ("stuck," "hung," "death spiral") implies a specific failure
 **session-coordination:4. Hand off the baton explicitly when your work on a thread is complete.** When you have sent everything your partner needs to take the next step, say so plainly in the same message that delivers the last artifact: `You have everything for X; baton to you`. Pair the at-rest declaration of rule 1 with an explicit baton declaration; this prevents the receiver from waiting for additional messages they will not get.
 
 Baton declarations name the action expected of the partner ("present the unified plan to operator," "open the consolidation PR," "merge after CI green") so the next move is unambiguous. An implicit baton -- "I'm done" without naming what the partner should now do -- is rule-4 non-compliance and produces the same read-error as a missing at-rest declaration.
+
+**session-coordination:5. Gate spoke coordination behind complete user decision collection.** When the hub needs operator decisions before spoke agents can proceed meaningfully, do not present the operator with a vague bundled blocker such as "need you to decide on X and several other things." Build the complete decision checklist first, present the list up front, then ask exactly one decision question at a time.
+
+Each decision question must include the decision being made, the context needed to answer it, the concrete options, tradeoffs, the hub's recommendation, and the default if the operator has no preference. Wait for the operator's answer before asking the next question. Continue until the checklist is exhausted.
+
+Do not begin decision-dependent spoke briefings, tasking, redirects, or updates until all decisions on the checklist have been answered. After the final answer, summarize the collected decisions and then coordinate with spokes using the complete decision set.
+
+Non-blocking status checks or informational updates may occur during decision collection only if they do not interrupt the decision flow or consume the hub's user-facing attention. The operator should experience a coherent decision workflow, not a partial-decision drip into agent coordination.
+
+**session-coordination:6. Preserve the operator control surface during spoke coordination.** The hub session may be the underlying messaging surface, but it must remain the operator's steering wheel. Internal spoke coordination must not become a long foreground activity that prevents the operator from correcting course, answering the next question, changing priority, or stopping the process.
+
+Do not let `send_agent_message` churn monopolize the main session after an operator instruction. If foreground coordination is unavoidable, perform it in short bounded batches, checkpoint, and return control to the operator. Prefer background sessions, sub-agents, or delegated sub-managers for coordination that will fan out or take time.
+
+Use a COO model: the hub should have few direct reports. When work expands beyond a small number of coordination threads, create or designate sub-managers for bounded domains such as infrastructure, database, application, QA, research, deployment, or documentation. Sub-managers absorb internal churn, coordinate their own spokes, summarize upward, and escalate only decisions, risks, blockers, or material status changes.
+
+Visibility is not the main issue; control is. Even invisible coordination is non-compliant if it captures the hub's attention for an extended period and deprives the operator of a responsive control surface.
 
 ## Spawn-session discipline
 
@@ -77,7 +93,9 @@ These rules are mandatory. The carve-out in rule 2 (operator override) lives ins
 
 ## Originating evidence
 
-- **2026-06-05 incident, pour-now workspace.** `260605-brisk-spring` (testing-strategy successor, spawned earlier the same day after the original session hit a provider transient) and `260604-clear-lagoon` (Playwright) were collaborating on PR #181 / PR #183 work for the chain-picker UAT testing framework. clear-lagoon delivered v3 F1 signoff and B1 PR #183 URL, then went at-rest -- but without an explicit baton declaration of "present the unified plan to operator." brisk-spring continued sending drain-pressure pings ("Queue lag now ~30 min"). Operator read the silence as a stall and asked workspace governance (`260604-smooth-gold`) to verify the state. Governance read clear-lagoon's session.jsonl: last activity 114 seconds prior, no errors, deliberate "going silent until brisk-spring's queue drains" status. The cadence mismatch was real; the framing of it as a session failure was the error. The four rules above name the discipline failures that produced the framing error.
+- **2026-06-05 incident, pour-now workspace.** `260605-brisk-spring` (testing-strategy successor, spawned earlier the same day after the original session hit a provider transient) and `260604-clear-lagoon` (Playwright) were collaborating on PR #181 / PR #183 work for the chain-picker UAT testing framework. clear-lagoon delivered v3 F1 signoff and B1 PR #183 URL, then went at-rest -- but without an explicit baton declaration of "present the unified plan to operator." brisk-spring continued sending drain-pressure pings ("Queue lag now ~30 min"). Operator read the silence as a stall and asked workspace governance (`260604-smooth-gold`) to verify the state. Governance read clear-lagoon's session.jsonl: last activity 114 seconds prior, no errors, deliberate "going silent until brisk-spring's queue drains" status. The cadence mismatch was real; the framing of it as a session failure was the error. The first four rules above name the discipline failures that produced the framing error.
+
+- **2026-09-05 hub decision/control-surface correction, Craft Agent session `260905-clever-quasar`.** The operator described a Siege hub failure mode where the hub says it needs decisions on a list of vague topics, then captures the user-facing session with extended `send_agent_message` churn before the operator has a useful control surface. The correction: present the complete decision checklist, ask each decision one at a time with context/options/recommendation/default, wait until the checklist is exhausted, and only then perform decision-dependent spoke coordination. If coordination must fan out, the hub should act like a COO with few direct reports by creating sub-managers rather than personally driving every spoke exchange in the foreground.
 
 The incident is recurrence-1 for the cohort. Per writing-claims:4's carve-out (authoring a new rule artifact is the legitimate case for naming a new pattern in the same response as the failure being named), the rule artifact itself is the backing for the cohort introduction.
 
@@ -96,14 +114,16 @@ All four are tractable but require runtime access to other sessions' state, whic
 
 ## Coverage matrix
 
-Four new judgment entries when `_coverage.md` is updated in a follow-up PR:
+Six judgment entries when `_coverage.md` is updated in a follow-up PR:
 
 - `partner-silence-without-declaration` (session-coordination:1, judgment)
 - `pinging-past-partner-at-rest` (session-coordination:2, judgment)
 - `escalation-language-without-evidence` (session-coordination:3, judgment)
 - `thread-closed-without-explicit-baton` (session-coordination:4, judgment)
+- `decision-dump-without-checklist-gate` (session-coordination:5, judgment)
+- `foreground-send-agent-message-control-surface-hijack` (session-coordination:6, judgment)
 
-Tooling-status counts after update: mechanical 16 (unchanged); judgment 18 -> 22; gap 1 (unchanged).
+Tooling-status counts after update: mechanical unchanged; judgment increases by two; gap unchanged.
 
 ## Attribution
 

@@ -8,7 +8,7 @@ export PATH="/home/craftagents/bin:$PATH"
 HOOKS_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 INPUT=$(cat)
 FILE_PATH=$(printf '%s' "$INPUT" \
-  | python3 "$HOOKS_DIR/lib/extract-json.py" tool_input.file_path tool_input.path \
+  | python3 "$HOOKS_DIR/lib/extract-json.py" tool_input.file_path tool_input.path tool_input.notebook_path \
   2>/dev/null || echo "")
 
 [[ -z "$FILE_PATH" ]] && exit 0

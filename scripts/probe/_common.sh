@@ -44,12 +44,33 @@ _probe_resolve_policy() {
     repo_root=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
     local project_md="$repo_root/PROJECT.md"
     if [[ -f "$project_md" ]]; then
+        # #679 (#668 P0-4): strip trailing inline comments and CR/whitespace.
+        # SKILL.md documents the value with a "# default on shared machines"
+        # comment after it; the old extractor left the comment in the value
+        # so the case statement fell through to block. CRLF line endings
+        # (#668 P2-1) had the same effect.
         local policy
-        policy=$(grep -E '^tool_install_policy:' "$project_md" 2>/dev/null | head -1 | sed -E 's/^tool_install_policy:[[:space:]]*//' || true)
-        if [[ -n "$policy" ]]; then
-            printf '%s' "$policy"
-            return
-        fi
+        policy=$(grep -E '^tool_install_policy:' "$project_md" 2>/dev/null | head -1 \
+            | sed -E 's/^tool_install_policy:[[:space:]]*//; s/[[:space:]]*#.*$//; s/[[:space:]]+$//' \
+            | tr -d '\r' \
+            || true)
+        # #679 (#668 P1-6): validate against the allowlist. An unrecognised
+        # value used to silently degrade to block; now we emit a stderr
+        # diagnostic that names the value and the accepted set, then treat
+        # as block.
+        case "$policy" in
+            allow|prompt|block)
+                printf '%s' "$policy"
+                return
+                ;;
+            "")
+                # No policy line found; fall through to default
+                ;;
+            *)
+                printf 'warning: tool_install_policy=%s not in {allow, prompt, block}; treating as block\n' \
+                    "$policy" >&2
+                ;;
+        esac
     fi
     printf 'block'
 }
@@ -136,24 +157,104 @@ Layer: $layer
 Suggested install: $install_cmd
 (Template templates/infra-ticket-tool-install.md not found; using fallback body.)"
     fi
+    # #680: before filing a new infra ticket, look for an existing OPEN
+    # ticket with the same title. Consumers invoke this function once per
+    # Automation block; a decomposed ticket with N pytest ACs on a machine
+    # without pytest would file N identical public issues. Search first;
+    # reuse if found.
+    local title="infra: install $tool for $blocking"
+    local existing_num existing_url
+    existing_num=$(gh issue list --search "in:title \"$title\"" --state open --json number,title --jq \
+        "[.[] | select(.title == \"$title\")] | .[0].number" 2>/dev/null || true)
+    if [[ -n "$existing_num" && "$existing_num" != "null" ]]; then
+        # Reuse. Derive URL via gh's own view rather than assuming the
+        # remote path; gh issue view -w=false --json url handles fork /
+        # cross-repo cases the caller shouldn't have to know about.
+        existing_url=$(gh issue view "$existing_num" --json url --jq .url 2>/dev/null || true)
+        if [[ -z "$existing_url" ]]; then
+            existing_url="#$existing_num"
+        fi
+        _probe_emit_json "{\"status\":\"blocked-on-infra\",\"tool\":\"$tool\",\"ticket\":\"$existing_url\",\"reused\":true}"
+        exit 78
+    fi
+
+    # #677: capture gh stderr and exit status explicitly. gh can be
+    # present and still fail (not authenticated, no network, label
+    # missing, rate limited, --body rejected). The previous form
+    # redirected stderr to /dev/null and used `local url` on its own
+    # line, which made the gh assignment a simple command subject to
+    # `set -e`; a non-zero gh aborted the function before
+    # _probe_emit_json ran, so the caller saw empty stdout ->
+    # probe="unknown" -> nothing appended to BLOCKED_BY -> false-
+    # coverage (SKILL.md line 15's stated failure mode).
+    #
+    # Now: capture stdout+stderr in one buffer, keep the exit code, and
+    # emit a distinct status (escalation-failed / exit 79) so consumers
+    # treat this case as Skipped-with-reason rather than confusing it
+    # with exit 78 (blocked-on-infra means "we filed a real ticket").
+    local gh_out gh_rc
+    gh_out=$(gh issue create --title "$title" --label task --body "$body" 2>&1)
+    gh_rc=$?
+    if [[ $gh_rc -ne 0 ]]; then
+        local reason
+        reason=$(printf '%s' "$gh_out" | python3 -c 'import sys, json; print(json.dumps(sys.stdin.read()[:500]))')
+        _probe_emit_json "{\"status\":\"escalation-failed\",\"tool\":\"$tool\",\"reason\":$reason}"
+        exit 79
+    fi
     local url
-    url=$(gh issue create --title "infra: install $tool for $blocking" --label task --body "$body" 2>/dev/null | tail -1)
+    url=$(printf '%s' "$gh_out" | tail -1)
     _probe_emit_json "{\"status\":\"blocked-on-infra\",\"tool\":\"$tool\",\"ticket\":\"$url\"}"
     exit 78
 }
 
+# #678: unified detection dispatch. If BIN_OR_CHECK_FN names a shell
+# function (declare -F), call it as the presence check. Otherwise fall
+# through to _probe_check_bin with (BIN, MODULE). This lets probes like
+# playwright/vitest pass a real check function that works both pre-install
+# AND post-install, instead of a magic sentinel BIN_NAME that could never
+# resolve on the post-install re-check.
+_probe_check_target() {
+    local target="$1"
+    local module="${2:-}"
+    if declare -F "$target" >/dev/null 2>&1; then
+        "$target"
+    else
+        _probe_check_bin "$target" "$module"
+    fi
+}
+
+_probe_get_version_target() {
+    local target="$1"
+    if declare -F "$target" >/dev/null 2>&1; then
+        # A check-function target has no fixed binary; a companion _version
+        # function is optional. If a function named "<check>_version" exists,
+        # call it; otherwise print "unknown".
+        local vfn="${target}_version"
+        if declare -F "$vfn" >/dev/null 2>&1; then
+            "$vfn"
+        else
+            printf 'unknown'
+        fi
+    else
+        _probe_get_version "$target"
+    fi
+}
+
 probe_run() {
-    # $1 = TOOL_NAME (display); $2 = BIN_NAME; $3 = INSTALL_CMD; $4 = optional MODULE_NAME; $5 = optional LAYER; $6 = optional BLOCKING_TICKET
+    # $1 = TOOL_NAME (display); $2 = BIN_OR_CHECK_FN; $3 = INSTALL_CMD; $4 = optional MODULE_NAME; $5 = optional LAYER; $6 = optional BLOCKING_TICKET
+    # BIN_OR_CHECK_FN (#678): either a binary name (falls through to
+    # _probe_check_bin) or a shell function name (called directly). Used
+    # symmetrically for pre-check and post-install re-check.
     local tool_name="$1"
-    local bin_name="$2"
+    local target="$2"
     local install_cmd="$3"
     local module_name="${4:-}"
     local layer="${5:-unknown}"
     local blocking="${6:-}"
 
-    if _probe_check_bin "$bin_name" "$module_name"; then
+    if _probe_check_target "$target" "$module_name"; then
         local ver
-        ver=$(_probe_get_version "$bin_name")
+        ver=$(_probe_get_version_target "$target")
         _probe_emit_json "{\"status\":\"installed\",\"tool\":\"$tool_name\",\"version\":\"$ver\"}"
         exit 0
     fi
@@ -164,9 +265,9 @@ probe_run() {
         allow)
             >&2 echo "probe: attempting install for $tool_name via: $install_cmd"
             if eval "$install_cmd" >/dev/null 2>&1; then
-                if _probe_check_bin "$bin_name" "$module_name"; then
+                if _probe_check_target "$target" "$module_name"; then
                     local ver
-                    ver=$(_probe_get_version "$bin_name")
+                    ver=$(_probe_get_version_target "$target")
                     _probe_emit_json "{\"status\":\"installed-just-now\",\"tool\":\"$tool_name\",\"version\":\"$ver\"}"
                     exit 0
                 fi
@@ -176,9 +277,9 @@ probe_run() {
         prompt)
             if [[ "${TOOL_INSTALL_YES:-}" == "1" ]]; then
                 >&2 echo "probe: TOOL_INSTALL_YES=1 set; attempting install for $tool_name"
-                if eval "$install_cmd" >/dev/null 2>&1 && _probe_check_bin "$bin_name" "$module_name"; then
+                if eval "$install_cmd" >/dev/null 2>&1 && _probe_check_target "$target" "$module_name"; then
                     local ver
-                    ver=$(_probe_get_version "$bin_name")
+                    ver=$(_probe_get_version_target "$target")
                     _probe_emit_json "{\"status\":\"installed-just-now\",\"tool\":\"$tool_name\",\"version\":\"$ver\"}"
                     exit 0
                 fi

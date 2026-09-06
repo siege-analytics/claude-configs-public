@@ -141,7 +141,7 @@ Example with evidence chain:
 > ```
 > **Verify-before-execute**
 > - **Standards:** `[rule:python]` (no implicit type coercion), project `.claude/rules/data-types.md` (FEC IDs as StringType)
-> - **Intent:** Cast committee_id to str before parsing so leading zeros survive the bronze→silver transform.
+> - **Intent:** Cast committee_id to str before parsing so leading zeros survive the bronze->silver transform.
 > - **Evidence:** `Read` of `transforms/silver.py:48` (in this response) shows `committee_id = int(row["committee_id"])`; `Bash` of `pytest tests/test_silver.py::test_zero_padded_committee_id -x` (in this response) shows `assert "C00000547" == "C547"` failing on line 22.
 > ```
 > [proceeds with Edit -- single-line fix, qualifies for think exemption]
@@ -152,7 +152,7 @@ Example with evidence chain:
 > **Verify-before-execute**
 > - **Standards:** `[skill:skillbuilder]` (frontmatter spec), `[rule:output]` (no AI attribution)
 > - **Intent:** Scaffold the new `lessons-learned` skill at `skills/meta/lessons-learned/SKILL.md` per the design we agreed in this conversation.
-> - **Design:** think workflow ran across the multi-turn discussion above; user selected the three-tier pipeline (Tier-1 ledger → Tier-2 project rules → Tier-3 org rules) and approved staging across PRs B, then C, then D.
+> - **Design:** think workflow ran across the multi-turn discussion above; user selected the three-tier pipeline (Tier-1 ledger -> Tier-2 project rules -> Tier-3 org rules) and approved staging across PRs B, then C, then D.
 > ```
 > [proceeds with Write]
 
