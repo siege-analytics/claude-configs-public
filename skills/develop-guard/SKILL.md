@@ -30,7 +30,7 @@ This skill is a guardrail that runs before branching or merging. It enforces the
 
 1. **Detect the repo's workflow mode** (see Mode detection below). Sample the last ~10 merged PRs on `main`'s history: if most/all had `base=main`, the repo is **GitHub Flow / Trunk-based**; if most/all had `base=develop` (or synonym), the repo is **Gitflow**.
 2. **Apply the mode's branching rule:**
-   - *Gitflow*: branch from `develop`; PR base is `develop`; merges to main are promotion events that require explicit user approval.
+   - *Gitflow*: branch from `develop`; PR base is `develop`; merges to main are promotion events that require explicit user approval. A `promote/*` branch may target `main` only when it represents an already-merged `develop` tree and the PR body carries `Self-Review-Source: <artifact>` evidence.
    - *GitHub Flow*: branch from `main`; PR base is `main`; the PR review IS the curation gate. Don't insist on a develop layer the repo doesn't use.
 3. **If Gitflow but `develop` is missing or stale relative to main** -- STOP. Ask the user before creating develop OR before doing a sync. Do not silently create the branch or silently fall through to main. The recurring stale-develop pattern is itself a signal that the repo may actually be GitHub Flow with an aspirational develop; surface that observation.
 4. **Before any merge to main, verify the user intended it** (Gitflow: this is a release event; GitHub Flow: this is the standard PR merge -- still confirm scope on first PR open per session).
@@ -117,6 +117,9 @@ Merge target is main?
 ├── Source is develop?
 │   ├── User explicitly requested merge to main? → Proceed
 │   └── User did NOT request it? → Ask first
+├── Source is promote/*?
+│   ├── Final tree equals intended develop snapshot AND PR body has Self-Review-Source? → Proceed
+│   └── Missing evidence or tree mismatch? → STOP; fix the promotion PR before merge
 ├── Source is a hotfix/ branch?
 │   ├── User explicitly requested it? → Proceed (then back-merge to develop)
 │   └── User did NOT request it? → Ask first, explain hotfix flow
@@ -201,7 +204,7 @@ Reference implementations:
 - **GitHub Actions**: [siege-analytics/socialwarehouse `.github/workflows/pr-base-guard.yml`](https://github.com/siege-analytics/socialwarehouse/blob/develop/.github/workflows/pr-base-guard.yml).
 - **GitLab CI**: `templates/gitlab-pr-base-guard.yml` in this repo. Include via `.gitlab-ci.yml`'s `include:` mechanism.
 
-Both honor the synonym tables above, allow `develop`/`dev`/`next`/`integration`/`staging`/`develop-next` as heads, allow `promote/*` / `release/*` / `hotfix/*` branch naming, and accept an explicit `hotfix-direct-to-main` bypass label for emergency cases.
+Both honor the synonym tables above, allow `develop`/`dev`/`next`/`integration`/`staging`/`develop-next` as heads, allow `release/*` / `hotfix/*` branch naming, and accept an explicit `hotfix-direct-to-main` bypass label for emergency cases. `promote/*` is allowed for main-targeted PRs only as a self-reviewed linear-promotion vehicle: the promoted content must already be on the develop-role branch, and the PR body must include `Self-Review-Source: <artifact>`.
 
 The **local** pre-tool-use enforcement is `hooks/git/pr-base-guard.sh` -- it catches both `gh pr create` (GitHub) and `glab mr create` (GitLab) before the command reaches the remote.
 
@@ -219,5 +222,6 @@ When this skill fires on a Gitflow repo missing the guard, propose adding it -- 
 - [ ] *Gitflow only*: if develop missing or stale, **asked the user** before creating / syncing (no silent action)
 - [ ] *GitHub Flow*: did not insist on a develop layer the repo doesn't use
 - [ ] Merges to main verified intended (release event in Gitflow; standard PR-merge in GitHub Flow)
+- [ ] For `promote/*` -> main PRs: final tree matches the intended develop snapshot and PR body includes `Self-Review-Source: <artifact>`
 - [ ] Direct commits to main are blocked (redirected through branches) in both modes
 - [ ] Existing repo conventions (branch names, synonyms, PR-review gates) are respected

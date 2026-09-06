@@ -53,6 +53,6 @@ Sequencing assumption: future conflict-resolved promotion branches include `Self
 ## Evidence-predates-work
 
 Artifact: plans/self-review-self-reviewed-linear-promotion.md
-First-added commit: to be filled after commit
-Work commit: to be filled after commit
-Verification: to be filled after commit
+First-added commit: 12f3714442a410019dbc272bd71d8947cb518b50
+Work commit: 2dd4b9797c2062ee4f4317264cbfcfe35a45fd11
+Verification: git merge-base --is-ancestor 12f3714442a410019dbc272bd71d8947cb518b50 2dd4b9797c2062ee4f4317264cbfcfe35a45fd11; echo 0 -> 0
