@@ -10,9 +10,18 @@
 #   3. scratch-* filename prefix (exploratory drafts exempt)
 #
 # This is the mechanical trigger that fires at artifact-creation time
-# without requiring agent volition. See #251 for the failure evidence:
-# the agent who filed the propagation rule still elided it on the next
-# artifact in the same session.
+# within the Write/Edit/MultiEdit/NotebookEdit tool surface. It does NOT
+# govern the Bash channel (#710): heredocs, cat >, sed -i, python3 -c,
+# git mv and other shell-invoked writes bypass this guard because
+# thirteen hooks are registered on the Bash matcher and none inspect
+# artifact frontmatter. Parsing shell command text for write intent is
+# an enumeration trap that #688 spent four rounds proving unwinnable,
+# so this hook does not attempt it. Closing the Bash channel needs a
+# PostToolUse mtime sweep — proposed as follow-up.
+#
+# See #251 for the failure evidence: the agent who filed the
+# propagation rule still elided it on the next artifact in the same
+# session.
 #
 # Exit 0 = allow, Exit 2 = block with message.
 
