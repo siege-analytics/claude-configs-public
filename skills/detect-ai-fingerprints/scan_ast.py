@@ -1286,12 +1286,15 @@ def _test_ast_covers_exception(test_path, exc_class):
 _test_file_covers_exception = _test_ast_covers_exception
 
 
-# Regex to enforce F8 (#760): `noqa: writing-tests-5` must be followed by
-# at least one non-whitespace reason token. Bare `noqa: writing-tests-5`
-# with no reason is rejected. Pattern accepts optional space after the
-# colon, then requires >=3 chars of non-whitespace content.
+# Regex to enforce F8/M-3 (#760/#766): `noqa: writing-tests-5` must be
+# followed by a real reason. F8 required >=3 chars of non-whitespace,
+# which trivially accepted `xxx`, `tbd`, `...` (M-3, Round 2 hostile
+# review). M-3 tightens the check: the reason must contain at least one
+# 4+ letter English-shape word (>=4 alpha chars including >=1 vowel).
+# `cleanup`, `finally`, `best-effort`, `finalizer` all pass; `xxx`,
+# `tbd`, `abcd`, `...` all fail.
 _NOQA_WITH_REASON_RE = re.compile(
-    r"noqa:\s*writing-tests-5\b[^\n]*?\S{3,}"
+    r"noqa:\s*writing-tests-5\b[^\n]*?\b(?=[A-Za-z]*[aeiouAEIOU])[A-Za-z]{4,}\b"
 )
 
 
