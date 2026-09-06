@@ -95,6 +95,14 @@ if ! echo "$COMMAND" | grep -qE "$TRIGGERS"; then
     exit 0
 fi
 
+# Content-scope check (#699). Skip out-of-scope repositories.
+if [[ -f "$HOOK_DIR/../lib/scope-check.sh" ]]; then
+    source "$HOOK_DIR/../lib/scope-check.sh"
+    if ! _scope_in_scope "$COMMAND" "${CWD:-$PWD}"; then
+        exit 0
+    fi
+fi
+
 # Multi-statement-with-cd yield (mirrors branch-guard.sh discipline, issue #101).
 # Portable word boundary (leading), same reason as TRIGGERS above.
 #
