@@ -157,6 +157,27 @@ Layer: $layer
 Suggested install: $install_cmd
 (Template templates/infra-ticket-tool-install.md not found; using fallback body.)"
     fi
+    # #680: before filing a new infra ticket, look for an existing OPEN
+    # ticket with the same title. Consumers invoke this function once per
+    # Automation block; a decomposed ticket with N pytest ACs on a machine
+    # without pytest would file N identical public issues. Search first;
+    # reuse if found.
+    local title="infra: install $tool for $blocking"
+    local existing_num existing_url
+    existing_num=$(gh issue list --search "in:title \"$title\"" --state open --json number,title --jq \
+        "[.[] | select(.title == \"$title\")] | .[0].number" 2>/dev/null || true)
+    if [[ -n "$existing_num" && "$existing_num" != "null" ]]; then
+        # Reuse. Derive URL via gh's own view rather than assuming the
+        # remote path; gh issue view -w=false --json url handles fork /
+        # cross-repo cases the caller shouldn't have to know about.
+        existing_url=$(gh issue view "$existing_num" --json url --jq .url 2>/dev/null || true)
+        if [[ -z "$existing_url" ]]; then
+            existing_url="#$existing_num"
+        fi
+        _probe_emit_json "{\"status\":\"blocked-on-infra\",\"tool\":\"$tool\",\"ticket\":\"$existing_url\",\"reused\":true}"
+        exit 78
+    fi
+
     # #677: capture gh stderr and exit status explicitly. gh can be
     # present and still fail (not authenticated, no network, label
     # missing, rate limited, --body rejected). The previous form
@@ -172,7 +193,7 @@ Suggested install: $install_cmd
     # treat this case as Skipped-with-reason rather than confusing it
     # with exit 78 (blocked-on-infra means "we filed a real ticket").
     local gh_out gh_rc
-    gh_out=$(gh issue create --title "infra: install $tool for $blocking" --label task --body "$body" 2>&1)
+    gh_out=$(gh issue create --title "$title" --label task --body "$body" 2>&1)
     gh_rc=$?
     if [[ $gh_rc -ne 0 ]]; then
         local reason

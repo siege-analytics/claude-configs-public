@@ -57,19 +57,36 @@ _run_probe_ticket() {
     # Sandbox layout: templates/infra-ticket-tool-install.md, bin/gh stub on PATH.
     mkdir -p "$sandbox/templates" "$sandbox/bin"
     printf '%s' "$TMPL_LITERAL" > "$sandbox/templates/infra-ticket-tool-install.md"
-    # Stub gh: capture args + body and echo a predictable URL.
+    # Stub gh: dispatch on subcommand. `issue create` captures --body and
+    # echoes a predictable URL. `issue list` returns empty (no existing
+    # ticket) so dedupe (#680) doesn't fire. `issue view` is unused here
+    # but stubbed for symmetry.
     cat > "$sandbox/bin/gh" <<'GH'
 #!/usr/bin/env bash
-# Capture the --body value so the test can inspect it.
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --body) printf '%s' "$2" > "$GH_STUB_BODY_OUT"; shift 2 ;;
-        --title) shift 2 ;;
-        --label) shift 2 ;;
-        *) shift ;;
-    esac
-done
-echo "https://github.com/fake/repo/issues/999"
+if [[ "$1" == "issue" && "$2" == "list" ]]; then
+    # No existing ticket found; probe proceeds to create
+    exit 0
+fi
+if [[ "$1" == "issue" && "$2" == "view" ]]; then
+    # Called with reused ticket; test controls this path via GH_EXISTING_URL
+    if [[ -n "${GH_EXISTING_URL:-}" ]]; then
+        echo "$GH_EXISTING_URL"
+    fi
+    exit 0
+fi
+if [[ "$1" == "issue" && "$2" == "create" ]]; then
+    shift 2
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --body) printf '%s' "$2" > "$GH_STUB_BODY_OUT"; shift 2 ;;
+            --title) shift 2 ;;
+            --label) shift 2 ;;
+            *) shift ;;
+        esac
+    done
+    echo "https://github.com/fake/repo/issues/999"
+    exit 0
+fi
 exit 0
 GH
     chmod +x "$sandbox/bin/gh"
@@ -281,6 +298,61 @@ test_ac8_policy_invalid_value_warns() {
     rm -rf "$sandbox"
 }
 
+# ---------------------------------------------------------------------------
+# AC9/AC10 (#680): dedupe existing infra ticket instead of filing a duplicate.
+# ---------------------------------------------------------------------------
+test_ac9_dedupe_reuses_existing() {
+    echo "test_ac9_dedupe_reuses_existing:"
+    local sandbox rc probe_stdout
+    sandbox=$(mktemp -d)
+    mkdir -p "$sandbox/templates" "$sandbox/bin"
+    printf '%s' "$TMPL_LITERAL" > "$sandbox/templates/infra-ticket-tool-install.md"
+    # Stub gh: issue list returns an existing ticket #42; view returns URL;
+    # create should NEVER be called (that's the assertion).
+    cat > "$sandbox/bin/gh" <<'GH'
+#!/usr/bin/env bash
+if [[ "$1" == "issue" && "$2" == "list" ]]; then
+    # Match the title (case-sensitive equality per the jq filter in the hook)
+    echo '42'
+    exit 0
+fi
+if [[ "$1" == "issue" && "$2" == "view" ]]; then
+    echo 'https://github.com/fake/repo/issues/42'
+    exit 0
+fi
+if [[ "$1" == "issue" && "$2" == "create" ]]; then
+    # Assertion: dedupe should have prevented create
+    echo "AC9 FAIL: gh issue create was called despite existing ticket" >&2
+    exit 99
+fi
+exit 0
+GH
+    chmod +x "$sandbox/bin/gh"
+    (cd "$sandbox" && git init -q 2>/dev/null || true)
+    rc=0
+    (
+        cd "$sandbox"
+        export PATH="$sandbox/bin:$PATH"
+        export GH_STUB_BODY_OUT="$sandbox/gh_body.txt"
+        source "$HERE/_common.sh"
+        _probe_file_infra_ticket "pytest" "backend" "pip install --user pytest" "656"
+    ) > "$sandbox/probe_stdout.txt" 2>"$sandbox/probe_stderr.txt" || rc=$?
+    probe_stdout=$(cat "$sandbox/probe_stdout.txt")
+
+    if [[ "$rc" != "78" ]]; then
+        fail "AC9: expected exit 78 (reused), got $rc"
+    elif ! echo "$probe_stdout" | grep -q '"reused":true'; then
+        fail "AC9: probe stdout missing reused=true"
+        echo "  stdout: $probe_stdout"
+    elif ! echo "$probe_stdout" | grep -q '"ticket":"https://github.com/fake/repo/issues/42"'; then
+        fail "AC9: probe stdout missing the existing ticket URL"
+        echo "  stdout: $probe_stdout"
+    else
+        pass "AC9: dedupe reuses existing infra ticket (no duplicate filed)"
+    fi
+    rm -rf "$sandbox"
+}
+
 test_ac1_no_sed_in_body_render
 test_ac2_playwright_ampamp
 test_ac3_k6_pipe
@@ -289,6 +361,7 @@ test_ac5_gh_failure_escalation
 test_ac6_policy_inline_comment
 test_ac7_policy_crlf
 test_ac8_policy_invalid_value_warns
+test_ac9_dedupe_reuses_existing
 
 echo ""
 echo "Summary: $PASS passed, $FAIL failed"
