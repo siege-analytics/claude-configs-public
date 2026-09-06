@@ -377,7 +377,11 @@ if [[ "$mode" == staged || "$mode" == working || "$mode" == pr ]]; then
             ast_out=$(python3 "$SCRIPT_DIR/scan_ast.py" "${config_arg[@]}" "${ast_files[@]}" 2>&1) || true
             if [[ -n "$ast_out" ]]; then
                 echo "$ast_out"
-                ast_n=$(printf '%s\n' "$ast_out" | grep -cE ':writing-(code-(7|9|15)|releases-3)' || true)
+                # B-1 (#766): must include every rule the AST scanner emits.
+                # scan_ast.py can emit writing-code-4, -7, -8, -9, -15,
+                # writing-tests-5, writing-releases-3. Missing any means the
+                # violations counter stays 0 and exit 1 doesn't fire.
+                ast_n=$(printf '%s\n' "$ast_out" | grep -cE ':writing-(code-(4|7|8|9|15)|tests-5|releases-3)' || true)
                 violations=$((violations + ast_n))
             fi
         fi
@@ -388,7 +392,7 @@ COVERAGE_NOTE='scanned: writing-prose:1-4 (stylistic; broader Unicode class as o
 
 if (( violations > 0 )); then
     # Summary to stderr to avoid bash 3.2 SIGSEGV on stdout buffer flush
-    # at exit time when many violations are buffered. See issue #60.
+    # at exit time when many violations are buffered.
     echo >&2
     echo "$COVERAGE_NOTE" >&2
     echo "violations: $violations" >&2
