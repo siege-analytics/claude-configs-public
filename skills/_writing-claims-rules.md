@@ -84,8 +84,8 @@ Banned shapes:
 
 Acceptable shapes:
 
-- `` `ls -d siege_utilities/*/ | wc -l` → 25 `` followed by "All 25 subpackages define `__all__`."
-- `` `grep -rn "from old_path" --include="*.py" | wc -l` → 15 `` followed by "Updated all 15 internal import sites."
+- `` `ls -d siege_utilities/*/ | wc -l` -> 25 `` followed by "All 25 subpackages define `__all__`."
+- `` `grep -rn "from old_path" --include="*.py" | wc -l` -> 15 `` followed by "Updated all 15 internal import sites."
 
 The command output anchors the claim to reality. When the agent's recalled count disagrees with the command's count, the command wins and the claim must be revised before stating it.
 
@@ -104,7 +104,7 @@ Mechanical enforcement candidate: `[skill:detect-ai-fingerprints]` trigger-set e
 Acceptable shapes:
 
 - *Inline:* "Phase 3 took effect -- grep result: 0 violating rows in <output-table> (was 3,469)."
-- *Inline:* "Hypothesis: <upstream-pattern> drives the gap. Probe: top-5 row inspection -- `SELECT <key>, <metric> FROM ...` → top-5 are <observed-shape>, not <hypothesized-shape> → hypothesis falsified."
+- *Inline:* "Hypothesis: <upstream-pattern> drives the gap. Probe: top-5 row inspection -- `SELECT <key>, <metric> FROM ...` -> top-5 are <observed-shape>, not <hypothesized-shape> -> hypothesis falsified."
 - *Referenced:* "Phase 3 took effect (verified at <ticket-comment-url> -- probe inlined there)."
 
 Banned shapes:
@@ -143,13 +143,13 @@ This is the operational core of the writing-claims:9 failure mode for runtime-lo
 
 When a PR body or agent message claims completion of a *class* or *family* of related fixes ("fixed all connector auth", "migrated every reporting engine", "closed the SU-1 sweep across the tree"), the claim must:
 
-1. Enumerate the set — a specific list of the class members (per writing-claims:2 countable-claims discipline) OR the command that produces the list (per writing-claims:8 specific-count evidence). "All N connectors" without naming N or the command is a writing-claims:8 violation.
+1. Enumerate the set -- a specific list of the class members (per writing-claims:2 countable-claims discipline) OR the command that produces the list (per writing-claims:8 specific-count evidence). "All N connectors" without naming N or the command is a writing-claims:8 violation.
 2. Identify which members are IN the current change vs which are deferred.
 3. For every deferred member, reference a follow-up ticket (per writing-code:17 for shims / writing-code:19 for placeholders).
 
 The failure mode: half-implementation reported as full. Agent fixes 2 of 5 same-shape sites, ships the PR describing it as "the SU-1 sweep" or "the connector fix," reader assumes class-completeness. Discovered later by a hostile-review round or a downstream regression on the un-fixed member.
 
-**Composition with writing-rules:7 (session-scale).** writing-rules:7's Spark Connect five-PR case is the canonical evidence — same-shape fixes across a session where each PR individually passed writing-claims but the class-level completeness was silently absent. writing-claims:11 makes the class-level enumeration a claim-time requirement rather than a session-wrap-up hope.
+**Composition with writing-rules:7 (session-scale).** writing-rules:7's Spark Connect five-PR case is the canonical evidence -- same-shape fixes across a session where each PR individually passed writing-claims but the class-level completeness was silently absent. writing-claims:11 makes the class-level enumeration a claim-time requirement rather than a session-wrap-up hope.
 
 **Composition with writing-claims:8.** If the count comes from a command (grep, ls, wc -l), writing-claims:8's `Verified-by:` trailer discipline applies. This rule adds the enumeration and deferred-member-tracking layers on top.
 

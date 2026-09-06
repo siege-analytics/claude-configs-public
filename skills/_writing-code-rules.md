@@ -338,15 +338,15 @@ The standing instruction "default is fix and keep moving" is not permission to s
 
 **writing-code:19. TODO / FIXME / HACK / XXX markers require a follow-up ticket reference.**
 
-Any `# TODO:`, `# FIXME:`, `# HACK:`, `# XXX:` comment shipped in production code (any `.py` file outside `tests/`) must include a ticket reference in the same or preceding comment line, or an inline design-note-shaped justification block per `feedback_stub_inline_justification.md`. Bare `# TODO: fix later` without either is the failure mode — the code ships marked-incomplete without the tracking that would ever cause "later" to arrive.
+Any `# TODO:`, `# FIXME:`, `# HACK:`, `# XXX:` comment shipped in production code (any `.py` file outside `tests/`) must include a ticket reference in the same or preceding comment line, or an inline design-note-shaped justification block per `feedback_stub_inline_justification.md`. Bare `# TODO: fix later` without either is the failure mode -- the code ships marked-incomplete without the tracking that would ever cause "later" to arrive.
 
 Falsification: `grep -rEn '# (TODO|FIXME|HACK|XXX)' <package>/ --include='*.py'` returns hits with no `#\d+` on the same or preceding line AND no accompanying inline-justification block within 5 lines.
 
 **Composition with writing-code:17:** writing-code:17 requires companion tickets for deprecation shims specifically. writing-code:19 generalizes the same discipline to all placeholder markers. Deprecation shims are the special case; TODO/FIXME/HACK/XXX are the general case. Both compose with the same follow-up-ticket enforcement.
 
-**Carve-out (test files):** `tests/**` files may carry `# TODO` markers without ticket reference — test-suite TODOs often track "add this case when the underlying fix lands" and forcing ticket-ref discipline in tests creates noise. Test files are exempt. Ratcheted adoption per writing-rules:1: run as `warn` initially, promote to `error` after per-project cleanup.
+**Carve-out (test files):** `tests/**` files may carry `# TODO` markers without ticket reference -- test-suite TODOs often track "add this case when the underlying fix lands" and forcing ticket-ref discipline in tests creates noise. Test files are exempt. Ratcheted adoption per writing-rules:1: run as `warn` initially, promote to `error` after per-project cleanup.
 
-**Empirical evidence:** siege_utilities as of 2026-08-27 has zero TODO/FIXME/HACK markers in production code (verified by scan; comment strings containing "XX" in reference literals like `XX-XXXX` SOC-code format are not markers). The zero-marker discipline is achievable; the shelf rule codifies what the operator memory (`feedback_stub_inline_justification.md`, operator-stated importance) already prescribes. Ratchet enforcement is essential per writing-rules:1 — a prose rule without a scanner decays.
+**Empirical evidence:** siege_utilities as of 2026-08-27 has zero TODO/FIXME/HACK markers in production code (verified by scan; comment strings containing "XX" in reference literals like `XX-XXXX` SOC-code format are not markers). The zero-marker discipline is achievable; the shelf rule codifies what the operator memory (`feedback_stub_inline_justification.md`, operator-stated importance) already prescribes. Ratchet enforcement is essential per writing-rules:1 -- a prose rule without a scanner decays.
 
 ## Override
 

@@ -11,7 +11,7 @@ Apply these principles from the [Hypothesis](https://hypothesis.readthedocs.io/)
 - Any function that transforms data (normalize, aggregate, project, interpolate) is a candidate. If you can state "for all valid inputs, the output satisfies X," write a property test.
 - Property tests complement, not replace, example-based tests. Use examples for specific known edge cases. Use properties for invariants that hold across the input space.
 - Prefer property tests when the input domain is large or combinatorial (GEOIDs, CRS codes, date ranges, coordinate pairs).
-- **Data-heavy libraries (geo, time-series, DataFrame ops) are especially high-ROI.** CRS round-trips, geometry normalization idempotence, spatial-join row-count invariants, aggregation associativity are canonical shapes. If the library already declares `hypothesis` in dev extras but has few property-test files, that's a coverage debt signal — the ROI is present but unclaimed.
+- **Data-heavy libraries (geo, time-series, DataFrame ops) are especially high-ROI.** CRS round-trips, geometry normalization idempotence, spatial-join row-count invariants, aggregation associativity are canonical shapes. If the library already declares `hypothesis` in dev extras but has few property-test files, that's a coverage debt signal -- the ROI is present but unclaimed.
 
 ## Writing good properties
 

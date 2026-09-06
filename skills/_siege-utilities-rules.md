@@ -25,8 +25,8 @@ If you're not sure: search the repo first (`gh search code --owner siege-analyti
 If `siege_utilities` *almost* solves it but doesn't:
 
 1. Decide whether the gap is generic (other Siege projects would benefit) or project-specific.
-2. **Generic** → propose a PR to `siege_utilities` *before* writing the local helper. Note the proposed PR in the commit message.
-3. **Project-specific** → write it locally, but in a `utils/` module shaped like `siege_utilities` so it can be lifted later if it generalizes.
+2. **Generic** -> propose a PR to `siege_utilities` *before* writing the local helper. Note the proposed PR in the commit message.
+3. **Project-specific** -> write it locally, but in a `utils/` module shaped like `siege_utilities` so it can be lifted later if it generalizes.
 
 ## What this rule is not
 

@@ -79,7 +79,7 @@ Apply these principles to all React code (`.jsx`, `.tsx`, and `.js`/`.ts` files 
 
 ## TypeScript interop
 
-This section layers on top of `[rule:typescript]` — the TypeScript rules there (strict-null-checks, no `any`, avoid non-null assertion, prefer union over enums for finite sets) apply unchanged; the bullets below are React-specific additions where the base TS rules under-specify.
+This section layers on top of `[rule:typescript]` -- the TypeScript rules there (strict-null-checks, no `any`, avoid non-null assertion, prefer union over enums for finite sets) apply unchanged; the bullets below are React-specific additions where the base TS rules under-specify.
 
 - Prefer `type` for component props; use `interface` when the prop shape is genuinely extensible by third parties
 - Type children explicitly: `children: React.ReactNode` -- do not rely on `React.FC` to inject it
