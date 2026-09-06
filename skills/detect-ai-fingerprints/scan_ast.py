@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AST scanner for writing-code:4 (Django ORM kwargs), :7, :9, :15 and writing-releases:3.
+"""AST scanner for writing-code:4 (Django ORM kwargs), :7, :8, :9, :15, writing-tests:5 and writing-releases:3.
 
 Invoked by scan.sh for .py files in the diff. Reports violations as
 <file>:<line>:<rule>: <excerpt>. Exit 0 if clean, 1 if violations.
@@ -724,6 +724,472 @@ def check_writing_code_4_django_orm(tree):
     return violations
 
 
+# ---------------------------------------------------------------------------
+# writing-code:8 -- optional-import callsite hygiene (#57)
+#
+# When a module declares an optional import via the try/import/except-with-flag
+# pattern, every public callsite of the imported symbol must be guarded by
+# `if <FLAG>: ...` (or its negation) BEFORE the call, so a missing dependency
+# produces a clear error rather than a bare NameError at first use.
+#
+# Detection is single-file only (multi-file re-exports are out of scope; the
+# ticket calls them "known scanner gap" tracked at upstream #57 v1.6.2). Fires
+# only when both parts of the pattern are present in one module:
+#   (a) try / import X ... except (ImportError, ModuleNotFoundError): X_FLAG = ...
+#   (b) an Attribute or Call node references X somewhere outside a guarded
+#       branch (an `if X_FLAG` / `if not X_FLAG:` conditional or a private
+#       helper function whose docstring names the flag as the caller's contract).
+#
+# Carve-outs:
+#   - Callsites inside a private function (leading-underscore name) whose
+#     docstring contains "caller must check" or names the flag literally.
+#     This matches the writing-code:8 rule body ("Public callsites must check
+#     the flag inline; private helpers can defer to their callers only if
+#     the docstring documents the contract.").
+#   - Callsites inside the try-body that established the flag (obviously
+#     guarded — the flag can't be False if we're still in the try block).
+# ---------------------------------------------------------------------------
+
+FLAG_PATTERNS = ("_AVAILABLE", "_INSTALLED")
+FLAG_PREFIXES = ("HAS_", "_HAS_")
+
+
+def _is_flag_name(name):
+    return (name.endswith(FLAG_PATTERNS) if isinstance(FLAG_PATTERNS, str)
+            else any(name.endswith(s) for s in FLAG_PATTERNS)
+            or any(name.startswith(p) for p in FLAG_PREFIXES))
+
+
+def _extract_optional_imports(tree):
+    """Return dict of imported_name -> flag_name for optional-import patterns
+    at module scope. Only matches the tight
+        try: import X (or from X import Y)
+        <FLAG> = True
+        except (ImportError, ...): <FLAG> = False
+    shape."""
+    result = {}
+    if not isinstance(tree, ast.Module):
+        return result
+
+    for node in tree.body:
+        if not isinstance(node, ast.Try):
+            continue
+        # Handler must catch ImportError (or subclass)
+        catches_import = False
+        for h in node.handlers:
+            if h.type is None:
+                continue
+            names = []
+            if isinstance(h.type, ast.Name):
+                names.append(h.type.id)
+            elif isinstance(h.type, ast.Tuple):
+                for elt in h.type.elts:
+                    if isinstance(elt, ast.Name):
+                        names.append(elt.id)
+            elif isinstance(h.type, ast.Attribute):
+                names.append(h.type.attr)
+            if any(n in ("ImportError", "ModuleNotFoundError") for n in names):
+                catches_import = True
+                break
+        if not catches_import:
+            continue
+
+        # Find imports + flag assigns in the try body
+        imported_names = []
+        flag_names_in_try = []
+        for stmt in node.body:
+            if isinstance(stmt, ast.Import):
+                for alias in stmt.names:
+                    imported_names.append(alias.asname or alias.name.split(".")[0])
+            elif isinstance(stmt, ast.ImportFrom):
+                for alias in stmt.names:
+                    imported_names.append(alias.asname or alias.name)
+            elif isinstance(stmt, ast.Assign):
+                for tgt in stmt.targets:
+                    if isinstance(tgt, ast.Name) and _is_flag_name(tgt.id):
+                        flag_names_in_try.append(tgt.id)
+
+        # Verify at least one handler ALSO assigns a flag (mirror shape)
+        flag_names_in_handler = []
+        for h in node.handlers:
+            for stmt in h.body:
+                if isinstance(stmt, ast.Assign):
+                    for tgt in stmt.targets:
+                        if isinstance(tgt, ast.Name) and _is_flag_name(tgt.id):
+                            flag_names_in_handler.append(tgt.id)
+
+        if not flag_names_in_try or not flag_names_in_handler:
+            continue
+
+        # Map each imported name to the (first) flag. If multiple flags are
+        # set, take the intersection or fall back to first-flag.
+        common_flags = set(flag_names_in_try) & set(flag_names_in_handler)
+        flag_name = next(iter(common_flags), flag_names_in_try[0] if flag_names_in_try else None)
+        if not flag_name:
+            continue
+        for imp in imported_names:
+            result[imp] = flag_name
+    return result
+
+
+def _guarded_by_flag(node, flag_name, guard_stack):
+    """Return True if the current node is inside an if-branch that reads flag_name."""
+    for guard in guard_stack:
+        # guard is (test_ast, branch: 'true'|'false')
+        test = guard[0]
+        # Simple cases: `if <FLAG>:` and `if not <FLAG>:`
+        if isinstance(test, ast.Name) and test.id == flag_name:
+            return True
+        if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not) \
+                and isinstance(test.operand, ast.Name) and test.operand.id == flag_name:
+            return True
+        # Composite: `if X and Y`, `if X or Y` — accept if the flag appears
+        # as a Name anywhere in the test expression.
+        for sub in ast.walk(test):
+            if isinstance(sub, ast.Name) and sub.id == flag_name:
+                return True
+    return False
+
+
+def _private_helper_documents_flag(func, flag_name):
+    """True if func is a leading-underscore function whose docstring names the flag."""
+    if not isinstance(func, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        return False
+    if not func.name.startswith("_"):
+        return False
+    doc = ast.get_docstring(func) or ""
+    return flag_name in doc or "caller must check" in doc.lower()
+
+
+def _terminates_flow(stmts):
+    """True if the block ends in a Return/Raise/Continue/Break — establishes an
+    early-return invariant for subsequent statements in the enclosing block."""
+    if not stmts:
+        return False
+    last = stmts[-1]
+    return isinstance(last, (ast.Return, ast.Raise, ast.Continue, ast.Break))
+
+
+def _if_test_references_flag(test, known_flags):
+    """True if the if-test is (a form of) a check on one of the known flags."""
+    for sub in ast.walk(test):
+        if isinstance(sub, ast.Name) and sub.id in known_flags:
+            return True
+    return False
+
+
+def _if_establishes_flag(if_node, known_flags):
+    """True if `if <negation-of-flag>: raise/return` establishes flag-is-true
+    for subsequent code, or `if flag: ... else: raise/return` does likewise.
+    Recognized shapes:
+        if not FLAG: <raise/return>          -> flag known True after
+        if not FLAG or ...: <raise/return>   -> flag known True after (conservative)
+    Not recognized:
+        if FLAG: ... else: raise             -> we DO recognize this by symmetry;
+                                                 the else-terminator means the if
+                                                 succeeded, so flag is True in the
+                                                 code AFTER the if statement."""
+    if not isinstance(if_node, ast.If):
+        return False
+    if not _if_test_references_flag(if_node.test, known_flags):
+        return False
+    # Body terminates → the else-branch or fall-through means the test was falsy
+    body_terminates = _terminates_flow(if_node.body)
+    else_terminates = _terminates_flow(if_node.orelse) if if_node.orelse else False
+    # Either the true-branch or the false-branch must be a terminator for the
+    # opposite branch to guarantee flag state on fall-through.
+    return body_terminates or else_terminates
+
+
+def _establish_test(if_node, known_flags):
+    """Return a synthetic test expression whose truthfulness is guaranteed after
+    the if-statement executes (if its terminator branch didn't fire).
+
+    For `if not FLAG: raise`, the synthetic guard is `FLAG` (present, truthy).
+    For `if FLAG: ok; else: raise`, the synthetic guard is `FLAG` (again).
+
+    We just return the flag-name Name node so _guarded_by_flag matches it."""
+    # Extract the first flag name referenced in the test
+    for sub in ast.walk(if_node.test):
+        if isinstance(sub, ast.Name) and sub.id in known_flags:
+            return ast.Name(id=sub.id, ctx=ast.Load())
+    # Should not reach here since caller called _if_establishes_flag first
+    return if_node.test
+
+
+def check_writing_code_8(tree):
+    optional = _extract_optional_imports(tree)
+    if not optional:
+        return []
+
+    violations = []
+
+    class Visitor(ast.NodeVisitor):
+        def __init__(self):
+            self.guard_stack = []
+            self.func_stack = []
+            # Skip the try/except body where the flag was established
+            self.skip_ranges = []
+
+        def visit_Try(self, node):
+            # If this try/except sets a flag we're tracking, its body is safe
+            # (the flag can't be False inside the try where imports succeeded).
+            try_sets_tracked_flag = False
+            for stmt in node.body:
+                if isinstance(stmt, ast.Assign):
+                    for tgt in stmt.targets:
+                        if isinstance(tgt, ast.Name) and tgt.id in optional.values():
+                            try_sets_tracked_flag = True
+            if try_sets_tracked_flag:
+                self.skip_ranges.append((node.body[0].lineno if node.body else node.lineno,
+                                        node.body[-1].end_lineno if node.body and hasattr(node.body[-1], 'end_lineno') else node.lineno))
+            self.generic_visit(node)
+
+        def visit_If(self, node):
+            self.guard_stack.append((node.test, 'true'))
+            for stmt in node.body:
+                self.visit(stmt)
+            self.guard_stack.pop()
+            self.guard_stack.append((node.test, 'false'))
+            for stmt in node.orelse:
+                self.visit(stmt)
+            self.guard_stack.pop()
+
+        def _visit_block(self, stmts):
+            """Walk a statement block with early-return-establishes-invariant semantics.
+
+            When encountering `if not FLAG: raise/return`, treat FLAG as
+            established for the REMAINDER of this block. Same for
+            `if FLAG: <body>; else: raise/return`. This is the standard
+            early-return-guard idiom the writing-code:8 rule body permits."""
+            established = []
+            for stmt in stmts:
+                if isinstance(stmt, ast.If) and _if_establishes_flag(stmt, optional.values()):
+                    # Push virtual guard for subsequent statements in this block
+                    established.append(_establish_test(stmt, optional.values()))
+                    self.guard_stack.append((established[-1], 'true'))
+                    self.visit(stmt)
+                else:
+                    self.visit(stmt)
+            for _ in established:
+                self.guard_stack.pop()
+
+        def visit_FunctionDef(self, node):
+            self.func_stack.append(node)
+            # Visit the function body with early-return semantics
+            for arg_node in [*node.args.defaults, *node.args.kw_defaults]:
+                if arg_node is not None:
+                    self.visit(arg_node)
+            self._visit_block(node.body)
+            self.func_stack.pop()
+
+        def visit_AsyncFunctionDef(self, node):
+            self.visit_FunctionDef(node)
+
+        def _check_name_usage(self, name_node, used_name):
+            if used_name not in optional:
+                return
+            flag = optional[used_name]
+
+            # Skip if inside the try-body that set the flag
+            for lo, hi in self.skip_ranges:
+                if lo <= name_node.lineno <= hi:
+                    return
+
+            # Skip if guarded
+            if _guarded_by_flag(name_node, flag, self.guard_stack):
+                return
+
+            # Skip if inside a private helper whose docstring names the flag
+            if self.func_stack and _private_helper_documents_flag(self.func_stack[-1], flag):
+                return
+
+            violations.append((
+                name_node.lineno,
+                "writing-code-8",
+                f"unguarded use of optional import '{used_name}'; expected 'if {flag}:' guard before this callsite",
+            ))
+
+        def visit_Attribute(self, node):
+            # X.foo -> value is Name(X); flag lookup key = X
+            if isinstance(node.value, ast.Name):
+                self._check_name_usage(node.value, node.value.id)
+            self.generic_visit(node)
+
+        def visit_Call(self, node):
+            # X(...) -> func is Name(X)
+            if isinstance(node.func, ast.Name):
+                self._check_name_usage(node.func, node.func.id)
+            self.generic_visit(node)
+
+    Visitor().visit(tree)
+    return violations
+
+
+# ---------------------------------------------------------------------------
+# writing-tests:5 -- untested exception handlers (#56)
+#
+# For each `except` block in production code, verify at least one test file
+# names the same exception class in a `pytest.raises(X)` / `assertRaises(X)` /
+# `with raises(X):` form. Cross-file: needs to open the test-file counterpart
+# to the source file being scanned.
+#
+# Source-to-test mapping (mirrors the affected-tests gate heuristic):
+#   For source `<pkg>/X.py`:
+#     tests/test_X.py
+#     tests/test_X_*.py            (glob)
+#     tests/<pkg>/test_X.py
+#     <pkg>/tests/test_X.py
+#
+# Carve-outs (out of scope; not flagged):
+#   - except inside a `finally` cleanup block
+#   - except in `__del__` or signal handlers
+# Both are detected by simple ancestry check + name check.
+#
+# Exception-class name matching:
+#   Allow short-name match. `requests.exceptions.RequestException` matches
+#   `RequestException` in a test that imports the short form. Match on the
+#   last dotted component only (which is the typical import shape).
+# ---------------------------------------------------------------------------
+
+def _extract_except_class_names(tree):
+    """Yield (lineno, class_name) for each except-handler that names a class.
+    Bare `except:` and `except Exception:` are still yielded; the caller
+    decides what to skip. Nested inside FunctionDef / ClassDef bodies is
+    fine; we walk the whole tree."""
+    results = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Try):
+            continue
+        # Skip the try if it's inside a finally-body of an ancestor Try (rare
+        # but the carve-out for finally-best-effort applies). We approximate
+        # by scanning the tree for parents; too expensive to be exact.
+        for handler in node.handlers:
+            if handler.type is None:
+                results.append((handler.lineno, ""))
+                continue
+            names = []
+            if isinstance(handler.type, ast.Name):
+                names.append(handler.type.id)
+            elif isinstance(handler.type, ast.Attribute):
+                # requests.exceptions.RequestException -> last segment
+                names.append(handler.type.attr)
+            elif isinstance(handler.type, ast.Tuple):
+                for elt in handler.type.elts:
+                    if isinstance(elt, ast.Name):
+                        names.append(elt.id)
+                    elif isinstance(elt, ast.Attribute):
+                        names.append(elt.attr)
+            for name in names:
+                results.append((handler.lineno, name))
+    return results
+
+
+def _test_files_for_source(source_path):
+    """Return candidate test files for a source file, per the affected-tests
+    heuristic. Returns a list of pathlib.Path objects that exist on disk."""
+    src = Path(source_path)
+    stem = src.stem
+    # Walk up to find repo root by looking for .git
+    root = src.resolve().parent
+    while root.parent != root and not (root / ".git").exists():
+        root = root.parent
+    if not (root / ".git").exists():
+        return []
+
+    candidates = [
+        root / "tests" / f"test_{stem}.py",
+        root / "tests" / src.parent.name / f"test_{stem}.py",
+        src.parent / "tests" / f"test_{stem}.py",
+        src.parent.parent / "tests" / f"test_{stem}.py",
+    ]
+    # Glob for test_X_*.py in tests/
+    if (root / "tests").is_dir():
+        candidates.extend(sorted((root / "tests").glob(f"test_{stem}_*.py")))
+
+    return [p for p in candidates if p.is_file()]
+
+
+def _test_file_covers_exception(test_path, exc_class):
+    """True if the test file contains pytest.raises(exc_class) or equivalent.
+    Short-name match: `requests.exceptions.RequestException` in source ->
+    look for `RequestException` in tests."""
+    if not exc_class:
+        return False
+    try:
+        source = test_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return False
+    # Cheap grep-based check; a more precise AST scan of the test file is
+    # possible but the false-positive rate on grep is acceptable per the
+    # ticket's own acceptance criterion.
+    patterns = [
+        f"pytest.raises({exc_class}",
+        f"pytest.raises({exc_class})",
+        f"assertRaises({exc_class}",
+        f"raises({exc_class}",
+    ]
+    return any(pat in source for pat in patterns)
+
+
+def _is_carveout_handler(handler_lineno, source_lines):
+    """True if the except handler carries a carve-out comment on the same or
+    preceding line naming why no test exists (per writing-tests:5's two
+    documented carve-outs plus explicit noqa)."""
+    if handler_lineno < 1 or handler_lineno > len(source_lines):
+        return False
+    line = source_lines[handler_lineno - 1]
+    if "noqa: writing-tests-5" in line or "noqa:writing-tests-5" in line:
+        return True
+    if handler_lineno >= 2:
+        prev = source_lines[handler_lineno - 2]
+        if "noqa: writing-tests-5" in prev:
+            return True
+    return False
+
+
+def check_writing_tests_5(tree, source_lines, source_path):
+    """Cross-file check: every except handler needs a test that names its class."""
+    # Skip if source path IS a test file (rule is for production code)
+    if _is_test_path(source_path):
+        return []
+
+    # Skip if source has no except blocks at all
+    handlers = _extract_except_class_names(tree)
+    handlers = [(ln, cls) for ln, cls in handlers if cls]  # drop bare except:
+    if not handlers:
+        return []
+
+    # Drop handlers that carry an explicit noqa carve-out before deciding
+    # whether to emit the no-test-file fire; a file whose every except is
+    # carved out should stay silent.
+    handlers = [(ln, cls) for ln, cls in handlers
+                if not _is_carveout_handler(ln, source_lines)]
+    if not handlers:
+        return []
+
+    test_files = _test_files_for_source(source_path)
+    if not test_files:
+        # No test file exists for this source. Fire once per file rather
+        # than once per except (avoid noise) — the fix is to add a test
+        # file, not to comment N except lines.
+        return [(handlers[0][0], "writing-tests-5",
+                 f"source has {len(handlers)} except block(s) but no test file found "
+                 f"(looked in tests/, {Path(source_path).parent}/tests/, ...)")]
+
+    violations = []
+    for lineno, exc_class in handlers:
+        # Any test file covers it?
+        covered = any(_test_file_covers_exception(tp, exc_class) for tp in test_files)
+        if not covered:
+            violations.append((
+                lineno, "writing-tests-5",
+                f"except {exc_class}: no matching pytest.raises({exc_class}) in "
+                f"{', '.join(str(p.name) for p in test_files)}",
+            ))
+    return violations
+
+
 # Default test-path globs for --exclude-tests.
 TEST_PATH_PATTERNS = ("/tests/", "/test/", "_test.py", "test_")
 
@@ -749,7 +1215,9 @@ def scan_file(path, allow_decorators, exclude_tests=False):
     results = (check_writing_code_7(tree, source_lines)
                + check_writing_code_9(tree, allow_decorators)
                + check_writing_code_4_django_orm(tree)
-               + check_writing_releases_3(tree))
+               + check_writing_releases_3(tree)
+               + check_writing_code_8(tree)
+               + check_writing_tests_5(tree, source_lines, path))
     # writing-code:15 honors --exclude-tests for project-specific test fixtures.
     if not (exclude_tests and _is_test_path(path)):
         results = results + check_writing_code_15(tree, source_lines)

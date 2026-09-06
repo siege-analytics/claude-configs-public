@@ -14,6 +14,13 @@ Checks:
     3. Lib helpers referenced by hooks exist
     4. Hook scripts on disk but not in settings JSON are reported as warnings
     5. Minimum hook count assertion (catches silent truncation)
+    6. This repo's .claude/settings.json wires the same (event, matcher, path)
+       triples as the snippet (catches drift; see #703)
+
+Check 5 is a truncation floor, not a drift check. It passed at 24 wired hooks
+while 5 were missing. Check 6 is the drift check, and it keys on triples rather
+than on hook paths because three of the eight entries missing when #703 was
+written belonged to hooks that were wired on their other matchers.
 """
 
 import json
@@ -63,6 +70,64 @@ def extract_hook_paths(settings: dict) -> list[str]:
     return paths
 
 
+def normalise_command(cmd: str) -> str:
+    prefix = PATH_TOKEN + "/"
+    if cmd.startswith(prefix):
+        return cmd[len(prefix):]
+    return cmd
+
+
+def extract_hook_triples(settings: dict) -> set[tuple[str, str, str]]:
+    """Every wiring as (event, matcher, normalised path).
+
+    Keying on the path alone answers a different question: a hook wired for
+    Write and Edit but not NotebookEdit is present by path and absent by triple.
+    """
+    triples = set()
+    for event, event_hooks in settings.get("hooks", {}).items():
+        if not isinstance(event_hooks, list):
+            continue
+        for group in event_hooks:
+            matcher = group.get("matcher", "")
+            for hook in group.get("hooks", []):
+                cmd = hook.get("command", "")
+                if cmd:
+                    triples.add((event, matcher, normalise_command(cmd)))
+    return triples
+
+
+def compare_settings_to_snippet(settings_path: Path, snippet_path: Path) -> list[str]:
+    """Report every triple the two files disagree on. Empty list means agreement.
+
+    Fail-closed: an unreadable file or a side that parses to zero wirings is
+    reported as a problem, so agreement cannot be manufactured by comparing
+    two empty sets.
+    """
+    problems = []
+    parsed = {}
+    for label, path in (("settings", settings_path), ("snippet", snippet_path)):
+        try:
+            parsed[label] = extract_hook_triples(json.loads(path.read_text()))
+        except (OSError, json.JSONDecodeError) as exc:
+            problems.append(f"Cannot read {label} at {path}: {exc}")
+    if problems:
+        return problems
+
+    for label in ("settings", "snippet"):
+        if not parsed[label]:
+            problems.append(f"{label} parsed to zero hook wirings; refusing to report agreement")
+    if problems:
+        return problems
+
+    for triple in sorted(parsed["snippet"] - parsed["settings"]):
+        event, matcher, path = triple
+        problems.append(f"Wired in snippet, missing from settings: {event} / {matcher or '(no matcher)'} -> {path}")
+    for triple in sorted(parsed["settings"] - parsed["snippet"]):
+        event, matcher, path = triple
+        problems.append(f"Wired in settings, absent from snippet: {event} / {matcher or '(no matcher)'} -> {path}")
+    return problems
+
+
 def find_hook_scripts(base: Path) -> set[Path]:
     hooks_dir = base / "hooks"
     if not hooks_dir.exists():
@@ -87,9 +152,18 @@ def main():
 
     if len(hook_paths) < MIN_HOOK_COUNT:
         errors.append(
-            f"Only {len(hook_paths)} hooks in settings (minimum {MIN_HOOK_COUNT}). "
-            f"Possible silent truncation."
+            f"Only {len(hook_paths)} hook wirings in settings (truncation floor "
+            f"{MIN_HOOK_COUNT}). This floor detects truncation only; drift is "
+            f"detected by the snippet comparison below."
         )
+
+    if package_dir is None:
+        drift = compare_settings_to_snippet(
+            REPO_ROOT / ".claude" / "settings.json",
+            REPO_ROOT / "hooks" / "settings-snippet.json",
+        )
+        for problem in drift:
+            errors.append(f"Settings drift: {problem}")
 
     for raw_path in hook_paths:
         resolved = resolve_path(raw_path, base)
@@ -122,6 +196,19 @@ def main():
     for script in sorted(on_disk):
         if script.resolve() not in referenced_files:
             warnings.append(f"Unreferenced hook: {script.relative_to(base)}")
+        # Exec-bit check on ALL hook scripts, not just referenced ones (#723).
+        # An unreferenced hook that loses its exec bit surfaces here rather
+        # than at the point of a future rewire. Test files under hooks/_test/
+        # are invoked via `bash <path>` in CI (see build-and-publish.yml) so
+        # they don't need the bit, but they're consistent-with-siblings; the
+        # scanner reports missing exec bits on production hooks as errors
+        # and on _test/ files as warnings.
+        if not os.access(script, os.X_OK):
+            rel = script.relative_to(base)
+            if "/_test/" in str(rel) or str(rel).startswith("hooks/_test/"):
+                warnings.append(f"Test file not executable: {rel}")
+            else:
+                errors.append(f"Hook script not executable: {rel}")
 
     print(f"Validated {len(hook_paths)} hook paths in {base}")
     if warnings:

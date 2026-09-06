@@ -17,10 +17,11 @@ _probe_check_vitest() {
     return 1
 }
 
-if _probe_check_vitest; then
-    ver=$( (command -v vitest >/dev/null 2>&1 && vitest --version) || npx --no-install vitest --version 2>&1 | head -1 )
-    _probe_emit_json "{\"status\":\"installed\",\"tool\":\"vitest\",\"version\":\"$ver\"}"
-    exit 0
-fi
+# #678: version function paired with _probe_check_vitest.
+_probe_check_vitest_version() {
+    (command -v vitest >/dev/null 2>&1 && vitest --version) \
+        || npx --no-install vitest --version 2>&1 | head -1
+}
 
-probe_run "vitest" "__vitest_absent__" "npm install -D vitest" "" "frontend" "${1:-}"
+# Delegate to probe_run with CHECK_FN target (#678); no sentinel BIN_NAME.
+probe_run "vitest" "_probe_check_vitest" "npm install -D vitest" "" "frontend" "${1:-}"

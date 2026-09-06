@@ -1,6 +1,6 @@
 #!/bin/bash
 # Hook: survey-context (v2.1)
-# Enforces: skills/thinking/survey-context/SKILL.md Definition-of-Done rule
+# Enforces: skills/survey-context/SKILL.md Definition-of-Done rule
 # Trigger: PreToolUse on Bash(git push *), Bash(gh pr create *), Bash(gh pr merge *)
 #
 # When the diff being pushed touches a file listed as the Definition for an
@@ -36,6 +36,12 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+if [[ -z "$COMMAND" ]]; then
+    COMMAND=$(printf '%s' "$INPUT" | sed -nE 's/.*"command"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/p' | head -1)
+fi
+if [[ -z "$CWD" ]]; then
+    CWD=$(printf '%s' "$INPUT" | sed -nE 's/.*"cwd"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/p' | head -1)
+fi
 
 if [[ -z "$COMMAND" ]]; then
     exit 0
@@ -46,6 +52,14 @@ fi
 TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
 if ! echo "$COMMAND" | grep -qE "$TRIGGERS"; then
     exit 0
+fi
+
+# Content-scope check (#699). Skip out-of-scope repositories.
+if [[ -f "$HOOK_DIR/../lib/scope-check.sh" ]]; then
+    source "$HOOK_DIR/../lib/scope-check.sh"
+    if ! _scope_in_scope "$COMMAND" "${CWD:-$PWD}"; then
+        exit 0
+    fi
 fi
 
 CD_COUNT=$(echo "$COMMAND" | { grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null || true; } | wc -l | tr -d ' ')
@@ -156,6 +170,21 @@ else
 fi
 
 if [[ -z "$DIFF_FILES" ]]; then
+    DIFF_FILES=$(git -C "$EFFECTIVE_CWD" diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true)
+fi
+
+if [[ -z "$DIFF_FILES" ]]; then
+    ROOT_COMMIT=$(git -C "$EFFECTIVE_CWD" rev-list --max-parents=0 HEAD 2>/dev/null | tail -1 || true)
+    if [[ -n "$ROOT_COMMIT" ]]; then
+        DIFF_FILES=$(git -C "$EFFECTIVE_CWD" diff --name-only "$ROOT_COMMIT"..HEAD 2>/dev/null || true)
+    fi
+fi
+
+if [[ -z "$DIFF_FILES" ]]; then
+    DIFF_FILES=$(git -C "$EFFECTIVE_CWD" show --name-only --format= HEAD 2>/dev/null || true)
+fi
+
+if [[ -z "$DIFF_FILES" ]]; then
     exit 0
 fi
 
@@ -240,7 +269,7 @@ fi
     echo "  - Add a Doc-Update-Source: <ref> trailer to the latest commit"
     echo "    pointing at the sibling PR/issue where the doc update lands."
     echo ""
-    echo "See skills/thinking/survey-context/SKILL.md for the DoD contract."
+    echo "See skills/survey-context/SKILL.md for the DoD contract."
     echo "Project catalog: $CONFIG"
 } >&2
 exit 2

@@ -183,7 +183,7 @@ if not invest:
         f'INVESTIGATE: No investigation artifact found FOR {current_ticket or \"current task\"}.\\n'
         '  Produce a Fact Sheet before writing code.\\n'
         '  Expected: plans/fact-sheet-*.md or plans/investigate-*.md (must reference current ticket)\\n'
-        '  Read: skills/thinking/investigate/SKILL.md'
+        '  Read: skills/investigate/SKILL.md'
     )
 
 # 2. Pre-mortem artifact
@@ -194,7 +194,7 @@ if not premortem:
         f'PRE-MORTEM: No pre-mortem artifact found FOR {current_ticket or \"current task\"}.\\n'
         '  Classify risks before writing code.\\n'
         '  Expected: plans/pre-mortem-*.md (must reference current ticket in ticket_refs)\\n'
-        '  Read: skills/thinking/pre-mortem/SKILL.md'
+        '  Read: skills/pre-mortem/SKILL.md'
     )
 elif not premortem_has_risks(premortem):
     warnings.append(
@@ -243,6 +243,15 @@ if has_changes:
 if status == 'implementing' and current_ticket:
     junior_found = False
     senior_found = False
+    # Track API reachability. When the gh api call fails (rate limit, network,
+    # 5xx), we cannot distinguish "artifact absent" from "we could not check."
+    # Writing all-false in that case falsely signals "no artifacts posted" and
+    # the downstream mutation-gate blocks work whose artifacts were, in fact,
+    # posted (#708). The pattern: if api_ok stays False, don't overwrite the
+    # signal file; keep the last-known-good state and add api_error field so
+    # the downstream reader can see the check was unreachable.
+    api_ok = True
+    api_error = ''
     junior_stems = [
         'current behavior', 'intended behavior', 'steps to get there',
         'success criteria', 'what could go wrong',
@@ -282,8 +291,12 @@ if status == 'implementing' and current_ticket:
                 senior_hits = sum(1 for s in senior_stems if s in comments)
                 if senior_hits >= 5:
                     senior_found = True
-    except Exception:
-        pass
+            else:
+                api_ok = False
+                api_error = (result.stderr or '').strip()[:200] or f'gh api rc={result.returncode}'
+    except Exception as e:
+        api_ok = False
+        api_error = str(e)[:200]
 
     if not junior_found:
         warnings.append(
@@ -369,45 +382,85 @@ if status == 'implementing' and current_ticket:
                 '  The mutation gate will block until the self-review is posted.'
             )
 
-    # Write junior-senior-gate.json signal file (#492, repo-scoped #578)
+    # Write junior-senior-gate.json signal file (#492, repo-scoped #578, #708)
+    # When the API was unreachable, do not overwrite with all-false. Keep the
+    # last-known-good signal file (which may itself be stale, but stale is
+    # better than incorrectly-negative). The unreachable-side stamp file lets
+    # the downstream reader see the check was unreachable without overwriting
+    # the last successful signal.
     import datetime
-    gate_data = {
-        'ticket': current_ticket,
-        'junior_found': junior_found,
-        'senior_found': senior_found,
-        'lastChecked': datetime.datetime.now().astimezone().isoformat(),
-    }
     if repo_root:
         _js_slug = _re.sub(r'[^a-zA-Z0-9_-]', '_', os.path.basename(repo_root.rstrip('/')))
         gate_path = os.path.join(workspace, f'junior-senior-gate-{_js_slug}.json')
     else:
         gate_path = os.path.join(workspace, 'junior-senior-gate.json')
-    try:
-        with open(gate_path, 'w') as f:
-            json.dump(gate_data, f, indent=2)
-            f.write('\\n')
-    except Exception:
-        pass
 
-    # Write artifacts-posted-gate.json signal file (#513, #519, repo-scoped #578)
-    posted_data = {
-        'ticket': current_ticket,
-        'investigate_posted': investigate_posted,
-        'premortem_posted': premortem_posted,
-        'selfreview_posted': selfreview_posted,
-        'lastChecked': datetime.datetime.now().astimezone().isoformat(),
-    }
+    if api_ok:
+        gate_data = {
+            'ticket': current_ticket,
+            'junior_found': junior_found,
+            'senior_found': senior_found,
+            'api_reachable': True,
+            'lastChecked': datetime.datetime.now().astimezone().isoformat(),
+        }
+        try:
+            with open(gate_path, 'w') as f:
+                json.dump(gate_data, f, indent=2)
+                f.write('\\n')
+        except Exception:
+            pass
+    else:
+        # API unreachable. Stamp an api_reachable=false side-file so the
+        # downstream reader can see the check was unreachable without
+        # overwriting the last successful signal.
+        stamp_path = gate_path + '.unreachable'
+        try:
+            with open(stamp_path, 'w') as f:
+                json.dump({
+                    'ticket': current_ticket,
+                    'api_reachable': False,
+                    'api_error': api_error,
+                    'lastAttempt': datetime.datetime.now().astimezone().isoformat(),
+                }, f, indent=2)
+                f.write('\\n')
+        except Exception:
+            pass
+
+    # Write artifacts-posted-gate.json signal file (#513, #519, repo-scoped #578, #708)
     if repo_root:
         _ap_slug = _re.sub(r'[^a-zA-Z0-9_-]', '_', os.path.basename(repo_root.rstrip('/')))
         posted_path = os.path.join(workspace, f'artifacts-posted-gate-{_ap_slug}.json')
     else:
         posted_path = os.path.join(workspace, 'artifacts-posted-gate.json')
-    try:
-        with open(posted_path, 'w') as f:
-            json.dump(posted_data, f, indent=2)
-            f.write('\\n')
-    except Exception:
-        pass
+
+    if api_ok:
+        posted_data = {
+            'ticket': current_ticket,
+            'investigate_posted': investigate_posted,
+            'premortem_posted': premortem_posted,
+            'selfreview_posted': selfreview_posted,
+            'api_reachable': True,
+            'lastChecked': datetime.datetime.now().astimezone().isoformat(),
+        }
+        try:
+            with open(posted_path, 'w') as f:
+                json.dump(posted_data, f, indent=2)
+                f.write('\\n')
+        except Exception:
+            pass
+    else:
+        stamp_path = posted_path + '.unreachable'
+        try:
+            with open(stamp_path, 'w') as f:
+                json.dump({
+                    'ticket': current_ticket,
+                    'api_reachable': False,
+                    'api_error': api_error,
+                    'lastAttempt': datetime.datetime.now().astimezone().isoformat(),
+                }, f, indent=2)
+                f.write('\\n')
+        except Exception:
+            pass
 
 if not warnings:
     found = []

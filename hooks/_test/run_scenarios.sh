@@ -42,6 +42,28 @@ expect_block() {
     _run 2 "$1" "$2" "$3"
 }
 
+# Assert exit 2 AND that the hook's output matches a pattern naming the reason.
+# Exit code alone cannot distinguish which of several block paths fired, so a
+# hook that blocks for an unrelated reason reads as a pass. Use this wherever a
+# scenario is named for one specific rule and the hook has more than one way to
+# reach exit 2.
+expect_block_because() {
+    local name="$1" hook="$2" payload="$3" pattern="$4"
+    local out actual_exit
+    out=$(printf '%s' "$payload" | bash "$hook" 2>&1)
+    actual_exit=$?
+    if [[ "$actual_exit" -eq 2 ]] && printf '%s' "$out" | grep -qE "$pattern"; then
+        _HARNESS_PASS=$((_HARNESS_PASS + 1))
+        printf '  [PASS] %s (exit 2, matched /%s/)\n' "$name" "$pattern"
+    else
+        _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+        _HARNESS_FAILED_NAMES+=("$name")
+        printf '  [FAIL] %s (expected exit 2 matching /%s/, got exit %d)\n' \
+            "$name" "$pattern" "$actual_exit"
+        printf '         stderr/stdout: %s\n' "${out:0:300}"
+    fi
+}
+
 expect_pass() {
     _run 0 "$1" "$2" "$3"
 }

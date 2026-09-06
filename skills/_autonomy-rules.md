@@ -17,7 +17,7 @@ When a set of N tasks is presented (either in a ticket, epic, roadmap, or user m
 **What counts as a "set":** A bounded list of related work items that form one logical operation. N ≥ 2 with a clear execution order or implicit grouping.
 
 **What does NOT trigger this rule:** 
-- Open-ended exploration ("investigate options" — wait for guidance on which options)
+- Open-ended exploration ("investigate options" -- wait for guidance on which options)
 - One-off tasks presented without grouping
 - Clarification-dependent work where the tasks themselves depend on a determinative answer
 
@@ -57,7 +57,7 @@ When waiting for an answer to a determinative question (user decision, external 
 
 **Anti-pattern:** User gives you a task, you finish step 1, hit a question, ask for clarification, and then idle for 30 minutes waiting for the answer. This is not expected behavior.
 
-**autonomy:3. Centralized question management — paste questions in tickets, reference in roadmap.**
+**autonomy:3. Centralized question management -- paste questions in tickets, reference in roadmap.**
 
 Questions needed for forward progress (decision points, clarifications, external information) must be pasted into the appropriate ticket/issue/epic, not left in chat. The roadmap or ticket list should be the single source of truth for all blocking questions.
 
@@ -99,7 +99,7 @@ Questions needed for forward progress (decision points, clarifications, external
 
 Link all blocking questions from the roadmap to their tickets. When scanning the roadmap for work, the agent sees:
 
-- Epic E1: Feature X (blocked on question #42 in ticket T1 — "design decision")
+- Epic E1: Feature X (blocked on question #42 in ticket T1 -- "design decision")
 - Epic E2: Feature Y (no blockers, can start)
 - Epic E3: Feature Z (blocked on external dependency #88 in ticket T3)
 
@@ -119,7 +119,7 @@ The agent works on E2 (no blockers) while E1 and E3 wait for answers.
 
 - **Pairs with `_standing-approval-rules.md`:** Standing approval establishes when an instruction delegates timing and execution to the agent. autonomy:1 extends that principle to sets of tasks.
 - **Pairs with `_session-coordination-rules.md` and `_prospective-memory-rules.md`:** When working in multi-session scenarios, autonomy:2 (opportunistic backlog work) is coordinated through the roadmap so other sessions can see what's being worked vs. what's waiting. autonomy:3 (centralized questions) ensures blocking points are visible to all sessions.
-- **Pairs with `_ticket-lifecycle-rules.md`:** Questions in tickets (autonomy:3) should be reflected in ticket status — a ticket with unresolved blocking questions should be in a "Blocked" or "Waiting for decision" state.
+- **Pairs with `_ticket-lifecycle-rules.md`:** Questions in tickets (autonomy:3) should be reflected in ticket status -- a ticket with unresolved blocking questions should be in a "Blocked" or "Waiting for decision" state.
 
 ## Enforcement
 

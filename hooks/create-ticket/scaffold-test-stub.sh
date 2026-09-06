@@ -34,7 +34,7 @@
 # Exit codes:
 #   0  = success (with or without stubs rendered; silent if no blocks)
 #   2  = usage error
-#   3  = internal error (kept in reserve for a future follow-up ticket)
+#   3  = internal error (mktemp/python3/awk failure; see #675 P1-7)
 
 set -euo pipefail
 
@@ -81,13 +81,20 @@ fi
 REPO_ROOT_ABS=$(cd "$REPO_ROOT" 2>/dev/null && pwd -P || echo "$REPO_ROOT")
 
 if [[ $USE_STDIN -eq 1 ]]; then
-    BODY=$(cat)
+    # #675 P2-6: bash command substitution strips ALL trailing newlines,
+    # so a caller writing a body with a trailing blank paragraph loses it.
+    # Append a sentinel byte before capture, strip it after — preserves
+    # the exact newline count the caller sent.
+    BODY=$(cat; printf X)
+    BODY="${BODY%X}"
 elif [[ -n "$BODY_FILE" ]]; then
     if [[ ! -f "$BODY_FILE" ]]; then
         >&2 echo "scaffold-test-stub: body file not found: $BODY_FILE"
         exit 2
     fi
-    BODY=$(cat "$BODY_FILE")
+    # Same sentinel trick for --body-file (#675 P2-6).
+    BODY=$(cat "$BODY_FILE"; printf X)
+    BODY="${BODY%X}"
 else
     >&2 echo "scaffold-test-stub: pass --body-file or --stdin"
     exit 2
@@ -102,7 +109,25 @@ sys.stdout.write(pattern.sub("", src))
 ' <<< "$BODY")
 
 # Silent-noop if the stripped body has no live Automation: block.
-if ! grep -q '^Automation:' <<< "$STRIPPED_BODY"; then
+#
+# #675 P1-2 (guard/splitter regex mismatch): the guard used to check
+# `^Automation:` (unanchored) but the awk splitter below requires
+# `^Automation:[[:space:]]*$` (bare Automation: with optional trailing space).
+# A body containing `Automation: pytest` (inline value on the same line)
+# passed the guard, produced no blocks, and the hook silently emitted the
+# body unchanged. That was indistinguishable from a body with no Automation
+# section at all. Fix: use the same anchor as the splitter, and if the guard
+# rejects a line but a `^Automation:` occurrence exists elsewhere in the
+# body, emit a specific stderr diagnostic naming the offending line so an
+# operator can distinguish "no Automation blocks" from "malformed
+# Automation blocks".
+if ! grep -qE '^Automation:[[:space:]]*$' <<< "$STRIPPED_BODY"; then
+    # Look for near-miss shapes so operators writing `Automation: pytest`
+    # (inline) get a diagnostic instead of silent no-op.
+    NEAR_MISS=$(grep -E '^Automation:.*' <<< "$STRIPPED_BODY" | head -1 || true)
+    if [[ -n "$NEAR_MISS" ]]; then
+        echo "scaffold-test-stub: Automation: line found but does not match bare-anchor splitter (${NEAR_MISS}); Automation: must be on its own line, followed by fields" >&2
+    fi
     if [[ -n "$OUT_FILE" ]]; then
         printf '%s\n' "$BODY" > "$OUT_FILE"
     else
@@ -133,9 +158,12 @@ _is_known_tool() {
 # Extract a single field. Tolerant of absence (returns empty string, exit 0).
 # Round-1 finding 1-1.
 _field() {
+    # #675 P2-3: accept both `Field: value` and `Field:value` (no space).
+    # The colon-space requirement rejected legit forms and made the failure
+    # look like "field missing" instead of "field format tolerant of both."
     local block="$1"
     local field="$2"
-    { echo "$block" | grep -E "^${field}:[[:space:]]" | head -1 | sed -E "s/^${field}:[[:space:]]*//"; } || true
+    { echo "$block" | grep -E "^${field}:" | head -1 | sed -E "s/^${field}:[[:space:]]*//"; } || true
 }
 
 _safe_value() {
@@ -153,7 +181,14 @@ _substitute() {
 
 # Renamed from TMPDIR to SCRATCH_DIR to avoid clobbering the exported
 # TMPDIR that macOS launchd and CI runners set. Round-2 P1-5.
-SCRATCH_DIR=$(mktemp -d -t scaffold-stub.XXXXXX)
+# #675 P1-7: exit 3 on internal-tool failure (mktemp / awk / python3).
+# Header documents exit 3 as internal-error; before this change nothing
+# emitted it. Explicit failure surface is better than a partially-scaffolded
+# ticket body with no diagnostic.
+if ! SCRATCH_DIR=$(mktemp -d -t scaffold-stub.XXXXXX 2>&1); then
+    echo "scaffold-test-stub: mktemp failed: $SCRATCH_DIR" >&2
+    exit 3
+fi
 trap 'rm -rf "$SCRATCH_DIR"' EXIT
 BLOCKS_FILE="$SCRATCH_DIR/blocks.txt"
 : > "$BLOCKS_FILE"  # ensure it exists even if awk finds no matches

@@ -320,12 +320,30 @@ enforcement = "code-review"
 tooling_status = "judgment"
 prevention_path = "needs: ticket-body scanner that greps for AC\\d+ lines and requires a matching Falsifiable-by + Tool pair within N lines, cross-referenced against the repo's PROJECT.md assertion_tools for the touched layer. Depends on stub-generation hook (epic #655 child #661) landing first so the scanner has a canonical rendered shape to check against."
 originating_arc = { session-id = "260525-long-swan", incident-name = "epic-655-falsifiable-ac-2026-08-30" }
+[[failure_mode]]
+name = "decision-dump-without-checklist-gate"
+description = "Hub asks the operator to decide on a vague bundle of topics instead of presenting the full decision checklist and collecting answers one at a time before decision-dependent spoke coordination."
+rule_id = ["session-coordination:5"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: coordinator-message scanner that detects bundled decision requests, verifies numbered checklist structure, and flags decision-dependent spoke tasking before all checklist items have recorded answers."
+originating_arc = { session-id = "260905-clever-quasar", incident-name = "hub-decision-checklist-gate" }
+
+[[failure_mode]]
+name = "foreground-send-agent-message-control-surface-hijack"
+description = "Hub lets foreground spoke coordination or send_agent_message churn monopolize the main session after an operator instruction, depriving the operator of a responsive control surface."
+rule_id = ["session-coordination:6"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: runtime/session supervisor that measures uninterrupted foreground coordination duration or send_agent_message burst size without operator checkpoints, then requires bounded batches, sub-managers, or background delegation."
+originating_arc = { session-id = "260905-clever-quasar", incident-name = "hub-control-surface-hijack" }
+
 ```
 
 ## Tooling-status summary
 
 - `mechanical` rows: 16 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :7, :9, :12, :15; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3, :4).
-- `judgment` rows: 18 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5, :7; writing-claims:1; writing-releases:5; counted with dual-coverage rows on writing-tests:4).
+- `judgment` rows: 20 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5, :7; writing-claims:1; writing-releases:5; session-coordination:5, :6; counted with dual-coverage rows on writing-tests:4).
 - `gap` rows: 1 (writing-releases:1, pending public-surface differ at upstream issue #51).
 
 The `gap` and `judgment` categories stay distinct: `gap` means no rule exists to prevent the failure mode and only operator honor catches it; `judgment` means a rule exists with defined enforcement (code review, scanner, hook) but the enforcement is judgment-bound rather than mechanical. The distinction lets the matrix answer "is this prevented at all?" separately from "is the prevention mechanized?".

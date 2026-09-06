@@ -43,9 +43,9 @@ A rule that says "always do X" without a surfacing path is a rule that fires onl
 A memory entry fires AFTER the rule is broken in the current session, only for the agent holding the memory. That's a useful correction layer -- it prevents the agent from compounding the failure, helps with retrospective repair, and seeds future-session discipline. It is not a substitute for an enforcement layer that prevents the failure before it happens, for every actor.
 
 When promoting a discipline from memory to a rule, ask:
-- Does this need to apply to other actors? → It belongs as a project rule (file in the repo) or workspace skill (file in `skills/`), not only in memory.
-- Does it need to fire before the action, not just after? → It needs an enforcement layer alongside the prose.
-- Will the actor encounter a tool default that contradicts the rule? → See writing-rules:1; the enforcement layer is non-optional.
+- Does this need to apply to other actors? -> It belongs as a project rule (file in the repo) or workspace skill (file in `skills/`), not only in memory.
+- Does it need to fire before the action, not just after? -> It needs an enforcement layer alongside the prose.
+- Will the actor encounter a tool default that contradicts the rule? -> See writing-rules:1; the enforcement layer is non-optional.
 
 Memory entries that capture these promoted rules should reference where the rule actually lives (`see skills/X` / `see .github/workflows/Y.yml`) rather than restating the rule's body, so the rule has a single source of truth and the memory entry is a discoverability shortcut.
 
@@ -175,7 +175,7 @@ writing-rules:5 ships the substrate (Cannot-produce-error claims with Falsificat
 | Trivial-change Falsification surface | The observable named in a Trivial-change block's Falsification field surfaces | A new ticket filed retroactively, citing the failed block as Goal source |
 | Cross-ticket contradiction | A new ticket's investigation falsifies an Assumption documented on a closed ticket | The closed ticket gets the revision; the new ticket cross-links it |
 
-**Not a trigger -- but only when BOTH conditions hold:** (a) the failure is in the agent's own iteration cycle (write → test → fail → fix, pre-commit), AND (b) NO durably-documented contract is being contradicted anywhere. "Durably documented" includes: hook contracts in `hooks/**`, SKILL.md prose, rule files (`_*-rules.md`), ticket Assumptions blocks, self-review artifacts, Trivial-change blocks, and source-code docstrings on the function being touched.
+**Not a trigger -- but only when BOTH conditions hold:** (a) the failure is in the agent's own iteration cycle (write -> test -> fail -> fix, pre-commit), AND (b) NO durably-documented contract is being contradicted anywhere. "Durably documented" includes: hook contracts in `hooks/**`, SKILL.md prose, rule files (`_*-rules.md`), ticket Assumptions blocks, self-review artifacts, Trivial-change blocks, and source-code docstrings on the function being touched.
 
 If a push hook blocks the commit, that's a contract documented in the hook's SKILL.md being contradicted -- condition (b) fails, so the carve-out does NOT apply, even though the agent is in their own loop. Same for: a CI lint blocking on a rule the agent's code violates; a type checker rejecting a function signature the agent wrote against a docstring; a downstream consumer flagging a schema change the agent didn't see documented.
 
@@ -212,13 +212,13 @@ Implication: <what changes -- file paths edited, docs updated, Assumptions
 
 When a trigger fires:
 
-1. Walk failure → commit → PR → ticket. If the chain breaks (no ticket -- e.g., a Trivial-change escape), file the missing ticket FIRST, then proceed.
+1. Walk failure -> commit -> PR -> ticket. If the chain breaks (no ticket -- e.g., a Trivial-change escape), file the missing ticket FIRST, then proceed.
 2. Re-read the originating ticket's Assumptions block. Find the specific belief the failure contradicts.
 3. Append a `## Post-error revision` block to that ticket with the five required fields.
 4. Update the ticket's Assumptions block. The original wrong Assumption is NOT deleted -- it is preserved with a `(superseded by Post-error revision YYYY-MM-DD)` annotation, and the revised Assumption is added alongside. The original-wrong + revised-correct pair documents the learning explicitly.
 5. THEN draft the fix or revert PR. Reference the Post-error revision in the PR body via `Refs: <originating ticket> Post-error revision`.
 
-### The Cannot-produce-error → Post-error revision pipeline
+### The Cannot-produce-error -> Post-error revision pipeline
 
 writing-rules:5 + writing-rules:6 are a closed loop:
 

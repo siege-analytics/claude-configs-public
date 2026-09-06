@@ -71,7 +71,12 @@ def _find_session_value(obj) -> str:
 
 def session_id_from_env() -> str:
     """Return the current session id from known runtime env vars or hook JSON."""
-    for name in ("CRAFT_AGENT_SESSION_ID", "CLAUDE_SESSION_ID", "SESSION_ID"):
+    # Craft Agents sets CRAFT_SESSION_ID (verified via ps -eE on the running
+    # server). The CRAFT_AGENT_ prefix was aspirational and is NEVER set at
+    # runtime (#697). Kept for backward compat if a caller ever exports it,
+    # but the CRAFT_ prefix is checked first because that is what Craft
+    # actually sets.
+    for name in ("CRAFT_SESSION_ID", "CRAFT_AGENT_SESSION_ID", "CLAUDE_SESSION_ID", "SESSION_ID"):
         value = os.environ.get(name, "").strip()
         if value:
             return _safe_session_id(value)
@@ -89,7 +94,10 @@ def session_id_from_env() -> str:
 def session_dirs(workspace: str, session_id: str = "") -> "list[str]":
     """Candidate session-scoped signal directories, highest priority first."""
     dirs: list[str] = []
-    for name in ("CLAUDE_SIGNAL_DIR", "CRAFT_AGENT_SIGNAL_DIR", "CRAFT_AGENT_SESSION_DIR", "CLAUDE_SESSION_DIR"):
+    # CRAFT_SESSION_DIR is the var Craft actually sets (#697). The
+    # CRAFT_AGENT_ prefixed names never resolve at runtime; kept for
+    # backward compat with any explicit exporter.
+    for name in ("CLAUDE_SIGNAL_DIR", "CRAFT_SIGNAL_DIR", "CRAFT_AGENT_SIGNAL_DIR", "CRAFT_SESSION_DIR", "CRAFT_AGENT_SESSION_DIR", "CLAUDE_SESSION_DIR"):
         value = os.environ.get(name, "").strip()
         if value:
             dirs.append(value)

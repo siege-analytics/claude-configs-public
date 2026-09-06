@@ -28,3 +28,8 @@ __pycache__/
 
 # Machine-local editor state
 .idea/
+
+# Repo test fixtures must be tracked regardless of a developer global
+# gitignore, which commonly excludes test_*.py and *_test.py. A repo
+# .gitignore takes precedence over core.excludesFile, so this re-includes them.
+!bin/_test/*.py

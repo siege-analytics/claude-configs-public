@@ -17,7 +17,7 @@ behavior; the skill explains the correct behavior.
 | `git/no-sensitive-files.sh` | commit (sensitive files) | Staging .env, credentials, keys |
 | `git/no-broad-staging.sh` | commit (staging patterns) | `git add -A`, `git add .`, `git add --all` |
 | `git/self-review.sh` | `skills/self-review/SKILL.md`, `feedback_self_code_review` memory | `git push`, `gh pr create`, `gh pr merge` when latest commit lacks `Self-Review:` / `Self-Review-Source:` trailers, or the source artifact lacks required sections. v1.1 includes Goal-source mtime check. v2 follow-ups tracked in the skill. See skill's "Known limitations" section for documented recoverable FPs (chained `git commit && git push`, echo-string substring match, multi-statement `cd`). |
-| `git/survey-context.sh` | `skills/thinking/survey-context/SKILL.md` v2.1 + v2.2 Definition-of-Done | `git push`, `gh pr create`, `gh pr merge` when the pushed diff touches a file listed as the Definition for an entity in the project's `.agents/skills/survey-context/config.md` catalog, OR a file matching the entity doc's optional `**Watched paths:**` glob list, and the corresponding doc page is untouched. Trailer escape: `Doc-Update-Source: <ref>`. Silent skip when the project hasn't adopted the doc layer. BLOCK message distinguishes `[v2.1 definition-file match]` from `[v2.2 watched-path match]`. v2.2 is operator-curated globs (evidence-collection minimal); symbol-based AST detection deferred to v2.3. |
+| `git/survey-context.sh` | `skills/survey-context/SKILL.md` v2.1 + v2.2 Definition-of-Done | `git push`, `gh pr create`, `gh pr merge` when the pushed diff touches a file listed as the Definition for an entity in the project's `.agents/skills/survey-context/config.md` catalog, OR a file matching the entity doc's optional `**Watched paths:**` glob list, and the corresponding doc page is untouched. Trailer escape: `Doc-Update-Source: <ref>`. Silent skip when the project hasn't adopted the doc layer. BLOCK message distinguishes `[v2.1 definition-file match]` from `[v2.2 watched-path match]`. v2.2 is operator-curated globs (evidence-collection minimal); symbol-based AST detection deferred to v2.3. |
 | `git/detect-ai-fingerprints.sh` | `skills/meta/detect-ai-fingerprints/SKILL.md` at push time (v1: commit-body only) | `git push`, `gh pr create`, `gh pr merge` when `scan.sh --message-file` on the latest commit body returns non-zero. Catches em-dashes (U+2014), en-dashes (U+2013), banned adverbs, structured `Why:` / `How to apply:` blocks, headers/bullets in commit bodies, history references, and countable-claim trailers. v1 scope is commit body only; staged-diff / PR-diff scanning would surface historical violations and needs a separate phasing decision. Closes the gap where the scanner existed but no hook called it (#120). |
 | `git/decomposition-guard.sh` | `skills/ticket-decomposition/SKILL.md`, `skills/testing-frameworks/SKILL.md` (testing.layers `source:` globs) | **Warns** (V1 non-blocking, always exit 0) on `git push`, `gh pr create`/`merge`, `glab mr create`/`merge` when the pushed diff's touched source files span more than one architectural layer per the project's `testing.layers` `source:` globs in PROJECT.md. Each file maps to exactly one layer (longest-literal-prefix wins); files matching no `source:` glob (tests, docs, config) are layer-neutral and never counted. Override: `[multi-layer-ok: <reason>]` trailer in the latest commit body. Silent no-op when the project declares no `source:` globs. Mechanical backstop for the one-ticket/PR-per-layer doctrine; promotes to a block after the false-positive rate is observed. |
 | `write/branch-guard.sh` | git-workflow/develop-guard at write time (not just commit time) | `Write` tool calls to files in a git repo on `main`/`master`/`develop`/`staging`, or in detached HEAD. Carve-outs: session-managed `plans/` and `data/` dirs, `~/.claude/`, `~/.craft-agent/`, files outside any git repo. Composes with `write/write-guard.sh` (path-pattern-based). Closes the git-perimeter coverage gap for silent file mutations that bypass push-time hooks. |
@@ -47,7 +47,7 @@ where the repo is cloned to a fixed path and the snippet's
 ### 1. Make scripts executable
 
 ```bash
-chmod +x hooks/git/*.sh hooks/agent-comms/*.sh hooks/infrastructure/*.sh hooks/resolver/*.sh hooks/write/*.sh
+chmod +x hooks/bash/*.sh hooks/git/*.sh hooks/agent-comms/*.sh hooks/infrastructure/*.sh hooks/resolver/*.sh hooks/write/*.sh
 ```
 
 ### 2. Add hooks to your project settings
@@ -66,6 +66,21 @@ Replace `/path/to/claude-configs-public` with the actual path:
 sed 's|/path/to/claude-configs-public|<absolute path to this repo>|g' \
     hooks/settings-snippet.json
 ```
+
+### 2a. This repo's own `.claude/settings.json` is generated, not edited
+
+`hooks/settings-snippet.json` is canonical. This repository's
+`.claude/settings.json` is generated from it by:
+
+```bash
+bash bin/install-hooks.sh --relative
+```
+
+Do not hand-edit `.claude/settings.json`. Adding a hook to the snippet and not
+regenerating is how this repository came to wire 27 of the snippet's 35
+`(event, matcher, path)` triples, with a whole `NotebookEdit` matcher group
+absent so that notebook writes passed every write guard. `bin/validate-hooks.py`
+now compares the two files on triples and fails the build when they disagree.
 
 ### 3. Or install globally
 

@@ -21,13 +21,19 @@ _probe_check_playwright() {
     return 1
 }
 
-if _probe_check_playwright; then
-    ver=$( (command -v playwright >/dev/null 2>&1 && playwright --version) || npx --no-install playwright --version 2>&1 | head -1 )
-    _probe_emit_json "{\"status\":\"installed\",\"tool\":\"playwright\",\"version\":\"$ver\"}"
-    exit 0
-fi
+# #678: version function called by _probe_get_version_target when the
+# CHECK_FN target is _probe_check_playwright. Naming convention:
+# <check_fn>_version. Symmetric with _probe_check_playwright so
+# probe_run's pre-check AND post-install re-check both go through the
+# check function rather than a sentinel BIN_NAME that could never
+# resolve.
+_probe_check_playwright_version() {
+    (command -v playwright >/dev/null 2>&1 && playwright --version) \
+        || npx --no-install playwright --version 2>&1 | head -1
+}
 
-# Absent: delegate to shared install/escalate flow via probe_run's install path.
-# Use a shim BIN_NAME that _probe_check_bin will always miss so probe_run takes
-# the absent branch and applies the shared policy resolution.
-probe_run "playwright" "__playwright_absent__" "npm install -D @playwright/test && npx playwright install --with-deps" "" "e2e" "${1:-}"
+# Delegate to probe_run with the CHECK_FN as target (#678). No sentinel
+# BIN_NAME; probe_run's pre-check calls _probe_check_playwright, install
+# runs under policy, and the re-check calls _probe_check_playwright again
+# so a successful install is observable.
+probe_run "playwright" "_probe_check_playwright" "npm install -D @playwright/test && npx playwright install --with-deps" "" "e2e" "${1:-}"

@@ -37,7 +37,7 @@ Apply these principles from *Effective Java* (Joshua Bloch, 3rd edition) to all 
 
 ## Generics and collections
 
-- Use generic types and methods; avoid raw types (`List` → `List<E>`)
+- Use generic types and methods; avoid raw types (`List` -> `List<E>`)
 - Use bounded wildcards (`? extends T` for producers, `? super T` for consumers -- PECS)
 - Prefer `List` over arrays for type safety; use arrays only for performance-sensitive low-level code
 

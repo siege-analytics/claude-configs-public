@@ -9,7 +9,7 @@
 #
 # Enforcement checks:
 #   1. think SKILL.md — if think-gate.json status=implementing,
-#      skills/thinking/think/SKILL.md must appear in session Read calls.
+#      skills/think/SKILL.md must appear in session Read calls.
 #   2. self-review SKILL.md — if code-modifying tool calls exist,
 #      skills/self-review/SKILL.md must have been Read.
 #
@@ -114,7 +114,7 @@ except Exception:
     sys.exit(0)
 
 # Check 1: think skill read receipt
-think_patterns = ["skills/thinking/think/SKILL.md", "skills/think/SKILL.md"]
+think_patterns = ["skills/think/SKILL.md", "skills/think/SKILL.md"]
 think_read = any(
     any(p in sr for p in think_patterns) for sr in skill_reads
 )
@@ -125,7 +125,7 @@ if not think_read:
         ticket = tg.get("ticket", "current task")
     except Exception:
         ticket = "current task"
-    print(f"BLOCKED: skills/thinking/think/SKILL.md has not been Read this "
+    print(f"BLOCKED: skills/think/SKILL.md has not been Read this "
           f"session. The think skill is the first gate for {ticket} — "
           f"read it before proceeding with implementation. Ref: #449")
     sys.exit(0)

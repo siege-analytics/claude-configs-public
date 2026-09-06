@@ -31,7 +31,7 @@ INPUT=$(cat)
 
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
-FILE_PATH=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.file_path tool_input.path 2>/dev/null || echo "")
+FILE_PATH=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.file_path tool_input.path tool_input.notebook_path 2>/dev/null || echo "")
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || echo "")
 
 [[ -z "$FILE_PATH" ]] && exit 0

@@ -27,7 +27,7 @@ testing:
 
 **testing-frameworks:2. New test files MUST use the project's declared framework.**
 
-When writing a new test file, use the framework declared in `PROJECT.md` for the relevant layer. Using an undeclared framework (e.g., writing a Jest test in a project that declares Vitest) requires updating `PROJECT.md` first — the declaration change is part of the PR, not a follow-up.
+When writing a new test file, use the framework declared in `PROJECT.md` for the relevant layer. Using an undeclared framework (e.g., writing a Jest test in a project that declares Vitest) requires updating `PROJECT.md` first -- the declaration change is part of the PR, not a follow-up.
 
 This prevents framework drift where different modules accumulate different test runners, making CI configuration increasingly complex and test maintenance increasingly expensive.
 
@@ -37,9 +37,9 @@ Enforcement: judgment-enforced via `[skill:code-review]` until a mechanical scan
 
 The affected-tests gate (`[skill:commit]` step 4) writes test results to `test-gate.json` at the workspace root after tests pass. This signal file records which source files were tested, which test files ran, the framework used, and the result.
 
-The `test-guard.sh` hook reads this signal file at push time and verifies that every touched source file has recorded test evidence. Projects that declare a `testing:` section in `PROJECT.md` demand test evidence — the hook blocks (exit 2) when evidence is missing.
+The `test-guard.sh` hook reads this signal file at push time and verifies that every touched source file has recorded test evidence. Projects that declare a `testing:` section in `PROJECT.md` demand test evidence -- the hook blocks (exit 2) when evidence is missing.
 
-Override: `[run-skip: reason]` in the commit body. The hook reads the latest commit message and allows the push with a warning when this override is present. Legitimate cases: test infrastructure under repair, external dependency unavailable. Using the override more than once per session is a smell — track frequency.
+Override: `[run-skip: reason]` in the commit body. The hook reads the latest commit message and allows the push with a warning when this override is present. Legitimate cases: test infrastructure under repair, external dependency unavailable. Using the override more than once per session is a smell -- track frequency.
 
 ## Operationalization
 
@@ -51,10 +51,10 @@ Override: `[run-skip: reason]` in the commit body. The hook reads the latest com
 
 ## Cross-references
 
-- `[skill:testing-frameworks]` — framework guidance, decision tree, quality tests
-- `[rule:writing-tests]` — test quality rules (mock fidelity, no cargo-cult, skip messages, untested except blocks, inspection vs behavioral)
-- `[skill:commit]` step 4 — the affected-tests gate that produces the evidence
-- `hooks/git/test-guard.sh` — the mechanical enforcement at push time
+- `[skill:testing-frameworks]` -- framework guidance, decision tree, quality tests
+- `[rule:writing-tests]` -- test quality rules (mock fidelity, no cargo-cult, skip messages, untested except blocks, inspection vs behavioral)
+- `[skill:commit]` step 4 -- the affected-tests gate that produces the evidence
+- `hooks/git/test-guard.sh` -- the mechanical enforcement at push time
 
 ## Attribution
 
