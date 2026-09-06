@@ -21,6 +21,7 @@ cd "$TMP_REPO"
 git init -q -b main
 git config user.email "t@example.test"
 git config user.name "test"
+git remote add origin git@github.com:siege-analytics/claude-configs-public.git
 
 # Project-skill scaffolding.
 mkdir -p .agents/skills/survey-context docs/entities src/widgets tests/widgets
@@ -75,7 +76,7 @@ fresh_commit_touching() {
         echo "// touch $RANDOM" >> "$f"
     done
     git add -A
-    git commit -q -m "fix: scenario commit" -m "$body"
+    git commit -q --no-verify -m "fix: scenario commit" -m "$body"
 }
 
 reset_to_initial() {
@@ -86,36 +87,36 @@ reset_to_initial() {
 # Scenario (a): touch Definition file (src/widgets/widget.py), no doc update -> BLOCK [v2.1]
 reset_to_initial
 fresh_commit_touching "Touched the Widget Definition file." src/widgets/widget.py
-expect_block "(a) v2.1 definition-file touched, no doc update" "$HOOK" "$(make_payload 'g'$'i''t push origin main')"
+expect_block "(a) v2.1 definition-file touched, no doc update" "$HOOK" "$(make_payload 'git push origin main')"
 
 # Scenario (b): touch Definition + doc page -> PASS
 reset_to_initial
 fresh_commit_touching "Touched Widget def and doc together." src/widgets/widget.py docs/entities/widget.md
-expect_pass "(b) v2.1 definition + doc both touched" "$HOOK" "$(make_payload 'g'$'i''t push origin main')"
+expect_pass "(b) v2.1 definition + doc both touched" "$HOOK" "$(make_payload 'git push origin main')"
 
 # Scenario (c): touch watched-path file (src/widgets/helpers.py), no doc update -> BLOCK [v2.2]
 reset_to_initial
 fresh_commit_touching "Touched a watched caller (widget helpers)." src/widgets/helpers.py
-expect_block "(c) v2.2 watched-path touched, no doc update" "$HOOK" "$(make_payload 'g'$'i''t push origin main')"
+expect_block "(c) v2.2 watched-path touched, no doc update" "$HOOK" "$(make_payload 'git push origin main')"
 
 # Scenario (d): touch watched-path file + doc page -> PASS
 reset_to_initial
 fresh_commit_touching "Touched watched caller and doc." src/widgets/helpers.py docs/entities/widget.md
-expect_pass "(d) v2.2 watched-path + doc both touched" "$HOOK" "$(make_payload 'g'$'i''t push origin main')"
+expect_pass "(d) v2.2 watched-path + doc both touched" "$HOOK" "$(make_payload 'git push origin main')"
 
 # Scenario (e): touch unrelated file (src/other.py) -> PASS silently
 reset_to_initial
 fresh_commit_touching "Touched an unrelated file." src/other.py
-expect_pass "(e) unrelated file, neither definition nor watched" "$HOOK" "$(make_payload 'g'$'i''t push origin main')"
+expect_pass "(e) unrelated file, neither definition nor watched" "$HOOK" "$(make_payload 'git push origin main')"
 
 # Scenario (f): touch Definition with Doc-Update-Source trailer -> PASS via trailer escape
 reset_to_initial
 git reset --hard HEAD~0 2>/dev/null >/dev/null || true
 echo "// touch $RANDOM" >> src/widgets/widget.py
 git add -A
-git commit -q -m "fix: scenario f" -m "Touched def but doc update lives elsewhere.
+git commit -q --no-verify -m "fix: scenario f" -m "Touched def but doc update lives elsewhere.
 
 Doc-Update-Source: see SW#999 sibling PR"
-expect_pass "(f) definition touched + Doc-Update-Source trailer escape" "$HOOK" "$(make_payload 'g'$'i''t push origin main')"
+expect_pass "(f) definition touched + Doc-Update-Source trailer escape" "$HOOK" "$(make_payload 'git push origin main')"
 
 report

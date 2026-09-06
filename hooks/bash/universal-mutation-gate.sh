@@ -146,7 +146,9 @@ MUTATION_INDICATORS=(
     'gh api .* (--input|--raw-field|-f )'
     'pip[3]? install'
     'npm install|yarn add|pnpm add'
-    'cat .* >|(^|[;|[:space:]])tee[[:space:]]|(^|[^0-9&>])>[^ 0-9&]|(^|[^0-9&>])> |(^|[^0-9&>])>> '
+    # redirect / tee / cat-write detection moved out of this array so it can be
+    # scanned quote-aware (see REDIRECT_INDICATOR below). Scanning it here (on the
+    # raw command) misread quoted '>' / '->' as redirects (#591-shape FP).
     'mkdir |touch |mv |cp '
     'chmod |chown |chgrp '
     'git config (--global|--system|--local|--unset|--add|--replace-all)'
@@ -163,6 +165,28 @@ for m_pattern in "${MUTATION_INDICATORS[@]}"; do
         break
     fi
 done
+
+# --- Redirect / tee / cat-write detection (quote-aware) ----------------------
+# A shell output redirect ('>' '>>'), a `tee`, or a `cat ... >` is a mutation.
+# But a '>' inside a QUOTED string (an arrow like a->b, a grep pattern, a JSON
+# value) is literal text, not a redirect. Scanning the raw command wrongly
+# blocked read-only commands (#591-shape; sibling of the tee/committee FP,
+# enterprise#2572). Two guards make this precise without under-blocking:
+#   1. '-' added to each redirect lookbehind so a bare arrow (flow->next) is
+#      not read as a redirect. A real redirect is never preceded by '-'.
+#   2. quoted spans are stripped before the scan, so a '>' inside quotes no
+#      longer trips it -- EXCEPT for shell-eval wrappers (bash -c "...>...",
+#      sh -c, eval), where quoted content IS executed, so the redirect is real.
+# All other mutation indicators above still scan the raw command, so a wrapped
+# mutation like bash -c "rm -rf x" is unaffected.
+REDIRECT_INDICATOR='cat .* >|(^|[;|[:space:]])tee[[:space:]]|(^|[^-0-9&>])>[^ 0-9&]|(^|[^-0-9&>])> |(^|[^-0-9&>])>> '
+REDIRECT_SCAN="$COMMAND"
+if ! [[ "$COMMAND" =~ (^|[[:space:]])(bash|sh|zsh|dash|ksh)[[:space:]]+-c([[:space:]]|$)|(^|[[:space:]])eval([[:space:]]|$) ]]; then
+    REDIRECT_SCAN=$(printf '%s' "$COMMAND" | sed -E "s/'[^']*'//g; s/\"[^\"]*\"//g")
+fi
+if [[ "$REDIRECT_SCAN" =~ $REDIRECT_INDICATOR ]]; then
+    COMPOUND_MUTATION=true
+fi
 
 # --- Match against safelist (only if no mutation indicator found) ---
 if [[ "$COMPOUND_MUTATION" == "false" ]]; then

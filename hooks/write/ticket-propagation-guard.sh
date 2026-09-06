@@ -33,6 +33,7 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 AFTER_IMAGE="$HOOK_DIR/../lib/after-image.py"
 
 # --- Parse the target path ---
+# hooks/lib/after-image.py reads tool_input.notebook_path for NotebookEdit.
 FILE_PATH=$(printf '%s' "$INPUT" | python3 "$AFTER_IMAGE" path)
 PATH_STATUS=$?
 
@@ -63,6 +64,7 @@ fi
 # cannot distinguish from its absence is the same non-check as the `*.md` test
 # that used to sit below this comment.
 CANONICAL="$HOOK_DIR/../lib/canonical-path.py"
+CASEFOLD_CANDIDATE="$HOOK_DIR/../lib/artifact-casefold-candidate.py"
 REAL_PATH=$(printf '%s' "$FILE_PATH" | python3 "$CANONICAL")
 REALPATH_STATUS=$?
 
@@ -82,6 +84,8 @@ BASENAME=$(basename "$REAL_PATH")
 
 # macOS ships bash 3.2, so `${VAR,,}` is unavailable.
 MATCH_PATH=$(printf '%s' "$REAL_PATH" | tr '[:upper:]' '[:lower:]')
+RAW_CASEFOLD_PATH=$(printf '%s' "$FILE_PATH" | python3 "$CASEFOLD_CANDIDATE" 2>/dev/null || true)
+RAW_CANONICAL_MATCH_PATH=$(printf '%s' "$RAW_CASEFOLD_PATH" | tr '[:upper:]' '[:lower:]')
 
 # realpath returns an absolute path, so the leading `/` is always present and
 # the bare-relative twins are unnecessary. `*` matches `/` in a bash `case`, so
@@ -92,6 +96,14 @@ case "$MATCH_PATH" in
     */plans/*.md)               ARTIFACT_PATH=true ;;
     */docs/investigations/*.md) ARTIFACT_PATH=true ;;
 esac
+case "$RAW_CANONICAL_MATCH_PATH" in
+    */plans/*.md)               ARTIFACT_PATH=true ;;
+    */docs/investigations/*.md) ARTIFACT_PATH=true ;;
+esac
+if printf '%s' "$FILE_PATH" | grep -Eq '/([Pp][Ll][Aa][Nn][Ss]|[Dd][Oo][Cc][Ss]/[Ii][Nn][Vv][Ee][Ss][Tt][Ii][Gg][Aa][Tt][Ii][Oo][Nn][Ss])/.+\.md$' \
+   && ! printf '%s' "$FILE_PATH" | grep -Eq '/(plans|docs/investigations)/'; then
+    ARTIFACT_PATH=true
+fi
 [[ "$ARTIFACT_PATH" == "false" ]] && exit 0
 
 # --- Extract the content this write would leave on disk ---
@@ -110,6 +122,10 @@ if [[ "$AFTER_IMAGE_STATUS" -ne 0 ]]; then
     printf '\nBLOCKED by ticket-propagation-guard: cannot determine the result of this write for %s (hooks/lib/after-image.py status %d).\nThe guard fails closed on payloads it cannot resolve.\n\n' \
         "$FILE_PATH" "$AFTER_IMAGE_STATUS" >&2
     exit 2
+fi
+
+if [[ -z "$CONTENT" ]] && [[ -n "$RAW_CASEFOLD_PATH" ]] && [[ -f "$RAW_CASEFOLD_PATH" ]]; then
+    CONTENT=$(cat "$RAW_CASEFOLD_PATH")
 fi
 
 [[ -z "$CONTENT" ]] && exit 0

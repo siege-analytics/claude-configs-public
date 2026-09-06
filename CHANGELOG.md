@@ -6,11 +6,16 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Added
 
+- Session-coordination decision/control-surface rules: `session-coordination:5` requires complete decision checklist collection before decision-dependent spoke coordination; `session-coordination:6` preserves the operator control surface by bounding foreground `send_agent_message` churn and preferring COO-style sub-manager delegation when work fans out.
 - Goal-mode intention-feint continuity (#635): standing-order and drive guidance now state that action announcements such as "continuing now" are not work unless paired with same-turn action, re-entry, or blocker evidence.
 - scaffold-test-stub hook (#661): `hooks/create-ticket/scaffold-test-stub.sh` reads a ticket body containing Automation blocks (per #658), invokes tool-availability probes (per #662) when the block lacks a Probe field, resolves the layer's `automation_template` from `PROJECT.md`, sed-substitutes `{ticket_id}`/`{ac_id}`/`{feature}` into the named Stub path, and appends `Generated stubs:` + `Blocked-by:` lines to the ticket body. Silent no-op when body has no Automation block. Test fixture at `hooks/_test/scaffold_test_stub.test.sh` covers no-op, happy-path, and blocked-path.
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 
 ### Fixed
+- Hook settings drift: `.claude/settings.json` and `hooks/settings-snippet.json` now agree on the wired hook set, including universal mutation, coordinator status, fix-shape, spawn guard, Vergil quote, and MultiEdit write guards.
+- Rule-file typography hygiene: swept banned typographic Unicode from all `skills/_*rules.md` files so the rule corpus satisfies `writing-prose:1` rather than merely prescribing it.
+- Cross-session think-gate contamination (#673): session signal resolution now scopes active gate lookup to the current session so new sessions do not inherit stale blocking state from another session.
+- Universal mutation gate quoted redirect false positive (#729): quoted `>` and `->` text is no longer classified as shell redirection.
 - Tool-availability-probe skill and scripts (#662): `skills/tool-availability-probe/SKILL.md` documents the check-install-escalate protocol; six probe shell scripts ship under `scripts/probe/` for pytest, playwright, vitest, schemathesis, great-expectations, k6. On absent + `tool_install_policy: block` (or install failure), probe files an infra ticket via `gh` from `templates/infra-ticket-tool-install.md` (#663) and returns exit 78 so the scaffold hook (#661) can record `Blocked-by:` while still rendering the stub.
 - Part-of epic #655; child ticket #662 closes the environment-gap check between writing-tests:7 tool declaration and the scaffold hook's stub-render step; adds a new tool-availability-probe skill under `skills/`.
 

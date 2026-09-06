@@ -5,7 +5,27 @@
         "hooks": [
           {
             "type": "command",
+            "command": "hooks/resolver/branch-state-guard.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "hooks/resolver/inject-resolver.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "hooks/resolver/investigate-gate-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/resolver/pipeline-state-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/resolver/pre-action-guard.sh",
             "timeout": 5
           },
           {
@@ -15,27 +35,7 @@
           },
           {
             "type": "command",
-            "command": "hooks/resolver/pre-action-guard.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
             "command": "hooks/resolver/think-gate-guard.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "hooks/resolver/investigate-gate-guard.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "hooks/resolver/branch-state-guard.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "hooks/resolver/pipeline-state-guard.sh",
             "timeout": 10
           }
         ]
@@ -47,13 +47,16 @@
         "hooks": [
           {
             "type": "command",
+            "command": "hooks/bash/coordinator-status-guard.sh"
+          },
+          {
+            "type": "command",
             "command": "hooks/bash/destructive-guard.sh",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "hooks/infrastructure/catalog-guard.sh",
-            "timeout": 10
+            "command": "hooks/bash/universal-mutation-gate.sh"
           },
           {
             "type": "command",
@@ -62,12 +65,21 @@
           },
           {
             "type": "command",
+            "command": "hooks/git/detect-ai-fingerprints.sh",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/fix-shape-guard.sh"
+          },
+          {
+            "type": "command",
             "command": "hooks/git/no-attribution.sh",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "hooks/git/ticket-required.sh",
+            "command": "hooks/git/no-broad-staging.sh",
             "timeout": 10
           },
           {
@@ -77,7 +89,17 @@
           },
           {
             "type": "command",
-            "command": "hooks/git/no-broad-staging.sh",
+            "command": "hooks/git/post-error-revision-required.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/pr-base-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/git/pre-push-self-review.sh",
             "timeout": 10
           },
           {
@@ -92,42 +114,12 @@
           },
           {
             "type": "command",
-            "command": "hooks/git/detect-ai-fingerprints.sh",
-            "timeout": 15
-          },
-          {
-            "type": "command",
-            "command": "hooks/git/post-error-revision-required.sh",
+            "command": "hooks/git/ticket-required.sh",
             "timeout": 10
           },
           {
             "type": "command",
-            "command": "hooks/git/pre-push-self-review.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "hooks/git/pr-base-guard.sh",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "hooks/write/write-guard.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "hooks/write/branch-guard.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "hooks/write/ticket-propagation-guard.sh",
+            "command": "hooks/infrastructure/catalog-guard.sh",
             "timeout": 10
           }
         ]
@@ -137,11 +129,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "hooks/write/write-guard.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
             "command": "hooks/write/branch-guard.sh",
             "timeout": 10
           },
@@ -149,25 +136,10 @@
             "type": "command",
             "command": "hooks/write/ticket-propagation-guard.sh",
             "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "NotebookEdit",
-        "hooks": [
+          },
           {
             "type": "command",
             "command": "hooks/write/write-guard.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "hooks/write/branch-guard.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "hooks/write/ticket-propagation-guard.sh",
             "timeout": 10
           }
         ]
@@ -177,9 +149,24 @@
         "hooks": [
           {
             "type": "command",
-            "command": "hooks/write/write-guard.sh",
+            "command": "hooks/write/branch-guard.sh",
             "timeout": 10
           },
+          {
+            "type": "command",
+            "command": "hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/write-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "NotebookEdit",
+        "hooks": [
           {
             "type": "command",
             "command": "hooks/write/branch-guard.sh",
@@ -188,6 +175,31 @@
           {
             "type": "command",
             "command": "hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/write-guard.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/write/branch-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/ticket-propagation-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/write/write-guard.sh",
             "timeout": 10
           }
         ]
@@ -199,6 +211,26 @@
             "type": "command",
             "command": "hooks/agent-comms/no-slug-form-outbound.sh",
             "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__session__spawn_session",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/agent-comms/spawn-guard.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/git/vergil-quote.sh"
           }
         ]
       }

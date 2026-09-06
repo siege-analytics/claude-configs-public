@@ -64,8 +64,8 @@ def main():
     triples = extract_triples(snippet)
     paths = {t[2] for t in triples}
     check(
-        "snippet has 35 triples over 29 distinct hooks",
-        (len(triples), len(paths)) == (35, 29),
+        "snippet has 38 triples over 29 distinct hooks",
+        (len(triples), len(paths)) == (38, 29),
         f"got {len(triples)} triples over {len(paths)} hooks",
     )
 
@@ -111,7 +111,7 @@ def main():
         )
         check(
             "the victim hook is still wired on its other matchers",
-            still_wired == {"Write", "Edit"},
+            still_wired == {"Write", "Edit", "MultiEdit"},
             still_wired,
         )
         check(

@@ -170,20 +170,38 @@ def find_think_gate_for_repo(workspace: str, repo_root: str, env_override: str =
 
 
 def find_all_gates(workspace: str, gate_name: str = "think-gate", session_id: str = "") -> "list[dict]":
-    """Find all gate signal files, with current-session files first."""
+    """Find all gate signal files, with current-session files first.
+
+    Workspace-root (non-session-scoped) files are included only when they
+    plausibly belong to the calling session: the calling session id is
+    unknown (can't disambiguate; preserves legacy single-tenant behavior),
+    the file's own recorded "session" field matches, or the file records
+    no session at all (fully generic legacy singleton). A workspace-root
+    file stamped with a DIFFERENT session's id is excluded -- otherwise a
+    brand-new session with no gate of its own inherits whichever foreign
+    session's stale, non-terminal think-gate happens to sort first
+    alphabetically, and gets gated on a ticket it has never touched.
+    """
+    sid = session_id or session_id_from_env()
     results = []
     seen = set()
-    for session_dir in session_dirs(workspace, session_id):
+    for session_dir in session_dirs(workspace, sid):
         for path in sorted(glob.glob(os.path.join(session_dir, f"{gate_name}*.json"))):
             loaded = _load(path)
             if loaded and path not in seen:
                 results.append(loaded)
                 seen.add(path)
     for path in sorted(glob.glob(os.path.join(workspace, f"{gate_name}*.json"))):
+        if path in seen:
+            continue
         loaded = _load(path)
-        if loaded and path not in seen:
-            results.append(loaded)
-            seen.add(path)
+        if not loaded:
+            continue
+        file_session = loaded["data"].get("session", "")
+        if sid and file_session and file_session != sid:
+            continue
+        results.append(loaded)
+        seen.add(path)
     return results
 
 
