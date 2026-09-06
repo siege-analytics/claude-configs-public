@@ -42,12 +42,12 @@ Every behavior change has been tested mentally -- and where appropriate, in test
 
 **Operationalized by:** [skill:python] "Tests and Documentation -- non-negotiable" section (Python); [skill:coding] Rule 6 (language-agnostic).
 
-### d. Non-trivial updates → update the ticket
+### d. Non-trivial updates -> update the ticket
 
 Non-trivial work updates the ticket as it progresses. The ticket reflects the current state of the work, not the state when it was written.
 
 What counts as a ticket update:
-- Status transitions (Todo → In Progress → In Review → Done)
+- Status transitions (Todo -> In Progress -> In Review -> Done)
 - Comments on substantive changes (scope expansion, blocker discovery, design pivots)
 - Links to commits and PRs (bidirectional -- commit references ticket, ticket links commit)
 - Final summary at close (what shipped, what was deferred, validation status)
@@ -113,7 +113,7 @@ The session-end check ([skill:wrap-up]) verifies all five before declaring the s
 
 ## Exceptions
 
-The following categories are exempt from criteria (a)–(d) but **not** from (e) (ticket existence):
+The following categories are exempt from criteria (a)--(d) but **not** from (e) (ticket existence):
 
 - **Typo fixes** with no functional effect (the same word, spelled correctly)
 - **Doc-only changes** that don't reframe API contracts
