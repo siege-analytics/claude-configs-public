@@ -36,6 +36,12 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+if [[ -z "$COMMAND" ]]; then
+    COMMAND=$(printf '%s' "$INPUT" | sed -nE 's/.*"command"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/p' | head -1)
+fi
+if [[ -z "$CWD" ]]; then
+    CWD=$(printf '%s' "$INPUT" | sed -nE 's/.*"cwd"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/p' | head -1)
+fi
 
 if [[ -z "$COMMAND" ]]; then
     exit 0
@@ -153,6 +159,21 @@ if [[ -n "$UPSTREAM" ]]; then
     DIFF_FILES=$(git -C "$EFFECTIVE_CWD" diff --name-only "$UPSTREAM"..HEAD 2>/dev/null || true)
 else
     DIFF_FILES=$(git -C "$EFFECTIVE_CWD" diff --name-only HEAD~1..HEAD 2>/dev/null || true)
+fi
+
+if [[ -z "$DIFF_FILES" ]]; then
+    DIFF_FILES=$(git -C "$EFFECTIVE_CWD" diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true)
+fi
+
+if [[ -z "$DIFF_FILES" ]]; then
+    ROOT_COMMIT=$(git -C "$EFFECTIVE_CWD" rev-list --max-parents=0 HEAD 2>/dev/null | tail -1 || true)
+    if [[ -n "$ROOT_COMMIT" ]]; then
+        DIFF_FILES=$(git -C "$EFFECTIVE_CWD" diff --name-only "$ROOT_COMMIT"..HEAD 2>/dev/null || true)
+    fi
+fi
+
+if [[ -z "$DIFF_FILES" ]]; then
+    DIFF_FILES=$(git -C "$EFFECTIVE_CWD" show --name-only --format= HEAD 2>/dev/null || true)
 fi
 
 if [[ -z "$DIFF_FILES" ]]; then
