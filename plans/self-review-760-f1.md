@@ -23,6 +23,13 @@ Cannot produce error: test file rewrite only; no runtime code change; the new lo
 Evidence: `git diff --stat` shows one file changed: skills/detect-ai-fingerprints/test_writing_code_8.sh.
 Falsification: NOT trivial if it also changes any file outside skills/detect-ai-fingerprints/. Verified: single file.
 
+## Trivial-investigation declaration
+
+Category: local-only
+Cannot produce error: no external state (data shape, config, cluster topology, plan complexity, version resolution) is contacted. The change is a shell script rewrite; the only runtime input is the scanner output on synthetic fixtures created and torn down in the same script.
+Evidence: `git diff --stat` shows test_writing_code_8.sh + plans/self-review-760-f1.md; no code path or resource contact beyond the shell test loop.
+Falsification: NOT trivial if the change reads or writes any external service, DB, cluster, or config outside the test's own mktemp scratch dir. Verified: only mktemp -d writes.
+
 ## Peer review
 
 Gate evidence:
