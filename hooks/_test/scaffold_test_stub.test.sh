@@ -700,6 +700,69 @@ BODY
     rm -rf "$sandbox"
 }
 
+# ---------------------------------------------------------------------------
+# #675 P2-4: verified by source-read. hooks/create-ticket/scaffold-test-stub.sh
+# builds APPEND with EACH section prefixing its own $'\n\nName:' — Generated
+# at :406, Skipped at :413, Blocked-by at :420. Empty Generated leaves APPEND
+# empty; the Skipped/Blocked branches then prepend their own blank-line
+# separator. No glue possible. A fixture-based assertion is out of reach
+# because the Probe: input grammar for triggering a SKIPPED-only path
+# without any GENERATED entry isn't exposed in the current probe grammar
+# (Skipped entries come from probe results, not from body-authored values).
+# Verified by grep of the source: `grep -c '$'\''\\n\\n' hooks/create-ticket/scaffold-test-stub.sh`
+# returns 3 (one per section header prefix).
+
+# ---------------------------------------------------------------------------
+# #675 P2-5: --body-file with no value exits 2 with an actionable diagnostic
+# ---------------------------------------------------------------------------
+test_p2_5_body_file_no_value() {
+    echo "test_p2_5_body_file_no_value:"
+    set +e
+    local stderr_out
+    stderr_out=$("$HOOK" --body-file 2>&1 >/dev/null)
+    local rc=$?
+    set -e
+    if [[ "$rc" != "2" ]]; then
+        fail "test_p2_5_body_file_no_value: expected exit 2, got $rc"
+    elif ! echo "$stderr_out" | grep -q "requires a value"; then
+        fail "test_p2_5_body_file_no_value: missing actionable diagnostic"
+        echo "  stderr: $stderr_out"
+    else
+        pass "test_p2_5_body_file_no_value: exit 2 with actionable diagnostic (P2-5)"
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# #675 P2-6: bash command sub $(cat) strips trailing newlines; sentinel-byte
+# trick preserves them. Verified via --out-file so the trailing newlines
+# reach the disk file, past the test-side command sub.
+# ---------------------------------------------------------------------------
+test_p2_6_trailing_newlines_preserved() {
+    echo "test_p2_6_trailing_newlines_preserved:"
+    local sandbox
+    sandbox=$(mktemp -d)
+    # Body with two trailing blank lines
+    local body
+    body=$'## Context\n\nContent here.\n\n\n'
+    local out_file="$sandbox/out.md"
+    printf '%s' "$body" | "$HOOK" --stdin --repo-root "$sandbox" --out-file "$out_file" 2>/dev/null
+    local rc=$?
+    # Count trailing newlines by reading the file's tail via wc -l.
+    # Body has 5 lines total (## Context, blank, Content here., blank, blank).
+    # printf %s\\n at emit adds one more. Expected line count: 5 to 6.
+    local nlines
+    nlines=$(wc -l < "$out_file")
+    if [[ "$rc" != "0" ]]; then
+        fail "test_p2_6_trailing_newlines_preserved: hook exit $rc"
+    elif [[ "$nlines" -ge 5 ]]; then
+        pass "test_p2_6_trailing_newlines_preserved: trailing newlines survive command-sub (P2-6 sentinel trick)"
+    else
+        fail "test_p2_6_trailing_newlines_preserved: got $nlines lines (< 5 expected)"
+        echo "  bytes: $(od -c "$out_file" | tail -3)"
+    fi
+    rm -rf "$sandbox"
+}
+
 test_unknown_tool_rejected
 test_layer_selects_integration
 test_tool_normalization
@@ -710,6 +773,8 @@ test_field_no_space_after_colon
 test_exit_code_zero_on_happy_path
 test_internal_error_surfaces_exit_3
 test_p1_2_inline_automation_diagnoses
+test_p2_5_body_file_no_value
+test_p2_6_trailing_newlines_preserved
 
 echo ""
 echo "Summary: $PASS passed, $FAIL failed"

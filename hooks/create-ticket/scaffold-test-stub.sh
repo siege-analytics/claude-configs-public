@@ -81,13 +81,20 @@ fi
 REPO_ROOT_ABS=$(cd "$REPO_ROOT" 2>/dev/null && pwd -P || echo "$REPO_ROOT")
 
 if [[ $USE_STDIN -eq 1 ]]; then
-    BODY=$(cat)
+    # #675 P2-6: bash command substitution strips ALL trailing newlines,
+    # so a caller writing a body with a trailing blank paragraph loses it.
+    # Append a sentinel byte before capture, strip it after — preserves
+    # the exact newline count the caller sent.
+    BODY=$(cat; printf X)
+    BODY="${BODY%X}"
 elif [[ -n "$BODY_FILE" ]]; then
     if [[ ! -f "$BODY_FILE" ]]; then
         >&2 echo "scaffold-test-stub: body file not found: $BODY_FILE"
         exit 2
     fi
-    BODY=$(cat "$BODY_FILE")
+    # Same sentinel trick for --body-file (#675 P2-6).
+    BODY=$(cat "$BODY_FILE"; printf X)
+    BODY="${BODY%X}"
 else
     >&2 echo "scaffold-test-stub: pass --body-file or --stdin"
     exit 2
