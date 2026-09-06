@@ -136,8 +136,31 @@ Layer: $layer
 Suggested install: $install_cmd
 (Template templates/infra-ticket-tool-install.md not found; using fallback body.)"
     fi
+    # #677: capture gh stderr and exit status explicitly. gh can be
+    # present and still fail (not authenticated, no network, label
+    # missing, rate limited, --body rejected). The previous form
+    # redirected stderr to /dev/null and used `local url` on its own
+    # line, which made the gh assignment a simple command subject to
+    # `set -e`; a non-zero gh aborted the function before
+    # _probe_emit_json ran, so the caller saw empty stdout ->
+    # probe="unknown" -> nothing appended to BLOCKED_BY -> false-
+    # coverage (SKILL.md line 15's stated failure mode).
+    #
+    # Now: capture stdout+stderr in one buffer, keep the exit code, and
+    # emit a distinct status (escalation-failed / exit 79) so consumers
+    # treat this case as Skipped-with-reason rather than confusing it
+    # with exit 78 (blocked-on-infra means "we filed a real ticket").
+    local gh_out gh_rc
+    gh_out=$(gh issue create --title "infra: install $tool for $blocking" --label task --body "$body" 2>&1)
+    gh_rc=$?
+    if [[ $gh_rc -ne 0 ]]; then
+        local reason
+        reason=$(printf '%s' "$gh_out" | python3 -c 'import sys, json; print(json.dumps(sys.stdin.read()[:500]))')
+        _probe_emit_json "{\"status\":\"escalation-failed\",\"tool\":\"$tool\",\"reason\":$reason}"
+        exit 79
+    fi
     local url
-    url=$(gh issue create --title "infra: install $tool for $blocking" --label task --body "$body" 2>/dev/null | tail -1)
+    url=$(printf '%s' "$gh_out" | tail -1)
     _probe_emit_json "{\"status\":\"blocked-on-infra\",\"tool\":\"$tool\",\"ticket\":\"$url\"}"
     exit 78
 }

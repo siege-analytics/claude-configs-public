@@ -169,10 +169,60 @@ test_ac4_plain_input_equivalence() {
     rm -rf "$sandbox"
 }
 
+# ---------------------------------------------------------------------------
+# AC5 (#677): gh failure produces escalation-failed status + exit 79, not
+# silent kill. Stubs gh to return exit 1; probe must emit valid JSON with
+# status=escalation-failed and exit 79, not empty stdout + set-e abort.
+# ---------------------------------------------------------------------------
+test_ac5_gh_failure_escalation() {
+    echo "test_ac5_gh_failure_escalation:"
+    local sandbox
+    sandbox=$(mktemp -d)
+    mkdir -p "$sandbox/templates" "$sandbox/bin"
+    printf '%s' "$TMPL_LITERAL" > "$sandbox/templates/infra-ticket-tool-install.md"
+    # Stub gh to fail with a real-looking error on stderr
+    cat > "$sandbox/bin/gh" <<'GH'
+#!/usr/bin/env bash
+echo "HTTP 403: label 'task' not found" >&2
+exit 1
+GH
+    chmod +x "$sandbox/bin/gh"
+    (cd "$sandbox" && git init -q 2>/dev/null || true)
+    local rc probe_stdout
+    # Suffix `|| true` on the subshell so its non-zero exit (79 is
+    # expected on this scenario) doesn't trip the enclosing `set -e`.
+    # Capture rc through the escape-hatch marker.
+    rc=0
+    (
+        cd "$sandbox"
+        export PATH="$sandbox/bin:$PATH"
+        export GH_STUB_BODY_OUT="$sandbox/gh_body.txt"
+        source "$HERE/_common.sh"
+        _probe_file_infra_ticket "faketool" "backend" "pip install --user faketool" "677"
+    ) > "$sandbox/probe_stdout.txt" 2>"$sandbox/probe_stderr.txt" || rc=$?
+    probe_stdout=$(cat "$sandbox/probe_stdout.txt")
+
+    if [[ "$rc" != "79" ]]; then
+        fail "AC5: expected exit 79 on gh failure, got $rc"
+    elif ! echo "$probe_stdout" | grep -q '"status":"escalation-failed"'; then
+        fail "AC5: probe stdout missing status=escalation-failed"
+        echo "  stdout: $probe_stdout"
+    elif ! echo "$probe_stdout" | grep -q '"reason":'; then
+        fail "AC5: probe stdout missing reason field (gh stderr captured)"
+    elif ! echo "$probe_stdout" | python3 -c 'import json,sys; json.loads(sys.stdin.read())' 2>/dev/null; then
+        fail "AC5: probe stdout is not valid JSON"
+        echo "  stdout: $probe_stdout"
+    else
+        pass "AC5: gh failure produces escalation-failed / exit 79 (not silent kill)"
+    fi
+    rm -rf "$sandbox"
+}
+
 test_ac1_no_sed_in_body_render
 test_ac2_playwright_ampamp
 test_ac3_k6_pipe
 test_ac4_plain_input_equivalence
+test_ac5_gh_failure_escalation
 
 echo ""
 echo "Summary: $PASS passed, $FAIL failed"
