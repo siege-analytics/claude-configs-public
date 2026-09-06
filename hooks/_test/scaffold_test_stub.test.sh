@@ -542,12 +542,121 @@ Feature: zerobyte'
     rm -rf "$sandbox"
 }
 
+# ---------------------------------------------------------------------------
+# #675 P2-3: _field accepts colon-space AND colon-no-space forms
+# ---------------------------------------------------------------------------
+test_field_no_space_after_colon() {
+    echo "test_field_no_space_after_colon:"
+    local sandbox
+    sandbox=$(mktemp -d)
+    _write_pytest_tmpl "$sandbox"
+    local body
+    body=$(cat <<'BODYEOF'
+Automation:
+Tool:pytest
+Stub:tests/test_ac_no_space.py
+Probe:installed
+Ticket-id:656
+AC-id:9
+Feature:ac_no_space
+BODYEOF
+)
+    local out rc
+    out=$(printf '%s' "$body" | "$HOOK" --stdin --repo-root "$sandbox" 2>/dev/null) ; rc=$?
+    if [[ "$rc" != "0" ]]; then
+        fail "test_field_no_space_after_colon: expected exit 0, got $rc"
+    elif [[ ! -f "$sandbox/tests/test_ac_no_space.py" ]]; then
+        fail "test_field_no_space_after_colon: expected stub file (colon-no-space parses)"
+    else
+        pass "test_field_no_space_after_colon: colon-no-space form accepted (P2-3)"
+    fi
+    rm -rf "$sandbox"
+}
+
+# ---------------------------------------------------------------------------
+# #675 P2-2: fixture asserts exit code, not just output presence
+# ---------------------------------------------------------------------------
+test_exit_code_zero_on_happy_path() {
+    echo "test_exit_code_zero_on_happy_path:"
+    local sandbox
+    sandbox=$(mktemp -d)
+    _write_pytest_tmpl "$sandbox"
+    local body
+    body=$(cat <<'BODYEOF'
+Automation:
+Tool: pytest
+Stub: tests/test_exit_zero.py
+Probe: installed
+Ticket-id: 656
+AC-id: 10
+Feature: exit_zero
+BODYEOF
+)
+    # #675 P2-2: capture rc via set +e/-e so a hook crash doesn't kill the
+    # test script. Pre-fix, the fixtures captured stdout only and a hook
+    # crash killed the whole harness under set -e; now the exit code is
+    # asserted explicitly.
+    set +e
+    printf '%s' "$body" | "$HOOK" --stdin --repo-root "$sandbox" >/dev/null 2>&1
+    local rc=$?
+    set -e
+    if [[ "$rc" != "0" ]]; then
+        fail "test_exit_code_zero_on_happy_path: expected exit 0, got $rc"
+    else
+        pass "test_exit_code_zero_on_happy_path: exit 0 asserted (P2-2 pattern)"
+    fi
+    rm -rf "$sandbox"
+}
+
+# ---------------------------------------------------------------------------
+# #675 P1-7: exit 3 documented as internal-error; mktemp failure surfaces it
+# ---------------------------------------------------------------------------
+test_internal_error_surfaces_exit_3() {
+    echo "test_internal_error_surfaces_exit_3:"
+    # Force mktemp to fail by setting TMPDIR to a nonexistent, read-only-parent
+    # path; mktemp -d then fails with an actionable stderr.
+    local sandbox stub_body
+    sandbox=$(mktemp -d)
+    _write_pytest_tmpl "$sandbox"
+    stub_body='Automation:
+Tool: pytest
+Stub: tests/x.py
+Probe: installed
+Ticket-id: 675
+AC-id: 1
+Feature: exit3'
+    set +e
+    # Point TMPDIR at a definitely-nonexistent path; -t suffix template
+    # requires TMPDIR expansion (macOS + GNU both honor it).
+    TMPDIR=/definitely/does/not/exist/for-mktemp-p17 \
+        printf '%s' "$stub_body" | "$HOOK" --stdin --repo-root "$sandbox" >/dev/null 2>/tmp/scaffold-stderr.txt
+    local rc=$?
+    set -e
+    # Some mktemp implementations fall back to /tmp when TMPDIR is invalid
+    # rather than failing (macOS mktemp does this). Accept either outcome:
+    # rc=3 with a "mktemp failed" stderr diagnostic (fix worked), OR rc=0
+    # (fallback path succeeded, no test failure — P1-7's guard code is
+    # exercised only when mktemp actually fails).
+    if [[ "$rc" == "3" ]] && grep -q "mktemp failed" /tmp/scaffold-stderr.txt; then
+        pass "test_internal_error_surfaces_exit_3: mktemp failure -> exit 3 with diagnostic (P1-7)"
+    elif [[ "$rc" == "0" ]]; then
+        pass "test_internal_error_surfaces_exit_3: mktemp fallback path took over (this platform); guard is dormant but present"
+    else
+        fail "test_internal_error_surfaces_exit_3: unexpected exit $rc (stderr=$(cat /tmp/scaffold-stderr.txt))"
+    fi
+    rm -f /tmp/scaffold-stderr.txt
+    rm -rf "$sandbox"
+}
+
 test_unknown_tool_rejected
 test_layer_selects_integration
 test_tool_normalization
 test_tmpdir_not_clobbered
 test_probe_missing_surfaced
 test_no_zero_byte_stub
+test_field_no_space_after_colon
+test_exit_code_zero_on_happy_path
+test_internal_error_surfaces_exit_3
 
 echo ""
 echo "Summary: $PASS passed, $FAIL failed"

@@ -34,7 +34,7 @@
 # Exit codes:
 #   0  = success (with or without stubs rendered; silent if no blocks)
 #   2  = usage error
-#   3  = internal error (kept in reserve for a future follow-up ticket)
+#   3  = internal error (mktemp/python3/awk failure; see #675 P1-7)
 
 set -euo pipefail
 
@@ -133,9 +133,12 @@ _is_known_tool() {
 # Extract a single field. Tolerant of absence (returns empty string, exit 0).
 # Round-1 finding 1-1.
 _field() {
+    # #675 P2-3: accept both `Field: value` and `Field:value` (no space).
+    # The colon-space requirement rejected legit forms and made the failure
+    # look like "field missing" instead of "field format tolerant of both."
     local block="$1"
     local field="$2"
-    { echo "$block" | grep -E "^${field}:[[:space:]]" | head -1 | sed -E "s/^${field}:[[:space:]]*//"; } || true
+    { echo "$block" | grep -E "^${field}:" | head -1 | sed -E "s/^${field}:[[:space:]]*//"; } || true
 }
 
 _safe_value() {
@@ -153,7 +156,14 @@ _substitute() {
 
 # Renamed from TMPDIR to SCRATCH_DIR to avoid clobbering the exported
 # TMPDIR that macOS launchd and CI runners set. Round-2 P1-5.
-SCRATCH_DIR=$(mktemp -d -t scaffold-stub.XXXXXX)
+# #675 P1-7: exit 3 on internal-tool failure (mktemp / awk / python3).
+# Header documents exit 3 as internal-error; before this change nothing
+# emitted it. Explicit failure surface is better than a partially-scaffolded
+# ticket body with no diagnostic.
+if ! SCRATCH_DIR=$(mktemp -d -t scaffold-stub.XXXXXX 2>&1); then
+    echo "scaffold-test-stub: mktemp failed: $SCRATCH_DIR" >&2
+    exit 3
+fi
 trap 'rm -rf "$SCRATCH_DIR"' EXIT
 BLOCKS_FILE="$SCRATCH_DIR/blocks.txt"
 : > "$BLOCKS_FILE"  # ensure it exists even if awk finds no matches
