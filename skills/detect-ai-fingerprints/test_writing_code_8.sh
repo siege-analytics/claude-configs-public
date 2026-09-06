@@ -27,11 +27,20 @@ except ImportError:
 def make_polygon(coords):
     return shapely.geometry.Polygon(coords)
 EOF
-OUT=$(python3 "$SCAN" "$TMP/a.py" 2>&1); RC=$?
-if [ "$RC" = "1" ] && echo "$OUT" | grep -q "writing-code-8"; then
-    ok "(a) unguarded callsite fires"
+# Isolate writing-code:8 by grepping specifically for that rule token.
+# Other rules (writing-tests-5, writing-code-7) may also fire on these
+# fixtures — those are covered by their own test suites; we only care
+# whether writing-code-8 fires or stays silent here.
+
+fires_wc8() {
+    echo "$1" | grep -q "writing-code-8"
+}
+
+OUT=$(python3 "$SCAN" "$TMP/a.py" 2>&1)
+if fires_wc8 "$OUT"; then
+    ok "(a) unguarded callsite: writing-code-8 fires"
 else
-    bad "(a) unguarded callsite" "rc=$RC out=$OUT"
+    bad "(a) unguarded callsite" "out=$OUT"
 fi
 
 # (b) early-return guard: no fire
@@ -47,11 +56,11 @@ def make_polygon(coords):
         raise RuntimeError("required")
     return shapely.geometry.Polygon(coords)
 EOF
-OUT=$(python3 "$SCAN" "$TMP/b.py" 2>&1); RC=$?
-if [ "$RC" = "0" ]; then
-    ok "(b) early-return guard: no fire"
+OUT=$(python3 "$SCAN" "$TMP/b.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(b) early-return guard: writing-code-8 silent"
 else
-    bad "(b) early-return guard" "rc=$RC out=$OUT"
+    bad "(b) early-return guard" "out=$OUT"
 fi
 
 # (c) if-body-guard: no fire
@@ -67,11 +76,11 @@ def make_polygon(coords):
         return shapely.geometry.Polygon(coords)
     return None
 EOF
-OUT=$(python3 "$SCAN" "$TMP/c.py" 2>&1); RC=$?
-if [ "$RC" = "0" ]; then
-    ok "(c) if-body-guard: no fire"
+OUT=$(python3 "$SCAN" "$TMP/c.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(c) if-body-guard: writing-code-8 silent"
 else
-    bad "(c) if-body-guard" "rc=$RC out=$OUT"
+    bad "(c) if-body-guard" "out=$OUT"
 fi
 
 # (d) inside try body: no fire (flag can't be False in the try that set it)
@@ -83,11 +92,11 @@ try:
 except ImportError:
     SHAPELY_AVAILABLE = False
 EOF
-OUT=$(python3 "$SCAN" "$TMP/d.py" 2>&1); RC=$?
-if [ "$RC" = "0" ]; then
-    ok "(d) inside try body: no fire"
+OUT=$(python3 "$SCAN" "$TMP/d.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(d) inside try body: writing-code-8 silent"
 else
-    bad "(d) inside try body" "rc=$RC out=$OUT"
+    bad "(d) inside try body" "out=$OUT"
 fi
 
 # (e) private helper documents flag: no fire
@@ -102,11 +111,11 @@ def _make_polygon_impl(coords):
     """Caller must check SHAPELY_AVAILABLE before calling."""
     return shapely.geometry.Polygon(coords)
 EOF
-OUT=$(python3 "$SCAN" "$TMP/e.py" 2>&1); RC=$?
-if [ "$RC" = "0" ]; then
-    ok "(e) private helper documents flag: no fire"
+OUT=$(python3 "$SCAN" "$TMP/e.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(e) private helper documents flag: writing-code-8 silent"
 else
-    bad "(e) private helper documents flag" "rc=$RC out=$OUT"
+    bad "(e) private helper documents flag" "out=$OUT"
 fi
 
 # (f) no optional-import pattern present: no fire (the file just imports shapely regularly)
@@ -116,11 +125,11 @@ import shapely
 def make_polygon(coords):
     return shapely.geometry.Polygon(coords)
 EOF
-OUT=$(python3 "$SCAN" "$TMP/f.py" 2>&1); RC=$?
-if [ "$RC" = "0" ]; then
-    ok "(f) no optional-import pattern: no fire"
+OUT=$(python3 "$SCAN" "$TMP/f.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(f) no optional-import pattern: writing-code-8 silent"
 else
-    bad "(f) no optional-import" "rc=$RC out=$OUT"
+    bad "(f) no optional-import" "out=$OUT"
 fi
 
 echo
