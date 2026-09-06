@@ -353,6 +353,54 @@ GH
     rm -rf "$sandbox"
 }
 
+# ---------------------------------------------------------------------------
+# AC10 (#678): probe_run's post-install re-check goes through the CHECK_FN,
+# not a magic BIN_NAME. When the install succeeds and the check function
+# returns 0 on the second call, emit installed-just-now.
+# ---------------------------------------------------------------------------
+test_ac10_check_fn_post_install() {
+    echo "test_ac10_check_fn_post_install:"
+    local sandbox rc probe_stdout
+    sandbox=$(mktemp -d)
+    (cd "$sandbox" && git init -q 2>/dev/null || true)
+    # Toggle file: check-function returns 1 (absent) until this file exists,
+    # then returns 0 (present). Install command TOUCHes it, so pre-check
+    # fails, install succeeds, post-check succeeds.
+    local flag="$sandbox/installed_flag"
+    printf 'tool_install_policy: allow\n' > "$sandbox/PROJECT.md"
+
+    rc=0
+    (
+        cd "$sandbox"
+        # Define a synthetic check function
+        _probe_check_fake_tool() {
+            [[ -f "$flag" ]] && return 0 || return 1
+        }
+        _probe_check_fake_tool_version() {
+            printf 'v1.2.3-fake'
+        }
+        export flag
+        source "$HERE/_common.sh"
+        probe_run "faketool" "_probe_check_fake_tool" "touch $flag" "" "backend" "678"
+    ) > "$sandbox/stdout.txt" 2>"$sandbox/stderr.txt" || rc=$?
+    probe_stdout=$(cat "$sandbox/stdout.txt")
+
+    if [[ "$rc" != "0" ]]; then
+        fail "AC10: expected exit 0 (install succeeded), got $rc"
+        echo "  stdout: $probe_stdout"
+        echo "  stderr: $(cat "$sandbox/stderr.txt")"
+    elif ! echo "$probe_stdout" | grep -q '"status":"installed-just-now"'; then
+        fail "AC10: probe stdout missing installed-just-now"
+        echo "  stdout: $probe_stdout"
+    elif ! echo "$probe_stdout" | grep -q '"version":"v1.2.3-fake"'; then
+        fail "AC10: probe stdout missing version from check_fn_version companion"
+        echo "  stdout: $probe_stdout"
+    else
+        pass "AC10: CHECK_FN drives post-install re-check (sentinel BIN_NAME retired)"
+    fi
+    rm -rf "$sandbox"
+}
+
 test_ac1_no_sed_in_body_render
 test_ac2_playwright_ampamp
 test_ac3_k6_pipe
@@ -362,6 +410,7 @@ test_ac6_policy_inline_comment
 test_ac7_policy_crlf
 test_ac8_policy_invalid_value_warns
 test_ac9_dedupe_reuses_existing
+test_ac10_check_fn_post_install
 
 echo ""
 echo "Summary: $PASS passed, $FAIL failed"
