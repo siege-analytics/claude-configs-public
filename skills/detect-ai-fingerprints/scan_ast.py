@@ -832,33 +832,77 @@ def _extract_optional_imports(tree):
     return result
 
 
+def _canonical_flag_test_polarity(test, flag_name):
+    """Return 'positive' if the test is exactly `FLAG`, 'negative' if exactly
+    `not FLAG`, else None. Compound tests (`FLAG and other`, `FLAG or other`,
+    `FLAG == True`, attribute access) are NOT canonical — they can't be used
+    to prove flag polarity. See F4 in issue #760."""
+    if isinstance(test, ast.Name) and test.id == flag_name:
+        return "positive"
+    if (isinstance(test, ast.UnaryOp)
+            and isinstance(test.op, ast.Not)
+            and isinstance(test.operand, ast.Name)
+            and test.operand.id == flag_name):
+        return "negative"
+    return None
+
+
+def _test_implies_flag_truthy(test, flag_name, branch):
+    """Given an if-test and which branch was taken ('true' = body executed,
+    'false' = else executed), return True iff the flag is guaranteed truthy
+    in that branch. See F2 in issue #760: earlier version was branch-blind
+    and treated the body of `if not FLAG:` as guarded even though that IS
+    the unavailable branch."""
+    polarity = _canonical_flag_test_polarity(test, flag_name)
+    if polarity is None:
+        return False
+    # `if FLAG:` body → flag truthy; else → flag falsy
+    # `if not FLAG:` body → flag falsy; else → flag truthy
+    if polarity == "positive":
+        return branch == "true"
+    return branch == "false"
+
+
 def _guarded_by_flag(node, flag_name, guard_stack):
-    """Return True if the current node is inside an if-branch that reads flag_name."""
-    for guard in guard_stack:
-        # guard is (test_ast, branch: 'true'|'false')
-        test = guard[0]
-        # Simple cases: `if <FLAG>:` and `if not <FLAG>:`
-        if isinstance(test, ast.Name) and test.id == flag_name:
+    """True iff the current node is under a canonical if-guard that proves
+    flag_name is truthy at this point in the code."""
+    for test, branch in guard_stack:
+        if _test_implies_flag_truthy(test, flag_name, branch):
             return True
-        if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not) \
-                and isinstance(test.operand, ast.Name) and test.operand.id == flag_name:
-            return True
-        # Composite: `if X and Y`, `if X or Y` — accept if the flag appears
-        # as a Name anywhere in the test expression.
-        for sub in ast.walk(test):
-            if isinstance(sub, ast.Name) and sub.id == flag_name:
-                return True
     return False
 
 
+# Phrases whose presence in a private helper's docstring counts as an
+# assertion that the caller has verified the availability flag. Bare mention
+# of the flag name is NOT sufficient (F5 in issue #760).
+CALLER_CONTRACT_PHRASES = (
+    "caller must check",
+    "caller must ensure",
+    "caller must verify",
+    "caller must have checked",
+    "caller has checked",
+    "caller checks",
+    "caller ensures",
+    "callers must",
+    "requires the caller",
+    "assumes the caller",
+)
+
+
 def _private_helper_documents_flag(func, flag_name):
-    """True if func is a leading-underscore function whose docstring names the flag."""
+    """True iff func is a leading-underscore function whose docstring both
+    names the flag AND asserts (via a caller-contract phrase) that the
+    caller has checked it. F5 in issue #760: bare flag mention alone is
+    not enough."""
     if not isinstance(func, (ast.FunctionDef, ast.AsyncFunctionDef)):
         return False
     if not func.name.startswith("_"):
         return False
     doc = ast.get_docstring(func) or ""
-    return flag_name in doc or "caller must check" in doc.lower()
+    if flag_name not in doc:
+        return False
+    lower = doc.lower()
+    return any(phrase in lower for phrase in CALLER_CONTRACT_PHRASES)
 
 
 def _terminates_flow(stmts):
@@ -870,51 +914,44 @@ def _terminates_flow(stmts):
     return isinstance(last, (ast.Return, ast.Raise, ast.Continue, ast.Break))
 
 
-def _if_test_references_flag(test, known_flags):
-    """True if the if-test is (a form of) a check on one of the known flags."""
-    for sub in ast.walk(test):
-        if isinstance(sub, ast.Name) and sub.id in known_flags:
-            return True
-    return False
-
-
 def _if_establishes_flag(if_node, known_flags):
-    """True if `if <negation-of-flag>: raise/return` establishes flag-is-true
-    for subsequent code, or `if flag: ... else: raise/return` does likewise.
-    Recognized shapes:
-        if not FLAG: <raise/return>          -> flag known True after
-        if not FLAG or ...: <raise/return>   -> flag known True after (conservative)
-    Not recognized:
-        if FLAG: ... else: raise             -> we DO recognize this by symmetry;
-                                                 the else-terminator means the if
-                                                 succeeded, so flag is True in the
-                                                 code AFTER the if statement."""
+    """Return the flag-name (str) whose truthiness is established on the
+    fall-through path after this if-statement, or None. F3 and F4 in issue
+    #760: only canonical shapes count.
+
+    Recognized (establish flag-truthy on fallthrough):
+        if not FLAG: <terminator>
+        if FLAG: <non-terminator>; else: <terminator>
+
+    Explicitly NOT recognized:
+        if FLAG: <terminator>              — fallthrough means FLAG was falsy
+        if not FLAG: <non-terminator>; else: <terminator>  — mirrored inverse
+        if FLAG and other: <terminator>    — compound doesn't prove polarity
+        if FLAG or other: <terminator>     — compound doesn't prove polarity
+    """
     if not isinstance(if_node, ast.If):
-        return False
-    if not _if_test_references_flag(if_node.test, known_flags):
-        return False
-    # Body terminates → the else-branch or fall-through means the test was falsy
-    body_terminates = _terminates_flow(if_node.body)
-    else_terminates = _terminates_flow(if_node.orelse) if if_node.orelse else False
-    # Either the true-branch or the false-branch must be a terminator for the
-    # opposite branch to guarantee flag state on fall-through.
-    return body_terminates or else_terminates
+        return None
+    for flag in known_flags:
+        polarity = _canonical_flag_test_polarity(if_node.test, flag)
+        if polarity is None:
+            continue
+        body_terminates = _terminates_flow(if_node.body)
+        else_terminates = _terminates_flow(if_node.orelse) if if_node.orelse else False
+        if polarity == "negative" and body_terminates:
+            return flag
+        if polarity == "positive" and else_terminates:
+            return flag
+    return None
 
 
 def _establish_test(if_node, known_flags):
-    """Return a synthetic test expression whose truthfulness is guaranteed after
-    the if-statement executes (if its terminator branch didn't fire).
-
-    For `if not FLAG: raise`, the synthetic guard is `FLAG` (present, truthy).
-    For `if FLAG: ok; else: raise`, the synthetic guard is `FLAG` (again).
-
-    We just return the flag-name Name node so _guarded_by_flag matches it."""
-    # Extract the first flag name referenced in the test
-    for sub in ast.walk(if_node.test):
-        if isinstance(sub, ast.Name) and sub.id in known_flags:
-            return ast.Name(id=sub.id, ctx=ast.Load())
-    # Should not reach here since caller called _if_establishes_flag first
-    return if_node.test
+    """Return a synthetic `FLAG` Name node representing the invariant that
+    is guaranteed on the fall-through path after if_node. Requires that
+    _if_establishes_flag returned a non-None flag for the same if_node."""
+    flag = _if_establishes_flag(if_node, known_flags)
+    if flag is None:
+        return None
+    return ast.Name(id=flag, ctx=ast.Load())
 
 
 def check_writing_code_8(tree):
@@ -959,19 +996,27 @@ def check_writing_code_8(tree):
             """Walk a statement block with early-return-establishes-invariant semantics.
 
             When encountering `if not FLAG: raise/return`, treat FLAG as
-            established for the REMAINDER of this block. Same for
-            `if FLAG: <body>; else: raise/return`. This is the standard
-            early-return-guard idiom the writing-code:8 rule body permits."""
-            established = []
+            established for the REMAINDER of this block, but NOT while
+            visiting the if-body itself (the body is the unavailable branch;
+            F2 in issue #760). Same for `if FLAG: ok; else: raise/return`.
+
+            F3/F4 (#760): polarity + shape are enforced via
+            _if_establishes_flag; positive-early-return and compound tests
+            no longer establish the flag."""
+            established_count = 0
+            known_flags = list(optional.values())
             for stmt in stmts:
-                if isinstance(stmt, ast.If) and _if_establishes_flag(stmt, optional.values()):
-                    # Push virtual guard for subsequent statements in this block
-                    established.append(_establish_test(stmt, optional.values()))
-                    self.guard_stack.append((established[-1], 'true'))
-                    self.visit(stmt)
-                else:
-                    self.visit(stmt)
-            for _ in established:
+                # Visit the statement FIRST — inside its own body, the flag
+                # is not yet known truthy.
+                self.visit(stmt)
+                # THEN push the invariant for subsequent statements in this
+                # block (fall-through semantic).
+                if isinstance(stmt, ast.If):
+                    virtual_test = _establish_test(stmt, known_flags)
+                    if virtual_test is not None:
+                        self.guard_stack.append((virtual_test, "true"))
+                        established_count += 1
+            for _ in range(established_count):
                 self.guard_stack.pop()
 
         def visit_FunctionDef(self, node):

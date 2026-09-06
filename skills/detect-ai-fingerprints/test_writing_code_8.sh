@@ -132,6 +132,127 @@ else
     bad "(f) no optional-import" "out=$OUT"
 fi
 
+# --- Codex hostile-review F2-F5 lock-in fixtures (issue #760) ---
+
+# (g) F2: use INSIDE `if not FLAG:` body -- that IS the unavailable branch, must fire
+cat > "$TMP/g.py" <<'EOF'
+try:
+    import shapely
+    SHAPELY_AVAILABLE = True
+except ImportError:
+    SHAPELY_AVAILABLE = False
+
+def make_polygon(coords):
+    if not SHAPELY_AVAILABLE:
+        return shapely.geometry.Polygon(coords)
+    return None
+EOF
+OUT=$(python3 "$SCAN" "$TMP/g.py" 2>&1)
+if fires_wc8 "$OUT"; then
+    ok "(g) F2 use inside 'if not FLAG:' body: writing-code-8 fires"
+else
+    bad "(g) F2 use inside 'if not FLAG:' body" "out=$OUT"
+fi
+
+# (h) F3: `if FLAG: return` followed by use -- fallthrough means FLAG false, must fire
+cat > "$TMP/h.py" <<'EOF'
+try:
+    import shapely
+    SHAPELY_AVAILABLE = True
+except ImportError:
+    SHAPELY_AVAILABLE = False
+
+def make_polygon(coords):
+    if SHAPELY_AVAILABLE:
+        return None
+    return shapely.geometry.Polygon(coords)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/h.py" 2>&1)
+if fires_wc8 "$OUT"; then
+    ok "(h) F3 positive-early-return doesn't establish truthy: writing-code-8 fires"
+else
+    bad "(h) F3 positive early return" "out=$OUT"
+fi
+
+# (i) F4: compound `if FLAG and other: return` doesn't prove FLAG, must fire
+cat > "$TMP/i.py" <<'EOF'
+try:
+    import shapely
+    SHAPELY_AVAILABLE = True
+except ImportError:
+    SHAPELY_AVAILABLE = False
+
+def make_polygon(coords, other):
+    if SHAPELY_AVAILABLE and other:
+        return None
+    return shapely.geometry.Polygon(coords)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/i.py" 2>&1)
+if fires_wc8 "$OUT"; then
+    ok "(i) F4 compound test doesn't establish truthy: writing-code-8 fires"
+else
+    bad "(i) F4 compound establish" "out=$OUT"
+fi
+
+# (j) F5: private helper docstring mentions flag but no caller-contract phrase, must fire
+cat > "$TMP/j.py" <<'EOF'
+try:
+    import shapely
+    SHAPELY_AVAILABLE = True
+except ImportError:
+    SHAPELY_AVAILABLE = False
+
+def _make_polygon_impl(coords):
+    """SHAPELY_AVAILABLE is a module-level flag."""
+    return shapely.geometry.Polygon(coords)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/j.py" 2>&1)
+if fires_wc8 "$OUT"; then
+    ok "(j) F5 private helper bare flag mention: writing-code-8 fires"
+else
+    bad "(j) F5 bare docstring mention" "out=$OUT"
+fi
+
+# (k) F5 counterpart: docstring names flag AND has caller-contract phrase, silent
+cat > "$TMP/k.py" <<'EOF'
+try:
+    import shapely
+    SHAPELY_AVAILABLE = True
+except ImportError:
+    SHAPELY_AVAILABLE = False
+
+def _make_polygon_impl(coords):
+    """Caller must check SHAPELY_AVAILABLE before invoking."""
+    return shapely.geometry.Polygon(coords)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/k.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(k) F5 private helper w/ caller-contract phrase: writing-code-8 silent"
+else
+    bad "(k) F5 with caller contract" "out=$OUT"
+fi
+
+# (l) F2 counterpart: else-branch of `if not FLAG:` IS guarded (flag truthy there)
+cat > "$TMP/l.py" <<'EOF'
+try:
+    import shapely
+    SHAPELY_AVAILABLE = True
+except ImportError:
+    SHAPELY_AVAILABLE = False
+
+def make_polygon(coords):
+    if not SHAPELY_AVAILABLE:
+        return None
+    else:
+        return shapely.geometry.Polygon(coords)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/l.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(l) F2 counterpart else-branch of 'if not FLAG:': writing-code-8 silent"
+else
+    bad "(l) F2 counterpart else-branch" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then
