@@ -471,17 +471,37 @@ def _attr_chain(node):
 
 
 def _matches_unbounded_io(call_func):
-    """True if a Call's func node matches one of UNBOUNDED_IO_SURFACES."""
-    if isinstance(call_func, ast.Attribute):
-        chain = _attr_chain(call_func)
-        if chain is None:
-            return False
-        # Match the rightmost two segments (handles urllib.request.urlopen
-        # and subprocess.Popen(...).communicate via the (Popen, communicate) entry).
+    """True if a Call's func node matches one of UNBOUNDED_IO_SURFACES.
+
+    M-2 (#766): handles `subprocess.Popen(...).communicate()` and
+    `Popen(...).wait()` shapes. `_attr_chain` on those bottoms out at a
+    Call() (the Popen instantiation), so the rightmost-two-segments
+    match cannot find the chain. Instead, we special-case the pattern:
+    if this Attribute is `.communicate` or `.wait` and its value is a
+    Call whose func is either `<pkg>.Popen` or bare `Popen`, treat it
+    as an UNBOUNDED_IO_SURFACES match on the (Popen, <attr>) entry.
+    """
+    if not isinstance(call_func, ast.Attribute):
+        return False
+
+    chain = _attr_chain(call_func)
+    if chain is not None:
+        # Match the rightmost two segments (handles urllib.request.urlopen,
+        # subprocess.run, requests.get, etc.).
         if len(chain) >= 2 and chain[-2:] in UNBOUNDED_IO_SURFACES:
             return True
-        # Also handle plain `urlopen` after `from urllib.request import urlopen`
-        # via the rightmost-only check using the second-tuple-element.
+
+    # M-2: X(...).communicate() / X(...).wait() where X is Popen or ends in .Popen
+    if call_func.attr in ("communicate", "wait") and isinstance(call_func.value, ast.Call):
+        popen_expr = call_func.value.func
+        popen_name = None
+        if isinstance(popen_expr, ast.Attribute):
+            popen_name = popen_expr.attr
+        elif isinstance(popen_expr, ast.Name):
+            popen_name = popen_expr.id
+        if popen_name == "Popen":
+            return True
+
     return False
 
 
@@ -530,6 +550,19 @@ def check_writing_code_15(tree, source_lines):
             chain = _attr_chain(node.func)
             if chain is not None:
                 surface = ".".join(chain)
+            elif node.func.attr in ("communicate", "wait"):
+                # M-2 (#766): Popen(...).communicate/wait chain — chain
+                # returns None because it bottoms out at a Call. Rebuild
+                # a useful surface name manually.
+                popen_expr = node.func.value.func if isinstance(node.func.value, ast.Call) else None
+                popen_repr = "Popen"
+                if isinstance(popen_expr, ast.Attribute):
+                    inner = _attr_chain(popen_expr)
+                    if inner is not None:
+                        popen_repr = ".".join(inner)
+                elif isinstance(popen_expr, ast.Name):
+                    popen_repr = popen_expr.id
+                surface = f"{popen_repr}(...).{node.func.attr}"
         if timeout_kwarg is None:
             violations.append(
                 (node.lineno,
