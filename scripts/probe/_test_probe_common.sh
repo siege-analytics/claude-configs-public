@@ -218,11 +218,77 @@ GH
     rm -rf "$sandbox"
 }
 
+# ---------------------------------------------------------------------------
+# AC6/AC7 (#679): tool_install_policy inline comment + CRLF parse cleanly.
+# _probe_resolve_policy used to keep the comment in the value, so the case
+# statement fell through to block. CRLF had the same effect.
+# ---------------------------------------------------------------------------
+test_ac6_policy_inline_comment() {
+    echo "test_ac6_policy_inline_comment:"
+    local sandbox policy
+    sandbox=$(mktemp -d)
+    (cd "$sandbox" && git init -q)
+    printf 'tool_install_policy: allow  # ephemeral CI runner\n' > "$sandbox/PROJECT.md"
+    policy=$(
+        cd "$sandbox"
+        source "$HERE/_common.sh"
+        _probe_resolve_policy
+    )
+    if [[ "$policy" == "allow" ]]; then
+        pass "AC6: inline-comment policy parses to allow (was falling through to block)"
+    else
+        fail "AC6: expected 'allow', got '$policy'"
+    fi
+    rm -rf "$sandbox"
+}
+
+test_ac7_policy_crlf() {
+    echo "test_ac7_policy_crlf:"
+    local sandbox policy
+    sandbox=$(mktemp -d)
+    (cd "$sandbox" && git init -q)
+    printf 'tool_install_policy: prompt\r\n' > "$sandbox/PROJECT.md"
+    policy=$(
+        cd "$sandbox"
+        source "$HERE/_common.sh"
+        _probe_resolve_policy
+    )
+    if [[ "$policy" == "prompt" ]]; then
+        pass "AC7: CRLF line ending does not break parsing"
+    else
+        fail "AC7: expected 'prompt', got '$(printf '%q' "$policy")'"
+    fi
+    rm -rf "$sandbox"
+}
+
+test_ac8_policy_invalid_value_warns() {
+    echo "test_ac8_policy_invalid_value_warns:"
+    local sandbox policy stderr_out
+    sandbox=$(mktemp -d)
+    (cd "$sandbox" && git init -q)
+    printf 'tool_install_policy: whatever-typo\n' > "$sandbox/PROJECT.md"
+    policy=$(
+        cd "$sandbox"
+        source "$HERE/_common.sh"
+        _probe_resolve_policy 2>"$sandbox/stderr.txt"
+    )
+    stderr_out=$(cat "$sandbox/stderr.txt")
+    if [[ "$policy" == "block" ]] && echo "$stderr_out" | grep -q "not in {allow, prompt, block}"; then
+        pass "AC8: invalid policy value treated as block with warning (not silent downgrade)"
+    else
+        fail "AC8: policy='$policy' stderr='$stderr_out'"
+    fi
+    rm -rf "$sandbox"
+}
+
 test_ac1_no_sed_in_body_render
 test_ac2_playwright_ampamp
 test_ac3_k6_pipe
 test_ac4_plain_input_equivalence
 test_ac5_gh_failure_escalation
+test_ac6_policy_inline_comment
+test_ac7_policy_crlf
+test_ac8_policy_invalid_value_warns
 
 echo ""
 echo "Summary: $PASS passed, $FAIL failed"

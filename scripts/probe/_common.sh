@@ -44,12 +44,33 @@ _probe_resolve_policy() {
     repo_root=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
     local project_md="$repo_root/PROJECT.md"
     if [[ -f "$project_md" ]]; then
+        # #679 (#668 P0-4): strip trailing inline comments and CR/whitespace.
+        # SKILL.md documents the value with a "# default on shared machines"
+        # comment after it; the old extractor left the comment in the value
+        # so the case statement fell through to block. CRLF line endings
+        # (#668 P2-1) had the same effect.
         local policy
-        policy=$(grep -E '^tool_install_policy:' "$project_md" 2>/dev/null | head -1 | sed -E 's/^tool_install_policy:[[:space:]]*//' || true)
-        if [[ -n "$policy" ]]; then
-            printf '%s' "$policy"
-            return
-        fi
+        policy=$(grep -E '^tool_install_policy:' "$project_md" 2>/dev/null | head -1 \
+            | sed -E 's/^tool_install_policy:[[:space:]]*//; s/[[:space:]]*#.*$//; s/[[:space:]]+$//' \
+            | tr -d '\r' \
+            || true)
+        # #679 (#668 P1-6): validate against the allowlist. An unrecognised
+        # value used to silently degrade to block; now we emit a stderr
+        # diagnostic that names the value and the accepted set, then treat
+        # as block.
+        case "$policy" in
+            allow|prompt|block)
+                printf '%s' "$policy"
+                return
+                ;;
+            "")
+                # No policy line found; fall through to default
+                ;;
+            *)
+                printf 'warning: tool_install_policy=%s not in {allow, prompt, block}; treating as block\n' \
+                    "$policy" >&2
+                ;;
+        esac
     fi
     printf 'block'
 }
