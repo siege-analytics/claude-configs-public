@@ -207,18 +207,54 @@ Suggested install: $install_cmd
     exit 78
 }
 
+# #678: unified detection dispatch. If BIN_OR_CHECK_FN names a shell
+# function (declare -F), call it as the presence check. Otherwise fall
+# through to _probe_check_bin with (BIN, MODULE). This lets probes like
+# playwright/vitest pass a real check function that works both pre-install
+# AND post-install, instead of a magic sentinel BIN_NAME that could never
+# resolve on the post-install re-check.
+_probe_check_target() {
+    local target="$1"
+    local module="${2:-}"
+    if declare -F "$target" >/dev/null 2>&1; then
+        "$target"
+    else
+        _probe_check_bin "$target" "$module"
+    fi
+}
+
+_probe_get_version_target() {
+    local target="$1"
+    if declare -F "$target" >/dev/null 2>&1; then
+        # A check-function target has no fixed binary; a companion _version
+        # function is optional. If a function named "<check>_version" exists,
+        # call it; otherwise print "unknown".
+        local vfn="${target}_version"
+        if declare -F "$vfn" >/dev/null 2>&1; then
+            "$vfn"
+        else
+            printf 'unknown'
+        fi
+    else
+        _probe_get_version "$target"
+    fi
+}
+
 probe_run() {
-    # $1 = TOOL_NAME (display); $2 = BIN_NAME; $3 = INSTALL_CMD; $4 = optional MODULE_NAME; $5 = optional LAYER; $6 = optional BLOCKING_TICKET
+    # $1 = TOOL_NAME (display); $2 = BIN_OR_CHECK_FN; $3 = INSTALL_CMD; $4 = optional MODULE_NAME; $5 = optional LAYER; $6 = optional BLOCKING_TICKET
+    # BIN_OR_CHECK_FN (#678): either a binary name (falls through to
+    # _probe_check_bin) or a shell function name (called directly). Used
+    # symmetrically for pre-check and post-install re-check.
     local tool_name="$1"
-    local bin_name="$2"
+    local target="$2"
     local install_cmd="$3"
     local module_name="${4:-}"
     local layer="${5:-unknown}"
     local blocking="${6:-}"
 
-    if _probe_check_bin "$bin_name" "$module_name"; then
+    if _probe_check_target "$target" "$module_name"; then
         local ver
-        ver=$(_probe_get_version "$bin_name")
+        ver=$(_probe_get_version_target "$target")
         _probe_emit_json "{\"status\":\"installed\",\"tool\":\"$tool_name\",\"version\":\"$ver\"}"
         exit 0
     fi
@@ -229,9 +265,9 @@ probe_run() {
         allow)
             >&2 echo "probe: attempting install for $tool_name via: $install_cmd"
             if eval "$install_cmd" >/dev/null 2>&1; then
-                if _probe_check_bin "$bin_name" "$module_name"; then
+                if _probe_check_target "$target" "$module_name"; then
                     local ver
-                    ver=$(_probe_get_version "$bin_name")
+                    ver=$(_probe_get_version_target "$target")
                     _probe_emit_json "{\"status\":\"installed-just-now\",\"tool\":\"$tool_name\",\"version\":\"$ver\"}"
                     exit 0
                 fi
@@ -241,9 +277,9 @@ probe_run() {
         prompt)
             if [[ "${TOOL_INSTALL_YES:-}" == "1" ]]; then
                 >&2 echo "probe: TOOL_INSTALL_YES=1 set; attempting install for $tool_name"
-                if eval "$install_cmd" >/dev/null 2>&1 && _probe_check_bin "$bin_name" "$module_name"; then
+                if eval "$install_cmd" >/dev/null 2>&1 && _probe_check_target "$target" "$module_name"; then
                     local ver
-                    ver=$(_probe_get_version "$bin_name")
+                    ver=$(_probe_get_version_target "$target")
                     _probe_emit_json "{\"status\":\"installed-just-now\",\"tool\":\"$tool_name\",\"version\":\"$ver\"}"
                     exit 0
                 fi
