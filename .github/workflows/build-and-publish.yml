@@ -210,6 +210,18 @@ jobs:
           else
             TAG=${GITHUB_REF#refs/tags/}
           fi
+          # #633: promote CHANGELOG [Unreleased] to [<version>] before cutting
+          # notes. Without this, every auto-cut release reads from the same
+          # growing [Unreleased] block and each release body describes changes
+          # that partly shipped in earlier releases. The promoter is idempotent
+          # (no-op when [<version>] already exists) and refuses to create an
+          # empty versioned section (which would poison future promotions).
+          # The mutation is workflow-local: dist/ is what gets published,
+          # CHANGELOG.md's promotion is committed by the release-notes step
+          # below only when running on a real tag push.
+          python3 scripts/ci/promote-unreleased.py --version "$TAG" || {
+            echo "::warning::promote-unreleased.py returned non-zero; falling back to release-notes.py alone"
+          }
           python3 scripts/ci/release-notes.py --version "$TAG" --out /tmp/release-notes.md
           printf '\nConsumer packages: `%s-claude-code` and `%s-craft-agent`.\n' "$TAG" "$TAG" >> /tmp/release-notes.md
           printf 'Layout tags: `%s-nested` and `%s-flat`.\n' "$TAG" "$TAG" >> /tmp/release-notes.md
