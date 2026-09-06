@@ -69,7 +69,7 @@ The skill resolver is ACTIVE for this session.
 
 Before ANY non-trivial action (feature, refactor, architecture change,
 cutover, schema change, >30min task) you MUST read
-skills/thinking/think/SKILL.md and produce a design note. Every
+skills/think/SKILL.md and produce a design note. Every
 catalog-bypass, premature cutover, and half-designed pipeline this
 resolver prevents traces back to skipping this step. think is
 not a pattern to match — it is the gate before everything else.

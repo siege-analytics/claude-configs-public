@@ -352,7 +352,7 @@ Investigation is non-discretionary. Provide one of:
   ${FIELD_NAME}: plans/investigate-*.md
   ${FIELD_NAME}: TRIVIAL (with ## Trivial-investigation declaration below)
 
-See skills/self-review/SKILL.md and skills/thinking/investigate/SKILL.md.
+See skills/self-review/SKILL.md and skills/investigate/SKILL.md.
 HOOKEOF
             exit 2
         fi

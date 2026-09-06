@@ -1,6 +1,6 @@
 #!/bin/bash
 # Hook: survey-context (v2.1)
-# Enforces: skills/thinking/survey-context/SKILL.md Definition-of-Done rule
+# Enforces: skills/survey-context/SKILL.md Definition-of-Done rule
 # Trigger: PreToolUse on Bash(git push *), Bash(gh pr create *), Bash(gh pr merge *)
 #
 # When the diff being pushed touches a file listed as the Definition for an
@@ -240,7 +240,7 @@ fi
     echo "  - Add a Doc-Update-Source: <ref> trailer to the latest commit"
     echo "    pointing at the sibling PR/issue where the doc update lands."
     echo ""
-    echo "See skills/thinking/survey-context/SKILL.md for the DoD contract."
+    echo "See skills/survey-context/SKILL.md for the DoD contract."
     echo "Project catalog: $CONFIG"
 } >&2
 exit 2

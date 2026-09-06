@@ -87,7 +87,7 @@ if [ ! -f "$SIGNAL_FILE" ]; then
     cat <<EOF
 <think-gate>
 No design note registered. Before writing code for any non-trivial
-change, produce a design note (read skills/thinking/think/SKILL.md)
+change, produce a design note (read skills/think/SKILL.md)
 and write a think-gate.json signal file with falsifiable claims.
 
 Signal file location: $SIGNAL_FILE

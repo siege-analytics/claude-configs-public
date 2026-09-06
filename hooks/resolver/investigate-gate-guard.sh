@@ -161,7 +161,7 @@ Design for $THINK_TICKET is approved (think-gate.json exists), but no
 investigation has been completed (investigate-gate.json missing).
 
 You MUST:
-1. Read skills/thinking/investigate/SKILL.md
+1. Read skills/investigate/SKILL.md
 2. Produce a Fact Sheet with file:line citations (Phase 1-5)
 3. Post the Fact Sheet to the ticket
 4. Write investigate-gate.json with verifiedShapes
