@@ -85,6 +85,19 @@ if [[ -z "$SCAN_SH" ]]; then
     exit 0
 fi
 
+# Zero-commit push carries nothing to review (#714). Compute ahead-of-upstream
+# count when an upstream is set; if it returns 0, this push transfers no
+# commits and the hook has nothing to prevent. When no upstream is set (fresh
+# branch, `git push -u origin branch`), the push carries the whole branch and
+# the scan proceeds against HEAD.
+UPSTREAM=$(git -C "$EFFECTIVE_CWD" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)
+if [[ -n "$UPSTREAM" ]]; then
+    AHEAD=$(git -C "$EFFECTIVE_CWD" rev-list --count "@{u}..HEAD" 2>/dev/null || echo "0")
+    if [[ "$AHEAD" -eq 0 ]]; then
+        exit 0
+    fi
+fi
+
 COMMIT_MSG=$(git -C "$EFFECTIVE_CWD" log -1 --pretty=%B 2>/dev/null || true)
 if [[ -z "$COMMIT_MSG" ]]; then
     exit 0
