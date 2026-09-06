@@ -102,7 +102,25 @@ sys.stdout.write(pattern.sub("", src))
 ' <<< "$BODY")
 
 # Silent-noop if the stripped body has no live Automation: block.
-if ! grep -q '^Automation:' <<< "$STRIPPED_BODY"; then
+#
+# #675 P1-2 (guard/splitter regex mismatch): the guard used to check
+# `^Automation:` (unanchored) but the awk splitter below requires
+# `^Automation:[[:space:]]*$` (bare Automation: with optional trailing space).
+# A body containing `Automation: pytest` (inline value on the same line)
+# passed the guard, produced no blocks, and the hook silently emitted the
+# body unchanged. That was indistinguishable from a body with no Automation
+# section at all. Fix: use the same anchor as the splitter, and if the guard
+# rejects a line but a `^Automation:` occurrence exists elsewhere in the
+# body, emit a specific stderr diagnostic naming the offending line so an
+# operator can distinguish "no Automation blocks" from "malformed
+# Automation blocks".
+if ! grep -qE '^Automation:[[:space:]]*$' <<< "$STRIPPED_BODY"; then
+    # Look for near-miss shapes so operators writing `Automation: pytest`
+    # (inline) get a diagnostic instead of silent no-op.
+    NEAR_MISS=$(grep -E '^Automation:.*' <<< "$STRIPPED_BODY" | head -1 || true)
+    if [[ -n "$NEAR_MISS" ]]; then
+        echo "scaffold-test-stub: Automation: line found but does not match bare-anchor splitter (${NEAR_MISS}); Automation: must be on its own line, followed by fields" >&2
+    fi
     if [[ -n "$OUT_FILE" ]]; then
         printf '%s\n' "$BODY" > "$OUT_FILE"
     else
