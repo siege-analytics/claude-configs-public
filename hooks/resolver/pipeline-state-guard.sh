@@ -183,7 +183,7 @@ if not invest:
         f'INVESTIGATE: No investigation artifact found FOR {current_ticket or \"current task\"}.\\n'
         '  Produce a Fact Sheet before writing code.\\n'
         '  Expected: plans/fact-sheet-*.md or plans/investigate-*.md (must reference current ticket)\\n'
-        '  Read: skills/thinking/investigate/SKILL.md'
+        '  Read: skills/investigate/SKILL.md'
     )
 
 # 2. Pre-mortem artifact
@@ -194,7 +194,7 @@ if not premortem:
         f'PRE-MORTEM: No pre-mortem artifact found FOR {current_ticket or \"current task\"}.\\n'
         '  Classify risks before writing code.\\n'
         '  Expected: plans/pre-mortem-*.md (must reference current ticket in ticket_refs)\\n'
-        '  Read: skills/thinking/pre-mortem/SKILL.md'
+        '  Read: skills/pre-mortem/SKILL.md'
     )
 elif not premortem_has_risks(premortem):
     warnings.append(
