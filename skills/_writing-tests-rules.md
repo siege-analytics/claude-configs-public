@@ -43,7 +43,7 @@ When mocking an external library (a third-party package on PyPI or equivalent re
 - Use the library's real exception classes via `from <pkg>.exceptions import X`, not `Exception` reassignment.
 - At least one test in the module must use a fixture built from a real response captured from the library (recorded once, committed as JSON), not a hand-rolled stub.
 - Every `MagicMock()` and `Mock()` instantiation that stands in for an external-library object must pass either `spec=<RealClass>` (rejects calls to non-existent methods), `spec_set=<RealClass>` (stricter; rejects attribute writes too), or an explicit `# noqa: writing-tests:4-spec` inline comment with a rationale naming why the real class cannot be used.
-- **Async surfaces:** when the spec class defines any `async def` method, use `AsyncMock(spec=<RealClass>)` or `create_autospec(<RealClass>, spec_set=True)`. Plain `MagicMock` / `Mock` on a class with async methods is a writing-tests:4 violation — the mock returns a `MagicMock` where the code expects a coroutine, and the coroutine-shape mismatch typically surfaces as `TypeError: object MagicMock can't be used in 'await' expression` at runtime rather than at test-write time. Grep-verifiable: for any `Mock()` / `MagicMock()` whose spec class has `async def`, replace with `AsyncMock(spec=...)`.
+- **Async surfaces:** when the spec class defines any `async def` method, use `AsyncMock(spec=<RealClass>)` or `create_autospec(<RealClass>, spec_set=True)`. Plain `MagicMock` / `Mock` on a class with async methods is a writing-tests:4 violation -- the mock returns a `MagicMock` where the code expects a coroutine, and the coroutine-shape mismatch typically surfaces as `TypeError: object MagicMock can't be used in 'await' expression` at runtime rather than at test-write time. Grep-verifiable: for any `Mock()` / `MagicMock()` whose spec class has `async def`, replace with `AsyncMock(spec=...)`.
 
 The session's worst case: a Facebook test fed a plain dict where the SDK returns `AbstractObject`. The test read correctly; the mock just was not the real thing, so production-only `AttributeError` did not surface. `MagicMock(spec=AdAccount)` would have caught the divergence.
 
@@ -81,13 +81,13 @@ The session's concrete instances: two PRs in the same session shipped source-gre
 
 **writing-tests:7. Every acceptance criterion names a falsifying observable and a test tool from the touched layer's `assertion_tools`.**
 
-Prose acceptance criteria without a paired `Falsifiable-by:` clause and a named tool are not acceptance criteria — they are wishes. An AC of "search returns paginated results" is unactionable until it becomes "AC1: search returns paginated results. Falsifiable-by: request page 2 with a distinct cursor value; assert the returned cursor differs from page 1. Tool: playwright." The Falsifiable-by clause states an observation that would prove the criterion false; the tool names what runs the observation. Both must be present per AC.
+Prose acceptance criteria without a paired `Falsifiable-by:` clause and a named tool are not acceptance criteria -- they are wishes. An AC of "search returns paginated results" is unactionable until it becomes "AC1: search returns paginated results. Falsifiable-by: request page 2 with a distinct cursor value; assert the returned cursor differs from page 1. Tool: playwright." The Falsifiable-by clause states an observation that would prove the criterion false; the tool names what runs the observation. Both must be present per AC.
 
-The tool must be drawn from the touched layer's `assertion_tools` list in `PROJECT.md`'s `testing.layers` schema (see `[rule:testing-frameworks]` testing-frameworks:1 for the schema shape and its `assertion_tools` extension). Free-form tool names ("some test," "manual QA," "the CI") do not count: the discipline requires the tool be one the project has already declared it uses for that layer, so the ticket links to real infrastructure rather than an aspiration. If the touched layer has no `assertion_tools` declared, the ticket is invalid until `PROJECT.md` is updated — the ticket-writing act surfaces the schema gap rather than papering over it.
+The tool must be drawn from the touched layer's `assertion_tools` list in `PROJECT.md`'s `testing.layers` schema (see `[rule:testing-frameworks]` testing-frameworks:1 for the schema shape and its `assertion_tools` extension). Free-form tool names ("some test," "manual QA," "the CI") do not count: the discipline requires the tool be one the project has already declared it uses for that layer, so the ticket links to real infrastructure rather than an aspiration. If the touched layer has no `assertion_tools` declared, the ticket is invalid until `PROJECT.md` is updated -- the ticket-writing act surfaces the schema gap rather than papering over it.
 
-Same-turn evidence discipline applies at ticket-close time, not ticket-open time: the person closing the ticket runs the falsifying tool against the merged code and pastes the output. This is the `[rule:writing-claims]` writing-claims:2 shape ("countable claims require same-turn evidence") applied to acceptance-criterion closure — the tool's output is the evidence, and the tool is named at open-time precisely so there's no ambiguity about what evidence would count.
+Same-turn evidence discipline applies at ticket-close time, not ticket-open time: the person closing the ticket runs the falsifying tool against the merged code and pastes the output. This is the `[rule:writing-claims]` writing-claims:2 shape ("countable claims require same-turn evidence") applied to acceptance-criterion closure -- the tool's output is the evidence, and the tool is named at open-time precisely so there's no ambiguity about what evidence would count.
 
-Multi-layer work (per `[skill:ticket-decomposition]`) means multiple `assertion_tools` — one per touched layer. The decomposition table on the parent epic names the tool per child ticket, and each child ticket's ACs use only tools from its own layer's list.
+Multi-layer work (per `[skill:ticket-decomposition]`) means multiple `assertion_tools` -- one per touched layer. The decomposition table on the parent epic names the tool per child ticket, and each child ticket's ACs use only tools from its own layer's list.
 
 **Composes with `[rule:testing-frameworks]` testing-frameworks:1** (which defines the `testing.layers` schema this rule reads from) and **`[skill:ticket-decomposition]`** (which is where the tool per layer gets selected). Composes with **`[rule:writing-claims]` writing-claims:2** at ticket-close: the paired Falsifiable-by + tool is the same-turn-evidence contract, deferred to close-time.
 
@@ -202,7 +202,7 @@ by construction and thus cannot fail on any revert of the code under
 test. Common shapes: `assert True`, `assert 1 == 1`, `assert x == x`,
 `assert isinstance(x, type(x))`, `assert len(list_i_just_built) == len(list_i_just_built)`.
 Distinct from `missing_assertions` (which detects zero-assertion
-tests) — a tautology test HAS assertions, they just never fail.
+tests) -- a tautology test HAS assertions, they just never fail.
 
 ```bash
 # Detection (AST-based; matches literal-vs-literal, x-vs-x)
@@ -226,12 +226,12 @@ for p in pathlib.Path('tests').rglob('test_*.py'):
 ```
 
 Severity: block (writing-tests:1 violation). Remediation: replace with
-an assertion that binds to production behavior — assert the observed
+an assertion that binds to production behavior -- assert the observed
 return value equals an expected constant, assert the exception type
 raised, assert a log record was emitted. If no meaningful assertion
 exists, the test is not testing production behavior and should be
 deleted or rewritten. Complements writing-tests:1 (tests must fail if
-production breaks) — a tautology test is a subclass of "cannot fail
+production breaks) -- a tautology test is a subclass of "cannot fail
 if production breaks."
 
 ### Cross-references to writing-tests rules
@@ -242,7 +242,7 @@ if production breaks."
 | mock_heavy | writing-tests:4 | Mock-dominated tests verify setup, not behavior |
 | conditional_test_logic | writing-tests:2 | Conditional tests are a form of cargo-cult (one shape serving multiple purposes) |
 | sleepy_test | writing-tests:5 | Sleeps often mask untested timing-dependent exception paths |
-| tautology_assert | writing-tests:1 | Subclass of missing_assertions — the assert exists but its truth is trivial |
+| tautology_assert | writing-tests:1 | Subclass of missing_assertions -- the assert exists but its truth is trivial |
 
 ## Override
 
