@@ -51,13 +51,27 @@ TMPL
 # ---------------------------------------------------------------------------
 test_noop() {
     echo "test_noop:"
-    local body='## Context\nSome ticket body\n\n## AC\n- [ ] AC1'
+    # #675 P2-1: previously used single-quoted string with printf '%s',
+    # so `\n` was literal backslash-n not newline; test never exercised
+    # a real multi-line body. Rewritten as heredoc so \n are actual
+    # newlines and the body has the intended multi-line shape.
+    local body
+    body=$(cat <<'BODY'
+## Context
+
+Some ticket body
+
+## AC
+
+- [ ] AC1
+BODY
+)
     local out
     out=$(printf '%s' "$body" | "$HOOK" --stdin --repo-root "$REPO_ROOT" 2>/dev/null)
     if [[ "$out" == *"Generated stubs"* ]]; then
         fail "test_noop: expected body unchanged, got Generated-stubs footer"
     else
-        pass "test_noop: body passed through unchanged"
+        pass "test_noop: multi-line body passed through unchanged (P2-1 heredoc)"
     fi
 }
 
@@ -648,6 +662,44 @@ Feature: exit3'
     rm -rf "$sandbox"
 }
 
+# ---------------------------------------------------------------------------
+# #675 P1-2: inline `Automation: value` triggers a stderr diagnostic instead
+# of silent no-op. The guard's bare-anchor regex matches the splitter's;
+# a near-miss line (e.g. `Automation: pytest`) now produces a diagnostic.
+# ---------------------------------------------------------------------------
+test_p1_2_inline_automation_diagnoses() {
+    echo "test_p1_2_inline_automation_diagnoses:"
+    local sandbox
+    sandbox=$(mktemp -d)
+    _write_pytest_tmpl "$sandbox"
+    # Body has `Automation: pytest` on one line (invalid; must be bare)
+    local body
+    body=$(cat <<'BODY'
+## Context
+
+Some body content
+
+Automation: pytest
+Tool: pytest
+Stub: tests/foo.py
+BODY
+)
+    # Capture stderr specifically; the fix emits a specific diagnostic on stderr.
+    set +e
+    local stderr_out
+    stderr_out=$(printf '%s' "$body" | "$HOOK" --stdin --repo-root "$sandbox" 2>&1 >/dev/null)
+    local rc=$?
+    set -e
+    if [[ "$rc" != "0" ]]; then
+        fail "test_p1_2_inline_automation_diagnoses: expected exit 0 (silent no-op for hook itself), got $rc"
+    elif ! echo "$stderr_out" | grep -q "does not match bare-anchor splitter"; then
+        fail "test_p1_2_inline_automation_diagnoses: expected near-miss stderr diagnostic, got: $stderr_out"
+    else
+        pass "test_p1_2_inline_automation_diagnoses: inline Automation: value surfaces stderr diagnostic (P1-2)"
+    fi
+    rm -rf "$sandbox"
+}
+
 test_unknown_tool_rejected
 test_layer_selects_integration
 test_tool_normalization
@@ -657,6 +709,7 @@ test_no_zero_byte_stub
 test_field_no_space_after_colon
 test_exit_code_zero_on_happy_path
 test_internal_error_surfaces_exit_3
+test_p1_2_inline_automation_diagnoses
 
 echo ""
 echo "Summary: $PASS passed, $FAIL failed"
