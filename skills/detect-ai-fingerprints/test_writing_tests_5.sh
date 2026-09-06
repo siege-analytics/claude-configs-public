@@ -239,6 +239,84 @@ else
     bad "(l) F7 unittest assertRaises" "out=$OUT"
 fi
 
+# --- Round 2 M-3 lock-in: bare or fake reason after noqa must not silence ---
+
+# (m) M-3: noqa with 'xxx' (Codex's exact reproduction) — must fire
+mkdir -p "$TMP/repo/pkg6"
+cat > "$TMP/repo/pkg6/thing.py" <<'EOF'
+def cleanup():
+    try:
+        stop_it()
+    except OSError:  # noqa: writing-tests-5 xxx
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg6/thing.py" 2>&1)
+if fires_wt5 "$OUT"; then
+    ok "(m) M-3 noqa reason 'xxx' rejected: fires"
+else
+    bad "(m) M-3 noqa reason 'xxx'" "out=$OUT"
+fi
+
+# (n) M-3: noqa with 'tbd' — must fire
+cat > "$TMP/repo/pkg6/thing.py" <<'EOF'
+def cleanup():
+    try:
+        stop_it()
+    except OSError:  # noqa: writing-tests-5 tbd
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg6/thing.py" 2>&1)
+if fires_wt5 "$OUT"; then
+    ok "(n) M-3 noqa reason 'tbd' rejected: fires"
+else
+    bad "(n) M-3 noqa reason 'tbd'" "out=$OUT"
+fi
+
+# (o) M-3: noqa with punctuation-only reason '...' — must fire
+cat > "$TMP/repo/pkg6/thing.py" <<'EOF'
+def cleanup():
+    try:
+        stop_it()
+    except OSError:  # noqa: writing-tests-5 ...
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg6/thing.py" 2>&1)
+if fires_wt5 "$OUT"; then
+    ok "(o) M-3 noqa reason '...' rejected: fires"
+else
+    bad "(o) M-3 noqa reason '...'" "out=$OUT"
+fi
+
+# (p) M-3: noqa with 'zzzz' (no vowel) — must fire
+cat > "$TMP/repo/pkg6/thing.py" <<'EOF'
+def cleanup():
+    try:
+        stop_it()
+    except OSError:  # noqa: writing-tests-5 zzzz
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg6/thing.py" 2>&1)
+if fires_wt5 "$OUT"; then
+    ok "(p) M-3 noqa reason 'zzzz' (no vowel) rejected: fires"
+else
+    bad "(p) M-3 noqa reason 'zzzz'" "out=$OUT"
+fi
+
+# (q) M-3 counterpart: real word reason 'cleanup' — silent (accepted carve-out)
+cat > "$TMP/repo/pkg6/thing.py" <<'EOF'
+def cleanup():
+    try:
+        stop_it()
+    except OSError:  # noqa: writing-tests-5 cleanup
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg6/thing.py" 2>&1)
+if ! fires_wt5 "$OUT"; then
+    ok "(q) M-3 noqa reason 'cleanup' accepted: silent"
+else
+    bad "(q) M-3 noqa reason 'cleanup'" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then
