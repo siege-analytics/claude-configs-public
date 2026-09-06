@@ -21,10 +21,25 @@ jobs:
             exit 0
           fi
 
-          # Allow promote branches (develop → main promotion)
-          if echo "$HEAD" | grep -qE '^(develop|promote/)'; then
-            echo "Head branch '$HEAD' is develop-role — allowed."
+          # Allow canonical develop -> main promotion directly.
+          if echo "$HEAD" | grep -qE '^develop$'; then
+            echo "Head branch '$HEAD' is canonical develop-role — allowed."
             exit 0
+          fi
+
+          # Allow promote branches when they carry explicit self-review evidence.
+          # This keeps the linear route (work already landed in develop; promotion
+          # branch targets main) while making the self-review audit trail machine
+          # visible to branch policy checks.
+          if echo "$HEAD" | grep -qE '^promote/'; then
+            BODY='${{ github.event.pull_request.body }}'
+            if printf '%s' "$BODY" | grep -qE '(^|[[:space:]])Self-Review-Source:[[:space:]]+\S'; then
+              echo "Promotion branch '$HEAD' carries Self-Review-Source — allowed."
+              exit 0
+            fi
+            echo "BLOCKED: promote/* PRs to main must include Self-Review-Source in the PR body."
+            echo "This is the self-reviewed linear-promotion evidence hook."
+            exit 1
           fi
 
           # Allow release tags
