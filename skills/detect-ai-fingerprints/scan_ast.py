@@ -261,7 +261,12 @@ def is_logging_call(stmt):
 
 
 def is_silent_terminator(stmt):
-    """True if stmt is one of the silent-terminator shapes (Pass / Return None / Return False / Continue)."""
+    """True if stmt is one of the silent-terminator shapes (Pass / Return None / Return False / Continue).
+
+    M-1 (#766): the None/False check uses `is` identity, not `==` equality.
+    Python's `in (None, False)` uses `==`, and `0 == False`, `0.0 == False`,
+    `0j == False`. Legitimate typed sentinels like `return 0` (count = 0)
+    would otherwise be mis-flagged as silent-swallow."""
     if isinstance(stmt, ast.Pass):
         return True
     if isinstance(stmt, ast.Continue):
@@ -269,7 +274,9 @@ def is_silent_terminator(stmt):
     if isinstance(stmt, ast.Return):
         if stmt.value is None:
             return True
-        if isinstance(stmt.value, ast.Constant) and stmt.value.value in (None, False):
+        if isinstance(stmt.value, ast.Constant) and (
+            stmt.value.value is None or stmt.value.value is False
+        ):
             return True
     return False
 
