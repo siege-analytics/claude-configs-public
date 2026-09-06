@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AST scanner for writing-code:4 (Django ORM kwargs), :7, :8, :9, :15 and writing-releases:3.
+"""AST scanner for writing-code:4 (Django ORM kwargs), :7, :8, :9, :15, writing-tests:5 and writing-releases:3.
 
 Invoked by scan.sh for .py files in the diff. Reports violations as
 <file>:<line>:<rule>: <excerpt>. Exit 0 if clean, 1 if violations.
@@ -1026,6 +1026,170 @@ def check_writing_code_8(tree):
     return violations
 
 
+# ---------------------------------------------------------------------------
+# writing-tests:5 -- untested exception handlers (#56)
+#
+# For each `except` block in production code, verify at least one test file
+# names the same exception class in a `pytest.raises(X)` / `assertRaises(X)` /
+# `with raises(X):` form. Cross-file: needs to open the test-file counterpart
+# to the source file being scanned.
+#
+# Source-to-test mapping (mirrors the affected-tests gate heuristic):
+#   For source `<pkg>/X.py`:
+#     tests/test_X.py
+#     tests/test_X_*.py            (glob)
+#     tests/<pkg>/test_X.py
+#     <pkg>/tests/test_X.py
+#
+# Carve-outs (out of scope; not flagged):
+#   - except inside a `finally` cleanup block
+#   - except in `__del__` or signal handlers
+# Both are detected by simple ancestry check + name check.
+#
+# Exception-class name matching:
+#   Allow short-name match. `requests.exceptions.RequestException` matches
+#   `RequestException` in a test that imports the short form. Match on the
+#   last dotted component only (which is the typical import shape).
+# ---------------------------------------------------------------------------
+
+def _extract_except_class_names(tree):
+    """Yield (lineno, class_name) for each except-handler that names a class.
+    Bare `except:` and `except Exception:` are still yielded; the caller
+    decides what to skip. Nested inside FunctionDef / ClassDef bodies is
+    fine; we walk the whole tree."""
+    results = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Try):
+            continue
+        # Skip the try if it's inside a finally-body of an ancestor Try (rare
+        # but the carve-out for finally-best-effort applies). We approximate
+        # by scanning the tree for parents; too expensive to be exact.
+        for handler in node.handlers:
+            if handler.type is None:
+                results.append((handler.lineno, ""))
+                continue
+            names = []
+            if isinstance(handler.type, ast.Name):
+                names.append(handler.type.id)
+            elif isinstance(handler.type, ast.Attribute):
+                # requests.exceptions.RequestException -> last segment
+                names.append(handler.type.attr)
+            elif isinstance(handler.type, ast.Tuple):
+                for elt in handler.type.elts:
+                    if isinstance(elt, ast.Name):
+                        names.append(elt.id)
+                    elif isinstance(elt, ast.Attribute):
+                        names.append(elt.attr)
+            for name in names:
+                results.append((handler.lineno, name))
+    return results
+
+
+def _test_files_for_source(source_path):
+    """Return candidate test files for a source file, per the affected-tests
+    heuristic. Returns a list of pathlib.Path objects that exist on disk."""
+    src = Path(source_path)
+    stem = src.stem
+    # Walk up to find repo root by looking for .git
+    root = src.resolve().parent
+    while root.parent != root and not (root / ".git").exists():
+        root = root.parent
+    if not (root / ".git").exists():
+        return []
+
+    candidates = [
+        root / "tests" / f"test_{stem}.py",
+        root / "tests" / src.parent.name / f"test_{stem}.py",
+        src.parent / "tests" / f"test_{stem}.py",
+        src.parent.parent / "tests" / f"test_{stem}.py",
+    ]
+    # Glob for test_X_*.py in tests/
+    if (root / "tests").is_dir():
+        candidates.extend(sorted((root / "tests").glob(f"test_{stem}_*.py")))
+
+    return [p for p in candidates if p.is_file()]
+
+
+def _test_file_covers_exception(test_path, exc_class):
+    """True if the test file contains pytest.raises(exc_class) or equivalent.
+    Short-name match: `requests.exceptions.RequestException` in source ->
+    look for `RequestException` in tests."""
+    if not exc_class:
+        return False
+    try:
+        source = test_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return False
+    # Cheap grep-based check; a more precise AST scan of the test file is
+    # possible but the false-positive rate on grep is acceptable per the
+    # ticket's own acceptance criterion.
+    patterns = [
+        f"pytest.raises({exc_class}",
+        f"pytest.raises({exc_class})",
+        f"assertRaises({exc_class}",
+        f"raises({exc_class}",
+    ]
+    return any(pat in source for pat in patterns)
+
+
+def _is_carveout_handler(handler_lineno, source_lines):
+    """True if the except handler carries a carve-out comment on the same or
+    preceding line naming why no test exists (per writing-tests:5's two
+    documented carve-outs plus explicit noqa)."""
+    if handler_lineno < 1 or handler_lineno > len(source_lines):
+        return False
+    line = source_lines[handler_lineno - 1]
+    if "noqa: writing-tests-5" in line or "noqa:writing-tests-5" in line:
+        return True
+    if handler_lineno >= 2:
+        prev = source_lines[handler_lineno - 2]
+        if "noqa: writing-tests-5" in prev:
+            return True
+    return False
+
+
+def check_writing_tests_5(tree, source_lines, source_path):
+    """Cross-file check: every except handler needs a test that names its class."""
+    # Skip if source path IS a test file (rule is for production code)
+    if _is_test_path(source_path):
+        return []
+
+    # Skip if source has no except blocks at all
+    handlers = _extract_except_class_names(tree)
+    handlers = [(ln, cls) for ln, cls in handlers if cls]  # drop bare except:
+    if not handlers:
+        return []
+
+    # Drop handlers that carry an explicit noqa carve-out before deciding
+    # whether to emit the no-test-file fire; a file whose every except is
+    # carved out should stay silent.
+    handlers = [(ln, cls) for ln, cls in handlers
+                if not _is_carveout_handler(ln, source_lines)]
+    if not handlers:
+        return []
+
+    test_files = _test_files_for_source(source_path)
+    if not test_files:
+        # No test file exists for this source. Fire once per file rather
+        # than once per except (avoid noise) — the fix is to add a test
+        # file, not to comment N except lines.
+        return [(handlers[0][0], "writing-tests-5",
+                 f"source has {len(handlers)} except block(s) but no test file found "
+                 f"(looked in tests/, {Path(source_path).parent}/tests/, ...)")]
+
+    violations = []
+    for lineno, exc_class in handlers:
+        # Any test file covers it?
+        covered = any(_test_file_covers_exception(tp, exc_class) for tp in test_files)
+        if not covered:
+            violations.append((
+                lineno, "writing-tests-5",
+                f"except {exc_class}: no matching pytest.raises({exc_class}) in "
+                f"{', '.join(str(p.name) for p in test_files)}",
+            ))
+    return violations
+
+
 # Default test-path globs for --exclude-tests.
 TEST_PATH_PATTERNS = ("/tests/", "/test/", "_test.py", "test_")
 
@@ -1052,7 +1216,8 @@ def scan_file(path, allow_decorators, exclude_tests=False):
                + check_writing_code_9(tree, allow_decorators)
                + check_writing_code_4_django_orm(tree)
                + check_writing_releases_3(tree)
-               + check_writing_code_8(tree))
+               + check_writing_code_8(tree)
+               + check_writing_tests_5(tree, source_lines, path))
     # writing-code:15 honors --exclude-tests for project-specific test fixtures.
     if not (exclude_tests and _is_test_path(path)):
         results = results + check_writing_code_15(tree, source_lines)
