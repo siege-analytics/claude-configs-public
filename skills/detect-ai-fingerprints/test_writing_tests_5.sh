@@ -126,6 +126,119 @@ else
     bad "(f) bare except tests-5 fired unexpectedly" "out=$OUT"
 fi
 
+# --- Codex hostile-review F6-F8 lock-in fixtures (issue #760) ---
+
+# (g) F6: namespaced test layout tests/pkg/sub/test_thing.py must be discovered
+mkdir -p "$TMP/repo/pkg2/sub" "$TMP/repo/tests/pkg2/sub"
+cat > "$TMP/repo/pkg2/sub/thing.py" <<'EOF'
+def fetch():
+    try:
+        return do_it()
+    except ConnectionError:
+        raise
+EOF
+cat > "$TMP/repo/tests/pkg2/sub/test_thing.py" <<'EOF'
+import pytest
+def test_connection_error():
+    with pytest.raises(ConnectionError):
+        fetch()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg2/sub/thing.py" 2>&1)
+if ! fires_wt5 "$OUT"; then
+    ok "(g) F6 namespaced test layout tests/pkg2/sub/test_thing.py discovered: silent"
+else
+    bad "(g) F6 namespaced test layout" "out=$OUT"
+fi
+
+# (h) F7: comment/TODO substring must NOT count as coverage
+mkdir -p "$TMP/repo/pkg3"
+cat > "$TMP/repo/pkg3/thing.py" <<'EOF'
+def fetch():
+    try:
+        return do_it()
+    except FileNotFoundError:
+        raise
+EOF
+cat > "$TMP/repo/tests/test_thing.py" <<'EOF'
+def test_placeholder():
+    # TODO: add with pytest.raises(FileNotFoundError) someday
+    assert True
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg3/thing.py" 2>&1)
+if fires_wt5 "$OUT"; then
+    ok "(h) F7 comment/TODO does not satisfy coverage: fires"
+else
+    bad "(h) F7 comment satisfies coverage" "out=$OUT"
+fi
+
+# (i) F7 counterpart: a real pytest.raises call DOES satisfy coverage
+cat > "$TMP/repo/tests/test_thing.py" <<'EOF'
+import pytest
+def test_placeholder():
+    with pytest.raises(FileNotFoundError):
+        fetch()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg3/thing.py" 2>&1)
+if ! fires_wt5 "$OUT"; then
+    ok "(i) F7 counterpart real pytest.raises call: silent"
+else
+    bad "(i) F7 counterpart real call" "out=$OUT"
+fi
+
+# (j) F8: bare noqa (no reason) must NOT count as carve-out
+mkdir -p "$TMP/repo/pkg4"
+cat > "$TMP/repo/pkg4/thing.py" <<'EOF'
+def cleanup():
+    try:
+        stop_it()
+    except OSError:  # noqa: writing-tests-5
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg4/thing.py" 2>&1)
+if fires_wt5 "$OUT"; then
+    ok "(j) F8 bare noqa without reason: fires"
+else
+    bad "(j) F8 bare noqa" "out=$OUT"
+fi
+
+# (k) F8 counterpart: noqa with reason IS accepted as carve-out
+cat > "$TMP/repo/pkg4/thing.py" <<'EOF'
+def cleanup():
+    try:
+        stop_it()
+    except OSError:  # noqa: writing-tests-5 (best-effort cleanup, safe to swallow)
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg4/thing.py" 2>&1)
+if ! fires_wt5 "$OUT"; then
+    ok "(k) F8 counterpart noqa with reason: silent"
+else
+    bad "(k) F8 counterpart with reason" "out=$OUT"
+fi
+
+# (l) F7: unittest self.assertRaises(X) satisfies coverage
+mkdir -p "$TMP/repo/pkg5"
+cat > "$TMP/repo/pkg5/thing.py" <<'EOF'
+def fetch():
+    try:
+        return do_it()
+    except KeyError:
+        raise
+EOF
+cat > "$TMP/repo/tests/test_thing.py" <<'EOF'
+import unittest
+class T(unittest.TestCase):
+    def test_key_error(self):
+        with self.assertRaises(KeyError):
+            fetch()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg5/thing.py" 2>&1)
+if ! fires_wt5 "$OUT"; then
+    ok "(l) F7 unittest self.assertRaises: silent"
+else
+    bad "(l) F7 unittest assertRaises" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then

@@ -1132,11 +1132,15 @@ def _extract_except_class_names(tree):
 
 def _test_files_for_source(source_path):
     """Return candidate test files for a source file, per the affected-tests
-    heuristic. Returns a list of pathlib.Path objects that exist on disk."""
-    src = Path(source_path)
+    heuristic. Returns a list of pathlib.Path objects that exist on disk.
+
+    F6 (#760): namespaced layouts are now mirrored. For source
+    `<root>/pkg/sub/thing.py`, we look under `<root>/tests/pkg/sub/test_thing.py`
+    as well as the shallower locations."""
+    src = Path(source_path).resolve()
     stem = src.stem
     # Walk up to find repo root by looking for .git
-    root = src.resolve().parent
+    root = src.parent
     while root.parent != root and not (root / ".git").exists():
         root = root.parent
     if not (root / ".git").exists():
@@ -1148,47 +1152,125 @@ def _test_files_for_source(source_path):
         src.parent / "tests" / f"test_{stem}.py",
         src.parent.parent / "tests" / f"test_{stem}.py",
     ]
-    # Glob for test_X_*.py in tests/
+    # F6: mirror the source's relative path under `tests/`. For
+    # `<root>/pkg/sub/thing.py`, add `<root>/tests/pkg/sub/test_thing.py` plus
+    # every prefix (`<root>/tests/pkg/test_thing.py`, `<root>/tests/sub/...`).
+    try:
+        rel_parent = src.parent.relative_to(root)
+    except ValueError:
+        rel_parent = None
+    if rel_parent is not None:
+        parts = rel_parent.parts
+        for i in range(len(parts) + 1):
+            candidates.append(root / "tests" / Path(*parts[:i]) / f"test_{stem}.py")
+    # Glob for test_X_*.py in tests/ (both the flat root and the mirrored dir)
     if (root / "tests").is_dir():
         candidates.extend(sorted((root / "tests").glob(f"test_{stem}_*.py")))
+        if rel_parent is not None:
+            mirror_dir = root / "tests" / rel_parent
+            if mirror_dir.is_dir():
+                candidates.extend(sorted(mirror_dir.glob(f"test_{stem}_*.py")))
 
-    return [p for p in candidates if p.is_file()]
+    # Deduplicate while preserving order
+    seen = set()
+    unique = []
+    for p in candidates:
+        rp = p.resolve() if p.exists() else p
+        if rp in seen:
+            continue
+        seen.add(rp)
+        unique.append(p)
+    return [p for p in unique if p.is_file()]
 
 
-def _test_file_covers_exception(test_path, exc_class):
-    """True if the test file contains pytest.raises(exc_class) or equivalent.
-    Short-name match: `requests.exceptions.RequestException` in source ->
-    look for `RequestException` in tests."""
+def _iter_call_arg_class_names(call_node):
+    """Yield class-name-shaped identifiers from a Call's positional args.
+    Handles Name, Attribute (dotted last-segment), and Tuple (multiple classes
+    passed as a tuple, e.g. `pytest.raises((ExcA, ExcB))`)."""
+    for arg in call_node.args:
+        if isinstance(arg, ast.Name):
+            yield arg.id
+        elif isinstance(arg, ast.Attribute):
+            yield arg.attr
+        elif isinstance(arg, ast.Tuple):
+            for elt in arg.elts:
+                if isinstance(elt, ast.Name):
+                    yield elt.id
+                elif isinstance(elt, ast.Attribute):
+                    yield elt.attr
+
+
+def _test_ast_covers_exception(test_path, exc_class):
+    """F7 (#760): parse the test file as AST and look for actual call nodes
+    to pytest.raises / raises / assertRaises / self.assertRaises whose first
+    positional arg names `exc_class`. Comments and TODOs cannot satisfy
+    coverage because they are not in the AST.
+
+    Returns True if such a call is found. On unreadable/unparseable files,
+    emits a scanner diagnostic to stderr and returns False (writing-code:11
+    no-silent-process compliance)."""
     if not exc_class:
         return False
     try:
         source = test_path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
+    except (OSError, UnicodeDecodeError) as e:
+        print(f"{test_path}:0:scan-ast-warning: test file unreadable: {e}",
+              file=sys.stderr)
         return False
-    # Cheap grep-based check; a more precise AST scan of the test file is
-    # possible but the false-positive rate on grep is acceptable per the
-    # ticket's own acceptance criterion.
-    patterns = [
-        f"pytest.raises({exc_class}",
-        f"pytest.raises({exc_class})",
-        f"assertRaises({exc_class}",
-        f"raises({exc_class}",
-    ]
-    return any(pat in source for pat in patterns)
+    try:
+        tree = ast.parse(source, filename=str(test_path))
+    except SyntaxError as e:
+        print(f"{test_path}:{e.lineno or 0}:scan-ast-warning: test file "
+              f"unparseable: {e.msg}", file=sys.stderr)
+        return False
+
+    RAISES_NAMES = ("raises", "assertRaises")
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        # Match: raises(X), assertRaises(X)
+        if isinstance(func, ast.Name) and func.id in RAISES_NAMES:
+            if exc_class in _iter_call_arg_class_names(node):
+                return True
+        # Match: pytest.raises(X), self.assertRaises(X), any.assertRaises(X)
+        elif isinstance(func, ast.Attribute) and func.attr in RAISES_NAMES:
+            if exc_class in _iter_call_arg_class_names(node):
+                return True
+    return False
+
+
+# Back-compat alias: earlier revisions used a grep-based helper; the AST
+# version is strictly stricter (rejects comments/TODOs) and is the correct
+# implementation of writing-tests:5's coverage predicate.
+_test_file_covers_exception = _test_ast_covers_exception
+
+
+# Regex to enforce F8 (#760): `noqa: writing-tests-5` must be followed by
+# at least one non-whitespace reason token. Bare `noqa: writing-tests-5`
+# with no reason is rejected. Pattern accepts optional space after the
+# colon, then requires >=3 chars of non-whitespace content.
+_NOQA_WITH_REASON_RE = re.compile(
+    r"noqa:\s*writing-tests-5\b[^\n]*?\S{3,}"
+)
 
 
 def _is_carveout_handler(handler_lineno, source_lines):
     """True if the except handler carries a carve-out comment on the same or
-    preceding line naming why no test exists (per writing-tests:5's two
-    documented carve-outs plus explicit noqa)."""
+    preceding line naming why no test exists.
+
+    F8 (#760): `noqa: writing-tests-5` requires at least 3 chars of non-
+    whitespace reason text following it on the same comment. Bare
+    `# noqa: writing-tests-5` is rejected; rule text requires a one-line
+    comment naming why no test exists."""
     if handler_lineno < 1 or handler_lineno > len(source_lines):
         return False
     line = source_lines[handler_lineno - 1]
-    if "noqa: writing-tests-5" in line or "noqa:writing-tests-5" in line:
+    if _NOQA_WITH_REASON_RE.search(line):
         return True
     if handler_lineno >= 2:
         prev = source_lines[handler_lineno - 2]
-        if "noqa: writing-tests-5" in prev:
+        if _NOQA_WITH_REASON_RE.search(prev):
             return True
     return False
 
