@@ -157,3 +157,37 @@ Independent adversarial pass on the diff.
 - "Zero R5-R10 self-review files modified" — verified via git diff --name-only grep above.
 - "Zero writing-rules:8 references introduced" — verified via grep -nE 'writing-rules:8[^0-9]' → empty in the diff.
 - "Four Trivial-investigation allowlist tokens preserved from self-review/SKILL.md" — the script's `TRIVIAL_INVESTIGATION_VOCAB_RE` is `^(single-line-fix|doc-only|config-only|test-only)$`; the shelf's declaration at line 448 shows the same four tokens.
+
+## Post-error revision
+
+Triggered by: hostile-review BLOCK from session `260905-clever-quasar` on PR #814, forwarded via coordinator `260525-long-swan` message 2026-09-07 ~13:35 CDT.
+
+Observed: Two HIGH findings in the delegation surface, both fail-open shapes I had missed in the Lead review Phase-A pass.
+
+**Finding 1: Delegated checker skip is fail-open.** The `if [[ -x "$CHECK_TRIVIAL_SCRIPT" ]]; then ... fi` guard in hooks/git/self-review.sh silently skipped the entire Trivial-investigation vocabulary check + external-shape-modeling never-trivial check when the helper was missing, renamed, or `chmod -x`'d. Since PR A designates `check-trivial-claim.sh` as the single source of truth, this fail-open shape was the exact governance breach the PR was supposed to close, re-created one layer up.
+
+**Finding 2: Diff scope misses branch-range multi-commit bypass.** The delegated diff scope was `git diff-tree HEAD ∪ git diff HEAD ∪ git diff --cached` — HEAD-only. A two-commit branch where commit 1 touches `hooks/**` and commit 2 adds the self-review artifact would bypass the never-trivial trigger because commit 1's files never entered the diff list.
+
+Falsified assumption: my Lead review Phase-A claim "Diff scope is the union of last commit + working tree + staged, sort -u'd. Union captures the pending change surface pre-commit AND pre-push." That assumption was false for the multi-commit branch shape. My inventory step 3 (contact-point measurement for plan-shape / authoring-against-state:4) never enumerated the multi-commit shape as a distinct case — I treated the branch as a single-commit unit of work. That's the shape-space enumeration gap the R11-meta analysis was itself flagging, re-created in the same PR that closes it. The dogfood ate itself; I owe the reviewer for surfacing it before merge.
+
+Revised model:
+- Fail-closed guard: if `check-trivial-claim.sh` is not a file OR not executable, hooks/git/self-review.sh exits 2 with a specific diagnostic naming the missing helper path. The check for `single source of truth` semantics only holds if the helper is invoked; otherwise the pipeline must fail closed.
+- Branch-range diff scope: the delegated diff list now unions `git diff <merge-base> HEAD` (against origin/develop, origin/main, or skills-upstream/{develop,main} — first match wins) alongside the HEAD + working + staged entries. If no merge-base resolves, a stderr warning names the fallback and the HEAD-only shape is used — fail-soft rather than fail-open, per reviewer instruction.
+
+Implication:
+- Files edited in this fix:
+  - `hooks/git/self-review.sh`: fail-closed guard replaces the `-x` conditional; branch-range merge-base loop added ahead of the diff-list build.
+  - `scripts/discipline/tests/fixtures/diff-list-branch-range-multi-commit.txt` + `fail-esm-branch-range-multi-commit.md`: reviewer-suggested regression fixture pair — a diff list containing both an ESM path (`hooks/git/foo-hook.sh`) and non-ESM paths, plus a Trivial-investigation artifact with a valid-vocabulary Category. The never-trivial trigger must fire on the ESM presence.
+  - `scripts/discipline/tests/test-hook-fail-closed.sh`: unit-shape regression test with three invariants — (1) the fail-closed guard pattern is present in the hook source; (2) the extracted guard snippet exits 2 with the expected diagnostic; (3) the branch-range merge-base + diff invocation pattern is present in the hook source. Belt + suspenders: static grep catches structural removal; extracted-snippet run catches semantic weakening.
+  - `scripts/discipline/tests/run-tests.sh`: invokes `test-hook-fail-closed.sh` as a final step and rolls up its result into the pass/fail summary. Test count: 11 fixture cases + 1 hook regression = 12 total.
+- Assumption to add to future PR B/C self-reviews: "The delegated diff scope must include the branch-range union against develop merge-base" — an inventory line item that step 3 (contact-point measurement) should surface for any hook-side enforcement PR.
+- Post-error revision to the base rules (writing-rules:6 obligation): the writing-rules:5 body already documents the never-trivial trigger; no new rule-body edit required, since the FIX is in the enforcement path (hook + script), not in the vocabulary. Filed follow-up: the multi-commit branch shape is an authoring-against-state:4 (plan-shape) inventory item that pre-mortem-pr-a.md's R5 mitigation ("Hook delegation composes cleanly") DID NOT stress — R5 was too narrow. The revised R5 mitigation now includes "Diff scope must be branch-range against develop merge-base, not HEAD-only."
+
+Test evidence:
+- `bash scripts/discipline/tests/run-tests.sh` → `Summary: 11 passed, 0 failed. PASS: fail-closed guard + branch-range diff scope regression guards. Total with hook regression: 12 passed, 0 failed.` (verified in the same turn this revision was written)
+- `bash -n hooks/git/self-review.sh` → clean.
+- `bash -n scripts/discipline/check-trivial-claim.sh` → clean.
+- `bash -n scripts/discipline/tests/test-hook-fail-closed.sh` → clean.
+
+Reviewer credit: `260905-clever-quasar` surfaced both findings in one bounded pass; the fixes shipped in the same session against the same branch per the reviewer's directive.
+

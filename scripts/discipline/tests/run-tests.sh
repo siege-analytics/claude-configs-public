@@ -37,6 +37,7 @@ CASES=(
     "fail-esm-scanner-diff-with-trivial-change.md|2|diff-list-scanner-touching.txt|external-shape-modeling"
     "pass-trivial-change-prose-only-docs.md|0|none|"
     "pass-trivial-investigation-test-only.md|0|diff-list-benign.txt|"
+    "fail-esm-branch-range-multi-commit.md|2|diff-list-branch-range-multi-commit.txt|external-shape-modeling"
 )
 
 RC_OVERALL=0
@@ -85,4 +86,18 @@ done
 
 echo
 echo "Summary: $PASSED passed, $FAILED failed."
+
+# Hook regression tests (fail-closed guard + branch-range diff scope).
+# Ref: 260905-clever-quasar hostile findings #1 and #2 on PR #814.
+HOOK_TEST="$HERE/test-hook-fail-closed.sh"
+if [[ -x "$HOOK_TEST" ]]; then
+    if bash "$HOOK_TEST"; then
+        PASSED=$((PASSED + 1))
+    else
+        FAILED=$((FAILED + 1))
+        RC_OVERALL=1
+    fi
+    echo "Total with hook regression: $PASSED passed, $FAILED failed."
+fi
+
 exit "$RC_OVERALL"
