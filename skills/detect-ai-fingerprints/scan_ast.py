@@ -1148,30 +1148,66 @@ def _extract_optional_imports(tree):
         if not common:
             continue
 
-        # Sort flags by lineno so "nearest following" is well-defined.
+        # Sort flags by lineno so positional fallback is well-defined.
         sorted_flags = sorted(
             (fl for fl in flags_with_line if fl[0] in common),
             key=lambda pair: pair[1],
         )
+        unique_flags = list({f for f, _ in sorted_flags})
 
         # Single-flag case: bind every import to the sole flag (preserves the
-        # existing 12 writing-code:8 fixtures which are all single-import).
-        # Multi-flag case: bind each import to the nearest flag set on a line
-        # strictly greater than the import's line; if none exists (import
-        # appears after all flags), fall back to the last flag.
-        if len({f for f, _ in sorted_flags}) == 1:
+        # existing single-import fixtures).
+        if len(unique_flags) == 1:
             sole_flag = sorted_flags[0][0]
             for imp_name, _ in imports_with_line:
                 result[imp_name] = sole_flag
             continue
 
-        for imp_name, imp_lineno in imports_with_line:
-            following = [f for f, fl in sorted_flags if fl > imp_lineno]
-            if following:
-                result[imp_name] = following[0]
-            else:
-                # No following flag; pair with the last flag by lineno.
-                result[imp_name] = sorted_flags[-1][0]
+        # R6-F1 (#804): multi-flag pairing. R5's nearest-following-line
+        # algorithm mis-pairs when imports are grouped before flags. Prefer
+        # name-based pairing: an import name matches a flag whose stem
+        # contains the import's uppercased identifier as a whole word.
+        # `pandas` matches `PANDAS_AVAILABLE`, `HAS_PANDAS`, `_HAS_PANDAS`,
+        # `PANDAS_INSTALLED`. Substring-only matches like `re` inside
+        # `MRE_AVAILABLE` are rejected by the word-boundary check.
+        def _name_matches_flag(imp_name, flag_name):
+            pat = r"\b" + re.escape(imp_name.upper()) + r"\b"
+            return bool(re.search(pat, flag_name))
+
+        pending = list(imports_with_line)
+        matched = {}
+        available_flags = list(unique_flags)
+        for imp_name, imp_line in pending:
+            hits = [f for f in available_flags if _name_matches_flag(imp_name, f)]
+            if len(hits) == 1:
+                matched[imp_name] = hits[0]
+                available_flags.remove(hits[0])
+        unmatched = [(n, ln) for n, ln in pending if n not in matched]
+
+        # Positional fallback: if the remaining #imports equals #remaining
+        # flags AND the fallback is unambiguous (single interpretation),
+        # pair by lineno order.
+        if unmatched and len(unmatched) == len(available_flags):
+            sorted_unmatched = sorted(unmatched, key=lambda p: p[1])
+            sorted_remaining = [f for f, _ in sorted_flags if f in available_flags]
+            # Preserve first-occurrence order for the remaining flags too.
+            for (imp_name, _), flag in zip(sorted_unmatched, sorted_remaining):
+                matched[imp_name] = flag
+            unmatched = []
+
+        if unmatched:
+            # Fail-open: drop tracking for the still-unmatched imports and
+            # emit a scan-ast-warning so the operator sees the ambiguity.
+            names = ", ".join(n for n, _ in unmatched)
+            print(
+                f"scan-ast-warning: writing-code:8 could not pair optional "
+                f"imports [{names}] to availability flags in try block at "
+                f"line {node.lineno}; heuristics available: name-match, "
+                f"positional. Bind by hand or use a single flag.",
+                file=sys.stderr,
+            )
+
+        result.update(matched)
     return result
 
 
