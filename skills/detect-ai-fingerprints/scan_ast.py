@@ -308,12 +308,44 @@ def import_flag_pattern(handler):
     return True
 
 
+# #771 sibling of M-3: noqa opt-out must carry a real reason word, not just
+# the marker. Same vowel-lookahead + 4-char-min shape as
+# _NOQA_WITH_REASON_RE for writing-tests:5.
+_NOQA_WC7_WITH_REASON_RE = re.compile(
+    r"noqa:\s*writing-code-7\b[^\n]*?\b(?=[A-Za-z]*[aeiouAEIOU])[A-Za-z]{4,}\b"
+)
+
+
 def has_noqa_writing_code_7(handler, source_lines):
-    """True if the except handler line carries a `# noqa: writing-code-7` opt-out comment."""
+    """True if the except handler line carries a `# noqa: writing-code-7`
+    opt-out AND the comment names a reason (>=4-letter English-shape word
+    with a vowel). Bare `# noqa: writing-code-7` is rejected (#771 sibling
+    of M-3)."""
     if handler.lineno < 1 or handler.lineno > len(source_lines):
         return False
     line = source_lines[handler.lineno - 1]
-    return "noqa: writing-code-7" in line or "noqa:writing-code-7" in line
+    if _NOQA_WC7_WITH_REASON_RE.search(line):
+        return True
+    if handler.lineno >= 2:
+        prev = source_lines[handler.lineno - 2]
+        if _NOQA_WC7_WITH_REASON_RE.search(prev):
+            return True
+    return False
+
+
+def _is_swallow_scaffold(stmt):
+    """m-2 (#771): True if stmt is a swallow-scaffold statement — a logging
+    call or a constant-value assignment — that decorates a silent handler
+    without actually recovering. Anything else (real cleanup call, function
+    call with side effects, complex assign) breaks the pattern."""
+    if is_logging_call(stmt):
+        return True
+    # Assign to a Name with a Constant value: `y = None`, `err = ""`, etc.
+    if isinstance(stmt, ast.Assign):
+        if all(isinstance(t, ast.Name) for t in stmt.targets):
+            if isinstance(stmt.value, ast.Constant):
+                return True
+    return False
 
 
 def function_returns_optional_with_documented_none(func_node):
@@ -378,9 +410,18 @@ def check_writing_code_7(tree, source_lines):
         if len(body) == 1 and is_silent_terminator(body[0]):
             is_silent = True
             excerpt_shape = type(body[0]).__name__
-        elif len(body) == 2 and is_logging_call(body[0]) and is_silent_terminator(body[1]):
-            is_silent = True
-            excerpt_shape = f"log+{type(body[1]).__name__}"
+        elif len(body) >= 2 and is_silent_terminator(body[-1]):
+            # m-2 (#771): extended from body-len==2 to any length where
+            # every earlier statement is a swallow-scaffold (logging call
+            # or constant-value assignment). Real cleanup calls break the
+            # scaffold and keep the handler silent.
+            if all(_is_swallow_scaffold(s) for s in body[:-1]):
+                is_silent = True
+                # Excerpt shape names whether scaffold was pure-logging or mixed
+                if all(is_logging_call(s) for s in body[:-1]):
+                    excerpt_shape = f"log+{type(body[-1]).__name__}"
+                else:
+                    excerpt_shape = f"scaffold+{type(body[-1]).__name__}"
         if not is_silent:
             continue
         # Optional[T]+docstring carve-out applies only to Return None shape.

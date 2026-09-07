@@ -134,7 +134,7 @@ else
     bad "(g) log + return None" "out=$OUT"
 fi
 
-# (h) # noqa: writing-code-7 carve-out — must NOT fire
+# (h) # noqa: writing-code-7 carve-out WITH reason — must NOT fire
 cat > "$TMP/h.py" <<'EOF'
 def go():
     try:
@@ -144,9 +144,96 @@ def go():
 EOF
 OUT=$(python3 "$SCAN" "$TMP/h.py" 2>&1)
 if ! fires_wc7 "$OUT"; then
-    ok "(h) noqa carve-out — silent"
+    ok "(h) noqa carve-out with reason — silent"
 else
-    bad "(h) noqa didn't silence" "out=$OUT"
+    bad "(h) noqa with reason didn't silence" "out=$OUT"
+fi
+
+# --- #771 m-2 + noqa-weak sibling lock-ins ---
+
+# (i) m-2: log + decoy-assign + return None (body-len 3) — fires
+cat > "$TMP/i.py" <<'EOF'
+import logging
+log = logging.getLogger(__name__)
+def go():
+    try:
+        return do_it()
+    except Exception:
+        log.error("x")
+        y = None
+        return None
+EOF
+OUT=$(python3 "$SCAN" "$TMP/i.py" 2>&1)
+if fires_wc7 "$OUT"; then
+    ok "(i) m-2 log+decoy-assign+return None (body-len 3) — fires"
+else
+    bad "(i) m-2 body-len 3" "out=$OUT"
+fi
+
+# (j) m-2 counterpart: real cleanup call + return None — silent
+cat > "$TMP/j.py" <<'EOF'
+def close(): pass
+def go():
+    try:
+        return do_it()
+    except Exception:
+        close()
+        return None
+EOF
+OUT=$(python3 "$SCAN" "$TMP/j.py" 2>&1)
+if ! fires_wc7 "$OUT"; then
+    ok "(j) m-2 cleanup call + return None — silent (legit)"
+else
+    bad "(j) cleanup false-fire" "out=$OUT"
+fi
+
+# (k) noqa sibling: bare noqa without reason — fires
+cat > "$TMP/k.py" <<'EOF'
+def go():
+    try:
+        do_it()
+    except Exception:  # noqa: writing-code-7
+        pass
+EOF
+OUT=$(python3 "$SCAN" "$TMP/k.py" 2>&1)
+if fires_wc7 "$OUT"; then
+    ok "(k) noqa sibling: bare marker without reason — fires"
+else
+    bad "(k) noqa bare" "out=$OUT"
+fi
+
+# (l) noqa sibling: fake reason 'xxx' — fires
+cat > "$TMP/l.py" <<'EOF'
+def go():
+    try:
+        do_it()
+    except Exception:  # noqa: writing-code-7 xxx
+        pass
+EOF
+OUT=$(python3 "$SCAN" "$TMP/l.py" 2>&1)
+if fires_wc7 "$OUT"; then
+    ok "(l) noqa sibling: fake reason 'xxx' — fires"
+else
+    bad "(l) noqa fake" "out=$OUT"
+fi
+
+# (m) m-2: log + log + return None (body-len 3, pure logging) — fires
+cat > "$TMP/m.py" <<'EOF'
+import logging
+log = logging.getLogger(__name__)
+def go():
+    try:
+        return do_it()
+    except Exception:
+        log.error("x")
+        log.info("y")
+        return None
+EOF
+OUT=$(python3 "$SCAN" "$TMP/m.py" 2>&1)
+if fires_wc7 "$OUT"; then
+    ok "(m) m-2 pure-logging body-len 3 — fires"
+else
+    bad "(m) pure logging body-3" "out=$OUT"
 fi
 
 echo
