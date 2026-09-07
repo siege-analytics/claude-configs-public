@@ -296,15 +296,17 @@ DESIGNEOF
     fi
 
     # Terminal statuses claim the pipeline ran and its artifacts were validated.
-    # That claim is only worth honouring if the artifacts exist: writing
-    # {"status":"disposed"} into a think-gate otherwise turns every gate green
-    # permanently, which makes the whole system satisfiable by assertion rather
-    # than by producing anything. See invariant 2 in
-    # docs/craft-agents/gate-architecture.md, and #69 item 6.
+    # That claim is only worth honoring if the artifacts exist: writing
+    # {"status":"disposed"} into a think-gate must not turn every mutation
+    # gate green permanently. But a stale closed-out marker with no artifacts
+    # must also not be converted into an active implementation blocker for
+    # unrelated workspace-cwd exploration. Ref: #592, #69, #784 follow-up.
     #
-    # An unearned terminal status falls through to the implementing checks, which
-    # report exactly which artifacts are missing. Ref: #592 (which introduced the
-    # shortcut), #69 (which found the hole).
+    # Policy:
+    #   - terminal + evidence: authorize the completed pipeline path
+    #   - terminal + no evidence + non-mutating command: allow exploration/read
+    #   - terminal + no evidence + mutation command: block; terminal assertion
+    #     alone does not grant mutation ability
     if [[ "$TG_STATUS" == "done-awaiting-pr" || "$TG_STATUS" == "disposed" || "$TG_STATUS" == "complete" ]]; then
         TERMINAL_EVIDENCE=""
         if [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
@@ -320,8 +322,27 @@ except Exception:
         if [[ -n "$TERMINAL_EVIDENCE" ]] && [[ -f "$TERMINAL_EVIDENCE" ]]; then
             exit 0
         fi
-        echo "[universal-mutation-gate] status '$TG_STATUS' has no investigation artifact behind it; checking as if implementing" >&2
-        TG_STATUS="implementing"
+        if [[ "$COMPOUND_MUTATION" == "false" ]]; then
+            exit 0
+        fi
+        CMD_SHORT_TERMINAL="${COMMAND:0:120}"
+        if [[ ${#COMMAND} -gt 120 ]]; then
+            CMD_SHORT_TERMINAL="${CMD_SHORT_TERMINAL}..."
+        fi
+        cat >&2 <<TERMINALEOF
+BLOCKED by universal-mutation-gate (#477/#592): terminal gate has no artifact evidence
+
+Command: $CMD_SHORT_TERMINAL
+
+think-gate.json status=$TG_STATUS, but no matching investigation artifact was
+found for the current task. A terminal status without artifacts is treated as a
+closed-out marker for read/exploration commands, not as permission to mutate.
+
+To mutate, create or select a current-task think gate with status=implementing
+and complete the required investigation/pre-mortem artifacts.
+TERMINALEOF
+        log_block_event "universal-mutation-gate" "terminal status without artifacts cannot authorize mutation" "$COMMAND"
+        exit 2
     fi
 
     if [[ "$TG_STATUS" == "implementing" ]]; then
