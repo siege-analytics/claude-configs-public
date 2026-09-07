@@ -135,6 +135,42 @@ else
     bad "(i) timeout=None with audit comment" "out=$OUT"
 fi
 
+# (j) m-5: timeout=0 (int zero) — fires (functionally unbounded)
+cat > "$TMP/j.py" <<'EOF'
+import subprocess
+subprocess.run(["ls"], timeout=0)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/j.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(j) m-5: timeout=0 — fires"
+else
+    bad "(j) m-5 timeout=0" "out=$OUT"
+fi
+
+# (k) m-5: timeout=0.0 (float zero) — fires
+cat > "$TMP/k.py" <<'EOF'
+import requests
+requests.get("http://x", timeout=0.0)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/k.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(k) m-5: timeout=0.0 on requests.get — fires"
+else
+    bad "(k) m-5 timeout=0.0" "out=$OUT"
+fi
+
+# (l) m-5 counterpart: fractional-but-positive timeout=0.001 — silent (bounded)
+cat > "$TMP/l.py" <<'EOF'
+import subprocess
+subprocess.run(["ls"], timeout=0.001)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/l.py" 2>&1)
+if ! fires_wc15 "$OUT"; then
+    ok "(l) m-5 counterpart: timeout=0.001 (positive) — silent"
+else
+    bad "(l) m-5 counterpart" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then

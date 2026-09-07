@@ -580,6 +580,25 @@ def check_writing_code_15(tree, source_lines):
                  f"{surface}(...): timeout=None without audit-signal comment "
                  f"(>=30 chars + identifier-shaped token, naming upstream bound)")
             )
+            continue
+        # m-5 (#771): timeout=0 is functionally unbounded — the call raises
+        # TimeoutExpired / times-out immediately and never bounds work. Reject
+        # numeric zero as invalid regardless of type (int/float/complex-zero).
+        # Uses `type(val.value) is not bool` to reject the False→0 identity
+        # collision (writing-code:7 M-1 discipline applied here).
+        is_zero = (
+            isinstance(val, ast.Constant)
+            and isinstance(val.value, (int, float, complex))
+            and type(val.value) is not bool
+            and val.value == 0
+        )
+        if is_zero:
+            violations.append(
+                (node.lineno,
+                 "writing-code-15-unbounded-io(timeout-zero)",
+                 f"{surface}(...): timeout=0 is not a bound — the call fails "
+                 f"immediately. Pass a positive number.")
+            )
     return violations
 
 
