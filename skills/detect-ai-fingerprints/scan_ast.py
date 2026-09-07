@@ -864,10 +864,14 @@ def check_writing_code_4_django_orm(tree):
                 f"{model_name}.objects.{method}(...)",
             )
         )
-        # `defaults={"field": value, ...}` dict literal.
+        # `defaults={"field": value, ...}` and `create_defaults={...}` dict
+        # literals. R3-F4 (#787): update_or_create also accepts
+        # `create_defaults=` which was previously skipped as a non-field kwarg
+        # but not descended-into for its dict keys.
         if method in ORM_DEFAULTS_METHODS:
+            defaults_kwargs = ("defaults", "create_defaults") if method == "update_or_create" else ("defaults",)
             for kw in node.keywords:
-                if kw.arg != "defaults":
+                if kw.arg not in defaults_kwargs:
                     continue
                 if not isinstance(kw.value, ast.Dict):
                     continue
@@ -878,7 +882,7 @@ def check_writing_code_4_django_orm(tree):
                 violations.extend(
                     _check_keys_against_model(
                         model_name, declared, dict_keys,
-                        f"{model_name}.objects.{method}(defaults={{...}})",
+                        f"{model_name}.objects.{method}({kw.arg}={{...}})",
                     )
                 )
     return violations
