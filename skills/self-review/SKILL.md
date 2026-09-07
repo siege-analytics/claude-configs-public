@@ -38,6 +38,25 @@ review on a genuinely trivial change is one valid output of the
 artifact. The artifact-existence floor is non-negotiable; the
 artifact's content scales with the work's scope.
 
+## Self-reviewed linear promotion PRs
+
+In Gitflow repositories, a `promote/*` PR to `main` is allowed as a
+self-reviewed promotion vehicle only when all of these are true:
+
+1. The promoted content has already landed on the develop-role branch.
+2. The promotion branch's final tree matches the intended develop
+   snapshot (for example, `git diff --stat origin/develop..HEAD` is
+   empty after resolving the promotion merge).
+3. The PR body includes `Self-Review-Source: <artifact>` pointing at
+   the durable self-review artifact.
+4. Required CI checks are green.
+
+This is not a shortcut around `develop`; it is a way to make a
+conflict-resolved promotion branch auditable when direct `develop` ->
+`main` PRs are blocked by squash-merge ancestry. Repository branch
+protection may still require a human approval, but this repo's policy
+and CI should treat such PRs as self-reviewed and promotion-ready.
+
 ## Artifact format
 
 Required sections:

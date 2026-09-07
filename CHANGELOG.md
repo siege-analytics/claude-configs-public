@@ -6,6 +6,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Added
 
+- Self-reviewed linear promotion policy: main-targeted `promote/*` PRs are accepted by the GitHub PR-base guard only when the PR body carries `Self-Review-Source:` evidence, preserving develop-first routing while making conflict-resolved promotion branches auditable.
 - Session-coordination decision/control-surface rules: `session-coordination:5` requires complete decision checklist collection before decision-dependent spoke coordination; `session-coordination:6` preserves the operator control surface by bounding foreground `send_agent_message` churn and preferring COO-style sub-manager delegation when work fans out.
 - Goal-mode intention-feint continuity (#635): standing-order and drive guidance now state that action announcements such as "continuing now" are not work unless paired with same-turn action, re-entry, or blocker evidence.
 - scaffold-test-stub hook (#661): `hooks/create-ticket/scaffold-test-stub.sh` reads a ticket body containing Automation blocks (per #658), invokes tool-availability probes (per #662) when the block lacks a Probe field, resolves the layer's `automation_template` from `PROJECT.md`, sed-substitutes `{ticket_id}`/`{ac_id}`/`{feature}` into the named Stub path, and appends `Generated stubs:` + `Blocked-by:` lines to the ticket body. Silent no-op when body has no Automation block. Test fixture at `hooks/_test/scaffold_test_stub.test.sh` covers no-op, happy-path, and blocked-path.
