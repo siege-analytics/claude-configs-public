@@ -309,6 +309,121 @@ else
     bad "(n) R5-F1 selective firing" "out=$OUT"
 fi
 
+# --- R6-F1 (#804) lock-in: grouped-imports-then-flags shape ---
+
+# (o) R6-F1: grouped imports+flags, correctly guarded — silent
+cat > "$TMP/o.py" <<'EOF'
+try:
+    import pandas
+    import geopandas
+    PANDAS_AVAILABLE = True
+    GEOPANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    GEOPANDAS_AVAILABLE = False
+
+def use_gpd():
+    if not GEOPANDAS_AVAILABLE:
+        raise RuntimeError("gpd")
+    return geopandas.GeoDataFrame()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/o.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(o) R6-F1 grouped imports+flags correctly guarded: silent"
+else
+    bad "(o) R6-F1 grouped correct" "out=$OUT"
+fi
+
+# (p) R6-F1: grouped imports+flags, guarded with WRONG flag — fires on truly-unguarded name with correct suggested flag
+cat > "$TMP/p.py" <<'EOF'
+try:
+    import pandas
+    import geopandas
+    PANDAS_AVAILABLE = True
+    GEOPANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    GEOPANDAS_AVAILABLE = False
+
+def use_gpd():
+    if not PANDAS_AVAILABLE:
+        raise RuntimeError("wrong flag")
+    return geopandas.GeoDataFrame()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/p.py" 2>&1)
+# Should fire on geopandas + suggest GEOPANDAS_AVAILABLE (not PANDAS_AVAILABLE)
+if fires_wc8 "$OUT" && echo "$OUT" | grep -q "geopandas" && echo "$OUT" | grep -q "GEOPANDAS_AVAILABLE"; then
+    ok "(p) R6-F1 grouped wrong-flag: fires on geopandas with correct GEOPANDAS_AVAILABLE suggestion"
+else
+    bad "(p) R6-F1 grouped wrong-flag" "out=$OUT"
+fi
+
+# (q) R6-F1: 3 imports + 3 flags grouped
+cat > "$TMP/q.py" <<'EOF'
+try:
+    import shapely
+    import fiona
+    import rasterio
+    SHAPELY_AVAILABLE = True
+    FIONA_AVAILABLE = True
+    RASTERIO_AVAILABLE = True
+except ImportError:
+    SHAPELY_AVAILABLE = False
+    FIONA_AVAILABLE = False
+    RASTERIO_AVAILABLE = False
+
+def use_shp():
+    if not SHAPELY_AVAILABLE:
+        raise RuntimeError("shp")
+    return shapely.geometry.Polygon()
+
+def use_f():
+    if not FIONA_AVAILABLE:
+        raise RuntimeError("f")
+    return fiona.open("x")
+
+def use_r():
+    if not RASTERIO_AVAILABLE:
+        raise RuntimeError("r")
+    return rasterio.open("x")
+EOF
+OUT=$(python3 "$SCAN" "$TMP/q.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(q) R6-F1 3+3 grouped all correctly guarded: silent"
+else
+    bad "(q) R6-F1 3+3 grouped" "out=$OUT"
+fi
+
+# (r) R6-F1: positional-fallback case — aliases whose stems don't match
+cat > "$TMP/r.py" <<'EOF'
+try:
+    import pandas as pd
+    import geopandas as gpd
+    PANDAS_AVAILABLE = True
+    GEOPANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    GEOPANDAS_AVAILABLE = False
+
+def use_pd():
+    if not PANDAS_AVAILABLE:
+        raise RuntimeError("pd")
+    return pd.DataFrame()
+
+def use_gpd():
+    if not GEOPANDAS_AVAILABLE:
+        raise RuntimeError("gpd")
+    return gpd.GeoDataFrame()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/r.py" 2>&1)
+# `pd` doesn't match PANDAS_AVAILABLE by whole-word; `gpd` doesn't match either.
+# Positional fallback pairs pd → PANDAS_AVAILABLE, gpd → GEOPANDAS_AVAILABLE.
+if ! fires_wc8 "$OUT"; then
+    ok "(r) R6-F1 aliased imports positional fallback: silent"
+else
+    bad "(r) R6-F1 positional fallback" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then
