@@ -503,6 +503,102 @@ else
     bad "(u) R7-F2 single-flag mismatch" "out=$OUT"
 fi
 
+# --- R8 (#808) lock-in: source_module-based pairing for aliased + from-imports ---
+
+# (v) R8-F1: `import numpy as np` + NUMPY_AVAILABLE unguarded -- fires
+cat > "$TMP/v.py" <<'EOF'
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+
+arr = np.array([1, 2, 3])
+EOF
+OUT=$(python3 "$SCAN" "$TMP/v.py" 2>&1)
+if fires_wc8 "$OUT"; then
+    ok "(v) R8-F1 numpy as np unguarded: fires"
+else
+    bad "(v) R8-F1 aliased" "out=$OUT"
+fi
+
+# (w) R8-F1 counterpart: `import numpy as np` + NUMPY_AVAILABLE guarded -- silent
+cat > "$TMP/w.py" <<'EOF'
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+
+def go():
+    if not NUMPY_AVAILABLE:
+        raise RuntimeError("numpy")
+    return np.array([1, 2, 3])
+EOF
+OUT=$(python3 "$SCAN" "$TMP/w.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(w) R8-F1 numpy as np guarded: silent"
+else
+    bad "(w) R8-F1 aliased guarded" "out=$OUT"
+fi
+
+# (x) R8-F2: `from PIL import Image` + PIL_AVAILABLE unguarded -- fires
+cat > "$TMP/x.py" <<'EOF'
+try:
+    from PIL import Image
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+
+img = Image.new("RGB", (1, 1))
+EOF
+OUT=$(python3 "$SCAN" "$TMP/x.py" 2>&1)
+if fires_wc8 "$OUT"; then
+    ok "(x) R8-F2 from PIL import Image unguarded: fires"
+else
+    bad "(x) R8-F2 from-import" "out=$OUT"
+fi
+
+# (y) R8-F2 counterpart: `from PIL import Image` + PIL_AVAILABLE guarded -- silent
+cat > "$TMP/y.py" <<'EOF'
+try:
+    from PIL import Image
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+
+def open_img():
+    if not PIL_AVAILABLE:
+        raise RuntimeError("PIL")
+    return Image.new("RGB", (1, 1))
+EOF
+OUT=$(python3 "$SCAN" "$TMP/y.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(y) R8-F2 from PIL import Image guarded: silent"
+else
+    bad "(y) R8-F2 from-import guarded" "out=$OUT"
+fi
+
+# (z) R8-F3: `from lxml import etree as _et` + LXML_AVAILABLE guarded -- silent
+cat > "$TMP/z2.py" <<'EOF'
+try:
+    from lxml import etree as _et
+    LXML_AVAILABLE = True
+except ImportError:
+    LXML_AVAILABLE = False
+
+def parse(s):
+    if not LXML_AVAILABLE:
+        raise RuntimeError("lxml")
+    return _et.fromstring(s)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/z2.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(z2) R8-F3 from lxml import etree as _et guarded: silent"
+else
+    bad "(z2) R8-F3 asname from-import" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then
