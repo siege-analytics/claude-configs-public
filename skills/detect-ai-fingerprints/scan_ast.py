@@ -1263,8 +1263,11 @@ def _extract_except_class_names(tree):
     decides what to skip. Nested inside FunctionDef / ClassDef bodies is
     fine; we walk the whole tree."""
     results = []
+    # R3-F5 (#787): walk both `ast.Try` and `ast.TryStar` (PEP 654 exception
+    # groups, `try/except*`). Both carry the same `.handlers` list shape.
+    try_types = (ast.Try, ast.TryStar) if hasattr(ast, "TryStar") else (ast.Try,)
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Try):
+        if not isinstance(node, try_types):
             continue
         # Skip the try if it's inside a finally-body of an ancestor Try (rare
         # but the carve-out for finally-best-effort applies). We approximate

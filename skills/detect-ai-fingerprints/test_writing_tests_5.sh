@@ -388,6 +388,46 @@ else
     bad "(t) m-3 starred false-negative" "out=$OUT"
 fi
 
+# --- R3-F5 (#787) lock-in: except* (PEP 654 exception groups) ---
+
+# (u) R3-F5: except* handler without matching test — fires
+mkdir -p "$TMP/repo/pkg10"
+cat > "$TMP/repo/pkg10/thing.py" <<'EOF'
+def go():
+    try:
+        risky()
+    except* ValueError:
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg10/thing.py" 2>&1)
+if fires_wt5 "$OUT"; then
+    ok "(u) R3-F5 except* ValueError no test — fires"
+else
+    bad "(u) R3-F5 except* silent" "out=$OUT"
+fi
+
+# (v) R3-F5 counterpart: except* covered by matching pytest.raises — silent
+mkdir -p "$TMP/repo/pkg11"
+cat > "$TMP/repo/pkg11/thing.py" <<'EOF'
+def go():
+    try:
+        risky()
+    except* KeyError:
+        raise
+EOF
+cat > "$TMP/repo/tests/test_thing.py" <<'EOF'
+import pytest
+def test_key():
+    with pytest.raises(KeyError):
+        go()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg11/thing.py" 2>&1)
+if ! fires_wt5 "$OUT"; then
+    ok "(v) R3-F5 except* covered by pytest.raises — silent"
+else
+    bad "(v) R3-F5 except* covered" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then
