@@ -17,6 +17,7 @@ Investigate-artifact: investigate-gate-claude-configs-public.json (repo root + s
 Pre-mortem-artifact: plans/pre-mortem-pr-a.md
 Pre-author-inventory: plans/self-review-pr-a.md#pre-author-inventory
 Hostile-review-artifact: plans/r11-scala-skeptic-review.md (upstream R11-meta chain, tracked in the workspace ticket)
+Project-contribution: A mechanical, forward-only enforcement floor for shelf-vocabulary discipline — future rounds cannot claim `Category: local-only` (or any invented token) on a Trivial-investigation block, and scanner/parser/linter/hook diffs cannot skip shape-space enumeration by claiming triviality. Converts a governance breach (twelve historical `local-only` bypasses) into a mechanical rejection at the pre-push hook boundary. Enables PRs B and C to build on a stable vocabulary layer without racing against future bypass attempts.
 Goal source verification: coordinator brief + R11-meta gap analysis both name the exact enforcement gap PR A closes (Trivial-investigation `Category: local-only` accepted by no validator).
 
 ## Pre-author inventory
