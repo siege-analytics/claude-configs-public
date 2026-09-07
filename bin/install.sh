@@ -148,10 +148,10 @@ install_craft_agent() {
 
     # Wire the blocking enforcement layer LAST. install-hooks.sh overwrites
     # settings.json from the base snippet (advisory injectors only), so the
-    # blocking ca-enforcement-gate.sh wrapper and the watchdog automations must
-    # be merged after it or they are clobbered. This is the step whose absence
-    # left consumers advisory-only even after a correct install.
-    echo "--- Wiring enforcement (blocking gate + watchdog automations) ---"
+    # blocking ca-enforcement-gate.sh wrapper must be merged after it or it is
+    # clobbered. Standing-order prompt automations are intentionally opt-in;
+    # auto-registering them can spawn recurring watchdog/audit sessions.
+    echo "--- Wiring enforcement (blocking gate; standing-order automations are opt-in) ---"
     python3 "$REPO_ROOT/bin/wire-enforcement.py" --workspace "$ws_path"
     echo
 
