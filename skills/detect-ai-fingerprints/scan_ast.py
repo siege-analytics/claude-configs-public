@@ -81,21 +81,61 @@ def decorator_name(node):
     return ""
 
 
-def collect_referenced(func_node):
+def _collect_load_names_in_scope(func_node):
+    """R3-F1 (#787): return names Load-referenced within func_node's own scope.
+
+    Scope-aware: does NOT descend into nested FunctionDef, AsyncFunctionDef,
+    Lambda, or comprehension scopes (those create their own scopes and can
+    shadow the parent's parameters). Load-only: Store/Del contexts do not
+    count as a use of a parameter — assigning to a name of the same identifier
+    shadows the parameter, not consumes it.
+
+    Also detects `**locals()`-style forwarders: if any Call's kwargs (double-
+    star spread) has an arg that is `locals()`, return `_captures_locals=True`
+    so the caller can conservatively silence emission (rare escape hatch)."""
     names = set()
-    keywords = set()
-    has_kwargs_spread = False
-    for n in ast.walk(func_node):
-        if isinstance(n, ast.Name):
-            names.add(n.id)
-        elif isinstance(n, ast.keyword):
-            if n.arg is None:
-                has_kwargs_spread = True
-            else:
-                keywords.add(n.arg)
-    return names, keywords, has_kwargs_spread
+    captures_locals = False
+    NESTED_SCOPE_TYPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda,
+                          ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+
+    def _walk(node):
+        nonlocal captures_locals
+        # If the node is itself a nested scope, do NOT walk into its body/args.
+        # But default-value expressions and decorators evaluate in the outer
+        # scope — walk THOSE.
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+            args = node.args
+            for default in list(args.defaults) + list(args.kw_defaults or []):
+                if default is not None:
+                    _walk(default)
+            for decorator in getattr(node, "decorator_list", []):
+                _walk(decorator)
+            return
+        if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
+            # First generator's iterable is evaluated in outer scope.
+            if node.generators:
+                _walk(node.generators[0].iter)
+            return
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+            names.add(node.id)
+        # Detect `**locals()` spread
+        if isinstance(node, ast.keyword) and node.arg is None:
+            if (isinstance(node.value, ast.Call)
+                    and isinstance(node.value.func, ast.Name)
+                    and node.value.func.id == "locals"):
+                captures_locals = True
+        for child in ast.iter_child_nodes(node):
+            _walk(child)
+
+    # Walk the body statements of this function directly (skip walking the
+    # signature — parameter names as Store bindings don't count as uses).
+    for stmt in func_node.body:
+        _walk(stmt)
+    return names, captures_locals
 
 
+# Back-compat alias for older callers (returned the 3-tuple; new callers use
+# the scoped helper directly).
 def defaulted_args(func_node):
     out = []
     args = func_node.args
@@ -114,6 +154,24 @@ def defaulted_args(func_node):
 
 
 def check_writing_code_9(tree, allow_decorators):
+    """R3-F1 (#787): scoped visitor + no keyword-name blessing + no bare
+    kwargs-spread silencer.
+
+    Prior version treated `fn(timeout=10)` inside the function as a use of
+    the outer `timeout` parameter (kwarg NAME match), silenced any function
+    with both `**kwargs` param and any `**` spread call (regardless of what
+    was in kwargs), and walked nested-function bodies (so a shadowed `x` in
+    an inner def counted as a use of the outer `x`). All three defeated
+    detection. New rules:
+
+    - Only Load-context `ast.Name` references in the CURRENT function scope
+      count as uses.
+    - Nested FunctionDef / AsyncFunctionDef / Lambda / comprehension bodies
+      do NOT count (they have their own scopes and can shadow).
+    - `**kwargs` spread does NOT silence a named defaulted parameter — named
+      params are bound explicitly and NEVER absorbed into `**kwargs`.
+    - Escape hatch: `**locals()` in ANY call in the body silences all
+      defaulted params for this function (rare but legitimate forwarder)."""
     violations = []
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -123,25 +181,22 @@ def check_writing_code_9(tree, allow_decorators):
         defaulted = defaulted_args(node)
         if not defaulted:
             continue
-        has_kwarg_param = node.args.kwarg is not None
-        names, keywords, has_kwargs_spread = collect_referenced(node)
+        names, captures_locals = _collect_load_names_in_scope(node)
+        if captures_locals:
+            continue
         docstring = ast.get_docstring(node) or ""
         for arg_name in defaulted:
-            if arg_name in names or arg_name in keywords:
-                continue
-            if has_kwarg_param and has_kwargs_spread:
+            if arg_name in names:
                 continue
             # Carve-out (c): if the docstring mentions the parameter name, treat as
             # documented no-op. Heuristic; loose by design - false negatives are
-            # acceptable here and false positives are not. Tighter substring matches
-            # (e.g. requiring "no-op" or "subclass" near the name) are a v2.2.x
-            # candidate after fix-exercise evidence about real patterns.
+            # acceptable here and false positives are not.
             if arg_name in docstring:
                 continue
             excerpt = (
                 f"def {node.name}(...): parameter '{arg_name}' has a default "
-                f"but is never referenced, not forwarded via **kwargs, and "
-                f"not named in the docstring"
+                f"but is never referenced in this function's own scope, not "
+                f"forwarded, and not named in the docstring"
             )
             violations.append(
                 (node.lineno,
@@ -308,11 +363,22 @@ def import_flag_pattern(handler):
     return True
 
 
-# #771 sibling of M-3: noqa opt-out must carry a real reason word, not just
-# the marker. Same vowel-lookahead + 4-char-min shape as
-# _NOQA_WITH_REASON_RE for writing-tests:5.
+# R3-F8 sibling (#787): writing-code:7 noqa also uses controlled vocabulary.
+# Silent-swallow carve-outs typically fall in one of these categories:
+# best-effort cleanup, atexit / __del__ / signal handler safety,
+# library-bootstrap paths where raising would defeat the loading chain,
+# or explicit re-raise-later delayed-signal patterns.
+_NOQA_WC7_REASON_KEYWORDS = (
+    "cleanup", "best-effort", "unsafe", "signal", "atexit", "handler",
+    "shutdown", "finalizer", "destructor",
+    "bootstrap", "vendored", "library",
+    "reraise-later", "delayed-signal",
+)
 _NOQA_WC7_WITH_REASON_RE = re.compile(
-    r"noqa:\s*writing-code-7\b[^\n]*?\b(?=[A-Za-z]*[aeiouAEIOU])[A-Za-z]{4,}\b"
+    r"noqa:\s*writing-code-7\b[^\n]*?\b("
+    + "|".join(re.escape(k) for k in _NOQA_WC7_REASON_KEYWORDS)
+    + r")\b",
+    re.IGNORECASE,
 )
 
 
@@ -580,20 +646,46 @@ def _matches_unbounded_io(call_func, module_aliases=None, from_imports=None):
         if chain[-2:] in UNBOUNDED_IO_SURFACES:
             return True
 
+    # Helper: resolve a name-or-attribute expression to its "real" class name,
+    # applying from_imports aliasing so `from X import Foo as Bar` -> `Foo`.
+    def _resolve_class_name(expr):
+        raw = None
+        if isinstance(expr, ast.Attribute):
+            raw = expr.attr
+        elif isinstance(expr, ast.Name):
+            raw = expr.id
+        if raw is None:
+            return None
+        if raw in from_imports:
+            _, real_symbol = from_imports[raw]
+            return real_symbol
+        return raw
+
     # M-2: X(...).communicate() / X(...).wait() where X is Popen or ends in .Popen
     if call_func.attr in ("communicate", "wait") and isinstance(call_func.value, ast.Call):
-        popen_expr = call_func.value.func
-        popen_name = None
-        if isinstance(popen_expr, ast.Attribute):
-            popen_name = popen_expr.attr
-        elif isinstance(popen_expr, ast.Name):
-            popen_name = popen_expr.id
-        # m-4: aliased `from subprocess import Popen as P; P(...).wait()`
-        if popen_name is not None and popen_name in from_imports:
-            _, real_symbol = from_imports[popen_name]
-            if real_symbol == "Popen":
-                popen_name = "Popen"
-        if popen_name == "Popen":
+        if _resolve_class_name(call_func.value.func) == "Popen":
+            return True
+
+    # R3-F3 (#787): Popen(...).stdout.read()/.readline()/.readlines()
+    # and .stderr equivalents. call chain shape:
+    #   Call(Attribute(read, Attribute(stdout, Call(Popen(...)))))
+    STREAM_READ_METHODS = ("read", "readline", "readlines")
+    STREAM_ATTRS = ("stdout", "stderr")
+    if (call_func.attr in STREAM_READ_METHODS
+            and isinstance(call_func.value, ast.Attribute)
+            and call_func.value.attr in STREAM_ATTRS
+            and isinstance(call_func.value.value, ast.Call)):
+        if _resolve_class_name(call_func.value.value.func) == "Popen":
+            return True
+
+    # R3-F3 (#787): Session()/Client()/AsyncClient() instance HTTP methods.
+    # Chain shape: Call(Attribute(get, Call(Session|Client|AsyncClient(...))))
+    HTTP_INSTANCE_METHODS = ("get", "post", "put", "delete", "head", "patch", "request")
+    HTTP_CLIENT_CLASSES = ("Session", "Client", "AsyncClient")
+    if (call_func.attr in HTTP_INSTANCE_METHODS
+            and isinstance(call_func.value, ast.Call)):
+        client_name = _resolve_class_name(call_func.value.func)
+        if client_name in HTTP_CLIENT_CLASSES:
             return True
 
     return False
@@ -664,6 +756,31 @@ def check_writing_code_15(tree, source_lines):
                 elif isinstance(popen_expr, ast.Name):
                     popen_repr = popen_expr.id
                 surface = f"{popen_repr}(...).{node.func.attr}"
+            elif node.func.attr in ("read", "readline", "readlines"):
+                # R3-F3 (#787): Popen(...).stdout.read chain surface.
+                inner_attr = node.func.value  # Attribute(stdout, Call(Popen))
+                popen_call = inner_attr.value if isinstance(inner_attr, ast.Attribute) else None
+                popen_expr = popen_call.func if isinstance(popen_call, ast.Call) else None
+                popen_repr = "Popen"
+                if isinstance(popen_expr, ast.Attribute):
+                    inner = _attr_chain(popen_expr)
+                    if inner is not None:
+                        popen_repr = ".".join(inner)
+                elif isinstance(popen_expr, ast.Name):
+                    popen_repr = popen_expr.id
+                surface = f"{popen_repr}(...).{inner_attr.attr}.{node.func.attr}"
+            elif isinstance(node.func.value, ast.Call):
+                # R3-F3 (#787): Session()/Client() instance HTTP method surface.
+                inner_call = node.func.value
+                client_expr = inner_call.func
+                client_repr = "?"
+                if isinstance(client_expr, ast.Attribute):
+                    inner = _attr_chain(client_expr)
+                    if inner is not None:
+                        client_repr = ".".join(inner)
+                elif isinstance(client_expr, ast.Name):
+                    client_repr = client_expr.id
+                surface = f"{client_repr}(...).{node.func.attr}"
         if timeout_kwarg is None:
             violations.append(
                 (node.lineno,
@@ -700,6 +817,40 @@ def check_writing_code_15(tree, source_lines):
                  f"{surface}(...): timeout=0 is not a bound — the call fails "
                  f"immediately. Pass a positive number.")
             )
+            continue
+        # R3-F2 (#787): reject non-numeric literal timeouts. `timeout=False`
+        # (a bool that is not None), `timeout=()` (empty tuple), and other
+        # obviously-invalid literals should not silently pass. requests
+        # supports `timeout=(connect, read)` as a 2-tuple of positive numbers;
+        # any other tuple shape is invalid.
+        if isinstance(val, ast.Constant) and val.value is False:
+            violations.append(
+                (node.lineno,
+                 "writing-code-15-unbounded-io(timeout-invalid-literal)",
+                 f"{surface}(...): timeout=False is not a bound. Pass a "
+                 f"positive number or `None` with an audit-signal comment.")
+            )
+            continue
+        if isinstance(val, ast.Tuple):
+            elts = val.elts
+            valid_tuple = (
+                len(elts) in (1, 2)
+                and all(
+                    isinstance(e, ast.Constant)
+                    and isinstance(e.value, (int, float))
+                    and type(e.value) is not bool
+                    and e.value > 0
+                    for e in elts
+                )
+            )
+            if not valid_tuple:
+                violations.append(
+                    (node.lineno,
+                     "writing-code-15-unbounded-io(timeout-invalid-tuple)",
+                     f"{surface}(...): timeout={ast.unparse(val)} is not a "
+                     f"valid bound. Pass a positive number or "
+                     f"`timeout=(connect, read)` with positive numbers.")
+                )
     return violations
 
 
@@ -864,10 +1015,14 @@ def check_writing_code_4_django_orm(tree):
                 f"{model_name}.objects.{method}(...)",
             )
         )
-        # `defaults={"field": value, ...}` dict literal.
+        # `defaults={"field": value, ...}` and `create_defaults={...}` dict
+        # literals. R3-F4 (#787): update_or_create also accepts
+        # `create_defaults=` which was previously skipped as a non-field kwarg
+        # but not descended-into for its dict keys.
         if method in ORM_DEFAULTS_METHODS:
+            defaults_kwargs = ("defaults", "create_defaults") if method == "update_or_create" else ("defaults",)
             for kw in node.keywords:
-                if kw.arg != "defaults":
+                if kw.arg not in defaults_kwargs:
                     continue
                 if not isinstance(kw.value, ast.Dict):
                     continue
@@ -878,7 +1033,7 @@ def check_writing_code_4_django_orm(tree):
                 violations.extend(
                     _check_keys_against_model(
                         model_name, declared, dict_keys,
-                        f"{model_name}.objects.{method}(defaults={{...}})",
+                        f"{model_name}.objects.{method}({kw.arg}={{...}})",
                     )
                 )
     return violations
@@ -915,9 +1070,53 @@ FLAG_PREFIXES = ("HAS_", "_HAS_")
 
 
 def _is_flag_name(name):
-    return (name.endswith(FLAG_PATTERNS) if isinstance(FLAG_PATTERNS, str)
-            else any(name.endswith(s) for s in FLAG_PATTERNS)
-            or any(name.startswith(p) for p in FLAG_PREFIXES))
+    # str.endswith and str.startswith both accept a tuple natively.
+    return name.endswith(FLAG_PATTERNS) or name.startswith(FLAG_PREFIXES)
+
+
+# R8-F5 (#808): stem-strip vocabulary hoisted to module scope so single-flag
+# and multi-flag paths cannot drift. R8-F6 dropped dead suffix entries `_HAS`
+# and `_HAS_` because _is_flag_name never accepts a name matching only those.
+_FLAG_STEM_PREFIX_STRIPS = ("HAS_", "_HAS_", "_")
+_FLAG_STEM_SUFFIX_STRIPS = ("_AVAILABLE", "_INSTALLED")
+
+
+def _flag_stem(flag_name):
+    """Strip a leading HAS_/_HAS_/_ and a trailing _AVAILABLE/_INSTALLED from
+    a flag name to expose its module-stem. Idempotent single-pass, first
+    prefix-then-suffix. Returns "" if nothing survives."""
+    stem = flag_name
+    for prefix in _FLAG_STEM_PREFIX_STRIPS:
+        if stem.startswith(prefix):
+            stem = stem[len(prefix):]
+            break
+    for suffix in _FLAG_STEM_SUFFIX_STRIPS:
+        if stem.endswith(suffix):
+            stem = stem[:-len(suffix)]
+            break
+    return stem
+
+
+def _name_matches_flag(source_module, flag_name):
+    """R8 (#808) + R9-F1 (#810): match a flag's stem to an import's SOURCE
+    MODULE. Case-folded comparison. Handles dotted sources: `foo.bar`
+    matches `FOO_BAR_AVAILABLE` because both `.` and `_` are normalized
+    away when checking the underscore-collapsed alternative.
+
+    Preserves R7-F2 misdirect protection: `re` source, `MRE` stem, no
+    match, fail open.
+    """
+    stem = _flag_stem(flag_name)
+    if not stem:
+        return False
+    stem_fold = stem.casefold()
+    src_fold = source_module.casefold()
+    if stem_fold == src_fold:
+        return True
+    # Normalize both `_` and `.` as separators before collapse.
+    def _collapse(s):
+        return s.replace("_", "").replace(".", "")
+    return _collapse(stem_fold) == _collapse(src_fold)
 
 
 def _extract_optional_imports(tree):
@@ -954,41 +1153,127 @@ def _extract_optional_imports(tree):
         if not catches_import:
             continue
 
-        # Find imports + flag assigns in the try body
-        imported_names = []
-        flag_names_in_try = []
+        # Find imports + flag assigns in the try body. R8 (#808): record
+        # SOURCE MODULE and BINDING NAME separately. R9-F1 (#810): store
+        # FULL dotted source path (not just the first segment) so
+        # `from foo.bar import baz` can pair with `FOO_BAR_AVAILABLE`.
+        # For `import X.Y.Z`, the source is `X.Y.Z` (full) and the binding
+        # is `X` (Python's convention — that's what the name binds to).
+        #   `import X`              -> binding=X,       source=X
+        #   `import X as Y`         -> binding=Y,       source=X
+        #   `import X.Y.Z`          -> binding=X,       source=X.Y.Z
+        #   `import X.Y.Z as W`     -> binding=W,       source=X.Y.Z
+        #   `from A import B`       -> binding=B,       source=A
+        #   `from A.B import C`     -> binding=C,       source=A.B
+        #   `from A import B as C`  -> binding=C,       source=A
+        imports_with_line = []   # list[(binding, source, lineno)]
+        flags_with_line = []     # list[(flag_name, lineno)]
         for stmt in node.body:
             if isinstance(stmt, ast.Import):
                 for alias in stmt.names:
-                    imported_names.append(alias.asname or alias.name.split(".")[0])
+                    full_source = alias.name  # e.g. `matplotlib.pyplot`
+                    binding = alias.asname or alias.name.split(".")[0]
+                    imports_with_line.append((binding, full_source, stmt.lineno))
             elif isinstance(stmt, ast.ImportFrom):
+                full_source = stmt.module or ""
                 for alias in stmt.names:
-                    imported_names.append(alias.asname or alias.name)
+                    binding = alias.asname or alias.name
+                    imports_with_line.append(
+                        (binding, full_source or binding, stmt.lineno)
+                    )
             elif isinstance(stmt, ast.Assign):
                 for tgt in stmt.targets:
                     if isinstance(tgt, ast.Name) and _is_flag_name(tgt.id):
-                        flag_names_in_try.append(tgt.id)
+                        flags_with_line.append((tgt.id, stmt.lineno))
 
-        # Verify at least one handler ALSO assigns a flag (mirror shape)
-        flag_names_in_handler = []
+        if not imports_with_line or not flags_with_line:
+            continue
+
+        # Verify at least one handler ALSO assigns a flag from the try body's
+        # set (mirror shape). Preserves the "must have paired True/False
+        # assigns" gate from the prior implementation.
+        handler_flag_names = set()
         for h in node.handlers:
             for stmt in h.body:
                 if isinstance(stmt, ast.Assign):
                     for tgt in stmt.targets:
                         if isinstance(tgt, ast.Name) and _is_flag_name(tgt.id):
-                            flag_names_in_handler.append(tgt.id)
-
-        if not flag_names_in_try or not flag_names_in_handler:
+                            handler_flag_names.add(tgt.id)
+        common = {f for f, _ in flags_with_line if f in handler_flag_names}
+        if not common:
             continue
 
-        # Map each imported name to the (first) flag. If multiple flags are
-        # set, take the intersection or fall back to first-flag.
-        common_flags = set(flag_names_in_try) & set(flag_names_in_handler)
-        flag_name = next(iter(common_flags), flag_names_in_try[0] if flag_names_in_try else None)
-        if not flag_name:
-            continue
-        for imp in imported_names:
-            result[imp] = flag_name
+        # Sort flags by lineno so positional fallback is well-defined.
+        sorted_flags = sorted(
+            (fl for fl in flags_with_line if fl[0] in common),
+            key=lambda pair: pair[1],
+        )
+        unique_flags = list({f for f, _ in sorted_flags})
+
+        # Unified pairing (R8/R9): source-group name-match, then guarded
+        # positional fallback, then fail-open.
+        pending = list(imports_with_line)  # list[(binding, source, lineno)]
+        matched = {}                       # binding -> flag
+        available_flags = list(unique_flags)
+
+        # Phase 1: source-group name-match. R9-F2 (#810) — group imports
+        # by source_module first, then find the single stem-matching flag
+        # per source. Bind ALL imports in the group to that flag. This
+        # handles `import numpy; import numpy as np` — both share source
+        # `numpy`, both bind to `NUMPY_AVAILABLE` from a single flag pool.
+        by_source = {}  # source -> [binding, ...]
+        for binding, source, _ln in pending:
+            by_source.setdefault(source, []).append(binding)
+
+        phase1_matched_any = False
+        for source, bindings in by_source.items():
+            hits = [f for f in available_flags if _name_matches_flag(source, f)]
+            if len(hits) == 1:
+                for binding in bindings:
+                    matched[binding] = hits[0]
+                available_flags.remove(hits[0])
+                phase1_matched_any = True
+
+        remaining = [(b, s, ln) for b, s, ln in pending if b not in matched]
+
+        # Phase 2: positional fallback. R9-F3 (#810) — only fall back if
+        # at least one phase-1 match happened AND remaining/flag counts
+        # match. If NO stems matched anywhere, positional pairing is
+        # unreliable (unrelated flag names could produce wrong-flag
+        # suggestions). Preserve the single-flag sole-import case where
+        # source stem-matches for aliased/from-import cases (R7-F2
+        # protection: `import re` + `MRE_AVAILABLE` — no phase-1 match,
+        # sole-flag path checks any_match, fails open).
+        if remaining and len(remaining) == len(available_flags):
+            if len(available_flags) > 1 and phase1_matched_any:
+                # Multi-flag positional fallback only after a phase-1 hit.
+                sorted_remaining_imports = sorted(remaining, key=lambda p: p[2])
+                sorted_remaining_flags = [f for f, _ in sorted_flags if f in available_flags]
+                for (binding, _src, _ln), flag in zip(sorted_remaining_imports, sorted_remaining_flags):
+                    matched[binding] = flag
+                remaining = []
+            elif len(available_flags) == 1:
+                # Sole-flag rule: bind all remaining if source stem-matches
+                # for any; otherwise fail open (R7-F2 preservation).
+                sole_flag = available_flags[0]
+                any_match = any(_name_matches_flag(src, sole_flag)
+                                for _b, src, _ln in remaining)
+                if any_match:
+                    for binding, _src, _ln in remaining:
+                        matched[binding] = sole_flag
+                    remaining = []
+
+        if remaining:
+            names = ", ".join(b for b, _s, _ln in remaining)
+            print(
+                f"scan-ast-warning: writing-code:8 could not pair optional "
+                f"imports [{names}] to availability flag(s) "
+                f"[{', '.join(available_flags)}] in try block at line "
+                f"{node.lineno}; failing open on those imports.",
+                file=sys.stderr,
+            )
+
+        result.update(matched)
     return result
 
 
@@ -1263,8 +1548,11 @@ def _extract_except_class_names(tree):
     decides what to skip. Nested inside FunctionDef / ClassDef bodies is
     fine; we walk the whole tree."""
     results = []
+    # R3-F5 (#787): walk both `ast.Try` and `ast.TryStar` (PEP 654 exception
+    # groups, `try/except*`). Both carry the same `.handlers` list shape.
+    try_types = (ast.Try, ast.TryStar) if hasattr(ast, "TryStar") else (ast.Try,)
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Try):
+        if not isinstance(node, try_types):
             continue
         # Skip the try if it's inside a finally-body of an ancestor Try (rare
         # but the carve-out for finally-best-effort applies). We approximate
@@ -1433,15 +1721,23 @@ def _test_ast_covers_exception(test_path, exc_class):
 _test_file_covers_exception = _test_ast_covers_exception
 
 
-# Regex to enforce F8/M-3 (#760/#766): `noqa: writing-tests-5` must be
-# followed by a real reason. F8 required >=3 chars of non-whitespace,
-# which trivially accepted `xxx`, `tbd`, `...` (M-3, Round 2 hostile
-# review). M-3 tightens the check: the reason must contain at least one
-# 4+ letter English-shape word (>=4 alpha chars including >=1 vowel).
-# `cleanup`, `finally`, `best-effort`, `finalizer` all pass; `xxx`,
-# `tbd`, `abcd`, `...` all fail.
-_NOQA_WITH_REASON_RE = re.compile(
-    r"noqa:\s*writing-tests-5\b[^\n]*?\b(?=[A-Za-z]*[aeiouAEIOU])[A-Za-z]{4,}\b"
+# R3-F8 (#787): noqa reason must contain a keyword from a controlled
+# vocabulary aligned with the rule text's two carve-out categories
+# (finally-cleanup and destructor/signal-handler safety). The vowel-only
+# heuristic (M-3) accepted sneaky placeholder text like `pass throughthrough`
+# where "through" is a real 7-letter word with vowels but conveys no
+# category signal. Controlled vocabulary rejects placeholder abuses.
+_NOQA_WT5_REASON_KEYWORDS = (
+    "cleanup", "finally", "finalizer", "destructor", "shutdown",
+    "signal", "handler", "atexit",
+    "bootstrap", "vendored", "library",
+    "best-effort", "unsafe", "cannot-induce", "not-induceable",
+)
+_NOQA_WT5_REASON_KEYWORDS_RE = re.compile(
+    r"noqa:\s*writing-tests-5\b[^\n]*?\b("
+    + "|".join(re.escape(k) for k in _NOQA_WT5_REASON_KEYWORDS)
+    + r")\b",
+    re.IGNORECASE,
 )
 
 
@@ -1456,11 +1752,11 @@ def _is_carveout_handler(handler_lineno, source_lines):
     if handler_lineno < 1 or handler_lineno > len(source_lines):
         return False
     line = source_lines[handler_lineno - 1]
-    if _NOQA_WITH_REASON_RE.search(line):
+    if _NOQA_WT5_REASON_KEYWORDS_RE.search(line):
         return True
     if handler_lineno >= 2:
         prev = source_lines[handler_lineno - 2]
-        if _NOQA_WITH_REASON_RE.search(prev):
+        if _NOQA_WT5_REASON_KEYWORDS_RE.search(prev):
             return True
     return False
 
@@ -1531,11 +1827,6 @@ def _is_test_path(path):
     if any(basename.endswith(suf) for suf in TEST_PATH_SUFFIXES):
         return True
     return False
-
-
-# Back-compat alias: earlier revisions referenced the flat pattern list.
-# Kept for consumers that grep the source; behavior is now segment-anchored.
-TEST_PATH_PATTERNS = TEST_PATH_DIR_SEGMENTS + TEST_PATH_SUFFIXES + ("test_",)
 
 
 def scan_file(path, allow_decorators, exclude_tests=False):

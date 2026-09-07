@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
-# Mechanical scanner for AI-fingerprint rules across the per-act rule files. Covers writing-prose:1-4 (broader Unicode char class as of v2.2.0), writing-code:2, writing-code:9 (via scan_ast.py), writing-tests:3-4, writing-claims:2-3, writing-releases:2, writing-releases:3 (via scan_ast.py).
+# Mechanical scanner for AI-fingerprint rules across the per-act rule files.
+# Prose-side (this file, regex): writing-prose:1-4 (broader Unicode class),
+# writing-code:2 (history references in code comments), writing-tests:3
+# (skip messages must be actionable), writing-claims:2 (countable claims
+# need Verified-by trailer), rule-citation Rule-executed evidence (#282).
+# Code-side (delegated to scan_ast.py, AST): writing-code:4 (Django ORM
+# kwargs, same-file), writing-code:7 (silent swallow), writing-code:8
+# (optional-import callsite guards), writing-code:9 (silently-dropped
+# params, scoped visitor), writing-code:15 (unbounded blocking I/O,
+# incl. Popen chains + Session/Client instance methods + invalid literal
+# timeouts), writing-tests:5 (untested named exception handlers, cross-file,
+# incl. except* PEP 654), writing-releases:3 (deprecation msg format).
+# Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4,
+# writing-claims:1/3, writing-releases:1/2.
 # Operates on a unified diff from stdin OR fetches the diff itself based on flags.
 # Reports violations as <file>:<line>:<rule>:<excerpt>. Exit 0 if clean, 1 if violations found.
 #
@@ -17,7 +30,9 @@
 #                                 # the scanner's own definition files, which contain the rule
 #                                 # source, regex, and worked examples by design.
 #
-# This scanner covers writing-prose:1-4 (broader Unicode class v2.2.0), writing-code:2, writing-code:9 (via scan_ast.py for .py files), writing-tests:3-4, writing-claims:2-3, writing-releases:2, writing-releases:3 (via scan_ast.py for .py files). The remaining rules require [skill:code-review] judgment.
+# Coverage (as of Round 4, 2026-09-07): see the top-of-file docstring
+# above for the authoritative list. Coverage note is also stored at the
+# COVERAGE_NOTE variable near the exit block.
 
 set -uo pipefail
 
@@ -148,7 +163,7 @@ scan_diff_stdin() {
             # writing-prose:3: every banned-adverb match on the line.
             while IFS= read -r adverb; do
                 [[ -n "$adverb" ]] && emit "$current_file" "$line_no" "writing-prose-3-adverb($adverb)" "$content"
-            done < <(grep -oE "$ADVERBS_RE" <<< "$content")
+            done < <(grep -oiE "$ADVERBS_RE" <<< "$content")
 
             # writing-code:2: history references in code comments (heuristic: line begins with # or //).
             if [[ "$content" =~ ^[[:space:]]*(#|//)[^!] ]]; then
@@ -252,7 +267,7 @@ scan_message_stdin() {
         # writing-prose:3: every adverb match.
         while IFS= read -r adverb; do
             [[ -n "$adverb" ]] && emit "$virtual_file" "$line_no" "writing-prose-3-adverb($adverb)" "$line"
-        done < <(grep -oE "$ADVERBS_RE" <<< "$line")
+        done < <(grep -oiE "$ADVERBS_RE" <<< "$line")
 
         # writing-prose:4: bullets in commit body.
         if [[ "$line" =~ ^[[:space:]]*[-*\+][[:space:]] ]]; then
@@ -347,12 +362,12 @@ case "$mode" in
         ;;
 esac
 
-# --- AST scanner: invoke scan_ast.py on changed .py files for writing-code:9
-# and writing-releases:3. Skipped for message modes since those are not code.
-# First-cut v2.2.0 implementation: scans the post-state file from disk,
-# reports ALL violations in the file (not diff-line-filtered). Pre-existing
-# violations are flagged along with new ones; rule grace-window text covers
-# the expectation. Diff-line filtering may land in v2.2.x.
+# --- AST scanner: invoke scan_ast.py on changed .py files for the AST rule
+# set (writing-code:4/7/8/9/15, writing-tests:5, writing-releases:3).
+# Skipped for message modes since those are not code. Scans the post-state
+# file from disk and reports ALL violations in that file (not diff-line-
+# filtered). Pre-existing violations are flagged along with newly-added
+# ones; rule grace-window text covers the expectation.
 if [[ "$mode" == staged || "$mode" == working || "$mode" == pr ]]; then
     py_files=""
     case "$mode" in
@@ -388,7 +403,7 @@ if [[ "$mode" == staged || "$mode" == working || "$mode" == pr ]]; then
     fi
 fi
 
-COVERAGE_NOTE='scanned: writing-prose:1-4 (stylistic; broader Unicode class as of v2.2.0), writing-code:2 (history references in code comments), writing-code:7 (silent error swallowing; AST scanner as of v2.3.1.1), writing-code:9 (silently-dropped parameters; AST scanner), writing-code:15 (unbounded blocking I/O; AST scanner as of v2.6.0), writing-tests:3-4 (skip messages, mock-without-spec), writing-claims:2-3 (countable claims and completeness claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:2 (skip-count trending), writing-releases:3 (deprecation messages name a removal target; AST scanner). The rest require [skill:code-review] judgment.'
+COVERAGE_NOTE='scanned: writing-prose:1-4 (stylistic; broader Unicode class), writing-code:2 (history references in code comments), writing-code:4 (Django ORM kwarg validation, same-file models; AST), writing-code:7 (silent error swallowing; AST), writing-code:8 (optional-import callsite guards; AST), writing-code:9 (silently-dropped parameters; AST scoped visitor), writing-code:15 (unbounded blocking I/O; AST, incl. Popen chains, Session/Client instance methods, invalid literal timeouts), writing-tests:3 (skip messages must be actionable), writing-tests:5 (untested named exception handlers, cross-file; AST), writing-claims:2 (countable claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:3 (deprecation messages need version+removal-keyword anchors; AST). Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4, writing-claims:1/3, writing-releases:1/2.'
 
 if (( violations > 0 )); then
     # Summary to stderr to avoid bash 3.2 SIGSEGV on stdout buffer flush

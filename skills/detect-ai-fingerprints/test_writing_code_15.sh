@@ -245,6 +245,130 @@ else
     bad "(r) m-4 aliased with timeout" "out=$OUT"
 fi
 
+# --- R3-F2 (#787) lock-in: reject invalid timeout literals ---
+
+# (s) R3-F2: timeout=False — fires
+cat > "$TMP/s.py" <<'EOF'
+import requests
+requests.get('http://x', timeout=False)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/s.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(s) R3-F2 timeout=False — fires"
+else
+    bad "(s) timeout=False" "out=$OUT"
+fi
+
+# (t) R3-F2: timeout=() empty tuple — fires
+cat > "$TMP/t.py" <<'EOF'
+import requests
+requests.get('http://x', timeout=())
+EOF
+OUT=$(python3 "$SCAN" "$TMP/t.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(t) R3-F2 timeout=() empty tuple — fires"
+else
+    bad "(t) empty tuple" "out=$OUT"
+fi
+
+# (u) R3-F2 counterpart: timeout=(3, 30) valid 2-tuple — silent
+cat > "$TMP/u.py" <<'EOF'
+import requests
+requests.get('http://x', timeout=(3, 30))
+EOF
+OUT=$(python3 "$SCAN" "$TMP/u.py" 2>&1)
+if ! fires_wc15 "$OUT"; then
+    ok "(u) R3-F2 timeout=(3, 30) valid connect-read tuple — silent"
+else
+    bad "(u) valid tuple" "out=$OUT"
+fi
+
+# (v) R3-F2: timeout=(0, 30) zero in tuple — fires
+cat > "$TMP/v.py" <<'EOF'
+import requests
+requests.get('http://x', timeout=(0, 30))
+EOF
+OUT=$(python3 "$SCAN" "$TMP/v.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(v) R3-F2 timeout=(0, 30) zero-in-tuple — fires"
+else
+    bad "(v) zero-in-tuple" "out=$OUT"
+fi
+
+# (w) R3-F2: timeout=(1, 2, 3) three-tuple — fires
+cat > "$TMP/w.py" <<'EOF'
+import requests
+requests.get('http://x', timeout=(1, 2, 3))
+EOF
+OUT=$(python3 "$SCAN" "$TMP/w.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(w) R3-F2 timeout=(1, 2, 3) 3-tuple — fires"
+else
+    bad "(w) 3-tuple" "out=$OUT"
+fi
+
+# --- R3-F3 (#787) lock-in: Popen(...).stdout.read + Session/Client instance methods ---
+
+# (x) Popen.stdout.read chain — fires
+cat > "$TMP/x.py" <<'EOF'
+import subprocess
+subprocess.Popen(['x'], stdout=subprocess.PIPE).stdout.read()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/x.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(x) R3-F3 Popen(...).stdout.read — fires"
+else
+    bad "(x) Popen stdout.read" "out=$OUT"
+fi
+
+# (y) requests.Session().get instance method — fires
+cat > "$TMP/y.py" <<'EOF'
+import requests
+requests.Session().get('http://x')
+EOF
+OUT=$(python3 "$SCAN" "$TMP/y.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(y) R3-F3 requests.Session().get — fires"
+else
+    bad "(y) Session.get" "out=$OUT"
+fi
+
+# (z) httpx.Client().get instance method — fires
+cat > "$TMP/z.py" <<'EOF'
+import httpx
+httpx.Client().get('http://x')
+EOF
+OUT=$(python3 "$SCAN" "$TMP/z.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(z) R3-F3 httpx.Client().get — fires"
+else
+    bad "(z) Client.get" "out=$OUT"
+fi
+
+# (aa) counterpart: Session().get(timeout=5) — silent
+cat > "$TMP/aa.py" <<'EOF'
+import requests
+requests.Session().get('http://x', timeout=5)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/aa.py" 2>&1)
+if ! fires_wc15 "$OUT"; then
+    ok "(aa) R3-F3 counterpart Session().get(timeout=5) — silent"
+else
+    bad "(aa) Session with timeout" "out=$OUT"
+fi
+
+# (ab) Popen.stderr.readline — fires
+cat > "$TMP/ab.py" <<'EOF'
+import subprocess
+subprocess.Popen(['x'], stderr=subprocess.PIPE).stderr.readline()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/ab.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(ab) R3-F3 Popen.stderr.readline — fires"
+else
+    bad "(ab) stderr.readline" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then

@@ -150,6 +150,38 @@ else
     bad "(h) create unknown" "out=$OUT"
 fi
 
+# (i) R3-F4 (#787): update_or_create create_defaults={"unknown": ...} — fires
+cat > "$TMP/i.py" <<'EOF'
+from django.db import models
+class Widget(models.Model):
+    name = models.CharField(max_length=32)
+
+def go():
+    Widget.objects.update_or_create(name="x", create_defaults={"bogus": 1})
+EOF
+OUT=$(python3 "$SCAN" "$TMP/i.py" 2>&1)
+if fires_wc4 "$OUT"; then
+    ok "(i) R3-F4 create_defaults unknown key — fires"
+else
+    bad "(i) R3-F4 create_defaults" "out=$OUT"
+fi
+
+# (j) R3-F4 counterpart: update_or_create create_defaults with declared field — silent
+cat > "$TMP/j.py" <<'EOF'
+from django.db import models
+class Widget(models.Model):
+    name = models.CharField(max_length=32)
+
+def go():
+    Widget.objects.update_or_create(name="x", create_defaults={"name": "y"})
+EOF
+OUT=$(python3 "$SCAN" "$TMP/j.py" 2>&1)
+if ! fires_wc4 "$OUT"; then
+    ok "(j) R3-F4 create_defaults declared field — silent"
+else
+    bad "(j) R3-F4 counterpart" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then

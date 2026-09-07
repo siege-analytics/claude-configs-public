@@ -244,4 +244,35 @@ else
   printf '         output: %s\n' "${out:0:300}"
 fi
 
+# Terminal-status gates without artifacts are closed-out markers, not active
+# implementation gates. They must not block read/exploration commands, but they
+# also must not grant mutation ability.
+cat >"$TMP/repo/.think-gate.json" <<JSON
+{"ticket":"#closed-no-artifacts","repo_root":"$TMP/repo","session":"session-brand-new","status":"complete"}
+JSON
+read_payload=$(printf '{"cwd":"%s","tool_input":{"command":"rg closed-no-artifacts ."}}' "$TMP/repo")
+out=$(printf '%s' "$read_payload" | CRAFT_AGENT_WORKSPACE="$TMP" CRAFT_AGENT_SESSION_ID=session-brand-new bash "$TMP_MUTATION" 2>&1)
+code=$?
+if [[ "$code" -eq 0 && -z "$out" ]]; then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1))
+  printf '  [PASS] terminal gate without artifacts allows non-mutating exploration\n'
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+  _HARNESS_FAILED_NAMES+=("terminal gate without artifacts allows non-mutating exploration")
+  printf '  [FAIL] terminal gate without artifacts blocked exploration (exit %s)\n' "$code"
+  printf '         output: %s\n' "${out:0:400}"
+fi
+
+out=$(printf '%s' "$mutation_payload" | CRAFT_AGENT_WORKSPACE="$TMP" CRAFT_AGENT_SESSION_ID=session-brand-new bash "$TMP_MUTATION" 2>&1)
+code=$?
+if [[ "$code" -eq 2 ]] && echo "$out" | grep -q "terminal gate has no artifact evidence" && ! echo "$out" | grep -q "artifacts missing or wrong ticket"; then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1))
+  printf '  [PASS] terminal gate without artifacts does not authorize mutation\n'
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+  _HARNESS_FAILED_NAMES+=("terminal gate without artifacts does not authorize mutation")
+  printf '  [FAIL] terminal gate without artifacts mutation behavior wrong (exit %s)\n' "$code"
+  printf '         output: %s\n' "${out:0:400}"
+fi
+
 report

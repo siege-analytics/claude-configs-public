@@ -388,6 +388,94 @@ else
     bad "(t) m-3 starred false-negative" "out=$OUT"
 fi
 
+# --- R3-F5 (#787) lock-in: except* (PEP 654 exception groups) ---
+
+# (u) R3-F5: except* handler without matching test — fires
+mkdir -p "$TMP/repo/pkg10"
+cat > "$TMP/repo/pkg10/thing.py" <<'EOF'
+def go():
+    try:
+        risky()
+    except* ValueError:
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg10/thing.py" 2>&1)
+if fires_wt5 "$OUT"; then
+    ok "(u) R3-F5 except* ValueError no test — fires"
+else
+    bad "(u) R3-F5 except* silent" "out=$OUT"
+fi
+
+# (v) R3-F5 counterpart: except* covered by matching pytest.raises — silent
+mkdir -p "$TMP/repo/pkg11"
+cat > "$TMP/repo/pkg11/thing.py" <<'EOF'
+def go():
+    try:
+        risky()
+    except* KeyError:
+        raise
+EOF
+cat > "$TMP/repo/tests/test_thing.py" <<'EOF'
+import pytest
+def test_key():
+    with pytest.raises(KeyError):
+        go()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg11/thing.py" 2>&1)
+if ! fires_wt5 "$OUT"; then
+    ok "(v) R3-F5 except* covered by pytest.raises — silent"
+else
+    bad "(v) R3-F5 except* covered" "out=$OUT"
+fi
+
+# --- R3-F8 (#787) lock-in: controlled-vocabulary noqa reason ---
+
+# (w) R3-F8: 'pass throughthrough' — real English word but not category — fires
+mkdir -p "$TMP/repo/pkg12"
+cat > "$TMP/repo/pkg12/thing.py" <<'EOF'
+def go():
+    try:
+        risky()
+    except OSError:  # noqa: writing-tests-5 pass throughthrough
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg12/thing.py" 2>&1)
+if fires_wt5 "$OUT"; then
+    ok "(w) R3-F8 vocabulary rejection: 'through' not a category — fires"
+else
+    bad "(w) F8 through slip" "out=$OUT"
+fi
+
+# (x) R3-F8: 'best-effort' category keyword — silent
+cat > "$TMP/repo/pkg12/thing.py" <<'EOF'
+def cleanup():
+    try:
+        stop_it()
+    except OSError:  # noqa: writing-tests-5 best-effort cleanup
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg12/thing.py" 2>&1)
+if ! fires_wt5 "$OUT"; then
+    ok "(x) R3-F8 category keyword 'best-effort cleanup' — silent"
+else
+    bad "(x) F8 best-effort" "out=$OUT"
+fi
+
+# (y) R3-F8: 'signal handler' category — silent
+cat > "$TMP/repo/pkg12/thing.py" <<'EOF'
+def cleanup():
+    try:
+        stop_it()
+    except OSError:  # noqa: writing-tests-5 signal handler safety
+        raise
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg12/thing.py" 2>&1)
+if ! fires_wt5 "$OUT"; then
+    ok "(y) R3-F8 'signal handler' — silent"
+else
+    bad "(y) F8 signal" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then
