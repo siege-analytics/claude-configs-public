@@ -33,6 +33,7 @@ export CCP_HOOK_INPUT_JSON="$INPUT"
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
+CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 
 # Block-event logging (#602): record every block for classification.
 source "$HOOK_DIR/../lib/log-block.sh" 2>/dev/null || true
@@ -103,8 +104,9 @@ SAFE_PATTERNS=(
     # GitHub CLI reads (gh api defaults to GET; write methods caught by MUTATION_INDICATORS)
     '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api|run (view|list))( |$)'
 
-    # GitHub CLI issue management (administrative, not code mutations)
-    '^(cd .* &&[[:space:]]*)?(gh )(issue (create|comment|close|edit|reopen|label))( |$)'
+    # GitHub CLI issue reporting carve-out is handled by
+    # is_governance_issue_reporting_command below. Issue close/edit/reopen/label
+    # remain mutations and are not safelisted here.
 
     # Python read-only operations (no arbitrary -c; only known-safe modules)
     '^(pip|pip3) (list|show|freeze|check)( |$)'
@@ -127,6 +129,98 @@ SAFE_PATTERNS=(
     '^(markitdown|pdf-tool (info|extract)|xlsx-tool (read|info)|pptx-tool info|doc-diff|ical-tool read) '
 )
 
+# Governance issue reporting is a reporting surface, not an implementation
+# mutation. Allow only inspectable `gh issue create` / `gh issue comment`
+# commands with non-empty title/body evidence. Issue edit/close/delete/etc.
+# remain guarded shared-resource mutations.
+is_governance_issue_reporting_command() {
+    python3 - "$COMMAND" "$CWD" <<'PYCODE'
+import os, shlex, sys
+
+command = sys.argv[1]
+cwd = sys.argv[2] or os.getcwd()
+if any(ch in command for ch in "\n\r;&|<>`$"):
+    sys.exit(1)
+try:
+    args = shlex.split(command)
+except ValueError:
+    sys.exit(1)
+if len(args) >= 3 and args[0] == "cd":
+    if len(args) < 5 or args[2] != "&&":
+        sys.exit(1)
+    cwd = args[1]
+    args = args[3:]
+if len(args) < 3 or args[0] != "gh" or args[1] != "issue":
+    sys.exit(1)
+sub = args[2]
+if sub not in {"create", "comment"}:
+    sys.exit(1)
+
+def parse_flags(positional_count, required_flags):
+    positional = []
+    flags = {}
+    i = 3
+    while i < len(args):
+        arg = args[i]
+        if arg.startswith("--"):
+            if "=" in arg:
+                flag, value = arg.split("=", 1)
+            else:
+                flag = arg
+                i += 1
+                if i >= len(args):
+                    sys.exit(1)
+                value = args[i]
+            if flag not in required_flags:
+                sys.exit(1)
+            if flag in flags:
+                sys.exit(1)
+            flags[flag] = value
+        else:
+            positional.append(arg)
+        i += 1
+    if len(positional) != positional_count:
+        sys.exit(1)
+    return positional, flags
+
+def nonempty_body(flags):
+    has_body = "--body" in flags
+    has_body_file = "--body-file" in flags
+    if has_body == has_body_file:
+        return False
+    if has_body:
+        return bool(flags["--body"].strip())
+    body_file = flags["--body-file"]
+    if body_file == "-" or body_file.startswith(("/dev/fd/", "/proc/self/fd/")):
+        return False
+    path = body_file if os.path.isabs(body_file) else os.path.join(cwd, body_file)
+    try:
+        return os.path.isfile(path) and os.path.getsize(path) > 0 and bool(open(path, encoding="utf-8").read().strip())
+    except Exception:
+        return False
+
+if sub == "create":
+    _positional, flags = parse_flags(0, {"--repo", "--title", "--body", "--body-file"})
+    title = flags.get("--title", "")
+    if not title.strip():
+        sys.exit(1)
+    if not nonempty_body(flags):
+        sys.exit(1)
+    sys.exit(0)
+
+positional, flags = parse_flags(1, {"--repo", "--body", "--body-file"})
+if positional[0].startswith("-"):
+    sys.exit(1)
+if not nonempty_body(flags):
+    sys.exit(1)
+sys.exit(0)
+PYCODE
+}
+
+if is_governance_issue_reporting_command; then
+    exit 0
+fi
+
 # --- Compound command mutation scan ---
 # A command starting with a safe read but containing a mutation via && or ;
 # or | is still a mutation. Scan the full string for mutation indicators
@@ -134,7 +228,7 @@ SAFE_PATTERNS=(
 # in the command, skip the safelist and fall through to think-gate check.
 MUTATION_INDICATORS=(
     'git (push|commit|reset|checkout|rebase|merge|cherry-pick|revert|stash (pop|drop|apply|clear)|clean|tag -[adf]|branch -[dDmM])'
-    'gh (issue (delete|transfer)|pr (create|merge|close|edit|comment|review)|release (create|delete|edit)|repo (create|delete|fork|rename))'
+    'gh (issue (create|comment|close|edit|delete|transfer|reopen|label)|pr (create|merge|close|edit|comment|review)|release (create|delete|edit)|repo (create|delete|fork|rename))'
     'glab (issue (create|close|note)|mr (create|merge|close|note|approve))'
     'rm (-[rRf]|--force|--recursive)'
     '\brm [^-]'
@@ -206,7 +300,6 @@ fi
 # Fallback: legacy think-gate.json for backward compat
 RESOLVE_TG="$HOOK_DIR/../lib/resolve-think-gate.py"
 WORKSPACE_CANDIDATE="$(dirname "$(dirname "$HOOK_DIR")")"
-CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 
 # Derive repo root from CWD (git toplevel)
 REPO_ROOT=""

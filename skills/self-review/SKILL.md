@@ -455,14 +455,70 @@ Falsification: <observable that would prove skipping investigation was
                 an assumption I didn't verify">
 ```
 
-**The enforcement mechanism:** the hook checks structural presence of
-both fields. A missing or empty field blocks the push. `TRIVIAL` without
-the declaration block also blocks. Content quality -- whether the
-investigate artifact actually traces the impact chain, whether the
-pre-mortem actually classifies risks -- remains operator-auditable. The
-fields exist to make the omission structurally visible and to block the
-pattern where agents skip `investigate` and `pre-mortem` and go straight
-from `think` to implementation.
+**Category is a default-deny allowlist.** The four tokens above are the
+entire vocabulary for `Trivial-investigation`. Any other value —
+including `local-only`, `internal-refactor`, `scoped-only`, and any
+invented token — is rejected by `scripts/discipline/check-trivial-claim.sh`
+with a diagnostic naming `[rule:writing-rules]` writing-rules:5 and
+this section.
+
+`local-only` deserves specific attention: it IS a legitimate Category
+for `## Trivial-against-state declaration` blocks (per
+`[rule:authoring-against-state]`), where it means "change to a code
+path that does not run under shared cluster state." That token is
+scoped to the authoring-against-state contact-point analysis. For
+skipping investigation, the four tokens above are the only allowed
+answers. If your intent was the authoring-against-state claim, use
+that block instead. Otherwise, produce an investigate artifact.
+
+**External-shape-modeling code is never eligible for
+`Trivial-investigation` regardless of Category.** When the push diff
+touches scanners, parsers, linters, hooks, or any code that models an
+external shape space (source syntax, config, CLI arguments, API
+payloads, schemas, notebooks, framework conventions), the four-token
+allowlist is bypassed entirely — no `Trivial-investigation`
+declaration is acceptable. The correct artifact is a full
+`[rule:authoring-against-state]` step-6 inventory covering the six
+required fields (Inputs read / Knowledge requirements / Contact-point
+measurements / Surface areas / Hypothesis / Conclusions). This is
+because the errors external-shape-modeling code produces are silent
+misses against a shape space the author has not enumerated; the
+inventory step IS the enumeration. See `[rule:writing-rules]`
+writing-rules:5 for the filename patterns that trigger this bypass.
+
+**Worked example (invalid — do not use):**
+
+```
+Investigate-artifact: TRIVIAL
+
+## Trivial-investigation declaration
+
+Category: local-only
+Cannot produce error: AST logic, no external contact.
+Evidence: git diff.
+Falsification: NOT trivial if any external resource contacted.
+```
+
+This is what R5-R10 of the detect-ai-fingerprints scanner arc shipped,
+five times. The check now fails it with two diagnostics: (1) `local-only`
+is outside the four-token allowlist, and (2) if the diff touches
+`skills/*/scan*.py` or `hooks/**` or similar, the never-trivial trigger
+fires. The correct artifact is a full authoring-against-state:6
+inventory naming the Python shape space the scanner claims to model.
+
+**The enforcement mechanism:** the hook (`hooks/git/self-review.sh`)
+checks structural presence of both fields, then delegates the
+declaration block's content validation to
+`scripts/discipline/check-trivial-claim.sh` with the current diff
+scope. A missing or empty field blocks the push. `TRIVIAL` without the
+declaration block also blocks. A declaration block with a Category
+outside the allowlist blocks. A declaration block on a push that
+touches external-shape-modeling code blocks regardless of Category.
+Content quality of the investigate/pre-mortem artifacts themselves --
+whether they trace the impact chain, classify risks -- remains
+operator-auditable. The fields exist to make the omission structurally
+visible and to block the pattern where agents skip `investigate` and
+`pre-mortem` and go straight from `think` to implementation.
 
 **Why this works where the think Step 7 checklist didn't:** Think Step 7
 is a mental checklist inside the design workflow. The agent checks the

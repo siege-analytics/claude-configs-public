@@ -68,12 +68,101 @@ DENY_PATTERNS=(
 
     # shared-resource tier: commands that affect shared state (GitHub issues, releases).
     # Promoted from v2-deferred to mechanical in #582.
-    "shared-resource|gh[[:space:]]+issue[[:space:]]+(create|comment|edit)|github issue write"
+    "shared-resource|gh[[:space:]]+issue[[:space:]]+(create|comment|edit|close|delete|reopen|label)|github issue write"
+    "shared-resource|gh[[:space:]]+pr[[:space:]]+(create|merge|close|edit|comment|review)|github pull request write"
     "shared-resource|gh[[:space:]]+release[[:space:]]+create|github release create"
     # general-mutation tier: network mutations via curl.
     # Promoted from v2-deferred to mechanical in #582.
     "general-mutation|curl[[:space:]]+.*-X[[:space:]]+(POST|PUT|PATCH|DELETE)|network mutation via curl"
 )
+
+# Governance issue reporting is a reporting surface, not an implementation
+# mutation. Allow only inspectable `gh issue create` / `gh issue comment`
+# commands with non-empty title/body evidence. Issue edit/close/delete/etc.
+# remain guarded shared-resource mutations.
+is_governance_issue_reporting_command() {
+    python3 - "$COMMAND" "$CWD" <<'PYCODE'
+import os, shlex, sys
+
+command = sys.argv[1]
+cwd = sys.argv[2] or os.getcwd()
+if any(ch in command for ch in "\n\r;&|<>`$"):
+    sys.exit(1)
+try:
+    args = shlex.split(command)
+except ValueError:
+    sys.exit(1)
+if len(args) >= 3 and args[0] == "cd":
+    if len(args) < 5 or args[2] != "&&":
+        sys.exit(1)
+    cwd = args[1]
+    args = args[3:]
+if len(args) < 3 or args[0] != "gh" or args[1] != "issue":
+    sys.exit(1)
+sub = args[2]
+if sub not in {"create", "comment"}:
+    sys.exit(1)
+
+def parse_flags(positional_count, required_flags):
+    positional = []
+    flags = {}
+    i = 3
+    while i < len(args):
+        arg = args[i]
+        if arg.startswith("--"):
+            if "=" in arg:
+                flag, value = arg.split("=", 1)
+            else:
+                flag = arg
+                i += 1
+                if i >= len(args):
+                    sys.exit(1)
+                value = args[i]
+            if flag not in required_flags:
+                sys.exit(1)
+            if flag in flags:
+                sys.exit(1)
+            flags[flag] = value
+        else:
+            positional.append(arg)
+        i += 1
+    if len(positional) != positional_count:
+        sys.exit(1)
+    return positional, flags
+
+def nonempty_body(flags):
+    has_body = "--body" in flags
+    has_body_file = "--body-file" in flags
+    if has_body == has_body_file:
+        return False
+    if has_body:
+        return bool(flags["--body"].strip())
+    body_file = flags["--body-file"]
+    if body_file == "-" or body_file.startswith(("/dev/fd/", "/proc/self/fd/")):
+        return False
+    path = body_file if os.path.isabs(body_file) else os.path.join(cwd, body_file)
+    try:
+        return os.path.isfile(path) and os.path.getsize(path) > 0 and bool(open(path, encoding="utf-8").read().strip())
+    except Exception:
+        return False
+
+if sub == "create":
+    _positional, flags = parse_flags(0, {"--repo", "--title", "--body", "--body-file"})
+    title = flags.get("--title", "")
+    if not title.strip():
+        sys.exit(1)
+    if not nonempty_body(flags):
+        sys.exit(1)
+    sys.exit(0)
+
+positional, flags = parse_flags(1, {"--repo", "--body", "--body-file"})
+if positional[0].startswith("-"):
+    sys.exit(1)
+if not nonempty_body(flags):
+    sys.exit(1)
+sys.exit(0)
+PYCODE
+}
 
 # Read allow-list files (project-scoped first, falls back to global).
 ALLOW_PATTERNS=()
@@ -119,6 +208,10 @@ fi
 
 # Evidence-chain override (escape 1). Ref: #582.
 if echo "$COMMAND" | grep -qE '\[destructive-ok:[[:space:]]+Reason:[^]]+;[[:space:]]*Evidence:[^]]+;[[:space:]]*Falsification:[^]]+\]'; then
+    exit 0
+fi
+
+if is_governance_issue_reporting_command; then
     exit 0
 fi
 
