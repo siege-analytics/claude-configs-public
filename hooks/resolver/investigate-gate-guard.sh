@@ -88,24 +88,41 @@ export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-# Repo-scoped resolution (#494): check think-gate-*.json first, fall back to think-gate.json
+# Task-scoped resolution: resolve the think gate for the CURRENT hook cwd/repo,
+# not the first active gate anywhere in the workspace. A shared workspace may
+# have many sessions/tasks in flight; only the current repo/session can require
+# this investigation gate.
 RESOLVE_TG="$SCRIPT_DIR/../lib/resolve-think-gate.py"
+REPO_ROOT=$(printf '%s' "$HOOK_INPUT_JSON" | python3 -c '
+import json, sys, os, subprocess
+try:
+    data = json.loads(sys.stdin.read() or "{}")
+    cwd = data.get("cwd") or os.getcwd()
+except Exception:
+    cwd = os.getcwd()
+try:
+    result = subprocess.run(["git", "-C", cwd, "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=5)
+    print(result.stdout.strip() if result.returncode == 0 else cwd)
+except Exception:
+    print(cwd)
+' 2>/dev/null || echo "$WORKSPACE_ROOT")
 THINK_GATE="${CLAUDE_THINK_GATE:-}"
+RESOLVER_ATTEMPTED=0
 if [[ -z "$THINK_GATE" ]] && [[ -f "$RESOLVE_TG" ]]; then
-    THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --all 2>/dev/null | python3 -c "
-import json, sys
-gates = json.load(sys.stdin)
-for g in gates:
-    s = g.get('data', {}).get('status', '')
-    if s not in ('disposed', 'done-awaiting-pr', 'complete'):
-        print(g['path'])
-        sys.exit(0)
-if gates:
-    print(gates[0]['path'])
-" 2>/dev/null || true)
+    RESOLVER_ATTEMPTED=1
+    THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" --env-override "${CLAUDE_THINK_GATE:-}" 2>/dev/null | python3 -c "import json,sys
+try:
+    r=json.load(sys.stdin)
+    print(r['path'] if r else '')
+except Exception:
+    print('')" 2>/dev/null || true)
 fi
 if [[ -z "$THINK_GATE" ]]; then
-    THINK_GATE="$WORKSPACE_ROOT/think-gate.json"
+    if [[ "$RESOLVER_ATTEMPTED" == "0" ]]; then
+        THINK_GATE="$WORKSPACE_ROOT/think-gate.json"
+    else
+        THINK_GATE="$REPO_ROOT/.think-gate-missing.json"
+    fi
 fi
 # Repo-scoped investigate-gate resolution (#578)
 INVESTIGATE_GATE="${CLAUDE_INVESTIGATE_GATE:-}"
@@ -166,8 +183,8 @@ You MUST:
 3. Post the Fact Sheet to the ticket
 4. Write investigate-gate.json with verifiedShapes
 
-Until investigate-gate.json exists, implementation writes are blocked
-by the investigation skill's "no artifact CRUD before investigation" rule.
+Until investigate-gate.json exists for this task, implementation writes are blocked
+by the mutation gate and the investigation skill's "no artifact CRUD before investigation" rule.
 
 Signal file location: $INVESTIGATE_GATE
 Ref: #255 (mid-pipeline enforcement gap)

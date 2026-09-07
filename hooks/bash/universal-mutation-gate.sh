@@ -239,11 +239,19 @@ if [[ -f "$RESOLVE_TG" ]]; then
     fi
 fi
 if [[ -z "$THINK_GATE" ]]; then
-    if [[ "$UMG_SESSION_KNOWN" != "1" ]] && [[ -f "$WORKSPACE_FOR_RESOLVE/think-gate.json" ]]; then
-        THINK_GATE="$WORKSPACE_FOR_RESOLVE/think-gate.json"
+    # If the scoped resolver was available for a known repo and returned no
+    # gate, do not fall back to the shared workspace singleton. The resolver
+    # already considered that legacy path and rejected it if its repo/session
+    # did not match. Raw fallback here is the workspace-global blocking bug.
+    if [[ ! ( -n "$REPO_ROOT" && -f "$RESOLVE_TG" ) ]]; then
+        if [[ "$UMG_SESSION_KNOWN" != "1" ]] && [[ -f "$WORKSPACE_FOR_RESOLVE/think-gate.json" ]]; then
+            THINK_GATE="$WORKSPACE_FOR_RESOLVE/think-gate.json"
+        fi
     fi
     if [[ -z "$THINK_GATE" ]] && [[ -n "$CWD" ]] && [[ -f "$CWD/.think-gate.json" ]]; then
-        THINK_GATE="$CWD/.think-gate.json"
+        if [[ ! ( -n "$REPO_ROOT" && -f "$RESOLVE_TG" ) ]]; then
+            THINK_GATE="$CWD/.think-gate.json"
+        fi
     fi
 fi
 

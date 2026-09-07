@@ -115,6 +115,17 @@ def session_dirs(workspace: str, session_id: str = "") -> "list[str]":
     return out
 
 
+def _gate_matches_scope(loaded: dict, repo_root: str, session_id: str) -> bool:
+    data = loaded.get("data", {})
+    gate_session = str(data.get("session", "")).strip()
+    if session_id and gate_session and gate_session != session_id:
+        return False
+    gate_repo = str(data.get("repo_root", "")).strip()
+    if gate_repo and os.path.basename(gate_repo.rstrip("/")) != os.path.basename(repo_root.rstrip("/")):
+        return False
+    return True
+
+
 def find_gate_for_repo(
     workspace: str,
     repo_root: str,
@@ -125,19 +136,22 @@ def find_gate_for_repo(
     """Find a gate signal file for a specific repo.
 
     Search order:
-    1. env_override path (if set and file exists)
+    1. env_override path (if set, file exists, and matches repo/session)
     2. session-scoped <gate-name>-<slug>.json
     3. session-scoped <gate-name>.json
-    4. <gate-name>-<slug>.json in workspace (repo-scoped)
-    5. .<gate-name>.json in repo_root (Claude Code convention)
-    6. <gate-name>.json in workspace (legacy singleton, only if
-       repo_root matches or is absent in the file)
+    4. <gate-name>-<slug>.json in workspace
+    5. .<gate-name>.json in repo_root, only if repo/session metadata matches
+    6. <gate-name>.json in workspace, only if repo/session metadata matches
     """
+    sid = session_id or session_id_from_env()
     if env_override and os.path.isfile(env_override):
-        return _load(env_override)
+        loaded = _load(env_override)
+        if loaded and _gate_matches_scope(loaded, repo_root, sid):
+            return loaded
+        return None
 
     slug = repo_slug(repo_root)
-    for session_dir in session_dirs(workspace, session_id):
+    for session_dir in session_dirs(workspace, sid):
         session_repo_scoped = os.path.join(session_dir, f"{gate_name}-{slug}.json")
         if os.path.isfile(session_repo_scoped):
             return _load(session_repo_scoped)
@@ -147,19 +161,23 @@ def find_gate_for_repo(
 
     scoped = os.path.join(workspace, f"{gate_name}-{slug}.json")
     if os.path.isfile(scoped):
-        return _load(scoped)
+        loaded = _load(scoped)
+        if loaded and _gate_matches_scope(loaded, repo_root, sid):
+            return loaded
+        return None
 
     local = os.path.join(repo_root, f".{gate_name}.json")
     if os.path.isfile(local):
-        return _load(local)
+        loaded = _load(local)
+        if loaded and _gate_matches_scope(loaded, repo_root, sid):
+            return loaded
+        return None
 
     legacy = os.path.join(workspace, f"{gate_name}.json")
     if os.path.isfile(legacy):
         loaded = _load(legacy)
-        if loaded:
-            gate_repo = loaded["data"].get("repo_root", "")
-            if not gate_repo or os.path.basename(gate_repo.rstrip("/")) == os.path.basename(repo_root.rstrip("/")):
-                return loaded
+        if loaded and _gate_matches_scope(loaded, repo_root, sid):
+            return loaded
         return None
 
     return None

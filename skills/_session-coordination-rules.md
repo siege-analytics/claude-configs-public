@@ -1,12 +1,12 @@
 ---
-description: Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Six rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, and operator control-surface preservation. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.
+description: Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Eight rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, and worker/reviewer retirement. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.
 ---
 
 # Session coordination
 
-These six rules apply to multi-session work where two or more agents exchange `send_agent_message` to coordinate. Originating evidence is a 2026-06-05 incident where two pour-now sessions (`260605-brisk-spring` testing-strategy, `260604-clear-lagoon` Playwright) entered a queue-lag spiral. One was sending updates faster than the other could process. The receiver went silent intentionally to drain its queue. The operator read the silence as a stall. Workspace governance (`260604-smooth-gold`) verified the silent partner was alive and processing -- session.jsonl mtime under two minutes -- and that the silence was a deliberate cadence choice, not a session failure. The first four rules name the discipline failures that produced the operator read-error: missing at-rest declaration with explicit re-engagement signal (rule 1), continued pinging past at-rest declaration (rule 2), "stuck" / "death spiral" framing applied to slow processing (rule 3), implicit-but-unstated baton hand-off after the signoff (rule 4). Rules 5 and 6 cover the later hub/COO failure mode where user decisions are dumped as a vague bundle and the main session is captured by foreground spoke-coordination churn.
+These eight rules apply to multi-session work where two or more agents exchange `send_agent_message` to coordinate. Originating evidence is a 2026-06-05 incident where two pour-now sessions (`260605-brisk-spring` testing-strategy, `260604-clear-lagoon` Playwright) entered a queue-lag spiral. One was sending updates faster than the other could process. The receiver went silent intentionally to drain its queue. The operator read the silence as a stall. Workspace governance (`260604-smooth-gold`) verified the silent partner was alive and processing -- session.jsonl mtime under two minutes -- and that the silence was a deliberate cadence choice, not a session failure. The first four rules name the discipline failures that produced the operator read-error: missing at-rest declaration with explicit re-engagement signal (rule 1), continued pinging past at-rest declaration (rule 2), "stuck" / "death spiral" framing applied to slow processing (rule 3), implicit-but-unstated baton hand-off after the signoff (rule 4). Rules 5 and 6 cover the later hub/COO failure mode where user decisions are dumped as a vague bundle and the main session is captured by foreground spoke-coordination churn.
 
-## The six coordination rules
+## The eight coordination rules
 
 **session-coordination:1. Declare your processing state when you cannot immediately respond.** When inbound messages from a partner are accumulating faster than you can substantively reply -- deep in another task, slow tool calls, queue backlog -- send a brief `at-rest` or `queue-draining` acknowledgment to the partner before going silent. Silence without declaration looks like a stall to the partner and to any operator monitoring the thread. The declaration must say what you are draining (specific thread, specific queue, specific predicate for re-engaging) and the form of the next signal you will emit.
 
@@ -42,14 +42,26 @@ Use a COO model: the hub should have few direct reports. When work expands beyon
 
 Visibility is not the main issue; control is. Even invisible coordination is non-compliant if it captures the hub's attention for an extended period and deprives the operator of a responsive control surface.
 
+**session-coordination:7. Choose spoke AI sources deliberately.** Before spawning or reassigning a spoke, the hub must choose the AI source, model, reasoning level, and enabled external sources/tools for that spoke based on the work, not on default inheritance or convenience. The choice must consider at least: rate-limit pressure and current provider health, the model's strengths and weaknesses for the task, whether the task needs long-context synthesis, hostile review, code execution, browser/source access, structured extraction, or cheap parallel summarization, and the operator's cross-system preferences for which systems should own which work.
+
+Do not overload one provider or one session family when a suitable alternative exists and rate limits or queueing are already visible. Do not send security, bypass, hostile-review, architecture, or final promotion review work to a weaker model merely because it is cheaper or already selected. Conversely, do not spend the strongest scarce model on simple rote extraction, file listing, or low-risk summarization when a smaller model/source can do it safely. If the requested source is unavailable, rate-limited, unauthenticated, or materially weaker for the task, the hub must state the degraded choice and mitigation in the spoke prompt or operator checkpoint.
+
+A compliant spoke prompt names the selected provider/model class, or `unknown` if the platform hides it, reasoning level, permission mode, enabled sources/tools, expected output channel, status-setting requirement, and why that source is fit for the task. Record the rationale in the spoke prompt, hub plan, or operator checkpoint; unrecorded source selection is non-compliant even if the choice was good. If a reviewer must be independent, the hub must prefer a different provider/model family when available or state why independence is degraded.
+
+**session-coordination:8. Retire unnecessary workers and reviewers.** Hubs must not keep stale spokes alive merely because they once had useful context. When a worker, reviewer, sub-manager, or observer has completed its bounded purpose and its knowledge can be safely discarded, the hub must archive it for operator deletion.
+
+Before retirement, preserve only durable value: final findings, open risks, PR/ticket links, evidence paths, decisions made, and any successor handoff. The retirement record must name the durable handoff location, such as a ticket comment, plan path, PR comment, commit, or coordinator summary. Send a final baton/retirement message if another session depends on it. Then mark the child session with a retirement signal available in the environment, such as status `done` and/or labels like `archive-candidate`, `retired-worker`, or `retired-reviewer`, and tell the operator it is safe to delete after they no longer need audit history.
+
+Do not retire a spoke that still owns an unmerged PR, an unresolved blocker, pending CI/UAT, unique credentials/browser state, or evidence not yet copied into the ticket/plan/PR. If the spoke is noisy but still needed, narrow its brief or move it under a sub-manager instead of archiving it.
+
 ## Spawn-session discipline
 
 When creating a new session for review, implementation, investigation, or any work that must act or communicate back, configure the session correctly at creation time. Do not rely on inherited defaults.
 
 - **Permissions:** sessions that must edit files, run commands, post artifacts, or reply through `send_agent_message` must be spawned in execute/allow-all mode. Safe/read-only sessions are only for passive analysis that never needs to report through tools.
-- **Model and reasoning:** review, hostile-review, security, bypass, or regression-analysis sessions must use the strongest appropriate model available with high or higher reasoning. Do not use a cheaper/default model for review when a better review model is available.
+- **Model and reasoning:** review, hostile-review, security, bypass, or regression-analysis sessions must use the strongest appropriate model available with high or higher reasoning. Do not use a cheaper/default model for review when a better review model is available. Apply session-coordination:7 before spawning: balance rate limits, provider health, task fit, model strengths/weaknesses, independence needs, and operator cross-system preferences.
 - **Sources/tools:** enable the sources and tools the child needs by name. If a needed source cannot be enabled or authenticated, state the degraded source set in the prompt and in the review artifact.
-- **Prompt contract:** name the permission mode, model class, reasoning level, enabled sources/tools, expected reply channel, and status-setting requirement in the spawn prompt. A child that cannot reply is not a reviewer; it is an unobservable background task.
+- **Prompt contract:** name the permission mode, model class, reasoning level, enabled sources/tools, expected reply channel, status-setting requirement, and retirement condition in the spawn prompt. A child that cannot reply is not a reviewer; it is an unobservable background task. A child with no retirement condition is future workspace clutter.
 
 ## Orphan dispatch
 
@@ -114,7 +126,7 @@ All four are tractable but require runtime access to other sessions' state, whic
 
 ## Coverage matrix
 
-Six judgment entries when `_coverage.md` is updated in a follow-up PR:
+Eight judgment entries when `_coverage.md` is updated in a follow-up PR:
 
 - `partner-silence-without-declaration` (session-coordination:1, judgment)
 - `pinging-past-partner-at-rest` (session-coordination:2, judgment)
@@ -122,8 +134,10 @@ Six judgment entries when `_coverage.md` is updated in a follow-up PR:
 - `thread-closed-without-explicit-baton` (session-coordination:4, judgment)
 - `decision-dump-without-checklist-gate` (session-coordination:5, judgment)
 - `foreground-send-agent-message-control-surface-hijack` (session-coordination:6, judgment)
+- `default-or-rate-blind-spoke-source-selection` (session-coordination:7, judgment)
+- `stale-worker-reviewer-not-archived` (session-coordination:8, judgment)
 
-Tooling-status counts after update: mechanical unchanged; judgment increases by two; gap unchanged.
+Tooling-status counts after update: mechanical unchanged; judgment increases by four relative to the pre-hub-control version; gap unchanged.
 
 ## Attribution
 

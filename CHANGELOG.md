@@ -6,6 +6,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Added
 
+- Hub spoke-source and retirement rules: `session-coordination:7` requires hubs to choose spoke AI sources by task fit, rate-limit pressure, provider health, model strengths, independence needs, tool/source access, and operator cross-system preferences; `session-coordination:8` requires completed workers and reviewers to preserve durable findings, mark themselves done/archive-candidate where available, and become safe for operator deletion.
 - DDIA shelf expansion: `shelves/systems-architecture/data-intensive` now records the user-provided *Designing Data-Intensive Applications* PDF as a cited source without redistributing it, adds consistency/consensus and data-integration/correctness references, and routes DDIA-derived checks into `code-review` and `self-review`.
 - Self-reviewed linear promotion policy: main-targeted `promote/*` PRs are accepted by the GitHub PR-base guard only when the PR body carries `Self-Review-Source:` evidence, preserving develop-first routing while making conflict-resolved promotion branches auditable.
 - Session-coordination decision/control-surface rules: `session-coordination:5` requires complete decision checklist collection before decision-dependent spoke coordination; `session-coordination:6` preserves the operator control surface by bounding foreground `send_agent_message` churn and preferring COO-style sub-manager delegation when work fans out.
@@ -14,6 +15,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 
 ### Fixed
+- Task-scoped design/think/investigate gates: resolver prompt gates and the universal mutation gate no longer fall back to a foreign workspace-root `think-gate.json` after scoped repo/session resolution rejects it. Design notes, think gate, investigate gate, and pipeline state now warn or block only for the current task/repo/session rather than the whole workspace.
 - Hook settings drift: `.claude/settings.json` and `hooks/settings-snippet.json` now agree on the wired hook set, including universal mutation, coordinator status, fix-shape, spawn guard, Vergil quote, and MultiEdit write guards.
 - Rule-file typography hygiene: swept banned typographic Unicode from all `skills/_*rules.md` files so the rule corpus satisfies `writing-prose:1` rather than merely prescribing it.
 - Cross-session think-gate contamination (#673): session signal resolution now scopes active gate lookup to the current session so new sessions do not inherit stale blocking state from another session.
