@@ -599,6 +599,73 @@ else
     bad "(z2) R8-F3 asname from-import" "out=$OUT"
 fi
 
+# --- R9 (#810) lock-in: dotted source + source-group binding + gated positional fallback ---
+
+# (z3) R9-F1: `from foo.bar import baz` + FOO_BAR_AVAILABLE unguarded -- fires
+cat > "$TMP/z3.py" <<'EOF'
+try:
+    from foo.bar import baz
+    FOO_BAR_AVAILABLE = True
+except ImportError:
+    FOO_BAR_AVAILABLE = False
+
+def use_baz():
+    return baz()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/z3.py" 2>&1)
+if fires_wc8 "$OUT"; then
+    ok "(z3) R9-F1 dotted source from foo.bar import baz: fires"
+else
+    bad "(z3) R9-F1 dotted source" "out=$OUT"
+fi
+
+# (z4) R9-F2: `import numpy; import numpy as np` + NUMPY_AVAILABLE, np unguarded -- fires on np
+cat > "$TMP/z4.py" <<'EOF'
+try:
+    import numpy
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+
+def use_np():
+    return np.array([])
+EOF
+OUT=$(python3 "$SCAN" "$TMP/z4.py" 2>&1)
+if fires_wc8 "$OUT"; then
+    ok "(z4) R9-F2 source-group both bind to NUMPY_AVAILABLE: np fires"
+else
+    bad "(z4) R9-F2 source-group" "out=$OUT"
+fi
+
+# (z5) R9-F3: no-stem-match with correct guards -- fails open, no wrong-flag suggestion
+cat > "$TMP/z5.py" <<'EOF'
+try:
+    import numpy
+    import pandas
+    DATAFRAME_AVAILABLE = True
+    ARRAY_AVAILABLE = True
+except ImportError:
+    DATAFRAME_AVAILABLE = False
+    ARRAY_AVAILABLE = False
+
+def use_np():
+    if not ARRAY_AVAILABLE:
+        raise RuntimeError("array")
+    return numpy.array([])
+
+def use_pd():
+    if not DATAFRAME_AVAILABLE:
+        raise RuntimeError("dataframe")
+    return pandas.DataFrame()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/z5.py" 2>&1)
+if ! fires_wc8 "$OUT" && echo "$OUT" | grep -q "scan-ast-warning"; then
+    ok "(z5) R9-F3 no-stem-match fails open with warning: silent"
+else
+    bad "(z5) R9-F3 no-stem-match" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then

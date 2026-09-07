@@ -1098,16 +1098,13 @@ def _flag_stem(flag_name):
 
 
 def _name_matches_flag(source_module, flag_name):
-    """R8 (#808): match a flag's stem to an import's SOURCE MODULE (not the
-    binding name). `import numpy as np` has source `numpy`; matches
-    `NUMPY_AVAILABLE` (stem `NUMPY`). `from PIL import Image` has source
-    `PIL`; matches `PIL_AVAILABLE`. `import re` (bare) has source `re`;
-    does NOT match `MRE_AVAILABLE` (stem `MRE`) — R7-F2 misdirect
-    protection preserved.
+    """R8 (#808) + R9-F1 (#810): match a flag's stem to an import's SOURCE
+    MODULE. Case-folded comparison. Handles dotted sources: `foo.bar`
+    matches `FOO_BAR_AVAILABLE` because both `.` and `_` are normalized
+    away when checking the underscore-collapsed alternative.
 
-    Case-folded comparison. Also accepts underscore-collapsed alternative:
-    stem `NUMPY_FINANCIAL` matches source `numpy_financial` (segment
-    joined form).
+    Preserves R7-F2 misdirect protection: `re` source, `MRE` stem, no
+    match, fail open.
     """
     stem = _flag_stem(flag_name)
     if not stem:
@@ -1116,7 +1113,10 @@ def _name_matches_flag(source_module, flag_name):
     src_fold = source_module.casefold()
     if stem_fold == src_fold:
         return True
-    return stem_fold.replace("_", "") == src_fold.replace("_", "")
+    # Normalize both `_` and `.` as separators before collapse.
+    def _collapse(s):
+        return s.replace("_", "").replace(".", "")
+    return _collapse(stem_fold) == _collapse(src_fold)
 
 
 def _extract_optional_imports(tree):
@@ -1154,31 +1154,32 @@ def _extract_optional_imports(tree):
             continue
 
         # Find imports + flag assigns in the try body. R8 (#808): record
-        # SOURCE MODULE and BINDING NAME separately so name-match can
-        # compare flag stems to source modules (fixes aliased and
-        # from-imports) while the result binds by the name actually used
-        # in the code.
+        # SOURCE MODULE and BINDING NAME separately. R9-F1 (#810): store
+        # FULL dotted source path (not just the first segment) so
+        # `from foo.bar import baz` can pair with `FOO_BAR_AVAILABLE`.
+        # For `import X.Y.Z`, the source is `X.Y.Z` (full) and the binding
+        # is `X` (Python's convention — that's what the name binds to).
         #   `import X`              -> binding=X,       source=X
         #   `import X as Y`         -> binding=Y,       source=X
-        #   `import X.Y.Z`          -> binding=X,       source=X (first-segment)
-        #   `import X.Y.Z as W`     -> binding=W,       source=X (first-segment)
+        #   `import X.Y.Z`          -> binding=X,       source=X.Y.Z
+        #   `import X.Y.Z as W`     -> binding=W,       source=X.Y.Z
         #   `from A import B`       -> binding=B,       source=A
-        #   `from A.B import C`     -> binding=C,       source=A (first-segment)
+        #   `from A.B import C`     -> binding=C,       source=A.B
         #   `from A import B as C`  -> binding=C,       source=A
         imports_with_line = []   # list[(binding, source, lineno)]
         flags_with_line = []     # list[(flag_name, lineno)]
         for stmt in node.body:
             if isinstance(stmt, ast.Import):
                 for alias in stmt.names:
-                    first_segment = alias.name.split(".")[0]
-                    binding = alias.asname or first_segment
-                    imports_with_line.append((binding, first_segment, stmt.lineno))
+                    full_source = alias.name  # e.g. `matplotlib.pyplot`
+                    binding = alias.asname or alias.name.split(".")[0]
+                    imports_with_line.append((binding, full_source, stmt.lineno))
             elif isinstance(stmt, ast.ImportFrom):
-                source_first_segment = (stmt.module or "").split(".")[0]
+                full_source = stmt.module or ""
                 for alias in stmt.names:
                     binding = alias.asname or alias.name
                     imports_with_line.append(
-                        (binding, source_first_segment or binding, stmt.lineno)
+                        (binding, full_source or binding, stmt.lineno)
                     )
             elif isinstance(stmt, ast.Assign):
                 for tgt in stmt.targets:
@@ -1209,51 +1210,51 @@ def _extract_optional_imports(tree):
         )
         unique_flags = list({f for f, _ in sorted_flags})
 
-        # Unified pairing (R8 #808): name-match on source_module first,
-        # then positional fallback, then fail-open. Same shape for single-
-        # flag and multi-flag cases.
-        #
-        # R7-F2 (#806) misdirect protection preserved: `import re` bare
-        # + `MRE_AVAILABLE` has source=`re`; stem-match against MRE fails;
-        # positional fallback would bind 1:1 but only if we ONLY have
-        # exactly one flag AND that flag stem-matches. Otherwise fail-open.
+        # Unified pairing (R8/R9): source-group name-match, then guarded
+        # positional fallback, then fail-open.
         pending = list(imports_with_line)  # list[(binding, source, lineno)]
         matched = {}                       # binding -> flag
         available_flags = list(unique_flags)
 
-        # Phase 1: name-match by source_module. Each import binding tries
-        # to claim a flag whose stem matches its source_module. Only bind
-        # on unambiguous single-hit; multi-hit leaves the import pending.
-        for binding, source, _ in pending:
+        # Phase 1: source-group name-match. R9-F2 (#810) — group imports
+        # by source_module first, then find the single stem-matching flag
+        # per source. Bind ALL imports in the group to that flag. This
+        # handles `import numpy; import numpy as np` — both share source
+        # `numpy`, both bind to `NUMPY_AVAILABLE` from a single flag pool.
+        by_source = {}  # source -> [binding, ...]
+        for binding, source, _ln in pending:
+            by_source.setdefault(source, []).append(binding)
+
+        phase1_matched_any = False
+        for source, bindings in by_source.items():
             hits = [f for f in available_flags if _name_matches_flag(source, f)]
             if len(hits) == 1:
-                matched[binding] = hits[0]
+                for binding in bindings:
+                    matched[binding] = hits[0]
                 available_flags.remove(hits[0])
+                phase1_matched_any = True
 
         remaining = [(b, s, ln) for b, s, ln in pending if b not in matched]
 
-        # Phase 2: positional fallback when #remaining equals #remaining
-        # flags AND either (a) more than one flag survives (multi-flag),
-        # or (b) the sole surviving flag has no misdirect risk with any
-        # of the remaining imports.
-        #
-        # Misdirect risk (R7-F2 preserved): if the sole flag's stem is
-        # non-empty AND does NOT match any remaining import's source, we
-        # fail open rather than bind. This is the `import re` +
-        # `MRE_AVAILABLE` case: `re` source, `MRE` stem, no match, no
-        # positional binding.
+        # Phase 2: positional fallback. R9-F3 (#810) — only fall back if
+        # at least one phase-1 match happened AND remaining/flag counts
+        # match. If NO stems matched anywhere, positional pairing is
+        # unreliable (unrelated flag names could produce wrong-flag
+        # suggestions). Preserve the single-flag sole-import case where
+        # source stem-matches for aliased/from-import cases (R7-F2
+        # protection: `import re` + `MRE_AVAILABLE` — no phase-1 match,
+        # sole-flag path checks any_match, fails open).
         if remaining and len(remaining) == len(available_flags):
-            if len(available_flags) > 1:
+            if len(available_flags) > 1 and phase1_matched_any:
+                # Multi-flag positional fallback only after a phase-1 hit.
                 sorted_remaining_imports = sorted(remaining, key=lambda p: p[2])
                 sorted_remaining_flags = [f for f, _ in sorted_flags if f in available_flags]
                 for (binding, _src, _ln), flag in zip(sorted_remaining_imports, sorted_remaining_flags):
                     matched[binding] = flag
                 remaining = []
-            else:
-                # Single sole flag. Check every remaining import for
-                # misdirect: if the sole flag stem-matches any source,
-                # bind them all to it (aliased/from-import case).
-                # Otherwise fail open (import re + MRE_AVAILABLE case).
+            elif len(available_flags) == 1:
+                # Sole-flag rule: bind all remaining if source stem-matches
+                # for any; otherwise fail open (R7-F2 preservation).
                 sole_flag = available_flags[0]
                 any_match = any(_name_matches_flag(src, sole_flag)
                                 for _b, src, _ln in remaining)
