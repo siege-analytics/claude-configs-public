@@ -307,8 +307,28 @@ HOOKEOF
     # paired with a Trivial-against-state: declaration in the artifact.
     INVENTORY_VALUE=$(grep -E '^Pre-author-inventory:[[:space:]]+\S' "$SOURCE_PATH" | head -1 | sed -E 's/^Pre-author-inventory:[[:space:]]+'// || true)
     if [[ -z "$INVENTORY_VALUE" ]]; then
-        # Field entirely missing or empty -- block regardless of Trivial-against-state.
-        cat >&2 <<HOOKEOF
+        # Grandfather prior-era committed artifacts whose last file change
+        # predates the hook commit that introduced the Pre-author-inventory:
+        # field requirement. Without this, a branch whose HEAD trailer points
+        # at a once-valid historical artifact retro-blocks unrelated future
+        # pushes/PRs after schema evolution. Untracked/current artifacts remain
+        # strict because they are authored in the current work stream.
+        SOURCE_REL_FOR_INVENTORY="$SOURCE_VALUE"
+        SOURCE_REL_FOR_INVENTORY="${SOURCE_REL_FOR_INVENTORY#./}"
+        ARTIFACT_LAST_TS=$(git -C "$EFFECTIVE_CWD" log -1 --format=%ct -- "$SOURCE_REL_FOR_INVENTORY" 2>/dev/null || true)
+        INVENTORY_RULE_TS=$(git -C "$EFFECTIVE_CWD" log -S'Pre-author-inventory:' --format=%ct --reverse -- hooks/git/self-review.sh 2>/dev/null | head -1 || true)
+        ARTIFACT_CLEAN=true
+        if ! git -C "$EFFECTIVE_CWD" diff --quiet -- "$SOURCE_REL_FOR_INVENTORY" 2>/dev/null; then
+            ARTIFACT_CLEAN=false
+        fi
+        if ! git -C "$EFFECTIVE_CWD" diff --cached --quiet -- "$SOURCE_REL_FOR_INVENTORY" 2>/dev/null; then
+            ARTIFACT_CLEAN=false
+        fi
+        if [[ "$ARTIFACT_CLEAN" = "true" && -n "$ARTIFACT_LAST_TS" && -n "$INVENTORY_RULE_TS" && "$ARTIFACT_LAST_TS" -lt "$INVENTORY_RULE_TS" ]]; then
+            echo "[self-review] warn: $SOURCE_PATH predates Pre-author-inventory: enforcement; grandfathering missing field for this clean historical artifact." >&2
+        else
+            # Field entirely missing or empty -- block unless grandfathered above.
+            cat >&2 <<HOOKEOF
 BLOCKED: Self-Review-Source: $SOURCE_PATH is missing 'Pre-author-inventory:'
 in the Assumptions section.
 
@@ -322,7 +342,8 @@ If the change genuinely does not trigger any authoring-against-state
 contact category, use NONE and include a Trivial-against-state:
 declaration in the artifact (see SKILL.md).
 HOOKEOF
-        exit 2
+            exit 2
+        fi
     fi
 
     if [[ "$INVENTORY_VALUE" == "NONE" ]]; then
@@ -756,6 +777,13 @@ if [ -n "$DIFF_FILES" ]; then
     if [ "$IS_TRANSFORM" = "false" ]; then
         TRANSFORM_CONTENT_RE='(CREATE[[:space:]]+TABLE|INSERT[[:space:]]+INTO|UNION[[:space:]]+ALL|\.write\.|\.saveAsTable|\.to_sql)'
         for f in $DIFF_FILES; do
+            # Do not let the transformation-content regex literal in this hook
+            # match itself. Editing the enforcement script should require
+            # hostile review and inventoried-shape evidence, not a data-pipeline
+            # Pre-ship-dry-run trailer for a regex string literal.
+            if [ "$f" = "hooks/git/self-review.sh" ]; then
+                continue
+            fi
             FULL_PATH="$EFFECTIVE_CWD/$f"
             if [ -f "$FULL_PATH" ] && grep -qE "$TRANSFORM_CONTENT_RE" "$FULL_PATH" 2>/dev/null; then
                 IS_TRANSFORM=true

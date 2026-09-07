@@ -68,6 +68,8 @@ fi
 
 NOWATCHDOG="$TMP/nowatchdog"
 cp -r "$WIRED" "$NOWATCHDOG"
+rm -f "$NOWATCHDOG/CLAUDE.md"
+(cd "$NOWATCHDOG" && ln -s RULES_BUNDLE.md CLAUDE.md)
 cat > "$NOWATCHDOG/automations.json" <<'JSON'
 {"version":2,"automations":{"SchedulerTick":[{"name":"Skills sync","cron":"0 * * * *","actions":[{"type":"prompt","prompt":"x"}]}]}}
 JSON
@@ -85,6 +87,8 @@ fi
 
 NOAUTOMATIONS="$TMP/noautomations"
 cp -r "$WIRED" "$NOAUTOMATIONS"
+rm -f "$NOAUTOMATIONS/CLAUDE.md"
+(cd "$NOAUTOMATIONS" && ln -s RULES_BUNDLE.md CLAUDE.md)
 rm -f "$NOAUTOMATIONS/automations.json"
 if bash "$PROBE" --target "$NOAUTOMATIONS" --mode craft-agent >/dev/null 2>&1; then
     ok "fully-wired-but-no-automations.json fixture passes (watchdog is advisory)"
