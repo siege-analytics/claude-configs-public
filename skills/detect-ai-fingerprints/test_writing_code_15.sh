@@ -245,6 +245,68 @@ else
     bad "(r) m-4 aliased with timeout" "out=$OUT"
 fi
 
+# --- R3-F2 (#787) lock-in: reject invalid timeout literals ---
+
+# (s) R3-F2: timeout=False — fires
+cat > "$TMP/s.py" <<'EOF'
+import requests
+requests.get('http://x', timeout=False)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/s.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(s) R3-F2 timeout=False — fires"
+else
+    bad "(s) timeout=False" "out=$OUT"
+fi
+
+# (t) R3-F2: timeout=() empty tuple — fires
+cat > "$TMP/t.py" <<'EOF'
+import requests
+requests.get('http://x', timeout=())
+EOF
+OUT=$(python3 "$SCAN" "$TMP/t.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(t) R3-F2 timeout=() empty tuple — fires"
+else
+    bad "(t) empty tuple" "out=$OUT"
+fi
+
+# (u) R3-F2 counterpart: timeout=(3, 30) valid 2-tuple — silent
+cat > "$TMP/u.py" <<'EOF'
+import requests
+requests.get('http://x', timeout=(3, 30))
+EOF
+OUT=$(python3 "$SCAN" "$TMP/u.py" 2>&1)
+if ! fires_wc15 "$OUT"; then
+    ok "(u) R3-F2 timeout=(3, 30) valid connect-read tuple — silent"
+else
+    bad "(u) valid tuple" "out=$OUT"
+fi
+
+# (v) R3-F2: timeout=(0, 30) zero in tuple — fires
+cat > "$TMP/v.py" <<'EOF'
+import requests
+requests.get('http://x', timeout=(0, 30))
+EOF
+OUT=$(python3 "$SCAN" "$TMP/v.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(v) R3-F2 timeout=(0, 30) zero-in-tuple — fires"
+else
+    bad "(v) zero-in-tuple" "out=$OUT"
+fi
+
+# (w) R3-F2: timeout=(1, 2, 3) three-tuple — fires
+cat > "$TMP/w.py" <<'EOF'
+import requests
+requests.get('http://x', timeout=(1, 2, 3))
+EOF
+OUT=$(python3 "$SCAN" "$TMP/w.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(w) R3-F2 timeout=(1, 2, 3) 3-tuple — fires"
+else
+    bad "(w) 3-tuple" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then
