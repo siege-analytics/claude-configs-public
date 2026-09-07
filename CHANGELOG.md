@@ -6,6 +6,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Added
 
+- Workspace hook deployment drift tooling: `bin/check-deploy-drift.py` compares repo hooks against deployed Craft Agent workspace hooks and `deploy-stamp.json`; `bin/sync-workspace-hooks.sh` provides an explicit post-merge sync/runbook command that deploys, wires, verifies, and drift-checks workspace hooks.
 - Hub spoke-source and retirement rules: `session-coordination:7` requires hubs to choose spoke AI sources by task fit, rate-limit pressure, provider health, model strengths, independence needs, tool/source access, and operator cross-system preferences; `session-coordination:8` requires completed workers and reviewers to preserve durable findings, mark themselves done/archive-candidate where available, and become safe for operator deletion.
 - DDIA shelf expansion: `shelves/systems-architecture/data-intensive` now records the user-provided *Designing Data-Intensive Applications* PDF as a cited source without redistributing it, adds consistency/consensus and data-integration/correctness references, and routes DDIA-derived checks into `code-review` and `self-review`.
 - Self-reviewed linear promotion policy: main-targeted `promote/*` PRs are accepted by the GitHub PR-base guard only when the PR body carries `Self-Review-Source:` evidence, preserving develop-first routing while making conflict-resolved promotion branches auditable.
