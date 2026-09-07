@@ -52,7 +52,7 @@ Exit code is 0 when clean, 1 when any violation is found, 2 on usage error.
 `--ignore <glob>` (repeatable) skips files matching the glob. The narrow legitimate use is scanning the scanner's own definition files, which contain the rule source, the regex, and the worked examples by design:
 
 ```bash
-bash <this-skill-dir>/scan.sh --ignore 'skills/meta/detect-ai-fingerprints/*'
+bash <this-skill-dir>/scan.sh --ignore 'skills/detect-ai-fingerprints/*'
 ```
 
 Production gates (`[skill:commit]` step 3, `[skill:code-review]` start) do **not** pass `--ignore`. The flag is for ad-hoc inspection and for the bootstrap commit that lands changes to the scanner itself. Using it elsewhere is a smell: if you find yourself excluding paths to make the scanner shut up, the rules are firing for a reason.
@@ -121,7 +121,7 @@ There is no override flag in the scanner. Address the violation or accept that i
 ### Clean staged diff
 
 ```
-$ bash skills/meta/detect-ai-fingerprints/scan.sh
+$ bash skills/detect-ai-fingerprints/scan.sh
 clean. scanned: writing-prose:1-4 (stylistic; broader Unicode class), writing-code:2 (history references in code comments), writing-code:4 (Django ORM kwarg validation, same-file models; AST), writing-code:7 (silent error swallowing; AST), writing-code:8 (optional-import callsite guards; AST), writing-code:9 (silently-dropped parameters; AST scoped visitor), writing-code:15 (unbounded blocking I/O; AST), writing-tests:3 (skip messages must be actionable), writing-tests:5 (untested named exception handlers, cross-file; AST), writing-claims:2 (countable claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:3 (deprecation messages need version+removal-keyword anchors; AST). Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4, writing-claims:1/3, writing-releases:1/2.
 $ echo $?
 0
@@ -130,7 +130,7 @@ $ echo $?
 ### Dirty staged diff blocking a commit
 
 ```
-$ bash skills/meta/detect-ai-fingerprints/scan.sh
+$ bash skills/detect-ai-fingerprints/scan.sh
 src/parser.py:42:writing-prose-3-adverb(deliberately):     # We deliberately drop NULLs here
 
 scanned: writing-prose:1-4 (stylistic; broader Unicode class), writing-code:2 (history references in code comments), writing-code:4 (Django ORM kwarg validation, same-file models; AST), writing-code:7 (silent error swallowing; AST), writing-code:8 (optional-import callsite guards; AST), writing-code:9 (silently-dropped parameters; AST scoped visitor), writing-code:15 (unbounded blocking I/O; AST), writing-tests:3 (skip messages must be actionable), writing-tests:5 (untested named exception handlers, cross-file; AST), writing-claims:2 (countable claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:3 (deprecation messages need version+removal-keyword anchors; AST). Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4, writing-claims:1/3, writing-releases:1/2.
@@ -144,7 +144,7 @@ The `[skill:commit]` pre-review gate checks the exit code; non-zero stops the co
 ### Scanning a PR before review
 
 ```
-$ bash skills/meta/detect-ai-fingerprints/scan.sh --pr 43
+$ bash skills/detect-ai-fingerprints/scan.sh --pr 43
 src/transforms/silver.py:118:writing-prose-1-em-dash: # Cast to StringType -- the FEC IDs need leading zeros
 src/transforms/silver.py:118:writing-prose-3-adverb(explicitly):   ...
 violations: 2
@@ -154,7 +154,7 @@ Reviewer addresses these before opening the six-layer human review.
 
 ## Implementation notes
 
-The scanner is plain bash to keep dependencies minimal: no Python, no node, no jq. It uses `git diff` and `gh pr diff` for input, parses unified-diff hunk headers to track line numbers, and pipes through `grep -oE` for pattern matches. See `scan.sh` for the source; the file is small and reads top to bottom.
+The scanner has two layers: `scan.sh` (bash + `grep -oE`) parses unified diffs and message bodies for the prose-side rules; `scan_ast.py` (Python AST) is invoked by `scan.sh` on any changed `.py` files for the code-side rules. Prose/regex checks are added-line and message-body scoped (they read the diff hunks only). AST checks scan the full post-state file for each changed `.py`, so pre-existing violations in a touched file surface alongside newly-added ones. See `scan.sh` and `scan_ast.py` for the sources; both are readable top to bottom.
 
 The diff parser handles only added lines (`+` prefix in unified diff), not removed or context lines, so existing-but-untouched fingerprints elsewhere in the file are not flagged. Rule violations are introduced by the diff under review or they are not introduced at all.
 

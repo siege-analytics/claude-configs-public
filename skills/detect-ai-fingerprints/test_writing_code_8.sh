@@ -253,6 +253,62 @@ else
     bad "(l) F2 counterpart else-branch" "out=$OUT"
 fi
 
+# --- R5-F1 (#802) lock-in: multi-import + multi-flag in one try block ---
+
+# (m) R5-F1: two imports + two flags, both correctly guarded — silent
+cat > "$TMP/m.py" <<'EOF'
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+    import geopandas as gpd
+    GEOPANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    GEOPANDAS_AVAILABLE = False
+
+def use_pd():
+    if not PANDAS_AVAILABLE:
+        raise RuntimeError("install pandas")
+    return pd.DataFrame()
+
+def use_gpd():
+    if not GEOPANDAS_AVAILABLE:
+        raise RuntimeError("install geopandas")
+    return gpd.GeoDataFrame()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/m.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(m) R5-F1 two imports two flags both guarded: silent"
+else
+    bad "(m) R5-F1 two-import mis-mapping" "out=$OUT"
+fi
+
+# (n) R5-F1: two imports two flags, pd guarded but gpd unguarded — only gpd fires
+cat > "$TMP/n.py" <<'EOF'
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+    import geopandas as gpd
+    GEOPANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    GEOPANDAS_AVAILABLE = False
+
+def use_pd():
+    if not PANDAS_AVAILABLE:
+        raise RuntimeError("install pandas")
+    return pd.DataFrame()
+
+def use_gpd():
+    return gpd.GeoDataFrame()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/n.py" 2>&1)
+if echo "$OUT" | grep -q "writing-code-8" && echo "$OUT" | grep -q "gpd" && ! echo "$OUT" | grep -q "'pd'"; then
+    ok "(n) R5-F1 pd guarded, gpd unguarded: only gpd fires"
+else
+    bad "(n) R5-F1 selective firing" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then
