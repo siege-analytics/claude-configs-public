@@ -417,11 +417,90 @@ def use_gpd():
 EOF
 OUT=$(python3 "$SCAN" "$TMP/r.py" 2>&1)
 # `pd` doesn't match PANDAS_AVAILABLE by whole-word; `gpd` doesn't match either.
-# Positional fallback pairs pd → PANDAS_AVAILABLE, gpd → GEOPANDAS_AVAILABLE.
+# Positional fallback pairs pd -> PANDAS_AVAILABLE, gpd -> GEOPANDAS_AVAILABLE.
 if ! fires_wc8 "$OUT"; then
     ok "(r) R6-F1 aliased imports positional fallback: silent"
 else
     bad "(r) R6-F1 positional fallback" "out=$OUT"
+fi
+
+# --- R7-F1 (#806) lock-in: reversed flag order + underscore-aware stem match ---
+
+# (s) R7-F1: flags declared in REVERSED order relative to imports
+cat > "$TMP/s.py" <<'EOF'
+try:
+    import pandas
+    import geopandas
+    GEOPANDAS_AVAILABLE = True
+    PANDAS_AVAILABLE = True
+except ImportError:
+    GEOPANDAS_AVAILABLE = False
+    PANDAS_AVAILABLE = False
+
+def use_pd():
+    if not PANDAS_AVAILABLE:
+        raise RuntimeError("pd")
+    return pandas.DataFrame()
+
+def use_gpd():
+    if not GEOPANDAS_AVAILABLE:
+        raise RuntimeError("gpd")
+    return geopandas.GeoDataFrame()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/s.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(s) R7-F1 reversed flag order correctly stem-paired: silent"
+else
+    bad "(s) R7-F1 reversed flag order" "out=$OUT"
+fi
+
+# (t) R7-F1: numpy + numpy_financial with matching flags
+cat > "$TMP/t.py" <<'EOF'
+try:
+    import numpy
+    import numpy_financial
+    NUMPY_AVAILABLE = True
+    NUMPY_FINANCIAL_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    NUMPY_FINANCIAL_AVAILABLE = False
+
+def use_np():
+    if not NUMPY_AVAILABLE:
+        raise RuntimeError("np")
+    return numpy.array([])
+
+def use_npf():
+    if not NUMPY_FINANCIAL_AVAILABLE:
+        raise RuntimeError("npf")
+    return numpy_financial.rate(1, 2, 3, 4)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/t.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(t) R7-F1 numpy + numpy_financial correctly stem-paired: silent"
+else
+    bad "(t) R7-F1 numpy family" "out=$OUT"
+fi
+
+# --- R7-F2 (#806) lock-in: single-flag stem-mismatch fails open ---
+
+# (u) R7-F2: import re + MRE_AVAILABLE (single flag doesn't stem-match import)
+cat > "$TMP/u.py" <<'EOF'
+try:
+    import re
+    MRE_AVAILABLE = True
+except ImportError:
+    MRE_AVAILABLE = False
+
+def compile_pat(pat):
+    return re.compile(pat)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/u.py" 2>&1)
+# Should fail open with scan-ast-warning; no writing-code:8 emission
+if ! fires_wc8 "$OUT" && echo "$OUT" | grep -q "scan-ast-warning"; then
+    ok "(u) R7-F2 single-flag stem-mismatch fails open + warns: silent + warning"
+else
+    bad "(u) R7-F2 single-flag mismatch" "out=$OUT"
 fi
 
 echo
