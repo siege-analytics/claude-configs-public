@@ -1074,6 +1074,51 @@ def _is_flag_name(name):
     return name.endswith(FLAG_PATTERNS) or name.startswith(FLAG_PREFIXES)
 
 
+# R8-F5 (#808): stem-strip vocabulary hoisted to module scope so single-flag
+# and multi-flag paths cannot drift. R8-F6 dropped dead suffix entries `_HAS`
+# and `_HAS_` because _is_flag_name never accepts a name matching only those.
+_FLAG_STEM_PREFIX_STRIPS = ("HAS_", "_HAS_", "_")
+_FLAG_STEM_SUFFIX_STRIPS = ("_AVAILABLE", "_INSTALLED")
+
+
+def _flag_stem(flag_name):
+    """Strip a leading HAS_/_HAS_/_ and a trailing _AVAILABLE/_INSTALLED from
+    a flag name to expose its module-stem. Idempotent single-pass, first
+    prefix-then-suffix. Returns "" if nothing survives."""
+    stem = flag_name
+    for prefix in _FLAG_STEM_PREFIX_STRIPS:
+        if stem.startswith(prefix):
+            stem = stem[len(prefix):]
+            break
+    for suffix in _FLAG_STEM_SUFFIX_STRIPS:
+        if stem.endswith(suffix):
+            stem = stem[:-len(suffix)]
+            break
+    return stem
+
+
+def _name_matches_flag(source_module, flag_name):
+    """R8 (#808): match a flag's stem to an import's SOURCE MODULE (not the
+    binding name). `import numpy as np` has source `numpy`; matches
+    `NUMPY_AVAILABLE` (stem `NUMPY`). `from PIL import Image` has source
+    `PIL`; matches `PIL_AVAILABLE`. `import re` (bare) has source `re`;
+    does NOT match `MRE_AVAILABLE` (stem `MRE`) — R7-F2 misdirect
+    protection preserved.
+
+    Case-folded comparison. Also accepts underscore-collapsed alternative:
+    stem `NUMPY_FINANCIAL` matches source `numpy_financial` (segment
+    joined form).
+    """
+    stem = _flag_stem(flag_name)
+    if not stem:
+        return False
+    stem_fold = stem.casefold()
+    src_fold = source_module.casefold()
+    if stem_fold == src_fold:
+        return True
+    return stem_fold.replace("_", "") == src_fold.replace("_", "")
+
+
 def _extract_optional_imports(tree):
     """Return dict of imported_name -> flag_name for optional-import patterns
     at module scope. Only matches the tight
@@ -1108,23 +1153,32 @@ def _extract_optional_imports(tree):
         if not catches_import:
             continue
 
-        # Find imports + flag assigns in the try body, recording line numbers
-        # so each import can be paired to the flag set on the smallest line
-        # number strictly greater than the import's own line. R5-F1 (#802):
-        # the earlier version put all imported names into a single set-picked
-        # flag, non-deterministically false-positiving on multi-import blocks.
-        imports_with_line = []   # list[(name, lineno)]
+        # Find imports + flag assigns in the try body. R8 (#808): record
+        # SOURCE MODULE and BINDING NAME separately so name-match can
+        # compare flag stems to source modules (fixes aliased and
+        # from-imports) while the result binds by the name actually used
+        # in the code.
+        #   `import X`              -> binding=X,       source=X
+        #   `import X as Y`         -> binding=Y,       source=X
+        #   `import X.Y.Z`          -> binding=X,       source=X (first-segment)
+        #   `import X.Y.Z as W`     -> binding=W,       source=X (first-segment)
+        #   `from A import B`       -> binding=B,       source=A
+        #   `from A.B import C`     -> binding=C,       source=A (first-segment)
+        #   `from A import B as C`  -> binding=C,       source=A
+        imports_with_line = []   # list[(binding, source, lineno)]
         flags_with_line = []     # list[(flag_name, lineno)]
         for stmt in node.body:
             if isinstance(stmt, ast.Import):
                 for alias in stmt.names:
-                    imports_with_line.append(
-                        (alias.asname or alias.name.split(".")[0], stmt.lineno)
-                    )
+                    first_segment = alias.name.split(".")[0]
+                    binding = alias.asname or first_segment
+                    imports_with_line.append((binding, first_segment, stmt.lineno))
             elif isinstance(stmt, ast.ImportFrom):
+                source_first_segment = (stmt.module or "").split(".")[0]
                 for alias in stmt.names:
+                    binding = alias.asname or alias.name
                     imports_with_line.append(
-                        (alias.asname or alias.name, stmt.lineno)
+                        (binding, source_first_segment or binding, stmt.lineno)
                     )
             elif isinstance(stmt, ast.Assign):
                 for tgt in stmt.targets:
@@ -1155,134 +1209,66 @@ def _extract_optional_imports(tree):
         )
         unique_flags = list({f for f, _ in sorted_flags})
 
-        # Single-flag case: bind every import to the sole flag ONLY when
-        # each import's name stem-matches the flag OR there's a single
-        # import (unambiguous). R7-F2 (#806): before this check, `import
-        # re` with `MRE_AVAILABLE` would bind unconditionally and emit
-        # wrong-flag suggestions. Now the mismatch triggers fail-open.
-        # Named the closure below so the guard can be reused; must be
-        # defined here before use since it's inside the loop.
-        _FLAG_PREFIX_STRIPS_LOCAL = ("HAS_", "_HAS_", "_")
-        _FLAG_SUFFIX_STRIPS_LOCAL = ("_AVAILABLE", "_INSTALLED", "_HAS", "_HAS_")
-
-        def _flag_stem_local(flag_name):
-            stem = flag_name
-            for prefix in _FLAG_PREFIX_STRIPS_LOCAL:
-                if stem.startswith(prefix):
-                    stem = stem[len(prefix):]
-                    break
-            for suffix in _FLAG_SUFFIX_STRIPS_LOCAL:
-                if stem.endswith(suffix):
-                    stem = stem[:-len(suffix)]
-                    break
-            return stem
-
-        def _sole_flag_matches_import(imp_name, flag_name):
-            stem = _flag_stem_local(flag_name).casefold()
-            if not stem:
-                return False
-            imp = imp_name.casefold()
-            return stem == imp or stem.replace("_", "") == imp.replace("_", "")
-
-        if len(unique_flags) == 1:
-            sole_flag = sorted_flags[0][0]
-            # Only bind imports whose name stem-matches the flag. Others
-            # fail open with a scan-ast-warning to avoid wrong-flag misdirect.
-            # R7-F2 (#806): applies to single-import case too. Prior version
-            # bypassed the check when len(imports)==1, so `import re` +
-            # `MRE_AVAILABLE` bound unconditionally and emitted a wrong-flag
-            # suggestion.
-            matched_imports = []
-            unmatched_imports = []
-            for imp_name, imp_line in imports_with_line:
-                if _sole_flag_matches_import(imp_name, sole_flag):
-                    matched_imports.append(imp_name)
-                else:
-                    unmatched_imports.append(imp_name)
-            for imp_name in matched_imports:
-                result[imp_name] = sole_flag
-            if unmatched_imports:
-                names = ", ".join(unmatched_imports)
-                print(
-                    f"scan-ast-warning: writing-code:8 sole availability "
-                    f"flag {sole_flag!r} does not stem-match imports "
-                    f"[{names}] in try block at line {node.lineno}; "
-                    f"failing open on those imports.",
-                    file=sys.stderr,
-                )
-            continue
-
-        # R6-F1 (#804) / R7-F1 (#806): multi-flag pairing via stem match.
-        # R6's `\b<NAME>\b` regex failed because Python regex treats `_` as
-        # a word character, so `\bPANDAS\b` never matches `PANDAS_AVAILABLE`.
-        # R7 fix: strip known prefixes/suffixes from the flag to get its
-        # stem, then compare stem to import name case-insensitively as a
-        # segment. Rejects `re` inside `MRE_AVAILABLE` because after
-        # stripping `_AVAILABLE` the stem is `MRE`, which does not equal
-        # any segment `re`.
-        _FLAG_PREFIX_STRIPS = ("HAS_", "_HAS_", "_")
-        _FLAG_SUFFIX_STRIPS = ("_AVAILABLE", "_INSTALLED", "_HAS", "_HAS_")
-
-        def _flag_stem(flag_name):
-            stem = flag_name
-            for prefix in _FLAG_PREFIX_STRIPS:
-                if stem.startswith(prefix):
-                    stem = stem[len(prefix):]
-                    break
-            for suffix in _FLAG_SUFFIX_STRIPS:
-                if stem.endswith(suffix):
-                    stem = stem[:-len(suffix)]
-                    break
-            return stem
-
-        def _name_matches_flag(imp_name, flag_name):
-            stem = _flag_stem(flag_name)
-            if not stem:
-                return False
-            # Case-fold both; split stem on underscore into segments; treat
-            # match as "any segment equals the import name". Handles
-            # PIL_AVAILABLE (stem PIL, one segment) and dotted-import names
-            # like `numpy_financial` -> `NUMPY_FINANCIAL_AVAILABLE` (stem
-            # NUMPY_FINANCIAL, joined_lower matches import name).
-            imp_fold = imp_name.casefold()
-            stem_fold = stem.casefold()
-            if stem_fold == imp_fold:
-                return True
-            # Also accept if joining stem segments with `_` matches, since
-            # a stem like `NUMPY_FINANCIAL` naturally corresponds to
-            # the module `numpy_financial`.
-            return stem_fold.replace("_", "") == imp_fold.replace("_", "")
-
-        pending = list(imports_with_line)
-        matched = {}
+        # Unified pairing (R8 #808): name-match on source_module first,
+        # then positional fallback, then fail-open. Same shape for single-
+        # flag and multi-flag cases.
+        #
+        # R7-F2 (#806) misdirect protection preserved: `import re` bare
+        # + `MRE_AVAILABLE` has source=`re`; stem-match against MRE fails;
+        # positional fallback would bind 1:1 but only if we ONLY have
+        # exactly one flag AND that flag stem-matches. Otherwise fail-open.
+        pending = list(imports_with_line)  # list[(binding, source, lineno)]
+        matched = {}                       # binding -> flag
         available_flags = list(unique_flags)
-        for imp_name, imp_line in pending:
-            hits = [f for f in available_flags if _name_matches_flag(imp_name, f)]
+
+        # Phase 1: name-match by source_module. Each import binding tries
+        # to claim a flag whose stem matches its source_module. Only bind
+        # on unambiguous single-hit; multi-hit leaves the import pending.
+        for binding, source, _ in pending:
+            hits = [f for f in available_flags if _name_matches_flag(source, f)]
             if len(hits) == 1:
-                matched[imp_name] = hits[0]
+                matched[binding] = hits[0]
                 available_flags.remove(hits[0])
-        unmatched = [(n, ln) for n, ln in pending if n not in matched]
 
-        # Positional fallback: if the remaining #imports equals #remaining
-        # flags AND the fallback is unambiguous (single interpretation),
-        # pair by lineno order.
-        if unmatched and len(unmatched) == len(available_flags):
-            sorted_unmatched = sorted(unmatched, key=lambda p: p[1])
-            sorted_remaining = [f for f, _ in sorted_flags if f in available_flags]
-            # Preserve first-occurrence order for the remaining flags too.
-            for (imp_name, _), flag in zip(sorted_unmatched, sorted_remaining):
-                matched[imp_name] = flag
-            unmatched = []
+        remaining = [(b, s, ln) for b, s, ln in pending if b not in matched]
 
-        if unmatched:
-            # Fail-open: drop tracking for the still-unmatched imports and
-            # emit a scan-ast-warning so the operator sees the ambiguity.
-            names = ", ".join(n for n, _ in unmatched)
+        # Phase 2: positional fallback when #remaining equals #remaining
+        # flags AND either (a) more than one flag survives (multi-flag),
+        # or (b) the sole surviving flag has no misdirect risk with any
+        # of the remaining imports.
+        #
+        # Misdirect risk (R7-F2 preserved): if the sole flag's stem is
+        # non-empty AND does NOT match any remaining import's source, we
+        # fail open rather than bind. This is the `import re` +
+        # `MRE_AVAILABLE` case: `re` source, `MRE` stem, no match, no
+        # positional binding.
+        if remaining and len(remaining) == len(available_flags):
+            if len(available_flags) > 1:
+                sorted_remaining_imports = sorted(remaining, key=lambda p: p[2])
+                sorted_remaining_flags = [f for f, _ in sorted_flags if f in available_flags]
+                for (binding, _src, _ln), flag in zip(sorted_remaining_imports, sorted_remaining_flags):
+                    matched[binding] = flag
+                remaining = []
+            else:
+                # Single sole flag. Check every remaining import for
+                # misdirect: if the sole flag stem-matches any source,
+                # bind them all to it (aliased/from-import case).
+                # Otherwise fail open (import re + MRE_AVAILABLE case).
+                sole_flag = available_flags[0]
+                any_match = any(_name_matches_flag(src, sole_flag)
+                                for _b, src, _ln in remaining)
+                if any_match:
+                    for binding, _src, _ln in remaining:
+                        matched[binding] = sole_flag
+                    remaining = []
+
+        if remaining:
+            names = ", ".join(b for b, _s, _ln in remaining)
             print(
                 f"scan-ast-warning: writing-code:8 could not pair optional "
-                f"imports [{names}] to availability flags in try block at "
-                f"line {node.lineno}; heuristics available: name-match, "
-                f"positional. Bind by hand or use a single flag.",
+                f"imports [{names}] to availability flag(s) "
+                f"[{', '.join(available_flags)}] in try block at line "
+                f"{node.lineno}; failing open on those imports.",
                 file=sys.stderr,
             )
 
