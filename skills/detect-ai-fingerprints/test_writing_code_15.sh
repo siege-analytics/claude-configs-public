@@ -307,6 +307,68 @@ else
     bad "(w) 3-tuple" "out=$OUT"
 fi
 
+# --- R3-F3 (#787) lock-in: Popen(...).stdout.read + Session/Client instance methods ---
+
+# (x) Popen.stdout.read chain — fires
+cat > "$TMP/x.py" <<'EOF'
+import subprocess
+subprocess.Popen(['x'], stdout=subprocess.PIPE).stdout.read()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/x.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(x) R3-F3 Popen(...).stdout.read — fires"
+else
+    bad "(x) Popen stdout.read" "out=$OUT"
+fi
+
+# (y) requests.Session().get instance method — fires
+cat > "$TMP/y.py" <<'EOF'
+import requests
+requests.Session().get('http://x')
+EOF
+OUT=$(python3 "$SCAN" "$TMP/y.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(y) R3-F3 requests.Session().get — fires"
+else
+    bad "(y) Session.get" "out=$OUT"
+fi
+
+# (z) httpx.Client().get instance method — fires
+cat > "$TMP/z.py" <<'EOF'
+import httpx
+httpx.Client().get('http://x')
+EOF
+OUT=$(python3 "$SCAN" "$TMP/z.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(z) R3-F3 httpx.Client().get — fires"
+else
+    bad "(z) Client.get" "out=$OUT"
+fi
+
+# (aa) counterpart: Session().get(timeout=5) — silent
+cat > "$TMP/aa.py" <<'EOF'
+import requests
+requests.Session().get('http://x', timeout=5)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/aa.py" 2>&1)
+if ! fires_wc15 "$OUT"; then
+    ok "(aa) R3-F3 counterpart Session().get(timeout=5) — silent"
+else
+    bad "(aa) Session with timeout" "out=$OUT"
+fi
+
+# (ab) Popen.stderr.readline — fires
+cat > "$TMP/ab.py" <<'EOF'
+import subprocess
+subprocess.Popen(['x'], stderr=subprocess.PIPE).stderr.readline()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/ab.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(ab) R3-F3 Popen.stderr.readline — fires"
+else
+    bad "(ab) stderr.readline" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then
