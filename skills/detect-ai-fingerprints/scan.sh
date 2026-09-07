@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
-# Mechanical scanner for AI-fingerprint rules across the per-act rule files. Covers writing-prose:1-4 (broader Unicode char class as of v2.2.0), writing-code:2, writing-code:9 (via scan_ast.py), writing-tests:3-4, writing-claims:2-3, writing-releases:2, writing-releases:3 (via scan_ast.py).
+# Mechanical scanner for AI-fingerprint rules across the per-act rule files.
+# Prose-side (this file, regex): writing-prose:1-4 (broader Unicode class),
+# writing-code:2 (history references in code comments), writing-tests:3
+# (skip messages must be actionable), writing-claims:2 (countable claims
+# need Verified-by trailer), rule-citation Rule-executed evidence (#282).
+# Code-side (delegated to scan_ast.py, AST): writing-code:4 (Django ORM
+# kwargs, same-file), writing-code:7 (silent swallow), writing-code:8
+# (optional-import callsite guards), writing-code:9 (silently-dropped
+# params, scoped visitor), writing-code:15 (unbounded blocking I/O,
+# incl. Popen chains + Session/Client instance methods + invalid literal
+# timeouts), writing-tests:5 (untested named exception handlers, cross-file,
+# incl. except* PEP 654), writing-releases:3 (deprecation msg format).
+# Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4,
+# writing-claims:1/3, writing-releases:1/2.
 # Operates on a unified diff from stdin OR fetches the diff itself based on flags.
 # Reports violations as <file>:<line>:<rule>:<excerpt>. Exit 0 if clean, 1 if violations found.
 #
@@ -17,7 +30,9 @@
 #                                 # the scanner's own definition files, which contain the rule
 #                                 # source, regex, and worked examples by design.
 #
-# This scanner covers writing-prose:1-4 (broader Unicode class v2.2.0), writing-code:2, writing-code:9 (via scan_ast.py for .py files), writing-tests:3-4, writing-claims:2-3, writing-releases:2, writing-releases:3 (via scan_ast.py for .py files). The remaining rules require [skill:code-review] judgment.
+# Coverage (as of Round 4, 2026-09-07): see the top-of-file docstring
+# above for the authoritative list. Coverage note is also stored at the
+# COVERAGE_NOTE variable near the exit block.
 
 set -uo pipefail
 
