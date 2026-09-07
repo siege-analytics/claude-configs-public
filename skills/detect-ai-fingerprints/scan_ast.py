@@ -372,11 +372,22 @@ def import_flag_pattern(handler):
     return True
 
 
-# #771 sibling of M-3: noqa opt-out must carry a real reason word, not just
-# the marker. Same vowel-lookahead + 4-char-min shape as
-# _NOQA_WITH_REASON_RE for writing-tests:5.
+# R3-F8 sibling (#787): writing-code:7 noqa also uses controlled vocabulary.
+# Silent-swallow carve-outs typically fall in one of these categories:
+# best-effort cleanup, atexit / __del__ / signal handler safety,
+# library-bootstrap paths where raising would defeat the loading chain,
+# or explicit re-raise-later delayed-signal patterns.
+_NOQA_WC7_REASON_KEYWORDS = (
+    "cleanup", "best-effort", "unsafe", "signal", "atexit", "handler",
+    "shutdown", "finalizer", "destructor",
+    "bootstrap", "vendored", "library",
+    "reraise-later", "delayed-signal",
+)
 _NOQA_WC7_WITH_REASON_RE = re.compile(
-    r"noqa:\s*writing-code-7\b[^\n]*?\b(?=[A-Za-z]*[aeiouAEIOU])[A-Za-z]{4,}\b"
+    r"noqa:\s*writing-code-7\b[^\n]*?\b("
+    + "|".join(re.escape(k) for k in _NOQA_WC7_REASON_KEYWORDS)
+    + r")\b",
+    re.IGNORECASE,
 )
 
 
@@ -1589,16 +1600,26 @@ def _test_ast_covers_exception(test_path, exc_class):
 _test_file_covers_exception = _test_ast_covers_exception
 
 
-# Regex to enforce F8/M-3 (#760/#766): `noqa: writing-tests-5` must be
-# followed by a real reason. F8 required >=3 chars of non-whitespace,
-# which trivially accepted `xxx`, `tbd`, `...` (M-3, Round 2 hostile
-# review). M-3 tightens the check: the reason must contain at least one
-# 4+ letter English-shape word (>=4 alpha chars including >=1 vowel).
-# `cleanup`, `finally`, `best-effort`, `finalizer` all pass; `xxx`,
-# `tbd`, `abcd`, `...` all fail.
-_NOQA_WITH_REASON_RE = re.compile(
-    r"noqa:\s*writing-tests-5\b[^\n]*?\b(?=[A-Za-z]*[aeiouAEIOU])[A-Za-z]{4,}\b"
+# R3-F8 (#787): noqa reason must contain a keyword from a controlled
+# vocabulary aligned with the rule text's two carve-out categories
+# (finally-cleanup and destructor/signal-handler safety). The vowel-only
+# heuristic (M-3) accepted sneaky placeholder text like `pass throughthrough`
+# where "through" is a real 7-letter word with vowels but conveys no
+# category signal. Controlled vocabulary rejects placeholder abuses.
+_NOQA_WT5_REASON_KEYWORDS = (
+    "cleanup", "finally", "finalizer", "destructor", "shutdown",
+    "signal", "handler", "atexit",
+    "bootstrap", "vendored", "library",
+    "best-effort", "unsafe", "cannot-induce", "not-induceable",
 )
+_NOQA_WT5_REASON_KEYWORDS_RE = re.compile(
+    r"noqa:\s*writing-tests-5\b[^\n]*?\b("
+    + "|".join(re.escape(k) for k in _NOQA_WT5_REASON_KEYWORDS)
+    + r")\b",
+    re.IGNORECASE,
+)
+# Kept for back-compat / grep-discovery of the earlier regex name.
+_NOQA_WITH_REASON_RE = _NOQA_WT5_REASON_KEYWORDS_RE
 
 
 def _is_carveout_handler(handler_lineno, source_lines):
