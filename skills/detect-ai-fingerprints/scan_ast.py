@@ -700,6 +700,40 @@ def check_writing_code_15(tree, source_lines):
                  f"{surface}(...): timeout=0 is not a bound — the call fails "
                  f"immediately. Pass a positive number.")
             )
+            continue
+        # R3-F2 (#787): reject non-numeric literal timeouts. `timeout=False`
+        # (a bool that is not None), `timeout=()` (empty tuple), and other
+        # obviously-invalid literals should not silently pass. requests
+        # supports `timeout=(connect, read)` as a 2-tuple of positive numbers;
+        # any other tuple shape is invalid.
+        if isinstance(val, ast.Constant) and val.value is False:
+            violations.append(
+                (node.lineno,
+                 "writing-code-15-unbounded-io(timeout-invalid-literal)",
+                 f"{surface}(...): timeout=False is not a bound. Pass a "
+                 f"positive number or `None` with an audit-signal comment.")
+            )
+            continue
+        if isinstance(val, ast.Tuple):
+            elts = val.elts
+            valid_tuple = (
+                len(elts) in (1, 2)
+                and all(
+                    isinstance(e, ast.Constant)
+                    and isinstance(e.value, (int, float))
+                    and type(e.value) is not bool
+                    and e.value > 0
+                    for e in elts
+                )
+            )
+            if not valid_tuple:
+                violations.append(
+                    (node.lineno,
+                     "writing-code-15-unbounded-io(timeout-invalid-tuple)",
+                     f"{surface}(...): timeout={ast.unparse(val)} is not a "
+                     f"valid bound. Pass a positive number or "
+                     f"`timeout=(connect, read)` with positive numbers.")
+                )
     return violations
 
 
