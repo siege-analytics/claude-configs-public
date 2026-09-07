@@ -1,0 +1,3 @@
+docs/architecture.md
+README.md
+plans/self-review-pr-a.md

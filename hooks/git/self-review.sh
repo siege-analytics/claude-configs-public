@@ -521,6 +521,77 @@ HOOKEOF
         fi
     done
 
+    # Delegate Trivial-* block content validation to
+    # scripts/discipline/check-trivial-claim.sh. This covers:
+    #   - Trivial-change writing-rules:5 vocabulary + evidence chain
+    #   - Trivial-investigation self-review vocabulary + evidence chain
+    #   - Exemption writing-rules:4 evidence chain
+    #   - external-shape-modeling never-trivial rejection for any
+    #     Trivial-* block when the diff touches scanner/parser/linter/hook code
+    # The inline field-presence checks above run first so a missing
+    # declaration block returns a hook-specific diagnostic. Content-level
+    # checks (Category vocabulary, Evidence-token shape,
+    # external-shape-modeling never-trivial) run here so the script is
+    # the single source of truth for the artifact's shape.
+    CHECK_TRIVIAL_SCRIPT="$(cd "$(dirname "$0")" && pwd)/../../scripts/discipline/check-trivial-claim.sh"
+    # Fail-closed: PR A designates the delegated checker as the single
+    # source of truth for Trivial-* vocabulary + evidence-chain +
+    # external-shape-modeling never-trivial. A missing / non-executable
+    # / renamed helper skipping the check silently is exactly the
+    # governance breach this pipeline exists to prevent
+    # (260905-clever-quasar hostile finding #1 on PR #814).
+    if [[ ! -f "$CHECK_TRIVIAL_SCRIPT" ]] || [[ ! -x "$CHECK_TRIVIAL_SCRIPT" ]]; then
+        cat >&2 <<HOOKEOF
+BLOCKED: Self-Review-Source: $SOURCE_PATH — required helper
+$CHECK_TRIVIAL_SCRIPT is missing or not executable.
+
+Per writing-rules:5, Trivial-* declaration vocabulary and the
+external-shape-modeling never-trivial trigger are enforced by
+check-trivial-claim.sh. If the helper is absent, renamed, or
+chmod -x'd, the checks that block invented Category tokens
+(local-only in Trivial-investigation, invented tokens, etc.) and
+that reject Trivial-* on scanner/parser/linter/hook diffs cannot
+run — the pipeline is fail-open, which is the governance breach
+this hook exists to close.
+
+Restore the helper (git checkout scripts/discipline/check-trivial-claim.sh)
+or make it executable (chmod +x scripts/discipline/check-trivial-claim.sh),
+then retry. Ref: 260905-clever-quasar HIGH finding on PR #814.
+HOOKEOF
+        exit 2
+    fi
+    # Diff scope: branch-range against develop merge-base (multi-commit
+    # PR coverage) + last-commit + working tree + staged, union-deduplicated.
+    # Captures the change surface both pre-commit and pre-push, AND when
+    # the ESM-touching commit is not HEAD (multi-commit branch bypass
+    # closed by 260905-clever-quasar hostile finding #2 on PR #814).
+    # The write-to-tmpfile shape avoids a shell-metacharacter round trip
+    # through argv when paths contain spaces.
+    TRIVIAL_DIFF_LIST=$(mktemp -t self-review-diff.XXXXXX)
+    TRIVIAL_MERGE_BASE=""
+    for TRIVIAL_REMOTE_BRANCH in origin/develop origin/main skills-upstream/develop skills-upstream/main; do
+        TRIVIAL_MERGE_BASE=$(git -C "$EFFECTIVE_CWD" merge-base HEAD "$TRIVIAL_REMOTE_BRANCH" 2>/dev/null || true)
+        if [[ -n "$TRIVIAL_MERGE_BASE" ]]; then
+            break
+        fi
+    done
+    if [[ -z "$TRIVIAL_MERGE_BASE" ]]; then
+        echo "[self-review] warn: no merge-base found against develop/main; falling back to HEAD-only diff scope (multi-commit ESM touches upstream of HEAD will NOT trigger never-trivial). Ref: 260905-clever-quasar finding #2." >&2
+    fi
+    {
+        if [[ -n "$TRIVIAL_MERGE_BASE" ]]; then
+            git -C "$EFFECTIVE_CWD" diff --name-only "$TRIVIAL_MERGE_BASE" HEAD 2>/dev/null || true
+        fi
+        git -C "$EFFECTIVE_CWD" diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true
+        git -C "$EFFECTIVE_CWD" diff --name-only HEAD 2>/dev/null || true
+        git -C "$EFFECTIVE_CWD" diff --cached --name-only 2>/dev/null || true
+    } | sort -u > "$TRIVIAL_DIFF_LIST"
+    if ! bash "$CHECK_TRIVIAL_SCRIPT" "$SOURCE_PATH" --diff-files "$TRIVIAL_DIFF_LIST"; then
+        rm -f "$TRIVIAL_DIFF_LIST"
+        exit 2
+    fi
+    rm -f "$TRIVIAL_DIFF_LIST"
+
     # Peer review section must cite at least one shelf.
     SHELF_RE='writing-(code|tests|claims|prose|releases):'
     # Extract Peer review section content (between '## Peer review' header

@@ -1,0 +1,4 @@
+plans/self-review-example.md
+docs/context.md
+hooks/git/foo-hook.sh
+README.md
