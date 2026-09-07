@@ -162,9 +162,11 @@ For data pipelines and database operations: will this corrupt or lose data?
 - Write mode: is `overwrite` used where `append` is correct (or vice versa)?
 - Schema changes: will this break downstream consumers?
 - Transactions: are multi-step operations atomic? What happens if step 2 fails after step 1 succeeds?
+- Isolation: does the code rely on serializable behavior while the database runs read committed or snapshot isolation?
 - Deduplication: will re-running this job create duplicates?
 - Idempotency: does running the same job twice produce the same result?
-- Ordering: does the result depend on row order that isn't guaranteed?
+- Ordering: does the result depend on row order, event order, timestamp order, or partition order that isn't guaranteed?
+- Derived data: if writing caches, indexes, read models, reports, or feature tables, is the source of truth named and is rebuild/reconciliation documented?
 
 **Red flags:**
 ```python
@@ -179,6 +181,12 @@ df.write.format("delta").mode("overwrite").saveAsTable("main.bronze.filings")
 # Schema drift
 df.write.option("mergeSchema", "true")
 # New columns silently added -- will downstream jobs handle them?
+
+# Direct dual-write to source and derived store
+save_order_to_postgres(order)
+index_order_in_elasticsearch(order)
+# If the second write fails after the first succeeds, systems diverge.
+# Prefer CDC/outbox/event-log propagation or a reconciliation process.
 ```
 
 ### 4. Performance
