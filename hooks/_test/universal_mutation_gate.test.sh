@@ -57,6 +57,21 @@ expect_pass "(k) echo \"migrate 2026->2027\" (arrow in echo string)" "$HOOK" "$(
 expect_pass "(l) grep \"cat .* >\" report.txt (literal redirect op in grep pattern)" "$HOOK" "$(make_payload 'grep \"cat .* >\" report.txt')"
 expect_pass "(m) grep \"append >> file\" report.txt (literal >> in grep pattern)" "$HOOK" "$(make_payload 'grep \"append >> file\" report.txt')"
 
+# --- Governance issue reporting: evidence-bearing create/comment pass without a think-gate ---
+
+printf 'follow-up evidence\n' > "$TMP_DIR/body.md"
+expect_pass "(n0) gh issue create with title and body-file passes as governance reporting" "$HOOK" "$(make_payload 'gh issue create --repo siege-analytics/claude-configs-public --title followup --body-file body.md')"
+expect_pass "(n1) gh issue comment with target and body-file passes as governance reporting" "$HOOK" "$(make_payload 'gh issue comment 123 --body-file body.md')"
+expect_block "(n2) gh issue create without body still blocks" "$HOOK" "$(make_payload 'gh issue create --title followup')"
+expect_block "(n3) gh issue close remains mutation-gated" "$HOOK" "$(make_payload 'gh issue close 123')"
+expect_block "(n4) gh issue edit remains mutation-gated" "$HOOK" "$(make_payload 'gh issue edit 123 --title changed')"
+expect_block "(n5) gh pr create remains mutation-gated" "$HOOK" "$(make_payload 'gh pr create --title pr --body body')"
+expect_block "(n6) chained gh issue create remains mutation-gated" "$HOOK" "$(make_payload 'gh issue create --title followup --body-file body.md; touch x')"
+expect_block "(n7) gh issue create with metadata flag remains mutation-gated" "$HOOK" "$(make_payload 'gh issue create --title followup --body-file body.md --label bug')"
+expect_block "(n8) gh issue create with duplicate body flags remains mutation-gated" "$HOOK" "$(make_payload 'gh issue create --title followup --body safe --body-file body.md')"
+expect_block "(n9) gh issue create with stdin body-file remains mutation-gated" "$HOOK" "$(make_payload 'gh issue create --title followup --body-file -')"
+expect_block "(n10) gh issue comment edit-last remains mutation-gated" "$HOOK" "$(make_payload 'gh issue comment 123 --body-file body.md --edit-last')"
+
 # --- True-positive preservation: real redirects must still block ---
 
 expect_block "(n) echo hi > /tmp/out.txt (real redirect, spaced)" "$HOOK" "$(make_payload 'echo hi > /tmp/out.txt')"

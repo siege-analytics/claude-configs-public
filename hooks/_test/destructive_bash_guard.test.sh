@@ -50,7 +50,19 @@ expect_pass "(j) rm -rf /tmp/scratch (not root/home)" "$HOOK" "$(make_payload 'r
 
 # --- v2 promoted tiers: shared-resource and general-mutation now block ---
 
-expect_block "(k) gh issue create (shared-resource, blocks)" "$HOOK" "$(make_payload 'gh issue create --title test')"
+printf 'follow-up evidence\n' > "$TMP_REPO/body.md"
+expect_pass "(k0) gh issue create with title and body-file is governance reporting" "$HOOK" "$(make_payload 'gh issue create --repo siege-analytics/claude-configs-public --title followup --body-file body.md')"
+expect_pass "(k1) gh issue comment with target and body-file is governance reporting" "$HOOK" "$(make_payload 'gh issue comment 123 --body-file body.md')"
+expect_block "(k) gh issue create without body is shared-resource write" "$HOOK" "$(make_payload 'gh issue create --title test')"
+expect_block "(k-close) gh issue close remains shared-resource write" "$HOOK" "$(make_payload 'gh issue close 123')"
+expect_block "(k-edit) gh issue edit remains shared-resource write" "$HOOK" "$(make_payload 'gh issue edit 123 --title changed')"
+expect_block "(k-chain) gh issue create with shell chain is not report-only" "$HOOK" "$(make_payload 'gh issue create --title followup --body-file body.md; touch x')"
+expect_block "(k-label) gh issue create with metadata flag is not report-only" "$HOOK" "$(make_payload 'gh issue create --title followup --body-file body.md --label bug')"
+expect_block "(k-dup) gh issue create with duplicate body flags is not inspectable" "$HOOK" "$(make_payload 'gh issue create --title followup --body safe --body-file body.md')"
+expect_block "(k-stdin) gh issue create with stdin body-file is not inspectable" "$HOOK" "$(make_payload 'gh issue create --title followup --body-file -')"
+expect_block "(k-comment-edit) gh issue comment edit-last is not report-only" "$HOOK" "$(make_payload 'gh issue comment 123 --body-file body.md --edit-last')"
+expect_block "(k-pr-create) gh pr create remains shared-resource write" "$HOOK" "$(make_payload 'gh pr create --title pr --body body')"
+expect_block "(k-pr-merge) gh pr merge remains shared-resource write" "$HOOK" "$(make_payload 'gh pr merge 123')"
 expect_block "(l) curl -X POST (general-mutation, blocks)" "$HOOK" "$(make_payload 'curl -X POST https://example.com/api')"
 
 # --- evidence-chain override escapes v2 blocks ---
