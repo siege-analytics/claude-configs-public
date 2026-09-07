@@ -580,20 +580,46 @@ def _matches_unbounded_io(call_func, module_aliases=None, from_imports=None):
         if chain[-2:] in UNBOUNDED_IO_SURFACES:
             return True
 
+    # Helper: resolve a name-or-attribute expression to its "real" class name,
+    # applying from_imports aliasing so `from X import Foo as Bar` -> `Foo`.
+    def _resolve_class_name(expr):
+        raw = None
+        if isinstance(expr, ast.Attribute):
+            raw = expr.attr
+        elif isinstance(expr, ast.Name):
+            raw = expr.id
+        if raw is None:
+            return None
+        if raw in from_imports:
+            _, real_symbol = from_imports[raw]
+            return real_symbol
+        return raw
+
     # M-2: X(...).communicate() / X(...).wait() where X is Popen or ends in .Popen
     if call_func.attr in ("communicate", "wait") and isinstance(call_func.value, ast.Call):
-        popen_expr = call_func.value.func
-        popen_name = None
-        if isinstance(popen_expr, ast.Attribute):
-            popen_name = popen_expr.attr
-        elif isinstance(popen_expr, ast.Name):
-            popen_name = popen_expr.id
-        # m-4: aliased `from subprocess import Popen as P; P(...).wait()`
-        if popen_name is not None and popen_name in from_imports:
-            _, real_symbol = from_imports[popen_name]
-            if real_symbol == "Popen":
-                popen_name = "Popen"
-        if popen_name == "Popen":
+        if _resolve_class_name(call_func.value.func) == "Popen":
+            return True
+
+    # R3-F3 (#787): Popen(...).stdout.read()/.readline()/.readlines()
+    # and .stderr equivalents. call chain shape:
+    #   Call(Attribute(read, Attribute(stdout, Call(Popen(...)))))
+    STREAM_READ_METHODS = ("read", "readline", "readlines")
+    STREAM_ATTRS = ("stdout", "stderr")
+    if (call_func.attr in STREAM_READ_METHODS
+            and isinstance(call_func.value, ast.Attribute)
+            and call_func.value.attr in STREAM_ATTRS
+            and isinstance(call_func.value.value, ast.Call)):
+        if _resolve_class_name(call_func.value.value.func) == "Popen":
+            return True
+
+    # R3-F3 (#787): Session()/Client()/AsyncClient() instance HTTP methods.
+    # Chain shape: Call(Attribute(get, Call(Session|Client|AsyncClient(...))))
+    HTTP_INSTANCE_METHODS = ("get", "post", "put", "delete", "head", "patch", "request")
+    HTTP_CLIENT_CLASSES = ("Session", "Client", "AsyncClient")
+    if (call_func.attr in HTTP_INSTANCE_METHODS
+            and isinstance(call_func.value, ast.Call)):
+        client_name = _resolve_class_name(call_func.value.func)
+        if client_name in HTTP_CLIENT_CLASSES:
             return True
 
     return False
@@ -664,6 +690,31 @@ def check_writing_code_15(tree, source_lines):
                 elif isinstance(popen_expr, ast.Name):
                     popen_repr = popen_expr.id
                 surface = f"{popen_repr}(...).{node.func.attr}"
+            elif node.func.attr in ("read", "readline", "readlines"):
+                # R3-F3 (#787): Popen(...).stdout.read chain surface.
+                inner_attr = node.func.value  # Attribute(stdout, Call(Popen))
+                popen_call = inner_attr.value if isinstance(inner_attr, ast.Attribute) else None
+                popen_expr = popen_call.func if isinstance(popen_call, ast.Call) else None
+                popen_repr = "Popen"
+                if isinstance(popen_expr, ast.Attribute):
+                    inner = _attr_chain(popen_expr)
+                    if inner is not None:
+                        popen_repr = ".".join(inner)
+                elif isinstance(popen_expr, ast.Name):
+                    popen_repr = popen_expr.id
+                surface = f"{popen_repr}(...).{inner_attr.attr}.{node.func.attr}"
+            elif isinstance(node.func.value, ast.Call):
+                # R3-F3 (#787): Session()/Client() instance HTTP method surface.
+                inner_call = node.func.value
+                client_expr = inner_call.func
+                client_repr = "?"
+                if isinstance(client_expr, ast.Attribute):
+                    inner = _attr_chain(client_expr)
+                    if inner is not None:
+                        client_repr = ".".join(inner)
+                elif isinstance(client_expr, ast.Name):
+                    client_repr = client_expr.id
+                surface = f"{client_repr}(...).{node.func.attr}"
         if timeout_kwarg is None:
             violations.append(
                 (node.lineno,
