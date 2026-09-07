@@ -576,10 +576,15 @@ the work to be correct, beyond what the shelves check mechanically.
 
 - **Software engineering** -- implementing features, fixing bugs, writing
   tests. Shelves cover this domain nearly completely.
-- **Data engineering** -- pipelines, schemas, ETL. Shelves cover
-  partially (writing-code:5, writing-tests:1, writing-claims:1-3).
-  Affirmative standards not shelved: idempotence, replayability, schema
-  evolution, partitioning, watermarking, lineage.
+- **Data engineering** -- pipelines, schemas, ETL, derived data,
+  replicated state, and distributed processing. Shelves cover partially
+  (writing-code:5, writing-tests:1, writing-claims:1-3) and should be
+  supplemented with `shelves/systems-architecture/data-intensive/` for
+  DDIA-style review. Affirmative standards: source-of-truth declared;
+  idempotence; replayability/backfill; schema evolution compatibility;
+  partitioning and hot-key behavior; transaction/isolation assumptions;
+  named consistency guarantee; watermarking/timeliness; lineage; and
+  reconciliation/integrity checks for derived stores.
 - **Data analysis & visualization** -- statistical modeling, defensible
   findings, chart/report generation. Shelves cover mostly via
   `_writing-claims-rules.md`. Affirmative standards not shelved:
