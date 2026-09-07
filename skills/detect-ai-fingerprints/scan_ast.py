@@ -1155,24 +1155,103 @@ def _extract_optional_imports(tree):
         )
         unique_flags = list({f for f, _ in sorted_flags})
 
-        # Single-flag case: bind every import to the sole flag (preserves the
-        # existing single-import fixtures).
+        # Single-flag case: bind every import to the sole flag ONLY when
+        # each import's name stem-matches the flag OR there's a single
+        # import (unambiguous). R7-F2 (#806): before this check, `import
+        # re` with `MRE_AVAILABLE` would bind unconditionally and emit
+        # wrong-flag suggestions. Now the mismatch triggers fail-open.
+        # Named the closure below so the guard can be reused; must be
+        # defined here before use since it's inside the loop.
+        _FLAG_PREFIX_STRIPS_LOCAL = ("HAS_", "_HAS_", "_")
+        _FLAG_SUFFIX_STRIPS_LOCAL = ("_AVAILABLE", "_INSTALLED", "_HAS", "_HAS_")
+
+        def _flag_stem_local(flag_name):
+            stem = flag_name
+            for prefix in _FLAG_PREFIX_STRIPS_LOCAL:
+                if stem.startswith(prefix):
+                    stem = stem[len(prefix):]
+                    break
+            for suffix in _FLAG_SUFFIX_STRIPS_LOCAL:
+                if stem.endswith(suffix):
+                    stem = stem[:-len(suffix)]
+                    break
+            return stem
+
+        def _sole_flag_matches_import(imp_name, flag_name):
+            stem = _flag_stem_local(flag_name).casefold()
+            if not stem:
+                return False
+            imp = imp_name.casefold()
+            return stem == imp or stem.replace("_", "") == imp.replace("_", "")
+
         if len(unique_flags) == 1:
             sole_flag = sorted_flags[0][0]
-            for imp_name, _ in imports_with_line:
+            # Only bind imports whose name stem-matches the flag. Others
+            # fail open with a scan-ast-warning to avoid wrong-flag misdirect.
+            # R7-F2 (#806): applies to single-import case too. Prior version
+            # bypassed the check when len(imports)==1, so `import re` +
+            # `MRE_AVAILABLE` bound unconditionally and emitted a wrong-flag
+            # suggestion.
+            matched_imports = []
+            unmatched_imports = []
+            for imp_name, imp_line in imports_with_line:
+                if _sole_flag_matches_import(imp_name, sole_flag):
+                    matched_imports.append(imp_name)
+                else:
+                    unmatched_imports.append(imp_name)
+            for imp_name in matched_imports:
                 result[imp_name] = sole_flag
+            if unmatched_imports:
+                names = ", ".join(unmatched_imports)
+                print(
+                    f"scan-ast-warning: writing-code:8 sole availability "
+                    f"flag {sole_flag!r} does not stem-match imports "
+                    f"[{names}] in try block at line {node.lineno}; "
+                    f"failing open on those imports.",
+                    file=sys.stderr,
+                )
             continue
 
-        # R6-F1 (#804): multi-flag pairing. R5's nearest-following-line
-        # algorithm mis-pairs when imports are grouped before flags. Prefer
-        # name-based pairing: an import name matches a flag whose stem
-        # contains the import's uppercased identifier as a whole word.
-        # `pandas` matches `PANDAS_AVAILABLE`, `HAS_PANDAS`, `_HAS_PANDAS`,
-        # `PANDAS_INSTALLED`. Substring-only matches like `re` inside
-        # `MRE_AVAILABLE` are rejected by the word-boundary check.
+        # R6-F1 (#804) / R7-F1 (#806): multi-flag pairing via stem match.
+        # R6's `\b<NAME>\b` regex failed because Python regex treats `_` as
+        # a word character, so `\bPANDAS\b` never matches `PANDAS_AVAILABLE`.
+        # R7 fix: strip known prefixes/suffixes from the flag to get its
+        # stem, then compare stem to import name case-insensitively as a
+        # segment. Rejects `re` inside `MRE_AVAILABLE` because after
+        # stripping `_AVAILABLE` the stem is `MRE`, which does not equal
+        # any segment `re`.
+        _FLAG_PREFIX_STRIPS = ("HAS_", "_HAS_", "_")
+        _FLAG_SUFFIX_STRIPS = ("_AVAILABLE", "_INSTALLED", "_HAS", "_HAS_")
+
+        def _flag_stem(flag_name):
+            stem = flag_name
+            for prefix in _FLAG_PREFIX_STRIPS:
+                if stem.startswith(prefix):
+                    stem = stem[len(prefix):]
+                    break
+            for suffix in _FLAG_SUFFIX_STRIPS:
+                if stem.endswith(suffix):
+                    stem = stem[:-len(suffix)]
+                    break
+            return stem
+
         def _name_matches_flag(imp_name, flag_name):
-            pat = r"\b" + re.escape(imp_name.upper()) + r"\b"
-            return bool(re.search(pat, flag_name))
+            stem = _flag_stem(flag_name)
+            if not stem:
+                return False
+            # Case-fold both; split stem on underscore into segments; treat
+            # match as "any segment equals the import name". Handles
+            # PIL_AVAILABLE (stem PIL, one segment) and dotted-import names
+            # like `numpy_financial` -> `NUMPY_FINANCIAL_AVAILABLE` (stem
+            # NUMPY_FINANCIAL, joined_lower matches import name).
+            imp_fold = imp_name.casefold()
+            stem_fold = stem.casefold()
+            if stem_fold == imp_fold:
+                return True
+            # Also accept if joining stem segments with `_` matches, since
+            # a stem like `NUMPY_FINANCIAL` naturally corresponds to
+            # the module `numpy_financial`.
+            return stem_fold.replace("_", "") == imp_fold.replace("_", "")
 
         pending = list(imports_with_line)
         matched = {}
