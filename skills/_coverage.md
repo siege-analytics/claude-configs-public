@@ -338,12 +338,30 @@ tooling_status = "judgment"
 prevention_path = "needs: runtime/session supervisor that measures uninterrupted foreground coordination duration or send_agent_message burst size without operator checkpoints, then requires bounded batches, sub-managers, or background delegation."
 originating_arc = { session-id = "260905-clever-quasar", incident-name = "hub-control-surface-hijack" }
 
+[[failure_mode]]
+name = "default-or-rate-blind-spoke-source-selection"
+description = "Hub spawns or reassigns spokes using inherited/default AI source choices without considering rate limits, provider health, model strengths/weaknesses, independence needs, tool/source access, and operator cross-system preferences."
+rule_id = ["session-coordination:7"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: spawn_session wrapper or coordinator-message scanner that requires model/source/reasoning/tool-choice rationale and flags source concentration during visible rate-limit or queue pressure."
+originating_arc = { session-id = "260905-clever-quasar", incident-name = "hub-spoke-source-selection" }
+
+[[failure_mode]]
+name = "stale-worker-reviewer-not-archived"
+description = "Hub keeps completed workers, reviewers, or observers active after their bounded purpose is complete and their durable knowledge has been copied to the ticket, plan, PR, or successor handoff."
+rule_id = ["session-coordination:8"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: session supervisor that identifies child sessions with completed status or final artifacts, verifies no open PR/blocker/CI ownership remains, and requires done/archive-candidate labeling or an explicit keep-alive reason."
+originating_arc = { session-id = "260905-clever-quasar", incident-name = "hub-worker-retirement" }
+
 ```
 
 ## Tooling-status summary
 
 - `mechanical` rows: 16 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :7, :9, :12, :15; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3, :4).
-- `judgment` rows: 20 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5, :7; writing-claims:1; writing-releases:5; session-coordination:5, :6; counted with dual-coverage rows on writing-tests:4).
+- `judgment` rows: 22 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5, :7; writing-claims:1; writing-releases:5; session-coordination:5, :6, :7, :8; counted with dual-coverage rows on writing-tests:4).
 - `gap` rows: 1 (writing-releases:1, pending public-surface differ at upstream issue #51).
 
 The `gap` and `judgment` categories stay distinct: `gap` means no rule exists to prevent the failure mode and only operator honor catches it; `judgment` means a rule exists with defined enforcement (code review, scanner, hook) but the enforcement is judgment-bound rather than mechanical. The distinction lets the matrix answer "is this prevented at all?" separately from "is the prevention mechanized?".
