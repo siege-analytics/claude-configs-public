@@ -73,11 +73,32 @@ Canonical implementations:
 - Script -- `scripts/discipline/check-trivial-claim.sh` enforces the three-field structure and the Evidence-token requirement.
 - Hook -- `hooks/git/self-review.sh` delegates to the script when an artifact contains `## Trivial-change declaration` or `## Exemption:` blocks.
 
-**writing-rules:5. Trivial = cannot produce a future error. Trivial-claim categories are a controlled vocabulary.**
+**writing-rules:5. Trivial = cannot produce a future error. Trivial-claim categories are a controlled vocabulary, per block type.**
 
 The Trivial-change declaration block (writing-rules:4 template) is the explicit claim that a change cannot generate empirical evidence that contradicts the agent's model of the system. "I claim, in falsifiable terms, that this change cannot produce a future error." If the claim turns out wrong, the block itself becomes the post-error revision trigger.
 
 The block requires a `Category:` field naming which trivial-safe category the claim falls under. Free-text categories are not allowed -- categories are a controlled vocabulary. Adding a new category is a writing-rules:5 edit + a `check-trivial-claim.sh` constant edit, both reviewable in one PR.
+
+**Block-type-specific vocabularies (default-deny across the board).** There are three declaration block types, each governed by its own controlled vocabulary. A Category token is valid ONLY within its block type. Cross-type token reuse is a rejection.
+
+| Block header | Vocabulary source | Allowed Category tokens |
+|---|---|---|
+| `## Trivial-change declaration` | writing-rules:5 (below) | `prose-only-docs` / `comments-only` / `whitespace-only` / `commit-msg-only` / `private-rename` / `descriptive-docstring-fix` / `fixed-string-correction` |
+| `## Trivial-investigation declaration` | `self-review/SKILL.md` | `single-line-fix` / `doc-only` / `config-only` / `test-only` |
+| `## Trivial-against-state declaration` | `_authoring-against-state-rules.md` | `docs-only` / `comment-only` / `local-only` / `inputs-already-measured` |
+
+`local-only` is legitimate for **Trivial-against-state** — "change to a code path that does not run under shared cluster state." It is NOT valid for Trivial-investigation, where the four allowed tokens above are the entire allowlist. `internal-refactor`, `scoped-only`, and any invented token are rejections in every block type. The check-trivial-claim.sh script enforces the block-type-specific allowlist and default-denies anything else.
+
+**`external-shape-modeling` is a prohibited-triviality trigger, not a Category token.** Code that models an external shape space — scanners, parsers, linters, hooks that infer semantics from source syntax, config files, CLI arguments, API payloads, schemas, notebooks, or framework conventions — is NEVER TRIVIAL. When the diff touches such code, NO Trivial-* declaration is acceptable, regardless of Category. Do not add `external-shape-modeling` to any of the three allowlists above; it is a rejection reason, not a permitted token. Ship the full `[rule:authoring-against-state]` step-6 inventory instead (Inputs read / Knowledge requirements / Contact-point measurements / Surface areas / Hypothesis / Conclusions).
+
+Filename-based detection (case-sensitive, per `scripts/discipline/check-trivial-claim.sh`):
+
+- Any path under `hooks/**` — hooks are external-shape-modeling by definition.
+- Basename matching `scan*` / `*_scan*` / `scanner*` / `*_scanner*` / `lint*` / `linter*` / `parse_*` / `parser*` / `check-*` / `check_*` / `_check*` / `*_check*` with extension `.py` / `.sh` / `.js` / `.ts` / `.rb` / `.go`.
+
+This is a floor, not a ceiling. A scanner named `analyze_source.py` will not match — writing-code:8 rule-authoring discipline plus code-review will catch the miss; the enforceable floor closes the invented-token escape hatch that a decade of "local-only" declarations exploited.
+
+**Incident that motivates the block-type split and the never-trivial trigger.** claude-configs-public detect-ai-fingerprints scanner arc, rounds R5-R10. Twelve `Trivial-against-state` / `Trivial-investigation` declarations across five self-reviews used `Category: local-only`. For Trivial-against-state, the token was legitimate. For Trivial-investigation, it was an invented category the shelf did not validate. The Trivial-investigation `local-only` claim justified skipping `[rule:authoring-against-state]` step 2 (enumerate what we need to know), which for scanner code IS the target shape space. R11's Scala-skeptic frame surfaced three INVALIDATING + four MAJOR dominant real-world Python idioms the enumeration would have named. The block-type split makes the vocabulary error mechanical; the never-trivial trigger makes the shape-space enumeration mandatory for the code kind where its absence is load-bearing.
 
 ### Controlled vocabulary (v1)
 

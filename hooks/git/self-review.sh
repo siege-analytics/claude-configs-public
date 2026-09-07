@@ -521,6 +521,37 @@ HOOKEOF
         fi
     done
 
+    # Delegate Trivial-* block content validation to
+    # scripts/discipline/check-trivial-claim.sh. This covers:
+    #   - Trivial-change writing-rules:5 vocabulary + evidence chain
+    #   - Trivial-investigation self-review vocabulary + evidence chain
+    #   - Exemption writing-rules:4 evidence chain
+    #   - external-shape-modeling never-trivial rejection for any
+    #     Trivial-* block when the diff touches scanner/parser/linter/hook code
+    # The inline field-presence checks above run first so a missing
+    # declaration block returns a hook-specific diagnostic. Content-level
+    # checks (Category vocabulary, Evidence-token shape,
+    # external-shape-modeling never-trivial) run here so the script is
+    # the single source of truth for the artifact's shape.
+    CHECK_TRIVIAL_SCRIPT="$(cd "$(dirname "$0")" && pwd)/../../scripts/discipline/check-trivial-claim.sh"
+    if [[ -x "$CHECK_TRIVIAL_SCRIPT" ]]; then
+        # Diff scope: last-commit + working tree + staged, union-deduplicated.
+        # Captures the change surface both pre-commit and pre-push. The
+        # write-to-tmpfile shape avoids a shell-metacharacter round trip
+        # through argv when paths contain spaces.
+        TRIVIAL_DIFF_LIST=$(mktemp -t self-review-diff.XXXXXX)
+        {
+            git -C "$EFFECTIVE_CWD" diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true
+            git -C "$EFFECTIVE_CWD" diff --name-only HEAD 2>/dev/null || true
+            git -C "$EFFECTIVE_CWD" diff --cached --name-only 2>/dev/null || true
+        } | sort -u > "$TRIVIAL_DIFF_LIST"
+        if ! bash "$CHECK_TRIVIAL_SCRIPT" "$SOURCE_PATH" --diff-files "$TRIVIAL_DIFF_LIST"; then
+            rm -f "$TRIVIAL_DIFF_LIST"
+            exit 2
+        fi
+        rm -f "$TRIVIAL_DIFF_LIST"
+    fi
+
     # Peer review section must cite at least one shelf.
     SHELF_RE='writing-(code|tests|claims|prose|releases):'
     # Extract Peer review section content (between '## Peer review' header

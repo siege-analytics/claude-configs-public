@@ -1,0 +1,2 @@
+hooks/git/self-review.sh
+plans/self-review-pr-a.md

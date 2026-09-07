@@ -1,0 +1,2 @@
+scripts/discipline/check-trivial-claim.sh
+plans/self-review-pr-a.md
