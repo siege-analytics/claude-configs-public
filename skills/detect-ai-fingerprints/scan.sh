@@ -148,7 +148,7 @@ scan_diff_stdin() {
             # writing-prose:3: every banned-adverb match on the line.
             while IFS= read -r adverb; do
                 [[ -n "$adverb" ]] && emit "$current_file" "$line_no" "writing-prose-3-adverb($adverb)" "$content"
-            done < <(grep -oE "$ADVERBS_RE" <<< "$content")
+            done < <(grep -oiE "$ADVERBS_RE" <<< "$content")
 
             # writing-code:2: history references in code comments (heuristic: line begins with # or //).
             if [[ "$content" =~ ^[[:space:]]*(#|//)[^!] ]]; then
@@ -252,7 +252,7 @@ scan_message_stdin() {
         # writing-prose:3: every adverb match.
         while IFS= read -r adverb; do
             [[ -n "$adverb" ]] && emit "$virtual_file" "$line_no" "writing-prose-3-adverb($adverb)" "$line"
-        done < <(grep -oE "$ADVERBS_RE" <<< "$line")
+        done < <(grep -oiE "$ADVERBS_RE" <<< "$line")
 
         # writing-prose:4: bullets in commit body.
         if [[ "$line" =~ ^[[:space:]]*[-*\+][[:space:]] ]]; then
