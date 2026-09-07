@@ -13,18 +13,21 @@ two things the deploy step does not reliably do on a fresh workspace:
      already existing, and install-hooks.sh creates it afterward), leaving the
      workspace advisory-only.
 
-  2. Register the standing-order watchdog automations into automations.json.
-     Nothing else registers them, so the batch/standing-order backstop stays
-     dark without this step.
+  2. Optionally register the standing-order watchdog automations when
+     --include-standing-order-automations is passed. They are opt-in because
+     SchedulerTick prompt automations create sessions and SessionStatusChange
+     audits can self-trigger into workspace spam if enabled uncritically.
 
-Both operations are idempotent (replace-by-identity, never append duplicates)
-and preserve every entry the workspace already has, including a consumer's own
-skills-sync automation. The automations write is backed up and restored on a
-parse failure so a bad merge cannot corrupt the file that drives harmonisation.
+The settings merge is idempotent. Optional automation registration is also
+idempotent (replace-by-identity, never append duplicates) and preserves every
+entry the workspace already has, including a consumer's own skills-sync
+automation. The automations write is backed up and restored on a parse failure
+so a bad merge cannot corrupt the file that drives harmonisation.
 
 Usage:
     python3 bin/wire-enforcement.py --workspace <path>
     python3 bin/wire-enforcement.py --workspace <path> --dist <dist-dir>
+    python3 bin/wire-enforcement.py --workspace <path> --include-standing-order-automations
 
 Exit codes: 0 wired, 1 error, 2 bad invocation.
 
@@ -167,6 +170,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace", type=Path, required=True, help="Craft Agent workspace path")
     parser.add_argument("--dist", type=Path, default=REPO_ROOT / "dist", help="Build dist directory (default: %(default)s)")
+    parser.add_argument(
+        "--include-standing-order-automations",
+        action="store_true",
+        help="Opt in to registering standing-order SchedulerTick/SessionStatusChange prompt automations",
+    )
     args = parser.parse_args()
 
     ws = args.workspace.expanduser()
@@ -183,7 +191,10 @@ def main() -> int:
         return 1
 
     merge_ca_enforcement_settings(settings_src, ws / ".claude" / "settings.json")
-    register_ca_automations(REPO_ROOT / "craft-agent" / "automations-snippet.json", ws / "automations.json")
+    if args.include_standing_order_automations:
+        register_ca_automations(REPO_ROOT / "craft-agent" / "automations-snippet.json", ws / "automations.json")
+    else:
+        print("  Skipped standing-order automations (opt-in; pass --include-standing-order-automations to register)")
     return 0
 
 
