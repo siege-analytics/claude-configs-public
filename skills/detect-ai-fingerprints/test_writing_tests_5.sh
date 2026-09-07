@@ -317,6 +317,77 @@ else
     bad "(q) M-3 noqa reason 'cleanup'" "out=$OUT"
 fi
 
+# --- m-3 (#771) lock-in: arg walker handles Subscript / Starred ---
+
+# (r) m-3: pytest.raises(Optional[ExcClass]) — silent (Subscript unwrapped)
+mkdir -p "$TMP/repo/pkg7"
+cat > "$TMP/repo/pkg7/thing.py" <<'EOF'
+def go():
+    try:
+        return do_it()
+    except FileExistsError:
+        raise
+EOF
+cat > "$TMP/repo/tests/test_thing.py" <<'EOF'
+import pytest
+from typing import Optional
+def test_conn_error():
+    with pytest.raises(Optional[FileExistsError]):
+        go()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg7/thing.py" 2>&1)
+if ! fires_wt5 "$OUT"; then
+    ok "(r) m-3 pytest.raises(Optional[Exc]) covers: silent"
+else
+    bad "(r) m-3 Optional[Exc] not recognized" "out=$OUT"
+fi
+
+# (s) m-3: pytest.raises(Union[A, B]) — silent (Subscript+Tuple recursed)
+mkdir -p "$TMP/repo/pkg8"
+cat > "$TMP/repo/pkg8/thing.py" <<'EOF'
+def go():
+    try:
+        return do_it()
+    except LookupError:
+        raise
+EOF
+cat > "$TMP/repo/tests/test_thing.py" <<'EOF'
+import pytest
+from typing import Union
+def test_lookup():
+    with pytest.raises(Union[LookupError, ValueError]):
+        go()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg8/thing.py" 2>&1)
+if ! fires_wt5 "$OUT"; then
+    ok "(s) m-3 pytest.raises(Union[A, B]) covers: silent"
+else
+    bad "(s) m-3 Union[A, B] not recognized" "out=$OUT"
+fi
+
+# (t) m-3: pytest.raises(*exc_tuple) — starred does NOT provide coverage; fires
+mkdir -p "$TMP/repo/pkg9"
+cat > "$TMP/repo/pkg9/thing.py" <<'EOF'
+def go():
+    try:
+        return do_it()
+    except IndexError:
+        raise
+EOF
+cat > "$TMP/repo/tests/test_thing.py" <<'EOF'
+import pytest
+exc_tuple = (IndexError,)
+def test_lookup():
+    with pytest.raises(*exc_tuple):
+        go()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/repo/pkg9/thing.py" 2>&1)
+if fires_wt5 "$OUT"; then
+    ok "(t) m-3 pytest.raises(*starred) not statically resolvable: fires"
+else
+    bad "(t) m-3 starred false-negative" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then
