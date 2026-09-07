@@ -1242,21 +1242,48 @@ def _test_files_for_source(source_path):
     return [p for p in unique if p.is_file()]
 
 
+def _yield_class_names_from(node):
+    """Extract class-name-shaped identifiers from an AST expression node.
+
+    Handles the shapes commonly seen in `pytest.raises(...)` first-arg:
+    - Name(ConnectionError) -> "ConnectionError"
+    - Attribute(requests.exceptions.RequestException) -> "RequestException"
+    - Tuple((ExcA, ExcB)) -> "ExcA", "ExcB"
+    - Subscript(Optional[Foo]) -> yields whatever inside the slice resolves to
+      (m-3 #771)
+    - Starred(*exc_tuple) -> conservative: yields nothing (the tuple's
+      contents are not statically visible from this call site)
+    Nested combinations are recursed into so `Optional[Tuple[A, B]]` yields
+    both A and B."""
+    if isinstance(node, ast.Name):
+        yield node.id
+    elif isinstance(node, ast.Attribute):
+        yield node.attr
+    elif isinstance(node, ast.Tuple):
+        for elt in node.elts:
+            yield from _yield_class_names_from(elt)
+    elif isinstance(node, ast.Subscript):
+        # m-3: Optional[Foo], List[Foo], Tuple[A, B], Union[A, B] — descend
+        # into the slice (a Name/Tuple/etc in modern Python; Index-wrapper
+        # in Python <3.9 but ast normalizes it away for our targets).
+        sub = node.slice
+        # Python 3.9+: slice is the value directly; older versions used ast.Index.
+        if isinstance(sub, ast.Index):  # pragma: no cover — legacy path
+            sub = sub.value
+        yield from _yield_class_names_from(sub)
+    elif isinstance(node, ast.Starred):
+        # *exc_tuple — the tuple's contents are not statically resolvable
+        # from this call site. Yield nothing rather than fabricate a match.
+        return
+
+
 def _iter_call_arg_class_names(call_node):
     """Yield class-name-shaped identifiers from a Call's positional args.
-    Handles Name, Attribute (dotted last-segment), and Tuple (multiple classes
-    passed as a tuple, e.g. `pytest.raises((ExcA, ExcB))`)."""
+    m-3 (#771): now recurses into Subscript (Optional[X], Union[A, B]) and
+    tolerates Starred (yields nothing rather than crash). Kept as the
+    public entry point; the recursion is in _yield_class_names_from."""
     for arg in call_node.args:
-        if isinstance(arg, ast.Name):
-            yield arg.id
-        elif isinstance(arg, ast.Attribute):
-            yield arg.attr
-        elif isinstance(arg, ast.Tuple):
-            for elt in arg.elts:
-                if isinstance(elt, ast.Name):
-                    yield elt.id
-                elif isinstance(elt, ast.Attribute):
-                    yield elt.attr
+        yield from _yield_class_names_from(arg)
 
 
 def _test_ast_covers_exception(test_path, exc_class):
