@@ -1360,13 +1360,35 @@ def check_writing_tests_5(tree, source_lines, source_path):
     return violations
 
 
-# Default test-path globs for --exclude-tests.
-TEST_PATH_PATTERNS = ("/tests/", "/test/", "_test.py", "test_")
+# Test-path detection. m-6 (#771): earlier version used substring match on
+# "test_", which false-positive'd on `tester_lib.py`, `tests_helper.py`,
+# `test_bench.py`. The `test_` marker must anchor at a path-segment boundary
+# (start of the basename or after a slash), not appear anywhere in the path.
+TEST_PATH_DIR_SEGMENTS = ("/tests/", "/test/")
+TEST_PATH_SUFFIXES = ("_test.py",)
 
 
 def _is_test_path(path):
+    """True iff path is under a test directory or its basename starts with
+    `test_` or ends with `_test.py`. Substring occurrences of `test_` mid-
+    basename (e.g., `tester_lib.py`) do NOT count."""
     p = str(path)
-    return any(pat in p for pat in TEST_PATH_PATTERNS)
+    if any(seg in p for seg in TEST_PATH_DIR_SEGMENTS):
+        return True
+    # Handle paths that START with a test directory (no leading slash).
+    if p.startswith("tests/") or p.startswith("test/"):
+        return True
+    basename = Path(p).name
+    if basename.startswith("test_"):
+        return True
+    if any(basename.endswith(suf) for suf in TEST_PATH_SUFFIXES):
+        return True
+    return False
+
+
+# Back-compat alias: earlier revisions referenced the flat pattern list.
+# Kept for consumers that grep the source; behavior is now segment-anchored.
+TEST_PATH_PATTERNS = TEST_PATH_DIR_SEGMENTS + TEST_PATH_SUFFIXES + ("test_",)
 
 
 def scan_file(path, allow_decorators, exclude_tests=False):
