@@ -15,6 +15,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 
 ### Fixed
+- Evidence-bearing `gh issue create` and `gh issue comment` commands are now treated as governance reporting rather than implementation mutations when their title/body or target/body is inspectable; destructive and universal mutation gates still block issue edit/close/delete/reopen/label, PR create/merge, shell chaining, and issue creation without a body.
 - Terminal think-gates without artifact evidence no longer become workspace-cwd implementation blockers for exploration/read Bash calls; they also no longer authorize mutation. Mutation attempts now receive a specific terminal-no-evidence block instead of falling through to unrelated implementation artifact checks.
 - Task-scoped design/think/investigate gates: resolver prompt gates and the universal mutation gate no longer fall back to a foreign workspace-root `think-gate.json` after scoped repo/session resolution rejects it. Design notes, think gate, investigate gate, and pipeline state now warn or block only for the current task/repo/session rather than the whole workspace.
 - Hook settings drift: `.claude/settings.json` and `hooks/settings-snippet.json` now agree on the wired hook set, including universal mutation, coordinator status, fix-shape, spawn guard, Vergil quote, and MultiEdit write guards.
