@@ -25,24 +25,40 @@ export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-# Repo-scoped resolution (#494): check think-gate-*.json first, fall back to think-gate.json
+# Task-scoped resolution: resolve the think gate for the CURRENT hook cwd/repo,
+# not the first active gate anywhere in the workspace. Pipeline warnings for
+# one task must not become workspace-global noise or blockers for another task.
 RESOLVE_TG="$SCRIPT_DIR/../lib/resolve-think-gate.py"
+REPO_ROOT=$(printf '%s' "$HOOK_INPUT_JSON" | python3 -c '
+import json, sys, os, subprocess
+try:
+    data = json.loads(sys.stdin.read() or "{}")
+    cwd = data.get("cwd") or os.getcwd()
+except Exception:
+    cwd = os.getcwd()
+try:
+    result = subprocess.run(["git", "-C", cwd, "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=5)
+    print(result.stdout.strip() if result.returncode == 0 else cwd)
+except Exception:
+    print(cwd)
+' 2>/dev/null || echo "$WORKSPACE_ROOT")
 SIGNAL_FILE="${CLAUDE_THINK_GATE:-}"
+RESOLVER_ATTEMPTED=0
 if [[ -z "$SIGNAL_FILE" ]] && [[ -f "$RESOLVE_TG" ]]; then
-    SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --all 2>/dev/null | python3 -c "
-import json, sys
-gates = json.load(sys.stdin)
-for g in gates:
-    s = g.get('data', {}).get('status', '')
-    if s not in ('disposed', 'done-awaiting-pr', 'complete'):
-        print(g['path'])
-        sys.exit(0)
-if gates:
-    print(gates[0]['path'])
-" 2>/dev/null || true)
+    RESOLVER_ATTEMPTED=1
+    SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" --env-override "${CLAUDE_THINK_GATE:-}" 2>/dev/null | python3 -c "import json,sys
+try:
+    r=json.load(sys.stdin)
+    print(r['path'] if r else '')
+except Exception:
+    print('')" 2>/dev/null || true)
 fi
 if [[ -z "$SIGNAL_FILE" ]]; then
-    SIGNAL_FILE="$WORKSPACE_ROOT/think-gate.json"
+    if [[ "$RESOLVER_ATTEMPTED" == "0" ]]; then
+        SIGNAL_FILE="$WORKSPACE_ROOT/think-gate.json"
+    else
+        SIGNAL_FILE="$REPO_ROOT/.think-gate-missing.json"
+    fi
 fi
 
 if [ ! -f "$SIGNAL_FILE" ]; then

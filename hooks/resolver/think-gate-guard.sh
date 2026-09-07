@@ -72,7 +72,9 @@ WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # matches the current repo's basename.
 RESOLVE_TG="$SCRIPT_DIR/../lib/resolve-think-gate.py"
 SIGNAL_FILE="${CLAUDE_THINK_GATE:-}"
+RESOLVER_ATTEMPTED=0
 if [[ -z "$SIGNAL_FILE" ]] && [[ -f "$RESOLVE_TG" ]]; then
+    RESOLVER_ATTEMPTED=1
     # Derive repo_root from the hook input's cwd (Claude Code hook payload).
     # If no cwd is available, fall back to the workspace root; find_gate_for_repo
     # will still filter the legacy singleton by repo_root basename match.
@@ -106,7 +108,11 @@ except Exception:
 " 2>/dev/null || true)
 fi
 if [[ -z "$SIGNAL_FILE" ]]; then
-    SIGNAL_FILE="$WORKSPACE_ROOT/think-gate.json"
+    if [[ "$RESOLVER_ATTEMPTED" == "0" ]]; then
+        SIGNAL_FILE="$WORKSPACE_ROOT/think-gate.json"
+    else
+        SIGNAL_FILE="$REPO_ROOT/.think-gate-missing.json"
+    fi
 fi
 
 if [ ! -f "$SIGNAL_FILE" ]; then
