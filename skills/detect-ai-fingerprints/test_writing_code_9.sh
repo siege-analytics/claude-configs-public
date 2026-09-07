@@ -111,6 +111,70 @@ else
     bad "(g) decorator allowlist" "out=$OUT"
 fi
 
+# --- R3-F1 (#787) lock-in: scoped visitor + no keyword-name blessing + no bare kwargs-spread ---
+
+# (h) R3-F1a: keyword-argument NAME match must NOT count as use — fires
+cat > "$TMP/h.py" <<'EOF'
+def wrapper(timeout=30):
+    return fn(timeout=10)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/h.py" 2>&1)
+if fires_wc9 "$OUT"; then
+    ok "(h) R3-F1a keyword literal name match — fires"
+else
+    bad "(h) F1a" "out=$OUT"
+fi
+
+# (i) R3-F1b: **kwargs spread + named-defaulted param NOT in kwargs — fires
+cat > "$TMP/i.py" <<'EOF'
+def wrapper(fn, dropped=42, **kwargs):
+    return fn(**kwargs)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/i.py" 2>&1)
+if fires_wc9 "$OUT"; then
+    ok "(i) R3-F1b named param separate from **kwargs — fires"
+else
+    bad "(i) F1b" "out=$OUT"
+fi
+
+# (j) R3-F1c: nested function shadow — inner's `x` is not outer's — fires
+cat > "$TMP/j.py" <<'EOF'
+def outer(x=1):
+    def inner(x):
+        return x
+    return inner
+EOF
+OUT=$(python3 "$SCAN" "$TMP/j.py" 2>&1)
+if fires_wc9 "$OUT"; then
+    ok "(j) R3-F1c nested shadow — fires"
+else
+    bad "(j) F1c" "out=$OUT"
+fi
+
+# (k) R3-F1 counterpart: legit forward with named + **kwargs — silent
+cat > "$TMP/k.py" <<'EOF'
+def wrap(fn, timeout=None, **kwargs):
+    return fn(timeout=timeout, **kwargs)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/k.py" 2>&1)
+if ! fires_wc9 "$OUT"; then
+    ok "(k) R3-F1 counterpart legit forward — silent"
+else
+    bad "(k) F1 counterpart" "out=$OUT"
+fi
+
+# (l) R3-F1 escape hatch: **locals() forwarder — silent
+cat > "$TMP/l.py" <<'EOF'
+def wrap(fn, arg=42):
+    return fn(**locals())
+EOF
+OUT=$(python3 "$SCAN" "$TMP/l.py" 2>&1)
+if ! fires_wc9 "$OUT"; then
+    ok "(l) R3-F1 **locals() escape hatch — silent"
+else
+    bad "(l) locals" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then

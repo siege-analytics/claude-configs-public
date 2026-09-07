@@ -81,19 +81,68 @@ def decorator_name(node):
     return ""
 
 
-def collect_referenced(func_node):
+def _collect_load_names_in_scope(func_node):
+    """R3-F1 (#787): return names Load-referenced within func_node's own scope.
+
+    Scope-aware: does NOT descend into nested FunctionDef, AsyncFunctionDef,
+    Lambda, or comprehension scopes (those create their own scopes and can
+    shadow the parent's parameters). Load-only: Store/Del contexts do not
+    count as a use of a parameter — assigning to a name of the same identifier
+    shadows the parameter, not consumes it.
+
+    Also detects `**locals()`-style forwarders: if any Call's kwargs (double-
+    star spread) has an arg that is `locals()`, return `_captures_locals=True`
+    so the caller can conservatively silence emission (rare escape hatch)."""
     names = set()
-    keywords = set()
-    has_kwargs_spread = False
-    for n in ast.walk(func_node):
-        if isinstance(n, ast.Name):
-            names.add(n.id)
-        elif isinstance(n, ast.keyword):
-            if n.arg is None:
-                has_kwargs_spread = True
-            else:
-                keywords.add(n.arg)
-    return names, keywords, has_kwargs_spread
+    captures_locals = False
+    NESTED_SCOPE_TYPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda,
+                          ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+
+    def _walk(node):
+        nonlocal captures_locals
+        # If the node is itself a nested scope, do NOT walk into its body/args.
+        # But default-value expressions and decorators evaluate in the outer
+        # scope — walk THOSE.
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+            args = node.args
+            for default in list(args.defaults) + list(args.kw_defaults or []):
+                if default is not None:
+                    _walk(default)
+            for decorator in getattr(node, "decorator_list", []):
+                _walk(decorator)
+            return
+        if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
+            # First generator's iterable is evaluated in outer scope.
+            if node.generators:
+                _walk(node.generators[0].iter)
+            return
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+            names.add(node.id)
+        # Detect `**locals()` spread
+        if isinstance(node, ast.keyword) and node.arg is None:
+            if (isinstance(node.value, ast.Call)
+                    and isinstance(node.value.func, ast.Name)
+                    and node.value.func.id == "locals"):
+                captures_locals = True
+        for child in ast.iter_child_nodes(node):
+            _walk(child)
+
+    # Walk the body statements of this function directly (skip walking the
+    # signature — parameter names as Store bindings don't count as uses).
+    for stmt in func_node.body:
+        _walk(stmt)
+    return names, captures_locals
+
+
+# Back-compat alias for older callers (returned the 3-tuple; new callers use
+# the scoped helper directly).
+def collect_referenced(func_node):
+    """Deprecated: use `_collect_load_names_in_scope`. Retained as a thin
+    shim that returns the old 3-tuple with the keyword set + kwargs-spread
+    flag emptied (both were R3-F1 false-positive silencers). Kept only to
+    avoid breaking downstream callers that grep for this symbol."""
+    names, _captures_locals = _collect_load_names_in_scope(func_node)
+    return names, set(), False
 
 
 def defaulted_args(func_node):
@@ -114,6 +163,24 @@ def defaulted_args(func_node):
 
 
 def check_writing_code_9(tree, allow_decorators):
+    """R3-F1 (#787): scoped visitor + no keyword-name blessing + no bare
+    kwargs-spread silencer.
+
+    Prior version treated `fn(timeout=10)` inside the function as a use of
+    the outer `timeout` parameter (kwarg NAME match), silenced any function
+    with both `**kwargs` param and any `**` spread call (regardless of what
+    was in kwargs), and walked nested-function bodies (so a shadowed `x` in
+    an inner def counted as a use of the outer `x`). All three defeated
+    detection. New rules:
+
+    - Only Load-context `ast.Name` references in the CURRENT function scope
+      count as uses.
+    - Nested FunctionDef / AsyncFunctionDef / Lambda / comprehension bodies
+      do NOT count (they have their own scopes and can shadow).
+    - `**kwargs` spread does NOT silence a named defaulted parameter — named
+      params are bound explicitly and NEVER absorbed into `**kwargs`.
+    - Escape hatch: `**locals()` in ANY call in the body silences all
+      defaulted params for this function (rare but legitimate forwarder)."""
     violations = []
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -123,25 +190,22 @@ def check_writing_code_9(tree, allow_decorators):
         defaulted = defaulted_args(node)
         if not defaulted:
             continue
-        has_kwarg_param = node.args.kwarg is not None
-        names, keywords, has_kwargs_spread = collect_referenced(node)
+        names, captures_locals = _collect_load_names_in_scope(node)
+        if captures_locals:
+            continue
         docstring = ast.get_docstring(node) or ""
         for arg_name in defaulted:
-            if arg_name in names or arg_name in keywords:
-                continue
-            if has_kwarg_param and has_kwargs_spread:
+            if arg_name in names:
                 continue
             # Carve-out (c): if the docstring mentions the parameter name, treat as
             # documented no-op. Heuristic; loose by design - false negatives are
-            # acceptable here and false positives are not. Tighter substring matches
-            # (e.g. requiring "no-op" or "subclass" near the name) are a v2.2.x
-            # candidate after fix-exercise evidence about real patterns.
+            # acceptable here and false positives are not.
             if arg_name in docstring:
                 continue
             excerpt = (
                 f"def {node.name}(...): parameter '{arg_name}' has a default "
-                f"but is never referenced, not forwarded via **kwargs, and "
-                f"not named in the docstring"
+                f"but is never referenced in this function's own scope, not "
+                f"forwarded, and not named in the docstring"
             )
             violations.append(
                 (node.lineno,
