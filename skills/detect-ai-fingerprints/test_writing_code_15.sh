@@ -171,6 +171,80 @@ else
     bad "(l) m-5 counterpart" "out=$OUT"
 fi
 
+# --- m-4 (#771) lock-in: alias handling + bare-name from-imports ---
+
+# (m) m-4: import subprocess as sp; sp.run() — fires
+cat > "$TMP/m.py" <<'EOF'
+import subprocess as sp
+sp.run(["ls"])
+EOF
+OUT=$(python3 "$SCAN" "$TMP/m.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(m) m-4 import subprocess as sp — fires"
+else
+    bad "(m) m-4 aliased subprocess" "out=$OUT"
+fi
+
+# (n) m-4: from urllib.request import urlopen; urlopen() — fires
+cat > "$TMP/n.py" <<'EOF'
+from urllib.request import urlopen
+urlopen("http://x")
+EOF
+OUT=$(python3 "$SCAN" "$TMP/n.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(n) m-4 bare urlopen from-import — fires"
+else
+    bad "(n) m-4 bare urlopen" "out=$OUT"
+fi
+
+# (o) m-4: from subprocess import Popen; Popen().wait() — fires
+cat > "$TMP/o.py" <<'EOF'
+from subprocess import Popen
+Popen(["x"]).wait()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/o.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(o) m-4 from subprocess import Popen — fires"
+else
+    bad "(o) m-4 bare Popen" "out=$OUT"
+fi
+
+# (p) m-4: aliased Popen — from subprocess import Popen as P — fires
+cat > "$TMP/p.py" <<'EOF'
+from subprocess import Popen as P
+P(["x"]).communicate()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/p.py" 2>&1)
+if fires_wc15 "$OUT"; then
+    ok "(p) m-4 Popen as P alias — fires"
+else
+    bad "(p) m-4 aliased Popen" "out=$OUT"
+fi
+
+# (q) m-4 false-positive guard: bare 'get' from unrelated module — silent
+cat > "$TMP/q.py" <<'EOF'
+from myapi import get
+get("foo")
+EOF
+OUT=$(python3 "$SCAN" "$TMP/q.py" 2>&1)
+if ! fires_wc15 "$OUT"; then
+    ok "(q) m-4 bare 'get' from unrelated module — silent"
+else
+    bad "(q) m-4 false positive" "out=$OUT"
+fi
+
+# (r) m-4: aliased import with timeout — silent (regression check)
+cat > "$TMP/r.py" <<'EOF'
+import subprocess as sp
+sp.run(["ls"], timeout=5)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/r.py" 2>&1)
+if ! fires_wc15 "$OUT"; then
+    ok "(r) m-4 aliased subprocess WITH timeout — silent"
+else
+    bad "(r) m-4 aliased with timeout" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then

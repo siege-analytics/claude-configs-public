@@ -470,25 +470,73 @@ def _attr_chain(node):
     return None
 
 
-def _matches_unbounded_io(call_func):
+def _extract_import_aliases(tree):
+    """m-4 (#771): return (module_aliases, from_imports) for a module.
+
+    - module_aliases[alias] = real_module_name for `import X` / `import X as Y`.
+      Bare `import X` maps X -> X. Dotted `import X.Y.Z` binds X and maps X -> X
+      (the fully-qualified use `X.Y.Z.func` remains untouched by aliasing).
+    - from_imports[bound_name] = (source_module, imported_symbol) for
+      `from X import Y [as Z]`. Bare-name calls to Y (or Z) are resolved
+      via this dict.
+    """
+    module_aliases = {}
+    from_imports = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                # `import subprocess` -> {'subprocess': 'subprocess'}
+                # `import subprocess as sp` -> {'sp': 'subprocess'}
+                # `import urllib.request` -> {'urllib': 'urllib'} (X.Y.Z chain untouched)
+                bound = alias.asname or alias.name.split(".")[0]
+                real = alias.asname and alias.name or alias.name.split(".")[0]
+                module_aliases[bound] = real
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            for alias in node.names:
+                bound = alias.asname or alias.name
+                from_imports[bound] = (module, alias.name)
+    return module_aliases, from_imports
+
+
+def _matches_unbounded_io(call_func, module_aliases=None, from_imports=None):
     """True if a Call's func node matches one of UNBOUNDED_IO_SURFACES.
 
     M-2 (#766): handles `subprocess.Popen(...).communicate()` and
-    `Popen(...).wait()` shapes. `_attr_chain` on those bottoms out at a
-    Call() (the Popen instantiation), so the rightmost-two-segments
-    match cannot find the chain. Instead, we special-case the pattern:
-    if this Attribute is `.communicate` or `.wait` and its value is a
-    Call whose func is either `<pkg>.Popen` or bare `Popen`, treat it
-    as an UNBOUNDED_IO_SURFACES match on the (Popen, <attr>) entry.
+    `Popen(...).wait()` shapes via a special case on the (Popen, <attr>)
+    entries.
+
+    m-4 (#771): resolves aliased imports (`import X as Y; Y.foo(...)`)
+    and bare-name calls (`from X import foo; foo(...)`) via the two
+    import maps built by _extract_import_aliases.
     """
+    module_aliases = module_aliases or {}
+    from_imports = from_imports or {}
+
+    # m-4: bare-name call (from X import Y case)
+    if isinstance(call_func, ast.Name):
+        fromspec = from_imports.get(call_func.id)
+        if fromspec is not None:
+            module, symbol = fromspec
+            module_last = module.rsplit(".", 1)[-1] if module else ""
+            if (module_last, symbol) in UNBOUNDED_IO_SURFACES:
+                return True
+        return False
+
     if not isinstance(call_func, ast.Attribute):
         return False
 
     chain = _attr_chain(call_func)
-    if chain is not None:
-        # Match the rightmost two segments (handles urllib.request.urlopen,
-        # subprocess.run, requests.get, etc.).
-        if len(chain) >= 2 and chain[-2:] in UNBOUNDED_IO_SURFACES:
+    if chain is not None and len(chain) >= 2:
+        # m-4: rewrite the leading name through module_aliases before matching.
+        # `sp.run(...)` where `import subprocess as sp` -> effective ('subprocess', 'run').
+        leading = chain[0]
+        real_leading = module_aliases.get(leading, leading)
+        effective = tuple(real_leading.split(".")) + chain[1:]
+        if len(effective) >= 2 and effective[-2:] in UNBOUNDED_IO_SURFACES:
+            return True
+        # Also try the original chain (in case module_aliases has stale info).
+        if chain[-2:] in UNBOUNDED_IO_SURFACES:
             return True
 
     # M-2: X(...).communicate() / X(...).wait() where X is Popen or ends in .Popen
@@ -499,6 +547,11 @@ def _matches_unbounded_io(call_func):
             popen_name = popen_expr.attr
         elif isinstance(popen_expr, ast.Name):
             popen_name = popen_expr.id
+        # m-4: aliased `from subprocess import Popen as P; P(...).wait()`
+        if popen_name is not None and popen_name in from_imports:
+            _, real_symbol = from_imports[popen_name]
+            if real_symbol == "Popen":
+                popen_name = "Popen"
         if popen_name == "Popen":
             return True
 
@@ -532,12 +585,16 @@ def check_writing_code_15(tree, source_lines):
 
     For each Call to a known I/O surface, require either a numeric `timeout`
     kwarg OR `timeout=None` accompanied by an audit-signal comment.
+
+    m-4 (#771): resolves aliased imports (`import X as Y`) and bare-name
+    calls (`from X import Y`) via per-module import maps.
     """
+    module_aliases, from_imports = _extract_import_aliases(tree)
     violations = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
-        if not _matches_unbounded_io(node.func):
+        if not _matches_unbounded_io(node.func, module_aliases, from_imports):
             continue
         timeout_kwarg = None
         for kw in node.keywords:
@@ -546,7 +603,10 @@ def check_writing_code_15(tree, source_lines):
                 break
         # Surface name for excerpt.
         surface = "?"
-        if isinstance(node.func, ast.Attribute):
+        if isinstance(node.func, ast.Name):
+            # m-4: bare-name call from `from X import Y`
+            surface = node.func.id
+        elif isinstance(node.func, ast.Attribute):
             chain = _attr_chain(node.func)
             if chain is not None:
                 surface = ".".join(chain)
