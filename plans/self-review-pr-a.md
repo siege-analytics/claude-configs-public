@@ -15,6 +15,7 @@ Goal source: coordinator brief from session 260525-long-swan (recorded in the op
 
 Investigate-artifact: investigate-gate-claude-configs-public.json (repo root + session dir)
 Pre-mortem-artifact: plans/pre-mortem-pr-a.md
+Pre-author-inventory: plans/self-review-pr-a.md#pre-author-inventory
 Hostile-review-artifact: plans/r11-scala-skeptic-review.md (upstream R11-meta chain, tracked in the workspace ticket)
 Goal source verification: coordinator brief + R11-meta gap analysis both name the exact enforcement gap PR A closes (Trivial-investigation `Category: local-only` accepted by no validator).
 
