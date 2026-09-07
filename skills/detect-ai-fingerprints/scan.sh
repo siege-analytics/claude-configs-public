@@ -362,12 +362,12 @@ case "$mode" in
         ;;
 esac
 
-# --- AST scanner: invoke scan_ast.py on changed .py files for writing-code:9
-# and writing-releases:3. Skipped for message modes since those are not code.
-# First-cut v2.2.0 implementation: scans the post-state file from disk,
-# reports ALL violations in the file (not diff-line-filtered). Pre-existing
-# violations are flagged along with new ones; rule grace-window text covers
-# the expectation. Diff-line filtering may land in v2.2.x.
+# --- AST scanner: invoke scan_ast.py on changed .py files for the AST rule
+# set (writing-code:4/7/8/9/15, writing-tests:5, writing-releases:3).
+# Skipped for message modes since those are not code. Scans the post-state
+# file from disk and reports ALL violations in that file (not diff-line-
+# filtered). Pre-existing violations are flagged along with newly-added
+# ones; rule grace-window text covers the expectation.
 if [[ "$mode" == staged || "$mode" == working || "$mode" == pr ]]; then
     py_files=""
     case "$mode" in

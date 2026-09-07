@@ -1108,41 +1108,70 @@ def _extract_optional_imports(tree):
         if not catches_import:
             continue
 
-        # Find imports + flag assigns in the try body
-        imported_names = []
-        flag_names_in_try = []
+        # Find imports + flag assigns in the try body, recording line numbers
+        # so each import can be paired to the flag set on the smallest line
+        # number strictly greater than the import's own line. R5-F1 (#802):
+        # the earlier version put all imported names into a single set-picked
+        # flag, non-deterministically false-positiving on multi-import blocks.
+        imports_with_line = []   # list[(name, lineno)]
+        flags_with_line = []     # list[(flag_name, lineno)]
         for stmt in node.body:
             if isinstance(stmt, ast.Import):
                 for alias in stmt.names:
-                    imported_names.append(alias.asname or alias.name.split(".")[0])
+                    imports_with_line.append(
+                        (alias.asname or alias.name.split(".")[0], stmt.lineno)
+                    )
             elif isinstance(stmt, ast.ImportFrom):
                 for alias in stmt.names:
-                    imported_names.append(alias.asname or alias.name)
+                    imports_with_line.append(
+                        (alias.asname or alias.name, stmt.lineno)
+                    )
             elif isinstance(stmt, ast.Assign):
                 for tgt in stmt.targets:
                     if isinstance(tgt, ast.Name) and _is_flag_name(tgt.id):
-                        flag_names_in_try.append(tgt.id)
+                        flags_with_line.append((tgt.id, stmt.lineno))
 
-        # Verify at least one handler ALSO assigns a flag (mirror shape)
-        flag_names_in_handler = []
+        if not imports_with_line or not flags_with_line:
+            continue
+
+        # Verify at least one handler ALSO assigns a flag from the try body's
+        # set (mirror shape). Preserves the "must have paired True/False
+        # assigns" gate from the prior implementation.
+        handler_flag_names = set()
         for h in node.handlers:
             for stmt in h.body:
                 if isinstance(stmt, ast.Assign):
                     for tgt in stmt.targets:
                         if isinstance(tgt, ast.Name) and _is_flag_name(tgt.id):
-                            flag_names_in_handler.append(tgt.id)
-
-        if not flag_names_in_try or not flag_names_in_handler:
+                            handler_flag_names.add(tgt.id)
+        common = {f for f, _ in flags_with_line if f in handler_flag_names}
+        if not common:
             continue
 
-        # Map each imported name to the (first) flag. If multiple flags are
-        # set, take the intersection or fall back to first-flag.
-        common_flags = set(flag_names_in_try) & set(flag_names_in_handler)
-        flag_name = next(iter(common_flags), flag_names_in_try[0] if flag_names_in_try else None)
-        if not flag_name:
+        # Sort flags by lineno so "nearest following" is well-defined.
+        sorted_flags = sorted(
+            (fl for fl in flags_with_line if fl[0] in common),
+            key=lambda pair: pair[1],
+        )
+
+        # Single-flag case: bind every import to the sole flag (preserves the
+        # existing 12 writing-code:8 fixtures which are all single-import).
+        # Multi-flag case: bind each import to the nearest flag set on a line
+        # strictly greater than the import's line; if none exists (import
+        # appears after all flags), fall back to the last flag.
+        if len({f for f, _ in sorted_flags}) == 1:
+            sole_flag = sorted_flags[0][0]
+            for imp_name, _ in imports_with_line:
+                result[imp_name] = sole_flag
             continue
-        for imp in imported_names:
-            result[imp] = flag_name
+
+        for imp_name, imp_lineno in imports_with_line:
+            following = [f for f, fl in sorted_flags if fl > imp_lineno]
+            if following:
+                result[imp_name] = following[0]
+            else:
+                # No following flag; pair with the last flag by lineno.
+                result[imp_name] = sorted_flags[-1][0]
     return result
 
 
