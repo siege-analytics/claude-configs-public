@@ -6,6 +6,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ### Added
 
+- DDIA shelf expansion: `shelves/systems-architecture/data-intensive` now records the user-provided *Designing Data-Intensive Applications* PDF as a cited source without redistributing it, adds consistency/consensus and data-integration/correctness references, and routes DDIA-derived checks into `code-review` and `self-review`.
 - Self-reviewed linear promotion policy: main-targeted `promote/*` PRs are accepted by the GitHub PR-base guard only when the PR body carries `Self-Review-Source:` evidence, preserving develop-first routing while making conflict-resolved promotion branches auditable.
 - Session-coordination decision/control-surface rules: `session-coordination:5` requires complete decision checklist collection before decision-dependent spoke coordination; `session-coordination:6` preserves the operator control surface by bounding foreground `send_agent_message` churn and preferring COO-style sub-manager delegation when work fans out.
 - Goal-mode intention-feint continuity (#635): standing-order and drive guidance now state that action announcements such as "continuing now" are not work unless paired with same-turn action, re-entry, or blocker evidence.

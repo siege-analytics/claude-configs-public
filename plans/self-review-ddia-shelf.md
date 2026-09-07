@@ -60,6 +60,6 @@ Sequencing assumption: future deeper DDIA work can split individual chapters int
 ## Evidence-predates-work
 
 Artifact: plans/self-review-ddia-shelf.md
-First-added commit: to be filled after commit
-Work commit: to be filled after commit
-Verification: to be filled after commit
+First-added commit: 3332b1701d2235719931cb1326b90fe5343b89b0
+Work commit: daeef86a18c60f502c12f72f1595d750519ff8a8
+Verification: git merge-base --is-ancestor 3332b1701d2235719931cb1326b90fe5343b89b0 daeef86a18c60f502c12f72f1595d750519ff8a8; echo 0 -> 0

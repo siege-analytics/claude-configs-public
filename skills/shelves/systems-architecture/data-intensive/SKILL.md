@@ -23,7 +23,7 @@ A principled approach to building reliable, scalable, and maintainable data syst
 
 ## The DDIA Framework
 
-Seven domains for reasoning about data-intensive systems:
+Nine domains for reasoning about data-intensive systems:
 
 ### 1. Data Models and Query Languages
 
@@ -199,6 +199,36 @@ See: [references/batch-stream.md](references/batch-stream.md)
 
 See: [references/fault-tolerance.md](references/fault-tolerance.md)
 
+### 8. Consistency, Clocks, and Consensus
+
+**Core concept:** Distributed systems do not share one clock, one memory, or one failure mode. Correct designs state their consistency guarantee, ordering source, clock assumptions, and partition behavior explicitly.
+
+**Why it works:** Many production data bugs come from implicit global-truth assumptions: stale reads, split-brain leaders, timestamp-based lost updates, unfenced locks, or "exactly once" claims that stop at a framework boundary.
+
+**Key insights:**
+- Linearizability and serializability solve different problems; do not use them interchangeably.
+- Wall clocks are unsafe for correctness unless uncertainty and skew are part of the design.
+- Quorum math only gives the intended guarantee under the stated membership and strictness assumptions.
+- Consensus is for small coordination state and total-order decisions, not a default high-throughput data path.
+- Safety properties must hold continuously; liveness can be temporarily sacrificed during partitions.
+
+See: [references/consistency-consensus.md](references/consistency-consensus.md)
+
+### 9. Data Integration and Correctness
+
+**Core concept:** Caches, indexes, reports, feature stores, and materialized views are derived data. Treat them as rebuildable projections from an explicit system of record unless they are intentionally promoted to source-of-truth status.
+
+**Why it works:** Specialized stores are powerful, but dual writes, schema drift, replay gaps, late data, and unverified derivations silently corrupt downstream decisions.
+
+**Key insights:**
+- Name the system of record before adding another store.
+- Prefer CDC, outbox, or event-log propagation over direct dual writes.
+- Schema evolution must cover old readers/new writers and new readers/old data.
+- Timeliness and integrity are separate promises; measure both.
+- Privacy and deletion obligations expand with every derived copy.
+
+See: [references/data-integration-correctness.md](references/data-integration-correctness.md)
+
 ## Common Mistakes
 
 | Mistake | Why It Fails | Fix |
@@ -209,6 +239,8 @@ See: [references/fault-tolerance.md](references/fault-tolerance.md)
 | **Hash partitioning everything** | Destroys range query ability; some workloads need sorted access | Use key-range partitioning for time-series; composite keys for locality |
 | **Assuming serializable isolation** | Most databases default to weaker isolation; write skew bugs appear in production | Check your database's actual default isolation level; use explicit locking where needed |
 | **Conflating batch and stream** | Batch tools on streaming data add latency; stream tools on bounded data waste complexity | Match processing model to data boundedness and latency requirements |
+| **Claiming strong consistency without naming the guarantee** | Reviewers cannot tell whether stale reads, write skew, or causal inversions are allowed | Name the guarantee and test the anomaly it is meant to prevent |
+| **Dual-writing derived stores** | Partial failure leaves source and derived data inconsistent | Write once to the system of record and propagate by CDC/outbox/event log |
 | **Treating all faults as recoverable** | Some failures (data corruption, Byzantine) require fundamentally different handling | Classify faults and design specific recovery strategies for each class |
 
 ## Quick Diagnostic
@@ -221,6 +253,8 @@ See: [references/fault-tolerance.md](references/fault-tolerance.md)
 | Can your system handle a hot partition key? | A single popular entity can bring down the cluster | Add key-splitting strategy or application-level load shedding for hot keys |
 | Do you separate your system of record from derived data? | Schema changes or new features require migrating everything | Introduce CDC or event sourcing to decouple source from derived stores |
 | Are your timeouts and retries tuned, not defaulted? | You get cascading failures or unnecessary delays | Measure p99 latency; set timeouts above p99 but below cascade threshold |
+| Have you named the consistency guarantee this feature relies on? | "Consistent" hides many weaker/stronger meanings | State read-your-writes, monotonic reads, causal, linearizable, serializable, or eventual convergence explicitly |
+| Can every derived store be rebuilt and reconciled? | Caches/indexes/reports drift under retries, schema change, and partial failure | Provide replay/backfill commands plus row-count/checksum/invariant checks |
 | Have you tested failover in production conditions? | Your recovery plan is theoretical, not validated | Run chaos engineering experiments: kill leaders, partition networks, fill disks |
 
 ## Reference Files
@@ -231,7 +265,10 @@ See: [references/fault-tolerance.md](references/fault-tolerance.md)
 - [partitioning.md](references/partitioning.md): Key-range vs hash partitioning, secondary indexes, rebalancing, request routing, hotspots
 - [transactions.md](references/transactions.md): ACID, isolation levels, write skew, two-phase locking, SSI, distributed transactions
 - [batch-stream.md](references/batch-stream.md): MapReduce, dataflow engines, event sourcing, CDC, stream-table duality, exactly-once semantics
-- [fault-tolerance.md](references/fault-tolerance.md): Faults vs failures, reliability metrics, timeouts, consensus, safety and liveness guarantees
+- [fault-tolerance.md](references/fault-tolerance.md): Faults vs failures, reliability metrics, timeouts, safety and liveness guarantees
+- [consistency-consensus.md](references/consistency-consensus.md): Linearizability, serializability, clocks, ordering, quorums, fencing, and consensus review prompts
+- [data-integration-correctness.md](references/data-integration-correctness.md): Systems of record, derived data, schema evolution, CDC/outbox, replay, timeliness, and integrity checks
+- [source-ddia.md](references/source-ddia.md): Bibliographic source note, shelf coverage map, and copyright handling for the user-provided PDF
 
 ## Further Reading
 
