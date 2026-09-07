@@ -261,7 +261,12 @@ def is_logging_call(stmt):
 
 
 def is_silent_terminator(stmt):
-    """True if stmt is one of the silent-terminator shapes (Pass / Return None / Return False / Continue)."""
+    """True if stmt is one of the silent-terminator shapes (Pass / Return None / Return False / Continue).
+
+    M-1 (#766): the None/False check uses `is` identity, not `==` equality.
+    Python's `in (None, False)` uses `==`, and `0 == False`, `0.0 == False`,
+    `0j == False`. Legitimate typed sentinels like `return 0` (count = 0)
+    would otherwise be mis-flagged as silent-swallow."""
     if isinstance(stmt, ast.Pass):
         return True
     if isinstance(stmt, ast.Continue):
@@ -269,7 +274,9 @@ def is_silent_terminator(stmt):
     if isinstance(stmt, ast.Return):
         if stmt.value is None:
             return True
-        if isinstance(stmt.value, ast.Constant) and stmt.value.value in (None, False):
+        if isinstance(stmt.value, ast.Constant) and (
+            stmt.value.value is None or stmt.value.value is False
+        ):
             return True
     return False
 
@@ -301,12 +308,44 @@ def import_flag_pattern(handler):
     return True
 
 
+# #771 sibling of M-3: noqa opt-out must carry a real reason word, not just
+# the marker. Same vowel-lookahead + 4-char-min shape as
+# _NOQA_WITH_REASON_RE for writing-tests:5.
+_NOQA_WC7_WITH_REASON_RE = re.compile(
+    r"noqa:\s*writing-code-7\b[^\n]*?\b(?=[A-Za-z]*[aeiouAEIOU])[A-Za-z]{4,}\b"
+)
+
+
 def has_noqa_writing_code_7(handler, source_lines):
-    """True if the except handler line carries a `# noqa: writing-code-7` opt-out comment."""
+    """True if the except handler line carries a `# noqa: writing-code-7`
+    opt-out AND the comment names a reason (>=4-letter English-shape word
+    with a vowel). Bare `# noqa: writing-code-7` is rejected (#771 sibling
+    of M-3)."""
     if handler.lineno < 1 or handler.lineno > len(source_lines):
         return False
     line = source_lines[handler.lineno - 1]
-    return "noqa: writing-code-7" in line or "noqa:writing-code-7" in line
+    if _NOQA_WC7_WITH_REASON_RE.search(line):
+        return True
+    if handler.lineno >= 2:
+        prev = source_lines[handler.lineno - 2]
+        if _NOQA_WC7_WITH_REASON_RE.search(prev):
+            return True
+    return False
+
+
+def _is_swallow_scaffold(stmt):
+    """m-2 (#771): True if stmt is a swallow-scaffold statement — a logging
+    call or a constant-value assignment — that decorates a silent handler
+    without actually recovering. Anything else (real cleanup call, function
+    call with side effects, complex assign) breaks the pattern."""
+    if is_logging_call(stmt):
+        return True
+    # Assign to a Name with a Constant value: `y = None`, `err = ""`, etc.
+    if isinstance(stmt, ast.Assign):
+        if all(isinstance(t, ast.Name) for t in stmt.targets):
+            if isinstance(stmt.value, ast.Constant):
+                return True
+    return False
 
 
 def function_returns_optional_with_documented_none(func_node):
@@ -371,9 +410,18 @@ def check_writing_code_7(tree, source_lines):
         if len(body) == 1 and is_silent_terminator(body[0]):
             is_silent = True
             excerpt_shape = type(body[0]).__name__
-        elif len(body) == 2 and is_logging_call(body[0]) and is_silent_terminator(body[1]):
-            is_silent = True
-            excerpt_shape = f"log+{type(body[1]).__name__}"
+        elif len(body) >= 2 and is_silent_terminator(body[-1]):
+            # m-2 (#771): extended from body-len==2 to any length where
+            # every earlier statement is a swallow-scaffold (logging call
+            # or constant-value assignment). Real cleanup calls break the
+            # scaffold and keep the handler silent.
+            if all(_is_swallow_scaffold(s) for s in body[:-1]):
+                is_silent = True
+                # Excerpt shape names whether scaffold was pure-logging or mixed
+                if all(is_logging_call(s) for s in body[:-1]):
+                    excerpt_shape = f"log+{type(body[-1]).__name__}"
+                else:
+                    excerpt_shape = f"scaffold+{type(body[-1]).__name__}"
         if not is_silent:
             continue
         # Optional[T]+docstring carve-out applies only to Return None shape.
@@ -463,18 +511,91 @@ def _attr_chain(node):
     return None
 
 
-def _matches_unbounded_io(call_func):
-    """True if a Call's func node matches one of UNBOUNDED_IO_SURFACES."""
-    if isinstance(call_func, ast.Attribute):
-        chain = _attr_chain(call_func)
-        if chain is None:
-            return False
-        # Match the rightmost two segments (handles urllib.request.urlopen
-        # and subprocess.Popen(...).communicate via the (Popen, communicate) entry).
-        if len(chain) >= 2 and chain[-2:] in UNBOUNDED_IO_SURFACES:
+def _extract_import_aliases(tree):
+    """m-4 (#771): return (module_aliases, from_imports) for a module.
+
+    - module_aliases[alias] = real_module_name for `import X` / `import X as Y`.
+      Bare `import X` maps X -> X. Dotted `import X.Y.Z` binds X and maps X -> X
+      (the fully-qualified use `X.Y.Z.func` remains untouched by aliasing).
+    - from_imports[bound_name] = (source_module, imported_symbol) for
+      `from X import Y [as Z]`. Bare-name calls to Y (or Z) are resolved
+      via this dict.
+    """
+    module_aliases = {}
+    from_imports = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                # `import subprocess` -> {'subprocess': 'subprocess'}
+                # `import subprocess as sp` -> {'sp': 'subprocess'}
+                # `import urllib.request` -> {'urllib': 'urllib'} (X.Y.Z chain untouched)
+                bound = alias.asname or alias.name.split(".")[0]
+                real = alias.asname and alias.name or alias.name.split(".")[0]
+                module_aliases[bound] = real
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            for alias in node.names:
+                bound = alias.asname or alias.name
+                from_imports[bound] = (module, alias.name)
+    return module_aliases, from_imports
+
+
+def _matches_unbounded_io(call_func, module_aliases=None, from_imports=None):
+    """True if a Call's func node matches one of UNBOUNDED_IO_SURFACES.
+
+    M-2 (#766): handles `subprocess.Popen(...).communicate()` and
+    `Popen(...).wait()` shapes via a special case on the (Popen, <attr>)
+    entries.
+
+    m-4 (#771): resolves aliased imports (`import X as Y; Y.foo(...)`)
+    and bare-name calls (`from X import foo; foo(...)`) via the two
+    import maps built by _extract_import_aliases.
+    """
+    module_aliases = module_aliases or {}
+    from_imports = from_imports or {}
+
+    # m-4: bare-name call (from X import Y case)
+    if isinstance(call_func, ast.Name):
+        fromspec = from_imports.get(call_func.id)
+        if fromspec is not None:
+            module, symbol = fromspec
+            module_last = module.rsplit(".", 1)[-1] if module else ""
+            if (module_last, symbol) in UNBOUNDED_IO_SURFACES:
+                return True
+        return False
+
+    if not isinstance(call_func, ast.Attribute):
+        return False
+
+    chain = _attr_chain(call_func)
+    if chain is not None and len(chain) >= 2:
+        # m-4: rewrite the leading name through module_aliases before matching.
+        # `sp.run(...)` where `import subprocess as sp` -> effective ('subprocess', 'run').
+        leading = chain[0]
+        real_leading = module_aliases.get(leading, leading)
+        effective = tuple(real_leading.split(".")) + chain[1:]
+        if len(effective) >= 2 and effective[-2:] in UNBOUNDED_IO_SURFACES:
             return True
-        # Also handle plain `urlopen` after `from urllib.request import urlopen`
-        # via the rightmost-only check using the second-tuple-element.
+        # Also try the original chain (in case module_aliases has stale info).
+        if chain[-2:] in UNBOUNDED_IO_SURFACES:
+            return True
+
+    # M-2: X(...).communicate() / X(...).wait() where X is Popen or ends in .Popen
+    if call_func.attr in ("communicate", "wait") and isinstance(call_func.value, ast.Call):
+        popen_expr = call_func.value.func
+        popen_name = None
+        if isinstance(popen_expr, ast.Attribute):
+            popen_name = popen_expr.attr
+        elif isinstance(popen_expr, ast.Name):
+            popen_name = popen_expr.id
+        # m-4: aliased `from subprocess import Popen as P; P(...).wait()`
+        if popen_name is not None and popen_name in from_imports:
+            _, real_symbol = from_imports[popen_name]
+            if real_symbol == "Popen":
+                popen_name = "Popen"
+        if popen_name == "Popen":
+            return True
+
     return False
 
 
@@ -505,12 +626,16 @@ def check_writing_code_15(tree, source_lines):
 
     For each Call to a known I/O surface, require either a numeric `timeout`
     kwarg OR `timeout=None` accompanied by an audit-signal comment.
+
+    m-4 (#771): resolves aliased imports (`import X as Y`) and bare-name
+    calls (`from X import Y`) via per-module import maps.
     """
+    module_aliases, from_imports = _extract_import_aliases(tree)
     violations = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
-        if not _matches_unbounded_io(node.func):
+        if not _matches_unbounded_io(node.func, module_aliases, from_imports):
             continue
         timeout_kwarg = None
         for kw in node.keywords:
@@ -519,10 +644,26 @@ def check_writing_code_15(tree, source_lines):
                 break
         # Surface name for excerpt.
         surface = "?"
-        if isinstance(node.func, ast.Attribute):
+        if isinstance(node.func, ast.Name):
+            # m-4: bare-name call from `from X import Y`
+            surface = node.func.id
+        elif isinstance(node.func, ast.Attribute):
             chain = _attr_chain(node.func)
             if chain is not None:
                 surface = ".".join(chain)
+            elif node.func.attr in ("communicate", "wait"):
+                # M-2 (#766): Popen(...).communicate/wait chain — chain
+                # returns None because it bottoms out at a Call. Rebuild
+                # a useful surface name manually.
+                popen_expr = node.func.value.func if isinstance(node.func.value, ast.Call) else None
+                popen_repr = "Popen"
+                if isinstance(popen_expr, ast.Attribute):
+                    inner = _attr_chain(popen_expr)
+                    if inner is not None:
+                        popen_repr = ".".join(inner)
+                elif isinstance(popen_expr, ast.Name):
+                    popen_repr = popen_expr.id
+                surface = f"{popen_repr}(...).{node.func.attr}"
         if timeout_kwarg is None:
             violations.append(
                 (node.lineno,
@@ -539,6 +680,25 @@ def check_writing_code_15(tree, source_lines):
                  "writing-code-15-unbounded-io(timeout-none-no-audit-comment)",
                  f"{surface}(...): timeout=None without audit-signal comment "
                  f"(>=30 chars + identifier-shaped token, naming upstream bound)")
+            )
+            continue
+        # m-5 (#771): timeout=0 is functionally unbounded — the call raises
+        # TimeoutExpired / times-out immediately and never bounds work. Reject
+        # numeric zero as invalid regardless of type (int/float/complex-zero).
+        # Uses `type(val.value) is not bool` to reject the False→0 identity
+        # collision (writing-code:7 M-1 discipline applied here).
+        is_zero = (
+            isinstance(val, ast.Constant)
+            and isinstance(val.value, (int, float, complex))
+            and type(val.value) is not bool
+            and val.value == 0
+        )
+        if is_zero:
+            violations.append(
+                (node.lineno,
+                 "writing-code-15-unbounded-io(timeout-zero)",
+                 f"{surface}(...): timeout=0 is not a bound — the call fails "
+                 f"immediately. Pass a positive number.")
             )
     return violations
 
@@ -832,33 +992,77 @@ def _extract_optional_imports(tree):
     return result
 
 
+def _canonical_flag_test_polarity(test, flag_name):
+    """Return 'positive' if the test is exactly `FLAG`, 'negative' if exactly
+    `not FLAG`, else None. Compound tests (`FLAG and other`, `FLAG or other`,
+    `FLAG == True`, attribute access) are NOT canonical — they can't be used
+    to prove flag polarity. See F4 in issue #760."""
+    if isinstance(test, ast.Name) and test.id == flag_name:
+        return "positive"
+    if (isinstance(test, ast.UnaryOp)
+            and isinstance(test.op, ast.Not)
+            and isinstance(test.operand, ast.Name)
+            and test.operand.id == flag_name):
+        return "negative"
+    return None
+
+
+def _test_implies_flag_truthy(test, flag_name, branch):
+    """Given an if-test and which branch was taken ('true' = body executed,
+    'false' = else executed), return True iff the flag is guaranteed truthy
+    in that branch. See F2 in issue #760: earlier version was branch-blind
+    and treated the body of `if not FLAG:` as guarded even though that IS
+    the unavailable branch."""
+    polarity = _canonical_flag_test_polarity(test, flag_name)
+    if polarity is None:
+        return False
+    # `if FLAG:` body → flag truthy; else → flag falsy
+    # `if not FLAG:` body → flag falsy; else → flag truthy
+    if polarity == "positive":
+        return branch == "true"
+    return branch == "false"
+
+
 def _guarded_by_flag(node, flag_name, guard_stack):
-    """Return True if the current node is inside an if-branch that reads flag_name."""
-    for guard in guard_stack:
-        # guard is (test_ast, branch: 'true'|'false')
-        test = guard[0]
-        # Simple cases: `if <FLAG>:` and `if not <FLAG>:`
-        if isinstance(test, ast.Name) and test.id == flag_name:
+    """True iff the current node is under a canonical if-guard that proves
+    flag_name is truthy at this point in the code."""
+    for test, branch in guard_stack:
+        if _test_implies_flag_truthy(test, flag_name, branch):
             return True
-        if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not) \
-                and isinstance(test.operand, ast.Name) and test.operand.id == flag_name:
-            return True
-        # Composite: `if X and Y`, `if X or Y` — accept if the flag appears
-        # as a Name anywhere in the test expression.
-        for sub in ast.walk(test):
-            if isinstance(sub, ast.Name) and sub.id == flag_name:
-                return True
     return False
 
 
+# Phrases whose presence in a private helper's docstring counts as an
+# assertion that the caller has verified the availability flag. Bare mention
+# of the flag name is NOT sufficient (F5 in issue #760).
+CALLER_CONTRACT_PHRASES = (
+    "caller must check",
+    "caller must ensure",
+    "caller must verify",
+    "caller must have checked",
+    "caller has checked",
+    "caller checks",
+    "caller ensures",
+    "callers must",
+    "requires the caller",
+    "assumes the caller",
+)
+
+
 def _private_helper_documents_flag(func, flag_name):
-    """True if func is a leading-underscore function whose docstring names the flag."""
+    """True iff func is a leading-underscore function whose docstring both
+    names the flag AND asserts (via a caller-contract phrase) that the
+    caller has checked it. F5 in issue #760: bare flag mention alone is
+    not enough."""
     if not isinstance(func, (ast.FunctionDef, ast.AsyncFunctionDef)):
         return False
     if not func.name.startswith("_"):
         return False
     doc = ast.get_docstring(func) or ""
-    return flag_name in doc or "caller must check" in doc.lower()
+    if flag_name not in doc:
+        return False
+    lower = doc.lower()
+    return any(phrase in lower for phrase in CALLER_CONTRACT_PHRASES)
 
 
 def _terminates_flow(stmts):
@@ -870,51 +1074,44 @@ def _terminates_flow(stmts):
     return isinstance(last, (ast.Return, ast.Raise, ast.Continue, ast.Break))
 
 
-def _if_test_references_flag(test, known_flags):
-    """True if the if-test is (a form of) a check on one of the known flags."""
-    for sub in ast.walk(test):
-        if isinstance(sub, ast.Name) and sub.id in known_flags:
-            return True
-    return False
-
-
 def _if_establishes_flag(if_node, known_flags):
-    """True if `if <negation-of-flag>: raise/return` establishes flag-is-true
-    for subsequent code, or `if flag: ... else: raise/return` does likewise.
-    Recognized shapes:
-        if not FLAG: <raise/return>          -> flag known True after
-        if not FLAG or ...: <raise/return>   -> flag known True after (conservative)
-    Not recognized:
-        if FLAG: ... else: raise             -> we DO recognize this by symmetry;
-                                                 the else-terminator means the if
-                                                 succeeded, so flag is True in the
-                                                 code AFTER the if statement."""
+    """Return the flag-name (str) whose truthiness is established on the
+    fall-through path after this if-statement, or None. F3 and F4 in issue
+    #760: only canonical shapes count.
+
+    Recognized (establish flag-truthy on fallthrough):
+        if not FLAG: <terminator>
+        if FLAG: <non-terminator>; else: <terminator>
+
+    Explicitly NOT recognized:
+        if FLAG: <terminator>              — fallthrough means FLAG was falsy
+        if not FLAG: <non-terminator>; else: <terminator>  — mirrored inverse
+        if FLAG and other: <terminator>    — compound doesn't prove polarity
+        if FLAG or other: <terminator>     — compound doesn't prove polarity
+    """
     if not isinstance(if_node, ast.If):
-        return False
-    if not _if_test_references_flag(if_node.test, known_flags):
-        return False
-    # Body terminates → the else-branch or fall-through means the test was falsy
-    body_terminates = _terminates_flow(if_node.body)
-    else_terminates = _terminates_flow(if_node.orelse) if if_node.orelse else False
-    # Either the true-branch or the false-branch must be a terminator for the
-    # opposite branch to guarantee flag state on fall-through.
-    return body_terminates or else_terminates
+        return None
+    for flag in known_flags:
+        polarity = _canonical_flag_test_polarity(if_node.test, flag)
+        if polarity is None:
+            continue
+        body_terminates = _terminates_flow(if_node.body)
+        else_terminates = _terminates_flow(if_node.orelse) if if_node.orelse else False
+        if polarity == "negative" and body_terminates:
+            return flag
+        if polarity == "positive" and else_terminates:
+            return flag
+    return None
 
 
 def _establish_test(if_node, known_flags):
-    """Return a synthetic test expression whose truthfulness is guaranteed after
-    the if-statement executes (if its terminator branch didn't fire).
-
-    For `if not FLAG: raise`, the synthetic guard is `FLAG` (present, truthy).
-    For `if FLAG: ok; else: raise`, the synthetic guard is `FLAG` (again).
-
-    We just return the flag-name Name node so _guarded_by_flag matches it."""
-    # Extract the first flag name referenced in the test
-    for sub in ast.walk(if_node.test):
-        if isinstance(sub, ast.Name) and sub.id in known_flags:
-            return ast.Name(id=sub.id, ctx=ast.Load())
-    # Should not reach here since caller called _if_establishes_flag first
-    return if_node.test
+    """Return a synthetic `FLAG` Name node representing the invariant that
+    is guaranteed on the fall-through path after if_node. Requires that
+    _if_establishes_flag returned a non-None flag for the same if_node."""
+    flag = _if_establishes_flag(if_node, known_flags)
+    if flag is None:
+        return None
+    return ast.Name(id=flag, ctx=ast.Load())
 
 
 def check_writing_code_8(tree):
@@ -959,19 +1156,27 @@ def check_writing_code_8(tree):
             """Walk a statement block with early-return-establishes-invariant semantics.
 
             When encountering `if not FLAG: raise/return`, treat FLAG as
-            established for the REMAINDER of this block. Same for
-            `if FLAG: <body>; else: raise/return`. This is the standard
-            early-return-guard idiom the writing-code:8 rule body permits."""
-            established = []
+            established for the REMAINDER of this block, but NOT while
+            visiting the if-body itself (the body is the unavailable branch;
+            F2 in issue #760). Same for `if FLAG: ok; else: raise/return`.
+
+            F3/F4 (#760): polarity + shape are enforced via
+            _if_establishes_flag; positive-early-return and compound tests
+            no longer establish the flag."""
+            established_count = 0
+            known_flags = list(optional.values())
             for stmt in stmts:
-                if isinstance(stmt, ast.If) and _if_establishes_flag(stmt, optional.values()):
-                    # Push virtual guard for subsequent statements in this block
-                    established.append(_establish_test(stmt, optional.values()))
-                    self.guard_stack.append((established[-1], 'true'))
-                    self.visit(stmt)
-                else:
-                    self.visit(stmt)
-            for _ in established:
+                # Visit the statement FIRST — inside its own body, the flag
+                # is not yet known truthy.
+                self.visit(stmt)
+                # THEN push the invariant for subsequent statements in this
+                # block (fall-through semantic).
+                if isinstance(stmt, ast.If):
+                    virtual_test = _establish_test(stmt, known_flags)
+                    if virtual_test is not None:
+                        self.guard_stack.append((virtual_test, "true"))
+                        established_count += 1
+            for _ in range(established_count):
                 self.guard_stack.pop()
 
         def visit_FunctionDef(self, node):
@@ -1087,11 +1292,15 @@ def _extract_except_class_names(tree):
 
 def _test_files_for_source(source_path):
     """Return candidate test files for a source file, per the affected-tests
-    heuristic. Returns a list of pathlib.Path objects that exist on disk."""
-    src = Path(source_path)
+    heuristic. Returns a list of pathlib.Path objects that exist on disk.
+
+    F6 (#760): namespaced layouts are now mirrored. For source
+    `<root>/pkg/sub/thing.py`, we look under `<root>/tests/pkg/sub/test_thing.py`
+    as well as the shallower locations."""
+    src = Path(source_path).resolve()
     stem = src.stem
     # Walk up to find repo root by looking for .git
-    root = src.resolve().parent
+    root = src.parent
     while root.parent != root and not (root / ".git").exists():
         root = root.parent
     if not (root / ".git").exists():
@@ -1103,47 +1312,155 @@ def _test_files_for_source(source_path):
         src.parent / "tests" / f"test_{stem}.py",
         src.parent.parent / "tests" / f"test_{stem}.py",
     ]
-    # Glob for test_X_*.py in tests/
+    # F6: mirror the source's relative path under `tests/`. For
+    # `<root>/pkg/sub/thing.py`, add `<root>/tests/pkg/sub/test_thing.py` plus
+    # every prefix (`<root>/tests/pkg/test_thing.py`, `<root>/tests/sub/...`).
+    try:
+        rel_parent = src.parent.relative_to(root)
+    except ValueError:
+        rel_parent = None
+    if rel_parent is not None:
+        parts = rel_parent.parts
+        for i in range(len(parts) + 1):
+            candidates.append(root / "tests" / Path(*parts[:i]) / f"test_{stem}.py")
+    # Glob for test_X_*.py in tests/ (both the flat root and the mirrored dir)
     if (root / "tests").is_dir():
         candidates.extend(sorted((root / "tests").glob(f"test_{stem}_*.py")))
+        if rel_parent is not None:
+            mirror_dir = root / "tests" / rel_parent
+            if mirror_dir.is_dir():
+                candidates.extend(sorted(mirror_dir.glob(f"test_{stem}_*.py")))
 
-    return [p for p in candidates if p.is_file()]
+    # Deduplicate while preserving order
+    seen = set()
+    unique = []
+    for p in candidates:
+        rp = p.resolve() if p.exists() else p
+        if rp in seen:
+            continue
+        seen.add(rp)
+        unique.append(p)
+    return [p for p in unique if p.is_file()]
 
 
-def _test_file_covers_exception(test_path, exc_class):
-    """True if the test file contains pytest.raises(exc_class) or equivalent.
-    Short-name match: `requests.exceptions.RequestException` in source ->
-    look for `RequestException` in tests."""
+def _yield_class_names_from(node):
+    """Extract class-name-shaped identifiers from an AST expression node.
+
+    Handles the shapes commonly seen in `pytest.raises(...)` first-arg:
+    - Name(ConnectionError) -> "ConnectionError"
+    - Attribute(requests.exceptions.RequestException) -> "RequestException"
+    - Tuple((ExcA, ExcB)) -> "ExcA", "ExcB"
+    - Subscript(Optional[Foo]) -> yields whatever inside the slice resolves to
+      (m-3 #771)
+    - Starred(*exc_tuple) -> conservative: yields nothing (the tuple's
+      contents are not statically visible from this call site)
+    Nested combinations are recursed into so `Optional[Tuple[A, B]]` yields
+    both A and B."""
+    if isinstance(node, ast.Name):
+        yield node.id
+    elif isinstance(node, ast.Attribute):
+        yield node.attr
+    elif isinstance(node, ast.Tuple):
+        for elt in node.elts:
+            yield from _yield_class_names_from(elt)
+    elif isinstance(node, ast.Subscript):
+        # m-3: Optional[Foo], List[Foo], Tuple[A, B], Union[A, B] — descend
+        # into the slice (a Name/Tuple/etc in modern Python; Index-wrapper
+        # in Python <3.9 but ast normalizes it away for our targets).
+        sub = node.slice
+        # Python 3.9+: slice is the value directly; older versions used ast.Index.
+        if isinstance(sub, ast.Index):  # pragma: no cover — legacy path
+            sub = sub.value
+        yield from _yield_class_names_from(sub)
+    elif isinstance(node, ast.Starred):
+        # *exc_tuple — the tuple's contents are not statically resolvable
+        # from this call site. Yield nothing rather than fabricate a match.
+        return
+
+
+def _iter_call_arg_class_names(call_node):
+    """Yield class-name-shaped identifiers from a Call's positional args.
+    m-3 (#771): now recurses into Subscript (Optional[X], Union[A, B]) and
+    tolerates Starred (yields nothing rather than crash). Kept as the
+    public entry point; the recursion is in _yield_class_names_from."""
+    for arg in call_node.args:
+        yield from _yield_class_names_from(arg)
+
+
+def _test_ast_covers_exception(test_path, exc_class):
+    """F7 (#760): parse the test file as AST and look for actual call nodes
+    to pytest.raises / raises / assertRaises / self.assertRaises whose first
+    positional arg names `exc_class`. Comments and TODOs cannot satisfy
+    coverage because they are not in the AST.
+
+    Returns True if such a call is found. On unreadable/unparseable files,
+    emits a scanner diagnostic to stderr and returns False (writing-code:11
+    no-silent-process compliance)."""
     if not exc_class:
         return False
     try:
         source = test_path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
+    except (OSError, UnicodeDecodeError) as e:
+        print(f"{test_path}:0:scan-ast-warning: test file unreadable: {e}",
+              file=sys.stderr)
         return False
-    # Cheap grep-based check; a more precise AST scan of the test file is
-    # possible but the false-positive rate on grep is acceptable per the
-    # ticket's own acceptance criterion.
-    patterns = [
-        f"pytest.raises({exc_class}",
-        f"pytest.raises({exc_class})",
-        f"assertRaises({exc_class}",
-        f"raises({exc_class}",
-    ]
-    return any(pat in source for pat in patterns)
+    try:
+        tree = ast.parse(source, filename=str(test_path))
+    except SyntaxError as e:
+        print(f"{test_path}:{e.lineno or 0}:scan-ast-warning: test file "
+              f"unparseable: {e.msg}", file=sys.stderr)
+        return False
+
+    RAISES_NAMES = ("raises", "assertRaises")
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        # Match: raises(X), assertRaises(X)
+        if isinstance(func, ast.Name) and func.id in RAISES_NAMES:
+            if exc_class in _iter_call_arg_class_names(node):
+                return True
+        # Match: pytest.raises(X), self.assertRaises(X), any.assertRaises(X)
+        elif isinstance(func, ast.Attribute) and func.attr in RAISES_NAMES:
+            if exc_class in _iter_call_arg_class_names(node):
+                return True
+    return False
+
+
+# Back-compat alias: earlier revisions used a grep-based helper; the AST
+# version is strictly stricter (rejects comments/TODOs) and is the correct
+# implementation of writing-tests:5's coverage predicate.
+_test_file_covers_exception = _test_ast_covers_exception
+
+
+# Regex to enforce F8/M-3 (#760/#766): `noqa: writing-tests-5` must be
+# followed by a real reason. F8 required >=3 chars of non-whitespace,
+# which trivially accepted `xxx`, `tbd`, `...` (M-3, Round 2 hostile
+# review). M-3 tightens the check: the reason must contain at least one
+# 4+ letter English-shape word (>=4 alpha chars including >=1 vowel).
+# `cleanup`, `finally`, `best-effort`, `finalizer` all pass; `xxx`,
+# `tbd`, `abcd`, `...` all fail.
+_NOQA_WITH_REASON_RE = re.compile(
+    r"noqa:\s*writing-tests-5\b[^\n]*?\b(?=[A-Za-z]*[aeiouAEIOU])[A-Za-z]{4,}\b"
+)
 
 
 def _is_carveout_handler(handler_lineno, source_lines):
     """True if the except handler carries a carve-out comment on the same or
-    preceding line naming why no test exists (per writing-tests:5's two
-    documented carve-outs plus explicit noqa)."""
+    preceding line naming why no test exists.
+
+    F8 (#760): `noqa: writing-tests-5` requires at least 3 chars of non-
+    whitespace reason text following it on the same comment. Bare
+    `# noqa: writing-tests-5` is rejected; rule text requires a one-line
+    comment naming why no test exists."""
     if handler_lineno < 1 or handler_lineno > len(source_lines):
         return False
     line = source_lines[handler_lineno - 1]
-    if "noqa: writing-tests-5" in line or "noqa:writing-tests-5" in line:
+    if _NOQA_WITH_REASON_RE.search(line):
         return True
     if handler_lineno >= 2:
         prev = source_lines[handler_lineno - 2]
-        if "noqa: writing-tests-5" in prev:
+        if _NOQA_WITH_REASON_RE.search(prev):
             return True
     return False
 
@@ -1190,13 +1507,35 @@ def check_writing_tests_5(tree, source_lines, source_path):
     return violations
 
 
-# Default test-path globs for --exclude-tests.
-TEST_PATH_PATTERNS = ("/tests/", "/test/", "_test.py", "test_")
+# Test-path detection. m-6 (#771): earlier version used substring match on
+# "test_", which false-positive'd on `tester_lib.py`, `tests_helper.py`,
+# `test_bench.py`. The `test_` marker must anchor at a path-segment boundary
+# (start of the basename or after a slash), not appear anywhere in the path.
+TEST_PATH_DIR_SEGMENTS = ("/tests/", "/test/")
+TEST_PATH_SUFFIXES = ("_test.py",)
 
 
 def _is_test_path(path):
+    """True iff path is under a test directory or its basename starts with
+    `test_` or ends with `_test.py`. Substring occurrences of `test_` mid-
+    basename (e.g., `tester_lib.py`) do NOT count."""
     p = str(path)
-    return any(pat in p for pat in TEST_PATH_PATTERNS)
+    if any(seg in p for seg in TEST_PATH_DIR_SEGMENTS):
+        return True
+    # Handle paths that START with a test directory (no leading slash).
+    if p.startswith("tests/") or p.startswith("test/"):
+        return True
+    basename = Path(p).name
+    if basename.startswith("test_"):
+        return True
+    if any(basename.endswith(suf) for suf in TEST_PATH_SUFFIXES):
+        return True
+    return False
+
+
+# Back-compat alias: earlier revisions referenced the flat pattern list.
+# Kept for consumers that grep the source; behavior is now segment-anchored.
+TEST_PATH_PATTERNS = TEST_PATH_DIR_SEGMENTS + TEST_PATH_SUFFIXES + ("test_",)
 
 
 def scan_file(path, allow_decorators, exclude_tests=False):
