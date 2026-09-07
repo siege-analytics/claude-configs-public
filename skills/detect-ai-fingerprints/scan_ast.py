@@ -136,15 +136,6 @@ def _collect_load_names_in_scope(func_node):
 
 # Back-compat alias for older callers (returned the 3-tuple; new callers use
 # the scoped helper directly).
-def collect_referenced(func_node):
-    """Deprecated: use `_collect_load_names_in_scope`. Retained as a thin
-    shim that returns the old 3-tuple with the keyword set + kwargs-spread
-    flag emptied (both were R3-F1 false-positive silencers). Kept only to
-    avoid breaking downstream callers that grep for this symbol."""
-    names, _captures_locals = _collect_load_names_in_scope(func_node)
-    return names, set(), False
-
-
 def defaulted_args(func_node):
     out = []
     args = func_node.args
@@ -1079,9 +1070,8 @@ FLAG_PREFIXES = ("HAS_", "_HAS_")
 
 
 def _is_flag_name(name):
-    return (name.endswith(FLAG_PATTERNS) if isinstance(FLAG_PATTERNS, str)
-            else any(name.endswith(s) for s in FLAG_PATTERNS)
-            or any(name.startswith(p) for p in FLAG_PREFIXES))
+    # str.endswith and str.startswith both accept a tuple natively.
+    return name.endswith(FLAG_PATTERNS) or name.startswith(FLAG_PREFIXES)
 
 
 def _extract_optional_imports(tree):
@@ -1618,8 +1608,6 @@ _NOQA_WT5_REASON_KEYWORDS_RE = re.compile(
     + r")\b",
     re.IGNORECASE,
 )
-# Kept for back-compat / grep-discovery of the earlier regex name.
-_NOQA_WITH_REASON_RE = _NOQA_WT5_REASON_KEYWORDS_RE
 
 
 def _is_carveout_handler(handler_lineno, source_lines):
@@ -1633,11 +1621,11 @@ def _is_carveout_handler(handler_lineno, source_lines):
     if handler_lineno < 1 or handler_lineno > len(source_lines):
         return False
     line = source_lines[handler_lineno - 1]
-    if _NOQA_WITH_REASON_RE.search(line):
+    if _NOQA_WT5_REASON_KEYWORDS_RE.search(line):
         return True
     if handler_lineno >= 2:
         prev = source_lines[handler_lineno - 2]
-        if _NOQA_WITH_REASON_RE.search(prev):
+        if _NOQA_WT5_REASON_KEYWORDS_RE.search(prev):
             return True
     return False
 
@@ -1708,11 +1696,6 @@ def _is_test_path(path):
     if any(basename.endswith(suf) for suf in TEST_PATH_SUFFIXES):
         return True
     return False
-
-
-# Back-compat alias: earlier revisions referenced the flat pattern list.
-# Kept for consumers that grep the source; behavior is now segment-anchored.
-TEST_PATH_PATTERNS = TEST_PATH_DIR_SEGMENTS + TEST_PATH_SUFFIXES + ("test_",)
 
 
 def scan_file(path, allow_decorators, exclude_tests=False):
