@@ -67,6 +67,36 @@ for line in "${non_rule_lines[@]}"; do
     fi
 done
 
+# Bash 3.2 + set -u treats an empty array expansion as unbound in some
+# contexts. A working diff with a changed Python file must still invoke the AST
+# scanner when no .claude/scanner-config.toml file exists.
+TMP_REPO=$(mktemp -d)
+trap 'rm -rf "$TMP_REPO"' EXIT
+(
+    cd "$TMP_REPO" || exit 1
+    git init -q
+    git config user.email "t@example.test"
+    git config user.name "test"
+    cat > clean.py <<'PYEOF'
+def value():
+    return 1
+PYEOF
+    git add clean.py
+    git commit -q -m seed
+    cat > clean.py <<'PYEOF'
+def value():
+    return 2
+PYEOF
+    bash "$SCAN_SH" --working
+) > "$TMP_REPO/scan-working.out" 2>&1
+scan_rc=$?
+scan_out=$(cat "$TMP_REPO/scan-working.out")
+if [[ "$scan_rc" -eq 0 ]] && ! grep -q "unbound variable" <<< "$scan_out"; then
+    ok "working diff with changed Python file and no scanner config runs cleanly"
+else
+    bad "working diff with changed Python file and no scanner config" "rc=$scan_rc out=$scan_out"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then

@@ -3,7 +3,7 @@
 # Enforces: skills/detect-ai-fingerprints/SKILL.md at push/pr-create/pr-merge time.
 # Trigger: PreToolUse on Bash(git push *), Bash(gh pr create *), Bash(gh pr merge *)
 #
-# Calls scan.sh --message-file <temp> against the latest commit body. Blocks
+# Calls scan.sh --commit-message-file <temp> against the latest commit message. Blocks
 # the push when the scanner finds any AI-fingerprint violation: em-dashes,
 # en-dashes, banned adverbs, structured Why:/How to apply: blocks in commit
 # bodies, header/bullet shapes in commit bodies, history references in code
@@ -103,7 +103,7 @@ if [[ -z "$COMMIT_MSG" ]]; then
     exit 0
 fi
 
-# Write to a temp file (scan.sh --message-file expects a path it can read).
+# Write to a temp file (scan.sh --commit-message-file expects a path it can read).
 # Ensure trailing newline: scan.sh's line-reading loop drops the final line
 # if the file is not newline-terminated (separate ticket filed against the
 # scanner). Printf with %s\n guarantees terminator regardless of whether
@@ -112,7 +112,7 @@ TMP_MSG=$(mktemp)
 trap 'rm -f "$TMP_MSG"' EXIT
 printf '%s\n' "$COMMIT_MSG" > "$TMP_MSG"
 
-SCAN_OUT=$(bash "$SCAN_SH" --message-file "$TMP_MSG" 2>&1)
+SCAN_OUT=$(bash "$SCAN_SH" --commit-message-file "$TMP_MSG" 2>&1)
 SCAN_EXIT=$?
 
 if [[ "$SCAN_EXIT" -eq 0 ]]; then

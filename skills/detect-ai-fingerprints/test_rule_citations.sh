@@ -6,6 +6,17 @@ SCAN="$SCRIPT_DIR/scan.sh"
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
+cat > "$TMP/body-only-first-line.txt" <<'MSG'
+Why: body-only structured rationale must be scanned.
+MSG
+
+if bash "$SCAN" --message-file "$TMP/body-only-first-line.txt" >/tmp/body-only-first-line.out 2>&1; then
+  echo 'FAIL: body-only first-line structured rationale passed' >&2
+  cat /tmp/body-only-first-line.out >&2
+  exit 1
+fi
+grep -Fq 'writing-prose-2-structured-rationale' /tmp/body-only-first-line.out
+
 cat > "$TMP/bad-message.txt" <<'MSG'
 fix: cite rule without execution
 
