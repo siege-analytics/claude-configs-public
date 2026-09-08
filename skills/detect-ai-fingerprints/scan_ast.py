@@ -1113,6 +1113,12 @@ def _name_matches_flag(source_module, flag_name):
     src_fold = source_module.casefold()
     if stem_fold == src_fold:
         return True
+    # Prefix-source match: `matplotlib.pyplot` is governed by
+    # MATPLOTLIB_AVAILABLE, and PySpark submodules are governed by
+    # PYSPARK_AVAILABLE. Require a real dotted boundary so R7-F2's
+    # `re` + `MRE_AVAILABLE` still does not match.
+    if src_fold.startswith(stem_fold + "."):
+        return True
     # Normalize both `_` and `.` as separators before collapse.
     def _collapse(s):
         return s.replace("_", "").replace(".", "")
@@ -1168,6 +1174,14 @@ def _extract_optional_imports(tree):
         #   `from A import B as C`  -> binding=C,       source=A
         imports_with_line = []   # list[(binding, source, lineno)]
         flags_with_line = []     # list[(flag_name, lineno)]
+
+        def collect_flag_assigns(stmts):
+            for stmt in stmts:
+                if isinstance(stmt, ast.Assign):
+                    for tgt in stmt.targets:
+                        if isinstance(tgt, ast.Name) and _is_flag_name(tgt.id):
+                            flags_with_line.append((tgt.id, stmt.lineno))
+
         for stmt in node.body:
             if isinstance(stmt, ast.Import):
                 for alias in stmt.names:
@@ -1185,6 +1199,9 @@ def _extract_optional_imports(tree):
                 for tgt in stmt.targets:
                     if isinstance(tgt, ast.Name) and _is_flag_name(tgt.id):
                         flags_with_line.append((tgt.id, stmt.lineno))
+        # R11 I-1 (#827): optional-import availability flags are often set in
+        # the try/except/else success branch rather than the try body.
+        collect_flag_assigns(node.orelse)
 
         if not imports_with_line or not flags_with_line:
             continue
@@ -1224,6 +1241,20 @@ def _extract_optional_imports(tree):
         by_source = {}  # source -> [binding, ...]
         for binding, source, _ln in pending:
             by_source.setdefault(source, []).append(binding)
+
+        # R11 I-3 (#827): one availability flag can intentionally cover
+        # multiple imports from the same dependency family, e.g. PySpark's
+        # `pyspark.sql` and `pyspark.sql.functions` under PYSPARK_AVAILABLE.
+        # Bind all imports only if EVERY source stem-matches the sole flag;
+        # otherwise preserve R7-F2 fail-open behavior for unrelated sole flags
+        # such as `import re` + `MRE_AVAILABLE`.
+        if len(available_flags) == 1 and all(
+            _name_matches_flag(source, available_flags[0]) for source in by_source
+        ):
+            for bindings in by_source.values():
+                for binding in bindings:
+                    matched[binding] = available_flags[0]
+            available_flags = []
 
         phase1_matched_any = False
         for source, bindings in by_source.items():
