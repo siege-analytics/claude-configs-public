@@ -142,33 +142,84 @@ if [[ ! -f "$SETTINGS" ]]; then
 elif ! python3 -c "import json; json.load(open('$SETTINGS'))" 2>/dev/null; then
     fail "settings file is not valid JSON: $SETTINGS"
 else
-    # Extract the registered wrapper's script path and assert it is an
-    # executable file. A substring match alone would pass a stale or typo'd
-    # path that resolves to nothing at runtime. The command is a bare
-    # (unquoted) path, which may contain spaces, so anchor on the script name
-    # rather than splitting on whitespace: take everything up to and including
-    # ca-enforcement-gate.sh. This preserves spaces and requires the executable
-    # token to actually be the gate, not merely to mention it in an argument.
+    # Extract the registered wrapper command. #843: accepting a substring like
+    # `ca-enforcement-gate.sh; echo junk` is false liveness because CA requires
+    # the hook stdout to be one clean JSON object. Accept exactly one shell token
+    # resolving to ca-enforcement-gate.sh; no suffixes, redirections, pipes, or
+    # control operators. Quoted paths with spaces are valid single tokens.
     gate_cmd="$(python3 - "$SETTINGS" <<'PY'
-import json, sys
+import json, shlex, sys
 s = json.load(open(sys.argv[1]))
 ups = s.get("hooks", {}).get("UserPromptSubmit", [])
 marker = "ca-enforcement-gate.sh"
 for grp in ups:
     for h in grp.get("hooks", []):
         c = h.get("command", "")
-        if marker in c:
-            print((c.split(marker)[0] + marker).strip())
+        if marker not in c:
+            continue
+        try:
+            parts = shlex.split(c)
+        except ValueError:
+            print("__INVALID_COMMAND__")
             sys.exit(0)
+        if len(parts) != 1 or not parts[0].endswith(marker):
+            print("__INVALID_COMMAND__")
+            sys.exit(0)
+        print(parts[0])
+        sys.exit(0)
 sys.exit(0)
 PY
 )"
     if [[ -z "$gate_cmd" ]]; then
         fail "settings do NOT register ca-enforcement-gate.sh (blocking wrapper not wired)"
+    elif [[ "$gate_cmd" == "__INVALID_COMMAND__" ]]; then
+        fail "settings register ca-enforcement-gate.sh with unsupported command shape; expected one shell token and no suffix/redirection"
+        gate_cmd=""
     elif [[ ! -x "$gate_cmd" ]]; then
         fail "registered ca-enforcement-gate.sh path is not an executable file: $gate_cmd"
+        gate_cmd=""
     else
-        ok "settings register ca-enforcement-gate.sh (resolves to executable)"
+        expected_gate="$HOOKS_ROOT/resolver/ca-enforcement-gate.sh"
+        gate_real="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$gate_cmd")"
+        expected_real="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$expected_gate")"
+        if [[ "$gate_real" != "$expected_real" ]]; then
+            fail "registered ca-enforcement-gate.sh path is outside deployed hooks root: $gate_cmd (expected $expected_gate)"
+            # Do not claim liveness for an external wrapper with unrelated
+            # sibling gates. Project-level external hook roots need an explicit
+            # contract/override model (#848/#851), not silent acceptance here.
+            gate_cmd=""
+        else
+            ok "settings register deployed ca-enforcement-gate.sh (resolves to executable)"
+        fi
+    fi
+
+    if [[ -n "${gate_cmd:-}" ]]; then
+        # #843: prove the SETTINGS-REGISTERED wrapper, not a hard-coded
+        # deployed sibling, can emit continue:false. Copy that exact wrapper
+        # into a mock resolver beside blocking/clean child gates so wrapper
+        # behavior is tested without relying on target-local gate state.
+        probe_dir="$(mktemp -d)"
+        trap 'rm -rf "$probe_dir"' EXIT
+        mock_resolver="$probe_dir/hooks/resolver"
+        mkdir -p "$mock_resolver"
+        cp "$gate_cmd" "$mock_resolver/ca-enforcement-gate.sh"
+        chmod +x "$mock_resolver/ca-enforcement-gate.sh"
+        cat > "$mock_resolver/think-gate-guard.sh" <<'MOCK'
+#!/usr/bin/env bash
+echo "STALE DESIGN: registered-wrapper probe assertion no longer holds. Re-examine."
+MOCK
+        for g in investigate-gate-guard.sh skill-enforcement-gate.sh; do
+            printf '#!/usr/bin/env bash\n' > "$mock_resolver/$g"
+        done
+        chmod +x "$mock_resolver"/*.sh
+        registered_probe_out="$(printf '%s' '{"prompt":"registered-wrapper-probe"}' | bash "$mock_resolver/ca-enforcement-gate.sh" 2>/dev/null || true)"
+        if printf '%s' "$registered_probe_out" \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get("continue") is False else 1)' 2>/dev/null; then
+            ok "registered wrapper live block test: emitted continue:false on STALE DESIGN"
+        else
+            fail "registered wrapper live block test: registered gate did NOT emit continue:false"
+            echo "         registered gate stdout was: ${registered_probe_out:-<empty>}" >&2
+        fi
     fi
 fi
 

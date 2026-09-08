@@ -70,6 +70,9 @@ NOWATCHDOG="$TMP/nowatchdog"
 cp -r "$WIRED" "$NOWATCHDOG"
 rm -f "$NOWATCHDOG/CLAUDE.md"
 (cd "$NOWATCHDOG" && ln -s RULES_BUNDLE.md CLAUDE.md)
+cat > "$NOWATCHDOG/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NOWATCHDOG/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
 cat > "$NOWATCHDOG/automations.json" <<'JSON'
 {"version":2,"automations":{"SchedulerTick":[{"name":"Skills sync","cron":"0 * * * *","actions":[{"type":"prompt","prompt":"x"}]}]}}
 JSON
@@ -89,6 +92,9 @@ NOAUTOMATIONS="$TMP/noautomations"
 cp -r "$WIRED" "$NOAUTOMATIONS"
 rm -f "$NOAUTOMATIONS/CLAUDE.md"
 (cd "$NOAUTOMATIONS" && ln -s RULES_BUNDLE.md CLAUDE.md)
+cat > "$NOAUTOMATIONS/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NOAUTOMATIONS/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
 rm -f "$NOAUTOMATIONS/automations.json"
 if bash "$PROBE" --target "$NOAUTOMATIONS" --mode craft-agent >/dev/null 2>&1; then
     ok "fully-wired-but-no-automations.json fixture passes (watchdog is advisory)"
@@ -118,6 +124,77 @@ if bash "$PROBE" --target "$NOWRAP" --mode craft-agent >/dev/null 2>&1; then
     bad "fixture missing the blocking wrapper should FAIL but passed"
 else
     ok "fixture missing ca-enforcement-gate registration fails the probe"
+fi
+
+# --- FAIL fixture: registered wrapper command has shell suffix ----
+# #843 hostile re-review: a command like `gate; echo junk` points at the right
+# path but emits mixed stdout at runtime, so CA will not parse a single JSON
+# object and will not block.
+
+SUFFIX_REGISTERED="$TMP/suffix-registered"
+cp -r "$WIRED" "$SUFFIX_REGISTERED"
+cat > "$SUFFIX_REGISTERED/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$SUFFIX_REGISTERED/hooks/resolver/ca-enforcement-gate.sh; echo trailing-junk"}]}]}}
+JSON
+if bash "$PROBE" --target "$SUFFIX_REGISTERED" --mode craft-agent >/dev/null 2>&1; then
+    bad "fixture with suffixed registered CA command should FAIL but passed"
+else
+    ok "fixture with suffixed registered CA command fails the probe"
+fi
+
+# --- FAIL fixture: registered wrapper command redirects stdout ----
+
+REDIRECT_REGISTERED="$TMP/redirect-registered"
+cp -r "$WIRED" "$REDIRECT_REGISTERED"
+cat > "$REDIRECT_REGISTERED/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$REDIRECT_REGISTERED/hooks/resolver/ca-enforcement-gate.sh >/tmp/ca-gate.log"}]}]}}
+JSON
+if bash "$PROBE" --target "$REDIRECT_REGISTERED" --mode craft-agent >/dev/null 2>&1; then
+    bad "fixture with redirected registered CA command should FAIL but passed"
+else
+    ok "fixture with redirected registered CA command fails the probe"
+fi
+
+# --- FAIL fixture: registered wrapper points outside deployed hooks root ----
+# #843 hostile review: settings may point at an executable external wrapper
+# whose sibling gates are missing/stale. The verifier must reject this instead
+# of proving an unrelated deployed wrapper can block.
+
+EXTERNAL_REGISTERED="$TMP/external-registered"
+cp -r "$WIRED" "$EXTERNAL_REGISTERED"
+EXTERNAL_ROOT="$TMP/external-hooks/resolver"
+mkdir -p "$EXTERNAL_ROOT"
+cp "$REAL_GATE" "$EXTERNAL_ROOT/ca-enforcement-gate.sh"
+chmod +x "$EXTERNAL_ROOT/ca-enforcement-gate.sh"
+cat > "$EXTERNAL_REGISTERED/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$EXTERNAL_ROOT/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$EXTERNAL_REGISTERED" --mode craft-agent >/dev/null 2>&1; then
+    bad "fixture with external registered CA wrapper should FAIL but passed"
+else
+    ok "fixture with external registered CA wrapper fails the probe"
+fi
+
+# --- FAIL fixture: registered wrapper is executable but does not actually block ----
+# #843: the verifier must test the exact settings-registered command, not a
+# hard-coded deployed wrapper path. The real deployed wrapper exists and would
+# pass the old mock STALE DESIGN probe, but settings points at a no-op wrapper.
+
+NOOP_REGISTERED="$TMP/noop-registered"
+cp -r "$WIRED" "$NOOP_REGISTERED"
+cat > "$NOOP_REGISTERED/hooks/resolver/noop-ca-enforcement-gate.sh" <<'SH'
+#!/usr/bin/env bash
+cat >/dev/null
+exit 0
+SH
+chmod +x "$NOOP_REGISTERED/hooks/resolver/noop-ca-enforcement-gate.sh"
+cat > "$NOOP_REGISTERED/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NOOP_REGISTERED/hooks/resolver/noop-ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$NOOP_REGISTERED" --mode craft-agent >/dev/null 2>&1; then
+    bad "fixture with no-op registered CA wrapper should FAIL but passed"
+else
+    ok "fixture with no-op registered CA wrapper fails the probe"
 fi
 
 # --- FAIL fixture: wrapper present but a deployed gate guard is missing (F1) --
