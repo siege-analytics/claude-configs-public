@@ -70,6 +70,9 @@ NOWATCHDOG="$TMP/nowatchdog"
 cp -r "$WIRED" "$NOWATCHDOG"
 rm -f "$NOWATCHDOG/CLAUDE.md"
 (cd "$NOWATCHDOG" && ln -s RULES_BUNDLE.md CLAUDE.md)
+cat > "$NOWATCHDOG/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NOWATCHDOG/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
 cat > "$NOWATCHDOG/automations.json" <<'JSON'
 {"version":2,"automations":{"SchedulerTick":[{"name":"Skills sync","cron":"0 * * * *","actions":[{"type":"prompt","prompt":"x"}]}]}}
 JSON
@@ -89,6 +92,9 @@ NOAUTOMATIONS="$TMP/noautomations"
 cp -r "$WIRED" "$NOAUTOMATIONS"
 rm -f "$NOAUTOMATIONS/CLAUDE.md"
 (cd "$NOAUTOMATIONS" && ln -s RULES_BUNDLE.md CLAUDE.md)
+cat > "$NOAUTOMATIONS/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NOAUTOMATIONS/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
 rm -f "$NOAUTOMATIONS/automations.json"
 if bash "$PROBE" --target "$NOAUTOMATIONS" --mode craft-agent >/dev/null 2>&1; then
     ok "fully-wired-but-no-automations.json fixture passes (watchdog is advisory)"
@@ -118,6 +124,26 @@ if bash "$PROBE" --target "$NOWRAP" --mode craft-agent >/dev/null 2>&1; then
     bad "fixture missing the blocking wrapper should FAIL but passed"
 else
     ok "fixture missing ca-enforcement-gate registration fails the probe"
+fi
+
+# --- FAIL fixture: registered wrapper points outside deployed hooks root ----
+# #843 hostile review: settings may point at an executable external wrapper
+# whose sibling gates are missing/stale. The verifier must reject this instead
+# of proving an unrelated deployed wrapper can block.
+
+EXTERNAL_REGISTERED="$TMP/external-registered"
+cp -r "$WIRED" "$EXTERNAL_REGISTERED"
+EXTERNAL_ROOT="$TMP/external-hooks/resolver"
+mkdir -p "$EXTERNAL_ROOT"
+cp "$REAL_GATE" "$EXTERNAL_ROOT/ca-enforcement-gate.sh"
+chmod +x "$EXTERNAL_ROOT/ca-enforcement-gate.sh"
+cat > "$EXTERNAL_REGISTERED/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$EXTERNAL_ROOT/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$EXTERNAL_REGISTERED" --mode craft-agent >/dev/null 2>&1; then
+    bad "fixture with external registered CA wrapper should FAIL but passed"
+else
+    ok "fixture with external registered CA wrapper fails the probe"
 fi
 
 # --- FAIL fixture: registered wrapper is executable but does not actually block ----

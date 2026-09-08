@@ -67,6 +67,20 @@ run_gate() {
     fi
     if [[ "$rc" -ne 0 ]]; then
         gate_output="${gate_output}${label}: exited with status ${rc}"$'\n'
+        blocking=true
+    fi
+
+    # Child gates may already speak Craft Agent hook JSON. Preserve a
+    # child-emitted continue:false signal even when its systemMessage does not
+    # contain the historical magic text patterns (#843 hostile review).
+    if [[ -n "$output" ]] && printf '%s' "$output" | python3 -c 'import json,sys
+try:
+    d=json.loads(sys.stdin.read())
+except Exception:
+    sys.exit(1)
+sys.exit(0 if d.get("continue") is False else 1)' 2>/dev/null; then
+        blocking=true
+        return 0
     fi
 
     for pattern in "${BLOCK_PATTERNS[@]}"; do

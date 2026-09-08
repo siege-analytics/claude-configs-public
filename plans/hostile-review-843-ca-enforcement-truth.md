@@ -29,6 +29,19 @@ PASS with watch item. Stderr and nonzero child status are preserved in the block
 
 PASS. The lazy fix would have been to make every missing design note prompt-block, recreating global gate pain. This PR instead changes the manifest claim to match runtime policy: missing design is advisory until mutation gates; stale/expired/scope-mismatched signals are blocking.
 
+## Follow-up after external hostile review
+
+External hostile review on PR #853 found three valid gaps before main promotion:
+
+1. The verifier copied the settings-registered wrapper into a mock resolver, but did not prove the registered path was the deployed workspace wrapper. Follow-up fix: verifier now canonicalizes the registered path and requires it to equal `$HOOKS_ROOT/resolver/ca-enforcement-gate.sh`; external registered wrappers fail until #848/#851 define an explicit override contract.
+2. The wrapper ignored child `continue:false` JSON unless magic text was also present. Follow-up fix: child JSON with `continue:false` now triggers blocking.
+3. Nonzero stderr-only child failures were diagnostic text but not blocking. Follow-up fix: nonzero child status fails closed and includes stderr/status diagnostics.
+
+Follow-up validation:
+- `bash hooks/_test/ca_enforcement_gate.test.sh` -> 11 passed, 0 failed.
+- `bash hooks/_test/verify_enforcement.test.sh` -> 9 passed, 0 failed.
+- `bash hooks/_test/ca_enforcement_manifest.test.sh` -> 2 passed, 0 failed.
+
 ## Verdict
 
-PASS. This is a bounded #843 truth-path repair. It does not solve the whole crazy gate architecture, but it stops one class of false `ENFORCEMENT LIVE` claim and adds executable tests for the exact behavior.
+PASS after follow-up. This remains a bounded #843 truth-path repair. It does not solve the whole crazy gate architecture, but it stops one class of false `ENFORCEMENT LIVE` claim and adds executable tests for the exact behavior.

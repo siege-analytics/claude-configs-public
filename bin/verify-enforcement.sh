@@ -168,8 +168,21 @@ PY
     elif [[ ! -x "$gate_cmd" ]]; then
         fail "registered ca-enforcement-gate.sh path is not an executable file: $gate_cmd"
     else
-        ok "settings register ca-enforcement-gate.sh (resolves to executable)"
+        expected_gate="$HOOKS_ROOT/resolver/ca-enforcement-gate.sh"
+        gate_real="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$gate_cmd")"
+        expected_real="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$expected_gate")"
+        if [[ "$gate_real" != "$expected_real" ]]; then
+            fail "registered ca-enforcement-gate.sh path is outside deployed hooks root: $gate_cmd (expected $expected_gate)"
+            # Do not claim liveness for an external wrapper with unrelated
+            # sibling gates. Project-level external hook roots need an explicit
+            # contract/override model (#848/#851), not silent acceptance here.
+            gate_cmd=""
+        else
+            ok "settings register deployed ca-enforcement-gate.sh (resolves to executable)"
+        fi
+    fi
 
+    if [[ -n "${gate_cmd:-}" ]]; then
         # #843: prove the SETTINGS-REGISTERED wrapper, not a hard-coded
         # deployed sibling, can emit continue:false. Copy that exact wrapper
         # into a mock resolver beside blocking/clean child gates so wrapper
