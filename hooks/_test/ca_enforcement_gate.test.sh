@@ -164,6 +164,40 @@ else
     fail=$((fail + 1))
 fi
 
+# 10. Propagates child continue:false JSON even without magic BLOCK_PATTERNS.
+cat > "$MOCK_RESOLVER/think-gate-guard.sh" <<'MOCK'
+#!/usr/bin/env bash
+printf '%s\n' '{"continue": false, "systemMessage": "json child block"}'
+MOCK
+make_mock_gate_empty "investigate-gate-guard.sh"
+make_mock_gate_empty "skill-enforcement-gate.sh"
+output="$(bash "$MOCK_RESOLVER/ca-enforcement-gate.sh" 2>/dev/null || true)"
+if echo "$output" | grep -q '"continue": false' && echo "$output" | grep -q 'json child block'; then
+    echo "  PASS: propagates child continue:false JSON"
+    pass=$((pass + 1))
+else
+    echo "  FAIL: expected child continue:false JSON to block, got: $output"
+    fail=$((fail + 1))
+fi
+
+# 11. Nonzero child with stderr-only diagnostics fails closed. Blocking gates
+# that crash are not clean; otherwise broken children silently disable policy.
+cat > "$MOCK_RESOLVER/think-gate-guard.sh" <<'MOCK'
+#!/usr/bin/env bash
+echo "stderr-only child failure" >&2
+exit 7
+MOCK
+make_mock_gate_empty "investigate-gate-guard.sh"
+make_mock_gate_empty "skill-enforcement-gate.sh"
+output="$(bash "$MOCK_RESOLVER/ca-enforcement-gate.sh" 2>/dev/null || true)"
+if echo "$output" | grep -q '"continue": false' && echo "$output" | grep -q 'stderr-only child failure' && echo "$output" | grep -q 'exited with status 7'; then
+    echo "  PASS: nonzero stderr-only child fails closed with diagnostics"
+    pass=$((pass + 1))
+else
+    echo "  FAIL: expected nonzero stderr-only child to block with diagnostics, got: $output"
+    fail=$((fail + 1))
+fi
+
 echo
 echo "Results: $pass passed, $fail failed"
 
