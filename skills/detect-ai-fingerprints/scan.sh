@@ -22,6 +22,7 @@
 #   scan.sh --working             # scan working-tree diff (git diff)
 #   scan.sh --message <text>      # scan a commit/PR message body for writing-prose / writing-claims violations
 #   scan.sh --message-file <path> # scan a commit/PR message body from a file
+#   scan.sh --commit-message-file <path> # scan full commit message; line 1 subject is exempt
 #
 # Modifiers (combine with any mode):
 #   --ignore <glob>               # skip files matching this glob (repeatable). For ad-hoc and
@@ -156,6 +157,10 @@ scan_diff_stdin() {
         # Only consider added lines (skip the +++ header handled above).
         if [[ "$line" == +* && "$line" != +++* ]]; then
             local content="${line:1}"
+            if is_ignored "$current_file"; then
+                line_no=$((line_no + 1))
+                continue
+            fi
 
             # writing-prose:1: AI-typographic Unicode characters (every match per line, per class).
             check_typographic "$current_file" "$line_no" "$content"
@@ -205,9 +210,12 @@ scan_diff_stdin() {
 }
 
 # --- Message scanner: reads a commit/PR message body from stdin or a file.
-# Caller MUST invoke as scan_message_stdin "<file>" < "<file>" (or process sub).
+# Caller MUST invoke as scan_message_stdin "<file>" [full] < "<file>" (or process sub).
+# Default mode treats input as body-only and scans line 1. The optional `full`
+# mode treats line 1 as a commit subject and skips the conventional blank
+# separator on line 2; hooks that pass `git log --pretty=%B` use that mode.
 scan_message_stdin() {
-    local virtual_file="${1:-<message>}" line_no=0 in_subject=1
+    local virtual_file="${1:-<message>}" message_shape="${2:-body}" line_no=0 line
     # writing-claims:2 / :3 need a pass over the whole message: collect countable-claim lines,
     # then check whether the message contains a Verified-by: trailer. If claims
     # are present without the trailer, each claim line gets a writing-claims:2 / :3 violation.
@@ -218,19 +226,23 @@ scan_message_stdin() {
     declare -a rule_citation_lines=()
     declare -a rule_citation_excerpts=()
     declare -a rule_citation_ids=()
+    declare -a message_lines=()
 
     while IFS= read -r line || [[ -n "$line" ]]; do
-        line_no=$((line_no + 1))
+        message_lines+=("$line")
+    done
 
-        # Subject line (line 1) is exempt from writing-prose:4 body checks.
-        if (( in_subject )); then
-            in_subject=0
-            continue
+    local idx start_idx=0
+    if [[ "$message_shape" == "full" ]]; then
+        start_idx=1
+        if (( ${#message_lines[@]} >= 2 )) && [[ -z "${message_lines[1]}" ]]; then
+            start_idx=2
         fi
-        # Skip the blank separator after subject.
-        if [[ -z "$line" && "$line_no" == "2" ]]; then
-            continue
-        fi
+    fi
+
+    for (( idx = start_idx; idx < ${#message_lines[@]}; idx++ )); do
+        line="${message_lines[$idx]}"
+        line_no=$((idx + 1))
 
         # writing-claims:2 / :3 trailer detection (any line in body counts).
         if [[ "$line" =~ ^[[:space:]]*Verified-by:[[:space:]]+ ]]; then
@@ -325,6 +337,11 @@ while (( $# > 0 )); do
             arg="${2:?--message-file requires a path}"
             shift 2
             ;;
+        --commit-message-file)
+            mode="commit-message-file"
+            arg="${2:?--commit-message-file requires a path}"
+            shift 2
+            ;;
         --ignore)
             IGNORE_GLOBS+=("${2:?--ignore requires a glob}")
             shift 2
@@ -360,6 +377,9 @@ case "$mode" in
     message-file)
         scan_message_stdin "$arg" < "$arg"
         ;;
+    commit-message-file)
+        scan_message_stdin "$arg" full < "$arg"
+        ;;
 esac
 
 # --- AST scanner: invoke scan_ast.py on changed .py files for the AST rule
@@ -389,7 +409,11 @@ if [[ "$mode" == staged || "$mode" == working || "$mode" == pr ]]; then
             ast_files+=("$f")
         done <<< "$py_files"
         if (( ${#ast_files[@]} > 0 )); then
-            ast_out=$(python3 "$SCRIPT_DIR/scan_ast.py" "${config_arg[@]}" "${ast_files[@]}" 2>&1) || true
+            if (( ${#config_arg[@]} > 0 )); then
+                ast_out=$(python3 "$SCRIPT_DIR/scan_ast.py" "${config_arg[@]}" "${ast_files[@]}" 2>&1) || true
+            else
+                ast_out=$(python3 "$SCRIPT_DIR/scan_ast.py" "${ast_files[@]}" 2>&1) || true
+            fi
             if [[ -n "$ast_out" ]]; then
                 echo "$ast_out"
                 # B-1 (#766): must include every rule the AST scanner emits.

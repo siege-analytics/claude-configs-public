@@ -127,6 +127,8 @@ expect_pass "(ae) glab mr list (not mr create)" "$HOOK" \
 
 expect_pass "(af) #648: gh issue create with 'gh pr create' inside --body body" "$HOOK" \
     "$(make_payload $'gh issue create --title x --body \'use gh pr create --base main\'' 'feature/foo')"
+expect_pass "(af2) quoted PR body --base main does not override real develop base" "$HOOK" \
+    "$(make_payload $'gh pr create --body \'example says --base main\' --base develop --head feature/foo --title x' 'feature/foo')"
 
 # --- #648: read --head arg instead of git branch when passed ---
 #
