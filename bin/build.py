@@ -999,7 +999,7 @@ CA_ENFORCEMENT_GATES = [
         "hook": "hooks/resolver/think-gate-guard.sh",
         "surface": "UserPromptSubmit",
         "blocking": True,
-        "condition": "No design note registered before non-trivial work",
+        "condition": "Stale, expired, or scope-mismatched design signal; missing design note is advisory until mutation gates",
     },
     {
         "id": "investigate-gate",
