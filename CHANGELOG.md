@@ -16,6 +16,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 
 ### Fixed
+- Resolver/mutation-gate artifact selection now ignores stale wrong-ticket session-scoped artifact gates and implements the `--session-known` probe used by `universal-mutation-gate.sh`.
 - Self-review hook now avoids transformation regex self-matches when editing `hooks/git/self-review.sh` and grandfathers historical self-review artifacts that predate `Pre-author-inventory:` enforcement.
 - Standing-order automation registration is now opt-in in `wire-enforcement.py`, preventing workspace sync from reintroducing recurring watchdog/completion-audit session spam.
 - Evidence-bearing `gh issue create` and `gh issue comment` commands are now treated as governance reporting rather than implementation mutations when their title/body or target/body is inspectable; destructive and universal mutation gates still block issue edit/close/delete/reopen/label, PR create/merge, shell chaining, and issue creation without a body.
