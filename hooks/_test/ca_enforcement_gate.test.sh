@@ -120,6 +120,50 @@ make_mock_gate_empty "think-gate-guard.sh"
 make_mock_gate "investigate-gate-guard.sh" "STALE INVESTIGATION: investigate-gate.json is older than think-gate.json."
 run_test "blocks on STALE INVESTIGATION" "block"
 
+# 8. Replays the original stdin payload to every child gate. The first child
+# consumes stdin and stays clean; the second child must still receive the same
+# payload and block. This catches wrappers that pipe stdin directly to children
+# one time, starving later gates.
+cat > "$MOCK_RESOLVER/think-gate-guard.sh" <<'MOCK'
+#!/usr/bin/env bash
+cat >/dev/null
+MOCK
+cat > "$MOCK_RESOLVER/investigate-gate-guard.sh" <<'MOCK'
+#!/usr/bin/env bash
+payload="$(cat)"
+if echo "$payload" | grep -q 'second-gate-token'; then
+    echo "BLOCKED: second child received payload"
+fi
+MOCK
+make_mock_gate_empty "skill-enforcement-gate.sh"
+output="$(printf '%s' '{"prompt":"second-gate-token"}' | bash "$MOCK_RESOLVER/ca-enforcement-gate.sh" 2>/dev/null || true)"
+if echo "$output" | grep -q 'second child received payload' && echo "$output" | grep -q '"continue": false'; then
+    echo "  PASS: replays stdin payload to every child gate"
+    pass=$((pass + 1))
+else
+    echo "  FAIL: expected second child to receive replayed stdin and block, got: $output"
+    fail=$((fail + 1))
+fi
+
+# 9. Preserves child stderr diagnostics in the blocking systemMessage. A gate
+# that fails loudly should not be silently swallowed by the wrapper.
+cat > "$MOCK_RESOLVER/think-gate-guard.sh" <<'MOCK'
+#!/usr/bin/env bash
+echo "child-stderr-diagnostic" >&2
+echo "BLOCKED: child stdout reason"
+exit 7
+MOCK
+make_mock_gate_empty "investigate-gate-guard.sh"
+make_mock_gate_empty "skill-enforcement-gate.sh"
+output="$(bash "$MOCK_RESOLVER/ca-enforcement-gate.sh" 2>/dev/null || true)"
+if echo "$output" | grep -q 'child-stderr-diagnostic' && echo "$output" | grep -q 'child stdout reason'; then
+    echo "  PASS: preserves child stderr diagnostics in block message"
+    pass=$((pass + 1))
+else
+    echo "  FAIL: expected child stderr/stdout diagnostics in block JSON, got: $output"
+    fail=$((fail + 1))
+fi
+
 echo
 echo "Results: $pass passed, $fail failed"
 

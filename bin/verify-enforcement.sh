@@ -169,6 +169,33 @@ PY
         fail "registered ca-enforcement-gate.sh path is not an executable file: $gate_cmd"
     else
         ok "settings register ca-enforcement-gate.sh (resolves to executable)"
+
+        # #843: prove the SETTINGS-REGISTERED wrapper, not a hard-coded
+        # deployed sibling, can emit continue:false. Copy that exact wrapper
+        # into a mock resolver beside blocking/clean child gates so wrapper
+        # behavior is tested without relying on target-local gate state.
+        probe_dir="$(mktemp -d)"
+        trap 'rm -rf "$probe_dir"' EXIT
+        mock_resolver="$probe_dir/hooks/resolver"
+        mkdir -p "$mock_resolver"
+        cp "$gate_cmd" "$mock_resolver/ca-enforcement-gate.sh"
+        chmod +x "$mock_resolver/ca-enforcement-gate.sh"
+        cat > "$mock_resolver/think-gate-guard.sh" <<'MOCK'
+#!/usr/bin/env bash
+echo "STALE DESIGN: registered-wrapper probe assertion no longer holds. Re-examine."
+MOCK
+        for g in investigate-gate-guard.sh skill-enforcement-gate.sh; do
+            printf '#!/usr/bin/env bash\n' > "$mock_resolver/$g"
+        done
+        chmod +x "$mock_resolver"/*.sh
+        registered_probe_out="$(printf '%s' '{"prompt":"registered-wrapper-probe"}' | bash "$mock_resolver/ca-enforcement-gate.sh" 2>/dev/null || true)"
+        if printf '%s' "$registered_probe_out" \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get("continue") is False else 1)' 2>/dev/null; then
+            ok "registered wrapper live block test: emitted continue:false on STALE DESIGN"
+        else
+            fail "registered wrapper live block test: registered gate did NOT emit continue:false"
+            echo "         registered gate stdout was: ${registered_probe_out:-<empty>}" >&2
+        fi
     fi
 fi
 

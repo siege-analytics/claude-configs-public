@@ -120,6 +120,28 @@ else
     ok "fixture missing ca-enforcement-gate registration fails the probe"
 fi
 
+# --- FAIL fixture: registered wrapper is executable but does not actually block ----
+# #843: the verifier must test the exact settings-registered command, not a
+# hard-coded deployed wrapper path. The real deployed wrapper exists and would
+# pass the old mock STALE DESIGN probe, but settings points at a no-op wrapper.
+
+NOOP_REGISTERED="$TMP/noop-registered"
+cp -r "$WIRED" "$NOOP_REGISTERED"
+cat > "$NOOP_REGISTERED/hooks/resolver/noop-ca-enforcement-gate.sh" <<'SH'
+#!/usr/bin/env bash
+cat >/dev/null
+exit 0
+SH
+chmod +x "$NOOP_REGISTERED/hooks/resolver/noop-ca-enforcement-gate.sh"
+cat > "$NOOP_REGISTERED/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NOOP_REGISTERED/hooks/resolver/noop-ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$NOOP_REGISTERED" --mode craft-agent >/dev/null 2>&1; then
+    bad "fixture with no-op registered CA wrapper should FAIL but passed"
+else
+    ok "fixture with no-op registered CA wrapper fails the probe"
+fi
+
 # --- FAIL fixture: wrapper present but a deployed gate guard is missing (F1) --
 
 NOGUARD="$TMP/noguard"

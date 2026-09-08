@@ -16,6 +16,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 
 ### Fixed
+- CA enforcement wrapper and verifier now test the settings-registered wrapper path, replay prompt payloads to all child gates, preserve child diagnostics, and align the think-gate manifest with advisory missing-design semantics.
 - Detect-ai-fingerprints writing-code:8 scanner now covers R11 optional-import shapes: try/except/else flags, dotted-source prefix flags such as matplotlib.pyplot, and one-flag/N-import dependency families such as PySpark.
 - Resolver/mutation-gate artifact selection now ignores stale wrong-ticket session-scoped artifact gates and implements the `--session-known` probe used by `universal-mutation-gate.sh`.
 - Self-review hook now avoids transformation regex self-matches when editing `hooks/git/self-review.sh` and grandfathers historical self-review artifacts that predate `Pre-author-inventory:` enforcement.
