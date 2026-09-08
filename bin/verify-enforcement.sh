@@ -142,31 +142,42 @@ if [[ ! -f "$SETTINGS" ]]; then
 elif ! python3 -c "import json; json.load(open('$SETTINGS'))" 2>/dev/null; then
     fail "settings file is not valid JSON: $SETTINGS"
 else
-    # Extract the registered wrapper's script path and assert it is an
-    # executable file. A substring match alone would pass a stale or typo'd
-    # path that resolves to nothing at runtime. The command is a bare
-    # (unquoted) path, which may contain spaces, so anchor on the script name
-    # rather than splitting on whitespace: take everything up to and including
-    # ca-enforcement-gate.sh. This preserves spaces and requires the executable
-    # token to actually be the gate, not merely to mention it in an argument.
+    # Extract the registered wrapper command. #843: accepting a substring like
+    # `ca-enforcement-gate.sh; echo junk` is false liveness because CA requires
+    # the hook stdout to be one clean JSON object. Accept exactly one shell token
+    # resolving to ca-enforcement-gate.sh; no suffixes, redirections, pipes, or
+    # control operators. Quoted paths with spaces are valid single tokens.
     gate_cmd="$(python3 - "$SETTINGS" <<'PY'
-import json, sys
+import json, shlex, sys
 s = json.load(open(sys.argv[1]))
 ups = s.get("hooks", {}).get("UserPromptSubmit", [])
 marker = "ca-enforcement-gate.sh"
 for grp in ups:
     for h in grp.get("hooks", []):
         c = h.get("command", "")
-        if marker in c:
-            print((c.split(marker)[0] + marker).strip())
+        if marker not in c:
+            continue
+        try:
+            parts = shlex.split(c)
+        except ValueError:
+            print("__INVALID_COMMAND__")
             sys.exit(0)
+        if len(parts) != 1 or not parts[0].endswith(marker):
+            print("__INVALID_COMMAND__")
+            sys.exit(0)
+        print(parts[0])
+        sys.exit(0)
 sys.exit(0)
 PY
 )"
     if [[ -z "$gate_cmd" ]]; then
         fail "settings do NOT register ca-enforcement-gate.sh (blocking wrapper not wired)"
+    elif [[ "$gate_cmd" == "__INVALID_COMMAND__" ]]; then
+        fail "settings register ca-enforcement-gate.sh with unsupported command shape; expected one shell token and no suffix/redirection"
+        gate_cmd=""
     elif [[ ! -x "$gate_cmd" ]]; then
         fail "registered ca-enforcement-gate.sh path is not an executable file: $gate_cmd"
+        gate_cmd=""
     else
         expected_gate="$HOOKS_ROOT/resolver/ca-enforcement-gate.sh"
         gate_real="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$gate_cmd")"

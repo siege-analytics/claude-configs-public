@@ -42,6 +42,13 @@ Follow-up validation:
 - `bash hooks/_test/verify_enforcement.test.sh` -> 9 passed, 0 failed.
 - `bash hooks/_test/ca_enforcement_manifest.test.sh` -> 2 passed, 0 failed.
 
+Second external hostile review on PR #855 found one additional valid gap: the verifier parsed a path substring from the settings command and ignored shell suffixes/redirections that break CA's single-JSON stdout contract. Second follow-up fix: settings command parsing now uses `shlex.split`, accepts exactly one shell token resolving to `ca-enforcement-gate.sh`, rejects suffix/redirection/control forms, and `build.py` quotes generated CA wrapper paths so workspace paths with spaces stay one shell token.
+
+Second follow-up validation:
+- `bash hooks/_test/ca_enforcement_gate.test.sh` -> 11 passed, 0 failed.
+- `bash hooks/_test/verify_enforcement.test.sh` -> 11 passed, 0 failed.
+- `bash hooks/_test/ca_enforcement_manifest.test.sh` -> 2 passed, 0 failed.
+
 ## Verdict
 
 PASS after follow-up. This remains a bounded #843 truth-path repair. It does not solve the whole crazy gate architecture, but it stops one class of false `ENFORCEMENT LIVE` claim and adds executable tests for the exact behavior.

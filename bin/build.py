@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -1367,9 +1368,12 @@ def _merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
     for entry in gen_hooks:
         for hook in entry.get("hooks", []):
             if "command" in hook:
-                hook["command"] = hook["command"].replace(
+                resolved = hook["command"].replace(
                     "/path/to", str(ws_root)
                 )
+                if resolved.endswith("ca-enforcement-gate.sh"):
+                    resolved = shlex.quote(resolved)
+                hook["command"] = resolved
 
     # Remove any existing ca-enforcement-gate entry (idempotent reinstall).
     for ups_group in existing["hooks"]["UserPromptSubmit"]:

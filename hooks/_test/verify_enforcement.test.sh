@@ -126,6 +126,35 @@ else
     ok "fixture missing ca-enforcement-gate registration fails the probe"
 fi
 
+# --- FAIL fixture: registered wrapper command has shell suffix ----
+# #843 hostile re-review: a command like `gate; echo junk` points at the right
+# path but emits mixed stdout at runtime, so CA will not parse a single JSON
+# object and will not block.
+
+SUFFIX_REGISTERED="$TMP/suffix-registered"
+cp -r "$WIRED" "$SUFFIX_REGISTERED"
+cat > "$SUFFIX_REGISTERED/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$SUFFIX_REGISTERED/hooks/resolver/ca-enforcement-gate.sh; echo trailing-junk"}]}]}}
+JSON
+if bash "$PROBE" --target "$SUFFIX_REGISTERED" --mode craft-agent >/dev/null 2>&1; then
+    bad "fixture with suffixed registered CA command should FAIL but passed"
+else
+    ok "fixture with suffixed registered CA command fails the probe"
+fi
+
+# --- FAIL fixture: registered wrapper command redirects stdout ----
+
+REDIRECT_REGISTERED="$TMP/redirect-registered"
+cp -r "$WIRED" "$REDIRECT_REGISTERED"
+cat > "$REDIRECT_REGISTERED/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$REDIRECT_REGISTERED/hooks/resolver/ca-enforcement-gate.sh >/tmp/ca-gate.log"}]}]}}
+JSON
+if bash "$PROBE" --target "$REDIRECT_REGISTERED" --mode craft-agent >/dev/null 2>&1; then
+    bad "fixture with redirected registered CA command should FAIL but passed"
+else
+    ok "fixture with redirected registered CA command fails the probe"
+fi
+
 # --- FAIL fixture: registered wrapper points outside deployed hooks root ----
 # #843 hostile review: settings may point at an executable external wrapper
 # whose sibling gates are missing/stale. The verifier must reject this instead
