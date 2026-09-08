@@ -620,6 +620,44 @@ Falsification: <observable that would make this exemption wrong>
 
 Same validation as Trivial-change declaration. Same enforcement path.
 
+## Adversarial shape audit
+
+Required subsection when the diff modifies external-shape-modeling code (per `[rule:writing-rules]` writing-rules:5 definition: scanners, parsers, linters, hooks that infer semantics from source syntax, config, CLI arguments, API payloads, schemas, notebooks, or framework conventions — not Python-specific, not scanner-specific).
+
+The subsection answers four questions, each requiring same-turn evidence per `[rule:verify-before-execute]` and `[rule:writing-claims]` writing-claims:2. Missing subsection when the diff touches ESM code is a self-review block. See `[skill:shape-space-audit]` for the discipline this subsection consumes.
+
+```
+## Adversarial shape audit
+
+Shape space: <name the class of inputs, formats, or idioms this code claims to model>
+
+Fixture-covered shapes: <enumeration with count per shape; cite fixture file + test name for each>
+
+Prose-vs-implementation gap: <shapes SKILL.md prose claims to cover that fixtures do NOT exercise; each row either references a follow-up ticket OR includes an explicit "documented over-claim, corrected in this PR" line>
+
+Adversarial frame this round: <one of: Scala/JVM skeptic | PyPI-top-100 CI operator | security engineer | Python newcomer | linter author (per shape-space-audit/SKILL.md rotation frames)>
+Adversarial fixture from frame: <at least one adversarial fixture constructed from that frame's perspective; cite file path + how it exercises the frame's typical failure mode>
+```
+
+The four fields are load-bearing. Rationale per field:
+
+- **Shape space** — makes the class-membership claim explicit rather than leaving it implicit in the code. Any downstream `covered` claim (per `[rule:writing-rules]` writing-rules:8) must be measurable against this stated shape space.
+- **Fixture-covered shapes** — grounds the coverage claim in executable evidence. Prevents the writing-claims:3 class-membership over-claim shape ("catches try/except optional-import patterns" without enumeration).
+- **Prose-vs-implementation gap** — surfaces the honest gap between SKILL.md aspirations and shipped fixtures. Each gap row either becomes a follow-up ticket OR gets closed in the current PR. Silent gap = writing-claims:3 violation.
+- **Adversarial frame this round** — forces frame alternation (not just provider alternation). The R11-meta failure mode was ten rounds of provider alternation without frame alternation; this field is the mechanical fix.
+
+**When one or more fields is genuinely N/A:** state `N/A: <one-sentence reason>` for that field. Silent omission fails the hook check. For example, a diff that adds ONLY a new fixture (no scanner change) can honestly declare `Prose-vs-implementation gap: N/A — this PR adds a fixture for the shape enumerated in <table row>; no scanner logic changed.`
+
+**Composition with existing sections above:**
+
+- The Assumptions block still ships (with Investigate-artifact / Pre-mortem-artifact / Hostile-review-artifact fields) — Adversarial shape audit is an ADDITION, not a replacement.
+- If the diff also qualifies as authoring-against-state (per `[rule:authoring-against-state]` authoring-against-state:6), the full inventory ships too — shape audit is one layer of that inventory, not the whole thing.
+- Trivial-change and Trivial-investigation declarations are INCOMPATIBLE with Adversarial shape audit. External-shape-modeling code is never-trivial per `[rule:writing-rules]` writing-rules:5; if the diff touches ESM code, no Trivial-* declaration is valid, and the Adversarial shape audit subsection is required.
+
+**Enforcement:** planned. `hooks/git/self-review.sh` reuses PR A's `check-trivial-claim.sh --diff-files` external-shape-modeling detection to determine when this subsection is required. Missing section when the diff touches ESM code → BLOCK with diagnostic naming the four required fields. Presence-check only in v1; field-quality validation (does the enumeration actually list shapes; is the frame actually one of the five) is judgment-enforced via bounded hostile review pass. Mechanical field-quality validation is tracked as a v1.1 follow-up.
+
+**Empirical evidence:** `siege-analytics/claude-configs-public#814` self-review dogfood already ships an implicit shape audit (the ESM never-trivial rule surfaced the requirement) but without the four-field structure — this subsection makes the structure explicit for future PRs. `siege-analytics/claude-configs-public#828` self-review is next-easiest fixture: a hook-editing PR touching ESM code that would naturally produce an Adversarial shape audit block if this subsection had been live at authoring time.
+
 ## Domains and roles
 
 Work happens in a **domain**. Review happens between two **roles**.

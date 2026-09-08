@@ -485,6 +485,63 @@ git grep -n "@mock\|@patch\|Mock()\|MagicMock(" -- "test_*.py" "tests/"
 
 ---
 
+## Category 10: Scanner-shape coverage
+
+Fires whenever the target of hostile review is scanner/parser/linter/hook code — i.e. external-shape-modeling code per `[rule:writing-rules]` writing-rules:5. Three sub-categories; each is a required audit lens when Category 10 applies. See `[skill:shape-space-audit]` for the discipline this category consumes and `[rule:writing-rules]` writing-rules:8 for the enforcement rule Category 10 checks against.
+
+**Empirical genesis:** ten alternating-provider hostile-review rounds on `siege-analytics/claude-configs-public#810` (`_extract_optional_imports`) converged on GREEN. R11 introduced the Scala/JVM-skeptic frame and surfaced 3 INVALIDATING + 4 MAJOR shape misses in one pass. Categories 1-9 above cover production-code shape (SU-1, security, domain, data integrity, resources, packaging, composability, performance, tests). None of them target "does this scanner honestly model the shape space it claims to cover." Category 10 fills that gap.
+
+### 10a. Corpus sample audit
+
+Constructs adversarial inputs from real-world open-source code, not from the fixture set the scanner ships.
+
+**Method:**
+
+1. Identify the target shape space from the scanner's SKILL.md prose (e.g. "detects try/except optional-import patterns").
+2. Select at least five distinct real-world variants of that shape by grepping top-N packages the scanner claims to cover (Python: PyPI top-100; TypeScript: DefinitelyTyped or npm top-100; etc.).
+3. For each variant, construct a minimal fixture that exercises the shape as real code uses it (not as the shipped fixtures normalize it).
+4. Run the scanner. Record actual behavior per variant: matched / silently-dropped / warned.
+5. Any silently-dropped variant is a Category 10a finding.
+
+**Anti-pattern to refuse:** sampling shapes from the shipped fixture set. That's fixture-frame audit, not corpus audit. The whole point is to reach shapes the fixture author did not consider.
+
+### 10b. Detector composition audit
+
+For scanners with multiple related detectors (e.g. `[rule:writing-code]` writing-code:7 silent-swallow + writing-code:8 optional-import-guard), constructs inputs where one detector's guard clause could silently mask another detector's finding.
+
+**Method:**
+
+1. Enumerate the detectors that share a target file or a target AST class.
+2. For each pair, ask: is there an input where detector A's guard makes detector B's check unreachable, or vice versa?
+3. Construct minimal fixtures that exercise the mask condition.
+4. Run the scanner. Any input where the expected finding is silently suppressed by an unrelated detector's guard is a Category 10b finding.
+
+**Named counter-example:** `siege-analytics/claude-configs-public#810` round 9 fix R9-F3 introduced a `phase1_matched_any` gate on the multi-flag positional fallback in `_extract_optional_imports`. The gate was correct in isolation (protected against name-match false positives) and toxic in composition (produced the 1-flag/N-import PySpark silent miss surfaced by R11). Category 10b is the class of finding that would have caught R9-F3 before merge.
+
+### 10c. Prose-vs-implementation audit
+
+Greps SKILL.md for coverage claims and verifies each named class has both an implementation code path AND at least one fixture.
+
+**Method:**
+
+1. `grep -n 'detects\|catches\|enforces\|covers\|handles' <scanner>/SKILL.md` — extract every coverage claim.
+2. For each claim, identify the named class (e.g. "try/except ImportError optional-import patterns" is the class "optional-import patterns").
+3. Verify (a) there is an AST/control-flow-aware code path in the scanner that handles the class, AND (b) there is at least one executable fixture that would regress if the code path were removed.
+4. Claims without both are prose over-claims and become Category 10c findings.
+
+**Composition with the P6 anti-pattern:** grepping SKILL.md for coverage claims is fine (that's discovery). The audit becomes evidence when (a) and (b) are verified per claim — not when a grep count is reported as coverage. See `[skill:shape-space-audit]`'s named P6 pattern: context-free grep is not shape evidence.
+
+**Applied to the writing-code:8 shape-space table** (per `[rule:writing-rules]` writing-rules:8): the table's `Coverage status` column is the mechanical output of Category 10c. A row marked `covered` claims both (a) and (b) hold; the reviewer's job is to falsify that claim by finding a real code shape the row's example represents but the scanner silently drops.
+
+### When Category 10 does NOT apply
+
+- The target of hostile review is production code, not scanner/parser/linter/hook code.
+- The scanner under review makes no class-membership coverage claims in its SKILL.md — every enforcement is described as a specific case, not a class (rare; most scanners over-claim by default).
+
+For non-Category-10 rounds, Categories 1-9 above are the appropriate lenses.
+
+---
+
 ## Methodology
 
 ### Execution Order

@@ -282,6 +282,33 @@ Skill authors maintaining `Pairs with` sections must verify the paired rule is a
 
 The Spark Connect guard sequence in session 260502-vital-channel (sibling workspace, 2026-05-21): five PRs shipped same-shape `pyspark.errors.exceptions.captured.AnalysisException` guards before the class audit ran. Each PR individually passed writing-code:5, writing-code:7, writing-code:13, writing-claims:1, and writing-claims:3 -- because every rule was read per-action. The session-scale pattern (five same-shape PRs in one session) was invisible. Filed and corrected via #186.
 
+**writing-rules:8. Rules that describe a class of code idioms must enumerate the covered shape space.**
+
+When a rule's prose claims to catch a *class* of code shapes -- e.g. "optional-import patterns," "SQL injection vectors," "unbounded blocking I/O," "silent error swallowing" -- the rule body must include an enumeration of the specific shapes covered, in a table with the following columns:
+
+- **Shape** -- named entry for the specific idiom.
+- **Example idiom** -- minimal fragment showing what the shape looks like.
+- **Coverage status** -- one of `covered` / `not-covered` / `documented-out-of-scope`. A `covered` entry may be marked so ONLY when the coverage claim is backed by BOTH (a) an AST- or control-flow-aware implementation in the scanner/hook/linter that handles the shape AND (b) at least one executable fixture that regresses if the implementation is removed. Context-free grep evidence does NOT satisfy `covered`; see `[skill:shape-space-audit]`'s named P6 anti-pattern.
+- **Fixture status** -- reference to the fixture file that exercises the shape, or `missing` if not-covered.
+- **Fix work-item** -- for `not-covered` rows, a ticket reference (issue or PR number) that tracks the fix; `deferred` is acceptable when no live ticket exists yet.
+- **Rationale for out-of-scope** -- required for any `documented-out-of-scope` row; must state falsifiably WHY the shape is not the rule's target rather than "we didn't get to it yet."
+
+Unquantified class-membership claims without enumeration are `[rule:writing-claims]` writing-claims:3 violations at authoring time. The two rules compose: writing-claims:3 governs the claim, writing-rules:8 governs the substrate that makes the claim quantifiable.
+
+**When this rule fires:** the rule under review makes a class-membership claim in its prose. Signals include phrases like "detects <plural noun>", "catches <plural noun>", "enforces <plural noun>", "handles <class name>". If the rule's target is a specific single shape ("the bare-except pattern," "the empty-return handler"), no enumeration is required — the shape IS the whole rule.
+
+**Composition:**
+
+- `[rule:writing-claims]` writing-claims:3 — class-membership prose extension; this rule provides the enumeration form that makes writing-claims:3 verifiable.
+- `[rule:authoring-against-state]` authoring-against-state:6 — the step-2 knowledge-requirements inventory is the design-time act; writing-rules:8's enumeration table is the write-time artifact that records the inventory's shape-space output.
+- `[rule:writing-rules]` writing-rules:5 — external-shape-modeling code is never-trivial. When such code changes, `[skill:self-review]`'s `## Adversarial shape audit` subsection (which references this table) is required.
+
+**Canonical example:** `[rule:writing-code]` writing-code:8's shape-space coverage table, retrofit in the same PR that introduced writing-rules:8. Ten baseline shapes enumerated; three `not-covered` rows cite `siege-analytics/claude-configs-public#827` (PR D) as the Fix work-item; four M-shapes plus one edge case remain `deferred`.
+
+**Empirical evidence:** ten alternating-provider hostile-review rounds on `siege-analytics/claude-configs-public#810` converged on GREEN while writing-code:8's prose class-claim ("optional-import patterns") was unquantified and the dominant real-world shapes (else-clause, prefix-flag, 1-flag/N-import) were silently uncovered. R11 (Scala/JVM-skeptic frame) surfaced the gap in one pass. Recurrence prevention: writing-rules:8 makes the enumeration mechanical at authoring time so future rules with class-membership claims cannot ship without the substrate that makes the claims verifiable.
+
+**Enforcement:** judgment-enforced via `[skill:code-review]` and `[skill:hostile-review]` Category 10c (prose-vs-implementation audit). Mechanical enforcement candidate: a scanner that greps rule files for class-membership signals ("detects X patterns," "catches Y") and blocks the commit if no matching shape-space table is present within the same rule body. Tracked as a v2.7.x follow-up.
+
 ## When this file applies
 
 - About to add a new memory entry of the form "always do X" / "never do Y"
