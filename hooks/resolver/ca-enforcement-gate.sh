@@ -35,6 +35,11 @@ BLOCK_PATTERNS=(
     "SCOPE MISMATCH"
 )
 
+# Capture the submitted payload once and replay it to every child gate. Shell
+# hooks commonly read stdin; piping the original stream directly to each child
+# lets the first consumer starve later gates (#843).
+INPUT_PAYLOAD="$(cat || true)"
+
 # Collect output from each gate, check for blocking signals.
 blocking=false
 gate_output=""
@@ -47,14 +52,22 @@ run_gate() {
         return 0
     fi
 
-    local output
-    output="$(bash "$gate_script" 2>/dev/null)" || true
+    local output rc
+    set +e
+    output="$(printf '%s' "$INPUT_PAYLOAD" | bash "$gate_script" 2>&1)"
+    rc=$?
+    set -e
 
-    if [[ -z "$output" ]]; then
+    if [[ -z "$output" && "$rc" -eq 0 ]]; then
         return 0
     fi
 
-    gate_output="${gate_output}${output}"$'\n'
+    if [[ -n "$output" ]]; then
+        gate_output="${gate_output}${label}: ${output}"$'\n'
+    fi
+    if [[ "$rc" -ne 0 ]]; then
+        gate_output="${gate_output}${label}: exited with status ${rc}"$'\n'
+    fi
 
     for pattern in "${BLOCK_PATTERNS[@]}"; do
         if echo "$output" | grep -qE "$pattern"; then
