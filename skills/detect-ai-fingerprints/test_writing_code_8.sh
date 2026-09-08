@@ -666,6 +666,94 @@ else
     bad "(z5) R9-F3 no-stem-match" "out=$OUT"
 fi
 
+# --- PR D / #827 R11 INVALIDATING shape repairs ---
+
+# (z6) I1: flag assigned in try/except/else must be detected; unguarded use fires
+cat > "$TMP/z6.py" <<'EOF'
+try:
+    import numpy as np
+except ImportError:
+    np = None
+    NUMPY_AVAILABLE = False
+else:
+    NUMPY_AVAILABLE = True
+
+def arr():
+    return np.array([1, 2, 3])
+EOF
+OUT=$(python3 "$SCAN" "$TMP/z6.py" 2>&1)
+if fires_wc8 "$OUT" && echo "$OUT" | grep -q "np" && echo "$OUT" | grep -q "NUMPY_AVAILABLE"; then
+    ok "(z6) #827 I1 try/except/else flag assignment: unguarded use fires"
+else
+    bad "(z6) #827 I1 else-clause flag" "out=$OUT"
+fi
+
+# (z7) I2: dotted-source prefix flag must pair matplotlib.pyplot -> MATPLOTLIB_AVAILABLE
+cat > "$TMP/z7.py" <<'EOF'
+try:
+    import matplotlib.pyplot as plt
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
+
+def draw():
+    return plt.figure()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/z7.py" 2>&1)
+if fires_wc8 "$OUT" && echo "$OUT" | grep -q "plt" && echo "$OUT" | grep -q "MATPLOTLIB_AVAILABLE"; then
+    ok "(z7) #827 I2 matplotlib.pyplot prefix flag: unguarded use fires"
+else
+    bad "(z7) #827 I2 dotted-source prefix" "out=$OUT"
+fi
+
+# (z8) I3: one PYSPARK_AVAILABLE flag covers multiple PySpark imports; unguarded function import fires
+cat > "$TMP/z8.py" <<'EOF'
+try:
+    from pyspark.sql import SparkSession
+    from pyspark.sql.functions import udf, pandas_udf, col
+    PYSPARK_AVAILABLE = True
+except ImportError:
+    PYSPARK_AVAILABLE = False
+
+def make_udf():
+    return udf(lambda x: x)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/z8.py" 2>&1)
+if fires_wc8 "$OUT" && echo "$OUT" | grep -q "udf" && echo "$OUT" | grep -q "PYSPARK_AVAILABLE"; then
+    ok "(z8) #827 I3 one-flag/N-import PySpark: unguarded use fires"
+else
+    bad "(z8) #827 I3 one-flag N-import" "out=$OUT"
+fi
+
+# (z9) I1/I2/I3 guarded counterparts are silent.
+cat > "$TMP/z9.py" <<'EOF'
+try:
+    import matplotlib.pyplot as plt
+    from pyspark.sql import SparkSession
+    from pyspark.sql.functions import udf, pandas_udf, col
+    MATPLOTLIB_AVAILABLE = True
+    PYSPARK_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
+    PYSPARK_AVAILABLE = False
+
+def draw():
+    if not MATPLOTLIB_AVAILABLE:
+        raise RuntimeError("matplotlib")
+    return plt.figure()
+
+def make_udf():
+    if not PYSPARK_AVAILABLE:
+        raise RuntimeError("pyspark")
+    return udf(lambda x: x)
+EOF
+OUT=$(python3 "$SCAN" "$TMP/z9.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(z9) #827 guarded dotted-prefix and one-flag/N-import counterparts: silent"
+else
+    bad "(z9) #827 guarded counterparts" "out=$OUT"
+fi
+
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 if [ "$FAIL" -gt 0 ]; then

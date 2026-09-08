@@ -66,9 +66,9 @@ The session's concrete instance: both `census_gazetteer.py` and `wikidata_gazett
 | # | Shape | Example idiom | Coverage status | Fixture status | Fix work-item | Notes |
 |---|---|---|---|---|---|---|
 | 1 | Basic `try/except ImportError` + module-scope flag | `SHAPELY_AVAILABLE = True` in try body, `= False` in except | covered | existing (skills/detect-ai-fingerprints/test_writing_code_8.sh) | — | canonical shape; the rule's original example |
-| 2 | `try/except/else FLAG = True` | numpy pattern: `try: import numpy / except: numpy = None; FLAG = False / else: FLAG = True` | not-covered | missing | `siege-analytics/claude-configs-public#827` | R11 I-1; `_extract_optional_imports` never scans `node.orelse` |
-| 3 | Dotted-source with prefix flag | `import matplotlib.pyplot as plt` paired with `MATPLOTLIB_AVAILABLE` | not-covered | missing | `siege-analytics/claude-configs-public#827` | R11 I-2; `_name_matches_flag` uses exact-equal after `.`/`_` collapse, not prefix; `matplotlibpyplot != matplotlib` |
-| 4 | 1-flag / N-import | `try: from pyspark.sql import SparkSession; from pyspark.sql.functions import udf, pandas_udf, col; PYSPARK_AVAILABLE = True` | not-covered | missing | `siege-analytics/claude-configs-public#827` | R11 I-3; R9-F3's `phase1_matched_any` gate causes fail-open; PySpark canonical shape |
+| 2 | `try/except/else FLAG = True` | numpy pattern: `try: import numpy / except: numpy = None; FLAG = False / else: FLAG = True` | covered | existing (skills/detect-ai-fingerprints/test_writing_code_8.sh z6) | `siege-analytics/claude-configs-public#827` | R11 I-1 fixed; `_extract_optional_imports` scans `node.orelse` for availability flags |
+| 3 | Dotted-source with prefix flag | `import matplotlib.pyplot as plt` paired with `MATPLOTLIB_AVAILABLE` | covered | existing (skills/detect-ai-fingerprints/test_writing_code_8.sh z7) | `siege-analytics/claude-configs-public#827` | R11 I-2 fixed; `_name_matches_flag` accepts dotted source prefix boundaries, preserving non-matches such as `re` + `MRE_AVAILABLE` |
+| 4 | 1-flag / N-import | `try: from pyspark.sql import SparkSession; from pyspark.sql.functions import udf, pandas_udf, col; PYSPARK_AVAILABLE = True` | covered | existing (skills/detect-ai-fingerprints/test_writing_code_8.sh z8/z9) | `siege-analytics/claude-configs-public#827` | R11 I-3 fixed; sole matching dependency-family flag can bind all imports; unrelated sole-flag misdirects still fail open |
 | 5 | `AnnAssign` flag | `NUMPY_AVAILABLE: bool = True` in the try body | not-covered | missing | deferred | R11 M-1; scanner walks `ast.Assign` but not `ast.AnnAssign` |
 | 6 | `from X import *` pollution | `from optional_pkg import *` in try body | not-covered | missing | deferred | R11 M-2; scanner writes `{'*': FLAG}` into optional map; `*` can never match a Python identifier |
 | 7 | Nested try | outer try wraps inner try for version-probe idiom | not-covered | missing | deferred | R11 M-3; scanner scans outer try body but not nested try body |
@@ -80,7 +80,7 @@ The session's concrete instance: both `census_gazetteer.py` and `wikidata_gazett
 
 - Adding a new shape row: mandatory when a new dominant idiom is identified. Row must include example, fixture status, and either a Fix work-item ticket for `not-covered` rows or evidence for `covered` claims.
 - Flipping a row from `not-covered` to `covered`: requires (a) a scanner code path in the same PR AND (b) an executable fixture in the same PR AND (c) reviewer sign-off per `[skill:hostile-review]` Category 10c (prose-vs-implementation audit). All three; no exceptions.
-- `deferred` in Fix work-item: acceptable when no live ticket exists yet; must be replaced by a ticket reference before the shape row can be actively worked. `siege-analytics/claude-configs-public#827` covers the three R11 INVALIDATING shapes (rows 2-4); M-shapes (rows 5-8) and edge cases (row 9) await follow-up tickets.
+- `deferred` in Fix work-item: acceptable when no live ticket exists yet; must be replaced by a ticket reference before the shape row can be actively worked. `siege-analytics/claude-configs-public#827` closed the three R11 INVALIDATING shapes (rows 2-4); M-shapes (rows 5-8) and edge cases (row 9) await follow-up tickets.
 
 **writing-code:9. No silently-dropped parameters.**
 
