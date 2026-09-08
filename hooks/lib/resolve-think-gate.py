@@ -37,6 +37,7 @@ import os
 import re
 import sys
 import glob
+import subprocess
 from typing import Optional
 
 
@@ -115,15 +116,78 @@ def session_dirs(workspace: str, session_id: str = "") -> "list[str]":
     return out
 
 
+def _git_origin(path: str) -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "-C", path, "config", "--get", "remote.origin.url"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=3,
+        ).strip()
+    except Exception:
+        return ""
+
+
+def _same_repo(gate_repo: str, repo_root: str) -> bool:
+    if not gate_repo:
+        return True
+    if not repo_root:
+        return False
+    try:
+        if os.path.realpath(gate_repo) == os.path.realpath(repo_root):
+            return True
+    except Exception:
+        pass
+    gate_origin = _git_origin(gate_repo)
+    repo_origin = _git_origin(repo_root)
+    return bool(gate_origin and repo_origin and gate_origin == repo_origin)
+
+
 def _gate_matches_scope(loaded: dict, repo_root: str, session_id: str) -> bool:
     data = loaded.get("data", {})
     gate_session = str(data.get("session", "")).strip()
-    if session_id and gate_session and gate_session != session_id:
-        return False
+    gate_session_id = str(data.get("sessionId", "")).strip()
+    if session_id:
+        if gate_session and gate_session != session_id:
+            return False
+        if gate_session_id and gate_session_id != session_id:
+            return False
     gate_repo = str(data.get("repo_root", "")).strip()
-    if gate_repo and os.path.basename(gate_repo.rstrip("/")) != os.path.basename(repo_root.rstrip("/")):
+    if gate_repo and not _same_repo(gate_repo, repo_root):
         return False
     return True
+
+
+def _artifact_matches_strict_scope(loaded: dict, repo_root: str, session_id: str) -> bool:
+    """Artifact gates must be explicitly scoped; generic artifacts do not authorize mutation."""
+    data = loaded.get("data", {})
+    if not str(data.get("repo_root", "")).strip():
+        return False
+    if session_id and not (str(data.get("session", "")).strip() or str(data.get("sessionId", "")).strip()):
+        return False
+    return _gate_matches_scope(loaded, repo_root, session_id)
+
+
+def _ticket_slug(ref: str) -> str:
+    if not ref or "#" not in ref:
+        return ref or ""
+    return "#" + ref.split("#")[-1]
+
+
+def _gate_matches_ticket(loaded: dict, current_ticket: str, *, require_explicit: bool = False) -> bool:
+    """Return True when a gate is usable for the current task/ticket."""
+    if not current_ticket:
+        return not require_explicit
+    data = loaded.get("data", {})
+    values = [str(data.get(k, "")).strip() for k in ("ticket", "task")]
+    values = [v for v in values if v]
+    if not values:
+        return False if require_explicit else True
+    slug = _ticket_slug(current_ticket)
+    for value in values:
+        if value == current_ticket or (slug and slug in value):
+            return True
+    return False
 
 
 def find_gate_for_repo(
@@ -154,10 +218,14 @@ def find_gate_for_repo(
     for session_dir in session_dirs(workspace, sid):
         session_repo_scoped = os.path.join(session_dir, f"{gate_name}-{slug}.json")
         if os.path.isfile(session_repo_scoped):
-            return _load(session_repo_scoped)
+            loaded = _load(session_repo_scoped)
+            if loaded and _gate_matches_scope(loaded, repo_root, sid):
+                return loaded
         session_scoped = os.path.join(session_dir, f"{gate_name}.json")
         if os.path.isfile(session_scoped):
-            return _load(session_scoped)
+            loaded = _load(session_scoped)
+            if loaded and _gate_matches_scope(loaded, repo_root, sid):
+                return loaded
 
     scoped = os.path.join(workspace, f"{gate_name}-{slug}.json")
     if os.path.isfile(scoped):
@@ -230,12 +298,54 @@ def find_all_think_gates(workspace: str) -> "list[dict]":
 def resolve_many(
     workspace: str, repo_root: str, gate_names: "list[str]", session_id: str = ""
 ) -> "dict[str, Optional[str]]":
-    """Resolve multiple gate types at once, returning a name-to-path map."""
+    """Resolve multiple gate types at once, returning a name-to-path map.
+
+    Artifact gates are resolved relative to the current think-gate ticket/task
+    when one exists. This prevents stale session-scoped artifacts from an older
+    task in the same long-lived coordinator session from shadowing current
+    repo/workspace-scoped artifacts.
+    """
     result: dict[str, Optional[str]] = {}
+    think_gate = find_gate_for_repo(workspace, repo_root, "think-gate", session_id=session_id)
+    current_ticket = ""
+    if think_gate:
+        td = think_gate.get("data", {})
+        current_ticket = str(td.get("ticket") or td.get("task") or "").strip()
     for name in gate_names:
         found = find_gate_for_repo(workspace, repo_root, name, session_id=session_id)
+        sid = session_id or session_id_from_env()
+        if found and (not _artifact_matches_strict_scope(found, repo_root, sid) or not _gate_matches_ticket(found, current_ticket, require_explicit=True)):
+            found = None
+        if not found and current_ticket:
+            # Re-scan lower-priority candidates for the first scope-valid gate
+            # matching the current task. find_gate_for_repo may have skipped
+            # them because a stale same-session artifact appeared first.
+            for candidate in _candidate_paths(workspace, repo_root, name, sid):
+                loaded = _load(candidate)
+                if loaded and _artifact_matches_strict_scope(loaded, repo_root, sid) and _gate_matches_ticket(loaded, current_ticket, require_explicit=True):
+                    found = loaded
+                    break
         result[name] = found["path"] if found else None
     return result
+
+
+def _candidate_paths(workspace: str, repo_root: str, gate_name: str, session_id: str = "") -> "list[str]":
+    """Return gate candidate paths in resolver priority order."""
+    slug = repo_slug(repo_root)
+    paths: list[str] = []
+    for session_dir in session_dirs(workspace, session_id):
+        paths.append(os.path.join(session_dir, f"{gate_name}-{slug}.json"))
+        paths.append(os.path.join(session_dir, f"{gate_name}.json"))
+    paths.append(os.path.join(workspace, f"{gate_name}-{slug}.json"))
+    paths.append(os.path.join(repo_root, f".{gate_name}.json"))
+    paths.append(os.path.join(workspace, f"{gate_name}.json"))
+    out: list[str] = []
+    seen = set()
+    for path in paths:
+        if path not in seen and os.path.isfile(path):
+            out.append(path)
+            seen.add(path)
+    return out
 
 
 def _load(path: str) -> Optional[dict]:
@@ -257,11 +367,16 @@ def main():
     parser.add_argument("--env-override", default="")
     parser.add_argument("--gate-name", default="think-gate")
     parser.add_argument("--session-id", default="")
+    parser.add_argument("--session-known", action="store_true", help="Return 1 if a current session id is resolvable, else 0")
     parser.add_argument(
         "--resolve-many", default="",
         help="Comma-separated gate names; returns name-to-path map",
     )
     args = parser.parse_args()
+
+    if args.session_known:
+        print("1" if (args.session_id or session_id_from_env()) else "0")
+        return
 
     if args.resolve_many:
         if not args.repo_root:
