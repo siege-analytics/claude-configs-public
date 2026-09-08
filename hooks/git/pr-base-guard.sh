@@ -93,11 +93,11 @@ fi
 PR_BASE=""
 if echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])glab[[:space:]]+mr[[:space:]]+create([^[:alnum:]]|$)'; then
     # GitLab path
-    if [[ "$COMMAND" =~ --target-branch[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+    if [[ "$COMMAND_UNQUOTED" =~ --target-branch[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
         PR_BASE="${BASH_REMATCH[1]}"
-    elif [[ "$COMMAND" =~ --target-branch=([A-Za-z0-9_/.-]+) ]]; then
+    elif [[ "$COMMAND_UNQUOTED" =~ --target-branch=([A-Za-z0-9_/.-]+) ]]; then
         PR_BASE="${BASH_REMATCH[1]}"
-    elif [[ "$COMMAND" =~ (^|[[:space:]])-b[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+    elif [[ "$COMMAND_UNQUOTED" =~ (^|[[:space:]])-b[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
         PR_BASE="${BASH_REMATCH[2]}"
     fi
     # Fall back to glab's default-branch query.
@@ -109,11 +109,11 @@ if echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])glab[[:space:]]+mr[[:space:]]+cre
     fi
 else
     # GitHub path (default)
-    if [[ "$COMMAND" =~ --base[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+    if [[ "$COMMAND_UNQUOTED" =~ --base[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
         PR_BASE="${BASH_REMATCH[1]}"
-    elif [[ "$COMMAND" =~ --base=([A-Za-z0-9_/.-]+) ]]; then
+    elif [[ "$COMMAND_UNQUOTED" =~ --base=([A-Za-z0-9_/.-]+) ]]; then
         PR_BASE="${BASH_REMATCH[1]}"
-    elif [[ "$COMMAND" =~ (^|[[:space:]])-B[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+    elif [[ "$COMMAND_UNQUOTED" =~ (^|[[:space:]])-B[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
         PR_BASE="${BASH_REMATCH[2]}"
     fi
     # Fall back to gh's default-branch query.
@@ -140,10 +140,10 @@ esac
 # the hotfix-direct-to-main bypass label.
 
 # Bypass label check first (cheap; doesn't need git).
-if echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])--label[[:space:]]+hotfix-direct-to-main([^[:alnum:]]|$)'; then
+if echo "$COMMAND_UNQUOTED" | grep -qE '(^|[^[:alnum:]])--label[[:space:]]+hotfix-direct-to-main([^[:alnum:]]|$)'; then
     exit 0
 fi
-if echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])--label=hotfix-direct-to-main([^[:alnum:]]|$)'; then
+if echo "$COMMAND_UNQUOTED" | grep -qE '(^|[^[:alnum:]])--label=hotfix-direct-to-main([^[:alnum:]]|$)'; then
     exit 0
 fi
 
@@ -156,20 +156,20 @@ fi
 HEAD_BRANCH=""
 if echo "$COMMAND_UNQUOTED" | grep -qE '(^|[^[:alnum:]])glab[[:space:]]+mr[[:space:]]+create([^[:alnum:]]|$)'; then
     # GitLab: -H / --source-branch
-    if [[ "$COMMAND" =~ --source-branch[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+    if [[ "$COMMAND_UNQUOTED" =~ --source-branch[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
         HEAD_BRANCH="${BASH_REMATCH[1]}"
-    elif [[ "$COMMAND" =~ --source-branch=([A-Za-z0-9_/.-]+) ]]; then
+    elif [[ "$COMMAND_UNQUOTED" =~ --source-branch=([A-Za-z0-9_/.-]+) ]]; then
         HEAD_BRANCH="${BASH_REMATCH[1]}"
-    elif [[ "$COMMAND" =~ (^|[[:space:]])-H[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+    elif [[ "$COMMAND_UNQUOTED" =~ (^|[[:space:]])-H[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
         HEAD_BRANCH="${BASH_REMATCH[2]}"
     fi
 else
     # GitHub: --head / -H (no --head= form is documented but accept it for symmetry)
-    if [[ "$COMMAND" =~ --head[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+    if [[ "$COMMAND_UNQUOTED" =~ --head[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
         HEAD_BRANCH="${BASH_REMATCH[1]}"
-    elif [[ "$COMMAND" =~ --head=([A-Za-z0-9_/.-]+) ]]; then
+    elif [[ "$COMMAND_UNQUOTED" =~ --head=([A-Za-z0-9_/.-]+) ]]; then
         HEAD_BRANCH="${BASH_REMATCH[1]}"
-    elif [[ "$COMMAND" =~ (^|[[:space:]])-H[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
+    elif [[ "$COMMAND_UNQUOTED" =~ (^|[[:space:]])-H[[:space:]]+([A-Za-z0-9_/.-]+) ]]; then
         HEAD_BRANCH="${BASH_REMATCH[2]}"
     fi
 fi

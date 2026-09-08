@@ -688,6 +688,29 @@ else
     bad "(z6) #827 I1 else-clause flag" "out=$OUT"
 fi
 
+# (z6b) I1 guard: try-body import setup remains safe when success flag is in else
+cat > "$TMP/z6b.py" <<'EOF'
+try:
+    import pandas
+    pandas.set_option("display.width", 120)
+except ImportError:
+    pandas = None
+    PANDAS_AVAILABLE = False
+else:
+    PANDAS_AVAILABLE = True
+
+def frame():
+    if not PANDAS_AVAILABLE:
+        raise RuntimeError("install pandas")
+    return pandas.DataFrame()
+EOF
+OUT=$(python3 "$SCAN" "$TMP/z6b.py" 2>&1)
+if ! fires_wc8 "$OUT"; then
+    ok "(z6b) #837 try-body setup under else flag: writing-code-8 silent"
+else
+    bad "(z6b) #837 try-body setup under else flag" "out=$OUT"
+fi
+
 # (z7) I2: dotted-source prefix flag must pair matplotlib.pyplot -> MATPLOTLIB_AVAILABLE
 cat > "$TMP/z7.py" <<'EOF'
 try:

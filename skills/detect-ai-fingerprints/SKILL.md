@@ -42,7 +42,10 @@ bash <this-skill-dir>/scan.sh --message "fix: bad
 This commit changes line 48 -- crucially the leading zeros are preserved."
 
 # Scan a message body from a file
-bash <this-skill-dir>/scan.sh --message-file /tmp/COMMIT_EDITMSG
+bash <this-skill-dir>/scan.sh --message-file /tmp/message-body.txt
+
+# Scan a full commit message from a file; line 1 subject is exempt
+bash <this-skill-dir>/scan.sh --commit-message-file /tmp/COMMIT_EDITMSG
 ```
 
 Exit code is 0 when clean, 1 when any violation is found, 2 on usage error.

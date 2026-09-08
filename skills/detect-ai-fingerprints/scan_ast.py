@@ -1445,10 +1445,13 @@ def check_writing_code_8(tree):
             self.skip_ranges = []
 
         def visit_Try(self, node):
-            # If this try/except sets a flag we're tracking, its body is safe
+            # If this try/except sets a flag we're tracking, its try body is safe
             # (the flag can't be False inside the try where imports succeeded).
+            # R11 I1 (#837): the success flag may be assigned in `else`, so use
+            # both the try body and else body when deciding whether this Try is
+            # an optional-import block, but skip only the try body range.
             try_sets_tracked_flag = False
-            for stmt in node.body:
+            for stmt in list(node.body) + list(node.orelse):
                 if isinstance(stmt, ast.Assign):
                     for tgt in stmt.targets:
                         if isinstance(tgt, ast.Name) and tgt.id in optional.values():

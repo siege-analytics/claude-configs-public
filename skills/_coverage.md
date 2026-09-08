@@ -154,8 +154,9 @@ originating_arc = { session-id = "260502-vital-channel", incident-name = "facebo
 name = "mock-without-spec"
 description = "MagicMock() without spec=<RealClass>, allowing calls to non-existent methods to silently succeed."
 rule_id = ["writing-tests:4"]
-enforcement = "scanner"
-tooling_status = "mechanical"
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: AST detector for Mock() / MagicMock() calls without spec/spec_set/autospec, with fixture and patch carve-outs to avoid false positives"
 originating_arc = { session-id = "260502-vital-channel", incident-name = "v1.7.0-retrospective" }
 
 [[failure_mode]]
@@ -188,8 +189,9 @@ originating_arc = { session-id = "260502-vital-channel", incident-name = "all-fo
 name = "completeness-claim-unverified"
 description = "'Loop closed', 'ready to ship', 'addressed all', 'no remaining' without the falsifying check; same family as countable claims but no integer is named."
 rule_id = ["writing-claims:3"]
-enforcement = "scanner"
-tooling_status = "mechanical"
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: message-body detector for non-countable completeness phrases plus a same-turn evidence trailer; current scanner only emits writing-claims:2 for countable-claim patterns"
 originating_arc = { session-id = "260502-vital-channel", incident-name = "v1.7.0-retrospective" }
 
 [[failure_mode]]
@@ -205,26 +207,25 @@ originating_arc = { session-id = "260502-vital-channel", incident-name = "groupb
 name = "skip-count-silent-trend"
 description = "PR adds new pytest.skip sites; CI stays green; test surface shrinks invisibly because no one is counting."
 rule_id = ["writing-releases:2"]
-enforcement = "scanner"
-tooling_status = "mechanical"
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: baseline-vs-diff skip-count detector that reports added skip/xfail sites and requires release-note or test-plan evidence"
 originating_arc = { session-id = "260502-vital-channel", incident-name = "v1.7.0-retrospective" }
 
 [[failure_mode]]
 name = "untested-exception-handler"
 description = "An except block in production code with no test that forces the exception to fire; behaviour on failure is unverified until the first production firing reveals divergence."
 rule_id = ["writing-tests:5"]
-enforcement = "code-review"
-tooling_status = "judgment"
-prevention_path = "needs: cross-file evidence detector that grep-matches except-class in source against pytest.raises / assertRaises / with raises in the same PR's test files (tracked at upstream issue #56 for v1.6.2)"
+enforcement = "scanner"
+tooling_status = "mechanical"
 originating_arc = { session-id = "260502-vital-channel", pr-number = 55, incident-name = "gazetteer-census-fallback-schema-divergence" }
 
 [[failure_mode]]
 name = "unguarded-optional-import-callsite"
 description = "Module declares X_AVAILABLE = False fallback for an optional import but a callsite uses X.foo(...) without first checking X_AVAILABLE; first call in a missing-dep environment raises NameError instead of the intended clear RuntimeError naming the package and install command."
 rule_id = ["writing-code:8"]
-enforcement = "code-review"
-tooling_status = "judgment"
-prevention_path = "needs: multi-pass-within-file detector that extracts the optional-import flag, then re-scans for unguarded callsites (tracked at upstream issue #57 for v1.6.2)"
+enforcement = "scanner"
+tooling_status = "mechanical"
 originating_arc = { session-id = "260502-vital-channel", pr-number = 55, incident-name = "shapely-available-unguarded-callsites" }
 
 [[failure_mode]]
