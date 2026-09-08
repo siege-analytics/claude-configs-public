@@ -59,6 +59,29 @@ Forward-only. New optional imports must comply; existing modules audited as disc
 
 The session's concrete instance: both `census_gazetteer.py` and `wikidata_gazetteer.py` had `SHAPELY_AVAILABLE` flags but the geometry-construction callsites used `shapely.geometry.Polygon(...)` without guarding. The first call in an environment without shapely raised `NameError: name 'shapely' is not defined` instead of the intended clear `RuntimeError`. Cross-module re-export case (X re-exported from `__init__.py`, used in sibling module via `from .somemod import X`) is a known scanner gap; the failure mode is loud (immediate NameError) and the pattern is rare. Mechanical detection is high (multi-pass within a file; tracked at upstream issue #57 for v1.6.2); judgment-enforced via `[skill:code-review]` until the scanner enhancement lands.
 
+**Shape-space coverage table.** Per `[rule:writing-rules]` writing-rules:8, rules that describe a class of code idioms must enumerate the covered shape space. The class writing-code:8 targets is "optional-import patterns"; the shape space is enumerated here.
+
+**Coverage-status semantics (read this before interpreting the table):** an entry may be marked `covered` only when the coverage claim is backed by BOTH (a) an AST- or control-flow-aware code path in the scanner AND (b) at least one executable fixture that regresses if the code path is removed. Context-free grep for the pattern in scanner source does NOT satisfy `covered`; it proves the string exists, not that the shape is handled. See `[skill:shape-space-audit]`'s named P6 anti-pattern for the underlying discipline.
+
+| # | Shape | Example idiom | Coverage status | Fixture status | Fix work-item | Notes |
+|---|---|---|---|---|---|---|
+| 1 | Basic `try/except ImportError` + module-scope flag | `SHAPELY_AVAILABLE = True` in try body, `= False` in except | covered | existing (skills/detect-ai-fingerprints/test_writing_code_8.sh) | — | canonical shape; the rule's original example |
+| 2 | `try/except/else FLAG = True` | numpy pattern: `try: import numpy / except: numpy = None; FLAG = False / else: FLAG = True` | not-covered | missing | `siege-analytics/claude-configs-public#827` | R11 I-1; `_extract_optional_imports` never scans `node.orelse` |
+| 3 | Dotted-source with prefix flag | `import matplotlib.pyplot as plt` paired with `MATPLOTLIB_AVAILABLE` | not-covered | missing | `siege-analytics/claude-configs-public#827` | R11 I-2; `_name_matches_flag` uses exact-equal after `.`/`_` collapse, not prefix; `matplotlibpyplot != matplotlib` |
+| 4 | 1-flag / N-import | `try: from pyspark.sql import SparkSession; from pyspark.sql.functions import udf, pandas_udf, col; PYSPARK_AVAILABLE = True` | not-covered | missing | `siege-analytics/claude-configs-public#827` | R11 I-3; R9-F3's `phase1_matched_any` gate causes fail-open; PySpark canonical shape |
+| 5 | `AnnAssign` flag | `NUMPY_AVAILABLE: bool = True` in the try body | not-covered | missing | deferred | R11 M-1; scanner walks `ast.Assign` but not `ast.AnnAssign` |
+| 6 | `from X import *` pollution | `from optional_pkg import *` in try body | not-covered | missing | deferred | R11 M-2; scanner writes `{'*': FLAG}` into optional map; `*` can never match a Python identifier |
+| 7 | Nested try | outer try wraps inner try for version-probe idiom | not-covered | missing | deferred | R11 M-3; scanner scans outer try body but not nested try body |
+| 8 | Conditional imports inside try body | `try: if version >= (3,8): import X; else: X = None` | not-covered | missing | deferred | R11 M-4; scanner scans try body's top-level nodes but does not descend into `if`/`for`/`while` inside try |
+| 9 | Cross-block shadowing | symbol imported in try, re-bound at module scope elsewhere | not-covered | missing | deferred | edge case; shadowing invalidates the flag-guard invariant |
+| 10 | Sole-flag misdirect protection | R7-F2 shape: `import re` + `MRE_AVAILABLE` (unrelated) — must fail open, not false-pair | covered | existing (fixture per R7-F2 lock-in) | — | preserved; this is a NON-match that must not be forced into a false pair |
+
+**Table maintenance rules:**
+
+- Adding a new shape row: mandatory when a new dominant idiom is identified. Row must include example, fixture status, and either a Fix work-item ticket for `not-covered` rows or evidence for `covered` claims.
+- Flipping a row from `not-covered` to `covered`: requires (a) a scanner code path in the same PR AND (b) an executable fixture in the same PR AND (c) reviewer sign-off per `[skill:hostile-review]` Category 10c (prose-vs-implementation audit). All three; no exceptions.
+- `deferred` in Fix work-item: acceptable when no live ticket exists yet; must be replaced by a ticket reference before the shape row can be actively worked. `siege-analytics/claude-configs-public#827` covers the three R11 INVALIDATING shapes (rows 2-4); M-shapes (rows 5-8) and edge cases (row 9) await follow-up tickets.
+
 **writing-code:9. No silently-dropped parameters.**
 
 When a method or function signature accepts a parameter, the implementation must do exactly one of:
