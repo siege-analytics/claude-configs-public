@@ -9,13 +9,13 @@ allowed-tools: Read Grep Glob
 ## Companion skills and shelves
 
 Anchor each review dimension in:
-- [skill:shelves--clean-code] -- naming, function size, comment discipline (the *why* behind most review comments).
-- [skill:shelves--design-patterns] -- when to suggest a pattern (and when not to).
-- [skill:shelves--refactoring-patterns] -- name the safe transformation, don't hand-wave.
+- `skills/shelves/engineering-principles/clean-code/SKILL.md` -- naming, function size, comment discipline (the *why* behind most review comments).
+- `skills/shelves/engineering-principles/design-patterns/SKILL.md` -- when to suggest a pattern (and when not to).
+- `skills/shelves/engineering-principles/refactoring-patterns/SKILL.md` -- name the safe transformation, don't hand-wave.
 - [skill:hostile-review] -- full-codebase adversarial audit (9 categories with grep methodology). Use for periodic audits; this skill is for PR-level review.
 - The nested DDIA shelf file `skills/shelves/systems-architecture/data-intensive/SKILL.md` -- required when the diff touches caches, derived data, data-quality validation, retries/failures around external data, or persisted geospatial/API results. DDIA's "data outlives code" frame applies even in a Python utility package when a cache, API wrapper, or validator changes what downstream users treat as truth.
 - The nested geospatial shelf file `skills/shelves/geospatial/SKILL.md` -- required when the diff touches coordinates, CRS, geocoding, spatial caches, geometry validation, or spatial IO.
-- For Spark/JVM PRs: [skill:shelves--effective-java], [skill:shelves--effective-kotlin].
+- For Spark/JVM PRs: `skills/shelves/languages/effective-java/SKILL.md`, `skills/shelves/languages/effective-kotlin/SKILL.md`.
 
 The Siege-specific catches below (catalog bypass, NULL drops, partition skew) stay here.
 
@@ -29,6 +29,18 @@ A review that only says "function X looks correct" is incomplete for utility-lib
 - Test lens: name the fixture that proves each public contract and each chain contract, or mark the claim unproven.
 
 If the PR promotes a symbol to stable public API, the review must cover degraded-mode behavior (missing optional dependencies, star import/introspection, documented exception types) before treating the public contract as stable.
+
+## Tandem review contract
+
+When code-review is performed by a collaborator session, apply `[rule:tandem-agent]` before reviewing:
+
+- record whether the reviewer is `review-only` or explicitly `comment-only`; neither role may edit code, commit, push, merge, revert, or open implementation PRs;
+- pin the reviewed repo, branch/PR, base, and head SHA or commit range;
+- deliver findings to the coordinator unless the role contract explicitly grants external comment-only posting;
+- mark each finding as merge-blocking or follow-up and name the function/function-chain/test evidence that proves it;
+- after an implementer pushes fixes, re-review the new commit range before the coordinator treats the gate as closed.
+
+A review comment, green CI, or obvious patch is not implementation authorization for the reviewer.
 
 ## When to Use This Skill
 

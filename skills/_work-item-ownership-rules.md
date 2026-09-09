@@ -19,6 +19,7 @@ No override flag: the marker is always cheap and always the correct signal.
 ## Cross-references
 
 - `_session-coordination-rules` -- agent-to-agent message *cadence* (declare at-rest, stop pinging past at-rest, distinguish slow-from-stuck, hand off the baton, spawn discipline). The work-item rules here are the *content* side: what a work session owes its coordinator, keyed on the item it owns.
+- `[rule:tandem-agent]` -- role contracts, review-only boundaries, explicit authorization, active collaborator supervision, durable findings, and re-review gates for tandem work.
 - The rule-1 marker is what makes a tracker's "notify the owning session on change" routing deterministic; rule-2 is the session-side half of the same loop.
 
 ## Originating evidence
