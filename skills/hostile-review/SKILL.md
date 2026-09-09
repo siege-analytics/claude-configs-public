@@ -38,8 +38,8 @@ contract and the logical chain that makes the bug matter:
 For domain work, load and cite the relevant shelves before final verdict. In
 particular:
 
-- data validation, caches, persisted API results, materialized views, or retry/failure semantics require [skill:shelves--data-intensive]. Apply DDIA's "data outlives code" principle: identify system of record vs derived data, freshness/consistency promises, partial-failure behavior, and whether bad data can persist after the code is fixed.
-- geocoding, coordinates, CRS, spatial caches, and geometry operations require [skill:shelves--geospatial] in addition to [skill:shelves--data-intensive] when persisted or derived data is involved.
+- data validation, caches, persisted API results, materialized views, or retry/failure semantics require reading and citing the nested DDIA shelf file `skills/shelves/systems-architecture/data-intensive/SKILL.md` (reachable via [skill:shelves--systems-architecture]). Apply DDIA's "data outlives code" principle: identify system of record vs derived data, freshness/consistency promises, partial-failure behavior, and whether bad data can persist after the code is fixed.
+- geocoding, coordinates, CRS, spatial caches, and geometry operations require reading and citing `skills/shelves/geospatial/SKILL.md` in addition to the DDIA shelf when persisted or derived data is involved.
 - API/public-surface promotions require [skill:code-review]'s public-contract checks: degraded optional dependency behavior, star import/introspection behavior, catchable documented exception types, and explicit tests for those promises.
 
 Do not implement from hostile-review findings until the parent/operator has
