@@ -23,6 +23,29 @@ are deployed to the production target and production UAT evidence is recorded,
 or after the review artifact records that production UAT is not applicable with
 a falsifiable reason.
 
+## Function-chain and shelf-grounded hostile review
+
+A hostile review of a utility library must be more than grep hits and isolated
+function nits. For every significant finding, record both the local function
+contract and the logical chain that makes the bug matter:
+
+- individual function or method name and line range;
+- public entry point or caller that exposes it;
+- downstream dependency, cache, file, database, or generated artifact it affects;
+- documented/general-guide/shelf contract that should govern the behavior;
+- fixture evidence that proves or fails to prove the chain.
+
+For domain work, load and cite the relevant shelves before final verdict. In
+particular:
+
+- data validation, caches, persisted API results, materialized views, or retry/failure semantics require [skill:shelves--data-intensive]. Apply DDIA's "data outlives code" principle: identify system of record vs derived data, freshness/consistency promises, partial-failure behavior, and whether bad data can persist after the code is fixed.
+- geocoding, coordinates, CRS, spatial caches, and geometry operations require [skill:shelves--geospatial] in addition to [skill:shelves--data-intensive] when persisted or derived data is involved.
+- API/public-surface promotions require [skill:code-review]'s public-contract checks: degraded optional dependency behavior, star import/introspection behavior, catchable documented exception types, and explicit tests for those promises.
+
+Do not implement from hostile-review findings until the parent/operator has
+explicitly authorized implementation after reviewing the findings. A review
+comment plus passing local tests is not authorization to push code.
+
 ## Dispatch verification and orphan fallback
 
 Sibling spawn dispatch is unreliable in practice. A spawn can return a
