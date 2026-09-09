@@ -13,7 +13,7 @@ Anchor each review dimension in:
 - [skill:shelves--design-patterns] -- when to suggest a pattern (and when not to).
 - [skill:shelves--refactoring-patterns] -- name the safe transformation, don't hand-wave.
 - [skill:hostile-review] -- full-codebase adversarial audit (9 categories with grep methodology). Use for periodic audits; this skill is for PR-level review.
-- [skill:shelves--systems-architecture] plus the nested DDIA shelf file `skills/shelves/systems-architecture/data-intensive/SKILL.md` -- required when the diff touches caches, derived data, data-quality validation, retries/failures around external data, or persisted geospatial/API results. DDIA's "data outlives code" frame applies even in a Python utility package when a cache, API wrapper, or validator changes what downstream users treat as truth.
+- The nested DDIA shelf file `skills/shelves/systems-architecture/data-intensive/SKILL.md` -- required when the diff touches caches, derived data, data-quality validation, retries/failures around external data, or persisted geospatial/API results. DDIA's "data outlives code" frame applies even in a Python utility package when a cache, API wrapper, or validator changes what downstream users treat as truth.
 - The nested geospatial shelf file `skills/shelves/geospatial/SKILL.md` -- required when the diff touches coordinates, CRS, geocoding, spatial caches, geometry validation, or spatial IO.
 - For Spark/JVM PRs: [skill:shelves--effective-java], [skill:shelves--effective-kotlin].
 
