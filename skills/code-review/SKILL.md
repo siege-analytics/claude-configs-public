@@ -13,9 +13,22 @@ Anchor each review dimension in:
 - [skill:shelves--design-patterns] -- when to suggest a pattern (and when not to).
 - [skill:shelves--refactoring-patterns] -- name the safe transformation, don't hand-wave.
 - [skill:hostile-review] -- full-codebase adversarial audit (9 categories with grep methodology). Use for periodic audits; this skill is for PR-level review.
+- [skill:shelves--systems-architecture] and [skill:shelves--data-intensive] -- required when the diff touches caches, derived data, data-quality validation, retries/failures around external data, or persisted geospatial/API results. DDIA's "data outlives code" frame applies even in a Python utility package when a cache, API wrapper, or validator changes what downstream users treat as truth.
+- [skill:shelves--geospatial] -- required when the diff touches coordinates, CRS, geocoding, spatial caches, geometry validation, or spatial IO.
 - For Spark/JVM PRs: [skill:shelves--effective-java], [skill:shelves--effective-kotlin].
 
 The Siege-specific catches below (catalog bypass, NULL drops, partition skew) stay here.
+
+## Shelf-grounded review requirement
+
+A review that only says "function X looks correct" is incomplete for utility-library changes. Before approving a Python utility PR, cite the relevant general guide or shelf lens and explain how it affected the verdict:
+
+- Function contract lens: individual function inputs/outputs/errors/docstring/type hints.
+- Chain lens: caller -> public API/lazy loader -> helper -> external dependency/cache/store -> returned data/error.
+- Shelf lens: at least one relevant shelf/general guide when the code has domain semantics. For data/cache/geocoding/data-validation changes, include [skill:shelves--data-intensive] and explicitly ask: what is the system of record, what is derived data, what consistency/freshness/error contract is promised, and can bad cached/validated data outlive this code?
+- Test lens: name the fixture that proves each public contract and each chain contract, or mark the claim unproven.
+
+If the PR promotes a symbol to stable public API, the review must cover degraded-mode behavior (missing optional dependencies, star import/introspection, documented exception types) before treating the public contract as stable.
 
 ## When to Use This Skill
 
