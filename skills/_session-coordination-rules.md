@@ -4,7 +4,7 @@ description: Always-on. Cross-session coordination discipline for agent-to-agent
 
 # Session coordination
 
-These eight rules apply to multi-session work where two or more agents exchange `send_agent_message` to coordinate. Originating evidence is a 2026-06-05 incident where two pour-now sessions (`260605-brisk-spring` testing-strategy, `260604-clear-lagoon` Playwright) entered a queue-lag spiral. One was sending updates faster than the other could process. The receiver went silent intentionally to drain its queue. The operator read the silence as a stall. Workspace governance (`260604-smooth-gold`) verified the silent partner was alive and processing -- session.jsonl mtime under two minutes -- and that the silence was a deliberate cadence choice, not a session failure. The first four rules name the discipline failures that produced the operator read-error: missing at-rest declaration with explicit re-engagement signal (rule 1), continued pinging past at-rest declaration (rule 2), "stuck" / "death spiral" framing applied to slow processing (rule 3), implicit-but-unstated baton hand-off after the signoff (rule 4). Rules 5 and 6 cover the later hub/COO failure mode where user decisions are dumped as a vague bundle and the main session is captured by foreground spoke-coordination churn.
+These eight rules apply to multi-session work where two or more agents exchange `send_agent_message` to coordinate. They are complemented by `[rule:tandem-agent]`, which governs role contracts, reviewer/implementer boundaries, explicit authorization, active collaborator supervision, durable findings, and re-review. Originating evidence is a 2026-06-05 incident where two pour-now sessions (`260605-brisk-spring` testing-strategy, `260604-clear-lagoon` Playwright) entered a queue-lag spiral. One was sending updates faster than the other could process. The receiver went silent intentionally to drain its queue. The operator read the silence as a stall. Workspace governance (`260604-smooth-gold`) verified the silent partner was alive and processing -- session.jsonl mtime under two minutes -- and that the silence was a deliberate cadence choice, not a session failure. The first four rules name the discipline failures that produced the operator read-error: missing at-rest declaration with explicit re-engagement signal (rule 1), continued pinging past at-rest declaration (rule 2), "stuck" / "death spiral" framing applied to slow processing (rule 3), implicit-but-unstated baton hand-off after the signoff (rule 4). Rules 5 and 6 cover the later hub/COO failure mode where user decisions are dumped as a vague bundle and the main session is captured by foreground spoke-coordination churn.
 
 ## The eight coordination rules
 
@@ -54,6 +54,8 @@ Before retirement, preserve only durable value: final findings, open risks, PR/t
 
 Do not retire a spoke that still owns an unmerged PR, an unresolved blocker, pending CI/UAT, unique credentials/browser state, or evidence not yet copied into the ticket/plan/PR. If the spoke is noisy but still needed, narrow its brief or move it under a sub-manager instead of archiving it.
 
+**session-coordination:9. Check collaborators after handoffs; do not set-and-forget.** When you delegate review, implementation, verification, or investigation to another session, the delegation is not complete until you actively check the collaborator's status/result and either resume, redirect, retire, or report a bounded waiting state. If the operator asks about collaborator progress, immediately inspect the collaborator rather than relying on the last known message. Apply `[rule:tandem-agent]` for role boundaries and authorization before sending new work.
+
 ## Spawn-session discipline
 
 When creating a new session for review, implementation, investigation, or any work that must act or communicate back, configure the session correctly at creation time. Do not rely on inherited defaults.
@@ -101,6 +103,7 @@ These rules are mandatory. The carve-out in rule 2 (operator override) lives ins
 
 - `[rule:writing-claims]` writing-claims:1-3 cover claims about prior actions. Declaring "I am at-rest" is itself a claim about what you will and will not do next; honor it (rule 2) or rescind it through the operator-override carve-out.
 - `[rule:writing-prose]` writing-prose:5 covers future-tense commitments to action. A baton declaration is the present-tense sibling: "the next move is yours, not mine."
+- `[rule:tandem-agent]` handles the role-contract and authorization side of multi-agent work; this file handles cadence and baton clarity.
 - `[skill:drive-while-away]` handles operator-handoff cadence for autonomous sessions. session-coordination rules are the agent-to-agent analog.
 
 ## Originating evidence

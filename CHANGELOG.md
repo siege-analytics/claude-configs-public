@@ -5,6 +5,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 ## [Unreleased]
 
 ### Added
+- Added a tandem-agent operating model for coordinator/reviewer/implementer collaboration: explicit role contracts, review-only boundaries, scoped implementation authorization, active collaborator checks, durable findings, and post-fix re-review.
 
 - Workspace hook deployment drift tooling: `bin/check-deploy-drift.py` compares repo hooks against deployed Craft Agent workspace hooks and `deploy-stamp.json`; `bin/sync-workspace-hooks.sh` provides an explicit post-merge sync/runbook command that deploys, wires, verifies, and drift-checks workspace hooks.
 - Hub spoke-source and retirement rules: `session-coordination:7` requires hubs to choose spoke AI sources by task fit, rate-limit pressure, provider health, model strengths, independence needs, tool/source access, and operator cross-system preferences; `session-coordination:8` requires completed workers and reviewers to preserve durable findings, mark themselves done/archive-candidate where available, and become safe for operator deletion.
@@ -16,6 +17,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 
 ### Fixed
+- Replaced all active `shelves--...` `[skill:]` references with explicit `skills/shelves/.../SKILL.md` paths so collaborator sessions do not fail shelf loading.
 - Followed up nested shelf reference repair by using explicit DDIA/geospatial shelf paths only where nested shelf loading is required.
 - Fixed invalid nested shelf skill references by replacing `shelves--data-intensive` / `shelves--geospatial` invocation forms with valid parent skills and explicit nested shelf file paths.
 - Review guidance now requires Siege Utilities hostile/code reviews to cite function contracts, function chains, and relevant shelves/general guides, including DDIA/data-intensive for caches, geocoding, data validation, and derived-data work, before Python implementation is authorized.

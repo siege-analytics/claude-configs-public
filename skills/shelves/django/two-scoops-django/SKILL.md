@@ -638,21 +638,21 @@ discipline holds. Performance ensures it works under load.
 ## When this skill does NOT apply
 
 - Pure performance infrastructure (caching tiers, load balancing, Varnish,
-  horizontal scaling) -- see [skill:shelves--high-performance-django]
+  horizontal scaling) -- see `skills/shelves/django/high-performance-django/SKILL.md`
 - Rescuing a legacy codebase that did not follow these practices -- see
-  [skill:shelves--django-design-patterns] for the rescue methodology
-- Non-Django Python projects -- see [skill:shelves--languages]
+  `skills/shelves/django/django-design-patterns/SKILL.md` for the rescue methodology
+- Non-Django Python projects -- see `skills/shelves/languages/SKILL.md`
 - Frontend framework architecture (React, Vue) -- Two Scoops focuses on
   server-side Django; see Section 4 for the enhancement-vs-SPA decision
 - Distributed system design beyond Django (microservices, event sourcing,
-  CQRS) -- see [skill:shelves--systems-architecture]
+  CQRS) -- see `skills/shelves/systems-architecture/SKILL.md`
 
 ## Companions
 
-- [skill:shelves--high-performance-django] -- after building correctly, scale it
-- [skill:shelves--django-design-patterns] -- legacy rescue and pattern vocabulary
-- [skill:shelves--clean-code] -- general code quality principles
-- [skill:shelves--pragmatic-programmer] -- broader engineering discipline
+- `skills/shelves/django/high-performance-django/SKILL.md` -- after building correctly, scale it
+- `skills/shelves/django/django-design-patterns/SKILL.md` -- legacy rescue and pattern vocabulary
+- `skills/shelves/engineering-principles/clean-code/SKILL.md` -- general code quality principles
+- `skills/shelves/engineering-principles/pragmatic-programmer/SKILL.md` -- broader engineering discipline
 - `skills/shelves/systems-architecture/data-intensive/SKILL.md` -- database internals beyond Django's ORM
 
 ## Source and license

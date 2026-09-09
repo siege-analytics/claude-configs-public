@@ -13,10 +13,11 @@ When the work target is `siege_utilities` itself, do not turn hostile-review fin
 1. Review individual functions and the function chains that expose them through public API, lazy import, cache, IO, dependency, or CLI surfaces.
 2. Cite applicable general guides and shelves in the review artifact/comment. For geocoding, caches, data validation, persisted API responses, and derived data, read and cite `skills/shelves/systems-architecture/data-intensive/SKILL.md` and apply DDIA's system-of-record vs derived-data lens. For coordinates/CRS/spatial helpers, also read and cite `skills/shelves/geospatial/SKILL.md`.
 3. Separate merge-blocking public-contract defects from follow-up edge hardening.
-4. Wait for explicit implementation authorization.
+4. Wait for explicit implementation authorization that names the Siege Utilities repo/branch, findings to fix, allowed modules/files, required tests, push permission, and PR/comment permission.
 5. Implement in a reviewed branch/PR flow with tests that prove the function-level and chain-level contracts named in the review.
+6. After implementation, request re-review against the new commit range before merge.
 
-A PR comment, green local tests, or a fixed local configs checkout is not authorization to push Siege Utilities code.
+A PR comment, green local tests, a fixed local configs checkout, or a reviewer saying the fix is obvious is not authorization to push Siege Utilities code. Review-only agents remain review-only until reauthorized under `[rule:tandem-agent]`.
 
 ## When to reach for it
 

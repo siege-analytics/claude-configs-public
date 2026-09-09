@@ -121,21 +121,21 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 
 ### Shelves (book-derived libraries)
 
-DBrain book-skill library. Each shelf is itself a router -- load the shelf, it tells you which book to read in full. See [skill:shelves--shelves] for the meta-router.
+DBrain book-skill library. Each shelf is itself a router -- load the shelf, it tells you which book to read in full. See `skills/shelves/SKILL.md` for the meta-router.
 
 | Trigger | Shelf |
 |---|---|
-| Engineering practice question, code review rationale, refactoring justification | [skill:shelves--engineering-principles] |
-| Distributed system design, storage engine choice, replication, scaling | [skill:shelves--systems-architecture] |
-| Language-specific idiom or best practice (Python, JVM, TS, Rust) | [skill:shelves--languages] |
-| Data pipeline design, scheduled-job patterns, batch/stream | [skill:shelves--data-and-pipelines] |
-| Product discovery, feature scoping, JTBD, user research | [skill:shelves--product] |
-| Marketing copy, conversion, positioning messaging | [skill:shelves--marketing] |
-| Sales motion, pricing, negotiation | [skill:shelves--sales] |
-| Strategy, market entry, competitive positioning | [skill:shelves--strategy] |
-| UI/UX design, visual hierarchy, typography, microinteractions | [skill:shelves--design] |
-| Team motivation, ways of working, organizational practice | [skill:shelves--team] |
-| Communicating data, presenting findings, animation in slides | [skill:shelves--storytelling] |
+| Engineering practice question, code review rationale, refactoring justification | `skills/shelves/engineering-principles/SKILL.md` |
+| Distributed system design, storage engine choice, replication, scaling | `skills/shelves/systems-architecture/SKILL.md` |
+| Language-specific idiom or best practice (Python, JVM, TS, Rust) | `skills/shelves/languages/SKILL.md` |
+| Data pipeline design, scheduled-job patterns, batch/stream | `skills/shelves/data-and-pipelines/SKILL.md` |
+| Product discovery, feature scoping, JTBD, user research | `skills/shelves/product/SKILL.md` |
+| Marketing copy, conversion, positioning messaging | `skills/shelves/marketing/SKILL.md` |
+| Sales motion, pricing, negotiation | `skills/shelves/sales/SKILL.md` |
+| Strategy, market entry, competitive positioning | `skills/shelves/strategy/SKILL.md` |
+| UI/UX design, visual hierarchy, typography, microinteractions | `skills/shelves/design/SKILL.md` |
+| Team motivation, ways of working, organizational practice | `skills/shelves/team/SKILL.md` |
+| Communicating data, presenting findings, animation in slides | `skills/shelves/storytelling/SKILL.md` |
 
 > **Status:** shelves are added incrementally via the `feat/dbrain-*` PR stack. Rows above pointing at not-yet-merged shelf files will resolve as PRs land.
 

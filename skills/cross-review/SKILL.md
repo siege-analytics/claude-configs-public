@@ -15,6 +15,7 @@ Codex reviews Claude's, and so on.
 - After completing work on a ticket, before merge
 - When self-review has passed but you want an independent second opinion
 - When the resolver or pipeline calls for cross-model review
+- When a coordinator needs an independent reviewer while preserving reviewer/implementer separation under `[rule:tandem-agent]`
 
 ## Inputs
 
@@ -71,8 +72,8 @@ Search paths for skills (in order):
 ### Step 5: Spawn the reviewer
 
 The spawn call must satisfy `spawn-guard.sh`: explicit permission, model,
-reasoning level, source list, and rule binding. Review sessions use high or
-higher reasoning and the strongest suitable model available.
+reasoning level, source list, rule binding, and the `[rule:tandem-agent]` role contract. Review sessions use high or
+higher reasoning and the strongest suitable model available. Default reviewer role is `review-only`: no edits, commits, pushes, merges, reverts, implementation PRs, or spawned implementers.
 
 ```
 spawn_session(
@@ -132,10 +133,9 @@ Review the attached file using the review methodology in review-skill.md.
 ## Output
 
 1. Produce your findings in the format specified by the review skill.
-2. Post findings as a comment on the ticket: gh issue comment <number> -R <repo> --body "<findings>"
-3. If you cannot post to the ticket, use send_agent_message to send findings
-   back to the parent session.
-4. When complete, set your session status to done.
+2. Send findings back to the parent/coordinator session with `send_agent_message` unless this prompt explicitly grants external `comment-only` posting.
+3. If external `comment-only` posting is granted, post exactly the reviewed findings; do not mutate code, branch state, PR status, labels, or merge state.
+4. When complete, set your session status to done and include a baton/terminal-state message.
 
 ## Rules
 
@@ -143,8 +143,9 @@ Review the attached file using the review methodology in review-skill.md.
 - You are a reviewer, not an implementer. Do not modify any files.
 - Cite file:line for every finding.
 - Rate severity per the review skill's scale.
-- Return findings to parent via send_agent_message; do not post ticket/PR comments directly.
-- When complete, call set_session_status done.
+- Return findings to parent via send_agent_message by default; post ticket/PR comments directly only if this role contract explicitly grants `comment-only` external posting.
+- Review-only means no source edits, commits, pushes, merges, reverts, implementation PRs, or spawned implementers.
+- When complete, call set_session_status done and send a terminal baton message.
 - Do not add AI/assistant attribution to any output.
 ```
 
@@ -167,7 +168,7 @@ findings to the ticket from the hook-bound parent runtime.
 
 ## Incorporating Results
 
-When findings arrive (via `send_agent_message` reply or ticket comment):
+When findings arrive (via `send_agent_message` reply or ticket comment), the coordinator remains responsible for the gate:
 
 1. Read the findings
 2. Triage by severity: S1 findings block merge, S2 findings get tickets, S3 findings are tracked
@@ -177,6 +178,7 @@ When findings arrive (via `send_agent_message` reply or ticket comment):
    provider, model, and finding count
 5. Record the review location in the self-review artifact's
    `Hostile-review-artifact:` field (ticket comment link or file path)
+6. If implementation follows, pin the new commit range and request re-review before declaring the review gate closed
 
 ## Reviewer session lifecycle (originating agent owns cleanup)
 

@@ -9,15 +9,15 @@ description: Router for team / ways-of-working / staff-engineering book skills. 
 
 | Task signal | Book to read |
 |---|---|
-| Autonomy / mastery / purpose; intrinsic vs extrinsic motivation (Daniel Pink) | [skill:shelves--drive-motivation] |
-| Calm-company practices, six-week cycles, async by default | [skill:shelves--37signals-way] |
-| Staff/Principal engineer IC role; archetypes (Tech Lead / Architect / Solver / Right Hand); engineering strategy; managing technical quality; promotion to Staff | [skill:shelves--staff-engineer] |
+| Autonomy / mastery / purpose; intrinsic vs extrinsic motivation (Daniel Pink) | `skills/shelves/team/drive-motivation/SKILL.md` |
+| Calm-company practices, six-week cycles, async by default | `skills/shelves/team/37signals-way/SKILL.md` |
+| Staff/Principal engineer IC role; archetypes (Tech Lead / Architect / Solver / Right Hand); engineering strategy; managing technical quality; promotion to Staff | `skills/shelves/team/staff-engineer/SKILL.md` |
 
 ## Books in this shelf
 
-- [skill:shelves--drive-motivation] -- Daniel Pink, *Drive*. Autonomy / Mastery / Purpose; why extrinsic rewards fail for cognitive work.
-- [skill:shelves--37signals-way] -- Jason Fried & DHH, calm-company operating practices.
-- [skill:shelves--staff-engineer] -- Will Larson, *Staff Engineer* (companion-site material; full book paid). Four archetypes + operating disciplines + getting-the-title.
+- `skills/shelves/team/drive-motivation/SKILL.md` -- Daniel Pink, *Drive*. Autonomy / Mastery / Purpose; why extrinsic rewards fail for cognitive work.
+- `skills/shelves/team/37signals-way/SKILL.md` -- Jason Fried & DHH, calm-company operating practices.
+- `skills/shelves/team/staff-engineer/SKILL.md` -- Will Larson, *Staff Engineer* (companion-site material; full book paid). Four archetypes + operating disciplines + getting-the-title.
 
 ## Disambiguation
 

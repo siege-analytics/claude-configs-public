@@ -15,13 +15,15 @@ reasoning.
 Hostile reviews are normally performed by a fresh agent session, not by the
 author in the same session and not by a human reviewer. Human hostile reviews
 are exceptional override cases; record why an agent review was unavailable if a
-human review is used. The author agent and reviewer agent must coordinate on
-findings and come to consensus on fixes before the work is considered reviewed.
-The reviewer is not done when it posts findings, and the author is not done when
-it patches code. The hostile-review task is complete only after the agreed fixes
-are deployed to the production target and production UAT evidence is recorded,
-or after the review artifact records that production UAT is not applicable with
-a falsifiable reason.
+human review is used. Apply `[rule:tandem-agent]` to every reviewer session: the
+reviewer is review-only unless explicitly reauthorized for implementation in a
+new scoped message. The reviewer task is complete when durable findings are
+delivered to the coordinator or authorized external comment location, blockers
+are separated from follow-ups, and a terminal status/baton is sent. The review
+gate for the work is complete only after an authorized implementer fixes or the
+operator accepts the named blockers, and an independent reviewer re-reviews the
+new commit range. Production UAT is a separate post-fix gate when applicable; it
+does not authorize the reviewer to implement.
 
 ## Function-chain and shelf-grounded hostile review
 
@@ -44,7 +46,9 @@ particular:
 
 Do not implement from hostile-review findings until the parent/operator has
 explicitly authorized implementation after reviewing the findings. A review
-comment plus passing local tests is not authorization to push code.
+comment plus passing local tests is not authorization to push code. Direct PR or
+ticket commenting is allowed only when the role contract grants comment-only
+posting; otherwise send findings back to the coordinator for posting.
 
 ## Dispatch verification and orphan fallback
 

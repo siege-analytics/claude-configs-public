@@ -11,8 +11,8 @@ paths: "**/*.py,**/settings/*.py"
 ## Companion shelves
 
 For service-boundary and modeling rationale:
-- [skill:shelves--clean-architecture] -- keep frameworks at the edges, not in the domain.
-- [skill:shelves--domain-driven-design] -- aggregates, bounded contexts when the app grows.
+- `skills/shelves/engineering-principles/clean-architecture/SKILL.md` -- keep frameworks at the edges, not in the domain.
+- `skills/shelves/engineering-principles/domain-driven-design/SKILL.md` -- aggregates, bounded contexts when the app grows.
 
 Apply when editing code that imports `django.*`. See [reference.md](reference.md) for deployment, security hardening, and recipe-style snippets.
 
