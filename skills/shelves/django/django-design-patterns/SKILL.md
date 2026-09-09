@@ -571,24 +571,24 @@ error tracking (Sentry).
 ## When this skill does NOT apply
 
 - Greenfield Django projects following best practices from the start --
-  see [skill:shelves--two-scoops-django]
+  see `skills/shelves/django/two-scoops-django/SKILL.md`
 - Performance optimization of structurally sound code -- see
-  [skill:shelves--high-performance-django] (fix correctness before speed)
+  `skills/shelves/django/high-performance-django/SKILL.md` (fix correctness before speed)
 - General refactoring patterns outside Django -- see
-  [skill:shelves--refactoring-patterns] or [skill:shelves--clean-code]
+  `skills/shelves/engineering-principles/refactoring-patterns/SKILL.md` or `skills/shelves/engineering-principles/clean-code/SKILL.md`
 - Non-Django legacy codebases -- the Django-specific patterns (MTV,
   ORM managers, URL routing as seams) are central to this framework
 
 ## Companions
 
-- [skill:shelves--two-scoops-django] -- the target state for legacy rescue.
+- `skills/shelves/django/two-scoops-django/SKILL.md` -- the target state for legacy rescue.
   Refactoring means moving toward Two Scoops conventions.
-- [skill:shelves--high-performance-django] -- after structural rescue, optimize
+- `skills/shelves/django/high-performance-django/SKILL.md` -- after structural rescue, optimize
   for performance
-- [skill:shelves--clean-code] -- general code quality principles
-- [skill:shelves--refactoring-patterns] -- broader refactoring catalog beyond
+- `skills/shelves/engineering-principles/clean-code/SKILL.md` -- general code quality principles
+- `skills/shelves/engineering-principles/refactoring-patterns/SKILL.md` -- broader refactoring catalog beyond
   Django-specific patterns
-- [skill:shelves--release-it] -- production resilience patterns (circuit breakers,
+- `skills/shelves/systems-architecture/release-it/SKILL.md` -- production resilience patterns (circuit breakers,
   bulkheads) that complement deployment readiness
 
 ## Source and license

@@ -117,7 +117,7 @@ When creating a new shelf:
    when-to-use / when-not-to-use, always-on companions, origin.
 2. Update `skills/shelves/SKILL.md` top-level router:
    - Bump shelf count in description.
-   - Add row to the Shelves trigger table referencing `[skill:shelves--<new>]`.
+   - Add row to the Shelves trigger table referencing ``skills/shelves/<category>/<new>/SKILL.md``.
 
 ## Self-review (per `[skill:self-review]`)
 

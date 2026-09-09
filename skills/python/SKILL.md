@@ -10,8 +10,8 @@ routed-by: coding-standards
 
 Always-on: [rule:principles], [rule:python].
 For deeper rationale load:
-- [skill:shelves--effective-python] -- canonical Python idioms.
-- [skill:shelves--clean-code] -- naming, function size, error handling.
+- `skills/shelves/languages/effective-python/SKILL.md` -- canonical Python idioms.
+- `skills/shelves/engineering-principles/clean-code/SKILL.md` -- naming, function size, error handling.
 
 Apply these conventions when writing or reviewing Python code. See [reference.md](reference.md) for data structure selection, string formatting, logging, testing, project structure, and anti-patterns.
 

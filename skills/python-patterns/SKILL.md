@@ -11,10 +11,10 @@ paths: "**/*.py"
 ## Companion shelves
 
 Tier A delegation. The deep rationale lives in:
-- [skill:shelves--effective-python] -- Pythonic structure.
-- [skill:shelves--using-asyncio-python] -- async patterns.
-- [skill:shelves--clean-code] -- DRY, function discipline.
-- [skill:shelves--design-patterns] -- GoF in Python.
+- `skills/shelves/languages/effective-python/SKILL.md` -- Pythonic structure.
+- `skills/shelves/languages/using-asyncio-python/SKILL.md` -- async patterns.
+- `skills/shelves/engineering-principles/clean-code/SKILL.md` -- DRY, function discipline.
+- `skills/shelves/engineering-principles/design-patterns/SKILL.md` -- GoF in Python.
 
 Use the rules below for Siege-specific conventions; load the shelf books for principle-level reasoning.
 

@@ -11,13 +11,13 @@ Books grounding geographic analysis: the principles that make spatial computing 
 
 | Task signal | Book to read |
 |---|---|
-| CRS / reprojection / spatial-operations / vector vs raster choice; "how do I do this in R / Python / PostGIS" applied questions | [skill:shelves--geocomputation-with-r] |
-| Support / MAUP / ecological fallacy / scale effects / areal interpolation / geostatistics / spatial regression; "what does this concept actually mean" questions | [skill:shelves--spatial-data-science] |
+| CRS / reprojection / spatial-operations / vector vs raster choice; "how do I do this in R / Python / PostGIS" applied questions | `skills/shelves/geospatial/geocomputation-with-r/SKILL.md` |
+| Support / MAUP / ecological fallacy / scale effects / areal interpolation / geostatistics / spatial regression; "what does this concept actually mean" questions | `skills/shelves/geospatial/spatial-data-science/SKILL.md` |
 
 ## Books in this shelf
 
-- [skill:shelves--geocomputation-with-r] -- Lovelace, Nowosad, Muenchow. *Geocomputation with R*. Applied / code-first; 16 chapters covering classes, operations, CRS, raster-vector, I/O, mapping. Full free online at r.geocompx.org.
-- [skill:shelves--spatial-data-science] -- Pebesma & Bivand. *Spatial Data Science: With Applications in R*. Theory / methodology-first; 17+ chapters across spatial-data, R-tooling, models-for-spatial-data. Full free online at r-spatial.org/book.
+- `skills/shelves/geospatial/geocomputation-with-r/SKILL.md` -- Lovelace, Nowosad, Muenchow. *Geocomputation with R*. Applied / code-first; 16 chapters covering classes, operations, CRS, raster-vector, I/O, mapping. Full free online at r.geocompx.org.
+- `skills/shelves/geospatial/spatial-data-science/SKILL.md` -- Pebesma & Bivand. *Spatial Data Science: With Applications in R*. Theory / methodology-first; 17+ chapters across spatial-data, R-tooling, models-for-spatial-data. Full free online at r-spatial.org/book.
 
 ## Disambiguation
 

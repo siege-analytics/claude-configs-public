@@ -9,9 +9,9 @@ description: Router for strategy book skills. Dispatches to blue-ocean-strategy,
 
 | Task signal | Book to read |
 |---|---|
-| Uncontested market space, value innovation, ERRC grid (Kim & Mauborgne) | [skill:shelves--blue-ocean-strategy] |
-| Tech-adoption lifecycle, beachhead segment, whole-product (Geoffrey Moore) | [skill:shelves--crossing-the-chasm] |
-| EOS -- Vision/Traction Organizer, Rocks, Level-10 meetings (Wickman) | [skill:shelves--traction-eos] |
-| Positioning -- context, alternatives, unique attributes (April Dunford) | [skill:shelves--obviously-awesome] |
+| Uncontested market space, value innovation, ERRC grid (Kim & Mauborgne) | `skills/shelves/strategy/blue-ocean-strategy/SKILL.md` |
+| Tech-adoption lifecycle, beachhead segment, whole-product (Geoffrey Moore) | `skills/shelves/strategy/crossing-the-chasm/SKILL.md` |
+| EOS -- Vision/Traction Organizer, Rocks, Level-10 meetings (Wickman) | `skills/shelves/strategy/traction-eos/SKILL.md` |
+| Positioning -- context, alternatives, unique attributes (April Dunford) | `skills/shelves/strategy/obviously-awesome/SKILL.md` |
 
 All wondelai/skills imports -- see footers and `THIRD_PARTY_NOTICES.md`.

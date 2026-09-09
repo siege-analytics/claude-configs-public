@@ -564,11 +564,11 @@ onboarding, maintenance, testing, documentation.
 ## When this skill does NOT apply
 
 - Writing correct Django code (project layout, model design, form
-  validation) -- see [skill:shelves--two-scoops-django]
+  validation) -- see `skills/shelves/django/two-scoops-django/SKILL.md`
 - Rescuing a structurally broken codebase -- fix correctness before
-  optimizing performance; see [skill:shelves--django-design-patterns]
+  optimizing performance; see `skills/shelves/django/django-design-patterns/SKILL.md`
 - Distributed system design beyond Django (microservices, event sourcing,
-  CQRS) -- see [skill:shelves--systems-architecture]
+  CQRS) -- see `skills/shelves/systems-architecture/SKILL.md`
 - Frontend performance (bundle size, rendering, CDN for SPAs) -- this
   book focuses on the Django server side
 - Async Django (ASGI, async views) -- this book predates Django 3.1;
@@ -576,12 +576,12 @@ onboarding, maintenance, testing, documentation.
 
 ## Companions
 
-- [skill:shelves--two-scoops-django] -- build correctly first, then scale
-- [skill:shelves--django-design-patterns] -- if the codebase needs structural
+- `skills/shelves/django/two-scoops-django/SKILL.md` -- build correctly first, then scale
+- `skills/shelves/django/django-design-patterns/SKILL.md` -- if the codebase needs structural
   fixes before performance work is meaningful
 - `skills/shelves/systems-architecture/data-intensive/SKILL.md` -- for deeper treatment of database internals,
   replication, and partitioning beyond Django's ORM
-- [skill:shelves--release-it] -- production resilience patterns (circuit breakers,
+- `skills/shelves/systems-architecture/release-it/SKILL.md` -- production resilience patterns (circuit breakers,
   bulkheads) that complement Django scaling
 
 ## Source and license
