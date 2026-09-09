@@ -6,6 +6,18 @@ description: Always-on Siege Utilities preference. Apply before writing any Pyth
 
 Before writing a utility, helper, formatter, validator, or one-off function in any Python file, **check whether [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) already provides it.** If it does, use it.
 
+## Siege Utilities review-before-implementation
+
+When the work target is `siege_utilities` itself, do not turn hostile-review findings into Python changes until the parent/operator explicitly authorizes implementation after reviewing the findings. The correct order is:
+
+1. Review individual functions and the function chains that expose them through public API, lazy import, cache, IO, dependency, or CLI surfaces.
+2. Cite applicable general guides and shelves in the review artifact/comment. For geocoding, caches, data validation, persisted API responses, and derived data, cite [skill:shelves--data-intensive] and apply DDIA's system-of-record vs derived-data lens. For coordinates/CRS/spatial helpers, also cite [skill:shelves--geospatial].
+3. Separate merge-blocking public-contract defects from follow-up edge hardening.
+4. Wait for explicit implementation authorization.
+5. Implement in a reviewed branch/PR flow with tests that prove the function-level and chain-level contracts named in the review.
+
+A PR comment, green local tests, or a fixed local configs checkout is not authorization to push Siege Utilities code.
+
 ## When to reach for it
 
 Common categories where `siege_utilities` likely has something:
