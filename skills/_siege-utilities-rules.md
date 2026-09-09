@@ -11,7 +11,7 @@ Before writing a utility, helper, formatter, validator, or one-off function in a
 When the work target is `siege_utilities` itself, do not turn hostile-review findings into Python changes until the parent/operator explicitly authorizes implementation after reviewing the findings. The correct order is:
 
 1. Review individual functions and the function chains that expose them through public API, lazy import, cache, IO, dependency, or CLI surfaces.
-2. Cite applicable general guides and shelves in the review artifact/comment. For geocoding, caches, data validation, persisted API responses, and derived data, cite [skill:shelves--data-intensive] and apply DDIA's system-of-record vs derived-data lens. For coordinates/CRS/spatial helpers, also cite [skill:shelves--geospatial].
+2. Cite applicable general guides and shelves in the review artifact/comment. For geocoding, caches, data validation, persisted API responses, and derived data, read and cite `skills/shelves/systems-architecture/data-intensive/SKILL.md` and apply DDIA's system-of-record vs derived-data lens. For coordinates/CRS/spatial helpers, also read and cite `skills/shelves/geospatial/SKILL.md`.
 3. Separate merge-blocking public-contract defects from follow-up edge hardening.
 4. Wait for explicit implementation authorization.
 5. Implement in a reviewed branch/PR flow with tests that prove the function-level and chain-level contracts named in the review.

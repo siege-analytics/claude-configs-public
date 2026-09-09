@@ -579,7 +579,7 @@ onboarding, maintenance, testing, documentation.
 - [skill:shelves--two-scoops-django] -- build correctly first, then scale
 - [skill:shelves--django-design-patterns] -- if the codebase needs structural
   fixes before performance work is meaningful
-- [skill:shelves--data-intensive] -- for deeper treatment of database internals,
+- [skill:shelves--systems-architecture] (`skills/shelves/systems-architecture/data-intensive/SKILL.md`) -- for deeper treatment of database internals,
   replication, and partitioning beyond Django's ORM
 - [skill:shelves--release-it] -- production resilience patterns (circuit breakers,
   bulkheads) that complement Django scaling
