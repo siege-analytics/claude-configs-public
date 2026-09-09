@@ -11,29 +11,29 @@ Language-specific idiom and best-practice books. Pair these with the always-on `
 
 | Language / task | Book to read |
 |---|---|
-| Pythonic style, idioms, stdlib usage | [skill:shelves--effective-python] |
-| Async I/O in Python, `asyncio`, event loop, concurrency primitives | [skill:shelves--using-asyncio-python] |
-| HTTP scraping, parsing, anti-bot, polite crawling | [skill:shelves--web-scraping-python] |
-| Java idioms -- `equals`/`hashCode`, immutability, generics, exceptions | [skill:shelves--effective-java] |
-| Kotlin idioms -- null safety, scope functions, DSLs, coroutines | [skill:shelves--effective-kotlin] |
-| Kotlin from-the-ground-up -- language features and patterns | [skill:shelves--kotlin-in-action] |
-| Spring Boot apps, autoconfiguration, starters | [skill:shelves--spring-boot-in-action] |
-| Rust ownership, traits, lifetimes, error handling | [skill:shelves--programming-with-rust] |
-| Rust applied -- networking, I/O, embedded, performance | [skill:shelves--rust-in-action] |
-| TypeScript types, narrowing, generics, structural typing | [skill:shelves--effective-typescript] |
+| Pythonic style, idioms, stdlib usage | `skills/shelves/languages/effective-python/SKILL.md` |
+| Async I/O in Python, `asyncio`, event loop, concurrency primitives | `skills/shelves/languages/using-asyncio-python/SKILL.md` |
+| HTTP scraping, parsing, anti-bot, polite crawling | `skills/shelves/languages/web-scraping-python/SKILL.md` |
+| Java idioms -- `equals`/`hashCode`, immutability, generics, exceptions | `skills/shelves/languages/effective-java/SKILL.md` |
+| Kotlin idioms -- null safety, scope functions, DSLs, coroutines | `skills/shelves/languages/effective-kotlin/SKILL.md` |
+| Kotlin from-the-ground-up -- language features and patterns | `skills/shelves/languages/kotlin-in-action/SKILL.md` |
+| Spring Boot apps, autoconfiguration, starters | `skills/shelves/languages/spring-boot-in-action/SKILL.md` |
+| Rust ownership, traits, lifetimes, error handling | `skills/shelves/languages/programming-with-rust/SKILL.md` |
+| Rust applied -- networking, I/O, embedded, performance | `skills/shelves/languages/rust-in-action/SKILL.md` |
+| TypeScript types, narrowing, generics, structural typing | `skills/shelves/languages/effective-typescript/SKILL.md` |
 
 ## Books in this shelf
 
-- [skill:shelves--effective-python] -- Brett Slatkin
-- [skill:shelves--using-asyncio-python] -- Caleb Hattingh
-- [skill:shelves--web-scraping-python] -- Ryan Mitchell
-- [skill:shelves--effective-java] -- Joshua Bloch
-- [skill:shelves--effective-kotlin] -- Marcin Moskała
-- [skill:shelves--kotlin-in-action] -- Jemerov & Isakova
-- [skill:shelves--spring-boot-in-action] -- Craig Walls
-- [skill:shelves--programming-with-rust] -- Donis Marshall
-- [skill:shelves--rust-in-action] -- Tim McNamara
-- [skill:shelves--effective-typescript] -- Dan Vanderkam
+- `skills/shelves/languages/effective-python/SKILL.md` -- Brett Slatkin
+- `skills/shelves/languages/using-asyncio-python/SKILL.md` -- Caleb Hattingh
+- `skills/shelves/languages/web-scraping-python/SKILL.md` -- Ryan Mitchell
+- `skills/shelves/languages/effective-java/SKILL.md` -- Joshua Bloch
+- `skills/shelves/languages/effective-kotlin/SKILL.md` -- Marcin Moskała
+- `skills/shelves/languages/kotlin-in-action/SKILL.md` -- Jemerov & Isakova
+- `skills/shelves/languages/spring-boot-in-action/SKILL.md` -- Craig Walls
+- `skills/shelves/languages/programming-with-rust/SKILL.md` -- Donis Marshall
+- `skills/shelves/languages/rust-in-action/SKILL.md` -- Tim McNamara
+- `skills/shelves/languages/effective-typescript/SKILL.md` -- Dan Vanderkam
 
 ## Why JVM books matter for Python-first work
 

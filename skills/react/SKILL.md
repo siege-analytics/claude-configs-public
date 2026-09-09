@@ -13,7 +13,7 @@ paths: "**/*.jsx,**/*.tsx"
 Always-on: [rule:react], [rule:typescript], [rule:principles].
 
 For deeper rationale load:
-- [skill:shelves--clean-code] -- naming, function size, error handling.
+- `skills/shelves/engineering-principles/clean-code/SKILL.md` -- naming, function size, error handling.
 - [skill:testing-frameworks] -- which test runner and library the project declared.
 
 Apply when editing code that imports from `react`. See [reference.md](reference.md) for recipes (data fetching, form patterns, error-boundary composition, testing patterns, RSC / client boundary).

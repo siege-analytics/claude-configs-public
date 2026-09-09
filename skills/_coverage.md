@@ -357,12 +357,58 @@ tooling_status = "judgment"
 prevention_path = "needs: session supervisor that identifies child sessions with completed status or final artifacts, verifies no open PR/blocker/CI ownership remains, and requires done/archive-candidate labeling or an explicit keep-alive reason."
 originating_arc = { session-id = "260905-clever-quasar", incident-name = "hub-worker-retirement" }
 
+
+[[failure_mode]]
+name = "collaborator-role-contract-missing"
+description = "Coordinator starts or resumes a collaborator without a durable role contract naming role, target, permission boundary, allowed/forbidden actions, output location, evidence, and terminal signal. The collaborator infers authority or blocks on ambiguity."
+rule_id = ["tandem-agent:1"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: spawn_session/send_agent_message wrapper that requires role, target, permissions, output, evidence, and terminal-condition fields before dispatching collaborator work."
+originating_arc = { session-id = "260905-clever-quasar", incident-name = "tandem-agent-role-contract" }
+
+[[failure_mode]]
+name = "reviewer-implements-without-authorization"
+description = "Reviewer turns findings into source edits, commits, pushes, reverts, implementation PRs, or spawned implementation work without a fresh explicit implementation authorization after findings are reviewed."
+rule_id = ["tandem-agent:2", "tandem-agent:3", "standing-approval:4"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: role-aware mutation gate that reads the session role contract and blocks write/push/merge tools when the current role is review-only or comment-only."
+originating_arc = { session-id = "260905-clever-quasar", incident-name = "siege-utilities-reviewer-unauthorized-push" }
+
+[[failure_mode]]
+name = "coordinator-set-and-forget-collaborator"
+description = "Coordinator delegates work to another session and proceeds or reports completion without checking collaborator state/result after material handoff, wait, pause, or resume point."
+rule_id = ["tandem-agent:4", "session-coordination:9", "work-item-ownership:2"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: session supervisor that records spawned collaborators and requires get_session_info/list-session or inbound-message evidence before completion or next operator decision."
+originating_arc = { session-id = "260905-clever-quasar", incident-name = "operator-corrected-set-and-forget-collaborator" }
+
+[[failure_mode]]
+name = "review-findings-not-durable-before-implementation"
+description = "Reviewer findings remain only in private session context or transient chat, so implementer/operator cannot inspect merge blockers, follow-ups, function chains, and proving fixtures before code changes begin."
+rule_id = ["tandem-agent:5"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: review-gate scanner that requires a PR/issue/plan URL with blocker/follow-up headings before implementation authorization can be recorded."
+originating_arc = { session-id = "260905-clever-quasar", incident-name = "durable-review-handoff" }
+
+[[failure_mode]]
+name = "stale-review-after-implementation"
+description = "Implementation changes land after review, but coordinator treats the old review as still closing the gate without re-review against the new commit range."
+rule_id = ["tandem-agent:6"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "needs: review-gate signal comparing reviewed_commit to current PR head and blocking merge/status-done until re-review or explicit accept-risk is recorded."
+originating_arc = { session-id = "260905-clever-quasar", incident-name = "stale-review-gate" }
+
 ```
 
 ## Tooling-status summary
 
 - `mechanical` rows: 16 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :7, :9, :12, :15; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3, :4).
-- `judgment` rows: 22 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5, :7; writing-claims:1; writing-releases:5; session-coordination:5, :6, :7, :8; counted with dual-coverage rows on writing-tests:4).
+- `judgment` rows: 27 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5, :7; writing-claims:1; writing-releases:5; session-coordination:5, :6, :7, :8; counted with dual-coverage rows on writing-tests:4).
 - `gap` rows: 1 (writing-releases:1, pending public-surface differ at upstream issue #51).
 
 The `gap` and `judgment` categories stay distinct: `gap` means no rule exists to prevent the failure mode and only operator honor catches it; `judgment` means a rule exists with defined enforcement (code review, scanner, hook) but the enforcement is judgment-bound rather than mechanical. The distinction lets the matrix answer "is this prevented at all?" separately from "is the prevention mechanized?".
