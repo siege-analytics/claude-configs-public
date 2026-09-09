@@ -11,7 +11,7 @@ routed-by: coding-standards
 Spark on Databricks is JVM underneath -- the cost model and failure modes are JVM. Load these for code-level idioms:
 - [skill:shelves--effective-java] -- equals/hashCode for Dataset[T], immutability, exception handling in UDFs.
 - [skill:shelves--effective-kotlin] -- null-safety idioms (≈ Scala Option/Either).
-- [skill:shelves--systems-architecture] (`skills/shelves/systems-architecture/data-intensive/SKILL.md`) -- partitioning, shuffle, replication theory.
+- `skills/shelves/systems-architecture/data-intensive/SKILL.md` -- partitioning, shuffle, replication theory.
 
 Always-on: [rule:jvm] is loaded when Spark/JVM code is touched.
 For Scala notebooks specifically, see also [skill:scala-on-spark].

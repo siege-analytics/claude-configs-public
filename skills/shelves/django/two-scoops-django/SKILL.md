@@ -653,7 +653,7 @@ discipline holds. Performance ensures it works under load.
 - [skill:shelves--django-design-patterns] -- legacy rescue and pattern vocabulary
 - [skill:shelves--clean-code] -- general code quality principles
 - [skill:shelves--pragmatic-programmer] -- broader engineering discipline
-- [skill:shelves--systems-architecture] (`skills/shelves/systems-architecture/data-intensive/SKILL.md`) -- database internals beyond Django's ORM
+- `skills/shelves/systems-architecture/data-intensive/SKILL.md` -- database internals beyond Django's ORM
 
 ## Source and license
 

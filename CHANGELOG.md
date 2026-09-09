@@ -16,6 +16,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 
 ### Fixed
+- Followed up nested shelf reference repair by using explicit DDIA/geospatial shelf paths only where nested shelf loading is required.
 - Fixed invalid nested shelf skill references by replacing `shelves--data-intensive` / `shelves--geospatial` invocation forms with valid parent skills and explicit nested shelf file paths.
 - Review guidance now requires Siege Utilities hostile/code reviews to cite function contracts, function chains, and relevant shelves/general guides, including DDIA/data-intensive for caches, geocoding, data validation, and derived-data work, before Python implementation is authorized.
 - CA enforcement wrapper and verifier now test the settings-registered wrapper path, replay prompt payloads to all child gates, preserve child diagnostics, and align the think-gate manifest with advisory missing-design semantics.
