@@ -12,7 +12,7 @@ Most Scala you'll write in a Siege project is **glue around Spark**: notebook ce
 
 - [skill:shelves--effective-java] -- `equals`/`hashCode`, immutability, exception handling, generics. Items map almost 1:1 to Scala case classes and `Either`-shaped APIs.
 - [skill:shelves--effective-kotlin] -- null-safety idioms (Scala `Option`/`Either` ≈ Kotlin nullable + `let`), DSLs, scope functions.
-- [skill:shelves--systems-architecture] (`skills/shelves/systems-architecture/data-intensive/SKILL.md`) -- partitioning, replication, batch/stream, the *why* behind Spark's cost model.
+- `skills/shelves/systems-architecture/data-intensive/SKILL.md` -- partitioning, replication, batch/stream, the *why* behind Spark's cost model.
 - [skill:spark] -- Siege-specific Spark patterns (catalog, medallion, transform shape).
 
 Always-on: [rule:jvm] is loaded when JVM code is touched and applies to Scala notebook cells equally.

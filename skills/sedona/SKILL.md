@@ -22,7 +22,7 @@ Don't use Sedona for:
 - [skill:spark] -- Siege-specific Spark patterns (medallion, catalog rules, transform shape).
 - [skill:scala-on-spark] -- when scaffolding is `.scala` or `%scala`.
 - [skill:python] -- when scaffolding is PySpark.
-- [skill:shelves--systems-architecture] (`skills/shelves/systems-architecture/data-intensive/SKILL.md`) -- partitioning, replication, batch/stream theory.
+- `skills/shelves/systems-architecture/data-intensive/SKILL.md` -- partitioning, replication, batch/stream theory.
 - [rule:jvm], [rule:python], [rule:data-trust], [rule:siege-utilities].
 
 ## References

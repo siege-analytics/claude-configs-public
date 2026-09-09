@@ -11,7 +11,7 @@ Books on designing distributed systems, choosing storage and compute primitives,
 
 | Task signal | Book to read |
 |---|---|
-| Storage engine choice (LSM vs B-tree, SQL vs NoSQL), replication, partitioning, transactions, consistency models, batch vs stream | [skill:shelves--systems-architecture] (`skills/shelves/systems-architecture/data-intensive/SKILL.md`) |
+| Storage engine choice (LSM vs B-tree, SQL vs NoSQL), replication, partitioning, transactions, consistency models, batch vs stream | `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
 | End-to-end system design -- load balancers, caches, queues, capacity estimation, back-of-envelope math | [skill:shelves--system-design] |
 | Service decomposition, sagas, API gateway, service discovery, distributed data patterns | [skill:shelves--microservices-patterns] |
 | Production failure modes -- circuit breakers, bulkheads, timeouts, capacity, "what breaks at 3am" | [skill:shelves--release-it] |
@@ -20,7 +20,7 @@ Books on designing distributed systems, choosing storage and compute primitives,
 
 ## Books in this shelf
 
-- [skill:shelves--systems-architecture] (`skills/shelves/systems-architecture/data-intensive/SKILL.md`) -- *Designing Data-Intensive Applications* (Kleppmann). Storage engines, replication, partitioning, transactions, batch + stream.
+- `skills/shelves/systems-architecture/data-intensive/SKILL.md` -- *Designing Data-Intensive Applications* (Kleppmann). Storage engines, replication, partitioning, transactions, batch + stream.
 - [skill:shelves--system-design] -- System design fundamentals: load balancing, caching, queues, capacity planning.
 - [skill:shelves--microservices-patterns] -- Chris Richardson. Service decomposition, sagas, distributed data, API gateway.
 - [skill:shelves--release-it] -- Michael Nygard. Stability and capacity patterns; production failure modes.
