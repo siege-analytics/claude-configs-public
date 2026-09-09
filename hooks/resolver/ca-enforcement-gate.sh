@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# UserPromptSubmit hook — enforcement wrapper.
+#
+# Calls existing gate hooks (think-gate-guard, investigate-gate-guard) and
+# converts their advisory output into a blocking {"continue": false} signal.
+#
+# Blocking mechanism:
+#   1. Running each gate and capturing its output
+#   2. Scanning for blocking keywords (STALE DESIGN, BLOCKED, STALE INVESTIGATION)
+#   3. Emitting a SINGLE {"continue": false, "systemMessage": ...} JSON object as
+#      the sole stdout when any gate blocks. NB: mixed human-text + JSON on stdout
+#      does NOT parse and does NOT block under Craft Agent (empirically verified,
+#      #416) — the JSON must be the only thing on stdout.
+#
+# The wrapper always exits 0 — blocking is done via continue:false, not exit code.
+#
+# Always active — no env var required. The CLAUDE_CA_ENFORCE gate was removed
+# in #572 because an opt-in enforcement switch is an honor-system gap.
+#
+# Refs: #409, #335, #325, #416, #572
+
+set -euo pipefail
+
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Blocking keyword patterns.  These match the output of existing gates.
+# If a gate changes its output format, the enforcement-manifest.json (generated
+# by build.py) documents the expected patterns for auditability.
+BLOCK_PATTERNS=(
+    "STALE DESIGN"
+    "STALE INVESTIGATION"
+    "^BLOCKED:"
+    "investigation has been completed.*missing"
+    "EXPIRED SIGNAL"
+    "SCOPE MISMATCH"
+)
+
+# Capture the submitted payload once and replay it to every child gate. Shell
+# hooks commonly read stdin; piping the original stream directly to each child
+# lets the first consumer starve later gates (#843).
+INPUT_PAYLOAD="$(cat || true)"
+
+# Collect output from each gate, check for blocking signals.
+blocking=false
+gate_output=""
+
+run_gate() {
+    local gate_script="$1"
+    local label="$2"
+
+    if [[ ! -x "$gate_script" ]]; then
+        return 0
+    fi
+
+    local output rc
+    set +e
+    output="$(printf '%s' "$INPUT_PAYLOAD" | bash "$gate_script" 2>&1)"
+    rc=$?
+    set -e
+
+    if [[ -z "$output" && "$rc" -eq 0 ]]; then
+        return 0
+    fi
+
+    if [[ -n "$output" ]]; then
+        gate_output="${gate_output}${label}: ${output}"$'\n'
+    fi
+    if [[ "$rc" -ne 0 ]]; then
+        gate_output="${gate_output}${label}: exited with status ${rc}"$'\n'
+        blocking=true
+    fi
+
+    # Child gates may already speak Craft Agent hook JSON. Preserve a
+    # child-emitted continue:false signal even when its systemMessage does not
+    # contain the historical magic text patterns (#843 hostile review).
+    if [[ -n "$output" ]] && printf '%s' "$output" | python3 -c 'import json,sys
+try:
+    d=json.loads(sys.stdin.read())
+except Exception:
+    sys.exit(1)
+sys.exit(0 if d.get("continue") is False else 1)' 2>/dev/null; then
+        blocking=true
+        return 0
+    fi
+
+    for pattern in "${BLOCK_PATTERNS[@]}"; do
+        if echo "$output" | grep -qE "$pattern"; then
+            blocking=true
+            return 0
+        fi
+    done
+}
+
+# Run gates that should block under CA enforcement.
+# These are the real-time gates (fire every turn, catch before work begins).
+# Push-time gates (self-review, branch-guard) are handled by native git hooks.
+run_gate "$HOOK_DIR/think-gate-guard.sh" "think-gate"
+run_gate "$HOOK_DIR/investigate-gate-guard.sh" "investigate-gate"
+run_gate "$HOOK_DIR/skill-enforcement-gate.sh" "skill-enforcement"
+
+if [[ "$blocking" == "true" ]]; then
+    # Emit a SINGLE clean JSON object as the sole stdout. Mixed human-text + a
+    # later JSON line does NOT parse and does NOT block under Craft Agent
+    # (empirically verified, #416). The gate explanation rides in systemMessage.
+    printf '%s' "$gate_output" | python3 -c 'import json,sys; print(json.dumps({"continue": False, "systemMessage": (sys.stdin.read().strip() or "Blocked by CA enforcement gate.")}))'
+fi
