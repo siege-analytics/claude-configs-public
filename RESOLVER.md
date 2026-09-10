@@ -261,6 +261,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 | Spawn sub-sessions / delegate work to parallel agents | Universal check #12 (spawn-protocol). Requires: execute/allow-all for sessions that must act or reply, explicit model/source selection, high-reasoning fresh sessions for reviews, worktree isolation, checkpoint-and-wait in prompt, artifact attachment to tickets, Phase 0 read instruction. |
 | Receive a standing "work until X" instruction from user | Universal check #13 (standing-order continuity). Maintain running agents plus a runtime-available re-entry mechanism when one exists. Never go idle with pending work; never claim operator-visible cadence from async tools unless this deployment proves visibility. |
 | Recover from a magnum / enterprise-runner outage | `electinfo_claude_skills/skills/monitor-magnum/SKILL.md` |
+| A session seems stuck, silent, or stuck on a repeating error (rate limit, timeout, generic failure) that isn't clearing | `skills/stalled-session-recovery/SKILL.md` -- diagnose the real failure shape before nudging or respawning; don't trust the error label alone |
 | SSH to a shared server / launch a batch job / triage server health | `skills/infrastructure/ops/SKILL.md` |
 | Create a new skill | `skills/meta/skillbuilder/SKILL.md` |
 
