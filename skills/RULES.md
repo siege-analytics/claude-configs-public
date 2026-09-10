@@ -26,6 +26,7 @@ For mapping failure modes to rules (the inverse question: "is this failure mode 
 |---|---|
 | `_verify-before-execute-rules.md` | Same-turn evidence requirement for any side-effecting action and for factual claims. Parent of the claim-grounding rules. |
 | `_definition-of-done-rules.md` | Five hard criteria (code-reviewed, edge cases, tests, ticket update, ticket exists) before declaring work done. |
+| `_strategic-agency-rules.md` | Mission-first doctrine for hubs and workers: derive tactical goals from strategic objectives, proceed with safe bounded initiative, and ask for guidance when choices affect strategy, authorization, risk, or operator control. |
 | `_session-coordination-rules.md` | Nine multi-session coordination rules: processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. |
 | `_ticket-lifecycle-rules.md` | Proactive ticket status transitions at work start, PR open, testing/UAT handoff, blocked/unblocked, and Done/Closed. Platform fallback is an evidence-bearing `Status: <state>` comment. |
 | `_work-item-ownership-rules.md` | Work sessions stamp owned tickets/cards with `maintained-by: <session-id>` and report material state changes to their coordinator. |

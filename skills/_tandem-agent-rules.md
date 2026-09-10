@@ -4,7 +4,7 @@ description: Always-on. Rules for coordinator, reviewer, and implementer agents 
 
 # Tandem Agent Operating Model
 
-These rules apply whenever two or more agents collaborate on the same work item, PR, repo, or epic. They close the gap between session-coordination cadence and the practical reviewer/implementer split.
+These rules apply whenever two or more agents collaborate on the same work item, PR, repo, or epic. They close the gap between session-coordination cadence and the practical reviewer/implementer split. Read them with `_strategic-agency-rules.md`: collaborators should advance the mission with bounded initiative, not pause for more direction when safe tactical progress is available.
 
 ## The six rules
 
@@ -46,6 +46,7 @@ When guidance, configs, or source-of-truth files are under revision, collaborato
 
 ## Cross-references
 
+- `_strategic-agency-rules.md` covers why hubs and workers exist: turn strategic goals into tactical progress with bounded initiative and appropriate guidance-seeking.
 - `[rule:session-coordination]` covers cadence, at-rest, baton, source selection, and retirement.
 - `[rule:work-item-ownership]` covers owner stamping and material state reporting.
 - `[rule:standing-approval]` covers readiness gates; standing approval does not grant role expansion.
