@@ -403,12 +403,30 @@ tooling_status = "judgment"
 prevention_path = "needs: review-gate signal comparing reviewed_commit to current PR head and blocking merge/status-done until re-review or explicit accept-risk is recorded."
 originating_arc = { session-id = "260905-clever-quasar", incident-name = "stale-review-gate" }
 
+[[failure_mode]]
+name = "strategic-goal-lost-to-tactical-passivity"
+description = "Agent treats the latest instruction as the whole job, pauses for praise or more direction, or leaves safe in-scope tactical work idle even though the strategic objective and next useful step are clear."
+rule_id = ["strategic-agency:1", "strategic-agency:2", "strategic-agency:3"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "judgment-only: whether a next step is safe, in scope, and strategy-aligned depends on operator intent, repo state, and current risk. Mechanical checks can help with stale sessions but cannot decide mission fit."
+originating_arc = { session-id = "260905-clever-quasar", incident-name = "strategic-agency-doctrine" }
+
+[[failure_mode]]
+name = "guidance-seeking-treated-as-failure"
+description = "Agent overcorrects toward autonomy and treats asking for advice as weakness, then guesses through a strategic fork, authorization boundary, destructive risk, user-facing change, or material tradeoff."
+rule_id = ["strategic-agency:4", "session-coordination:5", "session-coordination:6"]
+enforcement = "code-review"
+tooling_status = "judgment"
+prevention_path = "judgment-only: good guidance-seeking depends on the substance of the tradeoff and cannot be reduced to question frequency without harming operator control."
+originating_arc = { session-id = "260905-clever-quasar", incident-name = "strategic-agency-doctrine" }
+
 ```
 
 ## Tooling-status summary
 
 - `mechanical` rows: 16 (writing-prose:1, :2, :3, :4; writing-code:2, :5, :7, :9, :12, :15; writing-tests:3; writing-tests:4 mock-without-spec; writing-claims:2, :3; writing-releases:2, :3, :4).
-- `judgment` rows: 27 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 fixture-real-response, :4 mock-real-exceptions, :5, :7; writing-claims:1; writing-releases:5; session-coordination:5, :6, :7, :8; counted with dual-coverage rows on writing-tests:4).
+- `judgment` rows: 29 (writing-code:1, :3, :4, :6, :8, :10, :11, :13, :14; writing-tests:1, :2, :4 shape-correct-mock-without-real-exceptions, :4 mock-without-spec, :4 fixture-without-real-response, :5, :7; writing-claims:1, :3; writing-releases:2, :5; session-coordination:5, :6, :7, :8, :9; tandem-agent:1, :2, :3, :4, :5, :6; standing-approval:4; work-item-ownership:2; strategic-agency:1, :2, :3, :4; counted by failure-mode row, so dual-coverage rows list each covering rule but count once).
 - `gap` rows: 1 (writing-releases:1, pending public-surface differ at upstream issue #51).
 
 The `gap` and `judgment` categories stay distinct: `gap` means no rule exists to prevent the failure mode and only operator honor catches it; `judgment` means a rule exists with defined enforcement (code review, scanner, hook) but the enforcement is judgment-bound rather than mechanical. The distinction lets the matrix answer "is this prevented at all?" separately from "is the prevention mechanized?".
