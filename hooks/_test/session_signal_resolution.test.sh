@@ -275,4 +275,47 @@ else
   printf '         output: %s\n' "${out:0:400}"
 fi
 
+# #873 P2 (defect D3): session-unknown fail-safe on the workspace singleton.
+# When the session id cannot be resolved, a GENERIC singleton (no repo_root, or
+# a non-matching repo_root) must NOT bind -- that was the cross-project bleed.
+# A singleton carrying an explicit matching repo_root still binds.
+P2TMP=$(mktemp -d)
+mkdir -p "$P2TMP/repo"
+git -C "$P2TMP/repo" init -q -b main
+git -C "$P2TMP/repo" config user.email t@e.test; git -C "$P2TMP/repo" config user.name t
+printf 'x\n' > "$P2TMP/repo/f"; git -C "$P2TMP/repo" add f; git -C "$P2TMP/repo" commit -q --no-verify -m s
+
+# Generic singleton: no repo_root. Session unknown -> must NOT bind.
+cat >"$P2TMP/think-gate.json" <<'JSON'
+{"ticket":"#generic","status":"implementing"}
+JSON
+no_sid_generic=$(env -u CRAFT_SESSION_ID -u CRAFT_AGENT_SESSION_ID -u CLAUDE_SESSION_ID -u SESSION_ID -u CCP_HOOK_INPUT_JSON \
+  python3 "$RESOLVER" --workspace "$P2TMP" --repo-root "$P2TMP/repo" 2>/dev/null)
+if [[ "$no_sid_generic" == "null" || -z "$no_sid_generic" ]]; then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1))
+  printf '  [PASS] unknown session does not bind a no-repo generic singleton (D3)\n'
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+  _HARNESS_FAILED_NAMES+=("unknown session binds generic singleton (D3 regression)")
+  printf '  [FAIL] unknown session bound a generic singleton: %s\n' "${no_sid_generic:0:200}"
+fi
+
+# Singleton WITH a matching repo_root: must still bind even when session unknown.
+cat >"$P2TMP/think-gate.json" <<JSON
+{"ticket":"#matched","status":"implementing","repo_root":"$P2TMP/repo"}
+JSON
+no_sid_matched=$(env -u CRAFT_SESSION_ID -u CRAFT_AGENT_SESSION_ID -u CLAUDE_SESSION_ID -u SESSION_ID -u CCP_HOOK_INPUT_JSON \
+  python3 "$RESOLVER" --workspace "$P2TMP" --repo-root "$P2TMP/repo" 2>/dev/null | python3 -c 'import json,sys
+d=sys.stdin.read().strip()
+print(json.loads(d)["data"]["ticket"] if d and d!="null" else "NONE")' 2>/dev/null)
+if [[ "$no_sid_matched" == "#matched" ]]; then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1))
+  printf '  [PASS] unknown session still binds a repo-matched singleton (D3)\n'
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+  _HARNESS_FAILED_NAMES+=("unknown session fails to bind repo-matched singleton")
+  printf '  [FAIL] repo-matched singleton not bound under unknown session (got %s)\n' "$no_sid_matched"
+fi
+rm -rf "$P2TMP"
+
 report
