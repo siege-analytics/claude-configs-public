@@ -128,6 +128,79 @@ def _git_origin(path: str) -> str:
         return ""
 
 
+def _origin_to_slug(url: str) -> str:
+    """Normalize a git remote URL to an 'org/repo' slug, or '' if not parseable.
+
+    Handles the common forms:
+      git@github.com:org/repo.git       -> org/repo
+      https://github.com/org/repo.git   -> org/repo
+      ssh://git@github.com/org/repo      -> org/repo
+    """
+    if not url:
+        return ""
+    u = url.strip()
+    if u.endswith(".git"):
+        u = u[:-4]
+    # scp-like: git@host:org/repo
+    m = re.search(r"[:/]([^/:]+/[^/:]+)$", u)
+    return m.group(1) if m else ""
+
+
+def resolve_project(repo_root: str, workspace: str = "") -> str:
+    """Map the current repo to a project slug, or 'umbrella' if none matches.
+
+    #873 P3 (defect D2). The skills/rules layer already scopes by project via
+    projects/<slug>/PROJECT.md (repo: field, build-validated unique). This gives
+    the GATE layer the same notion: a gate file can be scoped per project, and
+    umbrella (Siege general) gates apply only when no project matches.
+
+    Matching is by git origin slug (org/repo) of repo_root against each
+    PROJECT.md's `repo:` field -- the same key the build uses for uniqueness.
+    Falls back to 'umbrella' on no/ambiguous match, never raising.
+    """
+    origin = _origin_to_slug(_git_origin(repo_root))
+    if not origin:
+        return "umbrella"
+    search_roots = []
+    if workspace:
+        search_roots.append(os.path.join(workspace, "projects"))
+    # the repo's own projects/ dir (source checkouts), deduped
+    repo_projects = os.path.join(repo_root, "projects")
+    if repo_projects not in search_roots:
+        search_roots.append(repo_projects)
+    for proot in search_roots:
+        if not os.path.isdir(proot):
+            continue
+        for manifest in sorted(glob.glob(os.path.join(proot, "*", "PROJECT.md"))):
+            repo_field = _project_repo_field(manifest)
+            if repo_field and repo_field == origin:
+                return os.path.basename(os.path.dirname(manifest))
+    return "umbrella"
+
+
+def _project_repo_field(manifest_path: str) -> str:
+    """Read the `repo:` value from a PROJECT.md YAML frontmatter, or '' on miss.
+
+    A deliberately tiny frontmatter reader: PROJECT.md frontmatter is flat
+    key: value, so a line scan between the --- fences avoids a yaml dependency
+    in a hook-path library.
+    """
+    try:
+        with open(manifest_path, encoding="utf-8") as f:
+            text = f.read(4096)
+    except Exception:
+        return ""
+    if not text.startswith("---"):
+        return ""
+    end = text.find("\n---", 3)
+    front = text[3:end] if end != -1 else text[3:]
+    for line in front.splitlines():
+        m = re.match(r"\s*repo:\s*(\S+)\s*$", line)
+        if m:
+            return m.group(1).strip().strip("'\"")
+    return ""
+
+
 def _same_repo(gate_repo: str, repo_root: str) -> bool:
     if not gate_repo:
         return True
@@ -380,6 +453,7 @@ def main():
     parser.add_argument("--gate-name", default="think-gate")
     parser.add_argument("--session-id", default="")
     parser.add_argument("--session-known", action="store_true", help="Return 1 if a current session id is resolvable, else 0")
+    parser.add_argument("--project", action="store_true", help="Print the project slug for --repo-root (or 'umbrella')")
     parser.add_argument(
         "--resolve-many", default="",
         help="Comma-separated gate names; returns name-to-path map",
@@ -388,6 +462,10 @@ def main():
 
     if args.session_known:
         print("1" if (args.session_id or session_id_from_env()) else "0")
+        return
+
+    if args.project:
+        print(resolve_project(args.repo_root, args.workspace))
         return
 
     if args.resolve_many:
