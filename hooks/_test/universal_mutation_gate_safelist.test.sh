@@ -85,6 +85,45 @@ expect_pass \
   "$HOOK" \
   "$(payload "comm -23 /tmp/a /tmp/b")"
 
+# --- Regression: git -C <path> read forms (#873 P1) ----------------------
+# The git-read safelist required the subcommand to immediately follow `git `,
+# so `git -C <dir> rev-parse` — a pure read — was blocked fail-closed. The
+# optional `-C <path>` prefix fixes it. Mutations with -C must still block.
+expect_pass \
+  "git -C <path> rev-parse passes (#873)" \
+  "$HOOK" \
+  "$(payload "git -C /Users/x/repo rev-parse --abbrev-ref HEAD")"
+
+expect_pass \
+  "git -C <path> status passes (#873)" \
+  "$HOOK" \
+  "$(payload "git -C /some/repo status --short")"
+
+expect_pass \
+  "plain git rev-parse still passes (no -C)" \
+  "$HOOK" \
+  "$(payload "git rev-parse --show-toplevel")"
+
+expect_block \
+  "git -C <path> push must still block (mutation indicator)" \
+  "$HOOK" \
+  "$(payload "git -C /some/repo push origin main")"
+
+expect_block \
+  "git -C <path> commit must still block" \
+  "$HOOK" \
+  "$(payload "git -C /some/repo commit -m x")"
+
+expect_block \
+  "git -C with a command-substitution path must block" \
+  "$HOOK" \
+  "$(payload "git -C \$(id) rev-parse HEAD")"
+
+expect_block \
+  "git -C with a chained mutation must block" \
+  "$HOOK" \
+  "$(payload "git -C /r rev-parse HEAD; rm -rf /tmp/x")"
+
 # --- Preservation: forms that reach the safelist loop and must be refused -
 # These carry no MUTATION_INDICATORS match, so they fall through to the
 # safelist. That is what makes them a real test of the new sed pattern
