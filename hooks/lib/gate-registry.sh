@@ -98,6 +98,34 @@ print(p.get(sys.argv[2], p.get("unknown", "advisory")))
 PY
 }
 
+# gate_applies <gate-id> <current-action-class> [runtime]
+# The task-relevance predicate (#873 P4, defect D1). Echoes the enforcement
+# decision for a gate against the action currently being attempted:
+#   "block"    -- the gate governs this action class AND its runtime policy is
+#                 block in this runtime. The caller may hard-stop.
+#   "advisory" -- either the action is outside this gate's class (the gate is
+#                 irrelevant to what is happening -- a design gate does not
+#                 govern "list *.pdf"), or the gate's runtime policy is advisory.
+#                 The caller narrates but does not hard-stop.
+#
+# Unknown action class is treated as "in class" (conservative: do not silently
+# stop governing because the classifier did not recognize the action). An empty
+# current_action_class means "caller could not classify" -> also in-class.
+# A gate with no declared action_class governs everything (legacy behavior).
+gate_applies() {
+    local gate_id="$1" current_action="$2" runtime="${3:-}"
+    local gate_action policy
+    gate_action="$(gate_action_class "$gate_id")"
+    # Relevance: if the gate declares a class and the action declares a class and
+    # they differ, the gate is irrelevant -> advisory regardless of policy.
+    if [ -n "$gate_action" ] && [ -n "$current_action" ] && [ "$gate_action" != "$current_action" ]; then
+        echo "advisory"
+        return 0
+    fi
+    policy="$(gate_runtime_policy "$gate_id" "$runtime")"
+    echo "$policy"
+}
+
 # Executed directly: dump resolved policy for every gate under the current
 # runtime. Handy for `bash hooks/lib/gate-registry.sh` debugging.
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then

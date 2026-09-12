@@ -36,6 +36,11 @@ cat > "$TMP/manifest.json" <<'JSON'
 JSON
 export CCP_ENFORCEMENT_MANIFEST="$TMP/manifest.json"
 
+# Fixture: a gate that declares no action_class (governs everything).
+cat > "$TMP/noclass.json" <<'JSON'
+{"gates": [{"id": "nc", "runtime_policy": {"craft": "block", "unknown": "block"}}]}
+JSON
+
 run() { bash -c ". '$LIB'; $1"; }
 
 # --- field accessors ---
@@ -70,6 +75,29 @@ check "empty-gates manifest action_class empty" "" \
 # accessor must not error-exit when the gate is absent (fail-soft contract)
 CCP_ENFORCEMENT_MANIFEST="$TMP/empty.json" run 'gate_runtime_policy think-gate craft' >/dev/null 2>&1
 check "absent gate exits 0 (no hard error)" 0 "$?"
+
+# --- gate_applies: the task-relevance predicate (#873 P4, defect D1) ---
+# branch-guard governs branch-state and blocks under craft. think-gate governs
+# design and is advisory everywhere (per the fixture manifest above).
+
+# In-class + block policy -> block.
+check "branch-guard applies to branch-state action -> block" block \
+    "$(run 'gate_applies branch-guard branch-state craft')"
+# Out-of-class -> advisory even though the policy is block. This is the
+# "research fishing rods gate does not block list *.pdf" case.
+check "branch-guard does NOT govern a mutation action -> advisory" advisory \
+    "$(run 'gate_applies branch-guard mutation craft')"
+check "branch-guard does NOT govern a design action -> advisory" advisory \
+    "$(run 'gate_applies branch-guard design craft')"
+# In-class but advisory policy -> advisory.
+check "think-gate in-class design -> advisory (policy)" advisory \
+    "$(run 'gate_applies think-gate design craft')"
+# Unknown/empty current action is treated as in-class (conservative).
+check "empty action class -> in-class (block for branch-guard)" block \
+    "$(run 'gate_applies branch-guard "" craft')"
+# A gate with no declared action_class governs everything.
+check "gate with no action_class governs any action" block \
+    "$(CCP_ENFORCEMENT_MANIFEST=$TMP/noclass.json run 'gate_applies nc mutation craft')"
 
 echo
 if [[ $_FAIL -eq 0 ]]; then
