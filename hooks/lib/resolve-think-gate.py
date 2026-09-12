@@ -244,7 +244,19 @@ def find_gate_for_repo(
     legacy = os.path.join(workspace, f"{gate_name}.json")
     if os.path.isfile(legacy):
         loaded = _load(legacy)
+        # #873 P2 (defect D3): the workspace-root singleton is shared by every
+        # session, task, and repo. _gate_matches_scope only REJECTS on a
+        # positive mismatch, so a generic singleton with no repo_root applied to
+        # any repo whenever the session id was unknown -- the cross-project bleed
+        # that governed an unrelated action in the 2026-09-12 incident. Fail
+        # safe: when we cannot identify the session, the singleton must carry an
+        # explicit repo_root that matches this repo; a no-repo generic gate does
+        # not bind. With a known session the prior scope check is sufficient.
         if loaded and _gate_matches_scope(loaded, repo_root, sid):
+            if not sid:
+                gate_repo = str(loaded.get("data", {}).get("repo_root", "")).strip()
+                if not (gate_repo and _same_repo(gate_repo, repo_root)):
+                    return None
             return loaded
         return None
 
