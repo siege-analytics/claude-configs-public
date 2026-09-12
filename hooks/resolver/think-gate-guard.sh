@@ -407,6 +407,12 @@ if status in ('disposed', 'done-awaiting-pr'):
 
 # Find PROJECT.md files that declare knowledge_base:
 has_kb_project = False
+# #873 P5 (defect D2): KB consultation is advisory by default. A project opts
+# into hard blocking with 'kb_enforcement: blocking' in its PROJECT.md. This
+# inverts the prior always-block behavior, which hard-halted turns for a missing
+# kb section even on unrelated work (observed 2026-09-12). Advisory still
+# narrates the reminder, so the signal is not lost.
+kb_enforcement_blocking = False
 project_files = []
 
 # Check workspace-root PROJECT.md
@@ -420,14 +426,16 @@ if os.path.isdir(projects_dir):
     for p in glob.glob(os.path.join(projects_dir, '*/PROJECT.md')):
         project_files.append(p)
 
+import re as _re
 for pf in project_files:
     try:
         content = open(pf).read()
-        if 'knowledge_base:' in content:
-            has_kb_project = True
-            break
     except:
         continue
+    if 'knowledge_base:' in content:
+        has_kb_project = True
+        if _re.search(r'^\s*kb_enforcement:\s*blocking\s*$', content, _re.MULTILINE):
+            kb_enforcement_blocking = True
 
 if not has_kb_project:
     sys.exit(0)
@@ -457,8 +465,13 @@ else:
         warnings.append('File a KB update or ticket for each contradiction.')
 
 if warnings:
-    # Prefix with BLOCKED: so ca-enforcement-gate catches it (#411).
-    print('BLOCKED: knowledge-base consultation required.')
+    # #873 P5: emit the BLOCKED: prefix (which ca-enforcement-gate catches, #411)
+    # ONLY when the project opted into blocking. Otherwise this is advisory: the
+    # reminder still prints, but ca-enforcement does not convert it to a halt.
+    if kb_enforcement_blocking:
+        print('BLOCKED: knowledge-base consultation required.')
+    else:
+        print('knowledge-base consultation reminder (advisory):')
     for w in warnings:
         print(w)
 " 2>/dev/null || true)
