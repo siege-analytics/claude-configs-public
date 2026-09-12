@@ -98,7 +98,13 @@ SAFE_PATTERNS=(
     # Git reads (status, log, diff, show, branch listing, tag listing, etc.)
     # Note: git config is read-only only for --get/--list/--get-regexp forms;
     # bare 'git config' can write. Narrow to read-only subcommands.
-    '^(cd .* &&[[:space:]]*)?(git )(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config (--get|--list|--get-regexp|--get-all)|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( |$)'
+    # The optional `-C <path>` prefix (#873 P1) lets `git -C <dir> rev-parse`
+    # match — a pure read that was previously blocked because the regex
+    # required the subcommand to immediately follow `git `. The path token
+    # excludes shell metacharacters so it cannot smuggle chaining/substitution;
+    # real mutations (push/commit/...) are still caught by MUTATION_INDICATORS,
+    # which scan the full command before the safelist is consulted.
+    "^(cd .* &&[[:space:]]*)?(git )(-C [^[:space:];&|<>()\$\`\"${_SQ}]+ )?(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config (--get|--list|--get-regexp|--get-all)|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( |\$)"
 
     # GitHub CLI reads (gh api defaults to GET; write methods caught by MUTATION_INDICATORS)
     '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api|run (view|list))( |$)'
