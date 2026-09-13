@@ -124,6 +124,55 @@ expect_block \
   "$HOOK" \
   "$(payload "git -C /r rev-parse HEAD; rm -rf /tmp/x")"
 
+# --- Regression: git -C must not bypass the mutation indicators (#873 review) --
+# The mutation indicators are anchored to `git <subcommand>`. Inserting -C once
+# let branch -D / tag -f / config --global / remote add slip past them and get
+# admitted by the widened read safelist. Normalization + explicit -C handling
+# closes this. Each must block under -C exactly as it does without -C.
+expect_block \
+  "git -C branch -D must block (not bypass via -C)" \
+  "$HOOK" \
+  "$(payload "git -C /repo branch -D feat/x")"
+
+expect_block \
+  "git -C tag -f must block (not bypass via -C)" \
+  "$HOOK" \
+  "$(payload "git -C /repo tag -f v1")"
+
+expect_block \
+  "git -C config --global must block (not bypass via -C)" \
+  "$HOOK" \
+  "$(payload "git -C /repo config --global user.email x")"
+
+# --- Regression: git remote write subcommands must block, -C or not --------
+# The safelist admits `git remote` (and -v/show/get-url) as a read; the write
+# subcommands mutate repo config and must not be admitted by that entry.
+expect_block \
+  "git remote add must block" \
+  "$HOOK" \
+  "$(payload "git remote add evil http://example.test/x")"
+
+expect_block \
+  "git -C remote add must block" \
+  "$HOOK" \
+  "$(payload "git -C /repo remote add evil http://example.test/x")"
+
+expect_block \
+  "git remote set-url must block" \
+  "$HOOK" \
+  "$(payload "git remote set-url origin http://example.test/x")"
+
+# Reads on remote must still pass.
+expect_pass \
+  "git remote -v still passes (read)" \
+  "$HOOK" \
+  "$(payload "git remote -v")"
+
+expect_pass \
+  "git -C remote show still passes (read)" \
+  "$HOOK" \
+  "$(payload "git -C /repo remote show origin")"
+
 # --- Preservation: forms that reach the safelist loop and must be refused -
 # These carry no MUTATION_INDICATORS match, so they fall through to the
 # safelist. That is what makes them a real test of the new sed pattern

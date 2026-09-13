@@ -234,6 +234,11 @@ fi
 # in the command, skip the safelist and fall through to think-gate check.
 MUTATION_INDICATORS=(
     'git (push|commit|reset|checkout|rebase|merge|cherry-pick|revert|stash (pop|drop|apply|clear)|clean|tag -[adf]|branch -[dDmM])'
+    # git remote write subcommands. The safelist admits bare `git remote` and
+    # `git remote -v`/`show`/`get-url` as reads, but `remote add/remove/rename/
+    # set-url/set-head/prune` mutate the repo config. Block those explicitly so
+    # the read entry cannot be widened into a write. (#873 follow-up.)
+    'git( +-C +[^ ]+)? remote (add|remove|rm|rename|set-url|set-head|set-branches|prune)'
     'gh (issue (create|comment|close|edit|delete|transfer|reopen|label)|pr (create|merge|close|edit|comment|review)|release (create|delete|edit)|repo (create|delete|fork|rename))'
     'glab (issue (create|close|note)|mr (create|merge|close|note|approve))'
     'rm (-[rRf]|--force|--recursive)'
@@ -258,9 +263,25 @@ MUTATION_INDICATORS=(
     'spawn_session'
 )
 
+# Normalize `git -C <path>` to `git ` before the mutation scan (#873 follow-up).
+# The git MUTATION_INDICATORS are anchored to `git <subcommand>` -- the
+# subcommand must immediately follow `git `. The safelist accepts an optional
+# `-C <path>` prefix (so `git -C <dir> rev-parse` reads pass), but if the
+# indicators do not also account for `-C`, then `git -C <dir> branch -D`,
+# `git -C <dir> tag -f`, `git -C <dir> remote add`, and `git -C <dir> config
+# --global` slip past the mutation scan AND get admitted by the read safelist --
+# a fail-closed bypass. Collapsing the prefix here keeps the indicators simple
+# and closes the hole for every git mutation at once. The path token excludes
+# shell metacharacters, matching the safelist grammar, so this substitution
+# cannot itself smuggle anything.
+MUTATION_SCAN="$COMMAND"
+if [[ "$MUTATION_SCAN" =~ (^|[[:space:]&|;])git[[:space:]]+-C[[:space:]]+[^[:space:]\;\&\|\<\>\(\)\$\`\"\']+[[:space:]]+ ]]; then
+    MUTATION_SCAN="$(printf '%s' "$MUTATION_SCAN" | sed -E 's/(^|[[:space:]&|;])git[[:space:]]+-C[[:space:]]+[^[:space:];&|<>()$`"'"'"']+[[:space:]]+/\1git /g')"
+fi
+
 COMPOUND_MUTATION=false
 for m_pattern in "${MUTATION_INDICATORS[@]}"; do
-    if [[ "$COMMAND" =~ $m_pattern ]]; then
+    if [[ "$MUTATION_SCAN" =~ $m_pattern ]]; then
         COMPOUND_MUTATION=true
         break
     fi
