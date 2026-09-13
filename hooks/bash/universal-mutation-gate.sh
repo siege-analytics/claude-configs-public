@@ -99,13 +99,16 @@ SAFE_PATTERNS=(
     # Git reads (status, log, diff, show, branch listing, tag listing, etc.)
     # Note: git config is read-only only for --get/--list/--get-regexp forms;
     # bare 'git config' can write. Narrow to read-only subcommands.
+    #
     # The optional `-C <path>` prefix (#873 P1) lets `git -C <dir> rev-parse`
-    # match — a pure read that was previously blocked because the regex
-    # required the subcommand to immediately follow `git `. The path token
-    # excludes shell metacharacters so it cannot smuggle chaining/substitution;
-    # real mutations (push/commit/...) are still caught by MUTATION_INDICATORS,
-    # which scan the full command before the safelist is consulted.
-    "^(cd .* &&[[:space:]]*)?(git )(-C [^[:space:];&|<>()\$\`\"${_SQ}]+ )?(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config (--get|--list|--get-regexp|--get-all)|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( |\$)"
+    # match. The path token and every trailing argument use the metacharacter-
+    # excluding _SAFE_ARG grammar, and the pattern is anchored at end-of-string
+    # ($), so a chained tail (`git status && curl ...`, `git -C /r log; bash x`,
+    # `git status | tee f`) no longer matches the safelist and falls through to
+    # the gate -- closing the chain bypass this entry had via its old `( |$)`
+    # end (#873 review, finding 1). Real mutations are also caught by
+    # MUTATION_INDICATORS, which scan first.
+    "^(cd .* &&[[:space:]]*)?(git )(-C ${_SAFE_ARG} )?(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config (--get|--list|--get-regexp|--get-all)|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( +${_SAFE_ARG})*\$"
 
     # GitHub CLI reads (gh api defaults to GET; write methods caught by MUTATION_INDICATORS)
     '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api|run (view|list))( |$)'
@@ -239,6 +242,10 @@ MUTATION_INDICATORS=(
     # set-url/set-head/prune` mutate the repo config. Block those explicitly so
     # the read entry cannot be widened into a write. (#873 follow-up.)
     'git( +-C +[^ ]+)? remote (add|remove|rm|rename|set-url|set-head|set-branches|prune)'
+    # git --output=<file> / -o <file> on log/diff/show/format-patch writes a file
+    # via a read-looking subcommand. Block the write flag so the read safelist
+    # entry cannot be turned into an arbitrary file write. (#873 review, finding 3.)
+    'git( +-C +[^ ]+)? (log|diff|show|format-patch)( .*)? --output[= ]'
     'gh (issue (create|comment|close|edit|delete|transfer|reopen|label)|pr (create|merge|close|edit|comment|review)|release (create|delete|edit)|repo (create|delete|fork|rename))'
     'glab (issue (create|close|note)|mr (create|merge|close|note|approve))'
     'rm (-[rRf]|--force|--recursive)'
