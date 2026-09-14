@@ -26,15 +26,48 @@ _gate_registry_manifest_path() {
     fi
     local here
     here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # `here` is <pkg-or-repo>/hooks/lib. Exactly two trusted candidates, both
+    # inside our own tree -- NO parent-directory walk-up (a walk-up let a foreign
+    # or attacker-planted manifest outside the deployment be picked up, #892 FU1
+    # review finding #1):
+    #   deployed : <pkg>/hooks/enforcement-manifest.json  (colocated by
+    #              build_consumer_packages into every package's hooks/ dir)
+    #   repo-dev : <repo>/dist/craft-agent/enforcement-manifest.json (running
+    #              tests/hooks from the source checkout)
     local candidates=(
-        "$here/../../dist/craft-agent/enforcement-manifest.json"
         "$here/../enforcement-manifest.json"
+        "$here/../../dist/craft-agent/enforcement-manifest.json"
     )
     local c
     for c in "${candidates[@]}"; do
         [ -r "$c" ] && { echo "$c"; return 0; }
     done
     return 1
+}
+
+# gate_runtime_policy_strict <gate-id> [runtime]
+# Like gate_runtime_policy but for FAIL-CLOSED callers: echoes the policy ONLY
+# when it is positively resolved from a present, parseable manifest that
+# contains this gate AND a policy entry for this runtime. Otherwise echoes
+# NOTHING (empty). Unlike gate_runtime_policy, it never substitutes a default,
+# so a caller can distinguish "manifest positively says advisory" from "no
+# opinion / manifest unavailable" and fail closed. (#892 FU1 review fix.)
+gate_runtime_policy_strict() {
+    local gate_id="$1" runtime="${2:-}" manifest policy_json
+    [ -n "$runtime" ] || return 0
+    manifest="$(_gate_registry_manifest_path)" || return 0
+    policy_json="$(gate_field "$gate_id" "runtime_policy")"
+    [ -n "$policy_json" ] || return 0
+    python3 - "$policy_json" "$runtime" <<'PY' 2>/dev/null || true
+import json, sys
+try:
+    p = json.loads(sys.argv[1])
+except Exception:
+    sys.exit(0)
+v = p.get(sys.argv[2])
+if isinstance(v, str) and v:
+    print(v)
+PY
 }
 
 # gate_field <gate-id> <field>
