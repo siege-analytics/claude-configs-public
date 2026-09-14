@@ -102,10 +102,13 @@ _DETECT_HOST_CLAUDE_VARS=(
 # Codex CLI markers (#873 P0). The OpenAI Codex CLI exports CODEX_* into the
 # tool subprocess. CODEX_SANDBOX is set for every sandboxed exec and
 # CODEX_SANDBOX_NETWORK_DISABLED under the default network-off policy; both are
-# process-level, not user-typed labels. Kept conservative: add a name here only
-# with a probe in docs/probes/ backing it, per this file's evidence discipline.
-# Codex is tested AFTER craft for the same child-process reason claude-code is:
-# a future host could spawn Codex as a child.
+# process-level, not user-typed labels. Codex is tested AFTER craft for the same
+# child-process reason claude-code is: a future host could spawn Codex as a child.
+#
+# EVIDENCE: docs/probes/codex-env.md. NB that doc currently marks these markers
+# UNVERIFIED against a live capture (chosen from documented sandbox behavior, not
+# a /proc/<pid>/environ dump). A false negative degrades to `unknown` (safe);
+# confirm by capture before treating codex-cli detection as load-bearing.
 _DETECT_HOST_CODEX_VARS=(
     CODEX_SANDBOX
     CODEX_SANDBOX_NETWORK_DISABLED
