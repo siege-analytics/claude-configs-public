@@ -307,6 +307,23 @@ def find_gate_for_repo(
             return loaded
         return None
 
+    # Project-scoped gate (#892 FU2, defect D2 completion). After the repo-slug
+    # file and before the repo-local/umbrella fallbacks, consult
+    # <gate>-<project-slug>.json where project-slug is resolve_project()'s answer
+    # for this repo. This lets a project (electinfo, siege-utilities, ...) carry
+    # a gate that applies to every repo in the project, while repo-specific gates
+    # still win. `umbrella` is skipped here (that is the legacy singleton below),
+    # so a repo in no project sees no change. Fail-soft: resolve_project never
+    # raises and returns 'umbrella' on any ambiguity.
+    project = resolve_project(repo_root, workspace)
+    if project and project != "umbrella":
+        proj_scoped = os.path.join(workspace, f"{gate_name}-{project}.json")
+        if os.path.isfile(proj_scoped):
+            loaded = _load(proj_scoped)
+            if loaded and _gate_matches_scope(loaded, repo_root, sid):
+                return loaded
+            return None
+
     local = os.path.join(repo_root, f".{gate_name}.json")
     if os.path.isfile(local):
         loaded = _load(local)
@@ -422,6 +439,10 @@ def _candidate_paths(workspace: str, repo_root: str, gate_name: str, session_id:
         paths.append(os.path.join(session_dir, f"{gate_name}-{slug}.json"))
         paths.append(os.path.join(session_dir, f"{gate_name}.json"))
     paths.append(os.path.join(workspace, f"{gate_name}-{slug}.json"))
+    # Project-scoped tier (#892 FU2), mirroring find_gate_for_repo's order.
+    project = resolve_project(repo_root, workspace)
+    if project and project != "umbrella":
+        paths.append(os.path.join(workspace, f"{gate_name}-{project}.json"))
     paths.append(os.path.join(repo_root, f".{gate_name}.json"))
     paths.append(os.path.join(workspace, f"{gate_name}.json"))
     out: list[str] = []
