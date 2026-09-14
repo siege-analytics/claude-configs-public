@@ -99,6 +99,18 @@ _DETECT_HOST_CLAUDE_VARS=(
     CLAUDE_PROJECT_DIR
 )
 
+# Codex CLI markers (#873 P0). The OpenAI Codex CLI exports CODEX_* into the
+# tool subprocess. CODEX_SANDBOX is set for every sandboxed exec and
+# CODEX_SANDBOX_NETWORK_DISABLED under the default network-off policy; both are
+# process-level, not user-typed labels. Kept conservative: add a name here only
+# with a probe in docs/probes/ backing it, per this file's evidence discipline.
+# Codex is tested AFTER craft for the same child-process reason claude-code is:
+# a future host could spawn Codex as a child.
+_DETECT_HOST_CODEX_VARS=(
+    CODEX_SANDBOX
+    CODEX_SANDBOX_NETWORK_DISABLED
+)
+
 _detect_host_any_set() {
     local name value
     for name in "$@"; do
@@ -111,10 +123,14 @@ _detect_host_any_set() {
     return 1
 }
 
-# Echo the current host: craft | claude-code | unknown
+# Echo the current host: craft | claude-code | codex-cli | unknown
 detect_host() {
     if _detect_host_any_set "${_DETECT_HOST_CRAFT_VARS[@]}"; then
         echo "craft"
+        return 0
+    fi
+    if _detect_host_any_set "${_DETECT_HOST_CODEX_VARS[@]}"; then
+        echo "codex-cli"
         return 0
     fi
     if _detect_host_any_set "${_DETECT_HOST_CLAUDE_VARS[@]}"; then

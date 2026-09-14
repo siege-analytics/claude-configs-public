@@ -1,22 +1,38 @@
 #!/bin/bash
-# UserPromptSubmit hook — block on wrong branch state.
+# UserPromptSubmit hook — warn on wrong branch state.
 #
-# Closes the enforcement gap where PreToolUse hooks (branch-guard,
-# ticket-required) do not fire in Craft Agent sessions.
-# See: claude-configs-public#261
+# Companion to the PreToolUse branch-guard/ticket-required hooks, which do not
+# fire in Craft Agent sessions. See: claude-configs-public#261
 #
 # On every turn:
-# 1. If cwd is a git repo on a protected branch → emit JSON block
-# 2. If detached HEAD → emit JSON block
-# 3. Otherwise → silent exit
+# 1. protected branch  -> advisory narration
+# 2. detached HEAD     -> advisory narration
+# 3. otherwise         -> silent (plus the workaround-tally advisory below)
 #
-# Always active — no env var required. CLAUDE_CA_ENFORCE gate removed
-# in #572 (honor-system gap).
+# #873 P1 (defects D5, D1): ADVISORY, not blocking. This hook previously emitted
+# {"continue": false} for detached HEAD or a protected branch. Craft Agents
+# honors continue:false as a hard turn-halt BEFORE the model runs, so a workspace
+# in detached HEAD hard-halted EVERY Claude turn, including read-only questions
+# -- the root cause of craft-agents#49. The hard block belongs at the PreToolUse
+# mutation point (branch-guard.sh blocks the actual commit); prompt-submit
+# narrates. Would-have-blocked events are still logged for audit.
 #
-# Fail-open: exits 0 if not in a git repo, if git is unavailable, or if
-# on a feature branch (the happy path).
+# Fail-open: exits 0 if not in a git repo or git is unavailable.
 
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Fail-safe audit logger: record a would-have-blocked event, never error.
+_pag_audit() {
+    local _lb="$SCRIPT_DIR/../lib/log-block.sh"
+    if [ -r "$_lb" ]; then
+        # shellcheck disable=SC1090
+        . "$_lb" 2>/dev/null || true
+        command -v log_block_event >/dev/null 2>&1 && \
+            log_block_event "pre-action-guard" "$1" "UserPromptSubmit" 2>/dev/null || true
+    fi
+}
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
 
@@ -27,21 +43,32 @@ fi
 PROTECTED="^(main|master|develop|dev|development|staging|next|integration)$"
 
 if [ "$BRANCH" = "HEAD" ]; then
-    python3 -c "import json,sys; print(json.dumps({'continue': False, 'systemMessage': sys.argv[1]}))" \
-        "BLOCKED: Working directory is in DETACHED HEAD state. Create a feature branch first: git checkout -b feat/<scope>-<description>. Ref: #261, #450, #572"
+    _pag_audit "detached HEAD (advisory)"
+    cat <<EOF
+<pre-action-guard>
+Advisory: working directory is in DETACHED HEAD state. Create a feature branch
+before making changes: git checkout -b feat/<scope>-<description>.
+Commits are still hard-blocked at commit/push time. Ref: #261, #450, #873
+</pre-action-guard>
+EOF
     exit 0
 fi
 
 if echo "$BRANCH" | grep -qE "$PROTECTED"; then
-    python3 -c "import json,sys; print(json.dumps({'continue': False, 'systemMessage': sys.argv[1]}))" \
-        "BLOCKED: Working directory is on protected branch '$BRANCH'. Do NOT commit directly. Create a feature branch first: git checkout -b feat/<scope>-<description>. Ref: #261, #450, #572"
+    _pag_audit "protected branch '$BRANCH' (advisory)"
+    cat <<EOF
+<pre-action-guard>
+Advisory: working directory is on protected branch '$BRANCH'. Do NOT commit
+directly. Create a feature branch first: git checkout -b feat/<scope>-<description>.
+Commits are still hard-blocked at commit/push time. Ref: #261, #450, #873
+</pre-action-guard>
+EOF
     exit 0
 fi
 
 # Workaround tally check — reads the tally file written by
 # hooks/bash/workaround-tally.sh and warns when patterns exceed threshold.
 # Covers Craft Agent sessions where PreToolUse doesn't fire.
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 TALLY_FILE="${WORKSPACE_ROOT}/workaround-tally.json"
 THRESHOLD=3

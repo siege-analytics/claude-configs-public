@@ -99,7 +99,16 @@ SAFE_PATTERNS=(
     # Git reads (status, log, diff, show, branch listing, tag listing, etc.)
     # Note: git config is read-only only for --get/--list/--get-regexp forms;
     # bare 'git config' can write. Narrow to read-only subcommands.
-    '^(cd .* &&[[:space:]]*)?(git )(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config (--get|--list|--get-regexp|--get-all)|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( |$)'
+    #
+    # The optional `-C <path>` prefix (#873 P1) lets `git -C <dir> rev-parse`
+    # match. The path token and every trailing argument use the metacharacter-
+    # excluding _SAFE_ARG grammar, and the pattern is anchored at end-of-string
+    # ($), so a chained tail (`git status && curl ...`, `git -C /r log; bash x`,
+    # `git status | tee f`) no longer matches the safelist and falls through to
+    # the gate -- closing the chain bypass this entry had via its old `( |$)`
+    # end (#873 review, finding 1). Real mutations are also caught by
+    # MUTATION_INDICATORS, which scan first.
+    "^(cd .* &&[[:space:]]*)?(git )(-C ${_SAFE_ARG} )?(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config (--get|--list|--get-regexp|--get-all)|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( +${_SAFE_ARG})*\$"
 
     # GitHub CLI reads (gh api defaults to GET; write methods caught by MUTATION_INDICATORS)
     '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api|run (view|list))( |$)'
@@ -228,6 +237,15 @@ fi
 # in the command, skip the safelist and fall through to think-gate check.
 MUTATION_INDICATORS=(
     'git (push|commit|reset|checkout|rebase|merge|cherry-pick|revert|stash (pop|drop|apply|clear)|clean|tag -[adf]|branch -[dDmM])'
+    # git remote write subcommands. The safelist admits bare `git remote` and
+    # `git remote -v`/`show`/`get-url` as reads, but `remote add/remove/rename/
+    # set-url/set-head/prune` mutate the repo config. Block those explicitly so
+    # the read entry cannot be widened into a write. (#873 follow-up.)
+    'git( +-C +[^ ]+)? remote (add|remove|rm|rename|set-url|set-head|set-branches|prune)'
+    # git --output=<file> / -o <file> on log/diff/show/format-patch writes a file
+    # via a read-looking subcommand. Block the write flag so the read safelist
+    # entry cannot be turned into an arbitrary file write. (#873 review, finding 3.)
+    'git( +-C +[^ ]+)? (log|diff|show|format-patch)( .*)? --output[= ]'
     'gh (issue (create|comment|close|edit|delete|transfer|reopen|label)|pr (create|merge|close|edit|comment|review)|release (create|delete|edit)|repo (create|delete|fork|rename))'
     'glab (issue (create|close|note)|mr (create|merge|close|note|approve))'
     'rm (-[rRf]|--force|--recursive)'
@@ -252,9 +270,25 @@ MUTATION_INDICATORS=(
     'spawn_session'
 )
 
+# Normalize `git -C <path>` to `git ` before the mutation scan (#873 follow-up).
+# The git MUTATION_INDICATORS are anchored to `git <subcommand>` -- the
+# subcommand must immediately follow `git `. The safelist accepts an optional
+# `-C <path>` prefix (so `git -C <dir> rev-parse` reads pass), but if the
+# indicators do not also account for `-C`, then `git -C <dir> branch -D`,
+# `git -C <dir> tag -f`, `git -C <dir> remote add`, and `git -C <dir> config
+# --global` slip past the mutation scan AND get admitted by the read safelist --
+# a fail-closed bypass. Collapsing the prefix here keeps the indicators simple
+# and closes the hole for every git mutation at once. The path token excludes
+# shell metacharacters, matching the safelist grammar, so this substitution
+# cannot itself smuggle anything.
+MUTATION_SCAN="$COMMAND"
+if [[ "$MUTATION_SCAN" =~ (^|[[:space:]&|;])git[[:space:]]+-C[[:space:]]+[^[:space:]\;\&\|\<\>\(\)\$\`\"\']+[[:space:]]+ ]]; then
+    MUTATION_SCAN="$(printf '%s' "$MUTATION_SCAN" | sed -E 's/(^|[[:space:]&|;])git[[:space:]]+-C[[:space:]]+[^[:space:];&|<>()$`"'"'"']+[[:space:]]+/\1git /g')"
+fi
+
 COMPOUND_MUTATION=false
 for m_pattern in "${MUTATION_INDICATORS[@]}"; do
-    if [[ "$COMMAND" =~ $m_pattern ]]; then
+    if [[ "$MUTATION_SCAN" =~ $m_pattern ]]; then
         COMPOUND_MUTATION=true
         break
     fi

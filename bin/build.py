@@ -993,6 +993,25 @@ def build_rules_bundle(
 
 # Gate definitions: maps gate ID → hook script, enforcement surface, blocking condition.
 # This is the single source of truth; the generated manifest + settings derive from it.
+#
+# Scoping fields (#873 P0, defect D6). These make gate identity data rather than
+# hardcoded strings, so later stages (P1 runtime policy, P4 task-relevance) read
+# the manifest instead of editing every script:
+#   action_class    -- what class of action the gate governs. Used by P4
+#                      gate_applies(); a gate is advisory for actions outside its
+#                      class. One of: design | investigation | mutation |
+#                      branch-state | skill-read | test-evidence.
+#   runtime_policy   -- per-runtime enforcement mode (#873 P1, defect D5). The
+#                      SAME hook is advisory in claude-code but fatal in craft
+#                      (continue:false honored as a hard halt). "advisory" = narrate
+#                      only; "block" = hard-stop. A gate must not be "block" in a
+#                      runtime that treats the block as terminal-without-recovery.
+#                      Keys: craft | claude-code | codex-cli | unknown.
+#   block_signals    -- the stdout patterns ca-enforcement-gate.sh treats as a
+#                      block, lifted out of that script's hardcoded BLOCK_PATTERNS
+#                      so the manifest is the single source of truth.
+# These fields are ADDITIVE in P0: the manifest carries them but no hook reads
+# them yet. P1/P4 wire them in. This keeps P0 a pure, inert infrastructure change.
 CA_ENFORCEMENT_GATES = [
     {
         "id": "think-gate",
@@ -1001,6 +1020,9 @@ CA_ENFORCEMENT_GATES = [
         "surface": "UserPromptSubmit",
         "blocking": True,
         "condition": "Stale, expired, or scope-mismatched design signal; missing design note is advisory until mutation gates",
+        "action_class": "design",
+        "runtime_policy": {"craft": "advisory", "claude-code": "advisory", "codex-cli": "advisory", "unknown": "advisory"},
+        "block_signals": ["STALE DESIGN", "SCOPE MISMATCH", "EXPIRED SIGNAL"],
     },
     {
         "id": "investigate-gate",
@@ -1009,6 +1031,9 @@ CA_ENFORCEMENT_GATES = [
         "surface": "UserPromptSubmit",
         "blocking": True,
         "condition": "Think gate exists but no investigation artifact",
+        "action_class": "investigation",
+        "runtime_policy": {"craft": "advisory", "claude-code": "advisory", "codex-cli": "advisory", "unknown": "advisory"},
+        "block_signals": ["STALE INVESTIGATION"],
     },
     {
         "id": "self-review",
@@ -1017,6 +1042,9 @@ CA_ENFORCEMENT_GATES = [
         "surface": "native-git-pre-push",
         "blocking": True,
         "condition": "Push without Self-Review trailers",
+        "action_class": "mutation",
+        "runtime_policy": {"craft": "block", "claude-code": "block", "codex-cli": "block", "unknown": "block"},
+        "block_signals": [],
     },
     {
         "id": "branch-guard",
@@ -1025,6 +1053,9 @@ CA_ENFORCEMENT_GATES = [
         "surface": "native-git-pre-push",
         "blocking": True,
         "condition": "Commit to protected branch",
+        "action_class": "branch-state",
+        "runtime_policy": {"craft": "block", "claude-code": "block", "codex-cli": "block", "unknown": "block"},
+        "block_signals": [],
     },
     {
         "id": "test-guard",
@@ -1033,6 +1064,9 @@ CA_ENFORCEMENT_GATES = [
         "surface": "native-git-pre-push",
         "blocking": True,
         "condition": "Push without test evidence (opt-in via testing: in PROJECT.md)",
+        "action_class": "test-evidence",
+        "runtime_policy": {"craft": "block", "claude-code": "block", "codex-cli": "block", "unknown": "block"},
+        "block_signals": [],
     },
     {
         "id": "skill-enforcement-gate",
@@ -1041,6 +1075,9 @@ CA_ENFORCEMENT_GATES = [
         "surface": "UserPromptSubmit",
         "blocking": True,
         "condition": "SKILL.md not Read when think-gate status=implementing",
+        "action_class": "skill-read",
+        "runtime_policy": {"craft": "advisory", "claude-code": "advisory", "codex-cli": "advisory", "unknown": "advisory"},
+        "block_signals": ["BLOCKED: knowledge-base consultation required"],
     },
 ]
 

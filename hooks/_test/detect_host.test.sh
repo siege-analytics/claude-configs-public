@@ -51,6 +51,17 @@ check "claude-code via CLAUDE_CODE_ENTRYPOINT" claude-code \
 check "claude-code via CLAUDE_PROJECT_DIR" claude-code \
     "$(detect_with CLAUDE_PROJECT_DIR=/repo)"
 
+# codex-cli markers (#873 P0)
+check "codex-cli via CODEX_SANDBOX" codex-cli \
+    "$(detect_with CODEX_SANDBOX=seatbelt)"
+check "codex-cli via CODEX_SANDBOX_NETWORK_DISABLED" codex-cli \
+    "$(detect_with CODEX_SANDBOX_NETWORK_DISABLED=1)"
+check "empty codex var does not signal codex-cli" unknown \
+    "$(detect_with CODEX_SANDBOX=)"
+# Craft is tested before codex for the same child-process reason as claude-code.
+check "craft wins when both craft and codex vars are present" craft \
+    "$(detect_with CRAFT_RPC_PORT=9100 CODEX_SANDBOX=seatbelt)"
+
 check "unknown when neither is present" unknown \
     "$(detect_with)"
 
