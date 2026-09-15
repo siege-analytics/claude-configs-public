@@ -251,6 +251,11 @@
             "type": "command",
             "command": "hooks/agent-comms/no-slug-form-outbound.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "hooks/agent-comms/hub-concurrency-gate.sh",
+            "timeout": 10
           }
         ]
       },
