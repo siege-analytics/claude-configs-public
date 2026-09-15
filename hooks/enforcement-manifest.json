@@ -1,0 +1,111 @@
+{
+  "version": "3.5.60",
+  "source_commit": "3c2ab11",
+  "built_at": "2026-09-15T01:23:25.831336+00:00",
+  "gates": [
+    {
+      "id": "think-gate",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/resolver/think-gate-guard.sh",
+      "surface": "UserPromptSubmit",
+      "blocking": true,
+      "condition": "Stale, expired, or scope-mismatched design signal; missing design note is advisory until mutation gates",
+      "action_class": "design",
+      "runtime_policy": {
+        "craft": "advisory",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": [
+        "STALE DESIGN",
+        "SCOPE MISMATCH",
+        "EXPIRED SIGNAL"
+      ]
+    },
+    {
+      "id": "investigate-gate",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/resolver/investigate-gate-guard.sh",
+      "surface": "UserPromptSubmit",
+      "blocking": true,
+      "condition": "Think gate exists but no investigation artifact",
+      "action_class": "investigation",
+      "runtime_policy": {
+        "craft": "advisory",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": [
+        "STALE INVESTIGATION"
+      ]
+    },
+    {
+      "id": "self-review",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/git/self-review.sh",
+      "surface": "native-git-pre-push",
+      "blocking": true,
+      "condition": "Push without Self-Review trailers",
+      "action_class": "mutation",
+      "runtime_policy": {
+        "craft": "block",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": []
+    },
+    {
+      "id": "branch-guard",
+      "rule_source": "_writing-code-rules.md",
+      "hook": "hooks/git/branch-guard.sh",
+      "surface": "native-git-pre-push",
+      "blocking": true,
+      "condition": "Commit to protected branch",
+      "action_class": "branch-state",
+      "runtime_policy": {
+        "craft": "block",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": []
+    },
+    {
+      "id": "test-guard",
+      "rule_source": "_testing-frameworks-rules.md",
+      "hook": "hooks/git/test-guard.sh",
+      "surface": "native-git-pre-push",
+      "blocking": true,
+      "condition": "Push without test evidence (opt-in via testing: in PROJECT.md)",
+      "action_class": "test-evidence",
+      "runtime_policy": {
+        "craft": "block",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": []
+    },
+    {
+      "id": "skill-enforcement-gate",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/resolver/skill-enforcement-gate.sh",
+      "surface": "UserPromptSubmit",
+      "blocking": true,
+      "condition": "SKILL.md not Read when think-gate status=implementing",
+      "action_class": "skill-read",
+      "runtime_policy": {
+        "craft": "advisory",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": [
+        "BLOCKED: knowledge-base consultation required"
+      ]
+    }
+  ]
+}
