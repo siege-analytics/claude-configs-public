@@ -32,13 +32,28 @@
 #   3. $CRAFT_AGENT_WORKSPACE/sessions/<session-id>/hub-threads.json
 # Cap resolution: $HUB_THREAD_CAP > file "cap" > 3.
 #
+# Staleness pruning (#915): an open_threads entry whose last_activity is
+# older than the staleness window is dropped from the count -- and from the
+# persisted state -- BEFORE the cap/allow decision, on every invocation
+# (continuing or new-target). This is a pure time-based prune, not a
+# work-type categorization (#896 decision 1 explicitly rejects categorizing
+# by kind of work; this change does not reopen that -- it only changes how
+# long an untouched entry survives). It answers the inactivity-window
+# candidate #898 named but never implemented. A pruned-but-still-blocked
+# call still persists the pruned state, so the file stays accurate even
+# when the outcome is a block.
+# Staleness resolution: $HUB_THREAD_STALE_SECONDS > file "stale_seconds" > 3600.
+# An entry with a missing or unparseable last_activity is treated as stale
+# (pruned) -- consistent with this file's fail-open ethos: ambiguous state
+# resolves toward allowing more sends, never toward a stuck cap slot.
+#
 # NOTE (#335): under Craft Agent, PreToolUse exit 2 has been advisory in some
 # contexts. This gate uses the identical mechanism as the deployed
 # no-slug-form-outbound.sh sibling on the same tool, so it inherits whatever
 # blocking semantics that gate has; even if advisory it is the paired
 # enforcement-of-record for the hub/SKILL.md Part 5 doctrine (writing-rules:1).
 #
-# Refs: siege-analytics/claude-configs-public#896, #898; electinfo hub/SKILL.md Part 5.
+# Refs: siege-analytics/claude-configs-public#896, #898, #915; electinfo hub/SKILL.md Part 5.
 
 set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH:/usr/local/bin:/opt/homebrew/bin"
@@ -56,6 +71,37 @@ def allow():
 
 def now_iso():
     return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+def parse_iso(s):
+    # Returns an aware datetime, or None if s is missing/unparseable.
+    # Every timestamp this script itself writes comes from now_dt.isoformat(),
+    # which always emits a +00:00 offset, never a bare 'Z' suffix -- so
+    # internal round-trips are safe on any Python 3.7+. A hand-edited or
+    # externally-written 'Z'-suffixed timestamp would raise on Python <3.11
+    # and fall through to the except below, which is fine: unparseable is
+    # already documented to mean "treated as stale."
+    if not s or not isinstance(s, str):
+        return None
+    try:
+        dt = datetime.datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=datetime.timezone.utc)
+        return dt
+    except Exception:
+        return None
+
+def prune_stale(open_threads, now_dt, stale_seconds):
+    # Drop entries whose last_activity is older than stale_seconds, or whose
+    # last_activity is missing/unparseable. Returns (kept, dropped_count).
+    kept = []
+    dropped = 0
+    for t in open_threads:
+        parsed = parse_iso(t.get("last_activity"))
+        if parsed is None or (now_dt - parsed).total_seconds() >= stale_seconds:
+            dropped += 1
+            continue
+        kept.append(t)
+    return kept, dropped
 
 def atomic_write(path, obj):
     # Best-effort atomic write; never raise to the caller.
@@ -152,38 +198,81 @@ if cap is None:
     except Exception:
         cap = 3
 
+# Resolve staleness window: env override > file value > default 3600 (#915).
+stale_seconds = None
+env_stale = os.environ.get("HUB_THREAD_STALE_SECONDS")
+if env_stale not in (None, ""):
+    try:
+        stale_seconds = int(env_stale)
+    except Exception:
+        stale_seconds = None
+if stale_seconds is None:
+    try:
+        stale_seconds = int(state.get("stale_seconds", 3600))
+    except Exception:
+        stale_seconds = 3600
+
 hub_session = str(payload.get("session_id") or payload.get("sessionId") or "").strip()
 workspace = os.environ.get("CRAFT_AGENT_WORKSPACE") or ""
-peers = [t.get("peer_session") for t in open_threads]
-now = now_iso()
+now_dt = datetime.datetime.now(datetime.timezone.utc)
+now = now_dt.isoformat()
 
-# Continuing an already-open thread -> always allow (never penalise grandfathered
-# over-cap hubs). Touch last_activity, best-effort.
-if target in peers:
-    for t in open_threads:
-        if t.get("peer_session") == target:
-            t["last_activity"] = now
+# Continuing-thread check MUST happen against the PRE-prune peer list.
+# A grandfathered/continuing thread is guaranteed to pass regardless of its
+# own staleness (that guarantee predates #915 and is tested by AC2); pruning
+# the target's own entry before this check would demote a stale-but-still-
+# being-messaged peer into "new thread" territory and could block + drop it,
+# contradicting the "already-open peer is never blocked" invariant. Hostile
+# review (#915) caught this ordering bug before ship.
+pre_prune_peers = [t.get("peer_session") for t in open_threads]
+
+if target in pre_prune_peers:
+    # Continuing an already-open thread -> always allow, unconditionally,
+    # regardless of staleness (messaging it makes it fresh again). Prune
+    # OTHER stale entries for on-disk hygiene, but never the target's own.
+    kept_others, _ = prune_stale(
+        [t for t in open_threads if t.get("peer_session") != target],
+        now_dt, stale_seconds,
+    )
+    target_entry = next(t for t in open_threads if t.get("peer_session") == target)
+    target_entry["last_activity"] = now
+    open_threads = kept_others + [target_entry]
     state["open_threads"] = open_threads
     state["lastUpdated"] = now
     atomic_write(state_path, state)
     allow()
 
-# New thread. Block iff at/over cap.
+# New target: only now does staleness pruning apply to the cap decision --
+# the target has no entry of its own to protect, so pruning the whole list
+# is safe (#915).
+open_threads, pruned_count = prune_stale(open_threads, now_dt, stale_seconds)
+peers = [t.get("peer_session") for t in open_threads]
+
+# New thread. Block iff at/over cap (post-prune).
 if len(open_threads) >= cap:
+    # Persist the prune even on the block path, but only when something
+    # actually changed -- a block with zero pruned entries is a true no-op
+    # and shouldn't write-amplify or bump lastUpdated for nothing (#915
+    # hostile review finding 2).
+    if pruned_count:
+        state["open_threads"] = open_threads
+        state["lastUpdated"] = now
+        atomic_write(state_path, state)
     peer_lines = "\n".join("  - " + str(p) for p in peers) or "  (none recorded)"
     sys.stderr.write(
         "BLOCKED: hub concurrency cap reached -- %d/%d open send_agent_message threads.\n\n"
         "hub/SKILL.md Part 5: a hub does not open a new thread while it already carries %d.\n"
         "Currently open threads (peers):\n%s\n\n"
+        "(Threads inactive for %d+s auto-prune on the next call -- HUB_THREAD_STALE_SECONDS.)\n\n"
         "To proceed, do ONE of:\n"
         "  1. Drain a concluded thread -- hand off the baton (session-coordination:4)\n"
         "     or mark it complete, then remove its entry from the hub-threads.json\n"
         "     state file so a slot frees. (Messages to an already-open peer are\n"
         "     never blocked.)\n"
-        "  2. Route this new work to the board backlog (#899/#900) instead of\n"
-        "     opening a 4th ad hoc thread, and pick it up when a slot frees.\n\n"
+        "  2. Wait for the board backlog (#899/#900) to ship, then route overflow\n"
+        "     work there instead of opening a 4th ad hoc thread -- not available yet.\n\n"
         "This is a load-shedding cap, not a hard wall: it only stops opening NEW threads.\n"
-        % (len(open_threads), cap, cap, peer_lines)
+        % (len(open_threads), cap, cap, peer_lines, stale_seconds)
     )
     log_block(workspace, cap, len(open_threads), target)
     sys.exit(2)
