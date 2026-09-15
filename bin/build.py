@@ -1021,7 +1021,7 @@ CA_ENFORCEMENT_GATES = [
         "blocking": True,
         "condition": "Stale, expired, or scope-mismatched design signal; missing design note is advisory until mutation gates",
         "action_class": "design",
-        "runtime_policy": {"craft": "advisory", "claude-code": "advisory", "codex-cli": "advisory", "unknown": "advisory"},
+        "runtime_policy": {"craft": "advisory", "claude-code": "block", "codex-cli": "block", "unknown": "block"},
         "block_signals": ["STALE DESIGN", "SCOPE MISMATCH", "EXPIRED SIGNAL"],
     },
     {
@@ -1032,7 +1032,7 @@ CA_ENFORCEMENT_GATES = [
         "blocking": True,
         "condition": "Think gate exists but no investigation artifact",
         "action_class": "investigation",
-        "runtime_policy": {"craft": "advisory", "claude-code": "advisory", "codex-cli": "advisory", "unknown": "advisory"},
+        "runtime_policy": {"craft": "advisory", "claude-code": "block", "codex-cli": "block", "unknown": "block"},
         "block_signals": ["STALE INVESTIGATION"],
     },
     {
@@ -1076,7 +1076,7 @@ CA_ENFORCEMENT_GATES = [
         "blocking": True,
         "condition": "SKILL.md not Read when think-gate status=implementing",
         "action_class": "skill-read",
-        "runtime_policy": {"craft": "advisory", "claude-code": "advisory", "codex-cli": "advisory", "unknown": "advisory"},
+        "runtime_policy": {"craft": "advisory", "claude-code": "block", "codex-cli": "block", "unknown": "block"},
         "block_signals": ["BLOCKED: knowledge-base consultation required"],
     },
 ]
@@ -1109,9 +1109,14 @@ def build_ca_enforcement() -> None:
         "built_at": datetime.now(timezone.utc).isoformat(),
         "gates": CA_ENFORCEMENT_GATES,
     }
-    (ca_dist / "enforcement-manifest.json").write_text(
-        json.dumps(manifest, indent=2) + "\n"
-    )
+    manifest_text = json.dumps(manifest, indent=2) + "\n"
+    (ca_dist / "enforcement-manifest.json").write_text(manifest_text)
+    # The manifest is colocated into each CONSUMER PACKAGE's hooks/ dir by
+    # build_consumer_packages() (that function copies hooks subdir-by-subdir, so
+    # a root-level file would be dropped -- #892 FU1 review). It is deliberately
+    # NOT written into the source hooks/ tree: that would commit a generated file
+    # and the repo-dev resolver path (hooks/../../dist/craft-agent/) already
+    # covers running from the checkout.
 
     # 2. Settings enforcement fragment — the CA enforcement wrapper as a
     #    UserPromptSubmit hook.  The installer merges this into the workspace's
@@ -1288,6 +1293,17 @@ def build_consumer_packages() -> None:
         (pkg_dir / "hooks" / "settings-snippet.json").write_text(
             json.dumps(pkg_settings, indent=2) + "\n"
         )
+
+        # Colocate the enforcement manifest inside EACH package's hooks/ dir
+        # (#892 FU1 review findings #1/#2). build_consumer_packages copies hooks
+        # subdir-by-subdir, so a file at the hooks/ root is NOT carried along; we
+        # must write it here explicitly. gate-registry.sh resolves the manifest
+        # at hooks/../enforcement-manifest.json relative to its own location, so
+        # this colocated copy is found in the deployed package -- WITHOUT the
+        # parent-directory walk-up that let a foreign manifest be picked up.
+        src_manifest = DIST / "craft-agent" / "enforcement-manifest.json"
+        if src_manifest.exists():
+            shutil.copy2(src_manifest, pkg_dir / "hooks" / "enforcement-manifest.json")
 
         # Copy skills from flat layout
         flat_skills = DIST / "flat" / "skills"
