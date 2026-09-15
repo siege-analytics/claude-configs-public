@@ -64,8 +64,8 @@ def main():
     triples = extract_triples(snippet)
     paths = {t[2] for t in triples}
     check(
-        "snippet has 38 triples over 29 distinct hooks",
-        (len(triples), len(paths)) == (38, 29),
+        "snippet has 39 triples over 30 distinct hooks",
+        (len(triples), len(paths)) == (39, 30),
         f"got {len(triples)} triples over {len(paths)} hooks",
     )
 

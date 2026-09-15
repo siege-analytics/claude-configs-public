@@ -1,5 +1,5 @@
 {
-  "_comment_": "Unified hooks snippet. Merge into ~/.claude/settings.json or project .claude/settings.local.json. Replace the literal path segments with an absolute path to this repo \u2014 see hooks/README.md.",
+  "_comment_": "Unified hooks snippet. Merge into ~/.claude/settings.json or project .claude/settings.local.json. Replace the literal path segments with an absolute path to this repo — see hooks/README.md.",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -211,6 +211,11 @@
           {
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/agent-comms/no-slug-form-outbound.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/agent-comms/hub-concurrency-gate.sh",
             "timeout": 10
           }
         ]
