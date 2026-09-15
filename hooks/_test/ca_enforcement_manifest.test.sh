@@ -42,6 +42,45 @@ else
     bad "think-gate manifest should document missing design advisory semantics"
 fi
 
+# DRIFT CHECK (#892 FU1 review r3 finding #1). The runtime reads the manifest
+# built from CA_ENFORCEMENT_GATES. It can drift if someone edits build.py's gate
+# list, or hand-edits a built/deployed manifest, without a matching rebuild.
+#
+# Compare the ON-DISK built manifest AS IT IS NOW against the live source
+# CA_ENFORCEMENT_GATES. Do NOT rebuild first -- rebuilding would regenerate the
+# file from the same source in the same process (tautological, the round-2 bug)
+# AND clobber the developer's dist/. Reading the on-disk file directly means a
+# manifest that has drifted from source (stale build, or a hand-edited/deployed
+# artifact) is detected. (#892 FU1 review r4 cleanup: no destructive rebuild,
+# no dead temp dir.)
+built="$REPO_ROOT/dist/craft-agent/enforcement-manifest.json"
+if python3 - "$built" "$manifest_json" <<'PY'
+import json, sys
+try:
+    prev = json.load(open(sys.argv[1]))
+except Exception:
+    # No on-disk manifest -> treat as drift (must be built before deploy)
+    sys.exit(1)
+source_gates = json.loads(sys.argv[2])
+sys.exit(0 if prev.get("gates") == source_gates else 1)
+PY
+then
+    ok "on-disk dist manifest was already in sync with CA_ENFORCEMENT_GATES (no drift)"
+else
+    bad "on-disk dist manifest DRIFTED from build.py CA_ENFORCEMENT_GATES -- rebuild + redeploy (run bin/build.py)"
+fi
+
+# The manifest must be colocated into each consumer package's hooks/ dir, or the
+# deployed hook cannot resolve it and runtime-aware enforcement silently reverts
+# to plain hard-block (loses the Craft anti-deadlock). (#892 FU1 review #1/#2.)
+for pkg in claude-code craft-agent; do
+    if [ -f "$REPO_ROOT/dist/$pkg/hooks/enforcement-manifest.json" ]; then
+        ok "manifest colocated in dist/$pkg/hooks/"
+    else
+        bad "manifest NOT colocated in dist/$pkg/hooks/ -- deployed $pkg loses runtime policy"
+    fi
+done
+
 echo
 echo "ca_enforcement_manifest: $pass passed, $fail failed"
 [[ $fail -eq 0 ]]
