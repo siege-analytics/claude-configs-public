@@ -148,7 +148,7 @@ import os, shlex, sys
 
 command = sys.argv[1]
 cwd = sys.argv[2] or os.getcwd()
-if any(ch in command for ch in "\n\r;&|<>\`$"):
+if any(ch in command for ch in "\n\r;&|<>`$"):
     sys.exit(1)
 try:
     args = shlex.split(command)
@@ -283,7 +283,7 @@ MUTATION_INDICATORS=(
 # cannot itself smuggle anything.
 MUTATION_SCAN="$COMMAND"
 if [[ "$MUTATION_SCAN" =~ (^|[[:space:]&|;])git[[:space:]]+-C[[:space:]]+[^[:space:]\;\&\|\<\>\(\)\$\`\"\']+[[:space:]]+ ]]; then
-    MUTATION_SCAN="$(printf '%s' "$MUTATION_SCAN" | sed -E 's/(^|[[:space:]&|;])git[[:space:]]+-C[[:space:]]+[^[:space:];&|<>()$\`\"'\"'\"']+[[:space:]]+/\1git /g')"
+    MUTATION_SCAN="$(printf '%s' "$MUTATION_SCAN" | sed -E 's/(^|[[:space:]&|;])git[[:space:]]+-C[[:space:]]+[^[:space:];&|<>()$`"'"'"']+[[:space:]]+/\1git /g')"
 fi
 
 COMPOUND_MUTATION=false
