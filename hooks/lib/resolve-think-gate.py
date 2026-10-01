@@ -353,6 +353,84 @@ def find_gate_for_repo(
     return None
 
 
+def _gate_matches_session(loaded: dict, session_id: str) -> bool:
+    """Session-only scope check for session-dir-resolved gates (#926).
+
+    A gate found inside this session's own signal dir is bound to the session
+    by location; no repo binding is needed, because the dir is
+    session-exclusive. If the gate additionally records a session/sessionId it
+    must match -- a stray foreign-stamped file dropped in the dir does not bind.
+    """
+    data = loaded.get("data", {})
+    if session_id:
+        for key in ("session", "sessionId"):
+            value = str(data.get(key, "")).strip()
+            if value and value != session_id:
+                return False
+    return True
+
+
+def find_session_gate(
+    workspace: str, gate_name: str = "think-gate", session_id: str = ""
+) -> Optional[dict]:
+    """Resolve a gate from the CURRENT session's own signal dir(s) ONLY (#926).
+
+    For callers with no repo context: a workspace-root CWD that is not a git
+    checkout -- the normal case for coordination/PM sessions and for build
+    workers whose worktree the Bash tool does not report as the cwd. The
+    session signal dir (CRAFT_SESSION_DIR / sessions/<id>) is session-exclusive,
+    so a gate found there belongs to this session and needs no repo binding.
+    The shared workspace-root singleton and other sessions' dirs are NEVER
+    consulted here, so there is no cross-session bleed (contrast
+    find_gate_for_repo, whose shared-root fallback is only safe under the #873
+    repo-binding guard).
+
+    Matches only the unambiguous ``<gate-name>.json`` -- not a repo-scoped
+    ``<gate-name>-<slug>.json``, which cannot be disambiguated without a repo.
+    Returns None when no such session gate exists (an unidentifiable session,
+    or a session that genuinely has no gate -- the caller keeps its fail-closed
+    handling and must not fall back to the shared root).
+    """
+    sid = session_id or session_id_from_env()
+    for session_dir in session_dirs(workspace, sid):
+        path = os.path.join(session_dir, f"{gate_name}.json")
+        if os.path.isfile(path):
+            loaded = _load(path)
+            if loaded and _gate_matches_session(loaded, sid):
+                return loaded
+    return None
+
+
+def resolve_many_session(
+    workspace: str, gate_names: "list[str]", session_id: str = ""
+) -> "dict[str, Optional[str]]":
+    """Session-scoped resolve_many (#926): resolve artifact gates from the
+    current session's own signal dir, matched to the session think-gate's
+    ticket/task.
+
+    Mirrors resolve_many's ticket discipline -- a stale prior-task session
+    artifact must not authorize the current task -- but without a repo binding,
+    because the session dir is itself the strict scope. The repo_root
+    requirement in _artifact_matches_strict_scope exists to stop a
+    WORKSPACE-ROOT generic artifact from authorizing any repo's mutation; it
+    does not apply to a session-dir artifact, which is session-exclusive.
+    Used by the mutation gate when REPO_ROOT is empty (workspace-root CWD) and
+    the session is known.
+    """
+    result: dict[str, Optional[str]] = {}
+    think_gate = find_session_gate(workspace, "think-gate", session_id)
+    current_ticket = ""
+    if think_gate:
+        td = think_gate.get("data", {})
+        current_ticket = str(td.get("ticket") or td.get("task") or "").strip()
+    for name in gate_names:
+        found = find_session_gate(workspace, name, session_id)
+        if found and not _gate_matches_ticket(found, current_ticket, require_explicit=True):
+            found = None
+        result[name] = found["path"] if found else None
+    return result
+
+
 def find_think_gate_for_repo(workspace: str, repo_root: str, env_override: str = "") -> Optional[dict]:
     return find_gate_for_repo(workspace, repo_root, "think-gate", env_override)
 
@@ -474,6 +552,8 @@ def main():
     parser.add_argument("--gate-name", default="think-gate")
     parser.add_argument("--session-id", default="")
     parser.add_argument("--session-known", action="store_true", help="Return 1 if a current session id is resolvable, else 0")
+    parser.add_argument("--session-gate", action="store_true", help="Resolve <gate-name>.json from the current session's own signal dir only, no repo binding (#926)")
+    parser.add_argument("--session-scoped", action="store_true", help="With --resolve-many: resolve from the session dir only; no --repo-root required (#926)")
     parser.add_argument("--project", action="store_true", help="Print the project slug for --repo-root (or 'umbrella')")
     parser.add_argument(
         "--resolve-many", default="",
@@ -489,11 +569,20 @@ def main():
         print(resolve_project(args.repo_root, args.workspace))
         return
 
+    if args.session_gate:
+        result = find_session_gate(args.workspace, args.gate_name, args.session_id)
+        print(json.dumps(result))
+        return
+
     if args.resolve_many:
+        names = [n.strip() for n in args.resolve_many.split(",") if n.strip()]
+        if args.session_scoped:
+            result = resolve_many_session(args.workspace, names, args.session_id)
+            print(json.dumps(result))
+            return
         if not args.repo_root:
             print(json.dumps({}))
             return
-        names = [n.strip() for n in args.resolve_many.split(",") if n.strip()]
         result = resolve_many(args.workspace, args.repo_root, names, args.session_id)
         print(json.dumps(result))
     elif args.all:
