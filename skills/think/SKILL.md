@@ -302,12 +302,18 @@ the design (prose) and the enforcement (hook).
 ### Creating a signal file
 
 After the design note is posted to the ticket (Step 7), write the
-signal file to the current session's signal directory, not the shared
-workspace root. Preferred locations:
+signal file to the **current session's** signal directory -- NEVER the
+shared workspace root. Preferred locations, in order:
 
-1. `$CLAUDE_SIGNAL_DIR/think-gate.json` or `$CRAFT_AGENT_SIGNAL_DIR/think-gate.json`
-2. `$CRAFT_AGENT_SESSION_DIR/think-gate.json` or `$CLAUDE_SESSION_DIR/think-gate.json`
-3. `<workspace>/sessions/<session-id>/think-gate.json`
+1. `$CRAFT_SESSION_DIR/think-gate.json` -- `CRAFT_SESSION_DIR` is the only
+   session-directory variable Craft Agent actually sets at runtime (#697).
+2. `<workspace>/sessions/<session-id>/think-gate.json` -- the same directory
+   by its stable path, for when the env var is not exported to your shell.
+
+(The variables `$CLAUDE_SIGNAL_DIR`, `$CRAFT_AGENT_SIGNAL_DIR`,
+`$CRAFT_AGENT_SESSION_DIR`, and `$CLAUDE_SESSION_DIR` were aspirational and
+are NEVER set at runtime -- do not key a write off them; a write to an unset
+variable silently lands in the wrong place.)
 
 If several repos are active inside the same session, use a repo-scoped
 filename inside the session directory: `think-gate-<slug>.json` where
@@ -328,9 +334,15 @@ Include `repo_root` so hooks can verify scope:
 }
 ```
 
-The legacy workspace-root filename `think-gate.json` is still supported
-for backward compatibility but should not be used for new work because it
-is shared by all sessions in the workspace.
+**Never write `<workspace>/think-gate.json` (the shared workspace root).**
+That file is read by every concurrent session in the workspace: a gate
+written there pollutes the mutation gate for others and can be resolved in
+place of another session's own gate (the cross-session jam behind siege#926).
+The mutation gate resolves a session's gate from the session directory above
+-- including on a workspace-root (non-git) CWD, where it resolves the
+session's own gate by session id rather than falling back to the shared root
+(#926). A gate at the workspace root earns nothing and costs other sessions;
+the session directory is the only correct home.
 
 The `lastUpdated` field (ISO 8601) is consumed by the temporal decay
 check. Omitting it forces the hook to fall back to file modification
