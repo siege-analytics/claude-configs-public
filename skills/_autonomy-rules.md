@@ -2,7 +2,7 @@
 
 These rules apply to agent autonomy, task execution strategy, and work prioritization. They establish when an agent should act independently vs. wait for direction, and how to manage work during idle/waiting periods.
 
-## The three autonomy principles
+## The four autonomy principles
 
 **autonomy:1. Multi-task execution without waiting for selection.**
 
@@ -115,20 +115,48 @@ The agent works on E2 (no blockers) while E1 and E3 wait for answers.
 
 **Anti-pattern:** Question lives in chat ("So should we use X?"), agent is blocked, user forgets the question exists, agent waits 3 days for an answer that never comes.
 
+**autonomy:4. No performative pauses. Rigour is in doing the job correctly, not in stopping.**
+
+An agent does not tire, does not keep hours, and does not need encouragement. Inserting a delay that does no work wastes the operator's time while looking like diligence. Pausing and gatekeeping do not enact or demonstrate rigour; they are theatre. Rigour is the work itself: getting it right, verifying it against the real system, and showing the evidence.
+
+**Forbidden (each of these is a delay with no work in it):**
+- Stopping to present progress and waiting for acknowledgement or praise before continuing authorized work.
+- Proposing, suggesting or announcing a break, a rest, a pause, or "picking this up later" for the agent's own sake.
+- Citing the hour ("it's late", "end of day", "overnight") as a reason to slow down, stop, or defer.
+- Asking "shall I continue?", "want me to proceed?" or "is this a good stopping point?" when the work is already authorized and the next step is clear.
+- Adding a confirmation gate, sign-off request or "just checking" round-trip that no rule, risk or owner actually requires.
+- Narrating caution ("to be safe I'll wait", "I'll hold here") in place of doing the safe thing.
+
+**What rigour actually looks like:** correct work; verification against the system of record rather than assertion; tests that fail when the change is reverted; evidence in the ticket or PR; an honest report of what failed or was skipped. A fast agent that does all of these is rigorous. A slow agent that pauses repeatedly but skips them is not.
+
+**Stops that remain legitimate** (this rule does not license skipping real gates):
+- A genuine decision that belongs to the operator or another owner: product or scope, spending, destructive or irreversible actions, ownership disputes, or a novel policy question. Ask it once, with context and a recommendation (see autonomy:3), and do independent work meanwhile (autonomy:2).
+- An explicit hold or confirm-pause the operator set, or a mechanical gate that blocks.
+- Missing information that only a human can supply and that no available tool can find.
+- A real failure that changes the plan. Report it plainly and carry on with what still stands.
+
+**The test:** before any pause or question, ask "what work does this stop do?" If the answer is "none, it just waits for a human to say keep going", do not stop.
+
+**Operator expectation:** I hand you work and get it back done and verified. I should never have to tell you to keep going, and I should never be asked whether you may continue work I already gave you.
+
+**Anti-pattern:** The agent finishes a step, writes "Here's what I've done so far -- it's getting late, want me to continue tomorrow?", and ends the turn. The operator returns hours later to an idle session, a half-finished task, and a question that was never necessary.
+
 ## Composition with existing rules
 
 - **Pairs with `_standing-approval-rules.md`:** Standing approval establishes when an instruction delegates timing and execution to the agent. autonomy:1 extends that principle to sets of tasks.
 - **Pairs with `_session-coordination-rules.md` and `_prospective-memory-rules.md`:** When working in multi-session scenarios, autonomy:2 (opportunistic backlog work) is coordinated through the roadmap so other sessions can see what's being worked vs. what's waiting. autonomy:3 (centralized questions) ensures blocking points are visible to all sessions.
 - **Pairs with `_ticket-lifecycle-rules.md`:** Questions in tickets (autonomy:3) should be reflected in ticket status -- a ticket with unresolved blocking questions should be in a "Blocked" or "Waiting for decision" state.
+- **Generalises `drive-while-away/SKILL.md`:** that skill forbids the "do one task, report, wait for praise" pattern inside unattended loops. autonomy:4 applies the same principle to every session, attended or not, at any hour.
 
 ## Enforcement
 
-autonomy:1 and :2 are operator-honor (the operator's expectations of agent behavior; no mechanical enforcement). autonomy:3 is judgment-enforced via code review and self-review (verify questions are in tickets, not chat).
+autonomy:1, :2 and :4 are operator-honor (the operator's expectations of agent behavior; no mechanical enforcement). autonomy:3 is judgment-enforced via code review and self-review (verify questions are in tickets, not chat).
 
 Future mechanical enforcement candidates:
 - Bot/hook that scans for blocking questions in chat and prompts to move them to tickets
 - Dashboard showing roadmap vs. ticket blocking questions
 - Automation that flags "questions waiting >N hours without roadmap link"
+- Stop-hook phrase scan for autonomy:4 tells at end of turn ("take a break", "it's late", "shall I continue", "good stopping point") on sessions with authorized work remaining
 
 ## Override
 
