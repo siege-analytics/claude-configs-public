@@ -148,6 +148,8 @@ Each finding must include:
 
 "Debatable design choice" is not a verdict. State the invariant or classify as Debt/Bug.
 
+**Reviewer-side red-on-revert is the close standard for a Bug fix.** A Bug finding whose fix carries a regression test moves to Closed only when the reviewer has independently reproduced the failure: revert the fix, run the named test, watch it go red; reapply the fix, watch it go green. Paste the two runs (revert -> red, reapply -> green) as the close evidence. Accepting the author's assertion that "the test covers it" is not a close -- the reviewer runs it. This independent reproduction is what surfaces the second defect: reproducing the first fix's red-on-revert (#1337) is how review found the adjacent #1338. A fix whose test does not go red on revert is testing the mock, not the bug (writing-tests:1), and the finding stays open.
+
 ### Process findings (Layer 3)
 
 - **Artifact gap** -- required artifact missing or ceremonial. Fix before merge or file a ticket.
