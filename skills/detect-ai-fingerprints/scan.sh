@@ -199,6 +199,23 @@ scan_diff_stdin() {
                 fi
             fi
 
+            # siege-utilities SU-4: run_comprehensive_test() dispatches the whole
+            # pytest suite; calling it from inside a test re-enters the suite
+            # (explosive recursion). Flag any call under a tests/ directory in a
+            # test_*.py file. Comment-stripped so a comment mentioning the symbol
+            # does not false-positive. Non-test / non-siege code is untouched.
+            case "/$current_file" in
+                */tests/*)
+                    tt_base="${current_file##*/}"
+                    if [[ "$tt_base" == test_*.py ]]; then
+                        tt_code="${content%%#*}"
+                        if grep -qE 'run_comprehensive_test[[:space:]]*\(' <<< "$tt_code"; then
+                            emit "$current_file" "$line_no" "siege-utilities-SU4-suite-runner-in-test" "$content"
+                        fi
+                    fi
+                    ;;
+            esac
+
             line_no=$((line_no + 1))
             continue
         fi
