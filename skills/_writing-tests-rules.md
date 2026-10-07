@@ -95,6 +95,20 @@ Multi-layer work (per `[skill:ticket-decomposition]`) means multiple `assertion_
 
 Enforcement: judgment-enforced via `[skill:code-review]` at v1 (reviewer checks each AC has Falsifiable-by + a valid tool from PROJECT.md). Mechanical enforcement candidate for a follow-up: a ticket-body scanner that grepped for `AC\d+` lines and required a matching `Falsifiable-by:` + `Tool:` pair within N lines, cross-referenced against the repo's PROJECT.md `assertion_tools` for the touched layer.
 
+**writing-tests:8. Behaviour changes to a shared function are provenance-verified and caller-covered.**
+
+When a change alters the BEHAVIOUR of a shared function -- adds a guard or early-return, changes a return shape, or otherwise changes what existing callers observe -- a local "tests pass" is not trustworthy until two checks hold. This rule is scoped to behaviour changes on functions with existing callers; it does not tax trivial or purely additive test edits.
+
+(a) **Provenance.** Confirm the test run loaded the EDITED source, not a shadow of it. Run `python -c "import <pkg>.<mod> as m; print(m.__file__)"` and verify the path is the tree you edited, or `pip install -e .` in the working checkout. An editable install can shadow a checked-out worktree: `import <pkg>` resolves to the install location (often the main clone), so a test run in a detached worktree exercises code WITHOUT your change and passes falsely. The `[skill:self-review]` Peer-review section records the `__file__` path (or the reinstall) as evidence.
+
+**Worktree-isolation interaction.** Worktree isolation is the recommended way to get parallel safety (spawn-protocol universal-check #12b): separate worktrees avoid stash collisions and branch drift. That same isolation is what creates the shadow -- the worktree has your edit on disk, but the editable install still points at the main clone, so the import never sees it. A reader who isolates for parallel safety MUST still run the `__file__` check. This is a concrete instance of the general trap in `feedback_reproduce_loaded_package_state` (reproduce the loaded-package state before trusting a pass); the worktree/editable-install case is that trap at a specific seam.
+
+(b) **Caller coverage.** A guard / early-return / return-shape change to a function with existing callers requires running the EXISTING caller tests, not only the new test. Enumerate them with `grep -rn "<symbol>" tests/` and run those. A new test that exercises only the new behaviour does not prove the change left existing callers intact.
+
+The session's concrete instance: the #1345 `run_test_suite` re-entrancy guard passed its new test in a detached worktree and landed, then CI reddened because the guard broke an existing caller test (`test_testing_runner.py::test_successful_run`). Both checks would have caught it before push: the `__file__` line would have shown the worktree test ran against the main clone, and running the existing caller test would have shown the break.
+
+Forward-only; scoped to behaviour changes on shared functions. Enforcement: judgment-enforced via `[skill:self-review]` at v1 (the Peer-review section shows the `__file__` provenance line and the existing-caller-test run for such changes), matching how writing-code:7/:15 were introduced. Mechanical AST / `[skill:detect-ai-fingerprints]` detection (a guard-added-to-a-tested-function heuristic) is a follow-up candidate, tracked separately. Composes with `[rule:verify-before-execute]` (evidence must come from the edited source, not a shadow of it) and writing-tests:1 (a test that passes against unchanged code is not a test of the change).
+
 ## Structural test smells
 
 Named patterns detectable by static analysis (grep or AST). These
