@@ -1004,6 +1004,19 @@ fi
 # hash must match HEAD.
 INFRA_PATTERNS='(^hooks/|^skills/|rules.*\.md$|^RESOLVER\.md$)'
 if [ -n "$DIFF_FILES" ] && echo "$DIFF_FILES" | grep -qE "$INFRA_PATTERNS" 2>/dev/null; then
+    # #226: merge-then-deploy carve-out. Repos that deploy AFTER merge (not
+    # before push) declare it with a committed .claude/deploy-model marker whose
+    # sole line is "merge-then-deploy". For those repos the pre-push deploy-stamp
+    # requirement does not apply -- deploy + deployed-copy verification happen
+    # post-merge (by the workspace admin), and pre-push verification is done via
+    # isolated test + build.py --check. Solo-deploy repos (no marker) still
+    # require the stamp, so the true positive is preserved. The marker is a
+    # reviewable committed file, not a runtime-writable signal, so it cannot be
+    # used as a silent per-push evasion.
+    DEPLOY_MODEL_ROOT="$(git -C "$EFFECTIVE_CWD" rev-parse --show-toplevel 2>/dev/null || echo "$EFFECTIVE_CWD")"
+    if [ -f "$DEPLOY_MODEL_ROOT/.claude/deploy-model" ] && grep -qx 'merge-then-deploy' "$DEPLOY_MODEL_ROOT/.claude/deploy-model" 2>/dev/null; then
+        : # merge-then-deploy repo -- deploy-stamp requirement N/A (deploy is post-merge)
+    else
     DEPLOY_STAMP=""
     for STAMP_CANDIDATE in \
         "$HOME/.craft-agent/workspaces/my-workspace/deploy-stamp.json" \
@@ -1047,6 +1060,7 @@ Run \`python3 bin/build.py --deploy\` after your latest commit and retry.
 Ref: #489 (deploy-after-hook-change enforcement)
 HOOKEOF
         exit 2
+    fi
     fi
 fi
 
