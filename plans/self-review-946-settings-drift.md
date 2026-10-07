@@ -19,6 +19,7 @@ Key assumptions:
 - **Change is minimal + matches convention.** One PreToolUse/Bash entry inserted after survey-context.sh (its snippet position), relative-path form like its siblings, timeout 10.
 - Gate 1 (syntax): `python3 -c "import json; json.load(open('.claude/settings.json'))"` -> valid.
 - Gate 2 (integration): `~/.pyenv/versions/default_31111/bin/python bin/validate-hooks.py` -> "All hooks valid", exit 0; no settings-drift line for test-tracking-guard. (Local default python3 is <3.10 and cannot run validate-hooks.py's `Path | None` annotation; the SZSH pyenv 3.11 reproduces CI.)
+- Gate 2b (the CI tripwire I missed first pass): CI run 37562444110 showed `bin/_test/settings_drift_test.py` still FAILing -- "[PASS] live settings and snippet agree" (my wiring fix worked) but "[FAIL] snippet has 39 triples over 30 distinct hooks; got 40 triples over 31 hooks". That test hardcodes the snippet's triple/hook count as a tripwire; #932 added test-tracking-guard to the snippet (-> 40/31) but never bumped it. Fixed the expected count to (40, 31). After: `settings_drift_test.py` -> "All settings-drift fixtures passed", exit 0 (pyenv 3.11). So the drift fix needed TWO edits, not one; CI caught the second, not local validate-hooks.py alone.
 - Gate 3 (counts): snippet count 1 == settings count 1.
 - Gate 4 (docs/notebooks): N/A.
 
@@ -34,4 +35,5 @@ Key assumptions:
 - **1 PreToolUse/Bash triple added** to `.claude/settings.json` (test-tracking-guard.sh). Evidence: grep count 0 -> 1.
 - **validate-hooks.py exit 0** ("All hooks valid"), no drift line for test-tracking-guard. Evidence: command output under pyenv 3.11.
 - **snippet == settings** (both 1). Evidence: the two grep counts.
-- **1 file changed** (.claude/settings.json) + this artifact. Evidence: `git status -s`.
+- **settings_drift_test.py tripwire bumped** 39/30 -> 40/31 to match the legitimately-added guard; test exit 0 after. Evidence: pyenv-3.11 run output.
+- **2 files changed** (.claude/settings.json wiring + bin/_test/settings_drift_test.py count) + this artifact. Evidence: `git status -s`.
