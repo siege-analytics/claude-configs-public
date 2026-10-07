@@ -57,7 +57,27 @@ if [[ -z "$BRANCH" ]] || [[ "$BRANCH" == "HEAD" ]] || [[ "$BRANCH" == "main" ]] 
     exit 0
 fi
 
-MERGE_BASE=$(git -C "$EFFECTIVE_CWD" merge-base develop HEAD 2>/dev/null || git -C "$EFFECTIVE_CWD" merge-base main HEAD 2>/dev/null || true)
+# Resolve the merge-base against the FRESHEST reachable integration ref, not a
+# stale local `develop`. A local develop that is hundreds of commits behind
+# skills-upstream/develop would make MERGE_BASE..HEAD span unrelated upstream
+# commits, inflating the scope-repetition count and false-blocking a legitimate
+# single-commit branch. Among candidate develop/main refs, pick the merge-base
+# that yields the fewest commits to HEAD (the tightest, most-accurate branch
+# delta), so remote develop wins when local develop is behind. Ref: #937.
+MERGE_BASE=""
+_FSG_BEST_COUNT=""
+for _fsg_ref in skills-upstream/develop origin/develop develop \
+                skills-upstream/main origin/main main master; do
+    git -C "$EFFECTIVE_CWD" rev-parse --verify --quiet "$_fsg_ref" >/dev/null 2>&1 || continue
+    _fsg_mb=$(git -C "$EFFECTIVE_CWD" merge-base "$_fsg_ref" HEAD 2>/dev/null || true)
+    [[ -z "$_fsg_mb" ]] && continue
+    _fsg_cnt=$(git -C "$EFFECTIVE_CWD" rev-list --count "$_fsg_mb..HEAD" 2>/dev/null || true)
+    [[ -z "$_fsg_cnt" ]] && continue
+    if [[ -z "$_FSG_BEST_COUNT" ]] || [[ "$_fsg_cnt" -lt "$_FSG_BEST_COUNT" ]]; then
+        _FSG_BEST_COUNT="$_fsg_cnt"
+        MERGE_BASE="$_fsg_mb"
+    fi
+done
 if [[ -z "$MERGE_BASE" ]]; then
     exit 0
 fi
