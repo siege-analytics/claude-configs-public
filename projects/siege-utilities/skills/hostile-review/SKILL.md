@@ -81,6 +81,178 @@ Scan every error path, every parameter, every return type, every docstring claim
 
 **P5 -- Demo code (SU-3).** Bare `except: pass`, hardcoded credentials/paths, silent fallbacks, non-actionable error messages in examples and notebooks.
 
+**P6 -- Notebook API fidelity.** Every function call in a notebook must correspond to a real method in the library with the correct signature. Every narrative claim about what a function does must match the function's actual behavior. Every cell output must be consistent with the narrative that frames it.
+
+Scan methodology:
+1. **Method existence**: for each `siege_utilities` call in a notebook, grep the source for that method name on the class or module referenced. `manager.get()` is only valid if `get` exists on `CredentialManager`. Aliased names count only if `__getattr__` or an explicit alias wires them.
+2. **Narrative-output consistency**: read each markdown cell's claims, then read the following code cell's output. If the narrative says "these will match" and the output says `All match: False`, that is an S2 finding (silent wrong answer to the reader).
+3. **Capability claims**: if a notebook says a function "reorders names" or "handles format X", grep the function source for that logic. Aspirational descriptions of what the function *should* do are SU-2 violations when presented as documentation of what it *does*.
+
+**Incident justification:** Session 260603-golden-shark. Three S2 findings: `CredentialManager.get()` doesn't exist (actual: `get_credential()`); `normalize_name_v1` narrative claims reordering but function only lowercases/strips; entity identification outputs contradict the matching narrative. All three shipped because nobody checked calls against source.
+
+### Scan patterns (siege_utilities-specific)
+
+The P-tiers above classify what you find. These patterns tell you WHERE to look. Run all of them; report hits with file:line.
+
+#### Security
+
+```bash
+# Command injection: subprocess with shell=True or string interpolation
+git grep -n "subprocess\.\|os\.system\|os\.popen" -- "siege_utilities/**/*.py"
+# Flag: shell=True with f-string or .format() args
+
+# Path traversal: user-controlled paths without validation
+git grep -n "os\.path\.join\|Path(" -- "siege_utilities/**/*.py" | grep -i "user\|input\|param\|arg"
+# Flag: file paths constructed from function parameters without validate_safe_path()
+# Cross-ref: siege_utilities/files/ has PathSecurityError -- is it used at every boundary?
+
+# Credential leakage: secrets in logs or tracebacks
+git grep -n "password\|secret\|token\|api_key\|credential" -- "siege_utilities/**/*.py" | grep -i "log\|print\|format\|f\""
+# Flag: credential values in log output, not just credential names
+
+# SSRF: HTTP calls with user-controlled URLs
+git grep -n "requests\.get\|requests\.post\|urlopen\|httpx" -- "siege_utilities/**/*.py"
+# Flag: URL from function parameter without allowlist. Census geocoder, TIGER downloads, data.world -- all fetch URLs.
+# Check: does each have a timeout= parameter?
+
+# Insecure deserialization
+git grep -n "pickle\.load\|yaml\.load\|eval(\|exec(" -- "siege_utilities/**/*.py"
+# Flag: any of these on data from external sources. yaml.load without SafeLoader is S1.
+```
+
+#### Domain correctness
+
+```bash
+# CRS agreement: geometry operations without CRS check
+git grep -n "\.intersection(\|\.union(\|\.contains(\|\.distance(\|sjoin(\|gpd\.overlay(" -- "siege_utilities/**/*.py"
+# Flag: spatial operations where both inputs don't have verified matching CRS
+# The two GeoDataFrames MUST have the same CRS or the result is silently wrong
+
+# Unprojected calculations: area/length/distance on EPSG:4326
+git grep -n "\.area\|\.length\|\.distance(" -- "siege_utilities/geo/**/*.py"
+# Flag: measurement on WGS84 geometries returns degrees, not meters -- meaningless for analysis
+# Safe: explicit reproject to equal-area CRS before calculation
+
+# Timezone confusion
+git grep -n "datetime\.now()\|datetime\.utcnow()" -- "siege_utilities/**/*.py"
+# Flag: naive datetimes in code with temporal semantics (effective dates, vintages, waves)
+# Census vintages, redistricting effective dates, survey waves all need aware datetimes
+
+# Impossible model states: redistricting/political
+git grep -n "class.*Plan\|class.*District\|class.*OfficeTerm\|class.*Seat" -- "siege_utilities/political/**/*.py"
+# Check: do models enforce invariants? Overlapping effective dates? District without a plan?
+# Congressional districts must have congress_number matching vintage year
+
+# Coordinate order confusion
+git grep -n "Point(\|POINT(" -- "siege_utilities/**/*.py"
+# Verify: consistent (lon, lat) per GeoJSON. Shapely Point(x, y) = Point(lon, lat).
+```
+
+#### Data integrity
+
+```bash
+# Non-atomic writes
+git grep -n "\.to_csv(\|\.to_parquet(\|\.to_file(\|open(.*'w'" -- "siege_utilities/**/*.py"
+# Flag: direct write to final destination without tmp + os.replace()
+# Cross-ref: siege_utilities/files/ has atomic_write_path -- is it used for all writes?
+
+# Silent row loss
+git grep -n "dropna(\|drop_duplicates(" -- "siege_utilities/**/*.py"
+# Flag: dropping rows without logging count before/after
+
+# Cartesian join bombs
+git grep -n "\.merge(\|\.join(" -- "siege_utilities/**/*.py" | grep -v "validate="
+# Flag: merge/join without validate='one_to_one' or 'many_to_one'
+
+# Partial write without rollback (databases)
+git grep -n "cursor\.execute\|session\.add\|bulk_create" -- "siege_utilities/**/*.py"
+# Flag: multiple mutations without explicit transaction boundary
+
+# Unbounded accumulation
+git grep -n "pd\.concat" -- "siege_utilities/**/*.py"
+# Flag: pd.concat inside loops (quadratic copy behavior)
+```
+
+#### Resource management
+
+```bash
+# Unclosed file handles
+git grep -n "open(" -- "siege_utilities/**/*.py" | grep -v "with "
+# Flag: open() not in a with statement
+
+# Missing timeouts on network calls
+git grep -n "requests\.get\|requests\.post\|urlopen" -- "siege_utilities/**/*.py" | grep -v "timeout"
+# Flag: geocoder calls, Census downloads, API clients without timeout=
+# A hung Census geocoder blocks the caller forever
+
+# Unbounded downloads
+git grep -n "requests\.get\|urlopen" -- "siege_utilities/**/*.py" | grep -v "stream=True"
+# Flag: HTTP GET without streaming + size limit
+
+# Module-level caches without eviction
+git grep -n "_cache\s*=\s*{}\|_registry\s*=\s*{}" -- "siege_utilities/**/*.py"
+# Flag: dicts that grow without bounds in long-running processes
+```
+
+#### Packaging truth
+
+```bash
+# Undeclared imports: extract third-party imports, cross-reference against setup.py/pyproject.toml
+git grep -n "^import \|^from " -- "siege_utilities/**/*.py" | grep -v "siege_utilities\|test_\|conftest"
+# Compare against declared dependencies in setup.py install_requires + extras_require
+
+# Lazy-loading correctness
+git grep -n "__getattr__" -- "siege_utilities/*/__init__.py"
+# Verify: deferred names actually exist in target module
+# Flag: __getattr__ that catches ImportError and returns a stub (SU-1 violation)
+# Flag: import-time side effects in __init__.py files
+
+# Phantom __all__ exports
+git grep -n "__all__" -- "siege_utilities/**/*.py"
+# For each name in __all__, verify it exists in the module
+```
+
+#### Composability (the canonical chain)
+
+```bash
+# Return type consistency across providers
+git grep -n "class.*Provider\|class.*Connector\|class.*Client" -- "siege_utilities/**/*.py"
+# Verify: all implementations return same shape (columns, CRS, types)
+# Flag: provider A returns GeoDataFrame, provider B returns None
+
+# Column name conventions
+git grep -n "geoid\|GEOID\|geo_id\|GEO_ID\|fips\|FIPS" -- "siege_utilities/**/*.py"
+# Flag: inconsistent naming for the same concept across modules
+# If find_geoid_column() exists, that proves the naming is already broken
+
+# The canonical chain: can it execute end-to-end?
+# address → geocoder → GEOID → boundary provider → demographic overlay → choropleth
+# Trace: geo/geocoding → geo/boundaries → geo/spatial → reporting/
+# Flag: type mismatches at seam points, column name disagreements, CRS assumptions
+
+# Engine abstraction gaps
+git grep -n "class.*Engine\|register.*engine\|SUPPORTED_ENGINES" -- "siege_utilities/engines/**/*.py"
+# Check: does every engine implement every operation claimed?
+# Flag: engine that silently returns empty result for unsupported operation (SU-1)
+```
+
+#### Performance at scale
+
+```bash
+# N+1 query patterns
+git grep -l "for.*in.*:" -- "siege_utilities/**/*.py" | xargs grep -l "\.query\|\.execute\|\.get("
+# Flag: database/API call inside loop body
+
+# Quadratic DataFrame operations
+git grep -n "\.iterrows(\|\.itertuples(" -- "siege_utilities/**/*.py"
+# Flag: row-by-row iteration with vectorized alternative available
+
+# Collect-to-driver (Spark)
+git grep -n "\.collect(\|\.toPandas(" -- "siege_utilities/**/*.py"
+# Flag: collecting large distributed datasets to single machine
+# Safe: small lookups, pre-filtered results with known bounds
+```
+
 ### Layer 2: Composition and architecture
 
 This is the Adversary's unique contribution. The Lead reviews one PR. You review the PR in the context of the library as a thesaurus.
@@ -114,6 +286,25 @@ The Adversary audits not just the code but the process that produced it. The Jun
 5. **Is the self-review artifact substantive?** Does the Lead review section contain domain-tagged affirmative standards with evidence, or structural window-dressing over "LGTM"? An empty "no concerns" verdict on a non-trivial PR is a review failure.
 
 6. **Do the quantified claims check out?** Every specific count in the PR body or commit messages -- was there a command that produced that number? (writing-claims:8)
+
+7. **Were the mechanical verification gates executed?** The self-review artifact must contain evidence lines for Gates 1-4 (syntax, test suite, doc build, notebook API). Check for the exact evidence format strings defined in the self-review skill. A self-review artifact with no gate evidence passed both the Junior and the Lead -- both failed.
+
+   The Adversary checks:
+   - Does the Peer review section contain a `Syntax check:` evidence line with `ast.parse` when `.py` files are in the diff?
+   - Does the Peer review section contain a `Test suite:` evidence line with an exit code?
+   - Does the Peer review section contain a `Doc build:` evidence line (or explicit "N/A") when `docs/` files are in the diff?
+   - Does the Peer review section contain a `Notebook API check:` evidence line (or explicit "N/A") when `.ipynb` files are in the diff?
+   - Are the commands in the evidence lines the actual gate commands, or paraphrased versions that might not have run?
+   - Did the Lead's Phase B item 5 actually verify gate evidence, or did the Lead skip it too?
+
+   **This is the Adversary's highest-value Layer 3 check.** Artifact gaps (item 5) and knowledge debt (item 4) are important but require judgment. Gate evidence is binary -- present or absent. If it is absent, the entire self-review pipeline failed mechanically, and both the Junior and the Lead are culpable.
+
+8. **Did the Lead actually review, or did the Lead rubber-stamp?** The Lead and the Junior are the same agent. The Lead's adversarial posture depends entirely on the agent's willingness to challenge its own prior work. Signs of rubber-stamping:
+   - Lead section repeats Junior's findings without adding anything
+   - Lead section has no domain-tagged affirmative standards
+   - Lead section accepts every Junior dismissal without examination
+   - Lead section is shorter than the Peer section (the Lead has MORE to check, not less)
+   - Gate evidence accepted without verification that the commands actually ran (output pasted vs. fabricated)
 
 ## Edge case hunting
 

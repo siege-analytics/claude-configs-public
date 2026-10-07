@@ -295,7 +295,7 @@ The Adversary audits not just the code but the process that produced it. The Jun
    - Does the Peer review section contain a `Doc build:` evidence line (or explicit "N/A") when `docs/` files are in the diff?
    - Does the Peer review section contain a `Notebook API check:` evidence line (or explicit "N/A") when `.ipynb` files are in the diff?
    - Are the commands in the evidence lines the actual gate commands, or paraphrased versions that might not have run?
-   - Did the Lead's Phase B item 5 explicitly verify gate evidence, or did the Lead skip it too?
+   - Did the Lead's Phase B item 5 actually verify gate evidence, or did the Lead skip it too?
 
    **This is the Adversary's highest-value Layer 3 check.** Artifact gaps (item 5) and knowledge debt (item 4) are important but require judgment. Gate evidence is binary -- present or absent. If it is absent, the entire self-review pipeline failed mechanically, and both the Junior and the Lead are culpable.
 
@@ -338,6 +338,8 @@ Each finding must include:
 - **Closed** -- with evidence. "I thought X was wrong but Y proves it's fine because Z."
 
 "Debatable design choice" is not a verdict. State the invariant or classify as Debt/Bug.
+
+**Reviewer-side red-on-revert is the close standard for a Bug fix.** A Bug finding whose fix carries a regression test moves to Closed only when the reviewer has independently reproduced the failure: revert the fix, run the named test, watch it go red; reapply the fix, watch it go green. Paste the two runs (revert -> red, reapply -> green) as the close evidence. Accepting the author's assertion that "the test covers it" is not a close -- the reviewer runs it. This independent reproduction is what surfaces the second defect: reproducing the first fix's red-on-revert (#1337) is how review found the adjacent #1338. A fix whose test does not go red on revert is testing the mock, not the bug (writing-tests:1), and the finding stays open.
 
 ### Process findings (Layer 3)
 
