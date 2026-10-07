@@ -67,6 +67,30 @@ if resource == "api":
         resource = "issue"
         action = "edit"
 
+# Read-only subcommands carry no status claim to evaluate; never gate them.
+# A completion/evidence gate firing on `gh pr view --json state,mergedAt` is a
+# false positive: the --json field names, not a status update, match the
+# vocabulary. Reads are outside this guard's domain (status comments + state
+# transitions). Ref: claude-configs-public#940.
+READ_ACTIONS = {"view", "list", "diff", "checks", "status"}
+if resource in {"issue", "pr"} and action in READ_ACTIONS:
+    sys.exit(0)
+# `gh api` without a mutating method or a request-body/field flag is a GET read.
+# (Issue-comment/edit api paths were already reclassified to issue+comment/edit
+# above, so they are writes and are not exempted here.)
+if resource == "api":
+    _api_args = tokens[idx + 2:]
+    _mutating_method = any(t in {"-X", "--method"} for t in _api_args) and any(
+        t.upper() in {"POST", "PUT", "PATCH", "DELETE"} for t in _api_args
+    )
+    _has_body = any(
+        t in {"-f", "--field", "--raw-field", "--input", "-F"}
+        or t.startswith(("-f=", "--field=", "--raw-field=", "--input=", "-F="))
+        for t in _api_args
+    )
+    if not _mutating_method and not _has_body:
+        sys.exit(0)
+
 BODY_FLAGS = {"--body", "-b", "--comment", "--message", "-m", "--title"}
 BODY_FILE_FLAGS = {"--body-file", "-F"}
 EDITOR_FLAGS = {"--editor", "-e", "--web", "-w"}
