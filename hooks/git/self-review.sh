@@ -1014,7 +1014,10 @@ if [ -n "$DIFF_FILES" ] && echo "$DIFF_FILES" | grep -qE "$INFRA_PATTERNS" 2>/de
     # reviewable committed file, not a runtime-writable signal, so it cannot be
     # used as a silent per-push evasion.
     DEPLOY_MODEL_ROOT="$(git -C "$EFFECTIVE_CWD" rev-parse --show-toplevel 2>/dev/null || echo "$EFFECTIVE_CWD")"
-    if [ -f "$DEPLOY_MODEL_ROOT/.claude/deploy-model" ] && grep -qx 'merge-then-deploy' "$DEPLOY_MODEL_ROOT/.claude/deploy-model" 2>/dev/null; then
+    # Read the policy from HEAD, not the mutable worktree. An untracked or
+    # merely staged marker must not be able to disable a pre-push gate.
+    if git -C "$DEPLOY_MODEL_ROOT" cat-file -e 'HEAD:.claude/deploy-model' 2>/dev/null \
+        && git -C "$DEPLOY_MODEL_ROOT" show 'HEAD:.claude/deploy-model' 2>/dev/null | grep -qx 'merge-then-deploy'; then
         : # merge-then-deploy repo -- deploy-stamp requirement N/A (deploy is post-merge)
     else
     DEPLOY_STAMP=""

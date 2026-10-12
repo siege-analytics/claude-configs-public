@@ -55,9 +55,9 @@ No release-count or corpus-count claims.
 
 ## Evidence-predates-work
 Artifact: plans/self-review-924-marker-hardening.md
-First-added commit: populated after this artifact commit
-Work commit: pending
-Verification: populated before push
+First-added commit: 4346347a3d7f529bc902934a3950d80980e8c00c
+Work commit: the commit carrying the hook and regression-test diff immediately after the artifact commit
+Verification: `git merge-base --is-ancestor 4346347a3d7f529bc902934a3950d80980e8c00c HEAD; echo $?` → 0 before push
 
 ## Hostile-review-waiver
 This is a two-file focused hardening of an already identified review finding, with direct negative regression coverage; a separate provider review would not be proportionate.

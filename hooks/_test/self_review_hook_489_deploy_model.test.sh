@@ -139,4 +139,31 @@ if ! grep -q "no deploy-stamp.json" <<<"$out"; then
   exit 1
 fi
 
+# --- Scenario 3: untracked marker must not bypass the solo-deploy gate ---
+mkdir -p "$repo_solo/.claude"
+printf 'merge-then-deploy\n' > "$repo_solo/.claude/deploy-model"
+if out="$(run_hook "$repo_solo" 2>&1)"; then
+  echo "$out" >&2
+  echo "FAIL: #226 an untracked deploy-model marker bypassed the #489 deploy-stamp gate" >&2
+  exit 1
+fi
+if ! grep -q "no deploy-stamp.json" <<<"$out"; then
+  echo "$out" >&2
+  echo "FAIL: #226 expected the deploy-stamp block when only an untracked marker exists" >&2
+  exit 1
+fi
+
+# --- Scenario 4: a merely staged marker must not bypass the gate either ---
+git -C "$repo_solo" add .claude/deploy-model
+if out="$(run_hook "$repo_solo" 2>&1)"; then
+  echo "$out" >&2
+  echo "FAIL: #226 a staged-but-uncommitted deploy-model marker bypassed the gate" >&2
+  exit 1
+fi
+if ! grep -q "no deploy-stamp.json" <<<"$out"; then
+  echo "$out" >&2
+  echo "FAIL: #226 expected the deploy-stamp block for a staged-only marker" >&2
+  exit 1
+fi
+
 echo "self_review_hook_489_deploy_model.test: PASS"
