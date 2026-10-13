@@ -12,7 +12,7 @@ def main():
  assert tier(["skills/python/SKILL.md"])=="B"
  assert tier(["src/app.py"])=="B"
  assert tier(["hooks/agent-comms/status.sh"])=="B"
- for path in ["hooks/git/self-review.sh","hooks/resolver/skill-enforcement-gate.sh","hooks/resolver/inject-resolver.sh",".github/workflows/build-and-publish.yml","bin/install.sh","bin/resolve-load-set.py","catalog/review-risk-policy.json","catalog/resolver-manifest.json","auth/token.py","VERSION"]:assert tier([path])=="C",path
+ for path in ["hooks/git/self-review.sh","hooks/resolver/skill-enforcement-gate.sh","hooks/resolver/inject-resolver.sh","hooks/settings-snippet.json",".github/workflows/build-and-publish.yml","skills/KERNEL.md","bin/install.sh","bin/resolve-load-set.py","bin/skill-lifecycle.py","catalog/review-risk-policy.json","catalog/resolver-manifest.json","catalog/skill-lifecycle-approved-exceptions.json","auth/token.py","VERSION"]:assert tier([path])=="C",path
  stripped=json.loads(json.dumps(policy));stripped["high_risk_path_patterns"]=[]
  assert m.classify(stripped,["catalog/review-risk-policy.json"])["computed_tier"]=="C"
  assert m.classify(stripped,["bin/review-risk.py"])["computed_tier"]=="C"
@@ -39,5 +39,24 @@ def main():
   assert tier(m.changed_paths(repo,staged=True))=="C"
   subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True);(repo/"hooks/git/gate.sh").unlink();subprocess.run(["git","add","-u"],cwd=repo,check=True)
   assert tier(m.changed_paths(repo,staged=True))=="C"
+  subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True)
+  unusual=["hooks/git/gate\t.sh","hooks/git/gate\n.sh","hooks/git/gaté.sh"]
+  for name in unusual:(repo/name).write_text("guard\n")
+  subprocess.run(["git","add","-A"],cwd=repo,check=True)
+  observed=m.changed_paths(repo,staged=True)
+  assert set(unusual)<=set(observed),observed
+  assert tier(observed)=="C"
+  subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True)
+  resolver_newline="hooks/resolver/new\nthink-gate-guard.sh"
+  (repo/"hooks/resolver").mkdir(parents=True,exist_ok=True);(repo/resolver_newline).write_text("guard\n")
+  subprocess.run(["git","add","-A"],cwd=repo,check=True)
+  added=m.changed_paths(repo,staged=True)
+  assert resolver_newline in added,added
+  assert tier(added)=="C",added
+  subprocess.run(["git","commit","-qm","add newline resolver gate"],cwd=repo,check=True)
+  (repo/resolver_newline).unlink();subprocess.run(["git","add","-u"],cwd=repo,check=True)
+  deleted=m.changed_paths(repo,staged=True)
+  assert resolver_newline in deleted,deleted
+  assert tier(deleted)=="C",deleted
  print("review_risk_test: PASS")
 if __name__=="__main__":main()

@@ -3,17 +3,25 @@
 set -euo pipefail
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$HOOK_DIR/../.." && pwd)"
-KERNEL="${CLAUDE_KERNEL_PATH:-$REPO_ROOT/skills/KERNEL.md}"
+CANONICAL_KERNEL="$REPO_ROOT/skills/KERNEL.md"
+KERNEL="${CLAUDE_KERNEL_PATH:-$CANONICAL_KERNEL}"
 SELECTOR="$REPO_ROOT/bin/resolve-load-set.py"
+block_invalid_kernel() {
+  printf '%s\n' '{"continue":false,"systemMessage":"BLOCKED: mandatory compact safety kernel is unavailable or invalid; restore the canonical KERNEL.md before continuing."}'
+  exit 0
+}
+# A caller-controlled path may be useful for packaging tests, but it must not
+# change the invariant policy surface. Accept only byte-identical kernel
+# content within the source-bound budget; never treat arbitrary content as the
+# kernel merely because an environment variable points to it.
+[[ -f "$CANONICAL_KERNEL" && -f "$KERNEL" ]] || block_invalid_kernel
+[[ "$(wc -c < "$KERNEL" | tr -d ' ')" -le 80000 ]] || block_invalid_kernel
+cmp -s "$CANONICAL_KERNEL" "$KERNEL" || block_invalid_kernel
 PAYLOAD="$(cat || true)"
 PROMPT="$(printf '%s' "$PAYLOAD" | python3 -c 'import json,sys; d=json.load(sys.stdin) if not sys.stdin.isatty() else {}; print(d.get("prompt") or d.get("tool_input",{}).get("prompt") or "")' 2>/dev/null || true)"
 PROMPT_CWD="$(printf '%s' "$PAYLOAD" | python3 -c 'import json,sys; d=json.load(sys.stdin) if not sys.stdin.isatty() else {}; print(d.get("cwd") or "")' 2>/dev/null || true)"
 [[ -n "$PROMPT_CWD" && -d "$PROMPT_CWD" ]] || PROMPT_CWD="$PWD"
 MODE="${CLAUDE_PROGRESSIVE_LOADING:-on}"
-if [[ ! -f "$KERNEL" ]]; then
-  printf '%s\n' '{"continue":false,"systemMessage":"BLOCKED: mandatory compact safety kernel is unavailable; restore KERNEL.md before continuing."}'
-  exit 0
-fi
 if [[ "$MODE" == "off" || "$MODE" == "kernel-only" ]]; then
   cat <<EOF
 <skill-kernel mode="kernel-only">

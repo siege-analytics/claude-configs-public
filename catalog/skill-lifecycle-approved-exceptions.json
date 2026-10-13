@@ -1,5 +1,5 @@
 {
-  "description": "Post-baseline lifecycle exceptions. Every entry requires source_path, reason, approval_reference, and approved_on.",
+  "description": "Post-baseline lifecycle exceptions. Every entry requires source_path, reason, approval_reference, approved_on, and approved_gaps exactly matching the current missing:/invalid: gap set.",
   "entries": [],
   "schema_version": 1
 }

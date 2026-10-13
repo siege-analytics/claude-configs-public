@@ -2,6 +2,8 @@
 """Regression tests for the compact-kernel Craft Agent auto-mount."""
 import importlib.util
 import io
+import json
+import subprocess
 import sys
 import tempfile
 from contextlib import redirect_stdout
@@ -27,6 +29,8 @@ def main() -> None:
 
         migrated = base / "migrated"
         migrated.mkdir()
+        (migrated / ".claude").mkdir()
+        (migrated / ".claude" / "settings.json").write_text("{}\n")
         (migrated / "CLAUDE.md").symlink_to("RULES_BUNDLE.md")
         deploy(migrated)
         assert (migrated / "CLAUDE.md").is_symlink()
@@ -35,6 +39,34 @@ def main() -> None:
         assert (migrated / "RULES_BUNDLE.md").is_file()
         assert (migrated / "bin" / "review-risk.py").is_file()
         assert (migrated / "catalog" / "review-risk-policy.json").is_file()
+        assert (migrated / "bin" / "resolve-load-set.py").is_file()
+        assert (migrated / "catalog" / "resolver-manifest.json").is_file()
+        hook = migrated / "hooks" / "resolver" / "inject-resolver.sh"
+        routed = subprocess.run(
+            ["bash", str(hook)],
+            input=json.dumps({"prompt": "review this Python module", "cwd": str(migrated)}),
+            text=True, capture_output=True, check=True,
+        )
+        assert "load: coding" in routed.stdout and "load: python" in routed.stdout
+        boundary = subprocess.run(
+            [sys.executable, str(migrated / "bin" / "resolve-load-set.py"),
+             "--prompt", "[skill:merge] [skill:self-review]", "--repo", "other/repo"],
+            text=True, capture_output=True, check=True,
+        )
+        boundary_result = json.loads(boundary.stdout)
+        actual_characters = sum(
+            len((migrated / "skills" / slug / "SKILL.md").read_text())
+            for slug in ("merge", "self-review")
+        )
+        assert actual_characters > 80000
+        assert boundary_result["state"] == "over-budget" and boundary_result["selected"] == []
+        assert boundary_result["selected_content"]["characters"] == actual_characters
+        verified = subprocess.run(
+            ["bash", str(ROOT / "bin" / "verify-enforcement.sh"),
+             "--target", str(migrated), "--mode", "craft-agent"],
+            text=True, capture_output=True,
+        )
+        assert verified.returncode == 0, verified.stdout + verified.stderr
 
         operator_link = base / "operator-link"
         operator_link.mkdir()

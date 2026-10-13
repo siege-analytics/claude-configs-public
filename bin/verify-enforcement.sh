@@ -4,7 +4,7 @@
 #
 # This is the "corner-cutting agent cannot evade it" acceptance probe. Skills
 # and rules can be perfectly authored and perfectly synced and still be
-# honor-system if the hook wiring, the RULES_BUNDLE mount, and the automation
+# honor-system if the hook wiring, compact-kernel mount, and automation
 # watchdog were never installed. A sync that copies skills/ alone passes every
 # file-presence check and still leaves enforcement dark. This probe fails when
 # that happens.
@@ -33,6 +33,10 @@ set -uo pipefail
 
 TARGET=""
 MODE="craft-agent"
+# Code-owned trust anchor for the canonical compact kernel. This verifier is a
+# Tier C surface; never derive the expected digest from the mutable target.
+EXPECTED_KERNEL_SHA256="00fd4c7c2aee069ed5a6349bbfa4a925ab7f4c60a2a44a5b5134f859d40b3842"
+KERNEL_VERIFIED=0
 
 usage() {
     cat <<'USAGE'
@@ -44,7 +48,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --target)
             [[ -z "${2:-}" ]] && { echo "ERROR: --target requires a path" >&2; exit 2; }
-            TARGET="${2%/}"; shift 2 ;;
+            TARGET="$2"; shift 2 ;;
         --mode)
             [[ -z "${2:-}" ]] && { echo "ERROR: --mode requires a value" >&2; exit 2; }
             MODE="$2"; shift 2 ;;
@@ -56,8 +60,14 @@ done
 if [[ -z "$TARGET" ]]; then
     echo "ERROR: --target is required" >&2; usage >&2; exit 2
 fi
+while [[ "$TARGET" != "/" && "$TARGET" == */ ]]; do
+    TARGET="${TARGET%/}"
+done
 if [[ "$MODE" != "craft-agent" && "$MODE" != "direct" ]]; then
     echo "ERROR: --mode must be craft-agent or direct" >&2; exit 2
+fi
+if [[ -L "$TARGET" ]]; then
+    echo "ERROR: target root must not be a symlink: $TARGET" >&2; exit 1
 fi
 if [[ ! -d "$TARGET" ]]; then
     echo "ERROR: target not found: $TARGET" >&2; exit 1
@@ -225,10 +235,18 @@ fi
 
 # --- Check 3: compact kernel + compatibility bundle present ------------------
 
-if [[ -f "$TARGET/KERNEL.md" ]]; then
-    ok "KERNEL.md present (progressive global policy)"
+if [[ -f "$TARGET/KERNEL.md" && ! -L "$TARGET/KERNEL.md" && -s "$TARGET/KERNEL.md" ]] \
+    && python3 - "$TARGET/KERNEL.md" "$EXPECTED_KERNEL_SHA256" <<'PY'
+from pathlib import Path
+import hashlib, sys
+actual = hashlib.sha256(Path(sys.argv[1]).read_bytes()).hexdigest()
+sys.exit(0 if actual == sys.argv[2] else 1)
+PY
+then
+    KERNEL_VERIFIED=1
+    ok "KERNEL.md is a non-symlink file matching the pinned canonical digest"
 else
-    fail "KERNEL.md missing (compact global policy absent)"
+    fail "KERNEL.md is missing, empty, symlinked, or differs from the pinned canonical kernel"
 fi
 if [[ -f "$TARGET/RULES_BUNDLE.md" ]]; then
     ok "RULES_BUNDLE.md present (on-demand compatibility)"
@@ -269,13 +287,79 @@ if [[ "$MODE" == "craft-agent" ]]; then
             fail "CLAUDE.md symlink points at '$link_target', not KERNEL.md"
         fi
     elif [[ -f "$TARGET/CLAUDE.md" ]]; then
-        if grep -q "KERNEL.md\|Safety Kernel\|always-loaded runtime constitution" "$TARGET/CLAUDE.md" 2>/dev/null; then
-            ok "CLAUDE.md is an operator file that references the compact kernel"
+        if [[ "$KERNEL_VERIFIED" -eq 1 ]] && cmp -s "$TARGET/KERNEL.md" "$TARGET/CLAUDE.md"; then
+            ok "CLAUDE.md operator file is byte-identical to the verified compact kernel"
         else
-            fail "CLAUDE.md exists but does not mount the compact kernel"
+            fail "CLAUDE.md operator file must equal the verified compact kernel exactly"
         fi
     else
         fail "CLAUDE.md missing (CA has nothing to auto-inject; rules never enter the system prompt)"
+    fi
+
+    # Check 6b: AGENTS.md is another Craft auto-injected root instruction
+    # surface. It may be absent or contain operator guidance, but it must not
+    # mount the compatibility bundle or redirect to an unverified policy file.
+    if [[ -L "$TARGET/AGENTS.md" ]]; then
+        agents_target="$(readlink "$TARGET/AGENTS.md")"
+        if [[ "$agents_target" == "KERNEL.md" && "$KERNEL_VERIFIED" -eq 1 ]]; then
+            ok "AGENTS.md duplicates only the verified compact kernel"
+        else
+            fail "AGENTS.md symlink points at '$agents_target'; only verified KERNEL.md is permitted"
+        fi
+    elif [[ -f "$TARGET/AGENTS.md" ]]; then
+        if [[ ! -s "$TARGET/AGENTS.md" ]]; then
+            ok "AGENTS.md is empty (no second root policy surface)"
+        elif [[ "$KERNEL_VERIFIED" -eq 1 ]] && cmp -s "$TARGET/KERNEL.md" "$TARGET/AGENTS.md"; then
+            ok "AGENTS.md regular file duplicates only the verified compact kernel"
+        else
+            fail "AGENTS.md regular file must be empty or equal the verified compact kernel exactly"
+        fi
+    else
+        ok "AGENTS.md absent (no second root instruction mount)"
+    fi
+
+    # Check 6c: Craft may auto-inject descendant CLAUDE.md/AGENTS.md files as
+    # sessions enter subdirectories. `find` does not traverse directory
+    # symlinks by default, so reject every descendant directory symlink before
+    # scanning; otherwise an external tree can hide an injected instruction.
+    symlinked_directories=0
+    while IFS= read -r -d '' descendant_link; do
+        if [[ -d "$descendant_link" ]]; then
+            symlinked_directories=$((symlinked_directories + 1))
+            fail "descendant directory symlink is not verifiable: ${descendant_link#"$TARGET"/}"
+        fi
+    done < <(find "$TARGET" -mindepth 1 -type l -print0 2>/dev/null)
+    if [[ "$symlinked_directories" -eq 0 ]]; then
+        ok "no descendant directory symlinks can hide instruction files"
+    fi
+
+    # Apply the exact-content allowlist to every directly traversable nested
+    # instruction surface; file aliases must resolve to root KERNEL.md.
+    nested_instructions=0
+    while IFS= read -r -d '' instruction_file; do
+        nested_instructions=$((nested_instructions + 1))
+        rel_instruction="${instruction_file#"$TARGET"/}"
+        if [[ -L "$instruction_file" ]]; then
+            if [[ "$KERNEL_VERIFIED" -eq 1 ]] && python3 - "$TARGET/KERNEL.md" "$instruction_file" <<'PY'
+from pathlib import Path
+import sys
+sys.exit(0 if Path(sys.argv[1]).resolve() == Path(sys.argv[2]).resolve() else 1)
+PY
+            then
+                ok "$rel_instruction resolves only to verified root KERNEL.md"
+            else
+                fail "$rel_instruction symlink does not resolve to verified root KERNEL.md"
+            fi
+        elif [[ ! -s "$instruction_file" ]]; then
+            ok "$rel_instruction is empty (no nested policy surface)"
+        elif [[ "$KERNEL_VERIFIED" -eq 1 ]] && cmp -s "$TARGET/KERNEL.md" "$instruction_file"; then
+            ok "$rel_instruction duplicates only the verified compact kernel"
+        else
+            fail "$rel_instruction must be empty, equal verified KERNEL.md, or resolve directly to it"
+        fi
+    done < <(find "$TARGET" -mindepth 2 \( -iname CLAUDE.md -o -iname AGENTS.md \) -print0 2>/dev/null)
+    if [[ "$nested_instructions" -eq 0 ]]; then
+        ok "no nested CLAUDE.md/AGENTS.md instruction surfaces"
     fi
 
     # Check 7: the standing-order watchdog automation (advisory).

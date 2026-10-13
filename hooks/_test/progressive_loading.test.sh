@@ -16,6 +16,12 @@ grep -q 'load: coding' <<<"$python_out" && grep -q 'load: python' <<<"$python_ou
 ! grep -q 'slow is smooth' <<<"$python_out" && ok "legacy resolver prose not injected" || bad "legacy resolver still injected"
 chars=$(printf '%s' "$python_out" | wc -c | tr -d ' ')
 [[ "$chars" -lt 12000 ]] && ok "injection stays below 12k chars ($chars)" || bad "injection too large ($chars)"
+overflow_out="$(run '{"prompt":"[skill:branch] [skill:commit] [skill:create-pr] [skill:merge] [skill:code-review] [skill:skillbuilder] [skill:ticket-guard] [skill:create-ticket] [skill:update-ticket] [skill:coding] [skill:python] [skill:testing-frameworks] [skill:sql]","cwd":"/tmp"}')"
+if grep -q 'state: over-budget' <<<"$overflow_out" && ! grep -q '^load:' <<<"$overflow_out"; then
+  ok "oversized explicit selection is visibly rejected kernel-only"
+else
+  bad "oversized explicit selection was partially or silently loaded"
+fi
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 mkdir "$TMP/many-plans"
 : > "$TMP/many-plans/think-many.md"
@@ -39,6 +45,17 @@ if [[ "$missing_kernel" == *'"continue":false'* ]] && [[ "$missing_kernel" != *'
 else
   bad "missing kernel failed open or mixed blocking output"
 fi
+cp "$ROOT/skills/KERNEL.md" "$TMP/tampered-kernel.md"
+printf '\nFull compatibility bundle content must never mount globally.\n' >> "$TMP/tampered-kernel.md"
+tampered_kernel="$(printf '%s' "$generic" | CLAUDE_KERNEL_PATH="$TMP/tampered-kernel.md" bash "$HOOK")"
+if [[ "$tampered_kernel" == *'"continue":false'* ]] && [[ "$tampered_kernel" != *'<skill-kernel'* ]]; then
+  ok "noncanonical kernel override fails closed as sole structured output"
+else
+  bad "noncanonical kernel override injected caller-controlled content"
+fi
+cp "$ROOT/skills/KERNEL.md" "$TMP/kernel-copy.md"
+identical_kernel="$(printf '%s' "$generic" | CLAUDE_KERNEL_PATH="$TMP/kernel-copy.md" bash "$HOOK")"
+grep -q 'state: unknown' <<<"$identical_kernel" && ok "byte-identical packaged kernel override is accepted" || bad "identical kernel override was rejected"
 canary="$(printf '%s' '{"prompt":"review this Python module","cwd":"/tmp"}' | CLAUDE_PROGRESSIVE_LOADING=canary bash "$HOOK")"
 if grep -q 'candidate: python' <<<"$canary" && ! grep -q 'load: python' <<<"$canary"; then
   ok "canary reports candidates without load instructions"

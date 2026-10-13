@@ -13,17 +13,27 @@ def inject(prompt:str)->int:
  if p.returncode:raise ValueError(p.stderr)
  return len(p.stdout)
 def build()->dict:
+ overflow_prompt=" ".join(f"[skill:{slug}]" for slug in ["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","coding","python","testing-frameworks","sql"])
+ multi_prompt="review Python Spark SQL Databricks Unity Catalog spatial PostGIS code"
  fixtures={
   "generic":run("write a friendly greeting"),
   "python_review":run("review this Python diff"),
+  "multi_route":run(multi_prompt),
+  "explicit_overflow":run(overflow_prompt),
   "siege_utilities_review":run("review this diff","siege-analytics/siege_utilities")}
  counts={k:len(v["selected"]) for k,v in fixtures.items()}
- injected={"generic":inject("write a friendly greeting"),"python_review":inject("review this Python diff")}
+ selected_content={k:v.get("selected_content",{}) for k,v in fixtures.items()}
+ injected={
+  "generic":inject("write a friendly greeting"),
+  "python_review":inject("review this Python diff"),
+  "multi_route":inject(multi_prompt),
+  "explicit_overflow":inject(overflow_prompt)}
  legacy_root=len((ROOT/"RESOLVER.md").read_text()); skill_resolver=len((ROOT/"skills/RESOLVER.md").read_text()); kernel=len((ROOT/"skills/KERNEL.md").read_text())
  rules=len((ROOT/"dist/RULES_BUNDLE.md").read_text()) if (ROOT/"dist/RULES_BUNDLE.md").is_file() else 0
  if max(injected.values())>=12000:raise ValueError(f"progressive injection exceeds 12k: {injected}")
  if counts["generic"]!=0:raise ValueError("generic fixture must remain kernel-only")
- return {"schema_version":1,"characters":{"legacy_root_resolver":legacy_root,"legacy_rules_bundle":rules,"skill_resolver":skill_resolver,"kernel":kernel,"injected":injected},"fixture_selected_counts":counts,"fixture_states":{k:v["state"] for k,v in fixtures.items()}}
+ if fixtures["explicit_overflow"]["state"]!="over-budget" or counts["explicit_overflow"]!=0:raise ValueError("explicit overflow must reject the entire load set")
+ return {"schema_version":1,"characters":{"legacy_root_resolver":legacy_root,"legacy_rules_bundle":rules,"skill_resolver":skill_resolver,"kernel":kernel,"injected":injected},"selection_limits":{"items":12,"characters":80000,"estimated_tokens":20000},"fixture_selected_counts":counts,"fixture_selected_content":selected_content,"fixture_states":{k:v["state"] for k,v in fixtures.items()}}
 def serial(x):return json.dumps(x,indent=2,sort_keys=True)+"\n"
 def main()->int:
  p=argparse.ArgumentParser();p.add_argument("--check",action="store_true");p.add_argument("--output",type=Path,default=OUT);a=p.parse_args();path=a.output if a.output.is_absolute() else ROOT/a.output

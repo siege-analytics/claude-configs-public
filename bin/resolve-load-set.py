@@ -6,6 +6,9 @@ from pathlib import Path
 from typing import Any
 ROOT=Path(__file__).resolve().parents[1]
 SHELF_PREFIX="shelves"
+MAX_SELECTED_ITEMS=12
+MAX_SELECTED_CHARACTERS=80000
+MAX_SELECTED_ESTIMATED_TOKENS=20000
 
 def norm_repo(value:str)->str:
     value=value.strip().removesuffix(".git").replace("\\","/")
@@ -37,6 +40,7 @@ def validate_manifest(manifest:dict[str,Any],known:dict[str,Any])->None:
         repos.extend(norm_repo(r) for r in project.get("repos",[]));all_routes.extend(project.get("routes",[]))
         for slug in project.get("always",[]):
             if slug not in known:raise ValueError(f"manifest references unknown slug: {slug}")
+            if known[slug]["kind"].startswith("shelf") or slug.startswith(SHELF_PREFIX):raise ValueError(f"shelf cannot auto-select: {slug}")
     for route in all_routes:
         ids.append(route["id"])
         if not route.get("terms") and not route.get("suffixes"):raise ValueError(f"route has no signals: {route['id']}")
@@ -49,10 +53,21 @@ def validate_manifest(manifest:dict[str,Any],known:dict[str,Any])->None:
 def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str="")->dict[str,Any]:
     known={i["slug"]:i for i in inventory["items"]};validate_manifest(manifest,known)
     text=" ".join(prompt.lower().split()); matches=[];matched_routes=[]
+    normalized_repo=norm_repo(repo); matching_project=None
+    for project in manifest.get("projects",[]):
+        if normalized_repo in {norm_repo(r) for r in project["repos"]}:
+            matching_project=project;break
+    permitted_project_slugs=set()
+    if matching_project:
+        permitted_project_slugs.update(matching_project.get("always",[]))
+        for route in matching_project.get("routes",[]):permitted_project_slugs.update(route["skills"])
     explicit_slugs=sorted(set(re.findall(r"\[skill:([a-z0-9-]+)\]",text)+re.findall(r"(?<!\S)/([a-z0-9-]+)(?!\S)",text)))
     rejected_explicit=[]
     for slug in explicit_slugs:
-        if slug in known and not slug.startswith(SHELF_PREFIX) and not known[slug]["kind"].startswith("shelf"):
+        is_known=slug in known
+        is_shelf=is_known and (slug.startswith(SHELF_PREFIX) or known[slug]["kind"].startswith("shelf"))
+        is_wrong_project=is_known and known[slug]["kind"].startswith("project") and slug not in permitted_project_slugs
+        if is_known and not is_shelf and not is_wrong_project:
             matches.append((1000,"explicit",slug,["explicit-slug"]))
         else:
             rejected_explicit.append(slug)
@@ -62,15 +77,14 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
             matched_routes.append(route)
             for slug in route["skills"]: matches.append((route["priority"],route["id"],slug,why))
     project_id=None
-    for project in manifest.get("projects",[]):
-        if norm_repo(repo) in {norm_repo(r) for r in project["repos"]}:
-            project_id=project["id"]
-            for slug in project.get("always",[]): matches.append((2000,f"project:{project_id}",slug,[f"repo:{norm_repo(repo)}"]))
-            for route in project.get("routes",[]):
-                why=route_matches(route,text)
-                if why:
-                    matched_routes.append(route)
-                    for slug in route["skills"]: matches.append((route["priority"],f"project:{project_id}:{route['id']}",slug,why))
+    if matching_project:
+        project_id=matching_project["id"]
+        for slug in matching_project.get("always",[]): matches.append((2000,f"project:{project_id}",slug,[f"repo:{normalized_repo}"]))
+        for route in matching_project.get("routes",[]):
+            why=route_matches(route,text)
+            if why:
+                matched_routes.append(route)
+                for slug in route["skills"]: matches.append((route["priority"],f"project:{project_id}:{route['id']}",slug,why))
     groups={}
     for route in matched_routes:
         if route.get("exclusive_group"):groups.setdefault(route["exclusive_group"],[]).append(route["id"])
@@ -82,10 +96,32 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
         if slug not in known: raise ValueError(f"manifest references unknown slug: {slug}")
         if known[slug]["kind"].startswith("shelf") or slug.startswith(SHELF_PREFIX): raise ValueError(f"shelf cannot auto-select: {slug}")
         selected.setdefault(slug,{"slug":slug,"route":route,"priority":priority,"reasons":why})
-    state="matched" if selected else "unknown"
-    diagnostic="no route matched; kernel only" if state=="unknown" else f"{len(selected)} capability item(s) selected"
+    selected_items=list(selected.values())
+    selected_characters=sum(int(known[item["slug"]].get("characters",0)) for item in selected_items)
+    selected_tokens=sum(int(known[item["slug"]].get("estimated_tokens",0)) for item in selected_items)
+    over_budget=(
+        len(selected_items)>MAX_SELECTED_ITEMS
+        or selected_characters>MAX_SELECTED_CHARACTERS
+        or selected_tokens>MAX_SELECTED_ESTIMATED_TOKENS
+    )
+    if over_budget:
+        return {
+            "schema_version":1,"state":"over-budget","kernel":manifest["kernel"],"project":project_id,"selected":[],
+            "selected_content":{"items":len(selected_items),"characters":selected_characters,"estimated_tokens":selected_tokens},
+            "diagnostic":(
+                f"selection exceeds budget (items={len(selected_items)}/{MAX_SELECTED_ITEMS}, "
+                f"characters={selected_characters}/{MAX_SELECTED_CHARACTERS}, "
+                f"estimated_tokens={selected_tokens}/{MAX_SELECTED_ESTIMATED_TOKENS}); kernel only"
+            ),
+        }
+    state="matched" if selected_items else "unknown"
+    diagnostic="no route matched; kernel only" if state=="unknown" else f"{len(selected_items)} capability item(s) selected"
     if rejected_explicit:diagnostic+=f"; rejected explicit slugs: {','.join(rejected_explicit)}"
-    return {"schema_version":1,"state":state,"kernel":manifest["kernel"],"project":project_id,"selected":list(selected.values()),"diagnostic":diagnostic}
+    return {
+        "schema_version":1,"state":state,"kernel":manifest["kernel"],"project":project_id,"selected":selected_items,
+        "selected_content":{"items":len(selected_items),"characters":selected_characters,"estimated_tokens":selected_tokens},
+        "diagnostic":diagnostic,
+    }
 
 def main()->int:
     p=argparse.ArgumentParser();p.add_argument("--prompt",default="");p.add_argument("--cwd",type=Path,default=Path.cwd());p.add_argument("--repo",default="");p.add_argument("--manifest",type=Path,default=ROOT/"catalog/resolver-manifest.json");p.add_argument("--inventory",type=Path,default=ROOT/"catalog/skills-inventory.json");a=p.parse_args()
