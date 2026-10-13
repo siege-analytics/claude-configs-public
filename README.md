@@ -43,7 +43,7 @@ The problem this repo solves: **skills are only useful if they fire before the a
 Three enforcement layers keep the resolver active:
 
 1. **Session start** -- every project `CLAUDE.md` references `RESOLVER.md` as the first action of any non-trivial task.
-2. **Every user turn** -- [`hooks/resolver/inject-resolver.sh`](hooks/resolver/inject-resolver.sh) is a `UserPromptSubmit` hook that injects the resolver summary into active context on every prompt. Context doesn't decay by turn 20.
+2. **Every user turn** -- [`hooks/resolver/inject-resolver.sh`](hooks/resolver/inject-resolver.sh) injects the compact safety kernel plus a deterministic task/project load set with reasons. Unknown or ambiguous prompts remain visibly kernel-only; the legacy resolver prose is not globally injected.
 3. **Pre-tool-use** -- [`hooks/infrastructure/catalog-guard.sh`](hooks/infrastructure/catalog-guard.sh) is a `PreToolUse` hook on `Bash` that matches dangerous catalog-bypass patterns and blocks them with a STOP-read-skill reminder.
 
 Wire the hooks by merging [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into `~/.claude/settings.json` (or project `.claude/settings.local.json`), replacing `/path/to/claude-configs-public` with the actual absolute path to the on-disk `hooks/` (typically a workspace path -- see [Wire and verify hooks](#wire-and-verify-hooks) for the rsync-first sequence and the canonical verify-it-fires invocation).

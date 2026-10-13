@@ -1320,6 +1320,19 @@ def _filter_settings_for_claude_code(settings: dict) -> dict:
     return filtered
 
 
+def build_resolver_runtime_manifest() -> None:
+    """Create the self-contained deterministic resolver manifest used by packages."""
+    manifest = json.loads((REPO_ROOT / "catalog" / "resolver-manifest.json").read_text())
+    inventory = json.loads((REPO_ROOT / "catalog" / "skills-inventory.json").read_text())
+    manifest["known"] = {
+        item["slug"]: {"kind": item["kind"]}
+        for item in sorted(inventory["items"], key=lambda value: value["slug"])
+    }
+    (DIST / "resolver-manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+    )
+
+
 def build_consumer_packages() -> None:
     """Build dist/claude-code/ and dist/craft-agent/ consumer packages.
 
@@ -1421,11 +1434,14 @@ def build_consumer_packages() -> None:
                 if artifact_src.exists():
                     shutil.copy2(artifact_src, pkg_dir / artifact_name)
 
-        # Copy validate-hooks.py
-        validator = REPO_ROOT / "bin" / "validate-hooks.py"
-        if validator.exists():
-            (pkg_dir / "bin").mkdir(exist_ok=True)
-            shutil.copy2(validator, pkg_dir / "bin" / "validate-hooks.py")
+        # Copy runtime validators/selectors.
+        (pkg_dir / "bin").mkdir(exist_ok=True)
+        for script_name in ("validate-hooks.py", "resolve-load-set.py"):
+            script = REPO_ROOT / "bin" / script_name
+            if script.exists():
+                shutil.copy2(script, pkg_dir / "bin" / script_name)
+        (pkg_dir / "catalog").mkdir(exist_ok=True)
+        shutil.copy2(DIST / "resolver-manifest.json", pkg_dir / "catalog" / "resolver-manifest.json")
 
         # Write package manifest
         pkg_manifest = {
@@ -1593,46 +1609,36 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
         hooks_count = sum(1 for _ in ws_hooks.rglob("*.sh"))
         print(f"  Synced {hooks_count} hook script(s) to {ws_hooks}/")
 
-    # Deploy rules bundle to workspace.
+    # Keep the full rules bundle as an on-demand compatibility artifact, but
+    # auto-mount only the compact kernel. Existing installer-owned bundle
+    # symlinks are migrated; operator-owned files/symlinks remain untouched.
     bundle_md = DIST / "RULES_BUNDLE.md"
-    if bundle_md.exists():
-        bundle_dst = craft_workspace / "RULES_BUNDLE.md"
-        shutil.copy2(bundle_md, bundle_dst)
-        print(f"  Copied RULES_BUNDLE.md to {craft_workspace}/")
-
-        # Craft Agent auto-injects CLAUDE.md / AGENTS.md content from cwd and
-        # its subdirectories on every session start. Wire the bundle into that
-        # mechanism by symlinking CLAUDE.md -> RULES_BUNDLE.md at the workspace
-        # root. Sessions whose cwd is set to the workspace root (via Settings
-        # -> Workspace Settings -> Default Working Directory) pick up the
-        # bundle automatically. Empirically verified 2026-06-07 against a
-        # probe session reporting `# claudeMd` content injection in its
-        # initial system prompt.
+    if not bundle_md.exists():
+        raise BuildError("dist/RULES_BUNDLE.md missing — compatibility rollback unavailable")
+    shutil.copy2(bundle_md, craft_workspace / "RULES_BUNDLE.md")
+    print(f"  Copied RULES_BUNDLE.md to {craft_workspace}/ (on-demand compatibility)")
+    kernel_md = DIST / "flat" / "skills" / "KERNEL.md"
+    if not kernel_md.exists():
+        raise BuildError("dist/flat/skills/KERNEL.md missing — refusing ungoverned deployment")
+    else:
+        shutil.copy2(kernel_md, craft_workspace / "KERNEL.md")
+        print(f"  Copied KERNEL.md to {craft_workspace}/")
         claudemd_dst = craft_workspace / "CLAUDE.md"
         if claudemd_dst.is_symlink():
-            # Only replace a symlink we own (one already pointing at
-            # RULES_BUNDLE.md). An operator-owned symlink to some other
-            # target is left untouched.
-            if claudemd_dst.readlink() == Path("RULES_BUNDLE.md"):
+            target = claudemd_dst.readlink()
+            if target in (Path("RULES_BUNDLE.md"), Path("KERNEL.md")):
                 claudemd_dst.unlink()
-                claudemd_dst.symlink_to("RULES_BUNDLE.md")
-                print("  Symlinked CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount)")
+                claudemd_dst.symlink_to("KERNEL.md")
+                print("  Symlinked CLAUDE.md -> KERNEL.md (progressive auto-mount)")
             else:
-                print(
-                    f"  [warn] {claudemd_dst} is a symlink to "
-                    f"{claudemd_dst.readlink()}; not overwriting operator-owned CLAUDE.md."
-                )
+                print(f"  [warn] {claudemd_dst} points at {target}; not overwriting operator-owned CLAUDE.md.")
         elif not claudemd_dst.exists():
-            claudemd_dst.symlink_to("RULES_BUNDLE.md")
-            print("  Symlinked CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount)")
+            claudemd_dst.symlink_to("KERNEL.md")
+            print("  Symlinked CLAUDE.md -> KERNEL.md (progressive auto-mount)")
         else:
-            # A non-symlink CLAUDE.md already exists. Don't clobber operator
-            # content; surface the situation and let them resolve it.
             print(
                 f"  [warn] {claudemd_dst} exists as a regular file; not overwriting.\n"
-                f"         To wire the bundle into CA auto-inject, either rename your\n"
-                f"         existing CLAUDE.md and re-run --deploy, or append the\n"
-                f"         contents of RULES_BUNDLE.md to your CLAUDE.md manually."
+                f"         Append KERNEL.md manually or rename the file and re-run --deploy."
             )
 
     # Deploy CA enforcement artifacts.
@@ -1783,6 +1789,9 @@ def main() -> int:
 
     print("\nBuilding CA enforcement artifacts...")
     build_ca_enforcement()
+
+    print("\nBuilding resolver runtime manifest...")
+    build_resolver_runtime_manifest()
 
     print("\nBuilding consumer packages...")
     build_consumer_packages()

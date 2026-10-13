@@ -10,14 +10,14 @@ Plan reference: approved `skill-library-simplification.md`, Phase 3 / proposed P
 Pre-author-inventory: `hooks/resolver/inject-resolver.sh`, root and skill resolver documents, project manifests, inventory tiers, kernel budget, build/install paths, resolver hook fixtures.
 Investigate-artifact: this document plus the inspected resolver/hook/build surfaces.
 Pre-mortem-artifact: Risks below.
-Hostile-review-artifact: required before implementation commit.
+Hostile-review-artifact: `plans/hostile-review-progressive-loading.md`.
 Project-contribution: make the compact kernel the invariant context and select only task/project capabilities with deterministic reasons instead of ambiently treating the entire library as active.
 
 ## Pre-implementation comprehension
 
 Current behavior: the resolver hook ignores prompt JSON, injects static instructions plus live sections from root `RESOLVER.md`, and tells the agent to scan the full resolver. Skill selection is human prose matching. Project routing is convention-only. Shelves appear in resolver prose. Unknown tasks can lead to broad manual loading.
 
-Intended behavior: a compact machine-readable manifest and deterministic selector receive prompt, changed/referenced paths, and working repository identity; return an ordered load set with a reason for every item. The kernel is always included. Project overlays load only for a matching manifest repository. Shelves cannot select themselves and load only through an active skill's declared references. Unknown or ambiguous routing is visible and never falls back to loading everything.
+Intended behavior: a compact machine-readable manifest and deterministic selector receive prompt text and canonical working-repository identity, then return an ordered load set with a reason for every item. The kernel is always included. Project overlays load only for a matching manifest repository and host. Shelves cannot select themselves and load only through an active skill's declared references. Unknown or ambiguous routing is visible and never falls back to loading everything.
 
 Steps:
 1. define a compact manifest schema with exact slugs, signals, project scope, priority, and explicit references;
@@ -46,7 +46,7 @@ Reject nondeterministic ordering, substring overmatch, hidden load-all fallback,
 
 ## Peer review
 
-Pending implementation and hostile review.
+Two completed deep hostile-review rounds identified five S2 defects: explicit-skill route suppression, path/command confusion, hostless project identity, SSH URI userinfo mishandling, and missing-kernel fail-open. All five are fixed with regression fixtures. Two subsequent final-review provider calls timed out and were not treated as approval; see `plans/hostile-review-progressive-loading.md`.
 
 ## Lead review
 
@@ -56,22 +56,38 @@ A deterministic selector plus kernel-only failure mode is the correct next bound
 
 | ID | Priority | Description | Resolution |
 |---|---|---|---|
-| P1 | P1 | Current hook injects resolver prose but does not compute a load set. | pending implementation |
-| P2 | P1 | Project routing is convention-only. | bind selection to project manifest identity |
-| P3 | P1 | Shelf routes are visible in global resolver prose. | prohibit shelf self-selection |
-| P4 | P2 | Root resolver is 46,316 characters and full rules bundle is 424,988 characters. | measure actual post-cutover injection |
+| P1 | P1 | Current hook injects resolver prose but does not compute a load set. | resolved: hook emits deterministic ordered selections and reasons |
+| P2 | P1 | Project routing is convention-only. | resolved: exact normalized host/repository identity with foreign-host isolation |
+| P3 | P1 | Shelf routes are visible in global resolver prose. | resolved: shelf kinds/prefixes are rejected by manifest validation and explicit selection |
+| P4 | P2 | Root resolver is 46,316 characters and full rules bundle is 424,988 characters. | resolved: measured maximum hook injection is 7,464 characters |
+| P5 | P1 | Craft Agent installer globally mounted the full rules bundle independently of the hook. | resolved: installer-owned mount migrates to `KERNEL.md`; bundle remains on-demand |
 
 ## Quantified claims
 
-Baseline files: root resolver 46,316 characters, skill resolver 17,802 characters, kernel 6,944 characters, generated rules bundle 424,988 characters. The implementation will record exact manifest size, per-fixture load counts, and hook injection size.
+Recorded by `catalog/progressive-loading-metrics.json` and freshness-checked in CI:
+
+- compact kernel: 6,995 characters / 1,749 estimated tokens;
+- legacy root resolver: 46,235 characters;
+- legacy rules bundle: 424,988 characters;
+- generic hook injection: 7,364 characters, zero selected skills;
+- Python-review injection: 7,464 characters, two selected skills;
+- Siege Utilities review: three selected items including the scoped overlay.
+
+Authority remains 198 authored sources, 804 source-owned artifact snapshots, and 2,900 generated mappings.
 
 ## Rework ledger
 
-No rework yet.
+1. Added normal-route preservation after hostile review found explicit markers suppressed mandatory routes.
+2. Restricted slash commands and added filesystem-path coverage.
+3. Bound project identity to host plus owner/repository and added foreign-host/SSH URI fixtures.
+4. Changed missing-kernel behavior from warning to structured hard block.
+5. Added visible rejected-explicit diagnostics and malformed-schema structured errors.
+6. Added safe `canary` and `kernel-only` controls with no broad fallback.
+7. Added persistent installer mount ownership/migration tests.
 
 ## Evidence-predates-work
 
 Artifact: `plans/self-review-progressive-loading.md`
-First-added commit: this planning commit
-Work commit: subsequent implementation commit
-Verification: this commit must be an ancestor of implementation.
+First-added commit: `81b7862`
+Work commit: this implementation commit.
+Verification: `81b7862` is an ancestor of this implementation.
