@@ -219,7 +219,16 @@ def build_allowlist(
     approval_data = read_json(approvals_path)
     approvals = {entry["source_path"]: entry for entry in approval_data["entries"]}
     for path, approval in approvals.items():
-        if not approval.get("reason") or not approval.get("approval_reference") or not valid_date(str(approval.get("approved_on", ""))):
+        approved_gaps = approval.get("approved_gaps")
+        if (
+            not approval.get("reason")
+            or not approval.get("approval_reference")
+            or not valid_date(str(approval.get("approved_on", "")))
+            or not isinstance(approved_gaps, list)
+            or not approved_gaps
+            or len(approved_gaps) != len(set(approved_gaps))
+            or not all(isinstance(gap, str) and re.match(r"^(missing|invalid):.+", gap) for gap in approved_gaps)
+        ):
             raise ValueError(f"invalid approved lifecycle exception: {path}")
     completed_data = read_json(completed_path)
     completed = {entry["source_path"]: entry for entry in completed_data["entries"]}
@@ -235,6 +244,23 @@ def build_allowlist(
     evaluations = [evaluate_item(root, item, module, schema) for item in inventory["items"]]
     gaps = [result for result in evaluations if result["missing_fields"] or result["invalid_fields"]]
     gap_paths = {result["source_path"] for result in gaps}
+    gap_state = {
+        result["source_path"]: {
+            *(f"missing:{field}" for field in result["missing_fields"]),
+            *(f"invalid:{field}" for field in result["invalid_fields"]),
+        }
+        for result in gaps
+    }
+    mismatched_approvals = {
+        path: {
+            "approved_gaps": sorted(approval["approved_gaps"]),
+            "current_gaps": sorted(gap_state.get(path, set())),
+        }
+        for path, approval in approvals.items()
+        if set(approval["approved_gaps"]) != gap_state.get(path, set())
+    }
+    if mismatched_approvals:
+        raise ValueError(f"approved lifecycle exceptions must bind the exact current gap set: {mismatched_approvals}")
     evaluation_paths = {result["source_path"] for result in evaluations}
     invalid_new_completions = sorted(
         path for path in (set(completed) - prior_completed)

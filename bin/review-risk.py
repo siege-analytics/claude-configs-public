@@ -12,17 +12,23 @@ BOOTSTRAP_HIGH_RISK=re.compile(r"^(bin/review-risk\.py|catalog/review-risk-polic
 def git(repo:Path,*args:str)->str:
  return subprocess.check_output(["git",*args],cwd=repo,text=True,stderr=subprocess.DEVNULL)
 
+def git_paths(repo:Path,*args:str)->list[str]:
+ # Git's newline form quotes unusual pathnames. NUL form is lossless; decode
+ # with surrogateescape so every repository byte remains classifiable.
+ out=subprocess.check_output(["git",*args],cwd=repo,stderr=subprocess.DEVNULL)
+ return [raw.decode("utf-8","surrogateescape") for raw in out.split(b"\0") if raw]
+
 def changed_paths(repo:Path,base:str|None=None,head:str="HEAD",staged:bool=False,commit:str|None=None)->list[str]:
- if staged:out=git(repo,"diff","--cached","--no-renames","--name-only","--diff-filter=ACDMRT")
+ if staged:paths=git_paths(repo,"diff","--cached","--no-renames","--name-only","-z","--diff-filter=ACDMRT")
  elif commit:
   parents=git(repo,"show","-s","--format=%P",commit).split();base_ref=parents[0] if parents else "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-  out=git(repo,"diff","--no-renames","--name-only","--diff-filter=ACDMRT",base_ref,commit)
- elif base:out=git(repo,"diff","--no-renames","--name-only","--diff-filter=ACDMRT",base,head)
+  paths=git_paths(repo,"diff","--no-renames","--name-only","-z","--diff-filter=ACDMRT",base_ref,commit)
+ elif base:paths=git_paths(repo,"diff","--no-renames","--name-only","-z","--diff-filter=ACDMRT",base,head)
  else:raise ValueError("one of --staged, --commit, or --base is required")
- return sorted({p.strip() for p in out.splitlines() if p.strip()})
+ return sorted(set(paths))
 
 def matches(path:str,patterns:list[str])->str|None:
- return next((pattern for pattern in patterns if re.search(pattern,path,re.IGNORECASE)),None)
+ return next((pattern for pattern in patterns if re.search(pattern,path,re.IGNORECASE|re.DOTALL)),None)
 
 def classify(policy:dict,paths:list[str])->dict:
  if not paths:return {"computed_tier":"A","paths":[],"reasons":["empty change set"],"required_evidence":policy["tiers"]["A"]["required_evidence"]}

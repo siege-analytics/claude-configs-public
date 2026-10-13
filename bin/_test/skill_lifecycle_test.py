@@ -212,12 +212,30 @@ def main() -> None:
             "reason": "fixture exception",
             "approval_reference": "PR #123",
             "approved_on": "2026-10-12",
+            "approved_gaps": [
+                "missing:tier", "missing:owner", "missing:status",
+                "missing:last-reviewed", "missing:verification",
+            ],
         }]})
         approved = MODULE.build_allowlist(
             root, inventory_path, schema_path, bootstrap_path, approvals_path, completed_path,
             verify_inventory=False, enforce_bootstrap_digest=False, allow_initial_bootstrap=True,
         )
         assert any(entry["source_path"] == "skills/new/SKILL.md" for entry in approved["entries"])
+
+        # A prior approval for one exact gap set cannot be replayed after the
+        # source gains a different gap set.
+        write(root, "skills/new/SKILL.md", skill("new", "status: active\n"))
+        try:
+            MODULE.build_allowlist(
+                root, inventory_path, schema_path, bootstrap_path, approvals_path, completed_path,
+                verify_inventory=False, enforce_bootstrap_digest=False, allow_initial_bootstrap=True,
+            )
+        except ValueError as exc:
+            assert "exact current gap set" in str(exc)
+        else:
+            raise AssertionError("historical approval authorized a different later gap set")
+        write(root, "skills/new/SKILL.md", skill("new"))
 
         traversal_inventory = {"items": [item("escape", "../escape/SKILL.md")]}
         dump(inventory_path, traversal_inventory)

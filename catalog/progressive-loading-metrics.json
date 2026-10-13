@@ -1,23 +1,61 @@
 {
   "characters": {
     "injected": {
+      "explicit_overflow": 7445,
       "generic": 7364,
+      "multi_route": 7774,
       "python_review": 7464
     },
     "kernel": 6995,
     "legacy_root_resolver": 46235,
-    "legacy_rules_bundle": 422069,
+    "legacy_rules_bundle": 422314,
     "skill_resolver": 17796
   },
+  "fixture_selected_content": {
+    "explicit_overflow": {
+      "characters": 143955,
+      "estimated_tokens": 35994,
+      "items": 13
+    },
+    "generic": {
+      "characters": 0,
+      "estimated_tokens": 0,
+      "items": 0
+    },
+    "multi_route": {
+      "characters": 50356,
+      "estimated_tokens": 12591,
+      "items": 7
+    },
+    "python_review": {
+      "characters": 10591,
+      "estimated_tokens": 2649,
+      "items": 2
+    },
+    "siege_utilities_review": {
+      "characters": 59341,
+      "estimated_tokens": 14836,
+      "items": 3
+    }
+  },
   "fixture_selected_counts": {
+    "explicit_overflow": 0,
     "generic": 0,
+    "multi_route": 7,
     "python_review": 2,
     "siege_utilities_review": 3
   },
   "fixture_states": {
+    "explicit_overflow": "over-budget",
     "generic": "unknown",
+    "multi_route": "matched",
     "python_review": "matched",
     "siege_utilities_review": "matched"
   },
-  "schema_version": 1
+  "schema_version": 1,
+  "selection_limits": {
+    "characters": 80000,
+    "estimated_tokens": 20000,
+    "items": 12
+  }
 }

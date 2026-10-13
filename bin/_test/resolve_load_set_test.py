@@ -6,8 +6,9 @@ ROOT=Path(__file__).resolve().parents[2]; SCRIPT=ROOT/"bin/resolve-load-set.py"
 SPEC=importlib.util.spec_from_file_location("resolver",SCRIPT); assert SPEC and SPEC.loader
 M=importlib.util.module_from_spec(SPEC);sys.modules[SPEC.name]=M;SPEC.loader.exec_module(M)
 def inv():
- def i(s,k="skill"):return {"slug":s,"kind":k}
- return {"items":[i(s) for s in ["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","django","react","stalled-session-recovery","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]]+[i("siege-utilities--rules","project-rule"),i("shelves--security","shelf-item")]}
+ def i(s,k="skill"):return {"slug":s,"kind":k,"characters":100,"estimated_tokens":25}
+ slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","django","react","stalled-session-recovery","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
+ return {"items":[i(s,"project-skill" if s.startswith("siege-utilities--") else "skill") for s in slugs]+[i("siege-utilities--rules","project-rule"),i("shelves--security","shelf-item")]}
 def main():
  manifest=json.loads((ROOT/"catalog/resolver-manifest.json").read_text()); inventory=inv()
  a=M.select(manifest,inventory,"review this Python pull request", "siege-analytics/siege_utilities")
@@ -22,6 +23,11 @@ def main():
  explicit=M.select(manifest,inventory,"create ticket [skill:python]","other/repo")
  explicit_slugs=[x["slug"] for x in explicit["selected"]]
  assert "python" in explicit_slugs and "ticket-guard" in explicit_slugs and "create-ticket" in explicit_slugs
+ project_explicit=M.select(manifest,inventory,"[skill:siege-utilities--hostile-review]","siege-analytics/siege_utilities")
+ assert "siege-utilities--hostile-review" in [x["slug"] for x in project_explicit["selected"]]
+ foreign_project_explicit=M.select(manifest,inventory,"[skill:siege-utilities--hostile-review] /siege-utilities--rules","git@other-host:siege-analytics/siege_utilities.git")
+ assert not any(x["slug"].startswith("siege-utilities--") for x in foreign_project_explicit["selected"])
+ assert "siege-utilities--hostile-review" in foreign_project_explicit["diagnostic"] and "siege-utilities--rules" in foreign_project_explicit["diagnostic"]
  path_prompt=M.select(manifest,inventory,"inspect /tmp/python then create ticket","other/repo")
  path_slugs=[x["slug"] for x in path_prompt["selected"]]
  assert "ticket-guard" in path_slugs
@@ -31,6 +37,14 @@ def main():
  unknown_explicit=M.select(manifest,inventory,"create ticket [skill:not-real]","other/repo")
  assert "ticket-guard" in [x["slug"] for x in unknown_explicit["selected"]]
  assert "not-real" in unknown_explicit["diagnostic"]
+ many_slugs=[x["slug"] for x in inventory["items"] if x["kind"]=="skill"][:13]
+ over_count=M.select(manifest,inventory," ".join(f"[skill:{slug}]" for slug in many_slugs),"other/repo")
+ assert over_count["state"]=="over-budget" and over_count["selected"]==[] and over_count["selected_content"]["items"]>12
+ huge=json.loads(json.dumps(inventory))
+ next(x for x in huge["items"] if x["slug"]=="python")["characters"]=90000
+ next(x for x in huge["items"] if x["slug"]=="python")["estimated_tokens"]=22500
+ over_content=M.select(manifest,huge,"[skill:python]","other/repo")
+ assert over_content["state"]=="over-budget" and over_content["selected"]==[] and "kernel only" in over_content["diagnostic"]
  bad=json.loads(json.dumps(manifest));bad["routes"][0]["skills"]=["missing"]
  try:M.select(bad,inventory,"create branch","other/repo")
  except ValueError as e:assert "unknown slug" in str(e)
@@ -39,6 +53,10 @@ def main():
  try:M.select(bad,inventory,"create branch","other/repo")
  except ValueError as e:assert "shelf cannot auto-select" in str(e)
  else:raise AssertionError("shelf route passed")
+ bad=json.loads(json.dumps(manifest));bad["projects"][0]["always"]=["shelves--security"]
+ try:M.select(bad,inventory,"review this diff","siege-analytics/siege_utilities")
+ except ValueError as e:assert "shelf cannot auto-select" in str(e)
+ else:raise AssertionError("project always shelf passed")
  ambiguous=json.loads(json.dumps(manifest));ambiguous["routes"]=[
   {"id":"a","priority":1,"terms":["build"],"skills":["coding"],"exclusive_group":"mode"},
   {"id":"b","priority":1,"terms":["build"],"skills":["python"],"exclusive_group":"mode"}]

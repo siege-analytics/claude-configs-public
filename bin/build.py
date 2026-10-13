@@ -1324,11 +1324,43 @@ def build_resolver_runtime_manifest() -> None:
     """Create the self-contained deterministic resolver manifest used by packages."""
     manifest = json.loads((REPO_ROOT / "catalog" / "resolver-manifest.json").read_text())
     inventory = json.loads((REPO_ROOT / "catalog" / "skills-inventory.json").read_text())
-    manifest["known"] = {
-        item["slug"]: {"kind": item["kind"]}
-        for item in sorted(inventory["items"], key=lambda value: value["slug"])
-    }
+    known = {}
+    for item in sorted(inventory["items"], key=lambda value: value["slug"]):
+        flat_outputs = [
+            Path(value) for value in item["generated_outputs"]
+            if str(value).startswith("dist/flat/skills/")
+        ]
+        if len(flat_outputs) != 1:
+            raise BuildError(f"resolver source {item['slug']} must have exactly one flat generated output")
+        package_path = flat_outputs[0].relative_to("dist/flat")
+        if package_path.suffix.lower() != ".md":
+            package_path /= "SKILL.md"
+        known[item["slug"]] = {
+            "kind": item["kind"],
+            "source_path": item["source_path"],
+            "package_path": package_path.as_posix(),
+            "characters": item["characters"],
+            "estimated_tokens": item["estimated_tokens"],
+        }
+    manifest["known"] = known
     (DIST / "resolver-manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+    )
+
+
+def write_package_resolver_manifest(pkg_dir: Path) -> None:
+    """Write resolver metadata from the package's final generated skill bytes."""
+    manifest = json.loads((DIST / "resolver-manifest.json").read_text())
+    for slug, metadata in manifest["known"].items():
+        generated = pkg_dir / metadata["package_path"]
+        if not generated.is_file():
+            raise BuildError(f"package resolver metadata has no generated source for {slug}: {generated}")
+        characters = len(generated.read_text())
+        metadata["characters"] = characters
+        metadata["estimated_tokens"] = (characters + 3) // 4
+    catalog = pkg_dir / "catalog"
+    catalog.mkdir(exist_ok=True)
+    (catalog / "resolver-manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n"
     )
 
@@ -1441,7 +1473,7 @@ def build_consumer_packages() -> None:
             if script.exists():
                 shutil.copy2(script, pkg_dir / "bin" / script_name)
         (pkg_dir / "catalog").mkdir(exist_ok=True)
-        shutil.copy2(DIST / "resolver-manifest.json", pkg_dir / "catalog" / "resolver-manifest.json")
+        write_package_resolver_manifest(pkg_dir)
         shutil.copy2(REPO_ROOT / "catalog" / "review-risk-policy.json", pkg_dir / "catalog" / "review-risk-policy.json")
 
         # Write package manifest
@@ -1639,7 +1671,8 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
         else:
             print(
                 f"  [warn] {claudemd_dst} exists as a regular file; not overwriting.\n"
-                f"         Append KERNEL.md manually or rename the file and re-run --deploy."
+                f"         Kernel-only verification requires byte-identical KERNEL.md content; "
+                f"replace it explicitly or rename it and re-run --deploy."
             )
 
     # Deploy CA enforcement artifacts.
@@ -1650,8 +1683,15 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
         if manifest_src.exists():
             shutil.copy2(manifest_src, craft_workspace / "enforcement-manifest.json")
 
-        # Install review-policy runtime used by native and prompt hooks.
-        for rel in (Path("bin/review-risk.py"), Path("catalog/review-risk-policy.json")):
+        # Install selector and review-policy runtimes used by prompt/native hooks.
+        # Hooks execute relative to the workspace root after deployment, so
+        # packaging these only inside dist/craft-agent is insufficient.
+        for rel in (
+            Path("bin/resolve-load-set.py"),
+            Path("catalog/resolver-manifest.json"),
+            Path("bin/review-risk.py"),
+            Path("catalog/review-risk-policy.json"),
+        ):
             src = ca_dist / rel
             if src.exists():
                 dst = craft_workspace / rel

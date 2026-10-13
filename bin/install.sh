@@ -194,7 +194,7 @@ install_craft_agent() {
         fi
     elif [[ -f "$ws_path/CLAUDE.md" ]]; then
         echo "  [warn] CLAUDE.md exists as a regular file (operator-owned); kernel NOT auto-mounted"
-        echo "         (rename or append KERNEL.md to wire compact policy into CA auto-inject)"
+        echo "         (kernel-only verification requires exact KERNEL.md bytes; replace explicitly or rename and re-run)"
     else
         echo "  [warn] CLAUDE.md missing; kernel present but CA will not auto-inject it"
         errors=$((errors + 1))

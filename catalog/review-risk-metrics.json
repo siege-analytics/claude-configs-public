@@ -1,5 +1,5 @@
 {
-  "classifier_characters": 3905,
+  "classifier_characters": 4272,
   "fixture_tiers": {
     "high_risk_gate": "C",
     "mixed": "C",
@@ -8,7 +8,7 @@
   },
   "legacy_minimum_artifact_for_all_tiers": true,
   "load_set_change": 0,
-  "policy_characters": 1885,
+  "policy_characters": 2033,
   "required_evidence_counts": {
     "A": 1,
     "B": 3,
