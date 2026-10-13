@@ -206,3 +206,22 @@ starting point.
   `team/staff-engineer/SKILL.md` (PARTIAL coverage),
   `geospatial/geocomputation-with-r/SKILL.md` (FULL coverage with
   verification date).
+
+## Ownership and path integrity (issue #980)
+
+Every category/book `SKILL.md` must have exactly one catalog decision in
+`catalog/shelf-ownership.json`: a single active non-shelf `SKILL.md` with
+verbatim scoped consultation evidence and a positive same-section directive (real inbound path), or quarantine with
+a nonempty reason. Names, scores, shelf self-links, and router mentions do not
+establish ownership. Quarantine is non-routable; never add shelves to resolver
+ambient routes. Regenerate `catalog/skills-inventory.json` and `.md` after
+changing source text; then run `bin/check-shelf-owners.py`.
+
+All actionable markdown/backtick local reading paths must resolve to shipped
+book-relative files or explicit repo-root targets. If only an upstream source
+exists, provide its explicit URL and state it is not vendored. Qualify historical
+provenance that is unavailable as non-actionable; do not promise local content.
+Link substantive supplemental references from the same book before adding them.
+Only one-byte empty retained placeholders may be documented with explicit
+reasons in `catalog/shelf-reference-exceptions.json`. Run
+`bin/check-shelf-paths.py` and its negative fixtures before review.

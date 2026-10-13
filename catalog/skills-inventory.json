@@ -940,10 +940,10 @@
     },
     {
       "canonical_source": "skills/shelves/statistical-inference/causal-inference-mixtape/SKILL.md",
-      "characters": 10043,
-      "content_sha256": "5a9459966c657334390a8a1b42ad303746bbc7d82e21393b0866d06e8763c15f",
+      "characters": 10111,
+      "content_sha256": "9eb4ebe612a260c64a4051352255af78182f1f91cbf7ad8bc13e198174d60df9",
       "description": "Applied causal-inference handbook covering DAGs, RD, IV, DiD, synthetic control, and panel methods -- the methods econometricians actually use. Use when the user mentions \"regression discontinuity\", \"RDD\", \"instrumental variables\", \"IV\", \"difference-in-differences\", \"DiD\", \"synthetic control\", \"panel data\", \"natural experiment\", \"quasi-experiment\", \"Cunningham\", or \"Mixtape\". Also trigger when looking for an empirical strategy to identify a causal effect from observational data, debating which natural-experiment design fits the data shape, or learning the practical mechanics of a specific identification strategy. More applied / hands-on than causal-inference-what-if (which is the theoretical foundation); pair them. For pure Bayesian framing see statistical-rethinking-course; for applied non-causal stats see think-stats.",
-      "estimated_tokens": 2511,
+      "estimated_tokens": 2528,
       "frontmatter_name": "causal-inference-mixtape",
       "generated_outputs": [
         "dist/nested/skills/shelves/statistical-inference/causal-inference-mixtape",
@@ -982,10 +982,10 @@
     },
     {
       "canonical_source": "skills/shelves/statistical-inference/causal-inference-what-if/SKILL.md",
-      "characters": 9156,
-      "content_sha256": "480b6c180d004e917811e8a6bb3f22c677d21f2281460eab28e4d1605d392667",
+      "characters": 9224,
+      "content_sha256": "0c210be144ec4dc99ee8cb594294c8248758234c12c60d4a87b8c5e8d09e8ef5",
       "description": "Canonical modern treatment of causal inference using the potential-outcomes / counterfactuals framework. Use when the user mentions \"causal inference\", \"counterfactual\", \"potential outcomes\", \"ATE / ATT / CATE\", \"g-methods\", \"g-computation\", \"g-estimation\", \"marginal structural models\", \"IPW\", \"inverse probability weighting\", \"Hernan\", \"Robins\", \"What If book\", \"exchangeability\", \"positivity\", or \"consistency assumption\". Also trigger when reasoning about whether an observational study can identify a causal effect, designing a target trial, picking between regression / matching / IPW / g-methods, or distinguishing association from causation. Heavier on theory and identification assumptions than the applied causal-inference-mixtape; pair them. For pure prediction / non-causal modeling see think-stats.",
-      "estimated_tokens": 2289,
+      "estimated_tokens": 2306,
       "frontmatter_name": "causal-inference-what-if",
       "generated_outputs": [
         "dist/nested/skills/shelves/statistical-inference/causal-inference-what-if",
@@ -1341,10 +1341,10 @@
     },
     {
       "canonical_source": "skills/shelves/data-and-pipelines/data-pipelines/SKILL.md",
-      "characters": 15165,
-      "content_sha256": "5d6e7c0c2d1076f5b9b0f76315f16d51b66e39d046d285d15e8b1ca79d279bc1",
+      "characters": 15460,
+      "content_sha256": "9acbb1267a3b2df9f70f52386ae1e50fc64b4cfb8b69ed55367212cfc768583c",
       "description": "Apply Data Pipelines Pocket Reference practices (James Densmore). Covers Infrastructure (Ch 1-2: warehouses, lakes, cloud), Patterns (Ch 3: ETL, ELT, CDC), DB Ingestion (Ch 4: MySQL, PostgreSQL, MongoDB, full/incremental), File Ingestion (Ch 5: CSV, JSON, cloud storage), API Ingestion (Ch 6: REST, pagination, rate limiting), Streaming (Ch 7: Kafka, Kinesis, event-driven), Storage (Ch 8: Redshift, BigQuery, Snowflake), Transforms (Ch 9: SQL, Python, dbt), Validation (Ch 10: Great Expectations, schema checks), Orchestration (Ch 11: Airflow, DAGs, scheduling), Monitoring (Ch 12: SLAs, alerting), Best Practices (Ch 13: idempotency, backfilling, error handling). Trigger on \"data pipeline\", \"ETL\", \"ELT\", \"data ingestion\", \"Airflow\", \"dbt\", \"data warehouse\", \"Kafka streaming\", \"CDC\", \"data orchestration\".",
-      "estimated_tokens": 3792,
+      "estimated_tokens": 3865,
       "frontmatter_name": "data-pipelines",
       "generated_outputs": [
         "dist/nested/skills/shelves/data-and-pipelines/data-pipelines",
@@ -1361,7 +1361,7 @@
       "kind": "reference-shelf",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 262,
+      "lines": 267,
       "owner": [
         "unknown"
       ],
@@ -1731,10 +1731,10 @@
     },
     {
       "canonical_source": "skills/shelves/languages/effective-python/SKILL.md",
-      "characters": 11859,
-      "content_sha256": "e3f26ccee7dfd725205663ec1beb4315eb4d693c6bb0060f36ce677763cec77d",
+      "characters": 12201,
+      "content_sha256": "5241d513db8a946b4065bd48ab210aeeecd44ace80bb4836806a5f1d2ee994d9",
       "description": "Review existing Python code and write new Python code following the 90 best practices from \"Effective Python\" by Brett Slatkin (2nd Edition). Use when writing Python, reviewing Python code, or wanting idiomatic, Pythonic solutions.",
-      "estimated_tokens": 2965,
+      "estimated_tokens": 3051,
       "frontmatter_name": "effective-python",
       "generated_outputs": [
         "dist/nested/skills/shelves/languages/effective-python",
@@ -1752,7 +1752,7 @@
       "kind": "reference-shelf",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 247,
+      "lines": 254,
       "owner": [
         "unknown"
       ],
@@ -1775,10 +1775,10 @@
     },
     {
       "canonical_source": "skills/shelves/languages/effective-typescript/SKILL.md",
-      "characters": 11136,
-      "content_sha256": "b0fcab767edd2400ca9742c922cf55917183df6687cfc669f45dc756d61b65d5",
+      "characters": 10317,
+      "content_sha256": "f589bd3f4d386d9ed5a66838df24142049f118374b37e17b4ffd323ce0657e6b",
       "description": "Review existing TypeScript code and write new TypeScript following the 62 items from \"Effective TypeScript\" by Dan Vanderkam. Use when writing TypeScript, reviewing TypeScript code, working with type design, avoiding any, managing type declarations, or migrating JavaScript to TypeScript. Trigger on: \"TypeScript best practices\", \"type safety\", \"any\", \"type assertions\", \"type design\", \"strict mode\", \"TypeScript review\", \"migrate to TypeScript\".",
-      "estimated_tokens": 2784,
+      "estimated_tokens": 2580,
       "frontmatter_name": "effective-typescript",
       "generated_outputs": [
         "dist/nested/skills/shelves/languages/effective-typescript",
@@ -1794,7 +1794,7 @@
       "kind": "reference-shelf",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 193,
+      "lines": 189,
       "owner": [
         "unknown"
       ],
@@ -1817,10 +1817,10 @@
     },
     {
       "canonical_source": "skills/shelves/geospatial/geocomputation-with-r/SKILL.md",
-      "characters": 11737,
-      "content_sha256": "47cae39c44c02b04c3ede8ad52779ed3ee54e10b485276c61379819859c5efd4",
+      "characters": 11805,
+      "content_sha256": "785c6c2a0807f4ec11e22554ad2a0b93ee2cb86079f3c74dc736c2760c26b19e",
       "description": "Practical, applied geospatial computing using open-source tools. Use when the user mentions \"spatial join\", \"reproject\", \"CRS\", \"geocomputation\", \"sf package\", \"terra package\", \"raster vs vector\", \"spatial operations\", \"geographic data I/O\", \"make a map in R\", \"Lovelace\", \"geocompx\", or general GIS-in-R workflows. Also trigger when reasoning about CRS choice for an operation, picking between vector and raster representations, debugging projection issues, designing spatial analysis pipelines, or onboarding to spatial work in R. R-flavored but the principles (CRS hygiene, vector / raster choice, spatial-index discipline, reproducible workflows) transfer directly to Python / PostGIS / other engines. Pairs with spatial-data-science for deeper methodology. For Python-specific code see geopandas / postgis / duckdb-spatial skills.",
-      "estimated_tokens": 2935,
+      "estimated_tokens": 2952,
       "frontmatter_name": "geocomputation-with-r",
       "generated_outputs": [
         "dist/nested/skills/shelves/geospatial/geocomputation-with-r",
@@ -1901,10 +1901,10 @@
     },
     {
       "canonical_source": "skills/shelves/django/high-performance-django/SKILL.md",
-      "characters": 25621,
-      "content_sha256": "adc35f364257f1b5a757ac5c8bee442d54954592d66a17574c6c76395095b155",
+      "characters": 25890,
+      "content_sha256": "b4e225915e52b0f515a7b11e8fd1eaf8074be668a5fa91b1891d359ce69aa9dc",
       "description": "Scale Django for high-traffic production: caching tiers, database optimization, load balancing, deployment automation, and performance testing. Use when the user mentions \"Django performance\", \"Django caching\", \"Django scaling\", \"Django load balancing\", \"Django deployment\", \"Django database optimization\", \"Django Celery\", \"Django Redis\", \"high traffic Django\", \"Django production\", \"Django performance testing\", \"Django connection pooling\", \"Django read replicas\", \"Django horizontal scaling\", \"Django Varnish\", \"Django uWSGI\", \"Django load testing\", \"Russian doll caching\", \"cache stampede\", or \"thundering herd\". Also trigger when optimizing an existing Django application for throughput, planning infrastructure for a Django deployment, debugging slow Django views, preparing for a site launch, or monitoring Django in production. For best practices see two-scoops-django; for legacy code see django-design-patterns.",
-      "estimated_tokens": 6406,
+      "estimated_tokens": 6473,
       "frontmatter_name": "high-performance-django",
       "generated_outputs": [
         "dist/nested/skills/shelves/django/high-performance-django",
@@ -1922,7 +1922,7 @@
       "kind": "reference-shelf",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 600,
+      "lines": 606,
       "owner": [
         "unknown"
       ],
@@ -2617,10 +2617,10 @@
     },
     {
       "canonical_source": "skills/shelves/marketing/one-page-marketing/SKILL.md",
-      "characters": 30341,
-      "content_sha256": "be643d83c812f5e1cac549f76a3bf17f2fde9c541ac89c2843aabd0d9e631f8c",
+      "characters": 30400,
+      "content_sha256": "054d9fcdaeed68f78919698e4d559e607802110b3b162abab50a37465ee8d4e8",
       "description": "Build a complete marketing plan covering the full customer journey from stranger to raving fan. Use when the user mentions \"marketing plan\", \"target market\", \"USP\", \"lead nurture\", \"customer lifetime value\", \"referral program\", \"marketing strategy\", or \"PVP Index\". Also trigger when building a marketing plan from scratch, choosing acquisition channels, or designing end-to-end customer lifecycle campaigns. Covers the PVP Index, channel selection, and advocacy systems. For brand messaging, see storybrand-messaging. For conversion optimization, see cro-methodology.",
-      "estimated_tokens": 7586,
+      "estimated_tokens": 7600,
       "frontmatter_name": "one-page-marketing",
       "generated_outputs": [
         "dist/nested/skills/shelves/marketing/one-page-marketing",
@@ -2744,10 +2744,10 @@
     },
     {
       "canonical_source": "skills/shelves/languages/programming-with-rust/SKILL.md",
-      "characters": 12699,
-      "content_sha256": "0cfe3f3f1903ede58a3ce54fc116bf87358a9236848803edb442acce34e39dc4",
+      "characters": 12296,
+      "content_sha256": "ff92c3b2d061bf6c022d6860f574b3b3fdcb48049750a52a99c260e8d371c558",
       "description": "Write and review Rust code using practices from \"Programming with Rust\" by Donis Marshall. Covers ownership, borrowing, lifetimes, error handling with Result/Option, traits, generics, pattern matching, closures, fearless concurrency, and macros. Use when writing Rust, reviewing Rust code, or learning Rust idioms. Trigger on: \"Rust\", \"ownership\", \"borrow checker\", \"lifetimes\", \"Result\", \"Option\", \"traits\", \"fearless concurrency\", \".rs files\", \"cargo\".",
-      "estimated_tokens": 3175,
+      "estimated_tokens": 3074,
       "frontmatter_name": "programming-with-rust",
       "generated_outputs": [
         "dist/nested/skills/shelves/languages/programming-with-rust",
@@ -2763,7 +2763,7 @@
       "kind": "reference-shelf",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 212,
+      "lines": 208,
       "owner": [
         "unknown"
       ],
@@ -2916,10 +2916,10 @@
     },
     {
       "canonical_source": "skills/shelves/languages/rust-in-action/SKILL.md",
-      "characters": 17127,
-      "content_sha256": "a8a2b9d31ca09ae411db0321a8dc65f3d924b51409a189e022ecf0d142c3dc8f",
+      "characters": 17149,
+      "content_sha256": "d5719b15d1aeed81f671c5b99f21dc12b8eefb4c32ffdedaf840b0bc90d95c16",
       "description": "Write and review Rust code using systems programming concepts from \"Rust in Action\" by Tim McNamara. Covers language foundations, ownership and borrowing, smart pointers, data representation (bits, endianness, floats), memory (stack/heap/virtual), file I/O, networking (TCP/HTTP), concurrency (threads/closures), and OS-level programming. Use when writing systems-level Rust, working with binary data, raw pointers, file formats, network protocols, or low-level memory. Trigger on: \"Rust\", \"systems programming\", \"smart pointers\", \"endianness\", \"bit manipulation\", \"TCP\", \"raw pointers\", \"serde\", \"borrow checker\", \"ownership\", \"concurrency\", \"kernel\", \".rs files\", \"cargo\".",
-      "estimated_tokens": 4282,
+      "estimated_tokens": 4288,
       "frontmatter_name": "rust-in-action",
       "generated_outputs": [
         "dist/nested/skills/shelves/languages/rust-in-action",
@@ -3042,10 +3042,10 @@
     },
     {
       "canonical_source": "skills/shelves/geospatial/spatial-data-science/SKILL.md",
-      "characters": 10735,
-      "content_sha256": "551cd1eab54d27a72273f3a6c4fe4cbafdb5b41f3312e6039def26a6bac4bcb4",
+      "characters": 10803,
+      "content_sha256": "e5c737f9c5503099a6690d64f4a629f04242a6c868b6feb18c625f8c99c1966c",
       "description": "Methodological foundation of spatial data science -- the WHY behind CRS / projections / support / data cubes. Use when the user mentions \"support (spatial)\", \"MAUP\", \"modifiable areal unit problem\", \"ecological fallacy\", \"data cubes\", \"spatial statistics\", \"geostatistics\", \"areal interpolation\", \"spatial regression\", \"Pebesma\", \"Bivand\", or asks \"what does this spatial concept actually mean\". Also trigger when modeling spatial phenomena (not just transforming data), debating CRS choice from first principles, reasoning about scale effects in geographic analysis, or designing a spatial-temporal data model. Heavier on theory than geocomputation-with-r (which is applied); pair them. For engine-specific code see postgis / geopandas / sedona / duckdb-spatial.",
-      "estimated_tokens": 2684,
+      "estimated_tokens": 2701,
       "frontmatter_name": "spatial-data-science",
       "generated_outputs": [
         "dist/nested/skills/shelves/geospatial/spatial-data-science",
@@ -3084,10 +3084,10 @@
     },
     {
       "canonical_source": "skills/shelves/languages/spring-boot-in-action/SKILL.md",
-      "characters": 16767,
-      "content_sha256": "8f99de59815f7c33d75ad7a1a2766bdf4d2a40ab0d8050e5b10cda02978ce8aa",
+      "characters": 16789,
+      "content_sha256": "fbb0c56c443a395b9d9b49374689cf420726ea1ad8d9dc2c489036c7e5c78495",
       "description": "Write and review Spring Boot applications using practices from \"Spring Boot in Action\" by Craig Walls. Covers auto-configuration, starter dependencies, externalizing configuration with properties and profiles, Spring Security, testing with MockMvc and @SpringBootTest, Spring Actuator for production observability, and deployment strategies (JAR, WAR, Cloud Foundry). Use when building Spring Boot apps, configuring beans, writing integration tests, setting up health checks, or deploying to production. Trigger on: \"Spring Boot\", \"Spring\", \"@SpringBootApplication\", \"auto-configuration\", \"application.properties\", \"application.yml\", \"@RestController\", \"@Service\", \"@Repository\", \"SpringBootTest\", \"Actuator\", \"starter\", \".java files\", \"Maven\", \"Gradle\".",
-      "estimated_tokens": 4192,
+      "estimated_tokens": 4198,
       "frontmatter_name": "spring-boot-in-action",
       "generated_outputs": [
         "dist/nested/skills/shelves/languages/spring-boot-in-action",
@@ -3168,10 +3168,10 @@
     },
     {
       "canonical_source": "skills/shelves/statistical-inference/statistical-rethinking-course/SKILL.md",
-      "characters": 10142,
-      "content_sha256": "50a26a70580208b8b10974c0a35f644def444d0e5e7f4a99e103b622afb04868",
+      "characters": 10210,
+      "content_sha256": "9be077502e3eca39be838e4947eb12fcb70ccf29a08d7f1841742b4bb8889e86",
       "description": "Bayesian statistical-inference course by Richard McElreath -- DAGs, multilevel models, MCMC, regression-as-thinking. Use when the user mentions \"Bayesian inference\", \"MCMC\", \"Stan\", \"PyMC\", \"brms\", \"rethinking package\", \"multilevel models\", \"hierarchical models\", \"regression-as-thinking\", \"Garden of Forking Data\", \"geocentric models\", \"elemental confounds\", or \"Statistical Rethinking\". Also trigger when designing a model from scratch with explicit priors, debating frequentist-vs-Bayesian for a specific question, handling missing data / measurement error rigorously, or learning Bayesian thinking from first principles. Course materials (lectures + slides + code) are free; the book itself is paid. Heavier on first-principles Bayesian framing than the other shelf entries; pairs with causal-inference-what-if (compatible identification framework) and think-stats (lighter-weight applied complement).",
-      "estimated_tokens": 2536,
+      "estimated_tokens": 2553,
       "frontmatter_name": "statistical-rethinking-course",
       "generated_outputs": [
         "dist/nested/skills/shelves/statistical-inference/statistical-rethinking-course",
@@ -3380,10 +3380,10 @@
     },
     {
       "canonical_source": "skills/shelves/statistical-inference/think-stats/SKILL.md",
-      "characters": 8395,
-      "content_sha256": "ad54f5c6797c3daa7e9c2095f91a4a0e0f18bca8604ffb343d4cd225cb23c6f2",
+      "characters": 8463,
+      "content_sha256": "bc59847491d64510795fd1b44a121660b9e6cf8a24b5d65804e6c3ee36c3d863",
       "description": "Computational, Python-first applied statistics for working analysts -- descriptive stats, distributions, hypothesis testing, regression, time series, survival analysis. Use when the user mentions \"exploratory data analysis\", \"EDA\", \"distributions\", \"PMF / CDF / PDF\", \"hypothesis test\", \"permutation test\", \"Bayes simple\", \"regression diagnostics\", \"time series\", \"survival analysis\", \"Allen Downey\", or \"Think Stats\". Also trigger when looking for the right statistical test for a question, doing exploratory analysis on a new dataset, validating assumptions of a regression, or running simulation-based inference. Applied / hands-on / Python-Jupyter; pairs with causal-inference-what-if (when the question becomes causal) and statistical-rethinking-course (Bayesian formalism). Lowest barrier-to-entry entry on the statistical-inference shelf.",
-      "estimated_tokens": 2099,
+      "estimated_tokens": 2116,
       "frontmatter_name": "think-stats",
       "generated_outputs": [
         "dist/nested/skills/shelves/statistical-inference/think-stats",
@@ -3506,10 +3506,10 @@
     },
     {
       "canonical_source": "skills/shelves/storytelling/tufte-data-viz/SKILL.md",
-      "characters": 18752,
-      "content_sha256": "f09bce52a1fe8a4beaf3e5ef93e14a0957da77677851c606b4e21f0f2892204d",
+      "characters": 20678,
+      "content_sha256": "df0c174028f5e87846dc3c0dd8d223860e8571b8e3afa51b88dd482994249a45",
       "description": "Use when creating, reviewing, or styling charts, graphs, dashboards, sparklines, or any data visualization. Applies to Recharts, ECharts, Chart.js, matplotlib, Plotly, seaborn, D3.js, and SVG. Enforces Tufte principles (data-ink ratio, direct labeling, range-frame axes) plus modern screen-first standards (accessibility, responsive, dark mode). Trigger on \"chart\", \"graph\", \"dashboard\", \"data visualization\", \"data viz\", \"sparkline\", \"Tufte\", \"data-ink ratio\", \"chartjunk\", \"matplotlib\", \"plotly\", \"recharts\", \"echarts\", \"chart.js\", \"d3\". Composes with storytelling-with-data (Knaflic) -- Tufte governs chart-implementation rules; Knaflic governs audience + narrative process. Read both for full coverage of a data-presentation task.",
-      "estimated_tokens": 4688,
+      "estimated_tokens": 5170,
       "frontmatter_name": "tufte-data-viz",
       "generated_outputs": [
         "dist/nested/skills/shelves/storytelling/tufte-data-viz",
@@ -3679,10 +3679,10 @@
     },
     {
       "canonical_source": "skills/shelves/languages/web-scraping-python/SKILL.md",
-      "characters": 14241,
-      "content_sha256": "224203bf4115638ca5ba566189ea4886a729738f954a6cfa70459489887570a2",
+      "characters": 14537,
+      "content_sha256": "3c06f0d7aa456ef946a2b440b04fb80929e2ac71121cd25495d14bb1672dced4",
       "description": "Apply Web Scraping with Python practices (Ryan Mitchell). Covers First Scrapers (Ch 1: urllib, BeautifulSoup), HTML Parsing (Ch 2: find, findAll, CSS selectors, regex, lambda), Crawling (Ch 3-4: single-domain, cross-site, crawl models), Scrapy (Ch 5: spiders, items, pipelines, rules), Storing Data (Ch 6: CSV, MySQL, files, email), Reading Documents (Ch 7: PDF, Word, encoding), Cleaning Data (Ch 8: normalization, OpenRefine), NLP (Ch 9: n-grams, Markov, NLTK), Forms & Logins (Ch 10: POST, sessions, cookies), JavaScript (Ch 11: Selenium, headless, Ajax), APIs (Ch 12: REST, undocumented), Image/OCR (Ch 13: Pillow, Tesseract), Avoiding Traps (Ch 14: headers, honeypots), Testing (Ch 15: unittest, Selenium), Parallel (Ch 16: threads, processes), Remote (Ch 17: Tor, proxies), Legalities (Ch 18: robots.txt, CFAA, ethics). Trigger on \"web scraping\", \"BeautifulSoup\", \"Scrapy\", \"crawler\", \"spider\", \"scraper\", \"parse HTML\", \"Selenium scraping\", \"data extraction\".",
-      "estimated_tokens": 3561,
+      "estimated_tokens": 3635,
       "frontmatter_name": "web-scraping-python",
       "generated_outputs": [
         "dist/nested/skills/shelves/languages/web-scraping-python",
@@ -3698,7 +3698,7 @@
       "kind": "reference-shelf",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 283,
+      "lines": 288,
       "owner": [
         "unknown"
       ],
@@ -6441,10 +6441,10 @@
     },
     {
       "canonical_source": "skills/shelves/SKILL.md",
-      "characters": 3068,
-      "content_sha256": "bf69f093dc9dc346fcb58abe15236544574707ba0a0ec56d20af87ab13c5dc5a",
+      "characters": 3167,
+      "content_sha256": "ad4c5a87cd5a3683e3b500de611bf21a60ed80621823e8d18f15a2e2b3c2724b",
       "description": "Meta-router for the DBrain book-skill library. Dispatches to one of 14 topic shelves (engineering-principles, systems-architecture, django, languages, data-and-pipelines, product, marketing, sales, strategy, design, team, storytelling, geospatial, statistical-inference). Read this before consulting any individual book skill.",
-      "estimated_tokens": 767,
+      "estimated_tokens": 792,
       "frontmatter_name": "shelves",
       "generated_outputs": [
         "dist/nested/skills/shelves",
@@ -6463,7 +6463,7 @@
       "kind": "shelf-router",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 51,
+      "lines": 54,
       "owner": [
         "unknown"
       ],
@@ -6682,7 +6682,8 @@
         "plans/self-review-valid-shelf-references.md",
         "skills/_siege-utilities-rules.md",
         "skills/code-review/SKILL.md",
-        "skills/hostile-review/SKILL.md"
+        "skills/hostile-review/SKILL.md",
+        "skills/shelves/SKILL.md"
       ],
       "kind": "shelf-router",
       "last_reviewed": "unknown",
@@ -6897,7 +6898,8 @@
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
-        "catalog/skill-lifecycle-legacy.json"
+        "catalog/skill-lifecycle-legacy.json",
+        "skills/shelves/SKILL.md"
       ],
       "kind": "shelf-router",
       "last_reviewed": "unknown",
@@ -10794,9 +10796,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2660981,
+    "characters": 2663497,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 665324,
+    "estimated_tokens": 665954,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -10814,9 +10816,9 @@
     },
     "quality_low_grade_count": 151,
     "tier_characters": {
-      "on-demand": 42965,
+      "on-demand": 43064,
       "project": 54452,
-      "reference": 1294771,
+      "reference": 1297188,
       "unclassified": 1268793
     },
     "tier_counts": {
@@ -10826,9 +10828,9 @@
       "unclassified": 110
     },
     "tier_estimated_tokens": {
-      "on-demand": 10746,
+      "on-demand": 10771,
       "project": 13615,
-      "reference": 323720,
+      "reference": 324325,
       "unclassified": 317243
     },
     "unknown_lifecycle_count": 198,

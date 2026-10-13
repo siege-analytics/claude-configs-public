@@ -39,7 +39,7 @@ Review the rules below. Every rule is a default -- deviate only when the user ex
 
 ### Step 3: Apply library-specific config
 
-Use the Library quick reference table to find the essential overrides for the target library. For complete code examples and helper functions, read ONE rule file from `rules/` matching the library.
+Use the Library quick reference table to find the essential overrides for the target library. For upstream code examples and helper functions, consult the matching upstream rule via the URL in the Source + license footer (not shipped locally).
 
 ### Step 4: Validate
 
@@ -81,7 +81,7 @@ Charts should be approximately 50% wider than tall. Standard sizes: 600x400, 750
 
 ### 8. Gray first, highlight selectively
 
-The default data series color is medium gray (`#666`). Use a single accent color to highlight the most important series or data point. Never use more than 4 distinct colors. Choose the right palette type: **categorical** (4-color muted) for unordered groups, **sequential** (single-hue ramp) for ordered magnitude, **diverging** (two-hue from center) for deviation from a midpoint. See `rules/typography-and-color.md` for hex values.
+The default data series color is medium gray (`#666`). Use a single accent color to highlight the most important series or data point. Never use more than 4 distinct colors. Choose the right palette type: **categorical** (4-color muted) for unordered groups, **sequential** (single-hue ramp) for ordered magnitude, **diverging** (two-hue from center) for deviation from a midpoint. See `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/typography-and-color.md` for hex values.
 
 ### 9. Off-white background
 
@@ -143,16 +143,16 @@ If the data is 1–2 numbers, write a sentence with inline context ("Revenue was
 
 ## Library quick reference
 
-The universal rules above are sufficient for most charts. For complete code examples and library-specific helpers, read the appropriate rule file from the `rules/` directory in this skill's folder. Only read ONE rule file per task.
+The universal rules above are sufficient for most charts. For complete code examples and library-specific helpers, consult the matching upstream rule at the URL below; no `rules/` directory is shipped locally. Consult only one rule per task.
 
-| Library | Rule file to read | Essential config (apply even without reading the file) |
+| Library | Upstream rule (not local) | Essential config (apply even without reading the file) |
 |---------|-------------------|--------------------------------------------------------|
-| Recharts | `rules/recharts.md` | `<CartesianGrid stroke="none" />`, remove `<Legend />`, `<YAxis axisLine={false} tickLine={false} />`, `<Line dot={false} strokeWidth={1.5} />` |
-| ECharts | `rules/echarts.md` | `splitLine: { show: false }`, `legend: { show: false }`, `grid: { show: false }`, use `endLabel` on series |
-| Chart.js | `rules/chartjs.md` | `grid: { display: false }`, `border: { display: false }`, `plugins.legend.display: false`, use `chartjs-plugin-datalabels` |
-| matplotlib | `rules/matplotlib.md` | `spines['top'].set_visible(False)`, `spines['right'].set_visible(False)`, `spines['bottom'].set_bounds(min, max)`, `font.family: serif` |
-| Plotly | `rules/plotly.md` | `showgrid=False`, `showlegend=False`, `plot_bgcolor='#fffff8'`, `zeroline=False` |
-| D3/SVG/HTML | `rules/svg-html.md` | `.domain { display: none }`, no `<rect>` backgrounds, `stroke-opacity: 0.1` for any gridlines |
+| Recharts | `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/recharts.md` | `<CartesianGrid stroke="none" />`, remove `<Legend />`, `<YAxis axisLine={false} tickLine={false} />`, `<Line dot={false} strokeWidth={1.5} />` |
+| ECharts | `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/echarts.md` | `splitLine: { show: false }`, `legend: { show: false }`, `grid: { show: false }`, use `endLabel` on series |
+| Chart.js | `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/chartjs.md` | `grid: { display: false }`, `border: { display: false }`, `plugins.legend.display: false`, use `chartjs-plugin-datalabels` |
+| matplotlib | `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/matplotlib.md` | `spines['top'].set_visible(False)`, `spines['right'].set_visible(False)`, `spines['bottom'].set_bounds(min, max)`, `font.family: serif` |
+| Plotly | `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/plotly.md` | `showgrid=False`, `showlegend=False`, `plot_bgcolor='#fffff8'`, `zeroline=False` |
+| D3/SVG/HTML | `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/svg-html.md` | `.domain { display: none }`, no `<rect>` backgrounds, `stroke-opacity: 0.1` for any gridlines |
 
 ---
 
@@ -172,7 +172,7 @@ The universal rules above are sufficient for most charts. For complete code exam
 | **Stacked bar** | Avoid -- use small multiples instead. If forced: sort by total, direct labels per segment, max 4 segments |
 | **Heatmap** | Sequential or diverging palette only, value labels in cells, companion data table for accessibility |
 
-For small multiples, sparklines, and slopegraph implementation patterns, see `rules/small-multiples-sparklines.md`.
+For small multiples, sparklines, and slopegraph implementation patterns, see `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/small-multiples-sparklines.md`.
 
 ---
 
@@ -190,7 +190,7 @@ For small multiples, sparklines, and slopegraph implementation patterns, see `ru
 
 **Categorical (max 4):** `#4e79a7` steel blue · `#f28e2b` tangerine · `#e15759` coral · `#76b7b2` sage
 
-Font stacks in rule 10. For full palettes (sequential, diverging), font loading, and old-style figures, see `rules/typography-and-color.md`.
+Font stacks in rule 10. For full palettes (sequential, diverging), font loading, and old-style figures, see `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/typography-and-color.md`.
 
 ---
 
@@ -198,7 +198,7 @@ Font stacks in rule 10. For full palettes (sequential, diverging), font loading,
 
 When reviewing existing chart code, check for: legends (→ direct labels), pie charts (→ horizontal bars), 3D effects (→ flat 2D), dual y-axes (→ small multiples), heavy gridlines (→ remove or 0.1 opacity), rainbow palettes (→ gray + accent), gauge widgets (→ number + sparkline), gradient fills (→ solid color), rotated labels (→ flip axes or abbreviate), pure white/black backgrounds (→ `#fffff8`/`#151515`), hover-only information (→ tap/focus fallback), missing text alternatives (→ `aria-label`), color-only encoding (→ add shape/pattern).
 
-For the full table with per-library detection patterns and one-liner fixes, see `rules/anti-patterns.md`.
+For the full table with per-library detection patterns and one-liner fixes, see `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/anti-patterns.md`.
 
 ---
 
@@ -231,13 +231,13 @@ Before presenting any chart, verify:
 
 ## Additional resources
 
-**Library rules** (read ONE per task): `rules/recharts.md`, `rules/echarts.md`, `rules/chartjs.md`, `rules/matplotlib.md`, `rules/plotly.md`, `rules/svg-html.md` -- complete code examples, helpers, and theme registrations.
+**Upstream library rules** (consult ONE per task, not shipped here): `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/recharts.md`, `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/echarts.md`, `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/chartjs.md`, `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/matplotlib.md`, `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/plotly.md`, `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/svg-html.md` -- complete code examples, helpers, and theme registrations.
 
-**Cross-cutting** (read when specifically needed):
-- `rules/interactive-and-accessible.md` -- progressive disclosure, WCAG, responsive, animation, dark mode
-- `rules/typography-and-color.md` -- font loading, full palette tables, old-style figures
-- `rules/anti-patterns.md` -- per-library detection heuristics and fixes
-- `rules/small-multiples-sparklines.md` -- layout patterns for small multiples, sparklines, slopegraphs
+**Upstream cross-cutting rules** (consult when specifically needed; not shipped here):
+- `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/interactive-and-accessible.md` -- progressive disclosure, WCAG, responsive, animation, dark mode
+- `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/typography-and-color.md` -- font loading, full palette tables, old-style figures
+- `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/anti-patterns.md` -- per-library detection heuristics and fixes
+- `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/small-multiples-sparklines.md` -- layout patterns for small multiples, sparklines, slopegraphs
 
 ---
 
@@ -261,5 +261,5 @@ Before presenting any chart, verify:
 - **Imported at commit:** `ae7ca0de7819db83241b24a2618810d5f1171145` (2026-02-19)
 - **Verified:** 2026-05-23 via `gh api repos/caylent/tufte-data-viz/commits/main`
 - **What was vendored:** the upstream `SKILL.md` body (rules 1-22, library quick reference, chart-type guidance, color quick reference, anti-pattern detection, validation checklist) is reproduced largely verbatim above. The workspace's frontmatter conventions (description with trigger phrases, license / metadata.source / metadata.coverage) replace the upstream's lighter frontmatter; the "When this skill does NOT apply" + "Composes with" sections are workspace-specific additions to integrate the skill into the existing shelf ecosystem.
-- **What was NOT vendored:** the per-library implementation files in upstream's `rules/` directory (`chartjs.md`, `echarts.md`, `matplotlib.md`, `plotly.md`, `recharts.md`, `svg-html.md`, `typography-and-color.md`, `interactive-and-accessible.md`, `anti-patterns.md`, `small-multiples-sparklines.md`) -- these are referenced inline by the "Library quick reference" and "Additional resources" sections but live upstream. When working in a specific library, fetch the corresponding `rules/<library>.md` from `https://github.com/caylent/tufte-data-viz/blob/main/rules/<library>.md`.
+- **What was NOT vendored:** the per-library implementation files in upstream's `rules/` directory (`chartjs.md`, `echarts.md`, `matplotlib.md`, `plotly.md`, `recharts.md`, `svg-html.md`, `typography-and-color.md`, `interactive-and-accessible.md`, `anti-patterns.md`, `small-multiples-sparklines.md`) -- these are referenced inline by the "Library quick reference" and "Additional resources" sections but live upstream. When working in a specific library, fetch the corresponding `rules/<library>.md` from `https://github.com/caylent/tufte-data-viz/blob/ae7ca0de7819db83241b24a2618810d5f1171145/rules/<library>.md`.
 - **Why partial vendor:** the universal rules are the load-bearing principles and rarely change; per-library implementation files track library API drift and are better consulted at the upstream where the maintainer keeps them current.

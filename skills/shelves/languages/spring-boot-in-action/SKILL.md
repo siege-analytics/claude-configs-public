@@ -20,11 +20,11 @@ The core philosophy: Spring Boot removes boilerplate through **auto-configuratio
 
 ## Reference Files
 
-- `practices-catalog.md` -- Before/after examples for auto-configuration, starters, properties, profiles, security, testing, Actuator, and deployment
+- `references/practices-catalog.md` -- Before/after examples for auto-configuration, starters, properties, profiles, security, testing, Actuator, and deployment
 
 ## How to Use This Skill
 
-**Before responding**, read `practices-catalog.md` for the topic at hand. For configuration issues read the properties/profiles section. For test code read the testing section. For a full review, read all sections.
+**Before responding**, read `references/practices-catalog.md` for the topic at hand. For configuration issues read the properties/profiles section. For test code read the testing section. For a full review, read all sections.
 
 ---
 

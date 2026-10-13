@@ -46,7 +46,7 @@ Ask (or infer from context):
 
 ### Step 2 -- Apply the Right Practices
 
-Read `references/practices-catalog.md` for the full chapter-by-chapter catalog. Quick decision guide by concern:
+No chapter-by-chapter practices catalog is shipped; use the quick decision guide below and the shipped supplemental references when relevant. Quick decision guide by concern:
 
 | Concern | Chapters to Apply |
 |---------|-------------------|
@@ -252,7 +252,7 @@ If no significant issues exist, say so -- a short list of minor suggestions is f
 - **Validate at boundaries** -- Check data quality at ingestion, after transformation, and before serving
 - **Orchestrate with DAGs** -- Use Airflow or similar tools for dependency management, retries, and scheduling
 - **Monitor proactively** -- Don't wait for users to report stale data; alert on freshness, completeness, and accuracy
-- For deeper practice details, read `references/practices-catalog.md` before building pipelines.
+- For deeper practice details, consult the shipped supplemental references when relevant; no full practices catalog is shipped.
 - For review checklists, read `references/review-checklist.md` before reviewing pipelines.
 
 ---
@@ -260,3 +260,8 @@ If no significant issues exist, say so -- a short list of minor suggestions is f
 ## Attribution
 
 Imported verbatim from [ZLStas/skills](https://github.com/ZLStas/skills) at commit `3b87ad338fe18b68371a69827372746729074c0e`. MIT-licensed; copyright © ZLStas and contributors. See repo-root `THIRD_PARTY_NOTICES.md`.
+
+## Additional shipped references
+
+Optional supplemental material (consult only when the topic applies; these are not mandatory chapters):
+- [`references/api_reference.md`](references/api_reference.md)

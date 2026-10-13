@@ -109,4 +109,4 @@ The collider-bias intuition is the most counterintuitive: "controlling for X" ca
 
 ## See also
 
-- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` -- context on why causal-inference-what-if is the canonical-causal-rigor entry on the statistical-inference shelf. Operator wanted "all three" statistical flavors; this is the rigorous-foundation flavor.
+- Session 260502-pure-vista's unavailable historical session plan (not shipped in this repository; provenance only, not a local reading target) -- context on why causal-inference-what-if is the canonical-causal-rigor entry on the statistical-inference shelf. Operator wanted "all three" statistical flavors; this is the rigorous-foundation flavor.

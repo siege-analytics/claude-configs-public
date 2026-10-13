@@ -19,11 +19,11 @@ The key differentiator of this book: Rust is taught through real systems -- a CP
 
 ## Reference Files
 
-- `practices-catalog.md` -- Before/after examples for ownership, smart pointers, bit ops, I/O, networking, concurrency, error wrapping, and state machines
+- `references/practices-catalog.md` -- Before/after examples for ownership, smart pointers, bit ops, I/O, networking, concurrency, error wrapping, and state machines
 
 ## How to Use This Skill
 
-**Before responding**, read `practices-catalog.md` for the topic at hand. For ownership/borrowing issues read the ownership section. For systems/binary data read the data section. For a full review, read all sections.
+**Before responding**, read `references/practices-catalog.md` for the topic at hand. For ownership/borrowing issues read the ownership section. For systems/binary data read the data section. For a full review, read all sections.
 
 ---
 

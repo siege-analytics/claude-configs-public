@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **198**
-- Characters: **2,660,981**
-- Estimated tokens: **665,324** (character/4 estimate)
+- Characters: **2,663,497**
+- Estimated tokens: **665,954** (character/4 estimate)
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -32,9 +32,9 @@ This report describes committed source evidence. Missing references or tests do 
 
 | Tier | Count | Characters | Est. tokens |
 |---|---:|---:|---:|
-| on-demand | 15 | 42,965 | 10,746 |
+| on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 54,452 | 13,615 |
-| reference | 69 | 1,294,771 | 323,720 |
+| reference | 69 | 1,297,188 | 324,325 |
 | unclassified | 110 | 1,268,793 | 317,243 |
 
 ## Largest source items
@@ -48,7 +48,7 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--top-design` | reference-shelf | 38,675 | 9,669 | `skills/shelves/design/top-design/SKILL.md` |
 | `writing-claims` | rule | 31,339 | 7,835 | `skills/_writing-claims-rules.md` |
 | `shelves--two-scoops-django` | reference-shelf | 30,998 | 7,750 | `skills/shelves/django/two-scoops-django/SKILL.md` |
-| `shelves--one-page-marketing` | reference-shelf | 30,341 | 7,586 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
+| `shelves--one-page-marketing` | reference-shelf | 30,400 | 7,600 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
 | `writing-rules` | rule | 30,148 | 7,537 | `skills/_writing-rules-rules.md` |
 | `shelves--hundred-million-offers` | reference-shelf | 29,309 | 7,328 | `skills/shelves/sales/hundred-million-offers/SKILL.md` |
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
@@ -57,9 +57,9 @@ This report describes committed source evidence. Missing references or tests do 
 | `think` | skill | 26,726 | 6,682 | `skills/think/SKILL.md` |
 | `engagement-post-mortem` | skill | 26,695 | 6,674 | `skills/engagement-post-mortem/SKILL.md` |
 | `siege-utilities--hostile-review` | project-skill | 25,909 | 6,478 | `projects/siege-utilities/skills/hostile-review/SKILL.md` |
+| `shelves--high-performance-django` | reference-shelf | 25,890 | 6,473 | `skills/shelves/django/high-performance-django/SKILL.md` |
 | `shelves--contagious` | reference-shelf | 25,741 | 6,436 | `skills/shelves/marketing/contagious/SKILL.md` |
 | `shelves--django-design-patterns` | reference-shelf | 25,629 | 6,408 | `skills/shelves/django/django-design-patterns/SKILL.md` |
-| `shelves--high-performance-django` | reference-shelf | 25,621 | 6,406 | `skills/shelves/django/high-performance-django/SKILL.md` |
 | `shelves--obviously-awesome` | reference-shelf | 24,799 | 6,200 | `skills/shelves/strategy/obviously-awesome/SKILL.md` |
 | `shelves--negotiation` | reference-shelf | 24,710 | 6,178 | `skills/shelves/sales/negotiation/SKILL.md` |
 | `shelves--ios-hig-design` | reference-shelf | 24,657 | 6,165 | `skills/shelves/design/ios-hig-design/SKILL.md` |

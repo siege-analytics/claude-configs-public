@@ -410,7 +410,7 @@ These cross-cutting principles apply across all nine squares:
 - `references/customer-experience.md` -- Moments of truth, NPS, surprise and delight, tribes and community, technology systems
 - `references/lifetime-value.md` -- LTV formulas, ascension model design, reactivation campaigns, retention, raising prices
 - `references/referral-systems.md` -- Referral program design, partnerships, affiliate programs, referral scripts, tracking
-- `references/one-page-plan-template.md` -- Blank 9-square template with prompts, two worked examples, planning exercise guide
+- Consult [`references/one-page-plan-template.md`](references/one-page-plan-template.md) for a blank 9-square template with prompts, two worked examples, and planning exercise guidance.
 
 ## Further Reading
 

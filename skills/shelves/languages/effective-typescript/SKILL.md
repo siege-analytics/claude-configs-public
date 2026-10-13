@@ -12,22 +12,18 @@ description: >
 
 Apply the 62 items from Dan Vanderkam's "Effective TypeScript" to review existing code and write new TypeScript. This skill operates in two modes: **Review Mode** (analyze code for violations) and **Write Mode** (produce idiomatic, well-typed TypeScript from scratch).
 
-## Reference Files
+## Shipped reference coverage
 
-This skill includes categorized reference files covering all 62 items:
-
-- `ref-01-getting-to-know-ts.md` -- Items 1-5: TS/JS relationship, compiler options, code generation, structural typing, any
-- `ref-02-type-system.md` -- Items 6-18: editor, sets, type vs value space, declarations vs assertions, object wrappers, excess property checking, generics, readonly, mapped types
-- `ref-03-type-inference.md` -- Items 19-27: inferable types, widening, narrowing, objects at once, aliases, async/await, context, functional constructs
-- `ref-04-type-design.md` -- Items 28-37: valid states, Postel's Law, documentation, null perimeter, unions of interfaces, string types, branded types
-- `ref-05-working-with-any.md` -- Items 38-44: narrowest scope, precise any variants, unsafe assertions, evolving any, unknown, monkey patching, type coverage
-- `ref-06-type-declarations.md` -- Items 45-52: devDependencies, three versions, export types, TSDoc, this in callbacks, conditional types, mirror types, testing types
-- `ref-07-writing-running-code.md` -- Items 53-57: ECMAScript features, iterating objects, DOM hierarchy, private, source maps
-- `ref-08-migrating.md` -- Items 58-62: modern JS, @ts-check, allowJs, module-by-module, noImplicitAny
+The original per-chapter `ref-*` files are not shipped. Consult
+[`references/practices-catalog.md`](references/practices-catalog.md) for selected
+before/after practices and [`references/api_reference.md`](references/api_reference.md)
+for the shipped API notes. These are selective, not full chapter-by-chapter coverage.
+For topics not covered there, use the guidance in this SKILL.md and verify claims
+against the upstream book; do not assume absent chapters were absorbed.
 
 ## How to Use This Skill
 
-**Before responding**, read the relevant reference files based on the code's topic. For a general review, read all files. For targeted work (e.g., type design), read the specific reference (e.g., `ref-04-type-design.md`).
+**Before responding**, consult the shipped practices catalog for the code's topic; it covers selected items, not all 62.
 
 ---
 
@@ -36,7 +32,7 @@ This skill includes categorized reference files covering all 62 items:
 When the user asks you to **review** existing TypeScript code, follow this process:
 
 ### Step 1: Read Relevant References
-Determine which chapters apply to the code under review and read those reference files. If unsure, read all of them.
+Determine which chapters apply to the code under review and consult the shipped practices catalog; verify any uncovered item against the upstream book.
 
 ### Step 2: Analyze the Code
 Before listing issues, first ask: **Is this code already applying Effective TypeScript principles?** Look for positive signals:

@@ -48,7 +48,7 @@ Ask (or infer from context):
 
 ### Step 2 -- Apply the Right Practices
 
-Read `references/practices-catalog.md` for the full chapter-by-chapter catalog. Quick decision guide:
+No chapter-by-chapter practices catalog is shipped; use the quick decision guide below and the shipped supplemental references when relevant. Quick decision guide:
 
 | Concern | Chapters to Apply |
 |---------|-------------------|
@@ -273,7 +273,7 @@ Each recommendation references the specific chapter/concept.
 - **Parse defensively** -- HTML structure changes; always handle missing elements gracefully
 - **Test with saved pages** -- Save HTML fixtures and test parsers offline; reduces requests and enables CI
 - **Clean data early** -- Normalize strings, handle encoding, strip whitespace at extraction time
-- For deeper practice details, read `references/practices-catalog.md` before building scrapers.
+- For deeper practice details, consult the shipped supplemental references when relevant; no full practices catalog is shipped.
 - For review checklists, read `references/review-checklist.md` before reviewing scrapers.
 
 ---
@@ -281,3 +281,8 @@ Each recommendation references the specific chapter/concept.
 ## Attribution
 
 Imported verbatim from [ZLStas/skills](https://github.com/ZLStas/skills) at commit `3b87ad338fe18b68371a69827372746729074c0e`. MIT-licensed; copyright © ZLStas and contributors. See repo-root `THIRD_PARTY_NOTICES.md`.
+
+## Additional shipped references
+
+Optional supplemental material (consult only when the topic applies; these are not mandatory chapters):
+- [`references/api_reference.md`](references/api_reference.md)
