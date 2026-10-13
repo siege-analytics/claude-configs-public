@@ -9,7 +9,8 @@ Validates project manifests: required frontmatter, repo uniqueness, status lifec
 
 Usage:
     python bin/build.py            # build both layouts + rules bundle
-    python bin/build.py --check    # validate tokens only, no output
+    python bin/build.py --check    # validate tokens only, no repository output
+    python bin/build.py --dist DIR # build into an isolated output root
 """
 from __future__ import annotations
 
@@ -1680,12 +1681,20 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
 
 
 def main() -> int:
+    global DIST
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Validate tokens; do not write output")
     parser.add_argument("--layout", choices=("nested", "flat", "both"), default="both")
     parser.add_argument("--deploy", action="store_true", help="After building, sync flat layout to Craft Agent workspace")
     parser.add_argument("--craft-workspace", type=Path, default=CRAFT_WORKSPACE, help="Target Craft Agent workspace path for --deploy (default: %(default)s)")
+    parser.add_argument("--dist", type=Path, help="Build into this isolated output root instead of repository dist/")
     args = parser.parse_args()
+
+    if args.dist:
+        if args.deploy:
+            print("BUILD ERROR: --dist cannot be combined with --deploy", file=sys.stderr)
+            return 1
+        DIST = args.dist.resolve()
 
     if args.deploy:
         try:
@@ -1739,7 +1748,6 @@ def main() -> int:
 
     if args.check:
         import tempfile
-        global DIST
         DIST = Path(tempfile.mkdtemp(prefix="claude-configs-build-check-"))
         try:
             for layout in ("nested", "flat"):

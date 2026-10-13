@@ -10,7 +10,7 @@ Plan reference: approved `skill-library-simplification.md`, Phase 4 / proposed P
 Pre-author-inventory: `bin/build.py`, `catalog/skills-inventory.json`, ignored `dist/`, nested/flat layouts, Claude Code and Craft Agent consumer packages.
 Investigate-artifact: this document and Phase 0 inventory diagnostics.
 Pre-mortem-artifact: Risks below.
-Hostile-review-artifact: required before implementation commit.
+Hostile-review-artifact: three independent rounds completed; findings and fixes are recorded below and in `plans/hostile-review-generated-source-authority.md`.
 Project-contribution: make canonical source-to-generated-copy provenance and content drift machine-checkable without making generated copies authoring sources.
 
 ## Pre-implementation comprehension
@@ -27,14 +27,14 @@ Steps:
 5. add fixtures for transformed content, nested routers, missing outputs, package-copy drift, and freshness;
 6. enforce after the existing full-build CI step.
 
-Success criteria: 198/198 source coverage; four output forms per source; no wildcard authority; no destination collisions; package copies match their flat source; stale or manually edited generated output fails; catalog regeneration is deterministic; full existing validation remains green.
+Success criteria: 198/198 inventory source coverage plus generated root support files; four output forms per source; no wildcard authority; no destination collisions or unowned generated skill files; package transformations are independently hashed; stale source/output state cannot be certified; catalog regeneration is deterministic; full existing validation remains green.
 
 ## Risks
 
 1. Hashing whole router directories could absorb nested child outputs and create false ownership. Enumerate only files owned by each canonical source directory, excluding child directories containing another `SKILL.md`.
 2. Token resolution and project frontmatter injection mean output bytes need not equal source bytes. Hash actual generated output while separately recording source snapshot hashes.
 3. Ignored `dist/` means CI must build before checking; an absent or partial build must fail, not silently regenerate.
-4. Consumer packages may diverge from flat output. Record and compare their exact files independently.
+4. Consumer packages intentionally transform some frontmatter and may diverge byte-for-byte from flat output. Record and compare their exact independently generated files.
 5. Generated timestamps/commit metadata can make catalogs nondeterministic. Scope authority to skill/rule files and exclude unrelated build metadata.
 6. A manifest generator must not redefine discovery. It must fail if its source set differs from Phase 0 inventory/build authority.
 
@@ -44,27 +44,36 @@ Reject source-set drift, unsafe paths, wildcard mappings, nested ownership leaka
 
 ## Peer review
 
-Pending implementation and hostile review.
+Three hostile-review rounds challenged stale-build certification, inventory omission, destination shapes, source/output symlinks, cross-layout traversal, unowned directory entries, router ownership, and excluded support files. Every S1/S2 finding was fixed before commit.
 
 ## Lead review
 
-A tracked deterministic hash catalog is appropriate because `dist/` remains generated and ignored. This adds evidence and CI drift detection without checking thousands of generated files into source control or changing deployment behavior.
+A tracked deterministic hash catalog is appropriate because `dist/` remains generated and ignored. Every write/check now reproduces artifacts in a fresh isolated build, so the catalog cannot bless arbitrary repository `dist` bytes. This adds CI drift detection without checking thousands of generated files into source control or changing deployment behavior.
 
 ## Findings
 
 | ID | Priority | Description | Resolution |
 |---|---|---|---|
-| G1 | P1 | Generated layouts and consumer copies lack committed byte-level provenance. | pending implementation |
-| G2 | P1 | Router directories can cause nested ownership ambiguity. | source-owned file enumeration required |
-| G3 | P2 | Build metadata is nondeterministic and outside skill/rule authority. | exclude unrelated metadata from this catalog |
+| G1 | P1 | Generated layouts and consumer copies lacked committed byte-level provenance. | Added deterministic source and four-form artifact tree hashes. |
+| G2 | P1 | Router directories could absorb child-skill outputs. | Source-owned enumeration excludes every nested child `SKILL.md` subtree. |
+| G3 | P2 | Build metadata is nondeterministic and outside skill/rule authority. | Authority is scoped to generated skills/rules/support files; unrelated build metadata is excluded. |
+| G4 | P1 | Existing or partial `dist` could be regenerated into a passing catalog. | Every write/check runs inventory freshness and a fresh temporary `build.py --dist` reproduction. |
+| G5 | P1 | Inventory/path edits could omit sources or redirect layouts. | Inventory freshness is mandatory; destinations require exact `dist/{form}/skills` shapes. |
+| G6 | P1 | Source/output symlinks and `..` traversal could escape ownership boundaries. | Symlink chains/members, traversal, wildcards, and cross-form resolution are rejected. |
+| G7 | P1 | Unowned files or directory symlinks could survive beneath generated skills roots. | Every entry is scanned; all files require one owner and all symlinks fail before type filtering. |
+| G8 | P1 | Reserved generated `RULES.md` and `_coverage.md` were initially excluded. | Both sources and all eight generated forms are independently hashed; unexpected support files fail as unowned. |
 
 ## Quantified claims
 
-Baseline: 198 canonical sources, each with nested and flat logical destinations. The implementation will measure exact source-owned file and generated-copy counts after a full build; no estimate will be committed as fact.
+The catalog covers 198 inventory canonical sources plus 2 generated support sources, 724 source-owned files, 800 artifact snapshots across four forms, and 2,896 generated file mappings. Destination collisions and unowned generated files are both zero.
 
 ## Rework ledger
 
-No rework yet.
+1. Replaced current-`dist` hashing with mandatory fresh isolated builds.
+2. Added exact inventory freshness and strict destination-prefix enforcement.
+3. Rejected source/output member and directory symlinks plus traversal/wildcards.
+4. Added complete skills-root ownership scanning.
+5. Added reserved rules-entry and coverage artifacts to the authority catalog.
 
 ## Evidence-predates-work
 

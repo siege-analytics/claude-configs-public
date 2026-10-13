@@ -671,6 +671,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-933-run-comprehensive-test.md",
@@ -711,6 +712,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -749,6 +751,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "projects/CONTRIBUTING.md",
@@ -787,6 +790,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "projects/CONTRIBUTING.md",
@@ -825,6 +829,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/team/SKILL.md"
@@ -866,6 +871,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/storytelling/SKILL.md"
@@ -907,6 +913,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/strategy/SKILL.md"
@@ -948,6 +955,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/statistical-inference/SKILL.md"
@@ -989,6 +997,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/statistical-inference/SKILL.md"
@@ -1031,6 +1040,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/django/SKILL.md",
@@ -1074,6 +1084,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/code-review/SKILL.md",
@@ -1121,6 +1132,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -1162,6 +1174,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -1203,6 +1216,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -1244,6 +1258,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/strategy/SKILL.md"
@@ -1286,6 +1301,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-ddia-shelf.md",
@@ -1340,6 +1356,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/pipeline-jobs/SKILL.md",
@@ -1382,6 +1399,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -1423,6 +1441,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/code-review/SKILL.md",
@@ -1466,6 +1485,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -1507,6 +1527,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/django/SKILL.md",
@@ -1550,6 +1571,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/django/SKILL.md",
@@ -1592,6 +1614,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/team/SKILL.md"
@@ -1633,6 +1656,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/code-review/SKILL.md",
@@ -1677,6 +1701,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/code-review/SKILL.md",
@@ -1721,6 +1746,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/python-patterns/SKILL.md",
@@ -1764,6 +1790,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -1805,6 +1832,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/geospatial/SKILL.md"
@@ -1846,6 +1874,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/systems-architecture/SKILL.md"
@@ -1887,6 +1916,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/django/SKILL.md",
@@ -1930,6 +1960,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -1971,6 +2002,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/sales/SKILL.md"
@@ -2012,6 +2044,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2053,6 +2086,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/sales/SKILL.md"
@@ -2094,6 +2128,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2135,6 +2170,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -2176,6 +2212,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2217,6 +2254,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -2258,6 +2296,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2299,6 +2338,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2340,6 +2380,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -2381,6 +2422,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -2422,6 +2464,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/systems-architecture/SKILL.md"
@@ -2463,6 +2506,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2504,6 +2548,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/sales/SKILL.md"
@@ -2545,6 +2590,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/strategy/SKILL.md"
@@ -2586,6 +2632,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -2627,6 +2674,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/django/two-scoops-django/SKILL.md",
@@ -2669,6 +2717,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/sales/SKILL.md"
@@ -2710,6 +2759,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -2751,6 +2801,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/code-review/SKILL.md",
@@ -2794,6 +2845,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -2835,6 +2887,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/django/django-design-patterns/SKILL.md",
@@ -2878,6 +2931,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -2919,6 +2973,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -2960,6 +3015,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/engineering-principles/SKILL.md"
@@ -3001,6 +3057,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/geospatial/SKILL.md"
@@ -3042,6 +3099,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -3083,6 +3141,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/team/SKILL.md"
@@ -3124,6 +3183,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/statistical-inference/SKILL.md"
@@ -3165,6 +3225,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -3207,6 +3268,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         ".self-review-tufte.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/storytelling/SKILL.md",
@@ -3249,6 +3311,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/systems-architecture/SKILL.md"
@@ -3290,6 +3353,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/systems-architecture/SKILL.md"
@@ -3331,6 +3395,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/statistical-inference/SKILL.md"
@@ -3372,6 +3437,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -3413,6 +3479,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/strategy/SKILL.md"
@@ -3456,6 +3523,7 @@
       "inbound_source_references": [
         ".self-review-tufte.md",
         "THIRD_PARTY_NOTICES.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/storytelling/SKILL.md"
@@ -3497,6 +3565,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/django/SKILL.md",
@@ -3540,6 +3609,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/python-patterns/SKILL.md",
@@ -3582,6 +3652,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -3623,6 +3694,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -3664,6 +3736,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -3705,6 +3778,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -3725,6 +3799,7 @@
       "slug": "architecture-patterns",
       "source_path": "skills/_architecture-patterns-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -3757,6 +3832,7 @@
       "inbound_source_references": [
         ".self-review-ae0dea0.md",
         ".self-review-followup-1.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-pr-a.md",
@@ -3790,6 +3866,7 @@
       "slug": "authoring-against-state",
       "source_path": "skills/_authoring-against-state-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -3821,6 +3898,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -3845,6 +3923,7 @@
       "slug": "autonomy",
       "source_path": "skills/_autonomy-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -3876,6 +3955,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "README.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -3901,6 +3981,7 @@
       "slug": "data-trust",
       "source_path": "skills/_data-trust-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -3935,6 +4016,7 @@
         "CONTRIBUTING.md",
         "LESSONS.md",
         "README.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/diagnoses/2026-06-09-conditional-as-unconditional.md",
@@ -3973,6 +4055,7 @@
       "slug": "definition-of-done",
       "source_path": "skills/_definition-of-done-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4003,6 +4086,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/django-rest-framework/SKILL.md",
@@ -4024,6 +4108,7 @@
       "slug": "django-rest-framework",
       "source_path": "skills/_django-rest-framework-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4054,6 +4139,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
@@ -4079,6 +4165,7 @@
       "slug": "enforcement-contradiction",
       "source_path": "skills/_enforcement-contradiction-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4111,6 +4198,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "LESSONS.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/_authoring-against-state-rules.md",
@@ -4132,6 +4220,7 @@
       "slug": "environment-preflight",
       "source_path": "skills/_environment-preflight-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4163,6 +4252,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "README.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -4187,6 +4277,7 @@
       "slug": "jvm",
       "source_path": "skills/_jvm-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4218,6 +4309,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-387.md",
@@ -4246,6 +4338,7 @@
       "slug": "knowledge-base",
       "source_path": "skills/_knowledge-base-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4279,6 +4372,7 @@
       "inbound_source_references": [
         "CONTRIBUTING.md",
         "README.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-466.md",
@@ -4335,6 +4429,7 @@
       "test_evidence": [
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/deploy_source_policy_test.py",
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
@@ -4377,6 +4472,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -4397,6 +4493,7 @@
       "slug": "packaging",
       "source_path": "skills/_packaging-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4428,6 +4525,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "README.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -4452,6 +4550,7 @@
       "slug": "principles",
       "source_path": "skills/_principles-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4482,6 +4581,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -4503,6 +4603,7 @@
       "slug": "property-testing",
       "source_path": "skills/_property-testing-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4533,6 +4634,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -4557,6 +4659,7 @@
       "slug": "prospective-memory",
       "source_path": "skills/_prospective-memory-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4588,6 +4691,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "README.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -4618,6 +4722,7 @@
       "test_evidence": [
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/deploy_source_policy_test.py",
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/settings_drift_test.py",
         "bin/_test/skill_inventory_test.py",
@@ -4678,6 +4783,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/react/SKILL.md",
@@ -4699,6 +4805,7 @@
       "slug": "react",
       "source_path": "skills/_react-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4729,6 +4836,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -4749,6 +4857,7 @@
       "slug": "robustness",
       "source_path": "skills/_robustness-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4780,6 +4889,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "README.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -4800,6 +4910,7 @@
       "slug": "rust",
       "source_path": "skills/_rust-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4832,6 +4943,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -4852,6 +4964,7 @@
       "slug": "scipy-spec",
       "source_path": "skills/_scipy-spec-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4882,6 +4995,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -4902,6 +5016,7 @@
       "slug": "security-scanning",
       "source_path": "skills/_security-scanning-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4933,6 +5048,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/hostile-review-478-sync-references.md",
@@ -4970,6 +5086,7 @@
       "slug": "session-coordination",
       "source_path": "skills/_session-coordination-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5003,6 +5120,7 @@
       "inbound_source_references": [
         "README.md",
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/hostile-review-su-review-shelf-grounding.md",
@@ -5031,6 +5149,7 @@
       "slug": "siege-utilities",
       "source_path": "skills/_siege-utilities-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5062,6 +5181,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/post-mortems/2026-06-09-pour-now-engagement.md",
@@ -5092,6 +5212,7 @@
       "slug": "standing-approval",
       "source_path": "skills/_standing-approval-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5122,6 +5243,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -5146,6 +5268,7 @@
       "slug": "strategic-agency",
       "source_path": "skills/_strategic-agency-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5176,6 +5299,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-note-tandem-agent-operating-model.md",
@@ -5210,6 +5334,7 @@
       "slug": "tandem-agent",
       "source_path": "skills/_tandem-agent-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5241,6 +5366,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/git/test-guard.sh",
@@ -5273,6 +5399,7 @@
       "slug": "testing-frameworks",
       "source_path": "skills/_testing-frameworks-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5303,6 +5430,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-248-345-612-lifecycle-spawn-autonomy.md",
@@ -5335,6 +5463,7 @@
       "slug": "ticket-lifecycle",
       "source_path": "skills/_ticket-lifecycle-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5366,6 +5495,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "README.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -5390,6 +5520,7 @@
       "slug": "typescript",
       "source_path": "skills/_typescript-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5422,6 +5553,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "LESSONS.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/diagnoses/2026-06-09-conditional-as-unconditional.md",
@@ -5451,6 +5583,7 @@
       "slug": "verify-before-execute",
       "source_path": "skills/_verify-before-execute-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5481,6 +5614,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-614-work-item-ownership-rules.md",
@@ -5506,6 +5640,7 @@
       "slug": "work-item-ownership",
       "source_path": "skills/_work-item-ownership-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5538,6 +5673,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "LESSONS.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/diagnoses/2026-06-09-conditional-as-unconditional.md",
@@ -5588,6 +5724,7 @@
       "slug": "writing-claims",
       "source_path": "skills/_writing-claims-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5620,6 +5757,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-note-827-r11-scanner-shape-space.md",
@@ -5675,6 +5813,7 @@
       "slug": "writing-code",
       "source_path": "skills/_writing-code-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5715,6 +5854,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "LESSONS.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-257-operator-visible-cadence.md",
@@ -5751,6 +5891,7 @@
       "slug": "writing-prose",
       "source_path": "skills/_writing-prose-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5784,6 +5925,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "bin/diff-public-surface.sh",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-51.md",
@@ -5815,6 +5957,7 @@
       "slug": "writing-releases",
       "source_path": "skills/_writing-releases-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5848,6 +5991,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "bin/_test/skill_inventory_test.py",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/pre-mortem-pr-a.md",
@@ -5886,6 +6030,7 @@
       "slug": "writing-rules",
       "source_path": "skills/_writing-rules-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5919,6 +6064,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/git/test-tracking-guard.sh",
@@ -5968,6 +6114,7 @@
       "slug": "writing-tests",
       "source_path": "skills/_writing-tests-rules.md",
       "test_evidence": [
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -6004,6 +6151,7 @@
       "inbound_source_references": [
         "README.md",
         "bin/_test/skill_inventory_test.py",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6050,6 +6198,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6093,6 +6242,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6135,6 +6285,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/SKILL.md"
@@ -6176,6 +6327,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6218,6 +6370,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-valid-shelf-references.md",
@@ -6262,6 +6415,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6306,6 +6460,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6348,6 +6503,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6390,6 +6546,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6432,6 +6589,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -6473,6 +6631,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         ".self-review-tufte.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6515,6 +6674,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6557,6 +6717,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-valid-shelf-references.md",
@@ -6603,6 +6764,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "scripts/discipline/test_skill_token_chat_safe.sh",
@@ -6650,6 +6812,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -6692,6 +6855,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-remove-pour-now-and-electinfo-leakage.md",
@@ -6734,6 +6898,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -6794,6 +6959,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -6835,6 +7001,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -6875,6 +7042,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-248-345-612-lifecycle-spawn-autonomy.md",
@@ -6922,6 +7090,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "CONTRIBUTING.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-note-837-audit-gaps-after-pr-d.md",
@@ -6991,6 +7160,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -7035,6 +7205,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -7082,6 +7253,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "LESSONS.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/git/test-guard.sh",
@@ -7166,6 +7338,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-422.md",
@@ -7210,6 +7383,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-remove-pour-now-and-electinfo-leakage.md",
@@ -7253,6 +7427,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-248-345-612-lifecycle-spawn-autonomy.md",
@@ -7303,6 +7478,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/investigate-682-executable-path.md",
@@ -7353,6 +7529,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/git/self-review.sh",
@@ -7401,6 +7578,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -7442,6 +7620,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-395.md",
@@ -7488,6 +7667,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "LESSONS.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/git/detect-ai-fingerprints.sh",
@@ -7544,6 +7724,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-self-reviewed-linear-promotion.md",
@@ -7591,6 +7772,7 @@
         "CHANGELOG.md",
         "CONTRIBUTING.md",
         "LESSONS.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RULES.md",
@@ -7638,6 +7820,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -7686,6 +7869,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -7726,6 +7910,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-248-345-612-lifecycle-spawn-autonomy.md",
@@ -7773,6 +7958,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -7823,6 +8009,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/post-mortems/2026-06-09-pour-now-engagement.md"
@@ -7865,6 +8052,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -7909,6 +8097,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -7956,6 +8145,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-note-pr-bc-combined.md",
@@ -8016,6 +8206,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/investigate_gate_schema.test.sh",
@@ -8086,6 +8277,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/resolver/think-gate-guard.sh",
@@ -8136,6 +8328,7 @@
         "CHANGELOG.md",
         "CONTRIBUTING.md",
         "LESSONS.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RULES.md",
@@ -8186,6 +8379,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -8227,6 +8421,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-422.md",
@@ -8280,6 +8475,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -8327,6 +8523,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -8367,6 +8564,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -8412,6 +8610,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/git/post-error-revision-required.sh",
@@ -8457,6 +8656,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/git/self-review.sh",
@@ -8500,6 +8700,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -8548,6 +8749,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -8590,6 +8792,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/post-mortems/2026-06-09-pour-now-engagement.md",
@@ -8644,6 +8847,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-237.md",
@@ -8689,6 +8893,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -8729,6 +8934,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/_definition-of-done-rules.md",
@@ -8759,6 +8965,7 @@
       "test_evidence": [
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/deploy_source_policy_test.py",
+        "bin/_test/generated_source_authority_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/settings_drift_test.py",
         "bin/_test/skill_inventory_test.py",
@@ -8815,6 +9022,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -8857,6 +9065,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -8899,6 +9108,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -8942,6 +9152,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -8983,6 +9194,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RULES.md"
@@ -9026,6 +9238,7 @@
       "inbound_source_references": [
         "CONTRIBUTING.md",
         "LESSONS.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RULES.md",
@@ -9072,6 +9285,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -9116,6 +9330,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -9156,6 +9371,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -9203,6 +9419,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/README.md",
@@ -9279,6 +9496,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-note-pr-bc-combined.md",
@@ -9325,6 +9543,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-197-skill-token-chat-safety.md",
@@ -9369,6 +9588,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -9409,6 +9629,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -9456,6 +9677,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -9498,6 +9720,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -9546,6 +9769,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json"
       ],
@@ -9586,6 +9810,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/README.md",
@@ -9631,6 +9856,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "projects/siege-utilities/skills/error-path-tests/SKILL.md",
@@ -9674,6 +9900,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/README.md",
@@ -9734,6 +9961,7 @@
         "CHANGELOG.md",
         "README.md",
         "bin/install-hooks.sh",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/README.md",
@@ -9809,6 +10037,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/README.md",
@@ -9857,6 +10086,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-237.md",
@@ -9901,6 +10131,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/investigate-682-executable-path.md",
@@ -9952,6 +10183,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-remove-pour-now-and-electinfo-leakage.md",
@@ -9994,6 +10226,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-248-345-612-lifecycle-spawn-autonomy.md",
@@ -10039,6 +10272,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-719.md"
@@ -10080,6 +10314,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-remove-pour-now-and-electinfo-leakage.md",
@@ -10122,6 +10357,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-398.md",
