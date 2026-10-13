@@ -417,7 +417,7 @@ If you're doing something truly novel that no skill covers, default to:
 This resolver is surfaced into every session via:
 
 - **Session start**: referenced from every project's CLAUDE.md.
-- **Every user turn**: injected via `UserPromptSubmit` hook (`hooks/resolver/inject-resolver.sh`) so it stays in active context.
+- **Every user turn**: the `UserPromptSubmit` hook (`hooks/resolver/inject-resolver.sh`) injects the compact kernel and a deterministic load set. This legacy resolver remains a compatibility/reference artifact and is no longer globally injected.
 - **Pre-tool-use**: `PreToolUse` hooks on `Bash` match dangerous catalog/data-write patterns and block with a STOP-read-skill reminder (`hooks/infrastructure/catalog-guard.sh`). The git / PR hook stack is also enforced at `PreToolUse`:
   - `hooks/git/branch-guard.sh` blocks direct commits to protected branches.
   - `hooks/git/pr-base-guard.sh` blocks PR/MR-create commands whose effective base is a main-role branch when the head is not develop-role / `release/*` / `promote/*` / `hotfix/*` (or carries the `hotfix-direct-to-main` bypass label). Catches both GitHub (`gh pr create --base`) and GitLab (`glab mr create --target-branch`); see CCP#201 for the GitLab-parity addition. This is the local mechanical enforcement of `skills/git-workflow/develop-guard/SKILL.md` — the skill is the prose layer; the hook closes the gap when the agent treats PR/MR-create as procedural and never consults the skill.

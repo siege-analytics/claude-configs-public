@@ -523,9 +523,6 @@
     ],
     "without_source_references": [],
     "without_test_evidence": [
-      "siege-utilities--error-path-tests",
-      "siege-utilities--hostile-review",
-      "siege-utilities--notebook-impact",
       "shelves--37signals-way",
       "shelves--animation-at-work",
       "shelves--blue-ocean-strategy",
@@ -614,9 +611,7 @@
       "close-ticket",
       "coderabbit-response",
       "consolidate",
-      "create-pr",
       "cross-review",
-      "databricks",
       "decision-to-ticket",
       "distill-lessons",
       "django-rest-framework",
@@ -635,22 +630,14 @@
       "publish-flat-layout",
       "python-exceptions",
       "python-patterns",
-      "react",
       "rule-eval-loop",
       "rules-audit",
       "scala-on-spark",
       "scope-expansion",
       "sedona",
       "shape-space-audit",
-      "skillbuilder",
       "solutions-catalog",
-      "spatial",
-      "stalled-session-recovery",
-      "test-coverage-audit",
       "ticket-decomposition",
-      "ticket-guard",
-      "unity-catalog",
-      "update-ticket",
       "verify-failure-premise",
       "vue",
       "wrap-up"
@@ -693,6 +680,8 @@
       "slug": "siege-utilities--rules",
       "source_path": "projects/siege-utilities/_rules.md",
       "test_evidence": [
+        "bin/_test/resolve_load_set_test.py",
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/resolve_project.test.sh"
       ],
       "tier": "project",
@@ -732,7 +721,9 @@
       "rule_definitions": [],
       "slug": "siege-utilities--error-path-tests",
       "source_path": "projects/siege-utilities/skills/error-path-tests/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "project",
       "tier_basis": "project source path",
       "verification": "unknown"
@@ -772,7 +763,9 @@
       "rule_definitions": [],
       "slug": "siege-utilities--hostile-review",
       "source_path": "projects/siege-utilities/skills/hostile-review/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "project",
       "tier_basis": "project source path",
       "verification": "unknown"
@@ -811,7 +804,9 @@
       "rule_definitions": [],
       "slug": "siege-utilities--notebook-impact",
       "source_path": "projects/siege-utilities/skills/notebook-impact/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "project",
       "tier_basis": "project source path",
       "verification": "unknown"
@@ -3801,6 +3796,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -3869,6 +3866,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -3928,6 +3927,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -3987,6 +3988,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4062,6 +4065,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4116,6 +4121,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4174,6 +4181,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4230,6 +4239,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4288,6 +4299,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4350,6 +4363,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4443,6 +4458,8 @@
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/notebook_edit_guards_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "bin/_test/wire_enforcement_automations_test.py",
@@ -4451,6 +4468,7 @@
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/resolve_project.test.sh",
         "hooks/_test/run_scenarios.sh",
         "hooks/_test/scaffold_test_stub.test.sh",
@@ -4507,6 +4525,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4565,6 +4585,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4619,6 +4641,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4676,6 +4700,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4741,6 +4767,8 @@
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/notebook_edit_guards_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/settings_drift_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
@@ -4750,6 +4778,7 @@
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/project_scoped_gate.test.sh",
         "hooks/_test/resolve_project.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
@@ -4824,6 +4853,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4877,6 +4908,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4931,6 +4964,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4986,6 +5021,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5040,6 +5077,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5112,6 +5151,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5176,10 +5217,13 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/resolve_project.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/survey_context.test.sh",
@@ -5240,6 +5284,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5298,6 +5344,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5366,6 +5414,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5432,6 +5482,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5497,6 +5549,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5555,6 +5609,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5620,6 +5676,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5678,6 +5736,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5764,6 +5824,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5854,6 +5916,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5933,6 +5997,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -6001,6 +6067,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -6075,6 +6143,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -6161,6 +6231,8 @@
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -6224,7 +6296,9 @@
       "source_path": "skills/shelves/SKILL.md",
       "test_evidence": [
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
+        "hooks/_test/progressive_loading.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/test_skill_token_chat_safe.sh"
       ],
@@ -6972,6 +7046,7 @@
       "test_evidence": [
         "bin/_test/kernel_budget_test.py",
         "bin/_test/notebook_edit_guards_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "hooks/_test/branch_state_advisory.test.sh",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/detect_host.test.sh",
@@ -7188,6 +7263,7 @@
       "slug": "code-review",
       "source_path": "skills/code-review/SKILL.md",
       "test_evidence": [
+        "bin/_test/resolve_load_set_test.py",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/test_skill_token_chat_safe.sh"
       ],
@@ -7279,7 +7355,9 @@
       "slug": "coding",
       "source_path": "skills/coding/SKILL.md",
       "test_evidence": [
+        "bin/_test/resolve_load_set_test.py",
         "hooks/_test/investigate_gate_schema.test.sh",
+        "hooks/_test/progressive_loading.test.sh",
         "scripts/ci/test_flat_skill_layout.sh"
       ],
       "tier": "unclassified",
@@ -7339,6 +7417,7 @@
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/notebook_edit_guards_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "hooks/_test/branch_state_advisory.test.sh",
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/detect_ai_fingerprints.test.sh",
@@ -7508,7 +7587,9 @@
       "rule_definitions": [],
       "slug": "create-pr",
       "source_path": "skills/create-pr/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -7558,6 +7639,7 @@
       "slug": "create-ticket",
       "source_path": "skills/create-ticket/SKILL.md",
       "test_evidence": [
+        "bin/_test/resolve_load_set_test.py",
         "hooks/_test/scaffold_test_stub.test.sh",
         "templates/tests/README.md"
       ],
@@ -7651,7 +7733,9 @@
       "rule_definitions": [],
       "slug": "databricks",
       "source_path": "skills/databricks/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -7800,6 +7884,7 @@
       "slug": "develop-guard",
       "source_path": "skills/develop-guard/SKILL.md",
       "test_evidence": [
+        "bin/_test/resolve_load_set_test.py",
         "hooks/_test/pr_base_guard.test.sh"
       ],
       "tier": "unclassified",
@@ -7899,6 +7984,7 @@
       "slug": "django",
       "source_path": "skills/django/SKILL.md",
       "test_evidence": [
+        "bin/_test/resolve_load_set_test.py",
         "skills/detect-ai-fingerprints/test_scan_sh_exit_code.sh",
         "skills/detect-ai-fingerprints/test_writing_code_4.sh"
       ],
@@ -8235,6 +8321,7 @@
       "slug": "hostile-review",
       "source_path": "skills/hostile-review/SKILL.md",
       "test_evidence": [
+        "bin/_test/resolve_load_set_test.py",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh",
         "skills/detect-ai-fingerprints/test_writing_tests_5.sh"
@@ -8302,6 +8389,7 @@
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
@@ -8499,6 +8587,7 @@
       "source_path": "skills/merge/SKILL.md",
       "test_evidence": [
         "bin/_test/deploy_source_policy_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -8876,6 +8965,7 @@
       "source_path": "skills/pre-mortem/SKILL.md",
       "test_evidence": [
         "bin/_test/settings_drift_test.py",
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
         "hooks/_test/universal_mutation_gate_831.test.sh",
@@ -8985,9 +9075,11 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "bin/_test/resolve_load_set_test.py",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "plans/hostile-review-progressive-loading.md",
         "skills/_definition-of-done-rules.md",
         "skills/coding/SKILL.md",
         "skills/duckdb-spatial/SKILL.md",
@@ -9019,6 +9111,8 @@
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/notebook_edit_guards_test.py",
+        "bin/_test/progressive_mount_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "bin/_test/settings_drift_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
@@ -9028,6 +9122,7 @@
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/project_scoped_gate.test.sh",
         "hooks/_test/resolve_project.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
@@ -9227,7 +9322,9 @@
       "rule_definitions": [],
       "slug": "react",
       "source_path": "skills/react/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -9524,6 +9621,7 @@
       "slug": "self-review",
       "source_path": "skills/self-review/SKILL.md",
       "test_evidence": [
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
         "scripts/discipline/tests/fixtures/fail-esm-branch-range-multi-commit.md",
@@ -9621,7 +9719,9 @@
       "rule_definitions": [],
       "slug": "skillbuilder",
       "source_path": "skills/skillbuilder/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -9710,6 +9810,8 @@
       "slug": "spark",
       "source_path": "skills/spark/SKILL.md",
       "test_evidence": [
+        "bin/_test/resolve_load_set_test.py",
+        "hooks/_test/progressive_loading.test.sh",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
       ],
       "tier": "unclassified",
@@ -9754,7 +9856,9 @@
       "rule_definitions": [],
       "slug": "spatial",
       "source_path": "skills/spatial/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -9799,6 +9903,7 @@
       "slug": "sql",
       "source_path": "skills/sql/SKILL.md",
       "test_evidence": [
+        "bin/_test/resolve_load_set_test.py",
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
@@ -9844,7 +9949,9 @@
       "rule_definitions": [],
       "slug": "stalled-session-recovery",
       "source_path": "skills/stalled-session-recovery/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -9934,7 +10041,9 @@
       "rule_definitions": [],
       "slug": "test-coverage-audit",
       "source_path": "skills/test-coverage-audit/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -9992,6 +10101,7 @@
       "slug": "testing-frameworks",
       "source_path": "skills/testing-frameworks/SKILL.md",
       "test_evidence": [
+        "bin/_test/resolve_load_set_test.py",
         "templates/tests/README.md"
       ],
       "tier": "unclassified",
@@ -10018,7 +10128,6 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/README.md",
-        "hooks/resolver/inject-resolver.sh",
         "hooks/resolver/skill-enforcement-gate.sh",
         "hooks/resolver/think-gate-guard.sh",
         "plans/investigate-615-session-scoped-signal-files.md",
@@ -10062,6 +10171,7 @@
         "hooks/_test/gate_registry.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/project_scoped_gate.test.sh",
         "hooks/_test/resolve_project.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
@@ -10165,7 +10275,9 @@
       "rule_definitions": [],
       "slug": "ticket-guard",
       "source_path": "skills/ticket-guard/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -10261,7 +10373,9 @@
       "rule_definitions": [],
       "slug": "unity-catalog",
       "source_path": "skills/unity-catalog/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -10307,7 +10421,9 @@
       "rule_definitions": [],
       "slug": "update-ticket",
       "source_path": "skills/update-ticket/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -10494,6 +10610,6 @@
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
     "without_source_references_count": 0,
-    "without_test_evidence_count": 131
+    "without_test_evidence_count": 118
   }
 }

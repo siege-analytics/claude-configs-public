@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "kernel": "skills/KERNEL.md",
+  "policy": {
+    "unknown": "kernel-only-visible",
+    "ambiguous": "kernel-only-visible",
+    "shelves_auto_select": false,
+    "ordering": "priority-descending-then-route-id"
+  },
+  "routes": [
+    {"id":"git-branch","priority":100,"terms":["create branch","new branch","checkout branch"],"skills":["branch"]},
+    {"id":"git-commit","priority":100,"terms":["commit changes","git commit","create commit"],"skills":["commit"]},
+    {"id":"git-pr","priority":100,"terms":["open pr","create pr","pull request"],"skills":["create-pr"]},
+    {"id":"git-merge","priority":100,"terms":["merge pr","merge pull request"],"skills":["merge"]},
+    {"id":"code-review","priority":90,"terms":["review this pr","review this diff","code review"],"skills":["code-review"]},
+    {"id":"skill-authoring","priority":90,"terms":["create a skill","audit skills","fix this skill","skill library"],"skills":["skillbuilder"]},
+    {"id":"ticketing","priority":85,"terms":["create ticket","create issue","update ticket","close ticket"],"skills":["ticket-guard","create-ticket","update-ticket"]},
+    {"id":"python","priority":70,"terms":["python","pytest","pyproject"],"suffixes":[".py"],"skills":["coding","python"]},
+    {"id":"testing","priority":70,"terms":["write tests","test coverage","regression test"],"skills":["testing-frameworks","test-coverage-audit"]},
+    {"id":"sql","priority":70,"terms":["sql","postgres","query"],"suffixes":[".sql"],"skills":["coding","sql"]},
+    {"id":"spatial","priority":75,"terms":["geospatial","spatial join","postgis","geopandas","sedona","duckdb spatial"],"skills":["spatial"]},
+    {"id":"spark","priority":75,"terms":["pyspark","spark dataframe","spark sql"],"skills":["spark"]},
+    {"id":"databricks","priority":75,"terms":["databricks","unity catalog","delta table"],"skills":["databricks","unity-catalog"]},
+    {"id":"django","priority":75,"terms":["django","migration","queryset"],"skills":["django"]},
+    {"id":"react","priority":75,"terms":["react","tsx","jsx"],"suffixes":[".tsx",".jsx"],"skills":["react"]},
+    {"id":"session-recovery","priority":95,"terms":["stalled session","context limit","session recovery"],"skills":["stalled-session-recovery"]},
+    {"id":"release","priority":95,"terms":["release","publish","deploy","tag version"],"skills":["develop-guard"]}
+  ],
+  "projects": [
+    {"id":"siege-utilities","repos":["github.com/siege-analytics/siege_utilities"],"always":["siege-utilities--rules"],"routes":[
+      {"id":"su-review","priority":110,"terms":["review","pull request","diff"],"skills":["siege-utilities--hostile-review"]},
+      {"id":"su-contract","priority":110,"terms":["signature","return type","exception contract"],"skills":["siege-utilities--notebook-impact"]},
+      {"id":"su-error-tests","priority":110,"terms":["error path","exception test"],"skills":["siege-utilities--error-path-tests"]}
+    ]}
+  ]
+}

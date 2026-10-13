@@ -41,9 +41,10 @@ for guard in think-gate-guard.sh investigate-gate-guard.sh skill-enforcement-gat
     printf '#!/usr/bin/env bash\n' > "$WIRED/hooks/resolver/$guard"
     chmod +x "$WIRED/hooks/resolver/$guard"
 done
+: > "$WIRED/KERNEL.md"
 : > "$WIRED/RULES_BUNDLE.md"
 : > "$WIRED/RESOLVER.md"
-(cd "$WIRED" && ln -s RULES_BUNDLE.md CLAUDE.md)
+(cd "$WIRED" && ln -s KERNEL.md CLAUDE.md)
 cat > "$WIRED/enforcement-manifest.json" <<'JSON'
 {"gates":[{"id":"think-gate"},{"id":"investigate-gate"}]}
 JSON
@@ -69,7 +70,7 @@ fi
 NOWATCHDOG="$TMP/nowatchdog"
 cp -r "$WIRED" "$NOWATCHDOG"
 rm -f "$NOWATCHDOG/CLAUDE.md"
-(cd "$NOWATCHDOG" && ln -s RULES_BUNDLE.md CLAUDE.md)
+(cd "$NOWATCHDOG" && ln -s KERNEL.md CLAUDE.md)
 cat > "$NOWATCHDOG/.claude/settings.json" <<JSON
 {"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NOWATCHDOG/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
 JSON
@@ -91,7 +92,7 @@ fi
 NOAUTOMATIONS="$TMP/noautomations"
 cp -r "$WIRED" "$NOAUTOMATIONS"
 rm -f "$NOAUTOMATIONS/CLAUDE.md"
-(cd "$NOAUTOMATIONS" && ln -s RULES_BUNDLE.md CLAUDE.md)
+(cd "$NOAUTOMATIONS" && ln -s KERNEL.md CLAUDE.md)
 cat > "$NOAUTOMATIONS/.claude/settings.json" <<JSON
 {"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NOAUTOMATIONS/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
 JSON

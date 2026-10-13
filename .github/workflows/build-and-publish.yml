@@ -39,6 +39,18 @@ jobs:
           python3 bin/_test/kernel_budget_test.py
           python3 bin/kernel-budget.py --check
 
+      - name: Deterministic progressive loading
+        run: |
+          python3 bin/_test/resolve_load_set_test.py
+          python3 bin/_test/progressive_mount_test.py
+          bash hooks/_test/progressive_loading.test.sh
+          python3 bin/progressive-loading-metrics.py --check
+          for pkg in claude-code craft-agent; do
+            test -f "dist/$pkg/bin/resolve-load-set.py"
+            test -f "dist/$pkg/catalog/resolver-manifest.json"
+            python3 "dist/$pkg/bin/resolve-load-set.py" --prompt "review this Python diff" --repo other/repo | grep -q '"state": "matched"'
+          done
+
       - name: Validate Craft Agent flat skill layout
         run: bash scripts/ci/test_flat_skill_layout.sh
 

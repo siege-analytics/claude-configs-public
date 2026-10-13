@@ -223,12 +223,17 @@ MOCK
     fi
 fi
 
-# --- Check 3: RULES_BUNDLE present -------------------------------------------
+# --- Check 3: compact kernel + compatibility bundle present ------------------
 
-if [[ -f "$TARGET/RULES_BUNDLE.md" ]]; then
-    ok "RULES_BUNDLE.md present"
+if [[ -f "$TARGET/KERNEL.md" ]]; then
+    ok "KERNEL.md present (progressive global policy)"
 else
-    fail "RULES_BUNDLE.md missing (non-hook injection fallback absent)"
+    fail "KERNEL.md missing (compact global policy absent)"
+fi
+if [[ -f "$TARGET/RULES_BUNDLE.md" ]]; then
+    ok "RULES_BUNDLE.md present (on-demand compatibility)"
+else
+    fail "RULES_BUNDLE.md missing (compatibility rollback absent)"
 fi
 
 # --- Check 4: RESOLVER present -----------------------------------------------
@@ -255,19 +260,19 @@ fi
 # --- Craft-Agent-only checks -------------------------------------------------
 
 if [[ "$MODE" == "craft-agent" ]]; then
-    # Check 6: CLAUDE.md must auto-mount the bundle into the CA system prompt.
+    # Check 6: CLAUDE.md must auto-mount only the compact kernel.
     if [[ -L "$TARGET/CLAUDE.md" ]]; then
         link_target="$(readlink "$TARGET/CLAUDE.md")"
-        if [[ "$link_target" == "RULES_BUNDLE.md" ]]; then
-            ok "CLAUDE.md -> RULES_BUNDLE.md (CA auto-inject wired)"
+        if [[ "$link_target" == "KERNEL.md" ]]; then
+            ok "CLAUDE.md -> KERNEL.md (progressive CA auto-inject wired)"
         else
-            fail "CLAUDE.md symlink points at '$link_target', not RULES_BUNDLE.md"
+            fail "CLAUDE.md symlink points at '$link_target', not KERNEL.md"
         fi
     elif [[ -f "$TARGET/CLAUDE.md" ]]; then
-        if grep -q "RULES_BUNDLE\|Always-on\|RESOLVER" "$TARGET/CLAUDE.md" 2>/dev/null; then
-            ok "CLAUDE.md is an operator file that references the bundle"
+        if grep -q "KERNEL.md\|Safety Kernel\|always-loaded runtime constitution" "$TARGET/CLAUDE.md" 2>/dev/null; then
+            ok "CLAUDE.md is an operator file that references the compact kernel"
         else
-            fail "CLAUDE.md exists but does not mount the bundle (CA will not auto-inject rules)"
+            fail "CLAUDE.md exists but does not mount the compact kernel"
         fi
     else
         fail "CLAUDE.md missing (CA has nothing to auto-inject; rules never enter the system prompt)"

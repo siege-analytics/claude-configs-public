@@ -1,5 +1,5 @@
 ---
-description: Compact candidate safety kernel. These invariants are the future always-loaded constitution; detailed procedures remain on demand until progressive loading is enabled.
+description: Compact always-loaded safety kernel. Detailed task and project procedures are selected on demand by the deterministic resolver.
 tier: kernel
 owner: siege-analytics
 status: active
@@ -9,7 +9,7 @@ verification: bin/kernel-budget.py and existing enforcement suites
 
 # Safety Kernel
 
-This document states invariants, not full procedures. It is a candidate runtime kernel until the progressive-loading resolver is enabled. Existing rules, skills, hooks, and deployment gates remain in force during that migration.
+This document states invariants, not full procedures. It is the always-loaded runtime constitution; existing hooks remain mechanical enforcement, while detailed rules and skills load only through deterministic task and project selection.
 
 ## Precedence and override boundary
 
@@ -64,6 +64,6 @@ Never invent citations, source text, ticket numbers, review findings, approvals,
 
 Use the smallest relevant task skill and project overlay for the work at hand. Project overlays apply only when the repository or manifest matches. Reference shelves are evidence sources loaded through an active skill; they are not policy and must never become globally injected on their own. Unknown or ambiguous routing must be visible rather than loading every domain. Detailed procedures may refine this kernel but may not override its non-overridable boundary.
 
-## Runtime migration note
+## Runtime loading contract
 
-This kernel does not yet replace the current rules bundle. The progressive-loading change must prove deterministic resolution, project scoping, shelf isolation, and visible ambiguity before making this document the always-loaded policy surface.
+`CLAUDE.md` mounts this kernel, not the full rules bundle. The resolver hook emits the ordered task/project load set and a reason for every selection. Unknown or ambiguous inputs remain visibly kernel-only. `RULES_BUNDLE.md` is retained as an on-demand compatibility artifact and rollback target; it is not globally mounted.

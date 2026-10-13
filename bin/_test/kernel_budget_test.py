@@ -21,7 +21,7 @@ SPEC.loader.exec_module(MODULE)
 def kernel(extra: str = "") -> str:
     headings = "\n".join(f"## K{i}: invariant {i}\nbody" for i in range(1, 11))
     return (
-        "# Safety Kernel\n\nThis is a candidate runtime kernel.\n"
+        "# Safety Kernel\n\nThis is the always-loaded runtime constitution.\n"
         "The non-overridable boundary covers permission, credential, destructive action, "
         "branch topology, exact-main deployment, and evidence.\n"
         f"{headings}\n{extra}"

@@ -177,19 +177,26 @@ install_craft_agent() {
         errors=$((errors + 1))
     fi
 
+    if [[ -f "$ws_path/KERNEL.md" ]]; then
+        echo "  [ok] KERNEL.md present (compact global policy)"
+    else
+        echo "  [FAIL] KERNEL.md not found" >&2
+        errors=$((errors + 1))
+    fi
+
     if [[ -L "$ws_path/CLAUDE.md" ]]; then
         local link_target
         link_target="$(readlink "$ws_path/CLAUDE.md")"
-        if [[ "$link_target" == "RULES_BUNDLE.md" ]]; then
-            echo "  [ok] CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount wired)"
+        if [[ "$link_target" == "KERNEL.md" ]]; then
+            echo "  [ok] CLAUDE.md -> KERNEL.md (progressive auto-mount wired)"
         else
-            echo "  [warn] CLAUDE.md is a symlink but points at '$link_target', not RULES_BUNDLE.md"
+            echo "  [warn] CLAUDE.md is a symlink but points at '$link_target', not KERNEL.md"
         fi
     elif [[ -f "$ws_path/CLAUDE.md" ]]; then
-        echo "  [warn] CLAUDE.md exists as a regular file (operator-owned); bundle NOT auto-mounted"
-        echo "         (rename or append to wire the bundle into CA auto-inject)"
+        echo "  [warn] CLAUDE.md exists as a regular file (operator-owned); kernel NOT auto-mounted"
+        echo "         (rename or append KERNEL.md to wire compact policy into CA auto-inject)"
     else
-        echo "  [warn] CLAUDE.md missing; bundle present but CA will not auto-inject it"
+        echo "  [warn] CLAUDE.md missing; kernel present but CA will not auto-inject it"
         errors=$((errors + 1))
     fi
 
@@ -257,9 +264,10 @@ install_craft_agent() {
 
     echo "Deployment complete. Workspace '$WORKSPACE_SLUG' is ready."
     echo
-    echo "Bundle mount status (Craft Agent):"
-    echo "  RULES_BUNDLE.md  -> $ws_path/RULES_BUNDLE.md (always written)"
-    echo "  CLAUDE.md        -> symlink to RULES_BUNDLE.md (if no operator CLAUDE.md present)"
+    echo "Progressive mount status (Craft Agent):"
+    echo "  KERNEL.md        -> $ws_path/KERNEL.md (globally mounted policy)"
+    echo "  RULES_BUNDLE.md  -> $ws_path/RULES_BUNDLE.md (on-demand compatibility)"
+    echo "  CLAUDE.md        -> symlink to KERNEL.md (if no operator CLAUDE.md present)"
     echo
     echo "CA auto-injects CLAUDE.md content into the system prompt of any session whose"
     echo "working directory is at or above the CLAUDE.md (CA walks cwd and its"
@@ -268,7 +276,7 @@ install_craft_agent() {
     echo "  1. Open Settings -> Workspace Settings -> Default Working Directory"
     echo "  2. Set it to: $ws_path"
     echo "  3. New sessions in this workspace will start with cwd there and pick"
-    echo "     up CLAUDE.md (= RULES_BUNDLE.md) on first system-prompt render."
+    echo "     up CLAUDE.md (= KERNEL.md) on first system-prompt render."
     echo
     echo "Existing sessions inherit their old cwd; restart them to apply the new mount."
     echo

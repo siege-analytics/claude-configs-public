@@ -1,0 +1,23 @@
+{
+  "characters": {
+    "injected": {
+      "generic": 7364,
+      "python_review": 7464
+    },
+    "kernel": 6995,
+    "legacy_root_resolver": 46235,
+    "legacy_rules_bundle": 424988,
+    "skill_resolver": 17796
+  },
+  "fixture_selected_counts": {
+    "generic": 0,
+    "python_review": 2,
+    "siege_utilities_review": 3
+  },
+  "fixture_states": {
+    "generic": "unknown",
+    "python_review": "matched",
+    "siege_utilities_review": "matched"
+  },
+  "schema_version": 1
+}

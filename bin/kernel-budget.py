@@ -54,8 +54,8 @@ def validate_text(text: str) -> list[str]:
             f"valid={ids}, all={all_kernel_ids}"
         )
     lowered = text.lower()
-    if "candidate runtime kernel" not in lowered:
-        raise ValueError("kernel must state that runtime cutover has not occurred")
+    if "always-loaded runtime constitution" not in lowered:
+        raise ValueError("kernel must state the active progressive-loading runtime contract")
     if "non-overridable boundary" not in lowered:
         raise ValueError("kernel must declare the non-overridable boundary")
     missing = [term for term in REQUIRED_BOUNDARY_TERMS if term not in lowered]
@@ -130,7 +130,7 @@ def build_catalog(
 
     return {
         "schema_version": 1,
-        "runtime_state": "candidate; progressive-loading cutover not yet enabled",
+        "runtime_state": "active; compact kernel globally mounted with deterministic progressive loading",
         "shelf_isolation_validation": "heuristic text guard; deterministic resolver enforcement belongs to progressive loading",
         "limits": {
             "characters": char_limit,
