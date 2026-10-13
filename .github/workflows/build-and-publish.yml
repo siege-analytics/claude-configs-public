@@ -54,6 +54,11 @@ jobs:
       - name: Exact-main deployment source fixtures
         run: python3 bin/_test/deploy_source_policy_test.py
 
+      - name: Skill inventory fixtures and freshness
+        run: |
+          python3 bin/_test/skill_inventory_test.py
+          python3 bin/skill-inventory.py --check
+
       # A bare `for f in ...; do bash "$f"; done` exits with the status of the
       # LAST file, so a failure in any other file is invisible. Failures are
       # accumulated and the step exits non-zero if any file failed. An empty
