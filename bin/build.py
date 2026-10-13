@@ -1436,12 +1436,13 @@ def build_consumer_packages() -> None:
 
         # Copy runtime validators/selectors.
         (pkg_dir / "bin").mkdir(exist_ok=True)
-        for script_name in ("validate-hooks.py", "resolve-load-set.py"):
+        for script_name in ("validate-hooks.py", "resolve-load-set.py", "review-risk.py"):
             script = REPO_ROOT / "bin" / script_name
             if script.exists():
                 shutil.copy2(script, pkg_dir / "bin" / script_name)
         (pkg_dir / "catalog").mkdir(exist_ok=True)
         shutil.copy2(DIST / "resolver-manifest.json", pkg_dir / "catalog" / "resolver-manifest.json")
+        shutil.copy2(REPO_ROOT / "catalog" / "review-risk-policy.json", pkg_dir / "catalog" / "review-risk-policy.json")
 
         # Write package manifest
         pkg_manifest = {
@@ -1648,6 +1649,14 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
         manifest_src = ca_dist / "enforcement-manifest.json"
         if manifest_src.exists():
             shutil.copy2(manifest_src, craft_workspace / "enforcement-manifest.json")
+
+        # Install review-policy runtime used by native and prompt hooks.
+        for rel in (Path("bin/review-risk.py"), Path("catalog/review-risk-policy.json")):
+            src = ca_dist / rel
+            if src.exists():
+                dst = craft_workspace / rel
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
 
         # Install native git hooks (.githooks/pre-push).
         githooks_src = ca_dist / ".githooks"

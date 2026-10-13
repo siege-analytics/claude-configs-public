@@ -1,0 +1,18 @@
+{
+  "classifier_characters": 3905,
+  "fixture_tiers": {
+    "high_risk_gate": "C",
+    "mixed": "C",
+    "standard_skill": "B",
+    "trivial_docs": "A"
+  },
+  "legacy_minimum_artifact_for_all_tiers": true,
+  "load_set_change": 0,
+  "policy_characters": 1801,
+  "required_evidence_counts": {
+    "A": 1,
+    "B": 3,
+    "C": 7
+  },
+  "schema_version": 1
+}

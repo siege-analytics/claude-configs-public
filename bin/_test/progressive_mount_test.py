@@ -33,6 +33,8 @@ def main() -> None:
         assert (migrated / "CLAUDE.md").readlink() == Path("KERNEL.md")
         assert (migrated / "KERNEL.md").is_file()
         assert (migrated / "RULES_BUNDLE.md").is_file()
+        assert (migrated / "bin" / "review-risk.py").is_file()
+        assert (migrated / "catalog" / "review-risk-policy.json").is_file()
 
         operator_link = base / "operator-link"
         operator_link.mkdir()

@@ -57,9 +57,19 @@ conflict-resolved promotion branch auditable when direct `develop` ->
 protection may still require a human approval, but this repo's policy
 and CI should treat such PRs as self-reviewed and promotion-ready.
 
+## Proportional review tiers
+
+Run `python3 bin/review-risk.py --staged` before committing. The classifier is authoritative for the minimum tier; authors may escalate but may not downgrade. Record `Review-Tier: A|B|C` in every non-merge commit.
+
+- **Tier A — trivial:** prose, plans, or generated evidence with no runtime behavior. Required: a short `Self-Review:` trailer, syntax/reference validation, and focused diff check. `Self-Review-Source:` is optional; pre-mortem and hostile review are not required.
+- **Tier B — standard:** normal skill/rule changes, non-critical code/hooks, and documentation behavior. Required: `Self-Review:`, `Self-Review-Source:`, a focused artifact with `## Assumptions` and `## Test plan`, and relevant regression tests. Investigation, pre-mortem, and cross-provider review are not mandatory unless the classifier escalates.
+- **Tier C — high risk:** enforcement gates, branch/release/deployment policy, credentials/auth/permissions, destructive operations, and review-policy changes. Required: the full artifact below, pre-mortem, actual `Hostile-Review:` evidence, negative tests, full suite, and canary/rollback evidence.
+
+Unknown paths default to Tier B. Mixed changes take the highest tier. Missing classifier/policy fails closed. `[no-review]` is accepted only for machine-validated Tier A changes.
+
 ## Artifact format
 
-Required sections:
+The full format below is required for Tier C. Tier B uses only `## Assumptions` and `## Test plan`; Tier A uses the short trailer record.
 
 ```
 ## Assumptions
@@ -1177,11 +1187,13 @@ remain operator-auditable rather than mechanical.
 
 ## Trailers and hook enforcement
 
-The latest commit being pushed must carry both trailers:
+Every non-merge commit must carry its validated tier and review record. Tier B/C also require the artifact pointer; Tier C requires independent hostile-review evidence:
 
 ```
+Review-Tier: <A | B | C>
 Self-Review: <one-line summary of the review pass>
-Self-Review-Source: <path or ticket pointing at the artifact>
+Self-Review-Source: <required for B/C; path or ticket pointing at the artifact>
+Hostile-Review: <required for C; path or ticket pointing at independent review>
 ```
 
 These match the existing `Verified-by:` trailer idiom that
@@ -1199,15 +1211,9 @@ the claim must be grounded.
 
 **v1 enforced mechanically (in the pre-push hook today):**
 
-- Both trailers present in the trailer block of the latest commit
-  (parsed via `git interpret-trailers --parse`, not line-anchored
-  grep -- rejects trailer keywords that appear in the subject or body).
-- Exactly one `Self-Review-Source:` value (multiple = ambiguous,
-  blocked).
-- If the source value is a file path: file exists, has the four
-  required section headers (`## Assumptions`, `## Peer review`,
-  `## Lead review`, `## Quantified claims`), has a non-empty
-  `Goal source:` line.
+- `Review-Tier:` and `Self-Review:` are present; the declaration cannot be below the classifier's result.
+- Tier A may stop at the short trailer record. Tier B/C require exactly one `Self-Review-Source:` value (multiple = ambiguous, blocked). Tier C also requires `Hostile-Review:`.
+- If a Tier B source is a file path: it exists and has `## Assumptions`, `## Test plan`, and a non-empty `Goal source:`. Tier C retains the full four-section structure (`## Assumptions`, `## Peer review`, `## Lead review`, `## Quantified claims`).
 - **v1.1**: If `Goal source:` value is itself a file path, its mtime
   must not be newer than the review artifact's mtime (catches goal-
   source-written-after-the-work post-hoc-justification pattern).

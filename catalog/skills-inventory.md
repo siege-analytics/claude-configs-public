@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **198**
-- Characters: **2,661,923**
-- Estimated tokens: **665,558** (character/4 estimate)
+- Characters: **2,663,655**
+- Estimated tokens: **665,991** (character/4 estimate)
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,13 +35,13 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 42,965 | 10,746 |
 | project | 4 | 54,452 | 13,615 |
 | reference | 69 | 1,294,771 | 323,720 |
-| unclassified | 110 | 1,269,735 | 317,477 |
+| unclassified | 110 | 1,271,467 | 317,910 |
 
 ## Largest source items
 
 | Slug | Kind | Characters | Est. tokens | Source |
 |---|---|---:|---:|---|
-| `self-review` | skill | 68,545 | 17,137 | `skills/self-review/SKILL.md` |
+| `self-review` | skill | 70,277 | 17,570 | `skills/self-review/SKILL.md` |
 | `authoring-against-state` | rule | 57,270 | 14,318 | `skills/_authoring-against-state-rules.md` |
 | `writing-code` | rule | 52,768 | 13,192 | `skills/_writing-code-rules.md` |
 | `investigate` | skill | 39,034 | 9,759 | `skills/investigate/SKILL.md` |

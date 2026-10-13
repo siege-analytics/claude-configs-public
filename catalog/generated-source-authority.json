@@ -2738,29 +2738,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/self-review",
           "file_count": 1,
-          "tree_sha256": "a630a37400083469598ecfcfa93ee726abff6ade5aee711c939c72236d2e9787"
+          "tree_sha256": "13edc76daa04da1913f2ded626de10a3ff815e26783edffbd9d1c9e2f01ebec2"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/self-review",
           "file_count": 1,
-          "tree_sha256": "a630a37400083469598ecfcfa93ee726abff6ade5aee711c939c72236d2e9787"
+          "tree_sha256": "13edc76daa04da1913f2ded626de10a3ff815e26783edffbd9d1c9e2f01ebec2"
         },
         "flat": {
           "destination": "dist/flat/skills/self-review",
           "file_count": 1,
-          "tree_sha256": "a630a37400083469598ecfcfa93ee726abff6ade5aee711c939c72236d2e9787"
+          "tree_sha256": "13edc76daa04da1913f2ded626de10a3ff815e26783edffbd9d1c9e2f01ebec2"
         },
         "nested": {
           "destination": "dist/nested/skills/self-review",
           "file_count": 1,
-          "tree_sha256": "a630a37400083469598ecfcfa93ee726abff6ade5aee711c939c72236d2e9787"
+          "tree_sha256": "13edc76daa04da1913f2ded626de10a3ff815e26783edffbd9d1c9e2f01ebec2"
         }
       },
       "canonical_source": "skills/self-review/SKILL.md",
       "kind": "skill",
       "slug": "self-review",
       "source_file_count": 1,
-      "source_tree_sha256": "13751586bbb70730af96cce8ea618c2d4cf65182885c0edc08c1037531ecd2af"
+      "source_tree_sha256": "f7a37d239268ee381caeb864eb9ad4e3610f8dc3c684f2eaef9d961448b06aa7"
     },
     {
       "artifacts": {
