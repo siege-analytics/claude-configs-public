@@ -60,16 +60,16 @@ PLANS_DIRS=""
 
 if [[ -n "$PLANS_DIRS" ]]; then
     # shellcheck disable=SC2086
-    THINK_FILES=$(find $PLANS_DIRS -maxdepth 1 -name 'think-*.md' 2>/dev/null | head -10)
+    THINK_FILES=$(find $PLANS_DIRS -maxdepth 1 -name 'think-*.md' 2>/dev/null | sed -n '1,10p')
 
     if [[ -n "$THINK_FILES" ]]; then
         # Check for downstream artifacts (any, not ticket-matched — v1)
         # shellcheck disable=SC2086
-        HAS_INVESTIGATE=$(find $PLANS_DIRS -maxdepth 1 -name 'investigate-*.md' 2>/dev/null | head -1)
+        HAS_INVESTIGATE=$(find $PLANS_DIRS -maxdepth 1 -name 'investigate-*.md' 2>/dev/null | sed -n '1p')
         # shellcheck disable=SC2086
-        HAS_PREMORTEM=$(find $PLANS_DIRS -maxdepth 1 \( -name 'pre-mortem-*.md' -o -name 'premortem-*.md' \) 2>/dev/null | head -1)
+        HAS_PREMORTEM=$(find $PLANS_DIRS -maxdepth 1 \( -name 'pre-mortem-*.md' -o -name 'premortem-*.md' \) 2>/dev/null | sed -n '1p')
         # shellcheck disable=SC2086
-        HAS_SELFREVIEW=$(find $PLANS_DIRS -maxdepth 1 -name 'self-review-*.md' 2>/dev/null | head -1)
+        HAS_SELFREVIEW=$(find $PLANS_DIRS -maxdepth 1 -name 'self-review-*.md' 2>/dev/null | sed -n '1p')
 
         MISSING=""
         [[ -z "$HAS_INVESTIGATE" ]] && MISSING="${MISSING}  [!] investigate artifact: MISSING — produce Fact Sheet before implementation\n"

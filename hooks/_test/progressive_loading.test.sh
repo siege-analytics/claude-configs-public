@@ -17,6 +17,15 @@ grep -q 'load: coding' <<<"$python_out" && grep -q 'load: python' <<<"$python_ou
 chars=$(printf '%s' "$python_out" | wc -c | tr -d ' ')
 [[ "$chars" -lt 12000 ]] && ok "injection stays below 12k chars ($chars)" || bad "injection too large ($chars)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+mkdir "$TMP/many-plans"
+: > "$TMP/many-plans/think-many.md"
+for i in $(seq 1 25); do
+  : > "$TMP/many-plans/investigate-$i.md"
+  : > "$TMP/many-plans/pre-mortem-$i.md"
+  : > "$TMP/many-plans/self-review-$i.md"
+done
+many_plans="$(printf '%s' "$generic" | CRAFT_AGENT_PLANS_PATH="$TMP/many-plans" bash "$HOOK")"
+grep -q 'state: unknown' <<<"$many_plans" && ok "large plan inventory does not SIGPIPE under pipefail" || bad "large plan inventory terminated hook"
 git -C "$TMP" init -q; git -C "$TMP" remote add origin git@github.com:siege-analytics/siege_utilities.git
 project_out="$(run "{\"prompt\":\"review this diff\",\"cwd\":\"$TMP\"}")"
 grep -q 'project: siege-utilities' <<<"$project_out" && grep -q 'load: siege-utilities--rules' <<<"$project_out" && ok "matching repo loads project overlay" || bad "project overlay missing"

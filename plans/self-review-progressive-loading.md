@@ -84,6 +84,7 @@ Authority remains 198 authored sources, 804 source-owned artifact snapshots, and
 5. Added visible rejected-explicit diagnostics and malformed-schema structured errors.
 6. Added safe `canary` and `kernel-only` controls with no broad fallback.
 7. Added persistent installer mount ownership/migration tests.
+8. Replaced `find | head` probes after hosted GNU `find` exposed SIGPIPE under `pipefail`; added a 25-artifact regression fixture.
 
 ## Evidence-predates-work
 

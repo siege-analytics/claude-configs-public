@@ -8389,6 +8389,7 @@
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
@@ -8964,6 +8965,7 @@
       "source_path": "skills/pre-mortem/SKILL.md",
       "test_evidence": [
         "bin/_test/settings_drift_test.py",
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
         "hooks/_test/universal_mutation_gate_831.test.sh",
@@ -9619,6 +9621,7 @@
       "slug": "self-review",
       "source_path": "skills/self-review/SKILL.md",
       "test_evidence": [
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
         "scripts/discipline/tests/fixtures/fail-esm-branch-range-multi-commit.md",
@@ -10168,6 +10171,7 @@
         "hooks/_test/gate_registry.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
+        "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/project_scoped_gate.test.sh",
         "hooks/_test/resolve_project.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
