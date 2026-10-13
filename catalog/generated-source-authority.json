@@ -853,29 +853,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_tandem-agent-rules.md",
           "file_count": 1,
-          "tree_sha256": "7515d84070b41fabb76d1644ec5bde52ea33b94e67565d43570fa4ded62aa93d"
+          "tree_sha256": "05bbe8b4eae0cd13ee57ad8a0b099dcc53fb7cc895efc1f05b04b61ca88bf632"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_tandem-agent-rules.md",
           "file_count": 1,
-          "tree_sha256": "7515d84070b41fabb76d1644ec5bde52ea33b94e67565d43570fa4ded62aa93d"
+          "tree_sha256": "05bbe8b4eae0cd13ee57ad8a0b099dcc53fb7cc895efc1f05b04b61ca88bf632"
         },
         "flat": {
           "destination": "dist/flat/skills/_tandem-agent-rules.md",
           "file_count": 1,
-          "tree_sha256": "7515d84070b41fabb76d1644ec5bde52ea33b94e67565d43570fa4ded62aa93d"
+          "tree_sha256": "05bbe8b4eae0cd13ee57ad8a0b099dcc53fb7cc895efc1f05b04b61ca88bf632"
         },
         "nested": {
           "destination": "dist/nested/skills/_tandem-agent-rules.md",
           "file_count": 1,
-          "tree_sha256": "7515d84070b41fabb76d1644ec5bde52ea33b94e67565d43570fa4ded62aa93d"
+          "tree_sha256": "05bbe8b4eae0cd13ee57ad8a0b099dcc53fb7cc895efc1f05b04b61ca88bf632"
         }
       },
       "canonical_source": "skills/_tandem-agent-rules.md",
       "kind": "rule",
       "slug": "tandem-agent",
       "source_file_count": 1,
-      "source_tree_sha256": "591761fc1fca43d443d46816c8ed9f2a29d348997df22a2b4202b3b4a50f8706"
+      "source_tree_sha256": "d9b10af0d9e54e89fe1d34f05d080204937dd881f911dc0e32ddb1de30ee6b82"
     },
     {
       "artifacts": {
