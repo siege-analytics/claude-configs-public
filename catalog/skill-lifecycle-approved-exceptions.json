@@ -1,0 +1,5 @@
+{
+  "description": "Post-baseline lifecycle exceptions. Every entry requires source_path, reason, approval_reference, and approved_on.",
+  "entries": [],
+  "schema_version": 1
+}

@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # lifecycle ratchets compare append-only state to the protected base
 
       - uses: actions/setup-python@v5
         with:
@@ -58,6 +60,13 @@ jobs:
         run: |
           python3 bin/_test/skill_inventory_test.py
           python3 bin/skill-inventory.py --check
+
+      - name: Skill lifecycle schema and migration ratchet
+        env:
+          LIFECYCLE_PREVIOUS_REF: ${{ github.event.pull_request.base.sha || github.event.before || github.event.merge_group.base_sha || '' }}
+        run: |
+          python3 bin/_test/skill_lifecycle_test.py
+          python3 bin/skill-lifecycle.py --check
 
       # A bare `for f in ...; do bash "$f"; done` exits with the status of the
       # LAST file, so a failure in any other file is invisible. Failures are

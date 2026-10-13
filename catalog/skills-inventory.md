@@ -11,7 +11,7 @@ This report describes committed source evidence. Missing references or tests do 
 - Estimated tokens: **665,558** (character/4 estimate)
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
-- Without tracked source references: **9**
+- Without tracked source references: **0**
 - Without heuristic test evidence: **131**
 - Duplicate rule IDs: **0**
 - Current build-rubric D/F grades: **151**
@@ -72,7 +72,7 @@ This report describes committed source evidence. Missing references or tests do 
 - Unclassified tier: 110
 - Unknown owners: 194
 - Unknown lifecycle: 198
-- No tracked source references: 9
+- No tracked source references: 0
 - No heuristic test evidence: 131
 
 These are Phase 1 inputs, not automatic retirement decisions.
