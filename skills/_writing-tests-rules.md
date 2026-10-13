@@ -272,10 +272,6 @@ These rules are mandatory. No `[test-skip]` override. The rule-7 grep ("test fil
 - `[rule:writing-claims]` rules apply to claims a test makes about coverage ("this test covers all four connectors") and to commit/PR messages that describe what the tests do.
 - `[rule:property-testing]` is the sibling discipline for functions whose input domain is large or combinatorial (CRS transforms, geometry operations, aggregations, normalization, serialization round-trips). When example-based tests would require enumerating dozens of cases to feel complete, reach for property tests instead. Property tests complement, not replace, example-based tests. Data-heavy libraries (geo, time-series, DataFrame ops) are especially high-ROI for this pattern.
 
-## Migration note (v2.0.x only)
-
-This file is derived from rules 7, 8, 15, 16, and 19 of the deprecated `_no-ai-fingerprints-rules.md`, plus the R-23 mock-spec extension landed inside v2.0.0. Old rule 19 (untested exception handlers, shipped in v1.6.1) becomes writing-tests:5 here. See `CHANGELOG.md` for the v2.0.0 migration table. This migration note is retained for one release cycle (v2.0.x) and removed in v2.1.0.
-
 ## Attribution
 
 Defers to `[rule:output]`. No AI / agent attribution in tests, fixtures, commits, or comments.

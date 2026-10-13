@@ -73,10 +73,6 @@ These rules are mandatory. There is no `[prose-skip]` override. The rule-2 carve
 - `[skill:commit]` implements writing-prose:4 directly and enforces the artifact-specific format (subject line conventions, ticket-reference footer).
 - `[skill:detect-ai-fingerprints]` mechanically scans writing-prose:1, :2, :3, :4 on staged diffs and commit message bodies. writing-prose:5 is outside that scanner's scope because it targets the live assistant response, not staged-diff text; Phase 2 of #266 proposes a separate Stop-hook scanner for that surface.
 
-## Migration note (v2.0.x only)
-
-This file is derived from rules 1, 2, 4, 5 of the deprecated `_no-ai-fingerprints-rules.md`. Old rules 3 and 6 moved to `_writing-code-rules.md` because they apply specifically to code-authoring acts (docstrings, code comments). See `CHANGELOG.md` for the v2.0.0 migration table mapping old rule numbers to new `<file-stem>:<n>` identifiers. This migration note is retained for one release cycle (v2.0.x) and removed in v2.1.0.
-
 ## Attribution
 
 Defers to `[rule:output]`. No AI / agent attribution in prose, code, commits, PRs, or comments.

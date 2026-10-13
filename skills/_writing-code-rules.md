@@ -383,10 +383,6 @@ These rules are mandatory. No `[code-skip]` override. writing-code:5 (no hypothe
 - `[rule:environment-preflight]` is the one-time-per-repo inventory underlying writing-code:5.
 - `[skill:commit]` step 4 is the mechanical enforcement of writing-code:5.
 
-## Migration note (v2.0.x only)
-
-This file is derived from rules 3, 6, 9, 10, 12, 17, 18, and 20 of the deprecated `_no-ai-fingerprints-rules.md`. Rules 3 and 6 moved here from `_writing-prose-rules.md` because they apply to code-authoring acts (docstrings, code comments). Rules 10 and 17 moved here from `_writing-claims-rules.md` because they fire at code-edit time, and the operator editing code should find them in the writing-code lookup path; the underlying claim-grounding family connection is preserved via cross-reference. Old rule 20 (conditional-import callsite hygiene, shipped in v1.6.1) becomes writing-code:8 here. See `CHANGELOG.md` for the v2.0.0 migration table. This migration note is retained for one release cycle (v2.0.x) and removed in v2.1.0.
-
 ## Attribution
 
 Defers to `[rule:output]`. No AI / agent attribution in code, commits, or comments.

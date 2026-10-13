@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **198**
-- Characters: **2,663,655**
-- Estimated tokens: **665,991** (character/4 estimate)
+- Characters: **2,660,899**
+- Estimated tokens: **665,303** (character/4 estimate)
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 42,965 | 10,746 |
 | project | 4 | 54,452 | 13,615 |
 | reference | 69 | 1,294,771 | 323,720 |
-| unclassified | 110 | 1,271,467 | 317,910 |
+| unclassified | 110 | 1,268,711 | 317,222 |
 
 ## Largest source items
 
@@ -43,16 +43,16 @@ This report describes committed source evidence. Missing references or tests do 
 |---|---|---:|---:|---|
 | `self-review` | skill | 70,277 | 17,570 | `skills/self-review/SKILL.md` |
 | `authoring-against-state` | rule | 57,270 | 14,318 | `skills/_authoring-against-state-rules.md` |
-| `writing-code` | rule | 52,768 | 13,192 | `skills/_writing-code-rules.md` |
+| `writing-code` | rule | 51,999 | 13,000 | `skills/_writing-code-rules.md` |
 | `investigate` | skill | 39,034 | 9,759 | `skills/investigate/SKILL.md` |
 | `shelves--top-design` | reference-shelf | 38,675 | 9,669 | `skills/shelves/design/top-design/SKILL.md` |
-| `writing-claims` | rule | 32,103 | 8,026 | `skills/_writing-claims-rules.md` |
+| `writing-claims` | rule | 31,339 | 7,835 | `skills/_writing-claims-rules.md` |
 | `shelves--two-scoops-django` | reference-shelf | 30,998 | 7,750 | `skills/shelves/django/two-scoops-django/SKILL.md` |
 | `shelves--one-page-marketing` | reference-shelf | 30,341 | 7,586 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
 | `writing-rules` | rule | 30,148 | 7,537 | `skills/_writing-rules-rules.md` |
 | `shelves--hundred-million-offers` | reference-shelf | 29,309 | 7,328 | `skills/shelves/sales/hundred-million-offers/SKILL.md` |
-| `writing-tests` | rule | 27,794 | 6,949 | `skills/_writing-tests-rules.md` |
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
+| `writing-tests` | rule | 27,373 | 6,844 | `skills/_writing-tests-rules.md` |
 | `hostile-review` | skill | 26,756 | 6,689 | `skills/hostile-review/SKILL.md` |
 | `think` | skill | 26,726 | 6,682 | `skills/think/SKILL.md` |
 | `engagement-post-mortem` | skill | 26,695 | 6,674 | `skills/engagement-post-mortem/SKILL.md` |

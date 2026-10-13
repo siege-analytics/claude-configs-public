@@ -182,10 +182,6 @@ These rules are mandatory. No `[claim-skip]` override and no `[padding-skip]` ov
 - `[skill:code-review]` checks writing-claims:1 (scope-of-fix across the codebase) and writing-claims:4 (pattern-naming groundedness) at PR time.
 - `[skill:self-review]` Quantified Claims section requires writing-claims:8 evidence inline for every specific count stated in the PR body or commit message.
 
-## Migration note (v2.0.x only)
-
-This file is derived from rules 11 and 13 of the deprecated `_no-ai-fingerprints-rules.md`, plus the R-22 confidence-calibration extension proposed in the v1.7.0 round and landed inside v2.0.0. Old rules 10 (verify symbol exists) and 17 (doc-edit symmetry) moved to `_writing-code-rules.md` because they fire at code-edit time; an operator editing code should find them in the writing-code lookup path, not via cross-reference from writing-claims. The underlying claim-grounding family connection is preserved via cross-reference. See `CHANGELOG.md` for the v2.0.0 migration table mapping old rule numbers to new `<file-stem>:<n>` identifiers. This migration note is retained for one release cycle (v2.0.x) and removed in v2.1.0.
-
 ## Attribution
 
 Defers to `[rule:output]`. No AI / agent attribution in claims, code, commits, PRs, or comments.
