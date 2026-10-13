@@ -129,10 +129,6 @@ These rules are mandatory. No `[release-skip]` override. writing-releases:1 stay
 - `[skill:create-pr]` is the artifact-skill that produces PR bodies; the `New-skip:` and `BREAKING` trailers are required when the rules fire.
 - `[skill:detect-ai-fingerprints]` mechanically enforces writing-releases:2 when invoked in `--pr <n>` mode and writing-releases:3 via the AST scanner on `.py` files.
 
-## Migration note
-
-This file is derived from rule 14 of the deprecated `_no-ai-fingerprints-rules.md`, plus the R-21 skip-count-trending extension proposed in the v1.7.0 round and landed inside v2.0.0. See `CHANGELOG.md` for the v2.0.0 migration table. This migration note is retained for one release cycle (v2.0.x) and removed in v2.1.0.
-
 ## Attribution
 
 Defers to `[rule:output]`. No AI / agent attribution in releases, changelogs, commits, or comments.

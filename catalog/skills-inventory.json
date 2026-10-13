@@ -3809,6 +3809,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -3881,6 +3882,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/fixtures/pass-trivial-against-state-local-only.md",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
@@ -3944,6 +3946,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4007,6 +4010,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4086,6 +4090,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4144,6 +4149,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4206,6 +4212,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4266,6 +4273,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4328,6 +4336,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4395,6 +4404,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4500,6 +4510,7 @@
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/test_skill_token_chat_safe.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
@@ -4560,6 +4571,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4622,6 +4634,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4680,6 +4693,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4741,6 +4755,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4824,6 +4839,7 @@
         "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/ci/test_promote_unreleased.sh",
         "scripts/ci/test_release_notes.sh",
@@ -4898,6 +4914,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -4955,6 +4972,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5015,6 +5033,7 @@
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5072,6 +5091,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5130,6 +5150,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5207,6 +5228,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5275,6 +5297,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "skills/detect-ai-fingerprints/test_run_comprehensive_test.sh",
@@ -5343,6 +5366,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5405,6 +5429,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5477,6 +5502,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5547,6 +5573,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5616,6 +5643,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5678,6 +5706,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5747,6 +5776,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5809,6 +5839,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "templates/tests/README.md"
@@ -5819,10 +5850,10 @@
     },
     {
       "canonical_source": "skills/_writing-claims-rules.md",
-      "characters": 32103,
-      "content_sha256": "e4fafdc75c95c1765aed2e4db013bf90610063005f1f4c859d5db571fd40ea1b",
+      "characters": 31339,
+      "content_sha256": "b9f252a879fbde8a6b3326ecf5448d80e2095390e1323b4f0a7eab25e5d4e527",
       "description": "Always-on. Claim-grounding discipline. Grep before declaring a fix complete; ground countable claims in same-turn evidence; ground unquantified completeness claims (loop closed, ready to ship) in the same evidence shape; ground invented framework signals (new pattern names, coined disciplines) in existing artifacts; verify external-resource recommendations (URLs, file paths, tickets, free-vs-paid) at recommendation time; require three samples before promoting a pattern to a rule; verify finding-text against live source before scoping work; specific counts must cite the command that produced them; gate present/past-tense causal claims about production state behind a same-turn falsification probe or explicit `Hypothesis:`/`Untested:` label; before claiming a change to runtime-loaded code took effect, verify the consuming path matches the edited path. Applies whenever the agent states a fact in a commit body, PR body, agent-to-agent message, or chat to the operator. Fact-grounding at code-edit time (verify symbol exists, doc-edit symmetry, dependency reachable) lives in `_writing-code-rules.md`. Future-tense action commitments live in writing-prose:5.",
-      "estimated_tokens": 8026,
+      "estimated_tokens": 7835,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_writing-claims-rules.md",
@@ -5859,7 +5890,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 191,
+      "lines": 187,
       "owner": [
         "unknown"
       ],
@@ -5899,6 +5930,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "skills/detect-ai-fingerprints/test_rule_citations.sh",
@@ -5910,10 +5942,10 @@
     },
     {
       "canonical_source": "skills/_writing-code-rules.md",
-      "characters": 52768,
-      "content_sha256": "3776e4d0461c644dfcd0ed70d72173c4d81976cc5a68d0d2ea856b71dfca1275",
+      "characters": 51999,
+      "content_sha256": "d720d555238fc89cb11bcf6b0c4d73e4eaef555ed6b889fc590a6f0ff37ba015",
       "description": "Always-on. Code-authoring discipline. Docstring brevity, no history references in code comments, no speculative abstractions, verify symbols exist before naming them, verify dependencies are reachable before writing code that uses them, doc-edit symmetry, no silent error swallowing, migration completeness (old-path grep must return zero), deprecation shims require companion follow-up tickets. Test-writing rules live in `_writing-tests-rules.md`; claim-grounding (commit/PR-body claims) lives in `_writing-claims-rules.md`.",
-      "estimated_tokens": 13192,
+      "estimated_tokens": 13000,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_writing-code-rules.md",
@@ -5945,7 +5977,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 392,
+      "lines": 388,
       "owner": [
         "unknown"
       ],
@@ -5994,6 +6026,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "skills/detect-ai-fingerprints/test_rule_citations.sh",
@@ -6012,10 +6045,10 @@
     },
     {
       "canonical_source": "skills/_writing-prose-rules.md",
-      "characters": 9923,
-      "content_sha256": "cb02d8427088e4ce52519d6a936bea8f45bebbf6c000551bb4894af525849abc",
+      "characters": 9461,
+      "content_sha256": "f001ec86c384b2714e6c566bd9b58e3eb9a52c4cc669c3779973b9c487239888",
       "description": "Always-on. Stylistic discipline for natural-language output -- chat, comments-as-prose, commit subject and body, PR descriptions, agent-to-agent messages. Five rules covering the prose-style fingerprints; rule 1 covers the broader AI-typographic Unicode character class (dashes, arrows, curly quotes, ellipsis, middle dot, bullet, NBSP); rule 5 covers future-tense commitments that ship without backing mechanism. Code-comment specifics (history references) live in `_writing-code-rules.md`; docstring discipline lives in `_writing-code-rules.md` because docstrings are code.",
-      "estimated_tokens": 2481,
+      "estimated_tokens": 2366,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_writing-prose-rules.md",
@@ -6042,7 +6075,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 82,
+      "lines": 78,
       "owner": [
         "unknown"
       ],
@@ -6076,6 +6109,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/test_skill_token_chat_safe.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
@@ -6088,10 +6122,10 @@
     },
     {
       "canonical_source": "skills/_writing-releases-rules.md",
-      "characters": 18577,
-      "content_sha256": "f606cdc8a757a0ffe3b320aa96c7011a7e218a756aa8b2f1ced0ce97e21f88b5",
+      "characters": 18237,
+      "content_sha256": "97769b70aa7a7ffd91c79d07dc71e91216a1b056fe09329d4f362b2dc0d93cd9",
       "description": "Always-on. Release-act discipline. Any change rejecting previously-accepted input or removing a public name gets a BREAKING entry. Any net increase in skip-site count needs an explicit justification in the PR body. Every DeprecationWarning and PendingDeprecationWarning names a removal target by version or date with a removal-commitment keyword. Applies when cutting a release, merging a PR that affects the public surface or the test-suite coverage, or adding a deprecation warning.",
-      "estimated_tokens": 4645,
+      "estimated_tokens": 4560,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_writing-releases-rules.md",
@@ -6114,7 +6148,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 138,
+      "lines": 134,
       "owner": [
         "unknown"
       ],
@@ -6148,6 +6182,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "skills/detect-ai-fingerprints/test_scan_sh_exit_code.sh",
@@ -6226,6 +6261,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/fixtures/fail-trivial-investigation-local-only.md",
         "scripts/discipline/tests/fixtures/pass-trivial-change-prose-only-docs.md",
@@ -6238,10 +6274,10 @@
     },
     {
       "canonical_source": "skills/_writing-tests-rules.md",
-      "characters": 27794,
-      "content_sha256": "d6e1a7b205084a9c8371b68319beb275437a9bac31627ac7f27c65a4b0c9a612",
+      "characters": 27373,
+      "content_sha256": "25f2ad09dc16eb15f9b1d97c2c901a32fb89375dbe9ba40a758375cab542166b",
       "description": "Always-on. Test-writing discipline. Tests must exercise the production code, not the mock setup; mocks must use real exception classes and real-shape fixtures; skip messages must name how to unskip; no cargo-culted copy-modify across similar targets. Code-writing rules live in `_writing-code-rules.md`; claim-grounding lives in `_writing-claims-rules.md`.",
-      "estimated_tokens": 6949,
+      "estimated_tokens": 6844,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_writing-tests-rules.md",
@@ -6279,7 +6315,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 281,
+      "lines": 277,
       "owner": [
         "unknown"
       ],
@@ -6316,6 +6352,7 @@
         "hooks/_test/survey_context.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
+        "hooks/_test/writing_migration_cleanup.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/tests/test-hook-fail-closed.sh",
         "skills/detect-ai-fingerprints/test_rule_citations.sh",
@@ -10651,9 +10688,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2663655,
+    "characters": 2660899,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 665991,
+    "estimated_tokens": 665303,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -10674,7 +10711,7 @@
       "on-demand": 42965,
       "project": 54452,
       "reference": 1294771,
-      "unclassified": 1271467
+      "unclassified": 1268711
     },
     "tier_counts": {
       "on-demand": 15,
@@ -10686,7 +10723,7 @@
       "on-demand": 10746,
       "project": 13615,
       "reference": 323720,
-      "unclassified": 317910
+      "unclassified": 317222
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

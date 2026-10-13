@@ -1027,116 +1027,116 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_writing-claims-rules.md",
           "file_count": 1,
-          "tree_sha256": "01dce9d6898be456e9d20d1c0746755d9304ca96f7565c6663f906f87a7170da"
+          "tree_sha256": "411acf32568f3c45f4df525cf486be63c4910f11d3f92556c6792df321e811cb"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_writing-claims-rules.md",
           "file_count": 1,
-          "tree_sha256": "01dce9d6898be456e9d20d1c0746755d9304ca96f7565c6663f906f87a7170da"
+          "tree_sha256": "411acf32568f3c45f4df525cf486be63c4910f11d3f92556c6792df321e811cb"
         },
         "flat": {
           "destination": "dist/flat/skills/_writing-claims-rules.md",
           "file_count": 1,
-          "tree_sha256": "01dce9d6898be456e9d20d1c0746755d9304ca96f7565c6663f906f87a7170da"
+          "tree_sha256": "411acf32568f3c45f4df525cf486be63c4910f11d3f92556c6792df321e811cb"
         },
         "nested": {
           "destination": "dist/nested/skills/_writing-claims-rules.md",
           "file_count": 1,
-          "tree_sha256": "01dce9d6898be456e9d20d1c0746755d9304ca96f7565c6663f906f87a7170da"
+          "tree_sha256": "411acf32568f3c45f4df525cf486be63c4910f11d3f92556c6792df321e811cb"
         }
       },
       "canonical_source": "skills/_writing-claims-rules.md",
       "kind": "rule",
       "slug": "writing-claims",
       "source_file_count": 1,
-      "source_tree_sha256": "185f83735b9b1403b6ce7f98d15bd2abfc26b0f0371325fdd4c7c71e940084c9"
+      "source_tree_sha256": "617ef4f7605ed004e3031a60e5d1300d89300b26a21e76e80d3c554a0b0c36e8"
     },
     {
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/_writing-code-rules.md",
           "file_count": 1,
-          "tree_sha256": "5ef6db949e20a6e3a9a4520cee2a8ffa43a9038e67d0be365000ed0d9032aac2"
+          "tree_sha256": "a04ee001753124854bd78f3c644e70af1ce1d63f50c214c51b46a38adffa5f28"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_writing-code-rules.md",
           "file_count": 1,
-          "tree_sha256": "5ef6db949e20a6e3a9a4520cee2a8ffa43a9038e67d0be365000ed0d9032aac2"
+          "tree_sha256": "a04ee001753124854bd78f3c644e70af1ce1d63f50c214c51b46a38adffa5f28"
         },
         "flat": {
           "destination": "dist/flat/skills/_writing-code-rules.md",
           "file_count": 1,
-          "tree_sha256": "5ef6db949e20a6e3a9a4520cee2a8ffa43a9038e67d0be365000ed0d9032aac2"
+          "tree_sha256": "a04ee001753124854bd78f3c644e70af1ce1d63f50c214c51b46a38adffa5f28"
         },
         "nested": {
           "destination": "dist/nested/skills/_writing-code-rules.md",
           "file_count": 1,
-          "tree_sha256": "5ef6db949e20a6e3a9a4520cee2a8ffa43a9038e67d0be365000ed0d9032aac2"
+          "tree_sha256": "a04ee001753124854bd78f3c644e70af1ce1d63f50c214c51b46a38adffa5f28"
         }
       },
       "canonical_source": "skills/_writing-code-rules.md",
       "kind": "rule",
       "slug": "writing-code",
       "source_file_count": 1,
-      "source_tree_sha256": "655fc981aa1d1754f5ca24cabf5c2ff36f64ff583104b83046cf2d62a0a9623d"
+      "source_tree_sha256": "28ca15e9c6f82bdbba5bdd78d147da19c97b80c527acba49b4f477eab3dd92e6"
     },
     {
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/_writing-prose-rules.md",
           "file_count": 1,
-          "tree_sha256": "27cd15bd6b513f40462424d17c67b52cfdd95270967d96adc5473c92b5dd2d72"
+          "tree_sha256": "1d1d3388eef2bff273fdcabe5b3a61bc2c9539943e3dfb0c1dd298d537638542"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_writing-prose-rules.md",
           "file_count": 1,
-          "tree_sha256": "27cd15bd6b513f40462424d17c67b52cfdd95270967d96adc5473c92b5dd2d72"
+          "tree_sha256": "1d1d3388eef2bff273fdcabe5b3a61bc2c9539943e3dfb0c1dd298d537638542"
         },
         "flat": {
           "destination": "dist/flat/skills/_writing-prose-rules.md",
           "file_count": 1,
-          "tree_sha256": "27cd15bd6b513f40462424d17c67b52cfdd95270967d96adc5473c92b5dd2d72"
+          "tree_sha256": "1d1d3388eef2bff273fdcabe5b3a61bc2c9539943e3dfb0c1dd298d537638542"
         },
         "nested": {
           "destination": "dist/nested/skills/_writing-prose-rules.md",
           "file_count": 1,
-          "tree_sha256": "27cd15bd6b513f40462424d17c67b52cfdd95270967d96adc5473c92b5dd2d72"
+          "tree_sha256": "1d1d3388eef2bff273fdcabe5b3a61bc2c9539943e3dfb0c1dd298d537638542"
         }
       },
       "canonical_source": "skills/_writing-prose-rules.md",
       "kind": "rule",
       "slug": "writing-prose",
       "source_file_count": 1,
-      "source_tree_sha256": "336ffd76b9633cac47d4175e3b312bb5d0fa213d3ed2b549593581f4698ec9f4"
+      "source_tree_sha256": "f967065ebdf0c6acd2b944f599a9966561436b7ce0fb2e89fccf052b0f8187c8"
     },
     {
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/_writing-releases-rules.md",
           "file_count": 1,
-          "tree_sha256": "c030aa2163096f8fefc81c555ab4f9dcc7bfa1b21ee608fa53e191beedb24697"
+          "tree_sha256": "dda36c3340294b2f1b441382c9474723e277e889bba19f4f940379aa6ba91745"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_writing-releases-rules.md",
           "file_count": 1,
-          "tree_sha256": "c030aa2163096f8fefc81c555ab4f9dcc7bfa1b21ee608fa53e191beedb24697"
+          "tree_sha256": "dda36c3340294b2f1b441382c9474723e277e889bba19f4f940379aa6ba91745"
         },
         "flat": {
           "destination": "dist/flat/skills/_writing-releases-rules.md",
           "file_count": 1,
-          "tree_sha256": "c030aa2163096f8fefc81c555ab4f9dcc7bfa1b21ee608fa53e191beedb24697"
+          "tree_sha256": "dda36c3340294b2f1b441382c9474723e277e889bba19f4f940379aa6ba91745"
         },
         "nested": {
           "destination": "dist/nested/skills/_writing-releases-rules.md",
           "file_count": 1,
-          "tree_sha256": "c030aa2163096f8fefc81c555ab4f9dcc7bfa1b21ee608fa53e191beedb24697"
+          "tree_sha256": "dda36c3340294b2f1b441382c9474723e277e889bba19f4f940379aa6ba91745"
         }
       },
       "canonical_source": "skills/_writing-releases-rules.md",
       "kind": "rule",
       "slug": "writing-releases",
       "source_file_count": 1,
-      "source_tree_sha256": "3c3df11ec045820a9dbd278488980607db3149096f3d5305889b3bab7a545782"
+      "source_tree_sha256": "abc85d3ea01a4686bc58e29980f6f9f560aa8a03ae9f515cfbcec58c9d367fe2"
     },
     {
       "artifacts": {
@@ -1172,29 +1172,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_writing-tests-rules.md",
           "file_count": 1,
-          "tree_sha256": "c43ac64e618270836679754dca8b126fc603e66c0fdd2c25e8f6b9362674dc44"
+          "tree_sha256": "e9db4af6be61d2103cf8e0346d5feefe5d056b4a0eb697ee421c256a4cc58e76"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_writing-tests-rules.md",
           "file_count": 1,
-          "tree_sha256": "c43ac64e618270836679754dca8b126fc603e66c0fdd2c25e8f6b9362674dc44"
+          "tree_sha256": "e9db4af6be61d2103cf8e0346d5feefe5d056b4a0eb697ee421c256a4cc58e76"
         },
         "flat": {
           "destination": "dist/flat/skills/_writing-tests-rules.md",
           "file_count": 1,
-          "tree_sha256": "c43ac64e618270836679754dca8b126fc603e66c0fdd2c25e8f6b9362674dc44"
+          "tree_sha256": "e9db4af6be61d2103cf8e0346d5feefe5d056b4a0eb697ee421c256a4cc58e76"
         },
         "nested": {
           "destination": "dist/nested/skills/_writing-tests-rules.md",
           "file_count": 1,
-          "tree_sha256": "c43ac64e618270836679754dca8b126fc603e66c0fdd2c25e8f6b9362674dc44"
+          "tree_sha256": "e9db4af6be61d2103cf8e0346d5feefe5d056b4a0eb697ee421c256a4cc58e76"
         }
       },
       "canonical_source": "skills/_writing-tests-rules.md",
       "kind": "rule",
       "slug": "writing-tests",
       "source_file_count": 1,
-      "source_tree_sha256": "91e12eb3ebd3b76399441be9b7c0e8f7e1d7b13e98624f7f1da2bbc94b71df58"
+      "source_tree_sha256": "a9f178ad1f369a1b169ef320fe4cd8c27d9bf224d12b9f10eddee895185b4dce"
     },
     {
       "artifacts": {
