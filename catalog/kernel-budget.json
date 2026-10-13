@@ -1,0 +1,50 @@
+{
+  "artifacts": {
+    "claude-code": {
+      "characters": 7236,
+      "estimated_tokens": 1809,
+      "sha256": "34525b4fbc5e7e6ca3e5e8b1f4aa55e3539f98ddb8b22fdfbf3e92dec6ba43c4"
+    },
+    "craft-agent": {
+      "characters": 7236,
+      "estimated_tokens": 1809,
+      "sha256": "34525b4fbc5e7e6ca3e5e8b1f4aa55e3539f98ddb8b22fdfbf3e92dec6ba43c4"
+    },
+    "flat": {
+      "characters": 7236,
+      "estimated_tokens": 1809,
+      "sha256": "34525b4fbc5e7e6ca3e5e8b1f4aa55e3539f98ddb8b22fdfbf3e92dec6ba43c4"
+    },
+    "nested": {
+      "characters": 7236,
+      "estimated_tokens": 1809,
+      "sha256": "34525b4fbc5e7e6ca3e5e8b1f4aa55e3539f98ddb8b22fdfbf3e92dec6ba43c4"
+    }
+  },
+  "limits": {
+    "characters": 80000,
+    "estimated_tokens": 20000,
+    "estimation": "ceil(decoded UTF-8 character count / 4)"
+  },
+  "required_invariants": [
+    "K1",
+    "K2",
+    "K3",
+    "K4",
+    "K5",
+    "K6",
+    "K7",
+    "K8",
+    "K9",
+    "K10"
+  ],
+  "runtime_state": "candidate; progressive-loading cutover not yet enabled",
+  "schema_version": 1,
+  "shelf_isolation_validation": "heuristic text guard; deterministic resolver enforcement belongs to progressive loading",
+  "source": {
+    "characters": 6944,
+    "estimated_tokens": 1736,
+    "path": "skills/KERNEL.md",
+    "sha256": "88ad43f3900d2d6f0c60524fe8f447d50a16c47283d5fd48bc94908ee80d5506"
+  }
+}

@@ -3800,6 +3800,7 @@
       "source_path": "skills/_architecture-patterns-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -3867,6 +3868,7 @@
       "source_path": "skills/_authoring-against-state-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -3900,7 +3902,8 @@
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
-        "catalog/skill-lifecycle-legacy.json"
+        "catalog/skill-lifecycle-legacy.json",
+        "skills/KERNEL.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
@@ -3924,6 +3927,7 @@
       "source_path": "skills/_autonomy-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -3982,6 +3986,7 @@
       "source_path": "skills/_data-trust-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4056,6 +4061,7 @@
       "source_path": "skills/_definition-of-done-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4109,6 +4115,7 @@
       "source_path": "skills/_django-rest-framework-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4166,6 +4173,7 @@
       "source_path": "skills/_enforcement-contradiction-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4221,6 +4229,7 @@
       "source_path": "skills/_environment-preflight-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4278,6 +4287,7 @@
       "source_path": "skills/_jvm-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4339,6 +4349,7 @@
       "source_path": "skills/_knowledge-base-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4430,6 +4441,7 @@
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
@@ -4494,6 +4506,7 @@
       "source_path": "skills/_packaging-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4551,6 +4564,7 @@
       "source_path": "skills/_principles-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4604,6 +4618,7 @@
       "source_path": "skills/_property-testing-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4660,6 +4675,7 @@
       "source_path": "skills/_prospective-memory-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4723,6 +4739,7 @@
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/settings_drift_test.py",
         "bin/_test/skill_inventory_test.py",
@@ -4806,6 +4823,7 @@
       "source_path": "skills/_react-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4858,6 +4876,7 @@
       "source_path": "skills/_robustness-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4911,6 +4930,7 @@
       "source_path": "skills/_rust-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4965,6 +4985,7 @@
       "source_path": "skills/_scipy-spec-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -4998,6 +5019,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "skills/KERNEL.md",
         "skills/RESOLVER.md"
       ],
       "kind": "rule",
@@ -5017,6 +5039,7 @@
       "source_path": "skills/_security-scanning-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5057,6 +5080,7 @@
         "plans/self-review-609-coordinator-status-guard.md",
         "plans/self-review-718-orphan-dispatch.md",
         "plans/self-review-867-hub-rule-count.md",
+        "skills/KERNEL.md",
         "skills/_tandem-agent-rules.md",
         "skills/_ticket-lifecycle-rules.md"
       ],
@@ -5087,6 +5111,7 @@
       "source_path": "skills/_session-coordination-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5150,6 +5175,7 @@
       "source_path": "skills/_siege-utilities-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5213,6 +5239,7 @@
       "source_path": "skills/_standing-approval-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5245,7 +5272,8 @@
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
-        "catalog/skill-lifecycle-legacy.json"
+        "catalog/skill-lifecycle-legacy.json",
+        "skills/KERNEL.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
@@ -5269,6 +5297,7 @@
       "source_path": "skills/_strategic-agency-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5303,6 +5332,7 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-note-tandem-agent-operating-model.md",
+        "skills/KERNEL.md",
         "skills/_session-coordination-rules.md",
         "skills/_siege-utilities-rules.md",
         "skills/_standing-approval-rules.md",
@@ -5335,6 +5365,7 @@
       "source_path": "skills/_tandem-agent-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5400,6 +5431,7 @@
       "source_path": "skills/_testing-frameworks-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5464,6 +5496,7 @@
       "source_path": "skills/_ticket-lifecycle-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5521,6 +5554,7 @@
       "source_path": "skills/_typescript-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5557,6 +5591,7 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/diagnoses/2026-06-09-conditional-as-unconditional.md",
+        "skills/KERNEL.md",
         "skills/_authoring-against-state-rules.md",
         "skills/_environment-preflight-rules.md",
         "skills/_prospective-memory-rules.md",
@@ -5584,6 +5619,7 @@
       "source_path": "skills/_verify-before-execute-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5641,6 +5677,7 @@
       "source_path": "skills/_work-item-ownership-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5679,6 +5716,7 @@
         "docs/diagnoses/2026-06-09-conditional-as-unconditional.md",
         "plans/self-review-282-rule-saturation.md",
         "plans/self-review-pr-bc.md",
+        "skills/KERNEL.md",
         "skills/_authoring-against-state-rules.md",
         "skills/_prospective-memory-rules.md",
         "skills/_session-coordination-rules.md",
@@ -5725,6 +5763,7 @@
       "source_path": "skills/_writing-claims-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5814,6 +5853,7 @@
       "source_path": "skills/_writing-code-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5892,6 +5932,7 @@
       "source_path": "skills/_writing-prose-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5929,6 +5970,7 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-51.md",
+        "skills/KERNEL.md",
         "skills/_django-rest-framework-rules.md",
         "skills/code-review/SKILL.md",
         "skills/detect-ai-fingerprints/SKILL.md",
@@ -5958,6 +6000,7 @@
       "source_path": "skills/_writing-releases-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -6031,6 +6074,7 @@
       "source_path": "skills/_writing-rules-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -6075,6 +6119,7 @@
         "plans/self-review-660.md",
         "plans/self-review-943-writing-tests-8.md",
         "projects/siege-utilities/skills/error-path-tests/SKILL.md",
+        "skills/KERNEL.md",
         "skills/_testing-frameworks-rules.md",
         "skills/_writing-code-rules.md",
         "skills/_writing-releases-rules.md",
@@ -6115,6 +6160,7 @@
       "source_path": "skills/_writing-tests-rules.md",
       "test_evidence": [
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -6177,6 +6223,7 @@
       "slug": "shelves",
       "source_path": "skills/shelves/SKILL.md",
       "test_evidence": [
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/skill_inventory_test.py",
         "scripts/ci/test_flat_skill_layout.sh",
         "scripts/discipline/test_skill_token_chat_safe.sh"
@@ -6923,6 +6970,7 @@
       "slug": "branch",
       "source_path": "skills/branch/SKILL.md",
       "test_evidence": [
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "hooks/_test/branch_state_advisory.test.sh",
         "hooks/_test/coordinator_status_guard.test.sh",
@@ -7433,6 +7481,7 @@
         "plans/design-248-345-612-lifecycle-spawn-autonomy.md",
         "plans/investigate-248-345-612-lifecycle-spawn-autonomy.md",
         "plans/self-review-466.md",
+        "skills/KERNEL.md",
         "skills/RESOLVER.md",
         "skills/_definition-of-done-rules.md",
         "skills/_ticket-lifecycle-rules.md",
@@ -7728,6 +7777,7 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-self-reviewed-linear-promotion.md",
+        "skills/KERNEL.md",
         "skills/RESOLVER.md"
       ],
       "kind": "skill",
@@ -8425,6 +8475,7 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-422.md",
+        "skills/KERNEL.md",
         "skills/RESOLVER.md"
       ],
       "kind": "skill",
@@ -8966,6 +9017,7 @@
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/kernel_budget_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/settings_drift_test.py",
         "bin/_test/skill_inventory_test.py",
@@ -9860,6 +9912,7 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "projects/siege-utilities/skills/error-path-tests/SKILL.md",
+        "skills/KERNEL.md",
         "skills/RESOLVER.md"
       ],
       "kind": "skill",
