@@ -28,9 +28,7 @@ If a reviewer discovers a one-line fix, the correct output is a finding with a p
 
 When authorization is absent or ambiguous, stop and ask the coordinator/operator for the missing scope instead of inferring permission.
 
-**tandem-agent:4. The coordinator actively supervises collaborators; no set-and-forget.** The coordinator must check collaborator state after every material handoff, after any expected wait, and before making decisions based on collaborator output. At minimum, check session status/last reply before saying a collaborator is done, stuck, paused, or safe to ignore. If a collaborator is paused for guidance/config changes, the coordinator must resume or retire it explicitly after the change lands.
-
-Bounded-batch rule: do collaborator checks in short batches, then return the operator control surface with a checkpoint. Do not let internal `send_agent_message` churn hide the next operator decision.
+**tandem-agent:4. Compatibility alias for session-coordination:9.** Apply `[rule:session-coordination]` session-coordination:9 for the canonical post-handoff check, status/result inspection, and resume/redirect/retire/waiting-state contract. Tandem-specific refinement: after guidance or configuration changes land, explicitly resume or retire paused collaborators. Perform collaborator checks in short batches, then return the operator control surface with a checkpoint; internal message churn must not hide the next operator decision.
 
 **tandem-agent:5. Findings become durable before action.** Review findings that may drive implementation must be copied to a durable location the implementer and operator can inspect: PR comment, issue comment, checked-in plan, or tracker artifact. The durable finding must distinguish merge blockers from follow-ups, cite function/file/line evidence, name the affected function chain, and identify the proving fixture or missing fixture. Private session memory is not a handoff.
 
