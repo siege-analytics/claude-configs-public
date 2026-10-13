@@ -1,0 +1,5 @@
+{
+  "description": "Bootstrap lifecycle migrations that have become metadata-complete. Once recorded, a later metadata regression fails CI.",
+  "entries": [],
+  "schema_version": 1
+}
