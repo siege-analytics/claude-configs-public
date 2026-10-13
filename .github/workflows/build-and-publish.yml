@@ -34,6 +34,11 @@ jobs:
           python3 bin/_test/generated_source_authority_test.py
           python3 bin/generated-source-authority.py --check
 
+      - name: Compact safety kernel structure and budget
+        run: |
+          python3 bin/_test/kernel_budget_test.py
+          python3 bin/kernel-budget.py --check
+
       - name: Validate Craft Agent flat skill layout
         run: bash scripts/ci/test_flat_skill_layout.sh
 

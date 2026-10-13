@@ -10,7 +10,7 @@ Plan reference: approved `skill-library-simplification.md`, Phase 2 / proposed P
 Pre-author-inventory: 37 general rule files plus 1 project rule currently produce an approximately 425k-character bundle; progressive loading is deliberately the next PR, not this one.
 Investigate-artifact: current `skills/RULES.md`, rule bundle metrics, and generated-source authority catalog.
 Pre-mortem-artifact: Risks below.
-Hostile-review-artifact: required before implementation commit.
+Hostile-review-artifact: three independent rounds completed; all S1/S2 findings resolved and recorded in `plans/hostile-review-compact-safety-kernel.md`.
 Project-contribution: define the small non-overridable constitution that the later resolver can load globally without flattening on-demand or project-specific policy.
 
 ## Pre-implementation comprehension
@@ -44,27 +44,35 @@ Reject missing/duplicate invariant IDs, over-budget source or artifacts, budget 
 
 ## Peer review
 
-Pending implementation and hostile review.
+Three hostile-review rounds challenged project/user precedence, source-to-artifact binding, source symlinks, invariant-heading loopholes, shelf-globalization prose, and stale authority catalogs. All identified S1/S2 findings were fixed; the final confirmation found none remaining.
 
 ## Lead review
 
-A separately generated and budgeted kernel is the reversible prerequisite for progressive loading. Keeping current runtime loading unchanged avoids combining policy authorship with resolver cutover.
+A separately generated and budgeted kernel is the reversible prerequisite for progressive loading. Keeping current runtime loading unchanged avoids combining policy authorship with resolver cutover. Every budget check now transitively performs a fresh isolated build through generated-source authority before accepting artifact hashes.
 
 ## Findings
 
 | ID | Priority | Description | Resolution |
 |---|---|---|---|
-| K1 | P1 | No compact machine-budgeted safety constitution exists. | pending implementation |
-| K2 | P1 | Override precedence is implicit. | enumerate narrow non-overridable boundary |
-| K3 | P2 | Current bundle is approximately 425k characters. | measure baseline; resolver cutover remains next PR |
+| K1 | P1 | No compact machine-budgeted safety constitution existed. | Added ten stable invariants and hard source/artifact budgets. |
+| K2 | P1 | Override precedence was implicit. | Matching project overlays are authoritative in declared scope beneath the narrow kernel boundary; conflicts ask. |
+| K3 | P2 | Current bundle is approximately 425k characters. | Kernel is measured separately; runtime cutover remains the next PR. |
+| K4 | P1 | Measured artifacts were not initially bound to validated source semantics. | Artifact hashes must match fresh-build authority, and the authority check is mandatory for every budget invocation. |
+| K5 | P1 | Resolving before symlink checks could accept a linked kernel source. | Every source path component is checked before resolution. |
+| K6 | P1 | Extra/malformed K headings and prose shelf-globalization could evade literal checks. | All K-number headings must exactly equal K1 through K10; literal and prose shelf guards have negative fixtures. |
+| K7 | P2 | Shelf prose detection is not a complete semantic resolver. | Catalog labels it heuristic; deterministic shelf isolation remains a required progressive-loading invariant. |
 
 ## Quantified claims
 
-Current full rules bundle is approximately 425,000 characters. Exact kernel source/generated sizes will be generated and committed by the budget tool; hard limits are 80,000 characters and 20,000 estimated tokens.
+Current full rules bundle is 424,988 characters. The candidate kernel is 6,944 characters and 1,736 estimated tokens, versus hard limits of 80,000 characters and 20,000 estimated tokens. Generated-source authority now covers 804 snapshots and 2,900 generated file mappings after adding the four kernel forms.
 
 ## Rework ledger
 
-No rework yet.
+1. Corrected matching-overlay precedence and explicit conflict handling.
+2. Bound all generated kernel artifacts to the fresh-build authority catalog.
+3. Rejected pre-resolution source symlinks.
+4. Closed extra/malformed invariant-heading and prose shelf-globalization loopholes.
+5. Made every kernel budget invocation fail closed unless fresh isolated authority verification passes.
 
 ## Evidence-predates-work
 

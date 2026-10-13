@@ -62,6 +62,7 @@ def main() -> None:
         write(root, "skills/router/guide.md", "router guide\n")
         write(root, "skills/router/child/SKILL.md", "# child\n")
         write(root, "skills/_safety-rules.md", "# safety\n")
+        write(root, "skills/KERNEL.md", "kernel source\n")
         write(root, "skills/RULES.md", "rules entry\n")
         write(root, "skills/_coverage.md", "coverage source\n")
         items = [
@@ -78,6 +79,7 @@ def main() -> None:
             copy_owned(root, "skills/router", parent, ["SKILL.md", "guide.md"])
             copy_owned(root, "skills/router/child", child, ["SKILL.md"])
             write(root, f"dist/{form}/skills/_safety-rules.md", "# safety\n")
+            write(root, f"dist/{form}/skills/KERNEL.md", "kernel output\n")
             write(root, f"dist/{form}/skills/RULES.md", "rules output\n")
             write(root, f"dist/{form}/skills/_coverage.md", "coverage output\n")
         for consumer in ("claude-code", "craft-agent"):
@@ -86,10 +88,10 @@ def main() -> None:
         generated = MODULE.build_catalog(root, inv, root / "dist")
         assert generated["summary"] == {
             "canonical_source_count": 3,
-            "support_source_count": 2,
-            "source_owned_file_count": 6,
-            "artifact_snapshot_count": 20,
-            "generated_file_mapping_count": 24,
+            "support_source_count": 3,
+            "source_owned_file_count": 7,
+            "artifact_snapshot_count": 24,
+            "generated_file_mapping_count": 28,
             "destination_collision_count": 0,
             "unowned_generated_file_count": 0,
         }
@@ -113,6 +115,7 @@ for form in ("nested", "flat"):
     shutil.copy2(r/"skills/router/guide.md", parent/"guide.md")
     shutil.copy2(r/"skills/router/child/SKILL.md", child/"SKILL.md")
     shutil.copy2(r/"skills/_safety-rules.md", d/form/"skills/_safety-rules.md")
+    (d/form/"skills/KERNEL.md").write_text("kernel output\\n")
     (d/form/"skills/RULES.md").write_text("rules output\\n")
     (d/form/"skills/_coverage.md").write_text("coverage output\\n")
 for consumer in ("claude-code", "craft-agent"):

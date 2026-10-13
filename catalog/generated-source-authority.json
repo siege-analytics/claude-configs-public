@@ -5752,15 +5752,42 @@
   ],
   "schema_version": 1,
   "summary": {
-    "artifact_snapshot_count": 800,
+    "artifact_snapshot_count": 804,
     "canonical_source_count": 198,
     "destination_collision_count": 0,
-    "generated_file_mapping_count": 2896,
-    "source_owned_file_count": 724,
-    "support_source_count": 2,
+    "generated_file_mapping_count": 2900,
+    "source_owned_file_count": 725,
+    "support_source_count": 3,
     "unowned_generated_file_count": 0
   },
   "support_artifacts": [
+    {
+      "artifacts": {
+        "claude-code": {
+          "destination": "dist/claude-code/skills/KERNEL.md",
+          "file_count": 1,
+          "tree_sha256": "9afeaee5b7c093b3496b1ae66f3be4c9c071c614455e4b35c7e1f0ee6ee3dc58"
+        },
+        "craft-agent": {
+          "destination": "dist/craft-agent/skills/KERNEL.md",
+          "file_count": 1,
+          "tree_sha256": "9afeaee5b7c093b3496b1ae66f3be4c9c071c614455e4b35c7e1f0ee6ee3dc58"
+        },
+        "flat": {
+          "destination": "dist/flat/skills/KERNEL.md",
+          "file_count": 1,
+          "tree_sha256": "9afeaee5b7c093b3496b1ae66f3be4c9c071c614455e4b35c7e1f0ee6ee3dc58"
+        },
+        "nested": {
+          "destination": "dist/nested/skills/KERNEL.md",
+          "file_count": 1,
+          "tree_sha256": "9afeaee5b7c093b3496b1ae66f3be4c9c071c614455e4b35c7e1f0ee6ee3dc58"
+        }
+      },
+      "canonical_source": "skills/KERNEL.md",
+      "source_file_count": 1,
+      "source_tree_sha256": "45df0b6b128d5343eb3ff6371cb515c1c908513a898d6309039bcee79e3df460"
+    },
     {
       "artifacts": {
         "claude-code": {

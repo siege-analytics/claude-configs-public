@@ -835,8 +835,8 @@ def build_layout(
     if template.exists():
         write_resolved(template, out_root / "RESOLVER.md", layout, skill_out_paths, rule_out_paths, Path("RESOLVER.md"))
 
-    # Copy entry-point and matrix files at skills/ root.
-    for fname in ("RULES.md", "_coverage.md"):
+    # Copy the candidate kernel, entry-point, and matrix files at skills/ root.
+    for fname in ("KERNEL.md", "RULES.md", "_coverage.md"):
         src = SOURCE_SKILLS / fname
         if src.exists():
             write_resolved(src, out_root / fname, layout, skill_out_paths, rule_out_paths, Path(fname))

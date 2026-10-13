@@ -20,6 +20,7 @@ DEFAULT_INVENTORY = Path("catalog/skills-inventory.json")
 DEFAULT_CATALOG = Path("catalog/generated-source-authority.json")
 FORMS = ("nested", "flat", "claude-code", "craft-agent")
 SUPPORT_SOURCES = {
+    "skills/KERNEL.md": "KERNEL.md",
     "skills/RULES.md": "RULES.md",
     "skills/_coverage.md": "_coverage.md",
 }
