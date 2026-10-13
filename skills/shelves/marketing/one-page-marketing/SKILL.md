@@ -401,15 +401,15 @@ These cross-cutting principles apply across all nine squares:
 
 ## Reference Files
 
-- `references/target-market.md` -- PVP Index scoring, ideal customer avatar worksheet, niche selection framework, common targeting mistakes
-- `references/craft-message.md` -- USP creation process, elevator pitch formula, differentiation strategies, commodity trap avoidance
-- `references/advertising-media.md` -- Direct response principles for channel selection, CAC tracking, media buying, organic vs paid, attribution
-- `references/capture-leads.md` -- Lead magnet types, CRM setup, opt-in page design, speed-to-lead, lead scoring
-- `references/nurture-leads.md` -- Email sequence templates, content cadence, multi-channel nurture, segmentation, automation
-- `references/sales-conversion.md` -- Pricing psychology, risk reversal, objection handling, sales call structure, proposal templates
-- `references/customer-experience.md` -- Moments of truth, NPS, surprise and delight, tribes and community, technology systems
-- `references/lifetime-value.md` -- LTV formulas, ascension model design, reactivation campaigns, retention, raising prices
-- `references/referral-systems.md` -- Referral program design, partnerships, affiliate programs, referral scripts, tracking
+- [`references/target-market.md`](references/target-market.md) -- PVP Index scoring, ideal customer avatar worksheet, niche selection framework, common targeting mistakes
+- [`references/craft-message.md`](references/craft-message.md) -- USP creation process, elevator pitch formula, differentiation strategies, commodity trap avoidance
+- [`references/advertising-media.md`](references/advertising-media.md) -- Direct response principles for channel selection, CAC tracking, media buying, organic vs paid, attribution
+- [`references/capture-leads.md`](references/capture-leads.md) -- Lead magnet types, CRM setup, opt-in page design, speed-to-lead, lead scoring
+- [`references/nurture-leads.md`](references/nurture-leads.md) -- Email sequence templates, content cadence, multi-channel nurture, segmentation, automation
+- [`references/sales-conversion.md`](references/sales-conversion.md) -- Pricing psychology, risk reversal, objection handling, sales call structure, proposal templates
+- [`references/customer-experience.md`](references/customer-experience.md) -- Moments of truth, NPS, surprise and delight, tribes and community, technology systems
+- [`references/lifetime-value.md`](references/lifetime-value.md) -- LTV formulas, ascension model design, reactivation campaigns, retention, raising prices
+- [`references/referral-systems.md`](references/referral-systems.md) -- Referral program design, partnerships, affiliate programs, referral scripts, tracking
 - Consult [`references/one-page-plan-template.md`](references/one-page-plan-template.md) for a blank 9-square template with prompts, two worked examples, and planning exercise guidance.
 
 ## Further Reading

@@ -8,20 +8,81 @@ from pathlib import Path
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
-INLINE = re.compile(r'(?<!!)\[([^\]]+)\]\(\s*(<[^>]+>|[^\s)]+)')
 DEFINITION = re.compile(r'^\s{0,3}\[([^\]]+)\]:\s*(<[^>]+>|\S+)')
 REFERENCE = re.compile(r'(?<!!)\[([^\]]+)\](?:\[([^\]]*)\])?(?!\s*[:(])')
 BACKTICK = re.compile(r'`([^`\n]+)`')
 ACTION = re.compile(r'(?i)\b(read|open|consult|see|load|refer to|before responding|files? to read|reference files?|full|chapter|shipped|available|located|find|includes?|rules? file)\b')
 NEGATED = re.compile(r"(?i)\b(?:do not|don't|never|not to)\s+(?:read|open|consult|load|use|follow)\b")
-FENCE = re.compile(r'^\s*(```|~~~)')
+FENCE = re.compile(r'^ {0,3}(`{3,}|~{3,})(.*)$')
+CLAUSE_BREAK = re.compile(r'(?i);|,\s+|:\s+|\s+[-–—]\s+|\bbut\b|\bthen\b|[.!?]\s+')
+
+
+def unescape(value: str) -> str:
+    """CommonMark backslash escapes for punctuation in a local destination."""
+    return re.sub(r'\\([!"#$%&\'()*+,./:;<=>?@\[\]\\^_`{|}~-])', r'\1', value)
 
 
 def normalize(value: str) -> str:
     value = value.strip()
     if value.startswith('<') and value.endswith('>'):
         value = value[1:-1]
-    return value.split('#', 1)[0]
+    return unescape(value).split('#', 1)[0]
+
+
+def inline_links(line: str):
+    """Read balanced, escaped CommonMark inline destinations, not just up to first ')' ."""
+    for opener in re.finditer(r'(?<!!)\[[^\]\n]+\]\(\s*', line):
+        start = opener.end()
+        if start >= len(line):
+            continue
+        if line[start] == '<':
+            i = start + 1
+            while i < len(line):
+                if line[i] == '\\' and i + 1 < len(line):
+                    i += 2
+                elif line[i] == '>':
+                    yield line[start:i + 1], opener.start()
+                    break
+                else:
+                    i += 1
+            continue
+        depth = 0
+        i = start
+        while i < len(line):
+            char = line[i]
+            if char == '\\' and i + 1 < len(line):
+                i += 2
+                continue
+            if char == '(':
+                depth += 1
+                if depth > 32:
+                    break
+            elif char == ')':
+                if depth == 0:
+                    if i > start:
+                        yield line[start:i], opener.start()
+                    break
+                depth -= 1
+            elif char.isspace() and depth == 0:
+                if i > start:
+                    yield line[start:i], opener.start()
+                break
+            i += 1
+
+
+def prose_lines(lines: list[str]):
+    """Exclude fenced examples; closers must match opening marker and length."""
+    marker = ''
+    for number, line in enumerate(lines, 1):
+        match = FENCE.match(line)
+        if marker:
+            if match and match.group(1)[0] == marker[0] and len(match.group(1)) >= len(marker) and not match.group(2).strip():
+                marker = ''
+            continue
+        if match:
+            marker = match.group(1)
+            continue
+        yield number, line
 
 
 def target(root: Path, book: Path, value: str) -> Path | None:
@@ -34,12 +95,12 @@ def target(root: Path, book: Path, value: str) -> Path | None:
 
 
 def candidates(line: str, definitions: dict[str, str]):
-    for match in INLINE.finditer(line):
-        yield match.group(2), match.start(), True
-    # Reference definitions only become actionable when referenced in this file.
+    inline = list(inline_links(line))
+    for value, start in inline:
+        yield value, start, True
     for match in REFERENCE.finditer(line):
         key = (match.group(2) or match.group(1)).lower()
-        if key in definitions and not INLINE.match(line, match.start()):
+        if key in definitions and not any(start == match.start() for _, start in inline):
             yield definitions[key], match.start(), True
     for match in BACKTICK.finditer(line):
         value = normalize(match.group(1))
@@ -48,28 +109,18 @@ def candidates(line: str, definitions: dict[str, str]):
 
 
 def actionable_lines(source: Path):
-    lines = source.read_text(errors='replace').splitlines()
-    definitions: dict[str, str] = {}
-    fenced = False
-    for line in lines:
-        if FENCE.match(line):
-            fenced = not fenced
-        elif not fenced:
-            found = DEFINITION.match(line)
-            if found:
-                definitions[found.group(1).lower()] = found.group(2)
-    fenced = False
-    for number, line in enumerate(lines, 1):
-        if FENCE.match(line):
-            fenced = not fenced
-            continue
-        if fenced or DEFINITION.match(line):
+    prose = list(prose_lines(source.read_text(errors='replace').splitlines()))
+    definitions = {}
+    for _, line in prose:
+        found = DEFINITION.match(line)
+        if found:
+            definitions[found.group(1).lower()] = found.group(2)
+    for number, line in prose:
+        if DEFINITION.match(line):
             continue
         for value, start, is_link in candidates(line, definitions):
-            # Semicolon-separated instructions are independent: a negated example
-            # cannot suppress an actionable missing target later on the same line.
             prefix = line[:start]
-            boundary = list(re.finditer(r'(?i);|\bbut\b|\bthen\b|[.!?]\s+', prefix))
+            boundary = list(CLAUSE_BREAK.finditer(prefix))
             clause = prefix[boundary[-1].end():] if boundary else prefix
             if NEGATED.search(clause):
                 continue

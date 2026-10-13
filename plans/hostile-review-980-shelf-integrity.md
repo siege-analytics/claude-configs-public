@@ -17,4 +17,12 @@ Residual scope: this is a targeted Markdown `.md` path integrity check, not a un
 2. Owner section is now checked for contradictory non-consultation prose, not only the two cataloged evidence lines. Added same-section `not for reading` fixture.
 3. Negation is scoped to sentence/semicolon/conjunction segments. `Do not read old but read missing` fails on the second target; fenced and explicitly negative examples still pass.
 
-These are author-run regressions; the independent reviewers could not execute fixtures in their read-only sessions. No blanket independent ACCEPT is asserted.
+## Coordinator follow-up on head 2ab38e5
+
+- CI failed due stale inventory before authority generation. Regeneration now occurs after source/test/artifact edits, then dependent authority and progressive metrics; this was a real defect in the first head and is disclosed in the self-review.
+- CommonMark inline destinations now handle balanced nested parentheses and escaped punctuation (including parentheses). Added failing missing-target and passing existing-target fixtures for both forms. Reference-style links remain covered.
+- Negation boundaries now include comma/colon/dash; 4-backtick and tilde fences only close with a matching marker and at least the opening length. Added adversarial fixtures so an affirmative target after punctuation still fails.
+- Ownership evidence strips frontmatter, HTML comments and correctly matched fenced examples; anti-consultation includes do-not-open/reference/follow and related language across the section. An unrelated `read logs` directive cannot justify a path-specific shelf entry. Negative fixtures cover all of these.
+- `skills/RESOLVER.md` now calls shelf rows a navigation index rather than ambient routes, and `AUTHORING.md` states precise guard scope: actionable Markdown local `.md` links/backticks and `references/**/*.md`; HTML/non-Markdown/assets/dynamic paths are not covered.
+
+These are author-run regressions; independent reviewers could not execute fixtures in their read-only sessions. No blanket independent ACCEPT of the follow-up head is asserted.

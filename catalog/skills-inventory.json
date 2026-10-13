@@ -826,6 +826,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/team/SKILL.md"
@@ -868,6 +869,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/storytelling/SKILL.md"
@@ -910,6 +912,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/strategy/SKILL.md"
@@ -952,6 +955,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/statistical-inference/SKILL.md"
@@ -994,6 +998,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/statistical-inference/SKILL.md"
@@ -1037,6 +1042,7 @@
       "inbound_source_references": [
         "RESOLVER.md",
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/django/SKILL.md",
@@ -1081,6 +1087,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/code-review/SKILL.md",
@@ -1129,6 +1136,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -1171,6 +1179,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -1213,6 +1222,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -1255,6 +1265,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/strategy/SKILL.md"
@@ -1298,6 +1309,7 @@
       "inbound_source_references": [
         "RESOLVER.md",
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-ddia-shelf.md",
@@ -1353,6 +1365,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/pipeline-jobs/SKILL.md",
@@ -1396,6 +1409,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -1438,6 +1452,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/code-review/SKILL.md",
@@ -1482,6 +1497,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -1524,6 +1540,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/django/SKILL.md",
@@ -1568,6 +1585,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/django/SKILL.md",
@@ -1611,6 +1629,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/team/SKILL.md"
@@ -1653,6 +1672,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/code-review/SKILL.md",
@@ -1698,6 +1718,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/code-review/SKILL.md",
@@ -1743,6 +1764,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/python-patterns/SKILL.md",
@@ -1787,6 +1809,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -1829,6 +1852,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/geospatial/SKILL.md"
@@ -1871,6 +1895,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/systems-architecture/SKILL.md"
@@ -1913,6 +1938,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/django/SKILL.md",
@@ -1957,6 +1983,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -1999,6 +2026,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/sales/SKILL.md"
@@ -2041,6 +2069,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2083,6 +2112,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/sales/SKILL.md"
@@ -2125,6 +2155,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2167,6 +2198,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -2209,6 +2241,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2251,6 +2284,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -2293,6 +2327,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2335,6 +2370,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2377,6 +2413,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -2419,6 +2456,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -2461,6 +2499,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/systems-architecture/SKILL.md"
@@ -2503,6 +2542,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/product/SKILL.md"
@@ -2545,6 +2585,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/sales/SKILL.md"
@@ -2587,6 +2628,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/strategy/SKILL.md"
@@ -2617,10 +2659,10 @@
     },
     {
       "canonical_source": "skills/shelves/marketing/one-page-marketing/SKILL.md",
-      "characters": 30400,
-      "content_sha256": "054d9fcdaeed68f78919698e4d559e607802110b3b162abab50a37465ee8d4e8",
+      "characters": 30696,
+      "content_sha256": "2fc37c894e858524cbdebabae37c5799a07e81feb017a6bf4b24e1bfec3efcdb",
       "description": "Build a complete marketing plan covering the full customer journey from stranger to raving fan. Use when the user mentions \"marketing plan\", \"target market\", \"USP\", \"lead nurture\", \"customer lifetime value\", \"referral program\", \"marketing strategy\", or \"PVP Index\". Also trigger when building a marketing plan from scratch, choosing acquisition channels, or designing end-to-end customer lifecycle campaigns. Covers the PVP Index, channel selection, and advocacy systems. For brand messaging, see storybrand-messaging. For conversion optimization, see cro-methodology.",
-      "estimated_tokens": 7600,
+      "estimated_tokens": 7674,
       "frontmatter_name": "one-page-marketing",
       "generated_outputs": [
         "dist/nested/skills/shelves/marketing/one-page-marketing",
@@ -2629,6 +2671,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -2671,6 +2714,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/django/two-scoops-django/SKILL.md",
@@ -2714,6 +2758,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/sales/SKILL.md"
@@ -2756,6 +2801,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -2798,6 +2844,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/code-review/SKILL.md",
@@ -2842,6 +2889,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -2884,6 +2932,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/django/django-design-patterns/SKILL.md",
@@ -2928,6 +2977,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -2970,6 +3020,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -3012,6 +3063,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/engineering-principles/SKILL.md"
@@ -3054,6 +3106,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/geospatial/SKILL.md"
@@ -3096,6 +3149,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -3138,6 +3192,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/team/SKILL.md"
@@ -3180,6 +3235,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/statistical-inference/SKILL.md"
@@ -3222,6 +3278,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/marketing/SKILL.md"
@@ -3265,6 +3322,7 @@
       "inbound_source_references": [
         ".self-review-tufte.md",
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/storytelling/SKILL.md",
@@ -3308,6 +3366,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/systems-architecture/SKILL.md"
@@ -3350,6 +3409,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/systems-architecture/SKILL.md"
@@ -3392,6 +3452,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/statistical-inference/SKILL.md"
@@ -3434,6 +3495,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -3476,6 +3538,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/strategy/SKILL.md"
@@ -3520,6 +3583,7 @@
         ".self-review-tufte.md",
         "THIRD_PARTY_NOTICES.md",
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/storytelling/SKILL.md"
@@ -3562,6 +3626,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/django/SKILL.md",
@@ -3606,6 +3671,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/python-patterns/SKILL.md",
@@ -3649,6 +3715,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -3691,6 +3758,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/languages/SKILL.md"
@@ -3733,6 +3801,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/design/SKILL.md"
@@ -3795,6 +3864,8 @@
       "slug": "architecture-patterns",
       "source_path": "skills/_architecture-patterns-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -3870,6 +3941,8 @@
       "slug": "authoring-against-state",
       "source_path": "skills/_authoring-against-state-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -3936,6 +4009,8 @@
       "slug": "autonomy",
       "source_path": "skills/_autonomy-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4002,6 +4077,8 @@
       "slug": "data-trust",
       "source_path": "skills/_data-trust-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4084,6 +4161,8 @@
       "slug": "definition-of-done",
       "source_path": "skills/_definition-of-done-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4145,6 +4224,8 @@
       "slug": "django-rest-framework",
       "source_path": "skills/_django-rest-framework-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4210,6 +4291,8 @@
       "slug": "enforcement-contradiction",
       "source_path": "skills/_enforcement-contradiction-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4273,6 +4356,8 @@
       "slug": "environment-preflight",
       "source_path": "skills/_environment-preflight-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4338,6 +4423,8 @@
       "slug": "jvm",
       "source_path": "skills/_jvm-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4407,6 +4494,8 @@
       "slug": "knowledge-base",
       "source_path": "skills/_knowledge-base-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4505,6 +4594,8 @@
       "source_path": "skills/_output-rules.md",
       "test_evidence": [
         "bin/_test/check_deploy_drift_test.py",
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
@@ -4578,6 +4669,8 @@
       "slug": "packaging",
       "source_path": "skills/_packaging-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4643,6 +4736,8 @@
       "slug": "principles",
       "source_path": "skills/_principles-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4704,6 +4799,8 @@
       "slug": "property-testing",
       "source_path": "skills/_property-testing-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4768,6 +4865,8 @@
       "slug": "prospective-memory",
       "source_path": "skills/_prospective-memory-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4838,6 +4937,8 @@
       "source_path": "skills/_python-rules.md",
       "test_evidence": [
         "bin/_test/check_deploy_drift_test.py",
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
@@ -4930,6 +5031,8 @@
       "slug": "react",
       "source_path": "skills/_react-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -4990,6 +5093,8 @@
       "slug": "robustness",
       "source_path": "skills/_robustness-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5051,6 +5156,8 @@
       "slug": "rust",
       "source_path": "skills/_rust-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5113,6 +5220,8 @@
       "slug": "scipy-spec",
       "source_path": "skills/_scipy-spec-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5174,6 +5283,8 @@
       "slug": "security-scanning",
       "source_path": "skills/_security-scanning-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5254,6 +5365,8 @@
       "slug": "session-coordination",
       "source_path": "skills/_session-coordination-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5325,6 +5438,8 @@
       "slug": "siege-utilities",
       "source_path": "skills/_siege-utilities-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5396,6 +5511,8 @@
       "slug": "standing-approval",
       "source_path": "skills/_standing-approval-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5461,6 +5578,8 @@
       "slug": "strategic-agency",
       "source_path": "skills/_strategic-agency-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5537,6 +5656,8 @@
       "slug": "tandem-agent",
       "source_path": "skills/_tandem-agent-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5610,6 +5731,8 @@
       "slug": "testing-frameworks",
       "source_path": "skills/_testing-frameworks-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5682,6 +5805,8 @@
       "slug": "ticket-lifecycle",
       "source_path": "skills/_ticket-lifecycle-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5747,6 +5872,8 @@
       "slug": "typescript",
       "source_path": "skills/_typescript-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5819,6 +5946,8 @@
       "slug": "verify-before-execute",
       "source_path": "skills/_verify-before-execute-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5884,6 +6013,8 @@
       "slug": "work-item-ownership",
       "source_path": "skills/_work-item-ownership-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -5977,6 +6108,8 @@
       "slug": "writing-claims",
       "source_path": "skills/_writing-claims-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -6074,6 +6207,8 @@
       "slug": "writing-code",
       "source_path": "skills/_writing-code-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -6160,6 +6295,8 @@
       "slug": "writing-prose",
       "source_path": "skills/_writing-prose-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -6235,6 +6372,8 @@
       "slug": "writing-releases",
       "source_path": "skills/_writing-releases-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -6316,6 +6455,8 @@
       "slug": "writing-rules",
       "source_path": "skills/_writing-rules-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -6409,6 +6550,8 @@
       "slug": "writing-tests",
       "source_path": "skills/_writing-tests-rules.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/progressive_mount_test.py",
@@ -6480,6 +6623,8 @@
       "slug": "shelves",
       "source_path": "skills/shelves/SKILL.md",
       "test_evidence": [
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
@@ -6505,6 +6650,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6549,6 +6695,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6592,6 +6739,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/SKILL.md"
@@ -6634,6 +6782,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6677,6 +6826,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-valid-shelf-references.md",
@@ -6723,6 +6873,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6768,6 +6919,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6811,6 +6963,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6854,6 +7007,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6897,6 +7051,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/shelves/SKILL.md"
@@ -6940,6 +7095,7 @@
       "inbound_source_references": [
         ".self-review-tufte.md",
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -6983,6 +7139,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -7026,6 +7183,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-valid-shelf-references.md",
@@ -7073,6 +7231,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "scripts/discipline/test_skill_token_chat_safe.sh",
@@ -7403,11 +7562,13 @@
         "CHANGELOG.md",
         "CONTRIBUTING.md",
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
         "plans/design-note-837-audit-gaps-after-pr-d.md",
         "plans/hostile-review-837-audit-gaps-after-pr-d.md",
+        "plans/hostile-review-980-shelf-integrity.md",
         "plans/hostile-review-su-review-shelf-grounding.md",
         "plans/self-review-837-audit-gaps-after-pr-d.md",
         "plans/self-review-ddia-shelf.md",
@@ -8157,6 +8318,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -8911,6 +9073,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -9285,6 +9448,7 @@
         "bin/_test/review_risk_test.py",
         "bin/review-risk-metrics.py",
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
@@ -9316,6 +9480,8 @@
       "source_path": "skills/python/SKILL.md",
       "test_evidence": [
         "bin/_test/check_deploy_drift_test.py",
+        "bin/_test/check_shelf_owners_test.py",
+        "bin/_test/check_shelf_paths_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
@@ -9423,6 +9589,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -9645,6 +9812,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -10796,9 +10964,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2663497,
+    "characters": 2663793,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 665954,
+    "estimated_tokens": 666028,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -10818,7 +10986,7 @@
     "tier_characters": {
       "on-demand": 43064,
       "project": 54452,
-      "reference": 1297188,
+      "reference": 1297484,
       "unclassified": 1268793
     },
     "tier_counts": {
@@ -10830,7 +10998,7 @@
     "tier_estimated_tokens": {
       "on-demand": 10771,
       "project": 13615,
-      "reference": 324325,
+      "reference": 324399,
       "unclassified": 317243
     },
     "unknown_lifecycle_count": 198,

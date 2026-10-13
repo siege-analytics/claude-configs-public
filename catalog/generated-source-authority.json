@@ -2796,29 +2796,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "501d02967766735fefd849394f864e1e1eba9580d2677714580d3f7e9f620483"
+          "tree_sha256": "9be72a4862518cf4eaabd076adadf86cd361bae4eeda7f9407d1c3d00546e964"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "501d02967766735fefd849394f864e1e1eba9580d2677714580d3f7e9f620483"
+          "tree_sha256": "9be72a4862518cf4eaabd076adadf86cd361bae4eeda7f9407d1c3d00546e964"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "501d02967766735fefd849394f864e1e1eba9580d2677714580d3f7e9f620483"
+          "tree_sha256": "9be72a4862518cf4eaabd076adadf86cd361bae4eeda7f9407d1c3d00546e964"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "501d02967766735fefd849394f864e1e1eba9580d2677714580d3f7e9f620483"
+          "tree_sha256": "9be72a4862518cf4eaabd076adadf86cd361bae4eeda7f9407d1c3d00546e964"
         }
       },
       "canonical_source": "skills/shelves/SKILL.md",
       "kind": "shelf-router",
       "slug": "shelves",
       "source_file_count": 2,
-      "source_tree_sha256": "a22b7ef47951a6bacfdeebd3256d88809a727e016addc3109d083b3cac7c7e2a"
+      "source_tree_sha256": "d4c9bd2168b4504d4b4d14e9f9ead39b6caa433a46a1ef84febbd5bfa1d365cf"
     },
     {
       "artifacts": {
@@ -4014,29 +4014,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/marketing/one-page-marketing",
           "file_count": 11,
-          "tree_sha256": "784baa6a9af7ebb81dbcb3b1264e83bbb6af3b09f684b7577eed1c64638ecfb5"
+          "tree_sha256": "1ea5c5faebf0db8e398f37ff08374ae196b140846b15b9364869afe3b430e24a"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/marketing/one-page-marketing",
           "file_count": 11,
-          "tree_sha256": "784baa6a9af7ebb81dbcb3b1264e83bbb6af3b09f684b7577eed1c64638ecfb5"
+          "tree_sha256": "1ea5c5faebf0db8e398f37ff08374ae196b140846b15b9364869afe3b430e24a"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/marketing/one-page-marketing",
           "file_count": 11,
-          "tree_sha256": "784baa6a9af7ebb81dbcb3b1264e83bbb6af3b09f684b7577eed1c64638ecfb5"
+          "tree_sha256": "1ea5c5faebf0db8e398f37ff08374ae196b140846b15b9364869afe3b430e24a"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/marketing/one-page-marketing",
           "file_count": 11,
-          "tree_sha256": "784baa6a9af7ebb81dbcb3b1264e83bbb6af3b09f684b7577eed1c64638ecfb5"
+          "tree_sha256": "1ea5c5faebf0db8e398f37ff08374ae196b140846b15b9364869afe3b430e24a"
         }
       },
       "canonical_source": "skills/shelves/marketing/one-page-marketing/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--one-page-marketing",
       "source_file_count": 11,
-      "source_tree_sha256": "784baa6a9af7ebb81dbcb3b1264e83bbb6af3b09f684b7577eed1c64638ecfb5"
+      "source_tree_sha256": "1ea5c5faebf0db8e398f37ff08374ae196b140846b15b9364869afe3b430e24a"
     },
     {
       "artifacts": {

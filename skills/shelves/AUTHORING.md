@@ -223,5 +223,9 @@ exists, provide its explicit URL and state it is not vendored. Qualify historica
 provenance that is unavailable as non-actionable; do not promise local content.
 Link substantive supplemental references from the same book before adding them.
 Only one-byte empty retained placeholders may be documented with explicit
-reasons in `catalog/shelf-reference-exceptions.json`. Run
-`bin/check-shelf-paths.py` and its negative fixtures before review.
+reasons in `catalog/shelf-reference-exceptions.json`. The guard checks actionable
+Markdown local `.md` links (including balanced/escaped inline and reference-style
+destinations), backticked local `.md` paths, and orphan `references/**/*.md`
+supplements. It does **not** cover non-Markdown files, HTML links, assets, or
+dynamically constructed paths; do not claim otherwise. Run `bin/check-shelf-paths.py`
+and its negative fixtures before review.

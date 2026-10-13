@@ -57,6 +57,19 @@ def main():
         bad['owner']['evidence'] = '- `'+record['source_path']+'` -- overview of the topic.'
         bad['owner']['directive'] = 'For design rationale:'
         assert run(root, [bad]), 'contradictory same-section owner passed'
+        for verb in ('open', 'reference', 'follow'):
+            (root / 'skills/worker/SKILL.md').write_text('## Companion shelves\nFor design rationale:\nDo not '+verb+' this shelf.\n- `'+record['source_path']+'` -- engineering rationale.\n')
+            bad['owner']['evidence'] = '- `'+record['source_path']+'` -- engineering rationale.'
+            bad['owner']['directive'] = 'For design rationale:'
+            assert run(root, [bad]), 'do-not-'+verb+' owner passed'
+        (root / 'skills/worker/SKILL.md').write_text('## Companion shelves\nRead logs for diagnostics.\n- `'+record['source_path']+'` -- engineering rationale.\n')
+        bad['owner']['directive'] = 'Read logs for diagnostics.'
+        assert run(root, [bad]), 'unrelated read-logs directive passed'
+        (root / 'skills/worker/SKILL.md').write_text('## Companion shelves\nRead shelf books for review.\n<!-- - `'+record['source_path']+'` -- engineering rationale. -->\n')
+        bad['owner']['directive'] = 'Read shelf books for review.'
+        assert run(root, [bad]), 'HTML comment evidence passed'
+        (root / 'skills/worker/SKILL.md').write_text('## Companion shelves\nRead shelf books for review.\n````markdown\n- `'+record['source_path']+'` -- engineering rationale.\n```\n````\n')
+        assert run(root, [bad]), 'fenced evidence passed'
         (root / 'skills/worker/SKILL.md').write_text('# Worker\n## Companion shelves\n'+record['owner']['evidence']+'\n')
         (root / 'skills/worker/SKILL.md').write_text('---\nstatus: archived\n---\n'+record['owner']['evidence'])
         assert run(root, [record]), 'inactive owner passed'

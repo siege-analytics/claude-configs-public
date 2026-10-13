@@ -34,6 +34,17 @@ def main():
         assert any('missing local target' in x for x in mod.check(root)), 'missing reference-style Markdown link passed'
         source.write_text('[read][doc]\n\n[doc]: <references/absent.md>\n')
         assert any('missing local target' in x for x in mod.check(root)), 'missing angle-wrapped reference definition passed'
+        for missing in ('references/missing(part).md', r'references/missing\(part\).md',
+                        'references/missing(one(two)).md'):
+            source.write_text('[read](' + missing + ')\n')
+            assert any('missing local target' in x for x in mod.check(root)), ('balanced/escaped destination bypassed', missing)
+        parenthesized = book / 'references/has(part).md'
+        parenthesized.write_text('# Present\n')
+        source.write_text('[read](references/existing.md) and [present](references/has(part).md)\n')
+        assert not mod.check(root), 'valid balanced destination failed'
+        source.write_text('[read](references/existing.md) and [present](references/has\\(part\\).md)\n')
+        assert not mod.check(root), 'valid escaped destination failed'
+        parenthesized.unlink()
         source.write_text('Read `skills/shelves/topic/book/references/absent.md`.\n')
         assert any('missing local target' in x for x in mod.check(root)), 'missing repo-root path passed'
         source.write_text('See `https://example.test/rules/not-vendored.md` (upstream, not shipped).\n')
@@ -49,6 +60,13 @@ def main():
         assert any('also-absent' in x for x in mod.check(root)), 'negated example masked subsequent actionable path'
         source.write_text('Do not read `references/absent.md` but read `references/also-absent.md`.\n')
         assert any('also-absent' in x for x in mod.check(root)), 'conjunction masked later affirmative target'
+        for delimiter in (',', ':', ' -'):
+            source.write_text('Do not read `references/absent.md`' + delimiter + ' read `references/also-absent.md`.\n')
+            assert any('also-absent' in x for x in mod.check(root)), ('punctuation masked affirmative target', delimiter)
+        source.write_text('````markdown\nRead `references/absent.md`\n```\nStill a fenced example: `references/absent.md`\n~~~~\nStill fenced: `references/absent.md`\n````\nRead `references/absent.md`\n')
+        assert any('missing local target' in x for x in mod.check(root)), 'closing four-backtick fence did not restore scanning'
+        source.write_text('````markdown\nRead `references/absent.md`\n```\nStill a fenced example: `references/absent.md`\n~~~~\nStill fenced: `references/absent.md`\n````\nRead `references/existing.md`\n')
+        assert not mod.check(root), 'short/mismatched fence closed long backtick block'
         source.write_text('```markdown\nRead `references/absent.md`\n```\n')
         assert not any('missing local' in x for x in mod.check(root)), 'fenced code example failed'
         source.write_text('Use `_foo-rules.md` and `SKILL.md` as shorthand.\n')
