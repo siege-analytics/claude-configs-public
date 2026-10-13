@@ -84,6 +84,14 @@ Specific requirements:
 
 **Mechanical test:** if `pytest --co` lists N tests for a module with M except/raise sites, and fewer than M tests have "error", "fail", "invalid", "missing", or "raises" in their name, the module fails this rule.
 
+#### SU-4c: No full-suite runner inside a test
+
+`run_comprehensive_test()` dispatches the ENTIRE pytest suite. Called from within a test, it re-enters the suite, which runs the test, which re-enters the suite — explosive recursion that wedges or crashes the run. A test file must never call a full-suite runner.
+
+**Invariant:** `grep -rn "run_comprehensive_test(" tests/` returns zero.
+
+**Mechanical test:** `detect-ai-fingerprints` flags any `run_comprehensive_test(` call under a `tests/` directory in a `test_*.py` file (rule tag `siege-utilities-SU4-suite-runner-in-test`), forward-only on added lines; the invariant grep above is the whole-tree check at review time. The library-side mitigation (a re-entrancy guard inside the function when `PYTEST_CURRENT_TEST` is set) is tracked separately in the siege_utilities repo.
+
 ### Rule SU-5: Parse verification for batch changes
 
 When a change touches more than 3 files (batch refactors, sweeps, linter-driven fixes), every modified `.py` file must be verified to parse before commit:

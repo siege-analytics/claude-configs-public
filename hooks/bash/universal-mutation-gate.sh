@@ -365,6 +365,19 @@ if [[ -f "$RESOLVE_TG" ]]; then
         echo "[universal-mutation-gate] WARN: session scope unresolved; using shared-state fallback" >&2
     fi
 fi
+# On a workspace-root (non-git) CWD, REPO_ROOT is empty and the repo-scoped
+# resolver above was skipped -- but a KNOWN session may still have its own gate
+# in its session signal dir. Resolve it directly (session-dir only: no repo
+# binding, no shared-root singleton, no other session's dir), so a
+# coordination/PM session or a build worker whose worktree is not the reported
+# cwd can still gate on its OWN pipeline instead of being hard-blocked. An
+# unknown session resolves nothing here and falls through to the fail-closed
+# handling below; a known session with no gate of its own likewise gets nothing
+# and must NOT inherit the shared root. (#926, building on the #873/#890
+# shared-root bleed guard just above.)
+if [[ -z "$THINK_GATE" ]] && [[ -z "$REPO_ROOT" ]] && [[ "$UMG_SESSION_KNOWN" == "1" ]] && [[ -f "$RESOLVE_TG" ]]; then
+    THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --session-gate --gate-name think-gate 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
+fi
 if [[ -z "$THINK_GATE" ]]; then
     # If the scoped resolver was available for a known repo and returned no
     # gate, do not fall back to the shared workspace singleton. The resolver
@@ -481,6 +494,13 @@ TERMINALEOF
         GATE_PATHS_JSON="{}"
         if [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
             GATE_PATHS_JSON=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --repo-root "$REPO_ROOT" --resolve-many "investigate-gate,junior-senior-gate,artifacts-posted-gate,review-gate" 2>/dev/null || echo "{}")
+        elif [[ -z "$REPO_ROOT" ]] && [[ "$UMG_SESSION_KNOWN" == "1" ]] && [[ -f "$RESOLVE_TG" ]]; then
+            # Empty REPO_ROOT (workspace-root CWD) + known session: the session
+            # think-gate above was resolved from the session dir, so resolve its
+            # artifact gates the same way -- from the session's own signal dir,
+            # ticket-matched -- instead of looking under the workspace root where
+            # they do not live (which would read as missing and block). (#926)
+            GATE_PATHS_JSON=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --resolve-many "investigate-gate,junior-senior-gate,artifacts-posted-gate,review-gate" --session-scoped 2>/dev/null || echo "{}")
         fi
 
         MISSING=$(python3 -c "

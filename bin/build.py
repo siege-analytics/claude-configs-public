@@ -81,6 +81,89 @@ class BuildError(Exception):
     pass
 
 
+def validate_deploy_source(repo_root: Path) -> str | None:
+    """Require merge-then-deploy installs to use the exact remote main SHA.
+
+    Policy activation is sticky once the marker appears in repository history:
+    deleting the marker in a later checkout cannot silently restore legacy
+    deployment. Remote main is authoritative when reachable, and active-policy
+    repositories fail closed when it is not.
+    """
+    def show_model(revision: str) -> str:
+        try:
+            return subprocess.check_output(
+                ["git", "-C", str(repo_root), "show", f"{revision}:.claude/deploy-model"],
+                text=True,
+                stderr=subprocess.DEVNULL,
+                timeout=5,
+            ).strip()
+        except (OSError, subprocess.SubprocessError):
+            return ""
+
+    try:
+        head = subprocess.check_output(
+            ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
+        ).strip()
+        marker_history = subprocess.check_output(
+            ["git", "-C", str(repo_root), "log", "-1", "--format=%H", "--all", "--", ".claude/deploy-model"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
+        ).strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise BuildError("cannot inspect repository deployment policy") from exc
+
+    head_model = show_model("HEAD")
+    policy_known = head_model == "merge-then-deploy" or bool(marker_history)
+
+    try:
+        remote_line = subprocess.check_output(
+            ["git", "-C", str(repo_root), "ls-remote", "--exit-code", "origin", "refs/heads/main"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=15,
+        ).strip()
+        remote_main = remote_line.split()[0]
+        if subprocess.run(
+            ["git", "-C", str(repo_root), "cat-file", "-e", f"{remote_main}^{{commit}}"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
+        ).returncode != 0:
+            subprocess.run(
+                ["git", "-C", str(repo_root), "fetch", "--quiet", "origin", "refs/heads/main"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=30,
+            )
+        remote_model = show_model(remote_main)
+        remote_marker_history = subprocess.check_output(
+            ["git", "-C", str(repo_root), "log", "-1", "--format=%H", remote_main, "--", ".claude/deploy-model"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
+        ).strip()
+        policy_known = policy_known or remote_model == "merge-then-deploy" or bool(remote_marker_history)
+    except (OSError, subprocess.SubprocessError, IndexError) as exc:
+        raise BuildError(
+            "deployment requires a reachable origin/main; remote policy verification failed closed"
+        ) from exc
+
+    if not policy_known:
+        return None
+    if head != remote_main:
+        raise BuildError(
+            "merge-then-deploy refused: checkout HEAD "
+            f"{head[:12]} is not current origin/main {remote_main[:12]}. "
+            "Merge develop into main, fetch origin, and install that exact main revision."
+        )
+    return head
+
+
 # Track unknown slug references for warnings (per build run)
 UNKNOWN_SKILLS: dict[str, set[str]] = {}
 UNKNOWN_RULES: dict[str, set[str]] = {}
@@ -1604,6 +1687,15 @@ def main() -> int:
     parser.add_argument("--craft-workspace", type=Path, default=CRAFT_WORKSPACE, help="Target Craft Agent workspace path for --deploy (default: %(default)s)")
     args = parser.parse_args()
 
+    if args.deploy:
+        try:
+            deploy_source = validate_deploy_source(REPO_ROOT)
+        except BuildError as e:
+            print(f"BUILD ERROR: {e}", file=sys.stderr)
+            return 1
+        if deploy_source:
+            print(f"Deploy source verified: current origin/main {deploy_source}")
+
     # Phase 1: Validate project manifests (repo uniqueness, required fields, status).
     print("Validating project manifests...")
     try:
@@ -1706,7 +1798,24 @@ def main() -> int:
                 project_skills_src, project_rules_src,
                 skill_provenance, active_projects,
             )
-        deploy_to_workspace(args.craft_workspace.expanduser())
+        # Close the build-time race: main may have advanced after the initial
+        # source check but before workspace mutation.
+        try:
+            validate_deploy_source(REPO_ROOT)
+        except BuildError as e:
+            print(f"BUILD ERROR: {e}", file=sys.stderr)
+            return 1
+        craft_workspace = args.craft_workspace.expanduser()
+        deploy_to_workspace(craft_workspace)
+        try:
+            validate_deploy_source(REPO_ROOT)
+        except BuildError as e:
+            # The copy may have completed, but it is not accepted as a valid
+            # deployment if main moved during mutation. Remove the authority
+            # stamp so drift/pre-push checks fail closed until main is reinstalled.
+            (craft_workspace / "deploy-stamp.json").unlink(missing_ok=True)
+            print(f"BUILD ERROR: main changed during deployment; deploy stamp invalidated: {e}", file=sys.stderr)
+            return 1
 
     return 0
 

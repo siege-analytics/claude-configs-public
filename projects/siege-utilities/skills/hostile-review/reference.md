@@ -77,6 +77,27 @@ For each: is the CRS documented in the function's contract? Can a
 caller pass a different CRS without the function noticing and
 producing wrong results?
 
+### Converter-pair round-trip symmetry
+
+For any converter pair the diff touches -- `to_X`/`from_X`,
+`serialize`/`deserialize`, `write_*`/`read_*`, `encode`/`decode` -- ask:
+does the inverse restore every field the forward preserved? The failure
+shape is asymmetric: the write side preserves metadata (CRS, dtype,
+index, units, precision) while the read side silently drops it, so a
+round trip returns a value that looks right but has lost a property.
+
+```bash
+# Find converter pairs in the diff's modules
+grep -rn "def to_\|def from_\|def read_\|def write_\|def serialize\|def deserialize\|def encode\|def decode" siege_utilities/ --include="*.py" | grep -v test
+```
+
+For each pair: enumerate what the forward side sets or preserves, then
+read the inverse and confirm each is restored. A missing restore is a P2
+seam finding (silent wrong result in composition), not a style note. The
+CRS write-preserves/read-drops bug (#1336) is the canonical instance. A
+property test asserting `from_X(to_X(v))` preserves every field
+(`_property-testing-rules.md` round-trip) is the mechanical complement.
+
 ### Optional dependency guard completeness (writing-code:8)
 
 ```bash

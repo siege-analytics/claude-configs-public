@@ -1,57 +1,71 @@
 name: pr-base-guard
 
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, reopened, synchronize]
+  pull_request_target:
+    branches: [main, develop]
+    types: [opened, reopened, synchronize, ready_for_review, edited]
+  merge_group:
+
+permissions:
+  contents: read
 
 jobs:
   check-base:
-    name: Require develop-role head for main-targeted PRs
+    name: Require canonical branch topology
     runs-on: ubuntu-latest
     steps:
-      - name: Check head branch
+      # pull_request_target loads this workflow from the protected base branch.
+      # Keep policy and candidate in separate directories and never execute code
+      # from the untrusted candidate checkout.
+      - name: Check out trusted policy
+        if: github.event_name == 'pull_request_target'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: policy
+          persist-credentials: false
+
+      - name: Check out candidate as data
+        if: github.event_name == 'pull_request_target'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fetch canonical main for PR
+        if: github.event_name == 'pull_request_target'
+        working-directory: candidate
+        run: git fetch --no-tags https://github.com/${{ github.repository }}.git refs/heads/main:refs/remotes/upstream/main
+
+      - name: Enforce integration and promotion path
+        if: github.event_name == 'pull_request_target'
+        working-directory: candidate
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          CANONICAL_REPO: ${{ github.repository }}
+          MAIN_REF: upstream/main
+        run: bash ../policy/scripts/ci/check-branch-topology.sh
+
+      # Merge queues have already admitted a PR through the head-role check.
+      # The queued synthetic commit must still contain current main.
+      - name: Check out merge-group candidate
+        if: github.event_name == 'merge_group'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate merge-group ancestry
+        if: github.event_name == 'merge_group'
         run: |
-          HEAD="${{ github.head_ref }}"
-          LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
-
-          # Allow hotfix bypasses
-          if echo "$LABELS" | grep -q '"hotfix-direct-to-main"'; then
-            echo "Hotfix label present — allowing direct-to-main PR."
-            exit 0
-          fi
-
-          # Allow canonical develop -> main promotion directly.
-          if echo "$HEAD" | grep -qE '^develop$'; then
-            echo "Head branch '$HEAD' is canonical develop-role — allowed."
-            exit 0
-          fi
-
-          # Allow promote branches when they carry explicit self-review evidence.
-          # This keeps the linear route (work already landed in develop; promotion
-          # branch targets main) while making the self-review audit trail machine
-          # visible to branch policy checks.
-          if echo "$HEAD" | grep -qE '^promote/'; then
-            BODY='${{ github.event.pull_request.body }}'
-            if printf '%s' "$BODY" | grep -qE '(^|[[:space:]])Self-Review-Source:[[:space:]]+\S'; then
-              echo "Promotion branch '$HEAD' carries Self-Review-Source — allowed."
-              exit 0
-            fi
-            echo "BLOCKED: promote/* PRs to main must include Self-Review-Source in the PR body."
-            echo "This is the self-reviewed linear-promotion evidence hook."
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          git merge-base --is-ancestor origin/main HEAD || {
+            echo "BLOCKED: merge-group candidate does not contain current main."
             exit 1
-          fi
-
-          # Allow release tags
-          if echo "$HEAD" | grep -qE '^release/'; then
-            echo "Head branch '$HEAD' is a release branch — allowed."
-            exit 0
-          fi
-
-          echo "BLOCKED: PR head '$HEAD' targets main but is not a develop-role branch."
-          echo ""
-          echo "PRs to main must come from 'develop' or 'promote/*' branches."
-          echo "If this is a hotfix, add the 'hotfix-direct-to-main' label."
-          echo ""
-          echo "See: skills/coding/develop-guard/SKILL.md"
-          exit 1
+          }
+          echo "PASS: merge-group candidate contains current main."

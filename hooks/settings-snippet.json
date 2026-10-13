@@ -118,6 +118,11 @@
           },
           {
             "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/git/test-tracking-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "/path/to/claude-configs-public/hooks/git/ticket-required.sh",
             "timeout": 10
           },

@@ -114,6 +114,11 @@
           },
           {
             "type": "command",
+            "command": "hooks/git/test-tracking-guard.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "hooks/git/ticket-required.sh",
             "timeout": 10
           },

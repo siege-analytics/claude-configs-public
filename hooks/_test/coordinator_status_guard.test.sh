@@ -203,4 +203,42 @@ expect_block \
   "$HOOK" \
   "$(payload "gh issue comment 31 --body \"Understood. I will stop treating ticket comments as the work. I am going to rerun the gates in the correct order: verify automated tests, prove the develop deployment/UAT state for #31, then only decide whether hotfix/staging movement is allowed.\"")"
 
+# --- #940: read-only subcommands must never be gated, even when flag names
+# contain the guard's state/transition vocabulary. ---
+
+expect_pass \
+  "pr view with --json state,mergedAt passes (read, not a status update)" \
+  "$HOOK" \
+  "$(payload "gh pr view 931 --json state,mergedAt,mergeCommit")"
+
+expect_pass \
+  "pr list --state passes (read)" \
+  "$HOOK" \
+  "$(payload "gh pr list --state open")"
+
+expect_pass \
+  "pr diff passes (read)" \
+  "$HOOK" \
+  "$(payload "gh pr diff 931")"
+
+expect_pass \
+  "pr checks passes (read)" \
+  "$HOOK" \
+  "$(payload "gh pr checks 931")"
+
+expect_pass \
+  "issue view with --json state passes (read)" \
+  "$HOOK" \
+  "$(payload "gh issue view 931 --json state,title")"
+
+expect_pass \
+  "issue list --search passes (read)" \
+  "$HOOK" \
+  "$(payload "gh issue list --search status")"
+
+expect_pass \
+  "gh api GET read (non-issue path, no body/method) passes" \
+  "$HOOK" \
+  "$(payload "gh api repos/siege-analytics/claude-configs-public/pulls/931")"
+
 report
