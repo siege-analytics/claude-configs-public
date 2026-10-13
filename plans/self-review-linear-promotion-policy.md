@@ -9,7 +9,7 @@ Plan reference: `plans/reconciliation-2026-10-12.md`
 Pre-author-inventory: `.github/workflows/build-and-publish.yml`, `.github/workflows/pr-base-guard.yml`, `.github/workflows/_test_pr_base_guard_policy.sh`, `bin/build.py`, `bin/install.sh`, deploy-drift tests.
 Investigate-artifact: `plans/reconciliation-2026-10-12.md`
 Pre-mortem-artifact: approved Craft Agent plan `reconcile-and-protect-claude-configs.md`; principal risks restated below.
-Hostile-review-artifact: pending independent review before push.
+Hostile-review-artifact: `plans/hostile-review-linear-promotion-policy.md`
 Project-contribution: Establishes one auditable integration→release→installation path and prevents branch divergence from recurring.
 
 ## Pre-implementation comprehension
@@ -32,7 +32,13 @@ Risks: required checks could deadlock branches if enabled before workflow delive
 10. Protection ordering and deployment verification will not be skipped.
 
 ## Peer review
-Pending implementation. Required checks: YAML inspection, shell syntax, Python AST/compile, policy fixtures, deploy-source fixtures, full build, full hook matrix, and GitHub hosted checks.
+- Shell syntax: `bash -n` passed for the topology checker and both shell fixtures.
+- Python syntax: `python3 -m py_compile bin/build.py bin/_test/deploy_source_policy_test.py` passed under Python 3.14.
+- Branch topology: 10 allowed/blocked graph cases passed, including fork impersonation and main back-sync.
+- Release source: main-only publishing/static trigger fixture passed.
+- Deployment source: exact-main, feature rejection, marker deletion, fail-closed remote, and uncommitted-marker cases passed.
+- Full repository validation: token sync, build check, full build, flat layout, three hook validators, settings drift, NotebookEdit guards, and all 32 hook scenario files passed.
+- Independent hostile review: two rounds completed; all S1/S2 findings fixed and recorded in `plans/hostile-review-linear-promotion-policy.md`.
 
 ## Lead review
 Approach-fit: canonical branch topology plus code-level deployment source validation closes both repository and workstation paths. Blast radius includes all PR routing, release publication, and Craft Agent installation. Sequencing must deliver workflows to main before making their check names required.
@@ -40,10 +46,10 @@ Approach-fit: canonical branch topology plus code-level deployment source valida
 ## Findings
 | ID | Priority | Description | Resolution |
 |----|----------|-------------|------------|
-| P1 | P1 | Develop pushes currently publish release branches. | pending fix |
-| P2 | P1 | Main guard permits scoped promotion, release, and hotfix bypasses. | pending fix |
-| P3 | P1 | Workspace deployment accepts non-main revisions. | pending fix |
-| P4 | P2 | GitHub cannot represent a permanent develop-superset after a main merge without post-promotion synchronization. | enforce immediate sync workflow/checklist |
+| P1 | P1 | Develop pushes currently publish release branches. | fixed: publish job is main-push only |
+| P2 | P1 | Main guard permits scoped promotion, release, and hotfix bypasses. | fixed: canonical repository `develop` is the sole main head |
+| P3 | P1 | Workspace deployment accepts non-main revisions. | fixed: sticky, fail-closed exact-remote-main checks before and after mutation |
+| P4 | P2 | GitHub cannot represent a permanent develop-superset after a main merge without post-promotion synchronization. | resolved operationally: immediate main→develop synchronization remains required |
 
 ## Quantified claims
 - “30 main-only and 34 develop-only before #924” — `git rev-list --left-right --count origin/main...origin/develop` at the audited heads → `30 34`.
@@ -57,6 +63,6 @@ Approach-fit: canonical branch topology plus code-level deployment source valida
 
 ## Evidence-predates-work
 Artifact: plans/self-review-linear-promotion-policy.md
-First-added commit: populated after this artifact commit
+First-added commit: `85efedc22af3d2653bf76ec996aca8c7878b7d06`
 Work commit: subsequent policy implementation commit
-Verification: artifact commit must be an ancestor of the policy implementation commit.
+Verification: `git merge-base --is-ancestor 85efedc22af3d2653bf76ec996aca8c7878b7d06 HEAD; echo $?` → 0 before push.

@@ -3,9 +3,9 @@ name: build-and-publish
 on:
   push:
     branches: [main, develop]
-    tags: ['v*']
   pull_request:
     branches: [main, develop]
+  merge_group:
 
 jobs:
   validate:
@@ -44,7 +44,17 @@ jobs:
 
       - name: NotebookEdit write-guard fixtures
         run: python3 bin/_test/notebook_edit_guards_test.py
-# A bare `for f in ...; do bash "$f"; done` exits with the status of the
+
+      - name: Branch topology policy fixtures
+        run: bash .github/workflows/_test_pr_base_guard_policy.sh
+
+      - name: Main-only release policy fixtures
+        run: bash .github/workflows/_test_release_source_policy.sh
+
+      - name: Exact-main deployment source fixtures
+        run: python3 bin/_test/deploy_source_policy_test.py
+
+      # A bare `for f in ...; do bash "$f"; done` exits with the status of the
       # LAST file, so a failure in any other file is invisible. Failures are
       # accumulated and the step exits non-zero if any file failed. An empty
       # glob is a failure rather than a silent pass. Ref: #713
@@ -75,12 +85,12 @@ jobs:
   publish:
     name: Build and publish to release branches
     needs: validate
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
+    # `develop` is integration-only. Publishing, tagging, and releases are
+    # authorized exclusively by a successful push/merge to `main`.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    # Serialize publish runs so back-to-back triggers (e.g. a `git push origin main`
-    # immediately followed by `git push origin vX.Y.Z`) queue instead of racing.
-    # Both runs need to push to release/nested + release/flat; concurrent --force
-    # pushes lose the race with `cannot lock ref ... is at X but expected Y`.
+    # Serialize main releases so force-updates to the consumer branches cannot
+    # race one another.
     concurrency:
       group: publish-release-branches
       cancel-in-progress: false
@@ -183,7 +193,7 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Tag release branches
-        if: startsWith(github.ref, 'refs/tags/v') || steps.auto-tag.outputs.tag != ''
+        if: steps.auto-tag.outputs.tag != ''
         run: |
           if [ -n "${{ steps.auto-tag.outputs.tag }}" ]; then
             TAG="${{ steps.auto-tag.outputs.tag }}"
@@ -201,7 +211,7 @@ jobs:
           git push origin "${TAG}-nested" "${TAG}-flat" "${TAG}-claude-code" "${TAG}-craft-agent"
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v') || steps.auto-tag.outputs.tag != ''
+        if: steps.auto-tag.outputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
