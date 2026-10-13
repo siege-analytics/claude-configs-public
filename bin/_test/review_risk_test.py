@@ -12,7 +12,7 @@ def main():
  assert tier(["skills/python/SKILL.md"])=="B"
  assert tier(["src/app.py"])=="B"
  assert tier(["hooks/agent-comms/status.sh"])=="B"
- for path in ["hooks/git/self-review.sh","hooks/resolver/skill-enforcement-gate.sh",".github/workflows/build-and-publish.yml","bin/install.sh","catalog/review-risk-policy.json","auth/token.py","VERSION"]:assert tier([path])=="C",path
+ for path in ["hooks/git/self-review.sh","hooks/resolver/skill-enforcement-gate.sh","hooks/resolver/inject-resolver.sh",".github/workflows/build-and-publish.yml","bin/install.sh","bin/resolve-load-set.py","catalog/review-risk-policy.json","catalog/resolver-manifest.json","auth/token.py","VERSION"]:assert tier([path])=="C",path
  stripped=json.loads(json.dumps(policy));stripped["high_risk_path_patterns"]=[]
  assert m.classify(stripped,["catalog/review-risk-policy.json"])["computed_tier"]=="C"
  assert m.classify(stripped,["bin/review-risk.py"])["computed_tier"]=="C"
