@@ -39,6 +39,16 @@ jobs:
           python3 bin/_test/kernel_budget_test.py
           python3 bin/kernel-budget.py --check
 
+      - name: Proportional review risk policy
+        run: |
+          python3 bin/_test/review_risk_test.py
+          bash hooks/_test/review_risk_policy.test.sh
+          python3 bin/review-risk-metrics.py --check
+          for pkg in claude-code craft-agent; do
+            test -f "dist/$pkg/bin/review-risk.py"
+            test -f "dist/$pkg/catalog/review-risk-policy.json"
+          done
+
       - name: Deterministic progressive loading
         run: |
           python3 bin/_test/resolve_load_set_test.py

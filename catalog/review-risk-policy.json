@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "legacy_before_epoch": 1791898200,
+  "tiers": {
+    "A": {
+      "name": "trivial",
+      "required_evidence": ["Self-Review"],
+      "description": "Prose, plans, or generated evidence with no runtime behavior."
+    },
+    "B": {
+      "name": "standard",
+      "required_evidence": ["Self-Review", "Self-Review-Source", "focused-tests"],
+      "description": "Normal skills, rules, code, and non-critical behavior."
+    },
+    "C": {
+      "name": "high-risk",
+      "required_evidence": ["Self-Review", "Self-Review-Source", "Pre-mortem-artifact", "Hostile-Review", "negative-tests", "full-suite", "canary"],
+      "description": "Enforcement, branch/release/deployment, credentials, destructive operations, or review-policy changes."
+    }
+  },
+  "high_risk_path_patterns": [
+    "^\\.githooks/",
+    "^\\.github/workflows/",
+    "^hooks/(git|bash|write)/",
+    "^hooks/resolver/.*(gate|guard|enforcement)",
+    "^scripts/ci/",
+    "^bin/(install|build|verify-enforcement|check-deploy|deploy|wire-enforcement)",
+    "^bin/review-risk\\.py$",
+    "^catalog/review-risk-policy\\.json$",
+    "^\\.claude/(deploy-model|settings\\.json)$",
+    "(^|/)(credential|credentials|secret|secrets|auth|permission|permissions)([._/-]|$)",
+    "(^|/)(release|deploy|destructive)([._/-]|$)",
+    "^VERSION$"
+  ],
+  "standard_path_patterns": [
+    "^skills/",
+    "^projects/",
+    "^bin/",
+    "^scripts/",
+    "\\.(py|sh|js|ts|tsx|jsx|sql|json|ya?ml|toml)$"
+  ],
+  "trivial_generated_paths": [
+    "^catalog/(skills-inventory|skill-lifecycle-legacy|generated-source-authority|kernel-budget|progressive-loading-metrics)\\.(json|md)$"
+  ],
+  "trivial_path_patterns": [
+    "^plans/",
+    "^docs/",
+    "(^|/)(README|CHANGELOG|CONTRIBUTING|THIRD_PARTY_NOTICES)\\.md$",
+    "\\.md$"
+  ]
+}
