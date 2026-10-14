@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # GeoParquet Without GDAL -- The DuckDB Path
 
 This is the load-bearing pattern for spatial work in GDAL-less environments. If you remember nothing else from this skill, remember this file.

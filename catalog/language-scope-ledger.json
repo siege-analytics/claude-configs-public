@@ -1,0 +1,2238 @@
+{
+  "schema_version": 1,
+  "base_sha": "b9b631988091fcabdc1c531087da57c5ca1a0419",
+  "note": "UNKNOWN is deliberate; inbound references are not consumer identities. Costs are Python len(text) and ceil(chars/4), with packaged form including owned files and resolved tokens. Baseline authored costs and source load fixtures are CI-verified from exact base; packaged baseline costs are attested from an isolated exact-base build. Load fixtures live in catalog/language-scope-fixtures.json. Only changed candidate load sets may change; no ambient savings claim. Lifecycle status is unchanged. Spatial engine sources and SQL are included because a global spatial route could expose SU instructions; pipeline-jobs, Databricks and Unity Catalog remain in #976 data scope.",
+  "items": [
+    {
+      "source": "projects/siege-utilities/_rules.md",
+      "slug": "siege-utilities--rules",
+      "kind": "project-rule",
+      "classification": "exact-project",
+      "known_consumers": [
+        "github.com/siege-analytics/siege_utilities"
+      ],
+      "consumer_evidence": "projects/siege-utilities/PROJECT.md and catalog/resolver-manifest.json exact github.com origin",
+      "auto_select": "exact-project",
+      "baseline": {
+        "authored": {
+          "characters": 10037,
+          "estimated_tokens": 2510
+        },
+        "packaged": {
+          "nested": {
+            "characters": 10037,
+            "estimated_tokens": 2510
+          },
+          "flat": {
+            "characters": 10037,
+            "estimated_tokens": 2510
+          },
+          "claude-code": {
+            "characters": 10037,
+            "estimated_tokens": 2510
+          },
+          "craft-agent": {
+            "characters": 10037,
+            "estimated_tokens": 2510
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 11286,
+          "estimated_tokens": 2822
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11286,
+            "estimated_tokens": 2822
+          },
+          "flat": {
+            "characters": 11286,
+            "estimated_tokens": 2822
+          },
+          "claude-code": {
+            "characters": 11286,
+            "estimated_tokens": 2822
+          },
+          "craft-agent": {
+            "characters": 11286,
+            "estimated_tokens": 2822
+          }
+        }
+      }
+    },
+    {
+      "source": "projects/siege-utilities/skills/error-path-tests/SKILL.md",
+      "slug": "siege-utilities--error-path-tests",
+      "kind": "project-skill",
+      "classification": "exact-project",
+      "known_consumers": [
+        "github.com/siege-analytics/siege_utilities"
+      ],
+      "consumer_evidence": "projects/siege-utilities/PROJECT.md and catalog/resolver-manifest.json exact github.com origin",
+      "auto_select": "exact-project",
+      "baseline": {
+        "authored": {
+          "characters": 11830,
+          "estimated_tokens": 2958
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11962,
+            "estimated_tokens": 2991
+          },
+          "flat": {
+            "characters": 11962,
+            "estimated_tokens": 2991
+          },
+          "claude-code": {
+            "characters": 11962,
+            "estimated_tokens": 2991
+          },
+          "craft-agent": {
+            "characters": 11962,
+            "estimated_tokens": 2991
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 11830,
+          "estimated_tokens": 2958
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11962,
+            "estimated_tokens": 2991
+          },
+          "flat": {
+            "characters": 11962,
+            "estimated_tokens": 2991
+          },
+          "claude-code": {
+            "characters": 11962,
+            "estimated_tokens": 2991
+          },
+          "craft-agent": {
+            "characters": 11962,
+            "estimated_tokens": 2991
+          }
+        }
+      }
+    },
+    {
+      "source": "projects/siege-utilities/skills/hostile-review/SKILL.md",
+      "slug": "siege-utilities--hostile-review",
+      "kind": "project-skill",
+      "classification": "exact-project",
+      "known_consumers": [
+        "github.com/siege-analytics/siege_utilities"
+      ],
+      "consumer_evidence": "projects/siege-utilities/PROJECT.md and catalog/resolver-manifest.json exact github.com origin",
+      "auto_select": "exact-project",
+      "baseline": {
+        "authored": {
+          "characters": 25909,
+          "estimated_tokens": 6478
+        },
+        "packaged": {
+          "nested": {
+            "characters": 38280,
+            "estimated_tokens": 9570
+          },
+          "flat": {
+            "characters": 38280,
+            "estimated_tokens": 9570
+          },
+          "claude-code": {
+            "characters": 38280,
+            "estimated_tokens": 9570
+          },
+          "craft-agent": {
+            "characters": 38249,
+            "estimated_tokens": 9563
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 25909,
+          "estimated_tokens": 6478
+        },
+        "packaged": {
+          "nested": {
+            "characters": 38280,
+            "estimated_tokens": 9570
+          },
+          "flat": {
+            "characters": 38280,
+            "estimated_tokens": 9570
+          },
+          "claude-code": {
+            "characters": 38280,
+            "estimated_tokens": 9570
+          },
+          "craft-agent": {
+            "characters": 38249,
+            "estimated_tokens": 9563
+          }
+        }
+      }
+    },
+    {
+      "source": "projects/siege-utilities/skills/notebook-impact/SKILL.md",
+      "slug": "siege-utilities--notebook-impact",
+      "kind": "project-skill",
+      "classification": "exact-project",
+      "known_consumers": [
+        "github.com/siege-analytics/siege_utilities"
+      ],
+      "consumer_evidence": "projects/siege-utilities/PROJECT.md and catalog/resolver-manifest.json exact github.com origin",
+      "auto_select": "exact-project",
+      "baseline": {
+        "authored": {
+          "characters": 6821,
+          "estimated_tokens": 1706
+        },
+        "packaged": {
+          "nested": {
+            "characters": 6846,
+            "estimated_tokens": 1712
+          },
+          "flat": {
+            "characters": 6846,
+            "estimated_tokens": 1712
+          },
+          "claude-code": {
+            "characters": 6846,
+            "estimated_tokens": 1712
+          },
+          "craft-agent": {
+            "characters": 6846,
+            "estimated_tokens": 1712
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 6821,
+          "estimated_tokens": 1706
+        },
+        "packaged": {
+          "nested": {
+            "characters": 6846,
+            "estimated_tokens": 1712
+          },
+          "flat": {
+            "characters": 6846,
+            "estimated_tokens": 1712
+          },
+          "claude-code": {
+            "characters": 6846,
+            "estimated_tokens": 1712
+          },
+          "craft-agent": {
+            "characters": 6846,
+            "estimated_tokens": 1712
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/_django-rest-framework-rules.md",
+      "slug": "django-rest-framework",
+      "kind": "rule",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 9132,
+          "estimated_tokens": 2283
+        },
+        "packaged": {
+          "nested": {
+            "characters": 9245,
+            "estimated_tokens": 2312
+          },
+          "flat": {
+            "characters": 9245,
+            "estimated_tokens": 2312
+          },
+          "claude-code": {
+            "characters": 9245,
+            "estimated_tokens": 2312
+          },
+          "craft-agent": {
+            "characters": 9245,
+            "estimated_tokens": 2312
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 9132,
+          "estimated_tokens": 2283
+        },
+        "packaged": {
+          "nested": {
+            "characters": 9245,
+            "estimated_tokens": 2312
+          },
+          "flat": {
+            "characters": 9245,
+            "estimated_tokens": 2312
+          },
+          "claude-code": {
+            "characters": 9245,
+            "estimated_tokens": 2312
+          },
+          "craft-agent": {
+            "characters": 9245,
+            "estimated_tokens": 2312
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/_jvm-rules.md",
+      "slug": "jvm",
+      "kind": "rule",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 4214,
+          "estimated_tokens": 1054
+        },
+        "packaged": {
+          "nested": {
+            "characters": 4214,
+            "estimated_tokens": 1054
+          },
+          "flat": {
+            "characters": 4214,
+            "estimated_tokens": 1054
+          },
+          "claude-code": {
+            "characters": 4214,
+            "estimated_tokens": 1054
+          },
+          "craft-agent": {
+            "characters": 4214,
+            "estimated_tokens": 1054
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 4214,
+          "estimated_tokens": 1054
+        },
+        "packaged": {
+          "nested": {
+            "characters": 4214,
+            "estimated_tokens": 1054
+          },
+          "flat": {
+            "characters": 4214,
+            "estimated_tokens": 1054
+          },
+          "claude-code": {
+            "characters": 4214,
+            "estimated_tokens": 1054
+          },
+          "craft-agent": {
+            "characters": 4214,
+            "estimated_tokens": 1054
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/_python-rules.md",
+      "slug": "python",
+      "kind": "rule",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 1994,
+          "estimated_tokens": 499
+        },
+        "packaged": {
+          "nested": {
+            "characters": 1994,
+            "estimated_tokens": 499
+          },
+          "flat": {
+            "characters": 1994,
+            "estimated_tokens": 499
+          },
+          "claude-code": {
+            "characters": 1994,
+            "estimated_tokens": 499
+          },
+          "craft-agent": {
+            "characters": 1994,
+            "estimated_tokens": 499
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 1994,
+          "estimated_tokens": 499
+        },
+        "packaged": {
+          "nested": {
+            "characters": 1994,
+            "estimated_tokens": 499
+          },
+          "flat": {
+            "characters": 1994,
+            "estimated_tokens": 499
+          },
+          "claude-code": {
+            "characters": 1994,
+            "estimated_tokens": 499
+          },
+          "craft-agent": {
+            "characters": 1994,
+            "estimated_tokens": 499
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/_react-rules.md",
+      "slug": "react",
+      "kind": "rule",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 9002,
+          "estimated_tokens": 2251
+        },
+        "packaged": {
+          "nested": {
+            "characters": 9062,
+            "estimated_tokens": 2266
+          },
+          "flat": {
+            "characters": 9062,
+            "estimated_tokens": 2266
+          },
+          "claude-code": {
+            "characters": 9062,
+            "estimated_tokens": 2266
+          },
+          "craft-agent": {
+            "characters": 9062,
+            "estimated_tokens": 2266
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 9002,
+          "estimated_tokens": 2251
+        },
+        "packaged": {
+          "nested": {
+            "characters": 9062,
+            "estimated_tokens": 2266
+          },
+          "flat": {
+            "characters": 9062,
+            "estimated_tokens": 2266
+          },
+          "claude-code": {
+            "characters": 9062,
+            "estimated_tokens": 2266
+          },
+          "craft-agent": {
+            "characters": 9062,
+            "estimated_tokens": 2266
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/_rust-rules.md",
+      "slug": "rust",
+      "kind": "rule",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 2218,
+          "estimated_tokens": 555
+        },
+        "packaged": {
+          "nested": {
+            "characters": 2218,
+            "estimated_tokens": 555
+          },
+          "flat": {
+            "characters": 2218,
+            "estimated_tokens": 555
+          },
+          "claude-code": {
+            "characters": 2218,
+            "estimated_tokens": 555
+          },
+          "craft-agent": {
+            "characters": 2218,
+            "estimated_tokens": 555
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 2218,
+          "estimated_tokens": 555
+        },
+        "packaged": {
+          "nested": {
+            "characters": 2218,
+            "estimated_tokens": 555
+          },
+          "flat": {
+            "characters": 2218,
+            "estimated_tokens": 555
+          },
+          "claude-code": {
+            "characters": 2218,
+            "estimated_tokens": 555
+          },
+          "craft-agent": {
+            "characters": 2218,
+            "estimated_tokens": 555
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/_siege-utilities-rules.md",
+      "slug": "siege-utilities",
+      "kind": "rule",
+      "classification": "compatibility",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 3131,
+          "estimated_tokens": 783
+        },
+        "packaged": {
+          "nested": {
+            "characters": 3152,
+            "estimated_tokens": 788
+          },
+          "flat": {
+            "characters": 3152,
+            "estimated_tokens": 788
+          },
+          "claude-code": {
+            "characters": 3152,
+            "estimated_tokens": 788
+          },
+          "craft-agent": {
+            "characters": 3152,
+            "estimated_tokens": 788
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 695,
+          "estimated_tokens": 174
+        },
+        "packaged": {
+          "nested": {
+            "characters": 695,
+            "estimated_tokens": 174
+          },
+          "flat": {
+            "characters": 695,
+            "estimated_tokens": 174
+          },
+          "claude-code": {
+            "characters": 695,
+            "estimated_tokens": 174
+          },
+          "craft-agent": {
+            "characters": 695,
+            "estimated_tokens": 174
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/_typescript-rules.md",
+      "slug": "typescript",
+      "kind": "rule",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 2206,
+          "estimated_tokens": 552
+        },
+        "packaged": {
+          "nested": {
+            "characters": 2206,
+            "estimated_tokens": 552
+          },
+          "flat": {
+            "characters": 2206,
+            "estimated_tokens": 552
+          },
+          "claude-code": {
+            "characters": 2206,
+            "estimated_tokens": 552
+          },
+          "craft-agent": {
+            "characters": 2206,
+            "estimated_tokens": 552
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 2206,
+          "estimated_tokens": 552
+        },
+        "packaged": {
+          "nested": {
+            "characters": 2206,
+            "estimated_tokens": 552
+          },
+          "flat": {
+            "characters": 2206,
+            "estimated_tokens": 552
+          },
+          "claude-code": {
+            "characters": 2206,
+            "estimated_tokens": 552
+          },
+          "craft-agent": {
+            "characters": 2206,
+            "estimated_tokens": 552
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/coding/SKILL.md",
+      "slug": "coding",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 3958,
+          "estimated_tokens": 990
+        },
+        "packaged": {
+          "nested": {
+            "characters": 4140,
+            "estimated_tokens": 1035
+          },
+          "flat": {
+            "characters": 4140,
+            "estimated_tokens": 1035
+          },
+          "claude-code": {
+            "characters": 4140,
+            "estimated_tokens": 1035
+          },
+          "craft-agent": {
+            "characters": 4140,
+            "estimated_tokens": 1035
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 4787,
+          "estimated_tokens": 1197
+        },
+        "packaged": {
+          "nested": {
+            "characters": 5149,
+            "estimated_tokens": 1288
+          },
+          "flat": {
+            "characters": 5149,
+            "estimated_tokens": 1288
+          },
+          "claude-code": {
+            "characters": 5149,
+            "estimated_tokens": 1288
+          },
+          "craft-agent": {
+            "characters": 5149,
+            "estimated_tokens": 1288
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/django-rest-framework/SKILL.md",
+      "slug": "django-rest-framework",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 8736,
+          "estimated_tokens": 2184
+        },
+        "packaged": {
+          "nested": {
+            "characters": 20085,
+            "estimated_tokens": 5022
+          },
+          "flat": {
+            "characters": 20085,
+            "estimated_tokens": 5022
+          },
+          "claude-code": {
+            "characters": 20085,
+            "estimated_tokens": 5022
+          },
+          "craft-agent": {
+            "characters": 20085,
+            "estimated_tokens": 5022
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 8719,
+          "estimated_tokens": 2180
+        },
+        "packaged": {
+          "nested": {
+            "characters": 20068,
+            "estimated_tokens": 5017
+          },
+          "flat": {
+            "characters": 20068,
+            "estimated_tokens": 5017
+          },
+          "claude-code": {
+            "characters": 20068,
+            "estimated_tokens": 5017
+          },
+          "craft-agent": {
+            "characters": 20068,
+            "estimated_tokens": 5017
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/django/SKILL.md",
+      "slug": "django",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 11833,
+          "estimated_tokens": 2959
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11851,
+            "estimated_tokens": 2963
+          },
+          "flat": {
+            "characters": 11851,
+            "estimated_tokens": 2963
+          },
+          "claude-code": {
+            "characters": 11851,
+            "estimated_tokens": 2963
+          },
+          "craft-agent": {
+            "characters": 11851,
+            "estimated_tokens": 2963
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 11799,
+          "estimated_tokens": 2950
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11817,
+            "estimated_tokens": 2955
+          },
+          "flat": {
+            "characters": 11817,
+            "estimated_tokens": 2955
+          },
+          "claude-code": {
+            "characters": 11817,
+            "estimated_tokens": 2955
+          },
+          "craft-agent": {
+            "characters": 11817,
+            "estimated_tokens": 2955
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/duckdb-spatial/SKILL.md",
+      "slug": "duckdb-spatial",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 6778,
+          "estimated_tokens": 1695
+        },
+        "packaged": {
+          "nested": {
+            "characters": 38670,
+            "estimated_tokens": 9668
+          },
+          "flat": {
+            "characters": 38670,
+            "estimated_tokens": 9668
+          },
+          "claude-code": {
+            "characters": 38670,
+            "estimated_tokens": 9668
+          },
+          "craft-agent": {
+            "characters": 38670,
+            "estimated_tokens": 9668
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 6852,
+          "estimated_tokens": 1713
+        },
+        "packaged": {
+          "nested": {
+            "characters": 39383,
+            "estimated_tokens": 9846
+          },
+          "flat": {
+            "characters": 39383,
+            "estimated_tokens": 9846
+          },
+          "claude-code": {
+            "characters": 39383,
+            "estimated_tokens": 9846
+          },
+          "craft-agent": {
+            "characters": 39383,
+            "estimated_tokens": 9846
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/geopandas/SKILL.md",
+      "slug": "geopandas",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 6676,
+          "estimated_tokens": 1669
+        },
+        "packaged": {
+          "nested": {
+            "characters": 56644,
+            "estimated_tokens": 14161
+          },
+          "flat": {
+            "characters": 56644,
+            "estimated_tokens": 14161
+          },
+          "claude-code": {
+            "characters": 56644,
+            "estimated_tokens": 14161
+          },
+          "craft-agent": {
+            "characters": 56644,
+            "estimated_tokens": 14161
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 6841,
+          "estimated_tokens": 1711
+        },
+        "packaged": {
+          "nested": {
+            "characters": 58753,
+            "estimated_tokens": 14689
+          },
+          "flat": {
+            "characters": 58753,
+            "estimated_tokens": 14689
+          },
+          "claude-code": {
+            "characters": 58753,
+            "estimated_tokens": 14689
+          },
+          "craft-agent": {
+            "characters": 58753,
+            "estimated_tokens": 14689
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/postgis/SKILL.md",
+      "slug": "postgis",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 10058,
+          "estimated_tokens": 2515
+        },
+        "packaged": {
+          "nested": {
+            "characters": 134624,
+            "estimated_tokens": 33656
+          },
+          "flat": {
+            "characters": 134624,
+            "estimated_tokens": 33656
+          },
+          "claude-code": {
+            "characters": 134624,
+            "estimated_tokens": 33656
+          },
+          "craft-agent": {
+            "characters": 134624,
+            "estimated_tokens": 33656
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 10045,
+          "estimated_tokens": 2512
+        },
+        "packaged": {
+          "nested": {
+            "characters": 136609,
+            "estimated_tokens": 34153
+          },
+          "flat": {
+            "characters": 136609,
+            "estimated_tokens": 34153
+          },
+          "claude-code": {
+            "characters": 136609,
+            "estimated_tokens": 34153
+          },
+          "craft-agent": {
+            "characters": 136609,
+            "estimated_tokens": 34153
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/python-exceptions/SKILL.md",
+      "slug": "python-exceptions",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 7134,
+          "estimated_tokens": 1784
+        },
+        "packaged": {
+          "nested": {
+            "characters": 7134,
+            "estimated_tokens": 1784
+          },
+          "flat": {
+            "characters": 7134,
+            "estimated_tokens": 1784
+          },
+          "claude-code": {
+            "characters": 7134,
+            "estimated_tokens": 1784
+          },
+          "craft-agent": {
+            "characters": 7134,
+            "estimated_tokens": 1784
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 7117,
+          "estimated_tokens": 1780
+        },
+        "packaged": {
+          "nested": {
+            "characters": 7117,
+            "estimated_tokens": 1780
+          },
+          "flat": {
+            "characters": 7117,
+            "estimated_tokens": 1780
+          },
+          "claude-code": {
+            "characters": 7117,
+            "estimated_tokens": 1780
+          },
+          "craft-agent": {
+            "characters": 7117,
+            "estimated_tokens": 1780
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/python-patterns/SKILL.md",
+      "slug": "python-patterns",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 10563,
+          "estimated_tokens": 2641
+        },
+        "packaged": {
+          "nested": {
+            "characters": 10581,
+            "estimated_tokens": 2646
+          },
+          "flat": {
+            "characters": 10581,
+            "estimated_tokens": 2646
+          },
+          "claude-code": {
+            "characters": 10581,
+            "estimated_tokens": 2646
+          },
+          "craft-agent": {
+            "characters": 10581,
+            "estimated_tokens": 2646
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 10546,
+          "estimated_tokens": 2637
+        },
+        "packaged": {
+          "nested": {
+            "characters": 10564,
+            "estimated_tokens": 2641
+          },
+          "flat": {
+            "characters": 10564,
+            "estimated_tokens": 2641
+          },
+          "claude-code": {
+            "characters": 10564,
+            "estimated_tokens": 2641
+          },
+          "craft-agent": {
+            "characters": 10564,
+            "estimated_tokens": 2641
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/python/SKILL.md",
+      "slug": "python",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 6633,
+          "estimated_tokens": 1659
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11303,
+            "estimated_tokens": 2826
+          },
+          "flat": {
+            "characters": 11303,
+            "estimated_tokens": 2826
+          },
+          "claude-code": {
+            "characters": 11303,
+            "estimated_tokens": 2826
+          },
+          "craft-agent": {
+            "characters": 11303,
+            "estimated_tokens": 2826
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 6633,
+          "estimated_tokens": 1659
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11303,
+            "estimated_tokens": 2826
+          },
+          "flat": {
+            "characters": 11303,
+            "estimated_tokens": 2826
+          },
+          "claude-code": {
+            "characters": 11303,
+            "estimated_tokens": 2826
+          },
+          "craft-agent": {
+            "characters": 11303,
+            "estimated_tokens": 2826
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/qml-component-review/SKILL.md",
+      "slug": "qml-component-review",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 7320,
+          "estimated_tokens": 1830
+        },
+        "packaged": {
+          "nested": {
+            "characters": 7320,
+            "estimated_tokens": 1830
+          },
+          "flat": {
+            "characters": 7320,
+            "estimated_tokens": 1830
+          },
+          "claude-code": {
+            "characters": 7320,
+            "estimated_tokens": 1830
+          },
+          "craft-agent": {
+            "characters": 7320,
+            "estimated_tokens": 1830
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 2337,
+          "estimated_tokens": 585
+        },
+        "packaged": {
+          "nested": {
+            "characters": 9814,
+            "estimated_tokens": 2454
+          },
+          "flat": {
+            "characters": 9814,
+            "estimated_tokens": 2454
+          },
+          "claude-code": {
+            "characters": 9814,
+            "estimated_tokens": 2454
+          },
+          "craft-agent": {
+            "characters": 9814,
+            "estimated_tokens": 2454
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/react/SKILL.md",
+      "slug": "react",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 11194,
+          "estimated_tokens": 2799
+        },
+        "packaged": {
+          "nested": {
+            "characters": 18704,
+            "estimated_tokens": 4676
+          },
+          "flat": {
+            "characters": 18704,
+            "estimated_tokens": 4676
+          },
+          "claude-code": {
+            "characters": 18704,
+            "estimated_tokens": 4676
+          },
+          "craft-agent": {
+            "characters": 18704,
+            "estimated_tokens": 4676
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 11167,
+          "estimated_tokens": 2792
+        },
+        "packaged": {
+          "nested": {
+            "characters": 18677,
+            "estimated_tokens": 4670
+          },
+          "flat": {
+            "characters": 18677,
+            "estimated_tokens": 4670
+          },
+          "claude-code": {
+            "characters": 18677,
+            "estimated_tokens": 4670
+          },
+          "craft-agent": {
+            "characters": 18677,
+            "estimated_tokens": 4670
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/scala-on-spark/SKILL.md",
+      "slug": "scala-on-spark",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 3176,
+          "estimated_tokens": 794
+        },
+        "packaged": {
+          "nested": {
+            "characters": 3206,
+            "estimated_tokens": 802
+          },
+          "flat": {
+            "characters": 3206,
+            "estimated_tokens": 802
+          },
+          "claude-code": {
+            "characters": 3206,
+            "estimated_tokens": 802
+          },
+          "craft-agent": {
+            "characters": 3206,
+            "estimated_tokens": 802
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 3176,
+          "estimated_tokens": 794
+        },
+        "packaged": {
+          "nested": {
+            "characters": 3206,
+            "estimated_tokens": 802
+          },
+          "flat": {
+            "characters": 3206,
+            "estimated_tokens": 802
+          },
+          "claude-code": {
+            "characters": 3206,
+            "estimated_tokens": 802
+          },
+          "craft-agent": {
+            "characters": 3206,
+            "estimated_tokens": 802
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/sedona/SKILL.md",
+      "slug": "sedona",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "not-routed",
+      "baseline": {
+        "authored": {
+          "characters": 8461,
+          "estimated_tokens": 2116
+        },
+        "packaged": {
+          "nested": {
+            "characters": 50974,
+            "estimated_tokens": 12744
+          },
+          "flat": {
+            "characters": 50974,
+            "estimated_tokens": 12744
+          },
+          "claude-code": {
+            "characters": 50974,
+            "estimated_tokens": 12744
+          },
+          "craft-agent": {
+            "characters": 50974,
+            "estimated_tokens": 12744
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 8498,
+          "estimated_tokens": 2125
+        },
+        "packaged": {
+          "nested": {
+            "characters": 51650,
+            "estimated_tokens": 12913
+          },
+          "flat": {
+            "characters": 51650,
+            "estimated_tokens": 12913
+          },
+          "claude-code": {
+            "characters": 51650,
+            "estimated_tokens": 12913
+          },
+          "craft-agent": {
+            "characters": 51650,
+            "estimated_tokens": 12913
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/languages/SKILL.md",
+      "slug": "shelves--languages",
+      "kind": "shelf-router",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 4003,
+          "estimated_tokens": 1001
+        },
+        "packaged": {
+          "nested": {
+            "characters": 693809,
+            "estimated_tokens": 173453
+          },
+          "flat": {
+            "characters": 693809,
+            "estimated_tokens": 173453
+          },
+          "claude-code": {
+            "characters": 693809,
+            "estimated_tokens": 173453
+          },
+          "craft-agent": {
+            "characters": 693809,
+            "estimated_tokens": 173453
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 4003,
+          "estimated_tokens": 1001
+        },
+        "packaged": {
+          "nested": {
+            "characters": 693809,
+            "estimated_tokens": 173453
+          },
+          "flat": {
+            "characters": 693809,
+            "estimated_tokens": 173453
+          },
+          "claude-code": {
+            "characters": 693809,
+            "estimated_tokens": 173453
+          },
+          "craft-agent": {
+            "characters": 693809,
+            "estimated_tokens": 173453
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/languages/effective-java/SKILL.md",
+      "slug": "shelves--effective-java",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 13203,
+          "estimated_tokens": 3301
+        },
+        "packaged": {
+          "nested": {
+            "characters": 73903,
+            "estimated_tokens": 18476
+          },
+          "flat": {
+            "characters": 73903,
+            "estimated_tokens": 18476
+          },
+          "claude-code": {
+            "characters": 73903,
+            "estimated_tokens": 18476
+          },
+          "craft-agent": {
+            "characters": 73903,
+            "estimated_tokens": 18476
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 13203,
+          "estimated_tokens": 3301
+        },
+        "packaged": {
+          "nested": {
+            "characters": 73903,
+            "estimated_tokens": 18476
+          },
+          "flat": {
+            "characters": 73903,
+            "estimated_tokens": 18476
+          },
+          "claude-code": {
+            "characters": 73903,
+            "estimated_tokens": 18476
+          },
+          "craft-agent": {
+            "characters": 73903,
+            "estimated_tokens": 18476
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/languages/effective-kotlin/SKILL.md",
+      "slug": "shelves--effective-kotlin",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 16405,
+          "estimated_tokens": 4102
+        },
+        "packaged": {
+          "nested": {
+            "characters": 95675,
+            "estimated_tokens": 23919
+          },
+          "flat": {
+            "characters": 95675,
+            "estimated_tokens": 23919
+          },
+          "claude-code": {
+            "characters": 95675,
+            "estimated_tokens": 23919
+          },
+          "craft-agent": {
+            "characters": 95675,
+            "estimated_tokens": 23919
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 16405,
+          "estimated_tokens": 4102
+        },
+        "packaged": {
+          "nested": {
+            "characters": 95675,
+            "estimated_tokens": 23919
+          },
+          "flat": {
+            "characters": 95675,
+            "estimated_tokens": 23919
+          },
+          "claude-code": {
+            "characters": 95675,
+            "estimated_tokens": 23919
+          },
+          "craft-agent": {
+            "characters": 95675,
+            "estimated_tokens": 23919
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/languages/effective-python/SKILL.md",
+      "slug": "shelves--effective-python",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 12201,
+          "estimated_tokens": 3051
+        },
+        "packaged": {
+          "nested": {
+            "characters": 142379,
+            "estimated_tokens": 35595
+          },
+          "flat": {
+            "characters": 142379,
+            "estimated_tokens": 35595
+          },
+          "claude-code": {
+            "characters": 142379,
+            "estimated_tokens": 35595
+          },
+          "craft-agent": {
+            "characters": 142379,
+            "estimated_tokens": 35595
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 12201,
+          "estimated_tokens": 3051
+        },
+        "packaged": {
+          "nested": {
+            "characters": 142379,
+            "estimated_tokens": 35595
+          },
+          "flat": {
+            "characters": 142379,
+            "estimated_tokens": 35595
+          },
+          "claude-code": {
+            "characters": 142379,
+            "estimated_tokens": 35595
+          },
+          "craft-agent": {
+            "characters": 142379,
+            "estimated_tokens": 35595
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/languages/effective-typescript/SKILL.md",
+      "slug": "shelves--effective-typescript",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 10317,
+          "estimated_tokens": 2580
+        },
+        "packaged": {
+          "nested": {
+            "characters": 40025,
+            "estimated_tokens": 10007
+          },
+          "flat": {
+            "characters": 40025,
+            "estimated_tokens": 10007
+          },
+          "claude-code": {
+            "characters": 40025,
+            "estimated_tokens": 10007
+          },
+          "craft-agent": {
+            "characters": 40025,
+            "estimated_tokens": 10007
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 10317,
+          "estimated_tokens": 2580
+        },
+        "packaged": {
+          "nested": {
+            "characters": 40025,
+            "estimated_tokens": 10007
+          },
+          "flat": {
+            "characters": 40025,
+            "estimated_tokens": 10007
+          },
+          "claude-code": {
+            "characters": 40025,
+            "estimated_tokens": 10007
+          },
+          "craft-agent": {
+            "characters": 40025,
+            "estimated_tokens": 10007
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/languages/kotlin-in-action/SKILL.md",
+      "slug": "shelves--kotlin-in-action",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 16189,
+          "estimated_tokens": 4048
+        },
+        "packaged": {
+          "nested": {
+            "characters": 76083,
+            "estimated_tokens": 19021
+          },
+          "flat": {
+            "characters": 76083,
+            "estimated_tokens": 19021
+          },
+          "claude-code": {
+            "characters": 76083,
+            "estimated_tokens": 19021
+          },
+          "craft-agent": {
+            "characters": 76083,
+            "estimated_tokens": 19021
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 16189,
+          "estimated_tokens": 4048
+        },
+        "packaged": {
+          "nested": {
+            "characters": 76083,
+            "estimated_tokens": 19021
+          },
+          "flat": {
+            "characters": 76083,
+            "estimated_tokens": 19021
+          },
+          "claude-code": {
+            "characters": 76083,
+            "estimated_tokens": 19021
+          },
+          "craft-agent": {
+            "characters": 76083,
+            "estimated_tokens": 19021
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/languages/programming-with-rust/SKILL.md",
+      "slug": "shelves--programming-with-rust",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 12296,
+          "estimated_tokens": 3074
+        },
+        "packaged": {
+          "nested": {
+            "characters": 42364,
+            "estimated_tokens": 10591
+          },
+          "flat": {
+            "characters": 42364,
+            "estimated_tokens": 10591
+          },
+          "claude-code": {
+            "characters": 42364,
+            "estimated_tokens": 10591
+          },
+          "craft-agent": {
+            "characters": 42364,
+            "estimated_tokens": 10591
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 12296,
+          "estimated_tokens": 3074
+        },
+        "packaged": {
+          "nested": {
+            "characters": 42364,
+            "estimated_tokens": 10591
+          },
+          "flat": {
+            "characters": 42364,
+            "estimated_tokens": 10591
+          },
+          "claude-code": {
+            "characters": 42364,
+            "estimated_tokens": 10591
+          },
+          "craft-agent": {
+            "characters": 42364,
+            "estimated_tokens": 10591
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/languages/rust-in-action/SKILL.md",
+      "slug": "shelves--rust-in-action",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 17149,
+          "estimated_tokens": 4288
+        },
+        "packaged": {
+          "nested": {
+            "characters": 43035,
+            "estimated_tokens": 10759
+          },
+          "flat": {
+            "characters": 43035,
+            "estimated_tokens": 10759
+          },
+          "claude-code": {
+            "characters": 43035,
+            "estimated_tokens": 10759
+          },
+          "craft-agent": {
+            "characters": 43035,
+            "estimated_tokens": 10759
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 17149,
+          "estimated_tokens": 4288
+        },
+        "packaged": {
+          "nested": {
+            "characters": 43035,
+            "estimated_tokens": 10759
+          },
+          "flat": {
+            "characters": 43035,
+            "estimated_tokens": 10759
+          },
+          "claude-code": {
+            "characters": 43035,
+            "estimated_tokens": 10759
+          },
+          "craft-agent": {
+            "characters": 43035,
+            "estimated_tokens": 10759
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/languages/spring-boot-in-action/SKILL.md",
+      "slug": "shelves--spring-boot-in-action",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 16789,
+          "estimated_tokens": 4198
+        },
+        "packaged": {
+          "nested": {
+            "characters": 50448,
+            "estimated_tokens": 12612
+          },
+          "flat": {
+            "characters": 50448,
+            "estimated_tokens": 12612
+          },
+          "claude-code": {
+            "characters": 50448,
+            "estimated_tokens": 12612
+          },
+          "craft-agent": {
+            "characters": 50448,
+            "estimated_tokens": 12612
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 16789,
+          "estimated_tokens": 4198
+        },
+        "packaged": {
+          "nested": {
+            "characters": 50448,
+            "estimated_tokens": 12612
+          },
+          "flat": {
+            "characters": 50448,
+            "estimated_tokens": 12612
+          },
+          "claude-code": {
+            "characters": 50448,
+            "estimated_tokens": 12612
+          },
+          "craft-agent": {
+            "characters": 50448,
+            "estimated_tokens": 12612
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/languages/using-asyncio-python/SKILL.md",
+      "slug": "shelves--using-asyncio-python",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 13311,
+          "estimated_tokens": 3328
+        },
+        "packaged": {
+          "nested": {
+            "characters": 58481,
+            "estimated_tokens": 14621
+          },
+          "flat": {
+            "characters": 58481,
+            "estimated_tokens": 14621
+          },
+          "claude-code": {
+            "characters": 58481,
+            "estimated_tokens": 14621
+          },
+          "craft-agent": {
+            "characters": 58481,
+            "estimated_tokens": 14621
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 13311,
+          "estimated_tokens": 3328
+        },
+        "packaged": {
+          "nested": {
+            "characters": 58481,
+            "estimated_tokens": 14621
+          },
+          "flat": {
+            "characters": 58481,
+            "estimated_tokens": 14621
+          },
+          "claude-code": {
+            "characters": 58481,
+            "estimated_tokens": 14621
+          },
+          "craft-agent": {
+            "characters": 58481,
+            "estimated_tokens": 14621
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/languages/web-scraping-python/SKILL.md",
+      "slug": "shelves--web-scraping-python",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 14537,
+          "estimated_tokens": 3635
+        },
+        "packaged": {
+          "nested": {
+            "characters": 67413,
+            "estimated_tokens": 16854
+          },
+          "flat": {
+            "characters": 67413,
+            "estimated_tokens": 16854
+          },
+          "claude-code": {
+            "characters": 67413,
+            "estimated_tokens": 16854
+          },
+          "craft-agent": {
+            "characters": 67413,
+            "estimated_tokens": 16854
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 14537,
+          "estimated_tokens": 3635
+        },
+        "packaged": {
+          "nested": {
+            "characters": 67413,
+            "estimated_tokens": 16854
+          },
+          "flat": {
+            "characters": 67413,
+            "estimated_tokens": 16854
+          },
+          "claude-code": {
+            "characters": 67413,
+            "estimated_tokens": 16854
+          },
+          "craft-agent": {
+            "characters": 67413,
+            "estimated_tokens": 16854
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/spark/SKILL.md",
+      "slug": "spark",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 6292,
+          "estimated_tokens": 1573
+        },
+        "packaged": {
+          "nested": {
+            "characters": 26293,
+            "estimated_tokens": 6574
+          },
+          "flat": {
+            "characters": 26293,
+            "estimated_tokens": 6574
+          },
+          "claude-code": {
+            "characters": 26293,
+            "estimated_tokens": 6574
+          },
+          "craft-agent": {
+            "characters": 26293,
+            "estimated_tokens": 6574
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 6292,
+          "estimated_tokens": 1573
+        },
+        "packaged": {
+          "nested": {
+            "characters": 26293,
+            "estimated_tokens": 6574
+          },
+          "flat": {
+            "characters": 26293,
+            "estimated_tokens": 6574
+          },
+          "claude-code": {
+            "characters": 26293,
+            "estimated_tokens": 6574
+          },
+          "craft-agent": {
+            "characters": 26293,
+            "estimated_tokens": 6574
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/spatial/SKILL.md",
+      "slug": "spatial",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 10782,
+          "estimated_tokens": 2696
+        },
+        "packaged": {
+          "nested": {
+            "characters": 193873,
+            "estimated_tokens": 48469
+          },
+          "flat": {
+            "characters": 193873,
+            "estimated_tokens": 48469
+          },
+          "claude-code": {
+            "characters": 193873,
+            "estimated_tokens": 48469
+          },
+          "craft-agent": {
+            "characters": 193873,
+            "estimated_tokens": 48469
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 10947,
+          "estimated_tokens": 2737
+        },
+        "packaged": {
+          "nested": {
+            "characters": 197094,
+            "estimated_tokens": 49274
+          },
+          "flat": {
+            "characters": 197094,
+            "estimated_tokens": 49274
+          },
+          "claude-code": {
+            "characters": 197094,
+            "estimated_tokens": 49274
+          },
+          "craft-agent": {
+            "characters": 197094,
+            "estimated_tokens": 49274
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/sql/SKILL.md",
+      "slug": "sql",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 5272,
+          "estimated_tokens": 1318
+        },
+        "packaged": {
+          "nested": {
+            "characters": 25446,
+            "estimated_tokens": 6362
+          },
+          "flat": {
+            "characters": 25446,
+            "estimated_tokens": 6362
+          },
+          "claude-code": {
+            "characters": 25446,
+            "estimated_tokens": 6362
+          },
+          "craft-agent": {
+            "characters": 25446,
+            "estimated_tokens": 6362
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 5272,
+          "estimated_tokens": 1318
+        },
+        "packaged": {
+          "nested": {
+            "characters": 25446,
+            "estimated_tokens": 6362
+          },
+          "flat": {
+            "characters": 25446,
+            "estimated_tokens": 6362
+          },
+          "claude-code": {
+            "characters": 25446,
+            "estimated_tokens": 6362
+          },
+          "craft-agent": {
+            "characters": 25446,
+            "estimated_tokens": 6362
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/vue/SKILL.md",
+      "slug": "vue",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 9382,
+          "estimated_tokens": 2346
+        },
+        "packaged": {
+          "nested": {
+            "characters": 9469,
+            "estimated_tokens": 2368
+          },
+          "flat": {
+            "characters": 9469,
+            "estimated_tokens": 2368
+          },
+          "claude-code": {
+            "characters": 9469,
+            "estimated_tokens": 2368
+          },
+          "craft-agent": {
+            "characters": 9469,
+            "estimated_tokens": 2368
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 9580,
+          "estimated_tokens": 2395
+        },
+        "packaged": {
+          "nested": {
+            "characters": 9667,
+            "estimated_tokens": 2417
+          },
+          "flat": {
+            "characters": 9667,
+            "estimated_tokens": 2417
+          },
+          "claude-code": {
+            "characters": 9667,
+            "estimated_tokens": 2417
+          },
+          "craft-agent": {
+            "characters": 9667,
+            "estimated_tokens": 2417
+          }
+        }
+      }
+    }
+  ]
+}

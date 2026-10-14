@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # siege_utilities + Spatial Router -- What SU Obviates
 
 Cross-engine map. Before reaching for any engine's native API, check whether SU already does the work. SU is the spine for Siege spatial pipelines; engine APIs fill the gaps.

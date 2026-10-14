@@ -1,8 +1,6 @@
 # Skill Resolver
 
-**You MUST consult this resolver as the first step of any non-trivial task.** When a task pattern below matches what you're about to do, READ the mapped skill(s) before proceeding. Not after. Not "I know what it says." Read.
-
-This is the enforcement layer for every skill in this collection and the electinfo collection. Skills are only useful if they fire before action.
+This is a legacy navigation document, **not the executable automatic loading contract**. `catalog/resolver-manifest.json` and `bin/resolve-load-set.py` control route selection, budget rejection, shelf isolation and exact host/repo project scope. A row here alone does not select a skill or authorize a project overlay; unknown and ambiguous prompts stay visibly kernel-only. Read selected skills before acting. See `catalog/language-scope-ledger.json` for classified source and consumer evidence.
 
 ---
 
@@ -150,7 +148,7 @@ Items marked **[build-enforced]** are validated by `bin/build.py`. Items marked 
 
 ### siege-utilities-specific routing
 
-These triggers apply only when the working directory matches `siege-analytics/siege_utilities`.
+These navigation hints are eligible only when the origin resolves to the exact `github.com/siege-analytics/siege_utilities` host/repository; a same-name foreign host or bare owner/repo is not proof of identity.
 
 | Trigger | Skill |
 |---|---|
@@ -198,11 +196,11 @@ See [projects/CONTRIBUTING.md](projects/CONTRIBUTING.md) for the full authoring 
 | Write a pipeline / ETL / scheduled data job | `skills/coding/pipeline-jobs/SKILL.md` |
 | Write a Rundeck job YAML | `electinfo_claude_skills/skills/rundeck-job/SKILL.md` |
 | Review existing code (yours or others') | `skills/coding/code-review/SKILL.md` |
-| Review an extracted QML component (properties-in / signals-out, MuseScore plugins) | `skills/coding/qml-component-review/SKILL.md` |
+| Explicit QML review (generic optional checklist; ChordLibrary/MuseScore consumer UNKNOWN, never auto-routed) | `skills/qml-component-review/SKILL.md` |
 | Write Scala on Databricks notebooks, `.scala` files, `Dataset[T]` Spark code | `skills/coding/scala-on-spark/SKILL.md` (delegates to `shelves/languages/effective-java/`, `effective-kotlin/`, and `coding/spark/`) |
 | Design a service / module boundary | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/engineering-principles/clean-architecture/SKILL.md` |
 | Pick a storage engine, replication scheme, or partitioning strategy | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
-| Write a Python utility, helper, formatter, validator, file/path/HTTP/spatial helper | `skills/_siege-utilities-rules.md` (check `siege_utilities` first) |
+| Python utility in the exact `github.com/siege-analytics/siege_utilities` repository | `projects/siege-utilities/_rules.md` (project overlay only; compatibility `skills/_siege-utilities-rules.md` is not a global mandate) |
 | Do any spatial work — pick engine, write spatial SQL/Python/Scala, run a spatial join | `skills/analysis/spatial/SKILL.md` (router; dispatches to `coding/postgis`, `coding/geopandas`, `coding/sedona`, `coding/duckdb-spatial`) |
 | Fix a bug or issue identified by code review / audit / static analysis | `skills/thinking/think/SKILL.md` Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per `evaluate-ticket` criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
 | Audit a repo for over-engineering, find bloat, identify what to delete or simplify | `skills/over-engineering-audit/SKILL.md` — one-shot ranked report. Five tags: delete, stdlib, platform, yagni, shrink. Lists findings, applies nothing. Complexity only — correctness and security go to normal review. |

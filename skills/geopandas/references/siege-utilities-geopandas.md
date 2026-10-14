@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # siege_utilities + GeoPandas -- Interop Map
 
 When working in GeoPandas/Shapely in Siege projects, [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) covers a large chunk of the typical pipeline (sourcing, CRS, Census plumbing, choropleth) and explicitly supports GDAL-less environments via its capability tiers.

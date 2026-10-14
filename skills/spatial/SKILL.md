@@ -11,8 +11,8 @@ Apply this decision framework when facing a problem involving geographic data. T
 - [`references/engine-selection.md`](references/engine-selection.md) -- given the task, pick PostGIS / GeoPandas / Sedona / DuckDB-spatial
 - [`references/gdal-availability-matrix.md`](references/gdal-availability-matrix.md) -- which paths work without GDAL, per engine, with SU tier mapping
 - [`references/crs-decision-tree.md`](references/crs-decision-tree.md) -- cross-engine projection rules; lat/lng vs projected for distance
-- [`references/siege-utilities-spatial.md`](references/siege-utilities-spatial.md) -- what SU obviates per task category; check this before reaching for native engine APIs
-- [`references/capability-tiers.md`](references/capability-tiers.md) -- `geo` / `geo-lite` / `geodjango` / `none` -- adopt SU's vocabulary for environment classification
+- [`references/siege-utilities-spatial.md`](references/siege-utilities-spatial.md) -- historical SU interop example; consult only inside the exact Siege Utilities repository
+- [`references/capability-tiers.md`](references/capability-tiers.md) -- historical SU capability vocabulary, not a universal runtime contract
 - [`references/principles/`](references/principles/index.md) -- **universal cross-engine spatial principles** (CRS-as-meaning, validate-on-ingest, bbox-pre-filter, subdivide-complex-polygons, indexing-discipline, name-by-srid). Engine-agnostic; load when you need the *why* behind the patterns
 - [`references/spatial-statistics.md`](references/spatial-statistics.md) -- Moran's I, LISA, Gi*, regression, GWR, segregation, DBSCAN; per-engine matrix
 - [`references/spatial-weights.md`](references/spatial-weights.md) -- the W matrix in depth; standardization; sensitivity
@@ -24,9 +24,9 @@ Apply this decision framework when facing a problem involving geographic data. T
 
 For operation code examples, CRS tables, dirty-data recipes, and the original technology-comparison matrix, see [`reference.md`](reference.md) (the cookbook).
 
-## Always start with: capability detection
+## Capability detection
 
-Before doing any spatial work, ask SU what the environment offers:
+Inspect the actual environment and project-declared dependencies before selecting an engine. Only in the exact `github.com/siege-analytics/siege_utilities` repository, the following SU-specific example may be used:
 
 ```python
 from siege_utilities.geo.capabilities import geo_capabilities
@@ -36,7 +36,7 @@ caps = geo_capabilities()  # detect installed packages
 set_default_crs("EPSG:4326")  # session-wide default
 ```
 
-`caps["tier"]` is `"geo"` (full GDAL stack), `"geo-lite"` (Shapely + pyproj only), `"geodjango"` (full + Django GIS), or `"none"`. The tier constrains the engine choice -- see [`gdal-availability-matrix.md`](references/gdal-availability-matrix.md). On Spark/Databricks, also call `siege_utilities.geo.spatial_runtime.resolve_spatial_runtime_plan()` to detect Sedona / native-spatial availability.
+`caps["tier"]` is `"geo"` (full GDAL stack), `"geo-lite"` (Shapely + pyproj only), `"geodjango"` (full + Django GIS), or `"none"`. The tier constrains the engine choice -- see [`gdal-availability-matrix.md`](references/gdal-availability-matrix.md). Outside that exact repository, do not assume SU is installed or call its runtime helpers; use the target environment's verified capabilities. For Spark/Databricks guidance, see the separate #976 routing batch.
 
 ## Step 1: Do You Trust Your Tabular Representation?
 

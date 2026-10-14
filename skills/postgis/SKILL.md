@@ -3,7 +3,6 @@ name: postgis
 description: "PostGIS patterns for spatial queries, indexing, and performance. TRIGGER: SQL with ST_* functions, geometry columns, spatial joins, or PostGIS extension setup. Stacks with sql and (when relevant) spatial sub-skills."
 routed-by: coding-standards
 user-invocable: false
-paths: "**/*.sql,**/postgis/**,**/*.py"
 ---
 
 # PostGIS
@@ -22,7 +21,7 @@ For *Mastering PostGIS* distillation, deep dives, and the SU-PostGIS interop map
 - [`references/topology.md`](references/topology.md) -- `postgis_topology` for shared-edge editing
 - [`references/vacuuming-and-bloat.md`](references/vacuuming-and-bloat.md) -- GIST bloat is the silent ops killer
 - [`references/pitfalls.md`](references/pitfalls.md) -- SRID mismatch, mixed geom types, 3D coords sneaking in
-- [`references/siege-utilities-postgis.md`](references/siege-utilities-postgis.md) -- which SU PostGIS helpers to use vs. raw psycopg2
+- [`references/siege-utilities-postgis.md`](references/siege-utilities-postgis.md) -- historical SU interop example for the exact Siege Utilities repository only
 
 Apply when writing SQL against PostgreSQL with the PostGIS extension enabled. See [reference.md](reference.md) for full query templates, extension setup, and raster operations.
 

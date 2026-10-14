@@ -3,18 +3,18 @@
     "injected": {
       "explicit_overflow": 7445,
       "generic": 7364,
-      "multi_route": 7774,
-      "python_review": 7464
+      "multi_route": 8006,
+      "python_review": 7528
     },
     "kernel": 6995,
-    "legacy_root_resolver": 46235,
-    "legacy_rules_bundle": 422459,
-    "skill_resolver": 18028
+    "legacy_root_resolver": 46561,
+    "legacy_rules_bundle": 421298,
+    "skill_resolver": 18563
   },
   "fixture_selected_content": {
     "explicit_overflow": {
-      "characters": 147184,
-      "estimated_tokens": 36801,
+      "characters": 148178,
+      "estimated_tokens": 37049,
       "items": 13
     },
     "generic": {
@@ -23,18 +23,18 @@
       "items": 0
     },
     "multi_route": {
-      "characters": 50356,
-      "estimated_tokens": 12591,
+      "characters": 51350,
+      "estimated_tokens": 12839,
       "items": 7
     },
     "python_review": {
-      "characters": 10591,
-      "estimated_tokens": 2649,
+      "characters": 11420,
+      "estimated_tokens": 2856,
       "items": 2
     },
     "siege_utilities_review": {
-      "characters": 59486,
-      "estimated_tokens": 14873,
+      "characters": 60735,
+      "estimated_tokens": 15185,
       "items": 3
     }
   },

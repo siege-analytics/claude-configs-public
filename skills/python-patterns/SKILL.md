@@ -3,7 +3,6 @@ name: python-patterns
 description: "Engineering principles for Python library code. TRIGGER: duplicated functions, undeclared attributes, ignored kwargs, unchecked types crossing module boundaries, or a CR comment about architectural smells. Covers DRY, dataclass discipline, interface integrity, and runtime type correctness."
 routed-by: coding-standards
 user-invocable: false
-paths: "**/*.py"
 ---
 
 # Python Engineering Patterns

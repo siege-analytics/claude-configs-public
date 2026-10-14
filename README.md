@@ -61,7 +61,7 @@ Files at the root of `skills/` named `_*-rules.md` are loaded by the resolver Co
 | [`_jvm-rules.md`](skills/_jvm-rules.md) | Effective Java + Effective Kotlin (merged) | Touching JVM languages, including Scala on Spark |
 | [`_typescript-rules.md`](skills/_typescript-rules.md) | Effective TypeScript idioms | Touching `*.ts` / `*.tsx` |
 | [`_rust-rules.md`](skills/_rust-rules.md) | Rust idioms | Touching `*.rs` |
-| [`_siege-utilities-rules.md`](skills/_siege-utilities-rules.md) | Prefer [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) for utility-shaped problems before writing a new helper. Consider PRs upstream when the gap is generic. | Writing Python utilities |
+| [`_siege-utilities-rules.md`](skills/_siege-utilities-rules.md) | Legacy compatibility pointer, not an always-on preference. Project-specific guidance is gated to the exact Siege Utilities origin. | Existing rule references only |
 | [`_definition-of-done-rules.md`](skills/_definition-of-done-rules.md) | Five hard criteria for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists. | Every behavior change |
 
 ## Rules bundle
@@ -126,7 +126,7 @@ Routers cover an entire category with one description slot. Sub-skills are loade
 | **Apache Sedona** | [`coding/sedona/`](skills/coding/sedona/SKILL.md) | Distributed spatial joins on Spark. Same skill for PySpark and Scala scaffolding. Includes raster. |
 | **DuckDB-spatial** | [`coding/duckdb-spatial/`](skills/coding/duckdb-spatial/SKILL.md) | SQL on Parquet without server; bundles GEOS/GDAL/PROJ -- the strongest single tool for GDAL-less environments. |
 
-Always start spatial work with `siege_utilities.geo.capabilities.geo_capabilities()` to detect the environment tier, then route from [`analysis/spatial/SKILL.md`](skills/analysis/spatial/SKILL.md).
+Start spatial work by verifying the target environment and choosing an engine from [`analysis/spatial/SKILL.md`](skills/analysis/spatial/SKILL.md). Siege Utilities examples are historical references for its exact repository origin only.
 
 ### Action Skills
 
@@ -328,9 +328,9 @@ See [`skills/shelves/SKILL.md`](skills/shelves/SKILL.md) (the meta-router) and t
 
 ## siege_utilities
 
-Many skills explicitly delegate to [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) when it covers the task. The [`_siege-utilities-rules.md`](skills/_siege-utilities-rules.md) always-on rule formalizes this preference: **before writing a Python utility, helper, or one-off function, check whether `siege_utilities` already provides it.** If it almost solves the problem but doesn't, file an upstream PR before adding a local helper.
+[`_siege-utilities-rules.md`](skills/_siege-utilities-rules.md) is a compatibility pointer, not a global dependency or upstream-PR requirement. Implementation and review guidance applies only to the exact `github.com/siege-analytics/siege_utilities` origin via its project overlay. Other repositories follow their own declared dependencies.
 
-The spatial skills in particular (per-engine `siege-utilities-<engine>.md` references) document what SU obviates and what's still bring-your-own.
+Spatial skills retain historical per-engine `siege-utilities-<engine>.md` references, explicitly scoped to that exact origin.
 
 ## Works well with
 

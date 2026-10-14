@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # Spatial Feature Engineering for ML
 
 When the goal is prediction (not inference), spatial structure matters in two places: **the features** (what you use to predict) and **the validation strategy** (how you measure success). Both diverge from non-spatial ML in subtle, easy-to-miss ways.

@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # siege_utilities + Sedona -- Interop Map
 
 When working with Sedona in Siege projects, [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) provides **runtime detection** and **geometry encoding** but does *not* wrap Sedona's spatial operations. The pattern: ask SU what runtime is available, use SU's encoder/decoder for cross-stage geometry safety, write the spatial logic directly in Sedona SQL.

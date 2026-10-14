@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # Ch 6 -- ETL with PostGIS
 
 The book's ETL chapter covers staging tables, bulk loads, and pipeline patterns for spatial data flowing into Postgres. Largely current; modern additions include declarative partitioning (PG 10+) and FDW-based ELT.

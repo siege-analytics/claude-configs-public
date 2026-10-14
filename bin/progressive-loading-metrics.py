@@ -20,7 +20,7 @@ def build()->dict:
   "python_review":run("review this Python diff"),
   "multi_route":run(multi_prompt),
   "explicit_overflow":run(overflow_prompt),
-  "siege_utilities_review":run("review this diff","siege-analytics/siege_utilities")}
+  "siege_utilities_review":run("review this diff","github.com/siege-analytics/siege_utilities")}
  counts={k:len(v["selected"]) for k,v in fixtures.items()}
  selected_content={k:v.get("selected_content",{}) for k,v in fixtures.items()}
  injected={

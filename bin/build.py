@@ -1325,6 +1325,7 @@ def build_resolver_runtime_manifest() -> None:
     manifest = json.loads((REPO_ROOT / "catalog" / "resolver-manifest.json").read_text())
     inventory = json.loads((REPO_ROOT / "catalog" / "skills-inventory.json").read_text())
     known = {}
+    known_by_source = {}
     for item in sorted(inventory["items"], key=lambda value: value["slug"]):
         flat_outputs = [
             Path(value) for value in item["generated_outputs"]
@@ -1335,14 +1336,18 @@ def build_resolver_runtime_manifest() -> None:
         package_path = flat_outputs[0].relative_to("dist/flat")
         if package_path.suffix.lower() != ".md":
             package_path /= "SKILL.md"
-        known[item["slug"]] = {
+        metadata = {
+            "slug": item["slug"],
             "kind": item["kind"],
             "source_path": item["source_path"],
             "package_path": package_path.as_posix(),
             "characters": item["characters"],
             "estimated_tokens": item["estimated_tokens"],
         }
+        known[item["slug"]] = metadata
+        known_by_source[item["source_path"]] = metadata
     manifest["known"] = known
+    manifest["known_by_source"] = known_by_source
     (DIST / "resolver-manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n"
     )
@@ -1351,13 +1356,19 @@ def build_resolver_runtime_manifest() -> None:
 def write_package_resolver_manifest(pkg_dir: Path) -> None:
     """Write resolver metadata from the package's final generated skill bytes."""
     manifest = json.loads((DIST / "resolver-manifest.json").read_text())
-    for slug, metadata in manifest["known"].items():
+    for source, metadata in manifest["known_by_source"].items():
         generated = pkg_dir / metadata["package_path"]
         if not generated.is_file():
-            raise BuildError(f"package resolver metadata has no generated source for {slug}: {generated}")
+            raise BuildError(f"package resolver metadata has no generated source for {source}: {generated}")
         characters = len(generated.read_text())
         metadata["characters"] = characters
         metadata["estimated_tokens"] = (characters + 3) // 4
+    for slug, winner in manifest["known"].items():
+        refreshed = manifest["known_by_source"][winner["source_path"]]
+        if refreshed["slug"] != slug:
+            raise BuildError(f"package resolver identity mismatch: {slug}")
+        winner["characters"] = refreshed["characters"]
+        winner["estimated_tokens"] = refreshed["estimated_tokens"]
     catalog = pkg_dir / "catalog"
     catalog.mkdir(exist_ok=True)
     (catalog / "resolver-manifest.json").write_text(

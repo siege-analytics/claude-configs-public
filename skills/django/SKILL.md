@@ -3,7 +3,6 @@ name: django
 description: "Django conventions for models, views, settings, forms, and testing. TRIGGER: *.py importing from django.*, writing a view/model/form/migration, or configuring settings. Stacks with python and sql sub-skills."
 routed-by: coding-standards
 user-invocable: false
-paths: "**/*.py,**/settings/*.py"
 ---
 
 # Django
