@@ -44,6 +44,20 @@ def route_matches(route:dict[str,Any],text:str)->list[str]:
             reasons.append(f"suffix:{suffix}")
     return reasons
 
+def typed_kind(kind:str)->str:
+    return "rule" if kind in ("rule","project-rule") else "skill"
+
+def inventory_maps(inventory:dict[str,Any])->tuple[dict[str,Any],dict[tuple[str,str],Any]]:
+    # Untyped manifest routes keep their historical deterministic winner; explicit
+    # tokens resolve in separate namespaces and retain their concrete source.
+    known={i["slug"]:i for i in inventory["items"]}
+    typed={}
+    for item in inventory["items"]:
+        key=(typed_kind(item["kind"]),item["slug"])
+        if key in typed:raise ValueError(f"duplicate typed slug: {key}")
+        typed[key]=item
+    return known,typed
+
 def validate_manifest(manifest:dict[str,Any],known:dict[str,Any])->None:
     ids=[]; repos=[]
     all_routes=list(manifest.get("routes",[]))
@@ -68,7 +82,7 @@ def validate_manifest(manifest:dict[str,Any],known:dict[str,Any])->None:
                 raise ValueError(f"invalid explicit prerequisite: {dependency}")
 
 def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str="")->dict[str,Any]:
-    known={i["slug"]:i for i in inventory["items"]};validate_manifest(manifest,known)
+    known,typed=inventory_maps(inventory);validate_manifest(manifest,known)
     text=" ".join(prompt.lower().split()); matches=[];matched_routes=[]
     # Explicit tokens pass through scope/shelf checks, never through prose routes.
     route_text=re.sub(r"\[(?:skill|rule):[a-z0-9-]+\]", " ", text)
@@ -82,35 +96,39 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
         permitted_project_slugs.update(matching_project.get("always",[]))
         for route in matching_project.get("routes",[]):permitted_project_slugs.update(route["skills"])
     explicit_refs=set(re.findall(r"\[(skill|rule):([a-z0-9-]+)\]",text))
-    explicit_refs.update(("skill",slug) for slug in re.findall(r"(?<!\S)/([a-z0-9-]+)(?!\S)",text))
+    # Slash commands are untyped: keep the deterministic route/default winner.
+    explicit_refs.update(("untyped",slug) for slug in re.findall(r"(?<!\S)/([a-z0-9-]+)(?!\S)",text))
     rejected_explicit=[]
     explicit_actions=set()
     for kind,slug in sorted(explicit_refs):
-        is_known=slug in known and (kind!="rule" or known[slug]["kind"] in ("rule","project-rule"))
-        is_shelf=is_known and (slug.startswith(SHELF_PREFIX) or known[slug]["kind"].startswith("shelf"))
-        is_wrong_project=is_known and known[slug]["kind"].startswith("project") and slug not in permitted_project_slugs
-        if is_known and not is_shelf and not is_wrong_project:
-            matches.append((1000,"explicit",slug,["explicit-slug"]))
+        item=known.get(slug) if kind=="untyped" else typed.get((kind,slug))
+        is_shelf=item is not None and (slug.startswith(SHELF_PREFIX) or item["kind"].startswith("shelf"))
+        is_wrong_project=item is not None and item["kind"].startswith("project") and slug not in permitted_project_slugs
+        if item is not None and not is_shelf and not is_wrong_project:
+            matches.append((1000,"explicit",item,["explicit-slug"]))
             if slug in TICKET_ACTIONS:explicit_actions.add(slug)
-            for dependency in manifest.get("explicit_stacks",{}).get(slug,[]):
-                matches.append((999,"explicit-prerequisite",dependency,[f"prerequisite:{slug}"]))
-            if slug in TICKET_ACTIONS:matches.append((999,"explicit-ticket-guard","ticket-guard",["ticket-action-prerequisite"]))
+            # Stacks are assigned to the concrete kind: a rule token with the
+            # same slug as a skill must not inherit the skill's prerequisites.
+            if known[slug] is item:
+                for dependency in manifest.get("explicit_stacks",{}).get(slug,[]):
+                    matches.append((999,"explicit-prerequisite",known[dependency],[f"prerequisite:{slug}"]))
+            if slug in TICKET_ACTIONS:matches.append((999,"explicit-ticket-guard",known["ticket-guard"],["ticket-action-prerequisite"]))
         else:
             rejected_explicit.append(slug)
     for route in manifest["routes"]:
         why=route_matches(route,route_text)
         if why:
             matched_routes.append(route)
-            for slug in route["skills"]: matches.append((route["priority"],route["id"],slug,why))
+            for slug in route["skills"]: matches.append((route["priority"],route["id"],known[slug],why))
     project_id=None
     if matching_project:
         project_id=matching_project["id"]
-        for slug in matching_project.get("always",[]): matches.append((2000,f"project:{project_id}",slug,[f"repo:{normalized_repo}"]))
+        for slug in matching_project.get("always",[]): matches.append((2000,f"project:{project_id}",known[slug],[f"repo:{normalized_repo}"]))
         for route in matching_project.get("routes",[]):
             why=route_matches(route,route_text)
             if why:
                 matched_routes.append(route)
-                for slug in route["skills"]: matches.append((route["priority"],f"project:{project_id}:{route['id']}",slug,why))
+                for slug in route["skills"]: matches.append((route["priority"],f"project:{project_id}:{route['id']}",known[slug],why))
     groups={}
     for route in matched_routes:
         if route.get("exclusive_group"):groups.setdefault(route["exclusive_group"],[]).append(route["id"])
@@ -120,16 +138,18 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
     if conflicts:
         return {"schema_version":1,"state":"ambiguous","kernel":manifest["kernel"],"project":project_id,"selected":[],"diagnostic":f"ambiguous routes: {conflicts}"}
     selected={}
-    for priority,route,slug,why in sorted(matches,key=lambda x:(-x[0],x[1],x[2])):
-        if slug not in known: raise ValueError(f"manifest references unknown slug: {slug}")
-        if known[slug]["kind"].startswith("shelf") or slug.startswith(SHELF_PREFIX): raise ValueError(f"shelf cannot auto-select: {slug}")
-        selected.setdefault(slug,{"slug":slug,"source_path":known[slug].get("source_path","unknown"),"route":route,"priority":priority,"reasons":why})
+    for priority,route,item,why in sorted(matches,key=lambda x:(-x[0],x[1],x[2]["slug"],x[2].get("source_path",""))):
+        slug=item["slug"]
+        if item["kind"].startswith("shelf") or slug.startswith(SHELF_PREFIX): raise ValueError(f"shelf cannot auto-select: {slug}")
+        source=item.get("source_path",f"{typed_kind(item['kind'])}:{slug}")
+        selected.setdefault(source,{"slug":slug,"source_path":item.get("source_path","unknown"),"route":route,"priority":priority,"reasons":why,"_item":item})
     selected_items=list(selected.values())
     # Explicit selection is discovery, never permission to bypass protected CI.
     # The legacy billing skill is retained only as a non-authorizing diagnostic.
-    diagnostic_only=sorted(set(selected)&DIAGNOSTIC_ONLY)
-    selected_characters=sum(int(known[item["slug"]].get("characters",0)) for item in selected_items)
-    selected_tokens=sum(int(known[item["slug"]].get("estimated_tokens",0)) for item in selected_items)
+    diagnostic_only=sorted({item["slug"] for item in selected_items}&DIAGNOSTIC_ONLY)
+    selected_characters=sum(int(item["_item"].get("characters",0)) for item in selected_items)
+    selected_tokens=sum(int(item["_item"].get("estimated_tokens",0)) for item in selected_items)
+    for item in selected_items:del item["_item"]
     over_budget=(
         len(selected_items)>MAX_SELECTED_ITEMS
         or selected_characters>MAX_SELECTED_CHARACTERS
@@ -162,7 +182,9 @@ def main()->int:
         if a.inventory.is_file():
             inventory=json.loads(a.inventory.read_text())
         else:
-            inventory={"items":[{"slug":slug,**meta} for slug,meta in manifest.get("known",{}).items()]}
+            entries=manifest.get("known_by_source")
+            inventory={"items":list(entries.values()) if entries is not None else
+                       [{"slug":slug,**meta} for slug,meta in manifest.get("known",{}).items()]}
         result=select(manifest,inventory,a.prompt,a.repo or detect_repo(a.cwd))
     except (OSError,ValueError,KeyError,TypeError,AttributeError,IndexError,json.JSONDecodeError) as e:
         print(json.dumps({"schema_version":1,"state":"error","kernel":"skills/KERNEL.md","selected":[],"diagnostic":str(e)},sort_keys=True));return 1

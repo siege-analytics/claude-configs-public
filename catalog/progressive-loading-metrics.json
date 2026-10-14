@@ -13,8 +13,8 @@
   },
   "fixture_selected_content": {
     "explicit_overflow": {
-      "characters": 147963,
-      "estimated_tokens": 36995,
+      "characters": 148178,
+      "estimated_tokens": 37049,
       "items": 13
     },
     "generic": {
@@ -23,13 +23,13 @@
       "items": 0
     },
     "multi_route": {
-      "characters": 51135,
-      "estimated_tokens": 12785,
+      "characters": 51350,
+      "estimated_tokens": 12839,
       "items": 7
     },
     "python_review": {
-      "characters": 11205,
-      "estimated_tokens": 2802,
+      "characters": 11420,
+      "estimated_tokens": 2856,
       "items": 2
     },
     "siege_utilities_review": {

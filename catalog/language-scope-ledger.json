@@ -672,25 +672,25 @@
       },
       "current": {
         "authored": {
-          "characters": 4572,
-          "estimated_tokens": 1143
+          "characters": 4787,
+          "estimated_tokens": 1197
         },
         "packaged": {
           "nested": {
-            "characters": 4915,
-            "estimated_tokens": 1229
+            "characters": 5149,
+            "estimated_tokens": 1288
           },
           "flat": {
-            "characters": 4915,
-            "estimated_tokens": 1229
+            "characters": 5149,
+            "estimated_tokens": 1288
           },
           "claude-code": {
-            "characters": 4915,
-            "estimated_tokens": 1229
+            "characters": 5149,
+            "estimated_tokens": 1288
           },
           "craft-agent": {
-            "characters": 4915,
-            "estimated_tokens": 1229
+            "characters": 5149,
+            "estimated_tokens": 1288
           }
         }
       }
@@ -900,25 +900,25 @@
       },
       "current": {
         "authored": {
-          "characters": 6943,
-          "estimated_tokens": 1736
+          "characters": 6841,
+          "estimated_tokens": 1711
         },
         "packaged": {
           "nested": {
-            "characters": 58855,
-            "estimated_tokens": 14714
+            "characters": 58753,
+            "estimated_tokens": 14689
           },
           "flat": {
-            "characters": 58855,
-            "estimated_tokens": 14714
+            "characters": 58753,
+            "estimated_tokens": 14689
           },
           "claude-code": {
-            "characters": 58855,
-            "estimated_tokens": 14714
+            "characters": 58753,
+            "estimated_tokens": 14689
           },
           "craft-agent": {
-            "characters": 58855,
-            "estimated_tokens": 14714
+            "characters": 58753,
+            "estimated_tokens": 14689
           }
         }
       }
@@ -1356,25 +1356,25 @@
       },
       "current": {
         "authored": {
-          "characters": 8490,
-          "estimated_tokens": 2123
+          "characters": 8498,
+          "estimated_tokens": 2125
         },
         "packaged": {
           "nested": {
-            "characters": 51642,
-            "estimated_tokens": 12911
+            "characters": 51650,
+            "estimated_tokens": 12913
           },
           "flat": {
-            "characters": 51642,
-            "estimated_tokens": 12911
+            "characters": 51650,
+            "estimated_tokens": 12913
           },
           "claude-code": {
-            "characters": 51642,
-            "estimated_tokens": 12911
+            "characters": 51650,
+            "estimated_tokens": 12913
           },
           "craft-agent": {
-            "characters": 51642,
-            "estimated_tokens": 12911
+            "characters": 51650,
+            "estimated_tokens": 12913
           }
         }
       }

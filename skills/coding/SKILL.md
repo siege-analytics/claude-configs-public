@@ -27,7 +27,7 @@ Use this as a navigation guide after identifying the language and framework. `ca
 | `*.go` | Go conventions | Go guide (not currently a published skill) |
 | `*.py` with pipeline/fetch/job/schedule context, Rundeck YAML, Airflow DAGs | Pipeline job pattern | [skill:pipeline-jobs] |
 
-A rule is not a skill: TypeScript and Rust have rule slugs, Vue has a skill slug, and React/DRF each have both a rule and a skill with the same slug. Executable selections expose `source_path` to disambiguate; an explicit `[rule:react]` is not the same as `[skill:react]`. Do not infer a QML project from this navigation table.
+A rule is not a skill: TypeScript and Rust have rule-only slugs, Vue has a skill-only slug, and Python, React and DRF each have both. `[rule:react]` selects `skills/_react-rules.md`; `[skill:react]` selects `skills/react/SKILL.md`. Typed tokens reject the wrong namespace (for example `[skill:rust]` or `[rule:vue]`). `/react` and prose routes use the deterministic default skill. Selections expose `source_path`, and both kinds count separately toward the budget when selected together. Do not infer a QML project from this navigation table.
 
 ## Rules
 

@@ -629,7 +629,6 @@
       "rule-eval-loop",
       "rules-audit",
       "scope-expansion",
-      "sedona",
       "shape-space-audit",
       "solutions-catalog",
       "ticket-decomposition",
@@ -653,6 +652,7 @@
       "inbound_source_references": [
         "RESOLVER.md",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -4228,7 +4228,9 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "bin/_test/language_scope_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -4955,7 +4957,9 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "README.md",
+        "bin/_test/language_scope_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -5062,6 +5066,7 @@
       "inbound_source_references": [
         "bin/_test/language_scope_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -7785,10 +7790,10 @@
     },
     {
       "canonical_source": "skills/coding/SKILL.md",
-      "characters": 4572,
-      "content_sha256": "dced74d98a0e81fbcbf3932617070359ea06062576b9a4903f44183034655e40",
+      "characters": 4787,
+      "content_sha256": "daacc2d0e443c6170af54ace507d1218a1c2f7af6121a38fdf8a77becbecce65",
       "description": "Coding conventions for explicit language/framework work. The executable resolver manifest controls automatic loading; this table is navigation only.",
-      "estimated_tokens": 1143,
+      "estimated_tokens": 1197,
       "frontmatter_name": "coding-standards",
       "generated_outputs": [
         "dist/nested/skills/coding",
@@ -7817,11 +7822,11 @@
       "project": null,
       "quality": {
         "completeness": 0,
-        "cross_references": 100.0,
+        "cross_references": 90.0,
         "grade": "F",
         "provenance": 0,
         "structure": 95.0,
-        "total": 48.75
+        "total": 46.25
       },
       "rule_definitions": [],
       "slug": "coding",
@@ -8444,6 +8449,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -8722,10 +8728,10 @@
     },
     {
       "canonical_source": "skills/geopandas/SKILL.md",
-      "characters": 6943,
-      "content_sha256": "bce575d37f8689b27c9411f2e23e5700ed9e7105cdf2a3ce793dbba9041c658d",
+      "characters": 6841,
+      "content_sha256": "1e400064cb9e739537e607a88bb43acef45f05a20dc699a784e4086703287440",
       "description": "GeoPandas + Shapely for single-node Python spatial work. TRIGGER: import geopandas / gpd. / .sjoin / .to_file / GeoDataFrame, or raw shapely.geometry use. Stacks with `analysis/spatial/` when applicable; SU interop examples require an exact project identity. Has explicit no-GDAL paths for environments without Fiona/GDAL.",
-      "estimated_tokens": 1736,
+      "estimated_tokens": 1711,
       "frontmatter_name": "geopandas",
       "generated_outputs": [
         "dist/nested/skills/geopandas",
@@ -8734,6 +8740,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -8745,7 +8752,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 144,
+      "lines": 143,
       "owner": [
         "unknown"
       ],
@@ -8762,6 +8769,7 @@
       "slug": "geopandas",
       "source_path": "skills/geopandas/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
       ],
       "tier": "unclassified",
@@ -9590,6 +9598,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
         "bin/review-risk-metrics.py",
@@ -9834,6 +9843,7 @@
       "inbound_source_references": [
         "bin/_test/language_scope_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -10051,10 +10061,10 @@
     },
     {
       "canonical_source": "skills/sedona/SKILL.md",
-      "characters": 8490,
-      "content_sha256": "99f5b95c13261e02c26d5fe2dccc32afa8a5b71f3bef90806c4a1839f99de6ad",
+      "characters": 8498,
+      "content_sha256": "efc7621d2e1a84892cc9bcf4755e0aacc687f717fd6c3519373eaf3bdb436735",
       "description": "Apache Sedona for distributed spatial work on Spark. PySpark is the default scaffolding; Scala variant covered in references. TRIGGER: from sedona, SedonaContext, SedonaRegistrator, ST_* in Spark SQL, %scala Sedona on Databricks. Stacks with `coding/spark/`, `coding/scala-on-spark/` (when using Scala), and `shelves/systems-architecture/data-intensive/`.",
-      "estimated_tokens": 2123,
+      "estimated_tokens": 2125,
       "frontmatter_name": "sedona",
       "generated_outputs": [
         "dist/nested/skills/sedona",
@@ -10063,6 +10073,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -10093,7 +10104,9 @@
       "rule_definitions": [],
       "slug": "sedona",
       "source_path": "skills/sedona/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/language_scope_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -11149,9 +11162,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2650864,
+    "characters": 2650985,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 662795,
+    "estimated_tokens": 662826,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -11172,7 +11185,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1254470
+      "unclassified": 1254591
     },
     "tier_counts": {
       "on-demand": 15,
@@ -11184,11 +11197,11 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 313661
+      "unclassified": 313692
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
     "without_source_references_count": 0,
-    "without_test_evidence_count": 112
+    "without_test_evidence_count": 111
   }
 }

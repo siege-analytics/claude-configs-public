@@ -118,18 +118,18 @@
       ],
       "measurements": {
         "source": {
-          "characters": 11205,
-          "estimated_tokens": 2802,
+          "characters": 11420,
+          "estimated_tokens": 2856,
           "items": 2
         },
         "claude-code": {
-          "characters": 11618,
-          "estimated_tokens": 2905,
+          "characters": 11852,
+          "estimated_tokens": 2964,
           "items": 2
         },
         "craft-agent": {
-          "characters": 11618,
-          "estimated_tokens": 2905,
+          "characters": 11852,
+          "estimated_tokens": 2964,
           "items": 2
         }
       },
@@ -185,18 +185,18 @@
       ],
       "measurements": {
         "source": {
-          "characters": 48400,
-          "estimated_tokens": 12102,
+          "characters": 48615,
+          "estimated_tokens": 12156,
           "items": 4
         },
         "claude-code": {
-          "characters": 48813,
-          "estimated_tokens": 12205,
+          "characters": 49047,
+          "estimated_tokens": 12264,
           "items": 4
         },
         "craft-agent": {
-          "characters": 48782,
-          "estimated_tokens": 12197,
+          "characters": 49016,
+          "estimated_tokens": 12256,
           "items": 4
         }
       },
@@ -256,18 +256,18 @@
       ],
       "measurements": {
         "source": {
-          "characters": 11205,
-          "estimated_tokens": 2802,
+          "characters": 11420,
+          "estimated_tokens": 2856,
           "items": 2
         },
         "claude-code": {
-          "characters": 11618,
-          "estimated_tokens": 2905,
+          "characters": 11852,
+          "estimated_tokens": 2964,
           "items": 2
         },
         "craft-agent": {
-          "characters": 11618,
-          "estimated_tokens": 2905,
+          "characters": 11852,
+          "estimated_tokens": 2964,
           "items": 2
         }
       },
@@ -323,18 +323,18 @@
       ],
       "measurements": {
         "source": {
-          "characters": 31723,
-          "estimated_tokens": 7932,
+          "characters": 31938,
+          "estimated_tokens": 7986,
           "items": 4
         },
         "claude-code": {
-          "characters": 32376,
-          "estimated_tokens": 8096,
+          "characters": 32610,
+          "estimated_tokens": 8155,
           "items": 4
         },
         "craft-agent": {
-          "characters": 32376,
-          "estimated_tokens": 8096,
+          "characters": 32610,
+          "estimated_tokens": 8155,
           "items": 4
         }
       },
@@ -389,18 +389,18 @@
       ],
       "measurements": {
         "source": {
-          "characters": 17945,
-          "estimated_tokens": 4487,
+          "characters": 18160,
+          "estimated_tokens": 4541,
           "items": 3
         },
         "claude-code": {
-          "characters": 18395,
-          "estimated_tokens": 4600,
+          "characters": 18629,
+          "estimated_tokens": 4659,
           "items": 3
         },
         "craft-agent": {
-          "characters": 18395,
-          "estimated_tokens": 4600,
+          "characters": 18629,
+          "estimated_tokens": 4659,
           "items": 3
         }
       },
@@ -506,18 +506,18 @@
       ],
       "measurements": {
         "source": {
-          "characters": 6790,
-          "estimated_tokens": 1698,
+          "characters": 7005,
+          "estimated_tokens": 1752,
           "items": 2
         },
         "claude-code": {
-          "characters": 7133,
-          "estimated_tokens": 1784,
+          "characters": 7367,
+          "estimated_tokens": 1843,
           "items": 2
         },
         "craft-agent": {
-          "characters": 7133,
-          "estimated_tokens": 1784,
+          "characters": 7367,
+          "estimated_tokens": 1843,
           "items": 2
         }
       },
@@ -567,18 +567,18 @@
       ],
       "measurements": {
         "source": {
-          "characters": 51135,
-          "estimated_tokens": 12785,
+          "characters": 51350,
+          "estimated_tokens": 12839,
           "items": 7
         },
         "claude-code": {
-          "characters": 51743,
-          "estimated_tokens": 12938,
+          "characters": 51977,
+          "estimated_tokens": 12997,
           "items": 7
         },
         "craft-agent": {
-          "characters": 51743,
-          "estimated_tokens": 12938,
+          "characters": 51977,
+          "estimated_tokens": 12997,
           "items": 7
         }
       },
@@ -644,18 +644,18 @@
       "slugs": [],
       "measurements": {
         "source": {
-          "characters": 147963,
-          "estimated_tokens": 36995,
+          "characters": 148178,
+          "estimated_tokens": 37049,
           "items": 13
         },
         "claude-code": {
-          "characters": 150139,
-          "estimated_tokens": 37538,
+          "characters": 150373,
+          "estimated_tokens": 37597,
           "items": 13
         },
         "craft-agent": {
-          "characters": 150139,
-          "estimated_tokens": 37538,
+          "characters": 150373,
+          "estimated_tokens": 37597,
           "items": 13
         }
       },
@@ -1302,18 +1302,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 31723,
-          "estimated_tokens": 7932,
+          "characters": 31938,
+          "estimated_tokens": 7986,
           "items": 4
         },
         "claude-code": {
-          "characters": 32376,
-          "estimated_tokens": 8096,
+          "characters": 32610,
+          "estimated_tokens": 8155,
           "items": 4
         },
         "craft-agent": {
-          "characters": 32376,
-          "estimated_tokens": 8096,
+          "characters": 32610,
+          "estimated_tokens": 8155,
           "items": 4
         }
       }
@@ -1369,18 +1369,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 31723,
-          "estimated_tokens": 7932,
+          "characters": 31938,
+          "estimated_tokens": 7986,
           "items": 4
         },
         "claude-code": {
-          "characters": 32376,
-          "estimated_tokens": 8096,
+          "characters": 32610,
+          "estimated_tokens": 8155,
           "items": 4
         },
         "craft-agent": {
-          "characters": 32376,
-          "estimated_tokens": 8096,
+          "characters": 32610,
+          "estimated_tokens": 8155,
           "items": 4
         }
       }
@@ -1389,11 +1389,8 @@
       "id": "explicit-rust-bracket",
       "prompt": "[skill:rust]",
       "repo": "other/repo",
-      "state": "matched",
-      "slugs": [
-        "rust",
-        "coding"
-      ],
+      "state": "unknown",
+      "slugs": [],
       "baseline_load_effect": {
         "source": {
           "state": "matched",
@@ -1431,19 +1428,19 @@
       },
       "measurements": {
         "source": {
-          "characters": 6790,
-          "estimated_tokens": 1698,
-          "items": 2
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
         },
         "claude-code": {
-          "characters": 7133,
-          "estimated_tokens": 1784,
-          "items": 2
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
         },
         "craft-agent": {
-          "characters": 7133,
-          "estimated_tokens": 1784,
-          "items": 2
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
         }
       }
     },
@@ -1493,18 +1490,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 6790,
-          "estimated_tokens": 1698,
+          "characters": 7005,
+          "estimated_tokens": 1752,
           "items": 2
         },
         "claude-code": {
-          "characters": 7133,
-          "estimated_tokens": 1784,
+          "characters": 7367,
+          "estimated_tokens": 1843,
           "items": 2
         },
         "craft-agent": {
-          "characters": 7133,
-          "estimated_tokens": 1784,
+          "characters": 7367,
+          "estimated_tokens": 1843,
           "items": 2
         }
       }
@@ -1564,18 +1561,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 11205,
-          "estimated_tokens": 2802,
+          "characters": 11420,
+          "estimated_tokens": 2856,
           "items": 2
         },
         "claude-code": {
-          "characters": 11618,
-          "estimated_tokens": 2905,
+          "characters": 11852,
+          "estimated_tokens": 2964,
           "items": 2
         },
         "craft-agent": {
-          "characters": 11618,
-          "estimated_tokens": 2905,
+          "characters": 11852,
+          "estimated_tokens": 2964,
           "items": 2
         }
       }
@@ -1629,18 +1626,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 11205,
-          "estimated_tokens": 2802,
+          "characters": 11420,
+          "estimated_tokens": 2856,
           "items": 2
         },
         "claude-code": {
-          "characters": 11618,
-          "estimated_tokens": 2905,
+          "characters": 11852,
+          "estimated_tokens": 2964,
           "items": 2
         },
         "craft-agent": {
-          "characters": 11618,
-          "estimated_tokens": 2905,
+          "characters": 11852,
+          "estimated_tokens": 2964,
           "items": 2
         }
       }
@@ -1694,18 +1691,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 11205,
-          "estimated_tokens": 2802,
+          "characters": 11420,
+          "estimated_tokens": 2856,
           "items": 2
         },
         "claude-code": {
-          "characters": 11618,
-          "estimated_tokens": 2905,
+          "characters": 11852,
+          "estimated_tokens": 2964,
           "items": 2
         },
         "craft-agent": {
-          "characters": 11618,
-          "estimated_tokens": 2905,
+          "characters": 11852,
+          "estimated_tokens": 2964,
           "items": 2
         }
       }
@@ -1750,18 +1747,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 6778,
-          "estimated_tokens": 1695,
+          "characters": 6993,
+          "estimated_tokens": 1749,
           "items": 2
         },
         "claude-code": {
-          "characters": 7121,
-          "estimated_tokens": 1781,
+          "characters": 7355,
+          "estimated_tokens": 1840,
           "items": 2
         },
         "craft-agent": {
-          "characters": 7121,
-          "estimated_tokens": 1781,
+          "characters": 7355,
+          "estimated_tokens": 1840,
           "items": 2
         }
       }
@@ -1806,18 +1803,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 6778,
-          "estimated_tokens": 1695,
+          "characters": 6993,
+          "estimated_tokens": 1749,
           "items": 2
         },
         "claude-code": {
-          "characters": 7121,
-          "estimated_tokens": 1781,
+          "characters": 7355,
+          "estimated_tokens": 1840,
           "items": 2
         },
         "craft-agent": {
-          "characters": 7121,
-          "estimated_tokens": 1781,
+          "characters": 7355,
+          "estimated_tokens": 1840,
           "items": 2
         }
       }
@@ -1869,18 +1866,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 17945,
-          "estimated_tokens": 4487,
+          "characters": 18160,
+          "estimated_tokens": 4541,
           "items": 3
         },
         "claude-code": {
-          "characters": 18395,
-          "estimated_tokens": 4600,
+          "characters": 18629,
+          "estimated_tokens": 4659,
           "items": 3
         },
         "craft-agent": {
-          "characters": 18395,
-          "estimated_tokens": 4600,
+          "characters": 18629,
+          "estimated_tokens": 4659,
           "items": 3
         }
       }
@@ -2090,18 +2087,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 6778,
-          "estimated_tokens": 1695,
+          "characters": 6993,
+          "estimated_tokens": 1749,
           "items": 2
         },
         "claude-code": {
-          "characters": 7121,
-          "estimated_tokens": 1781,
+          "characters": 7355,
+          "estimated_tokens": 1840,
           "items": 2
         },
         "craft-agent": {
-          "characters": 7121,
-          "estimated_tokens": 1781,
+          "characters": 7355,
+          "estimated_tokens": 1840,
           "items": 2
         }
       }
@@ -2146,18 +2143,18 @@
       },
       "measurements": {
         "source": {
-          "characters": 6790,
-          "estimated_tokens": 1698,
+          "characters": 7005,
+          "estimated_tokens": 1752,
           "items": 2
         },
         "claude-code": {
-          "characters": 7133,
-          "estimated_tokens": 1784,
+          "characters": 7367,
+          "estimated_tokens": 1843,
           "items": 2
         },
         "craft-agent": {
-          "characters": 7133,
-          "estimated_tokens": 1784,
+          "characters": 7367,
+          "estimated_tokens": 1843,
           "items": 2
         }
       }
@@ -2289,6 +2286,854 @@
           "characters": 13085,
           "estimated_tokens": 3272,
           "items": 2
+        }
+      }
+    },
+    {
+      "id": "typed-python-rule",
+      "prompt": "[rule:python]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "python"
+      ],
+      "source_paths": [
+        "skills/_python-rules.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10591,
+            "estimated_tokens": 2649,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 1994,
+          "estimated_tokens": 499,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 1994,
+          "estimated_tokens": 499,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 1994,
+          "estimated_tokens": 499,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "typed-python-skill",
+      "prompt": "[skill:python]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "python"
+      ],
+      "source_paths": [
+        "skills/python/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "python",
+            "coding"
+          ],
+          "selected_content": {
+            "characters": 10591,
+            "estimated_tokens": 2649,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "python",
+            "coding"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "python",
+            "coding"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 6633,
+          "estimated_tokens": 1659,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 6703,
+          "estimated_tokens": 1676,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 6703,
+          "estimated_tokens": 1676,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "typed-react-rule",
+      "prompt": "[rule:react]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "react"
+      ],
+      "source_paths": [
+        "skills/_react-rules.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11194,
+            "estimated_tokens": 2799,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 9002,
+          "estimated_tokens": 2251,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 9062,
+          "estimated_tokens": 2266,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 9062,
+          "estimated_tokens": 2266,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "typed-react-skill",
+      "prompt": "[skill:react]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "react"
+      ],
+      "source_paths": [
+        "skills/react/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11194,
+            "estimated_tokens": 2799,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 11167,
+          "estimated_tokens": 2792,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 11274,
+          "estimated_tokens": 2819,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 11274,
+          "estimated_tokens": 2819,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "typed-drf-rule",
+      "prompt": "[rule:django-rest-framework]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "django-rest-framework"
+      ],
+      "source_paths": [
+        "skills/_django-rest-framework-rules.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "django"
+          ],
+          "selected_content": {
+            "characters": 11833,
+            "estimated_tokens": 2959,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "django"
+          ],
+          "selected_content": {
+            "characters": 11851,
+            "estimated_tokens": 2963,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "django"
+          ],
+          "selected_content": {
+            "characters": 11851,
+            "estimated_tokens": 2963,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 9132,
+          "estimated_tokens": 2283,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 9245,
+          "estimated_tokens": 2312,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 9245,
+          "estimated_tokens": 2312,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "typed-drf-skill",
+      "prompt": "[skill:django-rest-framework]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "django-rest-framework",
+        "coding",
+        "django",
+        "python"
+      ],
+      "source_paths": [
+        "skills/django-rest-framework/SKILL.md",
+        "skills/coding/SKILL.md",
+        "skills/django/SKILL.md",
+        "skills/python/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20569,
+            "estimated_tokens": 5143,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20809,
+            "estimated_tokens": 5203,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20809,
+            "estimated_tokens": 5203,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 31938,
+          "estimated_tokens": 7986,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 32610,
+          "estimated_tokens": 8155,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 32610,
+          "estimated_tokens": 8155,
+          "items": 4
+        }
+      }
+    },
+    {
+      "id": "typed-react-both",
+      "prompt": "[rule:react] [skill:react]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "react",
+        "react"
+      ],
+      "source_paths": [
+        "skills/_react-rules.md",
+        "skills/react/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11194,
+            "estimated_tokens": 2799,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 20169,
+          "estimated_tokens": 5043,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 20336,
+          "estimated_tokens": 5085,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 20336,
+          "estimated_tokens": 5085,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "wrong-kind-typescript",
+      "prompt": "[skill:typescript]",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "typescript"
+          ],
+          "selected_content": {
+            "characters": 2206,
+            "estimated_tokens": 552,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "typescript"
+          ],
+          "selected_content": {
+            "characters": 2206,
+            "estimated_tokens": 552,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "typescript"
+          ],
+          "selected_content": {
+            "characters": 2206,
+            "estimated_tokens": 552,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "wrong-kind-rust",
+      "prompt": "[skill:rust]",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "wrong-kind-siege-utilities",
+      "prompt": "[skill:siege-utilities]",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities"
+          ],
+          "selected_content": {
+            "characters": 3131,
+            "estimated_tokens": 783,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities"
+          ],
+          "selected_content": {
+            "characters": 3152,
+            "estimated_tokens": 788,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities"
+          ],
+          "selected_content": {
+            "characters": 3152,
+            "estimated_tokens": 788,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "wrong-kind-vue",
+      "prompt": "[rule:vue]",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "foreign-spatial-content",
+      "prompt": "[skill:geopandas] [skill:sedona]",
+      "repo": "git@foreign-host:siege-analytics/siege_utilities.git",
+      "state": "matched",
+      "slugs": [
+        "geopandas",
+        "sedona"
+      ],
+      "source_paths": [
+        "skills/geopandas/SKILL.md",
+        "skills/sedona/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 25919,
+            "estimated_tokens": 6481,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 26389,
+            "estimated_tokens": 6599,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 26389,
+            "estimated_tokens": 6599,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 15339,
+          "estimated_tokens": 3836,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 15628,
+          "estimated_tokens": 3907,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 15628,
+          "estimated_tokens": 3907,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "exact-spatial-content",
+      "prompt": "[skill:geopandas] [skill:sedona]",
+      "repo": "github.com/siege-analytics/siege_utilities",
+      "state": "matched",
+      "slugs": [
+        "siege-utilities--rules",
+        "geopandas",
+        "sedona"
+      ],
+      "source_paths": [
+        "projects/siege-utilities/_rules.md",
+        "skills/geopandas/SKILL.md",
+        "skills/sedona/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 35956,
+            "estimated_tokens": 8991,
+            "items": 4
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 36426,
+            "estimated_tokens": 9109,
+            "items": 4
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 36426,
+            "estimated_tokens": 9109,
+            "items": 4
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 26625,
+          "estimated_tokens": 6658,
+          "items": 3
+        },
+        "claude-code": {
+          "characters": 26914,
+          "estimated_tokens": 6729,
+          "items": 3
+        },
+        "craft-agent": {
+          "characters": 26914,
+          "estimated_tokens": 6729,
+          "items": 3
         }
       }
     }

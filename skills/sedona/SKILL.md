@@ -34,9 +34,9 @@ Don't use Sedona for:
 - [`pitfalls.md`](references/pitfalls.md) -- skew, OOM on join, CRS lost across stages, Kryo registration
 - [`siege-utilities-sedona.md`](references/siege-utilities-sedona.md) -- exact-project-only SU runtime integration example
 
-## Runtime detection
+## Runtime detection (exact Siege Utilities repository only)
 
-Check the target cluster's actual native spatial and Sedona availability. Only for the exact `github.com/siege-analytics/siege_utilities` origin, this historical SU example can assist:
+Check the target cluster's actual native spatial and Sedona availability. The following historical SU examples apply only when the target origin is `github.com/siege-analytics/siege_utilities` and the dependency is present:
 
 ```python
 from siege_utilities.geo.spatial_runtime import resolve_spatial_runtime_plan
@@ -45,11 +45,11 @@ plan = resolve_spatial_runtime_plan()
 # Returns SpatialRuntimePlan with .engine in {"databricks_native", "sedona", "python"}
 ```
 
-Three reasons:
+For that exact origin only, the plan helps distinguish three cases:
 
-1. **Databricks runtimes 13+ have native spatial.** `ST_*` SQL works without Sedona at all on those clusters. SU detects and recommends.
-2. **Sedona presence varies.** SU's plan tells you whether `apache-sedona` is on the classpath without import-time crashes.
-3. **Fallback is real.** If neither native spatial nor Sedona is available, push to a non-Spark path (DuckDB-spatial or single-node Sedona via PySpark local mode).
+1. **Databricks native spatial is available.** `ST_*` SQL can work without Sedona; verify against the actual runtime.
+2. **Sedona is available.** The SU plan can report whether `apache-sedona` is on the classpath.
+3. **Neither is available.** Consider a non-Spark path when the data fits on one node.
 
 For Databricks in that exact repository only (never as a global dependency):
 

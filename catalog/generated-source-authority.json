@@ -1433,29 +1433,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/coding",
           "file_count": 1,
-          "tree_sha256": "15a8acb3a0f26904f2d5b81ce76ca7eb197a83444c4f01b9a978257f498a84d7"
+          "tree_sha256": "5e4c7fba425633215e040ec8a98d76d9b6df4a6db9486954aeedd7be959b1c06"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/coding",
           "file_count": 1,
-          "tree_sha256": "15a8acb3a0f26904f2d5b81ce76ca7eb197a83444c4f01b9a978257f498a84d7"
+          "tree_sha256": "5e4c7fba425633215e040ec8a98d76d9b6df4a6db9486954aeedd7be959b1c06"
         },
         "flat": {
           "destination": "dist/flat/skills/coding",
           "file_count": 1,
-          "tree_sha256": "15a8acb3a0f26904f2d5b81ce76ca7eb197a83444c4f01b9a978257f498a84d7"
+          "tree_sha256": "5e4c7fba425633215e040ec8a98d76d9b6df4a6db9486954aeedd7be959b1c06"
         },
         "nested": {
           "destination": "dist/nested/skills/coding",
           "file_count": 1,
-          "tree_sha256": "15a8acb3a0f26904f2d5b81ce76ca7eb197a83444c4f01b9a978257f498a84d7"
+          "tree_sha256": "5e4c7fba425633215e040ec8a98d76d9b6df4a6db9486954aeedd7be959b1c06"
         }
       },
       "canonical_source": "skills/coding/SKILL.md",
       "kind": "skill",
       "slug": "coding",
       "source_file_count": 1,
-      "source_tree_sha256": "430e282f243f28bea2b76a084bcab0f0a5d4a4ccc35af5f93a959cd3a42d5b1c"
+      "source_tree_sha256": "2c3bf55ee7e2463d131372ce57654fd2561a70e745d064e0909de1ecbfb0392d"
     },
     {
       "artifacts": {
@@ -1955,29 +1955,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/geopandas",
           "file_count": 9,
-          "tree_sha256": "e0917c0125f61672ca568bb4c4073cbe49fc81d5a7e95834ee9a722ffdf1b588"
+          "tree_sha256": "f80f72b674760e2a9adc56575048ce79f8ab7e7356d8c2c46c26d5a11a579683"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/geopandas",
           "file_count": 9,
-          "tree_sha256": "e0917c0125f61672ca568bb4c4073cbe49fc81d5a7e95834ee9a722ffdf1b588"
+          "tree_sha256": "f80f72b674760e2a9adc56575048ce79f8ab7e7356d8c2c46c26d5a11a579683"
         },
         "flat": {
           "destination": "dist/flat/skills/geopandas",
           "file_count": 9,
-          "tree_sha256": "e0917c0125f61672ca568bb4c4073cbe49fc81d5a7e95834ee9a722ffdf1b588"
+          "tree_sha256": "f80f72b674760e2a9adc56575048ce79f8ab7e7356d8c2c46c26d5a11a579683"
         },
         "nested": {
           "destination": "dist/nested/skills/geopandas",
           "file_count": 9,
-          "tree_sha256": "e0917c0125f61672ca568bb4c4073cbe49fc81d5a7e95834ee9a722ffdf1b588"
+          "tree_sha256": "f80f72b674760e2a9adc56575048ce79f8ab7e7356d8c2c46c26d5a11a579683"
         }
       },
       "canonical_source": "skills/geopandas/SKILL.md",
       "kind": "skill",
       "slug": "geopandas",
       "source_file_count": 9,
-      "source_tree_sha256": "56ff72ee11987b1f05ce4d0154e52de19ef8c394b98c34afcffabf46bec3902d"
+      "source_tree_sha256": "e50efa7280f632d19b0558ea22c524875c7e0d7bca78f945750638808fe7897f"
     },
     {
       "artifacts": {
@@ -2709,29 +2709,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/sedona",
           "file_count": 8,
-          "tree_sha256": "ad27bfc536a0a0abcdc3a15ccda6bdb390301fd7afc37ae9ee7d9fc45b916bd2"
+          "tree_sha256": "a1b8edfd4175ad1ffe312e82b0cf0db6bd2b110360439d521e712d0dcbcce7f4"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/sedona",
           "file_count": 8,
-          "tree_sha256": "ad27bfc536a0a0abcdc3a15ccda6bdb390301fd7afc37ae9ee7d9fc45b916bd2"
+          "tree_sha256": "a1b8edfd4175ad1ffe312e82b0cf0db6bd2b110360439d521e712d0dcbcce7f4"
         },
         "flat": {
           "destination": "dist/flat/skills/sedona",
           "file_count": 8,
-          "tree_sha256": "ad27bfc536a0a0abcdc3a15ccda6bdb390301fd7afc37ae9ee7d9fc45b916bd2"
+          "tree_sha256": "a1b8edfd4175ad1ffe312e82b0cf0db6bd2b110360439d521e712d0dcbcce7f4"
         },
         "nested": {
           "destination": "dist/nested/skills/sedona",
           "file_count": 8,
-          "tree_sha256": "ad27bfc536a0a0abcdc3a15ccda6bdb390301fd7afc37ae9ee7d9fc45b916bd2"
+          "tree_sha256": "a1b8edfd4175ad1ffe312e82b0cf0db6bd2b110360439d521e712d0dcbcce7f4"
         }
       },
       "canonical_source": "skills/sedona/SKILL.md",
       "kind": "skill",
       "slug": "sedona",
       "source_file_count": 8,
-      "source_tree_sha256": "ece7177707ffcbfd079b9958c6494d3ab211c8bd5670f34384e6ba6276f58360"
+      "source_tree_sha256": "ef8bb69a35108a26dabcf36e08f3955ebd072212e72f4f8a00df3e475806f914"
     },
     {
       "artifacts": {

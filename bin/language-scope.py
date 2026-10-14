@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import subprocess
 import sys
 import tempfile
@@ -61,6 +62,30 @@ def resolved(form: str, fixture: dict) -> dict:
     return json.loads(proc.stdout)
 
 
+SU_PRESCRIPTION = re.compile(
+    r"(?im)^\s*(?:from\s+siege_utilities\b|import\s+siege_utilities\b)"
+    r"|\bSU\s+(?:detects|recommends|plan\s+(?:tells|helps))\b"
+    r"|\b(?:prefer|always\s+start\s+\w+\s+with|use)\s+`?siege_utilities\b"
+)
+
+
+def check_global_su_scope(path: Path) -> None:
+    """SU imports/prescriptions must follow an exact-origin gate in their section.
+
+    A document-wide reference scope on the first line also qualifies. Heading
+    boundaries reset the gate so an earlier exact-host example cannot silently
+    authorize an unrelated quick start later in the same global skill.
+    """
+    text = path.read_text()
+    reference_gate = bool(re.match(r"> \*\*Scope:\*\*[^\n]*exact `github\.com/siege-analytics/siege_utilities`", text))
+    for section in re.split(r"(?=^## )", text, flags=re.MULTILINE):
+        for match in SU_PRESCRIPTION.finditer(section):
+            before = section[:match.start()].lower()
+            if not (reference_gate or "exact" in before and EXACT in before):
+                line = text[:text.find(section) + match.start()].count("\n") + 1
+                raise ValueError(f"ungated SU import/prescription: {path}:{line}")
+
+
 def compute(write: bool) -> None:
     ledger = json.loads(LEDGER.read_text())
     fixtures = json.loads(FIXTURES.read_text())
@@ -75,7 +100,19 @@ def compute(write: bool) -> None:
     if recorded != required:
         raise ValueError(f"incomplete ledger: missing={sorted(required - recorded)}, extra={sorted(recorded - required)}")
     source_known = {i["slug"]: i for i in json.loads((ROOT / "catalog/skills-inventory.json").read_text())["items"]}
-    consumer_known = {form: json.loads((ROOT / f"dist/{form}/catalog/resolver-manifest.json").read_text())["known"] for form in ("claude-code", "craft-agent")}
+    consumer_manifests = {form: json.loads((ROOT / f"dist/{form}/catalog/resolver-manifest.json").read_text()) for form in ("claude-code", "craft-agent")}
+    consumer_known = {form: manifest["known"] for form, manifest in consumer_manifests.items()}
+    for form, packaged_manifest in consumer_manifests.items():
+        for slug, meta in packaged_manifest["known"].items():
+            source = meta["source_path"]
+            by_source = packaged_manifest["known_by_source"][source]
+            if slug != by_source["slug"] or meta != by_source:
+                raise ValueError(f"inconsistent package resolver identity/cost: {form}/{slug}")
+        for source, meta in packaged_manifest["known_by_source"].items():
+            generated_file = ROOT / f"dist/{form}" / meta["package_path"]
+            file_cost = cost(len(generated_file.read_text()))
+            if file_cost != {key: meta[key] for key in ("characters", "estimated_tokens")}:
+                raise ValueError(f"stale package resolver cost: {form}/{source}")
     for slug in routes:
         origins = {source_known[slug]["source_path"]} | {consumer_known[form][slug]["source_path"] for form in consumer_known}
         if len(origins) != 1:
@@ -119,6 +156,11 @@ def compute(write: bool) -> None:
             raise ValueError(f"documented signal route absent: {path}")
         if entry["auto_select"] in ("never", "not-routed") and path in routed_sources:
             raise ValueError(f"unapproved global route: {path}")
+        if classification == "reusable-global":
+            for target in [ROOT / path, *(p for form in ("claude-code", "craft-agent")
+                                           for root in [generated(item, form)]
+                                           for p in ([root] if root.is_file() else root.rglob("*.md")))]:
+                check_global_su_scope(target)
         actual = {"authored": cost(len((ROOT / path).read_text())),
                   "packaged": {form: measure(generated(item, form)) for form in FORMS}}
         if write:
@@ -126,8 +168,8 @@ def compute(write: bool) -> None:
         elif entry["current"] != actual:
             raise ValueError(f"stale authored/packaged measurement: {path}")
         for form in ("claude-code", "craft-agent"):
-            packaged_manifest = json.loads((ROOT / f"dist/{form}/catalog/resolver-manifest.json").read_text())
-            meta = packaged_manifest["known"][entry["slug"]]
+            packaged_manifest = consumer_manifests[form]
+            meta = packaged_manifest["known_by_source"][path]
             if meta["source_path"] != path:
                 if entry["auto_select"] == "explicit-signal-only":
                     raise ValueError(f"route resolves to another source: {form}/{path}")
@@ -159,6 +201,8 @@ def compute(write: bool) -> None:
             slugs = [s["slug"] for s in result["selected"]]
             if result["state"] != fixture["state"] or slugs != fixture["slugs"]:
                 raise ValueError(f"unexpected {form}/{fixture['id']}: {result['state']} {slugs}")
+            if "source_paths" in fixture and [s["source_path"] for s in result["selected"]] != fixture["source_paths"]:
+                raise ValueError(f"wrong concrete sources: {form}/{fixture['id']}")
             content = result.get("selected_content", cost(0) | {"items": 0})
             if content.get("items", 0) > 12 and result["state"] != "over-budget":
                 raise ValueError(f"item budget exceeded: {form}/{fixture['id']}")

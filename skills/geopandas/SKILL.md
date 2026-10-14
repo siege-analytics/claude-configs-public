@@ -55,10 +55,9 @@ set_default_crs("EPSG:4326")
 
 ```python
 import geopandas as gpd
-from siege_utilities.geo.spatial_data import get_geographic_boundaries
 
-# Boundaries via SU (don't curl shapefiles by hand)
-counties = get_geographic_boundaries(boundary_type="county", state_fips="48", vintage=2020)
+# Boundaries from a declared source (GeoParquet, no GDAL needed)
+counties = gpd.read_parquet("counties.parquet")
 
 # Points from your own source
 points = gpd.read_parquet("donations.parquet")  # GeoParquet, no GDAL needed
