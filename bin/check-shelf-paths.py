@@ -14,7 +14,7 @@ BACKTICK = re.compile(r'`([^`\n]+)`')
 ACTION = re.compile(r'(?i)\b(read|open|consult|see|load|refer to|before responding|files? to read|reference files?|full|chapter|shipped|available|located|find|includes?|rules? file)\b')
 NEGATED = re.compile(r"(?i)\b(?:do not|don't|never|not to)\s+(?:read|open|consult|load|use|follow)\b")
 FENCE = re.compile(r'^ {0,3}(`{3,}|~{3,})(.*)$')
-CLAUSE_BREAK = re.compile(r'(?i);|,\s+|:\s+|\s+[-–—]\s+|\bbut\b|\bthen\b|[.!?]\s+')
+CLAUSE_BREAK = re.compile(r'(?i);|,\s+|:\s+|\s+--\s+|—|\s+[-–]\s+|\bbut\b|\bthen\b|[.!?]\s+')
 
 
 def unescape(value: str) -> str:
@@ -30,9 +30,30 @@ def normalize(value: str) -> str:
 
 
 def inline_links(line: str):
-    """Read balanced, escaped CommonMark inline destinations, not just up to first ')' ."""
-    for opener in re.finditer(r'(?<!!)\[[^\]\n]+\]\(\s*', line):
-        start = opener.end()
+    """Parse balanced/escaped labels and balanced/escaped inline destinations."""
+    for opener in re.finditer(r'(?<!!)\[', line):
+        start_label = opener.start()
+        # An escaped opening bracket is text, not a link label.
+        backslashes = len(line[:start_label]) - len(line[:start_label].rstrip('\\'))
+        if backslashes % 2:
+            continue
+        depth = 1
+        i = opener.end()
+        while i < len(line) and depth:
+            char = line[i]
+            if char == '\\' and i + 1 < len(line):
+                i += 2
+                continue
+            if char == '[':
+                depth += 1
+            elif char == ']':
+                depth -= 1
+            i += 1
+        if depth or i >= len(line) or line[i] != '(':
+            continue
+        start = i + 1
+        while start < len(line) and line[start].isspace():
+            start += 1
         if start >= len(line):
             continue
         if line[start] == '<':
@@ -41,7 +62,7 @@ def inline_links(line: str):
                 if line[i] == '\\' and i + 1 < len(line):
                     i += 2
                 elif line[i] == '>':
-                    yield line[start:i + 1], opener.start()
+                    yield line[start:i + 1], start_label
                     break
                 else:
                     i += 1
@@ -60,12 +81,12 @@ def inline_links(line: str):
             elif char == ')':
                 if depth == 0:
                     if i > start:
-                        yield line[start:i], opener.start()
+                        yield line[start:i], start_label
                     break
                 depth -= 1
             elif char.isspace() and depth == 0:
                 if i > start:
-                    yield line[start:i], opener.start()
+                    yield line[start:i], start_label
                 break
             i += 1
 

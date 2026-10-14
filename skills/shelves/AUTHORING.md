@@ -212,7 +212,7 @@ starting point.
 Every category/book `SKILL.md` must have exactly one catalog decision in
 `catalog/shelf-ownership.json`: a single active non-shelf `SKILL.md` with
 verbatim scoped consultation evidence and a positive same-section directive (real inbound path), or quarantine with
-a nonempty reason. Names, scores, shelf self-links, and router mentions do not
+a substantive reason (at least 20 non-whitespace characters). Names, scores, shelf self-links, and router mentions do not
 establish ownership. Quarantine is non-routable; never add shelves to resolver
 ambient routes. Regenerate `catalog/skills-inventory.json` and `.md` after
 changing source text; then run `bin/check-shelf-owners.py`.
@@ -224,8 +224,8 @@ provenance that is unavailable as non-actionable; do not promise local content.
 Link substantive supplemental references from the same book before adding them.
 Only one-byte empty retained placeholders may be documented with explicit
 reasons in `catalog/shelf-reference-exceptions.json`. The guard checks actionable
-Markdown local `.md` links (including balanced/escaped inline and reference-style
-destinations), backticked local `.md` paths, and orphan `references/**/*.md`
+Markdown local `.md` links (including balanced/escaped inline labels and
+destinations and reference-style links), backticked local `.md` paths, and orphan `references/**/*.md`
 supplements. It does **not** cover non-Markdown files, HTML links, assets, or
 dynamically constructed paths; do not claim otherwise. Run `bin/check-shelf-paths.py`
 and its negative fixtures before review.

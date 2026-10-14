@@ -28,6 +28,11 @@ def main():
         assert any('missing local target' in x for x in mod.check(root)), 'missing backtick path passed'
         source.write_text('[read it](references/absent.md)\n')
         assert any('missing local target' in x for x in mod.check(root)), 'missing markdown link passed'
+        for label in ('[the [chapter]]', r'[the \[chapter\]]'):
+            source.write_text('Read ' + label + '(references/absent.md)\n')
+            assert any('missing local target' in x for x in mod.check(root)), ('nested/escaped label bypassed', label)
+            source.write_text('Read ' + label + '(references/existing.md)\n')
+            assert not mod.check(root), ('valid nested/escaped label failed', label)
         source.write_text('[read](<references/absent.md>)\n')
         assert any('missing local target' in x for x in mod.check(root)), 'missing angle-wrapped Markdown link passed'
         source.write_text('[read][doc]\n\n[doc]: references/absent.md\n')
@@ -63,6 +68,9 @@ def main():
         for delimiter in (',', ':', ' -'):
             source.write_text('Do not read `references/absent.md`' + delimiter + ' read `references/also-absent.md`.\n')
             assert any('also-absent' in x for x in mod.check(root)), ('punctuation masked affirmative target', delimiter)
+        for delimiter in (' -- ', '—'):
+            source.write_text('Do not read `references/absent.md`' + delimiter + 'read `references/also-absent.md`.\n')
+            assert any('also-absent' in x for x in mod.check(root)), ('dash masked affirmative target', delimiter)
         source.write_text('````markdown\nRead `references/absent.md`\n```\nStill a fenced example: `references/absent.md`\n~~~~\nStill fenced: `references/absent.md`\n````\nRead `references/absent.md`\n')
         assert any('missing local target' in x for x in mod.check(root)), 'closing four-backtick fence did not restore scanning'
         source.write_text('````markdown\nRead `references/absent.md`\n```\nStill a fenced example: `references/absent.md`\n~~~~\nStill fenced: `references/absent.md`\n````\nRead `references/existing.md`\n')

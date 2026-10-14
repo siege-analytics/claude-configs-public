@@ -39,7 +39,8 @@ def main():
         assert run(root, [record, record]), 'duplicate owner decision passed'
         assert run(root, [dict(record, quarantine={'reason': 'no'})]), 'owner + quarantine passed'
         assert run(root, [{'source_path': record['source_path'], 'quarantine': {'reason': '  '}}]), 'empty reason passed'
-        assert not run(root, [{'source_path': record['source_path'], 'quarantine': {'reason': 'No active inbound path'}}])
+        assert not run(root, [{'source_path': record['source_path'], 'quarantine': {'reason': 'No active scoped inbound consultation path'}}])
+        assert run(root, [{'source_path': record['source_path'], 'quarantine': {'reason': 'No owner yet'}}]), 'short vague quarantine passed'
         bad = json.loads(json.dumps(record));bad['owner']['source_path'] = record['source_path']
         assert run(root, [bad]), 'shelf self-ownership passed'
         bad = json.loads(json.dumps(record));bad['owner']['source_path'] = 'skills/shelves/topic/SKILL.md'

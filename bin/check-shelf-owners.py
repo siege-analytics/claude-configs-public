@@ -74,7 +74,7 @@ def check(root: Path) -> list[str]:
             errors.append(f'exactly one owner or quarantine required: {path}')
             continue
         if quarantine:
-            if not isinstance(quarantine, dict) or set(quarantine) != {'reason'} or not isinstance(quarantine['reason'], str) or not quarantine['reason'].strip():
+            if not isinstance(quarantine, dict) or set(quarantine) != {'reason'} or not isinstance(quarantine['reason'], str) or len(''.join(quarantine['reason'].split())) < 20:
                 errors.append(f'quarantine reason required: {path}')
             continue
         if not isinstance(owner, dict) or set(owner) != {'source_path', 'evidence', 'directive'}:

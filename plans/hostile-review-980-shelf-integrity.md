@@ -25,4 +25,11 @@ Residual scope: this is a targeted Markdown `.md` path integrity check, not a un
 - Ownership evidence strips frontmatter, HTML comments and correctly matched fenced examples; anti-consultation includes do-not-open/reference/follow and related language across the section. An unrelated `read logs` directive cannot justify a path-specific shelf entry. Negative fixtures cover all of these.
 - `skills/RESOLVER.md` now calls shelf rows a navigation index rather than ambient routes, and `AUTHORING.md` states precise guard scope: actionable Markdown local `.md` links/backticks and `references/**/*.md`; HTML/non-Markdown/assets/dynamic paths are not covered.
 
-These are author-run regressions; independent reviewers could not execute fixtures in their read-only sessions. No blanket independent ACCEPT of the follow-up head is asserted.
+## Review of head 761386b
+
+- Valid inline CommonMark labels with nested brackets (`[the [chapter]]`) or escaped brackets (`[the \\[chapter\\]]`) bypassed the previous opener regex. The scanner now balances/escapes link labels before reading destinations; missing-target and existing-target fixtures cover both forms.
+- Negation boundaries also split on spaced `--` and unspaced em dash, with negative fixtures confirming an affirmative second target still fails.
+- Quarantine reasons now require at least 20 non-whitespace characters; short vague reasons fail a fixture while all existing 71 remain valid.
+- Separate measurement: `skills/RESOLVER.md` grew by **232 bytes** from the exact develop base. This is documentation size, not actual hook injection; the three injected-output comparisons remain byte-identical.
+
+These are author-run regressions; independent reviewers could not execute fixtures in their read-only sessions. No blanket independent ACCEPT of the new head is asserted.
