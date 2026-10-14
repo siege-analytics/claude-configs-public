@@ -2796,29 +2796,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "0126bd59e5d5728ae2f24b134ee17eab3bd1927f6534b0f9669bfb0feca03495"
+          "tree_sha256": "80b1ca001b55f68b28cb1fb84929b1003252d7c25ed5d0bbe4fe0761da49e5fd"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "0126bd59e5d5728ae2f24b134ee17eab3bd1927f6534b0f9669bfb0feca03495"
+          "tree_sha256": "80b1ca001b55f68b28cb1fb84929b1003252d7c25ed5d0bbe4fe0761da49e5fd"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "0126bd59e5d5728ae2f24b134ee17eab3bd1927f6534b0f9669bfb0feca03495"
+          "tree_sha256": "80b1ca001b55f68b28cb1fb84929b1003252d7c25ed5d0bbe4fe0761da49e5fd"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "0126bd59e5d5728ae2f24b134ee17eab3bd1927f6534b0f9669bfb0feca03495"
+          "tree_sha256": "80b1ca001b55f68b28cb1fb84929b1003252d7c25ed5d0bbe4fe0761da49e5fd"
         }
       },
       "canonical_source": "skills/shelves/SKILL.md",
       "kind": "shelf-router",
       "slug": "shelves",
       "source_file_count": 2,
-      "source_tree_sha256": "3829070eded7f7824cef5c58ad2fa7ba4d9346b7cefafbaca8e7150c9e1bb479"
+      "source_tree_sha256": "d593a23701284ec7330211ab276bdcf69ebd8951e30d3c9dd5a0438113d02acf"
     },
     {
       "artifacts": {
@@ -2854,29 +2854,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/data-and-pipelines/data-pipelines",
           "file_count": 10,
-          "tree_sha256": "89e626cb76c8de683d895f4f493a6876ee0e7491f5910dc3c5021a8bc5759c2f"
+          "tree_sha256": "da0afb3d67439e514f1e85e0eefa17d2b7b0972768388dfb4e991d92a5105a3c"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/data-and-pipelines/data-pipelines",
           "file_count": 10,
-          "tree_sha256": "89e626cb76c8de683d895f4f493a6876ee0e7491f5910dc3c5021a8bc5759c2f"
+          "tree_sha256": "da0afb3d67439e514f1e85e0eefa17d2b7b0972768388dfb4e991d92a5105a3c"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/data-and-pipelines/data-pipelines",
           "file_count": 10,
-          "tree_sha256": "89e626cb76c8de683d895f4f493a6876ee0e7491f5910dc3c5021a8bc5759c2f"
+          "tree_sha256": "da0afb3d67439e514f1e85e0eefa17d2b7b0972768388dfb4e991d92a5105a3c"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/data-and-pipelines/data-pipelines",
           "file_count": 10,
-          "tree_sha256": "89e626cb76c8de683d895f4f493a6876ee0e7491f5910dc3c5021a8bc5759c2f"
+          "tree_sha256": "da0afb3d67439e514f1e85e0eefa17d2b7b0972768388dfb4e991d92a5105a3c"
         }
       },
       "canonical_source": "skills/shelves/data-and-pipelines/data-pipelines/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--data-pipelines",
       "source_file_count": 10,
-      "source_tree_sha256": "89e626cb76c8de683d895f4f493a6876ee0e7491f5910dc3c5021a8bc5759c2f"
+      "source_tree_sha256": "da0afb3d67439e514f1e85e0eefa17d2b7b0972768388dfb4e991d92a5105a3c"
     },
     {
       "artifacts": {
@@ -3173,29 +3173,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/django/high-performance-django",
           "file_count": 4,
-          "tree_sha256": "80d119d4137e8af3e33bb18ad3622d107812f6f430aef47f11d14dd70304c3e3"
+          "tree_sha256": "c3394b333648dca5cb9c285c7eaa3d01a14ad65274129aa8ae132fd174641e26"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/django/high-performance-django",
           "file_count": 4,
-          "tree_sha256": "80d119d4137e8af3e33bb18ad3622d107812f6f430aef47f11d14dd70304c3e3"
+          "tree_sha256": "c3394b333648dca5cb9c285c7eaa3d01a14ad65274129aa8ae132fd174641e26"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/django/high-performance-django",
           "file_count": 4,
-          "tree_sha256": "80d119d4137e8af3e33bb18ad3622d107812f6f430aef47f11d14dd70304c3e3"
+          "tree_sha256": "c3394b333648dca5cb9c285c7eaa3d01a14ad65274129aa8ae132fd174641e26"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/django/high-performance-django",
           "file_count": 4,
-          "tree_sha256": "80d119d4137e8af3e33bb18ad3622d107812f6f430aef47f11d14dd70304c3e3"
+          "tree_sha256": "c3394b333648dca5cb9c285c7eaa3d01a14ad65274129aa8ae132fd174641e26"
         }
       },
       "canonical_source": "skills/shelves/django/high-performance-django/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--high-performance-django",
       "source_file_count": 4,
-      "source_tree_sha256": "80d119d4137e8af3e33bb18ad3622d107812f6f430aef47f11d14dd70304c3e3"
+      "source_tree_sha256": "c3394b333648dca5cb9c285c7eaa3d01a14ad65274129aa8ae132fd174641e26"
     },
     {
       "artifacts": {
@@ -3492,58 +3492,58 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/geospatial/geocomputation-with-r",
           "file_count": 1,
-          "tree_sha256": "830b44f698db6f57ad2e2570d9e66f66b9dcc6e9ecd2b408f516f683e3a5a168"
+          "tree_sha256": "869e2ef69a652559c67861fbc30a9fb9fb9cbc548249198af67061afdb7952b4"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/geospatial/geocomputation-with-r",
           "file_count": 1,
-          "tree_sha256": "830b44f698db6f57ad2e2570d9e66f66b9dcc6e9ecd2b408f516f683e3a5a168"
+          "tree_sha256": "869e2ef69a652559c67861fbc30a9fb9fb9cbc548249198af67061afdb7952b4"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/geospatial/geocomputation-with-r",
           "file_count": 1,
-          "tree_sha256": "830b44f698db6f57ad2e2570d9e66f66b9dcc6e9ecd2b408f516f683e3a5a168"
+          "tree_sha256": "869e2ef69a652559c67861fbc30a9fb9fb9cbc548249198af67061afdb7952b4"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/geospatial/geocomputation-with-r",
           "file_count": 1,
-          "tree_sha256": "830b44f698db6f57ad2e2570d9e66f66b9dcc6e9ecd2b408f516f683e3a5a168"
+          "tree_sha256": "869e2ef69a652559c67861fbc30a9fb9fb9cbc548249198af67061afdb7952b4"
         }
       },
       "canonical_source": "skills/shelves/geospatial/geocomputation-with-r/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--geocomputation-with-r",
       "source_file_count": 1,
-      "source_tree_sha256": "830b44f698db6f57ad2e2570d9e66f66b9dcc6e9ecd2b408f516f683e3a5a168"
+      "source_tree_sha256": "869e2ef69a652559c67861fbc30a9fb9fb9cbc548249198af67061afdb7952b4"
     },
     {
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/geospatial/spatial-data-science",
           "file_count": 1,
-          "tree_sha256": "721e40ba7e2959dbff40e1f6e30c553cba328c5c416c4e4b441d0646a43901f2"
+          "tree_sha256": "eff5a51f8f2899e83b0d0b0d10bf1d281947343eaeec98c78afcc2bcd2b58508"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/geospatial/spatial-data-science",
           "file_count": 1,
-          "tree_sha256": "721e40ba7e2959dbff40e1f6e30c553cba328c5c416c4e4b441d0646a43901f2"
+          "tree_sha256": "eff5a51f8f2899e83b0d0b0d10bf1d281947343eaeec98c78afcc2bcd2b58508"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/geospatial/spatial-data-science",
           "file_count": 1,
-          "tree_sha256": "721e40ba7e2959dbff40e1f6e30c553cba328c5c416c4e4b441d0646a43901f2"
+          "tree_sha256": "eff5a51f8f2899e83b0d0b0d10bf1d281947343eaeec98c78afcc2bcd2b58508"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/geospatial/spatial-data-science",
           "file_count": 1,
-          "tree_sha256": "721e40ba7e2959dbff40e1f6e30c553cba328c5c416c4e4b441d0646a43901f2"
+          "tree_sha256": "eff5a51f8f2899e83b0d0b0d10bf1d281947343eaeec98c78afcc2bcd2b58508"
         }
       },
       "canonical_source": "skills/shelves/geospatial/spatial-data-science/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--spatial-data-science",
       "source_file_count": 1,
-      "source_tree_sha256": "721e40ba7e2959dbff40e1f6e30c553cba328c5c416c4e4b441d0646a43901f2"
+      "source_tree_sha256": "eff5a51f8f2899e83b0d0b0d10bf1d281947343eaeec98c78afcc2bcd2b58508"
     },
     {
       "artifacts": {
@@ -3637,58 +3637,58 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/languages/effective-python",
           "file_count": 19,
-          "tree_sha256": "ec59e21c5553a95df007f3c33b7a06e53718c9bf8d75832781b6900e065a24df"
+          "tree_sha256": "b3629de37acf1acf06a0a02a8acc03a76de8f18ae9c6e498e252741b58785179"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/languages/effective-python",
           "file_count": 19,
-          "tree_sha256": "ec59e21c5553a95df007f3c33b7a06e53718c9bf8d75832781b6900e065a24df"
+          "tree_sha256": "b3629de37acf1acf06a0a02a8acc03a76de8f18ae9c6e498e252741b58785179"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/languages/effective-python",
           "file_count": 19,
-          "tree_sha256": "ec59e21c5553a95df007f3c33b7a06e53718c9bf8d75832781b6900e065a24df"
+          "tree_sha256": "b3629de37acf1acf06a0a02a8acc03a76de8f18ae9c6e498e252741b58785179"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/languages/effective-python",
           "file_count": 19,
-          "tree_sha256": "ec59e21c5553a95df007f3c33b7a06e53718c9bf8d75832781b6900e065a24df"
+          "tree_sha256": "b3629de37acf1acf06a0a02a8acc03a76de8f18ae9c6e498e252741b58785179"
         }
       },
       "canonical_source": "skills/shelves/languages/effective-python/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--effective-python",
       "source_file_count": 19,
-      "source_tree_sha256": "ec59e21c5553a95df007f3c33b7a06e53718c9bf8d75832781b6900e065a24df"
+      "source_tree_sha256": "b3629de37acf1acf06a0a02a8acc03a76de8f18ae9c6e498e252741b58785179"
     },
     {
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/languages/effective-typescript",
           "file_count": 8,
-          "tree_sha256": "c738e931987eec9f7057e08254ff7a12e6ba6b5b953a345bcc5b0fafdb9cc97f"
+          "tree_sha256": "124e91fae7d0876b4071de57ad868f33c07431cc8ef5233798d10f6570a38ce0"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/languages/effective-typescript",
           "file_count": 8,
-          "tree_sha256": "c738e931987eec9f7057e08254ff7a12e6ba6b5b953a345bcc5b0fafdb9cc97f"
+          "tree_sha256": "124e91fae7d0876b4071de57ad868f33c07431cc8ef5233798d10f6570a38ce0"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/languages/effective-typescript",
           "file_count": 8,
-          "tree_sha256": "c738e931987eec9f7057e08254ff7a12e6ba6b5b953a345bcc5b0fafdb9cc97f"
+          "tree_sha256": "124e91fae7d0876b4071de57ad868f33c07431cc8ef5233798d10f6570a38ce0"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/languages/effective-typescript",
           "file_count": 8,
-          "tree_sha256": "c738e931987eec9f7057e08254ff7a12e6ba6b5b953a345bcc5b0fafdb9cc97f"
+          "tree_sha256": "124e91fae7d0876b4071de57ad868f33c07431cc8ef5233798d10f6570a38ce0"
         }
       },
       "canonical_source": "skills/shelves/languages/effective-typescript/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--effective-typescript",
       "source_file_count": 8,
-      "source_tree_sha256": "c738e931987eec9f7057e08254ff7a12e6ba6b5b953a345bcc5b0fafdb9cc97f"
+      "source_tree_sha256": "124e91fae7d0876b4071de57ad868f33c07431cc8ef5233798d10f6570a38ce0"
     },
     {
       "artifacts": {
@@ -3724,87 +3724,87 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/languages/programming-with-rust",
           "file_count": 8,
-          "tree_sha256": "513785b248ddbc0acbf6cef5fda6a250c5d4d6846b1c2c75d82ac9c09f047d28"
+          "tree_sha256": "747a60332e4a1d82628fbb1ffa32dfb0cce602734169edc5ce9b219b97dac8cf"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/languages/programming-with-rust",
           "file_count": 8,
-          "tree_sha256": "513785b248ddbc0acbf6cef5fda6a250c5d4d6846b1c2c75d82ac9c09f047d28"
+          "tree_sha256": "747a60332e4a1d82628fbb1ffa32dfb0cce602734169edc5ce9b219b97dac8cf"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/languages/programming-with-rust",
           "file_count": 8,
-          "tree_sha256": "513785b248ddbc0acbf6cef5fda6a250c5d4d6846b1c2c75d82ac9c09f047d28"
+          "tree_sha256": "747a60332e4a1d82628fbb1ffa32dfb0cce602734169edc5ce9b219b97dac8cf"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/languages/programming-with-rust",
           "file_count": 8,
-          "tree_sha256": "513785b248ddbc0acbf6cef5fda6a250c5d4d6846b1c2c75d82ac9c09f047d28"
+          "tree_sha256": "747a60332e4a1d82628fbb1ffa32dfb0cce602734169edc5ce9b219b97dac8cf"
         }
       },
       "canonical_source": "skills/shelves/languages/programming-with-rust/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--programming-with-rust",
       "source_file_count": 8,
-      "source_tree_sha256": "513785b248ddbc0acbf6cef5fda6a250c5d4d6846b1c2c75d82ac9c09f047d28"
+      "source_tree_sha256": "747a60332e4a1d82628fbb1ffa32dfb0cce602734169edc5ce9b219b97dac8cf"
     },
     {
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/languages/rust-in-action",
           "file_count": 7,
-          "tree_sha256": "aea4ff06432108eb42bbbd160d0f8b449f29b607554d00ccd50a03c51c360b8b"
+          "tree_sha256": "420bb81af206fa3487c91e5c9bca6e7f3b22ec1123bab49eccabc3875358e2dc"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/languages/rust-in-action",
           "file_count": 7,
-          "tree_sha256": "aea4ff06432108eb42bbbd160d0f8b449f29b607554d00ccd50a03c51c360b8b"
+          "tree_sha256": "420bb81af206fa3487c91e5c9bca6e7f3b22ec1123bab49eccabc3875358e2dc"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/languages/rust-in-action",
           "file_count": 7,
-          "tree_sha256": "aea4ff06432108eb42bbbd160d0f8b449f29b607554d00ccd50a03c51c360b8b"
+          "tree_sha256": "420bb81af206fa3487c91e5c9bca6e7f3b22ec1123bab49eccabc3875358e2dc"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/languages/rust-in-action",
           "file_count": 7,
-          "tree_sha256": "aea4ff06432108eb42bbbd160d0f8b449f29b607554d00ccd50a03c51c360b8b"
+          "tree_sha256": "420bb81af206fa3487c91e5c9bca6e7f3b22ec1123bab49eccabc3875358e2dc"
         }
       },
       "canonical_source": "skills/shelves/languages/rust-in-action/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--rust-in-action",
       "source_file_count": 7,
-      "source_tree_sha256": "aea4ff06432108eb42bbbd160d0f8b449f29b607554d00ccd50a03c51c360b8b"
+      "source_tree_sha256": "420bb81af206fa3487c91e5c9bca6e7f3b22ec1123bab49eccabc3875358e2dc"
     },
     {
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/languages/spring-boot-in-action",
           "file_count": 7,
-          "tree_sha256": "7385472bdcdebec02d72d6dcf77e6fcf75090839f722a5e7e6e45b8c435c835a"
+          "tree_sha256": "4ba45863607b2e1174930cbe94fe872c0957634139880ade6f7e361a876ceef3"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/languages/spring-boot-in-action",
           "file_count": 7,
-          "tree_sha256": "7385472bdcdebec02d72d6dcf77e6fcf75090839f722a5e7e6e45b8c435c835a"
+          "tree_sha256": "4ba45863607b2e1174930cbe94fe872c0957634139880ade6f7e361a876ceef3"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/languages/spring-boot-in-action",
           "file_count": 7,
-          "tree_sha256": "7385472bdcdebec02d72d6dcf77e6fcf75090839f722a5e7e6e45b8c435c835a"
+          "tree_sha256": "4ba45863607b2e1174930cbe94fe872c0957634139880ade6f7e361a876ceef3"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/languages/spring-boot-in-action",
           "file_count": 7,
-          "tree_sha256": "7385472bdcdebec02d72d6dcf77e6fcf75090839f722a5e7e6e45b8c435c835a"
+          "tree_sha256": "4ba45863607b2e1174930cbe94fe872c0957634139880ade6f7e361a876ceef3"
         }
       },
       "canonical_source": "skills/shelves/languages/spring-boot-in-action/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--spring-boot-in-action",
       "source_file_count": 7,
-      "source_tree_sha256": "7385472bdcdebec02d72d6dcf77e6fcf75090839f722a5e7e6e45b8c435c835a"
+      "source_tree_sha256": "4ba45863607b2e1174930cbe94fe872c0957634139880ade6f7e361a876ceef3"
     },
     {
       "artifacts": {
@@ -3840,29 +3840,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/languages/web-scraping-python",
           "file_count": 10,
-          "tree_sha256": "a268a957dcb64662a9ce3f7111512c1f9618412356cfaece2c7319dbeac517e1"
+          "tree_sha256": "0e896c863890c3e8f06868d84ad6c716b342f1f8995c485e8236e82443ed51b9"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/languages/web-scraping-python",
           "file_count": 10,
-          "tree_sha256": "a268a957dcb64662a9ce3f7111512c1f9618412356cfaece2c7319dbeac517e1"
+          "tree_sha256": "0e896c863890c3e8f06868d84ad6c716b342f1f8995c485e8236e82443ed51b9"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/languages/web-scraping-python",
           "file_count": 10,
-          "tree_sha256": "a268a957dcb64662a9ce3f7111512c1f9618412356cfaece2c7319dbeac517e1"
+          "tree_sha256": "0e896c863890c3e8f06868d84ad6c716b342f1f8995c485e8236e82443ed51b9"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/languages/web-scraping-python",
           "file_count": 10,
-          "tree_sha256": "a268a957dcb64662a9ce3f7111512c1f9618412356cfaece2c7319dbeac517e1"
+          "tree_sha256": "0e896c863890c3e8f06868d84ad6c716b342f1f8995c485e8236e82443ed51b9"
         }
       },
       "canonical_source": "skills/shelves/languages/web-scraping-python/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--web-scraping-python",
       "source_file_count": 10,
-      "source_tree_sha256": "a268a957dcb64662a9ce3f7111512c1f9618412356cfaece2c7319dbeac517e1"
+      "source_tree_sha256": "0e896c863890c3e8f06868d84ad6c716b342f1f8995c485e8236e82443ed51b9"
     },
     {
       "artifacts": {
@@ -4014,29 +4014,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/marketing/one-page-marketing",
           "file_count": 11,
-          "tree_sha256": "ff93fe4455b35b8d999a987aab38affff0b1a013cd4e9a40325b9a0141c01039"
+          "tree_sha256": "1ea5c5faebf0db8e398f37ff08374ae196b140846b15b9364869afe3b430e24a"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/marketing/one-page-marketing",
           "file_count": 11,
-          "tree_sha256": "ff93fe4455b35b8d999a987aab38affff0b1a013cd4e9a40325b9a0141c01039"
+          "tree_sha256": "1ea5c5faebf0db8e398f37ff08374ae196b140846b15b9364869afe3b430e24a"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/marketing/one-page-marketing",
           "file_count": 11,
-          "tree_sha256": "ff93fe4455b35b8d999a987aab38affff0b1a013cd4e9a40325b9a0141c01039"
+          "tree_sha256": "1ea5c5faebf0db8e398f37ff08374ae196b140846b15b9364869afe3b430e24a"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/marketing/one-page-marketing",
           "file_count": 11,
-          "tree_sha256": "ff93fe4455b35b8d999a987aab38affff0b1a013cd4e9a40325b9a0141c01039"
+          "tree_sha256": "1ea5c5faebf0db8e398f37ff08374ae196b140846b15b9364869afe3b430e24a"
         }
       },
       "canonical_source": "skills/shelves/marketing/one-page-marketing/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--one-page-marketing",
       "source_file_count": 11,
-      "source_tree_sha256": "ff93fe4455b35b8d999a987aab38affff0b1a013cd4e9a40325b9a0141c01039"
+      "source_tree_sha256": "1ea5c5faebf0db8e398f37ff08374ae196b140846b15b9364869afe3b430e24a"
     },
     {
       "artifacts": {
@@ -4536,116 +4536,116 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/statistical-inference/causal-inference-mixtape",
           "file_count": 1,
-          "tree_sha256": "bc8e6276bcf7c0b4a088113189daaee57ce8a908d9fd23be97254d6ac2386261"
+          "tree_sha256": "bac7861c5cacb03e361bfce50c3535b948873dcf111753c48e2804ff58cf4e2e"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/statistical-inference/causal-inference-mixtape",
           "file_count": 1,
-          "tree_sha256": "bc8e6276bcf7c0b4a088113189daaee57ce8a908d9fd23be97254d6ac2386261"
+          "tree_sha256": "bac7861c5cacb03e361bfce50c3535b948873dcf111753c48e2804ff58cf4e2e"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/statistical-inference/causal-inference-mixtape",
           "file_count": 1,
-          "tree_sha256": "bc8e6276bcf7c0b4a088113189daaee57ce8a908d9fd23be97254d6ac2386261"
+          "tree_sha256": "bac7861c5cacb03e361bfce50c3535b948873dcf111753c48e2804ff58cf4e2e"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/statistical-inference/causal-inference-mixtape",
           "file_count": 1,
-          "tree_sha256": "bc8e6276bcf7c0b4a088113189daaee57ce8a908d9fd23be97254d6ac2386261"
+          "tree_sha256": "bac7861c5cacb03e361bfce50c3535b948873dcf111753c48e2804ff58cf4e2e"
         }
       },
       "canonical_source": "skills/shelves/statistical-inference/causal-inference-mixtape/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--causal-inference-mixtape",
       "source_file_count": 1,
-      "source_tree_sha256": "bc8e6276bcf7c0b4a088113189daaee57ce8a908d9fd23be97254d6ac2386261"
+      "source_tree_sha256": "bac7861c5cacb03e361bfce50c3535b948873dcf111753c48e2804ff58cf4e2e"
     },
     {
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/statistical-inference/causal-inference-what-if",
           "file_count": 1,
-          "tree_sha256": "7caa6e098e24ec8221f86887060af87ec4a07ef5eb8dd6f0105017a2489ed6ca"
+          "tree_sha256": "26745914c7d2e9ac80f24340eae7eb02e9e1ae308da079ebc96738f2f2c86f4b"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/statistical-inference/causal-inference-what-if",
           "file_count": 1,
-          "tree_sha256": "7caa6e098e24ec8221f86887060af87ec4a07ef5eb8dd6f0105017a2489ed6ca"
+          "tree_sha256": "26745914c7d2e9ac80f24340eae7eb02e9e1ae308da079ebc96738f2f2c86f4b"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/statistical-inference/causal-inference-what-if",
           "file_count": 1,
-          "tree_sha256": "7caa6e098e24ec8221f86887060af87ec4a07ef5eb8dd6f0105017a2489ed6ca"
+          "tree_sha256": "26745914c7d2e9ac80f24340eae7eb02e9e1ae308da079ebc96738f2f2c86f4b"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/statistical-inference/causal-inference-what-if",
           "file_count": 1,
-          "tree_sha256": "7caa6e098e24ec8221f86887060af87ec4a07ef5eb8dd6f0105017a2489ed6ca"
+          "tree_sha256": "26745914c7d2e9ac80f24340eae7eb02e9e1ae308da079ebc96738f2f2c86f4b"
         }
       },
       "canonical_source": "skills/shelves/statistical-inference/causal-inference-what-if/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--causal-inference-what-if",
       "source_file_count": 1,
-      "source_tree_sha256": "7caa6e098e24ec8221f86887060af87ec4a07ef5eb8dd6f0105017a2489ed6ca"
+      "source_tree_sha256": "26745914c7d2e9ac80f24340eae7eb02e9e1ae308da079ebc96738f2f2c86f4b"
     },
     {
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/statistical-inference/statistical-rethinking-course",
           "file_count": 1,
-          "tree_sha256": "fe6beaed01bda0b31cbf012f9cecf68f8fccab542ed920465f5c99bb60cc381a"
+          "tree_sha256": "a5aef78c9af64162d86d5cbae737a898c47f253ae6a7278dcd1c6229191c1a08"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/statistical-inference/statistical-rethinking-course",
           "file_count": 1,
-          "tree_sha256": "fe6beaed01bda0b31cbf012f9cecf68f8fccab542ed920465f5c99bb60cc381a"
+          "tree_sha256": "a5aef78c9af64162d86d5cbae737a898c47f253ae6a7278dcd1c6229191c1a08"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/statistical-inference/statistical-rethinking-course",
           "file_count": 1,
-          "tree_sha256": "fe6beaed01bda0b31cbf012f9cecf68f8fccab542ed920465f5c99bb60cc381a"
+          "tree_sha256": "a5aef78c9af64162d86d5cbae737a898c47f253ae6a7278dcd1c6229191c1a08"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/statistical-inference/statistical-rethinking-course",
           "file_count": 1,
-          "tree_sha256": "fe6beaed01bda0b31cbf012f9cecf68f8fccab542ed920465f5c99bb60cc381a"
+          "tree_sha256": "a5aef78c9af64162d86d5cbae737a898c47f253ae6a7278dcd1c6229191c1a08"
         }
       },
       "canonical_source": "skills/shelves/statistical-inference/statistical-rethinking-course/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--statistical-rethinking-course",
       "source_file_count": 1,
-      "source_tree_sha256": "fe6beaed01bda0b31cbf012f9cecf68f8fccab542ed920465f5c99bb60cc381a"
+      "source_tree_sha256": "a5aef78c9af64162d86d5cbae737a898c47f253ae6a7278dcd1c6229191c1a08"
     },
     {
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/statistical-inference/think-stats",
           "file_count": 1,
-          "tree_sha256": "b519278925038f8e3faa626fe218128125850cb808f7f7ffb25d74e19ea664e6"
+          "tree_sha256": "8345713f639822e31d2890f094cf3976cf2e634299d516fbf60a1db3ebee35bd"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/statistical-inference/think-stats",
           "file_count": 1,
-          "tree_sha256": "b519278925038f8e3faa626fe218128125850cb808f7f7ffb25d74e19ea664e6"
+          "tree_sha256": "8345713f639822e31d2890f094cf3976cf2e634299d516fbf60a1db3ebee35bd"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/statistical-inference/think-stats",
           "file_count": 1,
-          "tree_sha256": "b519278925038f8e3faa626fe218128125850cb808f7f7ffb25d74e19ea664e6"
+          "tree_sha256": "8345713f639822e31d2890f094cf3976cf2e634299d516fbf60a1db3ebee35bd"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/statistical-inference/think-stats",
           "file_count": 1,
-          "tree_sha256": "b519278925038f8e3faa626fe218128125850cb808f7f7ffb25d74e19ea664e6"
+          "tree_sha256": "8345713f639822e31d2890f094cf3976cf2e634299d516fbf60a1db3ebee35bd"
         }
       },
       "canonical_source": "skills/shelves/statistical-inference/think-stats/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--think-stats",
       "source_file_count": 1,
-      "source_tree_sha256": "b519278925038f8e3faa626fe218128125850cb808f7f7ffb25d74e19ea664e6"
+      "source_tree_sha256": "8345713f639822e31d2890f094cf3976cf2e634299d516fbf60a1db3ebee35bd"
     },
     {
       "artifacts": {
@@ -4739,29 +4739,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves/storytelling/tufte-data-viz",
           "file_count": 1,
-          "tree_sha256": "7a757a166d5838e60bd8254c5c1aacad7d5686e156587e55417d4e92601560ae"
+          "tree_sha256": "31275f6e592ac5b18273cac1c7834ec6f4fe6bfc979f2eddfacdd529195e635e"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves/storytelling/tufte-data-viz",
           "file_count": 1,
-          "tree_sha256": "7a757a166d5838e60bd8254c5c1aacad7d5686e156587e55417d4e92601560ae"
+          "tree_sha256": "31275f6e592ac5b18273cac1c7834ec6f4fe6bfc979f2eddfacdd529195e635e"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves/storytelling/tufte-data-viz",
           "file_count": 1,
-          "tree_sha256": "7a757a166d5838e60bd8254c5c1aacad7d5686e156587e55417d4e92601560ae"
+          "tree_sha256": "31275f6e592ac5b18273cac1c7834ec6f4fe6bfc979f2eddfacdd529195e635e"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves/storytelling/tufte-data-viz",
           "file_count": 1,
-          "tree_sha256": "7a757a166d5838e60bd8254c5c1aacad7d5686e156587e55417d4e92601560ae"
+          "tree_sha256": "31275f6e592ac5b18273cac1c7834ec6f4fe6bfc979f2eddfacdd529195e635e"
         }
       },
       "canonical_source": "skills/shelves/storytelling/tufte-data-viz/SKILL.md",
       "kind": "reference-shelf",
       "slug": "shelves--tufte-data-viz",
       "source_file_count": 1,
-      "source_tree_sha256": "5697d83c5fae0c95979f4042f2719affb308ac6128acbfa4962f6facda8b106f"
+      "source_tree_sha256": "d5dea6cf8152d9780fbdfe7bde04a0fedc9a8edc1375d711750c1ce6bf2aa133"
     },
     {
       "artifacts": {

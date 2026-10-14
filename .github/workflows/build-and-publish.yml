@@ -23,6 +23,13 @@ jobs:
       - name: Check for path-form references that should be tokens
         run: python3 bin/sync-skill-references.py --check
 
+      - name: Shelf ownership and actionable path integrity
+        run: |
+          python3 bin/_test/check_shelf_owners_test.py
+          python3 bin/_test/check_shelf_paths_test.py
+          python3 bin/check-shelf-owners.py
+          python3 bin/check-shelf-paths.py
+
       - name: Validate token resolution (build --check)
         run: python3 bin/build.py --check
 

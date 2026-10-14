@@ -121,7 +121,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 
 ### Shelves (book-derived libraries)
 
-DBrain book-skill library. Each shelf is itself a router -- load the shelf, it tells you which book to read in full. See `skills/shelves/SKILL.md` for the meta-router.
+DBrain book-skill library. The table below is a navigation index, **not** an ambient/global resolver route. Shelves cannot self-select (including explicit shelf slugs). Consult a category/book only through an active non-shelf skill's scoped inbound path recorded in `catalog/shelf-ownership.json`; quarantined entries are non-routable. See `skills/shelves/SKILL.md` for the meta-router.
 
 | Trigger | Shelf |
 |---|---|
@@ -137,7 +137,7 @@ DBrain book-skill library. Each shelf is itself a router -- load the shelf, it t
 | Team motivation, ways of working, organizational practice | `skills/shelves/team/SKILL.md` |
 | Communicating data, presenting findings, animation in slides | `skills/shelves/storytelling/SKILL.md` |
 
-> **Status:** shelves are added incrementally via the `feat/dbrain-*` PR stack. Rows above pointing at not-yet-merged shelf files will resolve as PRs land.
+> **Status:** all 14 category routers exist. The navigation rows do not authorize routing or override quarantine; `bin/resolve-load-set.py` rejects all shelf selection.
 
 ### Infrastructure
 

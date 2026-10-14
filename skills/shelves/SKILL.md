@@ -25,8 +25,8 @@ This pattern keeps the description budget small: one slot per shelf, not one per
 | `skills/shelves/design/SKILL.md` | UI, UX heuristics, typography, microinteractions |
 | `skills/shelves/team/SKILL.md` | Motivation, ways of working |
 | `skills/shelves/storytelling/SKILL.md` | Communicating data, slide animation |
-| `shelves--geospatial` (planned) | CRS / spatial joins / MAUP / areal interpolation / spatial statistics -- geographic analysis grounded in methodology |
-| `shelves--statistical-inference` (planned) | Causal inference (theory + applied), Bayesian / multilevel, applied EDA / hypothesis testing -- analytical rigor for any statistical claim |
+| `skills/shelves/geospatial/SKILL.md` | CRS / spatial joins / MAUP / areal interpolation / spatial statistics -- geographic analysis grounded in methodology |
+| `skills/shelves/statistical-inference/SKILL.md` | Causal inference (theory + applied), Bayesian / multilevel, applied EDA / hypothesis testing -- analytical rigor for any statistical claim |
 
 ## How shelves work
 
@@ -48,4 +48,7 @@ See [`THIRD_PARTY_NOTICES.md`](../../THIRD_PARTY_NOTICES.md) for the per-book ma
 
 ## Status
 
-Shelves are populated incrementally via the `feat/dbrain-*` PR stack. Until a given shelf merges, its router link from this meta-router will 404 -- that is expected and resolves as each PR lands.
+All 14 category routers are present in this repository. Navigation does not make
+shelves ambient or selectable by the task resolver; consult only through an
+explicit active-skill path and the ownership decisions in
+[`catalog/shelf-ownership.json`](../../catalog/shelf-ownership.json).

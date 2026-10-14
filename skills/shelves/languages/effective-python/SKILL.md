@@ -245,3 +245,10 @@ When the submitted code is already idiomatic and well-structured, the review mus
 ## Attribution
 
 Imported verbatim from [ZLStas/skills](https://github.com/ZLStas/skills) at commit `3b87ad338fe18b68371a69827372746729074c0e`. MIT-licensed; copyright © ZLStas and contributors. See repo-root `THIRD_PARTY_NOTICES.md`.
+
+## Additional shipped references
+
+Optional supplemental material (consult only when the topic applies; these are not mandatory chapters):
+- [`references/review-checklist.md`](references/review-checklist.md)
+- [`references/api_reference.md`](references/api_reference.md)
+- [`references/practices-catalog.md`](references/practices-catalog.md)

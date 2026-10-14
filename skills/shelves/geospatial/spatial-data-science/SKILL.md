@@ -125,5 +125,5 @@ For civic / electoral work: think census vintages as a time dimension on a data 
 
 ## See also
 
-- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` -- context on why Spatial Data Science is the methodological-depth complement to Geocomputation with R.
+- Session 260502-pure-vista's unavailable historical session plan (not shipped in this repository; provenance only, not a local reading target) -- context on why Spatial Data Science is the methodological-depth complement to Geocomputation with R.
 - Self-review SKILL.md role table -- the cross-cutting geospatial affirmative standards (CRS hygiene, spatial-index discipline, modern formats, semantic naming, MAUP / ecological fallacy / scale effects) are the same ones this book grounds.

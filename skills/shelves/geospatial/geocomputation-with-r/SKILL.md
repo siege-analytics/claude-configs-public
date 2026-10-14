@@ -162,4 +162,4 @@ The book's overall stance: spatial work is real research; it should be version-c
 
 - The Python equivalent *Geocomputation with Python* at `py.geocompx.org` is in development -- at the time of absorption (2026-05-17), `py.geocompx.org` is primarily a landing page with chapter content not yet fully online; the R version is the canonical free reference.
 - `spatial-data-science` shelf-mate for theory depth.
-- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` -- context on why Geocomputation with R is the chosen geospatial-shelf-floor entry.
+- Session 260502-pure-vista's unavailable historical session plan (not shipped in this repository; provenance only, not a local reading target) -- context on why Geocomputation with R is the chosen geospatial-shelf-floor entry.
