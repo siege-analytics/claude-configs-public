@@ -108,7 +108,7 @@ python3 -c "import ast; ast.parse(open('path/to/file.py').read())"
 
 - All work branches from `develop`, PRs target `develop`
 - `main` is downstream of `develop` — never merge unblessed work directly to `main`
-- CI billing is currently disabled on this repo; merges may require `--admin` flag
+- If CI cannot start because of billing, diagnose and escalate to the operator; this overlay does not authorize `--admin`, protected-check bypass, or a standing exception. Normal required-check and review gates remain in force.
 
 ## Bookshelf cross-reference
 

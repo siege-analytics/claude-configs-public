@@ -13,7 +13,7 @@ def inject(prompt:str)->int:
  if p.returncode:raise ValueError(p.stderr)
  return len(p.stdout)
 def build()->dict:
- overflow_prompt=" ".join(f"[skill:{slug}]" for slug in ["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","coding","python","testing-frameworks","sql"])
+ overflow_prompt=" ".join(f"[skill:{slug}]" for slug in ["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","spatial","coding","python","testing-frameworks","sql"])
  multi_prompt="review Python Spark SQL Databricks Unity Catalog spatial PostGIS code"
  fixtures={
   "generic":run("write a friendly greeting"),

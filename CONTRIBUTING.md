@@ -94,7 +94,7 @@ CI runs `--check` on every PR. If it fails, run the script locally and re-push.
 
 - **On every PR:** `sync-skill-references.py --check` + `build.py --check`
 - **On push to main:** the validate job + publishes `dist/nested/` to `release/nested` branch and `dist/flat/` to `release/flat` branch
-- **On tag push (`vX.Y.Z`):** all of the above + tags `release/nested` and `release/flat` with `vX.Y.Z-nested` / `vX.Y.Z-flat` for stable consumer pinning
+- **On source tag push (`vX.Y.Z`):** no build-and-publish run. After a separately published GitHub release, `publish-consumption-tags.yml` may tag already-published `release/nested` and `release/flat` as `vX.Y.Z-nested` / `vX.Y.Z-flat` for consumer pinning; the tag alone does not publish artifacts.
 
 ## How downstream consumes this repo
 
@@ -135,9 +135,9 @@ Versions follow [SemVer](https://semver.org/):
 - **Minor** -- new skills, new shelves, new always-on rules, additive changes
 - **Patch** -- fixes to existing skills, doc corrections
 
-Every tag on `main` produces matching tags on the release branches:
+A source tag on `main` does not itself publish artifacts. After the main-push publication and a separately published GitHub release, the consumption-tag workflow can mint matching tags on the already-published release branches:
 
-- `v1.0.0` (source) → `v1.0.0-nested` and `v1.0.0-flat` (release branches)
+- `v1.0.0` (source release) → `v1.0.0-nested` and `v1.0.0-flat` (existing release branches)
 
 Pin downstream consumers to a release-branch tag, not the source tag -- the source tag is on `main`, which has the build infrastructure but not the resolved skills.
 

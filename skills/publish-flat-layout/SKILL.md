@@ -54,7 +54,7 @@ This validates that every `[skill:<name>]` and `[rule:<name>]` token in source f
 
 ### 3. PR + merge as usual
 
-The publish workflow (`.github/workflows/build-and-publish.yml`) runs `python3 bin/build.py` on push to `main` and on tag push. On main pushes the workflow rsyncs `dist/nested/` to `release/nested` and `dist/flat/` to `release/flat`. On tag pushes (`v*`) the workflow additionally tags those branches as `vX.Y.Z-nested` and `vX.Y.Z-flat`.
+The publish workflow (`.github/workflows/build-and-publish.yml`) runs `python3 bin/build.py` on pushes to `main` and `develop` and on pull requests. Only main pushes publish `dist/nested/` to `release/nested` and `dist/flat/` to `release/flat`. A source tag push alone does not publish or create consumption tags; see `.github/workflows/publish-consumption-tags.yml` for its separate tag reconciliation trigger.
 
 The PR body should explicitly note that this is a structural change requiring the source-to-flat-to-consumer verification chain (per PR #86's worked example). Three steps spelled out in the PR body:
 

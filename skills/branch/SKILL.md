@@ -117,14 +117,15 @@ git branch -a | grep -iE '(develop|dev|development|staging|next|integration)$'
 |-----------|----------|
 | `develop` | `dev`, `development`, `staging`, `next`, `integration`, `trunk` (when used as integration) |
 
-If found, use the existing branch as the integration branch. If none exists, see the Develop guard skill -- create `develop` from `main` before proceeding.
+If found, use the existing branch as the integration branch. If none exists, STOP and consult the Develop guard skill. Ask for an explicit topology decision; do not create or push `develop` without approval, and never silently fall back to `main` for feature/fix work.
 
 # Creating a branch
 
 ```bash
-# Ensure develop is up to date
+# After verifying the remote integration branch, its main ancestry, and the user-owned topology decision:
+# Bring develop up to date without a silent sync from main.
 git checkout develop
-git pull origin develop
+git pull --ff-only origin develop
 
 # Create the new branch
 git checkout -b feature/geographic_enrichment_phase1

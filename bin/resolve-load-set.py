@@ -6,6 +6,9 @@ from pathlib import Path
 from typing import Any
 ROOT=Path(__file__).resolve().parents[1]
 SHELF_PREFIX="shelves"
+TICKET_ACTIONS={"create-ticket","update-ticket","close-ticket"}
+# This legacy slug is diagnostic-only until an exact project policy exists.
+DIAGNOSTIC_ONLY={"ci-billing-failure-merge"}
 MAX_SELECTED_ITEMS=12
 MAX_SELECTED_CHARACTERS=80000
 MAX_SELECTED_ESTIMATED_TOKENS=20000
@@ -63,12 +66,14 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
         for route in matching_project.get("routes",[]):permitted_project_slugs.update(route["skills"])
     explicit_slugs=sorted(set(re.findall(r"\[skill:([a-z0-9-]+)\]",text)+re.findall(r"(?<!\S)/([a-z0-9-]+)(?!\S)",text)))
     rejected_explicit=[]
+    explicit_actions=set(explicit_slugs)&TICKET_ACTIONS
     for slug in explicit_slugs:
         is_known=slug in known
         is_shelf=is_known and (slug.startswith(SHELF_PREFIX) or known[slug]["kind"].startswith("shelf"))
         is_wrong_project=is_known and known[slug]["kind"].startswith("project") and slug not in permitted_project_slugs
         if is_known and not is_shelf and not is_wrong_project:
             matches.append((1000,"explicit",slug,["explicit-slug"]))
+            if slug in TICKET_ACTIONS:matches.append((999,"explicit-ticket-guard","ticket-guard",["ticket-action-prerequisite"]))
         else:
             rejected_explicit.append(slug)
     for route in manifest["routes"]:
@@ -89,6 +94,8 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
     for route in matched_routes:
         if route.get("exclusive_group"):groups.setdefault(route["exclusive_group"],[]).append(route["id"])
     conflicts={group:sorted(ids) for group,ids in groups.items() if len(ids)>1}
+    routed_actions={slug for route in matched_routes if route.get("exclusive_group")=="ticket-action" for slug in route["skills"] if slug in TICKET_ACTIONS}
+    if len(routed_actions|explicit_actions)>1:conflicts["ticket-action"]=sorted(routed_actions|explicit_actions)
     if conflicts:
         return {"schema_version":1,"state":"ambiguous","kernel":manifest["kernel"],"project":project_id,"selected":[],"diagnostic":f"ambiguous routes: {conflicts}"}
     selected={}
@@ -97,6 +104,9 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
         if known[slug]["kind"].startswith("shelf") or slug.startswith(SHELF_PREFIX): raise ValueError(f"shelf cannot auto-select: {slug}")
         selected.setdefault(slug,{"slug":slug,"route":route,"priority":priority,"reasons":why})
     selected_items=list(selected.values())
+    # Explicit selection is discovery, never permission to bypass protected CI.
+    # The legacy billing skill is retained only as a non-authorizing diagnostic.
+    diagnostic_only=sorted(set(selected)&DIAGNOSTIC_ONLY)
     selected_characters=sum(int(known[item["slug"]].get("characters",0)) for item in selected_items)
     selected_tokens=sum(int(known[item["slug"]].get("estimated_tokens",0)) for item in selected_items)
     over_budget=(
@@ -116,6 +126,7 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
         }
     state="matched" if selected_items else "unknown"
     diagnostic="no route matched; kernel only" if state=="unknown" else f"{len(selected_items)} capability item(s) selected"
+    if diagnostic_only:diagnostic+=f"; diagnostic-only (no merge authorization): {','.join(diagnostic_only)}"
     if rejected_explicit:diagnostic+=f"; rejected explicit slugs: {','.join(rejected_explicit)}"
     return {
         "schema_version":1,"state":state,"kernel":manifest["kernel"],"project":project_id,"selected":selected_items,

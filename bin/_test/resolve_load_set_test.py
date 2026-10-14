@@ -7,7 +7,7 @@ SPEC=importlib.util.spec_from_file_location("resolver",SCRIPT); assert SPEC and 
 M=importlib.util.module_from_spec(SPEC);sys.modules[SPEC.name]=M;SPEC.loader.exec_module(M)
 def inv():
  def i(s,k="skill"):return {"slug":s,"kind":k,"characters":100,"estimated_tokens":25}
- slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","django","react","stalled-session-recovery","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
+ slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","close-ticket","ci-billing-failure-merge","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","django","react","stalled-session-recovery","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
  return {"items":[i(s,"project-skill" if s.startswith("siege-utilities--") else "skill") for s in slugs]+[i("siege-utilities--rules","project-rule"),i("shelves--security","shelf-item")]}
 def main():
  manifest=json.loads((ROOT/"catalog/resolver-manifest.json").read_text()); inventory=inv()
@@ -23,6 +23,29 @@ def main():
  explicit=M.select(manifest,inventory,"create ticket [skill:python]","other/repo")
  explicit_slugs=[x["slug"] for x in explicit["selected"]]
  assert "python" in explicit_slugs and "ticket-guard" in explicit_slugs and "create-ticket" in explicit_slugs
+ # Every ticket action loads only its guard + corresponding action, including aliases.
+ for action,terms in {
+  "create-ticket":["create ticket","create issues","file an issue","open a ticket","[skill:create-ticket]","/create-ticket"],
+  "update-ticket":["update ticket","update issues","edit issue","[skill:update-ticket]","/update-ticket"],
+  "close-ticket":["close ticket","close issues","mark issue closed","[skill:close-ticket]","/close-ticket"],
+ }.items():
+  for term in terms:
+   result=M.select(manifest,inventory,term,"other/repo")
+   got={x["slug"] for x in result["selected"]}
+   assert result["state"]=="matched" and got=={"ticket-guard",action},(term,result)
+ assert any(x["route"]=="ticketing" for x in M.select(manifest,inventory,"create issue","other/repo")["selected"])
+ for prompt in ("list open issues","are there any open issues","what is the new issue about"):
+  result=M.select(manifest,inventory,prompt,"other/repo")
+  assert result["state"]=="unknown" and result["selected"]==[],(prompt,result)
+ coding_only=M.select(manifest,inventory,"resolve issue handling in this python module","other/repo")
+ assert {x["slug"] for x in coding_only["selected"]}=={"coding","python"},coding_only
+ for term in ("create ticket and close issue","update issue then close ticket","create issue [skill:close-ticket]","[skill:create-ticket] /update-ticket"):
+  result=M.select(manifest,inventory,term,"other/repo")
+  assert result["state"]=="ambiguous" and result["selected"]==[],(term,result)
+ for repo in ("other/repo","git@other-host:electinfo/enterprise.git","github.com/electinfo/enterprise"):
+  result=M.select(manifest,inventory,"[skill:ci-billing-failure-merge]",repo)
+  assert result["state"]=="matched" and "diagnostic-only (no merge authorization)" in result["diagnostic"]
+  assert {x["slug"] for x in result["selected"]}=={"ci-billing-failure-merge"}
  project_explicit=M.select(manifest,inventory,"[skill:siege-utilities--hostile-review]","siege-analytics/siege_utilities")
  assert "siege-utilities--hostile-review" in [x["slug"] for x in project_explicit["selected"]]
  foreign_project_explicit=M.select(manifest,inventory,"[skill:siege-utilities--hostile-review] /siege-utilities--rules","git@other-host:siege-analytics/siege_utilities.git")
@@ -37,7 +60,7 @@ def main():
  unknown_explicit=M.select(manifest,inventory,"create ticket [skill:not-real]","other/repo")
  assert "ticket-guard" in [x["slug"] for x in unknown_explicit["selected"]]
  assert "not-real" in unknown_explicit["diagnostic"]
- many_slugs=[x["slug"] for x in inventory["items"] if x["kind"]=="skill"][:13]
+ many_slugs=[x["slug"] for x in inventory["items"] if x["kind"]=="skill" and x["slug"] not in {"update-ticket","close-ticket"}][:13]
  over_count=M.select(manifest,inventory," ".join(f"[skill:{slug}]" for slug in many_slugs),"other/repo")
  assert over_count["state"]=="over-budget" and over_count["selected"]==[] and over_count["selected_content"]["items"]>12
  huge=json.loads(json.dumps(inventory))
