@@ -1,6 +1,6 @@
 # Skill Resolver
 
-This is the top-level dispatcher. Skills live under category directories. **Read the skill file before acting.** If two skills could match, read both -- they chain.
+This is a navigation and compatibility index, not the executable auto-selection contract. `catalog/resolver-manifest.json` controls automatic routes and `bin/resolve-load-set.py` enforces budgets, ambiguity, shelf isolation, and exact host/repo scope. A row here alone does not authorize loading. **Read a selected skill before acting.**
 
 ## Conventions (apply to everything)
 
@@ -13,7 +13,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | [rule:jvm] | Effective Java + Effective Kotlin merged -- applied when touching JVM languages, including Scala on Spark |
 | [rule:typescript] | Effective TypeScript idioms -- applied when touching `*.ts` / `*.tsx` |
 | [rule:rust] | Rust idioms -- applied when touching `*.rs` |
-| [rule:siege-utilities] | Prefer `siege_utilities` for utility-shaped problems before writing a new helper. If `siege_utilities` almost solves it but doesn't, consider a PR upstream. |
+| [rule:siege-utilities] | Compatibility pointer only; project prescriptions live in the exact `github.com/siege-analytics/siege_utilities` overlay. |
 | [rule:definition-of-done] | Five hard criteria plus one opt-in for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists, KB delta validated. Behavior changes are not finished until all five mandatory criteria pass. |
 | [rule:knowledge-base] | Knowledge-base consultation discipline -- read before claiming, tag every assumption, update on contradiction, silence is a finding. Applied when the project declares `knowledge_base:` in PROJECT.md. |
 | [rule:robustness] | Robust Python (Viafore) -- type safety, invariant enforcement, fail fast, constrain mutability. Applied when writing or reviewing Python code. |
@@ -35,6 +35,10 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Library code architecture -- DRY, dataclass discipline, interface integrity, runtime types | [skill:python-patterns] |
 | "Why is this try/except too broad?", silent-failure patterns, `except Exception: pass` | [skill:python-exceptions] |
 | Django models, views, forms, migrations, settings | [skill:django] |
+| Explicit DRF / `rest_framework` | [skill:django-rest-framework] + [skill:django] + [skill:python] + [skill:coding] |
+| React + TypeScript / TSX | [skill:react] + [rule:typescript] + [skill:coding] |
+| Explicit Vue / Pinia | [skill:vue] |
+| Explicit Rust / `.rs` | [rule:rust] + [skill:coding] |
 | Data pipeline, scheduled job, Rundeck YAML, Airflow DAG | [skill:pipeline-jobs] |
 | PySpark DataFrame work, tuning, shuffle / skew | [skill:spark] |
 | Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | [skill:scala-on-spark] |
@@ -43,7 +47,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | GeoPandas + Shapely -- `import geopandas`, `gpd.`, `.sjoin`, raw `from shapely.geometry import` | [skill:geopandas] |
 | Apache Sedona -- `from sedona`, `SedonaContext`, ST_* in Spark SQL, `%scala` Sedona | [skill:sedona] |
 | DuckDB-spatial -- `import duckdb` + `INSTALL spatial` / `LOAD spatial` / `ST_Read` (single-node SQL on Parquet, GDAL-less) | [skill:duckdb-spatial] |
-| QML component review -- properties-in / signals-out, MuseScore plugins, Qt Quick decomposition | [skill:qml-component-review] |
+| Explicit QML component review -- optional generic Qt Quick checklist (not auto-routed; ChordLibrary/MuseScore identity UNKNOWN) | [skill:qml-component-review] |
 | Auditing error-path test coverage, writing-tests:5 compliance | [skill:test-coverage-audit] |
 | Choosing a test framework, declaring test layers in PROJECT.md, test-guard enforcement | [skill:testing-frameworks] |
 | Fix a bug or issue identified by code review / audit / static analysis | [skill:think] Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per [skill:evaluate-ticket] criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
@@ -175,11 +179,11 @@ Items marked **[build-enforced]** are validated by `bin/build.py`. Items marked 
 
 | Project | Repo | Rules | Skills |
 |---|---|---|---|
-| `siege-utilities` | `siege-analytics/siege_utilities` | [rule:siege-utilities-] | [skill:siege-utilities--hostile-review], [skill:siege-utilities--notebook-impact], [skill:siege-utilities--error-path-tests] |
+| `siege-utilities` | `github.com/siege-analytics/siege_utilities` | [rule:siege-utilities-] | [skill:siege-utilities--hostile-review], [skill:siege-utilities--notebook-impact], [skill:siege-utilities--error-path-tests] |
 
 ### siege-utilities-specific routing
 
-These triggers apply only when the working directory matches `siege-analytics/siege_utilities`.
+These hints apply only to the exact `github.com/siege-analytics/siege_utilities` origin. A bare owner/repo or same-name foreign host is not sufficient.
 
 | Trigger | Skill |
 |---|---|

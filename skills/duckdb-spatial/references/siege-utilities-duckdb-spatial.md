@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # siege_utilities + DuckDB-Spatial -- Interop Map
 
 `siege_utilities` pulls `duckdb>=0.7.0` as a `performance` extra, but currently uses it only for format conversion. The full DuckDB-spatial query layer is **bring-your-own** today. This file documents what SU does, doesn't, and the upstream-PR opportunities (which, when they land, will collapse most inline DuckDB SQL into one-liners).

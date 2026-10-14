@@ -21,7 +21,7 @@ def norm_repo(value:str)->str:
         match=re.match(r"^[^@]+@([^:]+):(.+)$",value)
         if match:value=f"{match.group(1)}/{match.group(2)}"
     value=value.strip("/").lower()
-    if value.count("/")==1:value=f"github.com/{value}"
+    # A bare owner/repo string is not proof of a GitHub origin.
     return value
 
 def detect_repo(cwd:Path)->str:
@@ -29,11 +29,19 @@ def detect_repo(cwd:Path)->str:
     except (OSError,subprocess.SubprocessError):return ""
 
 def token_match(text:str,term:str)->bool:
-    return re.search(r"(?<![a-z0-9])"+re.escape(term.lower())+r"(?![a-z0-9])",text) is not None
+    # Bare JSX/TSX terminology is a signal; an extension inside a
+    # sourcemap/domain is not. File extensions use route_matches instead.
+    before = r"[a-z0-9.]" if term.lower() in {"jsx","tsx","vue"} else r"[a-z0-9]"
+    return re.search(r"(?<!"+before+r")"+re.escape(term.lower())+r"(?![a-z0-9])",text) is not None
 
 def route_matches(route:dict[str,Any],text:str)->list[str]:
     reasons=[f"term:{t}" for t in route.get("terms",[]) if token_match(text,t)]
-    reasons += [f"suffix:{s}" for s in route.get("suffixes",[]) if re.search(re.escape(s.lower())+r"(?:\b|$)",text)]
+    # Match filenames, including dotted basenames and sentence-final periods,
+    # but not a hostname or sourcemap continuing after the extension.
+    for suffix in route.get("suffixes",[]):
+        pattern=r"(?<![a-z0-9_.-])(?:[a-z0-9_-]+\.)*[a-z0-9_-]+"+re.escape(suffix.lower())+r"(?![a-z0-9_-])(?!\.[a-z0-9])"
+        if any(m.group(0) not in {"docs.rs","crates.rs"} for m in re.finditer(pattern,text)):
+            reasons.append(f"suffix:{suffix}")
     return reasons
 
 def validate_manifest(manifest:dict[str,Any],known:dict[str,Any])->None:
@@ -52,10 +60,19 @@ def validate_manifest(manifest:dict[str,Any],known:dict[str,Any])->None:
             if known[slug]["kind"].startswith("shelf") or slug.startswith(SHELF_PREFIX):raise ValueError(f"shelf cannot auto-select: {slug}")
     if len(ids)!=len(set(ids)):raise ValueError("resolver route IDs must be unique")
     if len(repos)!=len(set(repos)):raise ValueError("project repository identities must be unique")
+    for slug, dependencies in manifest.get("explicit_stacks",{}).items():
+        if slug not in known:raise ValueError(f"unknown explicit stack: {slug}")
+        for dependency in dependencies:
+            if dependency not in known:raise ValueError(f"unknown prerequisite: {dependency}")
+            if known[dependency]["kind"].startswith("shelf") or dependency.startswith(SHELF_PREFIX) or known[dependency]["kind"].startswith("project"):
+                raise ValueError(f"invalid explicit prerequisite: {dependency}")
 
 def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str="")->dict[str,Any]:
     known={i["slug"]:i for i in inventory["items"]};validate_manifest(manifest,known)
     text=" ".join(prompt.lower().split()); matches=[];matched_routes=[]
+    # Explicit tokens pass through scope/shelf checks, never through prose routes.
+    route_text=re.sub(r"\[(?:skill|rule):[a-z0-9-]+\]", " ", text)
+    route_text=re.sub(r"(?<!\S)/[a-z0-9-]+(?!\S)", " ", route_text)
     normalized_repo=norm_repo(repo); matching_project=None
     for project in manifest.get("projects",[]):
         if normalized_repo in {norm_repo(r) for r in project["repos"]}:
@@ -64,20 +81,24 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
     if matching_project:
         permitted_project_slugs.update(matching_project.get("always",[]))
         for route in matching_project.get("routes",[]):permitted_project_slugs.update(route["skills"])
-    explicit_slugs=sorted(set(re.findall(r"\[skill:([a-z0-9-]+)\]",text)+re.findall(r"(?<!\S)/([a-z0-9-]+)(?!\S)",text)))
+    explicit_refs=set(re.findall(r"\[(skill|rule):([a-z0-9-]+)\]",text))
+    explicit_refs.update(("skill",slug) for slug in re.findall(r"(?<!\S)/([a-z0-9-]+)(?!\S)",text))
     rejected_explicit=[]
-    explicit_actions=set(explicit_slugs)&TICKET_ACTIONS
-    for slug in explicit_slugs:
-        is_known=slug in known
+    explicit_actions=set()
+    for kind,slug in sorted(explicit_refs):
+        is_known=slug in known and (kind!="rule" or known[slug]["kind"] in ("rule","project-rule"))
         is_shelf=is_known and (slug.startswith(SHELF_PREFIX) or known[slug]["kind"].startswith("shelf"))
         is_wrong_project=is_known and known[slug]["kind"].startswith("project") and slug not in permitted_project_slugs
         if is_known and not is_shelf and not is_wrong_project:
             matches.append((1000,"explicit",slug,["explicit-slug"]))
+            if slug in TICKET_ACTIONS:explicit_actions.add(slug)
+            for dependency in manifest.get("explicit_stacks",{}).get(slug,[]):
+                matches.append((999,"explicit-prerequisite",dependency,[f"prerequisite:{slug}"]))
             if slug in TICKET_ACTIONS:matches.append((999,"explicit-ticket-guard","ticket-guard",["ticket-action-prerequisite"]))
         else:
             rejected_explicit.append(slug)
     for route in manifest["routes"]:
-        why=route_matches(route,text)
+        why=route_matches(route,route_text)
         if why:
             matched_routes.append(route)
             for slug in route["skills"]: matches.append((route["priority"],route["id"],slug,why))
@@ -86,7 +107,7 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
         project_id=matching_project["id"]
         for slug in matching_project.get("always",[]): matches.append((2000,f"project:{project_id}",slug,[f"repo:{normalized_repo}"]))
         for route in matching_project.get("routes",[]):
-            why=route_matches(route,text)
+            why=route_matches(route,route_text)
             if why:
                 matched_routes.append(route)
                 for slug in route["skills"]: matches.append((route["priority"],f"project:{project_id}:{route['id']}",slug,why))
@@ -102,7 +123,7 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
     for priority,route,slug,why in sorted(matches,key=lambda x:(-x[0],x[1],x[2])):
         if slug not in known: raise ValueError(f"manifest references unknown slug: {slug}")
         if known[slug]["kind"].startswith("shelf") or slug.startswith(SHELF_PREFIX): raise ValueError(f"shelf cannot auto-select: {slug}")
-        selected.setdefault(slug,{"slug":slug,"route":route,"priority":priority,"reasons":why})
+        selected.setdefault(slug,{"slug":slug,"source_path":known[slug].get("source_path","unknown"),"route":route,"priority":priority,"reasons":why})
     selected_items=list(selected.values())
     # Explicit selection is discovery, never permission to bypass protected CI.
     # The legacy billing skill is retained only as a non-authorizing diagnostic.

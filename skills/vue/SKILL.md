@@ -1,9 +1,8 @@
 ---
 name: vue
-description: "Vue 3 conventions for Composition API, Pinia stores, and route guards. TRIGGER: *.vue, *.ts importing from vue/pinia/vue-router, or touching route/store/composable files. Stacks with api-integration."
+description: "Vue 3 conventions for Composition API, Pinia stores, and route guards. Explicit Vue/Pinia signals route here; consult api-integration only when its cross-boundary contract applies."
 routed-by: coding-standards
 user-invocable: false
-paths: "**/*.vue,**/*.ts,**/router/**,**/store/**,**/features/**"
 ---
 
 # Vue 3
@@ -32,7 +31,7 @@ START: I'm touching Vue/FE code
   |   in the shared dir. Don't introduce a new organizational pattern as a side effect.
   |
   +-- What am I building?
-  |   +-- A Pinia store  --> setup syntax, resetStore(), register in logout hierarchy
+  |   +-- A Pinia store  --> follow the project's store syntax and logout/reset policy
   |   +-- A route  --> meta keys must be read by the guard (section 4)
   |   +-- A composable  --> Composition API only, typed return
   |   +-- A component  --> <script setup lang="ts">, props via defineProps<>()
@@ -44,7 +43,7 @@ START: I'm touching Vue/FE code
 
 ## 2. Composition API + `<script setup>` doctrine
 
-Every component uses `<script setup lang="ts">`. Never Options API.
+For new Composition API components in a Vue 3 + TypeScript project, `<script setup lang="ts">` is a useful default. Preserve an existing Options API or JavaScript codebase's conventions unless migration is requested.
 
 ```vue
 <script setup lang="ts">
@@ -75,7 +74,7 @@ const { data, loading } = useCampaignDetails(props.campaignId)
 
 ## 3. Pinia stores
 
-All stores use **setup function syntax** (Pinia >= 2.x):
+If this project uses Pinia setup stores and persisted state, a store might look like this (adapt to its actual policy):
 
 ```ts
 export const useFooStore = defineStore('foo', () => {
@@ -94,7 +93,7 @@ export const useFooStore = defineStore('foo', () => {
     items.value = await fooApi.getItems()
   }
 
-  // MANDATORY: resetStore nulls every field
+  // Example only: clear persisted user-scoped state if the app requires it
   const resetStore = () => {
     items.value = null
   }
@@ -106,9 +105,8 @@ export const useFooStore = defineStore('foo', () => {
 **Rules:**
 
 - **`useStorage` with `StorageSerializers.object`** when the initial value is `null`. Without the serializer, `useStorage` defaults to string serialization and silently corrupts objects on round-trip. The third arg (`undefined`) is the storage target (defaults to localStorage).
-- **Every store exposes `resetStore()`** that nulls every field. This is the convention for the logout fan-out.
-- **Register in the project's logout fan-out** (typically a `resetAllStores()` in the auth store). If you add a store and don't register it, that store's data survives logout and leaks into the next session. There is no automatic registration -- this is convention-by-vigilance.
-- **Stores in alternate locations** (e.g., `features/*/stores/`) must also register. An unregistered store is a security gap; treat it as a bug.
+- **Logout/reset is conditional.** If a store holds user-scoped or persisted data, inspect the project's logout policy and ensure it is cleared when identities change. `resetStore()` and `resetAllStores()` are examples, not required API names; clearing every field to null can be wrong for non-nullable or application-wide state.
+- **Stores in alternate locations** need the same data-isolation review if they retain account-scoped data. Do not infer a security gap solely from the absence of a `resetStore()` method.
 - **Don't mutate store state from components.** Components call store actions; actions mutate state. The exception is simple boolean toggles where an action would add noise without value.
 
 ## 4. Route guards and meta keys
@@ -124,13 +122,8 @@ The global guard (`router.beforeEach` in `src/router/index.ts`) reads a project-
 
 ## 5. Error handling
 
-**The rule:** never `try / catch / console.log(error)`. Either re-throw, or call `Sentry.captureException(error)`.
+Avoid silently swallowing errors or logging sensitive details. First establish whether this application has a shared API error interceptor, reporting service, and user-facing notification policy. If it does, avoid duplicate reporting/toasts; if it does not, handle errors locally and visibly. Sentry, axios interceptors and toast suppression are examples, not requirements:
 
-The axios response interceptor handles user-facing error presentation:
-- 401 on auth-required routes -> toast + auto-logout
-- Other 4xx/5xx -> normalize the error envelope + toast (unless `config.skipToastError`)
-
-Component-level and composable-level code should not duplicate this:
 
 ```ts
 // BAD -- swallows context, duplicates toast logic
@@ -141,7 +134,7 @@ try {
   toast.error('Something went wrong')
 }
 
-// GOOD -- let interceptor handle the toast; capture for Sentry if needed
+// Example when the application has Sentry and a shared error interceptor
 try {
   await campaignApi.updateCampaign(id, payload)
 } catch (error) {
@@ -149,12 +142,12 @@ try {
   throw error  // or handle the specific recovery case
 }
 
-// ALSO GOOD -- if no recovery is needed, don't catch at all
+// If the project's interceptor handles this failure, no duplicate catch is needed
 await campaignApi.updateCampaign(id, payload)
-// interceptor handles the error presentation
+// only when a verified interceptor handles presentation
 ```
 
-**`skipToastError`:** pass `{ skipToastError: true }` in the axios config when the caller needs to handle the error UI itself (e.g., inline form validation errors). The interceptor still logs to Sentry but suppresses the toast.
+**Example only:** Some applications use `{ skipToastError: true }` with an axios interceptor for inline validation. Do not pass that option or assume Sentry is configured unless the target application actually implements those contracts.
 
 ## 6. TypeScript discipline
 
@@ -170,15 +163,15 @@ Defers to [rule:typescript] for core rules. Vue-specific additions:
 
 | Smell | Why | Fix |
 |---|---|---|
-| Options API (`data()`, `methods:`, `computed:`) | Dead pattern; Composition API is the standard | Rewrite with `<script setup>` |
+| New Composition API feature accidentally mixes Options API conventions | Inconsistent local style | Follow the established project API; migrate only when requested |
 | Business logic in `<template>` | Untestable, unreadable | Move to composable or computed |
 | Mutating store state from components | Breaks the action-mutation contract | Call a store action instead |
 | `watch` overuse (the Vue parallel to signals) | Hides control flow; creates implicit dependencies | Prefer `computed` for derived state; use `watch` only for side effects (API calls, DOM manipulation) |
 | Inline `api.get('/some/url/')` in components | Bypasses the project's API client layer | Route through the project's services / store / API client layer |
 | `ref<any>()` | Defeats TypeScript | Provide the type: `ref<Campaign | null>(null)` |
-| Catching errors just to `console.log` | Swallows context; duplicates interceptor | Let interceptor handle, or `Sentry.captureException` |
+| Catching errors just to `console.log` | Swallows context or exposes data | Follow the verified reporting and recovery contract |
 | New meta key without guard extension | Dead config that misleads readers | Extend guard in same PR |
-| Store without `resetStore()` | Data leaks across logout | Add `resetStore()` and register in the logout fan-out |
+| Persisted user-scoped store survives logout | Data may cross accounts | Follow the verified project reset/cleanup contract |
 | `reactive()` for top-level state | Loses reactivity on destructure; `ref` is explicit | Use `ref()` for top-level; `reactive()` for nested objects if needed |
 
 ## Attribution Policy

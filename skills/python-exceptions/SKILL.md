@@ -3,7 +3,6 @@ name: python-exceptions
 description: "Exception handling discipline for Python. TRIGGER: writing try/except, seeing `except Exception: pass`, reviewing error paths, or a CR comment about silent failures. Decides when to catch, translate, re-raise, or let fly."
 routed-by: coding-standards
 user-invocable: false
-paths: "**/*.py"
 ---
 
 # Python Exception Handling

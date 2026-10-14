@@ -1,9 +1,8 @@
 ---
 name: geopandas
-description: "GeoPandas + Shapely for single-node Python spatial work. TRIGGER: import geopandas / gpd. / .sjoin / .to_file / GeoDataFrame, or raw shapely.geometry use. Stacks with `analysis/spatial/` (router) and `_siege-utilities-rules.md`. Has explicit no-GDAL paths for environments without Fiona/GDAL."
+description: "GeoPandas + Shapely for single-node Python spatial work. TRIGGER: import geopandas / gpd. / .sjoin / .to_file / GeoDataFrame, or raw shapely.geometry use. Stacks with `analysis/spatial/` when applicable; SU interop examples require an exact project identity. Has explicit no-GDAL paths for environments without Fiona/GDAL."
 routed-by: coding-standards
 user-invocable: false
-paths: "**/*.py"
 ---
 
 # GeoPandas (and Shapely)
@@ -23,22 +22,22 @@ Pandas-style spatial operations in-process, single-node. The default Python tool
 
 ## References
 
-- [`crs-management.md`](references/crs-management.md) -- CRS via `siege_utilities.geo.crs` first; pyproj for edge cases
+- [`crs-management.md`](references/crs-management.md) -- CRS validation; SU-specific examples are conditional on exact project scope
 - [`spatial-joins.md`](references/spatial-joins.md) -- `sjoin`, `sjoin_nearest`, predicates, performance
 - [`io-formats.md`](references/io-formats.md) -- Parquet/GeoParquet, GPKG, Shapefile pitfalls; format selection
 - [`performance.md`](references/performance.md) -- pyogrio vs fiona vs no-GDAL; vectorized ops; STRtree
 - [`no-gdal-fallbacks.md`](references/no-gdal-fallbacks.md) -- Shapely + pyproj + DuckDB paths when GDAL is missing
 - [`shapely-direct.md`](references/shapely-direct.md) -- when inputs are WKT/dicts, skip GeoPandas
 - [`pitfalls.md`](references/pitfalls.md) -- CRS silent assumption, geometry validity, Z/M coords
-- [`siege-utilities-geopandas.md`](references/siege-utilities-geopandas.md) -- SU obviates Census/GADM sourcing, choropleth, areal interp, isochrones, geocoding
+- [`siege-utilities-geopandas.md`](references/siege-utilities-geopandas.md) -- historical SU interop reference, exact-project only
 
 ## Always-on companions
 
-- [rule:principles], [rule:python], [rule:data-trust], [rule:siege-utilities]
+- [rule:principles], [rule:python], [rule:data-trust] (SU compatibility rule is not globally prescriptive)
 
-## The two-line setup
+## Example capability setup (exact Siege Utilities repository only)
 
-Before anything else in a spatial Python session:
+Only when the target origin is `github.com/siege-analytics/siege_utilities` and the dependency is present:
 
 ```python
 from siege_utilities.geo.capabilities import geo_capabilities
@@ -122,9 +121,9 @@ print(p.within(poly))  # True
 
 See [`shapely-direct.md`](references/shapely-direct.md) for the full pattern.
 
-## What `siege_utilities` already does -- use it
+## Siege Utilities interoperability (exact project only)
 
-Per [rule:siege-utilities], check SU first. For spatial Python work specifically, SU obviates:
+The following historical examples apply only when the target origin is `github.com/siege-analytics/siege_utilities`. In other repositories, use the declared dependency policy and do not presume SU is installed:
 
 - **Boundary sourcing** (Census TIGER, GADM, OSM) -- `geo.spatial_data.get_geographic_boundaries()`
 - **Areal interpolation** between mismatched boundaries -- `geo.interpolation.areal.interpolate_areal()`
@@ -142,4 +141,4 @@ See [`pitfalls.md`](references/pitfalls.md). Top three:
 
 1. **Silent CRS assumption.** `gdf.crs is None` → `gdf.area` returns nonsense. Set CRS at ingest.
 2. **`sjoin` predicate confusion.** `predicate="within"` vs `"intersects"` vs `"contains"` matter at boundaries -- same gotcha as PostGIS `ST_Contains` vs `ST_Covers`.
-3. **`to_file` requires GDAL.** `to_parquet` / `to_feather` don't. Default to GeoParquet for Siege pipelines.
+3. **`to_file` requires GDAL.** `to_parquet` / `to_feather` don't. Consider GeoParquet when the target pipeline supports it.

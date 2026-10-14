@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # GDAL Availability Matrix
 
 Which spatial paths work, per engine, when GDAL is or isn't available. Adopt SU's tier vocabulary (`geo` / `geo-lite` / `geodjango` / `none`) to classify environments.

@@ -1,9 +1,8 @@
 ---
 name: duckdb-spatial
-description: "DuckDB spatial extension -- single-node SQL spatial queries on Parquet/CSV without Postgres or GDAL. TRIGGER: import duckdb with INSTALL spatial / LOAD spatial, ST_Read in DuckDB SQL, GeoParquet without GDAL, parquet → spatial-query workflows. Stacks with `coding/sql/`, `analysis/spatial/`, and `_siege-utilities-rules.md`."
+description: "DuckDB spatial extension -- single-node SQL spatial queries on Parquet/CSV without Postgres or GDAL. TRIGGER: import duckdb with INSTALL spatial / LOAD spatial, ST_Read in DuckDB SQL, GeoParquet without GDAL, parquet → spatial-query workflows. Stacks with SQL and spatial guidance when applicable; SU interop is exact-project-only."
 routed-by: coding-standards
 user-invocable: false
-paths: "**/*.py,**/*.sql"
 ---
 
 # DuckDB Spatial [EXPERIMENTAL]
@@ -35,13 +34,13 @@ DuckDB's `spatial` extension ships GEOS, GDAL, and PROJ inside a single in-proce
 - [`geoparquet-without-gdal.md`](references/geoparquet-without-gdal.md) -- WKB-encoded geometry columns; the SU gap; how to read/write GeoParquet entirely without GDAL
 - [`spatial-extension-cookbook.md`](references/spatial-extension-cookbook.md) -- `INSTALL spatial`, `ST_Read`, `ST_AsWKB`, `ST_Distance_Sphere`, partition pruning
 - [`pitfalls.md`](references/pitfalls.md) -- extension version drift, WKB endianness, single-process ceiling
-- [`siege-utilities-duckdb-spatial.md`](references/siege-utilities-duckdb-spatial.md) -- SU's current DuckDB integration is thin (format conversion only); pending SU-1 / SU-7 / SU-9 will close most inline-SQL gaps
+- [`siege-utilities-duckdb-spatial.md`](references/siege-utilities-duckdb-spatial.md) -- historical exact-project SU interop example (not a global requirement)
 
 ## Always-on companions
 
 - [skill:sql] -- DuckDB is SQL-first
 - [skill:python] -- when scaffolding via `import duckdb`
-- [rule:principles], [rule:python], [rule:data-trust], [rule:siege-utilities]
+- [rule:principles], [rule:python], [rule:data-trust]
 
 ## Setup
 
@@ -145,9 +144,9 @@ result = con.execute("""
 
 DuckDB sees Pandas/GeoPandas DataFrames as queryable views without copying data. The result comes back as Pandas.
 
-## What `siege_utilities` does and doesn't do
+## Siege Utilities interop (exact project only)
 
-SU pulls `duckdb>=0.7.0` as a `performance` extra but currently uses it only for format conversion (`spatial_transformations.SpatialDataTransformer`) -- *not* for the in-process query patterns above.
+The following historical integration notes apply only to `github.com/siege-analytics/siege_utilities`. Other repositories should not adopt SU or its backlog by default. SU pulls `duckdb>=0.7.0` as a `performance` extra but currently uses it only for format conversion (`spatial_transformations.SpatialDataTransformer`) -- *not* for the in-process query patterns above.
 
 **SU obviates:** nothing yet on the spatial query side.
 

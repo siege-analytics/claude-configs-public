@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # siege_utilities + PostGIS -- Interop Map
 
 When working with PostGIS in Siege projects, [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) helps with the *upstream* of getting data into Postgres (boundary sourcing, Census data, GEOID wrangling) and the *Django/ORM* side of querying it. It does **not** wrap raw ST_* operations -- that's bring-your-own-psycopg2.

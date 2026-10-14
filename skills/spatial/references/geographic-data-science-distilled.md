@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # Geographic Data Science with Python -- Distilled
 
 Principle-level distillation of [*Geographic Data Science with Python*](https://geographicdata.science/book/intro.html) (Sergio J. Rey, Dani Arribas-Bel, Levi J. Wolf; CRC Press, 2023; online CC-BY-NC-ND). The book is the canonical modern reference for spatial analysis on top of GeoPandas + the PySAL ecosystem.

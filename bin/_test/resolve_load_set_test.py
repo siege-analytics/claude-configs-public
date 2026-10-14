@@ -7,15 +7,15 @@ SPEC=importlib.util.spec_from_file_location("resolver",SCRIPT); assert SPEC and 
 M=importlib.util.module_from_spec(SPEC);sys.modules[SPEC.name]=M;SPEC.loader.exec_module(M)
 def inv():
  def i(s,k="skill"):return {"slug":s,"kind":k,"characters":100,"estimated_tokens":25}
- slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","close-ticket","ci-billing-failure-merge","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","django","react","stalled-session-recovery","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
+ slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","close-ticket","ci-billing-failure-merge","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","django","django-rest-framework","react","typescript","vue","rust","stalled-session-recovery","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
  return {"items":[i(s,"project-skill" if s.startswith("siege-utilities--") else "skill") for s in slugs]+[i("siege-utilities--rules","project-rule"),i("shelves--security","shelf-item")]}
 def main():
  manifest=json.loads((ROOT/"catalog/resolver-manifest.json").read_text()); inventory=inv()
- a=M.select(manifest,inventory,"review this Python pull request", "siege-analytics/siege_utilities")
+ a=M.select(manifest,inventory,"review this Python pull request", "github.com/siege-analytics/siege_utilities")
  slugs=[x["slug"] for x in a["selected"]]
  assert a["state"]=="matched" and slugs[0]=="siege-utilities--rules"
  assert "siege-utilities--hostile-review" in slugs and "coding" in slugs
- assert a==M.select(manifest,inventory,"review this Python pull request", "siege-analytics/siege_utilities")
+ assert a==M.select(manifest,inventory,"review this Python pull request", "github.com/siege-analytics/siege_utilities")
  generic=M.select(manifest,inventory,"write a friendly greeting","other/repo")
  assert generic["state"]=="unknown" and generic["selected"]==[] and generic["project"] is None
  outside=M.select(manifest,inventory,"review this diff","other/repo")
@@ -46,7 +46,7 @@ def main():
   result=M.select(manifest,inventory,"[skill:ci-billing-failure-merge]",repo)
   assert result["state"]=="matched" and "diagnostic-only (no merge authorization)" in result["diagnostic"]
   assert {x["slug"] for x in result["selected"]}=={"ci-billing-failure-merge"}
- project_explicit=M.select(manifest,inventory,"[skill:siege-utilities--hostile-review]","siege-analytics/siege_utilities")
+ project_explicit=M.select(manifest,inventory,"[skill:siege-utilities--hostile-review]","github.com/siege-analytics/siege_utilities")
  assert "siege-utilities--hostile-review" in [x["slug"] for x in project_explicit["selected"]]
  foreign_project_explicit=M.select(manifest,inventory,"[skill:siege-utilities--hostile-review] /siege-utilities--rules","git@other-host:siege-analytics/siege_utilities.git")
  assert not any(x["slug"].startswith("siege-utilities--") for x in foreign_project_explicit["selected"])
@@ -77,7 +77,7 @@ def main():
  except ValueError as e:assert "shelf cannot auto-select" in str(e)
  else:raise AssertionError("shelf route passed")
  bad=json.loads(json.dumps(manifest));bad["projects"][0]["always"]=["shelves--security"]
- try:M.select(bad,inventory,"review this diff","siege-analytics/siege_utilities")
+ try:M.select(bad,inventory,"review this diff","github.com/siege-analytics/siege_utilities")
  except ValueError as e:assert "shelf cannot auto-select" in str(e)
  else:raise AssertionError("project always shelf passed")
  ambiguous=json.loads(json.dumps(manifest));ambiguous["routes"]=[
@@ -86,6 +86,7 @@ def main():
  ambiguous["projects"]=[]
  result=M.select(ambiguous,inventory,"build this","other/repo")
  assert result["state"]=="ambiguous" and result["selected"]==[]
+ assert M.select(manifest,inventory,"[skill:shelves--security]", "other/repo")["selected"]==[]
  assert M.norm_repo("git@github.com:Siege-Analytics/siege_utilities.git")=="github.com/siege-analytics/siege_utilities"
  assert M.norm_repo("https://github.com/siege-analytics/siege_utilities.git")=="github.com/siege-analytics/siege_utilities"
  assert M.norm_repo("ssh://git@github.com/siege-analytics/siege_utilities.git")=="github.com/siege-analytics/siege_utilities"

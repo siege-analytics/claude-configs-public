@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # Principle: CRS is Meaning, Not Annotation
 
 A coordinate is a number with no relationship to physical space until it has an SRID. The SRID is what turns `(-98, 30)` from "two numbers" into "longitude -98°, latitude 30° on the WGS 84 ellipsoid."

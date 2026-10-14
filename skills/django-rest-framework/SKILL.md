@@ -3,7 +3,6 @@ name: django-rest-framework
 description: "Django REST Framework conventions for serializers, viewsets, permissions, pagination, throttling, testing, and OpenAPI schema. TRIGGER: *.py importing from rest_framework.*, writing a serializer/viewset/permission/DRF test, or configuring REST_FRAMEWORK settings. Stacks on top of the django skill."
 routed-by: coding-standards
 user-invocable: false
-paths: "**/*.py"
 ---
 
 # Django REST Framework

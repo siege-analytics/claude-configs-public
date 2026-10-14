@@ -63,6 +63,8 @@ jobs:
           python3 bin/_test/progressive_mount_test.py
           bash hooks/_test/progressive_loading.test.sh
           python3 bin/progressive-loading-metrics.py --check
+          python3 bin/_test/language_scope_test.py
+          python3 bin/language-scope.py --check
           for pkg in claude-code craft-agent; do
             test -f "dist/$pkg/bin/resolve-load-set.py"
             test -f "dist/$pkg/catalog/resolver-manifest.json"

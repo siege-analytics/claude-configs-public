@@ -544,7 +544,6 @@
       "shelves--drive-motivation",
       "shelves--effective-java",
       "shelves--effective-kotlin",
-      "shelves--effective-python",
       "shelves--effective-typescript",
       "shelves--geocomputation-with-r",
       "shelves--high-perf-browser",
@@ -612,7 +611,6 @@
       "cross-review",
       "decision-to-ticket",
       "distill-lessons",
-      "django-rest-framework",
       "drive-while-away",
       "duckdb-spatial",
       "engagement-post-mortem",
@@ -630,24 +628,22 @@
       "python-patterns",
       "rule-eval-loop",
       "rules-audit",
-      "scala-on-spark",
       "scope-expansion",
       "sedona",
       "shape-space-audit",
       "solutions-catalog",
       "ticket-decomposition",
       "verify-failure-premise",
-      "vue",
       "wrap-up"
     ]
   },
   "items": [
     {
       "canonical_source": "projects/siege-utilities/_rules.md",
-      "characters": 10037,
-      "content_sha256": "89e2f2490bd39b93029753ec720883320d1ff42288ff1edc5a178586c75d2649",
+      "characters": 11286,
+      "content_sha256": "54f3fdcb940806ad727c4bca6c5bab34a5a982c4fa29375adb6bab679f29d62f",
       "description": "Project-specific rules for siege_utilities. These take precedence over general rules within the siege-utilities scope. Falls back to general rules for anything not described here.",
-      "estimated_tokens": 2510,
+      "estimated_tokens": 2822,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_siege-utilities--rules.md",
@@ -657,15 +653,17 @@
       "inbound_source_references": [
         "RESOLVER.md",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-933-run-comprehensive-test.md",
-        "projects/CONTRIBUTING.md"
+        "projects/CONTRIBUTING.md",
+        "skills/_siege-utilities-rules.md"
       ],
       "kind": "project-rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 131,
+      "lines": 137,
       "owner": [
         "dheeraj@siegeanalytics.com"
       ],
@@ -700,6 +698,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -740,8 +739,11 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/issue-982-workflow-scope.md",
@@ -764,6 +766,7 @@
       "slug": "siege-utilities--hostile-review",
       "source_path": "projects/siege-utilities/skills/hostile-review/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py"
       ],
       "tier": "project",
@@ -784,6 +787,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "projects/CONTRIBUTING.md",
@@ -1313,7 +1317,6 @@
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-ddia-shelf.md",
         "plans/self-review-valid-shelf-references.md",
-        "skills/_siege-utilities-rules.md",
         "skills/code-review/SKILL.md",
         "skills/hostile-review/SKILL.md",
         "skills/postgis/SKILL.md",
@@ -1671,6 +1674,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -1717,6 +1721,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -1762,7 +1767,10 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "bin/_test/language_scope_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -1789,7 +1797,9 @@
       "rule_definitions": [],
       "slug": "shelves--effective-python",
       "source_path": "skills/shelves/languages/effective-python/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/language_scope_test.py"
+      ],
       "tier": "reference",
       "tier_basis": "path under skills/shelves/<topic>/<book>",
       "verification": "unknown"
@@ -1808,6 +1818,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -2283,6 +2294,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -2800,6 +2812,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -2976,6 +2989,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -3148,6 +3162,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -3670,6 +3685,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -3757,6 +3773,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -3868,6 +3885,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -3946,6 +3964,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4015,6 +4034,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4084,6 +4104,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4169,6 +4190,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4207,6 +4229,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/django-rest-framework/SKILL.md",
@@ -4233,6 +4256,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4301,6 +4325,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4367,6 +4392,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4406,6 +4432,7 @@
       "inbound_source_references": [
         "README.md",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -4435,6 +4462,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4507,6 +4535,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4609,6 +4638,7 @@
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
@@ -4684,6 +4714,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4752,6 +4783,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4816,6 +4848,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4883,6 +4916,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -4922,6 +4956,7 @@
       "inbound_source_references": [
         "README.md",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -4957,6 +4992,7 @@
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
@@ -5024,9 +5060,12 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "bin/_test/language_scope_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "skills/coding/SKILL.md",
         "skills/react/SKILL.md",
         "skills/react/reference.md"
       ],
@@ -5051,6 +5090,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5114,6 +5154,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5152,10 +5193,14 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "README.md",
+        "bin/_test/language_scope_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
-        "skills/RESOLVER.md"
+        "skills/RESOLVER.md",
+        "skills/coding/SKILL.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
@@ -5178,6 +5223,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5243,6 +5289,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5307,6 +5354,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5390,6 +5438,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5417,10 +5466,10 @@
     },
     {
       "canonical_source": "skills/_siege-utilities-rules.md",
-      "characters": 3131,
-      "content_sha256": "5e627be2beb12865f34f0295ca3e5d5d68e85f519f5e7d82dc595cc53e4af68a",
-      "description": "Always-on Siege Utilities preference. Apply before writing any Python helper, utility, or one-off function in this workspace.",
-      "estimated_tokens": 783,
+      "characters": 695,
+      "content_sha256": "4bf952cfbe11bd12748e3ab4715821309f86843295caea50df7a0459abd25bd2",
+      "description": "Compatibility pointer for legacy Siege Utilities rule references. Not a global Python prescription.",
+      "estimated_tokens": 174,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_siege-utilities-rules.md",
@@ -5430,23 +5479,22 @@
       "inbound_source_references": [
         "README.md",
         "RESOLVER.md",
+        "bin/language-scope.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/hostile-review-su-review-shelf-grounding.md",
         "plans/self-review-938-reconcile-hostile-review.md",
         "skills/RESOLVER.md",
         "skills/detect-ai-fingerprints/SKILL.md",
-        "skills/duckdb-spatial/SKILL.md",
-        "skills/geopandas/SKILL.md",
         "skills/postgis/references/siege-utilities-postgis.md",
-        "skills/sedona/SKILL.md",
         "skills/spatial/references/siege-utilities-spatial.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 46,
+      "lines": 7,
       "owner": [
         "unknown"
       ],
@@ -5464,6 +5512,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5538,6 +5587,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5606,6 +5656,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5650,7 +5701,6 @@
         "plans/design-note-tandem-agent-operating-model.md",
         "skills/KERNEL.md",
         "skills/_session-coordination-rules.md",
-        "skills/_siege-utilities-rules.md",
         "skills/_standing-approval-rules.md",
         "skills/_work-item-ownership-rules.md",
         "skills/code-review/SKILL.md",
@@ -5685,6 +5735,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5761,6 +5812,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5836,6 +5888,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5874,11 +5927,15 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "README.md",
+        "bin/_test/language_scope_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
         "skills/_react-rules.md",
+        "skills/coding/SKILL.md",
         "skills/react/SKILL.md",
         "skills/react/reference.md",
         "skills/vue/SKILL.md"
@@ -5904,6 +5961,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -5979,6 +6037,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -6047,6 +6106,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -6143,6 +6203,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -6243,6 +6304,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -6332,6 +6394,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -6411,6 +6474,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -6495,6 +6559,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -6591,6 +6656,7 @@
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -6663,6 +6729,7 @@
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/skill_inventory_test.py",
         "hooks/_test/progressive_loading.test.sh",
@@ -6867,7 +6934,6 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-valid-shelf-references.md",
-        "skills/_siege-utilities-rules.md",
         "skills/code-review/SKILL.md",
         "skills/hostile-review/SKILL.md",
         "skills/shelves/SKILL.md"
@@ -6910,6 +6976,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -7403,6 +7470,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
@@ -7429,6 +7497,7 @@
       "source_path": "skills/branch/SKILL.md",
       "test_evidence": [
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/branch_state_advisory.test.sh",
@@ -7608,6 +7677,7 @@
         "CHANGELOG.md",
         "CONTRIBUTING.md",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -7660,6 +7730,7 @@
       "slug": "code-review",
       "source_path": "skills/code-review/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/progressive_loading.test.sh",
         "scripts/ci/test_flat_skill_layout.sh",
@@ -7714,10 +7785,10 @@
     },
     {
       "canonical_source": "skills/coding/SKILL.md",
-      "characters": 3958,
-      "content_sha256": "1e328f0b2427723b7e120e47ad0997c5dd581d42ee7575f63da789acabc040fc",
-      "description": "Coding conventions. TRIGGER: writing Python, SQL, PySpark, Django, pipeline jobs, Rundeck YAML, or Go. Routes to the language-specific guide.",
-      "estimated_tokens": 990,
+      "characters": 4572,
+      "content_sha256": "dced74d98a0e81fbcbf3932617070359ea06062576b9a4903f44183034655e40",
+      "description": "Coding conventions for explicit language/framework work. The executable resolver manifest controls automatic loading; this table is navigation only.",
+      "estimated_tokens": 1143,
       "frontmatter_name": "coding-standards",
       "generated_outputs": [
         "dist/nested/skills/coding",
@@ -7728,6 +7799,8 @@
         "CHANGELOG.md",
         "RESOLVER.md",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
@@ -7737,7 +7810,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 46,
+      "lines": 48,
       "owner": [
         "unknown"
       ],
@@ -7754,6 +7827,7 @@
       "slug": "coding",
       "source_path": "skills/coding/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/investigate_gate_schema.test.sh",
@@ -7780,6 +7854,7 @@
         "CHANGELOG.md",
         "LESSONS.md",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
@@ -7817,6 +7892,7 @@
       "test_evidence": [
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/deploy_source_policy_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -7959,6 +8035,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
@@ -7993,6 +8070,7 @@
       "slug": "create-pr",
       "source_path": "skills/create-pr/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/progressive_loading.test.sh"
       ],
@@ -8016,6 +8094,7 @@
         "CHANGELOG.md",
         "bin/_test/resolve_load_set_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
@@ -8353,10 +8432,10 @@
     },
     {
       "canonical_source": "skills/django/SKILL.md",
-      "characters": 11833,
-      "content_sha256": "2cfaff84e302142218142d19864098c4e2480e9db4a9d45835d95041d374dce6",
+      "characters": 11799,
+      "content_sha256": "b64b5bc84c21bed23ac23c29d23672521bc4c4eb7e827ac312f4342ad64b2b79",
       "description": "Django conventions for models, views, settings, forms, and testing. TRIGGER: *.py importing from django.*, writing a view/model/form/migration, or configuring settings. Stacks with python and sql sub-skills.",
-      "estimated_tokens": 2959,
+      "estimated_tokens": 2950,
       "frontmatter_name": "django",
       "generated_outputs": [
         "dist/nested/skills/django",
@@ -8365,6 +8444,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -8377,7 +8457,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 277,
+      "lines": 276,
       "owner": [
         "unknown"
       ],
@@ -8394,6 +8474,7 @@
       "slug": "django",
       "source_path": "skills/django/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "skills/detect-ai-fingerprints/test_scan_sh_exit_code.sh",
         "skills/detect-ai-fingerprints/test_writing_code_4.sh"
@@ -8404,10 +8485,10 @@
     },
     {
       "canonical_source": "skills/django-rest-framework/SKILL.md",
-      "characters": 8736,
-      "content_sha256": "e5c7652459922c064179c0862ffea30ed4d4cb4c2bf21445118e86a8442718d0",
+      "characters": 8719,
+      "content_sha256": "69b90d6013484454342f55620c4600659c0c0c8577cc51e243f255d6394558b5",
       "description": "Django REST Framework conventions for serializers, viewsets, permissions, pagination, throttling, testing, and OpenAPI schema. TRIGGER: *.py importing from rest_framework.*, writing a serializer/viewset/permission/DRF test, or configuring REST_FRAMEWORK settings. Stacks on top of the django skill.",
-      "estimated_tokens": 2184,
+      "estimated_tokens": 2180,
       "frontmatter_name": "django-rest-framework",
       "generated_outputs": [
         "dist/nested/skills/django-rest-framework",
@@ -8415,14 +8496,19 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "bin/_test/language_scope_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
-        "catalog/skill-lifecycle-legacy.json"
+        "catalog/skill-lifecycle-legacy.json",
+        "skills/RESOLVER.md",
+        "skills/coding/SKILL.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 132,
+      "lines": 131,
       "owner": [
         "unknown"
       ],
@@ -8438,7 +8524,10 @@
       "rule_definitions": [],
       "slug": "django-rest-framework",
       "source_path": "skills/django-rest-framework/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/language_scope_test.py",
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -8493,10 +8582,10 @@
     },
     {
       "canonical_source": "skills/duckdb-spatial/SKILL.md",
-      "characters": 6778,
-      "content_sha256": "4d2e8aabab33dd797931085eea618e681e9f3a3d997baa17c938062bcc3593e8",
-      "description": "DuckDB spatial extension -- single-node SQL spatial queries on Parquet/CSV without Postgres or GDAL. TRIGGER: import duckdb with INSTALL spatial / LOAD spatial, ST_Read in DuckDB SQL, GeoParquet without GDAL, parquet \u2192 spatial-query workflows. Stacks with `coding/sql/`, `analysis/spatial/`, and `_siege-utilities-rules.md`.",
-      "estimated_tokens": 1695,
+      "characters": 6852,
+      "content_sha256": "6b8c7bd8c2679350e860aa551415864380d9f4ff7247b477be1dcf4420ff5b3e",
+      "description": "DuckDB spatial extension -- single-node SQL spatial queries on Parquet/CSV without Postgres or GDAL. TRIGGER: import duckdb with INSTALL spatial / LOAD spatial, ST_Read in DuckDB SQL, GeoParquet without GDAL, parquet \u2192 spatial-query workflows. Stacks with SQL and spatial guidance when applicable; SU interop is exact-project-only.",
+      "estimated_tokens": 1713,
       "frontmatter_name": "duckdb-spatial",
       "generated_outputs": [
         "dist/nested/skills/duckdb-spatial",
@@ -8505,6 +8594,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -8521,7 +8611,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 168,
+      "lines": 167,
       "owner": [
         "unknown"
       ],
@@ -8632,10 +8722,10 @@
     },
     {
       "canonical_source": "skills/geopandas/SKILL.md",
-      "characters": 6676,
-      "content_sha256": "3607fc5062a77611e314a0737a834978d14df3fa29449f32c2ec0fe2147bb092",
-      "description": "GeoPandas + Shapely for single-node Python spatial work. TRIGGER: import geopandas / gpd. / .sjoin / .to_file / GeoDataFrame, or raw shapely.geometry use. Stacks with `analysis/spatial/` (router) and `_siege-utilities-rules.md`. Has explicit no-GDAL paths for environments without Fiona/GDAL.",
-      "estimated_tokens": 1669,
+      "characters": 6943,
+      "content_sha256": "bce575d37f8689b27c9411f2e23e5700ed9e7105cdf2a3ce793dbba9041c658d",
+      "description": "GeoPandas + Shapely for single-node Python spatial work. TRIGGER: import geopandas / gpd. / .sjoin / .to_file / GeoDataFrame, or raw shapely.geometry use. Stacks with `analysis/spatial/` when applicable; SU interop examples require an exact project identity. Has explicit no-GDAL paths for environments without Fiona/GDAL.",
+      "estimated_tokens": 1736,
       "frontmatter_name": "geopandas",
       "generated_outputs": [
         "dist/nested/skills/geopandas",
@@ -8644,6 +8734,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -8654,7 +8745,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 145,
+      "lines": 144,
       "owner": [
         "unknown"
       ],
@@ -8692,6 +8783,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-note-pr-bc-combined.md",
@@ -8732,6 +8824,7 @@
       "slug": "hostile-review",
       "source_path": "skills/hostile-review/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh",
@@ -8972,6 +9065,7 @@
       "inbound_source_references": [
         "bin/_test/progressive_mount_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
@@ -9003,6 +9097,7 @@
       "test_evidence": [
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/deploy_source_policy_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/coordinator_status_guard.test.sh",
@@ -9248,10 +9343,10 @@
     },
     {
       "canonical_source": "skills/postgis/SKILL.md",
-      "characters": 10058,
-      "content_sha256": "caaeaccc7e5e7ff54d00b021390bd1caa158e5ef055d1e9ff2c217248d028a81",
+      "characters": 10045,
+      "content_sha256": "dba2e16fa7ae929308795966f1d184efd1de5260d3ce4cbd43bb13c4e7b79b62",
       "description": "PostGIS patterns for spatial queries, indexing, and performance. TRIGGER: SQL with ST_* functions, geometry columns, spatial joins, or PostGIS extension setup. Stacks with sql and (when relevant) spatial sub-skills.",
-      "estimated_tokens": 2515,
+      "estimated_tokens": 2512,
       "frontmatter_name": "postgis",
       "generated_outputs": [
         "dist/nested/skills/postgis",
@@ -9260,6 +9355,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -9274,7 +9370,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 239,
+      "lines": 238,
       "owner": [
         "unknown"
       ],
@@ -9498,11 +9594,14 @@
         "bin/_test/review_risk_test.py",
         "bin/review-risk-metrics.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
         "plans/hostile-review-progressive-loading.md",
+        "skills/RESOLVER.md",
         "skills/_definition-of-done-rules.md",
         "skills/coding/SKILL.md",
         "skills/duckdb-spatial/SKILL.md",
@@ -9536,6 +9635,7 @@
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
+        "bin/_test/language_scope_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
@@ -9585,10 +9685,10 @@
     },
     {
       "canonical_source": "skills/python-exceptions/SKILL.md",
-      "characters": 7134,
-      "content_sha256": "e94096bf9299f5e9f327f97d873ef3c52fc77f07c3ffcb93ba4911b14cc9421f",
+      "characters": 7117,
+      "content_sha256": "7ceade6a7cb38c42fe259cac8be0b2d46e187b0617b6ddee98aeffd93761ea02",
       "description": "Exception handling discipline for Python. TRIGGER: writing try/except, seeing `except Exception: pass`, reviewing error paths, or a CR comment about silent failures. Decides when to catch, translate, re-raise, or let fly.",
-      "estimated_tokens": 1784,
+      "estimated_tokens": 1780,
       "frontmatter_name": "python-exceptions",
       "generated_outputs": [
         "dist/nested/skills/python-exceptions",
@@ -9597,6 +9697,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -9605,7 +9706,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 153,
+      "lines": 152,
       "owner": [
         "unknown"
       ],
@@ -9628,10 +9729,10 @@
     },
     {
       "canonical_source": "skills/python-patterns/SKILL.md",
-      "characters": 10563,
-      "content_sha256": "ba8bd4af7c5be7237d37eb8910374c77883eba3b0b02cb217be270881b74d452",
+      "characters": 10546,
+      "content_sha256": "4b25403e3af915bc21ac5789d9629895c9d8765b8bbc2428868795bb3c31f98f",
       "description": "Engineering principles for Python library code. TRIGGER: duplicated functions, undeclared attributes, ignored kwargs, unchecked types crossing module boundaries, or a CR comment about architectural smells. Covers DRY, dataclass discipline, interface integrity, and runtime type correctness.",
-      "estimated_tokens": 2641,
+      "estimated_tokens": 2637,
       "frontmatter_name": "python-patterns",
       "generated_outputs": [
         "dist/nested/skills/python-patterns",
@@ -9640,6 +9741,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -9649,7 +9751,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 278,
+      "lines": 277,
       "owner": [
         "unknown"
       ],
@@ -9672,10 +9774,10 @@
     },
     {
       "canonical_source": "skills/qml-component-review/SKILL.md",
-      "characters": 7320,
-      "content_sha256": "d77a68d2b51bab60e6cb2cf441be2f321b02bc13245909666c289ec7c1ef6412",
-      "description": "Review extracted QML components for conformance with the ChordLibrary decomposition pattern (properties-in / signals-out with state groups).",
-      "estimated_tokens": 1830,
+      "characters": 2337,
+      "content_sha256": "42aa2fdbc531c328975d3b8b518169b86ea0297e52cfd088b5e4f05707ff3562",
+      "description": "Optional generic review checklist for Qt Quick/QML component boundaries; never assumes a particular plugin or application architecture.",
+      "estimated_tokens": 585,
       "frontmatter_name": "qml-component-review",
       "generated_outputs": [
         "dist/nested/skills/qml-component-review",
@@ -9683,7 +9785,10 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
+        "bin/language-scope.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md"
@@ -9691,7 +9796,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 206,
+      "lines": 19,
       "owner": [
         "unknown"
       ],
@@ -9700,9 +9805,9 @@
         "completeness": 0,
         "cross_references": 50,
         "grade": "F",
-        "provenance": 20,
-        "structure": 100.0,
-        "total": 42.5
+        "provenance": 0,
+        "structure": 65.0,
+        "total": 28.75
       },
       "rule_definitions": [],
       "slug": "qml-component-review",
@@ -9716,10 +9821,10 @@
     },
     {
       "canonical_source": "skills/react/SKILL.md",
-      "characters": 11194,
-      "content_sha256": "d05481562998241f7286d8abca42d299f3c9e5f17e27e1d52c580b79db76e237",
+      "characters": 11167,
+      "content_sha256": "5b6432e1c890f03d5f50856b5d66a237277607ab2b54c48f4fd78a2a9bdcea51",
       "description": "React conventions for components, hooks, effects, server components, forms, and testing. TRIGGER: *.jsx/*.tsx files, *.js/*.ts importing from 'react', writing a component/hook/server action, or configuring an error boundary. Layers on top of typescript.",
-      "estimated_tokens": 2799,
+      "estimated_tokens": 2792,
       "frontmatter_name": "react",
       "generated_outputs": [
         "dist/nested/skills/react",
@@ -9727,14 +9832,18 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "bin/_test/language_scope_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
-        "catalog/skill-lifecycle-legacy.json"
+        "catalog/skill-lifecycle-legacy.json",
+        "skills/RESOLVER.md",
+        "skills/coding/SKILL.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 268,
+      "lines": 267,
       "owner": [
         "unknown"
       ],
@@ -9751,6 +9860,7 @@
       "slug": "react",
       "source_path": "skills/react/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py"
       ],
       "tier": "unclassified",
@@ -9863,6 +9973,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -9890,7 +10001,9 @@
       "rule_definitions": [],
       "slug": "scala-on-spark",
       "source_path": "skills/scala-on-spark/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/language_scope_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -9938,10 +10051,10 @@
     },
     {
       "canonical_source": "skills/sedona/SKILL.md",
-      "characters": 8461,
-      "content_sha256": "8083d04f2f218ff29476e6d40641c3e8139e1ac5bb5a0fd1091ebe383f6e3b06",
+      "characters": 8490,
+      "content_sha256": "99f5b95c13261e02c26d5fe2dccc32afa8a5b71f3bef90806c4a1839f99de6ad",
       "description": "Apache Sedona for distributed spatial work on Spark. PySpark is the default scaffolding; Scala variant covered in references. TRIGGER: from sedona, SedonaContext, SedonaRegistrator, ST_* in Spark SQL, %scala Sedona on Databricks. Stacks with `coding/spark/`, `coding/scala-on-spark/` (when using Scala), and `shelves/systems-architecture/data-intensive/`.",
-      "estimated_tokens": 2116,
+      "estimated_tokens": 2123,
       "frontmatter_name": "sedona",
       "generated_outputs": [
         "dist/nested/skills/sedona",
@@ -9950,6 +10063,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -9963,7 +10077,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 207,
+      "lines": 206,
       "owner": [
         "unknown"
       ],
@@ -10128,6 +10242,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
@@ -10155,6 +10270,7 @@
       "slug": "skillbuilder",
       "source_path": "skills/skillbuilder/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/progressive_loading.test.sh"
       ],
@@ -10218,6 +10334,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "skills/RESOLVER.md",
@@ -10246,6 +10363,7 @@
       "slug": "spark",
       "source_path": "skills/spark/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/progressive_loading.test.sh",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
@@ -10256,10 +10374,10 @@
     },
     {
       "canonical_source": "skills/spatial/SKILL.md",
-      "characters": 10782,
-      "content_sha256": "f5e2b0d865ba28bb4ac14d4b7d318d7670c875bdabfcbf7c15d69c8fbd98a15e",
+      "characters": 10947,
+      "content_sha256": "a8120597f79333b094de9d8b46493233e6ed4d251b5b312e41bde493349f8d1d",
       "description": "Decision framework for spatial analysis. Determines when to use spatial methods vs. string lookups vs. graph traversal, and which technology and algorithms to apply. Leads with tabular-trust check because in the real world the crosswalk is usually wrong.",
-      "estimated_tokens": 2696,
+      "estimated_tokens": 2737,
       "frontmatter_name": "spatial",
       "generated_outputs": [
         "dist/nested/skills/spatial",
@@ -10268,6 +10386,8 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
@@ -10285,15 +10405,16 @@
       "quality": {
         "completeness": 20,
         "cross_references": 100.0,
-        "grade": "F",
-        "provenance": 0,
+        "grade": "D",
+        "provenance": 20,
         "structure": 100.0,
-        "total": 55.0
+        "total": 60.0
       },
       "rule_definitions": [],
       "slug": "spatial",
       "source_path": "skills/spatial/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/progressive_loading.test.sh"
       ],
@@ -10315,6 +10436,8 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
@@ -10342,6 +10465,7 @@
       "slug": "sql",
       "source_path": "skills/sql/SKILL.md",
       "test_evidence": [
+        "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/progressive_loading.test.sh",
@@ -10503,6 +10627,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/README.md",
@@ -10693,6 +10818,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
@@ -10918,10 +11044,10 @@
     },
     {
       "canonical_source": "skills/vue/SKILL.md",
-      "characters": 9382,
-      "content_sha256": "b9cae8fe4f84415122eb832d732357f58bcdd60504384064693ae92160e1c7c0",
-      "description": "Vue 3 conventions for Composition API, Pinia stores, and route guards. TRIGGER: *.vue, *.ts importing from vue/pinia/vue-router, or touching route/store/composable files. Stacks with api-integration.",
-      "estimated_tokens": 2346,
+      "characters": 9580,
+      "content_sha256": "144ca7d84cc578654e77a4df0041f9c036a743ef04f75bc1472f28c293ed0c8c",
+      "description": "Vue 3 conventions for Composition API, Pinia stores, and route guards. Explicit Vue/Pinia signals route here; consult api-integration only when its cross-boundary contract applies.",
+      "estimated_tokens": 2395,
       "frontmatter_name": "vue",
       "generated_outputs": [
         "dist/nested/skills/vue",
@@ -10929,16 +11055,20 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "bin/_test/language_scope_test.py",
         "catalog/generated-source-authority.json",
+        "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-remove-pour-now-and-electinfo-leakage.md",
-        "skills/api-integration/SKILL.md"
+        "skills/RESOLVER.md",
+        "skills/api-integration/SKILL.md",
+        "skills/coding/SKILL.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 186,
+      "lines": 179,
       "owner": [
         "unknown"
       ],
@@ -10954,7 +11084,10 @@
       "rule_definitions": [],
       "slug": "vue",
       "source_path": "skills/vue/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/language_scope_test.py",
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -11016,9 +11149,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2655812,
+    "characters": 2650864,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 664033,
+    "estimated_tokens": 662795,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -11030,16 +11163,16 @@
     },
     "quality_grade_counts": {
       "C": 6,
-      "D": 18,
-      "F": 133,
+      "D": 19,
+      "F": 132,
       "unknown": 41
     },
     "quality_low_grade_count": 151,
     "tier_characters": {
       "on-demand": 43064,
-      "project": 54597,
+      "project": 55846,
       "reference": 1297484,
-      "unclassified": 1260667
+      "unclassified": 1254470
     },
     "tier_counts": {
       "on-demand": 15,
@@ -11049,13 +11182,13 @@
     },
     "tier_estimated_tokens": {
       "on-demand": 10771,
-      "project": 13652,
+      "project": 13964,
       "reference": 324399,
-      "unclassified": 315211
+      "unclassified": 313661
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
     "without_source_references_count": 0,
-    "without_test_evidence_count": 116
+    "without_test_evidence_count": 112
   }
 }

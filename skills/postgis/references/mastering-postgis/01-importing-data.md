@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # Ch 1 -- Importing Spatial Data
 
 The book's first chapter covers `shp2pgsql`, `ogr2ogr`, and COPY-based loads. All still current; the modern additions are FDW for "import without ingesting" and DuckDB's `ST_Read` for GDAL-less environments.

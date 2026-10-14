@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # CRS Management in GeoPandas
 
 CRS bugs are silent and corruptive. A `GeoDataFrame` with the wrong CRS won't error -- it'll just give wrong areas, wrong distances, wrong joins.

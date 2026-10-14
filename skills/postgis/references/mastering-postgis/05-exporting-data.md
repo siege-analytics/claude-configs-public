@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # Ch 5 -- Exporting Spatial Data
 
 The book covers `ST_AsText`, `ST_AsBinary`, `ST_AsGeoJSON`, and `ogr2ogr` for export. Modern PostGIS adds `ST_AsMVT` (vector tiles) and FDW-based read-only exposure.

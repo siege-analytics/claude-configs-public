@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # No-GDAL Fallbacks
 
 Some Siege environments don't have GDAL: minimal cloud images, Lambda runtimes, embedded analytics inside non-spatial services. The following is the complete map of what works without it.

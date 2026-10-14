@@ -1,35 +1,37 @@
 ---
 name: coding-standards
-description: "Coding conventions. TRIGGER: writing Python, SQL, PySpark, Django, pipeline jobs, Rundeck YAML, or Go. Routes to the language-specific guide."
+description: "Coding conventions for explicit language/framework work. The executable resolver manifest controls automatic loading; this table is navigation only."
 user-invocable: false
-paths: "**/*.py,**/*.sql,**/*.ts,**/*.tsx,**/*.js,**/*.jsx,**/*.go"
 ---
 
 # Coding Standards Router
 
-Select and apply the appropriate coding guide based on file type and framework.
+Use this as a navigation guide after identifying the language and framework. `catalog/resolver-manifest.json` is the executable authority for automatic selections; a row here alone does not activate a skill. Unknown/ambiguous prompts stay kernel-only until clarified.
 
 ## Routing Table
 
 | Signal | Sub-Skill | Path |
 |--------|-----------|------|
 | `*.py` with Django imports (`from django`, `django.`) | Django conventions | [skill:django] |
+| Explicit Django REST Framework (`rest_framework`, DRF) | DRF, Django, Python and coding | [skill:django-rest-framework] + [skill:django] + [skill:python] |
 | `*.py` with PySpark imports (`from pyspark`, `import pyspark`) | PySpark patterns | [skill:spark] |
 | `*.py` (general) | Python style | [skill:python] |
 | `*.py` library code, especially on re-review / CR feedback touching architecture | Python engineering patterns (DRY, dataclass discipline, interface integrity, runtime types) | [skill:python-patterns] |
 | `try`/`except` on screen, silent-failure patterns, `except Exception: pass` | Python exception discipline | [skill:python-exceptions] |
 | `*.sql` or SQL in Python strings | SQL conventions | [skill:sql] |
 | SQL with `ST_*` functions, `geometry` / `geography` columns, PostGIS extension | PostGIS patterns | [skill:postgis] |
-| `*.ts`, `*.tsx` | TypeScript style | `typescript` (planned) |
-| `*.tsx`, `*.jsx` with React imports | React patterns | `react` (planned) |
-| `*.go` | Go conventions | `go` (planned) |
+| Explicit TypeScript / `*.ts`, `*.tsx` | TypeScript rule | [rule:typescript] |
+| React / `*.tsx`, `*.jsx` with React context | React patterns | [skill:react] |
+| Explicit Vue / Pinia / `*.vue` | Vue patterns | [skill:vue] |
+| Explicit Rust / `*.rs` | Rust rule | [rule:rust] |
+| `*.go` | Go conventions | Go guide (not currently a published skill) |
 | `*.py` with pipeline/fetch/job/schedule context, Rundeck YAML, Airflow DAGs | Pipeline job pattern | [skill:pipeline-jobs] |
 
-Not all sub-skills exist yet. If a routing table entry points to a file that doesn't exist, skip it and apply general best practices for that language.
+A rule is not a skill: TypeScript and Rust have rule slugs, Vue has a skill slug, and React/DRF each have both a rule and a skill with the same slug. Executable selections expose `source_path` to disambiguate; an explicit `[rule:react]` is not the same as `[skill:react]`. Do not infer a QML project from this navigation table.
 
 ## Rules
 
-1. **Load only what is needed.** A plain Python file loads only `python/SKILL.md`. Do not load spark, django, or sql unless their imports are present.
+1. **Load only what is needed.** A plain Python route selects coding + python. Do not load Spark, Django, or SQL without matching signals.
 2. **Stack when appropriate.** A PySpark file loads both `python/SKILL.md` (general style) and `spark/SKILL.md` (Spark-specific). A Django file loads `python/SKILL.md` + `django/SKILL.md`. SQL embedded in Python loads the relevant Python sub-skill + `sql/SKILL.md`. PostGIS SQL loads `sql/SKILL.md` + `postgis/SKILL.md`. Library-code review loads `python/SKILL.md` + `python-patterns/SKILL.md` + optionally `python-exceptions/SKILL.md`.
 3. **Specificity wins.** When a framework sub-skill and the general language sub-skill conflict, the framework sub-skill takes precedence.
 4. **Reference files load on demand.** Each sub-skill may have a `reference.md`. Load it only when the sub-skill directs you to consult it for the current task.
