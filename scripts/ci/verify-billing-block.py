@@ -8,15 +8,18 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
-BILLING = "The job was not started because recent account payments have failed or your spending limit needs to be increased."
+BILLING_REASON = "The job was not started because recent account payments have failed or your spending limit needs to be increased."
+BILLING = BILLING_REASON + " Please check the 'Billing & plans' section in your settings."
+# Only these exact display prefixes are recognized; arbitrary surrounding text is not.
+BILLING_PREFIXES = ("", "Error: ", "GitHub Actions: ")
 SHA = re.compile(r"^[0-9a-fA-F]{40}$")
 IDENTITY = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 
 def billing_message(value: str) -> bool:
-    """Recognize only the canonical GitHub message with known UI/annotation prefixes."""
+    """Recognize the full documented GitHub message, optionally with a declared prefix."""
     normalized = " ".join(value.split())
-    return normalized in (BILLING, f"Error: {BILLING}", f"GitHub Actions: {BILLING}")
+    return any(normalized == f"{prefix}{BILLING}" for prefix in BILLING_PREFIXES)
 
 
 def gh(*args: str):

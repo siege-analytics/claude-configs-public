@@ -280,9 +280,8 @@ jobs:
           # that partly shipped in earlier releases. The promoter is idempotent
           # (no-op when [<version>] already exists) and refuses to create an
           # empty versioned section (which would poison future promotions).
-          # The mutation is workflow-local: dist/ is what gets published,
-          # CHANGELOG.md's promotion is committed by the release-notes step
-          # below only when running on a real tag push.
+          # The mutation is workflow-local; this main-push job publishes the
+          # built artifacts and does not commit the promoted CHANGELOG.md.
           python3 scripts/ci/promote-unreleased.py --version "$TAG" || {
             echo "::warning::promote-unreleased.py returned non-zero; falling back to release-notes.py alone"
           }

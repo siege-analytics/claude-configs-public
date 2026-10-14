@@ -21,7 +21,10 @@ def fixture():
 
 def main():
     baseline = fixture()
-    assert M.evaluate(*baseline) == []  # Evidence, not authorization.
+    assert M.evaluate(*baseline) == []  # Bare full documented message, evidence not authorization.
+    assert BILLING == M.BILLING_REASON + " Please check the 'Billing & plans' section in your settings."
+    for prefix in M.BILLING_PREFIXES:
+        assert M.billing_message(prefix + BILLING)
     realistic = copy.deepcopy(fixture())
     realistic[1]["check_runs"][0]["output"] = {"summary": None, "title": None, "text": None}
     realistic[4][5] = [{"message": f"Error: {BILLING}", "title": None, "raw_details": None}]
@@ -39,8 +42,10 @@ def main():
     case("changed head", lambda a: a[5].update(headRefOid="b"*40))
     case("reviewer block", lambda a: a[0].update(reviewDecision="CHANGES_REQUESTED"))
     case("nonbilling failure", lambda a: a[1]["check_runs"][0]["output"].update(summary="tests failed"))
+    case("partial billing reason alone", lambda a: a[1]["check_runs"][0]["output"].update(summary=M.BILLING_REASON))
     case("mixed billing and test failure", lambda a: a[1]["check_runs"][0]["output"].update(summary=BILLING + " tests failed"))
     case("prefixed billing with test failure", lambda a: a[1]["check_runs"][0]["output"].update(summary=f"Error: {BILLING} tests failed"))
+    case("declared prefix with mixed suffix", lambda a: a[1]["check_runs"][0]["output"].update(summary=f"GitHub Actions: {BILLING} tests failed"))
     case("malformed output field", lambda a: a[1]["check_runs"][0]["output"].update(text={"unexpected": True}))
     case("billing summary with test failure annotation", lambda a: a[4][5].append({"message": "tests failed"}))
     case("billing annotation with conflicting title", lambda a: a[4][5].append({"message": BILLING, "title": "tests failed"}))
