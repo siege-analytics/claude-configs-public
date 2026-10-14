@@ -37,4 +37,10 @@ Residual scope: this is a targeted Markdown `.md` path integrity check, not a un
 - P2 false positive: literal `[example](references/missing.md)` inside an inline code span or HTML comment was parsed as a rendered local link. Rendered-link extraction now masks code spans (including double-backtick and multiline-capable delimiters) and HTML comments (including multiline comments) before inline/reference parsing.
 - Separate backticked `.md` path detection still uses the original line, so `Read \`references/missing.md\`` remains actionable and fails; actual rendered missing Markdown links also fail. Passing literal-example and failing real-link/backtick fixtures cover that distinction.
 
+## Review of head de4a702
+
+- P2 false negative: masking HTML comments before code spans made literal `<!--` inside a code span act as a real comment and hide a missing rendered link. Separate global code-span pairing also allowed stray backticks to mask links across paragraphs, headings, list items, and fence gaps.
+- Rendered text is now masked in one left-to-right pass: whichever real code span or HTML comment opens first owns its content. Code spans pair only within their current block and escaped backticks cannot delimit spans. HTML comment citations are non-actionable; direct backticked `.md` paths in rendered prose remain checked.
+- Persisted fixtures exercise literal comment markers in code, missing links across block boundaries and escaped backticks, legitimate same-paragraph code spans, real comments, and actionable/non-actionable direct-path distinctions. The supplied adversarial probe `/tmp/review-probe/delta989b.py` yielded **0 unexpected results** against the patched guard (one probe fixture expects a backticked path inside a real HTML comment to be non-actionable).
+
 These are author-run regressions; independent reviewers could not execute fixtures in their read-only sessions. No blanket independent ACCEPT of the new head is asserted.

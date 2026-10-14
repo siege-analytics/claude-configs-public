@@ -40,6 +40,24 @@ def main():
         assert any('missing local target' in x for x in mod.check(root)), 'code-span masking suppressed direct backtick path check'
         source.write_text('<!-- Read [example](references/absent.md) -->\nRead [real](references/absent.md).\n')
         assert any('missing local target' in x for x in mod.check(root)), 'HTML masking suppressed real missing link'
+        # Left-to-right masking: literal comment markers in a code span are not comments.
+        missing = 'references/absent.md'
+        for name, body in (
+            ('code-literal comment markers', f'Use `<!--` then read [real]({missing}) and `-->`\n'),
+            ('stray backticks across paragraphs', f'Press the ` key.\n\nRead [real]({missing})\n\nAnother ` key.\n'),
+            ('stray backticks across headings', f'# A ` b\n\nRead [real]({missing})\n\n## C ` d\n'),
+            ('stray backticks across list items', f'- uses ` here\n\n- Read [real]({missing})\n\n- uses ` there\n'),
+            ('stray backticks across fences', f'Use ` x\n\n```\ncode\n```\n\nRead [real]({missing})\n\nUse ` y\n'),
+            ('escaped backticks', f'Type \\` then read [real]({missing}) then \\` again\n'),
+        ):
+            source.write_text(body)
+            assert any('missing local target' in x for x in mod.check(root)), ('missing link hidden by masking state', name)
+        source.write_text(f'Press the ` key.\nRead [literal]({missing})\nAnother ` key.\nRead [existing](references/existing.md).\n')
+        assert not mod.check(root), 'real same-paragraph code span was not masked'
+        source.write_text('<!-- Read `references/absent.md` -->\nRead [existing](references/existing.md).\n')
+        assert not mod.check(root), 'non-actionable backtick path inside HTML comment failed'
+        source.write_text('Read `references/absent.md` directly.\n')
+        assert any('missing local target' in x for x in mod.check(root)), 'actionable backtick path outside comment passed'
         source.write_text('[read it](references/absent.md)\n')
         assert any('missing local target' in x for x in mod.check(root)), 'missing markdown link passed'
         for label in ('[the [chapter]]', r'[the \[chapter\]]'):

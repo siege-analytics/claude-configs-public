@@ -2,6 +2,7 @@
 """Validate actionable local Markdown targets and justified shelf supplements."""
 from __future__ import annotations
 import argparse
+import bisect
 import json
 import re
 from pathlib import Path
@@ -107,30 +108,69 @@ def prose_lines(lines: list[str]):
 
 
 def rendered_link_lines(prose: list[tuple[int, str]]) -> list[str]:
-    """Hide non-rendered links while preserving positions for separate path checks."""
+    """Mask literal link syntax in source order, never letting code cross blocks."""
     text = '\n'.join(line for _, line in prose)
     masked = list(text)
+    backtick_masked = list(text)  # only comments are non-actionable to path citations
+    boundaries = {len(text)}
+    offset = 0
+    previous_number = None
+    previous_line = ''
+    block_start = re.compile(r'^ {0,3}(?:#{1,6}(?:\s|$)|(?:[-+*]|\d+[.)])\s+)')
+    for number, line in prose:
+        if (previous_number is not None and number != previous_number + 1) or not line.strip() or not previous_line.strip() or block_start.match(line):
+            boundaries.add(offset)
+        if block_start.match(line):
+            boundaries.add(offset + len(line) + 1)
+        offset += len(line) + 1
+        previous_number, previous_line = number, line
+    limits = sorted(boundaries)
 
-    def hide(start: int, end: int) -> None:
-        for i in range(start, end):
-            if masked[i] != '\n':
-                masked[i] = ' '
+    def hide(start: int, end: int, *, comment: bool = False) -> None:
+        for index in range(start, end):
+            if masked[index] != '\n':
+                masked[index] = ' '
+                if comment:
+                    backtick_masked[index] = ' '
 
-    for comment in re.finditer(r'<!--.*?-->', text, flags=re.DOTALL):
-        hide(comment.start(), comment.end())
-    without_comments = ''.join(masked)
-    opener = re.compile(r'(?<!`)`+(?!`)')
-    pos = 0
-    while match := opener.search(without_comments, pos):
-        delimiter = match.group()
-        closer = re.search(r'(?<!`)' + delimiter + r'(?!`)', without_comments[match.end():])
-        if closer is None:
-            pos = match.end()
+    def escaped(index: int) -> bool:
+        count = 0
+        while index - count - 1 >= 0 and text[index - count - 1] == '\\':
+            count += 1
+        return count % 2 == 1
+
+    i = 0
+    while i < len(text):
+        if text.startswith('<!--', i):
+            end = text.find('-->', i + 4)
+            if end >= 0:
+                hide(i, end + 3, comment=True)
+                i = end + 3
+                continue
+        if text[i] == '`' and not escaped(i):
+            end_run = i
+            while end_run < len(text) and text[end_run] == '`':
+                end_run += 1
+            length = end_run - i
+            limit = limits[bisect.bisect_right(limits, i)] if bisect.bisect_right(limits, i) < len(limits) else len(text)
+            j = end_run
+            while j < limit:
+                if text[j] != '`' or escaped(j):
+                    j += 1
+                    continue
+                close_end = j
+                while close_end < limit and text[close_end] == '`':
+                    close_end += 1
+                if close_end - j == length:
+                    hide(i, close_end)
+                    i = close_end
+                    break
+                j = close_end
+            else:
+                i = end_run  # unmatched backticks are literal, not masking delimiters
             continue
-        end = match.end() + closer.end()
-        hide(match.start(), end)
-        pos = end
-    return ''.join(masked).split('\n')
+        i += 1
+    return ''.join(masked).split('\n'), ''.join(backtick_masked).split('\n')
 
 
 def target(root: Path, book: Path, value: str) -> Path | None:
@@ -142,7 +182,7 @@ def target(root: Path, book: Path, value: str) -> Path | None:
     return book / value
 
 
-def candidates(line: str, definitions: dict[str, str], link_line: str):
+def candidates(line: str, definitions: dict[str, str], link_line: str, backtick_line: str):
     inline = list(inline_links(link_line))
     for value, start in inline:
         yield value, start, True
@@ -150,7 +190,7 @@ def candidates(line: str, definitions: dict[str, str], link_line: str):
         key = (match.group(2) or match.group(1)).lower()
         if key in definitions and not any(start == match.start() for _, start in inline):
             yield definitions[key], match.start(), True
-    for match in BACKTICK.finditer(line):
+    for match in BACKTICK.finditer(backtick_line):
         value = normalize(match.group(1))
         if value.endswith('.md') and (('/' in value and (ACTION.search(line) or value.startswith(('references/', 'rules/', 'skills/', './', '../')))) or (ACTION.search(line) and value.startswith(('ref-', 'practices-catalog.md')))):
             yield value, match.start(), False
@@ -158,16 +198,16 @@ def candidates(line: str, definitions: dict[str, str], link_line: str):
 
 def actionable_lines(source: Path):
     prose = list(prose_lines(source.read_text(errors='replace').splitlines()))
-    link_lines = rendered_link_lines(prose)
+    link_lines, backtick_lines = rendered_link_lines(prose)
     definitions = {}
     for link_line in link_lines:
         found = DEFINITION.match(link_line)
         if found:
             definitions[found.group(1).lower()] = found.group(2)
-    for (number, line), link_line in zip(prose, link_lines):
+    for (number, line), link_line, backtick_line in zip(prose, link_lines, backtick_lines):
         if DEFINITION.match(link_line):
             continue
-        for value, start, is_link in candidates(line, definitions, link_line):
+        for value, start, is_link in candidates(line, definitions, link_line, backtick_line):
             prefix = (link_line if is_link else line)[:start]
             boundary = list(CLAUSE_BREAK.finditer(prefix))
             clause = prefix[boundary[-1].end():] if boundary else prefix

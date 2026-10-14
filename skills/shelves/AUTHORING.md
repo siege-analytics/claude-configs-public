@@ -227,7 +227,8 @@ reasons in `catalog/shelf-reference-exceptions.json`. The guard checks actionabl
 Markdown local `.md` links (including balanced/escaped inline labels and
 destinations and reference-style links), backticked local `.md` paths, and orphan `references/**/*.md`
 supplements. Rendered-link parsing ignores link-shaped examples in inline code spans
-and HTML comments; actionable backticked local `.md` paths remain checked. It does
+and HTML comments, with code spans bounded by paragraphs/blocks. Backticked
+local `.md` paths remain checked when actionable outside HTML comments. It does
 **not** cover non-Markdown files, HTML links, assets, or
 dynamically constructed paths; do not claim otherwise. Run `bin/check-shelf-paths.py`
 and its negative fixtures before review.

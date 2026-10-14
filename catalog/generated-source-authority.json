@@ -2796,29 +2796,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "fe6d2d1b959be6a65bd7130ecd5220ab8e84d563282d99a2a83fb73c230beffc"
+          "tree_sha256": "80b1ca001b55f68b28cb1fb84929b1003252d7c25ed5d0bbe4fe0761da49e5fd"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "fe6d2d1b959be6a65bd7130ecd5220ab8e84d563282d99a2a83fb73c230beffc"
+          "tree_sha256": "80b1ca001b55f68b28cb1fb84929b1003252d7c25ed5d0bbe4fe0761da49e5fd"
         },
         "flat": {
           "destination": "dist/flat/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "fe6d2d1b959be6a65bd7130ecd5220ab8e84d563282d99a2a83fb73c230beffc"
+          "tree_sha256": "80b1ca001b55f68b28cb1fb84929b1003252d7c25ed5d0bbe4fe0761da49e5fd"
         },
         "nested": {
           "destination": "dist/nested/skills/shelves",
           "file_count": 2,
-          "tree_sha256": "fe6d2d1b959be6a65bd7130ecd5220ab8e84d563282d99a2a83fb73c230beffc"
+          "tree_sha256": "80b1ca001b55f68b28cb1fb84929b1003252d7c25ed5d0bbe4fe0761da49e5fd"
         }
       },
       "canonical_source": "skills/shelves/SKILL.md",
       "kind": "shelf-router",
       "slug": "shelves",
       "source_file_count": 2,
-      "source_tree_sha256": "77a91fe111c32dcf6e407369c73051f0d540f9773a1769a96a804ea65a50c6e4"
+      "source_tree_sha256": "d593a23701284ec7330211ab276bdcf69ebd8951e30d3c9dd5a0438113d02acf"
     },
     {
       "artifacts": {
