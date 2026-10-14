@@ -12,29 +12,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_siege-utilities--rules.md",
           "file_count": 1,
-          "tree_sha256": "a5614e4bf283355f0b1c3ec8ab3593f4e7e56b37bad515204290de66392b0461"
+          "tree_sha256": "09d9f4eeaac309d8bf8adbb5a3a6b2192d2ffb3ad9573e2cab86a0b9b3c3cb84"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_siege-utilities--rules.md",
           "file_count": 1,
-          "tree_sha256": "a5614e4bf283355f0b1c3ec8ab3593f4e7e56b37bad515204290de66392b0461"
+          "tree_sha256": "09d9f4eeaac309d8bf8adbb5a3a6b2192d2ffb3ad9573e2cab86a0b9b3c3cb84"
         },
         "flat": {
           "destination": "dist/flat/skills/_siege-utilities--rules.md",
           "file_count": 1,
-          "tree_sha256": "a5614e4bf283355f0b1c3ec8ab3593f4e7e56b37bad515204290de66392b0461"
+          "tree_sha256": "09d9f4eeaac309d8bf8adbb5a3a6b2192d2ffb3ad9573e2cab86a0b9b3c3cb84"
         },
         "nested": {
           "destination": "dist/nested/skills/_siege-utilities--rules.md",
           "file_count": 1,
-          "tree_sha256": "a5614e4bf283355f0b1c3ec8ab3593f4e7e56b37bad515204290de66392b0461"
+          "tree_sha256": "09d9f4eeaac309d8bf8adbb5a3a6b2192d2ffb3ad9573e2cab86a0b9b3c3cb84"
         }
       },
       "canonical_source": "projects/siege-utilities/_rules.md",
       "kind": "project-rule",
       "slug": "siege-utilities--rules",
       "source_file_count": 1,
-      "source_tree_sha256": "c16afefe9c0bfc39cd505a7a224d4338f6c085d5fec5a0d8225453da82ef63cb"
+      "source_tree_sha256": "2fdad9e60bf4b786ba542d2543d55a36e0e403c553aafd431db9aa9b3028ecaa"
     },
     {
       "artifacts": {
@@ -1317,29 +1317,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/ci-billing-failure-merge",
           "file_count": 1,
-          "tree_sha256": "b95aefac705a47868f1662d10c68aaee42e94e867b94bd2f4fe43cdd76380324"
+          "tree_sha256": "982995a61b613e8aa4eff6161bbbc31de4c52a2e5712b38ea09d83ee30d97010"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/ci-billing-failure-merge",
           "file_count": 1,
-          "tree_sha256": "b95aefac705a47868f1662d10c68aaee42e94e867b94bd2f4fe43cdd76380324"
+          "tree_sha256": "982995a61b613e8aa4eff6161bbbc31de4c52a2e5712b38ea09d83ee30d97010"
         },
         "flat": {
           "destination": "dist/flat/skills/ci-billing-failure-merge",
           "file_count": 1,
-          "tree_sha256": "b95aefac705a47868f1662d10c68aaee42e94e867b94bd2f4fe43cdd76380324"
+          "tree_sha256": "982995a61b613e8aa4eff6161bbbc31de4c52a2e5712b38ea09d83ee30d97010"
         },
         "nested": {
           "destination": "dist/nested/skills/ci-billing-failure-merge",
           "file_count": 1,
-          "tree_sha256": "b95aefac705a47868f1662d10c68aaee42e94e867b94bd2f4fe43cdd76380324"
+          "tree_sha256": "982995a61b613e8aa4eff6161bbbc31de4c52a2e5712b38ea09d83ee30d97010"
         }
       },
       "canonical_source": "skills/ci-billing-failure-merge/SKILL.md",
       "kind": "skill",
       "slug": "ci-billing-failure-merge",
       "source_file_count": 1,
-      "source_tree_sha256": "ab337d11851fad124284b71f7028358bbdfa6157de618b2626bb328a060e1e43"
+      "source_tree_sha256": "796272bb328919e9831d63da2b8273bb5c6b1f318ed5ac282dc4e7c83268a978"
     },
     {
       "artifacts": {

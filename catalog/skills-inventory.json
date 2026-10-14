@@ -644,10 +644,10 @@
   "items": [
     {
       "canonical_source": "projects/siege-utilities/_rules.md",
-      "characters": 9892,
-      "content_sha256": "2be3ba2c2d3bdb7dc867676c9cc6bc2965001a4a42dc0f9faecc10584a8ad8e2",
+      "characters": 10037,
+      "content_sha256": "89e2f2490bd39b93029753ec720883320d1ff42288ff1edc5a178586c75d2649",
       "description": "Project-specific rules for siege_utilities. These take precedence over general rules within the siege-utilities scope. Falls back to general rules for anything not described here.",
-      "estimated_tokens": 2473,
+      "estimated_tokens": 2510,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_siege-utilities--rules.md",
@@ -7498,10 +7498,10 @@
     },
     {
       "canonical_source": "skills/ci-billing-failure-merge/SKILL.md",
-      "characters": 3144,
-      "content_sha256": "af401cf325322b7845202dd2eb52f7ec35cfbeb117a83b0a4d9ee6342805f520",
+      "characters": 3140,
+      "content_sha256": "e31fe39d738499352557d6827e2b2ceedaf75fedfb289c85cc72bc51bd5d523f",
       "description": "Diagnostic triage for PRs with suspected GitHub Actions billing failures. Never authorizes a protected-check bypass or admin merge.",
-      "estimated_tokens": 786,
+      "estimated_tokens": 785,
       "frontmatter_name": "ci-billing-failure-merge",
       "generated_outputs": [
         "dist/nested/skills/ci-billing-failure-merge",
@@ -7519,7 +7519,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 23,
+      "lines": 22,
       "owner": [
         "unknown"
       ],
@@ -11016,9 +11016,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2655671,
+    "characters": 2655812,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 663997,
+    "estimated_tokens": 664033,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -11037,9 +11037,9 @@
     "quality_low_grade_count": 151,
     "tier_characters": {
       "on-demand": 43064,
-      "project": 54452,
+      "project": 54597,
       "reference": 1297484,
-      "unclassified": 1260671
+      "unclassified": 1260667
     },
     "tier_counts": {
       "on-demand": 15,
@@ -11049,9 +11049,9 @@
     },
     "tier_estimated_tokens": {
       "on-demand": 10771,
-      "project": 13615,
+      "project": 13652,
       "reference": 324399,
-      "unclassified": 315212
+      "unclassified": 315211
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

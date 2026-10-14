@@ -8,7 +8,7 @@
     },
     "kernel": 6995,
     "legacy_root_resolver": 46235,
-    "legacy_rules_bundle": 422314,
+    "legacy_rules_bundle": 422459,
     "skill_resolver": 18028
   },
   "fixture_selected_content": {
@@ -33,8 +33,8 @@
       "items": 2
     },
     "siege_utilities_review": {
-      "characters": 59341,
-      "estimated_tokens": 14836,
+      "characters": 59486,
+      "estimated_tokens": 14873,
       "items": 3
     }
   },

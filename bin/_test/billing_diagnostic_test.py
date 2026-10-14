@@ -22,6 +22,10 @@ def fixture():
 def main():
     baseline = fixture()
     assert M.evaluate(*baseline) == []  # Evidence, not authorization.
+    realistic = copy.deepcopy(fixture())
+    realistic[1]["check_runs"][0]["output"] = {"summary": None, "title": None, "text": None}
+    realistic[4][5] = [{"message": f"Error: {BILLING}", "title": None, "raw_details": None}]
+    assert M.evaluate(*realistic) == []  # Real GitHub annotation prefix + null optional fields.
     negatives = []
     def case(name, change):
         args = copy.deepcopy(fixture())
@@ -36,6 +40,8 @@ def main():
     case("reviewer block", lambda a: a[0].update(reviewDecision="CHANGES_REQUESTED"))
     case("nonbilling failure", lambda a: a[1]["check_runs"][0]["output"].update(summary="tests failed"))
     case("mixed billing and test failure", lambda a: a[1]["check_runs"][0]["output"].update(summary=BILLING + " tests failed"))
+    case("prefixed billing with test failure", lambda a: a[1]["check_runs"][0]["output"].update(summary=f"Error: {BILLING} tests failed"))
+    case("malformed output field", lambda a: a[1]["check_runs"][0]["output"].update(text={"unexpected": True}))
     case("billing summary with test failure annotation", lambda a: a[4][5].append({"message": "tests failed"}))
     case("billing annotation with conflicting title", lambda a: a[4][5].append({"message": BILLING, "title": "tests failed"}))
     case("billing annotation with conflicting details", lambda a: a[4][5].append({"message": BILLING, "raw_details": "tests failed"}))
@@ -54,11 +60,11 @@ def main():
     # separate future project implementation; do not claim they run here.
     # Even billing-looking evidence MUST return 1, for any owner/repo identity.
     for owner, repo in (("electinfo", "enterprise"), ("wrong", "repo")):
-        pr, runs, required, statuses, annotations, latest = fixture()
+        pr, runs, required, statuses, annotations, latest = copy.deepcopy(realistic)
         replies = [pr, [runs], required, statuses, latest]
         def fake_gh(*args):
             if "annotations" in " ".join(args):
-                return [[]]
+                return [annotations[5]]
             return replies.pop(0)
         with patch.object(M, "gh", side_effect=fake_gh):
             assert M.main([owner, repo, "123"]) == 1 and not replies

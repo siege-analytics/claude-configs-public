@@ -20,4 +20,3 @@ Record diagnostics with PR URL, head SHA, check names/IDs/conclusions, required-
 ## Rollback / compatibility
 
 If an exact project-specific policy is later introduced, add a separately reviewed scoped capability with negative tests; do not repurpose this generic slug as a grant. Existing references keep resolving to this non-authorizing diagnostic.
----

@@ -25,15 +25,20 @@ def main():
  assert "python" in explicit_slugs and "ticket-guard" in explicit_slugs and "create-ticket" in explicit_slugs
  # Every ticket action loads only its guard + corresponding action, including aliases.
  for action,terms in {
-  "create-ticket":["create ticket","create issues","open issue","file issues","[skill:create-ticket]","/create-ticket"],
+  "create-ticket":["create ticket","create issues","file an issue","open a ticket","[skill:create-ticket]","/create-ticket"],
   "update-ticket":["update ticket","update issues","edit issue","[skill:update-ticket]","/update-ticket"],
-  "close-ticket":["close ticket","close issues","resolve issue","[skill:close-ticket]","/close-ticket"],
+  "close-ticket":["close ticket","close issues","mark issue closed","[skill:close-ticket]","/close-ticket"],
  }.items():
   for term in terms:
    result=M.select(manifest,inventory,term,"other/repo")
    got={x["slug"] for x in result["selected"]}
    assert result["state"]=="matched" and got=={"ticket-guard",action},(term,result)
  assert any(x["route"]=="ticketing" for x in M.select(manifest,inventory,"create issue","other/repo")["selected"])
+ for prompt in ("list open issues","are there any open issues","what is the new issue about"):
+  result=M.select(manifest,inventory,prompt,"other/repo")
+  assert result["state"]=="unknown" and result["selected"]==[],(prompt,result)
+ coding_only=M.select(manifest,inventory,"resolve issue handling in this python module","other/repo")
+ assert {x["slug"] for x in coding_only["selected"]}=={"coding","python"},coding_only
  for term in ("create ticket and close issue","update issue then close ticket","create issue [skill:close-ticket]","[skill:create-ticket] /update-ticket"):
   result=M.select(manifest,inventory,term,"other/repo")
   assert result["state"]=="ambiguous" and result["selected"]==[],(term,result)

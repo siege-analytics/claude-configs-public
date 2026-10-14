@@ -13,6 +13,12 @@ SHA = re.compile(r"^[0-9a-fA-F]{40}$")
 IDENTITY = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 
+def billing_message(value: str) -> bool:
+    """Recognize only the canonical GitHub message with known UI/annotation prefixes."""
+    normalized = " ".join(value.split())
+    return normalized in (BILLING, f"Error: {BILLING}", f"GitHub Actions: {BILLING}")
+
+
 def gh(*args: str):
     result = subprocess.run(["gh", *args], capture_output=True, text=True, check=True, timeout=30)
     return json.loads(result.stdout)
@@ -84,11 +90,11 @@ def evaluate(pr: dict, runs: dict, required: dict, statuses: dict, annotations: 
                 continue
             messages = [output.get(key, "") for key in ("summary", "title", "text")]
             messages += [a.get(key, "") for a in annotation_list for key in ("message", "title", "raw_details")]
-            if any(not isinstance(s, str) for s in messages):
+            if any(s is not None and not isinstance(s, str) for s in messages):
                 gaps.append(f"malformed check output: {name}")
                 continue
-            nonempty = [s.strip() for s in messages if s.strip()]
-            if conclusion != "failure" or not nonempty or any(s != BILLING for s in nonempty):
+            nonempty = [s for s in messages if isinstance(s, str) and s.strip()]
+            if conclusion != "failure" or not nonempty or any(not billing_message(s) for s in nonempty):
                 gaps.append(f"nonbilling or conflicting failure: {name}")
             else:
                 print(f"BILLING SIGNAL: {name} ({duration:g}s)")
