@@ -26,6 +26,20 @@ def main():
         assert not mod.check(root)
         source.write_text('Read `references/absent.md` before responding.\n')
         assert any('missing local target' in x for x in mod.check(root)), 'missing backtick path passed'
+        source.write_text('Read `[example](references/absent.md)` as literal syntax.\nRead `references/existing.md`.\n')
+        assert not mod.check(root), 'link-shaped code span was parsed as rendered Markdown'
+        source.write_text('Read ``[example](references/absent.md)`` as literal syntax.\nRead `references/existing.md`.\n')
+        assert not mod.check(root), 'double-backtick code span was parsed as rendered Markdown'
+        source.write_text('Read `[example][doc]` as literal syntax.\n[doc]: references/absent.md\nRead `references/existing.md`.\n')
+        assert not mod.check(root), 'reference-style use inside code span became actionable'
+        source.write_text('<!-- Read [example](references/absent.md) -->\nRead [real](references/existing.md).\n')
+        assert not mod.check(root), 'link-shaped HTML comment was parsed as rendered Markdown'
+        source.write_text('<!--\nRead [example](references/absent.md)\n-->\nRead [real](references/existing.md).\n')
+        assert not mod.check(root), 'multiline HTML comment was parsed as rendered Markdown'
+        source.write_text('Read `[example](references/absent.md)` as literal syntax.\nRead `references/absent.md` directly.\n')
+        assert any('missing local target' in x for x in mod.check(root)), 'code-span masking suppressed direct backtick path check'
+        source.write_text('<!-- Read [example](references/absent.md) -->\nRead [real](references/absent.md).\n')
+        assert any('missing local target' in x for x in mod.check(root)), 'HTML masking suppressed real missing link'
         source.write_text('[read it](references/absent.md)\n')
         assert any('missing local target' in x for x in mod.check(root)), 'missing markdown link passed'
         for label in ('[the [chapter]]', r'[the \[chapter\]]'):

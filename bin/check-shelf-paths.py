@@ -106,6 +106,33 @@ def prose_lines(lines: list[str]):
         yield number, line
 
 
+def rendered_link_lines(prose: list[tuple[int, str]]) -> list[str]:
+    """Hide non-rendered links while preserving positions for separate path checks."""
+    text = '\n'.join(line for _, line in prose)
+    masked = list(text)
+
+    def hide(start: int, end: int) -> None:
+        for i in range(start, end):
+            if masked[i] != '\n':
+                masked[i] = ' '
+
+    for comment in re.finditer(r'<!--.*?-->', text, flags=re.DOTALL):
+        hide(comment.start(), comment.end())
+    without_comments = ''.join(masked)
+    opener = re.compile(r'(?<!`)`+(?!`)')
+    pos = 0
+    while match := opener.search(without_comments, pos):
+        delimiter = match.group()
+        closer = re.search(r'(?<!`)' + delimiter + r'(?!`)', without_comments[match.end():])
+        if closer is None:
+            pos = match.end()
+            continue
+        end = match.end() + closer.end()
+        hide(match.start(), end)
+        pos = end
+    return ''.join(masked).split('\n')
+
+
 def target(root: Path, book: Path, value: str) -> Path | None:
     value = unquote(normalize(value))
     if value.startswith(('https://', 'http://', 'mailto:')) or not value or value.startswith('#') or ('<' in value and '>' in value):
@@ -115,11 +142,11 @@ def target(root: Path, book: Path, value: str) -> Path | None:
     return book / value
 
 
-def candidates(line: str, definitions: dict[str, str]):
-    inline = list(inline_links(line))
+def candidates(line: str, definitions: dict[str, str], link_line: str):
+    inline = list(inline_links(link_line))
     for value, start in inline:
         yield value, start, True
-    for match in REFERENCE.finditer(line):
+    for match in REFERENCE.finditer(link_line):
         key = (match.group(2) or match.group(1)).lower()
         if key in definitions and not any(start == match.start() for _, start in inline):
             yield definitions[key], match.start(), True
@@ -131,16 +158,17 @@ def candidates(line: str, definitions: dict[str, str]):
 
 def actionable_lines(source: Path):
     prose = list(prose_lines(source.read_text(errors='replace').splitlines()))
+    link_lines = rendered_link_lines(prose)
     definitions = {}
-    for _, line in prose:
-        found = DEFINITION.match(line)
+    for link_line in link_lines:
+        found = DEFINITION.match(link_line)
         if found:
             definitions[found.group(1).lower()] = found.group(2)
-    for number, line in prose:
-        if DEFINITION.match(line):
+    for (number, line), link_line in zip(prose, link_lines):
+        if DEFINITION.match(link_line):
             continue
-        for value, start, is_link in candidates(line, definitions):
-            prefix = line[:start]
+        for value, start, is_link in candidates(line, definitions, link_line):
+            prefix = (link_line if is_link else line)[:start]
             boundary = list(CLAUSE_BREAK.finditer(prefix))
             clause = prefix[boundary[-1].end():] if boundary else prefix
             if NEGATED.search(clause):

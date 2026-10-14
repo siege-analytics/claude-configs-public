@@ -226,6 +226,8 @@ Only one-byte empty retained placeholders may be documented with explicit
 reasons in `catalog/shelf-reference-exceptions.json`. The guard checks actionable
 Markdown local `.md` links (including balanced/escaped inline labels and
 destinations and reference-style links), backticked local `.md` paths, and orphan `references/**/*.md`
-supplements. It does **not** cover non-Markdown files, HTML links, assets, or
+supplements. Rendered-link parsing ignores link-shaped examples in inline code spans
+and HTML comments; actionable backticked local `.md` paths remain checked. It does
+**not** cover non-Markdown files, HTML links, assets, or
 dynamically constructed paths; do not claim otherwise. Run `bin/check-shelf-paths.py`
 and its negative fixtures before review.

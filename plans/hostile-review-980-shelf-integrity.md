@@ -32,4 +32,9 @@ Residual scope: this is a targeted Markdown `.md` path integrity check, not a un
 - Quarantine reasons now require at least 20 non-whitespace characters; short vague reasons fail a fixture while all existing 71 remain valid.
 - Separate measurement: `skills/RESOLVER.md` grew by **232 bytes** from the exact develop base. This is documentation size, not actual hook injection; the three injected-output comparisons remain byte-identical.
 
+## Review of head fbd5eed
+
+- P2 false positive: literal `[example](references/missing.md)` inside an inline code span or HTML comment was parsed as a rendered local link. Rendered-link extraction now masks code spans (including double-backtick and multiline-capable delimiters) and HTML comments (including multiline comments) before inline/reference parsing.
+- Separate backticked `.md` path detection still uses the original line, so `Read \`references/missing.md\`` remains actionable and fails; actual rendered missing Markdown links also fail. Passing literal-example and failing real-link/backtick fixtures cover that distinction.
+
 These are author-run regressions; independent reviewers could not execute fixtures in their read-only sessions. No blanket independent ACCEPT of the new head is asserted.
