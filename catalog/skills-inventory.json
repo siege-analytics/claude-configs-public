@@ -607,8 +607,6 @@
       "shelves--systems-architecture",
       "api-integration",
       "cascading-documentation",
-      "ci-billing-failure-merge",
-      "close-ticket",
       "coderabbit-response",
       "consolidate",
       "cross-review",
@@ -746,6 +744,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "plans/issue-982-workflow-scope.md",
         "projects/CONTRIBUTING.md",
         "skills/RESOLVER.md"
       ],
@@ -3864,6 +3863,7 @@
       "slug": "architecture-patterns",
       "source_path": "skills/_architecture-patterns-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -3941,6 +3941,7 @@
       "slug": "authoring-against-state",
       "source_path": "skills/_authoring-against-state-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4009,6 +4010,7 @@
       "slug": "autonomy",
       "source_path": "skills/_autonomy-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4077,6 +4079,7 @@
       "slug": "data-trust",
       "source_path": "skills/_data-trust-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4161,6 +4164,7 @@
       "slug": "definition-of-done",
       "source_path": "skills/_definition-of-done-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4224,6 +4228,7 @@
       "slug": "django-rest-framework",
       "source_path": "skills/_django-rest-framework-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4291,6 +4296,7 @@
       "slug": "enforcement-contradiction",
       "source_path": "skills/_enforcement-contradiction-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4356,6 +4362,7 @@
       "slug": "environment-preflight",
       "source_path": "skills/_environment-preflight-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4423,6 +4430,7 @@
       "slug": "jvm",
       "source_path": "skills/_jvm-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4494,6 +4502,7 @@
       "slug": "knowledge-base",
       "source_path": "skills/_knowledge-base-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4593,6 +4602,7 @@
       "slug": "output",
       "source_path": "skills/_output-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
@@ -4669,6 +4679,7 @@
       "slug": "packaging",
       "source_path": "skills/_packaging-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4736,6 +4747,7 @@
       "slug": "principles",
       "source_path": "skills/_principles-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4799,6 +4811,7 @@
       "slug": "property-testing",
       "source_path": "skills/_property-testing-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4865,6 +4878,7 @@
       "slug": "prospective-memory",
       "source_path": "skills/_prospective-memory-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -4936,6 +4950,7 @@
       "slug": "python",
       "source_path": "skills/_python-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
@@ -5031,6 +5046,7 @@
       "slug": "react",
       "source_path": "skills/_react-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5093,6 +5109,7 @@
       "slug": "robustness",
       "source_path": "skills/_robustness-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5156,6 +5173,7 @@
       "slug": "rust",
       "source_path": "skills/_rust-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5220,6 +5238,7 @@
       "slug": "scipy-spec",
       "source_path": "skills/_scipy-spec-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5283,6 +5302,7 @@
       "slug": "security-scanning",
       "source_path": "skills/_security-scanning-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5365,6 +5385,7 @@
       "slug": "session-coordination",
       "source_path": "skills/_session-coordination-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5438,6 +5459,7 @@
       "slug": "siege-utilities",
       "source_path": "skills/_siege-utilities-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5511,6 +5533,7 @@
       "slug": "standing-approval",
       "source_path": "skills/_standing-approval-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5578,6 +5601,7 @@
       "slug": "strategic-agency",
       "source_path": "skills/_strategic-agency-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5656,6 +5680,7 @@
       "slug": "tandem-agent",
       "source_path": "skills/_tandem-agent-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5731,6 +5756,7 @@
       "slug": "testing-frameworks",
       "source_path": "skills/_testing-frameworks-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5805,6 +5831,7 @@
       "slug": "ticket-lifecycle",
       "source_path": "skills/_ticket-lifecycle-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5872,6 +5899,7 @@
       "slug": "typescript",
       "source_path": "skills/_typescript-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -5946,6 +5974,7 @@
       "slug": "verify-before-execute",
       "source_path": "skills/_verify-before-execute-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -6013,6 +6042,7 @@
       "slug": "work-item-ownership",
       "source_path": "skills/_work-item-ownership-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -6108,6 +6138,7 @@
       "slug": "writing-claims",
       "source_path": "skills/_writing-claims-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -6207,6 +6238,7 @@
       "slug": "writing-code",
       "source_path": "skills/_writing-code-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -6295,6 +6327,7 @@
       "slug": "writing-prose",
       "source_path": "skills/_writing-prose-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -6342,6 +6375,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "plans/issue-982-workflow-scope.md",
         "plans/self-review-51.md",
         "skills/KERNEL.md",
         "skills/_django-rest-framework-rules.md",
@@ -6372,6 +6406,7 @@
       "slug": "writing-releases",
       "source_path": "skills/_writing-releases-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -6455,6 +6490,7 @@
       "slug": "writing-rules",
       "source_path": "skills/_writing-rules-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -6550,6 +6586,7 @@
       "slug": "writing-tests",
       "source_path": "skills/_writing-tests-rules.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
         "bin/_test/generated_source_authority_test.py",
@@ -7354,10 +7391,10 @@
     },
     {
       "canonical_source": "skills/branch/SKILL.md",
-      "characters": 6493,
-      "content_sha256": "2f939243a096a7016775a7c763f989704f62152f259b1105b2a92f9d316c5bc8",
+      "characters": 6751,
+      "content_sha256": "e06dc6c37739198035bdb5df56762c91ac701325e2cce7386c4d2be3a5b50795",
       "description": "Create and manage git branches using a consistent naming convention (type/descriptive_string) that mirrors ticket taxonomy.",
-      "estimated_tokens": 1624,
+      "estimated_tokens": 1688,
       "frontmatter_name": "branch",
       "generated_outputs": [
         "dist/nested/skills/branch",
@@ -7374,7 +7411,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 171,
+      "lines": 172,
       "owner": [
         "unknown"
       ],
@@ -7461,41 +7498,47 @@
     },
     {
       "canonical_source": "skills/ci-billing-failure-merge/SKILL.md",
-      "characters": 11847,
-      "content_sha256": "0cfe8ed4f9a1648c1e03ad0427b0a2553b5b74c3aa02d77b8263d2e6a90dba44",
-      "description": "Authorizes admin-merge of PRs when all CI checks fail solely due to GitHub Actions org-level billing failure, provided the PR meets the substitute-review criteria. Three tiers: pre-authorized for non-runtime PRs (docs, read-only tooling); per-merge operator-approved (conditional tier) for runtime-adjacent paths like recon SQL and silver_canonical; standing delegation for time-bounded blanket approval of a work-package.",
-      "estimated_tokens": 2962,
-      "frontmatter_name": "CI Billing-Failure Merge Override",
+      "characters": 3144,
+      "content_sha256": "af401cf325322b7845202dd2eb52f7ec35cfbeb117a83b0a4d9ee6342805f520",
+      "description": "Diagnostic triage for PRs with suspected GitHub Actions billing failures. Never authorizes a protected-check bypass or admin merge.",
+      "estimated_tokens": 786,
+      "frontmatter_name": "ci-billing-failure-merge",
       "generated_outputs": [
         "dist/nested/skills/ci-billing-failure-merge",
         "dist/flat/skills/ci-billing-failure-merge"
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
-        "catalog/skill-lifecycle-legacy.json"
+        "catalog/skill-lifecycle-legacy.json",
+        "plans/issue-982-workflow-scope.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 113,
+      "lines": 23,
       "owner": [
         "unknown"
       ],
       "project": null,
       "quality": {
         "completeness": 0,
-        "cross_references": 50,
+        "cross_references": 100.0,
         "grade": "F",
-        "provenance": 20,
-        "structure": 100.0,
-        "total": 42.5
+        "provenance": 0,
+        "structure": 95.0,
+        "total": 48.75
       },
       "rule_definitions": [],
       "slug": "ci-billing-failure-merge",
       "source_path": "skills/ci-billing-failure-merge/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -7513,6 +7556,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "bin/_test/resolve_load_set_test.py",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -7541,7 +7585,9 @@
       "rule_definitions": [],
       "slug": "close-ticket",
       "source_path": "skills/close-ticket/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -7968,6 +8014,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "bin/_test/resolve_load_set_test.py",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -8208,10 +8255,10 @@
     },
     {
       "canonical_source": "skills/develop-guard/SKILL.md",
-      "characters": 14311,
-      "content_sha256": "d74b327b96d3bfe5f3b11909e9a1ef4a0c395f0558cfa1ebe1b15bc2799ef1f4",
+      "characters": 14561,
+      "content_sha256": "ae9abc3f3dd4c4590fc6ead88ccc60dd08769a3db7a2e36a8833aa59ad9d9c2d",
       "description": "Enforce the curation invariant -- main-role (main, master, prod, production, trunk, stable, release) is the project's best, ready-to-use work; develop-role (develop, dev, development, next, integration, staging, develop-next) is the origin where experiments compete for main. Detect repo mode (Gitflow vs GitHub Flow). Prevent direct feature-PRs to main-role when develop-role is the workflow.",
-      "estimated_tokens": 3578,
+      "estimated_tokens": 3641,
       "frontmatter_name": "develop-guard",
       "generated_outputs": [
         "dist/nested/skills/develop-guard",
@@ -8650,6 +8697,7 @@
         "plans/design-note-pr-bc-combined.md",
         "plans/hostile-review-725.md",
         "plans/hostile-review-su-review-shelf-grounding.md",
+        "plans/issue-982-workflow-scope.md",
         "plans/review-deferred-709.md",
         "plans/self-review-286.md",
         "plans/self-review-609-coordinator-status-guard.md",
@@ -8930,7 +8978,8 @@
         "plans/self-review-422.md",
         "plans/self-review-epic-962-remediation.md",
         "skills/KERNEL.md",
-        "skills/RESOLVER.md"
+        "skills/RESOLVER.md",
+        "skills/ci-billing-failure-merge/SKILL.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
@@ -8952,6 +9001,7 @@
       "slug": "merge",
       "source_path": "skills/merge/SKILL.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
@@ -9392,10 +9442,10 @@
     },
     {
       "canonical_source": "skills/publish-flat-layout/SKILL.md",
-      "characters": 8294,
-      "content_sha256": "698cc14d3fad95c14863e7845054e30ef14e88c5e16dad03b0b28705ac9d4203",
+      "characters": 8367,
+      "content_sha256": "8de8a74d1c01bbebf20a989580510f16504f492b756cf9a6772a5f60f9648783",
       "description": "How to generate the flat layout for Craft Agent and similar consumers, and verify the structural changes in skills/ + hooks/ mirror correctly to the published artifact. The repo ships two layouts (nested + flat); this skill scopes to the flat layout's source-to-consumer chain and the verification discipline that prevents structural drift.",
-      "estimated_tokens": 2074,
+      "estimated_tokens": 2092,
       "frontmatter_name": "publish-flat-layout",
       "generated_outputs": [
         "dist/nested/skills/publish-flat-layout",
@@ -9479,6 +9529,7 @@
       "slug": "python",
       "source_path": "skills/python/SKILL.md",
       "test_evidence": [
+        "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
@@ -10219,6 +10270,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "hooks/_test/progressive_loading.test.sh",
         "skills/RESOLVER.md",
         "skills/analysis/SKILL.md"
       ],
@@ -10242,7 +10294,8 @@
       "slug": "spatial",
       "source_path": "skills/spatial/SKILL.md",
       "test_evidence": [
-        "bin/_test/resolve_load_set_test.py"
+        "bin/_test/resolve_load_set_test.py",
+        "hooks/_test/progressive_loading.test.sh"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -10785,10 +10838,10 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "bin/_test/resolve_load_set_test.py",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
-        "hooks/_test/progressive_loading.test.sh",
         "plans/design-248-345-612-lifecycle-spawn-autonomy.md",
         "plans/investigate-248-345-612-lifecycle-spawn-autonomy.md",
         "skills/RESOLVER.md",
@@ -10815,8 +10868,7 @@
       "slug": "update-ticket",
       "source_path": "skills/update-ticket/SKILL.md",
       "test_evidence": [
-        "bin/_test/resolve_load_set_test.py",
-        "hooks/_test/progressive_loading.test.sh"
+        "bin/_test/resolve_load_set_test.py"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -10964,9 +11016,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2663793,
+    "characters": 2655671,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 666028,
+    "estimated_tokens": 663997,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -10987,7 +11039,7 @@
       "on-demand": 43064,
       "project": 54452,
       "reference": 1297484,
-      "unclassified": 1268793
+      "unclassified": 1260671
     },
     "tier_counts": {
       "on-demand": 15,
@@ -10999,11 +11051,11 @@
       "on-demand": 10771,
       "project": 13615,
       "reference": 324399,
-      "unclassified": 317243
+      "unclassified": 315212
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
     "without_source_references_count": 0,
-    "without_test_evidence_count": 118
+    "without_test_evidence_count": 116
   }
 }

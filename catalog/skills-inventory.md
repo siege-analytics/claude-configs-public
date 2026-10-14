@@ -7,12 +7,12 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **198**
-- Characters: **2,663,793**
-- Estimated tokens: **666,028** (character/4 estimate)
+- Characters: **2,655,671**
+- Estimated tokens: **663,997** (character/4 estimate)
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
-- Without heuristic test evidence: **118**
+- Without heuristic test evidence: **116**
 - Duplicate rule IDs: **0**
 - Current build-rubric D/F grades: **151**
 - Quality grades: C: 6, D: 18, F: 133, unknown: 41
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 54,452 | 13,615 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 110 | 1,268,793 | 317,243 |
+| unclassified | 110 | 1,260,671 | 315,212 |
 
 ## Largest source items
 
@@ -73,7 +73,7 @@ This report describes committed source evidence. Missing references or tests do 
 - Unknown owners: 194
 - Unknown lifecycle: 198
 - No tracked source references: 0
-- No heuristic test evidence: 118
+- No heuristic test evidence: 116
 
 These are Phase 1 inputs, not automatic retirement decisions.
 

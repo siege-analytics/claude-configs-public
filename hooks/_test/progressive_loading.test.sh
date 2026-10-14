@@ -16,7 +16,7 @@ grep -q 'load: coding' <<<"$python_out" && grep -q 'load: python' <<<"$python_ou
 ! grep -q 'slow is smooth' <<<"$python_out" && ok "legacy resolver prose not injected" || bad "legacy resolver still injected"
 chars=$(printf '%s' "$python_out" | wc -c | tr -d ' ')
 [[ "$chars" -lt 12000 ]] && ok "injection stays below 12k chars ($chars)" || bad "injection too large ($chars)"
-overflow_out="$(run '{"prompt":"[skill:branch] [skill:commit] [skill:create-pr] [skill:merge] [skill:code-review] [skill:skillbuilder] [skill:ticket-guard] [skill:create-ticket] [skill:update-ticket] [skill:coding] [skill:python] [skill:testing-frameworks] [skill:sql]","cwd":"/tmp"}')"
+overflow_out="$(run '{"prompt":"[skill:branch] [skill:commit] [skill:create-pr] [skill:merge] [skill:code-review] [skill:skillbuilder] [skill:ticket-guard] [skill:create-ticket] [skill:spatial] [skill:coding] [skill:python] [skill:testing-frameworks] [skill:sql]","cwd":"/tmp"}')"
 if grep -q 'state: over-budget' <<<"$overflow_out" && ! grep -q '^load:' <<<"$overflow_out"; then
   ok "oversized explicit selection is visibly rejected kernel-only"
 else

@@ -200,7 +200,7 @@ Options: `--workspace <slug>` to target a specific workspace (default: `my-works
 
 ### Pin to a release tag
 
-This repo publishes **two release-branch artifacts per tag** for two consumer runtimes -- see [Distribution layouts](#distribution-layouts) below for the full explanation.
+This repo publishes **two release-branch artifacts on pushes to `main`** for two consumer runtimes; source tag pushes alone do not publish -- see [Distribution layouts](#distribution-layouts) below for the full explanation.
 
 For Claude Code with the resolver hook (the original target), pull from `release/nested`:
 
@@ -369,7 +369,7 @@ Craft Agent consumers must use `release/flat` or the `craft-agent` package. The 
 
 Standing-order continuity ships in two forms. Claude Code / Codex-style consumers use the resolver rule plus `hooks/resolver/standing-order-guard.sh` from the flat hook package. Craft Agent consumers get the same signal-file hook; the periodic watchdog in `automations-snippet.json` is **opt-in and not wired by default**, because each `SchedulerTick` tick spawns a watchdog session (~144/day at the shipped `*/10` cadence) and each `done`/`blocked` transition spawns an audit session, which floods the session list. Enable it only for workspaces that want periodic batch-continuity enforcement and accept that session cost, by merging `craft-agent/automations-snippet.json` into the workspace `automations.json`; see `craft-agent/standing-order-watchdog.json` for the mechanism and cost.
 
-`main` is the source of truth (nested layout with tokens). Build outputs are published to `release/nested` and `release/flat` by CI on every push to main and every tag. **Pin downstream consumers to a release-branch tag (`v1.0.0-nested` / `v1.0.0-flat`), not the source tag** -- the source has the build infrastructure but tokens are unresolved.
+`main` is the source of truth (nested layout with tokens). Build outputs are published to `release/nested` and `release/flat` by CI on pushes to `main` only; a source tag push alone does not publish them. **Pin downstream consumers to a release-branch tag (`v1.0.0-nested` / `v1.0.0-flat`), not the source tag** -- the source has the build infrastructure but tokens are unresolved.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the slug-token convention, build-script details, and contributor workflow.
 
