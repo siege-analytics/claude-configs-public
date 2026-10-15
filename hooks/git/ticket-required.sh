@@ -3,8 +3,13 @@
 # Enforces: commit skill (ticket enforcement section)
 # Trigger: PreToolUse on Bash(git commit *)
 #
-# Blocks commits that don't reference a ticket in the message.
-# Accepts (platform-agnostic):
+# Resolves the effective commit message instead of scanning incidental argv.
+# Deterministic sources: -m/--message, repository-confined -F/--file,
+# literal quoted heredoc stdin for -F -, -C/--reuse-message, -c with
+# --no-edit, and --amend --no-edit. Editor-dependent, opaque-stdin, unsafe
+# path, shell-expansion, and unsupported message-mutating forms fail closed.
+#
+# Accepted references (shared with .githooks/commit-msg):
 #   GitHub/GitLab:  #NNN, repo#NNN, owner/repo#NNN
 #   Jira/Linear:    PROJ-NNN, ELE-NNN, SU-NNN
 #   URL:            https://jira.example.com/browse/PROJ-123, etc.
@@ -12,49 +17,63 @@
 # Override: [no-ticket: Reason: ...; Evidence: ...; Falsification: ...] in the
 #   message body. The bare [no-ticket] form is blocked (#580).
 #
-# Ref: claude-configs-public#320
+# Ref: claude-configs-public#320, #994
 
 set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
 
-INPUT=$(cat)
+INPUT=$(python3 -c 'import sys
+limit = 1024 * 1024
+payload = sys.stdin.buffer.read(limit + 1)
+if len(payload) > limit:
+    raise SystemExit(65)
+sys.stdout.buffer.write(payload)')
+INPUT_STATUS=$?
+if [[ "$INPUT_STATUS" -ne 0 ]]; then
+    echo "BLOCKED: hook input exceeds the 1 MiB safety limit." >&2
+    exit 2
+fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
+MESSAGE_HELPER="$HOOK_DIR/../lib/commit-message.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
-CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
-
-# If parse fails or command is empty, allow
-if [[ -z "$COMMAND" ]]; then
-    exit 0
+CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.cwd 2>/dev/null || true)
+if [[ -z "$CWD" ]]; then
+    CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 fi
+CWD="${CWD:-$PWD}"
 
-# Match git commit anywhere in the command (not just at start) so
-# `cd /path && git commit` doesn't bypass. Uses portable word boundary
-# via character-class form (see branch-guard.sh, issue #106).
-if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'; then
+# If parse fails or command is empty, allow. The helper independently returns
+# NOT_COMMIT for well-formed commands outside this hook's enforcement surface.
+if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
 # Content-scope check (#699). Skip out-of-scope repositories.
 if [[ -f "$HOOK_DIR/../lib/scope-check.sh" ]]; then
     source "$HOOK_DIR/../lib/scope-check.sh"
-    if ! _scope_in_scope "$COMMAND" "${CWD:-$PWD}"; then
+    if ! _scope_in_scope "$COMMAND" "$CWD"; then
         exit 0
     fi
 fi
 
-# Skip if this is an amend (message already exists) or merge commit
-if echo "$COMMAND" | grep -qE -- '--amend|--no-edit'; then
-    exit 0
+if [[ ! -f "$MESSAGE_HELPER" ]]; then
+    echo "BLOCKED: effective commit-message parser is unavailable." >&2
+    exit 2
 fi
 
-# Structured override with evidence chain: accepted per writing-rules:4.
-# Bare [no-ticket] without evidence: blocked. Ref: #580.
-if echo "$COMMAND" | grep -qE '\[no-ticket:[[:space:]]+Reason:[^]]+;[[:space:]]*Evidence:[^]]+;[[:space:]]*Falsification:[^]]+\]'; then
-    exit 0
-fi
-if echo "$COMMAND" | grep -qE '\[no-ticket\]|\[no-ticket:[[:space:]]*\]'; then
-    cat >&2 <<HOOKEOF
+DETAIL=$(printf '%s' "$COMMAND" | python3 "$MESSAGE_HELPER" check-command --cwd "$CWD" 2>&1)
+STATUS=$?
+case "$STATUS" in
+    0)
+        exit 0
+        ;;
+    3)
+        # Not a git commit invocation.
+        exit 0
+        ;;
+    4)
+        cat >&2 <<'HOOKEOF'
 BLOCKED: '[no-ticket]' override now requires evidence chain.
 
 Per writing-rules:4, every "this doesn't apply" claim requires the
@@ -70,27 +89,25 @@ Alternatives that don't need the evidence chain:
 
 Ref: #580
 HOOKEOF
-    exit 2
-fi
+        exit 2
+        ;;
+    2)
+        cat >&2 <<HOOKEOF
+BLOCKED: Cannot safely determine the effective commit message.
 
-# [task: ...] marker for work tracked outside issue trackers (spreadsheets,
-# shared docs, etc.). Lighter than [no-ticket] — still requires a description.
-if echo "$COMMAND" | grep -qE '\[task:[[:space:]]+[^]]+\]'; then
-    exit 0
-fi
+Reason: ${DETAIL:-unknown parser failure}
 
-# Ticket reference patterns (platform-agnostic):
-#   #NNN, repo#NNN, owner/repo#NNN  — GitHub, GitLab
-#   PROJ-NNN                        — Jira, Linear, Shortcut
-#   URL containing /issues/, /browse/, /tickets/, /merge_requests/, /pull/
-if echo "$COMMAND" | grep -qE '(#[0-9]+|[A-Z]+-[0-9]+)'; then
-    exit 0
-fi
-if echo "$COMMAND" | grep -qE 'https?://[^[:space:]]+(/(issues|browse|tickets|merge_requests|pull|stories|tasks)/[^[:space:]]+)'; then
-    exit 0
-fi
+Use a deterministic message source: -m/--message, a repository-confined
+-F/--file path, -F - with one quoted literal heredoc, -C/--reuse-message,
+-c/--reedit-message with --no-edit, or --amend --no-edit. Commands whose
+message can still be changed by an editor or shell expansion fail closed.
 
-cat >&2 <<HOOKEOF
+Ref: claude-configs-public#994
+HOOKEOF
+        exit 2
+        ;;
+    1|*)
+        cat >&2 <<'HOOKEOF'
 BLOCKED: Commit message has no ticket reference.
 
 Every commit must reference a ticket or task. Accepted formats:
@@ -107,12 +124,14 @@ Every commit must reference a ticket or task. Accepted formats:
     Refs: https://jira.example.com/browse/PROJ-123
 
   Non-tracker work (spreadsheet, shared doc, etc.):
-    [task: Sprint Q2 sheet row 14 — geocoder refactor]
+    [task: Sprint Q2 sheet row 14 - geocoder refactor]
 
   Override with evidence (requires Reason/Evidence/Falsification):
     [no-ticket: Reason: <why>; Evidence: <obs>; Falsification: <disproof>]
 
 This is enforced by the commit skill (ticket enforcement section).
-Ref: claude-configs-public#320, #580
+Ref: claude-configs-public#320, #580, #994
 HOOKEOF
-exit 2
+        exit 2
+        ;;
+esac

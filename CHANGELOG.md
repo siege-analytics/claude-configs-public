@@ -17,6 +17,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 
 ### Fixed
+- Ticket-required effective-message enforcement (#994): `git commit` checks now resolve repeated `-m`, repository-confined `-F`, quoted-heredoc stdin, deterministic `-C`/`-c`, and `--amend --no-edit` sources instead of scanning incidental argv. Unsafe/interactive sources fail closed, unrelated `#NNN` argv no longer bypasses enforcement, and native `commit-msg` validation shares the same ticket grammar.
 - Replaced all active `shelves--...` `[skill:]` references with explicit `skills/shelves/.../SKILL.md` paths so collaborator sessions do not fail shelf loading.
 - Followed up nested shelf reference repair by using explicit DDIA/geospatial shelf paths only where nested shelf loading is required.
 - Fixed invalid nested shelf skill references by replacing `shelves--data-intensive` / `shelves--geospatial` invocation forms with valid parent skills and explicit nested shelf file paths.

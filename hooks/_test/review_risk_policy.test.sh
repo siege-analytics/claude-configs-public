@@ -3,21 +3,66 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"; pass=0; fail=0
 ok(){ echo "  PASS: $1"; pass=$((pass+1)); }; bad(){ echo "  FAIL: $1" >&2; fail=$((fail+1)); }
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-R="$TMP/repo"; mkdir -p "$R/.githooks" "$R/bin" "$R/catalog" "$R/hooks/git"
+R="$TMP/repo"; mkdir -p "$R/.githooks" "$R/bin" "$R/catalog" "$R/hooks/git" "$R/hooks/lib"
 cp "$ROOT/.githooks/commit-msg" "$R/.githooks/"
 cp "$ROOT/bin/review-risk.py" "$R/bin/"
 cp "$ROOT/catalog/review-risk-policy.json" "$R/catalog/"
 cp "$ROOT/hooks/git/pre-push-self-review.sh" "$R/hooks/git/"
+cp "$ROOT/hooks/lib/commit-message.py" "$R/hooks/lib/"
 git -C "$R" init -q; git -C "$R" config user.email test@example.com; git -C "$R" config user.name Test
 run_msg(){ (cd "$R" && bash .githooks/commit-msg "$1"); }
 printf 'docs\n' > "$R/README.md"; git -C "$R" add README.md
 cat > "$TMP/a.msg" <<'EOF'
-docs: clarify [no-ticket]
+docs: clarify Refs: #994
 
 Review-Tier: A
 Self-Review: focused diff checked
 EOF
 run_msg "$TMP/a.msg" >/dev/null 2>&1 && ok "Tier A accepts short review without artifact" || bad "Tier A short review blocked"
+cat > "$TMP/jira.msg" <<'EOF'
+docs: clarify Refs: PROJ-123
+
+Review-Tier: A
+Self-Review: focused diff checked
+EOF
+run_msg "$TMP/jira.msg" >/dev/null 2>&1 && ok "commit-msg shares Jira ticket grammar" || bad "commit-msg rejected shared Jira grammar"
+cat > "$TMP/task.msg" <<'EOF'
+docs: clarify [task: fixture row 1]
+
+Review-Tier: A
+Self-Review: focused diff checked
+EOF
+run_msg "$TMP/task.msg" >/dev/null 2>&1 && ok "commit-msg shares task grammar" || bad "commit-msg rejected shared task grammar"
+cat > "$TMP/bare.msg" <<'EOF'
+docs: clarify [no-ticket]
+
+Review-Tier: A
+Self-Review: focused diff checked
+EOF
+if run_msg "$TMP/bare.msg" >/dev/null 2>&1; then bad "commit-msg accepted bare no-ticket"; else ok "commit-msg rejects bare no-ticket"; fi
+cat > "$TMP/comment-ticket.msg" <<'EOF'
+docs: clarify
+# Refs: #994
+
+Review-Tier: A
+Self-Review: focused diff checked
+EOF
+if run_msg "$TMP/comment-ticket.msg" >/dev/null 2>&1; then bad "commit-msg accepted cleanup-removable comment ticket"; else ok "commit-msg rejects cleanup-removable comment ticket"; fi
+cat > "$TMP/scissors-ticket.msg" <<'EOF'
+docs: clarify
+
+Review-Tier: A
+Self-Review: focused diff checked
+# ------------------------ >8 ------------------------
+Refs: #994
+EOF
+if run_msg "$TMP/scissors-ticket.msg" >/dev/null 2>&1; then bad "commit-msg accepted post-scissors ticket"; else ok "commit-msg rejects post-scissors ticket"; fi
+git -C "$R" config core.commentChar ';'
+sed 's/^# Refs:/; Refs:/' "$TMP/comment-ticket.msg" > "$TMP/custom-comment-ticket.msg"
+if run_msg "$TMP/custom-comment-ticket.msg" >/dev/null 2>&1; then bad "commit-msg accepted custom-comment ticket"; else ok "commit-msg honors core.commentChar"; fi
+git -C "$R" config --unset core.commentChar
+dd if=/dev/zero bs=1048577 count=1 2>/dev/null | tr '\0' x > "$TMP/oversized.msg"
+if run_msg "$TMP/oversized.msg" >/dev/null 2>&1; then bad "commit-msg accepted oversized message"; else ok "commit-msg bounds message before reading"; fi
 git -C "$R" commit --no-verify -q -F "$TMP/a.msg"
 mkdir -p "$R/skills/x"; printf 'behavior\n' > "$R/skills/x/SKILL.md"; git -C "$R" add skills/x/SKILL.md
 cat > "$TMP/low.msg" <<'EOF'
@@ -28,7 +73,7 @@ Self-Review: checked
 EOF
 if run_msg "$TMP/low.msg" >/dev/null 2>&1; then bad "Tier B downgrade accepted"; else ok "Tier B downgrade rejected"; fi
 cat > "$TMP/b-missing.msg" <<'EOF'
-feat: skill [no-ticket]
+feat: skill Refs: #994
 
 Review-Tier: B
 Self-Review: focused review
@@ -44,7 +89,7 @@ focused fixture
 EOF
 git -C "$R" add plans/review.md
 cat > "$TMP/b.msg" <<'EOF'
-feat: skill [no-ticket]
+feat: skill Refs: #994
 
 Review-Tier: B
 Self-Review: focused review
@@ -62,7 +107,7 @@ Self-Review-Source: plans/review.md
 EOF
 if run_msg "$TMP/c-low.msg" >/dev/null 2>&1; then bad "Tier C downgrade accepted"; else ok "Tier C downgrade rejected"; fi
 cat > "$TMP/c-incomplete.msg" <<'EOF'
-fix: gate [no-ticket]
+fix: gate Refs: #994
 
 Review-Tier: C
 Self-Review: incomplete
@@ -71,7 +116,7 @@ Hostile-Review: plans/hostile.md
 EOF
 if run_msg "$TMP/c-incomplete.msg" >/dev/null 2>&1; then bad "Tier C incomplete evidence accepted"; else ok "Tier C incomplete evidence rejected"; fi
 cat > "$TMP/duplicate.msg" <<'EOF'
-fix: duplicate tier [no-ticket]
+fix: duplicate tier Refs: #994
 
 Review-Tier: C
 Review-Tier: A
@@ -93,7 +138,7 @@ one file
 EOF
 git -C "$R" add plans/full.md plans/pre.md plans/hostile.md
 cat > "$TMP/c.msg" <<'EOF'
-fix: gate [no-ticket]
+fix: gate Refs: #994
 
 Review-Tier: C
 Self-Review: full review
@@ -110,7 +155,7 @@ printf 'refs/heads/test %s refs/heads/test %s\n' "$(git -C "$R" rev-parse HEAD)"
 : > "$R/plans/full.md"; git -C "$R" add plans/full.md; git -C "$R" commit --amend --no-verify -q -F "$TMP/c.msg"
 if printf 'refs/heads/test %s refs/heads/test %s\n' "$(git -C "$R" rev-parse HEAD)" "$ZERO" | (cd "$R" && bash hooks/git/pre-push-self-review.sh) >/dev/null 2>&1; then bad "pre-push accepted empty review artifact"; else ok "pre-push rejects empty review artifact"; fi
 cat > "$TMP/bad-pointer.msg" <<'EOF'
-fix: bad pointer [no-ticket]
+fix: bad pointer Refs: #994
 
 Review-Tier: C
 Self-Review: invalid pointer
@@ -123,7 +168,7 @@ EOF
 git -C "$R" commit --amend --no-verify -q -F "$TMP/bad-pointer.msg"
 if printf 'refs/heads/test %s refs/heads/test %s\n' "$(git -C "$R" rev-parse HEAD)" "$ZERO" | (cd "$R" && bash hooks/git/pre-push-self-review.sh) >/dev/null 2>&1; then bad "pre-push accepted missing evidence pointers"; else ok "pre-push rejects missing evidence pointers"; fi
 cat > "$TMP/tierless.msg" <<'EOF'
-fix: tierless bypass [no-ticket]
+fix: tierless bypass Refs: #994
 
 Self-Review: attempted bypass
 Self-Review-Source: plans/full.md

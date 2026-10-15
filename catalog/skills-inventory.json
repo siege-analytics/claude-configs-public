@@ -9210,7 +9210,6 @@
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/test_guard.test.sh",
-        "hooks/_test/ticket_required.test.sh",
         "scripts/discipline/tests/fixtures/fail-esm-branch-range-multi-commit.md",
         "scripts/discipline/tests/test-hook-fail-closed.sh"
       ],

@@ -19,6 +19,15 @@
 set -euo pipefail
 
 COMMIT_MSG_FILE="$1"
+if ! COMMIT_MSG_BYTES=$(wc -c < "$COMMIT_MSG_FILE" 2>/dev/null); then
+    echo "BLOCKED: commit message file is unreadable." >&2
+    exit 1
+fi
+COMMIT_MSG_BYTES=${COMMIT_MSG_BYTES//[[:space:]]/}
+if [[ ! "$COMMIT_MSG_BYTES" =~ ^[0-9]+$ || "$COMMIT_MSG_BYTES" -gt 1048576 ]]; then
+    echo "BLOCKED: commit message exceeds the 1 MiB safety limit." >&2
+    exit 1
+fi
 COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
 
 # Parse trailers from the commit message.
@@ -46,8 +55,22 @@ if ! RISK_RESULT=$(python3 "$RISK_SCRIPT" --repo "$REPO_ROOT" --staged --declare
 fi
 
 # Ticket traceability remains universal, including Tier A and [no-review].
-if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
-    echo "BLOCKED: Missing ticket reference. Include #NNN or [no-ticket]." >&2
+# Use the same validator as the PreToolUse guard so accepted tracker, task,
+# URL, and structured override forms cannot drift between enforcement layers.
+TICKET_HELPER="$HOOK_ROOT/hooks/lib/commit-message.py"
+if [[ ! -f "$TICKET_HELPER" ]]; then
+    echo "BLOCKED: shared ticket-message validator is unavailable." >&2
+    exit 1
+fi
+set +e
+TICKET_DETAIL=$(python3 "$TICKET_HELPER" check-message-file "$COMMIT_MSG_FILE" 2>&1)
+TICKET_STATUS=$?
+set -e
+if [[ "$TICKET_STATUS" -eq 4 ]]; then
+    echo "BLOCKED: bare [no-ticket] is invalid; include Reason, Evidence, and Falsification." >&2
+    exit 1
+elif [[ "$TICKET_STATUS" -ne 0 ]]; then
+    echo "BLOCKED: Missing or unreadable ticket reference. ${TICKET_DETAIL}" >&2
     exit 1
 fi
 
@@ -88,14 +111,6 @@ if ! echo "$TRAILERS" | grep -qi '^Self-Review-Source:'; then
     echo ""
     echo "BLOCKED: Missing Self-Review-Source: trailer."
     echo "Add: Self-Review-Source: <path or URL to the self-review artifact>"
-    exit 1
-fi
-
-# Check for ticket reference
-if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
-    echo ""
-    echo "BLOCKED: Missing ticket reference."
-    echo "Include #NNN in the commit message, or [no-ticket] if exempt."
     exit 1
 fi
 
