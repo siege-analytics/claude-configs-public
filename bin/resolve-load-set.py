@@ -35,13 +35,37 @@ def token_match(text:str,term:str)->bool:
     return re.search(r"(?<!"+before+r")"+re.escape(term.lower())+r"(?![a-z0-9])",text) is not None
 
 def route_matches(route:dict[str,Any],text:str)->list[str]:
-    reasons=[f"term:{t}" for t in route.get("terms",[]) if token_match(text,t)]
-    # Match filenames, including dotted basenames and sentence-final periods,
-    # but not a hostname or sourcemap continuing after the extension.
-    for suffix in route.get("suffixes",[]):
-        pattern=r"(?<![a-z0-9_.-])(?:[a-z0-9_-]+\.)*[a-z0-9_-]+"+re.escape(suffix.lower())+r"(?![a-z0-9_-])(?!\.[a-z0-9])"
-        if any(m.group(0) not in {"docs.rs","crates.rs"} for m in re.finditer(pattern,text)):
-            reasons.append(f"suffix:{suffix}")
+    # A map's input geometry is not proof of a geometry transformation.
+    if route.get("exclude_pure_visualization") and re.search(r"\b(?:choropleth|visualization|arcgis map|map rendering)\b",text) and not re.search(r"\b(?:spatial join|sjoin|overlay|reproject|geoparquet|crs|geometry transform|geometry repair|st_[a-z]+)\b",text):
+        return []
+    # Pair action and technology within the same clause. An unrelated action
+    # before a semicolon must not authorize a README mention after it.
+    clauses=text.split(";") if route.get("verbs") else [text]
+    reasons=[]
+    if route.get("all_terms") and all(token_match(text, term) for term in route["all_terms"]):
+        lead=clauses[0].strip()
+        continuation=any(re.match(r"^"+re.escape(term)+r"\b",part.strip()) for term in route["all_terms"][1:] for part in clauses[1:])
+        if continuation and token_match(lead, route["all_terms"][0]) and any(token_match(lead, verb) for verb in route.get("verbs",[])) and not re.match(r"^(?:what|why|which|explain|tell me|how does|how do i|how to|is it|do not|don't)\b",lead):
+            reasons.append("compound:"+"+".join(route["all_terms"]))
+    for clause in clauses:
+        clause=clause.strip()
+        if any(token_match(clause,term) for term in route.get("exclude_terms",[])):
+            continue
+        if route.get("verbs"):
+            if re.match(r"^(?:what|why|which|explain|tell me|how does|how do i|how to|is it|do not|don't)\b",clause) or re.search(r"\bread.only\b|\b(?:do not|don't|never)\s+(?:write|save|load|insert|register)\b|\b(?:without modifying code|documentation about|readme mentions|docs discuss|docs say)\b|\b(?:write|edit|review|update)\s+(?:docs|documentation|readme|guide)\b",clause):
+                continue
+            if not any(token_match(clause, verb) for verb in route["verbs"]):
+                continue
+        if route.get("context_terms") and not any(token_match(clause, term) for term in route["context_terms"]):
+            continue
+        if any(not any(token_match(clause,term) for term in group) for group in route.get("required_groups",[])):
+            continue
+        reasons.extend(f"term:{t}" for t in route.get("terms",[]) if token_match(clause,t))
+        # Match filenames, but not a hostname or sourcemap continuation.
+        for suffix in route.get("suffixes",[]):
+            pattern=r"(?<![a-z0-9_.-])(?:[a-z0-9_-]+\.)*[a-z0-9_-]+"+re.escape(suffix.lower())+r"(?![a-z0-9_-])(?!\.[a-z0-9])"
+            if any(m.group(0) not in {"docs.rs","crates.rs"} for m in re.finditer(pattern,clause)):
+                reasons.append(f"suffix:{suffix}")
     return reasons
 
 def typed_kind(kind:str)->str:
@@ -69,6 +93,13 @@ def validate_manifest(manifest:dict[str,Any],known:dict[str,Any])->None:
     for route in all_routes:
         ids.append(route["id"])
         if not route.get("terms") and not route.get("suffixes"):raise ValueError(f"route has no signals: {route['id']}")
+        for key in ("verbs","context_terms","all_terms","exclude_terms"):
+            if key in route and (not isinstance(route[key],list) or not route[key] or not all(isinstance(v,str) and v for v in route[key])):
+                raise ValueError(f"invalid {key} gate: {route['id']}")
+        if "exclude_pure_visualization" in route and not isinstance(route["exclude_pure_visualization"],bool):
+            raise ValueError(f"invalid visualization gate: {route['id']}")
+        if "required_groups" in route and (not isinstance(route["required_groups"],list) or not route["required_groups"] or any(not isinstance(g,list) or not g or not all(isinstance(v,str) and v for v in g) for g in route["required_groups"])):
+            raise ValueError(f"invalid required groups: {route['id']}")
         for slug in route["skills"]:
             if slug not in known:raise ValueError(f"manifest references unknown slug: {slug}")
             if known[slug]["kind"].startswith("shelf") or slug.startswith(SHELF_PREFIX):raise ValueError(f"shelf cannot auto-select: {slug}")
@@ -83,7 +114,20 @@ def validate_manifest(manifest:dict[str,Any],known:dict[str,Any])->None:
 
 def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str="")->dict[str,Any]:
     known,typed=inventory_maps(inventory);validate_manifest(manifest,known)
-    text=" ".join(prompt.lower().split()); matches=[];matched_routes=[]
+    # An explicit task/code heading owns its next line; unrelated lines remain
+    # separate clauses so README notes cannot borrow an earlier action verb.
+    prompt=re.sub(r"(?im)^\s*(implement(?: the following)?|review this code|write the following|analyze the following)\s*:\s*\n",r"\1: ",prompt)
+    # A how-to question is read-only unless the immediately following clause
+    # requests a concrete code/SQL patch to the same task. Never carry its
+    # technology into a later independent docs/README clause.
+    question=re.match(r"(?is)^\s*((?:how do i|how to|what is the best way to)\b[^?]*\?)\s*(.*)$",prompt)
+    if question:
+        follow,separator,rest=question.group(2).partition(";")
+        if (re.match(r"(?i)^\s*(?:please\s+)?(?:implement|edit|fix|patch)\b",follow)
+            and re.search(r"(?i)\b(?:code|patch|sql|script|query|table|saveastable)\b",follow)
+            and not re.search(r"(?i)\b(?:unrelated|readme|docs|documentation|title)\b",follow)):
+            prompt=f"{follow.strip()} {question.group(1).rstrip('?')}"+(f"; {rest}" if separator else "")
+    text=" ".join(prompt.lower().replace("?","; ").replace("\n","; ").split()); matches=[];matched_routes=[]
     # Explicit tokens pass through scope/shelf checks, never through prose routes.
     route_text=re.sub(r"\[(?:skill|rule):[a-z0-9-]+\]", " ", text)
     route_text=re.sub(r"(?<!\S)/[a-z0-9-]+(?!\S)", " ", route_text)

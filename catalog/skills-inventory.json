@@ -612,15 +612,12 @@
       "decision-to-ticket",
       "distill-lessons",
       "drive-while-away",
-      "duckdb-spatial",
       "engagement-post-mortem",
       "lessons-learned",
       "library-api-evolution",
       "over-engineering-audit",
-      "pipeline-jobs",
       "post-error-revision",
       "post-mortem",
-      "postgis",
       "pr-comments",
       "pre-work-check",
       "publish-flat-layout",
@@ -7375,10 +7372,10 @@
     },
     {
       "canonical_source": "skills/analysis/SKILL.md",
-      "characters": 4049,
-      "content_sha256": "3a88c882f29502cab671efaff4a5ddf216b23af715e67827c68ab6349dbbe087",
+      "characters": 3980,
+      "content_sha256": "02c8d0758013c9cbefa2cf6971e45720dba9684d35a506ba12cfc883ec2b26d0",
       "description": "Analysis methodology. TRIGGER: geographic data, spatial joins, statistical modeling, graph analysis, entity matching, or text processing. Routes to the method.",
-      "estimated_tokens": 1013,
+      "estimated_tokens": 995,
       "frontmatter_name": "analysis-methods",
       "generated_outputs": [
         "dist/nested/skills/analysis",
@@ -7390,12 +7387,13 @@
         "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
-        "catalog/skill-lifecycle-legacy.json"
+        "catalog/skill-lifecycle-legacy.json",
+        "skills/RESOLVER.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 44,
+      "lines": 43,
       "owner": [
         "unknown"
       ],
@@ -7412,6 +7410,7 @@
       "slug": "analysis",
       "source_path": "skills/analysis/SKILL.md",
       "test_evidence": [
+        "bin/_test/resolve_load_set_test.py",
         "hooks/_test/investigate_gate_schema.test.sh"
       ],
       "tier": "unclassified",
@@ -7681,6 +7680,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "CONTRIBUTING.md",
+        "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/shelf-ownership.json",
@@ -8633,7 +8633,9 @@
       "rule_definitions": [],
       "slug": "duckdb-spatial",
       "source_path": "skills/duckdb-spatial/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -8770,6 +8772,7 @@
       "source_path": "skills/geopandas/SKILL.md",
       "test_evidence": [
         "bin/_test/language_scope_test.py",
+        "bin/_test/resolve_load_set_test.py",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
       ],
       "tier": "unclassified",
@@ -9225,6 +9228,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -9253,7 +9257,9 @@
       "rule_definitions": [],
       "slug": "pipeline-jobs",
       "source_path": "skills/pipeline-jobs/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -9394,7 +9400,9 @@
       "rule_definitions": [],
       "slug": "postgis",
       "source_path": "skills/postgis/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -9598,6 +9606,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
@@ -9982,6 +9991,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
@@ -10012,7 +10022,8 @@
       "slug": "scala-on-spark",
       "source_path": "skills/scala-on-spark/SKILL.md",
       "test_evidence": [
-        "bin/_test/language_scope_test.py"
+        "bin/_test/language_scope_test.py",
+        "bin/_test/resolve_load_set_test.py"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -10105,7 +10116,8 @@
       "slug": "sedona",
       "source_path": "skills/sedona/SKILL.md",
       "test_evidence": [
-        "bin/_test/language_scope_test.py"
+        "bin/_test/language_scope_test.py",
+        "bin/_test/resolve_load_set_test.py"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -10346,6 +10358,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -10387,10 +10400,10 @@
     },
     {
       "canonical_source": "skills/spatial/SKILL.md",
-      "characters": 10947,
-      "content_sha256": "a8120597f79333b094de9d8b46493233e6ed4d251b5b312e41bde493349f8d1d",
+      "characters": 10967,
+      "content_sha256": "a6090bdb8532afaefc2b856f03da9459600a2b5c43c887d17d66b7a6a34fe1da",
       "description": "Decision framework for spatial analysis. Determines when to use spatial methods vs. string lookups vs. graph traversal, and which technology and algorithms to apply. Leads with tabular-trust check because in the real world the crosswalk is usually wrong.",
-      "estimated_tokens": 2737,
+      "estimated_tokens": 2742,
       "frontmatter_name": "spatial",
       "generated_outputs": [
         "dist/nested/skills/spatial",
@@ -10398,6 +10411,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
@@ -10418,10 +10432,10 @@
       "quality": {
         "completeness": 20,
         "cross_references": 100.0,
-        "grade": "D",
-        "provenance": 20,
+        "grade": "F",
+        "provenance": 0,
         "structure": 100.0,
-        "total": 60.0
+        "total": 55.0
       },
       "rule_definitions": [],
       "slug": "spatial",
@@ -10448,6 +10462,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
@@ -10932,6 +10947,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -11162,9 +11178,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2650985,
+    "characters": 2650936,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 662826,
+    "estimated_tokens": 662813,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -11176,8 +11192,8 @@
     },
     "quality_grade_counts": {
       "C": 6,
-      "D": 19,
-      "F": 132,
+      "D": 18,
+      "F": 133,
       "unknown": 41
     },
     "quality_low_grade_count": 151,
@@ -11185,7 +11201,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1254591
+      "unclassified": 1254542
     },
     "tier_counts": {
       "on-demand": 15,
@@ -11197,11 +11213,11 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 313692
+      "unclassified": 313679
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
     "without_source_references_count": 0,
-    "without_test_evidence_count": 111
+    "without_test_evidence_count": 108
   }
 }

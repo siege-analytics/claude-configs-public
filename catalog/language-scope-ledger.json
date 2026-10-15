@@ -816,7 +816,7 @@
       "classification": "reusable-global",
       "known_consumers": "UNKNOWN",
       "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
-      "auto_select": "not-routed",
+      "auto_select": "explicit-signal-only",
       "baseline": {
         "authored": {
           "characters": 6778,
@@ -873,7 +873,7 @@
       "classification": "reusable-global",
       "known_consumers": "UNKNOWN",
       "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
-      "auto_select": "not-routed",
+      "auto_select": "explicit-signal-only",
       "baseline": {
         "authored": {
           "characters": 6676,
@@ -930,7 +930,7 @@
       "classification": "reusable-global",
       "known_consumers": "UNKNOWN",
       "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
-      "auto_select": "not-routed",
+      "auto_select": "explicit-signal-only",
       "baseline": {
         "authored": {
           "characters": 10058,
@@ -1272,7 +1272,7 @@
       "classification": "reusable-global",
       "known_consumers": "UNKNOWN",
       "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
-      "auto_select": "not-routed",
+      "auto_select": "explicit-signal-only",
       "baseline": {
         "authored": {
           "characters": 3176,
@@ -1329,7 +1329,7 @@
       "classification": "reusable-global",
       "known_consumers": "UNKNOWN",
       "consumer_evidence": "UNKNOWN: inbound references and navigation links do not prove a runtime host/repo consumer",
-      "auto_select": "not-routed",
+      "auto_select": "explicit-signal-only",
       "baseline": {
         "authored": {
           "characters": 8461,
@@ -2097,25 +2097,25 @@
       },
       "current": {
         "authored": {
-          "characters": 10947,
-          "estimated_tokens": 2737
+          "characters": 10967,
+          "estimated_tokens": 2742
         },
         "packaged": {
           "nested": {
-            "characters": 197094,
-            "estimated_tokens": 49274
+            "characters": 197114,
+            "estimated_tokens": 49279
           },
           "flat": {
-            "characters": 197094,
-            "estimated_tokens": 49274
+            "characters": 197114,
+            "estimated_tokens": 49279
           },
           "claude-code": {
-            "characters": 197094,
-            "estimated_tokens": 49274
+            "characters": 197114,
+            "estimated_tokens": 49279
           },
           "craft-agent": {
-            "characters": 197094,
-            "estimated_tokens": 49274
+            "characters": 197114,
+            "estimated_tokens": 49279
           }
         }
       }

@@ -176,32 +176,36 @@ See [projects/CONTRIBUTING.md](projects/CONTRIBUTING.md) for the full authoring 
 
 ### Data, catalogs, storage
 
+The executable contract is `catalog/resolver-manifest.json`: operational action plus named technology signals select procedures; bare nouns/read-only questions (including “how do I/how to” requests without a concrete edit), ArcGIS maps, and standalone visualization do not. Reference shelves are opt-in. Only exact `github.com/siege-analytics/siege_utilities` activates its project overlay; a foreign host or a textual SU reference does not. These are route contracts, not verified runtime consumer identities.
+
 | About to… | Read first |
 |---|---|
-| Write Delta/Parquet/Iceberg to any path | `skills/infrastructure/unity-catalog/SKILL.md` |
-| Use `.write.save(...)`, `.write.parquet(...)`, or any raw-path write | `skills/infrastructure/unity-catalog/SKILL.md` |
-| Use `saveAsTable(...)` | `skills/infrastructure/unity-catalog/SKILL.md` |
-| Register a table in Hive Metastore or Unity Catalog | `skills/infrastructure/unity-catalog/SKILL.md` |
-| Touch `s3a://hive-warehouse/*`, `s3://silver/*`, `s3://gold/*`, or any shared bucket | `skills/infrastructure/unity-catalog/SKILL.md` |
-| Run a batch data processing job | `electinfo_claude_skills/skills/pipeline-guard/SKILL.md` |
-| Schedule a recurring pipeline job | `skills/coding/pipeline-jobs/SKILL.md` + `electinfo_claude_skills/skills/rundeck-job/SKILL.md` |
+| Write Delta/Parquet/Iceberg or register a catalog table (operational write, not a read-only format question) | `skills/unity-catalog/SKILL.md` |
+| Use `df.write.save(...)`, `.write.parquet(...)`, or a catalog-managed raw path | `skills/unity-catalog/SKILL.md` |
+| Call `saveAsTable(...)` | `skills/unity-catalog/SKILL.md` |
+| Register a table in Hive Metastore or Unity Catalog | `skills/unity-catalog/SKILL.md` |
+| Write to `s3a://hive-warehouse/*`, `s3://silver/*`, `s3://gold/*`, or another catalog-managed prefix | `skills/unity-catalog/SKILL.md` |
+| Execute `INSERT INTO` in Spark SQL / Hive Metastore / Unity Catalog context | `skills/unity-catalog/SKILL.md` (never inferred for PostgreSQL/SQLite inserts) |
+| Modify a SparkApplication CRD that writes Delta/Parquet to shared storage | `skills/unity-catalog/SKILL.md` (not for unrelated CPU/CSV configuration) |
+| Run a batch data processing job in an independently verified electinfo environment | External `electinfo_claude_skills/skills/pipeline-guard/SKILL.md` (not a route or consumer asserted by this manifest) |
+| Implement a recurring pipeline job | `skills/pipeline-jobs/SKILL.md`; external Rundeck guidance only if that environment is independently verified |
 
 ### Writing code
 
 | About to… | Read first |
 |---|---|
-| Write Python | `skills/coding/SKILL.md` → `skills/coding/python/SKILL.md` |
-| Write SQL (Postgres/PostGIS/SparkSQL) | `skills/coding/SKILL.md` → `skills/coding/sql/SKILL.md` |
-| Write PySpark / use DataFrame API / write to Delta | `skills/coding/SKILL.md` → `skills/coding/spark/SKILL.md` + `skills/infrastructure/unity-catalog/SKILL.md` |
-| Write a pipeline / ETL / scheduled data job | `skills/coding/pipeline-jobs/SKILL.md` |
-| Write a Rundeck job YAML | `electinfo_claude_skills/skills/rundeck-job/SKILL.md` |
-| Review existing code (yours or others') | `skills/coding/code-review/SKILL.md` |
+| Write Python | `skills/coding/SKILL.md` → `skills/python/SKILL.md` |
+| Write SQL (Postgres/PostGIS/SparkSQL) | `skills/coding/SKILL.md` → `skills/sql/SKILL.md` |
+| Write PySpark / use DataFrame API / write to Delta | `skills/spark/SKILL.md`; add `skills/unity-catalog/SKILL.md` for catalog or raw-path writes |
+| Implement or review a pipeline / ETL / scheduled data job | `skills/pipeline-jobs/SKILL.md` (Python style stacks only when Python is explicitly signaled; explicit Java/Scala jobs do not get this Python-first pattern) |
+| Implement a Rundeck job YAML | `skills/pipeline-jobs/SKILL.md`; external `electinfo_claude_skills/skills/rundeck-job/SKILL.md` only in a verified electinfo environment |
+| Review existing code (yours or others') | `skills/code-review/SKILL.md` |
 | Explicit QML review (generic optional checklist; ChordLibrary/MuseScore consumer UNKNOWN, never auto-routed) | `skills/qml-component-review/SKILL.md` |
-| Write Scala on Databricks notebooks, `.scala` files, `Dataset[T]` Spark code | `skills/coding/scala-on-spark/SKILL.md` (delegates to `shelves/languages/effective-java/`, `effective-kotlin/`, and `coding/spark/`) |
+| Write or review Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | `skills/scala-on-spark/SKILL.md` + `skills/spark/SKILL.md`; reference shelves remain on-demand |
 | Design a service / module boundary | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/engineering-principles/clean-architecture/SKILL.md` |
 | Pick a storage engine, replication scheme, or partitioning strategy | `skills/thinking/think/SKILL.md` (gate) → `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
 | Python utility in the exact `github.com/siege-analytics/siege_utilities` repository | `projects/siege-utilities/_rules.md` (project overlay only; compatibility `skills/_siege-utilities-rules.md` is not a global mandate) |
-| Do any spatial work — pick engine, write spatial SQL/Python/Scala, run a spatial join | `skills/analysis/spatial/SKILL.md` (router; dispatches to `coding/postgis`, `coding/geopandas`, `coding/sedona`, `coding/duckdb-spatial`) |
+| Perform geospatial analysis or implement a spatial join | `skills/spatial/SKILL.md` (trust/CRS router); named engine signals add `skills/{postgis,geopandas,sedona,duckdb-spatial}/SKILL.md` with SQL/Spark companions where applicable |
 | Fix a bug or issue identified by code review / audit / static analysis | `skills/thinking/think/SKILL.md` Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per `evaluate-ticket` criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
 | Audit a repo for over-engineering, find bloat, identify what to delete or simplify | `skills/over-engineering-audit/SKILL.md` — one-shot ranked report. Five tags: delete, stdlib, platform, yagni, shrink. Lists findings, applies nothing. Complexity only — correctness and security go to normal review. |
 
@@ -211,8 +215,8 @@ See [projects/CONTRIBUTING.md](projects/CONTRIBUTING.md) for the full authoring 
 |---|---|
 | Implement a new feature, refactor, or architecture change | `skills/thinking/think/SKILL.md` (MANDATORY before any code) → `skills/thinking/investigate/SKILL.md` (Fact Sheet before implementation) → `skills/thinking/pre-mortem/SKILL.md` (Tiger/Paper Tiger/Elephant before implementation) |
 | Fix a shipped bug (post-merge, found by user/reviewer/CI) | `skills/post-mortem/SKILL.md` (trace failure through skill pipeline) → then `skills/thinking/think/SKILL.md` for the fix |
-| Do spatial / geographic analysis | `skills/analysis/SKILL.md` → `skills/analysis/spatial/SKILL.md` |
-| Do statistical / graph / entity-resolution / text analysis | `skills/analysis/SKILL.md` |
+| Perform spatial / geographic analysis | `skills/analysis/SKILL.md` for named spatial analysis + `skills/spatial/SKILL.md`; generic geospatial operations select `spatial` |
+| Perform statistical modeling, graph analysis, or entity matching | `skills/analysis/SKILL.md` (no unpublished sub-skill is selected); text/NLP remains explicit-only pending evidence |
 
 ### Failure handling
 
