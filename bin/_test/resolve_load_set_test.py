@@ -7,7 +7,7 @@ SPEC=importlib.util.spec_from_file_location("resolver",SCRIPT); assert SPEC and 
 M=importlib.util.module_from_spec(SPEC);sys.modules[SPEC.name]=M;SPEC.loader.exec_module(M)
 def inv():
  def i(s,k="skill"):return {"slug":s,"kind":k,"characters":100,"estimated_tokens":25}
- slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","close-ticket","ci-billing-failure-merge","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","django","django-rest-framework","react","typescript","vue","rust","stalled-session-recovery","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
+ slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","close-ticket","ci-billing-failure-merge","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","pipeline-jobs","analysis","scala-on-spark","postgis","geopandas","sedona","duckdb-spatial","django","django-rest-framework","react","typescript","vue","rust","stalled-session-recovery","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
  return {"items":[i(s,"project-skill" if s.startswith("siege-utilities--") else "skill") for s in slugs]+[i("siege-utilities--rules","project-rule"),i("shelves--security","shelf-item")]}
 def main():
  manifest=json.loads((ROOT/"catalog/resolver-manifest.json").read_text()); inventory=inv()

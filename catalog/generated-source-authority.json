@@ -1201,29 +1201,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/analysis",
           "file_count": 1,
-          "tree_sha256": "85d7e201e8d43dbf965588ec8e7beea11ecb42053dc028639940c2b3be74172c"
+          "tree_sha256": "bca4bddee2a59b99a792d159367c66b9bc1b0c36920aced7f2a4e28a93ec85ed"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/analysis",
           "file_count": 1,
-          "tree_sha256": "85d7e201e8d43dbf965588ec8e7beea11ecb42053dc028639940c2b3be74172c"
+          "tree_sha256": "bca4bddee2a59b99a792d159367c66b9bc1b0c36920aced7f2a4e28a93ec85ed"
         },
         "flat": {
           "destination": "dist/flat/skills/analysis",
           "file_count": 1,
-          "tree_sha256": "85d7e201e8d43dbf965588ec8e7beea11ecb42053dc028639940c2b3be74172c"
+          "tree_sha256": "bca4bddee2a59b99a792d159367c66b9bc1b0c36920aced7f2a4e28a93ec85ed"
         },
         "nested": {
           "destination": "dist/nested/skills/analysis",
           "file_count": 1,
-          "tree_sha256": "85d7e201e8d43dbf965588ec8e7beea11ecb42053dc028639940c2b3be74172c"
+          "tree_sha256": "bca4bddee2a59b99a792d159367c66b9bc1b0c36920aced7f2a4e28a93ec85ed"
         }
       },
       "canonical_source": "skills/analysis/SKILL.md",
       "kind": "skill",
       "slug": "analysis",
       "source_file_count": 1,
-      "source_tree_sha256": "bf9354d8be9fc1f38bfdc888b5b5d16833bd254c2af4e22d5c722b0e52bc3370"
+      "source_tree_sha256": "eb4d0bbc28b16ec130ad4da49c9d559c3c1809f67eacf93b15d380b2bbea19a2"
     },
     {
       "artifacts": {
@@ -5319,29 +5319,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/spatial",
           "file_count": 21,
-          "tree_sha256": "605eec2826fea640d674ed9092aae52f4ca54ad37b52538ed6c93423cb749f73"
+          "tree_sha256": "c4946a37cc63c5ca108b2148dff40aa8599e6d8f190ce4f3409ccb242c2a8df0"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/spatial",
           "file_count": 21,
-          "tree_sha256": "605eec2826fea640d674ed9092aae52f4ca54ad37b52538ed6c93423cb749f73"
+          "tree_sha256": "c4946a37cc63c5ca108b2148dff40aa8599e6d8f190ce4f3409ccb242c2a8df0"
         },
         "flat": {
           "destination": "dist/flat/skills/spatial",
           "file_count": 21,
-          "tree_sha256": "605eec2826fea640d674ed9092aae52f4ca54ad37b52538ed6c93423cb749f73"
+          "tree_sha256": "c4946a37cc63c5ca108b2148dff40aa8599e6d8f190ce4f3409ccb242c2a8df0"
         },
         "nested": {
           "destination": "dist/nested/skills/spatial",
           "file_count": 21,
-          "tree_sha256": "605eec2826fea640d674ed9092aae52f4ca54ad37b52538ed6c93423cb749f73"
+          "tree_sha256": "c4946a37cc63c5ca108b2148dff40aa8599e6d8f190ce4f3409ccb242c2a8df0"
         }
       },
       "canonical_source": "skills/spatial/SKILL.md",
       "kind": "skill",
       "slug": "spatial",
       "source_file_count": 21,
-      "source_tree_sha256": "38c5b084c72a559daefea967317c64b7f13018ed5412e81734cc06cc43150e0c"
+      "source_tree_sha256": "3f26f8534f573a5c343fd5498cd3f635e16d397a04af5cdea462b6b7b0a4cfd9"
     },
     {
       "artifacts": {

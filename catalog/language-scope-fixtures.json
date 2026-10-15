@@ -557,29 +557,30 @@
       "repo": "other/repo",
       "state": "matched",
       "slugs": [
+        "postgis",
+        "spatial",
+        "sql",
         "databricks",
         "unity-catalog",
         "spark",
-        "spatial",
         "coding",
-        "python",
-        "sql"
+        "python"
       ],
       "measurements": {
         "source": {
-          "characters": 51350,
-          "estimated_tokens": 12839,
-          "items": 7
+          "characters": 61415,
+          "estimated_tokens": 15356,
+          "items": 8
         },
         "claude-code": {
-          "characters": 51977,
-          "estimated_tokens": 12997,
-          "items": 7
+          "characters": 62060,
+          "estimated_tokens": 15518,
+          "items": 8
         },
         "craft-agent": {
-          "characters": 51977,
-          "estimated_tokens": 12997,
-          "items": 7
+          "characters": 62060,
+          "estimated_tokens": 15518,
+          "items": 8
         }
       },
       "baseline_load_effect": {
@@ -644,18 +645,18 @@
       "slugs": [],
       "measurements": {
         "source": {
-          "characters": 148178,
-          "estimated_tokens": 37049,
+          "characters": 148198,
+          "estimated_tokens": 37054,
           "items": 13
         },
         "claude-code": {
-          "characters": 150373,
-          "estimated_tokens": 37597,
+          "characters": 150393,
+          "estimated_tokens": 37602,
           "items": 13
         },
         "craft-agent": {
-          "characters": 150373,
-          "estimated_tokens": 37597,
+          "characters": 150393,
+          "estimated_tokens": 37602,
           "items": 13
         }
       },
@@ -923,23 +924,26 @@
       "id": "scala-deferred",
       "prompt": "review Scala-on-Spark Dataset[T]",
       "repo": "other/repo",
-      "state": "unknown",
-      "slugs": [],
+      "state": "matched",
+      "slugs": [
+        "scala-on-spark",
+        "spark"
+      ],
       "measurements": {
         "source": {
-          "characters": 0,
-          "estimated_tokens": 0,
-          "items": 0
+          "characters": 9468,
+          "estimated_tokens": 2367,
+          "items": 2
         },
         "claude-code": {
-          "characters": 0,
-          "estimated_tokens": 0,
-          "items": 0
+          "characters": 9537,
+          "estimated_tokens": 2385,
+          "items": 2
         },
         "craft-agent": {
-          "characters": 0,
-          "estimated_tokens": 0,
-          "items": 0
+          "characters": 9537,
+          "estimated_tokens": 2385,
+          "items": 2
         }
       },
       "baseline_load_effect": {
@@ -1196,6 +1200,7 @@
       "repo": "other/repo",
       "state": "matched",
       "slugs": [
+        "geopandas",
         "spatial"
       ],
       "baseline_load_effect": {
@@ -1235,19 +1240,19 @@
       },
       "measurements": {
         "source": {
-          "characters": 10947,
-          "estimated_tokens": 2737,
-          "items": 1
+          "characters": 17808,
+          "estimated_tokens": 4453,
+          "items": 2
         },
         "claude-code": {
-          "characters": 11047,
-          "estimated_tokens": 2762,
-          "items": 1
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
         },
         "craft-agent": {
-          "characters": 11047,
-          "estimated_tokens": 2762,
-          "items": 1
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
         }
       }
     },

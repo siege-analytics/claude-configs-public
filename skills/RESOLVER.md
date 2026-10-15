@@ -39,9 +39,9 @@ This is a navigation and compatibility index, not the executable auto-selection 
 | React + TypeScript / TSX | [skill:react] + [rule:typescript] + [skill:coding] |
 | Explicit Vue / Pinia | [skill:vue] |
 | Explicit Rust / `.rs` | [rule:rust] + [skill:coding] |
-| Data pipeline, scheduled job, Rundeck YAML, Airflow DAG | [skill:pipeline-jobs] |
+| Implement or review an ETL/data pipeline job, Airflow DAG, or scheduled processing script | [skill:pipeline-jobs] (add [skill:coding] + [skill:python] only on a Python signal; explicit Java/Scala jobs do not select Python-first pattern; no electinfo overlay inferred) |
 | PySpark DataFrame work, tuning, shuffle / skew | [skill:spark] |
-| Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | [skill:scala-on-spark] |
+| Write or review Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | [skill:scala-on-spark] + [skill:spark] |
 | SQL query structure, joins, window functions, Postgres performance | [skill:sql] |
 | PostGIS -- ST_* functions, spatial indexes, spatial joins | [skill:postgis] |
 | GeoPandas + Shapely -- `import geopandas`, `gpd.`, `.sjoin`, raw `from shapely.geometry import` | [skill:geopandas] |
@@ -52,15 +52,17 @@ This is a navigation and compatibility index, not the executable auto-selection 
 | Choosing a test framework, declaring test layers in PROJECT.md, test-guard enforcement | [skill:testing-frameworks] |
 | Fix a bug or issue identified by code review / audit / static analysis | [skill:think] Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per [skill:evaluate-ticket] criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
 
+Named data/engine routes require an operational task in the same clause, not a bare mention in documentation or a read-only “what/how-to” question. A pure choropleth/map request does not activate geometry engines just because its input is a GeoDataFrame; a requested spatial join, overlay, or reprojection does. Shelves remain opt-in, never auto-selected.
+
 ### Analysis
 
 | Trigger | Skill |
 |---|---|
-| Geospatial data -- pick engine + GDAL-availability path, cross-engine principles | [skill:spatial] (router; dispatches to `coding/{postgis,geopandas,sedona,duckdb-spatial}/`) |
-| Statistical modeling, regression, hypothesis tests | `analysis/statistical/SKILL.md` (if present) |
-| Graph / network analysis, entity relationships | `analysis/graph/SKILL.md` (if present) |
-| Record linkage, dedup, fuzzy matching | `analysis/entity-resolution/SKILL.md` (if present) |
-| NLP, text classification, extraction | `analysis/nlp/SKILL.md` (if present) |
+| Implement or analyze geospatial data -- pick engine + GDAL-availability path, cross-engine principles | [skill:spatial] (router; named engine signals select [skill:postgis], [skill:geopandas], [skill:sedona], or [skill:duckdb-spatial]); shelves remain on-demand |
+| Perform statistical modeling, regression analysis, hypothesis tests | [skill:analysis] (methodology router; statistical sub-skill is not published) |
+| Perform graph / network analysis | [skill:analysis] (graph sub-skill is not published) |
+| Perform record linkage / entity matching | [skill:analysis] (entity-resolution sub-skill is not published) |
+| NLP / text classification / extraction | Planned sub-skill; explicit [skill:analysis] is available, but no prose route is asserted. |
 
 ### Maintenance
 

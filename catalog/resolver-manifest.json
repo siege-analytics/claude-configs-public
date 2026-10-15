@@ -175,6 +175,22 @@
       "skills": [
         "coding",
         "sql"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "analyze",
+        "edit"
       ]
     },
     {
@@ -186,11 +202,29 @@
         "postgis",
         "geopandas",
         "sedona",
-        "duckdb spatial"
+        "duckdb spatial",
+        "spatial analysis"
       ],
       "skills": [
         "spatial"
-      ]
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "analyze",
+        "edit"
+      ],
+      "exclude_pure_visualization": true
     },
     {
       "id": "spark",
@@ -202,6 +236,21 @@
       ],
       "skills": [
         "spark"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "edit"
       ]
     },
     {
@@ -215,6 +264,23 @@
       "skills": [
         "databricks",
         "unity-catalog"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "register",
+        "save",
+        "edit"
       ]
     },
     {
@@ -329,6 +395,404 @@
       ],
       "skills": [
         "develop-guard"
+      ]
+    },
+    {
+      "id": "pipeline-jobs",
+      "priority": 77,
+      "terms": [
+        "etl pipeline",
+        "data pipeline job",
+        "pipeline script",
+        "airflow dag",
+        "rundeck job",
+        "scheduled data processing",
+        "recurring pipeline job",
+        "etl job",
+        "batch data processing job",
+        "schedule pipeline"
+      ],
+      "skills": [
+        "pipeline-jobs"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze"
+      ],
+      "exclude_terms": [
+        "java",
+        "scala"
+      ]
+    },
+    {
+      "id": "analysis-methods",
+      "priority": 76,
+      "terms": [
+        "statistical modeling",
+        "hypothesis testing",
+        "regression analysis",
+        "entity matching",
+        "record linkage",
+        "graph analysis",
+        "spatial analysis",
+        "statistical analysis",
+        "analyze distributions",
+        "sampling analysis",
+        "geospatial analysis"
+      ],
+      "skills": [
+        "analysis"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze"
+      ]
+    },
+    {
+      "id": "unity-catalog-write",
+      "priority": 79,
+      "terms": [
+        "saveastable",
+        "catalog-managed s3",
+        "s3a://hive-warehouse",
+        "s3://silver",
+        "s3://gold",
+        "raw delta path",
+        "raw parquet path",
+        "raw iceberg path",
+        "register table in unity catalog",
+        "register table in hive metastore",
+        "delta to s3",
+        "parquet to s3",
+        "iceberg to s3",
+        "df.write.parquet",
+        "delta path",
+        "parquet path",
+        "iceberg path",
+        "register table",
+        "write delta",
+        "write parquet",
+        "write iceberg",
+        "write orc",
+        "orc to s3",
+        "s3://bronze",
+        "insert overwrite table",
+        "insertinto",
+        "using delta location",
+        "hive metastore",
+        "register analytics table",
+        "write.format(\"delta\")",
+        "write.format(\"iceberg\")",
+        "write.format('delta')",
+        "write.format('iceberg')"
+      ],
+      "skills": [
+        "unity-catalog"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "call",
+        "modify",
+        "touch",
+        "insert",
+        "edit"
+      ]
+    },
+    {
+      "id": "scala-on-spark",
+      "priority": 78,
+      "terms": [
+        "scala spark",
+        "scala on spark",
+        "scala databricks",
+        "%scala",
+        "dataset[t]"
+      ],
+      "skills": [
+        "scala-on-spark",
+        "spark"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design"
+      ],
+      "suffixes": [
+        ".scala"
+      ],
+      "context_terms": [
+        "spark",
+        "databricks",
+        "dataset[t]",
+        "%scala"
+      ]
+    },
+    {
+      "id": "postgis-engine",
+      "priority": 78,
+      "terms": [
+        "postgis",
+        "postgis extension",
+        "postgis sql",
+        "st_intersects in postgres",
+        "st_dwithin in postgres",
+        "st_contains in postgres"
+      ],
+      "skills": [
+        "postgis",
+        "sql",
+        "spatial"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ],
+      "exclude_pure_visualization": true
+    },
+    {
+      "id": "geopandas-engine",
+      "priority": 78,
+      "terms": [
+        "geopandas",
+        "gpd.sjoin",
+        "geodataframe",
+        "shapely.geometry",
+        "gpd.overlay",
+        "gpd.to_file"
+      ],
+      "skills": [
+        "geopandas",
+        "spatial"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ],
+      "exclude_pure_visualization": true
+    },
+    {
+      "id": "sedona-engine",
+      "priority": 78,
+      "terms": [
+        "sedona",
+        "sedonacontext",
+        "sedonaregistrator"
+      ],
+      "skills": [
+        "sedona",
+        "spark",
+        "spatial"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ],
+      "exclude_pure_visualization": true
+    },
+    {
+      "id": "duckdb-spatial-engine",
+      "priority": 78,
+      "terms": [
+        "duckdb spatial",
+        "duckdb-spatial",
+        "duckdb spatial extension",
+        "st_read in duckdb",
+        "geoparquet without gdal",
+        "st_read",
+        "duckdb install spatial",
+        "duckdb load spatial"
+      ],
+      "skills": [
+        "duckdb-spatial",
+        "sql",
+        "spatial"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ],
+      "all_terms": [
+        "import duckdb",
+        "install spatial"
+      ],
+      "exclude_pure_visualization": true
+    },
+    {
+      "id": "unity-catalog-insert",
+      "priority": 79,
+      "terms": [
+        "insert into"
+      ],
+      "context_terms": [
+        "spark",
+        "unity catalog",
+        "hive metastore",
+        "catalog-managed",
+        "delta table",
+        "s3://bronze",
+        "s3://silver",
+        "s3://gold"
+      ],
+      "verbs": [
+        "insert",
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "edit",
+        "run",
+        "analyze"
+      ],
+      "skills": [
+        "unity-catalog"
+      ]
+    },
+    {
+      "id": "unity-catalog-sparkapplication",
+      "priority": 79,
+      "terms": [
+        "sparkapplication crd"
+      ],
+      "required_groups": [
+        [
+          "writes",
+          "writing"
+        ],
+        [
+          "delta",
+          "parquet"
+        ],
+        [
+          "shared storage"
+        ]
+      ],
+      "verbs": [
+        "modify",
+        "review",
+        "implement",
+        "write",
+        "fix"
+      ],
+      "skills": [
+        "unity-catalog"
       ]
     }
   ],

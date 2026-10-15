@@ -36,7 +36,7 @@ caps = geo_capabilities()  # detect installed packages
 set_default_crs("EPSG:4326")  # session-wide default
 ```
 
-`caps["tier"]` is `"geo"` (full GDAL stack), `"geo-lite"` (Shapely + pyproj only), `"geodjango"` (full + Django GIS), or `"none"`. The tier constrains the engine choice -- see [`gdal-availability-matrix.md`](references/gdal-availability-matrix.md). Outside that exact repository, do not assume SU is installed or call its runtime helpers; use the target environment's verified capabilities. For Spark/Databricks guidance, see the separate #976 routing batch.
+Inside that exact repository only, `caps["tier"]` is `"geo"` (full GDAL stack), `"geo-lite"` (Shapely + pyproj only), `"geodjango"` (full + Django GIS), or `"none"`; see [`gdal-availability-matrix.md`](references/gdal-availability-matrix.md). Outside that exact repository, do not assume SU is installed or call its runtime helpers; use the target environment's verified capabilities. For Spark/Databricks, select the named operational skills only when their task signals match.
 
 ## Step 1: Do You Trust Your Tabular Representation?
 

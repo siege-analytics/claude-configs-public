@@ -1,0 +1,5260 @@
+{
+  "schema_version": 1,
+  "note": "Source paths are concrete selected identity. Baseline source outcomes are checked from exact git SHA; baseline consumer outcomes/costs are verified by rebuilding the isolated exact-base git archive. Current source/Claude/Craft costs are checked against generated package bytes and actual selected_content. Empty selection is kernel-only; kernel costs are accounted separately by progressive metrics.",
+  "fixtures": [
+    {
+      "id": "etl",
+      "prompt": "implement scheduled data processing job",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "pipeline-jobs"
+      ],
+      "source_paths": [
+        "skills/pipeline-jobs/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 5755,
+          "estimated_tokens": 1439,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 5755,
+          "estimated_tokens": 1439,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 5755,
+          "estimated_tokens": 1439,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 5815,
+        "claude-code": 5815,
+        "craft-agent": 5815
+      }
+    },
+    {
+      "id": "etl-airflow",
+      "prompt": "write Airflow DAG for a scheduled data processing job",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "pipeline-jobs"
+      ],
+      "source_paths": [
+        "skills/pipeline-jobs/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 5755,
+          "estimated_tokens": 1439,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 5755,
+          "estimated_tokens": 1439,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 5755,
+          "estimated_tokens": 1439,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 5815,
+        "claude-code": 5815,
+        "craft-agent": 5815
+      }
+    },
+    {
+      "id": "analysis",
+      "prompt": "perform statistical modeling and hypothesis testing",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "analysis"
+      ],
+      "source_paths": [
+        "skills/analysis/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 3980,
+          "estimated_tokens": 995,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 4019,
+          "estimated_tokens": 1005,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 4019,
+          "estimated_tokens": 1005,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 3980,
+        "claude-code": 4019,
+        "craft-agent": 4019
+      }
+    },
+    {
+      "id": "catalog-raw-write",
+      "prompt": "write raw Iceberg to S3 path",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "catalog-saveastable",
+      "prompt": "call df.write.saveAsTable for analytics.daily_events",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "scala",
+      "prompt": "write Scala Spark Dataset[T] transform",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "scala-on-spark",
+        "spark"
+      ],
+      "source_paths": [
+        "skills/scala-on-spark/SKILL.md",
+        "skills/spark/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 9468,
+          "estimated_tokens": 2367,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 9537,
+          "estimated_tokens": 2385,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 9537,
+          "estimated_tokens": 2385,
+          "items": 2
+        }
+      },
+      "selected_bytes": {
+        "source": 9472,
+        "claude-code": 9541,
+        "craft-agent": 9541
+      }
+    },
+    {
+      "id": "scala-file",
+      "prompt": "review transformer.scala",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "postgis",
+      "prompt": "optimize PostGIS spatial join SQL",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "postgis",
+        "spatial",
+        "sql",
+        "coding"
+      ],
+      "source_paths": [
+        "skills/postgis/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/sql/SKILL.md",
+        "skills/coding/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21006,
+            "estimated_tokens": 5252,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 31071,
+          "estimated_tokens": 7769,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        }
+      },
+      "selected_bytes": {
+        "source": 31304,
+        "claude-code": 31784,
+        "craft-agent": 31784
+      }
+    },
+    {
+      "id": "geopandas",
+      "prompt": "implement GeoPandas sjoin geometry",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "geopandas",
+        "spatial"
+      ],
+      "source_paths": [
+        "skills/geopandas/SKILL.md",
+        "skills/spatial/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 17808,
+          "estimated_tokens": 4453,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
+        }
+      },
+      "selected_bytes": {
+        "source": 17940,
+        "claude-code": 18159,
+        "craft-agent": 18159
+      }
+    },
+    {
+      "id": "sedona",
+      "prompt": "implement Sedona Spark SQL spatial join",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "sedona",
+        "spark",
+        "spatial",
+        "coding",
+        "sql"
+      ],
+      "source_paths": [
+        "skills/sedona/SKILL.md",
+        "skills/spark/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/coding/SKILL.md",
+        "skills/sql/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spark",
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 27298,
+            "estimated_tokens": 6825,
+            "items": 4
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spark",
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 27799,
+            "estimated_tokens": 6951,
+            "items": 4
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spark",
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 27799,
+            "estimated_tokens": 6951,
+            "items": 4
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 35816,
+          "estimated_tokens": 8955,
+          "items": 5
+        },
+        "claude-code": {
+          "characters": 36487,
+          "estimated_tokens": 9123,
+          "items": 5
+        },
+        "craft-agent": {
+          "characters": 36487,
+          "estimated_tokens": 9123,
+          "items": 5
+        }
+      },
+      "selected_bytes": {
+        "source": 35952,
+        "claude-code": 36623,
+        "craft-agent": 36623
+      }
+    },
+    {
+      "id": "duckdb",
+      "prompt": "write DuckDB spatial extension SQL with ST_Read",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "duckdb-spatial",
+        "spatial",
+        "sql",
+        "coding"
+      ],
+      "source_paths": [
+        "skills/duckdb-spatial/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/sql/SKILL.md",
+        "skills/coding/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21006,
+            "estimated_tokens": 5252,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 27878,
+          "estimated_tokens": 6970,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 28483,
+          "estimated_tokens": 7122,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 28483,
+          "estimated_tokens": 7122,
+          "items": 4
+        }
+      },
+      "selected_bytes": {
+        "source": 28017,
+        "claude-code": 28622,
+        "craft-agent": 28622
+      }
+    },
+    {
+      "id": "foreign-postgis",
+      "prompt": "optimize PostGIS spatial join SQL",
+      "repo": "git@foreign-host:siege-analytics/siege_utilities.git",
+      "state": "matched",
+      "slugs": [
+        "postgis",
+        "spatial",
+        "sql",
+        "coding"
+      ],
+      "source_paths": [
+        "skills/postgis/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/sql/SKILL.md",
+        "skills/coding/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21006,
+            "estimated_tokens": 5252,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 31071,
+          "estimated_tokens": 7769,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        }
+      },
+      "selected_bytes": {
+        "source": 31304,
+        "claude-code": 31784,
+        "craft-agent": 31784
+      }
+    },
+    {
+      "id": "exact-postgis",
+      "prompt": "optimize PostGIS spatial join SQL",
+      "repo": "github.com/siege-analytics/siege_utilities",
+      "state": "matched",
+      "slugs": [
+        "siege-utilities--rules",
+        "postgis",
+        "spatial",
+        "sql",
+        "coding"
+      ],
+      "source_paths": [
+        "projects/siege-utilities/_rules.md",
+        "skills/postgis/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/sql/SKILL.md",
+        "skills/coding/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 32292,
+            "estimated_tokens": 8074,
+            "items": 4
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 32754,
+            "estimated_tokens": 8190,
+            "items": 4
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 32754,
+            "estimated_tokens": 8190,
+            "items": 4
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 42357,
+          "estimated_tokens": 10591,
+          "items": 5
+        },
+        "claude-code": {
+          "characters": 42837,
+          "estimated_tokens": 10711,
+          "items": 5
+        },
+        "craft-agent": {
+          "characters": 42837,
+          "estimated_tokens": 10711,
+          "items": 5
+        }
+      },
+      "selected_bytes": {
+        "source": 42630,
+        "claude-code": 43110,
+        "craft-agent": 43110
+      }
+    },
+    {
+      "id": "multi",
+      "prompt": "review Python Spark SQL Databricks Unity Catalog spatial PostGIS code",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "postgis",
+        "spatial",
+        "sql",
+        "databricks",
+        "unity-catalog",
+        "spark",
+        "coding",
+        "python"
+      ],
+      "source_paths": [
+        "skills/postgis/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/sql/SKILL.md",
+        "skills/databricks/SKILL.md",
+        "skills/unity-catalog/SKILL.md",
+        "skills/spark/SKILL.md",
+        "skills/coding/SKILL.md",
+        "skills/python/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog",
+            "spark",
+            "spatial",
+            "coding",
+            "python",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 51350,
+            "estimated_tokens": 12839,
+            "items": 7
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog",
+            "spark",
+            "spatial",
+            "coding",
+            "python",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 51977,
+            "estimated_tokens": 12997,
+            "items": 7
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog",
+            "spark",
+            "spatial",
+            "coding",
+            "python",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 51977,
+            "estimated_tokens": 12997,
+            "items": 7
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 61415,
+          "estimated_tokens": 15356,
+          "items": 8
+        },
+        "claude-code": {
+          "characters": 62060,
+          "estimated_tokens": 15518,
+          "items": 8
+        },
+        "craft-agent": {
+          "characters": 62060,
+          "estimated_tokens": 15518,
+          "items": 8
+        }
+      },
+      "selected_bytes": {
+        "source": 61658,
+        "claude-code": 62303,
+        "craft-agent": 62303
+      }
+    },
+    {
+      "id": "over-budget",
+      "prompt": "[skill:branch] [skill:commit] [skill:create-pr] [skill:merge] [skill:code-review] [skill:skillbuilder] [skill:ticket-guard] [skill:create-ticket] [skill:spatial] [skill:coding] [skill:python] [skill:testing-frameworks] [skill:sql]",
+      "repo": "other/repo",
+      "state": "over-budget",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "over-budget",
+          "slugs": [],
+          "selected_content": {
+            "characters": 148178,
+            "estimated_tokens": 37049,
+            "items": 13
+          }
+        },
+        "claude-code": {
+          "state": "over-budget",
+          "slugs": [],
+          "selected_content": {
+            "characters": 150373,
+            "estimated_tokens": 37597,
+            "items": 13
+          }
+        },
+        "craft-agent": {
+          "state": "over-budget",
+          "slugs": [],
+          "selected_content": {
+            "characters": 150373,
+            "estimated_tokens": 37597,
+            "items": 13
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 148198,
+          "estimated_tokens": 37054,
+          "items": 13
+        },
+        "claude-code": {
+          "characters": 150393,
+          "estimated_tokens": 37602,
+          "items": 13
+        },
+        "craft-agent": {
+          "characters": 150393,
+          "estimated_tokens": 37602,
+          "items": 13
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "ambiguous",
+      "prompt": "create ticket and close issue",
+      "repo": "other/repo",
+      "state": "ambiguous",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "ambiguous",
+          "slugs": [],
+          "selected_content": {}
+        },
+        "claude-code": {
+          "state": "ambiguous",
+          "slugs": [],
+          "selected_content": {}
+        },
+        "craft-agent": {
+          "state": "ambiguous",
+          "slugs": [],
+          "selected_content": {}
+        }
+      },
+      "measurements": {
+        "source": {},
+        "claude-code": {},
+        "craft-agent": {}
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "unknown",
+      "prompt": "write a friendly greeting",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "arcgis",
+      "prompt": "create ArcGIS map",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "visualization",
+      "prompt": "create a choropleth visualization",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "read-only",
+      "prompt": "what is PostGIS and how does it compare to GeoPandas?",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-sql",
+      "prompt": "what is a query?",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10059,
+            "estimated_tokens": 2515,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10421,
+            "estimated_tokens": 2606,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10421,
+            "estimated_tokens": 2606,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-uc",
+      "prompt": "read Parquet from S3",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-etl",
+      "prompt": "what is an ETL pipeline?",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-stat",
+      "prompt": "what is statistical modeling?",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-engine",
+      "prompt": "tell me about Sedona",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-foreign-project",
+      "prompt": "[skill:siege-utilities--hostile-review]",
+      "repo": "git@foreign-host:siege-analytics/siege_utilities.git",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "unknown-arcgis",
+      "prompt": "What is ArcGIS?",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "bare-project",
+      "prompt": "optimize PostGIS spatial join SQL",
+      "repo": "siege-analytics/siege_utilities",
+      "state": "matched",
+      "slugs": [
+        "postgis",
+        "spatial",
+        "sql",
+        "coding"
+      ],
+      "source_paths": [
+        "skills/postgis/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/sql/SKILL.md",
+        "skills/coding/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21006,
+            "estimated_tokens": 5252,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 31071,
+          "estimated_tokens": 7769,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        }
+      },
+      "selected_bytes": {
+        "source": 31304,
+        "claude-code": 31784,
+        "craft-agent": 31784
+      }
+    },
+    {
+      "id": "sql-spark",
+      "prompt": "write Spark SQL window query",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "spark",
+        "coding",
+        "sql"
+      ],
+      "source_paths": [
+        "skills/spark/SKILL.md",
+        "skills/coding/SKILL.md",
+        "skills/sql/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spark",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 16351,
+            "estimated_tokens": 4088,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spark",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 16752,
+            "estimated_tokens": 4189,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spark",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 16752,
+            "estimated_tokens": 4189,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 16351,
+          "estimated_tokens": 4088,
+          "items": 3
+        },
+        "claude-code": {
+          "characters": 16752,
+          "estimated_tokens": 4189,
+          "items": 3
+        },
+        "craft-agent": {
+          "characters": 16752,
+          "estimated_tokens": 4189,
+          "items": 3
+        }
+      },
+      "selected_bytes": {
+        "source": 16353,
+        "claude-code": 16754,
+        "craft-agent": 16754
+      }
+    },
+    {
+      "id": "geographic-trust",
+      "prompt": "perform geospatial analysis with uncertain crosswalk vintage",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "analysis",
+        "spatial"
+      ],
+      "source_paths": [
+        "skills/analysis/SKILL.md",
+        "skills/spatial/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 14947,
+          "estimated_tokens": 3737,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 15086,
+          "estimated_tokens": 3772,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 15086,
+          "estimated_tokens": 3772,
+          "items": 2
+        }
+      },
+      "selected_bytes": {
+        "source": 15071,
+        "claude-code": 15210,
+        "craft-agent": 15210
+      }
+    },
+    {
+      "id": "spatial-analysis",
+      "prompt": "perform spatial analysis",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "analysis",
+        "spatial"
+      ],
+      "source_paths": [
+        "skills/analysis/SKILL.md",
+        "skills/spatial/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 14947,
+          "estimated_tokens": 3737,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 15086,
+          "estimated_tokens": 3772,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 15086,
+          "estimated_tokens": 3772,
+          "items": 2
+        }
+      },
+      "selected_bytes": {
+        "source": 15071,
+        "claude-code": 15210,
+        "craft-agent": 15210
+      }
+    },
+    {
+      "id": "geospatial-crs",
+      "prompt": "analyze geospatial data for missing CRS",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "spatial"
+      ],
+      "source_paths": [
+        "skills/spatial/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 10967,
+          "estimated_tokens": 2742,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 11067,
+          "estimated_tokens": 2767,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 11067,
+          "estimated_tokens": 2767,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 11091,
+        "claude-code": 11191,
+        "craft-agent": 11191
+      }
+    },
+    {
+      "id": "catalog-orc",
+      "prompt": "write ORC to S3",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "catalog-bronze",
+      "prompt": "write a Delta file to s3://bronze/raw/",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "catalog-register",
+      "prompt": "register analytics table in Hive Metastore",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "catalog-insert",
+      "prompt": "spark.sql(\"INSERT OVERWRITE TABLE analytics.daily_events SELECT * FROM src\")",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10059,
+            "estimated_tokens": 2515,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10421,
+            "estimated_tokens": 2606,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10421,
+            "estimated_tokens": 2606,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "catalog-external",
+      "prompt": "implement spark.sql(\"CREATE TABLE analytics.daily_events USING DELTA LOCATION s3://bronze/events\")",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog",
+        "coding",
+        "sql"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md",
+        "skills/coding/SKILL.md",
+        "skills/sql/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10059,
+            "estimated_tokens": 2515,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10421,
+            "estimated_tokens": 2606,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10421,
+            "estimated_tokens": 2606,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 17802,
+          "estimated_tokens": 4451,
+          "items": 3
+        },
+        "claude-code": {
+          "characters": 18202,
+          "estimated_tokens": 4552,
+          "items": 3
+        },
+        "craft-agent": {
+          "characters": 18202,
+          "estimated_tokens": 4552,
+          "items": 3
+        }
+      },
+      "selected_bytes": {
+        "source": 17802,
+        "claude-code": 18202,
+        "craft-agent": 18202
+      }
+    },
+    {
+      "id": "scala-negative",
+      "prompt": "write a Scala CLI parser in Parser.scala",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "etl-java",
+      "prompt": "implement an Airflow DAG in Java",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "duckdb-extension",
+      "prompt": "write import duckdb; INSTALL spatial; LOAD spatial; ST_Read",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "duckdb-spatial",
+        "spatial",
+        "sql"
+      ],
+      "source_paths": [
+        "skills/duckdb-spatial/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/sql/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 23091,
+          "estimated_tokens": 5773,
+          "items": 3
+        },
+        "claude-code": {
+          "characters": 23334,
+          "estimated_tokens": 5834,
+          "items": 3
+        },
+        "craft-agent": {
+          "characters": 23334,
+          "estimated_tokens": 5834,
+          "items": 3
+        }
+      },
+      "selected_bytes": {
+        "source": 23230,
+        "claude-code": 23473,
+        "craft-agent": 23473
+      }
+    },
+    {
+      "id": "geopandas-overlay",
+      "prompt": "implement gpd.overlay in a spatial join",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "geopandas",
+        "spatial"
+      ],
+      "source_paths": [
+        "skills/geopandas/SKILL.md",
+        "skills/spatial/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 17808,
+          "estimated_tokens": 4453,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
+        }
+      },
+      "selected_bytes": {
+        "source": 17940,
+        "claude-code": 18159,
+        "craft-agent": 18159
+      }
+    },
+    {
+      "id": "postgis-st",
+      "prompt": "review ST_Intersects in Postgres spatial SQL",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "postgis",
+        "spatial",
+        "sql",
+        "coding"
+      ],
+      "source_paths": [
+        "skills/postgis/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/sql/SKILL.md",
+        "skills/coding/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10059,
+            "estimated_tokens": 2515,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10421,
+            "estimated_tokens": 2606,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10421,
+            "estimated_tokens": 2606,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 31071,
+          "estimated_tokens": 7769,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        }
+      },
+      "selected_bytes": {
+        "source": 31304,
+        "claude-code": 31784,
+        "craft-agent": 31784
+      }
+    },
+    {
+      "id": "negative-unrelated-postgis",
+      "prompt": "review an unrelated Python module; README mentions PostGIS",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "python"
+      ],
+      "source_paths": [
+        "skills/coding/SKILL.md",
+        "skills/python/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 22367,
+            "estimated_tokens": 5593,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 22899,
+            "estimated_tokens": 5726,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 22899,
+            "estimated_tokens": 5726,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 11420,
+          "estimated_tokens": 2856,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        }
+      },
+      "selected_bytes": {
+        "source": 11420,
+        "claude-code": 11852,
+        "craft-agent": 11852
+      }
+    },
+    {
+      "id": "negative-unrelated-catalog",
+      "prompt": "review an unrelated PR; docs say do not saveAsTable",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-negated-write",
+      "prompt": "Do not write Delta to a raw path; read a table instead",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-read-only-delta",
+      "prompt": "review read-only Delta table query",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 27478,
+            "estimated_tokens": 6870,
+            "items": 4
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 27896,
+            "estimated_tokens": 6976,
+            "items": 4
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 27896,
+            "estimated_tokens": 6976,
+            "items": 4
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-how-to",
+      "prompt": "How to write Delta table?",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog"
+          ],
+          "selected_content": {
+            "characters": 17419,
+            "estimated_tokens": 4355,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog"
+          ],
+          "selected_content": {
+            "characters": 17475,
+            "estimated_tokens": 4370,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog"
+          ],
+          "selected_content": {
+            "characters": 17475,
+            "estimated_tokens": 4370,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-viz-engine",
+      "prompt": "create a choropleth visualization with GeoPandas",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "catalog-insert-into",
+      "prompt": "review Spark SQL INSERT INTO analytics.daily_events SELECT * FROM src",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog",
+        "spark",
+        "coding",
+        "sql"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md",
+        "skills/spark/SKILL.md",
+        "skills/coding/SKILL.md",
+        "skills/sql/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spark",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 16351,
+            "estimated_tokens": 4088,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spark",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 16752,
+            "estimated_tokens": 4189,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spark",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 16752,
+            "estimated_tokens": 4189,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 24094,
+          "estimated_tokens": 6024,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 24533,
+          "estimated_tokens": 6135,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 24533,
+          "estimated_tokens": 6135,
+          "items": 4
+        }
+      },
+      "selected_bytes": {
+        "source": 24096,
+        "claude-code": 24535,
+        "craft-agent": 24535
+      }
+    },
+    {
+      "id": "catalog-insert-bare",
+      "prompt": "insert into analytics.daily_events select * from src in Hive Metastore",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "negative-insert-question",
+      "prompt": "what is INSERT INTO?",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "multiline-postgis",
+      "prompt": "Implement the following:\nPostGIS spatial join SQL for boundaries",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "postgis",
+        "spatial",
+        "sql",
+        "coding"
+      ],
+      "source_paths": [
+        "skills/postgis/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/sql/SKILL.md",
+        "skills/coding/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21006,
+            "estimated_tokens": 5252,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 31071,
+          "estimated_tokens": 7769,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        }
+      },
+      "selected_bytes": {
+        "source": 31304,
+        "claude-code": 31784,
+        "craft-agent": 31784
+      }
+    },
+    {
+      "id": "multiline-sedona",
+      "prompt": "Review this code:\nfrom sedona.sql import SedonaContext",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "sedona",
+        "spark",
+        "spatial",
+        "coding",
+        "sql"
+      ],
+      "source_paths": [
+        "skills/sedona/SKILL.md",
+        "skills/spark/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/coding/SKILL.md",
+        "skills/sql/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21006,
+            "estimated_tokens": 5252,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 35816,
+          "estimated_tokens": 8955,
+          "items": 5
+        },
+        "claude-code": {
+          "characters": 36487,
+          "estimated_tokens": 9123,
+          "items": 5
+        },
+        "craft-agent": {
+          "characters": 36487,
+          "estimated_tokens": 9123,
+          "items": 5
+        }
+      },
+      "selected_bytes": {
+        "source": 35952,
+        "claude-code": 36623,
+        "craft-agent": 36623
+      }
+    },
+    {
+      "id": "negative-duckdb-docs",
+      "prompt": "write import duckdb; docs discuss INSTALL spatial",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "etl-python-and-scala",
+      "prompt": "implement Airflow DAG in Python; project uses Scala too",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "pipeline-jobs",
+        "coding",
+        "python"
+      ],
+      "source_paths": [
+        "skills/pipeline-jobs/SKILL.md",
+        "skills/coding/SKILL.md",
+        "skills/python/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 11420,
+            "estimated_tokens": 2856,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 11852,
+            "estimated_tokens": 2964,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 11852,
+            "estimated_tokens": 2964,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 17175,
+          "estimated_tokens": 4295,
+          "items": 3
+        },
+        "claude-code": {
+          "characters": 17607,
+          "estimated_tokens": 4403,
+          "items": 3
+        },
+        "craft-agent": {
+          "characters": 17607,
+          "estimated_tokens": 4403,
+          "items": 3
+        }
+      },
+      "selected_bytes": {
+        "source": 17235,
+        "claude-code": 17667,
+        "craft-agent": 17667
+      }
+    },
+    {
+      "id": "negative-viz-geodataframe",
+      "prompt": "build a choropleth using GeoDataFrame geometry column",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-viz-geometry",
+      "prompt": "create a choropleth from GeoPandas geometry",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "viz-with-transform",
+      "prompt": "implement GeoPandas geometry overlay for a choropleth",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "geopandas",
+        "spatial"
+      ],
+      "source_paths": [
+        "skills/geopandas/SKILL.md",
+        "skills/spatial/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 17808,
+          "estimated_tokens": 4453,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
+        }
+      },
+      "selected_bytes": {
+        "source": 17940,
+        "claude-code": 18159,
+        "craft-agent": 18159
+      }
+    },
+    {
+      "id": "negative-doc-postgis",
+      "prompt": "write documentation about PostGIS without modifying code",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-how-do-i",
+      "prompt": "How do I write raw Iceberg to S3?",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "analyze-geopandas",
+      "prompt": "analyze a spatial join in GeoPandas",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "geopandas",
+        "spatial"
+      ],
+      "source_paths": [
+        "skills/geopandas/SKILL.md",
+        "skills/spatial/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 17808,
+          "estimated_tokens": 4453,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
+        }
+      },
+      "selected_bytes": {
+        "source": 17940,
+        "claude-code": 18159,
+        "craft-agent": 18159
+      }
+    },
+    {
+      "id": "analyze-postgis",
+      "prompt": "analyze PostGIS query plan",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "postgis",
+        "spatial",
+        "sql",
+        "coding"
+      ],
+      "source_paths": [
+        "skills/postgis/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/sql/SKILL.md",
+        "skills/coding/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21006,
+            "estimated_tokens": 5252,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 31071,
+          "estimated_tokens": 7769,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        }
+      },
+      "selected_bytes": {
+        "source": 31304,
+        "claude-code": 31784,
+        "craft-agent": 31784
+      }
+    },
+    {
+      "id": "analyze-sedona",
+      "prompt": "analyze Sedona spatial SQL",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "sedona",
+        "spark",
+        "spatial",
+        "coding",
+        "sql"
+      ],
+      "source_paths": [
+        "skills/sedona/SKILL.md",
+        "skills/spark/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/coding/SKILL.md",
+        "skills/sql/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21006,
+            "estimated_tokens": 5252,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 35816,
+          "estimated_tokens": 8955,
+          "items": 5
+        },
+        "claude-code": {
+          "characters": 36487,
+          "estimated_tokens": 9123,
+          "items": 5
+        },
+        "craft-agent": {
+          "characters": 36487,
+          "estimated_tokens": 9123,
+          "items": 5
+        }
+      },
+      "selected_bytes": {
+        "source": 35952,
+        "claude-code": 36623,
+        "craft-agent": 36623
+      }
+    },
+    {
+      "id": "concrete-edit-catalog",
+      "prompt": "How do I fix this Delta raw-path write? Please edit the code to saveAsTable.",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "concrete-patch-catalog",
+      "prompt": "How to write Delta to S3? Please implement the patch.",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "concrete-edit-postgis",
+      "prompt": "How do I fix my PostGIS spatial join? Implement the corrected SQL.",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "postgis",
+        "spatial",
+        "sql",
+        "coding"
+      ],
+      "source_paths": [
+        "skills/postgis/SKILL.md",
+        "skills/spatial/SKILL.md",
+        "skills/sql/SKILL.md",
+        "skills/coding/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21006,
+            "estimated_tokens": 5252,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial",
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 21468,
+            "estimated_tokens": 5368,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 31071,
+          "estimated_tokens": 7769,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 31551,
+          "estimated_tokens": 7889,
+          "items": 4
+        }
+      },
+      "selected_bytes": {
+        "source": 31304,
+        "claude-code": 31784,
+        "craft-agent": 31784
+      }
+    },
+    {
+      "id": "negative-postgres-insert",
+      "prompt": "implement Postgres INSERT INTO customers SELECT * FROM staging_customers",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "sql"
+      ],
+      "source_paths": [
+        "skills/coding/SKILL.md",
+        "skills/sql/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10059,
+            "estimated_tokens": 2515,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10421,
+            "estimated_tokens": 2606,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 10421,
+            "estimated_tokens": 2606,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 10059,
+          "estimated_tokens": 2515,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 10421,
+          "estimated_tokens": 2606,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 10421,
+          "estimated_tokens": 2606,
+          "items": 2
+        }
+      },
+      "selected_bytes": {
+        "source": 10059,
+        "claude-code": 10421,
+        "craft-agent": 10421
+      }
+    },
+    {
+      "id": "negative-sqlite-insert",
+      "prompt": "review SQLite INSERT INTO invoices VALUES (1)",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-csv-write",
+      "prompt": "write CSV using df.write.format(\"csv\").save(\"/tmp/results\")",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-spark-crd",
+      "prompt": "modify SparkApplication CRD to change CPU limits only",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-write-docs",
+      "prompt": "write docs describing saveAsTable",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-unrelated-readme",
+      "prompt": "How do I write a Delta table? Please edit an unrelated README.",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog"
+          ],
+          "selected_content": {
+            "characters": 17419,
+            "estimated_tokens": 4355,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog"
+          ],
+          "selected_content": {
+            "characters": 17475,
+            "estimated_tokens": 4370,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog"
+          ],
+          "selected_content": {
+            "characters": 17475,
+            "estimated_tokens": 4370,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-unrelated-title",
+      "prompt": "How do I write a Delta table? Please edit the title.",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog"
+          ],
+          "selected_content": {
+            "characters": 17419,
+            "estimated_tokens": 4355,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog"
+          ],
+          "selected_content": {
+            "characters": 17475,
+            "estimated_tokens": 4370,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog"
+          ],
+          "selected_content": {
+            "characters": 17475,
+            "estimated_tokens": 4370,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    },
+    {
+      "id": "negative-inherited-doc-leak",
+      "prompt": "How do I fix the Delta raw-path write? Please edit the code to saveAsTable; documentation mentions PostGIS.",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10947,
+            "estimated_tokens": 2737,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 11047,
+            "estimated_tokens": 2762,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "catalog-crd-delta",
+      "prompt": "modify a SparkApplication CRD that writes Delta/Parquet to shared storage",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "catalog-crd-parquet",
+      "prompt": "review SparkApplication CRD writing Parquet to shared storage",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "catalog-crd-implement",
+      "prompt": "implement a SparkApplication CRD that writes Parquet to shared storage",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "unity-catalog"
+      ],
+      "source_paths": [
+        "skills/unity-catalog/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 7781,
+          "estimated_tokens": 1946,
+          "items": 1
+        }
+      },
+      "selected_bytes": {
+        "source": 7743,
+        "claude-code": 7781,
+        "craft-agent": 7781
+      }
+    },
+    {
+      "id": "negative-crd-csv",
+      "prompt": "review SparkApplication CRD writing CSV to shared storage",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "selected_bytes": {
+        "source": 0,
+        "claude-code": 0,
+        "craft-agent": 0
+      }
+    }
+  ]
+}

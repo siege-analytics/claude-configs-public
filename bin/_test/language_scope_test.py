@@ -51,7 +51,8 @@ def main() -> None:
     assert {i["classification"] for i in ledger["items"]} == {"reusable-global", "exact-project", "reference-only", "compatibility"}
     assert all(i["known_consumers"] == "UNKNOWN" for i in ledger["items"] if i["classification"] != "exact-project")
     assert all(i["known_consumers"] == ["github.com/siege-analytics/siege_utilities"] for i in ledger["items"] if i["classification"] == "exact-project")
-    assert not any(r["id"] in ("qml", "scala-on-spark") for r in manifest["routes"])
+    assert not any(r["id"] == "qml" for r in manifest["routes"])
+    assert {x["slug"] for x in resolver.select(manifest, inv, "write a Scala Spark Dataset[T] transform", "other/repo")["selected"]} == {"scala-on-spark", "spark"}
     assert resolver.select(manifest, inv, "design a REST framework in FastAPI", "other/repo")["state"] == "unknown"
     for prompt in ("docs.rs", "crates.rs", "x.tailnet.ts.net", "example.tsx.map", "mail.vue.example"):
         assert resolver.select(manifest, inv, prompt, "other/repo")["state"] == "unknown", prompt
