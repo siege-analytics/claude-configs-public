@@ -30,22 +30,32 @@ The hostile loop rejected successive candidates for concrete dataflow and preced
 
 One proposed stdout-to-stderr false block was reproduced against the current candidate and shown invalid (actual exit 0); it was nevertheless retained as a passing regression.
 
+## CodeRabbit review remediation
+
+Review `5529528446` on published SHA `3abbcf741b641e7f2a172173258f9db1bc18a430` identified three concrete gaps, all reproduced before repair:
+
+- recursion limits did not fail closed with a dedicated reason through every path, including `_process_command_consumes_stdin`;
+- `timeout`, `nice`, `stdbuf`, and `setsid` were not unwrapped, and `eval` payloads lacked execution context;
+- `shlex` comment handling dropped mid-word `#`, including a managed AWS operand.
+
+All three became hostile regressions. The hostile loop then found additional bounded static/dataflow cases involving executor substitutions, echo/printf escapes, Python/Spark AST writes, subprocess/exec/eval payloads, function/lambda invocation, callable aliases, and call-time closure bindings. Every valid finding became a block/pass regression; invalid syntax findings were reproduced and rejected rather than waived.
+
 ## Final verdicts
 
-Parser/dataflow candidate after the last behavioral change: **ACCEPT**.
+Parser/dataflow candidate after the original implementation: **ACCEPT**.
 
-Final post-develop, post-F4 full candidate review: **ACCEPT** (two independent completions returned `ACCEPT`).
+Frozen CodeRabbit-remediation candidate after the last behavioral change: **ACCEPT** from an exact post-change hostile completion. Earlier verdicts that produced subsequent findings are treated as superseded, not as acceptance evidence.
 
-No finding is waived.
+No valid finding is waived.
 
 ## Final evidence supplied to reviewer
 
-- Focused catalog suite: `182 passed, 0 failed`.
-- Full-hook extraction control: `172/172` exact and nonempty.
+- Focused catalog suite: `288 passed, 0 failed`.
+- Full-hook extraction control: `275/275` exact and nonempty.
 - Original 20-case matrix: base `10/20`, current `20/20`; extraction `20/20` exact/nonempty for both.
-- Deterministic malformed fuzz: seed 993; 500 classifier cases repeated twice plus 100 full-hook cases; only exit 0/2; zero tracebacks.
+- Deterministic malformed fuzz: seed 993; 500 classifier cases repeated twice plus 100 full-hook cases; 100/100 exact nonempty full-hook extractions; only exit 0/2; zero tracebacks.
 - F4 authoritative risk suite: `review_risk_test: PASS`, including direct, modification, deletion, rename-source, and declared-B rejection coverage for the classifier.
-- Full current-develop validation and all `37/37` hook suite files passed.
+- Full current-develop validation: `18/18` Python fixtures, `29/29` CI build/check/package gates, and all `37/37` hook suite files passed.
 
 ## Canary and rollback
 

@@ -96,6 +96,7 @@ OBJECT_REASON='Direct S3 copy into catalog-managed bucket'
 RAW_REASON='Python/Spark raw-path write'
 FORMAT_REASON='Spark write.format.*bypasses catalog'
 KUBECTL_REASON='kubectl exec.*catalog bypass'
+DEPTH_REASON='Command nesting exceeds catalog-guard classifier depth'
 
 printf '\nRaw classifier source (no JSON extractor dependency)\n'
 expect_classifier 2 "direct aws copy" \
@@ -110,12 +111,112 @@ expect_classifier 0 "quoted heredoc is documentation" \
     $'cat <<\'EOF\'\naws s3 cp ./out s3://gold/table/\nEOF'
 expect_classifier 0 "malformed quoted prose cannot execute" \
     "grep '$WRITE"
+DEEP_COMMAND=$(python3 - <<'PY'
+import shlex
+command = "aws s3 cp ./out s3://gold/table/"
+for _ in range(10):
+    command = "sh -c " + shlex.quote(command)
+print(command)
+PY
+)
+expect_classifier 2 "excessive nesting fails closed" \
+    "$DEEP_COMMAND" "$DEPTH_REASON"
+DEEP_EVAL_COMMAND=$(python3 - <<'PY'
+print("eval " * 400 + "echo safe")
+PY
+)
+expect_classifier 2 "literal stdout recursion limit fails closed" \
+    "$DEEP_EVAL_COMMAND" "$DEPTH_REASON"
+if python3 - "$CLASSIFIER" <<'PY'
+import importlib.util
+import sys
+spec = importlib.util.spec_from_file_location("catalog_guard_classifier", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+try:
+    module._process_command_consumes_stdin(
+        "cat", depth=module.MAX_RECURSION + 1
+    )
+except module.ClassificationDepthError as error:
+    if str(error) == module.DEPTH_REASON:
+        raise SystemExit(0)
+raise SystemExit(1)
+PY
+then
+    record_pass "classifier: stdin-consumption depth fails closed"
+else
+    record_fail "classifier: stdin-consumption depth fails closed"
+fi
 
 printf '\nPreserved Python, Spark, and kubectl block paths\n'
 expect_block "python raw write" \
     "python3 -c 'df.write.parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python whitespace around attribute dot" \
+    "python3 -c 'df.write .parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python whitespace after receiver dot" \
+    "python3 -c 'df. write.parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python writer mode chain" \
+    "python3 -c 'df.write.mode(\"overwrite\").parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python concatenated literal path" \
+    "python3 -c 'df.write.parquet(\"s3\" + \"a://gold/table/\")'" "$RAW_REASON"
+expect_block "python assigned static path" \
+    "python3 -c 'path = \"s3a://gold/table/\"; df.write.parquet(path)'" "$RAW_REASON"
+expect_block "python f-string static path" \
+    "python3 -c 'path = \"s3a://gold/table/\"; df.write.parquet(f\"{path}\")'" "$RAW_REASON"
+expect_block "python assigned path used before overwrite" \
+    "python3 -c 'path = \"s3a://gold/table/\"; df.write.parquet(path); path = \"/tmp/local\"'" "$RAW_REASON"
+expect_block "python assigned writer alias" \
+    "python3 -c 'writer = df.write; writer.parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python assigned chained writer alias" \
+    "python3 -c 'writer = df.write.mode(\"overwrite\"); writer.parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python getattr writer method" \
+    "python3 -c 'getattr(df.write, \"parquet\")(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python getattr writer root" \
+    "python3 -c 'getattr(df, \"write\").parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python writer path option" \
+    "python3 -c 'df.write.option(\"path\", \"s3a://gold/table/\").save()'" "$RAW_REASON"
+expect_block "python writer unpacked path options" \
+    "python3 -c 'df.write.options(**{\"path\": \"s3a://gold/table/\"}).save()'" "$RAW_REASON"
+expect_block "python writer starred literal path" \
+    "python3 -c 'df.write.parquet(*[\"s3a://gold/table/\"])'" "$RAW_REASON"
+expect_block "python os system shell payload" \
+    "python3 -c 'import os; os.system(\"aws s3 cp ./out s3://gold/table/\")'" "$OBJECT_REASON"
+expect_block "python subprocess argv payload" \
+    "python3 -c 'import subprocess; subprocess.run([\"aws\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"])'" "$OBJECT_REASON"
+expect_block "python subprocess args keyword payload" \
+    "python3 -c 'import subprocess; subprocess.run(args=[\"aws\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"])'" "$OBJECT_REASON"
+expect_block "python subprocess shell payload" \
+    "python3 -c 'import subprocess; subprocess.run(\"aws s3 cp ./out s3://gold/table/\", shell=True)'" "$OBJECT_REASON"
+expect_block "python subprocess shell list payload" \
+    "python3 -c 'import subprocess; subprocess.run([\"aws s3 cp ./out s3://gold/table/\"], shell=True)'" "$OBJECT_REASON"
+expect_block "python exec static write payload" \
+    "python3 -c 'exec(\"df.write.parquet(\\\"s3a://gold/table/\\\")\")'" "$RAW_REASON"
+expect_block "python exec inherits static path" \
+    "python3 -c 'path = \"s3a://gold/table/\"; exec(\"df.write.parquet(path)\")'" "$RAW_REASON"
+expect_block "python loop body static path" \
+    "python3 -c 'for _ in [0]: path = \"s3a://gold/table/\"; df.write.parquet(path)'" "$RAW_REASON"
+expect_block "python invoked lambda static path" \
+    "python3 -c 'path = \"s3a://gold/table/\"; (lambda: df.write.parquet(path))()'" "$RAW_REASON"
+expect_block "python invoked function write" \
+    $'python3 -c \'def run(): df.write.parquet("s3a://gold/table/")\nrun()\'' "$RAW_REASON"
+expect_block "python bound writer method alias" \
+    "python3 -c 'save = df.write.parquet; save(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python function resolves later global path" \
+    $'python3 -c \'def run():\n    df.write.parquet(path)\npath = "s3a://gold/table/"\nrun()\'' "$RAW_REASON"
+expect_block "python function static default path" \
+    $'python3 -c \'def run(path="s3a://gold/table/"):\n    df.write.parquet(path)\nrun()\'' "$RAW_REASON"
+expect_block "python function static keyword path" \
+    $'python3 -c \'def run(path):\n    df.write.parquet(path)\nrun(path="s3a://gold/table/")\'' "$RAW_REASON"
+expect_block "python function named static default path" \
+    $'python3 -c \'path = "s3a://gold/table/"\ndef run(target=path):\n    df.write.parquet(target)\nrun()\'' "$RAW_REASON"
+expect_block "python function default retains definition value" \
+    $'python3 -c \'path = "s3a://gold/table/"\ndef run(target=path):\n    df.write.parquet(target)\npath = "/tmp/local"\nrun()\'' "$RAW_REASON"
 expect_block "python format save" \
     "python3 -c 'df.write.format(\"delta\").save(\"s3a://gold/table/\")'" "$FORMAT_REASON"
+expect_block "python format save with attribute whitespace" \
+    "python3 -c 'df.write . format(\"delta\") . save(\"s3a://gold/table/\")'" "$FORMAT_REASON"
+expect_block "python format save with writer mode chain" \
+    "python3 -c 'df.write.mode(\"overwrite\").format(\"delta\").save(\"s3a://gold/table/\")'" "$FORMAT_REASON"
 expect_block "spark submit visible write payload" \
     "spark-submit --conf 'job=$WRITE' app.py" "$RAW_REASON"
 expect_block "kubectl exec original format path" \
@@ -134,10 +235,16 @@ expect_block "later Python heredoc overrides file stdin" \
     $'python3 < /dev/null <<\'PY\'\ndf.write.parquet("s3a://gold/table/")\nPY' "$RAW_REASON"
 expect_block "leading python heredoc redirection" \
     $'<<\'PY\' python3\ndf.write.parquet("s3a://gold/table/")\nPY' "$RAW_REASON"
+expect_block "python script from nonzero fd here string" \
+    "python3 /dev/fd/3 3<<<'df.write.parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python script from pipeline duplicated fd" \
+    "printf '%s\\n' 'df.write.parquet(\"s3a://gold/table/\")' | python3 /dev/fd/3 3<&0" "$RAW_REASON"
 
 printf '\nDirect and wrapped object copies (direction remains conservative)\n'
 expect_block "direct aws cp" \
     'aws s3 cp ./out s3a://hive-warehouse/table/' "$OBJECT_REASON"
+expect_block "direct aws cp to managed bucket root" \
+    'aws s3 cp ./out s3://gold' "$OBJECT_REASON"
 expect_block "leading output redirection before copy" \
     '>/dev/null aws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
 expect_block "leading numeric redirection before copy" \
@@ -158,6 +265,22 @@ expect_block "managed source copy remains blocked" \
     'aws s3 cp s3://gold/table/part-0 ./local' "$OBJECT_REASON"
 expect_block "sudo wrapper" \
     'sudo -u operator aws s3 cp ./out s3://bullion/table/' "$OBJECT_REASON"
+expect_block "timeout wrapper" \
+    'timeout 300 aws s3 sync ./out s3://gold/table/' "$OBJECT_REASON"
+expect_block "timeout value options wrapper" \
+    'timeout --signal KILL --kill-after=10s 300s aws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
+expect_block "nice wrapper" \
+    'nice -n 10 mc cp ./out s3://gold/table/' "$OBJECT_REASON"
+expect_block "stdbuf wrapper" \
+    'stdbuf -oL aws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
+expect_block "setsid wrapper" \
+    'setsid --fork aws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
+expect_block "mid-word hash remains in copy argument" \
+    'aws s3 cp ./a#b s3://gold/table/' "$OBJECT_REASON"
+# This substitution must remain literal test input for the hook classifier.
+# shellcheck disable=SC2016
+expect_block "escaped whitespace keeps hash inside executable word" \
+    'echo foo\ #$(aws s3 cp ./out s3://gold/table/)' "$OBJECT_REASON"
 expect_block "leading assignment" \
     'AWS_PROFILE=dev mc cp ./out s3://platinum/table/' "$OBJECT_REASON"
 expect_block "env wrapper" \
@@ -206,10 +329,14 @@ expect_block "tee output process substitution feeds shell" \
     "printf '%s\\n' 'aws s3 cp ./out s3://gold/table/' | tee >(sh)" "$OBJECT_REASON"
 expect_block "printf assembles shell payload from literals" \
     "printf '%s %s\\n' 'aws' 's3 cp ./out s3://gold/table/' | sh" "$OBJECT_REASON"
+expect_block "printf percent b decodes octal shell payload" \
+    "printf '%b\\n' '\\0141ws s3 cp ./out s3://gold/table/' | sh" "$OBJECT_REASON"
 expect_block "printf reuses consuming format for later command" \
     "printf '%s\\n' 'echo safe' 'aws s3 cp ./out s3://gold/table/' | sh" "$OBJECT_REASON"
 expect_block "literal echo payload piped through env to shell" \
     "echo 'aws s3 cp ./out s3://gold/table/' | env sh" "$OBJECT_REASON"
+expect_block "echo escape payload piped to shell" \
+    "echo -e '\\x61ws s3 cp ./out s3://gold/table/' | sh" "$OBJECT_REASON"
 expect_block "quoted heredoc producer piped to shell" \
     $'cat <<\'EOF\' | sh\naws s3 cp ./out s3://gold/table/\nEOF' "$OBJECT_REASON"
 expect_block "literal payload forwarded to kubectl shell stdin" \
@@ -246,6 +373,42 @@ expect_block "kubectl global option before exec copy" \
 printf '\nShell payloads and active substitutions\n'
 expect_block "sh -c object copy" \
     "sh -c 'aws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
+expect_block "bash ANSI-C quoted object copy" \
+    "bash -c \$'aws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
+expect_block "bash ANSI-C quoted multiline copy" \
+    "bash -c \$'echo safe\\naws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
+expect_block "invalid ANSI Unicode cannot hide later copy" \
+    "echo \$'\\U00110000'; aws s3 cp ./out s3://gold/table/" "$OBJECT_REASON"
+expect_block "shell sources process substitution script" \
+    "bash -c 'source <(printf \"%s\\n\" \"aws s3 cp ./out s3://gold/table/\")'" "$OBJECT_REASON"
+expect_block "dot sources process substitution script" \
+    "bash -c '. <(printf \"%s\\n\" \"aws s3 cp ./out s3://gold/table/\")'" "$OBJECT_REASON"
+expect_block "source dev stdin consumes pipeline script" \
+    "printf '%s\\n' 'aws s3 cp ./out s3://gold/table/' | bash -c 'source /dev/stdin'" "$OBJECT_REASON"
+expect_block "dot fd zero consumes pipeline script" \
+    "printf '%s\\n' 'aws s3 cp ./out s3://gold/table/' | bash -c '. /dev/fd/0'" "$OBJECT_REASON"
+expect_block "source proc fd zero consumes here string" \
+    "source /proc/self/fd/0 <<< 'aws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
+expect_block "source script from nonzero fd here string" \
+    "source /dev/fd/3 3<<<'aws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
+expect_block "source script from pipeline duplicated fd" \
+    "printf '%s\\n' 'aws s3 cp ./out s3://gold/table/' | source /dev/fd/3 3<&0" "$OBJECT_REASON"
+expect_block "noexec can be reset before shell payload" \
+    "bash -n +n -c 'aws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
+expect_block "named noexec can be reset before shell payload" \
+    "bash -o noexec +o noexec -c 'aws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
+expect_block "eval object copy" \
+    "eval 'aws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
+expect_block "eval executes command substitution stdout" \
+    "eval \"\$(printf '%s\\n' 'aws s3 cp ./out s3://gold/table/')\"" "$OBJECT_REASON"
+expect_block "sh c executes command substitution stdout" \
+    "sh -c \"\$(printf '%s\\n' 'aws s3 cp ./out s3://gold/table/')\"" "$OBJECT_REASON"
+expect_block "eval substitution consumes pipeline stdin" \
+    "printf 'aws s3 cp ./out s3://gold/table/\\n' | eval \"\$(cat)\"" "$OBJECT_REASON"
+expect_block "eval consumes inherited shell payload" \
+    "printf '%s\\n' 'aws s3 cp ./out s3://gold/table/' | eval 'cat | sh'" "$OBJECT_REASON"
+expect_block "eval stdout feeds downstream shell" \
+    "printf '%s\\n' 'aws s3 cp ./out s3://gold/table/' | eval 'cat' | sh" "$OBJECT_REASON"
 expect_block "bash -lc python write" \
     "bash -lc 'python3 -c '\"'\"'df.write.parquet(\"s3a://gold/table/\")'\"'\"''" "$RAW_REASON"
 expect_block "bash combined flags with c before final flag" \
@@ -279,6 +442,8 @@ expect_block "kubectl shell preserves legacy format-only block" \
 # shellcheck disable=SC2016
 expect_block "active dollar command substitution" \
     'echo "$(aws s3 cp ./out s3://gold/table/)"' "$OBJECT_REASON"
+expect_block "unquoted substitution output forms invocation" \
+    "\$(printf 'aws s3 cp ./out s3://gold/table/')" "$OBJECT_REASON"
 expect_block "command substitution retains nested heredoc body" \
     $'echo $(python3 <<\'PY\'\ndf.write.parquet("s3a://gold/table/")\nPY\n)' "$RAW_REASON"
 # shellcheck disable=SC2016
@@ -338,12 +503,32 @@ expect_pass "inline redirection in grep remains prose" \
     "grep >/dev/null 'aws s3 cp ./out s3://gold/table/' notes.md"
 expect_pass "echo argument names object copy" \
     "echo 'aws s3 cp ./out s3://gold/table/'"
+expect_pass "eval only echoes copy prose" \
+    "eval \"echo 'aws s3 cp ./out s3://gold/table/'\""
+expect_pass "echo receives command substitution prose" \
+    "echo \"\$(printf '%s\\n' 'aws s3 cp ./out s3://gold/table/')\""
+expect_pass "quoted substitution is one command-name word" \
+    "\"\$(printf 'aws s3 cp ./out s3://gold/table/')\""
+expect_pass "echo receives pipeline substitution as prose" \
+    "printf 'aws s3 cp ./out s3://gold/table/\\n' | echo \"\$(cat)\""
+expect_pass "eval substitution only echoes copy prose" \
+    "eval \"\$(printf '%s\\n' \"echo 'aws s3 cp ./out s3://gold/table/'\")\""
+expect_pass "real shell comment remains nonexecuting" \
+    "echo safe # aws s3 cp ./out s3://gold/table/"
 expect_pass "aws help argument is prose, not cp invocation" \
     "aws help 'aws s3 cp ./out s3://gold/table/'"
 expect_pass "aws help positionals are not a cp invocation" \
     "aws help s3 cp s3://gold/table/"
+expect_pass "aws metadata managed URI is not copy operand" \
+    "aws s3 cp ./out s3://unmanaged/table/ --metadata 'note=s3://gold/table/'"
+expect_pass "aws leading metadata managed URI is not copy operand" \
+    "aws s3 cp --metadata 'note=s3://gold/table/' ./out s3://unmanaged/table/"
+expect_pass "similarly named bucket is unmanaged" \
+    "aws s3 cp ./out s3://goldish/table/"
 expect_pass "mc help positionals are not a copy invocation" \
     "mc help cp s3://gold/table/"
+expect_pass "mc attribute managed URI is not copy operand" \
+    "mc cp ./out s3://unmanaged/table/ --attr 'note=s3://gold/table/'"
 expect_pass "cat quoted heredoc contains commands" \
     $'cat <<\'EOF\'\naws s3 cp ./out s3://gold/table/\ndf.write.parquet("s3a://gold/table/")\nEOF'
 expect_pass "editor heredoc contains commands" \
@@ -372,8 +557,12 @@ expect_pass "assembled printf echo remains non-copy" \
     "printf '%s%s\\n' 'echo ' 'aws s3 cp ./out s3://gold/table/' | sh"
 expect_pass "printf ignores args when format consumes none" \
     "printf 'safe\\n' 'aws s3 cp ./out s3://gold/table/' | sh"
+expect_pass "printf percent q shell escapes copy text" \
+    "printf '%q' 'aws s3 cp ./out s3://gold/table/' | sh"
 expect_pass "safe literal command piped to shell" \
     "echo 'grep catalog notes.md' | sh"
+expect_pass "echo escape decoding disabled before shell" \
+    "echo -E '\\x61ws s3 cp ./out s3://gold/table/' | sh"
 expect_pass "inline shell program does not consume outer stdin" \
     "printf '%s\\n' 'aws s3 cp ./out s3://gold/table/' | sh -c 'echo safe'"
 expect_pass "earlier cat drains compound shell stdin" \
@@ -443,6 +632,62 @@ expect_pass "process substitution syntax in heredoc is literal" \
     $'cat <<EOF\n<(aws s3 cp ./out s3://gold/table/)\nEOF'
 expect_pass "shell payload only echoes prose" \
     "sh -c 'echo '\"'\"'aws s3 cp ./out s3://gold/table/'\"'\"''"
+expect_pass "shell noexec only syntax-checks payload" \
+    "bash -n -c 'aws s3 cp ./out s3://gold/table/'"
+expect_pass "clustered shell noexec only syntax-checks payload" \
+    "bash -nc 'aws s3 cp ./out s3://gold/table/'"
+expect_pass "named shell noexec only syntax-checks payload" \
+    "bash -o noexec -c 'aws s3 cp ./out s3://gold/table/'"
+expect_pass "shell noexec only syntax-checks heredoc" \
+    $'bash -n <<\'EOF\'\naws s3 cp ./out s3://gold/table/\nEOF'
+expect_pass "source process script only echoes prose" \
+    "bash -c 'source <(printf \"%s\\n\" \"echo aws s3 cp ./out s3://gold/table/\")'"
+expect_pass "source dev stdin executes only echo prose" \
+    "printf '%s\\n' 'echo aws s3 cp ./out s3://gold/table/' | bash -c 'source /dev/stdin'"
+expect_pass "out of range ANSI Unicode alone is harmless" \
+    "echo \$'\\U00110000'"
+expect_pass "python string literal write syntax is prose" \
+    "python3 -c 'print(\"df.write.parquet(s3a://gold/table/)\")'"
+expect_pass "python os system only echoes copy prose" \
+    "python3 -c 'import os; os.system(\"echo aws s3 cp ./out s3://gold/table/\")'"
+expect_pass "python subprocess shell list only echoes prose" \
+    "python3 -c 'import subprocess; subprocess.run([\"echo aws s3 cp ./out s3://gold/table/\"], shell=True)'"
+expect_pass "python subprocess args keyword only echoes prose" \
+    "python3 -c 'import subprocess; subprocess.run(args=[\"echo\", \"aws s3 cp ./out s3://gold/table/\"])'"
+expect_pass "python unrelated keyword string is not path" \
+    "python3 -c 'df.write.parquet(\"/tmp/local\", mode=\"overwrite\" if \"s3a://gold/table/\" else \"append\")'"
+expect_pass "python unrelated unpacked option is not path" \
+    "python3 -c 'df.write.options(**{\"note\": \"s3a://gold/table/\"}).parquet(\"/tmp/local\")'"
+expect_pass "python assigned path overwritten before write" \
+    "python3 -c 'path = \"s3a://gold/table/\"; path = \"/tmp/local\"; df.write.parquet(path)'"
+expect_pass "python f-string local path is allowed" \
+    "python3 -c 'path = \"/tmp/local\"; df.write.parquet(f\"{path}\")'"
+expect_pass "python exec inherits overwritten local path" \
+    "python3 -c 'path = \"s3a://gold/table/\"; path = \"/tmp/local\"; exec(\"df.write.parquet(path)\")'"
+expect_pass "python loop body local path is allowed" \
+    "python3 -c 'for _ in [0]: path = \"/tmp/local\"; df.write.parquet(path)'"
+expect_pass "python unused function write is nonexecuting" \
+    "python3 -c 'def unused(): df.write.parquet(\"s3a://gold/table/\")'"
+expect_pass "python call before definition cannot execute body" \
+    $'python3 -c \'run()\ndef run(): df.write.parquet("s3a://gold/table/")\''
+expect_pass "python reassigned function body is nonexecuting" \
+    $'python3 -c \'def run():\n    df.write.parquet("s3a://gold/table/")\nrun = lambda: None\nrun()\''
+expect_pass "python bound writer method local path is allowed" \
+    "python3 -c 'save = df.write.parquet; save(\"/tmp/local\")'"
+expect_pass "python writer object alias is not callable" \
+    "python3 -c 'writer = df.write; writer(\"s3a://gold/table/\")'"
+expect_pass "python function resolves overwritten local global path" \
+    $'python3 -c \'path = "s3a://gold/table/"\ndef run():\n    df.write.parquet(path)\npath = "/tmp/local"\nrun()\''
+expect_pass "python function explicit argument overrides dangerous default" \
+    $'python3 -c \'def run(path="s3a://gold/table/"):\n    df.write.parquet(path)\nrun("/tmp/local")\''
+expect_pass "python function parameter shadows dangerous global" \
+    $'python3 -c \'path = "s3a://gold/table/"\ndef run(path):\n    df.write.parquet(path)\nrun("/tmp/local")\''
+expect_pass "python unresolved parameter clears stale global annotation" \
+    $'python3 -c \'path = "s3a://gold/table/"\ndef run(path):\n    df.write.parquet(path)\nrun(str("/tmp/local"))\''
+expect_pass "python function named local default is allowed" \
+    $'python3 -c \'path = "/tmp/local"\ndef run(target=path):\n    df.write.parquet(target)\nrun()\''
+expect_pass "python writer alias overwritten before call" \
+    "python3 -c 'writer = df.write; writer = other; writer.parquet(\"s3a://gold/table/\")'"
 expect_pass "python filename argument is not inline payload" \
     "python3 report.py '$WRITE'"
 expect_pass "python module -c argument is not interpreter payload" \

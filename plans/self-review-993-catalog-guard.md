@@ -69,8 +69,8 @@ Falsification: this exemption is invalid if any implementation decision lacks an
 ## Peer review
 
 - **Parsing safety:** `classify-catalog-command.py` imports no subprocess module and calls no `eval`, `exec`, `os.system`, or `shell=True`; parsed text is data only.
-- **Invocation correctness:** 182 focused cases cover preserved blockers, direct/wrapped copies, pipelines/control lists, shell/Python/kubectl payloads, substitutions, heredocs/here-strings, descriptor state, nested process flow, malformed syntax, and prose consumers.
-- **Consumer correctness:** all 172 full-hook cases independently require the real extractor to return the exact nonempty command before evaluating policy output; missing classifier/extractor, malformed JSON, and empty command exit 2.
+- **Invocation correctness:** 288 focused cases cover preserved blockers, direct/wrapped copies, pipelines/control lists, shell/Python/kubectl payloads, substitutions, heredocs/here-strings, descriptor state, nested process flow, malformed syntax, wrapper/eval/comment semantics, bounded AST executors, aliases, call-time closures, static arguments/defaults, and prose consumers.
+- **Consumer correctness:** all 275 full-hook cases independently require the real extractor to return the exact nonempty command before evaluating policy output; missing classifier/extractor, malformed JSON, empty command, and recursion-limit exhaustion exit 2.
 - **F4 boundary:** the policy regex names only `classify-catalog-command`; graph audit pins the exact catalog-guard assignment and Python operand; `review_risk_test.py` exercises direct, staged modification, deletion, rename source, and declared-B rejection.
 - **Syntax/static:** shellcheck on both shell files, Python 3.13 byte compilation, `git diff --check`, and call/import-specific unsafe primitive scan all exit 0.
 - **Suite:** full current-develop non-hook workflow command set exits 0; all 37 hook suite files pass.
@@ -87,14 +87,14 @@ Falsification: this exemption is invalid if any implementation decision lacks an
 
 ## Findings
 
-No unresolved findings. Every valid hostile finding was fixed and regression-tested; final parser and full-candidate reviews returned `ACCEPT`.
+No unresolved findings. CodeRabbit review `5529528446` was reproduced and remediated for dedicated fail-closed recursion limits, wrapper/eval invocation context, and mid-word `#` preservation. Every subsequent valid hostile finding was fixed and regression-tested; the exact post-final-change candidate returned `ACCEPT`. Earlier verdicts that produced later findings are explicitly superseded.
 
 ## Quantified claims
 
-- "Focused catalog suite: 182 passed, 0 failed; extraction 172/172" — `bash hooks/_test/catalog_guard.test.sh` → `Results: 182 passed, 0 failed`; `extraction control: 172/172 full-hook commands nonempty`.
+- "Focused catalog suite: 288 passed, 0 failed; extraction 275/275" — `bash hooks/_test/catalog_guard.test.sh` → `Results: 288 passed, 0 failed`; `extraction control: 275/275 full-hook commands nonempty`.
 - "Original matrix base 10/20, current 20/20, extraction 20/20 each" — exact-base/current matrix command → `SUMMARY base_policy=10/20 current_policy=20/20 base_exact_nonempty=20/20 current_exact_nonempty=20/20`.
 - "Malformed fuzz deterministic and crash-free" — seed-993 fuzz → `classifier_cases=500 repeated=2 hook_cases=100 exits={0,2} tracebacks=0`.
-- "18 Python fixture modules" — `find bin/_test -maxdepth 1 -name '*_test.py' | wc -l` → `18`; current workflow non-hook command sequence → `FULL_NON_HOOK_SUITE_PASS`.
+- "18 Python fixture modules and 29 CI build/check/package gates" — accumulated runners → `PYTHON_FIXTURES passed=18 failed=0 total=18` and `CI_CHECKS passed=29 failed=0`.
 - "37/37 hook files" — accumulated `hooks/_test/*.test.sh` runner → `HOOK_FILES_TOTAL=37 PASS=37 FAIL=0`.
 - "F4 graph/shape suite" — `python3.13 bin/_test/review_risk_test.py` → `review_risk_test: PASS`.
 - "Generated authorities" — checks → `198 sources, 804 artifact snapshots, 2904 generated file mappings`; kernel `6995 chars, 1749 estimated tokens`; inventory current.
@@ -111,6 +111,8 @@ No unresolved findings. Every valid hostile finding was fixed and regression-tes
 | First matrix reconstruction gave 13/20 and 0 extraction | Selected prose cases did not enter legacy gate; compared extractor print newline literally | One matrix run | Corrected case composition and normalized extractor-owned newline | Low |
 | Unsafe primitive grep flagged parser string `exec` | Pattern matched data tokens, not calls | One grep | Refined to call/import-specific scan | Low |
 | Hosted generated-authority check failed | Inventory was checked before, not after, the new focused test/evidence files were committed | One hosted run + local reproduction | Regenerated `catalog/skills-inventory.json`, reran dependent authorities/build checks, and pushed a reviewed follow-up | Low |
+| CodeRabbit review `5529528446` | Recursion, utility wrappers/eval, and `shlex` comment semantics were incomplete at published SHA `3abbcf7` | Three exact reproductions | Added dedicated depth failure, wrapper/eval context, literal `#` handling, and hostile regressions | High |
+| Follow-on AST/dataflow hostile findings | The bounded model lacked several statically knowable executor, alias, invocation, closure, argument/default, and re-annotation shapes | One exact command plus block/pass control per round | Generalized bounded modeling; final frozen suite reached 288/288 and the exact post-final candidate returned `ACCEPT` | High defect yield |
 
 ## Evidence-predates-work
 
@@ -124,6 +126,6 @@ Verification: `git merge-base --is-ancestor 96069e69d29ef05ea12f0fb9c1c59c2bf519
 
 ## Canary and rollback
 
-Canary: build both consumer packages; direct managed copy exits 2 with the direct-copy reason; grep prose exits 0; packaged review-risk policy accepts declared Tier C for the helper. Both packages passed.
+Canary: build both consumer packages; direct managed copy exits 2 with the direct-copy reason; grep prose exits 0; all four package extractions are exact/nonempty; the authoritative high-risk regex matches the helper and F4 passes. Both packages passed.
 
-Rollback: revert the isolated implementation commit and its evidence-only follow-up if needed. Do not force-push. No install/deployment/release cleanup is required because none occurred.
+Rollback: revert the forthcoming isolated CodeRabbit-remediation commit (or the original implementation series if a full rollback is required). Do not force-push. No install/deployment/release cleanup is required because none occurred.

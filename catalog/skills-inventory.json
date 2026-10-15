@@ -7967,6 +7967,7 @@
         "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
+        "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "scripts/ci/test_flat_skill_layout.sh"
