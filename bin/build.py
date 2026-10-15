@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 import shlex
@@ -25,6 +26,40 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+# Load the sibling validator lazily by absolute path. Tier C discovery tests
+# import a deliberately isolated copy of build.py to inspect pure discovery
+# functions; that copy does not contain runtime siblings and must remain
+# importable until a contract-dependent build function is actually called.
+GATE_CONTRACT_SOURCE = Path("catalog/gate-contracts.json")
+_GATE_CONTRACT = None
+
+
+def _gate_contract_module():
+    global _GATE_CONTRACT
+    if _GATE_CONTRACT is None:
+        spec = importlib.util.spec_from_file_location(
+            "gate_contract", Path(__file__).resolve().with_name("gate_contract.py")
+        )
+        if spec is None or spec.loader is None:
+            raise ImportError("cannot load bin/gate_contract.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _GATE_CONTRACT = module
+    return _GATE_CONTRACT
+
+
+def load_contract(*args, **kwargs):
+    return _gate_contract_module().load_contract(*args, **kwargs)
+
+
+def load_fixtures(*args, **kwargs):
+    return _gate_contract_module().load_fixtures(*args, **kwargs)
+
+
+def contract_digest(*args, **kwargs):
+    return _gate_contract_module().contract_digest(*args, **kwargs)
+
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_SKILLS = REPO_ROOT / "skills"
@@ -1172,11 +1207,13 @@ def build_ca_enforcement() -> None:
     Emits:
       dist/craft-agent/enforcement-manifest.json  -- gate definitions for auditability
       dist/craft-agent/settings-enforcement.json   -- hook settings fragment for merge
-      dist/craft-agent/.githooks/pre-push           -- native git hook for push-time gates
+      dist/craft-agent/.githooks/{commit-msg,pre-push} -- native git boundaries
     """
     ca_dist = DIST / "craft-agent"
     ca_dist.mkdir(parents=True, exist_ok=True)
 
+    contract = load_contract(REPO_ROOT)
+    contract_sha256 = contract_digest(contract)
     version = _get_version()
     try:
         commit = subprocess.check_output(
@@ -1191,6 +1228,9 @@ def build_ca_enforcement() -> None:
         "version": version,
         "source_commit": commit,
         "built_at": datetime.now(timezone.utc).isoformat(),
+        "gate_contract_source": GATE_CONTRACT_SOURCE.as_posix(),
+        "gate_contract_sha256": contract_sha256,
+        "gate_contract": contract,
         "gates": CA_ENFORCEMENT_GATES,
     }
     manifest_text = json.dumps(manifest, indent=2) + "\n"
@@ -1212,6 +1252,13 @@ def build_ca_enforcement() -> None:
             "into blocking continue:false signals.  Merge into workspace "
             ".claude/settings.json — do not replace the full file."
         ),
+        "_gate_contract": {
+            "schema_version": contract["schema_version"],
+            "contract_version": contract["contract_version"],
+            "source": GATE_CONTRACT_SOURCE.as_posix(),
+            "sha256": contract_sha256,
+            "evidence_state": "configured",
+        },
         "hooks": {
             "UserPromptSubmit": [
                 {
@@ -1233,9 +1280,14 @@ def build_ca_enforcement() -> None:
         json.dumps(settings_fragment, indent=2) + "\n"
     )
 
-    # 3. Native git pre-push hook — calls push-time gates.
+    # 3. Native git hooks. The commit-msg boundary is canonical source copied
+    # byte-for-byte; pre-push is generated from the legacy gate registrations.
     githooks_dir = ca_dist / ".githooks"
     githooks_dir.mkdir(parents=True, exist_ok=True)
+    commit_msg_source = REPO_ROOT / ".githooks" / "commit-msg"
+    if not commit_msg_source.is_file() or not commit_msg_source.stat().st_mode & 0o111:
+        raise BuildError("gate contract registered .githooks/commit-msg is missing or not executable")
+    shutil.copy2(commit_msg_source, githooks_dir / "commit-msg")
 
     push_gates = [g for g in CA_ENFORCEMENT_GATES if g["surface"] == "native-git-pre-push"]
     pre_push_lines = [
@@ -1287,6 +1339,7 @@ def build_ca_enforcement() -> None:
     print(f"    {len(push_gates)} native git pre-push")
     print(f"  -> dist/craft-agent/enforcement-manifest.json")
     print(f"  -> dist/craft-agent/settings-enforcement.json")
+    print(f"  -> dist/craft-agent/.githooks/commit-msg")
     print(f"  -> dist/craft-agent/.githooks/pre-push")
 
 
@@ -1789,6 +1842,22 @@ def main() -> int:
             return 1
         if deploy_source:
             print(f"Deploy source verified: current origin/main {deploy_source}")
+
+    # Phase 0: Validate the bounded gate/capability source and fixtures. This is
+    # structural/configured evidence only; live host proof is intentionally not
+    # inferred by the build.
+    print("Validating gate contracts...")
+    try:
+        gate_contract = load_contract(REPO_ROOT)
+        gate_fixtures = load_fixtures(REPO_ROOT, gate_contract)
+    except ValueError as e:
+        print(f"BUILD ERROR: gate contract: {e}", file=sys.stderr)
+        return 1
+    print(
+        f"  {len(gate_contract['policy_fields'])} policy field(s), "
+        f"{len(gate_contract['capabilities'])} capability declaration(s), "
+        f"{len(gate_fixtures)} synthetic fixture(s)"
+    )
 
     # Phase 1: Validate project manifests (repo uniqueness, required fields, status).
     print("Validating project manifests...")

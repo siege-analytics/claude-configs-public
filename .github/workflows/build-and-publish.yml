@@ -39,6 +39,11 @@ jobs:
       - name: Full build for hook validation
         run: python3 bin/build.py
 
+      - name: Gate contract and generated agreement
+        run: |
+          python3 bin/_test/gate_contract_test.py
+          python3 bin/gate_contract.py --check --probe --generated-root dist
+
       - name: Canonical terminology and generated wiki
         run: |
           python3 bin/_test/ontology_test.py

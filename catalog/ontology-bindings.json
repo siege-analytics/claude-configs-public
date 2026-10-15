@@ -39,6 +39,91 @@
           "pointer": "/gates/*/blocking",
           "term": "configured",
           "value_type": "boolean"
+        },
+        {
+          "pointer": "/gate_contract",
+          "term": "generated-artifact",
+          "value_type": "object"
+        }
+      ]
+    },
+    {
+      "artifact": "catalog/gate-contracts.json",
+      "fields": [
+        {
+          "pointer": "/policy_fields/0",
+          "term": "policy",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/policy_fields/1",
+          "term": "policy",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/policy_fields/2",
+          "term": "procedure-binding",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/policy_fields/*/override_policy",
+          "term": "policy-override",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/policy_fields/*/required_capability_ids/*",
+          "term": "host-capability",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/capabilities/*",
+          "term": "host-capability",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/capabilities/*/configured_evidence_only",
+          "term": "configured",
+          "value_type": "boolean"
+        }
+      ]
+    },
+    {
+      "artifact": "examples/scaffolding/strict-release-policy.json",
+      "fields": [
+        {
+          "pointer": "/repository_identity",
+          "term": "repository-identity",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/parent_lock",
+          "term": "parent-lock",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/values/review-procedure-binding",
+          "term": "procedure-binding",
+          "value_type": "object"
+        }
+      ]
+    },
+    {
+      "artifact": "examples/scaffolding/synthetic-trunk-policy.json",
+      "fields": [
+        {
+          "pointer": "/repository_identity",
+          "term": "repository-identity",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/parent_lock",
+          "term": "parent-lock",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/values/review-procedure-binding",
+          "term": "procedure-binding",
+          "value_type": "object"
         }
       ]
     }
