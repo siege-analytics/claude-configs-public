@@ -1,0 +1,742 @@
+{
+  "schema_version": 1,
+  "ontology_version": "1.0.0",
+  "terms": [
+    {
+      "id": "parent-scaffold",
+      "label": "Parent scaffold",
+      "definition": "Reusable definitions, composition and verification mechanisms shared by consumers; selected organization or project workflow choices live in profiles.",
+      "owner": "scaffolding",
+      "examples": [
+        "One parent package serves strict-release and synthetic-trunk."
+      ],
+      "distinguished_from": [
+        "profile"
+      ],
+      "references": [
+        "#851",
+        "#848"
+      ]
+    },
+    {
+      "id": "profile",
+      "label": "Profile",
+      "definition": "An approved named set of workflow policy values and permitted project customizations selected for a declared scope.",
+      "owner": "policy",
+      "examples": [
+        "One profile targets develop; another permits feature branches to target main."
+      ],
+      "distinguished_from": [
+        "parent-scaffold",
+        "policy-override"
+      ],
+      "references": [
+        "#848",
+        "#1002"
+      ]
+    },
+    {
+      "id": "project",
+      "label": "Project",
+      "definition": "A declared consumer scope with canonical repository identities, a selected profile and explicit composition inputs.",
+      "owner": "policy",
+      "examples": [
+        "A project declares its repository and binds a project review procedure."
+      ],
+      "distinguished_from": [
+        "repository-identity"
+      ],
+      "references": [
+        "#848",
+        "#1001"
+      ]
+    },
+    {
+      "id": "policy",
+      "label": "Policy",
+      "definition": "Approved criteria governing an operation, including permitted configuration and required evidence; policy does not grant platform permissions.",
+      "owner": "policy",
+      "examples": [
+        "The selected policy requires a ticket identifier on accepted commits."
+      ],
+      "distinguished_from": [
+        "skill",
+        "authorization-record"
+      ],
+      "references": [
+        "#848",
+        "#851"
+      ]
+    },
+    {
+      "id": "effective-policy",
+      "label": "Effective policy",
+      "definition": "The deterministic result of resolving approved parent, organization and project policy inputs, with provenance and a revision or digest. Evaluate a policy-changing operation under the previously approved policy, not its proposed replacement.",
+      "owner": "policy",
+      "examples": [
+        "An explanation reports the controlling ticket syntax and its approved source."
+      ],
+      "distinguished_from": [
+        "policy-override",
+        "evidence"
+      ],
+      "references": [
+        "#848",
+        "#1002"
+      ]
+    },
+    {
+      "id": "policy-override",
+      "label": "Policy override",
+      "definition": "An explicit change to a policy field that the controlling approved layer permits a lower layer to customize.",
+      "owner": "policy",
+      "examples": [
+        "A permitted project setting chooses a different ticket syntax."
+      ],
+      "distinguished_from": [
+        "skill-replacement",
+        "resident-composition",
+        "authorization-record"
+      ],
+      "references": [
+        "#848",
+        "#851"
+      ]
+    },
+    {
+      "id": "skill",
+      "label": "Skill",
+      "definition": "A scoped procedure or reference resource selected for a task; reading or replacing its prose cannot create permission or approval.",
+      "owner": "composition",
+      "examples": [
+        "A code review skill supplies a review procedure."
+      ],
+      "distinguished_from": [
+        "policy",
+        "host-capability"
+      ],
+      "references": [
+        "#1001",
+        "#848"
+      ]
+    },
+    {
+      "id": "procedure-binding",
+      "label": "Procedure binding",
+      "definition": "An explicit association between a task procedure role and the qualified skill selected to perform it.",
+      "owner": "composition",
+      "examples": [
+        "The review role selects a project-specific review skill."
+      ],
+      "distinguished_from": [
+        "host-capability",
+        "skill-replacement"
+      ],
+      "references": [
+        "#1001",
+        "#851"
+      ]
+    },
+    {
+      "id": "skill-replacement",
+      "label": "Skill replacement",
+      "definition": "An explicit composition declaration selecting a qualified skill instead of another for the declared procedure role and scope.",
+      "owner": "composition",
+      "examples": [
+        "The default review procedure is replaced across explicit and prerequisite routes."
+      ],
+      "distinguished_from": [
+        "policy-override",
+        "skill-extension",
+        "authorization-record"
+      ],
+      "references": [
+        "#1001",
+        "#848"
+      ]
+    },
+    {
+      "id": "skill-extension",
+      "label": "Skill extension",
+      "definition": "An explicit composition declaration adding scoped skill content in a declared order while retaining the referenced base procedure.",
+      "owner": "composition",
+      "examples": [
+        "A project review adds a notebook check after the general review."
+      ],
+      "distinguished_from": [
+        "skill-replacement"
+      ],
+      "references": [
+        "#1001",
+        "#848"
+      ]
+    },
+    {
+      "id": "resident-block",
+      "label": "Resident block",
+      "definition": "A stable identified section of instructions selected to remain in the active resident context.",
+      "owner": "composition",
+      "examples": [
+        "A workflow block carries the selected project topology."
+      ],
+      "distinguished_from": [
+        "skill"
+      ],
+      "references": [
+        "#1001",
+        "#1003"
+      ]
+    },
+    {
+      "id": "resident-composition",
+      "label": "Resident composition",
+      "definition": "Deterministic assembly of parent and project resident blocks using declared replacement or extension, provenance and a final size budget. Every managed output must identify the same approved parent lock; mixed parent inputs are invalid.",
+      "owner": "composition",
+      "examples": [
+        "A project replaces its workflow block and preserves common integrity blocks."
+      ],
+      "distinguished_from": [
+        "policy-override",
+        "skill-replacement"
+      ],
+      "references": [
+        "#1001",
+        "#1004"
+      ]
+    },
+    {
+      "id": "repository-identity",
+      "label": "Repository identity",
+      "definition": "Canonical host, owner and repository identifiers used to identify the actual operation target repository. Directory or file applicability is a separate scope bound to that identity. Missing, foreign or ambiguous identity remains unknown and cannot inherit a neighboring project.",
+      "owner": "policy",
+      "examples": [
+        "Equal repository basenames under different owners do not identify the same target."
+      ],
+      "distinguished_from": [
+        "applicability-scope",
+        "authorization-scope"
+      ],
+      "references": [
+        "#848",
+        "#1002"
+      ]
+    },
+    {
+      "id": "applicability-scope",
+      "label": "Applicability scope",
+      "definition": "The targets and operation classes for which a policy, skill or check is relevant.",
+      "owner": "policy",
+      "examples": [
+        "A notebook check applies only to the declared project and notebook changes."
+      ],
+      "distinguished_from": [
+        "repository-identity",
+        "authorization-scope"
+      ],
+      "references": [
+        "#848",
+        "#1002"
+      ]
+    },
+    {
+      "id": "authorization-scope",
+      "label": "Authorization scope",
+      "definition": "The actors, resources, operations and validity limits covered by an actual authorization.",
+      "owner": "authority",
+      "examples": [
+        "Permission to inspect one repository does not grant deployment authority."
+      ],
+      "distinguished_from": [
+        "applicability-scope",
+        "repository-identity"
+      ],
+      "references": [
+        "#848",
+        "#1002"
+      ]
+    },
+    {
+      "id": "host-capability",
+      "label": "Host capability",
+      "definition": "A specific mechanism a pinned host/backend combination can provide, with capability evidence recorded separately from configuration.",
+      "owner": "host-adapter",
+      "examples": [
+        "Tool-call denial and instruction delivery are separate host capabilities."
+      ],
+      "distinguished_from": [
+        "procedure-binding",
+        "configured",
+        "acceptance-blocking"
+      ],
+      "references": [
+        "#1003",
+        "#851"
+      ]
+    },
+    {
+      "id": "host-adapter",
+      "label": "Host adapter",
+      "definition": "The implementation that maps structured inputs and decisions to a particular host protocol and observes its outcome.",
+      "owner": "host-adapter",
+      "examples": [
+        "An adapter translates a denial into the supported tool-interception response."
+      ],
+      "distinguished_from": [
+        "host-capability",
+        "policy"
+      ],
+      "references": [
+        "#1003",
+        "#851"
+      ]
+    },
+    {
+      "id": "gate",
+      "label": "Gate",
+      "definition": "A check that evaluates operation facts and evidence against applicable policy at a declared boundary and returns a decision.",
+      "owner": "enforcement",
+      "examples": [
+        "A ticket gate inspects actual commit messages in the candidate range."
+      ],
+      "distinguished_from": [
+        "host-adapter",
+        "acceptance-blocking"
+      ],
+      "references": [
+        "#851",
+        "#1002"
+      ]
+    },
+    {
+      "id": "evidence",
+      "label": "Evidence",
+      "definition": "An observable record supporting a specific claim, bound to relevant source, target, revision, method and validity conditions.",
+      "owner": "verification",
+      "examples": [
+        "A canary records the exact adapter revision and the prevented side effect."
+      ],
+      "distinguished_from": [
+        "authorization-record",
+        "configured"
+      ],
+      "references": [
+        "#1002",
+        "#1003"
+      ]
+    },
+    {
+      "id": "authorization-record",
+      "label": "Authorization record",
+      "definition": "A record of permission or an approved scoped exception from an authorized issuer, with scope and validity; the record cannot create its own issuer authority. A project-scoped exception cannot extend to another project or weaken the common integrity floor.",
+      "owner": "authority",
+      "examples": [
+        "An approved exception identifies its issuer, allowed operation and expiration."
+      ],
+      "distinguished_from": [
+        "evidence",
+        "policy-override",
+        "skill-replacement"
+      ],
+      "references": [
+        "#848",
+        "#1002"
+      ]
+    },
+    {
+      "id": "parent-lock",
+      "label": "Parent lock",
+      "definition": "An immutable reference to the approved parent source and compatible artifacts, including revision and provenance needed to detect mixed inputs.",
+      "owner": "packaging",
+      "examples": [
+        "Skills and runtime artifacts identify the same parent commit and compatible build."
+      ],
+      "distinguished_from": [
+        "profile",
+        "rollback-receipt",
+        "source-reference"
+      ],
+      "references": [
+        "#851",
+        "#1004"
+      ]
+    },
+    {
+      "id": "rollback-receipt",
+      "label": "Rollback receipt",
+      "definition": "A record identifying the exact previous compatible artifact and policy set and the state compatibility needed to restore it. The target is a previously approved exact lock and effective-policy digest, never a live branch or tag tip.",
+      "owner": "packaging",
+      "examples": [
+        "Rollback names the prior immutable set and invalidates incompatible task evidence."
+      ],
+      "distinguished_from": [
+        "parent-lock",
+        "authorization-record"
+      ],
+      "references": [
+        "#1004",
+        "#1005"
+      ]
+    },
+    {
+      "id": "configured",
+      "label": "Configured",
+      "definition": "A declared setting or registration exists for an identified target; this fact alone says nothing about artifact presence or observed behavior.",
+      "owner": "verification",
+      "examples": [
+        "Settings name a hook command that has not yet been installed or observed."
+      ],
+      "distinguished_from": [
+        "installed",
+        "runtime-observed",
+        "acceptance-blocking"
+      ],
+      "references": [
+        "#1003",
+        "#851"
+      ]
+    },
+    {
+      "id": "generated",
+      "label": "Generated",
+      "definition": "An artifact was produced from identified inputs; generation alone does not establish installation, runtime execution or acceptance protection.",
+      "owner": "packaging",
+      "examples": [
+        "A build emits a hook manifest into its output tree."
+      ],
+      "distinguished_from": [
+        "installed",
+        "artifact-verified"
+      ],
+      "references": [
+        "#1004",
+        "#851"
+      ]
+    },
+    {
+      "id": "installed",
+      "label": "Installed",
+      "definition": "Identified artifacts are present at the intended consumer locations; installation alone does not prove the host executes them.",
+      "owner": "packaging",
+      "examples": [
+        "A hook file is present at its configured path."
+      ],
+      "distinguished_from": [
+        "configured",
+        "runtime-observed",
+        "acceptance-blocking"
+      ],
+      "references": [
+        "#1003",
+        "#1004"
+      ]
+    },
+    {
+      "id": "configuration-valid",
+      "label": "Configuration valid",
+      "definition": "A named configuration passed its declared structural and consistency checks at an exact revision.",
+      "owner": "verification",
+      "examples": [
+        "A schema check rejects unknown fields and accepts the two valid profile fixtures."
+      ],
+      "distinguished_from": [
+        "artifact-verified",
+        "runtime-observed",
+        "acceptance-blocking"
+      ],
+      "references": [
+        "#851",
+        "#848"
+      ]
+    },
+    {
+      "id": "artifact-verified",
+      "label": "Artifact verified",
+      "definition": "An identified artifact set passed declared provenance, content and compatibility checks; this is a scoped artifact claim.",
+      "owner": "verification",
+      "examples": [
+        "Installed file hashes match the approved package and project composition."
+      ],
+      "distinguished_from": [
+        "configuration-valid",
+        "runtime-observed",
+        "acceptance-blocking"
+      ],
+      "references": [
+        "#1004",
+        "#847"
+      ]
+    },
+    {
+      "id": "runtime-observed",
+      "label": "Runtime observed",
+      "definition": "The declared behavior was actually exercised through the identified registered path in a pinned runtime, with the outcome recorded.",
+      "owner": "verification",
+      "examples": [
+        "An allowed operation succeeds and a denial canary leaves its target unchanged."
+      ],
+      "distinguished_from": [
+        "installed",
+        "acceptance-blocking"
+      ],
+      "references": [
+        "#1003",
+        "#1002"
+      ]
+    },
+    {
+      "id": "acceptance-blocking",
+      "label": "Acceptance blocking",
+      "definition": "Observed protection at a declared acceptance boundary actually prevents an invalid candidate from being accepted, with exact candidate/range and protection configuration bound to the evidence.",
+      "owner": "verification",
+      "examples": [
+        "Protected checks reject a candidate containing an invalid commit even when local hooks were bypassed."
+      ],
+      "distinguished_from": [
+        "configured",
+        "installed",
+        "runtime-observed"
+      ],
+      "references": [
+        "#1002",
+        "#1003"
+      ]
+    },
+    {
+      "id": "common-integrity-floor",
+      "label": "Common integrity floor",
+      "definition": "Shared requirements for authorization, credential handling, work preservation and evidence integrity; selected workflow topology is defined separately in profiles.",
+      "owner": "policy",
+      "examples": [
+        "Replacing a project workflow does not waive credential handling or invent approval."
+      ],
+      "distinguished_from": [
+        "profile",
+        "policy-override"
+      ],
+      "references": [
+        "#1000",
+        "#851"
+      ]
+    },
+    {
+      "id": "source-reference",
+      "label": "Source reference",
+      "definition": "A repository locator and revision expression; a branch or tag name alone is mutable and does not establish an immutable parent lock.",
+      "owner": "packaging",
+      "examples": [
+        "Resolve a branch to its exact approved commit before generating or activating artifacts."
+      ],
+      "distinguished_from": [
+        "parent-lock"
+      ],
+      "references": [
+        "#1000",
+        "#851"
+      ]
+    },
+    {
+      "id": "generated-artifact",
+      "label": "Generated artifact",
+      "definition": "Output derived from identified source inputs and a generator version; provenance and verification are separate recorded properties.",
+      "owner": "packaging",
+      "examples": [
+        "A generated resident file records the parent and project inputs used to compose it."
+      ],
+      "distinguished_from": [
+        "effective-policy",
+        "activation-receipt"
+      ],
+      "references": [
+        "#1000",
+        "#851"
+      ]
+    },
+    {
+      "id": "activation-receipt",
+      "label": "Activation receipt",
+      "definition": "A record of the coherent artifact and policy set actually activated, its validation evidence and prior compatible state; it is not new authorization.",
+      "owner": "packaging",
+      "examples": [
+        "Activation records the new parent lock and policy digest plus the prior rollback target."
+      ],
+      "distinguished_from": [
+        "rollback-receipt",
+        "authorization-record",
+        "generated-artifact"
+      ],
+      "references": [
+        "#1000",
+        "#851"
+      ]
+    },
+    {
+      "id": "local-feedback",
+      "label": "Local feedback",
+      "definition": "A locally executed check or diagnostic that may prevent a normal local operation but can be bypassed outside its declared local boundary.",
+      "owner": "enforcement",
+      "examples": [
+        "A native commit hook rejects a missing ticket; bypassing that hook remains possible."
+      ],
+      "distinguished_from": [
+        "acceptance-blocking"
+      ],
+      "references": [
+        "#1000",
+        "#851"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "project-selects-profile",
+      "subject": "project",
+      "verb": "selects",
+      "object": "profile",
+      "definition": "Selection is scoped to the declared project identity."
+    },
+    {
+      "id": "profile-configures-policy",
+      "subject": "profile",
+      "verb": "configures",
+      "object": "policy",
+      "definition": "Only approved values and permitted overrides participate."
+    },
+    {
+      "id": "gate-evaluates-policy",
+      "subject": "gate",
+      "verb": "evaluates",
+      "object": "effective-policy",
+      "definition": "The gate uses operation facts and separately supplied evidence."
+    },
+    {
+      "id": "adapter-implements-capability",
+      "subject": "host-adapter",
+      "verb": "implements",
+      "object": "host-capability",
+      "definition": "Implementation presence does not establish observed capability."
+    },
+    {
+      "id": "binding-selects-skill",
+      "subject": "procedure-binding",
+      "verb": "selects",
+      "object": "skill",
+      "definition": "Selecting a procedure does not grant authorization."
+    },
+    {
+      "id": "replacement-selects-skill",
+      "subject": "skill-replacement",
+      "verb": "selects",
+      "object": "skill",
+      "definition": "The explicit replacement applies to every declared loading route."
+    },
+    {
+      "id": "extension-adds-skill",
+      "subject": "skill-extension",
+      "verb": "adds",
+      "object": "skill",
+      "definition": "The declared order retains the base procedure."
+    },
+    {
+      "id": "composition-assembles-blocks",
+      "subject": "resident-composition",
+      "verb": "assembles",
+      "object": "resident-block",
+      "definition": "The final composed context is measured and scoped."
+    },
+    {
+      "id": "evidence-supports-runtime-claim",
+      "subject": "evidence",
+      "verb": "supports",
+      "object": "runtime-observed",
+      "definition": "A runtime claim needs evidence from the actual registered path."
+    },
+    {
+      "id": "evidence-supports-acceptance-claim",
+      "subject": "evidence",
+      "verb": "supports",
+      "object": "acceptance-blocking",
+      "definition": "A passing schema or an installed hook alone cannot support this claim."
+    },
+    {
+      "id": "authorization-binds-scope",
+      "subject": "authorization-record",
+      "verb": "binds",
+      "object": "authorization-scope",
+      "definition": "The issuer authority and scope are established outside this registry."
+    },
+    {
+      "id": "rollback-identifies-parent",
+      "subject": "rollback-receipt",
+      "verb": "identifies",
+      "object": "parent-lock",
+      "definition": "Rollback identifies an exact compatible set rather than a moving branch tip."
+    },
+    {
+      "id": "policy-preserves-common-floor",
+      "subject": "effective-policy",
+      "verb": "preserves",
+      "object": "common-integrity-floor",
+      "definition": "Authorized workflow configuration cannot weaken the shared integrity requirements."
+    },
+    {
+      "id": "artifact-identifies-parent",
+      "subject": "generated-artifact",
+      "verb": "identifies",
+      "object": "parent-lock",
+      "definition": "Composed managed artifacts must identify one compatible immutable parent; a mixed-lock result is invalid."
+    }
+  ],
+  "aliases": [
+    {
+      "name": "capability",
+      "status": "ambiguous",
+      "targets": [
+        "host-capability",
+        "procedure-binding"
+      ]
+    },
+    {
+      "name": "override",
+      "status": "ambiguous",
+      "targets": [
+        "policy-override",
+        "skill-replacement",
+        "skill-extension",
+        "resident-composition"
+      ]
+    },
+    {
+      "name": "verified",
+      "status": "ambiguous",
+      "targets": [
+        "configuration-valid",
+        "artifact-verified",
+        "runtime-observed",
+        "acceptance-blocking"
+      ]
+    },
+    {
+      "name": "scope",
+      "status": "ambiguous",
+      "targets": [
+        "repository-identity",
+        "applicability-scope",
+        "authorization-scope"
+      ]
+    },
+    {
+      "name": "enforcement-live",
+      "status": "deprecated",
+      "targets": [
+        "acceptance-blocking"
+      ]
+    },
+    {
+      "name": "native-shadow",
+      "status": "deprecated",
+      "targets": [
+        "skill-replacement"
+      ]
+    }
+  ]
+}

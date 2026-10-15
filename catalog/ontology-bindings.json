@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "ontology_version": "1.0.0",
+  "bindings": [
+    {
+      "artifact": "catalog/resolver-manifest.json",
+      "fields": [
+        {
+          "pointer": "/projects/*/repos/*",
+          "term": "repository-identity",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/routes/*/skills/*",
+          "term": "skill",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/projects/*/routes/*/skills/*",
+          "term": "skill",
+          "value_type": "string"
+        }
+      ]
+    },
+    {
+      "artifact": "dist/craft-agent/enforcement-manifest.json",
+      "fields": [
+        {
+          "pointer": "/gates/*",
+          "term": "gate",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/gates/*/runtime_policy/*",
+          "term": "configured",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/gates/*/blocking",
+          "term": "configured",
+          "value_type": "boolean"
+        }
+      ]
+    }
+  ]
+}
