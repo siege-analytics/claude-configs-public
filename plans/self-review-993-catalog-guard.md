@@ -110,6 +110,7 @@ No unresolved findings. Every valid hostile finding was fixed and regression-tes
 | Develop advanced to F4 | Original base predated policy boundary | Fetch/merge and authoritative F4 test | Narrow policy/graph/audit/metrics reconciliation | Moderate |
 | First matrix reconstruction gave 13/20 and 0 extraction | Selected prose cases did not enter legacy gate; compared extractor print newline literally | One matrix run | Corrected case composition and normalized extractor-owned newline | Low |
 | Unsafe primitive grep flagged parser string `exec` | Pattern matched data tokens, not calls | One grep | Refined to call/import-specific scan | Low |
+| Hosted generated-authority check failed | Inventory was checked before, not after, the new focused test/evidence files were committed | One hosted run + local reproduction | Regenerated `catalog/skills-inventory.json`, reran dependent authorities/build checks, and pushed a reviewed follow-up | Low |
 
 ## Evidence-predates-work
 
