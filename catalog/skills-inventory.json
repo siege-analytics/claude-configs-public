@@ -610,7 +610,6 @@
       "lessons-learned",
       "library-api-evolution",
       "over-engineering-audit",
-      "post-error-revision",
       "post-mortem",
       "pr-comments",
       "pre-work-check",
@@ -7629,6 +7628,7 @@
         "bin/_test/language_scope_test.py",
         "bin/_test/notebook_edit_guards_test.py",
         "bin/_test/resolve_load_set_test.py",
+        "bin/_test/review_risk_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/branch_state_advisory.test.sh",
         "hooks/_test/coordinator_status_guard.test.sh",
@@ -8267,6 +8267,7 @@
       "source_path": "skills/create-ticket/SKILL.md",
       "test_evidence": [
         "bin/_test/resolve_load_set_test.py",
+        "bin/_test/review_risk_test.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/scaffold_test_stub.test.sh",
         "templates/tests/README.md"
@@ -8468,6 +8469,7 @@
       "slug": "detect-ai-fingerprints",
       "source_path": "skills/detect-ai-fingerprints/SKILL.md",
       "test_evidence": [
+        "bin/_test/review_risk_test.py",
         "hooks/_test/detect_ai_fingerprints.test.sh"
       ],
       "tier": "unclassified",
@@ -9048,6 +9050,7 @@
       "slug": "investigate",
       "source_path": "skills/investigate/SKILL.md",
       "test_evidence": [
+        "bin/_test/review_risk_test.py",
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
@@ -9457,7 +9460,9 @@
       "rule_definitions": [],
       "slug": "post-error-revision",
       "source_path": "skills/post-error-revision/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/review_risk_test.py"
+      ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
@@ -10763,6 +10768,7 @@
       "slug": "survey-context",
       "source_path": "skills/survey-context/SKILL.md",
       "test_evidence": [
+        "bin/_test/review_risk_test.py",
         "hooks/_test/survey_context.test.sh"
       ],
       "tier": "unclassified",
@@ -11399,6 +11405,6 @@
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
     "without_source_references_count": 0,
-    "without_test_evidence_count": 102
+    "without_test_evidence_count": 101
   }
 }
