@@ -772,7 +772,7 @@ def _aws_copy_operands(args):
         ["s3", "sync"],
     ):
         return []
-    return positionals[2:4]
+    return positionals[2:]
 
 
 def _mc_copy_operands(args):

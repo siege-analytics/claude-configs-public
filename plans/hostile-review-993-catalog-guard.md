@@ -38,7 +38,7 @@ Review `5529528446` on published SHA `3abbcf741b641e7f2a172173258f9db1bc18a430` 
 - `timeout`, `nice`, `stdbuf`, and `setsid` were not unwrapped, and `eval` payloads lacked execution context;
 - `shlex` comment handling dropped mid-word `#`, including a managed AWS operand.
 
-All three became hostile regressions. The hostile loop then found additional bounded static/dataflow cases involving executor substitutions, echo/printf escapes, Python/Spark AST writes, subprocess/exec/eval payloads, function/lambda invocation, callable aliases, and call-time closure bindings. Every valid finding became a block/pass regression; invalid syntax findings were reproduced and rejected rather than waived.
+All three became hostile regressions. The hostile loop then found additional bounded static/dataflow cases involving executor substitutions, echo/printf escapes, Python/Spark AST writes, subprocess/exec/eval payloads, function/lambda invocation, callable aliases, and call-time closure bindings. Fresh exact-SHA CodeRabbit review `5530995977` found one further AWS streaming-upload operand shift through `--expected-size`; operand inspection was generalized and covered with block/pass regressions. Every valid finding became a regression; invalid syntax findings were reproduced and rejected rather than waived.
 
 ## Final verdicts
 
@@ -50,8 +50,8 @@ No valid finding is waived.
 
 ## Final evidence supplied to reviewer
 
-- Focused catalog suite: `288 passed, 0 failed`.
-- Full-hook extraction control: `275/275` exact and nonempty.
+- Focused catalog suite: `290 passed, 0 failed`.
+- Full-hook extraction control: `277/277` exact and nonempty.
 - Original 20-case matrix: base `10/20`, current `20/20`; extraction `20/20` exact/nonempty for both.
 - Deterministic malformed fuzz: seed 993; 500 classifier cases repeated twice plus 100 full-hook cases; 100/100 exact nonempty full-hook extractions; only exit 0/2; zero tracebacks.
 - F4 authoritative risk suite: `review_risk_test: PASS`, including direct, modification, deletion, rename-source, and declared-B rejection coverage for the classifier.
@@ -59,6 +59,6 @@ No valid finding is waived.
 
 ## Canary and rollback
 
-Canary: both `dist/claude-code` and `dist/craft-agent` package copies block a direct managed-bucket copy with exit 2, allow quoted grep prose with exit 0, and classify the helper as valid Tier C.
+Canary: both `dist/claude-code` and `dist/craft-agent` package copies block direct and `--expected-size` managed-bucket copies with exit 2, allow quoted grep prose with exit 0, extract all six commands exactly/nonempty, and classify the helper as valid Tier C.
 
 Rollback: revert the isolated issue #993 implementation commit. Do not force-push, weaken to a direct-copy-only allowlist, deploy, install, release, merge, or affect `main` as part of rollback.

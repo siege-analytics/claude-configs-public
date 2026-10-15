@@ -245,6 +245,8 @@ expect_block "direct aws cp" \
     'aws s3 cp ./out s3a://hive-warehouse/table/' "$OBJECT_REASON"
 expect_block "direct aws cp to managed bucket root" \
     'aws s3 cp ./out s3://gold' "$OBJECT_REASON"
+expect_block "aws stdin upload expected size keeps managed operand" \
+    "aws s3 cp - --expected-size 123 s3://gold/table/" "$OBJECT_REASON"
 expect_block "leading output redirection before copy" \
     '>/dev/null aws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
 expect_block "leading numeric redirection before copy" \
@@ -521,6 +523,8 @@ expect_pass "aws help positionals are not a cp invocation" \
     "aws help s3 cp s3://gold/table/"
 expect_pass "aws metadata managed URI is not copy operand" \
     "aws s3 cp ./out s3://unmanaged/table/ --metadata 'note=s3://gold/table/'"
+expect_pass "aws expected size local destination is allowed" \
+    "aws s3 cp - --expected-size 123 ./local"
 expect_pass "aws leading metadata managed URI is not copy operand" \
     "aws s3 cp --metadata 'note=s3://gold/table/' ./out s3://unmanaged/table/"
 expect_pass "similarly named bucket is unmanaged" \
