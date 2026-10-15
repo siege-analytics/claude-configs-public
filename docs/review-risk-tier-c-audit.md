@@ -52,10 +52,11 @@ Warning-only behavior inside a path does not automatically remove that path from
 
 `bin/_test/review_risk_test.py` does not rely only on the path list above. It independently:
 
-- parses `hooks/settings-snippet.json` to derive configured hook entrypoints;
-- runs `bin/build.py` into an isolated temporary distribution and parses the actual generated enforcement manifest and settings fragment for blocking native/Craft entrypoints, avoiding assumptions about how build source spells them;
-- recognizes only executable helper assignments, shell sources, Python executions, and the probe-result generator validation site, then requires the complete caller-to-helper edge set to match the audited snapshot;
-- removes each exact helper invocation site in memory and proves that the caller-specific edge disappears, so a surviving reference from a different caller cannot mask removal;
+- compares `hooks/settings-snippet.json` against independently maintained path/occurrence counts and a hash of every complete event, matcher, and hook record; it removes, duplicates, and neutralizes every command occurrence with `>/dev/null 2>&1; true`, requiring each mutation to fail, including helper-free blockers;
+- runs `bin/build.py` into an isolated temporary distribution and separately hash-pins every complete generated manifest gate and generated settings registration in addition to path/count checks; generated settings receive the same removal, duplication, and forced-success mutations;
+- recognizes helper assignments only when the quoted value ends at the helper path and the exact quoted variable is subsequently the sourced file or a `python3` script operand in shell command position; it hash-pins all 45 exact invocation lines and all 57 exact assignment-use occurrence lines in addition to edge/count snapshots;
+- removes and duplicates each downstream use by its actual line index, replaces its script operand while retaining the audited variable in a comment, and prefixes the apparent execution with `echo`; every mutation must fail the assignment-to-execution audit;
+- replaces each helper assignment with another path while retaining the audited helper basename only in a trailing comment, which must remove the edge;
 - pins exact generated-source-authority, kernel-budget, workflow, runtime-generator, hook-validator, and review-risk-suite invocation lines with occurrence counts, then removes each occurrence in memory and requires the invocation audit to fail;
 - requires every derived entrypoint and decision-changing helper to classify Tier C, with only `hooks/lib/log-block.sh` accepted as a non-decision-changing helper edge.
 

@@ -28,12 +28,12 @@ Hostile-review-artifact: `plans/hostile-review-962-f4-develop-merge.md`
 
 ## Peer review
 
-An isolated hostile reviewer examined the resulting PR diff relative to updated develop and returned ACCEPT with no blocking findings. It specifically evaluated incoming build/workflow/package changes against F4's generated-entrypoint, helper-edge, CI-site, path-shape, exclusion, and freshness contracts.
+An isolated hostile reviewer examined the staged PR diff relative to updated develop and initially returned ACCEPT. Exact-SHA review of unpushed merge commit `30607cc23e7acc1f5b55b83242d4c992e3c2c7d6` and three remediation reviews found registry shrinkage, unproved execution, loose matching, duplicate masking, comment/echo spoofs, and full-command neutralization via forced success. That SHA was not pushed. The current follow-up pins path/count and complete registration records on all three surfaces, exact helper values/command positions, all 45 invocation lines, and all 57 assignment-use lines; it mutation-tests removal, duplication, command neutralization, comment decoys, and non-executing text. A fifth review initially asked for semantic tests of arbitrary Tier C edits, then returned ACCEPT after confirming that every dependency modification already computes Tier C and rejects declared B. A new exact-SHA ACCEPT remains required before push.
 
 ## Lead review
 
 - **Conflict correctness:** regeneration retained both F4 `review_risk_test.py` and F1 `skill_lifecycle_test.py` evidence rather than choosing a side.
-- **F4 integrity:** graph audit and commit/push suite pass; all three named canaries remain Tier C and reject B.
+- **F4 integrity:** graph audit and commit/push suite pass; all three named canaries remain Tier C and reject B. The audit independently pins 31 source settings entrypoints, 6 generated-manifest blockers, and 1 generated-settings wrapper, including helper-free blockers.
 - **F1 integrity:** promotion fixtures and ordinary check pass; raw pinned-main baseline without event/graph proof still fails closed.
 - **F2/F3 integrity:** all four installed layouts pass prompt selection, readable paths, push enforcement, parity, and negative cases.
 - **Full-suite integrity:** 18 Python, 36 hook, 2 workflow, all freshness/package/layout/discipline gates pass.
@@ -47,6 +47,8 @@ An isolated hostile reviewer examined the resulting PR diff relative to updated 
 - Workflow suites: 2/2 PASS.
 - Consumer layouts: 4/4 isolated runtime PASS; 5/5 source/package validators PASS.
 - F4 named canaries: 3/3 Tier C, `valid=false`, exit 2 for declared B.
+- Entrypoint surfaces: 31 source, 6 manifest, 1 generated-settings registration; each removal is mutation-tested.
+- Assignment-backed helper edges: 32 and downstream uses: 57; every use is removal-, duplication-, and comment-decoy-tested by actual line index.
 - Generated authority: 198 sources, 804 snapshots, 2,904 mappings current.
 - Lifecycle: 0 completions, 198 legacy exceptions current.
 - Runtime deployment/release/install/main actions: 0.
