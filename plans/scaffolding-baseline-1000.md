@@ -45,7 +45,7 @@ All commands passed after building local ignored artifacts. One important caveat
 
 ## 2. Measured current baseline
 
-A reproducible read-only probe lives in the coordinating session evidence as `baseline_1000_probe.py`; its JSON output is `baseline-1000-probe.json`.
+The exact read-only measurement probe is versioned in Appendix A below. Run it only after `python3 bin/build.py --layout both` has produced ignored local `dist/` outputs. It enumerates source files from `git ls-files -z`; generated package counts include paths for which `Path.is_file()` is true (including a valid symlink to a file), do not traverse directory symlinks, and include generated package tests. Text rows distinguish UTF-8 bytes, Python characters, and the deliberately rough `ceil(characters / 4)` token estimate. The pinned result is the table below; private consumer paths/data are not inputs.
 
 | Measure | Exact result at `f97d194` | Interpretation |
 |---|---:|---|
@@ -70,7 +70,7 @@ No duplicate source core-hook basenames or byte-identical source core-hook copie
 
 | Surface | Current owner/source | Scope | Evidence | Proposed disposition |
 |---|---|---|---|---|
-| Safety kernel | `skills/KERNEL.md`; build transforms it into consumer layouts | Global resident | kernel budget, generated-source authority, verifier exact-composition tests | **Keep locked**; budget packaged bytes |
+| Safety kernel | `skills/KERNEL.md`; build transforms it into consumer layouts | Global resident | kernel budget, generated-source authority, verifier exact-composition tests | **Split common integrity floor from configurable workflow**; retain authorization, credential, work-preservation, and evidence principles; move literal K5 topology/release-source choices into selected profiles; budget the final packaged composition |
 | Compatibility bundle | generated `dist/RULES_BUNDLE.*` from rules | On demand only | verifier rejects global/nested broad-bundle injection | **Keep on demand**; never self-select |
 | Progressive selection | resolver manifest, load-set resolver, consumer runtime | Task/project selected | accepted #962/F1–F4 tests and four-layout consumer test | **Keep/configure** |
 | Project package identity | `projects/*/PROJECT.md` plus `bin/build.py` | Exact declared repository | build validates required fields and uniqueness | **Keep**, but share canonical identity parser with runtime |
@@ -166,6 +166,7 @@ Expected decisions:
 - `develop` → `main` PR from the exact same repository: allow after required evidence.
 - commit without `#<number>`: deny at the native message/range boundary.
 - enforcement change declared Tier B: deny; computed Tier C cannot be downgraded.
+- resident instructions and guard decisions both state this profile’s authorized `develop` → `main` topology; extracting literal K5 workflow choices from the common integrity floor is a prerequisite for #848/#1002, not a weakening of this repository’s selected profile.
 
 ### Fixture B — `synthetic-trunk`
 
@@ -197,6 +198,7 @@ Expected decisions:
 - feature → nonexistent `develop`: deny as outside the effective branch policy.
 - commit with `LAB-42`: allow at the ticket boundary; `#42` alone does not satisfy this project.
 - project review procedure loads once, in declared order, without importing fixture A.
+- resident instructions and guard decisions both state the authorized trunk topology and do not retain fixture A’s literal `develop` → `main` text.
 - project review binding cannot waive Tier C or manufacture approval.
 
 ### Required negative corpus
@@ -208,7 +210,8 @@ Expected decisions:
 | `github.com/foreign-owner/strict-release` | no match despite same repository basename |
 | stale task evidence from a prior SHA/session | deny; explain stale provenance |
 | working-tree edit that loosens policy | evaluate under previously approved policy; edit cannot authorize itself |
-| same replacement skill reached by explicit route and prerequisite | load once or reject duplicate; never duplicate resident content |
+| same resolved replacement reached by explicit route and prerequisite | load once in declared order; identical repeated references are idempotent |
+| conflicting replacement declarations for one capability | reject with both sources identified; never choose silently |
 | missing required host capability | unsupported/blocked, not “enforcement live” |
 | ambiguous identity or unknown policy field | reject with actionable diagnostic |
 
@@ -218,8 +221,8 @@ Expected decisions:
 
 **Actual authority boundary:**
 
-1. Native `commit-msg` validates the effective message for one commit.
-2. CI/server-side range validation checks every relevant commit at PR/push acceptance.
+1. Native `commit-msg` validates the effective message for one commit using project-declared matching and cleanup semantics. Fixtures inherit no implicit `[no-ticket]` escape; any permitted exception must be typed, explicit, provenance-bearing, and visible in explain output.
+2. A required protected CI/server-side acceptance check validates every relevant exact commit range/head for the selected merge strategy. Merely running CI is not enforcement; the check must actually prevent acceptance when it fails.
 3. PreToolUse command classification may provide early feedback or a scoped fail-closed refusal for known protected forms, but arbitrary command text is not authorization and is not represented as server-side protection.
 4. Both instructions and executable checks consume the same effective policy/provenance from #848/#851.
 
@@ -257,3 +260,134 @@ Private host names, workspace paths, credentials, and real consumer operations m
 3. Should missing project identity be explicit `unknown` rather than current `umbrella` fallback? This baseline recommends **yes**.
 4. Should CI range validation be a required capability for any profile that claims ticket enforcement is live? This baseline recommends **yes**.
 5. What exact backend/provider combinations are authorized for #1003 disposable live canaries?
+
+## Appendix A — exact read-only measurement probe
+
+Prerequisite: from the pinned checkout, run `python3 bin/build.py --layout both` without `--deploy`. Then save the following as a temporary file and invoke it with the repository root as its sole argument. It writes JSON to stdout and does not modify the repository.
+
+```python
+#!/usr/bin/env python3
+import hashlib
+import json
+import pathlib
+import re
+import subprocess
+import sys
+
+repo = pathlib.Path(sys.argv[1]).resolve()
+
+
+def tracked():
+    output = subprocess.check_output(["git", "-C", str(repo), "ls-files", "-z"])
+    return [
+        repo / raw.decode("utf-8", "surrogateescape")
+        for raw in output.split(b"\0")
+        if raw
+    ]
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+files = tracked()
+relative = lambda path: str(path.relative_to(repo))
+source_hooks = [
+    path for path in files
+    if relative(path).startswith("hooks/")
+    and "/_test/" not in relative(path)
+    and path.is_file()
+]
+hook_tests = [
+    path for path in files
+    if relative(path).startswith("hooks/_test/") and path.is_file()
+]
+lib_files = [
+    path for path in files
+    if relative(path).startswith("hooks/lib/") and path.is_file()
+]
+parser_terms = re.compile(r"(classif|parse|token|resolve|command|extract|scope|path)", re.I)
+parser_candidates = [path for path in lib_files if parser_terms.search(path.name)]
+policy_terms = re.compile(
+    r"(policy|manifest|settings|_rules\.md$|PROJECT\.md$|deploy-model)", re.I
+)
+policy_candidates = [
+    path for path in files
+    if policy_terms.search(relative(path)) and not relative(path).startswith("plans/")
+]
+
+core = []
+for root in (repo / ".githooks", repo / "hooks" / "git"):
+    if root.exists():
+        core.extend(path for path in root.rglob("*") if path.is_file())
+by_name = {}
+by_hash = {}
+for path in core:
+    by_name.setdefault(path.name, []).append(relative(path))
+    by_hash.setdefault(digest(path), []).append(relative(path))
+
+resident = {}
+for path in (
+    repo / "skills/KERNEL.md",
+    repo / "dist/flat/skills/KERNEL.md",
+    repo / "dist/craft-agent/skills/KERNEL.md",
+    repo / "dist/craft-agent/KERNEL.md",
+    repo / "dist/RULES_BUNDLE.md",
+):
+    if path.exists():
+        text = path.read_text(encoding="utf-8", errors="replace")
+        resident[relative(path)] = {
+            "bytes": len(text.encode("utf-8")),
+            "chars": len(text),
+            "estimated_tokens": (len(text) + 3) // 4,
+        }
+
+packages = {}
+for name in ("flat", "nested", "craft-agent", "claude-code"):
+    root = repo / "dist" / name
+    if root.exists():
+        packages[name] = {
+            "files": sum(1 for path in root.rglob("*") if path.is_file()),
+            "hook_files": sum(
+                1 for path in (root / "hooks").rglob("*") if path.is_file()
+            ) if (root / "hooks").exists() else 0,
+        }
+
+manifest = repo / "dist/craft-agent/enforcement-manifest.json"
+manifest_summary = None
+if manifest.exists():
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_summary = {
+        "gate_count": len(data.get("gates", [])),
+        "gate_ids": [gate.get("id") for gate in data.get("gates", [])],
+        "source_commit": data.get("source_commit"),
+    }
+
+print(json.dumps({
+    "head": subprocess.check_output(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"], text=True
+    ).strip(),
+    "tracked_files": len(files),
+    "source_hook_files": len(source_hooks),
+    "hook_test_files": len(hook_tests),
+    "hook_lib_files": len(lib_files),
+    "parser_candidates": [relative(path) for path in parser_candidates],
+    "policy_candidates": [relative(path) for path in policy_candidates],
+    "core_hook_name_copies": {
+        name: paths for name, paths in by_name.items() if len(paths) > 1
+    },
+    "core_hook_identical_copies": [
+        paths for paths in by_hash.values() if len(paths) > 1
+    ],
+    "resident": resident,
+    "projects": [
+        relative(path) for path in sorted((repo / "projects").glob("*/PROJECT.md"))
+    ],
+    "project_skills": [
+        relative(path)
+        for path in sorted((repo / "projects").glob("*/skills/*/SKILL.md"))
+    ],
+    "dist_packages": packages,
+    "enforcement_manifest": manifest_summary,
+}, indent=2, sort_keys=True))
+```

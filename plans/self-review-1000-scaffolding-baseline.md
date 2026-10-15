@@ -22,6 +22,14 @@ Plan-only evidence reconciliation at exact `develop` SHA `f97d194fedf1eda053a16e
 - Alternative rejected: encode a new policy schema in #1000. That would preempt #851/#848 contract review; this slice only specifies fixtures and evidence.
 - Alternative rejected: treat current green suites as completion of open tickets. Each disposition is criterion-specific and preserves missing boundary tests.
 
+## Focused review response
+
+- Split the common resident integrity floor from profile-selected workflow policy so the synthetic trunk fixture does not contradict literal K5 topology while this repository retains its strict profile.
+- Embedded the exact read-only measurement probe, including generated-output prerequisites, filters, symlink/file counting, and bytes/characters/token-estimate definitions.
+- Made duplicate composition deterministic: identical repeated references load once; conflicting replacement declarations reject.
+- Added explicit ticket cleanup/exception semantics and a protected exact-range/head acceptance requirement.
+- No runtime or policy implementation changed.
+
 ## Validation
 
 ```text
