@@ -534,7 +534,6 @@
       "shelves--continuous-discovery",
       "shelves--cro-methodology",
       "shelves--crossing-the-chasm",
-      "shelves--data-intensive",
       "shelves--data-pipelines",
       "shelves--design-everyday-things",
       "shelves--design-patterns",
@@ -582,7 +581,6 @@
       "shelves--storytelling-with-data",
       "shelves--system-design",
       "shelves--system-design-interview",
-      "shelves--think-stats",
       "shelves--top-design",
       "shelves--traction-eos",
       "shelves--tufte-data-viz",
@@ -591,17 +589,14 @@
       "shelves--ux-heuristics",
       "shelves--web-scraping-python",
       "shelves--web-typography",
-      "shelves--data-and-pipelines",
       "shelves--design",
       "shelves--django",
       "shelves--engineering-principles",
-      "shelves--geospatial",
       "shelves--languages",
       "shelves--marketing",
       "shelves--product",
       "shelves--sales",
       "shelves--statistical-inference",
-      "shelves--storytelling",
       "shelves--strategy",
       "shelves--systems-architecture",
       "api-integration",
@@ -648,6 +643,8 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
@@ -673,6 +670,7 @@
       "slug": "siege-utilities--rules",
       "source_path": "projects/siege-utilities/_rules.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/resolve_project.test.sh"
@@ -694,6 +692,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -738,6 +737,8 @@
         "RESOLVER.md",
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
@@ -783,6 +784,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -868,6 +870,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -954,6 +957,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -997,6 +1001,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -1308,6 +1313,8 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "bin/data-scope.py",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -1345,7 +1352,9 @@
       "rule_definitions": [],
       "slug": "shelves--data-intensive",
       "source_path": "skills/shelves/systems-architecture/data-intensive/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/data_scope_test.py"
+      ],
       "tier": "reference",
       "tier_basis": "path under skills/shelves/<topic>/<book>",
       "verification": "unknown"
@@ -1363,6 +1372,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -1858,6 +1868,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -3115,6 +3126,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -3245,6 +3257,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -3332,6 +3345,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         ".self-review-tufte.md",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -3462,6 +3476,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -3487,7 +3502,9 @@
       "rule_definitions": [],
       "slug": "shelves--think-stats",
       "source_path": "skills/shelves/statistical-inference/think-stats/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/data_scope_test.py"
+      ],
       "tier": "reference",
       "tier_basis": "path under skills/shelves/<topic>/<book>",
       "verification": "unknown"
@@ -3593,6 +3610,7 @@
       "inbound_source_references": [
         ".self-review-tufte.md",
         "THIRD_PARTY_NOTICES.md",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -3880,6 +3898,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -3959,6 +3978,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4029,6 +4049,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4070,6 +4091,8 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "README.md",
+        "bin/data-scope.py",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -4099,6 +4122,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4185,6 +4209,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4253,6 +4278,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4322,6 +4348,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4389,6 +4416,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4459,6 +4487,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4532,6 +4561,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4634,6 +4664,7 @@
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
@@ -4711,6 +4742,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4780,6 +4812,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4845,6 +4878,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4913,6 +4947,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -4990,6 +5025,7 @@
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
@@ -5090,6 +5126,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5154,6 +5191,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5223,6 +5261,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5289,6 +5328,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5354,6 +5394,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5438,6 +5479,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5481,7 +5523,9 @@
       "inbound_source_references": [
         "README.md",
         "RESOLVER.md",
+        "bin/data-scope.py",
         "bin/language-scope.py",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -5512,6 +5556,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5587,6 +5632,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5656,6 +5702,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5735,6 +5782,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5812,6 +5860,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5888,6 +5937,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -5961,6 +6011,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -6037,6 +6088,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -6106,6 +6158,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -6203,6 +6256,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -6304,6 +6358,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -6394,6 +6449,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -6474,6 +6530,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -6559,6 +6616,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -6656,6 +6714,7 @@
         "bin/_test/billing_diagnostic_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
@@ -6730,6 +6789,7 @@
       "test_evidence": [
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
@@ -6755,6 +6815,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -6782,7 +6843,9 @@
       "rule_definitions": [],
       "slug": "shelves--data-and-pipelines",
       "source_path": "skills/shelves/data-and-pipelines/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/data_scope_test.py"
+      ],
       "tier": "on-demand",
       "tier_basis": "shelf router path",
       "verification": "unknown"
@@ -6931,6 +6994,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -6959,7 +7023,9 @@
       "rule_definitions": [],
       "slug": "shelves--geospatial",
       "source_path": "skills/shelves/geospatial/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/data_scope_test.py"
+      ],
       "tier": "on-demand",
       "tier_basis": "shelf router path",
       "verification": "unknown"
@@ -7156,6 +7222,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -7200,6 +7267,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         ".self-review-tufte.md",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -7226,7 +7294,9 @@
       "rule_definitions": [],
       "slug": "shelves--storytelling",
       "source_path": "skills/shelves/storytelling/SKILL.md",
-      "test_evidence": [],
+      "test_evidence": [
+        "bin/_test/data_scope_test.py"
+      ],
       "tier": "on-demand",
       "tier_basis": "shelf router path",
       "verification": "unknown"
@@ -7385,6 +7455,9 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "RESOLVER.md",
+        "bin/data-scope.py",
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -7410,6 +7483,7 @@
       "slug": "analysis",
       "source_path": "skills/analysis/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/investigate_gate_schema.test.sh"
       ],
@@ -7473,6 +7547,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -7681,6 +7756,7 @@
         "CHANGELOG.md",
         "CONTRIBUTING.md",
         "RESOLVER.md",
+        "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/shelf-ownership.json",
@@ -7803,6 +7879,8 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "RESOLVER.md",
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
@@ -7832,6 +7910,7 @@
       "slug": "coding",
       "source_path": "skills/coding/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/resolve_load_set_test.py",
@@ -7858,6 +7937,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "LESSONS.md",
+        "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -8039,6 +8119,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -8098,6 +8179,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "bin/_test/resolve_load_set_test.py",
+        "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -8202,6 +8284,8 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -8599,6 +8683,8 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -8634,6 +8720,7 @@
       "slug": "duckdb-spatial",
       "source_path": "skills/duckdb-spatial/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/resolve_load_set_test.py"
       ],
       "tier": "unclassified",
@@ -8741,6 +8828,8 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
@@ -8771,6 +8860,7 @@
       "slug": "geopandas",
       "source_path": "skills/geopandas/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
@@ -8793,6 +8883,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -9075,6 +9166,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "bin/_test/progressive_mount_test.py",
+        "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -9229,6 +9321,8 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/shelf-ownership.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -9258,6 +9352,7 @@
       "slug": "pipeline-jobs",
       "source_path": "skills/pipeline-jobs/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/resolve_load_set_test.py"
       ],
       "tier": "unclassified",
@@ -9368,6 +9463,8 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -9401,6 +9498,7 @@
       "slug": "postgis",
       "source_path": "skills/postgis/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/resolve_load_set_test.py"
       ],
       "tier": "unclassified",
@@ -9611,6 +9709,7 @@
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/review_risk_test.py",
         "bin/review-risk-metrics.py",
+        "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
@@ -9650,6 +9749,7 @@
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/check_shelf_owners_test.py",
         "bin/_test/check_shelf_paths_test.py",
+        "bin/_test/data_scope_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/generated_source_authority_test.py",
         "bin/_test/kernel_budget_test.py",
@@ -9992,6 +10092,8 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-ledger.json",
         "catalog/shelf-ownership.json",
@@ -10022,6 +10124,7 @@
       "slug": "scala-on-spark",
       "source_path": "skills/scala-on-spark/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py"
       ],
@@ -10083,6 +10186,8 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
@@ -10116,6 +10221,7 @@
       "slug": "sedona",
       "source_path": "skills/sedona/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py"
       ],
@@ -10266,6 +10372,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -10359,6 +10466,8 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-ledger.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -10389,6 +10498,7 @@
       "slug": "spark",
       "source_path": "skills/spark/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/progressive_loading.test.sh",
@@ -10412,6 +10522,8 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
@@ -10441,6 +10553,7 @@
       "slug": "spatial",
       "source_path": "skills/spatial/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/progressive_loading.test.sh"
@@ -10463,6 +10576,8 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/language-scope-ledger.json",
@@ -10493,6 +10608,7 @@
       "slug": "sql",
       "source_path": "skills/sql/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/destructive_bash_guard.test.sh",
@@ -10654,6 +10770,7 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -10760,6 +10877,7 @@
       "slug": "think",
       "source_path": "skills/think/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/review_risk_test.py",
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/ca_enforcement_manifest.test.sh",
@@ -10845,6 +10963,7 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
@@ -10948,6 +11067,8 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "RESOLVER.md",
+        "catalog/data-scope-fixtures.json",
+        "catalog/data-scope-ledger.json",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -10974,6 +11095,7 @@
       "slug": "unity-catalog",
       "source_path": "skills/unity-catalog/SKILL.md",
       "test_evidence": [
+        "bin/_test/data_scope_test.py",
         "bin/_test/resolve_load_set_test.py"
       ],
       "tier": "unclassified",
@@ -11218,6 +11340,6 @@
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
     "without_source_references_count": 0,
-    "without_test_evidence_count": 108
+    "without_test_evidence_count": 103
   }
 }
