@@ -50,7 +50,7 @@ $(cat "$KERNEL")
 </skill-kernel>
 <progressive-load-set>
 EOF
-  printf '%s' "$RESULT" | python3 -c 'import json,sys; label=sys.argv[1]; d=json.load(sys.stdin); print("state: "+d["state"]); print("project: "+str(d.get("project") or "none")); [print("%s: %s | source=%s | route=%s | reasons=%s"%(label,x["slug"],x.get("source_path","unknown"),x["route"],",".join(x["reasons"]))) for x in d.get("selected",[])]; print("diagnostic: "+d["diagnostic"])' "$LABEL" 2>/dev/null || printf 'state: error\ndiagnostic: selector output invalid; kernel only\n'
+  printf '%s' "$RESULT" | python3 -c 'import json,sys; from pathlib import Path; label=sys.argv[1]; root=Path(sys.argv[2]).resolve(); d=json.load(sys.stdin); selected=d.get("selected",[]); resolved=[(x,(root/x.get("load_path",x.get("source_path","unknown"))).resolve()) for x in selected]; [p.relative_to(root) for _,p in resolved]; missing=[str(p) for _,p in resolved if not p.is_file()]; assert not missing,"unreadable runtime path(s): "+",".join(missing); print("state: "+d["state"]); print("project: "+str(d.get("project") or "none")); [print("%s: %s | path=%s | source=%s | route=%s | reasons=%s"%(label,x["slug"],p,x.get("source_path","unknown"),x["route"],",".join(x["reasons"]))) for x,p in resolved]; print("diagnostic: "+d["diagnostic"])' "$LABEL" "$REPO_ROOT" 2>/dev/null || printf 'state: error\ndiagnostic: selector output invalid or selected runtime path unreadable; kernel only\n'
   cat <<EOF
 $ACTION Unknown or ambiguous means kernel only; do not load the full library.
 Reference shelves never self-select and may load only through an active skill's declared reference.

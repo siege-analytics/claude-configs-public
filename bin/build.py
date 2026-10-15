@@ -1320,20 +1320,26 @@ def _filter_settings_for_claude_code(settings: dict) -> dict:
     return filtered
 
 
-def build_resolver_runtime_manifest() -> None:
-    """Create the self-contained deterministic resolver manifest used by packages."""
+def build_resolver_runtime_manifest(layout: str = "flat") -> dict:
+    """Create resolver metadata with paths for one installed skill layout."""
+    if layout not in ("nested", "flat"):
+        raise BuildError(f"Unknown resolver runtime layout: {layout}")
     manifest = json.loads((REPO_ROOT / "catalog" / "resolver-manifest.json").read_text())
     inventory = json.loads((REPO_ROOT / "catalog" / "skills-inventory.json").read_text())
     known = {}
     known_by_source = {}
+    output_prefix = f"dist/{layout}/skills/"
+    package_root = Path("dist") / layout
     for item in sorted(inventory["items"], key=lambda value: value["slug"]):
-        flat_outputs = [
+        layout_outputs = [
             Path(value) for value in item["generated_outputs"]
-            if str(value).startswith("dist/flat/skills/")
+            if str(value).startswith(output_prefix)
         ]
-        if len(flat_outputs) != 1:
-            raise BuildError(f"resolver source {item['slug']} must have exactly one flat generated output")
-        package_path = flat_outputs[0].relative_to("dist/flat")
+        if len(layout_outputs) != 1:
+            raise BuildError(
+                f"resolver source {item['slug']} must have exactly one {layout} generated output"
+            )
+        package_path = layout_outputs[0].relative_to(package_root)
         if package_path.suffix.lower() != ".md":
             package_path /= "SKILL.md"
         metadata = {
@@ -1348,14 +1354,17 @@ def build_resolver_runtime_manifest() -> None:
         known_by_source[item["source_path"]] = metadata
     manifest["known"] = known
     manifest["known_by_source"] = known_by_source
-    (DIST / "resolver-manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n"
-    )
+    # Preserve the historical flat intermediate for tooling that inspects dist/.
+    if layout == "flat":
+        (DIST / "resolver-manifest.json").write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+        )
+    return manifest
 
 
-def write_package_resolver_manifest(pkg_dir: Path) -> None:
-    """Write resolver metadata from the package's final generated skill bytes."""
-    manifest = json.loads((DIST / "resolver-manifest.json").read_text())
+def write_package_resolver_manifest(pkg_dir: Path, layout: str = "flat") -> None:
+    """Write layout-correct resolver metadata from final generated skill bytes."""
+    manifest = build_resolver_runtime_manifest(layout)
     for source, metadata in manifest["known_by_source"].items():
         generated = pkg_dir / metadata["package_path"]
         if not generated.is_file():
@@ -1370,9 +1379,25 @@ def write_package_resolver_manifest(pkg_dir: Path) -> None:
         winner["characters"] = refreshed["characters"]
         winner["estimated_tokens"] = refreshed["estimated_tokens"]
     catalog = pkg_dir / "catalog"
-    catalog.mkdir(exist_ok=True)
+    catalog.mkdir(parents=True, exist_ok=True)
     (catalog / "resolver-manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+    )
+
+
+def install_hook_runtime(pkg_dir: Path, layout: str, include_validator: bool = False) -> None:
+    """Install all scripts and catalogs required by shipped hooks."""
+    bin_dir = pkg_dir / "bin"
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    script_names = ["resolve-load-set.py", "review-risk.py"]
+    if include_validator:
+        script_names.insert(0, "validate-hooks.py")
+    for script_name in script_names:
+        shutil.copy2(REPO_ROOT / "bin" / script_name, bin_dir / script_name)
+    write_package_resolver_manifest(pkg_dir, layout)
+    shutil.copy2(
+        REPO_ROOT / "catalog" / "review-risk-policy.json",
+        pkg_dir / "catalog" / "review-risk-policy.json",
     )
 
 
@@ -1477,15 +1502,9 @@ def build_consumer_packages() -> None:
                 if artifact_src.exists():
                     shutil.copy2(artifact_src, pkg_dir / artifact_name)
 
-        # Copy runtime validators/selectors.
-        (pkg_dir / "bin").mkdir(exist_ok=True)
-        for script_name in ("validate-hooks.py", "resolve-load-set.py", "review-risk.py"):
-            script = REPO_ROOT / "bin" / script_name
-            if script.exists():
-                shutil.copy2(script, pkg_dir / "bin" / script_name)
-        (pkg_dir / "catalog").mkdir(exist_ok=True)
-        write_package_resolver_manifest(pkg_dir)
-        shutil.copy2(REPO_ROOT / "catalog" / "review-risk-policy.json", pkg_dir / "catalog" / "review-risk-policy.json")
+        # Copy validators plus all hook runtime dependencies. Dedicated
+        # consumer packages use the flat skill tree copied above.
+        install_hook_runtime(pkg_dir, "flat", include_validator=True)
 
         # Write package manifest
         pkg_manifest = {
@@ -1822,6 +1841,7 @@ def main() -> int:
                     project_skills_src, project_rules_src,
                     skill_provenance, active_projects,
                 )
+                install_hook_runtime(DIST / layout, layout)
             warn_unknown()
             print("Build check complete.")
             return 0
@@ -1850,8 +1870,10 @@ def main() -> int:
     print("\nBuilding CA enforcement artifacts...")
     build_ca_enforcement()
 
-    print("\nBuilding resolver runtime manifest...")
+    print("\nBuilding resolver runtime manifests and hook dependencies...")
     build_resolver_runtime_manifest()
+    for layout in layouts:
+        install_hook_runtime(DIST / layout, layout)
 
     print("\nBuilding consumer packages...")
     build_consumer_packages()

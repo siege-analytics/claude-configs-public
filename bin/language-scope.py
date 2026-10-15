@@ -100,7 +100,7 @@ def compute(write: bool) -> None:
     if recorded != required:
         raise ValueError(f"incomplete ledger: missing={sorted(required - recorded)}, extra={sorted(recorded - required)}")
     source_known = {i["slug"]: i for i in json.loads((ROOT / "catalog/skills-inventory.json").read_text())["items"]}
-    consumer_manifests = {form: json.loads((ROOT / f"dist/{form}/catalog/resolver-manifest.json").read_text()) for form in ("claude-code", "craft-agent")}
+    consumer_manifests = {form: json.loads((ROOT / f"dist/{form}/catalog/resolver-manifest.json").read_text()) for form in FORMS}
     consumer_known = {form: manifest["known"] for form, manifest in consumer_manifests.items()}
     for form, packaged_manifest in consumer_manifests.items():
         for slug, meta in packaged_manifest["known"].items():
@@ -157,7 +157,7 @@ def compute(write: bool) -> None:
         if entry["auto_select"] in ("never", "not-routed") and path in routed_sources:
             raise ValueError(f"unapproved global route: {path}")
         if classification == "reusable-global":
-            for target in [ROOT / path, *(p for form in ("claude-code", "craft-agent")
+            for target in [ROOT / path, *(p for form in FORMS
                                            for root in [generated(item, form)]
                                            for p in ([root] if root.is_file() else root.rglob("*.md")))]:
                 check_global_su_scope(target)
@@ -167,7 +167,7 @@ def compute(write: bool) -> None:
             entry["current"] = actual
         elif entry["current"] != actual:
             raise ValueError(f"stale authored/packaged measurement: {path}")
-        for form in ("claude-code", "craft-agent"):
+        for form in FORMS:
             packaged_manifest = consumer_manifests[form]
             meta = packaged_manifest["known_by_source"][path]
             if meta["source_path"] != path:
@@ -196,7 +196,8 @@ def compute(write: bool) -> None:
         measurements = {}
         if set(fixture.get("baseline_load_effect", {})) != {"source", "claude-code", "craft-agent"}:
             raise ValueError(f"missing exact-base source/consumer load evidence: {fixture['id']}")
-        for form in ("source", "claude-code", "craft-agent"):
+        evidence_forms = ("source", "claude-code", "craft-agent")
+        for form in ("source", *FORMS):
             result = resolved(form, fixture)
             slugs = [s["slug"] for s in result["selected"]]
             if result["state"] != fixture["state"] or slugs != fixture["slugs"]:
@@ -208,7 +209,8 @@ def compute(write: bool) -> None:
                 raise ValueError(f"item budget exceeded: {form}/{fixture['id']}")
             if result["state"] == "matched" and (content["characters"] > 80000 or content["estimated_tokens"] > 20000):
                 raise ValueError(f"content budget exceeded: {form}/{fixture['id']}")
-            measurements[form] = content
+            if form in evidence_forms:
+                measurements[form] = content
         if write:
             fixture["measurements"] = measurements
         elif fixture.get("measurements") != measurements:

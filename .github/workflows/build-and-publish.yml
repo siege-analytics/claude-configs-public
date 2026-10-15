@@ -64,6 +64,7 @@ jobs:
           python3 bin/_test/resolve_load_set_test.py
           python3 bin/_test/billing_diagnostic_test.py
           python3 bin/_test/progressive_mount_test.py
+          python3 bin/_test/consumer_runtime_test.py
           bash hooks/_test/progressive_loading.test.sh
           python3 bin/progressive-loading-metrics.py --check
           python3 bin/_test/language_scope_test.py

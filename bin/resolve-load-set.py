@@ -186,7 +186,15 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
         slug=item["slug"]
         if item["kind"].startswith("shelf") or slug.startswith(SHELF_PREFIX): raise ValueError(f"shelf cannot auto-select: {slug}")
         source=item.get("source_path",f"{typed_kind(item['kind'])}:{slug}")
-        selected.setdefault(source,{"slug":slug,"source_path":item.get("source_path","unknown"),"route":route,"priority":priority,"reasons":why,"_item":item})
+        selected.setdefault(source,{
+            "slug":slug,
+            "source_path":item.get("source_path","unknown"),
+            "load_path":item.get("package_path",item.get("source_path","unknown")),
+            "route":route,
+            "priority":priority,
+            "reasons":why,
+            "_item":item,
+        })
     selected_items=list(selected.values())
     # Explicit selection is discovery, never permission to bypass protected CI.
     # The legacy billing skill is retained only as a non-authorizing diagnostic.
