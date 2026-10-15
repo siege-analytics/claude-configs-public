@@ -30,32 +30,33 @@ The hostile loop rejected successive candidates for concrete dataflow and preced
 
 One proposed stdout-to-stderr false block was reproduced against the current candidate and shown invalid (actual exit 0); it was nevertheless retained as a passing regression.
 
-## CodeRabbit review remediation
+## Published-review remediation
 
-Review `5529528446` on published SHA `3abbcf741b641e7f2a172173258f9db1bc18a430` identified three concrete gaps, all reproduced before repair:
+Review `5529528446` on published SHA `3abbcf741b641e7f2a172173258f9db1bc18a430` identified recursion, utility-wrapper/eval, and literal-`#` gaps. Review `5530995977` then identified an AWS streaming-upload operand shift through `--expected-size`. All findings were reproduced before repair and became block/pass regressions.
 
-- recursion limits did not fail closed with a dedicated reason through every path, including `_process_command_consumes_stdin`;
-- `timeout`, `nice`, `stdbuf`, and `setsid` were not unwrapped, and `eval` payloads lacked execution context;
-- `shlex` comment handling dropped mid-word `#`, including a managed AWS operand.
+Independent exact-SHA reporter review `5531747431` subsequently **rejected** frozen SHA `415e1262baabad38af36a64bcd1311a03c149142`. Its R1–R6 commands all reproduced through exact/nonempty extraction, the raw classifier, and the full hook:
 
-All three became hostile regressions. The hostile loop then found additional bounded static/dataflow cases involving executor substitutions, echo/printf escapes, Python/Spark AST writes, subprocess/exec/eval payloads, function/lambda invocation, callable aliases, and call-time closure bindings. Fresh exact-SHA CodeRabbit review `5530995977` found one further AWS streaming-upload operand shift through `--expected-size`; operand inspection was generalized and covered with block/pass regressions. Every valid finding became a regression; invalid syntax findings were reproduced and rejected rather than waived.
+- R1: clustered shell `-o` values (`bash -euo pipefail -c`), including kubectl wrapping;
+- R2: imported/aliased Python executors, literal/split argv, and `os.exec*` payloads;
+- R3: executed Spark writes in callbacks, lambdas, methods, plus `-W`/`-X` values containing `c`;
+- R4: `${#...}` and brace/parameter words containing literal `#`;
+- R5: ANSI-C escaped quotes and arithmetic `<<` misread as heredocs;
+- R6: AWS `--cli-binary-format` value operands before or within `s3 cp`.
+
+The remediation used explicit shell lexical state and bounded Python AST binding/execution state. Follow-on hostile review found additional statically knowable aliases, argv composition/parameters, class/instance overrides and restoration, constructors, `foreachBatch`, imported/shadowed `exec`/`eval`, contextual execution state, chained writer methods, and named expressions. Every valid exact command was first reproduced, then added with a blocking or non-blocking control. One alleged aliased-module shadow false positive was falsified locally and not used as a mutation reason.
 
 ## Final verdicts
 
-Parser/dataflow candidate after the original implementation: **ACCEPT**.
-
-Frozen CodeRabbit-remediation candidate after the last behavioral change: **ACCEPT** from an exact post-change hostile completion. Earlier verdicts that produced subsequent findings are treated as superseded, not as acceptance evidence.
-
-No valid finding is waived.
+All acceptance verdicts predating a later finding are superseded. The final complete working-tree review after the last behavioral change returned **ACCEPT** and explicitly confirmed that the classifier parses input as data and never executes or evaluates it. No valid finding is waived.
 
 ## Final evidence supplied to reviewer
 
-- Focused catalog suite: `290 passed, 0 failed`.
-- Full-hook extraction control: `277/277` exact and nonempty.
-- Original 20-case matrix: base `10/20`, current `20/20`; extraction `20/20` exact/nonempty for both.
-- Deterministic malformed fuzz: seed 993; 500 classifier cases repeated twice plus 100 full-hook cases; 100/100 exact nonempty full-hook extractions; only exit 0/2; zero tracebacks.
+- Focused catalog suite: `364 passed, 0 failed`; this preserves all former `290/290` cases and adds the rejection/follow-on regressions.
+- Full-hook extraction control: `351/351` exact and nonempty.
+- Reconstructed issue matrix: current `20/20`; extraction `20/20` exact/nonempty. Historical authored-base evidence remains `10/20`; the independent reporter reconstruction recorded `7/20`.
+- Deterministic malformed fuzz: seed 993; 500 classifier cases repeated twice plus 100 full-hook cases; 100/100 exact nonempty full-hook extractions; exits exactly 0/2; zero tracebacks.
 - F4 authoritative risk suite: `review_risk_test: PASS`, including direct, modification, deletion, rename-source, and declared-B rejection coverage for the classifier.
-- Full current-develop validation: `18/18` Python fixtures, `29/29` CI build/check/package gates, and all `37/37` hook suite files passed.
+- Full current-develop validation: `18/18` Python fixtures on Python 3.13 (hosted CI uses 3.12), `29/29` CI build/check/package gates, and all `37/37` hook suite files passed.
 
 ## Canary and rollback
 

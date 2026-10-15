@@ -87,19 +87,21 @@ Falsification: this exemption is invalid if any implementation decision lacks an
 
 ## Findings
 
-No unresolved findings. CodeRabbit review `5529528446` was reproduced and remediated for dedicated fail-closed recursion limits, wrapper/eval invocation context, and mid-word `#` preservation. Fresh exact-SHA review `5530995977` found an AWS `--expected-size` operand shift; it was reproduced, generalized to all post-subcommand positionals, and regression-tested. The exact post-fix candidate returned `ACCEPT`. Earlier verdicts that produced later findings are explicitly superseded.
+No unresolved findings. CodeRabbit reviews `5529528446` and `5530995977` were reproduced and remediated for recursion/wrapper/eval/comment handling and AWS `--expected-size` operand shifting. Independent exact-SHA reporter review `5531747431` then rejected frozen SHA `415e1262baabad38af36a64bcd1311a03c149142` with R1–R6: clustered shell `-o`, Python executor spellings, executed Spark callables, parameter/brace `#`, ANSI-C/arithmetic parsing, and AWS `--cli-binary-format`. All 25 supplied commands reproduced with exact extraction and hook exit 0 before editing.
+
+The replacement models those classes structurally and converts every valid follow-on hostile command into a regression with a control. Follow-on coverage includes static import/executor identities, split/concatenated/assigned/parameter argv, `os.exec*`, functions/lambdas/bound methods/constructors/`foreachBatch`, class/instance override and restoration, contextual and imported/shadowed `exec`/`eval`, writer aliases, and named expressions. The complete post-change hostile review returned `ACCEPT`; every earlier verdict that produced a later finding is superseded.
 
 ## Quantified claims
 
-- "Focused catalog suite: 290 passed, 0 failed; extraction 277/277" — `bash hooks/_test/catalog_guard.test.sh` → `Results: 290 passed, 0 failed`; `extraction control: 277/277 full-hook commands nonempty`.
-- "Original matrix base 10/20, current 20/20, extraction 20/20 each" — exact-base/current matrix command → `SUMMARY base_policy=10/20 current_policy=20/20 base_exact_nonempty=20/20 current_exact_nonempty=20/20`.
-- "Malformed fuzz deterministic and crash-free" — seed-993 fuzz → `classifier_cases=500 repeated=2 hook_cases=100 exits={0,2} tracebacks=0`.
-- "18 Python fixture modules and 29 CI build/check/package gates" — accumulated runners → `PYTHON_FIXTURES passed=18 failed=0 total=18` and `CI_CHECKS passed=29 failed=0`.
+- "Focused catalog suite: 364 passed, 0 failed; extraction 351/351" — `bash hooks/_test/catalog_guard.test.sh` → `Results: 364 passed, 0 failed`; `extraction control: 351/351 full-hook commands nonempty`. This preserves all prior `290/290` cases.
+- "Issue matrix current 20/20 with exact extraction" — reconstructed issue matrix → `MATRIX current_policy=20/20 current_exact_nonempty=20/20`. Historical authored-base evidence is `10/20`; independent review recorded a `7/20` reconstruction.
+- "Malformed fuzz deterministic and crash-free" — seed-993 fuzz → `classifier_cases=500 repeated=2 hook_cases=100 exact_nonempty=100/100 exits=[0,2] tracebacks=0`.
+- "18 Python fixture modules and 29 CI build/check/package gates" — accumulated Python 3.13 runners → `PYTHON_FIXTURES_PY313 passed=18 failed=0 total=18` and `CI_CHECKS passed=29 failed=0 total=29`. The initial system-Python run's two annotation syntax errors were superseded because hosted CI uses Python 3.12.
 - "37/37 hook files" — accumulated `hooks/_test/*.test.sh` runner → `HOOK_FILES_TOTAL=37 PASS=37 FAIL=0`.
 - "F4 graph/shape suite" — `python3.13 bin/_test/review_risk_test.py` → `review_risk_test: PASS`.
 - "Generated authorities" — checks → `198 sources, 804 artifact snapshots, 2904 generated file mappings`; kernel `6995 chars, 1749 estimated tokens`; inventory current.
 - "Two package canaries" — built `claude-code` and `craft-agent` hooks → direct and expected-size block, prose pass, extraction `6/6`, Tier C.
-- "Tier C classification" — `python3.13 bin/review-risk.py --paths hooks/lib/classify-catalog-command.py --declared C` → `computed_tier: C`, `valid: true`; declared B exits 2 and reports `valid: false`.
+- "Tier C classification" — packaged `review-risk.py --paths hooks/lib/classify-catalog-command.py` → `computed_tier: C`, `valid: true`; authoritative declared-B rejection remains covered by `review_risk_test.py`.
 
 ## Rework ledger
 
@@ -113,7 +115,9 @@ No unresolved findings. CodeRabbit review `5529528446` was reproduced and remedi
 | Hosted generated-authority check failed | Inventory was checked before, not after, the new focused test/evidence files were committed | One hosted run + local reproduction | Regenerated `catalog/skills-inventory.json`, reran dependent authorities/build checks, and pushed a reviewed follow-up | Low |
 | CodeRabbit review `5529528446` | Recursion, utility wrappers/eval, and `shlex` comment semantics were incomplete at published SHA `3abbcf7` | Three exact reproductions | Added dedicated depth failure, wrapper/eval context, literal `#` handling, and hostile regressions | High |
 | Follow-on AST/dataflow hostile findings | The bounded model lacked several statically knowable executor, alias, invocation, closure, argument/default, and re-annotation shapes | One exact command plus block/pass control per round | Generalized bounded modeling; candidate reached 288/288 before external re-review | High defect yield |
-| Fresh CodeRabbit review `5530995977` | Fixed two-operand slicing let an unlisted value-taking option shift a managed AWS operand | Exact expected-size upload plus local control | Inspect all post-subcommand positionals; final suite 290/290 and exact post-fix `ACCEPT` | Low |
+| Fresh CodeRabbit review `5530995977` | Fixed two-operand slicing let an unlisted value-taking option shift a managed AWS operand | Exact expected-size upload plus local control | Inspect all post-subcommand positionals; candidate reached 290/290 before independent review | Low |
+| Independent exact-SHA review `5531747431` | Shell option/lexical state and bounded Python execution state omitted six executable syntax classes | 25 exact reproductions plus real-execution evidence | Structural R1–R6 fix; all valid commands and controls became regressions | High defect yield |
+| Post-R1–R6 hostile loop | Static bindings did not initially cover all aliases, argv transfers, callable boundaries, overrides, contextual builtins, and named expressions | One exact block/pass pair per finding | Generalized bounded state transfer; final suite 364/364 and complete hostile `ACCEPT` | High defect yield |
 
 ## Evidence-predates-work
 

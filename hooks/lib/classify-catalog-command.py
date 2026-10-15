@@ -58,7 +58,7 @@ def _is_shell_comment_boundary(chars):
     if not chars:
         return True
     previous = chars[-1]
-    if previous in ";|&(){}":
+    if previous in ";|&()":
         return True
     if not previous.isspace():
         return False
@@ -126,6 +126,22 @@ def _remove_line_continuations(command):
     i = 0
     while i < len(command):
         ch = command[i]
+        if quote == "ansi":
+            if ch == "\\" and i + 1 < len(command):
+                if command[i + 1] == "\n":
+                    i += 2
+                    continue
+                if command[i + 1 : i + 3] == "\r\n":
+                    i += 3
+                    continue
+                out.extend((ch, command[i + 1]))
+                i += 2
+                continue
+            if ch == "'":
+                quote = None
+            out.append(ch)
+            i += 1
+            continue
         if ch == "\\" and quote != "'":
             if i + 1 < len(command) and command[i + 1] == "\n":
                 i += 2
@@ -138,6 +154,11 @@ def _remove_line_continuations(command):
                 out.append(command[i + 1])
                 i += 2
                 continue
+        if quote is None and command.startswith("$'", i):
+            quote = "ansi"
+            out.append("$'")
+            i += 2
+            continue
         if ch == "'" and quote != '"':
             quote = None if quote == "'" else "'"
         elif ch == '"' and quote != "'":
@@ -147,10 +168,13 @@ def _remove_line_continuations(command):
     return "".join(out)
 
 
-def _find_heredoc_specs(line, initial_quote=None):
-    """Return heredoc declarations plus shell quote state across physical lines."""
+def _find_heredoc_specs(line, initial_state=None):
+    """Return heredoc declarations plus shell lexical state across lines."""
     specs = []
-    quote = initial_quote
+    if isinstance(initial_state, tuple):
+        quote, arithmetic_depth = initial_state
+    else:
+        quote, arithmetic_depth = initial_state, 0
     escaped = False
     i = 0
     token_boundary = True
@@ -159,6 +183,13 @@ def _find_heredoc_specs(line, initial_quote=None):
         if escaped:
             escaped = False
             token_boundary = False
+            i += 1
+            continue
+        if quote == "ansi":
+            if ch == "\\":
+                escaped = True
+            elif ch == "'":
+                quote = None
             i += 1
             continue
         if quote == "'":
@@ -178,10 +209,33 @@ def _find_heredoc_specs(line, initial_quote=None):
             token_boundary = False
             i += 1
             continue
+        if line.startswith("$'", i):
+            quote = "ansi"
+            token_boundary = False
+            i += 2
+            continue
         if ch in ("'", '"'):
             quote = ch
             token_boundary = False
             i += 1
+            continue
+        if arithmetic_depth:
+            if line.startswith("$((", i):
+                arithmetic_depth += 2
+                i += 3
+            elif ch == "(":
+                arithmetic_depth += 1
+                i += 1
+            elif ch == ")":
+                arithmetic_depth -= 1
+                i += 1
+            else:
+                i += 1
+            continue
+        if line.startswith("$((", i):
+            arithmetic_depth = 2
+            token_boundary = False
+            i += 3
             continue
         if ch == "#" and token_boundary:
             break
@@ -204,14 +258,14 @@ def _find_heredoc_specs(line, initial_quote=None):
                 continue
             delimiter, j, quoted, malformed = _parse_heredoc_delimiter(line, j)
             if malformed:
-                return [], True, quote
+                return [], True, (quote, arithmetic_depth)
             specs.append((start, j, delimiter, strip_tabs, quoted))
             i = j
             token_boundary = False
             continue
-        token_boundary = ch.isspace() or ch in ";|&(){}"
+        token_boundary = ch.isspace() or ch in ";|&()"
         i += 1
-    return specs, False, quote
+    return specs, False, (quote, arithmetic_depth)
 
 
 def _extract_heredocs(command):
@@ -221,10 +275,10 @@ def _extract_heredocs(command):
     documents = {}
     index = 0
     line_index = 0
-    shell_quote = None
+    shell_state = None
     while line_index < len(lines):
         line = lines[line_index]
-        specs, malformed, shell_quote = _find_heredoc_specs(line, shell_quote)
+        specs, malformed, shell_state = _find_heredoc_specs(line, shell_state)
         if malformed:
             # Preserve the current line so the ordinary segmenter can still
             # classify complete invocations before the malformed declaration.
@@ -280,6 +334,13 @@ def _consume_dollar_paren(text, start):
             escaped = False
             i += 1
             continue
+        if quote == "ansi":
+            if ch == "\\":
+                escaped = True
+            elif ch == "'":
+                quote = None
+            i += 1
+            continue
         if quote == "'":
             if ch == "'":
                 quote = None
@@ -298,6 +359,10 @@ def _consume_dollar_paren(text, start):
             continue
         if ch == "\\":
             escaped = True
+        elif text.startswith("$'", i):
+            quote = "ansi"
+            i += 2
+            continue
         elif ch in ("'", '"'):
             quote = ch
         elif text.startswith("$(", i):
@@ -346,6 +411,16 @@ def _mask_substitutions(
             escaped = False
             i += 1
             continue
+        if shell_quotes and quote == "ansi":
+            out.append(ch)
+            if ch == "\\" and i + 1 < len(text):
+                out.append(text[i + 1])
+                i += 2
+                continue
+            if ch == "'":
+                quote = None
+            i += 1
+            continue
         if shell_quotes and quote == "'":
             out.append(ch)
             if ch == "'":
@@ -368,6 +443,11 @@ def _mask_substitutions(
             if i < len(text):
                 out.append("\n")
                 i += 1
+            continue
+        if shell_quotes and quote is None and text.startswith("$'", i):
+            quote = "ansi"
+            out.append("$'")
+            i += 2
             continue
         if shell_quotes and ch == "'" and quote is None:
             quote = "'"
@@ -453,6 +533,16 @@ def _split_segments(command):
             escaped = False
             i += 1
             continue
+        if quote == "ansi":
+            current.append(ch)
+            if ch == "\\" and i + 1 < len(command):
+                current.append(command[i + 1])
+                i += 2
+                continue
+            if ch == "'":
+                quote = None
+            i += 1
+            continue
         if quote == "'":
             current.append(ch)
             if ch == "'":
@@ -471,6 +561,11 @@ def _split_segments(command):
             current.append(ch)
             escaped = True
             i += 1
+            continue
+        if command.startswith("$'", i):
+            quote = "ansi"
+            current.append("$'")
+            i += 2
             continue
         if ch in ("'", '"'):
             quote = ch
@@ -756,7 +851,8 @@ def _all_positionals(tokens, options_with_values):
 def _aws_copy_operands(args):
     options_with_values = {
         "--profile", "--region", "--endpoint-url", "--ca-bundle",
-        "--cli-read-timeout", "--cli-connect-timeout", "--output", "--query",
+        "--cli-read-timeout", "--cli-connect-timeout", "--cli-binary-format",
+        "--output", "--query",
         "--color", "--exclude", "--include", "--acl", "--sse", "--sse-c",
         "--sse-c-key", "--sse-kms-key-id", "--sse-c-copy-source",
         "--sse-c-copy-source-key", "--storage-class", "--grants",
@@ -798,6 +894,9 @@ def _python_inline_payloads(args):
             return []
         if arg in {"-W", "-X"}:
             index += 2
+            continue
+        if arg.startswith(("-W", "-X")):
+            index += 1
             continue
         if arg.startswith("--"):
             index += 1
@@ -850,6 +949,21 @@ def _python_reads_stdin_code(args):
     return index >= len(args) or args[index] == "-"
 
 
+def _shell_option_advance(args, index):
+    """Advance over one shell invocation option and any separate value."""
+    arg = args[index]
+    value_options = {"-o", "+o", "-O", "+O", "--rcfile", "--init-file"}
+    if arg in value_options:
+        return min(index + 2, len(args))
+    if arg.startswith(("-", "+")) and not arg.startswith(("--", "++")):
+        flags = arg[1:]
+        # Bash accepts a final clustered -o/+o as the selector for a separate
+        # option-name operand (for example, `-euo pipefail`).
+        if "c" not in flags and flags.endswith(("o", "O")):
+            return min(index + 2, len(args))
+    return index + 1
+
+
 def _shell_noexec(args):
     """Return the effective invocation-time noexec state before any script."""
     value_options = {"-o", "+o", "-O", "+O", "--rcfile", "--init-file"}
@@ -866,7 +980,7 @@ def _shell_noexec(args):
                 and args[index + 1] == "noexec"
             ):
                 noexec = arg == "-o"
-            index += 2
+            index = _shell_option_advance(args, index)
             continue
         if arg.startswith("--"):
             index += 1
@@ -876,7 +990,7 @@ def _shell_noexec(args):
             noexec = arg.startswith("-")
         if "c" in flags and arg.startswith("-"):
             break
-        index += 1
+        index = _shell_option_advance(args, index)
     return noexec
 
 
@@ -898,7 +1012,7 @@ def _shell_inline_payloads(args):
                 and args[index + 1] == "noexec"
             ):
                 noexec = arg == "-o"
-            index += 2
+            index = _shell_option_advance(args, index)
             continue
         if arg.startswith("--"):
             index += 1
@@ -915,7 +1029,7 @@ def _shell_inline_payloads(args):
             if noexec:
                 return []
             return [args[index + 1]] if index + 1 < len(args) else []
-        index += 1
+        index = _shell_option_advance(args, index)
     return []
 
 
@@ -944,7 +1058,7 @@ def _shell_reads_stdin_code(args):
         if arg == "-":
             return True
         if arg in value_options:
-            index += 2
+            index = _shell_option_advance(code_args, index)
             continue
         if arg.startswith("--"):
             index += 1
@@ -953,7 +1067,7 @@ def _shell_reads_stdin_code(args):
             flags = arg[1:]
             if "s" in flags:
                 reads_stdin = True
-            index += 1
+            index = _shell_option_advance(code_args, index)
             continue
         return reads_stdin
     return reads_stdin or index >= len(code_args)
@@ -990,6 +1104,8 @@ def _chain_contains_write(node):
 
 
 def _static_string(node):
+    if isinstance(node, ast.NamedExpr):
+        return _static_string(node.value)
     if isinstance(node, ast.Name):
         return getattr(node, "_catalog_static_string", None)
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
@@ -1016,12 +1132,26 @@ def _static_string(node):
 
 class _StaticLoadAnnotator(ast.NodeVisitor):
     def __init__(
-        self, values, writers, functions=None, writer_methods=None
+        self,
+        values,
+        writers,
+        functions=None,
+        writer_methods=None,
+        imports=None,
+        classes=None,
+        shadowed_attributes=None,
+        static_argvs=None,
+        shadowed_builtins=None,
     ):
         self.values = values
         self.writers = writers
         self.functions = dict(functions or {})
         self.writer_methods = set(writer_methods or set())
+        self.imports = dict(imports or {})
+        self.classes = dict(classes or {})
+        self.shadowed_attributes = set(shadowed_attributes or set())
+        self.static_argvs = dict(static_argvs or {})
+        self.shadowed_builtins = set(shadowed_builtins or set())
 
     def visit_Name(self, node):
         if not isinstance(node.ctx, ast.Load):
@@ -1038,12 +1168,29 @@ class _StaticLoadAnnotator(ast.NodeVisitor):
             node._catalog_writer_method = True
         elif hasattr(node, "_catalog_writer_method"):
             del node._catalog_writer_method
+        if node.id in self.imports:
+            node._catalog_import_name = self.imports[node.id]
+        elif hasattr(node, "_catalog_import_name"):
+            del node._catalog_import_name
+        if node.id in self.static_argvs:
+            node._catalog_static_argv = self.static_argvs[node.id]
+        elif hasattr(node, "_catalog_static_argv"):
+            del node._catalog_static_argv
+        if node.id in self.shadowed_builtins:
+            node._catalog_builtin_shadowed = True
+        elif hasattr(node, "_catalog_builtin_shadowed"):
+            del node._catalog_builtin_shadowed
 
     def visit_Call(self, node):
         node._catalog_static_values = dict(self.values)
         node._catalog_static_writers = set(self.writers)
         node._catalog_static_functions = dict(self.functions)
         node._catalog_static_writer_methods = set(self.writer_methods)
+        node._catalog_static_imports = dict(self.imports)
+        node._catalog_static_classes = dict(self.classes)
+        node._catalog_shadowed_attributes = set(self.shadowed_attributes)
+        node._catalog_static_argvs = dict(self.static_argvs)
+        node._catalog_shadowed_builtins = set(self.shadowed_builtins)
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node):
@@ -1056,24 +1203,112 @@ class _StaticLoadAnnotator(ast.NodeVisitor):
         return None
 
 
-
 def _annotate_static_names(
     statements,
     inherited_values=None,
     inherited_writers=None,
     inherited_functions=None,
     inherited_writer_methods=None,
+    inherited_imports=None,
+    inherited_classes=None,
+    inherited_shadowed_attributes=None,
+    inherited_static_argvs=None,
+    inherited_shadowed_builtins=None,
 ):
     values = dict(inherited_values or {})
     writers = set(inherited_writers or set())
     functions = dict(inherited_functions or {})
     writer_methods = set(inherited_writer_methods or set())
+    imports = dict(inherited_imports or {})
+    classes = dict(inherited_classes or {})
+    shadowed_attributes = set(inherited_shadowed_attributes or set())
+    static_argvs = dict(inherited_static_argvs or {})
+    shadowed_builtins = set(inherited_shadowed_builtins or set())
+
+    def recurse(block):
+        _annotate_static_names(
+            block,
+            values,
+            writers,
+            functions,
+            writer_methods,
+            imports,
+            classes,
+            shadowed_attributes,
+            static_argvs,
+            shadowed_builtins,
+        )
+
+    def clear_binding(name):
+        values.pop(name, None)
+        writers.discard(name)
+        writer_methods.discard(name)
+        functions.pop(name, None)
+        imports.pop(name, None)
+        classes.pop(name, None)
+        static_argvs.pop(name, None)
+
+    def shadow_builtin(name):
+        if name in {"exec", "eval"}:
+            shadowed_builtins.add(name)
+
+    def callable_binding(node):
+        if isinstance(node, ast.Lambda):
+            return node
+        if isinstance(node, ast.Name):
+            return functions.get(node.id)
+        if not isinstance(node, ast.Attribute):
+            return None
+        if isinstance(node.value, ast.Name):
+            receiver_name = node.value.id
+            implicit_receiver = None
+        elif (
+            isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Name)
+        ):
+            receiver_name = node.value.func.id
+            implicit_receiver = True
+        else:
+            return None
+        class_node = classes.get(receiver_name)
+        if class_node is None:
+            return None
+        if (
+            f"{receiver_name}.{node.attr}" in shadowed_attributes
+            or f"{class_node.name}.{node.attr}" in shadowed_attributes
+        ):
+            return None
+        method = next(
+            (
+                item
+                for item in class_node.body
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and item.name == node.attr
+            ),
+            None,
+        )
+        if method is None:
+            return None
+        if implicit_receiver is None:
+            implicit_receiver = receiver_name != class_node.name
+        return method, implicit_receiver
+
     for statement in statements:
         if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
             statement._catalog_static_values = dict(values)
             statement._catalog_static_writers = set(writers)
+            statement._catalog_static_imports = dict(imports)
+            statement._catalog_static_classes = dict(classes)
             default_annotator = _StaticLoadAnnotator(
-                values, writers, functions, writer_methods
+                values,
+                writers,
+                functions,
+                writer_methods,
+                imports,
+                classes,
+                shadowed_attributes,
+                static_argvs,
+                shadowed_builtins,
             )
             for default in (
                 list(statement.args.defaults)
@@ -1081,23 +1316,60 @@ def _annotate_static_names(
             ):
                 if default is not None:
                     default_annotator.visit(default)
+            clear_binding(statement.name)
+            shadow_builtin(statement.name)
             if isinstance(statement, ast.FunctionDef):
                 functions[statement.name] = statement
-            _annotate_static_names(
-                statement.body,
+            recurse(statement.body)
+            continue
+        if isinstance(statement, ast.ClassDef):
+            annotator = _StaticLoadAnnotator(
                 values,
                 writers,
                 functions,
                 writer_methods,
+                imports,
+                classes,
+                shadowed_attributes,
+                static_argvs,
+                shadowed_builtins,
             )
+            annotator.visit(statement)
+            clear_binding(statement.name)
+            shadow_builtin(statement.name)
+            classes[statement.name] = statement
+            recurse(statement.body)
             continue
         annotator = _StaticLoadAnnotator(
-            values, writers, functions, writer_methods
+            values,
+            writers,
+            functions,
+            writer_methods,
+            imports,
+            classes,
+            shadowed_attributes,
+            static_argvs,
+            shadowed_builtins,
         )
         annotator.visit(statement)
-        if isinstance(statement, (ast.Assign, ast.AnnAssign)):
+        if isinstance(statement, ast.Import):
+            for alias in statement.names:
+                bound = alias.asname or alias.name.split(".", 1)[0]
+                clear_binding(bound)
+                shadow_builtin(bound)
+                imports[bound] = alias.name if alias.asname else bound
+        elif isinstance(statement, ast.ImportFrom) and statement.module:
+            for alias in statement.names:
+                if alias.name == "*":
+                    continue
+                bound = alias.asname or alias.name
+                clear_binding(bound)
+                shadow_builtin(bound)
+                imports[bound] = f"{statement.module}.{alias.name}"
+        elif isinstance(statement, (ast.Assign, ast.AnnAssign)):
             value_node = statement.value
             value = _static_string(value_node) if value_node is not None else None
+            argv_value = _static_argv(value_node) if value_node is not None else None
             is_writer = bool(value_node and _chain_contains_write(value_node))
             bound_method, bound_receiver = (
                 _writer_call_target(value_node)
@@ -1105,9 +1377,29 @@ def _annotate_static_names(
                 else (None, None)
             )
             is_writer_method = bool(
-                bound_method in {"save", "parquet", "text", "json", "csv"}
-                and _chain_contains_write(bound_receiver)
+                (
+                    bound_method in {"save", "parquet", "text", "json", "csv"}
+                    and _chain_contains_write(bound_receiver)
+                )
+                or (
+                    isinstance(value_node, ast.Name)
+                    and value_node.id in writer_methods
+                )
             )
+            callable_value = callable_binding(value_node)
+            import_value = (
+                imports.get(value_node.id)
+                if isinstance(value_node, ast.Name)
+                else None
+            )
+            class_value = None
+            if isinstance(value_node, ast.Name):
+                class_value = classes.get(value_node.id)
+            elif (
+                isinstance(value_node, ast.Call)
+                and isinstance(value_node.func, ast.Name)
+            ):
+                class_value = classes.get(value_node.func.id)
             targets = (
                 statement.targets
                 if isinstance(statement, ast.Assign)
@@ -1115,34 +1407,69 @@ def _annotate_static_names(
             )
             for target in targets:
                 if isinstance(target, ast.Name):
-                    if value is None:
-                        values.pop(target.id, None)
-                    else:
+                    clear_binding(target.id)
+                    shadow_builtin(target.id)
+                    if value is not None:
                         values[target.id] = value
+                    if argv_value is not None:
+                        static_argvs[target.id] = argv_value
                     if is_writer:
                         writers.add(target.id)
-                    else:
-                        writers.discard(target.id)
                     if is_writer_method:
                         writer_methods.add(target.id)
-                    else:
-                        writer_methods.discard(target.id)
-                    functions.pop(target.id, None)
+                    if callable_value is not None:
+                        functions[target.id] = callable_value
+                    if import_value is not None:
+                        imports[target.id] = import_value
+                    if class_value is not None:
+                        classes[target.id] = class_value
+                elif isinstance(target, ast.Attribute):
+                    qualified = _python_qualified_name(target)
+                    receiver_name = (
+                        target.value.id
+                        if isinstance(target.value, ast.Name)
+                        else None
+                    )
+                    class_node = classes.get(receiver_name)
+                    original_method = next(
+                        (
+                            item
+                            for item in class_node.body
+                            if isinstance(
+                                item, (ast.FunctionDef, ast.AsyncFunctionDef)
+                            )
+                            and item.name == target.attr
+                        ),
+                        None,
+                    ) if class_node is not None else None
+                    callable_node = (
+                        callable_value[0]
+                        if isinstance(callable_value, tuple)
+                        else callable_value
+                    )
+                    if original_method is not None and callable_node is original_method:
+                        shadowed_attributes.discard(qualified)
+                        if receiver_name == class_node.name:
+                            shadowed_attributes.discard(
+                                f"{class_node.name}.{target.attr}"
+                            )
+                    elif qualified:
+                        shadowed_attributes.add(qualified)
         elif isinstance(statement, ast.If):
             # Branch-local assignments are not treated as unconditional.
-            _annotate_static_names(statement.body, values, writers, functions, writer_methods)
-            _annotate_static_names(statement.orelse, values, writers, functions, writer_methods)
+            recurse(statement.body)
+            recurse(statement.orelse)
         elif isinstance(statement, (ast.For, ast.AsyncFor, ast.While)):
-            _annotate_static_names(statement.body, values, writers, functions, writer_methods)
-            _annotate_static_names(statement.orelse, values, writers, functions, writer_methods)
+            recurse(statement.body)
+            recurse(statement.orelse)
         elif isinstance(statement, (ast.With, ast.AsyncWith)):
-            _annotate_static_names(statement.body, values, writers, functions, writer_methods)
+            recurse(statement.body)
         elif isinstance(statement, ast.Try):
-            _annotate_static_names(statement.body, values, writers, functions, writer_methods)
-            _annotate_static_names(statement.orelse, values, writers, functions, writer_methods)
-            _annotate_static_names(statement.finalbody, values, writers, functions, writer_methods)
+            recurse(statement.body)
+            recurse(statement.orelse)
+            recurse(statement.finalbody)
             for handler in statement.handlers:
-                _annotate_static_names(handler.body, values, writers, functions, writer_methods)
+                recurse(handler.body)
     return values, writers
 
 
@@ -1221,32 +1548,101 @@ def _format_call_in_chain(node):
 
 
 def _static_argv(node):
-    if not isinstance(node, (ast.List, ast.Tuple)):
-        return None
-    values = [_static_string(item) for item in node.elts]
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        left = _static_argv(node.left)
+        right = _static_argv(node.right)
+        if left is None or right is None:
+            return None
+        try:
+            return shlex.join(shlex.split(left) + shlex.split(right))
+        except ValueError:
+            return None
+    if isinstance(node, ast.Name):
+        return getattr(node, "_catalog_static_argv", None)
+    if isinstance(node, (ast.List, ast.Tuple)):
+        values = [_static_string(item) for item in node.elts]
+        if any(value is None for value in values):
+            return None
+        return shlex.join(values)
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "split"
+        and len(node.args) <= 2
+        and not node.keywords
+    ):
+        value = _static_string(node.func.value)
+        if value is None:
+            return None
+        separator = _static_string(node.args[0]) if node.args else None
+        if node.args and separator is None:
+            return None
+        maxsplit = -1
+        if len(node.args) == 2:
+            maxsplit_node = node.args[1]
+            if not (
+                isinstance(maxsplit_node, ast.Constant)
+                and isinstance(maxsplit_node.value, int)
+            ):
+                return None
+            maxsplit = maxsplit_node.value
+        return shlex.join(value.split(separator, maxsplit))
+    return None
+
+
+def _static_argv_nodes(nodes):
+    values = [_static_string(item) for item in nodes]
     if any(value is None for value in values):
         return None
     return shlex.join(values)
 
 
+def _python_qualified_name(function):
+    if isinstance(function, ast.Name):
+        return getattr(function, "_catalog_import_name", function.id)
+    if isinstance(function, ast.Attribute):
+        owner = _python_qualified_name(function.value)
+        return f"{owner}.{function.attr}" if owner else None
+    return None
+
+
 def _python_executor_payload(node):
     if not isinstance(node, ast.Call):
         return None, None
-    function = node.func
-    if isinstance(function, ast.Name) and function.id in {"exec", "eval"}:
+    qualified = _python_qualified_name(node.func)
+    if qualified in getattr(node, "_catalog_shadowed_attributes", set()):
+        return None, None
+    if (
+        isinstance(node.func, ast.Name)
+        and getattr(node.func, "_catalog_builtin_shadowed", False)
+    ):
+        return None, None
+    if qualified in {"exec", "eval", "builtins.exec", "builtins.eval"}:
         return (
             ("python", _static_string(node.args[0]))
             if node.args
             else (None, None)
         )
-    if not isinstance(function, ast.Attribute) or not isinstance(function.value, ast.Name):
+    if not qualified or "." not in qualified:
         return None, None
-    owner = function.value.id
-    method = function.attr
+    owner, method = qualified.rsplit(".", 1)
     if owner == "os" and method in {"system", "popen"}:
         return (
             ("shell", _static_string(node.args[0]))
             if node.args
+            else (None, None)
+        )
+    if owner == "os" and method in {"execl", "execlp", "execle", "execlpe"}:
+        arguments = (
+            node.args[1:-1]
+            if method in {"execle", "execlpe"}
+            else node.args[1:]
+        )
+        return "shell", _static_argv_nodes(arguments)
+    if owner == "os" and method in {"execv", "execvp", "execve", "execvpe"}:
+        return (
+            ("shell", _static_argv(node.args[1]))
+            if len(node.args) >= 2
             else (None, None)
         )
     if owner != "subprocess":
@@ -1281,6 +1677,163 @@ def _python_executor_payload(node):
 
 
 def _executed_ast_nodes(tree):
+    def resolve_callable(target, context):
+        if isinstance(target, ast.Lambda):
+            return target, False
+        if isinstance(target, ast.Name):
+            function = getattr(context, "_catalog_static_functions", {}).get(
+                target.id
+            )
+            if isinstance(function, tuple):
+                return function
+            return (function, False) if function is not None else (None, False)
+        if not isinstance(target, ast.Attribute):
+            return None, False
+        receiver = target.value
+        if isinstance(receiver, ast.Call) and isinstance(receiver.func, ast.Name):
+            receiver_name = receiver.func.id
+            implicit_receiver = True
+        elif isinstance(receiver, ast.Name):
+            receiver_name = receiver.id
+            implicit_receiver = None
+        else:
+            return None, False
+        class_node = getattr(context, "_catalog_static_classes", {}).get(
+            receiver_name
+        )
+        if class_node is None:
+            return None, False
+        shadowed = getattr(context, "_catalog_shadowed_attributes", set())
+        if (
+            f"{receiver_name}.{target.attr}" in shadowed
+            or f"{class_node.name}.{target.attr}" in shadowed
+        ):
+            return None, False
+        if implicit_receiver is None:
+            implicit_receiver = receiver_name != class_node.name
+        method = next(
+            (
+                item
+                for item in class_node.body
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and item.name == target.attr
+            ),
+            None,
+        )
+        return method, implicit_receiver
+
+    def execute_callable(
+        callable_node,
+        context,
+        active_functions,
+        call=None,
+        implicit_receiver=False,
+    ):
+        if callable_node is None or id(callable_node) in active_functions:
+            return
+        call_values = dict(getattr(context, "_catalog_static_values", {}))
+        call_writers = set(getattr(context, "_catalog_static_writers", set()))
+        call_functions = dict(
+            getattr(context, "_catalog_static_functions", {})
+        )
+        call_writer_methods = set(
+            getattr(context, "_catalog_static_writer_methods", set())
+        )
+        call_imports = dict(getattr(context, "_catalog_static_imports", {}))
+        call_classes = dict(getattr(context, "_catalog_static_classes", {}))
+        call_shadowed_attributes = set(
+            getattr(context, "_catalog_shadowed_attributes", set())
+        )
+        call_static_argvs = dict(
+            getattr(context, "_catalog_static_argvs", {})
+        )
+        call_shadowed_builtins = set(
+            getattr(context, "_catalog_shadowed_builtins", set())
+        )
+        arguments = callable_node.args
+        positional = list(arguments.posonlyargs) + list(arguments.args)
+        defaults = [None] * (
+            len(positional) - len(arguments.defaults)
+        ) + list(arguments.defaults)
+        keyword_arguments = {
+            keyword.arg: keyword.value
+            for keyword in (call.keywords if call is not None else [])
+            if keyword.arg is not None
+        }
+        supplied = list(call.args if call is not None else [])
+        if implicit_receiver:
+            supplied.insert(0, None)
+        parameter_names = [parameter.arg for parameter in positional]
+        parameter_names.extend(parameter.arg for parameter in arguments.kwonlyargs)
+        if arguments.vararg:
+            parameter_names.append(arguments.vararg.arg)
+        if arguments.kwarg:
+            parameter_names.append(arguments.kwarg.arg)
+        for name in parameter_names:
+            if name in {"exec", "eval"}:
+                call_shadowed_builtins.add(name)
+            call_values.pop(name, None)
+            call_writers.discard(name)
+            call_writer_methods.discard(name)
+            call_functions.pop(name, None)
+            call_imports.pop(name, None)
+            call_classes.pop(name, None)
+            call_static_argvs.pop(name, None)
+        for index, parameter in enumerate(positional):
+            argument = (
+                supplied[index]
+                if index < len(supplied)
+                else keyword_arguments.get(parameter.arg, defaults[index])
+            )
+            value = _static_string(argument) if argument is not None else None
+            argv = _static_argv(argument) if argument is not None else None
+            if value is not None:
+                call_values[parameter.arg] = value
+            if argv is not None:
+                call_static_argvs[parameter.arg] = argv
+        for parameter, default in zip(
+            arguments.kwonlyargs, arguments.kw_defaults
+        ):
+            argument = keyword_arguments.get(parameter.arg, default)
+            value = _static_string(argument) if argument is not None else None
+            argv = _static_argv(argument) if argument is not None else None
+            if value is not None:
+                call_values[parameter.arg] = value
+            if argv is not None:
+                call_static_argvs[parameter.arg] = argv
+        nested_active = active_functions | {id(callable_node)}
+        if isinstance(callable_node, ast.Lambda):
+            annotator = _StaticLoadAnnotator(
+                call_values,
+                call_writers,
+                call_functions,
+                call_writer_methods,
+                call_imports,
+                call_classes,
+                call_shadowed_attributes,
+                call_static_argvs,
+                call_shadowed_builtins,
+            )
+            annotator.visit(callable_node.body)
+            yield from walk(
+                callable_node.body, nested_active, execute_lambda=True
+            )
+            return
+        _annotate_static_names(
+            callable_node.body,
+            call_values,
+            call_writers,
+            call_functions,
+            call_writer_methods,
+            call_imports,
+            call_classes,
+            call_shadowed_attributes,
+            call_static_argvs,
+            call_shadowed_builtins,
+        )
+        for statement in callable_node.body:
+            yield from walk(statement, nested_active)
+
     def walk(node, active_functions=None, execute_lambda=False):
         active_functions = set(active_functions or set())
         yield node
@@ -1296,71 +1849,63 @@ def _executed_ast_nodes(tree):
         if isinstance(node, ast.Call):
             for child in ast.iter_child_nodes(node):
                 yield from walk(child, active_functions)
-            if isinstance(node.func, ast.Lambda):
-                annotator = _StaticLoadAnnotator(
-                    getattr(node, "_catalog_static_values", {}),
-                    getattr(node, "_catalog_static_writers", set()),
-                    getattr(node, "_catalog_static_functions", {}),
-                    getattr(node, "_catalog_static_writer_methods", set()),
+            callable_node, implicit_receiver = resolve_callable(node.func, node)
+            yield from execute_callable(
+                callable_node,
+                node,
+                active_functions,
+                call=node,
+                implicit_receiver=implicit_receiver,
+            )
+            if isinstance(node.func, ast.Name):
+                class_node = getattr(
+                    node, "_catalog_static_classes", {}
+                ).get(node.func.id)
+                shadowed = getattr(
+                    node, "_catalog_shadowed_attributes", set()
                 )
-                annotator.visit(node.func.body)
-                yield from walk(
-                    node.func.body, active_functions, execute_lambda=True
-                )
-            elif (
-                isinstance(node.func, ast.Name)
-                and node.func.id
-                in getattr(node, "_catalog_static_functions", {})
-                and node.func.id not in active_functions
-            ):
-                function = node._catalog_static_functions[node.func.id]
-                call_values = dict(
-                    getattr(node, "_catalog_static_values", {})
-                )
-                positional = (
-                    list(function.args.posonlyargs)
-                    + list(function.args.args)
-                )
-                defaults = [None] * (
-                    len(positional) - len(function.args.defaults)
-                ) + list(function.args.defaults)
-                keyword_arguments = {
-                    keyword.arg: keyword.value
-                    for keyword in node.keywords
-                    if keyword.arg is not None
-                }
-                for index, parameter in enumerate(positional):
-                    argument = (
-                        node.args[index]
-                        if index < len(node.args)
-                        else keyword_arguments.get(
-                            parameter.arg, defaults[index]
+                if class_node is not None:
+                    for constructor_name in ("__new__", "__init__"):
+                        if (
+                            f"{node.func.id}.{constructor_name}" in shadowed
+                            or f"{class_node.name}.{constructor_name}" in shadowed
+                        ):
+                            continue
+                        constructor = next(
+                            (
+                                item
+                                for item in class_node.body
+                                if isinstance(
+                                    item,
+                                    (ast.FunctionDef, ast.AsyncFunctionDef),
+                                )
+                                and item.name == constructor_name
+                            ),
+                            None,
                         )
+                        yield from execute_callable(
+                            constructor,
+                            node,
+                            active_functions,
+                            call=node,
+                            implicit_receiver=True,
+                        )
+            if (
+                isinstance(node.func, ast.Attribute)
+                and node.func.attr == "foreachBatch"
+            ):
+                callback_nodes = list(node.args) + [
+                    keyword.value
+                    for keyword in node.keywords
+                    if keyword.arg in {"func", "function"}
+                ]
+                for callback in callback_nodes:
+                    callable_node, _implicit = resolve_callable(callback, node)
+                    yield from execute_callable(
+                        callable_node,
+                        node,
+                        active_functions,
                     )
-                    call_values.pop(parameter.arg, None)
-                    value = _static_string(argument)
-                    if value is not None:
-                        call_values[parameter.arg] = value
-                for parameter, default in zip(
-                    function.args.kwonlyargs, function.args.kw_defaults
-                ):
-                    argument = keyword_arguments.get(parameter.arg, default)
-                    call_values.pop(parameter.arg, None)
-                    value = _static_string(argument)
-                    if value is not None:
-                        call_values[parameter.arg] = value
-                _annotate_static_names(
-                    function.body,
-                    call_values,
-                    getattr(node, "_catalog_static_writers", set()),
-                    getattr(node, "_catalog_static_functions", {}),
-                    getattr(
-                        node, "_catalog_static_writer_methods", set()
-                    ),
-                )
-                nested_active = active_functions | {node.func.id}
-                for statement in function.body:
-                    yield from walk(statement, nested_active)
             return
         for child in ast.iter_child_nodes(node):
             yield from walk(child, active_functions, execute_lambda)
@@ -1374,6 +1919,13 @@ def _python_ast_write_reason(
     depth=0,
     inherited_values=None,
     inherited_writers=None,
+    inherited_functions=None,
+    inherited_writer_methods=None,
+    inherited_imports=None,
+    inherited_classes=None,
+    inherited_shadowed_attributes=None,
+    inherited_static_argvs=None,
+    inherited_shadowed_builtins=None,
 ):
     if depth > MAX_RECURSION:
         return True, DEPTH_REASON
@@ -1385,6 +1937,13 @@ def _python_ast_write_reason(
         tree.body,
         inherited_values=inherited_values,
         inherited_writers=inherited_writers,
+        inherited_functions=inherited_functions,
+        inherited_writer_methods=inherited_writer_methods,
+        inherited_imports=inherited_imports,
+        inherited_classes=inherited_classes,
+        inherited_shadowed_attributes=inherited_shadowed_attributes,
+        inherited_static_argvs=inherited_static_argvs,
+        inherited_shadowed_builtins=inherited_shadowed_builtins,
     )
     for node in _executed_ast_nodes(tree):
         if not isinstance(node, ast.Call):
@@ -1403,6 +1962,27 @@ def _python_ast_write_reason(
                     ),
                     inherited_writers=getattr(
                         node, "_catalog_static_writers", None
+                    ),
+                    inherited_functions=getattr(
+                        node, "_catalog_static_functions", None
+                    ),
+                    inherited_writer_methods=getattr(
+                        node, "_catalog_static_writer_methods", None
+                    ),
+                    inherited_imports=getattr(
+                        node, "_catalog_static_imports", None
+                    ),
+                    inherited_classes=getattr(
+                        node, "_catalog_static_classes", None
+                    ),
+                    inherited_shadowed_attributes=getattr(
+                        node, "_catalog_shadowed_attributes", None
+                    ),
+                    inherited_static_argvs=getattr(
+                        node, "_catalog_static_argvs", None
+                    ),
+                    inherited_shadowed_builtins=getattr(
+                        node, "_catalog_shadowed_builtins", None
                     ),
                 )
             if reason:
@@ -1597,11 +2177,6 @@ def _normalize_ansi_c_quotes(segment):
             escaped = True
             index += 1
             continue
-        if char in ("'", '"'):
-            output.append(char)
-            quote = char
-            index += 1
-            continue
         if segment.startswith("$'", index):
             cursor = index + 2
             content = []
@@ -1619,6 +2194,11 @@ def _normalize_ansi_c_quotes(segment):
                 break
             output.append(shlex.quote(_decode_ansi_c_content("".join(content))))
             index = cursor + 1
+            continue
+        if char in ("'", '"'):
+            output.append(char)
+            quote = char
+            index += 1
             continue
         output.append(char)
         index += 1
@@ -2074,10 +2654,10 @@ def _process_script_payloads(
         while index < len(args):
             arg = args[index]
             if arg in value_options:
-                index += 2
+                index = _shell_option_advance(args, index)
                 continue
             if arg.startswith(("-", "+")) and arg != "-":
-                index += 1
+                index = _shell_option_advance(args, index)
                 continue
             marker_index = _process_marker_index(arg)
             if marker_index is not None and marker_index < len(process_substitutions):

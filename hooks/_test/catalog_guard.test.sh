@@ -161,6 +161,8 @@ expect_block "python concatenated literal path" \
     "python3 -c 'df.write.parquet(\"s3\" + \"a://gold/table/\")'" "$RAW_REASON"
 expect_block "python assigned static path" \
     "python3 -c 'path = \"s3a://gold/table/\"; df.write.parquet(path)'" "$RAW_REASON"
+expect_block "python named expression static path" \
+    "python3 -c 'df.write.parquet(path := \"s3a://gold/table/\")'" "$RAW_REASON"
 expect_block "python f-string static path" \
     "python3 -c 'path = \"s3a://gold/table/\"; df.write.parquet(f\"{path}\")'" "$RAW_REASON"
 expect_block "python assigned path used before overwrite" \
@@ -181,6 +183,30 @@ expect_block "python writer starred literal path" \
     "python3 -c 'df.write.parquet(*[\"s3a://gold/table/\"])'" "$RAW_REASON"
 expect_block "python os system shell payload" \
     "python3 -c 'import os; os.system(\"aws s3 cp ./out s3://gold/table/\")'" "$OBJECT_REASON"
+expect_block "python imported subprocess executor" \
+    "python3 -c \"from subprocess import run; run('aws s3 cp ./out s3://gold/table/', shell=True)\"" "$OBJECT_REASON"
+expect_block "python aliased subprocess module executor" \
+    "python3 -c \"import subprocess as sp; sp.run('aws s3 cp ./out s3://gold/table/', shell=True)\"" "$OBJECT_REASON"
+expect_block "python assigned subprocess module alias" \
+    "python3 -c 'import subprocess; sp = subprocess; sp.run([\"aws\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"])'" "$OBJECT_REASON"
+expect_block "python assigned imported executor alias" \
+    "python3 -c 'from subprocess import run; invoke = run; invoke([\"aws\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"])'" "$OBJECT_REASON"
+expect_block "python imported os system executor" \
+    "python3 -c \"from os import system; system('aws s3 cp ./out s3://gold/table/')\"" "$OBJECT_REASON"
+expect_block "python aliased os module executor" \
+    "python3 -c \"import os as o; o.system('aws s3 cp ./out s3://gold/table/')\"" "$OBJECT_REASON"
+expect_block "python subprocess literal split argv" \
+    "python3 -c \"import subprocess; subprocess.check_call('aws s3 cp ./out s3://gold/table/'.split())\"" "$OBJECT_REASON"
+expect_block "python subprocess literal split separator argv" \
+    "python3 -c \"import subprocess; subprocess.run('aws s3 cp ./out s3://gold/table/'.split(' '))\"" "$OBJECT_REASON"
+expect_block "python subprocess assigned literal argv" \
+    "python3 -c \"import subprocess; argv = 'aws s3 cp ./out s3://gold/table/'.split(); subprocess.run(argv)\"" "$OBJECT_REASON"
+expect_block "python subprocess concatenated literal argv" \
+    "python3 -c 'import subprocess; subprocess.run([\"aws\", \"s3\", \"cp\", \"./out\"] + [\"s3://gold/table/\"])'" "$OBJECT_REASON"
+expect_block "python os execlp shell argv" \
+    "python3 -c \"import os; os.execlp('sh', 'sh', '-c', 'aws s3 cp ./out s3://gold/table/')\"" "$OBJECT_REASON"
+expect_block "python os execle shell argv" \
+    "python3 -c \"import os; os.execle('/bin/sh', 'sh', '-c', 'aws s3 cp ./out s3://gold/table/', {})\"" "$OBJECT_REASON"
 expect_block "python subprocess argv payload" \
     "python3 -c 'import subprocess; subprocess.run([\"aws\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"])'" "$OBJECT_REASON"
 expect_block "python subprocess args keyword payload" \
@@ -193,14 +219,44 @@ expect_block "python exec static write payload" \
     "python3 -c 'exec(\"df.write.parquet(\\\"s3a://gold/table/\\\")\")'" "$RAW_REASON"
 expect_block "python exec inherits static path" \
     "python3 -c 'path = \"s3a://gold/table/\"; exec(\"df.write.parquet(path)\")'" "$RAW_REASON"
+expect_block "python exec inherits writer method alias" \
+    "python3 -c 'save = df.write.parquet; exec(\"save(\\\"s3a://gold/table/\\\")\")'" "$RAW_REASON"
+expect_block "python imported builtins exec alias" \
+    "python3 -c 'from builtins import exec as invoke; invoke(\"df.write.parquet(\\\"s3a://gold/table/\\\")\")'" "$RAW_REASON"
+expect_block "python aliased builtins eval module" \
+    "python3 -c 'import builtins as b; b.eval(\"df.write.parquet(\\\"s3a://gold/table/\\\")\")'" "$RAW_REASON"
 expect_block "python loop body static path" \
     "python3 -c 'for _ in [0]: path = \"s3a://gold/table/\"; df.write.parquet(path)'" "$RAW_REASON"
 expect_block "python invoked lambda static path" \
     "python3 -c 'path = \"s3a://gold/table/\"; (lambda: df.write.parquet(path))()'" "$RAW_REASON"
+expect_block "python assigned invoked lambda write" \
+    "python3 -c 'f = lambda: df.write.parquet(\"s3a://gold/table/\"); f()'" "$RAW_REASON"
+expect_block "python aliased invoked lambda write" \
+    "python3 -c 'f = lambda: df.write.parquet(\"s3a://gold/table/\"); g = f; g()'" "$RAW_REASON"
+expect_block "python invoked instance method write" \
+    $'python3 -c \'class Job:\n    def run(self):\n        df.write.parquet("s3a://gold/table/")\nJob().run()\'' "$RAW_REASON"
+expect_block "python instantiated constructor executor" \
+    $'python3 -c \'class Job:\n    def __init__(self):\n        import os\n        os.system("aws s3 cp ./out s3://gold/table/")\nJob()\'' "$OBJECT_REASON"
+expect_block "python assigned instance method write" \
+    $'python3 -c \'class Job:\n    def run(self):\n        df.write.parquet("s3a://gold/table/")\njob = Job()\njob.run()\'' "$RAW_REASON"
+expect_block "python restored class method write" \
+    $'python3 -c \'class Job:\n    def run(self):\n        df.write.parquet("s3a://gold/table/")\noriginal = Job.run\nJob.run = lambda self: None\nJob.run = original\nJob().run()\'' "$RAW_REASON"
+expect_block "python bound method alias write" \
+    $'python3 -c \'class Job:\n    def run(self):\n        df.write.parquet("s3a://gold/table/")\njob = Job()\ncallback = job.run\ncallback()\'' "$RAW_REASON"
+expect_block "python constructor method alias write" \
+    $'python3 -c \'class Job:\n    def run(self):\n        df.write.parquet("s3a://gold/table/")\ncallback = Job().run\ncallback()\'' "$RAW_REASON"
+expect_block "python static argv function argument" \
+    "python3 -c 'import subprocess; invoke = lambda argv: subprocess.run(argv); invoke(\"aws s3 cp ./out s3://gold/table/\".split())'" "$OBJECT_REASON"
+expect_block "python Spark foreachBatch callback write" \
+    "python3 -c 'stream_df.writeStream.foreachBatch(lambda b, i: b.write.parquet(\"s3a://gold/events/\")).start()'" "$RAW_REASON"
+expect_block "python Spark foreachBatch aliased callback write" \
+    $'python3 -c \'def save(batch, index):\n    batch.write.parquet("s3a://gold/events/")\ncallback = save\nstream_df.writeStream.foreachBatch(callback).start()\'' "$RAW_REASON"
 expect_block "python invoked function write" \
     $'python3 -c \'def run(): df.write.parquet("s3a://gold/table/")\nrun()\'' "$RAW_REASON"
 expect_block "python bound writer method alias" \
     "python3 -c 'save = df.write.parquet; save(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python chained bound writer method alias" \
+    "python3 -c 'save = df.write.parquet; alias = save; alias(\"s3a://gold/table/\")'" "$RAW_REASON"
 expect_block "python function resolves later global path" \
     $'python3 -c \'def run():\n    df.write.parquet(path)\npath = "s3a://gold/table/"\nrun()\'' "$RAW_REASON"
 expect_block "python function static default path" \
@@ -247,6 +303,10 @@ expect_block "direct aws cp to managed bucket root" \
     'aws s3 cp ./out s3://gold' "$OBJECT_REASON"
 expect_block "aws stdin upload expected size keeps managed operand" \
     "aws s3 cp - --expected-size 123 s3://gold/table/" "$OBJECT_REASON"
+expect_block "aws global cli binary format before s3 copy" \
+    "aws --cli-binary-format raw-in-base64-out s3 cp ./out s3://gold/table/" "$OBJECT_REASON"
+expect_block "aws global cli binary format inside s3 copy" \
+    "aws s3 --cli-binary-format raw-in-base64-out cp ./out s3://gold/table/" "$OBJECT_REASON"
 expect_block "leading output redirection before copy" \
     '>/dev/null aws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
 expect_block "leading numeric redirection before copy" \
@@ -381,6 +441,24 @@ expect_block "bash ANSI-C quoted multiline copy" \
     "bash -c \$'echo safe\\naws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
 expect_block "invalid ANSI Unicode cannot hide later copy" \
     "echo \$'\\U00110000'; aws s3 cp ./out s3://gold/table/" "$OBJECT_REASON"
+expect_block "ANSI-C escaped quote before managed copy operand" \
+    "aws s3 cp \$'./bob\\'s.parquet' s3://gold/table/" "$OBJECT_REASON"
+expect_block "ANSI-C escaped quote before later copy" \
+    "x=\$'it\\'s'; aws s3 cp ./out s3://gold/table/" "$OBJECT_REASON"
+expect_block "arithmetic shift before later copy" \
+    'echo $((1<<2)); aws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
+expect_block "multiline arithmetic shift before later copy" \
+    $'echo $((1 << 2))\naws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
+expect_block "parameter length array before later copy" \
+    'files=(a b); [ ${#files[@]} -gt 0 ] && aws s3 sync ./out s3://gold/table/' "$OBJECT_REASON"
+expect_block "parameter length assignment before later copy" \
+    'n=${#x}; aws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
+expect_block "positional count expansion before later copy" \
+    'echo ${#}; aws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
+expect_block "hash after parameter expansion before later copy" \
+    'echo ${x}#; aws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
+expect_block "hash after brace expansion before later copy" \
+    'echo a{b,c}#d; aws s3 cp ./out s3://gold/table/' "$OBJECT_REASON"
 expect_block "shell sources process substitution script" \
     "bash -c 'source <(printf \"%s\\n\" \"aws s3 cp ./out s3://gold/table/\")'" "$OBJECT_REASON"
 expect_block "dot sources process substitution script" \
@@ -419,10 +497,20 @@ expect_block "bash all-letter valid flag cluster" \
     "bash -ctrue 'aws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
 expect_block "bash value option before c payload" \
     "bash -o pipefail -c 'aws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
+expect_block "bash clustered o option before c payload" \
+    "bash -euo pipefail -c 'aws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
+expect_block "bash clustered eo option before c payload" \
+    "bash -eo pipefail -c 'aws s3 cp ./out s3://gold/table/'" "$OBJECT_REASON"
+expect_block "kubectl bash clustered o option payload" \
+    "kubectl exec -i spark-0 -- bash -euo pipefail -c 'aws s3 cp /data/out s3://gold/table/'" "$OBJECT_REASON"
 expect_block "python combined flags payload" \
     "python3 -Bc 'df.write.parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
 expect_block "python option value before inline payload" \
     "python3 -X dev -c 'df.write.parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python warning option containing c before payload" \
+    "python3 -Wignore::DeprecationWarning -c 'df.write.parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_block "python implementation option containing c before payload" \
+    "python3 -Xtracemalloc -c 'df.write.parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
 expect_block "python attached -c payload" \
     "python3 -c'df.write.parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
 expect_block "python here-string payload" \
@@ -517,6 +605,12 @@ expect_pass "eval substitution only echoes copy prose" \
     "eval \"\$(printf '%s\\n' \"echo 'aws s3 cp ./out s3://gold/table/'\")\""
 expect_pass "real shell comment remains nonexecuting" \
     "echo safe # aws s3 cp ./out s3://gold/table/"
+expect_pass "real shell comment after control operator remains inert" \
+    "echo safe;# aws s3 cp ./out s3://gold/table/"
+expect_pass "parameter length expansions without invocation are safe" \
+    'files=(a b); echo ${#files[@]} ${#x} ${#}'
+expect_pass "hash suffixes without invocation are safe" \
+    'echo ${x}# a{b,c}#d'
 expect_pass "aws help argument is prose, not cp invocation" \
     "aws help 'aws s3 cp ./out s3://gold/table/'"
 expect_pass "aws help positionals are not a cp invocation" \
@@ -525,6 +619,10 @@ expect_pass "aws metadata managed URI is not copy operand" \
     "aws s3 cp ./out s3://unmanaged/table/ --metadata 'note=s3://gold/table/'"
 expect_pass "aws expected size local destination is allowed" \
     "aws s3 cp - --expected-size 123 ./local"
+expect_pass "aws cli binary format unmanaged destination is allowed" \
+    "aws --cli-binary-format raw-in-base64-out s3 cp ./out s3://unmanaged/table/"
+expect_pass "aws cli binary format equals form unmanaged destination is allowed" \
+    "aws s3 --cli-binary-format=raw-in-base64-out cp ./out s3://unmanaged/table/"
 expect_pass "aws leading metadata managed URI is not copy operand" \
     "aws s3 cp --metadata 'note=s3://gold/table/' ./out s3://unmanaged/table/"
 expect_pass "similarly named bucket is unmanaged" \
@@ -650,6 +748,12 @@ expect_pass "source dev stdin executes only echo prose" \
     "printf '%s\\n' 'echo aws s3 cp ./out s3://gold/table/' | bash -c 'source /dev/stdin'"
 expect_pass "out of range ANSI Unicode alone is harmless" \
     "echo \$'\\U00110000'"
+expect_pass "ANSI-C escaped quote alone is harmless" \
+    "echo \$'it\\'s safe'"
+expect_pass "ANSI-C quoted copy text remains echo data" \
+    "echo \$'aws s3 cp ./out s3://gold/table/'"
+expect_pass "arithmetic shift alone is harmless" \
+    'echo $((1<<2))'
 expect_pass "python string literal write syntax is prose" \
     "python3 -c 'print(\"df.write.parquet(s3a://gold/table/)\")'"
 expect_pass "python os system only echoes copy prose" \
@@ -658,26 +762,70 @@ expect_pass "python subprocess shell list only echoes prose" \
     "python3 -c 'import subprocess; subprocess.run([\"echo aws s3 cp ./out s3://gold/table/\"], shell=True)'"
 expect_pass "python subprocess args keyword only echoes prose" \
     "python3 -c 'import subprocess; subprocess.run(args=[\"echo\", \"aws s3 cp ./out s3://gold/table/\"])'"
+expect_pass "python imported executor only echoes copy prose" \
+    "python3 -c \"from subprocess import run; run('echo aws s3 cp ./out s3://gold/table/', shell=True)\""
+expect_pass "python aliased os executor only echoes copy prose" \
+    "python3 -c \"import os as o; o.system('echo aws s3 cp ./out s3://gold/table/')\""
+expect_pass "python literal split argv only echoes copy prose" \
+    "python3 -c \"import subprocess; subprocess.check_call('echo aws s3 cp ./out s3://gold/table/'.split())\""
+expect_pass "python os execlp only echoes copy prose" \
+    "python3 -c \"import os; os.execlp('echo', 'echo', 'aws s3 cp ./out s3://gold/table/')\""
+expect_pass "python reassigned imported executor is inert" \
+    "python3 -c 'import subprocess; subprocess.run = lambda *args, **kwargs: None; subprocess.run([\"aws\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"])'"
 expect_pass "python unrelated keyword string is not path" \
     "python3 -c 'df.write.parquet(\"/tmp/local\", mode=\"overwrite\" if \"s3a://gold/table/\" else \"append\")'"
 expect_pass "python unrelated unpacked option is not path" \
     "python3 -c 'df.write.options(**{\"note\": \"s3a://gold/table/\"}).parquet(\"/tmp/local\")'"
 expect_pass "python assigned path overwritten before write" \
     "python3 -c 'path = \"s3a://gold/table/\"; path = \"/tmp/local\"; df.write.parquet(path)'"
+expect_pass "python named expression local path is allowed" \
+    "python3 -c 'df.write.parquet(path := \"/tmp/local\")'"
 expect_pass "python f-string local path is allowed" \
     "python3 -c 'path = \"/tmp/local\"; df.write.parquet(f\"{path}\")'"
 expect_pass "python exec inherits overwritten local path" \
     "python3 -c 'path = \"s3a://gold/table/\"; path = \"/tmp/local\"; exec(\"df.write.parquet(path)\")'"
+expect_pass "python exec inherits writer method local path" \
+    "python3 -c 'save = df.write.parquet; exec(\"save(\\\"/tmp/local\\\")\")'"
+expect_pass "python shadowed exec callable is inert" \
+    "python3 -c 'exec = lambda code: None; exec(\"df.write.parquet(\\\"s3a://gold/table/\\\")\")'"
+expect_pass "python shadowed eval callable is inert" \
+    "python3 -c 'eval = lambda code: None; eval(\"df.write.parquet(\\\"s3a://gold/table/\\\")\")'"
+expect_pass "python shadowed exec print alias is prose" \
+    "python3 -c 'exec = print; exec(\"df.write.parquet(\\\"s3a://gold/table/\\\")\")'"
+expect_pass "python shadowed eval print alias is prose" \
+    "python3 -c 'eval = print; eval(\"df.write.parquet(\\\"s3a://gold/table/\\\")\")'"
+expect_pass "python imported builtins exec safe payload" \
+    "python3 -c 'from builtins import exec as invoke; invoke(\"print(\\\"safe\\\")\")'"
+expect_pass "python concatenated argv unmanaged destination" \
+    "python3 -c 'import subprocess; subprocess.run([\"aws\", \"s3\", \"cp\", \"./out\"] + [\"s3://unmanaged/table/\"])'"
 expect_pass "python loop body local path is allowed" \
     "python3 -c 'for _ in [0]: path = \"/tmp/local\"; df.write.parquet(path)'"
 expect_pass "python unused function write is nonexecuting" \
     "python3 -c 'def unused(): df.write.parquet(\"s3a://gold/table/\")'"
+expect_pass "python uncalled assigned lambda is nonexecuting" \
+    "python3 -c 'f = lambda: df.write.parquet(\"s3a://gold/table/\")'"
+expect_pass "python uncalled instance method is nonexecuting" \
+    $'python3 -c \'class Job:\n    def run(self):\n        df.write.parquet("s3a://gold/table/")\nJob()\''
+expect_pass "python uninstantiated constructor is nonexecuting" \
+    $'python3 -c \'class Job:\n    def __init__(self):\n        import os\n        os.system("aws s3 cp ./out s3://gold/table/")\''
+expect_pass "python reassigned class method is inert" \
+    $'python3 -c \'class Job:\n    def run(self):\n        df.write.parquet("s3a://gold/table/")\nJob.run = lambda self: None\nJob().run()\''
+expect_pass "python overridden instance method is inert" \
+    $'python3 -c \'class Job:\n    def run(self):\n        df.write.parquet("s3a://gold/table/")\njob = Job()\njob.run = lambda: None\njob.run()\''
+expect_pass "python instance restore preserves class override" \
+    $'python3 -c \'class Job:\n    def run(self):\n        df.write.parquet("s3a://gold/table/")\noriginal = Job.run\nJob.run = lambda self: None\njob = Job()\njob.run = original\nJob().run()\''
+expect_pass "python warning option containing c safe payload" \
+    "python3 -Wignore::DeprecationWarning -c 'print(\"safe\")'"
+expect_pass "python implementation option containing c safe payload" \
+    "python3 -Xtracemalloc -c 'print(\"safe\")'"
 expect_pass "python call before definition cannot execute body" \
     $'python3 -c \'run()\ndef run(): df.write.parquet("s3a://gold/table/")\''
 expect_pass "python reassigned function body is nonexecuting" \
     $'python3 -c \'def run():\n    df.write.parquet("s3a://gold/table/")\nrun = lambda: None\nrun()\''
 expect_pass "python bound writer method local path is allowed" \
     "python3 -c 'save = df.write.parquet; save(\"/tmp/local\")'"
+expect_pass "python chained bound writer method local path is allowed" \
+    "python3 -c 'save = df.write.parquet; alias = save; alias(\"/tmp/local\")'"
 expect_pass "python writer object alias is not callable" \
     "python3 -c 'writer = df.write; writer(\"s3a://gold/table/\")'"
 expect_pass "python function resolves overwritten local global path" \
