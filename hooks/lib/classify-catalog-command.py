@@ -1110,6 +1110,8 @@ def _static_string(node):
         return getattr(node, "_catalog_static_string", None)
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
+    if isinstance(node, ast.Constant) and isinstance(node.value, bytes):
+        return os.fsdecode(node.value)
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
         left = _static_string(node.left)
         right = _static_string(node.right)
@@ -1130,6 +1132,27 @@ def _static_string(node):
     return None
 
 
+def _static_sequence(node):
+    if isinstance(node, ast.NamedExpr):
+        return _static_sequence(node.value)
+    if isinstance(node, ast.Name):
+        sequence = getattr(node, "_catalog_static_sequence", None)
+        argv = getattr(node, "_catalog_static_argv", None)
+        if sequence is not None:
+            return sequence
+    elif isinstance(node, (ast.List, ast.Tuple)):
+        return tuple(node.elts)
+    else:
+        argv = _static_argv(node)
+    if argv is None:
+        return None
+    try:
+        values = shlex.split(argv)
+    except ValueError:
+        return None
+    return tuple(ast.Constant(value=value) for value in values)
+
+
 class _StaticLoadAnnotator(ast.NodeVisitor):
     def __init__(
         self,
@@ -1142,6 +1165,7 @@ class _StaticLoadAnnotator(ast.NodeVisitor):
         shadowed_attributes=None,
         static_argvs=None,
         shadowed_builtins=None,
+        static_sequences=None,
     ):
         self.values = values
         self.writers = writers
@@ -1152,6 +1176,7 @@ class _StaticLoadAnnotator(ast.NodeVisitor):
         self.shadowed_attributes = set(shadowed_attributes or set())
         self.static_argvs = dict(static_argvs or {})
         self.shadowed_builtins = set(shadowed_builtins or set())
+        self.static_sequences = dict(static_sequences or {})
 
     def visit_Name(self, node):
         if not isinstance(node.ctx, ast.Load):
@@ -1176,6 +1201,10 @@ class _StaticLoadAnnotator(ast.NodeVisitor):
             node._catalog_static_argv = self.static_argvs[node.id]
         elif hasattr(node, "_catalog_static_argv"):
             del node._catalog_static_argv
+        if node.id in self.static_sequences:
+            node._catalog_static_sequence = self.static_sequences[node.id]
+        elif hasattr(node, "_catalog_static_sequence"):
+            del node._catalog_static_sequence
         if node.id in self.shadowed_builtins:
             node._catalog_builtin_shadowed = True
         elif hasattr(node, "_catalog_builtin_shadowed"):
@@ -1191,6 +1220,7 @@ class _StaticLoadAnnotator(ast.NodeVisitor):
         node._catalog_shadowed_attributes = set(self.shadowed_attributes)
         node._catalog_static_argvs = dict(self.static_argvs)
         node._catalog_shadowed_builtins = set(self.shadowed_builtins)
+        node._catalog_static_sequences = dict(self.static_sequences)
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node):
@@ -1214,6 +1244,7 @@ def _annotate_static_names(
     inherited_shadowed_attributes=None,
     inherited_static_argvs=None,
     inherited_shadowed_builtins=None,
+    inherited_static_sequences=None,
 ):
     values = dict(inherited_values or {})
     writers = set(inherited_writers or set())
@@ -1224,6 +1255,7 @@ def _annotate_static_names(
     shadowed_attributes = set(inherited_shadowed_attributes or set())
     static_argvs = dict(inherited_static_argvs or {})
     shadowed_builtins = set(inherited_shadowed_builtins or set())
+    static_sequences = dict(inherited_static_sequences or {})
 
     def recurse(block):
         _annotate_static_names(
@@ -1237,6 +1269,7 @@ def _annotate_static_names(
             shadowed_attributes,
             static_argvs,
             shadowed_builtins,
+            static_sequences,
         )
 
     def clear_binding(name):
@@ -1247,6 +1280,7 @@ def _annotate_static_names(
         imports.pop(name, None)
         classes.pop(name, None)
         static_argvs.pop(name, None)
+        static_sequences.pop(name, None)
 
     def shadow_builtin(name):
         if name in {"exec", "eval"}:
@@ -1309,6 +1343,7 @@ def _annotate_static_names(
                 shadowed_attributes,
                 static_argvs,
                 shadowed_builtins,
+                static_sequences,
             )
             for default in (
                 list(statement.args.defaults)
@@ -1333,6 +1368,7 @@ def _annotate_static_names(
                 shadowed_attributes,
                 static_argvs,
                 shadowed_builtins,
+                static_sequences,
             )
             annotator.visit(statement)
             clear_binding(statement.name)
@@ -1350,6 +1386,7 @@ def _annotate_static_names(
             shadowed_attributes,
             static_argvs,
             shadowed_builtins,
+            static_sequences,
         )
         annotator.visit(statement)
         if isinstance(statement, ast.Import):
@@ -1370,6 +1407,9 @@ def _annotate_static_names(
             value_node = statement.value
             value = _static_string(value_node) if value_node is not None else None
             argv_value = _static_argv(value_node) if value_node is not None else None
+            sequence_value = (
+                _static_sequence(value_node) if value_node is not None else None
+            )
             is_writer = bool(value_node and _chain_contains_write(value_node))
             bound_method, bound_receiver = (
                 _writer_call_target(value_node)
@@ -1413,6 +1453,8 @@ def _annotate_static_names(
                         values[target.id] = value
                     if argv_value is not None:
                         static_argvs[target.id] = argv_value
+                    if sequence_value is not None:
+                        static_sequences[target.id] = sequence_value
                     if is_writer:
                         writers.add(target.id)
                     if is_writer_method:
@@ -1597,6 +1639,32 @@ def _static_argv_nodes(nodes):
     return shlex.join(values)
 
 
+def _static_exec_payload(path_node, argv):
+    path = _static_string(path_node)
+    if path is None or argv is None:
+        return None
+    try:
+        values = shlex.split(argv)
+    except ValueError:
+        return None
+    # os.exec* selects the executable from path/file; argv[0] is only the
+    # replacement process name and can be an arbitrary decoy.
+    return shlex.join([path, *values[1:]])
+
+
+def _expanded_call_args(nodes):
+    expanded = []
+    for node in nodes:
+        if not isinstance(node, ast.Starred):
+            expanded.append(node)
+            continue
+        values = _static_sequence(node.value)
+        if values is None:
+            return None
+        expanded.extend(values)
+    return expanded
+
+
 def _python_qualified_name(function):
     if isinstance(function, ast.Name):
         return getattr(function, "_catalog_import_name", function.id)
@@ -1633,17 +1701,23 @@ def _python_executor_payload(node):
             else (None, None)
         )
     if owner == "os" and method in {"execl", "execlp", "execle", "execlpe"}:
+        call_args = _expanded_call_args(node.args)
+        if not call_args:
+            return None, None
         arguments = (
-            node.args[1:-1]
+            call_args[1:-1]
             if method in {"execle", "execlpe"}
-            else node.args[1:]
+            else call_args[1:]
         )
-        return "shell", _static_argv_nodes(arguments)
+        return "shell", _static_exec_payload(
+            call_args[0], _static_argv_nodes(arguments)
+        )
     if owner == "os" and method in {"execv", "execvp", "execve", "execvpe"}:
-        return (
-            ("shell", _static_argv(node.args[1]))
-            if len(node.args) >= 2
-            else (None, None)
+        call_args = _expanded_call_args(node.args)
+        if call_args is None or len(call_args) < 2:
+            return None, None
+        return "shell", _static_exec_payload(
+            call_args[0], _static_argv(call_args[1])
         )
     if owner != "subprocess":
         return None, None
@@ -1747,6 +1821,9 @@ def _executed_ast_nodes(tree):
         call_static_argvs = dict(
             getattr(context, "_catalog_static_argvs", {})
         )
+        call_static_sequences = dict(
+            getattr(context, "_catalog_static_sequences", {})
+        )
         call_shadowed_builtins = set(
             getattr(context, "_catalog_shadowed_builtins", set())
         )
@@ -1760,7 +1837,10 @@ def _executed_ast_nodes(tree):
             for keyword in (call.keywords if call is not None else [])
             if keyword.arg is not None
         }
-        supplied = list(call.args if call is not None else [])
+        supplied = []
+        if call is not None:
+            expanded = _expanded_call_args(call.args)
+            supplied = expanded if expanded is not None else list(call.args)
         if implicit_receiver:
             supplied.insert(0, None)
         parameter_names = [parameter.arg for parameter in positional]
@@ -1779,6 +1859,7 @@ def _executed_ast_nodes(tree):
             call_imports.pop(name, None)
             call_classes.pop(name, None)
             call_static_argvs.pop(name, None)
+            call_static_sequences.pop(name, None)
         for index, parameter in enumerate(positional):
             argument = (
                 supplied[index]
@@ -1787,20 +1868,34 @@ def _executed_ast_nodes(tree):
             )
             value = _static_string(argument) if argument is not None else None
             argv = _static_argv(argument) if argument is not None else None
+            sequence = (
+                _static_sequence(argument) if argument is not None else None
+            )
             if value is not None:
                 call_values[parameter.arg] = value
             if argv is not None:
                 call_static_argvs[parameter.arg] = argv
+            if sequence is not None:
+                call_static_sequences[parameter.arg] = sequence
+        if arguments.vararg:
+            call_static_sequences[arguments.vararg.arg] = tuple(
+                supplied[len(positional):]
+            )
         for parameter, default in zip(
             arguments.kwonlyargs, arguments.kw_defaults
         ):
             argument = keyword_arguments.get(parameter.arg, default)
             value = _static_string(argument) if argument is not None else None
             argv = _static_argv(argument) if argument is not None else None
+            sequence = (
+                _static_sequence(argument) if argument is not None else None
+            )
             if value is not None:
                 call_values[parameter.arg] = value
             if argv is not None:
                 call_static_argvs[parameter.arg] = argv
+            if sequence is not None:
+                call_static_sequences[parameter.arg] = sequence
         nested_active = active_functions | {id(callable_node)}
         if isinstance(callable_node, ast.Lambda):
             annotator = _StaticLoadAnnotator(
@@ -1813,6 +1908,7 @@ def _executed_ast_nodes(tree):
                 call_shadowed_attributes,
                 call_static_argvs,
                 call_shadowed_builtins,
+                call_static_sequences,
             )
             annotator.visit(callable_node.body)
             yield from walk(
@@ -1830,6 +1926,7 @@ def _executed_ast_nodes(tree):
             call_shadowed_attributes,
             call_static_argvs,
             call_shadowed_builtins,
+            call_static_sequences,
         )
         for statement in callable_node.body:
             yield from walk(statement, nested_active)
@@ -1926,6 +2023,7 @@ def _python_ast_write_reason(
     inherited_shadowed_attributes=None,
     inherited_static_argvs=None,
     inherited_shadowed_builtins=None,
+    inherited_static_sequences=None,
 ):
     if depth > MAX_RECURSION:
         return True, DEPTH_REASON
@@ -1944,6 +2042,7 @@ def _python_ast_write_reason(
         inherited_shadowed_attributes=inherited_shadowed_attributes,
         inherited_static_argvs=inherited_static_argvs,
         inherited_shadowed_builtins=inherited_shadowed_builtins,
+        inherited_static_sequences=inherited_static_sequences,
     )
     for node in _executed_ast_nodes(tree):
         if not isinstance(node, ast.Call):
@@ -1983,6 +2082,9 @@ def _python_ast_write_reason(
                     ),
                     inherited_shadowed_builtins=getattr(
                         node, "_catalog_shadowed_builtins", None
+                    ),
+                    inherited_static_sequences=getattr(
+                        node, "_catalog_static_sequences", None
                     ),
                 )
             if reason:

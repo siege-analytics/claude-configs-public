@@ -45,21 +45,25 @@ Independent exact-SHA reporter review `5531747431` subsequently **rejected** fro
 
 The remediation used explicit shell lexical state and bounded Python AST binding/execution state. Follow-on hostile review found additional statically knowable aliases, argv composition/parameters, class/instance overrides and restoration, constructors, `foreachBatch`, imported/shadowed `exec`/`eval`, contextual execution state, chained writer methods, and named expressions. Every valid exact command was first reproduced, then added with a blocking or non-blocking control. One alleged aliased-module shadow false positive was falsified locally and not used as a mutation reason.
 
+Fresh CodeRabbit exact-SHA analysis then **rejected** replacement SHA `90997cc4781a1a745d31afb21715d1f5220b0f5e`: `os.execv(path, argv)` was classified from attacker-controlled `argv[0]` instead of the executable `path`, so an AWS path plus an `echo` decoy passed while the path executed. The finding reproduced with exact/nonempty extraction, raw-classifier exit 0, full-hook exit 0, and a controlled executable stub.
+
+The repair now models the whole bounded class using Python's actual `os.exec*` signatures: executable identity comes from path/file; `argv[0]` is discarded as a process-name decoy; trailing `execle`/`execlepe` environments are excluded; static string/byte paths and vectors are supported; and literal, assigned, function-bound, wrapper-call, vararg, and split-vector expansions retain static sequence state. Each follow-on command was reproduced through extraction, classifier, hook, and controlled execution before mutation, received a paired block/pass regression, and the final bounded hostile pass returned **ACCEPT**. An out-of-policy `aws s3 rm` example was not accepted as a finding; its corrected managed `s3 cp` shape was reproduced and fixed.
+
 ## Final verdicts
 
 All acceptance verdicts predating a later finding are superseded. The final complete working-tree review after the last behavioral change returned **ACCEPT** and explicitly confirmed that the classifier parses input as data and never executes or evaluates it. No valid finding is waived.
 
 ## Final evidence supplied to reviewer
 
-- Focused catalog suite: `364 passed, 0 failed`; this preserves all former `290/290` cases and adds the rejection/follow-on regressions.
-- Full-hook extraction control: `351/351` exact and nonempty.
+- Focused catalog suite: `398 passed, 0 failed`; this preserves all former `364/364` and `290/290` cases and adds the exact-SHA `os.exec*` rejection/follow-on regressions.
+- Full-hook extraction control: `369/369` exact and nonempty.
 - Reconstructed issue matrix: current `20/20`; extraction `20/20` exact/nonempty. Historical authored-base evidence remains `10/20`; the independent reporter reconstruction recorded `7/20`.
 - Deterministic malformed fuzz: seed 993; 500 classifier cases repeated twice plus 100 full-hook cases; 100/100 exact nonempty full-hook extractions; exits exactly 0/2; zero tracebacks.
 - F4 authoritative risk suite: `review_risk_test: PASS`, including direct, modification, deletion, rename-source, and declared-B rejection coverage for the classifier.
-- Full current-develop validation: `18/18` Python fixtures on Python 3.13 (hosted CI uses 3.12), `29/29` CI build/check/package gates, and all `37/37` hook suite files passed.
+- Full current-develop validation: `18/18` Python fixtures on Python 3.13 (hosted CI uses 3.12), `36/36` hosted-equivalent non-publishing gates, and all `37/37` hook suite files passed.
 
 ## Canary and rollback
 
-Canary: both `dist/claude-code` and `dist/craft-agent` package copies block direct and `--expected-size` managed-bucket copies with exit 2, allow quoted grep prose with exit 0, extract all six commands exactly/nonempty, and classify the helper as valid Tier C.
+Canary: both `dist/claude-code` and `dist/craft-agent` package copies block direct, `--expected-size`, string-`os.execv`, and byte-vector-`os.execv` managed-bucket copies with exit 2, allow quoted grep prose with exit 0, extract all ten commands exactly/nonempty, and classify the helper as valid Tier C.
 
 Rollback: revert the isolated issue #993 implementation commit. Do not force-push, weaken to a direct-copy-only allowlist, deploy, install, release, merge, or affect `main` as part of rollback.

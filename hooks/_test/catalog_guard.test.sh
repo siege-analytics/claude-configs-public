@@ -105,6 +105,38 @@ expect_classifier 2 "pipeline consumer executes copy" \
     "printf '%s\\n' ./out | xargs aws s3 cp s3://gold/table/" "$OBJECT_REASON"
 expect_classifier 2 "python payload executes write" \
     "python3 -c 'df.write.parquet(\"s3a://gold/table/\")'" "$RAW_REASON"
+expect_classifier 2 "python os execv uses executable path over decoy argv0" \
+    "python3 -c \"import os; os.execv('/usr/local/bin/aws', ['echo', 's3', 'cp', './out', 's3://gold/table/'])\"" "$OBJECT_REASON"
+expect_classifier 0 "python os execv decoy argv0 cannot impersonate executable" \
+    "python3 -c \"import os; os.execv('/bin/echo', ['aws', 's3', 'cp', './out', 's3://gold/table/'])\""
+expect_classifier 2 "python os execv accepts byte-vector copy arguments" \
+    "python3 -c \"import os; os.execv('/usr/local/bin/aws', [b'echo', b's3', b'cp', b'./out', b's3://gold/table/'])\"" "$OBJECT_REASON"
+expect_classifier 0 "python os execv byte-vector decoy cannot impersonate executable" \
+    "python3 -c \"import os; os.execv('/bin/echo', [b'aws', b's3', b'cp', b'./out', b's3://gold/table/'])\""
+expect_classifier 2 "python os execv expands literal starred arguments" \
+    "python3 -c \"import os; os.execv(*('/usr/local/bin/aws', ['echo', 's3', 'cp', './out', 's3://gold/table/']))\"" "$OBJECT_REASON"
+expect_classifier 0 "python os execv literal starred decoy cannot impersonate executable" \
+    "python3 -c \"import os; os.execv(*('/bin/echo', ['aws', 's3', 'cp', './out', 's3://gold/table/']))\""
+expect_classifier 2 "python os execv expands assigned starred arguments" \
+    "python3 -c \"import os; args=('/usr/local/bin/aws', ['echo', 's3', 'cp', './out', 's3://gold/table/']); os.execv(*args)\"" "$OBJECT_REASON"
+expect_classifier 0 "python os execv assigned starred decoy cannot impersonate executable" \
+    "python3 -c \"import os; args=('/bin/echo', ['aws', 's3', 'cp', './out', 's3://gold/table/']); os.execv(*args)\""
+expect_classifier 2 "python os execv expands function starred arguments" \
+    $'python3 -c \'import os\ndef invoke(args):\n    os.execv(*args)\ninvoke(("/usr/local/bin/aws", ["echo", "s3", "cp", "./out", "s3://gold/table/"]))\'' "$OBJECT_REASON"
+expect_classifier 0 "python os execv function starred decoy cannot impersonate executable" \
+    $'python3 -c \'import os\ndef invoke(args):\n    os.execv(*args)\ninvoke(("/bin/echo", ["aws", "s3", "cp", "./out", "s3://gold/table/"]))\''
+expect_classifier 2 "python os execvp expands starred wrapper call arguments" \
+    $'python3 -c \'import os\ndef go(path, argv):\n    os.execvp(path, argv)\ngo(*(\"aws\", [\"decoy\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"]))\'' "$OBJECT_REASON"
+expect_classifier 0 "python os execvp starred wrapper decoy cannot impersonate executable" \
+    $'python3 -c \'import os\ndef go(path, argv):\n    os.execvp(path, argv)\ngo(*(\"echo\", [\"aws\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"]))\''
+expect_classifier 2 "python os execv binds static varargs" \
+    $'python3 -c \'import os\ndef go(*args):\n    os.execv(*args)\ngo("/usr/local/bin/aws", ["decoy", "s3", "cp", "./out", "s3://gold/table/"])\'' "$OBJECT_REASON"
+expect_classifier 0 "python os execv vararg decoy cannot impersonate executable" \
+    $'python3 -c \'import os\ndef go(*args):\n    os.execv(*args)\ngo("/bin/echo", ["aws", "s3", "cp", "./out", "s3://gold/table/"])\''
+expect_classifier 2 "python split argv expands into wrapper call" \
+    "python3 -c 'import os; f=lambda action,src,dst: os.execlp(\"aws\",\"aws\",\"s3\",action,src,dst); args=\"cp ./out s3://gold/table/\".split(); f(*args)'" "$OBJECT_REASON"
+expect_classifier 0 "python split argv wrapper decoy cannot impersonate executable" \
+    "python3 -c 'import os; f=lambda action,src,dst: os.execlp(\"echo\",\"aws\",\"s3\",action,src,dst); args=\"cp ./out s3://gold/table/\".split(); f(*args)'"
 expect_classifier 0 "grep only consumes quoted write prose" \
     "grep '$WRITE' notes.md"
 expect_classifier 0 "quoted heredoc is documentation" \
@@ -207,6 +239,16 @@ expect_block "python os execlp shell argv" \
     "python3 -c \"import os; os.execlp('sh', 'sh', '-c', 'aws s3 cp ./out s3://gold/table/')\"" "$OBJECT_REASON"
 expect_block "python os execle shell argv" \
     "python3 -c \"import os; os.execle('/bin/sh', 'sh', '-c', 'aws s3 cp ./out s3://gold/table/', {})\"" "$OBJECT_REASON"
+expect_block "python os execv executable path beats decoy argv0" \
+    "python3 -c \"import os; os.execv('/usr/local/bin/aws', ['echo', 's3', 'cp', './out', 's3://gold/table/'])\"" "$OBJECT_REASON"
+expect_block "python os execl executable path beats decoy argv0" \
+    "python3 -c \"import os; os.execl('/usr/local/bin/aws', 'echo', 's3', 'cp', './out', 's3://gold/table/')\"" "$OBJECT_REASON"
+expect_block "python os execv accepts byte-vector copy arguments" \
+    "python3 -c \"import os; os.execv('/usr/local/bin/aws', [b'echo', b's3', b'cp', b'./out', b's3://gold/table/'])\"" "$OBJECT_REASON"
+expect_block "python os execv expands literal starred arguments" \
+    "python3 -c \"import os; os.execv(*('/usr/local/bin/aws', ['echo', 's3', 'cp', './out', 's3://gold/table/']))\"" "$OBJECT_REASON"
+expect_block "python os execv expands assigned starred arguments" \
+    "python3 -c \"import os; args=('/usr/local/bin/aws', ['echo', 's3', 'cp', './out', 's3://gold/table/']); os.execv(*args)\"" "$OBJECT_REASON"
 expect_block "python subprocess argv payload" \
     "python3 -c 'import subprocess; subprocess.run([\"aws\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"])'" "$OBJECT_REASON"
 expect_block "python subprocess args keyword payload" \
@@ -247,6 +289,14 @@ expect_block "python constructor method alias write" \
     $'python3 -c \'class Job:\n    def run(self):\n        df.write.parquet("s3a://gold/table/")\ncallback = Job().run\ncallback()\'' "$RAW_REASON"
 expect_block "python static argv function argument" \
     "python3 -c 'import subprocess; invoke = lambda argv: subprocess.run(argv); invoke(\"aws s3 cp ./out s3://gold/table/\".split())'" "$OBJECT_REASON"
+expect_block "python os execv expands function starred arguments" \
+    $'python3 -c \'import os\ndef invoke(args):\n    os.execv(*args)\ninvoke(("/usr/local/bin/aws", ["echo", "s3", "cp", "./out", "s3://gold/table/"]))\'' "$OBJECT_REASON"
+expect_block "python os execvp expands starred wrapper call arguments" \
+    $'python3 -c \'import os\ndef go(path, argv):\n    os.execvp(path, argv)\ngo(*(\"aws\", [\"decoy\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"]))\'' "$OBJECT_REASON"
+expect_block "python os execv binds static varargs" \
+    $'python3 -c \'import os\ndef go(*args):\n    os.execv(*args)\ngo("/usr/local/bin/aws", ["decoy", "s3", "cp", "./out", "s3://gold/table/"])\'' "$OBJECT_REASON"
+expect_block "python split argv expands into wrapper call" \
+    "python3 -c 'import os; f=lambda action,src,dst: os.execlp(\"aws\",\"aws\",\"s3\",action,src,dst); args=\"cp ./out s3://gold/table/\".split(); f(*args)'" "$OBJECT_REASON"
 expect_block "python Spark foreachBatch callback write" \
     "python3 -c 'stream_df.writeStream.foreachBatch(lambda b, i: b.write.parquet(\"s3a://gold/events/\")).start()'" "$RAW_REASON"
 expect_block "python Spark foreachBatch aliased callback write" \
@@ -770,6 +820,24 @@ expect_pass "python literal split argv only echoes copy prose" \
     "python3 -c \"import subprocess; subprocess.check_call('echo aws s3 cp ./out s3://gold/table/'.split())\""
 expect_pass "python os execlp only echoes copy prose" \
     "python3 -c \"import os; os.execlp('echo', 'echo', 'aws s3 cp ./out s3://gold/table/')\""
+expect_pass "python os execv decoy argv0 cannot impersonate executable" \
+    "python3 -c \"import os; os.execv('/bin/echo', ['aws', 's3', 'cp', './out', 's3://gold/table/'])\""
+expect_pass "python os execl decoy argv0 cannot impersonate executable" \
+    "python3 -c \"import os; os.execl('/bin/echo', 'aws', 's3', 'cp', './out', 's3://gold/table/')\""
+expect_pass "python os execv byte-vector decoy cannot impersonate executable" \
+    "python3 -c \"import os; os.execv('/bin/echo', [b'aws', b's3', b'cp', b'./out', b's3://gold/table/'])\""
+expect_pass "python os execv literal starred decoy cannot impersonate executable" \
+    "python3 -c \"import os; os.execv(*('/bin/echo', ['aws', 's3', 'cp', './out', 's3://gold/table/']))\""
+expect_pass "python os execv assigned starred decoy cannot impersonate executable" \
+    "python3 -c \"import os; args=('/bin/echo', ['aws', 's3', 'cp', './out', 's3://gold/table/']); os.execv(*args)\""
+expect_pass "python os execv function starred decoy cannot impersonate executable" \
+    $'python3 -c \'import os\ndef invoke(args):\n    os.execv(*args)\ninvoke(("/bin/echo", ["aws", "s3", "cp", "./out", "s3://gold/table/"]))\''
+expect_pass "python os execvp starred wrapper decoy cannot impersonate executable" \
+    $'python3 -c \'import os\ndef go(path, argv):\n    os.execvp(path, argv)\ngo(*(\"echo\", [\"aws\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"]))\''
+expect_pass "python os execv vararg decoy cannot impersonate executable" \
+    $'python3 -c \'import os\ndef go(*args):\n    os.execv(*args)\ngo("/bin/echo", ["aws", "s3", "cp", "./out", "s3://gold/table/"])\''
+expect_pass "python split argv wrapper decoy cannot impersonate executable" \
+    "python3 -c 'import os; f=lambda action,src,dst: os.execlp(\"echo\",\"aws\",\"s3\",action,src,dst); args=\"cp ./out s3://gold/table/\".split(); f(*args)'"
 expect_pass "python reassigned imported executor is inert" \
     "python3 -c 'import subprocess; subprocess.run = lambda *args, **kwargs: None; subprocess.run([\"aws\", \"s3\", \"cp\", \"./out\", \"s3://gold/table/\"])'"
 expect_pass "python unrelated keyword string is not path" \
