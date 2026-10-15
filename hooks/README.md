@@ -12,7 +12,7 @@ behavior; the skill explains the correct behavior.
 | Hook | Enforces | Blocks |
 |------|----------|--------|
 | `git/branch-guard.sh` | develop-guard, branch, commit (step 0) | Commits to main, develop, master, staging |
-| `git/ticket-required.sh` | commit (ticket enforcement) | Commits without a ticket reference |
+| `git/ticket-required.sh` | commit (ticket enforcement) | Commits whose effective message lacks a ticket reference; resolves `-m`, repository-confined `-F`, literal quoted-heredoc `-F -`, deterministic `-C`/`-c`, and `--amend --no-edit` sources, while editor/opaque-input forms fail closed |
 | `git/no-attribution.sh` | commit (attribution policy), all CLAUDE.md | Commits with AI/agent attribution |
 | `git/no-sensitive-files.sh` | commit (sensitive files) | Staging .env, credentials, keys |
 | `git/no-broad-staging.sh` | commit (staging patterns) | `git add -A`, `git add .`, `git add --all` |
@@ -102,6 +102,10 @@ expected. To test settings.json wiring end-to-end, attempt a real
 the body -- the call should be blocked with the same stderr.
 
 ## How Hooks Work
+
+### Effective commit messages
+
+`git/ticket-required.sh` delegates shell parsing and ticket grammar to `hooks/lib/commit-message.py`; `.githooks/commit-msg` uses the same validator on Git's message file. The pre-tool layer never evaluates command text. It accepts only message sources whose final pre-editor content can be determined safely: repeated `-m` paragraphs, the last `-F` file (resolved from `tool_input.cwd`, canonicalized inside the target repository, and opened through pinned no-follow directory descriptors), one literal quoted heredoc for `-F -`, `-C`, `-c --no-edit`, and `--amend --no-edit`. Repository/global Git aliases are read through a bounded NUL-delimited config query and expanded without execution; simple, prefixed, chained, and direct shell aliases that resolve to `commit` feed reconstructed arguments through the same validator, while cyclic or dynamic forms fail closed. Explicit `--edit`, template-only commits, opaque stdin/pipes, shell/path expansion, relative `cd` prefixes, cleanup modes/configuration that can remove validated content, unsupported wrappers, missing/unreadable/outside files, and configuration-dependent message mutators fail closed with remediation guidance. Native `commit-msg` validation ignores comment and post-scissors content so a direct Git invocation cannot cite a ticket that cleanup later removes.
 
 - `PreToolUse` hooks run before Claude Code executes a tool. They receive JSON on stdin with the tool name and arguments. Exit 0 = allow, Exit 2 = block (message shown to agent). Hooks cannot be bypassed by the agent — they are system-level.
 - `UserPromptSubmit` hooks run on every user turn. `resolver/inject-resolver.sh` injects `skills/KERNEL.md` plus the deterministic load set selected from `catalog/resolver-manifest.json`; it does not inject the broad legacy resolver. Unknown/ambiguous inputs remain visibly kernel-only, project overlays require a matching Git remote, and shelves never self-select. Set `CLAUDE_PROGRESSIVE_LOADING=canary` to report `candidate:` routes without activating them, or `kernel-only` to disable selection without broad fallback. The hook also scans for plan artifacts (think-*.md, investigate-*.md, pre-mortem-*.md) and warns when the downstream pipeline is incomplete (#253). Set `CRAFT_AGENT_PLANS_PATH` to a session plans directory for Craft Agent sessions; the hook also checks `$CWD/plans/` by default.

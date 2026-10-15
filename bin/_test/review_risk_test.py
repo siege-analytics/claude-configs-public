@@ -14,6 +14,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = [
  "hooks/lib/after-image.py",
  "hooks/lib/artifact-casefold-candidate.py",
  "hooks/lib/canonical-path.py",
+ "hooks/lib/commit-message.py",
  "hooks/lib/detect-host.sh",
  "hooks/lib/extract-json.py",
  "hooks/lib/gate-registry.sh",
@@ -64,6 +65,7 @@ hooks/write/ticket-propagation-guard.sh
 hooks/write/write-guard.sh
 """.strip().splitlines())
 REQUIRED_SOURCE_ENTRYPOINT_COUNTS = {path:(4 if path.startswith("hooks/write/") else 1) for path in REQUIRED_SOURCE_ENTRYPOINTS}
+REQUIRED_NATIVE_ENTRYPOINTS = {".githooks/commit-msg"}
 REQUIRED_MANIFEST_ENTRYPOINTS = set("""
 hooks/git/branch-guard.sh
 hooks/git/self-review.sh
@@ -122,6 +124,7 @@ hooks/git/survey-context.sh|hooks/lib/extract-json.py
 hooks/git/survey-context.sh|hooks/lib/scope-check.sh
 hooks/git/test-guard.sh|hooks/lib/extract-json.py
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py
+hooks/git/ticket-required.sh|hooks/lib/commit-message.py
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py
 hooks/git/ticket-required.sh|hooks/lib/scope-check.sh
 hooks/git/vergil-quote.sh|hooks/lib/extract-json.py
@@ -140,10 +143,11 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/artifact-casefold-candidate.py
 hooks/write/ticket-propagation-guard.sh|hooks/lib/canonical-path.py
 hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
+.githooks/commit-msg|hooks/lib/commit-message.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "be3eb70e43afc0c3eb747204a06ee2eb2d4ff6057ec9c1b63f119bdd795c9f60"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "961b75dda8e289f0997bd17cdfefd6b8fd1b4be78473da3577bf747ed6a88bfc"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "74b7725b15df05c26d210331c8d0866677bcaa7dbe6a8b40ebfaf22fedca5554"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "ea4a8d2df0d515225f2eeb7cbf3398c1537b15cdf6a0b6f8ad8e7128a262eb23"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
@@ -165,7 +169,8 @@ hooks/git/self-review.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/survey-context.sh|hooks/lib/extract-json.py|2
 hooks/git/test-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py|2
-hooks/git/ticket-required.sh|hooks/lib/extract-json.py|2
+hooks/git/ticket-required.sh|hooks/lib/commit-message.py|1
+hooks/git/ticket-required.sh|hooks/lib/extract-json.py|3
 hooks/git/vergil-quote.sh|hooks/lib/extract-json.py|1
 hooks/resolver/branch-state-guard.sh|hooks/lib/log-block.sh|1
 hooks/resolver/ca-enforcement-gate.sh|hooks/lib/gate-registry.sh|1
@@ -179,6 +184,7 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/after-image.py|2
 hooks/write/ticket-propagation-guard.sh|hooks/lib/artifact-casefold-candidate.py|1
 hooks/write/ticket-propagation-guard.sh|hooks/lib/canonical-path.py|1
 hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py|2
+.githooks/commit-msg|hooks/lib/commit-message.py|1
 """.strip().splitlines()
  )
 }
@@ -277,7 +283,7 @@ def mutate_nth_manifest_entrypoint(manifest:dict,path:str,index:int,action:str)-
 def configured_entrypoints()->set[str]:
  source,manifest,generated=entrypoint_surfaces()
  assert not entrypoint_surface_problems(source,manifest,generated),entrypoint_surface_problems(source,manifest,generated)
- return REQUIRED_SOURCE_ENTRYPOINTS|REQUIRED_MANIFEST_ENTRYPOINTS|REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS
+ return REQUIRED_SOURCE_ENTRYPOINTS|REQUIRED_NATIVE_ENTRYPOINTS|REQUIRED_MANIFEST_ENTRYPOINTS|REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS
 
 def helper_assignment_use_sites(entrypoints:set[str],overrides:dict[str,str]|None=None)->list[tuple[str,str,int,str,str,int,str]]:
  helper_names={path.name for path in (ROOT/"hooks/lib").iterdir() if path.is_file()};uses=[];overrides=overrides or {}
@@ -377,7 +383,7 @@ def verify_dependency_graph()->None:
    for action in ("remove","duplicate","neutralize"):
     mutated=mutate_nth_settings_entrypoint(generated_settings,"/path/to/",path,occurrence,action)
     assert entrypoint_surface_problems(source_settings,manifest,mutated),(f"generated settings {action} undetected",path,occurrence)
- entrypoints=REQUIRED_SOURCE_ENTRYPOINTS|REQUIRED_MANIFEST_ENTRYPOINTS|REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS
+ entrypoints=REQUIRED_SOURCE_ENTRYPOINTS|REQUIRED_NATIVE_ENTRYPOINTS|REQUIRED_MANIFEST_ENTRYPOINTS|REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS
  for path in entrypoints:assert tier([path])=="C",("entrypoint",path)
  helper_sites=helper_invocation_sites(entrypoints);helper_edges={(source,target) for source,target,_ in helper_sites}
  assert helper_edges==REQUIRED_HELPER_EDGES,("helper edge drift",sorted(helper_edges^REQUIRED_HELPER_EDGES))
