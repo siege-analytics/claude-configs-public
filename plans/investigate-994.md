@@ -18,6 +18,10 @@ The pre-tool hook scanned the full shell command text rather than the message Gi
 
 **F4 dependency boundary - PROBED.** On accepted develop commit `f97d194fedf1eda053a16e938851c6151f308d72`, `python3 bin/review-risk.py --paths hooks/lib/commit-message.py --declared B` returned valid Tier B even though both `ticket-required.sh` and native `commit-msg` trust the helper to allow or block commits. The accepted F4 audit provides exact helper-edge, modification, deletion, rename, and downgrade fixtures that can be extended narrowly.
 
+**Configured alias boundary - PROBED.** On pushed candidate `140da3dafcaeebde35e6cc2e0fc4c0524ed76cce`, the real hook blocked direct `git commit -m 'subject only'` but returned allow for repository aliases `ci=commit`, `cm='commit -m'`, `c=commit`, and `save='!git commit'`; real Git then created four ticketless commits. Effective alias configuration therefore participates in command dispatch and must be inspected without executing alias content.
+
+**Control/command-word boundary - PROBED.** The same real hook returned allow for `git commit --no-verify … && true`, absolute `/usr/bin/git commit … | cat`, absolute Git before `|| true`, `git${IFS}commit …`, and `$(echo git) commit …`; executing each command created a ticketless commit. Commit-capable segments must be classified regardless of position or executable path, and parser rejection of shell expansion must not collapse to NOT_COMMIT when Git/commit command text remains visible.
+
 ## Disposition
 
 Implement one shared Python resolver/validator. The PreToolUse hook uses command mode; native `commit-msg` uses file mode and cleanup-stable validation. Supported deterministic forms are explicit and all uncertain forms fail closed with remediation.

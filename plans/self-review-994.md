@@ -55,6 +55,12 @@ The shared parser is large because it defines a security boundary, but it remain
 | R17 | P1 | `xargs` input substitution supplied `commit` as a Git subcommand after static command parsing. | fail closed for visible xargs→Git dispatch with dynamic/unknown subcommands; add exact exploit and unrelated pipeline control |
 | R18 | P1 | Control-token handling returned NOT_COMMIT before detecting an obfuscated commit inside a piped shell wrapper. | run wrapper/alias/xargs analysis on full tokens before every chain/pipeline exit; add exploit and unrelated positive |
 | R19 | P1 | GNU `xargs -a file` supplied a Git subcommand without any control token, bypassing the control-only xargs guard. | invoke xargs dispatch analysis before ordinary non-Git exits too; add file-fed exploit and unrelated positive |
+| R20 | P1 | Pushed candidate `140da3d` allowed repository/global aliases that real Git dispatched to ticketless commits. | bounded effective-config lookup plus non-executing simple/prefixed/shell/chained expansion; cyclic/dynamic forms fail closed; add 14 block/pass regressions |
+| R21 | P1 | Shell alias `!git -C inner commit` discarded its effective cwd and validated `-F` from the outer repository. | return reconstructed argv plus alias-selected cwd; add opposite file-content fixtures and real nested-repository execution proof |
+| R22 | P1 | Commits before `&&`, absolute Git under pipe/`||`, and command-word expansions returned NOT_COMMIT and executed ticketless commits. | recursively classify every control segment; preserve absolute `cd &&`; fail closed on tokenizer errors with visible Git/commit words; add five negatives and three positives |
+| R23 | P1 | Configured `!` aliases were parsed from caller cwd although Git starts them at repository top level. | resolve top level before shell alias parsing, then apply internal `-C`; add conflicting root/subdir fixtures and real execution proof |
+| R24 | P1 | A preceding export/assignment could replace Git config after alias inspection and before dispatch. | fail closed when Git is combined with config lookup environment variables; cover export/assignment/env forms, positive control, and real proof |
+| R25 | P1 | `command export`/`builtin export` or sourced scripts could mutate dispatch state before an unknown Git subcommand. | normalize builtin prefixes and fail closed for unknown Git dispatch after unsupported control-prefixes; preserve known-status positives |
 
 ## Test plan
 
@@ -66,7 +72,7 @@ The shared parser is large because it defines a security boundary, but it remain
 
 ## Quantified claims
 
-- Focused ticket matrix: 115 scenarios pass, including wrapper, alias, retokenization, piped/file-fed dynamic dispatch, and control-ordering attacks, with unrelated-command positives and five harmless long-form flags.
+- Focused ticket matrix: 154 scenarios pass, including configured alias/cwd/root/config-environment/prefix-mutation semantics and precision controls, commit-before-chain, absolute Git pipe/or, command-word expansions, four real Git dispatch proofs, and prior wrapper/retokenization/dynamic-dispatch attacks.
 - Native commit/risk matrix: 19 scenarios pass.
 - F4 risk matrix: `commit-message.py` rejects declared Tier B and the exhaustive graph plus modification/deletion/rename/downgrade suite passes.
 - Full hook suite and serial CI matrix are rerun after the combined-tree evidence refresh and recorded in the replacement commit/PR evidence.

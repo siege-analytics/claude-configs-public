@@ -11,6 +11,7 @@ set -uo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 HOOK="$REPO_ROOT/hooks/git/ticket-required.sh"
+ABS_GIT=$(command -v git)
 
 # shellcheck source=./run_scenarios.sh
 source "$SCRIPT_DIR/run_scenarios.sh"
@@ -22,9 +23,27 @@ mkdir -p "$FIXTURE/sub/dir"
 git -C "$FIXTURE" init -q
 git -C "$FIXTURE" config user.email test@example.com
 git -C "$FIXTURE" config user.name Test
+git -C "$FIXTURE" config alias.ci commit
+git -C "$FIXTURE" config alias.cm 'commit -m'
+git -C "$FIXTURE" config alias.c commit
+git -C "$FIXTURE" config alias.save '!git commit'
+git -C "$FIXTURE" config alias.jump '!git -C alias-inner commit'
+git -C "$FIXTURE" config alias.chain ci
+git -C "$FIXTURE" config alias.stat status
+git -C "$FIXTURE" config alias.loop loop
+GLOBAL_CONFIG="$TMP/global.gitconfig"
+git config --file "$GLOBAL_CONFIG" alias.gcommit commit
+ALT_GLOBAL_CONFIG="$TMP/alternate-global.gitconfig"
+git config --file "$ALT_GLOBAL_CONFIG" alias.galt commit
+SOURCE_CONFIG_SCRIPT="$TMP/source-config-alias.sh"
+printf "export GIT_CONFIG_GLOBAL='%s'\n" "$ALT_GLOBAL_CONFIG" > "$SOURCE_CONFIG_SCRIPT"
 git -C "$FIXTURE" remote add origin git@github.com:siege-analytics/ticket-fixture.git
 git -C "$FIXTURE" commit -q --allow-empty -m 'base without reference'
 git -C "$FIXTURE" tag no-ticket
+mkdir -p "$FIXTURE/alias-inner"
+git -C "$FIXTURE/alias-inner" init -q
+git -C "$FIXTURE/alias-inner" config user.email test@example.com
+git -C "$FIXTURE/alias-inner" config user.name Test
 git -C "$FIXTURE" commit -q --allow-empty -m $'ticketed subject\n\nRefs: #994'
 git -C "$FIXTURE" tag with-ticket
 
@@ -136,6 +155,34 @@ UNRELATED_PIPED_WRAPPER_COMMAND=$(cat <<'COMMAND'
 bash -c 'printf ok' | cat
 COMMAND
 )
+COMMIT_BEFORE_AND_COMMAND=$(cat <<'COMMAND'
+git commit --allow-empty --no-verify -m 'subject only' && true
+COMMAND
+)
+ABSOLUTE_GIT_PIPE_COMMAND="$ABS_GIT commit --allow-empty -m 'subject only' | cat"
+ABSOLUTE_GIT_OR_COMMAND="$ABS_GIT commit --allow-empty -m 'subject only' || true"
+ABSOLUTE_GIT_STATUS_PIPE="$ABS_GIT status --short | cat"
+ABSOLUTE_GIT_STATUS_OR="$ABS_GIT status --short || true"
+IFS_COMMAND_COMMIT=$(cat <<'COMMAND'
+git${IFS}commit --allow-empty -m "subject only"
+COMMAND
+)
+SUBSTITUTED_COMMAND_COMMIT=$(cat <<'COMMAND'
+$(echo git) commit --allow-empty -m "subject only"
+COMMAND
+)
+UNRELATED_COMMAND_EXPANSION=$(cat <<'COMMAND'
+printf '%s\n' "${HOME}"
+COMMAND
+)
+CONFIG_EXPORT_ALIAS_COMMAND="export GIT_CONFIG_GLOBAL='$ALT_GLOBAL_CONFIG' && git galt --allow-empty --no-verify -m 'subject only'"
+CONFIG_ASSIGNMENT_ALIAS_COMMAND="GIT_CONFIG_GLOBAL='$ALT_GLOBAL_CONFIG' git galt --allow-empty --no-verify -m 'subject only'"
+CONFIG_STANDALONE_ALIAS_COMMAND="GIT_CONFIG_GLOBAL='$ALT_GLOBAL_CONFIG' && git galt --allow-empty --no-verify -m 'subject only'"
+CONFIG_ENV_PREFIX_ALIAS_COMMAND="env GIT_CONFIG_GLOBAL='$ALT_GLOBAL_CONFIG' git galt --allow-empty --no-verify -m 'subject only'"
+COMMAND_EXPORT_ALIAS_COMMAND="command export GIT_CONFIG_GLOBAL='$ALT_GLOBAL_CONFIG' && git galt --allow-empty --no-verify -m 'subject only'"
+SOURCE_CONFIG_ALIAS_COMMAND=". '$SOURCE_CONFIG_SCRIPT' && git galt --allow-empty --no-verify -m 'subject only'"
+UNRELATED_EXPORT_STATUS_COMMAND="export OTHER_SETTING=value && git status --short"
+UNRELATED_COMMAND_EXPORT_STATUS="command export OTHER_SETTING=value && git status --short"
 FAKE_HEREDOC_ARGUMENT=$(cat <<'COMMAND'
 git commit -F - --author="Person <<'EOF'"
 Refs: #994
@@ -349,6 +396,27 @@ expect_block_because "(ba) ticket in earlier shell command cannot bypass" "$HOOK
 expect_block_because "(ba2) subshell commit fails closed" "$HOOK" \
     "$(make_payload '(git commit -m "Refs: #994")')" \
     "pipelines, redirects, and command chains"
+expect_block_because "(ba2a) commit before and-chain fails closed" "$HOOK" \
+    "$(make_payload "$COMMIT_BEFORE_AND_COMMAND")" \
+    "only a literal 'cd <path> && git commit' prefix"
+expect_block_because "(ba2b) absolute git commit in pipeline fails closed" "$HOOK" \
+    "$(make_payload "$ABSOLUTE_GIT_PIPE_COMMAND")" \
+    "pipelines, redirects, and command chains"
+expect_block_because "(ba2c) absolute git commit before or fails closed" "$HOOK" \
+    "$(make_payload "$ABSOLUTE_GIT_OR_COMMAND")" \
+    "pipelines, redirects, and command chains"
+expect_pass "(ba2d) absolute git status pipeline passes" "$HOOK" \
+    "$(make_payload "$ABSOLUTE_GIT_STATUS_PIPE")"
+expect_pass "(ba2e) absolute git status before or passes" "$HOOK" \
+    "$(make_payload "$ABSOLUTE_GIT_STATUS_OR")"
+expect_block_because "(ba2f) IFS command-word expansion fails closed" "$HOOK" \
+    "$(make_payload "$IFS_COMMAND_COMMIT")" \
+    "shell expansion"
+expect_block_because "(ba2g) command substitution command word fails closed" "$HOOK" \
+    "$(make_payload "$SUBSTITUTED_COMMAND_COMMIT")" \
+    "shell expansion"
+expect_pass "(ba2h) unrelated command expansion passes" "$HOOK" \
+    "$(make_payload "$UNRELATED_COMMAND_EXPANSION")"
 expect_block_because "(ba3) xargs dynamic git subcommand fails closed" "$HOOK" \
     "$(make_payload "$XARGS_DYNAMIC_COMMIT_COMMAND")" \
     "unquoted shell pathname expansion"
@@ -437,6 +505,119 @@ expect_pass "(bg5) --no-gpg-sign preserves message source" "$HOOK" \
     "$(make_payload 'git commit --no-gpg-sign -m "Refs: #994"')"
 expect_pass "(bg6) --no-signoff preserves message source" "$HOOK" \
     "$(make_payload 'git commit --no-signoff -m "Refs: #994"')"
+expect_pass "(bg6a) HOME text in ticketed message is not an environment change" "$HOOK" \
+    "$(make_payload 'git commit -m "HOME Refs: #994"')"
+
+# --- Repository/global configured aliases resolve without execution ---
+expect_block "(bg7) configured commit alias without ticket" "$HOOK" \
+    "$(make_payload 'git ci --allow-empty -m "subject only"')"
+expect_pass "(bg8) configured commit alias with ticket" "$HOOK" \
+    "$(make_payload 'git ci --allow-empty -m "Refs: #994"')"
+expect_block "(bg9) configured message-prefix alias without ticket" "$HOOK" \
+    "$(make_payload 'git cm "subject only" --allow-empty')"
+expect_pass "(bg10) configured message-prefix alias with ticket" "$HOOK" \
+    "$(make_payload 'git cm "Refs: #994" --allow-empty')"
+expect_block "(bg11) one-letter commit alias without ticket" "$HOOK" \
+    "$(make_payload 'git c --allow-empty -m "subject only"')"
+expect_pass "(bg12) one-letter commit alias with ticket" "$HOOK" \
+    "$(make_payload 'git c --allow-empty -m "Refs: #994"')"
+expect_block "(bg13) configured shell alias without ticket" "$HOOK" \
+    "$(make_payload 'git save --allow-empty -m "subject only"')"
+expect_pass "(bg14) configured shell alias with ticket" "$HOOK" \
+    "$(make_payload 'git save --allow-empty -m "Refs: #994"')"
+printf 'root shell alias subject without reference\n' > "$FIXTURE/shell-alias-message.txt"
+printf 'subdir ticketed Refs: #994\n' > "$FIXTURE/sub/dir/shell-alias-message.txt"
+expect_block "(bg14a) shell alias starts at repository root" "$HOOK" \
+    "$(make_payload 'git save --allow-empty -F shell-alias-message.txt' "$FIXTURE/sub/dir")"
+printf 'root shell alias ticketed Refs: #994\n' > "$FIXTURE/shell-alias-message.txt"
+printf 'subdir subject without reference\n' > "$FIXTURE/sub/dir/shell-alias-message.txt"
+expect_pass "(bg14b) shell alias accepts root message from subdir" "$HOOK" \
+    "$(make_payload 'git save --allow-empty -F shell-alias-message.txt' "$FIXTURE/sub/dir")"
+shell_root_before=$(git -C "$FIXTURE" rev-list --count HEAD)
+if git -C "$FIXTURE/sub/dir" save --allow-empty -F shell-alias-message.txt >/dev/null 2>&1 \
+    && [[ "$(git -C "$FIXTURE" rev-list --count HEAD)" -eq $((shell_root_before + 1)) ]] \
+    && [[ "$(git -C "$FIXTURE" log -1 --format=%s)" == 'root shell alias ticketed Refs: #994' ]]; then
+    _HARNESS_PASS=$((_HARNESS_PASS + 1))
+    printf '  [PASS] (bg14c) real shell alias starts at repository root\n'
+else
+    _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+    printf '  [FAIL] (bg14c) shell alias root semantics diverged\n'
+fi
+expect_block "(bg15) configured alias chain without ticket" "$HOOK" \
+    "$(make_payload 'git chain --allow-empty -m "subject only"')"
+expect_pass "(bg16) configured alias chain with ticket" "$HOOK" \
+    "$(make_payload 'git chain --allow-empty -m "Refs: #994"')"
+expect_pass "(bg17) configured non-commit alias passes" "$HOOK" \
+    "$(make_payload 'git stat')"
+expect_block_because "(bg18) configured alias cycle fails closed" "$HOOK" \
+    "$(make_payload 'git loop -m "Refs: #994"')" \
+    "alias cycle is unsupported"
+export GIT_CONFIG_GLOBAL="$GLOBAL_CONFIG"
+expect_block "(bg19) global commit alias without ticket" "$HOOK" \
+    "$(make_payload 'git gcommit --allow-empty -m "subject only"')"
+expect_pass "(bg20) global commit alias with ticket" "$HOOK" \
+    "$(make_payload 'git gcommit --allow-empty -m "Refs: #994"')"
+unset GIT_CONFIG_GLOBAL
+expect_block_because "(bg20a) exported config alias change fails closed" "$HOOK" \
+    "$(make_payload "$CONFIG_EXPORT_ALIAS_COMMAND")" \
+    "alter Git configuration lookup"
+expect_block_because "(bg20b) assigned config alias change fails closed" "$HOOK" \
+    "$(make_payload "$CONFIG_ASSIGNMENT_ALIAS_COMMAND")" \
+    "alter Git configuration lookup"
+expect_block_because "(bg20c) env config alias change fails closed" "$HOOK" \
+    "$(make_payload "$CONFIG_ENV_PREFIX_ALIAS_COMMAND")" \
+    "alter Git configuration lookup"
+expect_block_because "(bg20c2) standalone config assignment before alias fails closed" "$HOOK" \
+    "$(make_payload "$CONFIG_STANDALONE_ALIAS_COMMAND")" \
+    "alter Git configuration lookup"
+expect_block_because "(bg20c3) command-prefixed config export fails closed" "$HOOK" \
+    "$(make_payload "$COMMAND_EXPORT_ALIAS_COMMAND")" \
+    "alter Git configuration lookup"
+expect_block_because "(bg20c4) sourced config before unknown alias fails closed" "$HOOK" \
+    "$(make_payload "$SOURCE_CONFIG_ALIAS_COMMAND")" \
+    "only a literal 'cd <path> && git commit' prefix"
+expect_pass "(bg20d) unrelated export before git status passes" "$HOOK" \
+    "$(make_payload "$UNRELATED_EXPORT_STATUS_COMMAND")"
+expect_pass "(bg20d2) unrelated command export before status passes" "$HOOK" \
+    "$(make_payload "$UNRELATED_COMMAND_EXPORT_STATUS")"
+config_env_before=$(git -C "$FIXTURE" rev-list --count HEAD)
+if (cd "$FIXTURE" && eval "$CONFIG_EXPORT_ALIAS_COMMAND") >/dev/null 2>&1 \
+    && [[ "$(git -C "$FIXTURE" rev-list --count HEAD)" -eq $((config_env_before + 1)) ]] \
+    && [[ "$(git -C "$FIXTURE" log -1 --format=%s)" == 'subject only' ]]; then
+    _HARNESS_PASS=$((_HARNESS_PASS + 1))
+    printf '  [PASS] (bg20e) real exported config changes alias dispatch\n'
+else
+    _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+    printf '  [FAIL] (bg20e) exported config alias semantics diverged\n'
+fi
+printf 'outer ticketed Refs: #994\n' > "$FIXTURE/alias-message.txt"
+printf 'inner subject without reference\n' > "$FIXTURE/alias-inner/alias-message.txt"
+expect_block "(bg21) shell alias -C uses inner ticketless message file" "$HOOK" \
+    "$(make_payload 'git jump --allow-empty -F alias-message.txt')"
+printf 'outer subject without reference\n' > "$FIXTURE/alias-message.txt"
+printf 'inner ticketed Refs: #994\n' > "$FIXTURE/alias-inner/alias-message.txt"
+expect_pass "(bg22) shell alias -C accepts inner ticketed message file" "$HOOK" \
+    "$(make_payload 'git jump --allow-empty -F alias-message.txt')"
+inner_before=$(git -C "$FIXTURE/alias-inner" rev-list --count HEAD 2>/dev/null || echo 0)
+if git -C "$FIXTURE" jump --allow-empty -F alias-message.txt >/dev/null 2>&1 \
+    && [[ "$(git -C "$FIXTURE/alias-inner" rev-list --count HEAD)" -eq $((inner_before + 1)) ]] \
+    && [[ "$(git -C "$FIXTURE/alias-inner" log -1 --format=%s)" == 'inner ticketed Refs: #994' ]]; then
+    _HARNESS_PASS=$((_HARNESS_PASS + 1))
+    printf '  [PASS] (bg23) real shell alias commits from alias-selected cwd\n'
+else
+    _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+    printf '  [FAIL] (bg23) real shell alias cwd semantics diverged\n'
+fi
+alias_before=$(git -C "$FIXTURE" rev-list --count HEAD)
+if git -C "$FIXTURE" ci --allow-empty -m 'configured alias execution proof' >/dev/null 2>&1 \
+    && [[ "$(git -C "$FIXTURE" rev-list --count HEAD)" -eq $((alias_before + 1)) ]] \
+    && [[ "$(git -C "$FIXTURE" log -1 --format=%s)" == 'configured alias execution proof' ]]; then
+    _HARNESS_PASS=$((_HARNESS_PASS + 1))
+    printf '  [PASS] (bg24) real Git executes configured commit alias\n'
+else
+    _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+    printf '  [FAIL] (bg24) real Git did not execute configured commit alias\n'
+fi
 
 # --- Commands outside this hook's surface pass ---
 expect_pass "(bh) git status" "$HOOK" "$(make_payload 'git status')"

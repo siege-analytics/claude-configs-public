@@ -47,6 +47,12 @@ TICKET_RE = re.compile(r"#[0-9]+|[A-Z]+-[0-9]+")
 TRACKER_URL_RE = re.compile(
     r"https?://\S+/(?:issues|browse|tickets|merge_requests|pull|stories|tasks)/\S+"
 )
+GIT_WORD_RE = re.compile(r"(?:^|[^\w])git", re.DOTALL)
+GIT_CONFIG_ENV_CHANGE_RE = re.compile(
+    r"(?:^|[\s;&|])(?:export\s+|unset\s+|env\s+)?"
+    r"(?:GIT_CONFIG_[A-Z0-9_]*|HOME|XDG_CONFIG_HOME)(?:=|\s|$)"
+)
+COMMIT_WORD_RE = re.compile(r"\bcommit(?:\s|$)", re.DOTALL)
 COMMIT_TEXT_RE = re.compile(r"(?:^|[^\w])git(?:\s|$).*?\bcommit(?:\s|$)", re.DOTALL)
 XARGS_GIT_TEXT_RE = re.compile(r"(?:^|[^\w])xargs(?:\s|$).*?\bgit(?:\s|$)", re.DOTALL)
 
@@ -467,6 +473,100 @@ def git_alias_expansion_may_commit(
     return mentions_commit(expansion_tokens)
 
 
+def configured_git_aliases(cwd: Path) -> dict[str, str]:
+    try:
+        process = subprocess.Popen(
+            ["git", "-C", str(cwd), "config", "--null", "--get-regexp", r"^alias\."],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
+        assert process.stdout is not None
+        data = process.stdout.read(MAX_MESSAGE_BYTES + 1)
+        if len(data) > MAX_MESSAGE_BYTES:
+            process.terminate()
+            process.wait()
+            raise ResolutionError("repository alias configuration exceeds the 1 MiB safety limit")
+        return_code = process.wait()
+    except ResolutionError:
+        raise
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ResolutionError("repository alias configuration cannot be inspected") from exc
+    if return_code == 1:
+        return {}
+    if return_code != 0:
+        raise ResolutionError("repository alias configuration cannot be inspected")
+    try:
+        records = data.decode("utf-8").split("\0")
+    except UnicodeError as exc:
+        raise ResolutionError("repository alias configuration is not valid UTF-8") from exc
+    aliases: dict[str, str] = {}
+    for record in records:
+        if not record:
+            continue
+        key, separator, value = record.partition("\n")
+        key = key.lower()
+        if separator != "\n" or not key.startswith("alias.") or len(key) == len("alias."):
+            raise ResolutionError("repository alias configuration is malformed")
+        aliases[key[len("alias.") :]] = value
+    return aliases
+
+
+def configured_alias_commit_args(
+    name: str,
+    args: Sequence[str],
+    aliases: dict[str, str],
+    cwd: Path,
+    seen: frozenset[str] = frozenset(),
+) -> Optional[Tuple[Sequence[str], Path]]:
+    name = name.lower()
+    if name in seen:
+        raise ResolutionError("repository Git alias cycle is unsupported")
+    expansion = aliases.get(name)
+    if expansion is None:
+        return None
+    if expansion.startswith("!"):
+        script = expansion[1:]
+        try:
+            script_tokens, _ = shell_tokens(script)
+            shell_cwd = resolve_dir(cwd, git_output(cwd, "rev-parse", "--show-toplevel").strip())
+        except ResolutionError as exc:
+            raise ResolutionError("repository shell alias is indeterminate") from exc
+        try:
+            script_args, heredoc, script_cwd = command_parts(
+                script, shell_cwd, resolve_configured_aliases=False
+            )
+        except NotCommit:
+            for git_index, token in enumerate(script_tokens):
+                if Path(token).name != "git":
+                    continue
+                if (
+                    git_index + 1 >= len(script_tokens)
+                    or script_tokens[git_index + 1].lower() not in KNOWN_NONCOMMIT_GIT_SUBCOMMANDS
+                ):
+                    raise ResolutionError("repository shell alias is indeterminate")
+            return None
+        except ResolutionError as exc:
+            raise ResolutionError("repository shell alias is indeterminate") from exc
+        if heredoc is not None:
+            raise ResolutionError("repository shell alias heredoc is unsupported")
+        return [*script_args, *args], script_cwd
+    try:
+        expansion_tokens, heredoc = shell_tokens(expansion)
+    except ResolutionError as exc:
+        raise ResolutionError("repository Git alias expansion is indeterminate") from exc
+    if heredoc is not None or not expansion_tokens:
+        raise ResolutionError("repository Git alias expansion is indeterminate")
+    target = expansion_tokens[0].lower()
+    expanded_args = [*expansion_tokens[1:], *args]
+    if target == "commit":
+        return expanded_args, cwd
+    if target in aliases:
+        return configured_alias_commit_args(target, expanded_args, aliases, cwd, seen | {name})
+    if mentions_commit(expansion_tokens):
+        raise ResolutionError("repository Git alias expansion is indeterminate")
+    return None
+
+
 def xargs_git_dispatch_may_commit(tokens: Sequence[str]) -> bool:
     for index, token in enumerate(tokens):
         if Path(token).name != "xargs":
@@ -536,42 +636,164 @@ def inline_git_alias_may_commit(tokens: Sequence[str], cwd: Path) -> bool:
     return False
 
 
-def command_parts(command: str, cwd: Path) -> Tuple[Sequence[str], Optional[str], Path]:
+def git_config_environment_changes(tokens: Sequence[str]) -> bool:
+    controls = {";", "&&", "&", "||", "|", "<", ">", "<<", ">>"}
+    segments = []
+    start = 0
+    for index, token in enumerate(tokens):
+        if token in controls:
+            segments.append(tokens[start:index])
+            start = index + 1
+    segments.append(tokens[start:])
+
+    def config_name(value: str) -> bool:
+        name = value.split("=", 1)[0]
+        return name.startswith("GIT_CONFIG_") or name in {"HOME", "XDG_CONFIG_HOME"}
+
+    def strip_builtin_prefixes(segment: Sequence[str]) -> Sequence[str]:
+        index = 0
+        while index < len(segment) and Path(segment[index]).name in {"command", "builtin"}:
+            index += 1
+            while index < len(segment) and segment[index].startswith("-"):
+                index += 1
+        return segment[index:]
+
+    for segment_index, segment in enumerate(segments):
+        if not segment:
+            continue
+        command_segment = strip_builtin_prefixes(segment)
+        if (
+            any(
+                Path(token).name == "git"
+                for later_segment in segments[segment_index + 1 :]
+                for token in later_segment
+            )
+            and all("=" in token for token in segment)
+            and any(config_name(token) for token in segment)
+        ):
+            return True
+        if (
+            command_segment
+            and command_segment[0] in {"export", "unset"}
+            and any(config_name(token) for token in command_segment[1:])
+        ):
+            return True
+        git_indexes = [
+            index for index, token in enumerate(segment) if Path(token).name == "git"
+        ]
+        for git_index in git_indexes:
+            prefix = segment[:git_index]
+            if any("=" in token and config_name(token) for token in prefix):
+                return True
+            for index, token in enumerate(prefix):
+                if Path(token).name != "env":
+                    continue
+                env_args = prefix[index + 1 :]
+                if any("=" in arg and config_name(arg) for arg in env_args):
+                    return True
+                for arg_index, arg in enumerate(env_args):
+                    if arg in {"-u", "--unset"} and arg_index + 1 < len(env_args):
+                        if config_name(env_args[arg_index + 1]):
+                            return True
+                    if arg.startswith("--unset=") and config_name(arg.split("=", 1)[1]):
+                        return True
+    return False
+
+
+def has_unknown_git_dispatch(tokens: Sequence[str]) -> bool:
+    for git_index, token in enumerate(tokens):
+        if Path(token).name != "git":
+            continue
+        index = git_index + 1
+        while index < len(tokens):
+            option = tokens[index]
+            if option == "-C":
+                index += 2
+                continue
+            if option.startswith("-C") and option != "-C":
+                index += 1
+                continue
+            if option in {
+                "--no-pager", "--paginate", "-p", "-P", "--literal-pathspecs",
+                "--glob-pathspecs", "--noglob-pathspecs", "--icase-pathspecs",
+            }:
+                index += 1
+                continue
+            break
+        if index >= len(tokens) or tokens[index].startswith("-"):
+            return True
+        subcommand = tokens[index].lower()
+        if subcommand != "commit" and subcommand not in KNOWN_NONCOMMIT_GIT_SUBCOMMANDS:
+            return True
+    return False
+
+
+def token_segment_may_commit(tokens: Sequence[str], cwd: Path) -> bool:
+    if not tokens:
+        return False
+    try:
+        command_parts(shlex.join(tokens), cwd)
+    except NotCommit:
+        return has_unknown_git_dispatch(tokens)
+    except ResolutionError:
+        return True
+    return True
+
+
+def command_parts(
+    command: str,
+    cwd: Path,
+    resolve_configured_aliases: bool = True,
+) -> Tuple[Sequence[str], Optional[str], Path]:
     try:
         tokens, heredoc = shell_tokens(command)
     except ResolutionError:
-        if COMMIT_TEXT_RE.search(command) or XARGS_GIT_TEXT_RE.search(command):
+        if (
+            (GIT_CONFIG_ENV_CHANGE_RE.search(command) and GIT_WORD_RE.search(command))
+            or COMMIT_TEXT_RE.search(command)
+            or XARGS_GIT_TEXT_RE.search(command)
+            or GIT_WORD_RE.search(command)
+            or COMMIT_WORD_RE.search(command)
+        ):
             raise
         raise NotCommit
+
+    if git_config_environment_changes(tokens):
+        raise ResolutionError("commands that alter Git configuration lookup are unsupported")
 
     controls = [i for i, token in enumerate(tokens) if token in {";", "&&", "&", "||", "|", "<", ">", "<<", ">>", "(", ")"}]
     effective_cwd = cwd
     if controls:
-        if (
-            opaque_wrapper_may_commit(tokens, effective_cwd)
-            or inline_git_alias_may_commit(tokens, effective_cwd)
-            or xargs_git_dispatch_may_commit(tokens)
-        ):
-            raise ResolutionError("shell pipelines, redirects, and command chains are unsupported")
-        if len(controls) != 1 or tokens[controls[0]] != "&&":
-            if (
-                ("git" in tokens and "commit" in tokens)
-                or xargs_git_dispatch_may_commit(tokens)
-            ):
-                raise ResolutionError("shell pipelines, redirects, and command chains are unsupported")
-            raise NotCommit
-        prefix, tokens = tokens[: controls[0]], tokens[controls[0] + 1 :]
-        if len(prefix) == 2 and prefix[0] == "cd":
-            if not Path(prefix[1]).is_absolute():
-                raise ResolutionError("relative cd prefixes are unsupported because CDPATH can redirect them")
-            effective_cwd = resolve_dir(cwd, prefix[1])
-        elif len(prefix) == 3 and prefix[:2] == ["cd", "--"]:
-            if not Path(prefix[2]).is_absolute():
-                raise ResolutionError("relative cd prefixes are unsupported because CDPATH can redirect them")
-            effective_cwd = resolve_dir(cwd, prefix[2])
+        if len(controls) == 1 and tokens[controls[0]] == "&&":
+            prefix, suffix = tokens[: controls[0]], tokens[controls[0] + 1 :]
+            cd_value: Optional[str] = None
+            if len(prefix) == 2 and prefix[0] == "cd":
+                cd_value = prefix[1]
+            elif len(prefix) == 3 and prefix[:2] == ["cd", "--"]:
+                cd_value = prefix[2]
+            if cd_value is not None:
+                if not Path(cd_value).is_absolute():
+                    if token_segment_may_commit(suffix, cwd):
+                        raise ResolutionError(
+                            "relative cd prefixes are unsupported because CDPATH can redirect them"
+                        )
+                    raise NotCommit
+                effective_cwd = resolve_dir(cwd, cd_value)
+                tokens = suffix
+            else:
+                segments = [prefix, suffix]
+                if any(token_segment_may_commit(segment, cwd) for segment in segments):
+                    raise ResolutionError("only a literal 'cd <path> && git commit' prefix is supported")
+                raise NotCommit
         else:
-            if "git" in tokens and "commit" in tokens:
-                raise ResolutionError("only a literal 'cd <path> && git commit' prefix is supported")
+            segments = []
+            start = 0
+            for control in controls:
+                segments.append(tokens[start:control])
+                start = control + 1
+            segments.append(tokens[start:])
+            if any(token_segment_may_commit(segment, cwd) for segment in segments):
+                raise ResolutionError("shell pipelines, redirects, and command chains are unsupported")
             raise NotCommit
 
     if not tokens:
@@ -604,6 +826,18 @@ def command_parts(command: str, cwd: Path) -> Tuple[Sequence[str], Optional[str]
     if index >= len(tokens) or tokens[index] != "commit":
         if inline_git_alias_may_commit(tokens, effective_cwd) or mentions_commit(tokens):
             raise ResolutionError("unsupported git global options before commit")
+        if (
+            resolve_configured_aliases
+            and index < len(tokens)
+            and not tokens[index].startswith("-")
+            and tokens[index].lower() not in KNOWN_NONCOMMIT_GIT_SUBCOMMANDS
+        ):
+            alias_result = configured_alias_commit_args(
+                tokens[index], tokens[index + 1 :], configured_git_aliases(effective_cwd), effective_cwd
+            )
+            if alias_result is not None:
+                alias_args, alias_cwd = alias_result
+                return alias_args, heredoc, alias_cwd
         raise NotCommit
     return tokens[index + 1 :], heredoc, effective_cwd
 

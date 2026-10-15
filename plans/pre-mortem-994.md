@@ -49,4 +49,18 @@
 **Failure:** A later helper-only modification, deletion, or rename changes ticket allow/block behavior while declaring Tier B.
 **Mitigation:** Add the exact helper to the F4 Tier C path pattern, pin both real caller edges, and include it in exhaustive modification/deletion/rename/declared-B fixtures.
 
+## Tiger 8 - Configured Git aliases hide commit dispatch
+
+**Severity:** HIGH
+**Likelihood:** MEDIUM
+**Failure:** A repository/global alias expands a non-`commit` subcommand into `commit`, so the pre-tool parser returns NOT_COMMIT while Git creates a ticketless commit.
+**Mitigation:** Read effective alias configuration with bounded NUL-delimited Git output; expand static aliases without execution; validate reconstructed commit argv and cwd; fail closed for cycles, dynamic content, malformed/oversized configuration, and unresolved shell dispatch; retain ticketed and non-commit positive controls.
+
+## Tiger 9 - Commit dispatch appears outside the final simple-command segment
+
+**Severity:** HIGH
+**Likelihood:** MEDIUM
+**Failure:** A commit before a control operator, an absolute Git executable, or command-word expansion escapes literal final-segment matching and returns NOT_COMMIT.
+**Mitigation:** Recursively classify every control-separated segment; normalize executable basenames; preserve only the bounded absolute `cd &&` form; and fail closed on tokenizer errors when visible Git/commit words can be transformed by shell expansion. Pair each negative with unrelated status/expansion positives.
+
 Implementation may proceed: YES
