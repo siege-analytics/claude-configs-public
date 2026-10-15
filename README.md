@@ -18,6 +18,7 @@ For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zsh
 |---|---|
 | [`RESOLVER.md`](RESOLVER.md) | **Skill resolver** -- master index mapping task patterns to required skills. Mandatory first read before any non-trivial action. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release notes by version. |
+| [`docs/skill-lifecycle.md`](docs/skill-lifecycle.md) | Lifecycle migration ratchet and first-promotion boundary. |
 | `skills/` | Categorized reusable skills for Claude Code sessions. |
 | `skills/_*-rules.md` | **Always-on conventions** -- applied across every skill that touches code, data, or output. See [Conventions](#always-on-conventions). |
 | `skills/shelves/` | **DBrain book-skill library** -- book-derived skills (Clean Code, DDIA, Effective Python, etc.) organized into 11 topic shelves. See [DBrain](#dbrain--book-skill-library). |
@@ -193,8 +194,8 @@ bash bin/install.sh
 
 **What it does:**
 
-- **Craft Agent detected** (`~/.craft-agent/workspaces/` exists): builds the flat layout + rules bundle, deploys skills/hooks/resolver/bundle to your workspace, installs hook settings, validates the deployment.
-- **No Craft Agent**: builds both layouts, installs hooks to `.claude/settings.local.json` for Claude Code CLI.
+- **Craft Agent detected** (`~/.craft-agent/workspaces/` exists): builds the flat layout + rules bundle, deploys skills/hooks/resolver/bundle plus the selector and review-classifier runtimes (`bin/` + `catalog/`) to your workspace, installs hook settings, validates the deployment.
+- **No Craft Agent**: builds both self-contained layouts, including their hook runtimes, and installs hooks to `.claude/settings.local.json` for Claude Code CLI.
 
 Options: `--workspace <slug>` to target a specific workspace (default: `my-workspace`), `--no-craft-agent` to force CLI-only mode.
 
@@ -216,12 +217,16 @@ For Craft Agent (slash-command pane), pull from `release/flat`:
 TMP=$(mktemp -d)
 git clone --depth 1 --branch release/flat \
   https://github.com/siege-analytics/claude-configs-public.git "$TMP/repo"
-rsync -a "$TMP/repo/skills/" ~/.craft-agent/workspaces/<ws>/skills/
-rsync -a "$TMP/repo/hooks/"  ~/.craft-agent/workspaces/<ws>/hooks/
+WS=~/.craft-agent/workspaces/<ws>
+mkdir -p "$WS/bin" "$WS/catalog"
+rsync -a "$TMP/repo/skills/"  "$WS/skills/"
+rsync -a "$TMP/repo/hooks/"   "$WS/hooks/"
+rsync -a "$TMP/repo/bin/"     "$WS/bin/"
+rsync -a "$TMP/repo/catalog/" "$WS/catalog/"
 rm -rf "$TMP"
 ```
 
-Plain `rsync -a` (no `--delete`): preserves any local files in the workspace's `skills/` or `hooks/` that aren't shipped upstream. The hooks rsync MUST run before wiring `~/.claude/settings.json` (next step), because the snippet's `command` paths reference workspace files that have to exist on disk first.
+Plain `rsync -a` (no `--delete`): preserves local files not shipped upstream. Copy all four directories as one sync unit: the prompt hook requires `bin/resolve-load-set.py` plus `catalog/resolver-manifest.json`, and the push hook requires `bin/review-risk.py` plus `catalog/review-risk-policy.json`. The hooks rsync MUST run before wiring `~/.claude/settings.json` (next step), because the snippet's `command` paths reference workspace files that have to exist on disk first.
 
 ### Wire and verify hooks
 
@@ -363,7 +368,7 @@ The same source serves two consumer runtimes via a build step. Pick the layout t
 | **claude-code package** | GitHub Release archive | Flat skills, hooks, settings snippet, resolver/rules bundle | Claude Code / Codex-style runtimes |
 | **craft-agent package** | GitHub Release archive | Flat skills, hooks, settings/enforcement files, Craft automation snippets | Craft Agent workspaces |
 
-Both layouts contain identical content; only the file-tree shape differs. The build resolves `[skill:slug]` and `[rule:slug]` tokens to layout-appropriate paths so cross-references work in both worlds without manual maintenance.
+Both layouts contain identical content; only the file-tree shape differs. Every hook-bearing layout is self-contained: `hooks/`, `bin/resolve-load-set.py`, `bin/review-risk.py`, and their `catalog/` manifests/policies ship together. Each resolver manifest records canonical `source_path` provenance separately from its layout-correct `package_path`; emitted hook instructions resolve that runtime path against the installation root. The build resolves `[skill:slug]` and `[rule:slug]` tokens to layout-appropriate paths so cross-references work in both worlds without manual maintenance.
 
 Craft Agent consumers must use `release/flat` or the `craft-agent` package. The host resolver matches bare skill slugs against top-level `skills/<slug>/SKILL.md` directories; nested leaf paths such as `skills/coding/code-review/SKILL.md` are not reachable by bare slug in affected workspaces. CI validates that the flat layout and Craft Agent package expose known nested leaf skills, including `code-review` and `qml-component-review`, at top level.
 
