@@ -115,11 +115,11 @@ No unresolved findings. Every valid hostile finding was fixed and regression-tes
 
 Artifact: `plans/self-review-993-catalog-guard.md`
 
-First-added commit: `EVIDENCE_COMMIT_PENDING`
+First-added commit: `96069e69d29ef05ea12f0fb9c1c59c2bf519677b`
 
 Work commit: `WORK_COMMIT_PENDING`
 
-Verification: `git merge-base --is-ancestor EVIDENCE_COMMIT_PENDING WORK_COMMIT_PENDING; echo $?` → pending final commit IDs; must be 0 before push.
+Verification: `git merge-base --is-ancestor 96069e69d29ef05ea12f0fb9c1c59c2bf519677b WORK_COMMIT_PENDING; echo $?` → pending implementation commit ID; must be 0 before push.
 
 ## Canary and rollback
 

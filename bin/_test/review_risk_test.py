@@ -14,6 +14,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = [
  "hooks/lib/after-image.py",
  "hooks/lib/artifact-casefold-candidate.py",
  "hooks/lib/canonical-path.py",
+ "hooks/lib/classify-catalog-command.py",
  "hooks/lib/detect-host.sh",
  "hooks/lib/extract-json.py",
  "hooks/lib/gate-registry.sh",
@@ -125,6 +126,7 @@ hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py
 hooks/git/ticket-required.sh|hooks/lib/scope-check.sh
 hooks/git/vergil-quote.sh|hooks/lib/extract-json.py
+hooks/infrastructure/catalog-guard.sh|hooks/lib/classify-catalog-command.py
 hooks/infrastructure/catalog-guard.sh|hooks/lib/extract-json.py
 hooks/resolver/branch-state-guard.sh|hooks/lib/log-block.sh
 hooks/resolver/ca-enforcement-gate.sh|hooks/lib/detect-host.sh
@@ -142,8 +144,8 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "be3eb70e43afc0c3eb747204a06ee2eb2d4ff6057ec9c1b63f119bdd795c9f60"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "961b75dda8e289f0997bd17cdfefd6b8fd1b4be78473da3577bf747ed6a88bfc"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "d587b129cea033d90ac181a0b074135cd501fbc423986d8a8de8a3a5c1126a13"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "d8d1a4013a014580cd3cc054b3704be011ea9df928c24775c8b11199e8597115"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
@@ -167,6 +169,7 @@ hooks/git/test-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py|2
 hooks/git/vergil-quote.sh|hooks/lib/extract-json.py|1
+hooks/infrastructure/catalog-guard.sh|hooks/lib/classify-catalog-command.py|1
 hooks/resolver/branch-state-guard.sh|hooks/lib/log-block.sh|1
 hooks/resolver/ca-enforcement-gate.sh|hooks/lib/gate-registry.sh|1
 hooks/resolver/investigate-gate-guard.sh|hooks/lib/resolve-think-gate.py|2
