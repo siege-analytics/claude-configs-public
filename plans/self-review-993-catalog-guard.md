@@ -117,9 +117,9 @@ Artifact: `plans/self-review-993-catalog-guard.md`
 
 First-added commit: `96069e69d29ef05ea12f0fb9c1c59c2bf519677b`
 
-Work commit: `WORK_COMMIT_PENDING`
+Work commit: `0ce418e0a8a156f79b90a4019a04f429484a6967`
 
-Verification: `git merge-base --is-ancestor 96069e69d29ef05ea12f0fb9c1c59c2bf519677b WORK_COMMIT_PENDING; echo $?` → pending implementation commit ID; must be 0 before push.
+Verification: `git merge-base --is-ancestor 96069e69d29ef05ea12f0fb9c1c59c2bf519677b 0ce418e0a8a156f79b90a4019a04f429484a6967; echo $?` → `0`.
 
 ## Canary and rollback
 
