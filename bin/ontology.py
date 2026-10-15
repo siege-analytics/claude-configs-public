@@ -16,6 +16,10 @@ BINDINGS = "catalog/ontology-bindings.json"
 WIKI = "wiki/Ontology.md"
 ID = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*\Z")
 VALUE_TYPES = {"string": str, "object": dict, "array": list, "boolean": bool, "integer": int}
+# A bounded vocabulary invariant, not runtime permission. Maintenance ownership
+# may extend protection, but can never qualify a new subject or allowed edge.
+AUTHORITY_TERMS = frozenset({"authorization-record", "authorization-scope"})
+AUTHORITY_RELATIONSHIPS = frozenset({("authorization-record", "binds", "authorization-scope")})
 
 
 def fail(message: str) -> None:
@@ -105,6 +109,12 @@ def validate_registry(data: Any) -> dict[str, dict]:
                 fail(f"term label/id collision: {ident} with {names[name]}")
             names[name] = ident
         terms[ident] = term
+    missing_authority_terms = AUTHORITY_TERMS - terms.keys()
+    if missing_authority_terms:
+        fail(f"missing required authority terms: {', '.join(sorted(missing_authority_terms))}")
+    protected_terms = AUTHORITY_TERMS | {
+        ident for ident, term in terms.items() if normalized(term["owner"]) == "authority"
+    }
     for ident, term in terms.items():
         for other in term["distinguished_from"]:
             if other not in terms or other == ident:
@@ -122,8 +132,14 @@ def validate_registry(data: Any) -> dict[str, dict]:
         triple = (edge["subject"], edge["verb"], edge["object"])
         if ident in edges or triple in triples:
             fail(f"duplicate relationship: {ident}")
+        if protected_terms.intersection((edge["subject"], edge["object"])) and triple not in AUTHORITY_RELATIONSHIPS:
+            fail(f"{ident}: unsupported authority relationship: {' '.join(triple)}; "
+                 "only authorization-record binds authorization-scope is permitted; "
+                 "review changes to the authority invariant in bin/ontology.py")
         edges.add(ident)
         triples.add(triple)
+    for triple in sorted(AUTHORITY_RELATIONSHIPS - triples):
+        fail(f"missing required authority relationship: {' '.join(triple)}")
     for alias in items(data["aliases"], "aliases", empty=True):
         object_fields(alias, {"name", "status", "targets"}, "alias")
         name = normalized(text(alias["name"], "alias name"))
@@ -218,6 +234,7 @@ def render_wiki(registry: dict, bindings: dict) -> str:
              "## Use and authority", "",
              "Structured semantic references must use exact canonical IDs. Aliases require an explicit migration choice; the validator never silently rewrites them. Existing field names can retain a checked binding while their owning contract is migrated.", "",
              "A binding checks its canonical term reference, field presence and JSON type. It does not prove that the chosen meaning is correct or that a program implements the definition. Relationships describe the model; they are not executable permission rules, a reasoner or authorization evidence. Owners identify maintenance responsibility, not permission to authorize an operation.", "",
+             "The validator seals relationships involving `authorization-record`, `authorization-scope` or any term maintained by the `authority` owner. The only permitted signature is `authorization-record binds authorization-scope`, and that relationship and its two terms are required. All other incoming or outgoing edges fail regardless of the verb, including configuration or skill replacement creating authorization. Changing an owner cannot unprotect the two canonical terms or qualify a new subject. Adding a relationship at this boundary requires a reviewed change to the explicit allowlist in `bin/ontology.py`; non-authority relationships remain extensible. This is a structural vocabulary constraint, not proof about arbitrary prose or runtime authorization.", "",
              "Configuration, artifact checks, runtime observation and protected acceptance are separate claims. Always name the target, revision, boundary and evidence relevant to a claim. A skill replacement, label or configured flag cannot manufacture authorization or live enforcement.", "",
              "## Canonical terms", ""]
     for term in sorted(registry["terms"], key=lambda item: item["id"]):

@@ -37,8 +37,14 @@ python3 bin/ontology.py --check
 ```
 
 CI checks the registry, opted-in bindings and generated-page freshness. It does
-not infer authorization or prove runtime behavior from a label. For optional
-prose feedback, use `python3 bin/ontology.py --lint <path>`; terminology warnings
+not infer authorization or prove runtime behavior from a label. Relationships
+involving `authorization-record`, `authorization-scope` or an `authority`-owned
+term must match the explicit validator allowlist: currently only
+`authorization-record binds authorization-scope`. That edge and its endpoints
+are required. Ownership is maintenance metadata; changing it cannot qualify
+another subject or remove protection from the canonical terms. Extending this
+boundary requires a reviewed validator change, not a new verb in the registry.
+For optional prose feedback, use `python3 bin/ontology.py --lint <path>`; warnings
 remain advisory. Consumer-specific names need explicit scoped mappings, with
 private operational evidence retained privately. Review an incompatible meaning
 as a new term ID and migration rather than silently changing an existing ID.

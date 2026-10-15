@@ -12,6 +12,8 @@ Structured semantic references must use exact canonical IDs. Aliases require an 
 
 A binding checks its canonical term reference, field presence and JSON type. It does not prove that the chosen meaning is correct or that a program implements the definition. Relationships describe the model; they are not executable permission rules, a reasoner or authorization evidence. Owners identify maintenance responsibility, not permission to authorize an operation.
 
+The validator seals relationships involving `authorization-record`, `authorization-scope` or any term maintained by the `authority` owner. The only permitted signature is `authorization-record binds authorization-scope`, and that relationship and its two terms are required. All other incoming or outgoing edges fail regardless of the verb, including configuration or skill replacement creating authorization. Changing an owner cannot unprotect the two canonical terms or qualify a new subject. Adding a relationship at this boundary requires a reviewed change to the explicit allowlist in `bin/ontology.py`; non-authority relationships remain extensible. This is a structural vocabulary constraint, not proof about arbitrary prose or runtime authorization.
+
 Configuration, artifact checks, runtime observation and protected acceptance are separate claims. Always name the target, revision, boundary and evidence relevant to a claim. A skill replacement, label or configured flag cannot manufacture authorization or live enforcement.
 
 ## Canonical terms

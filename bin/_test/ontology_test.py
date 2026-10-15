@@ -95,6 +95,92 @@ class OntologyTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate relationship"):
             ontology.validate_registry(self.registry)
 
+    def test_configuration_and_replacement_cannot_create_authorization(self):
+        for subject in ("skill-replacement", "configured", "policy-override", "procedure-binding"):
+            for verb in ("authorizes", "creates", "grants", "permits", "binds", "invented-verb"):
+                for target in ("authorization-record", "authorization-scope"):
+                    with self.subTest(subject=subject, verb=verb, target=target):
+                        registry = copy.deepcopy(self.registry)
+                        registry["relationships"].append({
+                            "id": "invalid-authority-edge", "subject": subject,
+                            "verb": verb, "object": target, "definition": "Invalid authority claim.",
+                        })
+                        with self.assertRaisesRegex(ValueError, "unsupported authority relationship"):
+                            ontology.validate_registry(registry)
+
+    def test_authority_relationships_require_exact_approved_signature(self):
+        for subject, verb, target in (
+            ("authorization-record", "creates", "authorization-scope"),
+            ("authorization-scope", "binds", "authorization-record"),
+            ("authorization-record", "authorizes", "skill"),
+            ("authorization-record", "creates", "authorization-record"),
+        ):
+            with self.subTest(subject=subject, verb=verb, target=target):
+                registry = copy.deepcopy(self.registry)
+                registry["relationships"].append({
+                    "id": "invalid-authority-edge", "subject": subject,
+                    "verb": verb, "object": target, "definition": "Invalid authority claim.",
+                })
+                with self.assertRaisesRegex(ValueError, "unsupported authority relationship"):
+                    ontology.validate_registry(registry)
+        # The existing record-to-scope binding remains a valid vocabulary relationship.
+        self.assertIn("authorization-record", ontology.validate_registry(self.registry))
+
+    def test_maintenance_owner_cannot_grant_or_remove_authority_qualification(self):
+        for changed_term, owner in (("skill-replacement", "authority"), ("authorization-record", "composition")):
+            with self.subTest(changed_term=changed_term):
+                registry = copy.deepcopy(self.registry)
+                next(term for term in registry["terms"] if term["id"] == changed_term)["owner"] = owner
+                registry["relationships"].append({
+                    "id": "invalid-owner-edge", "subject": "skill-replacement",
+                    "verb": "binds", "object": "authorization-record", "definition": "Invalid owner qualification.",
+                })
+                with self.assertRaisesRegex(ValueError, "unsupported authority relationship"):
+                    ontology.validate_registry(registry)
+
+    def test_new_authority_owned_term_does_not_bypass_boundary(self):
+        term = copy.deepcopy(next(term for term in self.registry["terms"] if term["id"] == "authorization-record"))
+        term.update(id="additional-approval", label="Additional approval", owner="Authority")
+        self.registry["terms"].append(term)
+        self.registry["relationships"].append({
+            "id": "invalid-new-target", "subject": "configured", "verb": "creates",
+            "object": "additional-approval", "definition": "Invalid authority claim under another term ID.",
+        })
+        with self.assertRaisesRegex(ValueError, "unsupported authority relationship"):
+            ontology.validate_registry(self.registry)
+
+    def test_required_authority_terms_and_relationship_cannot_be_removed(self):
+        registry = copy.deepcopy(self.registry)
+        registry["terms"] = [term for term in registry["terms"] if term["id"] != "authorization-record"]
+        with self.assertRaisesRegex(ValueError, "missing required authority terms"):
+            ontology.validate_registry(registry)
+        self.registry["relationships"] = [edge for edge in self.registry["relationships"] if edge["id"] != "authorization-binds-scope"]
+        with self.assertRaisesRegex(ValueError, "missing required authority relationship"):
+            ontology.validate_registry(self.registry)
+
+    def test_non_authority_relationships_remain_extensible(self):
+        self.registry["relationships"].append({
+            "id": "project-documents-skill", "subject": "project", "verb": "documents",
+            "object": "skill", "definition": "A project documents a procedure it uses.",
+        })
+        self.assertEqual(len(ontology.validate_registry(self.registry)), len(self.registry["terms"]))
+
+    def test_cli_rejects_authority_claim_without_rewriting_wiki(self):
+        self.assertEqual(self.cli("--write").returncode, 0)
+        wiki = self.root / ontology.WIKI
+        before = wiki.read_bytes()
+        self.registry["relationships"].append({
+            "id": "invalid-cli-authority", "subject": "configured", "verb": "creates",
+            "object": "authorization-record", "definition": "Invalid authority claim.",
+        })
+        self.write(ontology.REGISTRY, self.registry)
+        for mode in ("--check", "--write"):
+            with self.subTest(mode=mode):
+                result = self.cli(mode)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("unsupported authority relationship", result.stderr)
+                self.assertEqual(wiki.read_bytes(), before)
+
     def test_distinction_cannot_reference_missing_or_same_term(self):
         for target in ("absent", self.registry["terms"][0]["id"]):
             registry = copy.deepcopy(self.registry)
