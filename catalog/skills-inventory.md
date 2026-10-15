@@ -12,7 +12,7 @@ This report describes committed source evidence. Missing references or tests do 
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
-- Without heuristic test evidence: **103**
+- Without heuristic test evidence: **102**
 - Duplicate rule IDs: **0**
 - Current build-rubric D/F grades: **151**
 - Quality grades: C: 6, D: 18, F: 133, unknown: 41
@@ -73,7 +73,7 @@ This report describes committed source evidence. Missing references or tests do 
 - Unknown owners: 194
 - Unknown lifecycle: 198
 - No tracked source references: 0
-- No heuristic test evidence: 103
+- No heuristic test evidence: 102
 
 These are Phase 1 inputs, not automatic retirement decisions.
 
