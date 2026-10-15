@@ -39,6 +39,11 @@ jobs:
       - name: Full build for hook validation
         run: python3 bin/build.py
 
+      - name: Canonical terminology and generated wiki
+        run: |
+          python3 bin/_test/ontology_test.py
+          python3 bin/ontology.py --check
+
       - name: Generated source authority and drift
         run: |
           python3 bin/_test/generated_source_authority_test.py

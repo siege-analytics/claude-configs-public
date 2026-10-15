@@ -19,6 +19,7 @@ For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zsh
 | [`RESOLVER.md`](RESOLVER.md) | **Skill resolver** -- master index mapping task patterns to required skills. Mandatory first read before any non-trivial action. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release notes by version. |
 | [`docs/skill-lifecycle.md`](docs/skill-lifecycle.md) | Lifecycle migration ratchet and first-promotion boundary. |
+| [`wiki/Ontology.md`](wiki/Ontology.md) | Canonical terms, relationships and checked contract bindings; generated from `catalog/ontology.json`. |
 | `skills/` | Categorized reusable skills for Claude Code sessions. |
 | `skills/_*-rules.md` | **Always-on conventions** -- applied across every skill that touches code, data, or output. See [Conventions](#always-on-conventions). |
 | `skills/shelves/` | **DBrain book-skill library** -- book-derived skills (Clean Code, DDIA, Effective Python, etc.) organized into 11 topic shelves. See [DBrain](#dbrain--book-skill-library). |

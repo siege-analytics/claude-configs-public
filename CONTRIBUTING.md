@@ -4,6 +4,45 @@ This repo serves two runtimes from one source: Claude Code (with the resolver ho
 
 If you're adding a skill or editing one, the only conventions you need to know are below.
 
+## Shared terminology
+
+Use the [shared ontology](wiki/Ontology.md) when defining policy, composition,
+host behavior or verification claims. Its canonical source is
+`catalog/ontology.json`; the wiki page is generated. Keep this reference on
+demand rather than adding it to always-loaded instructions.
+
+New structured contracts should register their semantic fields in
+`catalog/ontology-bindings.json`, or supply a binding manifest to
+`python3 bin/ontology.py --validate-bindings <path>`. Each binding declares an
+artifact, JSON Pointer (with `*` for every child), canonical term ID and JSON
+value type. Every wildcard branch must match; missing fields and ambiguous or
+deprecated term references fail. A binding annotates existing names without
+renaming runtime fields or changing their behavior. The initial checked
+surfaces are the resolver manifest and generated Craft enforcement manifest;
+other interfaces require explicit adoption through #851.
+
+Use `host-capability` for runtime mechanisms and `procedure-binding` for skill
+selection. Distinguish `policy-override`, `skill-replacement` and
+`resident-composition`. Name the evidence stage of a verification claim:
+configuration validation, artifact verification, runtime observation and
+protected acceptance are separate facts.
+
+After changing definitions or bindings, build the referenced artifacts and run:
+
+```sh
+python3 bin/build.py --layout both
+python3 bin/ontology.py --write
+python3 bin/_test/ontology_test.py
+python3 bin/ontology.py --check
+```
+
+CI checks the registry, opted-in bindings and generated-page freshness. It does
+not infer authorization or prove runtime behavior from a label. For optional
+prose feedback, use `python3 bin/ontology.py --lint <path>`; terminology warnings
+remain advisory. Consumer-specific names need explicit scoped mappings, with
+private operational evidence retained privately. Review an incompatible meaning
+as a new term ID and migration rather than silently changing an existing ID.
+
 ## The slug-token convention
 
 Skills cross-reference each other by **slug token**, not file path:
