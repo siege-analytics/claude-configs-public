@@ -23,6 +23,7 @@ DEFAULT_APPROVALS = Path("catalog/skill-lifecycle-approved-exceptions.json")
 DEFAULT_COMPLETED = Path("catalog/skill-lifecycle-completed.json")
 BOOTSTRAP_SHA256 = "73e79ea93b12f3f5e8c0c7b3aacc67c41ec79af51ae520355f9de1f231e93b1c"
 INITIAL_POLICY_BASE = "c2f27d00ce1e507176814307ba2a9252d7448ff8"
+FIRST_PROMOTION_BASE = "b2d91ef2900f58ddb37c10e1eb2803a7aeaa6753"
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 STRUCTURAL_TIERS = {"project", "reference", "on-demand"}
 
@@ -148,19 +149,122 @@ def evaluate_item(
     }
 
 
-def json_at_ref(root: Path, ref: str, path: str) -> dict[str, Any] | None:
+def resolve_commit(root: Path, ref: str) -> str:
     if not ref:
         raise ValueError("previous lifecycle reference is required")
-    commit = subprocess.run(
-        ["git", "-C", str(root), "cat-file", "-e", f"{ref}^{{commit}}"],
+    result = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--verify", f"{ref}^{{commit}}"],
+        text=True,
+        capture_output=True,
+        timeout=10,
+    )
+    commit = result.stdout.strip().lower()
+    if result.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError(f"previous lifecycle reference is unavailable: {ref}")
+    return commit
+
+
+def commit_parents(root: Path, ref: str) -> list[str]:
+    commit = resolve_commit(root, ref)
+    result = subprocess.run(
+        ["git", "-C", str(root), "rev-list", "--parents", "-n", "1", commit],
+        text=True,
+        capture_output=True,
+        timeout=10,
+        check=True,
+    )
+    fields = result.stdout.strip().lower().split()
+    if not fields or fields[0] != commit:
+        raise ValueError(f"cannot inspect lifecycle candidate parents: {ref}")
+    return fields[1:]
+
+
+def tree_at_ref(root: Path, ref: str) -> str:
+    commit = resolve_commit(root, ref)
+    result = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--verify", f"{commit}^{{tree}}"],
+        text=True,
+        capture_output=True,
+        timeout=10,
+        check=True,
+    )
+    return result.stdout.strip().lower()
+
+
+def is_ancestor(root: Path, ancestor: str, descendant: str) -> bool:
+    result = subprocess.run(
+        ["git", "-C", str(root), "merge-base", "--is-ancestor", ancestor, descendant],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         timeout=10,
     )
-    if commit.returncode != 0:
-        raise ValueError(f"previous lifecycle reference is unavailable: {ref}")
+    return result.returncode == 0
+
+
+def canonical_first_promotion_history_ref(
+    root: Path,
+    previous_commit: str,
+    *,
+    current_ref: str,
+    event_name: str,
+    base_ref: str,
+    head_ref: str,
+    event_ref: str,
+    repository: str,
+    head_repository: str,
+    promotion_ref: str,
+    accepted_base: str = FIRST_PROMOTION_BASE,
+    policy_base: str = INITIAL_POLICY_BASE,
+) -> str:
+    """Return the last develop history ref only for the pinned first promotion."""
+    if previous_commit != accepted_base:
+        raise ValueError("previous lifecycle gap report is missing outside the initial bootstrap")
+
+    current_commit = resolve_commit(root, current_ref)
+    parents = commit_parents(root, current_commit)
+    if len(parents) != 2 or parents[0] != previous_commit:
+        raise ValueError(
+            "first lifecycle promotion must be a two-parent merge whose first parent is the pinned main baseline"
+        )
+
+    if event_name == "pull_request":
+        if base_ref != "main" or head_ref != "develop":
+            raise ValueError("first lifecycle promotion PR must be canonical develop -> main")
+        if not repository or head_repository != repository:
+            raise ValueError("first lifecycle promotion PR must use canonical-repository develop")
+        if not promotion_ref:
+            raise ValueError("first lifecycle promotion PR head commit is required")
+        promotion_commit = resolve_commit(root, promotion_ref)
+        if parents[1] != promotion_commit:
+            raise ValueError("first lifecycle promotion PR head does not match the merge second parent")
+    elif event_name == "push":
+        if event_ref != "refs/heads/main":
+            raise ValueError("first lifecycle promotion push must update refs/heads/main")
+        if not re.fullmatch(r"[0-9a-fA-F]{40}", promotion_ref):
+            raise ValueError("first lifecycle promotion push requires an immutable canonical develop SHA")
+        promotion_commit = resolve_commit(root, promotion_ref)
+        if parents[1] != promotion_commit:
+            raise ValueError("first lifecycle promotion push second parent is not canonical develop")
+    else:
+        raise ValueError("first lifecycle promotion requires pull_request or push event context")
+
+    if not is_ancestor(root, previous_commit, promotion_commit):
+        raise ValueError("first lifecycle promotion develop head does not contain the pinned main baseline")
+    if not is_ancestor(root, policy_base, promotion_commit):
+        raise ValueError("first lifecycle promotion develop head does not contain lifecycle policy history")
+    if tree_at_ref(root, current_commit) != tree_at_ref(root, promotion_commit):
+        raise ValueError("first lifecycle promotion merge tree differs from the promoted develop tree")
+
+    history_ref = resolve_commit(root, f"{promotion_commit}^")
+    if gap_state_at_ref(root, history_ref) is None:
+        raise ValueError("first lifecycle promotion develop history lacks a prior lifecycle gap report")
+    return history_ref
+
+
+def json_at_ref(root: Path, ref: str, path: str) -> dict[str, Any] | None:
+    commit = resolve_commit(root, ref)
     result = subprocess.run(
-        ["git", "-C", str(root), "show", f"{ref}:{path}"],
+        ["git", "-C", str(root), "show", f"{commit}:{path}"],
         text=True,
         capture_output=True,
         timeout=10,
@@ -345,6 +449,14 @@ def main() -> int:
     parser.add_argument("--approvals", type=Path, default=DEFAULT_APPROVALS)
     parser.add_argument("--completed", type=Path, default=DEFAULT_COMPLETED)
     parser.add_argument("--previous-ref", default=os.environ.get("LIFECYCLE_PREVIOUS_REF", ""))
+    parser.add_argument("--current-ref", default=os.environ.get("LIFECYCLE_CURRENT_REF", "HEAD"))
+    parser.add_argument("--event-name", default=os.environ.get("LIFECYCLE_EVENT_NAME", ""))
+    parser.add_argument("--base-ref", default=os.environ.get("LIFECYCLE_BASE_REF", ""))
+    parser.add_argument("--head-ref", default=os.environ.get("LIFECYCLE_HEAD_REF", ""))
+    parser.add_argument("--event-ref", default=os.environ.get("LIFECYCLE_EVENT_REF", ""))
+    parser.add_argument("--repository", default=os.environ.get("LIFECYCLE_REPOSITORY", ""))
+    parser.add_argument("--head-repository", default=os.environ.get("LIFECYCLE_HEAD_REPOSITORY", ""))
+    parser.add_argument("--promotion-ref", default=os.environ.get("LIFECYCLE_PROMOTION_REF", ""))
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
     root = args.root.resolve()
@@ -366,12 +478,28 @@ def main() -> int:
         except (OSError, subprocess.SubprocessError):
             previous_ref = ""
     try:
-        previous_completed = completed_paths_at_ref(root, previous_ref)
-        previous_gaps = gap_state_at_ref(root, previous_ref)
+        previous_commit = resolve_commit(root, previous_ref)
+        previous_completed = completed_paths_at_ref(root, previous_commit)
+        previous_gaps = gap_state_at_ref(root, previous_commit)
+        if previous_gaps is None and previous_commit == FIRST_PROMOTION_BASE:
+            comparison_ref = canonical_first_promotion_history_ref(
+                root,
+                previous_commit,
+                current_ref=args.current_ref,
+                event_name=args.event_name,
+                base_ref=args.base_ref,
+                head_ref=args.head_ref,
+                event_ref=args.event_ref,
+                repository=args.repository,
+                head_repository=args.head_repository,
+                promotion_ref=args.promotion_ref,
+            )
+            previous_completed = completed_paths_at_ref(root, comparison_ref)
+            previous_gaps = gap_state_at_ref(root, comparison_ref)
     except (OSError, subprocess.SubprocessError, ValueError, KeyError, json.JSONDecodeError) as exc:
         print(f"SKILL LIFECYCLE ERROR: {exc}", file=sys.stderr)
         return 1
-    initial_bootstrap = previous_ref == INITIAL_POLICY_BASE
+    initial_bootstrap = previous_commit == INITIAL_POLICY_BASE
     try:
         expected = serialize(build_allowlist(
             root,
