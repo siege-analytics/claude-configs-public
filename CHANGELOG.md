@@ -17,6 +17,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 
 ### Fixed
+- Epic #962 F4 review-risk coverage now follows the blocking enforcement dependency graph: shared decision helpers, the catalog infrastructure guard, agent-communication blockers, generated-source/kernel CI checkers, hook validation, authority discovery, and consumer runtime generation compute Tier C. Exhaustive fixtures cover modification, deletion, rename, and declared-Tier-B rejection while logging-only, unregistered, and generated-evidence exclusions remain documented below Tier C.
 - Replaced all active `shelves--...` `[skill:]` references with explicit `skills/shelves/.../SKILL.md` paths so collaborator sessions do not fail shelf loading.
 - Followed up nested shelf reference repair by using explicit DDIA/geospatial shelf paths only where nested shelf loading is required.
 - Fixed invalid nested shelf skill references by replacing `shelves--data-intensive` / `shelves--geospatial` invocation forms with valid parent skills and explicit nested shelf file paths.
