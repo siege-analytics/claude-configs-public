@@ -229,6 +229,20 @@ install_craft_agent() {
         errors=$((errors + 1))
     fi
 
+    local runtime_file
+    for runtime_file in \
+        bin/resolve-load-set.py \
+        catalog/resolver-manifest.json \
+        bin/review-risk.py \
+        catalog/review-risk-policy.json; do
+        if [[ -f "$ws_path/$runtime_file" ]]; then
+            echo "  [ok] $runtime_file deployed"
+        else
+            echo "  [FAIL] $runtime_file not found (installed hooks are incomplete)" >&2
+            errors=$((errors + 1))
+        fi
+    done
+
     # CA enforcement artifacts
     if [[ -f "$ws_path/enforcement-manifest.json" ]]; then
         local gate_count

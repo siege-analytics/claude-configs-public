@@ -34,6 +34,8 @@ printf 'literal question path Refs: #994\n' > "$FIXTURE/message?.txt"
 printf 'template subject\n\nRefs: #444\n' > "$FIXTURE/template.txt"
 printf 'first source Refs: #111\n' > "$FIXTURE/first.txt"
 printf 'second source without reference\n' > "$FIXTURE/second.txt"
+printf 'commit\n' > "$FIXTURE/xargs-subcommand.txt"
+printf 'ok\n' > "$FIXTURE/xargs-echo-input.txt"
 printf 'unreadable Refs: #994\n' > "$FIXTURE/unreadable.txt"
 chmod 000 "$FIXTURE/unreadable.txt"
 dd if=/dev/zero bs=1048577 count=1 2>/dev/null | tr '\0' x > "$FIXTURE/oversized.txt"
@@ -70,6 +72,68 @@ COMMAND
 NEWLINE_CHAIN_COMMAND=$(cat <<'COMMAND'
 git commit -m "Refs: #994"
 git commit --no-verify -m "subject only"
+COMMAND
+)
+OBFUSCATED_WRAPPER_COMMAND=$(cat <<'COMMAND'
+bash -c 'g"it" commit -m "subject only"'
+COMMAND
+)
+NESTED_OBFUSCATED_WRAPPER_COMMAND=$(cat <<'COMMAND'
+env bash -lc 'g"it" commit -m "subject only"'
+COMMAND
+)
+TERMINATED_OBFUSCATED_WRAPPER_COMMAND=$(cat <<'COMMAND'
+bash -c -- 'g"it" commit -m "subject only"'
+COMMAND
+)
+OPTION_OPERAND_WRAPPER_COMMAND=$(cat <<'COMMAND'
+bash -o pipefail -c 'g"it" commit -m "subject only"'
+COMMAND
+)
+NESTED_OPTION_OPERAND_WRAPPER_COMMAND=$(cat <<'COMMAND'
+env bash --norc -o pipefail -lc 'g"it" commit -m "subject only"'
+COMMAND
+)
+ATTACHED_SU_WRAPPER_COMMAND=$(cat <<'COMMAND'
+su -c'g"it" commit -m "subject only"'
+COMMAND
+)
+INLINE_SHELL_ALIAS_COMMAND=$(cat <<'COMMAND'
+git -c 'alias.c=!git co"mmit" -m "subject only"' c
+COMMAND
+)
+CHAINED_INLINE_ALIAS_COMMAND=$(cat <<'COMMAND'
+git -c 'alias.a=b' -c 'alias.b=co"mmit"' a -m "subject only"
+COMMAND
+)
+CONFIG_ENV_ALIAS_COMMAND=$(cat <<'COMMAND'
+ALIAS_COMMAND='!git co"mmit" -m "subject only"' git --config-env=alias.c=ALIAS_COMMAND c
+COMMAND
+)
+ENV_SPLIT_WRAPPER_COMMAND=$(cat <<'COMMAND'
+env -S "sh -c 'g\"it\" commit -m subject-only'"
+COMMAND
+)
+ENV_LONG_SPLIT_WRAPPER_COMMAND=$(cat <<'COMMAND'
+env --split-string="sh -c 'g\"it\" commit -m subject-only'"
+COMMAND
+)
+XARGS_DYNAMIC_COMMIT_COMMAND=$(cat <<'COMMAND'
+printf 'commit\n' | xargs -I{} git {} -m 'subject only'
+COMMAND
+)
+UNRELATED_XARGS_COMMAND=$(cat <<'COMMAND'
+printf 'ok\n' | xargs echo
+COMMAND
+)
+XARGS_FILE_COMMIT_COMMAND="xargs -a '$FIXTURE/xargs-subcommand.txt' -I@ git @ -m 'subject only'"
+XARGS_FILE_ECHO_COMMAND="xargs -a '$FIXTURE/xargs-echo-input.txt' echo"
+PIPED_OBFUSCATED_WRAPPER_COMMAND=$(cat <<'COMMAND'
+bash -c 'g"it" commit -m "subject only"' | cat
+COMMAND
+)
+UNRELATED_PIPED_WRAPPER_COMMAND=$(cat <<'COMMAND'
+bash -c 'printf ok' | cat
 COMMAND
 )
 FAKE_HEREDOC_ARGUMENT=$(cat <<'COMMAND'
@@ -285,6 +349,21 @@ expect_block_because "(ba) ticket in earlier shell command cannot bypass" "$HOOK
 expect_block_because "(ba2) subshell commit fails closed" "$HOOK" \
     "$(make_payload '(git commit -m "Refs: #994")')" \
     "pipelines, redirects, and command chains"
+expect_block_because "(ba3) xargs dynamic git subcommand fails closed" "$HOOK" \
+    "$(make_payload "$XARGS_DYNAMIC_COMMIT_COMMAND")" \
+    "unquoted shell pathname expansion"
+expect_pass "(ba4) unrelated xargs pipeline passes" "$HOOK" \
+    "$(make_payload "$UNRELATED_XARGS_COMMAND")"
+expect_block_because "(ba5) piped obfuscated wrapper fails closed" "$HOOK" \
+    "$(make_payload "$PIPED_OBFUSCATED_WRAPPER_COMMAND")" \
+    "pipelines, redirects, and command chains"
+expect_pass "(ba6) unrelated piped wrapper passes" "$HOOK" \
+    "$(make_payload "$UNRELATED_PIPED_WRAPPER_COMMAND")"
+expect_block_because "(ba7) file-fed xargs dynamic git subcommand fails closed" "$HOOK" \
+    "$(make_payload "$XARGS_FILE_COMMIT_COMMAND")" \
+    "wrappers and environment prefixes"
+expect_pass "(ba8) unrelated file-fed xargs passes" "$HOOK" \
+    "$(make_payload "$XARGS_FILE_ECHO_COMMAND")"
 expect_block_because "(bb) shell expansion fails closed" "$HOOK" \
     "$(make_payload "$SHELL_EXPANSION_COMMAND")" \
     "shell expansion"
@@ -297,6 +376,48 @@ expect_block_because "(bb3) unsupported git global config fails closed" "$HOOK" 
 expect_block_because "(bc) environment wrapper fails closed" "$HOOK" \
     "$(make_payload 'env GIT_EDITOR=true git commit -m "Refs: #994"')" \
     "wrappers and environment prefixes"
+expect_block_because "(bc2) bash -c wrapped commit fails closed" "$HOOK" \
+    "$(make_payload 'bash -c "git commit -m '\''subject only'\''"')" \
+    "wrappers and environment prefixes"
+expect_block_because "(bc3) sh -c wrapped commit fails closed" "$HOOK" \
+    "$(make_payload 'sh -c "git commit -m '\''subject only'\''"')" \
+    "wrappers and environment prefixes"
+expect_block_because "(bc4) eval wrapped commit fails closed" "$HOOK" \
+    "$(make_payload 'eval "git commit -m '\''subject only'\''"')" \
+    "wrappers and environment prefixes"
+expect_block_because "(bc5) quote-obfuscated bash wrapper fails closed" "$HOOK" \
+    "$(make_payload "$OBFUSCATED_WRAPPER_COMMAND")" \
+    "wrappers and environment prefixes"
+expect_block_because "(bc6) nested quote-obfuscated wrapper fails closed" "$HOOK" \
+    "$(make_payload "$NESTED_OBFUSCATED_WRAPPER_COMMAND")" \
+    "wrappers and environment prefixes"
+expect_block_because "(bc7) -c -- quote-obfuscated wrapper fails closed" "$HOOK" \
+    "$(make_payload "$TERMINATED_OBFUSCATED_WRAPPER_COMMAND")" \
+    "wrappers and environment prefixes"
+expect_block_because "(bc8) option operand before -c fails closed" "$HOOK" \
+    "$(make_payload "$OPTION_OPERAND_WRAPPER_COMMAND")" \
+    "wrappers and environment prefixes"
+expect_block_because "(bc9) nested options before -lc fail closed" "$HOOK" \
+    "$(make_payload "$NESTED_OPTION_OPERAND_WRAPPER_COMMAND")" \
+    "wrappers and environment prefixes"
+expect_block_because "(bc10) attached su -c script fails closed" "$HOOK" \
+    "$(make_payload "$ATTACHED_SU_WRAPPER_COMMAND")" \
+    "wrappers and environment prefixes"
+expect_block_because "(bc11) inline shell alias commit fails closed" "$HOOK" \
+    "$(make_payload "$INLINE_SHELL_ALIAS_COMMAND")" \
+    "unsupported git global options"
+expect_block_because "(bc12) chained inline alias commit fails closed" "$HOOK" \
+    "$(make_payload "$CHAINED_INLINE_ALIAS_COMMAND")" \
+    "unsupported git global options"
+expect_block_because "(bc13) config-env alias commit fails closed" "$HOOK" \
+    "$(make_payload "$CONFIG_ENV_ALIAS_COMMAND")" \
+    "wrappers and environment prefixes"
+expect_block_because "(bc14) env -S retokenized commit fails closed" "$HOOK" \
+    "$(make_payload "$ENV_SPLIT_WRAPPER_COMMAND")" \
+    "wrappers and environment prefixes"
+expect_block_because "(bc15) env long split-string commit fails closed" "$HOOK" \
+    "$(make_payload "$ENV_LONG_SPLIT_WRAPPER_COMMAND")" \
+    "wrappers and environment prefixes"
 expect_block_because "(bd) assignment prefix fails closed" "$HOOK" \
     "$(make_payload 'GIT_EDITOR=true git commit -m "Refs: #994"')" \
     "wrappers and environment prefixes"
@@ -306,9 +427,32 @@ expect_pass "(bf) optional -S does not consume -m" "$HOOK" \
     "$(make_payload 'git commit -S -m "Refs: #994"')"
 expect_pass "(bg) optional -u does not consume -m" "$HOOK" \
     "$(make_payload 'git commit -u -m "Refs: #994"')"
+expect_pass "(bg2) --quiet preserves message source" "$HOOK" \
+    "$(make_payload 'git commit --quiet -m "Refs: #994"')"
+expect_pass "(bg3) --only preserves message source" "$HOOK" \
+    "$(make_payload 'git commit --only -m "Refs: #994"')"
+expect_pass "(bg4) --include preserves message source" "$HOOK" \
+    "$(make_payload 'git commit --include -m "Refs: #994"')"
+expect_pass "(bg5) --no-gpg-sign preserves message source" "$HOOK" \
+    "$(make_payload 'git commit --no-gpg-sign -m "Refs: #994"')"
+expect_pass "(bg6) --no-signoff preserves message source" "$HOOK" \
+    "$(make_payload 'git commit --no-signoff -m "Refs: #994"')"
 
 # --- Commands outside this hook's surface pass ---
 expect_pass "(bh) git status" "$HOOK" "$(make_payload 'git status')"
+expect_pass "(bh2) unrelated bash -c passes" "$HOOK" "$(make_payload "bash -c 'printf ok'")"
+expect_pass "(bh3) unrelated sh -c passes" "$HOOK" "$(make_payload "sh -c 'printf ok'")"
+expect_pass "(bh4) unrelated eval passes" "$HOOK" "$(make_payload "eval 'printf ok'")"
+expect_pass "(bh5) unrelated option-bearing bash -c passes" "$HOOK" \
+    "$(make_payload "bash --norc -o pipefail -lc 'printf ok'")"
+expect_pass "(bh6) unrelated attached su -c passes" "$HOOK" \
+    "$(make_payload "su -c'printf ok'")"
+expect_pass "(bh7) unrelated inline shell alias passes" "$HOOK" \
+    "$(make_payload "git -c 'alias.p=!printf ok' p")"
+expect_pass "(bh8) unrelated chained inline alias passes" "$HOOK" \
+    "$(make_payload "git -c 'alias.a=b' -c 'alias.b=status' a")"
+expect_pass "(bh9) unrelated env -S split string passes" "$HOOK" \
+    "$(make_payload "env -S \"sh -c 'printf ok'\"")"
 expect_pass "(bi) git push" "$HOOK" "$(make_payload 'git push origin develop')"
 
 if [[ "${_HARNESS_FAIL:-0}" -gt 0 ]]; then

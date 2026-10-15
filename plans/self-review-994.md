@@ -26,7 +26,7 @@ The original hook grepped all of `tool_input.command`. It therefore rejected tic
 
 ## Peer review
 
-Independent Git-semantics and security reviews found and drove fixes for unsupported global-option bypass, newline chains, cleanup removal, heredoc context, shell comments, pathname expansion, `CDPATH`, mixed overrides, bounded reads, and descriptor-pinned path traversal. Each finding is recorded with its resolution in `plans/hostile-review-994.md`.
+Independent Git-semantics and security reviews found and drove fixes for unsupported global-option bypass, newline chains, cleanup removal, heredoc context, shell comments, pathname expansion, `CDPATH`, mixed overrides, bounded reads, and descriptor-pinned path traversal. CodeRabbit's exact-SHA review then found wrapped `bash -c` command text and five harmless long-form flags; the reporter's focused F4 review found the new helper below the accepted Tier C dependency boundary. Each finding and resolution is recorded in `plans/hostile-review-994.md`.
 
 ## Lead review
 
@@ -42,6 +42,19 @@ The shared parser is large because it defines a security boundary, but it remain
 | R4 | P1 | Resolve/stat/read sequence left path replacement concerns. | canonical in-repo target plus pinned no-follow descriptor traversal |
 | R5 | P2 | Input caps were applied after full reads. | bounded JSON, message-file, native-file, and revision reads |
 | R6 | P2 | Native ticket syntax drifted from pre-tool syntax. | one shared validator and positive/negative native fixtures |
+| R7 | P1 | Wrapped commits inside a single `bash -c`/`sh -c`/`eval` token returned NOT_COMMIT. | detect raw commit text across joined tokens and within each token at every parsed non-commit exit |
+| R8 | P2 | Five harmless long-form flags false-blocked while short forms passed. | accept all five and add one positive fixture per form |
+| R9 | P1 | Accepted F4 policy classified authoritative `commit-message.py` as Tier B. | exact Tier C pattern, both caller edges, pinned graph snapshots, and exhaustive staged-shape downgrade tests |
+| R10 | P1 | Literal raw-text scanning missed `bash -c 'g"it" commit …'` shell quote concatenation. | recursively tokenize static wrapper scripts without execution and fail closed for direct, obfuscated, nested, or dynamic/indeterminate commit-capable forms |
+| R11 | P1 | Initial R10 fix overblocked unrelated static `bash -c`, `sh -c`, and `eval`. | return NOT_COMMIT when recursive static analysis proves no commit; add three positive non-interference fixtures |
+| R12 | P1 | `bash -c -- 'g"it" commit …'` executed the script after an option terminator the analyzer treated as terminal. | once `-c` is present, continue past `--` and recursively inspect the next command-string token; add exact exploit fixture |
+| R13 | P1 | `bash -o pipefail -c …` hid `-c` behind an option operand mistaken for the script. | statefully locate short `-c` clusters/`su --command` across operands and analyze the actual next script; add direct, nested, and positive controls |
+| R14 | P1 | `su -cSCRIPT` attached the command operand to the short option, leaving no next token to inspect. | parse content after `c` as an attached script for `su`; add exact blocking and unrelated positive controls |
+| R15 | P1 | Inline `git -c alias.c='!git co"mmit" …' c` executed a commit while the visible subcommand returned NOT_COMMIT. | resolve static/chained/shell inline aliases without execution and fail closed for config-env/dynamic indeterminacy; add three exploits and two positives |
+| R16 | P1 | BSD/GNU `env -S`/`--split-string` retokenized an opaque operand into `sh -c` plus an obfuscated commit. | recursively inspect split-string operands; add short/long exploit fixtures and a static non-commit positive |
+| R17 | P1 | `xargs` input substitution supplied `commit` as a Git subcommand after static command parsing. | fail closed for visible xargs→Git dispatch with dynamic/unknown subcommands; add exact exploit and unrelated pipeline control |
+| R18 | P1 | Control-token handling returned NOT_COMMIT before detecting an obfuscated commit inside a piped shell wrapper. | run wrapper/alias/xargs analysis on full tokens before every chain/pipeline exit; add exploit and unrelated positive |
+| R19 | P1 | GNU `xargs -a file` supplied a Git subcommand without any control token, bypassing the control-only xargs guard. | invoke xargs dispatch analysis before ordinary non-Git exits too; add file-fed exploit and unrelated positive |
 
 ## Test plan
 
@@ -53,12 +66,12 @@ The shared parser is large because it defines a security boundary, but it remain
 
 ## Quantified claims
 
-- Focused ticket matrix: 82 scenarios before evidence-only additions; final rerun records the current exact count.
-- Native commit/risk matrix: 19 passing scenarios.
-- Full hook suite: 36 of 36 files pass after a fresh build.
-- Full serial CI matrix: all listed build, generated-authority, loading, risk, install, policy, lifecycle, and hook steps pass.
+- Focused ticket matrix: 115 scenarios pass, including wrapper, alias, retokenization, piped/file-fed dynamic dispatch, and control-ordering attacks, with unrelated-command positives and five harmless long-form flags.
+- Native commit/risk matrix: 19 scenarios pass.
+- F4 risk matrix: `commit-message.py` rejects declared Tier B and the exhaustive graph plus modification/deletion/rename/downgrade suite passes.
+- Full hook suite and serial CI matrix are rerun after the combined-tree evidence refresh and recorded in the replacement commit/PR evidence.
 - Shared runtime: one parser is copied byte-identically into both `dist/claude-code/hooks/lib/` and `dist/craft-agent/hooks/lib/`.
 
 ## Rollback
 
-Revert the single issue #994 commit. The prior command-string behavior returns immediately; no migration, deployment, release, or external state change is required. Existing native hooks remain source-controlled and protected checks still gate merge.
+Revert the issue #994 commits after the develop merge. The prior command-string behavior and F4 graph remain recoverable from history; no migration, deployment, release, or external state change is required. Existing native hooks remain source-controlled and protected checks still gate integration.

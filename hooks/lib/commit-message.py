@@ -47,6 +47,8 @@ TICKET_RE = re.compile(r"#[0-9]+|[A-Z]+-[0-9]+")
 TRACKER_URL_RE = re.compile(
     r"https?://\S+/(?:issues|browse|tickets|merge_requests|pull|stories|tasks)/\S+"
 )
+COMMIT_TEXT_RE = re.compile(r"(?:^|[^\w])git(?:\s|$).*?\bcommit(?:\s|$)", re.DOTALL)
+XARGS_GIT_TEXT_RE = re.compile(r"(?:^|[^\w])xargs(?:\s|$).*?\bgit(?:\s|$)", re.DOTALL)
 
 NO_ARG_LONG = {
     "--all",
@@ -70,6 +72,11 @@ NO_ARG_LONG = {
     "--pathspec-file-nul",
     "--untracked-files",
     "--gpg-sign",
+    "--no-gpg-sign",
+    "--quiet",
+    "--only",
+    "--include",
+    "--no-signoff",
 }
 ARG_LONG = {
     "--author",
@@ -78,6 +85,14 @@ ARG_LONG = {
 }
 NO_ARG_SHORT = set("apsvnieoq")
 OPTIONAL_ATTACHED_SHORT = {"u", "S"}
+OPAQUE_SHELL_WRAPPERS = {"bash", "dash", "fish", "ksh", "sh", "su", "zsh"}
+KNOWN_NONCOMMIT_GIT_SUBCOMMANDS = {
+    "add", "bisect", "blame", "branch", "checkout", "cherry", "cherry-pick",
+    "clean", "clone", "config", "describe", "diff", "fetch", "format-patch",
+    "grep", "help", "init", "log", "merge", "mv", "notes", "pull", "push",
+    "rebase", "remote", "reset", "restore", "revert", "rm", "show", "sparse-checkout",
+    "stash", "status", "submodule", "switch", "tag", "worktree",
+}
 
 
 class ResolutionError(Exception):
@@ -342,19 +357,207 @@ def resolve_dir(base: Path, value: str) -> Path:
     return resolved
 
 
+def mentions_commit(tokens: Sequence[str]) -> bool:
+    return bool(COMMIT_TEXT_RE.search(" ".join(tokens))) or any(
+        COMMIT_TEXT_RE.search(token) for token in tokens
+    )
+
+
+def opaque_wrapper_scripts(tokens: Sequence[str]) -> Sequence[str]:
+    scripts = []
+    for index, token in enumerate(tokens):
+        name = Path(token).name
+        if name == "eval":
+            scripts.append(" ".join(tokens[index + 1 :]))
+            continue
+        if name == "env":
+            env_args = tokens[index + 1 :]
+            for env_index, option in enumerate(env_args):
+                if option == "--":
+                    break
+                if option == "-S" and env_index + 1 < len(env_args):
+                    scripts.append(env_args[env_index + 1])
+                    break
+                if option.startswith("-S") and option != "-S":
+                    scripts.append(option[2:])
+                    break
+                if option.startswith("--split-string="):
+                    scripts.append(option.split("=", 1)[1])
+                    break
+            continue
+        if name not in OPAQUE_SHELL_WRAPPERS:
+            continue
+        command_option = False
+        for option in tokens[index + 1 :]:
+            if command_option:
+                if option == "--":
+                    continue
+                scripts.append(option)
+                break
+            if option == "--":
+                break
+            if name == "su" and option.startswith("--command="):
+                scripts.append(option.split("=", 1)[1])
+                break
+            if name == "su" and option == "--command":
+                command_option = True
+                continue
+            if option.startswith("-") and not option.startswith("--") and "c" in option[1:]:
+                command_index = option[1:].index("c") + 2
+                if name == "su" and len(option) > command_index:
+                    scripts.append(option[command_index:])
+                    break
+                command_option = True
+    return scripts
+
+
+def opaque_wrapper_may_commit(tokens: Sequence[str], cwd: Path) -> bool:
+    for script in opaque_wrapper_scripts(tokens):
+        if not script:
+            continue
+        try:
+            shell_tokens(script)
+        except ResolutionError:
+            return True
+        try:
+            command_parts(script, cwd)
+        except NotCommit:
+            continue
+        except ResolutionError:
+            return True
+        return True
+    return False
+
+
+def git_alias_expansion_may_commit(
+    name: str,
+    aliases: dict[str, str],
+    cwd: Path,
+    seen: frozenset[str] = frozenset(),
+) -> bool:
+    if name in seen:
+        return True
+    expansion = aliases.get(name)
+    if expansion is None:
+        return False
+    if expansion.startswith("!"):
+        script = expansion[1:]
+        try:
+            shell_tokens(script)
+        except ResolutionError:
+            return True
+        try:
+            command_parts(script, cwd)
+        except NotCommit:
+            return False
+        except ResolutionError:
+            return True
+        return True
+    try:
+        expansion_tokens, heredoc = shell_tokens(expansion)
+    except ResolutionError:
+        return True
+    if heredoc is not None or not expansion_tokens:
+        return True
+    target = expansion_tokens[0]
+    if target == "commit":
+        return True
+    if target in aliases:
+        return git_alias_expansion_may_commit(target, aliases, cwd, seen | {name})
+    return mentions_commit(expansion_tokens)
+
+
+def xargs_git_dispatch_may_commit(tokens: Sequence[str]) -> bool:
+    for index, token in enumerate(tokens):
+        if Path(token).name != "xargs":
+            continue
+        for git_index in range(index + 1, len(tokens)):
+            if Path(tokens[git_index]).name != "git":
+                continue
+            if git_index + 1 >= len(tokens):
+                return True
+            subcommand = tokens[git_index + 1]
+            if (
+                subcommand == "commit"
+                or subcommand.startswith("-")
+                or any(character in subcommand for character in "{}%")
+                or subcommand not in KNOWN_NONCOMMIT_GIT_SUBCOMMANDS
+            ):
+                return True
+    return False
+
+
+def inline_git_alias_may_commit(tokens: Sequence[str], cwd: Path) -> bool:
+    aliases: dict[str, str] = {}
+    indeterminate_aliases: set[str] = set()
+    definition_ends: list[tuple[int, str]] = []
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        config: Optional[str] = None
+        if token == "-c" and index + 1 < len(tokens):
+            config = tokens[index + 1]
+            definition_end = index + 2
+            index += 2
+        elif token.startswith("-c") and token != "-c":
+            config = token[2:]
+            definition_end = index + 1
+            index += 1
+        elif token.startswith("--config-env=alias."):
+            key = token[len("--config-env=") :].split("=", 1)[0].lower()
+            indeterminate_aliases.add(key[len("alias.") :])
+            definition_ends.append((index + 1, key[len("alias.") :]))
+            index += 1
+            continue
+        else:
+            index += 1
+            continue
+        if config is None or "=" not in config:
+            continue
+        key, value = config.split("=", 1)
+        key = key.lower()
+        if not key.startswith("alias.") or len(key) == len("alias."):
+            continue
+        name = key[len("alias.") :]
+        aliases[name] = value
+        definition_ends.append((definition_end, name))
+
+    for definition_end, name in definition_ends:
+        try:
+            invoked_at = tokens.index(name, definition_end)
+        except ValueError:
+            continue
+        if invoked_at < definition_end:
+            continue
+        if name in indeterminate_aliases:
+            return True
+        if git_alias_expansion_may_commit(name, aliases, cwd):
+            return True
+    return False
+
+
 def command_parts(command: str, cwd: Path) -> Tuple[Sequence[str], Optional[str], Path]:
     try:
         tokens, heredoc = shell_tokens(command)
     except ResolutionError:
-        if re.search(r"(?:^|[^\w])git(?:\s|$).*?\bcommit(?:\s|$)", command, re.DOTALL):
+        if COMMIT_TEXT_RE.search(command) or XARGS_GIT_TEXT_RE.search(command):
             raise
         raise NotCommit
 
     controls = [i for i, token in enumerate(tokens) if token in {";", "&&", "&", "||", "|", "<", ">", "<<", ">>", "(", ")"}]
     effective_cwd = cwd
     if controls:
+        if (
+            opaque_wrapper_may_commit(tokens, effective_cwd)
+            or inline_git_alias_may_commit(tokens, effective_cwd)
+            or xargs_git_dispatch_may_commit(tokens)
+        ):
+            raise ResolutionError("shell pipelines, redirects, and command chains are unsupported")
         if len(controls) != 1 or tokens[controls[0]] != "&&":
-            if "git" in tokens and "commit" in tokens:
+            if (
+                ("git" in tokens and "commit" in tokens)
+                or xargs_git_dispatch_may_commit(tokens)
+            ):
                 raise ResolutionError("shell pipelines, redirects, and command chains are unsupported")
             raise NotCommit
         prefix, tokens = tokens[: controls[0]], tokens[controls[0] + 1 :]
@@ -374,7 +577,12 @@ def command_parts(command: str, cwd: Path) -> Tuple[Sequence[str], Optional[str]
     if not tokens:
         raise NotCommit
     if Path(tokens[0]).name != "git":
-        if "commit" in tokens and any(Path(token).name == "git" for token in tokens):
+        if (
+            opaque_wrapper_may_commit(tokens, effective_cwd)
+            or inline_git_alias_may_commit(tokens, effective_cwd)
+            or xargs_git_dispatch_may_commit(tokens)
+            or mentions_commit(tokens)
+        ):
             raise ResolutionError("wrappers and environment prefixes around git commit are unsupported")
         raise NotCommit
 
@@ -394,7 +602,7 @@ def command_parts(command: str, cwd: Path) -> Tuple[Sequence[str], Optional[str]
         else:
             break
     if index >= len(tokens) or tokens[index] != "commit":
-        if "commit" in tokens[index:]:
+        if inline_git_alias_may_commit(tokens, effective_cwd) or mentions_commit(tokens):
             raise ResolutionError("unsupported git global options before commit")
         raise NotCommit
     return tokens[index + 1 :], heredoc, effective_cwd

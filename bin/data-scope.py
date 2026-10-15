@@ -21,7 +21,10 @@ EXACT = "github.com/siege-analytics/siege_utilities"
 LEDGER = ROOT / "catalog/data-scope-ledger.json"
 FIXTURES = ROOT / "catalog/data-scope-fixtures.json"
 FORMS = ("nested", "flat", "claude-code", "craft-agent")
+# Existing ledgers attest source plus the two dedicated archives. Current parity
+# also covers both release-branch layouts without rewriting historical evidence.
 CONSUMERS = ("source", "claude-code", "craft-agent")
+ALL_CONSUMERS = ("source", *FORMS)
 GLOBAL = {"analysis", "pipeline-jobs", "unity-catalog", "scala-on-spark", "sql", "spark", "databricks", "spatial", "postgis", "geopandas", "sedona", "duckdb-spatial", "coding"}
 SHELVES = ("data-and-pipelines", "geospatial", "statistical-inference", "storytelling")
 VALID = {"reusable-global", "exact-project", "reference-only", "compatibility"}
@@ -82,7 +85,7 @@ def compute(write: bool) -> None:
     routed_paths = {next(i for i in inv.values() if i["slug"] == slug)["source_path"] for slug in routes}
     if manifest["policy"]["shelves_auto_select"] is not False or any(p.startswith("skills/shelves/") for p in routed_paths):
         raise ValueError("reference shelf promoted to auto-selection")
-    packages = {form: json.loads((ROOT / f"dist/{form}/catalog/resolver-manifest.json").read_text()) for form in CONSUMERS[1:]}
+    packages = {form: json.loads((ROOT / f"dist/{form}/catalog/resolver-manifest.json").read_text()) for form in FORMS}
     for form, pkg in packages.items():
         for source, meta in pkg["known_by_source"].items():
             if {k: meta[k] for k in ("characters", "estimated_tokens")} != cost(len((ROOT / f"dist/{form}" / meta["package_path"]).read_text())):
@@ -111,7 +114,7 @@ def compute(write: bool) -> None:
             # #975's section-aware gate applies to every active global data
             # source, not just the spatial engines; package text must match.
             language.check_global_su_scope(ROOT / path)
-            for form in CONSUMERS[1:]:
+            for form in FORMS:
                 language.check_global_su_scope(ROOT / f"dist/{form}" / packages[form]["known_by_source"][path]["package_path"])
         if path == "skills/analysis/SKILL.md" and "\npaths:" in (ROOT / path).read_text().split("---", 2)[1]:
             raise ValueError("native data extension auto-selection bypass")
@@ -150,7 +153,7 @@ def compute(write: bool) -> None:
                     raise ValueError(f"wrong isolated exact-base fixture evidence: {base_form}/{fixture['id']}")
             measurements = {}
             selected_bytes = {}
-            for form in CONSUMERS:
+            for form in ALL_CONSUMERS:
                 result = resolved(form, fixture)
                 slugs = [s["slug"] for s in result["selected"]]
                 paths = [s["source_path"] for s in result["selected"]]
@@ -161,11 +164,11 @@ def compute(write: bool) -> None:
                     raise ValueError(f"budget bypass: {form}/{fixture['id']}")
                 if result["state"] in ("unknown", "ambiguous", "over-budget") and result["selected"]:
                     raise ValueError(f"non-kernel fallback: {form}/{fixture['id']}")
-                selected_bytes[form] = 0
+                selected_byte_count = 0
                 for selected in result["selected"]:
                     source = selected["source_path"]
                     target = ROOT / source if form == "source" else ROOT / f"dist/{form}" / packages[form]["known_by_source"][source]["package_path"]
-                    selected_bytes[form] += len(target.read_bytes())
+                    selected_byte_count += len(target.read_bytes())
                     if source.startswith("projects/") and result["project"] != "siege-utilities":
                         raise ValueError(f"foreign project leak: {form}/{fixture['id']}")
                     if form != "source":
@@ -173,7 +176,9 @@ def compute(write: bool) -> None:
                         actual = cost(len((ROOT / f"dist/{form}" / meta["package_path"]).read_text()))
                         if actual != {key: meta[key] for key in ("characters", "estimated_tokens")}:
                             raise ValueError(f"selected byte mismatch: {form}/{source}")
-                measurements[form] = content
+                if form in CONSUMERS:
+                    selected_bytes[form] = selected_byte_count
+                    measurements[form] = content
             if write:
                 fixture["measurements"] = measurements
                 fixture["selected_bytes"] = selected_bytes

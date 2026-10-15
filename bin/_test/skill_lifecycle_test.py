@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "bin" / "skill-lifecycle.py"
@@ -41,6 +44,31 @@ def item(slug: str, path: str, kind: str = "skill", tier: str = "unclassified", 
 def dump(path: Path, value) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+
+
+def git(root: Path, *args: str, input_text: str | None = None) -> str:
+    return subprocess.run(
+        ["git", "-C", str(root), *args],
+        input=input_text,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout.strip()
+
+
+def commit(root: Path, message: str) -> str:
+    git(root, "add", ".")
+    git(root, "commit", "-m", message)
+    return git(root, "rev-parse", "HEAD")
+
+
+def expect_value_error(message: str, callback) -> None:
+    try:
+        callback()
+    except ValueError as exc:
+        assert message in str(exc), str(exc)
+    else:
+        raise AssertionError(f"expected ValueError containing: {message}")
 
 
 def main() -> None:
@@ -103,6 +131,21 @@ def main() -> None:
             "skills/uppercase/SKILL.md",
             "projects/demo/skills/conflict/SKILL.md",
         ])
+        dump(bootstrap_path, {"baseline_reference": "fixture", "source_paths": bootstrap_paths})
+        fixture_bootstrap_digest = hashlib.sha256(bootstrap_path.read_bytes()).hexdigest()
+        with mock.patch.object(MODULE, "BOOTSTRAP_SHA256", fixture_bootstrap_digest):
+            bootstrap_path.write_text(bootstrap_path.read_text() + "\n")
+            expect_value_error(
+                "lifecycle bootstrap digest changed",
+                lambda: MODULE.build_allowlist(
+                    root, inventory_path, schema_path, bootstrap_path,
+                    root / "catalog" / "not-created-approvals.json",
+                    root / "catalog" / "not-created-completed.json",
+                    verify_inventory=False,
+                    enforce_bootstrap_digest=True,
+                    allow_initial_bootstrap=True,
+                ),
+            )
         dump(bootstrap_path, {"baseline_reference": "fixture", "source_paths": bootstrap_paths})
         approvals_path = root / "catalog" / "skill-lifecycle-approved-exceptions.json"
         dump(approvals_path, {"entries": []})
@@ -248,6 +291,208 @@ def main() -> None:
             assert "unsafe inventory source_path" in str(exc)
         else:
             raise AssertionError("path traversal was accepted")
+
+    # Model both GitHub event paths around the same canonical promotion merge.
+    # The event baseline has no report; ratchet state is recovered from the
+    # promoted develop commit's first parent instead of being skipped.
+    with tempfile.TemporaryDirectory() as td:
+        repo = Path(td).resolve()
+        git(repo.parent, "init", "-q", "-b", "main", str(repo))
+        git(repo, "config", "user.email", "test@example.test")
+        git(repo, "config", "user.name", "Lifecycle Test")
+        write(repo, "README.md", "pre-lifecycle main\n")
+        first_main = commit(repo, "pre-lifecycle main")
+        git(repo, "tag", "first-main-baseline", first_main)
+
+        git(repo, "switch", "-q", "-c", "develop")
+        dump(repo / "catalog" / "skill-lifecycle-legacy.json", {"entries": []})
+        dump(repo / "catalog" / "skill-lifecycle-completed.json", {"entries": []})
+        policy_history = commit(repo, "introduce lifecycle report")
+        write(repo, "candidate.txt", "canonical develop candidate\n")
+        promotion = commit(repo, "develop candidate")
+
+        git(repo, "switch", "-q", "main")
+        git(repo, "merge", "--no-ff", "develop", "-m", "canonical promotion")
+        candidate = git(repo, "rev-parse", "HEAD")
+        normalized_previous = MODULE.resolve_commit(repo, "first-main-baseline")
+        assert normalized_previous == first_main
+
+        common = {
+            "root": repo,
+            "previous_commit": normalized_previous,
+            "current_ref": candidate,
+            "repository": "test/repo",
+            "head_repository": "test/repo",
+            "accepted_base": first_main,
+            "policy_base": policy_history,
+        }
+        pr_history = MODULE.canonical_first_promotion_history_ref(
+            **common,
+            event_name="pull_request",
+            base_ref="main",
+            head_ref="develop",
+            event_ref="refs/pull/1/merge",
+            promotion_ref="refs/heads/develop",
+        )
+        assert pr_history == policy_history
+        push_history = MODULE.canonical_first_promotion_history_ref(
+            **common,
+            event_name="push",
+            base_ref="",
+            head_ref="",
+            event_ref="refs/heads/main",
+            promotion_ref=promotion,
+        )
+        assert push_history == policy_history
+
+        # The push uses the immutable associated-PR head SHA, so a later
+        # develop advance neither changes provenance nor falsely blocks it.
+        advanced_develop = git(
+            repo, "commit-tree", git(repo, "rev-parse", f"{promotion}^{{tree}}"),
+            "-p", promotion, input_text="later develop advance\n",
+        )
+        git(repo, "branch", "-f", "develop", advanced_develop)
+        assert MODULE.canonical_first_promotion_history_ref(
+            **common,
+            event_name="push",
+            base_ref="",
+            head_ref="",
+            event_ref="refs/heads/main",
+            promotion_ref=promotion,
+        ) == policy_history
+
+        expect_value_error(
+            "missing outside the initial bootstrap",
+            lambda: MODULE.canonical_first_promotion_history_ref(
+                **{**common, "previous_commit": policy_history},
+                event_name="push", base_ref="", head_ref="",
+                event_ref="refs/heads/main", promotion_ref=promotion,
+            ),
+        )
+        expect_value_error(
+            "canonical develop -> main",
+            lambda: MODULE.canonical_first_promotion_history_ref(
+                **common,
+                event_name="pull_request", base_ref="develop", head_ref="feature/f1",
+                event_ref="refs/pull/1/merge", promotion_ref=promotion,
+            ),
+        )
+        expect_value_error(
+            "canonical-repository develop",
+            lambda: MODULE.canonical_first_promotion_history_ref(
+                **{**common, "head_repository": "fork/repo"},
+                event_name="pull_request", base_ref="main", head_ref="develop",
+                event_ref="refs/pull/1/merge", promotion_ref=promotion,
+            ),
+        )
+        expect_value_error(
+            "canonical-repository develop",
+            lambda: MODULE.canonical_first_promotion_history_ref(
+                **{**common, "head_repository": ""},
+                event_name="pull_request", base_ref="main", head_ref="develop",
+                event_ref="refs/pull/1/merge", promotion_ref=promotion,
+            ),
+        )
+        expect_value_error(
+            "two-parent merge",
+            lambda: MODULE.canonical_first_promotion_history_ref(
+                **{**common, "current_ref": promotion},
+                event_name="push", base_ref="", head_ref="",
+                event_ref="refs/heads/main", promotion_ref=promotion,
+            ),
+        )
+        expect_value_error(
+            "refs/heads/main",
+            lambda: MODULE.canonical_first_promotion_history_ref(
+                **common,
+                event_name="push", base_ref="", head_ref="",
+                event_ref="refs/heads/develop", promotion_ref=promotion,
+            ),
+        )
+
+        # A conflict-resolution or payload change in the promotion merge is
+        # not the already-reviewed develop tree and must not consume the pin.
+        write(repo, "merge-only.txt", "not on develop\n")
+        git(repo, "add", "merge-only.txt")
+        changed_tree = git(repo, "write-tree")
+        changed_merge = git(
+            repo, "commit-tree", changed_tree, "-p", first_main, "-p", promotion,
+            input_text="changed promotion tree\n",
+        )
+        expect_value_error(
+            "merge tree differs",
+            lambda: MODULE.canonical_first_promotion_history_ref(
+                **{**common, "current_ref": changed_merge},
+                event_name="push", base_ref="", head_ref="",
+                event_ref="refs/heads/main", promotion_ref=promotion,
+            ),
+        )
+
+        # A feature-derived second parent cannot impersonate develop on the
+        # push path even if it contains all policy history and keeps its tree.
+        feature_commit = git(
+            repo, "commit-tree", changed_tree, "-p", promotion,
+            input_text="feature candidate\n",
+        )
+        feature_merge = git(
+            repo, "commit-tree", changed_tree, "-p", first_main, "-p", feature_commit,
+            input_text="feature to main\n",
+        )
+        expect_value_error(
+            "not canonical develop",
+            lambda: MODULE.canonical_first_promotion_history_ref(
+                **{**common, "current_ref": feature_merge},
+                event_name="push", base_ref="", head_ref="",
+                event_ref="refs/heads/main", promotion_ref=promotion,
+            ),
+        )
+        expect_value_error(
+            "immutable canonical develop SHA",
+            lambda: MODULE.canonical_first_promotion_history_ref(
+                **common,
+                event_name="push", base_ref="", head_ref="",
+                event_ref="refs/heads/main", promotion_ref="",
+            ),
+        )
+        expect_value_error(
+            "immutable canonical develop SHA",
+            lambda: MODULE.canonical_first_promotion_history_ref(
+                **common,
+                event_name="push", base_ref="", head_ref="",
+                event_ref="refs/heads/main", promotion_ref="refs/heads/develop",
+            ),
+        )
+
+        # Even a structurally valid merge fails if the promoted branch has no
+        # lifecycle history to anchor gap expansion and append-only checks.
+        git(repo, "switch", "-q", "--orphan", "no-report-develop")
+        git(repo, "rm", "-q", "-rf", ".")
+        write(repo, "orphan.txt", "no report\n")
+        orphan_base = commit(repo, "orphan base")
+        write(repo, "orphan-candidate.txt", "no lifecycle history\n")
+        orphan_promotion = commit(repo, "orphan candidate")
+        orphan_tree = git(repo, "rev-parse", f"{orphan_promotion}^{{tree}}")
+        orphan_merge = git(
+            repo, "commit-tree", orphan_tree, "-p", orphan_base, "-p", orphan_promotion,
+            input_text="orphan promotion\n",
+        )
+        expect_value_error(
+            "prior lifecycle gap report",
+            lambda: MODULE.canonical_first_promotion_history_ref(
+                repo,
+                orphan_base,
+                current_ref=orphan_merge,
+                event_name="push",
+                base_ref="",
+                head_ref="",
+                event_ref="refs/heads/main",
+                repository="test/repo",
+                head_repository="test/repo",
+                promotion_ref=orphan_promotion,
+                accepted_base=orphan_base,
+                policy_base=orphan_base,
+            ),
+        )
 
     print("skill_lifecycle_test: PASS")
 

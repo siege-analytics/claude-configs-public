@@ -39,7 +39,14 @@
 
 **Severity:** MEDIUM
 **Likelihood:** MEDIUM
-**Failure:** Quoted spaces/newlines or quoted literal glob characters become false positives.
-**Mitigation:** Track quote context for newlines, comments, heredocs, and pathname expansion; positive fixtures preserve quoted multiline `-m`, paths with spaces, quoted `?`, absolute `cd`, and in-repository symlink targets.
+**Failure:** Quoted spaces/newlines, quoted literal glob characters, or harmless long-form commit flags become false positives.
+**Mitigation:** Track quote context for newlines, comments, heredocs, and pathname expansion; positive fixtures preserve quoted multiline `-m`, paths with spaces, quoted `?`, absolute `cd`, in-repository symlink targets, and long-form non-message flags.
+
+## Tiger 7 - New enforcement helper falls below its callers' tier
+
+**Severity:** HIGH
+**Likelihood:** HIGH
+**Failure:** A later helper-only modification, deletion, or rename changes ticket allow/block behavior while declaring Tier B.
+**Mitigation:** Add the exact helper to the F4 Tier C path pattern, pin both real caller edges, and include it in exhaustive modification/deletion/rename/declared-B fixtures.
 
 Implementation may proceed: YES

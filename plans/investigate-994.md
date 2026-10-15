@@ -16,6 +16,8 @@ The pre-tool hook scanned the full shell command text rather than the message Gi
 
 **Shell transformation boundary - PROBED.** Shell comments, newlines, command chains, command substitution, tilde/glob/brace expansion, wrappers, relative `cd` under `CDPATH`, and opaque stdin can make shell execution differ from source spelling. They require an exact bounded parser or documented fail-closed treatment, never evaluation.
 
+**F4 dependency boundary - PROBED.** On accepted develop commit `f97d194fedf1eda053a16e938851c6151f308d72`, `python3 bin/review-risk.py --paths hooks/lib/commit-message.py --declared B` returned valid Tier B even though both `ticket-required.sh` and native `commit-msg` trust the helper to allow or block commits. The accepted F4 audit provides exact helper-edge, modification, deletion, rename, and downgrade fixtures that can be extended narrowly.
+
 ## Disposition
 
 Implement one shared Python resolver/validator. The PreToolUse hook uses command mode; native `commit-msg` uses file mode and cleanup-stable validation. Supported deterministic forms are explicit and all uncertain forms fail closed with remediation.
