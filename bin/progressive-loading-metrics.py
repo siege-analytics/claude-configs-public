@@ -11,7 +11,11 @@ def run(prompt:str,repo:str="other/repo")->dict:
 def inject(prompt:str)->int:
  p=subprocess.run(["bash",str(ROOT/"hooks/resolver/inject-resolver.sh")],input=json.dumps({"prompt":prompt,"cwd":"/tmp"}),text=True,capture_output=True,timeout=20,env={**os.environ,"CRAFT_AGENT_PLANS_PATH":"/nonexistent"})
  if p.returncode:raise ValueError(p.stderr)
- return len(p.stdout)
+ # Hooks emit absolute, installation-root-correct paths. Normalize only that
+ # variable prefix so the tracked metric is reproducible across local clones,
+ # CI workspaces, and installed package roots.
+ rendered=p.stdout.replace(f"| path={ROOT.resolve()}/","| path=<installation-root>/")
+ return len(rendered)
 def build()->dict:
  overflow_prompt=" ".join(f"[skill:{slug}]" for slug in ["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","spatial","coding","python","testing-frameworks","sql"])
  multi_prompt="review Python Spark SQL Databricks Unity Catalog spatial PostGIS code"

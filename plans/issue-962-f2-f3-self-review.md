@@ -4,6 +4,7 @@
 
 Domain(s): software engineering
 Geospatial cross-cut: no (data/geospatial routing is regression-tested but not changed)
+Working as: software engineer, tech lead
 Roles: Peer reviewer = package/runtime correctness; Lead reviewer = epic closure and blast-radius review
 Goal source: https://github.com/siege-analytics/claude-configs-public/issues/962#issuecomment-6184498727
 Goal source verification: GitHub issue read returned OPEN F2/F3 with installed-package closure criteria; latest coordinator claim is `issuecomment-6184547105`.
@@ -15,6 +16,8 @@ Hostile-review-artifact: plans/issue-962-f2-f3-hostile-review.md
 Project-contribution: all advertised hook-bearing release layouts become independently executable consumer packages with readable, provenance-preserving capability instructions.
 
 ## Peer review
+
+Shelf references: writing-code:1 (runtime correctness), writing-tests:1 (falsifiable installed behavior), writing-claims:8 (quantified evidence).
 
 ### Package/runtime mechanics shelf
 
