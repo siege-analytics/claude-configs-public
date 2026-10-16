@@ -44,6 +44,14 @@ jobs:
           python3 bin/_test/gate_contract_test.py
           python3 bin/gate_contract.py --check --probe --generated-root dist
 
+      - name: Bounded work coordination and recovery
+        run: |
+          python3 bin/_test/work_cycle_test.py
+          python3 bin/ontology.py --validate-bindings examples/coordination/ontology-bindings.json
+          for pkg in claude-code craft-agent; do
+            python3 "dist/$pkg/skills/drive-while-away/scripts/work_cycle.py" examples/coordination/work-cycle.json
+          done
+
       - name: Canonical terminology and generated wiki
         run: |
           python3 bin/_test/ontology_test.py

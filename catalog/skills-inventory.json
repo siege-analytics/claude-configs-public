@@ -8758,10 +8758,10 @@
     },
     {
       "canonical_source": "skills/drive-while-away/SKILL.md",
-      "characters": 23171,
-      "content_sha256": "1b3230d74a1111131521b1431a5c8f11d55f71a85747889a6d504e5a14dd227e",
+      "characters": 24027,
+      "content_sha256": "64fd8eebb84fd0e3dcc2b1e4f3fa0858a815d562c9198681da601374125a7e02",
       "description": "When the operator hands off continuous work for an extended period (\"drive while I'm gone,\" \"monitor X overnight,\" \"keep going while I'm out,\" \"watch this and handle it\"), set up an autonomous-re-entry mechanism (CronCreate for regular Claude/Codex sessions, ScheduleWakeup for /loop sessions) when available, but do not claim operator-visible cadence unless the runtime proves those events render in the operator UI. In Craft Agent, use foreground tool calls, durable artifacts, and issue/PR updates for visible evidence; treat async wakeups as agent-internal until proven otherwise. Continuation is automatic only when the scheduler exists and is wired; stopping requires an active decision. Forbids the \"do one task, present a progress report, wait for praise\" anti-pattern.",
-      "estimated_tokens": 5793,
+      "estimated_tokens": 6007,
       "frontmatter_name": "drive-while-away",
       "generated_outputs": [
         "dist/nested/skills/drive-while-away",
@@ -8778,12 +8778,13 @@
         "plans/self-review-257-operator-visible-cadence.md",
         "plans/self-review-628-standing-order-progress-summary-stop.md",
         "skills/RESOLVER.md",
-        "skills/_session-coordination-rules.md"
+        "skills/_session-coordination-rules.md",
+        "skills/stalled-session-recovery/SKILL.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 272,
+      "lines": 286,
       "owner": [
         "unknown"
       ],
@@ -10771,10 +10772,10 @@
     },
     {
       "canonical_source": "skills/stalled-session-recovery/SKILL.md",
-      "characters": 11481,
-      "content_sha256": "eb8cb77aae3ab0afd14fec288c173b163ff3c3a04489c74c067c8e86eacdff7c",
+      "characters": 12019,
+      "content_sha256": "35640d535ad53c350e240762c459bc47531e796c35abf2fa941195c5f17337d1",
       "description": "How to diagnose and recover a session that has stopped producing useful turns -- stuck on a repeating error, silent for an abnormal stretch, or looping on the same tool call. Invoke when checking on a session that \"seems stuck,\" when a session's own error looks like it should have cleared but hasn't, when a hub is deciding whether to nudge or respawn a worker, or when auditing a fleet of sessions for health. Covers three failure shapes (transient error, persistent misconfiguration, wedged tool call) with distinct diagnostics and distinct fixes, the discipline of reading the last coherent content instead of trusting the error label, and how to respawn without duplicating work or losing in-flight state.",
-      "estimated_tokens": 2871,
+      "estimated_tokens": 3005,
       "frontmatter_name": "stalled-session-recovery",
       "generated_outputs": [
         "dist/nested/skills/stalled-session-recovery",
@@ -10790,18 +10791,18 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 88,
+      "lines": 96,
       "owner": [
         "unknown"
       ],
       "project": null,
       "quality": {
         "completeness": 20,
-        "cross_references": 50,
+        "cross_references": 100.0,
         "grade": "F",
         "provenance": 0,
         "structure": 100.0,
-        "total": 42.5
+        "total": 55.0
       },
       "rule_definitions": [],
       "slug": "stalled-session-recovery",
@@ -11450,9 +11451,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2650936,
+    "characters": 2652330,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 662813,
+    "estimated_tokens": 663161,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -11473,7 +11474,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1254542
+      "unclassified": 1255936
     },
     "tier_counts": {
       "on-demand": 15,
@@ -11485,7 +11486,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 313679
+      "unclassified": 314027
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

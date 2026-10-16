@@ -8,6 +8,20 @@ allowed-tools: Read Grep Glob Bash Write Edit
 
 The operator handed off the keyboard. Your job is to keep working autonomously across the gap they cannot bridge by typing -- not to do one thing and stop for acknowledgment.
 
+## Bounded checkpoints and recovery
+
+For multi-step work, use the local journal helper and operating cycle in
+[bounded-work checkpoints](references/bounded-work.md). Record objective,
+owner, scope, bounded chunk, exact candidate, reported review/check state,
+unresolved findings and next action before long waits or handoffs. Publish
+material transitions and configured heartbeats through the available user
+channel; reading/polling and queued messages are not progress. Select budgets
+from the applicable host/session instructions. Repeated failure classes require
+a design checkpoint for the failing approach while independent authorized work
+can continue. The helper supplies durable metadata, not a timer, transport,
+authorization decision or proof of runtime enforcement. Follow its resume and
+supersession sequence after interruption or compaction.
+
 ## When to invoke
 
 The operator's message contains any of these shapes:
