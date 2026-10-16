@@ -39,6 +39,10 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "bin/skill-inventory.py",
  "bin/validate-hooks.py",
  "bin/_test/review_risk_test.py",
+ "bin/_test/native_push_test.py",
+ "bin/install-hooks.sh",
+ "bin/verify-enforcement.sh",
+ ".githooks/pre-push",
  "hooks/_test/review_risk_policy.test.sh",
 ]
 ADVISORY_DEPENDENCY_EXCLUSIONS = {"hooks/lib/log-block.sh"}
@@ -57,7 +61,6 @@ hooks/git/no-broad-staging.sh
 hooks/git/no-sensitive-files.sh
 hooks/git/post-error-revision-required.sh
 hooks/git/pr-base-guard.sh
-hooks/git/pre-push-self-review.sh
 hooks/git/self-review.sh
 hooks/git/survey-context.sh
 hooks/git/test-tracking-guard.sh
@@ -78,7 +81,7 @@ hooks/write/write-guard.sh
 REQUIRED_SOURCE_ENTRYPOINT_COUNTS = {path:(4 if path.startswith("hooks/write/") else 1) for path in REQUIRED_SOURCE_ENTRYPOINTS}
 REQUIRED_MANIFEST_ENTRYPOINTS = set("""
 hooks/git/branch-guard.sh
-hooks/git/self-review.sh
+hooks/git/pre-push-self-review.sh
 hooks/git/test-guard.sh
 hooks/resolver/investigate-gate-guard.sh
 hooks/resolver/skill-enforcement-gate.sh
@@ -87,10 +90,11 @@ hooks/resolver/think-gate-guard.sh
 REQUIRED_MANIFEST_ENTRYPOINT_COUNTS = {path:1 for path in REQUIRED_MANIFEST_ENTRYPOINTS}
 REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS = {"hooks/resolver/ca-enforcement-gate.sh"}
 REQUIRED_GENERATED_SETTINGS_ENTRYPOINT_COUNTS = {path:1 for path in REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS}
-REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "3e02bd03cef21c1120613399476fb5f3e9a46b25b329bc905c56689b824d92f1"
-REQUIRED_MANIFEST_REGISTRATIONS_SHA256 = "791911dc5e3d0f9640807e59c22ed548e17b43721f6cd8d67ea11fb76a44cab2"
+REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "67e52755ef66fb4ba9ad1bf32df1e51653924b41ccad535aa7126050e009549c"
+REQUIRED_MANIFEST_REGISTRATIONS_SHA256 = "868ca27fe41ca9d2e6f9335e2ddaf05d7cb992617b42f24cbc3ff2794099414b"
 REQUIRED_GENERATED_SETTINGS_REGISTRATIONS_SHA256 = "19a972d9471da0d66c46568c0efb8a16c356ed66f620702b7f06b8251bc809f0"
 CI_INVOCATION_SITES = [
+ (".github/workflows/build-and-publish.yml","bin/_test/native_push_test.py","run: python3 bin/_test/native_push_test.py",1),
  ("bin/generated-source-authority.py","bin/skill-inventory.py",'[sys.executable, str(root / "bin" / "skill-inventory.py"), "--check"],',1),
  ("bin/generated-source-authority.py","bin/build.py",'[sys.executable, str(root / "bin" / "build.py"), "--dist", str(fresh_dist)],',1),
  ("bin/kernel-budget.py","bin/generated-source-authority.py",'[sys.executable, str(root / "bin" / "generated-source-authority.py"), "--check"],',1),

@@ -1,25 +1,21 @@
 #!/usr/bin/env bash
-# Verify that enforcement is actually LIVE in a target root, not merely that
-# the advisory files were copied in.
+# Verify local wiring and executable behavior in disposable fixtures.
+# This does not establish that a live Craft backend invokes the configured hooks.
 #
-# This is the "corner-cutting agent cannot evade it" acceptance probe. Skills
-# and rules can be perfectly authored and perfectly synced and still be
-# honor-system if the hook wiring, compact-kernel mount, and automation
-# watchdog were never installed. A sync that copies skills/ alone passes every
-# file-presence check and still leaves enforcement dark. This probe fails when
-# that happens.
-#
-# It runs a LIVE block test: it drives the installed ca-enforcement-gate.sh
-# with a mock resolver whose think-gate reports STALE DESIGN, and asserts the
-# gate emits a single {"continue": false} object. A gate that cannot block is
-# not enforcement.
+# Prompt-wrapper conversion is exercised with a mock blocking child; native Git
+# range behavior is exercised with actual local pushes. Files and these probes
+# establish neither host invocation nor protected server-side authorization.
+# Local Git hooks can be bypassed with --no-verify.
 #
 # Usage:
 #   bash bin/verify-enforcement.sh --target <root> [--mode craft-agent|direct]
+#       [--git-repo <consumer-root>]
 #
-#   --target <root>   Workspace root (CA) or repo root (direct-clone) to check.
+#   --target <root>   Installed package/workspace root to check.
 #   --mode            craft-agent (default) or direct. Selects the settings
 #                     filename and whether CLAUDE.md / automations are required.
+#   --git-repo        Exact consumer Git root whose core.hooksPath must resolve
+#                     to the target's packaged .githooks directory.
 #
 # Exit codes:
 #   0  every enforcement-critical check passed
@@ -33,6 +29,7 @@ set -uo pipefail
 
 TARGET=""
 MODE="craft-agent"
+NATIVE_GIT_REPO=""
 # Code-owned trust anchor for the canonical compact kernel. This verifier is a
 # Tier C surface; never derive the expected digest from the mutable target.
 EXPECTED_KERNEL_SHA256="00fd4c7c2aee069ed5a6349bbfa4a925ab7f4c60a2a44a5b5134f859d40b3842"
@@ -40,7 +37,7 @@ KERNEL_VERIFIED=0
 
 usage() {
     cat <<'USAGE'
-Usage: bash bin/verify-enforcement.sh --target <root> [--mode craft-agent|direct]
+Usage: bash bin/verify-enforcement.sh --target <root> [--mode craft-agent|direct] [--git-repo <consumer-root>]
 USAGE
 }
 
@@ -52,6 +49,9 @@ while [[ $# -gt 0 ]]; do
         --mode)
             [[ -z "${2:-}" ]] && { echo "ERROR: --mode requires a value" >&2; exit 2; }
             MODE="$2"; shift 2 ;;
+        --git-repo)
+            [[ -z "${2:-}" ]] && { echo "ERROR: --git-repo requires a path" >&2; exit 2; }
+            NATIVE_GIT_REPO="${2%/}"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "ERROR: unknown arg: $1" >&2; usage >&2; exit 2 ;;
     esac
@@ -100,7 +100,7 @@ else
     SETTINGS="$TARGET/.claude/settings.local.json"
 fi
 
-# --- Check 1: the LIVE block test (the load-bearing check) -------------------
+# --- Check 1: local wrapper conversion probe -------------------
 
 GATE="$HOOKS_ROOT/resolver/ca-enforcement-gate.sh"
 if [[ ! -f "$GATE" ]]; then
@@ -138,9 +138,9 @@ MOCK
     probe_out="$(bash "$mock_resolver/ca-enforcement-gate.sh" 2>/dev/null || true)"
     if printf '%s' "$probe_out" \
         | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get("continue") is False else 1)' 2>/dev/null; then
-        ok "live block test: gate emitted continue:false on STALE DESIGN"
+        ok "local block probe: gate emitted continue:false on STALE DESIGN"
     else
-        fail "live block test: gate did NOT emit continue:false (enforcement is advisory-only)"
+        fail "local block probe: gate did NOT emit continue:false (enforcement is advisory-only)"
         echo "         gate stdout was: ${probe_out:-<empty>}" >&2
     fi
 fi
@@ -149,7 +149,7 @@ fi
 
 if [[ ! -f "$SETTINGS" ]]; then
     fail "settings file missing: $SETTINGS (hooks not registered)"
-elif ! python3 -c "import json; json.load(open('$SETTINGS'))" 2>/dev/null; then
+elif ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$SETTINGS" 2>/dev/null; then
     fail "settings file is not valid JSON: $SETTINGS"
 else
     # Extract the registered wrapper command. #843: accepting a substring like
@@ -225,9 +225,9 @@ MOCK
         registered_probe_out="$(printf '%s' '{"prompt":"registered-wrapper-probe"}' | bash "$mock_resolver/ca-enforcement-gate.sh" 2>/dev/null || true)"
         if printf '%s' "$registered_probe_out" \
             | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get("continue") is False else 1)' 2>/dev/null; then
-            ok "registered wrapper live block test: emitted continue:false on STALE DESIGN"
+            ok "registered wrapper local block probe: emitted continue:false on STALE DESIGN"
         else
-            fail "registered wrapper live block test: registered gate did NOT emit continue:false"
+            fail "registered wrapper local block probe: registered gate did NOT emit continue:false"
             echo "         registered gate stdout was: ${registered_probe_out:-<empty>}" >&2
         fi
     fi
@@ -265,7 +265,7 @@ fi
 # --- Check 5: enforcement manifest present -----------------------------------
 
 if [[ -f "$TARGET/enforcement-manifest.json" ]]; then
-    gate_count="$(python3 -c "import json; print(len(json.load(open('$TARGET/enforcement-manifest.json')).get('gates', [])))" 2>/dev/null || echo 0)"
+    gate_count="$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1])).get("gates", [])))' "$TARGET/enforcement-manifest.json" 2>/dev/null || echo 0)"
     if [[ "$gate_count" -gt 0 ]]; then
         ok "enforcement-manifest.json present ($gate_count gates)"
     else
@@ -273,6 +273,91 @@ if [[ -f "$TARGET/enforcement-manifest.json" ]]; then
     fi
 else
     fail "enforcement-manifest.json missing (CA enforcement not deployed)"
+fi
+
+# --- Check 6: native Git registration and real range push -------------------
+
+NATIVE_HOOKS="$TARGET/.githooks"
+NATIVE_PRE_PUSH="$NATIVE_HOOKS/pre-push"
+if [[ ! -f "$NATIVE_PRE_PUSH" || ! -x "$NATIVE_PRE_PUSH" ]]; then
+    fail "native .githooks/pre-push missing or not executable"
+elif [[ ! -f "$TARGET/hooks/git/pre-push-self-review.sh" || ! -x "$TARGET/hooks/git/pre-push-self-review.sh" ]]; then
+    fail "range-aware hooks/git/pre-push-self-review.sh missing or not executable"
+elif [[ ! -f "$TARGET/bin/review-risk.py" || ! -f "$TARGET/catalog/review-risk-policy.json" ]]; then
+    fail "native pre-push trusted risk helper or policy missing"
+else
+    if [[ -n "$NATIVE_GIT_REPO" ]]; then
+        git_top=$(git -C "$NATIVE_GIT_REPO" rev-parse --show-toplevel 2>/dev/null || true)
+        requested_real=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$NATIVE_GIT_REPO")
+        git_top_real=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "${git_top:-/nonexistent}")
+        configured=$(git -C "$NATIVE_GIT_REPO" config --get core.hooksPath 2>/dev/null || true)
+        if [[ -z "$git_top" || "$requested_real" != "$git_top_real" || -z "$configured" ]]; then
+            fail "consumer repository or core.hooksPath registration is missing/ambiguous: $NATIVE_GIT_REPO"
+        else
+            if [[ "$configured" = /* ]]; then
+                configured_path="$configured"
+            else
+                configured_path="$NATIVE_GIT_REPO/$configured"
+            fi
+            configured_real=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$configured_path")
+            expected_real=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$NATIVE_HOOKS")
+            if [[ "$configured_real" == "$expected_real" ]]; then
+                ok "consumer core.hooksPath resolves to installed native hooks"
+            else
+                fail "consumer core.hooksPath resolves outside installed native hooks: $configured"
+            fi
+        fi
+    else
+        warn "no consumer repository supplied; native consumer registration is unverified"
+    fi
+
+    native_probe=$(mktemp -d)
+    trap 'rm -rf "${probe_dir:-}" "${native_probe:-}"' EXIT
+    remote="$native_probe/remote.git"
+    consumer="$native_probe/consumer"
+    git init -q --bare "$remote"
+    git init -q "$consumer"
+    git -C "$consumer" config user.email probe@example.invalid
+    git -C "$consumer" config user.name "Native Hook Probe"
+    git -C "$consumer" remote add origin "$remote"
+    printf 'baseline\n' > "$consumer/README.md"
+    git -C "$consumer" add README.md
+    GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z \
+        git -C "$consumer" commit -q --no-verify -m 'baseline'
+    git -C "$consumer" branch -M main
+    git -C "$consumer" push -q --no-verify -u origin main
+    git -C "$consumer" checkout -q -b feature
+    git -C "$consumer" config core.hooksPath "$NATIVE_HOOKS"
+
+    printf 'missing source evidence\n' > "$consumer/probe.py"
+    git -C "$consumer" add probe.py
+    git -C "$consumer" commit -q --no-verify -m $'test: invalid interior #845\n\nReview-Tier: B\nSelf-Review: intentionally incomplete'
+    printf 'valid head after invalid interior\n' > "$consumer/head.md"
+    git -C "$consumer" add head.md
+    git -C "$consumer" commit -q --no-verify -m $'docs: valid head #845\n\nReview-Tier: A\nSelf-Review: probe'
+
+    invalid_log="$native_probe/invalid-push.log"
+    if git -C "$consumer" push origin HEAD:refs/heads/feature >"$invalid_log" 2>&1; then
+        fail "real native push accepted an invalid interior commit"
+    elif git --git-dir="$remote" show-ref --verify --quiet refs/heads/feature; then
+        fail "denied native push still changed the remote feature ref"
+    elif grep -qF 'BLOCKED by pre-push-self-review hook' "$invalid_log"; then
+        ok "real native push rejected invalid interior evidence with no remote side effect"
+    else
+        fail "native push failed without observed range-hook denial"
+    fi
+
+    git -C "$consumer" reset -q --hard origin/main
+    printf 'repaired range\n' > "$consumer/repaired.md"
+    git -C "$consumer" add repaired.md
+    git -C "$consumer" commit -q --no-verify -m $'docs: repaired range #845\n\nReview-Tier: A\nSelf-Review: probe'
+    repaired_head=$(git -C "$consumer" rev-parse HEAD)
+    if git -C "$consumer" push -q origin HEAD:refs/heads/feature \
+        && [[ "$(git --git-dir="$remote" rev-parse refs/heads/feature 2>/dev/null || true)" == "$repaired_head" ]]; then
+        ok "same registered hook permits repaired range and advances only the intended ref"
+    else
+        fail "registered native hook did not permit the repaired valid range"
+    fi
 fi
 
 # --- Craft-Agent-only checks -------------------------------------------------
@@ -369,7 +454,7 @@ PY
     # session list, so standing-order continuity is delivered by the always-on
     # injected resolver rules instead. Its absence is therefore not an
     # enforcement failure; warn (advisory), do not fail. The load-bearing
-    # pass/fail is the blocking gate's live block test (Checks 1-6).
+    # pass/fail is the blocking gate's local probe (Checks 1-6).
     AUTO="$TARGET/automations.json"
     if [[ ! -f "$AUTO" ]]; then
         warn "automations.json has no standing-order watchdog (opt-in; continuity via injected rules)"
@@ -395,10 +480,10 @@ fi
 
 echo
 if [[ $errors -gt 0 ]]; then
-    echo "ENFORCEMENT NOT LIVE: $errors check(s) failed." >&2
-    echo "Skills may be present and current, but they are advisory-only." >&2
+    echo "LOCAL ENFORCEMENT PROBES FAILED: $errors check(s) failed." >&2
+    echo "Local wiring or executable behavior is incomplete; live host status is unverified." >&2
     echo "Run bin/install.sh (Craft Agent) or bin/install-hooks.sh (direct) to wire them." >&2
     exit 1
 fi
-echo "ENFORCEMENT LIVE: all checks passed for $TARGET"
+echo "LOCAL ENFORCEMENT PROBES PASSED for $TARGET; live host invocation remains unverified."
 exit 0

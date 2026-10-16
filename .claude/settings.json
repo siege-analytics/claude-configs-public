@@ -99,11 +99,6 @@
           },
           {
             "type": "command",
-            "command": "hooks/git/pre-push-self-review.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
             "command": "hooks/git/self-review.sh",
             "timeout": 10
           },

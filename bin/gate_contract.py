@@ -677,7 +677,13 @@ def run_pre_push_probe(executable: Path, contract: dict[str, Any]) -> None:
         target.parent.mkdir(parents=True)
         shutil.copy2(executable, target)
         hooks = package / "hooks/git"; hooks.mkdir(parents=True)
-        for name, code in (("self-review.sh", 0), ("branch-guard.sh", 1), ("test-guard.sh", 0)):
+        # This bounded probe checks delegation only. Real native range behavior
+        # is exercised separately through registered consumer Git pushes (#845).
+        (package / "bin").mkdir()
+        (package / "catalog").mkdir()
+        (package / "bin/review-risk.py").write_text("# dispatch fixture\n")
+        (package / "catalog/review-risk-policy.json").write_text("{}\n")
+        for name, code in (("pre-push-self-review.sh", 0), ("branch-guard.sh", 1), ("test-guard.sh", 0)):
             gate = hooks / name
             gate.write_text(f"#!/usr/bin/env bash\nexit {code}\n", encoding="utf-8")
             gate.chmod(0o755)
