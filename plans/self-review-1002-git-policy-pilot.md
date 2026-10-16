@@ -33,8 +33,8 @@ Implementation self-review confirms topology remains first and unchanged; provid
 
 - 13 focused disposable/provider scenarios pass, including exact default-workflow identity, registered topology-entrypoint event denial, entrypoint/validator mutations, six installed-package mutations, and canonical-promotion negatives.
 - 34 effective-policy and 21 gate-contract scenarios pass at the selected snapshot/contract.
-- Current provider-repair validation passes 13/13 protected-policy/provider scenarios, 10/10 topology scenarios, 26/26 Python modules, 36/36 native hook suites and 2/2 workflow suites.
-- Canonical build/check, skill inventory, generated authority (198 sources / 804 snapshots / 2,912 mappings on the pre-#1016 base), progressive-loading metrics, review-risk metrics, kernel budget, ontology, three hook-package validators and flat-layout validation pass with no generated tracked drift.
+- Final combined provider-repair validation passes 13/13 protected-policy/provider scenarios, 10/10 topology scenarios, 34/34 effective-policy scenarios, 21/21 gate-contract scenarios, 28/28 Python modules, 36/36 native hook suites and 2/2 workflow suites.
+- The accepted scanner sequence and four-package documentation/runtime suites pass after integration. Canonical build/check, skill inventory, generated authority (198 sources / 804 snapshots / 2,916 mappings), progressive-loading metrics, review-risk metrics, kernel budget, ontology, three hook-package validators and flat-layout validation pass with no generated tracked drift.
 - Two synthetic projects share one recomputed parent-content SHA-256 and produce distinct effective-policy SHA-256 identities.
 - Every commit in exact `base..head` is evaluated; supported commits have at most two parents.
 - Seven policy/validator dependencies plus the registered topology entrypoint are byte-bound to exact base blobs. The actual executed workflow is separately bound to canonical `origin/main`, `GITHUB_WORKFLOW_REF`, `GITHUB_WORKFLOW_SHA`, its Git blob and SHA-256.
