@@ -60,7 +60,7 @@ class WorkCycleTest(unittest.TestCase):
         self.candidate(SHA_B)
         self.assertEqual(self.state["review"]["verdict"], "pending")
         self.assertEqual(self.state["checks"]["status"], "pending")
-        self.assertTrue(any(r["sha"] == SHA_A and r["invalidated"] for r in self.state["review_history"]))
+        self.assertTrue(all(r["invalidated"] for r in self.state["review_history"] if r["sha"] == SHA_A))
         with self.assertRaisesRegex(ValueError, "different candidate"):
             self.step("review", {"sha": SHA_A, "verdict": "accepted", "failure_class": "", "evidence": ["stale"]})
 
@@ -110,6 +110,19 @@ class WorkCycleTest(unittest.TestCase):
         self.step("resolve-finding", {"finding_id": "F1", "evidence": ["regression.log"]})
         self.assertEqual(self.state["review"]["verdict"], "pending")
         self.review(proof="pr/review/2")
+
+    def test_invalidated_receipt_cannot_be_reused_after_resolution_or_return_to_head(self):
+        self.candidate(); self.review()
+        self.step("finding", {"finding_id": "F1", "summary": "New counterexample", "evidence": ["repro"]})
+        self.step("resolve-finding", {"finding_id": "F1", "evidence": ["resolution"]})
+        self.review()
+        self.assertEqual(self.state["review"]["verdict"], "changes-required")
+        self.review(proof="pr/review/2")
+        self.candidate(SHA_B); self.candidate(SHA_A)
+        self.review(proof="pr/review/2")
+        self.assertEqual(self.state["review"]["verdict"], "pending")
+        self.review(proof="pr/review/3")
+        self.assertEqual(self.state["review"]["verdict"], "accepted")
 
     def test_supersession_preserves_pending_evidence_and_fences_old_owner(self):
         self.candidate(); self.review("queued", proof="review/request")

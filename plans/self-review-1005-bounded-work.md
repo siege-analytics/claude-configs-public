@@ -40,10 +40,15 @@ Both packaged skills carry the same helper without changing the builder.
 
 ## Quantified claims
 
-Fourteen focused scenarios pass locally. The synthetic journal reports a queued
+Fifteen focused scenarios pass locally. The synthetic journal reports a queued
 review, never acceptance. The build packages three owned files for the drive
 skill in each layout. Full-suite results and hosted CI are recorded in the PR;
 this document does not assert they passed before terminal evidence exists.
+
+Follow-up self-review corrected ambiguous history: invalidation now marks the
+original receipt instead of appending a second copy with a different validity
+flag. An invalidated receipt cannot become current again after finding resolution
+or returning to a previous SHA; fresh review evidence is required.
 
 ## Canary and rollback
 

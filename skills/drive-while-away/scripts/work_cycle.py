@@ -118,8 +118,9 @@ def transition(previous, event):
     elif kind == "candidate":
         sha(data["sha"])
         if data["sha"] != s["candidate_sha"]:
-            if s["candidate_sha"] is not None:
-                s["review_history"].append({"sha": s["candidate_sha"], **s["review"], "invalidated": True})
+            for receipt in s["review_history"]:
+                if receipt["sha"] == s["candidate_sha"]:
+                    receipt["invalidated"] = True
             s["candidate_sha"] = data["sha"]
             s["review"] = {"verdict": "pending", "evidence": []}
             s["checks"] = {"status": "pending", "evidence": []}
@@ -142,7 +143,10 @@ def transition(previous, event):
             record = {"verdict": verdict, "evidence": data["evidence"]}
             # Re-delivery under a new transport ID must not consume the budget twice.
             receipt = {"sha": data["sha"], **record, "failure_class": data["failure_class"], "invalidated": False}
-            if receipt not in s["review_history"]:
+            receipt_key = {key: value for key, value in receipt.items() if key != "invalidated"}
+            prior_keys = [{key: value for key, value in old.items() if key != "invalidated"}
+                          for old in s["review_history"]]
+            if receipt_key not in prior_keys:
                 s["review_history"].append(receipt)
                 s["review"] = record
                 if verdict == "changes-required":
@@ -161,8 +165,9 @@ def transition(previous, event):
         evidence(data["evidence"])
         require(data["finding_id"] not in s["findings"], "finding already exists")
         s["findings"][data["finding_id"]] = {"summary": data["summary"], "evidence": data["evidence"], "resolved_by": None}
-        if s["review"]["verdict"] == "accepted":
-            s["review_history"].append({"sha": s["candidate_sha"], **s["review"], "invalidated": True})
+        for receipt in s["review_history"]:
+            if receipt["sha"] == s["candidate_sha"] and receipt["verdict"] == "accepted":
+                receipt["invalidated"] = True
         s["review"] = {"verdict": "changes-required", "evidence": data["evidence"]}
         s["state"] = "blocked"
         s["dependency"] = "Resolve reproduced finding: " + data["finding_id"]

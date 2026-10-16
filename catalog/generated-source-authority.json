@@ -1839,29 +1839,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/drive-while-away",
           "file_count": 3,
-          "tree_sha256": "cbb01238a31b921ac7d55e0f955659a291fb722425aaa55b69f620991e986e78"
+          "tree_sha256": "cb286595f301e99e7b7dafeda8a0a00c370e91ef805f7a881ae0901ddd50b39b"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/drive-while-away",
           "file_count": 3,
-          "tree_sha256": "cbb01238a31b921ac7d55e0f955659a291fb722425aaa55b69f620991e986e78"
+          "tree_sha256": "cb286595f301e99e7b7dafeda8a0a00c370e91ef805f7a881ae0901ddd50b39b"
         },
         "flat": {
           "destination": "dist/flat/skills/drive-while-away",
           "file_count": 3,
-          "tree_sha256": "cbb01238a31b921ac7d55e0f955659a291fb722425aaa55b69f620991e986e78"
+          "tree_sha256": "cb286595f301e99e7b7dafeda8a0a00c370e91ef805f7a881ae0901ddd50b39b"
         },
         "nested": {
           "destination": "dist/nested/skills/drive-while-away",
           "file_count": 3,
-          "tree_sha256": "cbb01238a31b921ac7d55e0f955659a291fb722425aaa55b69f620991e986e78"
+          "tree_sha256": "cb286595f301e99e7b7dafeda8a0a00c370e91ef805f7a881ae0901ddd50b39b"
         }
       },
       "canonical_source": "skills/drive-while-away/SKILL.md",
       "kind": "skill",
       "slug": "drive-while-away",
       "source_file_count": 3,
-      "source_tree_sha256": "71917fca76d6026c8d3c16e394d52bae9d526e60461fe2f99bc1f5a460dd7803"
+      "source_tree_sha256": "8a7accddc18479dc6e41c54fa7d33b3e2ad88f3721441c4c2e3c87d0967f2b58"
     },
     {
       "artifacts": {
