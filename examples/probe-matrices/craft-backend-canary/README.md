@@ -45,7 +45,7 @@ python3 scripts/canary/craft-backend-canary.py materialize --manifest "$PROPOSAL
 
 Materialization creates only the temp root: detached exact source, rebuilt outputs, marker repository, local bare remote and receipt. It refuses a pre-existing temp root or disposable workspace and records `live_session_created: false` and `credentials_read: false`.
 
-Review `$TEMP_ROOT/materialization.json`. Copy the proposal to `$TEMP_ROOT/approval.recorded.json` only after the final PR is accepted. Fill the exact package-tree digest and accepted integration revisions. A later direct user instruction must name the `approval_subject_sha256` returned by `validate`; only then may its source/reference, approver and timestamp be recorded. The record does not grant or verify authority.
+Review `$TEMP_ROOT/materialization.json`. Copy the proposal to `$TEMP_ROOT/approval.recorded.json` only after the final PR is accepted. Fill the exact package-tree digest and accepted integration revisions **before** computing the subject. A later direct user instruction must name the `approval_subject_sha256` returned by `validate`; only then may status change to `approval-recorded` and its source/reference, approver and timestamp be recorded. The immutable subject excludes only lifecycle `status` and `operator_approval`, so that recording preserves the named digest while every substantive run/pin/path/backend/timeout/side-effect/cleanup change invalidates it. The record does not grant or verify authority.
 
 After that separate instruction:
 
@@ -121,9 +121,12 @@ Start backend 2 only after backend 1 has ended and its host export is captured. 
 
 Replace `BN` literally with `B1` or `B2`; replace `$SOURCE_ROOT` in prompt 4 with its exact absolute path before submission. Assistant claims are never evidence.
 
-For compaction, generate and retain the nonce in the operator shell before the `COMPACTION_BEFORE` prompt:
+For compaction, initialize the active backend identity and its evidence directory **before the first receipt**, then generate and retain the nonce in the operator shell before the `COMPACTION_BEFORE` prompt. Use sequence `1` for the Anthropic session and `2` for the Pi session:
 
 ```bash
+export BACKEND_SEQUENCE=1
+export BACKEND_MARKER=B$BACKEND_SEQUENCE
+mkdir -p "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE"
 COMPACTION_NONCE=$(python3 -c 'import secrets; print(secrets.token_hex(16))')
 POLICY_PROBE=$SOURCE_ROOT/catalog/effective-policy.json
 POLICY_BEFORE_SHA256=$(shasum -a 256 "$POLICY_PROBE" | awk '{print $1}')
@@ -266,26 +269,37 @@ backend=f'B{sequence}'
 source=root/f'backend-{sequence}'/'session.jsonl'
 records=source.read_text(encoding='utf-8').splitlines(keepends=True)
 events={
- 'startup_resolver':f'CC1003_{backend}_STARTUP_RESOLVER',
- 'prompt_hook':f'CC1003_{backend}_PROMPT_HOOK',
- 'write_guard_allow':f'CC1003_{backend}_WRITE_ALLOW',
- 'write_guard_deny':f'CC1003_{backend}_WRITE_DENY',
- 'git_push_allow':f'CC1003_{backend}_PUSH_ALLOW',
- 'git_push_deny':f'CC1003_{backend}_PUSH_DENY',
- 'resume_context':f'CC1003_{backend}_RESUME',
- 'compaction_context':f'CC1003_{backend}_COMPACTION_BEFORE',
- 'no_op_detection':f'CC1003_{backend}_NO_OP',
+ 'startup_resolver':(f'CC1003_{backend}_STARTUP_RESOLVER','.'),
+ 'prompt_hook':(f'CC1003_{backend}_PROMPT_HOOK','.'),
+ 'write_guard_allow':(f'CC1003_{backend}_WRITE_ALLOW','.'),
+ 'write_guard_deny':(f'CC1003_{backend}_WRITE_DENY','.'),
+ 'git_push_allow':(f'CC1003_{backend}_PUSH_ALLOW','.'),
+ 'git_push_deny':(f'CC1003_{backend}_PUSH_DENY','.'),
+ 'resume_context':(f'CC1003_{backend}_RESUME','.'),
+ 'compaction_context':(f'CC1003_{backend}_COMPACTION_BEFORE',' nonce='),
+ 'no_op_detection':(f'CC1003_{backend}_NO_OP','.'),
 }
 tail_markers={
- 'compaction_context':f'CC1003_{backend}_COMPACTION_AFTER',
- 'no_op_detection':f'CC1003_{backend}_NO_OP_RESTORED',
+ 'compaction_context':(f'CC1003_{backend}_COMPACTION_AFTER','.'),
+ 'no_op_detection':(f'CC1003_{backend}_NO_OP_RESTORED','.'),
 }
-for event, marker in events.items():
+def user_content(record):
+    if record.get('type') != 'user': return ''
+    value=record.get('content',record.get('message',''))
+    if isinstance(value,str): return value
+    if isinstance(value,dict): value=value.get('content',value.get('text',''))
+    if isinstance(value,list):
+        return '\n'.join(item if isinstance(item,str) else str(item.get('text',item.get('content',''))) for item in value if isinstance(item,(str,dict)))
+    return ''
+def marker_match(record,spec):
+    marker,delimiter=spec
+    return marker+delimiter in user_content(record)
+for event, spec in events.items():
     starts=[]
     for i,line in enumerate(records):
         try: record=json.loads(line)
         except Exception: continue
-        if record.get('type') == 'user' and marker in line:
+        if marker_match(record,spec):
             starts.append(i)
     if len(starts) != 1:
         raise SystemExit(f'{event}: expected one marker-bearing user record, found {len(starts)}')
@@ -295,7 +309,7 @@ for event, marker in events.items():
         for i,line in enumerate(records[start+1:],start+1):
             try: record=json.loads(line)
             except Exception: continue
-            if record.get('type') == 'user' and tail_markers[event] in line:
+            if marker_match(record,tail_markers[event]):
                 tails.append(i)
         if len(tails) != 1:
             raise SystemExit(f'{event}: expected one post-boundary user record, found {len(tails)}')

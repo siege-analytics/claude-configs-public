@@ -87,7 +87,11 @@ def exact_path(value: Any, expected: Path, label: str) -> Path:
 
 def approval_subject_sha256(manifest: dict[str, Any]) -> str:
     subject = json.loads(json.dumps(manifest))
+    # Recording lifecycle is not part of the immutable run subject. The digest
+    # named by external approval must survive proposal -> approval-recorded,
+    # while substantive run, pin, path and capability changes remain bound.
     subject.pop("operator_approval", None)
+    subject.pop("status", None)
     return sha256_bytes(canonical_bytes(subject))
 
 

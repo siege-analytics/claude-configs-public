@@ -11,6 +11,8 @@
 - Use Git `insteadOf` local transport so resolver identity becomes a file URL or claim that a present `RESIDENT.md` was delivered.
 - Register zero, duplicate or foreign resident adapters; accept a symlink/escaping resident path; emit the marker zero/multiple times; or inject either negative control.
 - Attest once, then alter a source command, fixture canonical origin, local push URL, bare-repository shape or local `main`; setup must rerun shared attestation and stop before workspace copy or install/wire/verify execution.
+- Approve a proposal digest, then invalidate it merely by recording status; or exclude a substantive run field from the immutable subject.
+- Let prefix-related markers create duplicate starts, truncate no-op restoration/compaction tails, or write a receipt before backend/evidence paths are initialized.
 - Build from working-tree bytes rather than the exact detached revision.
 - Substitute a package with the same source revision but changed nonvolatile bytes.
 - Reuse a proposal receipt as if it recorded external approval or granted authority.

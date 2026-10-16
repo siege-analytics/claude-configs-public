@@ -5,7 +5,10 @@ import copy
 import importlib.util
 import json
 import os
+import re
 import shutil
+import subprocess
+import sys
 import unittest
 from unittest import mock
 from datetime import datetime, timedelta, timezone
@@ -91,7 +94,18 @@ class CanaryPacketTest(unittest.TestCase):
             canary.validate_manifest(broken)
 
     def test_external_record_requires_prerequisites_and_matching_subject(self):
-        approved = record_external_approval(self.value)
+        prepared = copy.deepcopy(self.value)
+        prepared["pins"].update({
+            "provider_integration_revision": "a" * 40,
+            "native_hooks_revision": "b" * 40,
+            "craft_package_tree_sha256": "d" * 64,
+            "composition_tree_sha256": "e" * 64,
+            "workspace_payload_tree_sha256": "f" * 64,
+        })
+        proposal_subject = canary.approval_subject_sha256(prepared)
+        approved = record_external_approval(prepared)
+        self.assertEqual(canary.approval_subject_sha256(approved), proposal_subject)
+        self.assertEqual(approved["operator_approval"]["subject_sha256"], proposal_subject)
         approved["pins"]["native_hooks_revision"] = None
         with self.assertRaisesRegex(canary.PacketError, "native_hooks_revision"):
             canary.validate_manifest(approved, require_approval_record=True)
@@ -99,6 +113,42 @@ class CanaryPacketTest(unittest.TestCase):
         approved["backends"][0]["model"] = "mutated-after-approval"
         with self.assertRaisesRegex(canary.PacketError, "subject digest mismatch"):
             canary.validate_manifest(approved, require_approval_record=True)
+
+    def test_readme_extraction_distinguishes_prefix_markers_and_keeps_tail(self):
+        readme = (ROOT / "examples/probe-matrices/craft-backend-canary/README.md").read_text()
+        match = re.search(r"python3 - \"\$EVIDENCE_ROOT\" \"\$BACKEND_SEQUENCE\" <<'PY'\n(.*?)\nPY", readme, re.S)
+        self.assertIsNotNone(match)
+        evidence = self.temp / "evidence"
+        backend = evidence / "backend-1"
+        backend.mkdir(parents=True)
+        records = []
+        def user(content): records.append({"type": "user", "content": content})
+        def host(content): records.append({"type": "host", "content": content})
+        for marker in ("STARTUP_RESOLVER", "PROMPT_HOOK", "WRITE_ALLOW", "WRITE_DENY", "PUSH_ALLOW", "PUSH_DENY", "RESUME"):
+            user(f"CC1003_B1_{marker}. prescribed prompt")
+            host(f"host record for {marker}")
+        user("CC1003_B1_COMPACTION_BEFORE nonce=abc123. prescribed prompt")
+        host("compaction boundary")
+        user("CC1003_B1_COMPACTION_AFTER. prescribed prompt")
+        host("post-compaction denial")
+        user("CC1003_B1_NO_OP. prescribed prompt")
+        host("zero-output invocation")
+        user("CC1003_B1_NO_OP_RESTORED. prescribed prompt")
+        host("restored resolver invocation")
+        user("UNRELATED_END. boundary")
+        (backend / "session.jsonl").write_text("".join(json.dumps(record) + "\n" for record in records))
+        result = subprocess.run([sys.executable, "-", str(evidence), "1"], input=match.group(1), text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(list(backend.glob("*_*.jsonl"))), 9)
+        no_op = (backend / "no_op_detection.jsonl").read_text()
+        self.assertEqual(no_op.count("CC1003_B1_NO_OP. prescribed prompt"), 1)
+        self.assertEqual(no_op.count("CC1003_B1_NO_OP_RESTORED. prescribed prompt"), 1)
+        self.assertNotIn("UNRELATED_END", no_op)
+        compaction = (backend / "compaction_context.jsonl").read_text()
+        self.assertEqual(compaction.count("CC1003_B1_COMPACTION_BEFORE nonce=abc123"), 1)
+        self.assertEqual(compaction.count("CC1003_B1_COMPACTION_AFTER. prescribed prompt"), 1)
+        self.assertIn("post-compaction denial", compaction)
+        self.assertNotIn("CC1003_B1_NO_OP.", compaction)
 
     def test_materialize_and_external_record_attest_exact_existing_bytes(self):
         receipt = canary.materialize(self.value)
