@@ -10,6 +10,13 @@ This is the artifact transition layer for #1004. Protected Git acceptance uses
 #1002's separate adapter, and actual host delivery/registration remains #1003.
 A successful `select` means coherent artifact selection, not live enforcement.
 
+The transition suite also copies the selected pilot content into disposable Git
+repositories and invokes #1002's exact-revision adapter before upgrade, after
+upgrade and after rollback. It replays a valid ticketed integration, a forbidden
+feature target, a missing ticket and changed installed guidance. This is local
+Git-boundary evidence for the accepted synthetic project; it does not establish
+GitHub provider execution or acceptance of an arbitrary project customization.
+
 ## Inputs and ownership
 
 Supply an exact parent source commit, the four release archives and the canonical
@@ -103,8 +110,11 @@ runtime read in the operation, and bind operation evidence to both generation
 and epoch. Re-reading current separately for each file defeats coherence.
 A reader already holding the old generation can finish with that complete set.
 
-Rollback names the exact `previous` generation and uses the same observation and
-selection checks:
+Rollback names the exact `previous` generation. First use `observe --rollback`
+with that generation and corpus, then accept its exact observation digest. If
+active files are damaged, the observation explicitly marks their results unknown;
+the prior target must still verify completely before recovery. Normal upgrade
+continues to reject a damaged active set. The rollback command is:
 
 ```sh
 python3 bin/package-generation.py --store /absolute/disposable-store rollback \

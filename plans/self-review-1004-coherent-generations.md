@@ -22,6 +22,8 @@ remains authoritative. A live Craft workspace is not used as a test fixture.
   retain the previous generation, then replace one selection record under a lock.
 - Rollback resurrects approval: retain content but issue a new selection epoch;
   never copy task/operation receipts into the generation.
+- Active payload damage prevents recovery: mark the broken set's observations
+  unknown and permit recovery only to the completely verified previous set.
 - A new tool silently reinterprets an old generation: record exact composer and
   resolver dependency hashes and reject unsupported version/schema combinations.
 - Artifact verification is mistaken for host proof: keep authorization effect
@@ -29,8 +31,11 @@ remains authoritative. A live Craft workspace is not used as a test fixture.
 
 ## Peer review
 
-Independent review pending. #1002 is still being implemented by the existing
-coordinator; its accepted operation oracle must be integrated before completion.
+Independent review pending. The accepted #1002 operation adapter is integrated
+from develop `73fb88da02b3915b72e2a3082126754dc4d611c2`. Its hosted activation
+remains incomplete: the subsequent-head probe in #1019 ran the default branch's
+old workflow without the new adapter. These local transition tests cannot
+establish provider execution. The existing coordinator owns that repair.
 No additional worker or alternate workflow policy engine is introduced here.
 
 ## Lead review
@@ -41,15 +46,22 @@ and live authority switching remain separately visible acceptance boundaries.
 
 ## Quantified claims
 
-Real-build transition suite: 16 scenarios pass, using two complete builds and
-four exact release output/archive forms per build. Full repository validation:
-82/82 commands pass in 457.0 seconds, including Python modules, 36 hook suites,
+Real-build transition suite: 18 scenarios pass in 101.771 seconds, using two
+complete builds and four exact release output/archive forms per build. The
+accepted adapter replays four Git cases across initial selection, upgrade and
+rollback: valid ticketed integration allows; wrong feature target, missing ticket
+and changed installed guidance deny. The restored generation receives epoch 3.
+The damaged-active recovery case also passes. Log:
+`/tmp/cc-1004-adapter-recovery-focused.log`.
+
+At the earlier `28c4690` checkpoint, full repository validation passed
+82/82 commands in 457.0 seconds, including Python modules, 36 hook suites,
 two workflow suites, generated freshness and all package hook validators. The
 transition test also validates scoped ontology bindings against a real generated
 manifest. Logs: `/tmp/cc-1004-full-validation.log` and
 `/tmp/cc-1004-focused-batch.log` (the earlier 12-case checkpoint).
-Protected #1002 adapter integration and independent review remain pending; no
-final acceptance or ticket closure is claimed.
+Fresh full validation of this integrated recovery checkpoint and independent
+review remain pending. No final acceptance or ticket closure is claimed.
 
 ## Canary and rollback
 

@@ -106,8 +106,8 @@ class PackageGenerationTest(unittest.TestCase):
                        identity=kwargs.pop('identity', self.identity), **kwargs)['generation']
 
     def select(self, candidate, rollback=False):
-        observation = m.observe(self.store, candidate, self.operations)
-        return m.select(self.store, candidate, expected_epoch=m.current(self.store)['epoch'],
+        observation = m.observe(self.store, candidate, self.operations, rollback=rollback)
+        return m.select(self.store, candidate, expected_epoch=m.current(self.store, verify_payload=not rollback)['epoch'],
                         operations=self.operations, accepted_observation=observation['sha256'], rollback=rollback)
 
     def test_real_build_upgrade_preserves_declared_content_and_rollback_has_new_epoch(self):
@@ -138,6 +138,63 @@ class PackageGenerationTest(unittest.TestCase):
         registry = m.effective.read_json(ROOT / 'catalog/ontology.json')
         self.assertGreater(ontology.validate_bindings(bindings, registry, root), 0)
         self.assertEqual(m.decisions(root, manifest, self.operations), observation['before'])
+
+    def test_real_git_adapter_corpus_before_upgrade_after_upgrade_and_rollback(self):
+        first = self.stage(); second = self.stage(self.second)
+        m.select(self.store, first, expected_epoch=0)
+        results = []
+        for index, version in enumerate((self.first, self.second, self.first)):
+            if index == 1:
+                self.select(second)
+            elif index == 2:
+                self.select(first, rollback=True)
+            selected = m.resolve(self.store)
+            repo = self.base_case / f'operation-{index}'; repo.mkdir()
+            git(repo, 'init', '-q', '-b', 'feature/generation')
+            git(repo, 'config', 'core.hooksPath', '/dev/null')
+            git(repo, 'config', 'user.name', 'Operation fixture')
+            git(repo, 'config', 'user.email', 'fixture@example.invalid')
+            git(repo, 'remote', 'add', 'origin', 'https://' + self.identity + '.git')
+            shutil.copytree(Path(selected['payload']) / 'content', repo / '.pilot')
+            base = commit(repo)
+            (repo / 'change.md').write_text('Synthetic operation.\n')
+            git(repo, 'add', '--force', 'change.md')
+            git(repo, 'commit', '-qm', 'Operation #1004')
+
+            def probe(target):
+                result = subprocess.run([
+                    sys.executable, str(version['parent_root'] / 'scripts/ci/protected-policy-range.py'),
+                    '--trusted-root', str(version['parent_root']), '--trusted-revision', version['source'],
+                    '--candidate-repo', str(repo), '--base', base, '--head', git(repo, 'rev-parse', 'HEAD'),
+                    '--canonical-identity', self.identity, '--head-branch', 'feature/generation',
+                    '--target-branch', target, '--installed-pilot-receipt', '.pilot/composition.json',
+                ], capture_output=True, text=True, timeout=90)
+                self.assertTrue(result.stdout, result.stderr)
+                receipt = json.loads(result.stdout)
+                return result.returncode, receipt
+
+            code, allowed = probe('develop')
+            self.assertEqual((code, allowed['state']), (0, 'eligible'))
+            self.assertEqual(allowed['trusted']['revision'], version['source'])
+            self.assertEqual(allowed['authorization'], 'protected-host-check-required')
+            _, manifest = m.generation(self.store, selected['generation'])
+            self.assertEqual(allowed['candidate']['installed_pilot']['parent_content_sha256'], manifest['parent_content_sha256'])
+            branch_code, branch_denied = probe('main')
+            self.assertEqual((branch_code, branch_denied['state']), (1, 'denied'))
+            git(repo, 'commit', '--amend', '-qm', 'Operation without ticket')
+            ticket_code, ticket_denied = probe('develop')
+            self.assertEqual((ticket_code, ticket_denied['state']), (1, 'denied'))
+            self.assertIn('lacks required', ticket_denied['diagnostic'])
+            git(repo, 'commit', '--amend', '-qm', 'Operation #1004')
+            (repo / '.pilot/skills/RESIDENT.md').write_text('Mixed installed guidance.\n')
+            git(repo, 'add', '--force', '.pilot')
+            git(repo, 'commit', '-qm', 'Changed installation #1004')
+            drift_code, drift_denied = probe('develop')
+            self.assertEqual((drift_code, drift_denied['state']), (1, 'denied'))
+            self.assertIn('differs from trusted composition', drift_denied['diagnostic'])
+            results.append((code, branch_code, ticket_code, drift_code))
+            self.assertEqual(selected['epoch'], index + 1)
+        self.assertEqual(results, [(0, 1, 1, 1)] * 3)
 
     def test_selected_project_replacement_extension_and_resident_survive(self):
         first = self.stage(); second = self.stage(self.second)
@@ -215,6 +272,23 @@ class PackageGenerationTest(unittest.TestCase):
         path = self.store / 'generations' / first / 'payload/operator-settings.json'; path.write_text('{}')
         with self.assertRaisesRegex(ValueError, 'drift'): self.select(first, rollback=True)
         self.assertEqual(m.resolve(self.store)['generation'], second)
+
+    def test_damaged_active_generation_can_only_recover_to_verified_previous(self):
+        first = self.stage(); m.select(self.store, first, expected_epoch=0)
+        second = self.stage(self.second); self.select(second)
+        path = self.store / 'generations' / second / 'payload/runtime/package.json'
+        path.write_text('{damaged')
+        with self.assertRaisesRegex(ValueError, 'drift'): m.resolve(self.store)
+        with self.assertRaisesRegex(ValueError, 'drift'): m.observe(self.store, first, self.operations)
+        observation = m.observe(self.store, first, self.operations, rollback=True)
+        self.assertEqual(observation['previous_verification']['state'], 'unknown')
+        self.assertEqual(observation['differences'], list(range(len(self.operations))))
+        restored = self.select(first, rollback=True)
+        self.assertEqual(restored['epoch'], 3)
+        self.assertEqual(m.resolve(self.store)['generation'], first)
+        # Recovery does not bless the damaged set as a valid rollback target.
+        with self.assertRaisesRegex(ValueError, 'drift'):
+            m.observe(self.store, second, self.operations, rollback=True)
 
     def test_generation_manifest_tampering_and_symlinks_reject(self):
         value = self.stage(); root, manifest = m.generation(self.store, value)

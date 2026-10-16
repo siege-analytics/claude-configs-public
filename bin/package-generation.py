@@ -145,7 +145,7 @@ def locked(store):
         yield
 
 
-def current(store):
+def current(store, *, verify_payload=True):
     store = canonical_root(store)
     path = no_symlinks(store / 'current.json')
     if not path.exists():
@@ -155,7 +155,10 @@ def current(store):
     require(type(value['schema_version']) is int and value['schema_version'] == 1, 'unsupported selection schema')
     require(type(value['epoch']) is int and value['epoch'] > 0, 'invalid selection epoch')
     require(value['authorization_effect'] == 'none', 'selection cannot grant authorization')
-    generation(store, value['generation'])
+    require(isinstance(value['generation'], str) and re.fullmatch(r'[0-9a-f]{64}', value['generation']), 'invalid selected generation')
+    require(value['previous'] is None or isinstance(value['previous'], str) and re.fullmatch(r'[0-9a-f]{64}', value['previous']), 'invalid previous generation')
+    if verify_payload:
+        generation(store, value['generation'])
     return value
 
 
@@ -283,18 +286,31 @@ def decisions(root, manifest, operations):
     return [effective.explain(contract, policy, selection, effective.default_context(manifest['identity'], []), op)['decision'] for op in operations]
 
 
-def observe(store, candidate, operations):
+def observe(store, candidate, operations, *, rollback=False):
     require(isinstance(operations, list) and operations, 'observation corpus must be nonempty')
     for operation in operations:
         effective.validate_operation(operation)
-    active = current(store)
+    active = current(store, verify_payload=not rollback)
     require(active is not None, 'observation requires an existing selected generation')
-    old_root, old = generation(store, active['generation'])
+    if rollback:
+        require(candidate == active['previous'], 'rollback must select the exact previous generation')
     new_root, new = generation(store, candidate)
-    require(old['identity'] == new['identity'], 'cannot switch project identity')
-    before = decisions(old_root, old, operations); after = decisions(new_root, new, operations)
+    previous_verification = {'state': 'artifact-verified'}
+    try:
+        old_root, old = generation(store, active['generation'])
+        require(old['identity'] == new['identity'], 'cannot switch project identity')
+        before = decisions(old_root, old, operations)
+    except (ValueError, OSError) as error:
+        if not rollback:
+            raise
+        # A broken active set must not prevent recovery to the exact intact
+        # previous set. Do not execute or call the broken set verified.
+        previous_verification = {'state': 'unknown', 'diagnostic': str(error)}
+        before = [{'policy': 'unknown', 'final': 'unknown'} for _ in operations]
+    after = decisions(new_root, new, operations)
     result = {'schema_version': 1, 'previous': active['generation'], 'previous_epoch': active['epoch'],
-              'candidate': candidate, 'operations': operations, 'before': before, 'after': after,
+              'candidate': candidate, 'rollback': rollback, 'previous_verification': previous_verification,
+              'operations': operations, 'before': before, 'after': after,
               'differences': [i for i, pair in enumerate(zip(before, after)) if pair[0] != pair[1]],
               'authoritative_stack': 'existing-host-registration', 'evidence_state': 'configured', 'authorization_effect': 'none'}
     return {**result, 'sha256': digest(result)}
@@ -320,7 +336,7 @@ def select(store, candidate, *, expected_epoch, operations=None, accepted_observ
     """Select artifact bytes only; host authority never changes in this function."""
     store = canonical_root(store)
     with locked(store):
-        active = current(store)
+        active = current(store, verify_payload=not rollback)
         epoch = active['epoch'] if active else 0
         require(epoch == expected_epoch, 'stale selection epoch')
         root, manifest = generation(store, candidate)
@@ -329,7 +345,7 @@ def select(store, candidate, *, expected_epoch, operations=None, accepted_observ
             require(candidate != active['generation'], 'generation already selected')
             if rollback:
                 require(candidate == active['previous'], 'rollback must select the exact previous generation')
-            observation = observe(store, candidate, operations)
+            observation = observe(store, candidate, operations, rollback=rollback)
             require(accepted_observation == observation['sha256'], 'review and accept the exact observation before selection')
         else:
             require(not rollback, 'cannot rollback an empty store')
@@ -366,6 +382,8 @@ def main():
     stage_parser.add_argument('--runtime', default='craft-agent', choices=('craft-agent', 'claude-code'))
     for command in ('verify', 'observe', 'select', 'rollback'):
         child = sub.add_parser(command); child.add_argument('--generation', required=True)
+        if command == 'observe':
+            child.add_argument('--rollback', action='store_true', help='observe recovery to the exact previous generation, including damaged active files')
         if command != 'verify':
             child.add_argument('--operations', type=Path, required=command != 'select')
         if command in ('select', 'rollback'):
@@ -382,7 +400,7 @@ def main():
     else:
         operations = json.loads(args.pop('operations').read_text()) if args.get('operations') else None
         args.pop('operations', None); candidate = args.pop('generation')
-        result = observe(store, candidate, operations) if command == 'observe' else select(store, candidate, operations=operations, rollback=command == 'rollback', **args)
+        result = observe(store, candidate, operations, **args) if command == 'observe' else select(store, candidate, operations=operations, rollback=command == 'rollback', **args)
     print(json.dumps(result, sort_keys=True, indent=2))
 
 
