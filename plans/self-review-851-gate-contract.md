@@ -46,6 +46,7 @@ Independent staged-diff falsification produced four successive review packets:
 2. Confirmed ticket/settings/procedure closures; found an early-exit packaged pre-push bypass and a deeper override-path schema drift.
 3. Confirmed those closures; found a conditional CI-step skip that preserved command strings.
 4. The conditional, early-exit, and error-swallowing workflow variants are now rejected by an exact bounded step-shape check.
+5. Independent exact-SHA review of the initial PR head reproduced four additional structural bypasses: declared registration could disagree with the actual target; only the last of multiple package paths was probed; an incompatible uninspected JSON Schema constraint passed; and JSON key order bypassed duplicate repository identity detection. The replacement rejects all alternate pilot target/package declarations, resolves validation through the declared path, seals the complete reviewed schema while evaluating the canonical source against it, and compares identity fields in canonical order.
 
 The remaining provenance concern is explicitly outside this fixture validator: #848 must derive effective values and provenance from separate approved inputs rather than trusting project declarations. The fixture files here are reviewed synthetic inputs and make no effective-policy or authorization claim.
 
@@ -68,7 +69,7 @@ Lead check confirms:
 ## Quantified claims
 
 - Contract: 3 policy fields, 4 capability declarations, 2 synthetic fixture instances.
-- Focused contract suite: 18 tests passing after hostile remediation.
+- Focused contract suite: 20 tests passing after exact-SHA hostile remediation.
 - Ontology: 34 terms and 119 bound values validated; ontology suite 25/25.
 - Python regression: 20/20 modules passing with Python 3.13. The system Python 3.9 cannot import pre-existing PEP 604 annotations and is not used for that matrix.
 - Hook regression: 36/36 shell suites passing.

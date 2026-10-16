@@ -77,6 +77,8 @@ class GateContractTest(unittest.TestCase):
         self.assertEqual(["strict-release", "synthetic-trunk"], [item["fixture_id"] for item in self.fixtures])
 
     def test_schema_drift_rejects(self):
+        canonical_schema = gc.read_json(ROOT / gc.SCHEMA)
+        gc.validate_json_schema_instance(self.contract, canonical_schema, canonical_schema)
         schema = gc.read_json(ROOT / gc.SCHEMA)
         schema["properties"]["decision_values"]["const"] = ["allow", "deny"]
         with self.assertRaisesRegex(ValueError, "decision values disagree"):
@@ -93,6 +95,14 @@ class GateContractTest(unittest.TestCase):
         schema["$defs"]["override_policy"]["properties"]["project_paths"] = {"type": "string"}
         with self.assertRaisesRegex(ValueError, "override path types disagree"):
             gc.validate_schema_document(schema)
+        for mutate in (
+            lambda value: value["properties"]["contract_version"].update({"pattern": "^not-the-current-version$"}),
+            lambda value: value["$defs"]["result_contract"]["properties"]["type"].update({"enum": ["other"]}),
+            lambda value: value["$defs"]["capability"]["properties"]["registered_path"].update({"minLength": 99}),
+        ):
+            schema = gc.read_json(ROOT / gc.SCHEMA); mutate(schema)
+            with self.assertRaisesRegex(ValueError, "complete schema digest differs"):
+                gc.validate_schema_document(schema)
 
     def test_unknown_top_level_and_nested_fields_reject(self):
         data = self.mutation(); data["surprise"] = True
@@ -119,6 +129,23 @@ class GateContractTest(unittest.TestCase):
         self.assert_invalid(data, "unknown required capabilities")
         data = self.mutation(); data["capabilities"][0]["configured_evidence_only"] = False
         self.assert_invalid(data, "configured evidence only")
+
+    def test_wrong_declared_registration_and_extra_packages_reject(self):
+        data = self.mutation()
+        branch = next(value for value in data["capabilities"] if value["id"] == "native-branch-pre-push")
+        branch["registered_path"] = "dist/craft-agent/.githooks/not-installed"
+        self.assert_invalid(data, "registration/package declaration differs")
+        data = self.mutation()
+        protected = next(value for value in data["capabilities"] if value["id"] == "protected-range-validation")
+        protected["registered_path"] = "README.md"
+        self.assert_invalid(data, "registration/package declaration differs")
+        for prepend in (True, False):
+            data = self.mutation()
+            ticket = next(value for value in data["capabilities"] if value["id"] == "native-ticket-commit-msg")
+            broken = "dist/craft-agent/.githooks/broken-commit-msg"
+            ticket["package_paths"] = ([broken] + ticket["package_paths"] if prepend
+                                       else ticket["package_paths"] + [broken])
+            self.assert_invalid(data, "registration/package declaration differs")
 
     def test_unsafe_missing_and_nonexecutable_registered_paths_reject(self):
         data = self.mutation(); data["capabilities"][0]["registered_path"] = "../outside"
@@ -152,6 +179,27 @@ class GateContractTest(unittest.TestCase):
         fixture["declared_overrides"] = [{"field_id": "review-procedure-binding", "path": "procedure", "layer": "project"}]
         with self.assertRaisesRegex(ValueError, "path is missing"):
             gc.validate_fixture(fixture, self.contract, "fixture")
+
+    def test_reordered_duplicate_repository_identity_rejects(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            for relative in gc.FIXTURES:
+                destination = root / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_text((ROOT / relative).read_text())
+            skill = root / "skills/self-review/SKILL.md"
+            skill.parent.mkdir(parents=True, exist_ok=True); skill.write_text("fixture")
+            first = json.loads((root / gc.FIXTURES[0]).read_text())
+            second = json.loads((root / gc.FIXTURES[1]).read_text())
+            identity = first["repository_identity"]
+            second["repository_identity"] = {
+                "repository": identity["repository"],
+                "owner": identity["owner"],
+                "host": identity["host"],
+            }
+            (root / gc.FIXTURES[1]).write_text(json.dumps(second))
+            with self.assertRaisesRegex(ValueError, "repository identities are ambiguous"):
+                gc.load_fixtures(root, self.contract)
 
     def test_mixed_parent_locks_reject(self):
         with tempfile.TemporaryDirectory() as raw:

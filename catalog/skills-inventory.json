@@ -10388,6 +10388,7 @@
       "inbound_source_references": [
         "bin/_test/gate_contract_test.py",
         "bin/_test/progressive_mount_test.py",
+        "bin/gate_contract.py",
         "catalog/gate-contracts.json",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",

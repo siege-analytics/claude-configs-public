@@ -33,6 +33,32 @@ HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 DECISIONS = ["allow", "deny", "not-applicable", "unknown", "error"]
 CAPABILITY_STATES = ["verified", "unsupported", "unverified"]
+SCHEMA_SHA256 = "3cd65d6ffee11f39baca5c066d550fb89e5e2ccab4ee73e51f8a87bf00974d72"
+# The bounded pilot supports one reviewed registration/package shape per
+# capability. Reject alternate declarations until a migrated behavior needs
+# them; otherwise metadata can drift from the concrete builder/verifier path.
+SUPPORTED_CAPABILITY_TARGETS = {
+    "native-ticket-commit-msg": {
+        "kind": "executable",
+        "registered_path": ".githooks/commit-msg",
+        "package_paths": ("dist/craft-agent/.githooks/commit-msg",),
+    },
+    "native-branch-pre-push": {
+        "kind": "generated-executable",
+        "registered_path": "dist/craft-agent/.githooks/pre-push",
+        "package_paths": ("dist/craft-agent/.githooks/pre-push",),
+    },
+    "protected-range-validation": {
+        "kind": "external",
+        "registered_path": ".github/workflows/build-and-publish.yml",
+        "package_paths": (),
+    },
+    "procedure-binding-resolution": {
+        "kind": "declarative",
+        "registered_path": "skills/self-review/SKILL.md",
+        "package_paths": ("dist/craft-agent/skills/self-review/SKILL.md",),
+    },
+}
 CONTRACT_FIELDS = {
     "schema_version", "contract_version", "ontology_version", "decision_values",
     "capability_states", "policy_fields", "capabilities",
@@ -185,6 +211,65 @@ def validate_typed_value(value: Any, schema: dict[str, Any], context: str) -> No
             fail(f"{context}.{name}: expected boolean")
 
 
+def validate_json_schema_instance(instance: Any, schema: Any, root_schema: dict[str, Any], context: str = "contract") -> None:
+    """Evaluate the bounded JSON Schema vocabulary used by this catalog."""
+    if not isinstance(schema, dict):
+        fail(f"{context}: advertised schema node is not an object")
+    if "$ref" in schema:
+        ref = schema["$ref"]
+        prefix = "#/$defs/"
+        if not isinstance(ref, str) or not ref.startswith(prefix) or "/" in ref[len(prefix):]:
+            fail(f"{context}: unsupported advertised schema reference {ref!r}")
+        name = ref[len(prefix):]
+        target = root_schema.get("$defs", {}).get(name)
+        if target is None:
+            fail(f"{context}: missing advertised schema definition {name}")
+        validate_json_schema_instance(instance, target, root_schema, context)
+        return
+    if "const" in schema and instance != schema["const"]:
+        fail(f"{context}: canonical source violates advertised const")
+    if "enum" in schema and instance not in schema["enum"]:
+        fail(f"{context}: canonical source violates advertised enum")
+    kind = schema.get("type")
+    expected_types = {
+        "object": dict, "array": list, "string": str, "integer": int, "boolean": bool,
+    }
+    if kind in expected_types and type(instance) is not expected_types[kind]:
+        fail(f"{context}: canonical source violates advertised type {kind}")
+    if isinstance(instance, str):
+        if len(instance) < schema.get("minLength", 0):
+            fail(f"{context}: canonical source violates advertised minLength")
+        if "pattern" in schema and re.search(schema["pattern"], instance) is None:
+            fail(f"{context}: canonical source violates advertised pattern")
+    if isinstance(instance, int) and not isinstance(instance, bool) and instance < schema.get("minimum", instance):
+        fail(f"{context}: canonical source violates advertised minimum")
+    if isinstance(instance, list):
+        if len(instance) < schema.get("minItems", 0) or len(instance) > schema.get("maxItems", len(instance)):
+            fail(f"{context}: canonical source violates advertised item count")
+        if schema.get("uniqueItems"):
+            values = [json.dumps(value, sort_keys=True, separators=(",", ":")) for value in instance]
+            if len(values) != len(set(values)):
+                fail(f"{context}: canonical source violates advertised uniqueness")
+        if "items" in schema:
+            for index, value in enumerate(instance):
+                validate_json_schema_instance(value, schema["items"], root_schema, f"{context}[{index}]")
+    if isinstance(instance, dict):
+        if len(instance) < schema.get("minProperties", 0):
+            fail(f"{context}: canonical source violates advertised minProperties")
+        required = schema.get("required", [])
+        missing = set(required) - set(instance)
+        if missing:
+            fail(f"{context}: canonical source misses advertised fields {sorted(missing)}")
+        properties = schema.get("properties", {})
+        if schema.get("additionalProperties") is False:
+            unknown = set(instance) - set(properties)
+            if unknown:
+                fail(f"{context}: canonical source has fields forbidden by advertised schema {sorted(unknown)}")
+        for key, subschema in properties.items():
+            if key in instance:
+                validate_json_schema_instance(instance[key], subschema, root_schema, f"{context}.{key}")
+
+
 def validate_schema_document(data: Any) -> dict[str, Any]:
     """Guard the checked-in JSON Schema from drifting behind the strict checker."""
     required = {"$schema", "$id", "title", "type", "additionalProperties", "required", "properties", "$defs"}
@@ -228,6 +313,11 @@ def validate_schema_document(data: Any) -> dict[str, Any]:
     result = data["$defs"]["result_contract"]
     if result.get("additionalProperties") is not False or set(result.get("required", [])) != RESULT_FIELDS:
         fail("gate contract schema: result fields disagree with strict checker")
+    digest = hashlib.sha256(
+        json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+    ).hexdigest()
+    if digest != SCHEMA_SHA256:
+        fail("gate contract schema: complete schema digest differs from the reviewed bounded schema")
     return data
 
 
@@ -280,6 +370,15 @@ def validate_contract(data: Any, root: Path = ROOT, *, check_paths: bool = True)
         packages = string_list(capability["package_paths"], f"{ident}.package_paths", empty=True)
         for package in packages:
             repository_path(root, package, f"{ident}.package_paths", must_exist=False)
+        target = SUPPORTED_CAPABILITY_TARGETS.get(ident)
+        if target is None:
+            fail(f"unsupported pilot capability id: {ident}")
+        if (
+            kind != target["kind"]
+            or capability["registered_path"] != target["registered_path"]
+            or tuple(packages) != target["package_paths"]
+        ):
+            fail(f"{ident}: registration/package declaration differs from the supported bounded target")
         probes = string_list(capability["acceptance_probe_ids"], f"{ident}.acceptance_probe_ids")
         for probe in probes:
             identifier(probe, f"{ident}.probe")
@@ -289,6 +388,9 @@ def validate_contract(data: Any, root: Path = ROOT, *, check_paths: bool = True)
         if capability["configured_evidence_only"] is not True:
             fail(f"{ident}: generated registration must be configured evidence only")
         capabilities[ident] = capability
+
+    if set(capabilities) != set(SUPPORTED_CAPABILITY_TARGETS):
+        fail(f"pilot capabilities differ from supported IDs: {sorted(set(capabilities) ^ set(SUPPORTED_CAPABILITY_TARGETS))}")
 
     fields: dict[str, dict[str, Any]] = {}
     if not isinstance(data["policy_fields"], list) or not data["policy_fields"]:
@@ -334,8 +436,10 @@ def contract_digest(data: dict[str, Any]) -> str:
 
 
 def load_contract(root: Path = ROOT, *, check_paths: bool = True) -> dict[str, Any]:
-    validate_schema_document(read_json(root / SCHEMA))
-    return validate_contract(read_json(root / CONTRACT), root, check_paths=check_paths)
+    schema = validate_schema_document(read_json(root / SCHEMA))
+    data = read_json(root / CONTRACT)
+    validate_json_schema_instance(data, schema, schema)
+    return validate_contract(data, root, check_paths=check_paths)
 
 
 def validate_fixture(data: Any, contract: dict[str, Any], context: str, root: Path = ROOT) -> dict[str, Any]:
@@ -401,7 +505,10 @@ def load_fixtures(root: Path, contract: dict[str, Any]) -> list[dict[str, Any]]:
     locks = {json.dumps(item["parent_lock"], sort_keys=True) for item in fixtures}
     if len(locks) != 1:
         fail("synthetic fixtures use mixed parent locks")
-    identities = {tuple(item["repository_identity"].values()) for item in fixtures}
+    identities = {
+        tuple(item["repository_identity"][key] for key in ("host", "owner", "repository"))
+        for item in fixtures
+    }
     if len(identities) != len(fixtures):
         fail("synthetic fixture repository identities are ambiguous")
     return fixtures
@@ -471,7 +578,8 @@ def validate_generated(root: Path, generated_root: Path, contract: dict[str, Any
     }.items()):
         fail("generated enforcement manifest disagrees with native-branch-pre-push")
 
-    packaged: dict[str, Path] = {}
+    by_id = {capability["id"]: capability for capability in contract["capabilities"]}
+    packaged: dict[str, list[Path]] = {}
     for capability in contract["capabilities"]:
         for package in capability["package_paths"]:
             relative = Path(package)
@@ -483,17 +591,34 @@ def validate_generated(root: Path, generated_root: Path, contract: dict[str, Any
             )
             if not candidate.is_file():
                 fail(f"{capability['id']}: generated package path is not a regular file: {package}")
-            packaged[capability["id"]] = candidate
+            packaged.setdefault(capability["id"], []).append(candidate)
 
-    ticket = packaged["native-ticket-commit-msg"]
-    source_ticket = repository_path(root, ".githooks/commit-msg", "native ticket source")
+    ticket_capability = by_id["native-ticket-commit-msg"]
+    ticket_targets = packaged.get("native-ticket-commit-msg", [])
+    if len(ticket_targets) != 1:
+        fail("native-ticket-commit-msg must have exactly one generated package target")
+    ticket = ticket_targets[0]
+    source_ticket = repository_path(root, ticket_capability["registered_path"], "native ticket declared registration")
     if ticket.read_bytes() != source_ticket.read_bytes():
         fail("packaged native-ticket-commit-msg bytes disagree with registered source")
     if not ticket.stat().st_mode & 0o111:
         fail("packaged native-ticket-commit-msg is not executable")
     run_ticket_probe(root, contract, executable_override=ticket)
 
-    pre_push = packaged["native-branch-pre-push"]
+    branch_capability = by_id["native-branch-pre-push"]
+    branch_targets = packaged.get("native-branch-pre-push", [])
+    if len(branch_targets) != 1:
+        fail("native-branch-pre-push must have exactly one generated package target")
+    pre_push = branch_targets[0]
+    registered_branch = Path(branch_capability["registered_path"])
+    if registered_branch.parts[:1] != ("dist",):
+        fail("native-branch-pre-push declared registration must be generated under dist/")
+    declared_pre_push = repository_path(
+        generated_root, Path(*registered_branch.parts[1:]).as_posix(),
+        "native branch declared registration",
+    )
+    if declared_pre_push != pre_push:
+        fail("native-branch-pre-push declared registration disagrees with package target")
     if not pre_push.stat().st_mode & 0o111:
         fail("packaged native-branch-pre-push is not executable")
     pre_push_text = pre_push.read_text(encoding="utf-8")
@@ -506,7 +631,10 @@ def validate_generated(root: Path, generated_root: Path, contract: dict[str, Any
         fail("packaged native-branch-pre-push lost or duplicated branch-guard registration")
     run_pre_push_probe(pre_push, contract)
 
-    workflow = repository_path(root, ".github/workflows/build-and-publish.yml", "protected validation workflow")
+    protected_capability = by_id["protected-range-validation"]
+    workflow = repository_path(
+        root, protected_capability["registered_path"], "protected validation declared registration"
+    )
     validate_protected_workflow(workflow.read_text(encoding="utf-8"))
 
 
