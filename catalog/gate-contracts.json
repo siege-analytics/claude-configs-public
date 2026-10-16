@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "1.0.0",
+  "contract_version": "1.2.0",
   "ontology_version": "1.0.0",
   "decision_values": [
     "allow",
@@ -232,10 +232,16 @@
       "ontology_term": "host-capability",
       "boundary": "protected-acceptance",
       "kind": "external",
-      "registered_path": ".github/workflows/build-and-publish.yml",
+      "registered_path": ".github/workflows/pr-base-guard.yml",
       "input_contract": [
-        "exact-pushed-range",
-        "exact-head"
+        "trusted-base-revision",
+        "canonical-repository-identity",
+        "candidate-source-identity",
+        "exact-base",
+        "exact-head",
+        "authenticated-head-branch",
+        "target-branch",
+        "complete-commit-range"
       ],
       "result_contract": {
         "type": "protected-check",
@@ -252,7 +258,10 @@
       "failure_semantics": "unknown-never-allow",
       "package_paths": [],
       "acceptance_probe_ids": [
-        "protected-invalid-range-denies"
+        "protected-invalid-range-denies",
+        "protected-stale-head-denies",
+        "protected-wrong-repository-denies",
+        "protected-interior-commit-denies"
       ],
       "configured_evidence_only": true
     },

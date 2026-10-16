@@ -23,6 +23,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: policy
+          fetch-depth: 0  # selected policy snapshot must be an available ancestor
           persist-credentials: false
 
       - name: Check out candidate as data
@@ -50,6 +51,30 @@ jobs:
           CANONICAL_REPO: ${{ github.repository }}
           MAIN_REF: upstream/main
         run: bash ../policy/scripts/ci/check-branch-topology.sh
+
+      # This PR cannot prove this step: pull_request_target loads it from the
+      # protected base. After integration, #1003 must exercise a subsequent
+      # exact head and independently record that this existing check is required.
+      - name: Evaluate exact project policy range
+        if: github.event_name == 'pull_request_target'
+        working-directory: candidate
+        env:
+          POLICY_REVISION: ${{ github.event.pull_request.base.sha }}
+          EXACT_BASE: ${{ github.event.pull_request.base.sha }}
+          EXACT_HEAD: ${{ github.event.pull_request.head.sha }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+          TARGET_BRANCH: ${{ github.base_ref }}
+          CANONICAL_REPOSITORY: ${{ github.repository }}
+          CANONICAL_SERVER: ${{ github.server_url }}
+        run: |
+          set -euo pipefail
+          CANONICAL_HOST="${CANONICAL_SERVER#https://}"
+          python3 ../policy/scripts/ci/protected-policy-range.py \
+            --trusted-root ../policy --trusted-revision "$POLICY_REVISION" \
+            --candidate-repo . --base "$EXACT_BASE" --head "$EXACT_HEAD" \
+            --canonical-identity "$CANONICAL_HOST/$CANONICAL_REPOSITORY" \
+            --head-branch "$HEAD_BRANCH" --target-branch "$TARGET_BRANCH" \
+            --receipt /tmp/protected-policy-receipt.json
 
       # Merge queues have already admitted a PR through the head-role check.
       # The queued synthetic commit must still contain current main.

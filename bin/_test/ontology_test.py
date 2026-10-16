@@ -59,7 +59,7 @@ class OntologyTest(unittest.TestCase):
     def test_real_registry_and_existing_artifact_bindings(self):
         terms = ontology.validate_registry(self.registry)
         self.assertNotEqual(terms["host-capability"], terms["procedure-binding"])
-        self.assertEqual(ontology.validate_bindings(self.bindings, self.registry, self.root), 49)
+        self.assertEqual(ontology.validate_bindings(self.bindings, self.registry, self.root), 51)
 
     def test_duplicate_ids_labels_and_json_keys_reject(self):
         for field in ("id", "label"):
