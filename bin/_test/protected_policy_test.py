@@ -43,7 +43,10 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
         test_target = cls.trusted / "bin/_test/protected_policy_test.py"
         shutil.copy2(ROOT / "bin/_test/protected_policy_test.py", test_target)
         git(cls.trusted, "add", SCRIPT.as_posix(), "bin/_test/protected_policy_test.py")
-        git(cls.trusted, "-c", "core.hooksPath=/dev/null", "commit", "-q", "-m", "pilot adapter #1002")
+        # Before publication the copied files create this commit; after they are
+        # already tracked, an empty commit still gives every disposable run a
+        # fresh immutable trusted revision without a test-only byte bypass.
+        git(cls.trusted, "-c", "core.hooksPath=/dev/null", "commit", "--allow-empty", "-q", "-m", "pilot adapter #1002")
         cls.trusted_revision = git(cls.trusted, "rev-parse", "HEAD").stdout.strip()
         cls.packages: dict[str, Path] = {}
         for project in ("strict-release", "synthetic-trunk"):
