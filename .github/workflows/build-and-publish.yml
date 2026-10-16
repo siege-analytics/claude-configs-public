@@ -118,6 +118,9 @@ jobs:
       - name: Consumer package documentation and clean-home diagnostics
         run: python3 bin/_test/package_documentation_test.py
 
+      - name: Native consumer Git registration and destination range
+        run: python3 bin/_test/native_push_test.py
+
       - name: Canary packet preparation remains non-authorizing
         run: |
           python3 bin/_test/craft_backend_canary_test.py

@@ -34,7 +34,7 @@ HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 DECISIONS = ["allow", "deny", "not-applicable", "unknown", "error"]
 CAPABILITY_STATES = ["verified", "unsupported", "unverified"]
 SCHEMA_SHA256 = "3cd65d6ffee11f39baca5c066d550fb89e5e2ccab4ee73e51f8a87bf00974d72"
-PROTECTED_ADAPTER_WORKFLOW_SHA256 = "2e47e6a6b43be37c99614e0b91feff7cf48068d8ab6622f446e09829944688b0"
+PROTECTED_ADAPTER_WORKFLOW_SHA256 = "13b83c61b8326f9c2deaab9beb8611968a7c00562dcb1b155dba9c37f0748d50"
 # The bounded pilot supports one reviewed registration/package shape per
 # capability. Reject alternate declarations until a migrated behavior needs
 # them; otherwise metadata can drift from the concrete builder/verifier path.
@@ -542,13 +542,13 @@ def validate_protected_workflow(content: str) -> None:
 
 
 def validate_protected_adapter_workflow(content: str) -> None:
-    """Require the one reviewed complete base-controlled workflow shape.
+    """Require the reviewed future default-branch registration shape.
 
-    The digest covers event filters, permissions, the enclosing job, every
-    checkout/fetch/topology/adapter condition, exact event-derived inputs,
-    working directories, shell fail-closed behavior, and merge-group handling.
-    This intentionally rejects all alternate registrations rather than trying
-    to enumerate YAML spellings for disabled or advisory execution.
+    GitHub executes pull_request_target YAML from the repository default branch.
+    The sealed workflow therefore preserves the already-registered topology
+    step, checks out the exact PR base as trusted policy with complete history,
+    and delegates provider evaluation to that base's topology entrypoint. The
+    checked-out YAML is never represented as the workflow GitHub executed.
     """
     actual = hashlib.sha256(content.encode("utf-8")).hexdigest()
     if actual != PROTECTED_ADAPTER_WORKFLOW_SHA256:
@@ -677,7 +677,13 @@ def run_pre_push_probe(executable: Path, contract: dict[str, Any]) -> None:
         target.parent.mkdir(parents=True)
         shutil.copy2(executable, target)
         hooks = package / "hooks/git"; hooks.mkdir(parents=True)
-        for name, code in (("self-review.sh", 0), ("branch-guard.sh", 1), ("test-guard.sh", 0)):
+        # This bounded probe checks delegation only. Real native range behavior
+        # is exercised separately through registered consumer Git pushes (#845).
+        (package / "bin").mkdir()
+        (package / "catalog").mkdir()
+        (package / "bin/review-risk.py").write_text("# dispatch fixture\n")
+        (package / "catalog/review-risk-policy.json").write_text("{}\n")
+        for name, code in (("pre-push-self-review.sh", 0), ("branch-guard.sh", 1), ("test-guard.sh", 0)):
             gate = hooks / name
             gate.write_text(f"#!/usr/bin/env bash\nexit {code}\n", encoding="utf-8")
             gate.chmod(0o755)

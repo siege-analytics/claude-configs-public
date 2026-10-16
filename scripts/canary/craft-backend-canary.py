@@ -103,7 +103,14 @@ def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool
 
     pins = manifest.get("pins")
     require(isinstance(pins, dict), "pins must be an object")
-    for name in ("develop_revision", "source_revision", "provider_integration_revision", "native_hooks_revision"):
+    for name in (
+        "develop_revision",
+        "source_revision",
+        "provider_accepted_head",
+        "provider_integration_revision",
+        "native_hooks_accepted_head",
+        "native_hooks_revision",
+    ):
         value = pins.get(name)
         if require_final_pins or name in {"develop_revision", "source_revision"}:
             require(isinstance(value, str) and HEX40.fullmatch(value) is not None, f"pins.{name} must be a full Git SHA")

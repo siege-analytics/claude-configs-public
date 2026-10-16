@@ -43,14 +43,13 @@ Self-review found and corrected three blockers: nondeterministic package timesta
 
 ## Quantified claims
 
-Seven focused cases pass without creating a Craft workspace/session: path confinement, missing external approval, prerequisite pins, detached source/package materialization, existing-root refusal, exact-byte attestation, imported host-event provenance/order, no-self-report, synthetic relabeling, side-effect closure, timeout floor, and cleanup residue detection. The 12 review-policy cases and review-risk dependency/mutation audit pass. The proposal validates in preparation mode and rejects `--require-approval-record`; structurally consistent imported evidence remains unverified and non-authorizing.
+Seven focused cases pass without creating a Craft workspace/session: path confinement, missing external approval, prerequisite pins, detached source/package materialization, existing-root refusal, exact-byte attestation, imported host-event provenance/order, no-self-report, synthetic relabeling, side-effect closure, timeout floor, and cleanup residue detection. The 12 review-policy cases and review-risk dependency/mutation audit pass. After integrating accepted provider/native develop, 16 native scenarios and 13 provider scenarios also pass. The proposal validates in preparation mode and rejects `--require-approval-record`; structurally consistent imported evidence remains unverified and non-authorizing.
 
 ## Pending before publication
 
-- Integrate accepted #1002 provider and #845 native registration changes into `develop`.
-- Refresh exact develop/source/provider/native revisions and source/package/driver digests.
-- Add risk-policy dependency and mutation coverage, regenerate generated artifacts, and run the complete matrix.
+- Run the complete combined Python/hook/workflow/package/scanner/freshness matrix.
 - Publish a draft PR and obtain independent exact-head review.
+- After review/integration, materialize exact package bytes and request separate direct user authorization; the remaining shared-parent #1002 slice is not claimed or satisfied by this packet.
 
 ## Explicit non-claims
 

@@ -14,7 +14,15 @@ This packet becomes reviewable for one live run only after accepted #1002/#845 r
 - Per backend: 900 seconds; transition: 180; cleanup: 300; overall: 2,400
 - Cleanup owner: Dheeraj
 
-Current base pins are recorded in `approval.proposal.json`; provider/native pins and exact materialized package bytes are deliberately null. The proposal cannot pass live authorization.
+Current immutable preparation pins in `approval.proposal.json` are:
+
+- accepted provider head `9b541dff6452b4782a732356d3e1089e828f9293`, integrated as `b97c99dfce05ca6f5f6e8fe7839b9dc2585065a8`;
+- accepted native head `0fa16ce6a07b1083a31d80a3f40dd5dbf1639744`, integrated in `develop@cd014600d7262492c7ce95512ba308b307a8efa5`;
+- source-tree SHA-256 `42ea856dbd140e8445c611bf55dc0f6acd9c90852d85f07d93fad8a0626421bf`;
+- canonical Craft package SHA-256 `49acf0788df5fe33582e4b35eda226544909e1232a6215682545c5859adb5d2c`;
+- approval driver SHA-256 `bf3feb5f37c1b34fe4542932d865654ccfe5b391f90759daf8170edbca188f4b`.
+
+Exact materialized package bytes and external operator approval remain deliberately null. The proposal cannot pass `--require-approval-record` and no script result can grant live authority.
 
 ## Prepared commands
 

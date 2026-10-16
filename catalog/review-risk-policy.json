@@ -42,7 +42,8 @@
     "^\\.claude/(deploy-model|settings\\.json)$",
     "(^|/)(credential|credentials|secret|secrets|auth|permission|permissions)([._/-]|$)",
     "(^|/)(release|deploy|destructive)([._/-]|$)",
-    "^VERSION$"
+    "^VERSION$",
+    "^bin/_test/native_push_test\\.py$"
   ],
   "standard_path_patterns": [
     "^skills/",

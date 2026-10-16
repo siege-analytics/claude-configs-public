@@ -256,13 +256,11 @@ class GateContractTest(unittest.TestCase):
         gc.validate_protected_adapter_workflow(valid)
         mutations = (
             valid.replace("fetch-depth: 0  # selected policy snapshot must be an available ancestor", "fetch-depth: 1"),
+            valid.replace("ref: ${{ github.event.pull_request.base.sha }}", "ref: ${{ github.event.pull_request.head.sha }}"),
             valid.replace("run: bash ../policy/scripts/ci/check-branch-topology.sh", "run: true"),
-            valid.replace("--head \"$EXACT_HEAD\"", "--head HEAD"),
-            valid.replace("--canonical-identity \"$CANONICAL_HOST/$CANONICAL_REPOSITORY\"", "--canonical-identity github.example.invalid/synthetic-org/strict-release"),
-            valid.replace("--head-branch \"$HEAD_BRANCH\"", "--head-branch feature/untrusted"),
-            valid.replace("set -euo pipefail", "set +e"),
-            valid.replace("      - name: Evaluate exact project policy range\n        if: github.event_name == 'pull_request_target'",
-                          "      - name: Evaluate exact project policy range\n        if: false"),
+            valid.replace("HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}", "HEAD_REPO: untrusted/example"),
+            valid.replace("persist-credentials: false", "persist-credentials: true", 1),
+            valid.replace("branches: [main, develop]", "branches: [main]"),
             valid.replace("    runs-on: ubuntu-latest", "    if: false\n    runs-on: ubuntu-latest"),
         )
         for mutation in mutations:
