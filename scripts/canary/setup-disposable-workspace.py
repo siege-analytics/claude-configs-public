@@ -90,62 +90,72 @@ def run(command: list[str], *, cwd: Path) -> str:
     return result.stdout
 
 
+def configure(canary: Any, manifest: dict[str, Any]) -> dict[str, Any]:
+    facts = canary.validate_manifest(manifest, require_approval_record=True)
+    source: Path = facts["source_root"]
+    payload = facts["temp_root"] / "workspace-payload"
+    workspace: Path = facts["workspace_root"]
+    fixture = facts["temp_root"] / "fixture" / "repo"
+    validate_payload(canary, payload, manifest["pins"]["workspace_payload_tree_sha256"])
+    # Fresh shared attestation is the mutation boundary. An earlier receipt is
+    # never trusted: source/package/composition/payload and fixture identity/
+    # local transport are re-read immediately before any workspace copy or
+    # install/wire/verify command.
+    attestation = canary.attest_materialized(manifest)
+    if not workspace.is_dir() or workspace.is_symlink() or workspace.resolve() != workspace:
+        raise canary.PacketError("exact disposable workspace must already exist as a real directory")
+    if not fixture.is_dir() or fixture.is_symlink():
+        raise canary.PacketError("exact disposable fixture repository is absent")
+    if (workspace / "deploy-stamp.json").exists():
+        raise canary.PacketError("refusing workspace with a production deploy stamp")
+    copy_payload(canary, payload, workspace)
+    outputs = []
+    outputs.append(run([
+        "bash", "bin/install-hooks.sh", "--workspace", str(workspace),
+        "--hooks-root", str(workspace), "--git-repo", str(fixture),
+    ], cwd=source))
+    outputs.append(run([
+        sys.executable, "bin/wire-enforcement.py", "--workspace", str(workspace),
+        "--dist", str(source / "dist"),
+    ], cwd=source))
+    outputs.append(run([
+        "bash", "bin/verify-enforcement.sh", "--target", str(workspace),
+        "--mode", "craft-agent", "--git-repo", str(fixture),
+    ], cwd=source))
+    if (workspace / "deploy-stamp.json").exists():
+        raise canary.PacketError("disposable setup created a forbidden production deploy stamp")
+    receipt = {
+        "schema_version": canary.SCHEMA_VERSION,
+        "run_id": facts["run_id"],
+        "manifest_sha256": facts["manifest_sha256"],
+        "mutation_boundary_attestation_sha256": attestation["receipt_sha256"],
+        "workspace": str(workspace),
+        "fixture": str(fixture),
+        "fixture_identity": manifest["fixture"]["canonical_identity"],
+        "workspace_payload_tree_sha256": canary.tree_digest(payload),
+        "production_deploy_stamp": False,
+        "standing_order_automations_enabled": False,
+        "authorization_effect": "none",
+        "command_output_sha256": canary.sha256_bytes("\n".join(outputs).encode()),
+    }
+    destination = facts["evidence_root"] / "workspace-setup.json"
+    destination.write_bytes(canary.canonical_bytes(receipt))
+    return {
+        "status": "disposable-workspace-configured-unverified",
+        "authorization_effect": "none",
+        "receipt": str(destination),
+        "receipt_sha256": canary.sha256_bytes(destination.read_bytes()),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, required=True)
     args = parser.parse_args()
     canary = load_canary()
     try:
-        manifest = canary.load_json(args.manifest)
-        facts = canary.validate_manifest(manifest, require_approval_record=True)
-        source: Path = facts["source_root"]
-        payload = facts["temp_root"] / "workspace-payload"
-        workspace: Path = facts["workspace_root"]
-        fixture = facts["temp_root"] / "fixture" / "repo"
-        validate_payload(canary, payload, manifest["pins"]["workspace_payload_tree_sha256"])
-        if not workspace.is_dir() or workspace.is_symlink() or workspace.resolve() != workspace:
-            raise canary.PacketError("exact disposable workspace must already exist as a real directory")
-        if not fixture.is_dir() or fixture.is_symlink():
-            raise canary.PacketError("exact disposable fixture repository is absent")
-        if (workspace / "deploy-stamp.json").exists():
-            raise canary.PacketError("refusing workspace with a production deploy stamp")
-        copy_payload(canary, payload, workspace)
-        outputs = []
-        outputs.append(run([
-            "bash", "bin/install-hooks.sh", "--workspace", str(workspace),
-            "--hooks-root", str(workspace), "--git-repo", str(fixture),
-        ], cwd=source))
-        outputs.append(run([
-            sys.executable, "bin/wire-enforcement.py", "--workspace", str(workspace),
-            "--dist", str(source / "dist"),
-        ], cwd=source))
-        outputs.append(run([
-            "bash", "bin/verify-enforcement.sh", "--target", str(workspace),
-            "--mode", "craft-agent", "--git-repo", str(fixture),
-        ], cwd=source))
-        if (workspace / "deploy-stamp.json").exists():
-            raise canary.PacketError("disposable setup created a forbidden production deploy stamp")
-        receipt = {
-            "schema_version": canary.SCHEMA_VERSION,
-            "run_id": facts["run_id"],
-            "manifest_sha256": facts["manifest_sha256"],
-            "workspace": str(workspace),
-            "fixture": str(fixture),
-            "fixture_identity": manifest["fixture"]["canonical_identity"],
-            "workspace_payload_tree_sha256": canary.tree_digest(payload),
-            "production_deploy_stamp": False,
-            "standing_order_automations_enabled": False,
-            "authorization_effect": "none",
-            "command_output_sha256": canary.sha256_bytes("\n".join(outputs).encode()),
-        }
-        destination = facts["evidence_root"] / "workspace-setup.json"
-        destination.write_bytes(canary.canonical_bytes(receipt))
-        print(json.dumps({
-            "status": "disposable-workspace-configured-unverified",
-            "authorization_effect": "none",
-            "receipt": str(destination),
-            "receipt_sha256": canary.sha256_bytes(destination.read_bytes()),
-        }, sort_keys=True))
+        result = configure(canary, canary.load_json(args.manifest))
+        print(json.dumps(result, sort_keys=True))
         return 0
     except (OSError, RuntimeError, subprocess.SubprocessError, canary.PacketError, ValueError, TypeError) as exc:
         print(f"CANARY SETUP ERROR: {exc}", file=sys.stderr)

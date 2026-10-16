@@ -10,6 +10,7 @@
 - Copy generic package `bin/catalog` after composition and silently erase strict-release selection.
 - Use Git `insteadOf` local transport so resolver identity becomes a file URL or claim that a present `RESIDENT.md` was delivered.
 - Register zero, duplicate or foreign resident adapters; accept a symlink/escaping resident path; emit the marker zero/multiple times; or inject either negative control.
+- Attest once, then alter a source command, fixture canonical origin, local push URL, bare-repository shape or local `main`; setup must rerun shared attestation and stop before workspace copy or install/wire/verify execution.
 - Build from working-tree bytes rather than the exact detached revision.
 - Substitute a package with the same source revision but changed nonvolatile bytes.
 - Reuse a proposal receipt as if it recorded external approval or granted authority.

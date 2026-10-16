@@ -18,7 +18,8 @@ Prepare reviewable scripts, synthetic fixtures and an approval packet. Do not la
 10. **Timeout leaves residue.** Per-run, transition, cleanup and overall deadlines are explicit; any timeout enters cleanup without in-place repair.
 11. **Generic package files overwrite composed resolver data.** Assemble generic dependencies first, composition last, then invoke the final payload resolver and require strict-release plus both scoped skills.
 12. **Resident presence is mistaken for delivery.** Probe the exact canonical registered hook after the separately reviewed selector render-mode correction integrates; require one resident marker and no negative controls without changing `CLAUDE_KERNEL_PATH` validation. Until then, keep the packet blocked rather than installing a parallel adapter.
-13. **Local transport rewrites project identity.** Seed the bare fixture locally, then store the canonical origin with no retained `insteadOf`; assert resolver identity from the final fixture.
+13. **Local transport rewrites project identity.** Seed the bare fixture locally, retain canonical fetch identity plus an exact local bare push URL, reject `insteadOf`, and assert both resolver identity and local `main` ref consistency from the final fixture.
+14. **Source or fixture drifts after an earlier attestation.** Setup reruns the shared materialized-byte attestation immediately before the first workspace copy/command and binds its receipt. Source-script, origin and push-transport mutations must reject before any payload target or install/wire/verify invocation.
 11. **Cleanup script deletes broadly.** The driver performs no deletion. Cleanup uses normal UI plus exact temp removal; verifier requires real absence and unchanged outside state.
 12. **Prerequisite heads change.** Any replacement #1002/#845/develop/script/package identity requires packet refresh and fresh exact-head review.
 

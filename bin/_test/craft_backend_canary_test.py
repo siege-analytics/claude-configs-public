@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import unittest
+from unittest import mock
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -145,6 +146,34 @@ class CanaryPacketTest(unittest.TestCase):
         approved["operator_approval"]["subject_sha256"] = canary.approval_subject_sha256(approved)
         attestation = canary.attest_materialized(approved)
         self.assertEqual(attestation["status"], "materialization-consistent-unverified")
+        source = self.temp / "source"
+        install_script = source / "bin/install-hooks.sh"
+        untracked_source = source / "bin/untracked-setup-shadow.py"
+        original_install = install_script.read_bytes()
+        origin = canary.run_git(["config", "--get", "remote.origin.url"], cwd=fixture_repo)
+        pushurl = canary.run_git(["remote", "get-url", "--push", "origin"], cwd=fixture_repo)
+        for mutation, restore, diagnostic in (
+            (lambda: install_script.write_bytes(original_install + b"# drift\n"),
+             lambda: install_script.write_bytes(original_install), "tracked drift"),
+            (lambda: untracked_source.write_text("shadow\n"),
+             lambda: untracked_source.unlink(missing_ok=True), "untracked drift"),
+            (lambda: canary.run_git(["remote", "set-url", "origin", "https://foreign.invalid/wrong/repo.git"], cwd=fixture_repo),
+             lambda: canary.run_git(["remote", "set-url", "origin", origin], cwd=fixture_repo), "origin identity"),
+            (lambda: canary.run_git(["remote", "set-url", "--push", "origin", "file:///private/tmp/foreign.git"], cwd=fixture_repo),
+             lambda: canary.run_git(["remote", "set-url", "--push", "origin", pushurl], cwd=fixture_repo), "push transport"),
+        ):
+            with self.subTest(mutation=diagnostic):
+                mutation()
+                try:
+                    with mock.patch.object(setup, "copy_payload") as copied, mock.patch.object(setup, "run") as command:
+                        with self.assertRaises(canary.PacketError):
+                            setup.configure(canary, approved)
+                        copied.assert_not_called()
+                        command.assert_not_called()
+                    self.assertFalse(self.workspace.exists())
+                finally:
+                    restore()
+        canary.attest_materialized(approved)
         self.assertEqual(attestation["authorization_effect"], "none")
         with self.assertRaisesRegex(canary.PacketError, "existing temp root"):
             canary.materialize(self.value)

@@ -79,7 +79,7 @@ python3 scripts/canary/setup-disposable-workspace.py \
 test ! -e "$WORKSPACE_ROOT/deploy-stamp.json"
 ```
 
-`setup-disposable-workspace.py` is separately digest-pinned by `workspace_setup_driver_sha256`. The setup rejects an unexpected payload entry, symlink (except `CLAUDE.md -> KERNEL.md`), existing target, changed tree digest, wrong workspace/fixture path, or production deploy stamp. Do **not** pass or add `--include-standing-order-automations`. Required placement is:
+`setup-disposable-workspace.py` is separately digest-pinned by `workspace_setup_driver_sha256`. Immediately before its first workspace copy or install/wire/verify command, it invokes the shared materialized-byte attestation again; an earlier receipt is never trusted. That fresh boundary checks exact source HEAD, a fully clean source tree, canonical and exact package digests, composition/payload digests, canonical fixture identity, exact local bare push transport, absence of identity-rewriting `insteadOf`, and matching local `main`. The setup also rejects an unexpected payload entry, symlink (except `CLAUDE.md -> KERNEL.md`), existing target, wrong workspace/fixture path, or production deploy stamp. Do **not** pass or add `--include-standing-order-automations`. Required placement is:
 
 - flat parent skills plus the exact composed strict-release `RESIDENT.md`, `_strict-release--rules.md`, `strict-release--review`, and `strict-release--checks` content under `$WORKSPACE_ROOT/skills`;
 - `composition.json`, `KERNEL.md`, `RESOLVER.md`, and composition resolver/catalog support under `$WORKSPACE_ROOT`;
@@ -88,7 +88,7 @@ test ! -e "$WORKSPACE_ROOT/deploy-stamp.json"
 - the blocking `ca-enforcement-gate.sh` wrapper merged by `wire-enforcement.py` after base hook settings;
 - native `core.hooksPath` only in `$TEMP_ROOT/fixture/repo`.
 
-Materialization pins the reviewed package, strict-release composition and final workspace payload separately. Setup copies those payload bytes rather than rebuilding them. Preserve `$EVIDENCE_ROOT/workspace-setup.json` and `workspace-setup.log`, record their digests, and stop if registration or verification fails. Final publication remains blocked until a separately reviewed canonical resident injector is integrated, source pins are refreshed, and this packet proves the actual registered hook emits the strict-release resident exactly once with both controls absent.
+Materialization pins the reviewed package, strict-release composition and final workspace payload separately. Setup copies those payload bytes rather than rebuilding them. `workspace-setup.json` binds the fresh mutation-boundary attestation receipt digest; source or fixture drift after any earlier attestation stops before workspace payload targets or setup commands. Preserve both receipts and `workspace-setup.log`, record their digests, and stop if registration or verification fails. Final publication remains blocked until a separately reviewed canonical resident injector is integrated, source pins are refreshed, and this packet proves the actual registered hook emits the strict-release resident exactly once with both controls absent.
 
 ## Phase C — exact sessions and prompts
 

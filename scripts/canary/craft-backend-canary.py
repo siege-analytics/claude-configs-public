@@ -471,6 +471,7 @@ def materialize(manifest: dict[str, Any]) -> dict[str, Any]:
     run_git(["remote", "add", "origin", remote.as_uri()], cwd=repo)
     run_git(["push", "-u", "origin", "main"], cwd=repo)
     run_git(["remote", "set-url", "origin", canonical_remote], cwd=repo)
+    run_git(["remote", "set-url", "--push", "origin", remote.as_uri()], cwd=repo)
     run_git(["checkout", "-b", "canary/1003-observation"], cwd=repo)
     (repo / "PROMPT_MARKER.txt").write_text("prompt-marker-not-observed\n")
     (repo / "WRITE_MARKER.txt").write_text("write-marker-not-observed\n")
@@ -502,7 +503,7 @@ def materialize(manifest: dict[str, Any]) -> dict[str, Any]:
         "fixture": {
             **manifest["fixture"],
             "origin": canonical_remote,
-            "transport": "local-seed-then-canonical-origin-no-network",
+            "transport": "canonical-fetch-identity-local-pushurl",
             "foreign_control_sha256": sha256_bytes((control / "FOREIGN_PROJECT_MARKER.txt").read_bytes()),
             "global_bundle_control_sha256": sha256_bytes((control / "GLOBAL_BUNDLE_MARKER.txt").read_bytes()),
         },
@@ -527,7 +528,7 @@ def attest_materialized(manifest: dict[str, Any]) -> dict[str, Any]:
     package = source / "dist" / "craft-agent"
     require(source.is_dir() and package.is_dir(), "materialized source/package is absent")
     require(run_git(["rev-parse", "HEAD"], cwd=source) == manifest["pins"]["source_revision"], "materialized source revision mismatch")
-    require(run_git(["status", "--porcelain", "--untracked-files=no"], cwd=source) == "", "materialized source has tracked drift")
+    require(run_git(["status", "--porcelain", "--untracked-files=all"], cwd=source) == "", "materialized source tree has drift")
     require(tree_digest(package, canonical_package=True) == manifest["pins"]["craft_package_canonical_sha256"], "materialized canonical package mismatch")
     require(tree_digest(package) == manifest["pins"]["craft_package_tree_sha256"], "materialized exact package mismatch")
     composition = facts["temp_root"] / "composition" / manifest["fixture"]["composition_layout"]
@@ -540,9 +541,20 @@ def attest_materialized(manifest: dict[str, Any]) -> dict[str, Any]:
     require(composition_receipt.get("project") == manifest["fixture"]["project"], "materialized composition project mismatch")
     require(manifest["fixture"]["resident_marker"] in (composition / "skills/RESIDENT.md").read_text(), "materialized resident marker mismatch")
     fixture_repo = facts["temp_root"] / "fixture" / "repo"
-    require((facts["temp_root"] / "fixture" / "remote.git").is_dir(), "synthetic bare remote is absent")
+    bare_remote = facts["temp_root"] / "fixture" / "remote.git"
+    require(fixture_repo.is_dir() and not fixture_repo.is_symlink(), "synthetic fixture repository is absent or symlinked")
+    require(bare_remote.is_dir() and not bare_remote.is_symlink() and bare_remote.resolve() == bare_remote, "synthetic bare remote is absent, symlinked or inexact")
+    require(run_git(["rev-parse", "--is-bare-repository"], cwd=bare_remote) == "true", "synthetic local transport is not a bare repository")
     expected_origin = "https://" + manifest["fixture"]["canonical_identity"] + ".git"
     require(run_git(["config", "--get", "remote.origin.url"], cwd=fixture_repo) == expected_origin, "fixture origin identity mismatch")
+    require(run_git(["remote", "get-url", "origin"], cwd=fixture_repo) == expected_origin, "fixture fetch identity is rewritten")
+    require(run_git(["remote", "get-url", "--push", "origin"], cwd=fixture_repo) == bare_remote.as_uri(), "fixture push transport is not the exact local bare remote")
+    rewrites = subprocess.run(
+        ["git", "config", "--get-regexp", r"^url\..*\.insteadof$"], cwd=fixture_repo,
+        text=True, capture_output=True, check=False, timeout=30,
+    )
+    require(rewrites.returncode == 1 and rewrites.stdout == "", "fixture contains an identity-rewriting insteadOf rule")
+    require(run_git(["rev-parse", "refs/remotes/origin/main"], cwd=fixture_repo) == run_git(["rev-parse", "refs/heads/main"], cwd=bare_remote), "fixture local transport main ref mismatch")
     resolver_probe = probe_workspace_payload(manifest, payload, fixture_repo)
     receipt = {
         "schema_version": SCHEMA_VERSION,
