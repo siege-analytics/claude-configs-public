@@ -307,15 +307,44 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
     ctx = context(canonical_identity)
     candidate_policy = candidate_json(candidate, head, ep.POLICY, ep.parse_json)
 
-    branch = ep.explain(
+    if subprocess.run(
+        ["git", "-C", str(candidate), "check-ref-format", "--branch", args.head_branch],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    ).returncode:
+        raise Denied("authenticated head branch is invalid")
+    requested_branch = ep.explain(
         contract, policy, selection, ctx,
         {"type": "feature-merge", "target_branch": args.target_branch},
         candidate_policy,
     )
-    if branch.get("state") != "resolved":
-        raise Denied(f"repository identity cannot resolve approved policy: {branch.get('diagnostic', branch.get('state'))}")
+    if requested_branch.get("state") != "resolved":
+        raise Denied(
+            "repository identity cannot resolve approved policy: "
+            f"{requested_branch.get('diagnostic', requested_branch.get('state'))}"
+        )
+    expected_integration = requested_branch["values"]["branch-policy"]["integration_branch"]
+    operation = "feature-integration"
+    branch = requested_branch
+    if requested_branch["decision"]["policy"] != "allow":
+        # Promotion is a distinct, topology-bounded operation. It does not
+        # weaken the strict profile's feature target: only that profile's
+        # exact integration branch may be promoted to main in the canonical
+        # same-repository range already established above.
+        if (
+            args.target_branch == "main"
+            and expected_integration != "main"
+            and args.head_branch == expected_integration
+        ):
+            operation = "canonical-promotion"
+            branch = ep.explain(
+                contract, policy, selection, ctx,
+                {"type": "feature-merge", "target_branch": expected_integration},
+                candidate_policy,
+            )
+        else:
+            raise Denied("target branch contradicts the selected project's approved branch policy")
     if branch["decision"]["policy"] != "allow":
-        raise Denied("target branch contradicts the selected project's approved branch policy")
+        raise Denied("effective integration branch is not approved")
     if args.installed_pilot_receipt:
         installation = validate_install(
             candidate, head, args.installed_pilot_receipt, branch, ep.parse_json,
@@ -384,7 +413,10 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
             "source_relationship": "same-repository",
             "base": base,
             "head": head,
+            "head_branch": args.head_branch,
             "target_branch": args.target_branch,
+            "operation": operation,
+            "policy_evaluation_target": expected_integration if operation == "canonical-promotion" else args.target_branch,
             "supported_strategy": "linear-or-two-parent-merge",
             "commits": observations,
             "policy_sensitive_paths": sorted(sensitive),
@@ -407,6 +439,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--base", required=True)
     parser.add_argument("--head", required=True)
     parser.add_argument("--canonical-identity", required=True, help="host-authenticated target as host/owner/repository")
+    parser.add_argument("--head-branch", required=True, help="host-authenticated candidate branch name")
     parser.add_argument("--target-branch", required=True)
     parser.add_argument("--installed-pilot-receipt", type=Path, help="required configured consumer receipt for disposable consumer probes")
     parser.add_argument("--receipt", type=Path)

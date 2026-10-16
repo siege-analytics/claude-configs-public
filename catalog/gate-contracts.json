@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "contract_version": "1.1.0",
+  "contract_version": "1.2.0",
   "ontology_version": "1.0.0",
   "decision_values": [
     "allow",
@@ -239,6 +239,7 @@
         "candidate-source-identity",
         "exact-base",
         "exact-head",
+        "authenticated-head-branch",
         "target-branch",
         "complete-commit-range"
       ],

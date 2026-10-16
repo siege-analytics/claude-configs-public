@@ -62,6 +62,7 @@ jobs:
           POLICY_REVISION: ${{ github.event.pull_request.base.sha }}
           EXACT_BASE: ${{ github.event.pull_request.base.sha }}
           EXACT_HEAD: ${{ github.event.pull_request.head.sha }}
+          HEAD_BRANCH: ${{ github.head_ref }}
           TARGET_BRANCH: ${{ github.base_ref }}
           CANONICAL_REPOSITORY: ${{ github.repository }}
           CANONICAL_SERVER: ${{ github.server_url }}
@@ -72,7 +73,8 @@ jobs:
             --trusted-root ../policy --trusted-revision "$POLICY_REVISION" \
             --candidate-repo . --base "$EXACT_BASE" --head "$EXACT_HEAD" \
             --canonical-identity "$CANONICAL_HOST/$CANONICAL_REPOSITORY" \
-            --target-branch "$TARGET_BRANCH" --receipt /tmp/protected-policy-receipt.json
+            --head-branch "$HEAD_BRANCH" --target-branch "$TARGET_BRANCH" \
+            --receipt /tmp/protected-policy-receipt.json
 
       # Merge queues have already admitted a PR through the head-role check.
       # The queued synthetic commit must still contain current main.

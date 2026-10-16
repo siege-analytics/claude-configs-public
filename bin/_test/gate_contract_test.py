@@ -259,13 +259,16 @@ class GateContractTest(unittest.TestCase):
             valid.replace("run: bash ../policy/scripts/ci/check-branch-topology.sh", "run: true"),
             valid.replace("--head \"$EXACT_HEAD\"", "--head HEAD"),
             valid.replace("--canonical-identity \"$CANONICAL_HOST/$CANONICAL_REPOSITORY\"", "--canonical-identity github.example.invalid/synthetic-org/strict-release"),
-            valid.replace("--target-branch \"$TARGET_BRANCH\"", "--target-branch develop"),
+            valid.replace("--head-branch \"$HEAD_BRANCH\"", "--head-branch feature/untrusted"),
             valid.replace("set -euo pipefail", "set +e"),
-            valid.replace("--target-branch \"$TARGET_BRANCH\" --receipt", "--target-branch \"$TARGET_BRANCH\" || true --receipt"),
+            valid.replace("      - name: Evaluate exact project policy range\n        if: github.event_name == 'pull_request_target'",
+                          "      - name: Evaluate exact project policy range\n        if: false"),
+            valid.replace("    runs-on: ubuntu-latest", "    if: false\n    runs-on: ubuntu-latest"),
         )
         for mutation in mutations:
             with self.subTest(mutation=mutation):
-                with self.assertRaisesRegex(ValueError, "missing, duplicated, or altered|may not be advisory"):
+                self.assertNotEqual(valid, mutation)
+                with self.assertRaisesRegex(ValueError, "reviewed complete registration"):
                     gc.validate_protected_adapter_workflow(mutation)
 
     def test_generated_registration_removal_rejects(self):

@@ -34,6 +34,7 @@ HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 DECISIONS = ["allow", "deny", "not-applicable", "unknown", "error"]
 CAPABILITY_STATES = ["verified", "unsupported", "unverified"]
 SCHEMA_SHA256 = "3cd65d6ffee11f39baca5c066d550fb89e5e2ccab4ee73e51f8a87bf00974d72"
+PROTECTED_ADAPTER_WORKFLOW_SHA256 = "2e47e6a6b43be37c99614e0b91feff7cf48068d8ab6622f446e09829944688b0"
 # The bounded pilot supports one reviewed registration/package shape per
 # capability. Reject alternate declarations until a migrated behavior needs
 # them; otherwise metadata can drift from the concrete builder/verifier path.
@@ -541,34 +542,20 @@ def validate_protected_workflow(content: str) -> None:
 
 
 def validate_protected_adapter_workflow(content: str) -> None:
-    """Require the base-controlled adapter after the retained topology guard."""
-    required = (
-        "name: pr-base-guard",
-        "pull_request_target:",
-        "fetch-depth: 0  # selected policy snapshot must be an available ancestor",
-        "- name: Enforce integration and promotion path",
-        "run: bash ../policy/scripts/ci/check-branch-topology.sh",
-        "- name: Evaluate exact project policy range",
-        "POLICY_REVISION: ${{ github.event.pull_request.base.sha }}",
-        "EXACT_BASE: ${{ github.event.pull_request.base.sha }}",
-        "EXACT_HEAD: ${{ github.event.pull_request.head.sha }}",
-        "CANONICAL_REPOSITORY: ${{ github.repository }}",
-        "set -euo pipefail",
-        "python3 ../policy/scripts/ci/protected-policy-range.py \\",
-        '--trusted-root ../policy --trusted-revision "$POLICY_REVISION" \\',
-        '--candidate-repo . --base "$EXACT_BASE" --head "$EXACT_HEAD" \\',
-        '--canonical-identity "$CANONICAL_HOST/$CANONICAL_REPOSITORY" \\',
-        '--target-branch "$TARGET_BRANCH" --receipt /tmp/protected-policy-receipt.json',
-    )
-    if any(content.count(item) != 1 for item in required):
-        fail("base-controlled protected adapter registration is missing, duplicated, or altered")
-    if content.index("- name: Enforce integration and promotion path") > content.index("- name: Evaluate exact project policy range"):
-        fail("protected adapter must follow the retained topology guard")
-    start = content.index("- name: Evaluate exact project policy range")
-    end = content.find("\n      - name:", start + 1)
-    step = content[start:end if end >= 0 else len(content)]
-    if "continue-on-error:" in step or "|| true" in step or "if: ${{ false }}" in step:
-        fail("base-controlled protected adapter may not be advisory or fail-open")
+    """Require the one reviewed complete base-controlled workflow shape.
+
+    The digest covers event filters, permissions, the enclosing job, every
+    checkout/fetch/topology/adapter condition, exact event-derived inputs,
+    working directories, shell fail-closed behavior, and merge-group handling.
+    This intentionally rejects all alternate registrations rather than trying
+    to enumerate YAML spellings for disabled or advisory execution.
+    """
+    actual = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    if actual != PROTECTED_ADAPTER_WORKFLOW_SHA256:
+        fail(
+            "base-controlled protected adapter workflow bytes differ from the "
+            "reviewed complete registration"
+        )
 
 
 def validate_generated(root: Path, generated_root: Path, contract: dict[str, Any]) -> None:

@@ -102,6 +102,7 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
         return git(repo, "rev-parse", "HEAD").stdout.strip()
 
     def evaluate(self, repo: Path, base: str, target: str, *, head: str | None = None,
+                 head_branch: str = "feature/pilot",
                  trusted: Path | None = None, trusted_revision: str | None = None,
                  canonical_identity: str | None = None) -> tuple[int, dict]:
         exact_head = head or git(repo, "rev-parse", "HEAD").stdout.strip()
@@ -116,11 +117,61 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
             "--base", base,
             "--head", exact_head,
             "--canonical-identity", canonical,
+            "--head-branch", head_branch,
             "--target-branch", target,
             "--installed-pilot-receipt", ".pilot/composition.json",
         ]
         result = run(*command, cwd=trusted_root, check=False)
         return result.returncode, json.loads(result.stdout)
+
+    def topology(self, repo: Path, base: str, target: str, head_branch: str,
+                 *, head_repository: str | None = None) -> subprocess.CompletedProcess[str]:
+        project = "synthetic-trunk" if "synthetic-trunk" in repo.name else "strict-release"
+        canonical = f"synthetic-org/{project}"
+        git(repo, "update-ref", "refs/remotes/upstream/main", base)
+        env = {
+            **os.environ,
+            "BASE_BRANCH": target,
+            "HEAD_BRANCH": head_branch,
+            "HEAD_REPO": head_repository or canonical,
+            "CANONICAL_REPO": canonical,
+            "MAIN_REF": "upstream/main",
+        }
+        return run(
+            "bash", str(self.trusted / "scripts/ci/check-branch-topology.sh"),
+            cwd=repo, check=False, env=env,
+        )
+
+    def test_canonical_promotion_and_full_chain_negatives(self):
+        repo, base = self.make_repo("strict-release")
+        self.change(repo, "promotion", self.message("canonical promotion"))
+        old_guard = self.topology(repo, base, "main", "develop")
+        self.assertEqual(old_guard.returncode, 0, old_guard.stdout + old_guard.stderr)
+        code, receipt = self.evaluate(repo, base, "main", head_branch="develop")
+        self.assertEqual((code, receipt["state"]), (0, "eligible"))
+        self.assertEqual(receipt["candidate"]["operation"], "canonical-promotion")
+        self.assertEqual(receipt["candidate"]["policy_evaluation_target"], "develop")
+        self.assertEqual(receipt["candidate"]["target_branch"], "main")
+
+        for head_branch in ("feature/pilot", "main"):
+            with self.subTest(head_branch=head_branch):
+                old_guard = self.topology(repo, base, "main", head_branch)
+                self.assertNotEqual(old_guard.returncode, 0)
+                code, denied = self.evaluate(repo, base, "main", head_branch=head_branch)
+                self.assertEqual((code, denied["state"]), (1, "denied"))
+
+        fork, fork_base = self.make_repo("strict-release")
+        self.change(fork, "fork-promotion", self.message("fork promotion"))
+        git(fork, "remote", "set-url", "origin", "https://github.example.invalid/foreign/strict-release.git")
+        old_guard = self.topology(
+            fork, fork_base, "main", "develop", head_repository="foreign/strict-release",
+        )
+        self.assertNotEqual(old_guard.returncode, 0)
+        code, denied = self.evaluate(
+            fork, fork_base, "main", head_branch="develop",
+            canonical_identity="github.example.invalid/synthetic-org/strict-release",
+        )
+        self.assertEqual((code, denied["state"]), (1, "denied"))
 
     def test_same_develop_operation_differs_by_approved_profile(self):
         strict, strict_base = self.make_repo("strict-release")
