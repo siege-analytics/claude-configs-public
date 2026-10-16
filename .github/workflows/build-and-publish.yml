@@ -115,6 +115,9 @@ jobs:
       - name: Validate repo hooks match snippet
         run: python3 bin/validate-hooks.py
 
+      - name: Consumer package documentation and clean-home diagnostics
+        run: python3 bin/_test/package_documentation_test.py
+
       - name: Settings-drift check fixtures
         run: python3 bin/_test/settings_drift_test.py
 
