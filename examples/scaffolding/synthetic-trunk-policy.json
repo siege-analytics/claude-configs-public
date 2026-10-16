@@ -10,10 +10,10 @@
     "host": "github.com",
     "owner": "siege-analytics",
     "repository": "claude-configs-public",
-    "revision": "b4c08e5a6173065ecd7aa71345177bcd90f515e6",
+    "revision": "34f014bd8aaf55e545a6a2fe3094242aa40cb182",
     "import_mechanism": "git",
-    "digest": "33f93f418382a744a5a36777184cb62c54fbe0daf06ee71e6ffc447170a36979",
-    "tool_version": "gate-contract/1"
+    "digest": "0e3b8e869eb0eb90583680d777a58ecfcdb0694d4f5ffe7891e69ebc7de1059b",
+    "tool_version": "effective-policy/1"
   },
   "values": {
     "branch-policy": {
@@ -27,7 +27,7 @@
       "exception_policy": "scoped-evidence-record-only"
     },
     "review-procedure-binding": {
-      "procedure": "self-review",
+      "procedure": "hostile-review",
       "authorization_effect": "none"
     }
   },
@@ -36,6 +36,11 @@
       "field_id": "branch-policy",
       "path": "integration_branch",
       "layer": "organization-profile"
+    },
+    {
+      "field_id": "review-procedure-binding",
+      "path": "procedure",
+      "layer": "project"
     }
   ]
 }

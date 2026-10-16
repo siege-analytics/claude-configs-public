@@ -533,6 +533,8 @@ def validate_protected_workflow(content: str) -> None:
         "run: |",
         "python3 bin/_test/gate_contract_test.py",
         "python3 bin/gate_contract.py --check --probe --generated-root dist",
+        "python3 bin/_test/effective_policy_test.py",
+        "python3 bin/effective_policy.py validate --generated-root dist",
     ]
     if actual != expected:
         fail("protected validation workflow gate contract step is conditional, altered, or non-exact")
