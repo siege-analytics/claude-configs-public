@@ -2,15 +2,15 @@
   "schema_version": 1,
   "resolver_version": "1.0.0",
   "contract_source": "catalog/gate-contracts.json",
-  "contract_sha256": "f2907fe643f7a0e0ebd94a46edbcb58f960e4da0e4e5027f46027d281ddc1a70",
-  "parent_contract_revision": "eb660b058c0a983dff692204616597a76a54f0ba",
+  "contract_sha256": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
+  "parent_contract_revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
   "parent_lock": {
     "host": "github.com",
     "owner": "siege-analytics",
     "repository": "claude-configs-public",
-    "revision": "eb660b058c0a983dff692204616597a76a54f0ba",
+    "revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
     "import_mechanism": "git",
-    "digest": "f2907fe643f7a0e0ebd94a46edbcb58f960e4da0e4e5027f46027d281ddc1a70",
+    "digest": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
     "tool_version": "effective-policy/1"
   },
   "organization_profiles": [

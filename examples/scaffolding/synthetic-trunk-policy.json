@@ -10,9 +10,9 @@
     "host": "github.com",
     "owner": "siege-analytics",
     "repository": "claude-configs-public",
-    "revision": "eb660b058c0a983dff692204616597a76a54f0ba",
+    "revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
     "import_mechanism": "git",
-    "digest": "f2907fe643f7a0e0ebd94a46edbcb58f960e4da0e4e5027f46027d281ddc1a70",
+    "digest": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
     "tool_version": "effective-policy/1"
   },
   "values": {
