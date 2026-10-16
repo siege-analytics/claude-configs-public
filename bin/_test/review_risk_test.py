@@ -6,7 +6,16 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2];SCRIPT=ROOT/"bin/review-risk.py"
 spec=importlib.util.spec_from_file_location("review_risk",SCRIPT);m=importlib.util.module_from_spec(spec);sys.modules[spec.name]=m;spec.loader.exec_module(m)
 policy=json.loads((ROOT/"catalog/review-risk-policy.json").read_text())
-AUDITED_ENFORCEMENT_DEPENDENCIES = [
+AUTHORITY_DEPENDENCY_FLOOR = [
+ "bin/effective_policy.py",
+ "bin/gate_contract.py",
+ "bin/_test/effective_policy_test.py",
+ "bin/_test/gate_contract_test.py",
+ "catalog/effective-policy-selection.json",
+ "catalog/gate-contract-schema.json",
+ "catalog/gate-contracts.json",
+]
+AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/agent-comms/hub-concurrency-gate.sh",
  "hooks/agent-comms/no-slug-form-outbound.sh",
  "hooks/agent-comms/spawn-guard.sh",
@@ -457,6 +466,11 @@ def main():
  assert tier(["skills/python/SKILL.md"])=="B"
  assert tier(["src/app.py"])=="B"
  assert tier(["hooks/agent-comms/status.sh"])=="B"
+ # Enforcement authority code, its immutable selection receipt, the reviewed
+ # contract and the tests that advertise those semantics must change together
+ # under Tier C. Mutable policy/fixture candidates remain proposals, not proof.
+ for path in AUTHORITY_DEPENDENCY_FLOOR:assert tier([path])=="C",("authority dependency",path)
+ for path in ["catalog/effective-policy.json","examples/scaffolding/strict-release-policy.json","examples/scaffolding/synthetic-trunk-policy.json"]:assert tier([path])=="B",("proposal content",path)
  for path in ["hooks/git/self-review.sh","hooks/resolver/skill-enforcement-gate.sh","hooks/resolver/inject-resolver.sh","hooks/settings-snippet.json",".github/workflows/build-and-publish.yml","skills/KERNEL.md","bin/install.sh","bin/resolve-load-set.py","bin/skill-lifecycle.py","bin/data-scope.py","bin/_test/data_scope_test.py","catalog/data-scope-ledger.json","catalog/data-scope-fixtures.json","catalog/review-risk-policy.json","catalog/resolver-manifest.json","catalog/skill-lifecycle-approved-exceptions.json","auth/token.py","VERSION",*AUDITED_ENFORCEMENT_DEPENDENCIES]:assert tier([path])=="C",path
  for path in ["hooks/lib/log-block.sh","hooks/create-ticket/scaffold-test-stub.sh","bin/review-risk-metrics.py","hooks/agent-comms/future-advisory.sh"]:assert tier([path])=="B",path
  for path in ["catalog/generated-source-authority.json","catalog/kernel-budget.json"]:assert tier([path])=="A",path
