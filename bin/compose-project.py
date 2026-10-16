@@ -70,10 +70,20 @@ def raw_link_targets(content):
         return ''.join(result)
 
     targets = [destination(match.end()) for match in re.finditer(r'\]\(', content)]
-    # Reference definitions are checked even if unused. Labels may contain
-    # escaped brackets; whitespace before the destination may include a newline.
-    definitions = re.finditer(r'(?m)^[ \t]{0,3}\[(?:\\.|[^\]\\]){1,999}\]:', content)
+    # Conservatively inspect definitions anywhere, including inside nested
+    # blockquotes/lists and unused definitions. A top-level line anchor would
+    # miss valid container definitions. Labels cannot contain bare brackets.
+    definitions = re.finditer(r'\[(?:\\.|[^\[\]\\]){1,999}\]:', content)
     targets.extend(destination(match.end()) for match in definitions)
+
+    # CommonMark 0.31.2 section 6.5: URI autolinks are destinations too, not
+    # HTML attributes. Feed them through the same scheme policy. Email
+    # autolinks intentionally resolve to mailto, as in CommonMark.
+    targets.extend(re.findall(r'<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^\x00-\x20\x7f<>]*)>', content))
+    email = (r"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@"
+             r'[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?'
+             r'(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*')
+    targets.extend('mailto:' + address for address in re.findall('<(' + email + ')>', content))
 
     class Links(HTMLParser):
         def handle_starttag(self, tag, attrs):

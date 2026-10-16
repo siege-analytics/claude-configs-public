@@ -81,3 +81,26 @@ file-URL exceptions. Package paths and anchors keep the same validated route.
 Two new direct/full-package scenarios cover absolute/relative/case/entity-encoded
 local-resource URLs, malformed web URLs and positive controls for each allowed
 scheme. The focused total is now 40 scenarios; fresh review remains required.
+
+## Independent R3 remediation and integration
+
+The reviewer rejected `ad6d1ee` for URI autolinks escaping destination extraction.
+The destination stream now includes CommonMark 0.31.2 URI autolinks and explicitly
+maps email autolinks to mailto. An audit of the other supported representations
+also found that top-level-only reference definitions missed definitions nested in
+lists and blockquotes. Definitions are now conservatively inspected regardless of
+container placement. This retains the existing policy of checking link examples
+even when a renderer might treat them as code. The syntax reference is
+https://spec.commonmark.org/0.31.2/#autolinks . No general renderer is introduced.
+
+Three added scenarios exercise URI schemes through direct and full-package paths,
+both output layouts, intentional email behavior and container reference mutations.
+The focused suite now has 43 scenarios. This candidate incorporates accepted
+develop `beb97cbd9d9cf4d575f07d5bf802869c510fd603` (#1012's Tier C prerequisite).
+Fresh combined validation and independent acceptance must be recorded from actual
+results; prior heads' green CI does not override their independent rejections.
+
+The combined R3/integration matrix passed **80/80 commands** in 328.4 seconds,
+including all 43 focused scenarios, 24 Python modules, 36 hook suites and two
+workflow suites. Log: `/tmp/cc-1001-r3-full-validation.log`. Generated freshness
+and both layouts pass. Hosted validation and fresh independent review are pending.

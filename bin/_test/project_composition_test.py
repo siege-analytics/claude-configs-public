@@ -227,6 +227,59 @@ label]: <references/steps.md>
         with self.assertRaisesRegex(ValueError, 'missing procedure'):
             m.package(source, output, 'github.example.invalid/synthetic-org/strict-release')
 
+    def test_uri_autolinks_use_shared_scheme_policy_before_any_package_write(self):
+        allowed = ('http://example.invalid/doc', 'https://example.invalid/a?q=1&b=2', 'MAILTO:review@example.invalid')
+        rejected = ('file:///etc/passwd', 'file:../self-review/SKILL.md', 'FILE:///private/secret',
+                    'vscode://file/private/secret', 'data:text/plain,local', 'https:../self-review/SKILL.md')
+        for target in allowed + rejected:
+            content = f'See <{target}>\n'
+            self.assertIn(target, m.raw_link_targets(content))
+            for caller in ('skills/code-review/SKILL.md', 'skills/coding/code-review/SKILL.md'):
+                with self.subTest(caller=caller, target=target):
+                    if target in allowed:
+                        m.validate_packaged_links({caller: content.encode()})
+                    else:
+                        with self.assertRaises(ValueError):
+                            m.validate_packaged_links({caller: content.encode()})
+            source, output = self.changed_source()
+            path = source / 'skills/coding/code-review/SKILL.md'
+            path.write_text(path.read_text() + '\n' + content)
+            if target in rejected:
+                with self.assertRaises(ValueError):
+                    m.package(source, output, 'github.example.invalid/synthetic-org/strict-release')
+                self.assertFalse(output.exists())
+            else:
+                m.package(source, output, 'github.example.invalid/synthetic-org/strict-release')
+                for layout, caller in (('flat', 'code-review'), ('nested', 'coding/code-review')):
+                    self.assertIn(content, (output / layout / 'skills' / caller / 'SKILL.md').read_text())
+
+    def test_email_autolinks_intentionally_use_mailto(self):
+        content = '<review@example.invalid> <review+project@Example.invalid>'
+        self.assertEqual(m.raw_link_targets(content), ['mailto:review@example.invalid', 'mailto:review+project@Example.invalid'])
+        source, output = self.changed_source()
+        path = source / 'skills/coding/code-review/SKILL.md'
+        path.write_text(path.read_text() + '\n' + content)
+        m.package(source, output, 'github.example.invalid/synthetic-org/strict-release')
+        for layout, caller in (('flat', 'code-review'), ('nested', 'coding/code-review')):
+            self.assertIn(content, (output / layout / 'skills' / caller / 'SKILL.md').read_text())
+
+    def test_container_reference_definitions_cannot_bypass_scope(self):
+        for prefix in ('> ', '- ', '    ', '> 1. > '):
+            for target in ('file:///etc/passwd', '../self-review/SKILL.md'):
+                content = f'{prefix}[ref]: {target}\n'
+                self.assertIn(target, m.raw_link_targets(content))
+                for caller in ('skills/code-review/SKILL.md', 'skills/coding/code-review/SKILL.md'):
+                    with self.subTest(prefix=prefix, target=target, caller=caller), self.assertRaises(ValueError):
+                        m.validate_packaged_links({caller: content.encode()})
+                source, output = self.changed_source()
+                path = source / 'skills/coding/code-review/SKILL.md'
+                path.write_text(path.read_text() + '\n' + content)
+                with self.assertRaises(ValueError):
+                    m.package(source, output, 'github.example.invalid/synthetic-org/strict-release')
+                self.assertFalse(output.exists())
+            m.validate_packaged_links({'skills/review/SKILL.md': f'{prefix}[ref]: references/steps.md'.encode(),
+                                      'skills/review/references/steps.md': b'# Steps'})
+
     def test_existing_output_is_not_overwritten(self):
         with self.assertRaisesRegex(ValueError, 'already exists'):
             m.package(self.source, self.root / 'strict-release', 'github.example.invalid/synthetic-org/strict-release')
