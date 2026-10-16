@@ -7,7 +7,8 @@ Hostile-review-artifact: plans/hostile-review-1002-git-policy-pilot.md
 
 - The active selection is the independently accepted exact snapshot `ecef9e8620f477cdea4962cd3d737e16873f06fa`, blob `086e7bda8e9f588c57294ed0899f9ff2ffa982c5`, review `5543665034`; working policy remains proposal-only.
 - #1001 composition is configured content and cannot establish operation authority.
-- A base-controlled host provider and required-check protection are unavailable to the introducing PR; #1003 must prove them on a later head.
+- `pull_request_target` executes workflow YAML/ref from default branch `main`, not the PR base. The registered main workflow delegates to the exact base's topology entrypoint; checked-out develop YAML is not executed-workflow evidence.
+- Provider execution and required-check protection remain separate claims. The user's later #1019 negative/replacement-head probe must prove the repaired invocation and protection state.
 - The bounded first deployment supports same-repository PRs, linear commits and two-parent merges only.
 
 ## Test plan
@@ -22,20 +23,21 @@ Hostile-review-artifact: plans/hostile-review-1002-git-policy-pilot.md
 
 ## Peer review
 
-A hostile model review found a concrete port-identity collapse and noted candidate-origin/host-input boundaries. The port reproduction was added and the interface split canonical target from source origin; unsupported forks now reject. Independent adapter review then reproduced two configured-integrity bypasses: contradictory installed `RESIDENT.md` bytes and invented parent/effective digests were still eligible. The adapter now performs an exact trusted composition rebuild and full installed-tree comparison. The same review found the published fixture could run zero tests when its setup copy was unchanged; setup now commits conditionally/allow-empty. Follow-up review found canonical `develop -> main` was incorrectly evaluated as feature integration and that `if: false` could disable the registered adapter without invalidating configured evidence. Canonical promotion is now a distinct operation using the explicit authenticated head branch, while strict feature integration remains `develop`; the complete workflow registration is sealed rather than validated by bypassable substrings. Fresh exact-head peer review remains required.
+A hostile model review found a concrete port-identity collapse and noted candidate-origin/host-input boundaries. The port reproduction was added and the interface split canonical target from source origin; unsupported forks now reject. Independent adapter review then reproduced configured-integrity and fixture-execution bypasses, repaired by exact trusted recomposition/full-tree comparison and non-short-circuiting setup. Follow-up review separated canonical promotion and sealed complete workflow registration. The subsequent live #1019 negative then falsified the activation premise: GitHub executed the default-branch main workflow and omitted the develop-only adapter step, so a missing-ticket candidate passed. The repair now preserves the registered topology step, invokes the adapter from the exact base entrypoint, parses exact host event inputs, fetches complete trusted history, and records actual default-workflow ref/revision/blob separately. A local replay also caught Bash-4-only `mapfile`; portable parsing replaced it. Fresh exact-head peer review remains required.
 
 ## Lead review
 
-Pending exact-head review. The acceptance question is whether the adapter correctly produces non-authoritative eligibility evidence from immutable prior policy and exact Git facts, not whether this PR proves live branch protection.
+Implementation self-review confirms topology remains first and unchanged; provider activation occurs only under `GITHUB_EVENT_NAME=pull_request_target`; host event facts must agree with workflow inputs and both checkout HEADs; canonical history is deepened before immutable ancestry/blob checks; and `GITHUB_WORKFLOW_SHA` must equal fetched `origin/main`. The adapter receipt separates actual default-workflow and exact-base entrypoint identities. Independent exact-head review remains required. This repair still cannot prove its own hosted execution or required protection.
 
 ## Quantified claims
 
-- 11 focused disposable-history scenarios currently pass, including six independent installed-package mutations and the full retained-topology-plus-adapter canonical-promotion chain with feature, main-head and fork negatives.
+- 13 focused disposable/provider scenarios pass, including exact default-workflow identity, registered topology-entrypoint event denial, entrypoint/validator mutations, six installed-package mutations, and canonical-promotion negatives.
 - 34 effective-policy and 21 gate-contract scenarios pass at the selected snapshot/contract.
-- Final checkpoint validation passes 26/26 Python modules, 36/36 native hook suites, 2/2 workflow suites and 22/22 canonical build/freshness commands.
+- Current provider-repair validation passes 13/13 protected-policy/provider scenarios, 10/10 topology scenarios, 26/26 Python modules, 36/36 native hook suites and 2/2 workflow suites.
+- Canonical build/check, skill inventory, generated authority (198 sources / 804 snapshots / 2,912 mappings on the pre-#1016 base), progressive-loading metrics, review-risk metrics, kernel budget, ontology, three hook-package validators and flat-layout validation pass with no generated tracked drift.
 - Two synthetic projects share one recomputed parent-content SHA-256 and produce distinct effective-policy SHA-256 identities.
 - Every commit in exact `base..head` is evaluated; supported commits have at most two parents.
-- Seven trusted authority dependency paths are byte-bound to exact Git blobs at the declared trusted revision.
+- Seven policy/validator dependencies plus the registered topology entrypoint are byte-bound to exact base blobs. The actual executed workflow is separately bound to canonical `origin/main`, `GITHUB_WORKFLOW_REF`, `GITHUB_WORKFLOW_SHA`, its Git blob and SHA-256.
 - The adapter has zero final-allow result state; `eligible` always requires a separate protected host check.
 
 ## Rollback and non-claims
