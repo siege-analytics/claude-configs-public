@@ -704,6 +704,68 @@ def evidence_timestamp(value: Any, label: str) -> datetime:
     return observed
 
 
+def validate_setup_registration(facts: dict[str, Any]) -> dict[str, Any]:
+    receipt_path = facts["evidence_root"] / "workspace-setup.json"
+    require(receipt_path.is_file() and not receipt_path.is_symlink(), "workspace setup receipt is absent or symlinked")
+    receipt = json.loads(receipt_path.read_text())
+    require(isinstance(receipt, dict), "workspace setup receipt must be an object")
+    require(receipt.get("schema_version") == SCHEMA_VERSION, "unsupported workspace setup receipt schema")
+    require(receipt.get("run_id") == facts["run_id"], "workspace setup receipt run_id mismatch")
+    require(receipt.get("manifest_sha256") == facts["manifest_sha256"], "workspace setup receipt manifest digest mismatch")
+    require(receipt.get("workspace") == str(facts["workspace_root"]), "workspace setup receipt workspace mismatch")
+    fixture = facts["temp_root"] / "fixture" / "repo"
+    require(receipt.get("fixture") == str(fixture), "workspace setup receipt fixture mismatch")
+    require(receipt.get("workspace_settings_role") == "assembly-evidence-only", "workspace settings must be labeled assembly evidence only")
+    require(receipt.get("standing_order_automations_enabled") is False, "standing-order automations must remain disabled")
+    require(receipt.get("pi_capability_state") == "unsupported-unverified", "workspace setup cannot establish Pi capability")
+    require(receipt.get("authorization_effect") == "none", "workspace setup receipt cannot authorize execution")
+    registration = receipt.get("claude_project_registration")
+    require(isinstance(registration, dict), "fixture-local Claude project registration receipt is required")
+    source = facts["workspace_root"] / ".claude" / "settings.json"
+    target = fixture / ".claude" / "settings.json"
+    require(registration.get("source_path") == str(source), "Claude registration source path mismatch")
+    require(registration.get("destination_path") == str(target), "Claude registration must target fixture-local project settings")
+    require(registration.get("sdk_cwd") == str(fixture), "Claude registration sdkCwd mismatch")
+    require(registration.get("registration_state") == "configured-unverified", "Claude registration state must remain configured-unverified")
+    require(registration.get("host_invocation_observed") is False, "setup cannot claim host invocation")
+    source_digest = registration.get("source_sha256")
+    destination_digest = registration.get("destination_sha256")
+    require(
+        isinstance(source_digest, str) and HEX64.fullmatch(source_digest) is not None
+        and destination_digest == source_digest,
+        "Claude registration source/destination digest mismatch",
+    )
+    inventory = registration.get("command_inventory")
+    require(isinstance(inventory, list) and inventory, "Claude registration command inventory is required")
+    coordinates: set[tuple[str, int, int]] = set()
+    for item in inventory:
+        require(isinstance(item, dict), "Claude registration command inventory entries must be objects")
+        require(
+            set(item) == {
+                "event", "matcher", "group_index", "hook_index", "argv",
+                "payload_relative_path", "executable_sha256",
+            },
+            "Claude registration command inventory entry shape mismatch",
+        )
+        event = item["event"]
+        group_index = item["group_index"]
+        hook_index = item["hook_index"]
+        relative = Path(item["payload_relative_path"])
+        require(isinstance(event, str) and event, "Claude registration inventory event is required")
+        require(isinstance(group_index, int) and group_index >= 0, "Claude registration group index is invalid")
+        require(isinstance(hook_index, int) and hook_index >= 0, "Claude registration hook index is invalid")
+        require(not relative.is_absolute() and ".." not in relative.parts, "Claude registration payload path must be confined")
+        require(item["argv"] == [str(facts["workspace_root"] / relative)], "Claude registration argv differs from pinned workspace payload")
+        require(
+            isinstance(item["executable_sha256"], str) and HEX64.fullmatch(item["executable_sha256"]) is not None,
+            "Claude registration executable digest is invalid",
+        )
+        coordinate = (event, group_index, hook_index)
+        require(coordinate not in coordinates, "Claude registration command inventory contains duplicate coordinates")
+        coordinates.add(coordinate)
+    return {"settings_path": str(target), "settings_sha256": destination_digest}
+
+
 def validate_evidence(
     manifest: dict[str, Any], evidence: dict[str, Any], *, _test_discovery_reader: Any = discover_installed_builds,
     _test_expected_temp_base: Path = Path("/private/tmp"),
@@ -725,6 +787,7 @@ def validate_evidence(
     installed_discovery = _test_discovery_reader(manifest)
     require(evidence_root.is_dir() and not evidence_root.is_symlink(), "evidence root is absent or symlinked")
     require(evidence_root.resolve() == evidence_root, "evidence root must resolve to its exact approved path")
+    claude_registration = validate_setup_registration(facts)
     for expected, observed in zip(manifest["backends"], runs):
         require(isinstance(observed, dict), "backend evidence must be objects")
         sequence = expected["sequence"]
@@ -791,6 +854,25 @@ def validate_evidence(
             digest = event.get("artifact_sha256")
             require(isinstance(digest, str) and HEX64.fullmatch(digest), "event artifact digest required")
             require(sha256_bytes(artifact.read_bytes()) == digest, f"event artifact digest mismatch: {reference}")
+            registration_keys = {"registered_settings_path", "registered_settings_sha256", "settings_restored_sha256"}
+            if sequence == 1 and event["name"] in {"startup_resolver", "no_op_detection"}:
+                require(
+                    event.get("registered_settings_path") == claude_registration["settings_path"],
+                    f"backend 1 {event['name']} must bind fixture-local registered settings path",
+                )
+                require(
+                    event.get("registered_settings_sha256") == claude_registration["settings_sha256"],
+                    f"backend 1 {event['name']} registered settings digest mismatch",
+                )
+                if event["name"] == "no_op_detection":
+                    require(
+                        event.get("settings_restored_sha256") == claude_registration["settings_sha256"],
+                        "backend 1 no-op evidence must bind exact fixture settings restoration",
+                    )
+                else:
+                    require("settings_restored_sha256" not in event, "startup registration event must not claim no-op restoration")
+            else:
+                require(not registration_keys.intersection(event), "Claude project registration evidence cannot establish Pi or unrelated events")
         validated_events += len(events)
     require(first_start is not None and prior_end is not None, "backend timing evidence is absent")
     overall_duration = (prior_end - first_start).total_seconds()
@@ -825,6 +907,28 @@ def verify_cleanup(
     require(receipt.get("run_id") == facts["run_id"], "cleanup run_id mismatch")
     require(receipt.get("manifest_sha256") == facts["manifest_sha256"], "cleanup manifest digest mismatch")
     require(receipt.get("workspace_absent") is True, "workspace residue remains")
+    setup_receipt_digest = receipt.get("workspace_setup_receipt_sha256")
+    registered_digest = receipt.get("fixture_claude_settings_registered_sha256")
+    observed_digest = receipt.get("fixture_claude_settings_observed_sha256_before_cleanup")
+    require(
+        isinstance(setup_receipt_digest, str) and HEX64.fullmatch(setup_receipt_digest) is not None,
+        "cleanup receipt must bind the preserved workspace setup receipt",
+    )
+    require(
+        isinstance(registered_digest, str) and HEX64.fullmatch(registered_digest) is not None,
+        "cleanup receipt must bind the setup-registered fixture Claude settings digest",
+    )
+    require(
+        isinstance(observed_digest, str) and HEX64.fullmatch(observed_digest) is not None,
+        "cleanup receipt must record the observed pre-removal fixture Claude settings digest",
+    )
+    require(
+        receipt.get("fixture_claude_settings_digest_match") is True and observed_digest == registered_digest,
+        "fixture Claude settings cleanup digest differs from setup registration",
+    )
+    require(receipt.get("fixture_claude_settings_absent") is True, "fixture Claude settings residue remains")
+    fixture_settings = facts["temp_root"] / "fixture" / "repo" / ".claude" / "settings.json"
+    require(not fixture_settings.exists() and not fixture_settings.is_symlink(), "fixture Claude settings still exists on disk")
     require(receipt.get("temp_root_absent") is True, "temp-root residue remains")
     require(receipt.get("disposable_refs_absent") is True, "disposable Git refs remain")
     require(receipt.get("outside_allowlist_unchanged") is True, "outside-allowlist state changed")
