@@ -655,7 +655,7 @@ def inject_project_frontmatter(content: str, project_slug: str) -> str:
 # Token resolution
 # ---------------------------------------------------------------------------
 
-def resolve_tokens(content: str, layout: str, skill_paths: dict[str, str], rule_paths: dict[str, str], from_path: Path) -> str:
+def resolve_tokens(content: str, layout: str, skill_paths: dict[str, str], rule_paths: dict[str, str], from_path: Path, composition=None) -> str:
     """Expand [skill:slug] and [rule:slug] tokens to layout-appropriate Markdown links.
 
     `from_path` is the SKILL.md (or .md) file's path relative to skills/, used to compute
@@ -672,6 +672,11 @@ def resolve_tokens(content: str, layout: str, skill_paths: dict[str, str], rule_
 
     def replace_skill(match: re.Match[str]) -> str:
         slug = match.group("slug")
+        if composition is not None:
+            return ", ".join(
+                f"[`{item['slug']}`]({link_to(item['load_path'].removeprefix('skills/'))})"
+                for item in composition.resolve([slug])["selected"]
+            )
         if slug not in skill_paths:
             UNKNOWN_SKILLS.setdefault(str(from_path), set()).add(slug)
             return f"`{slug}` (planned)"
@@ -1982,6 +1987,19 @@ def main() -> int:
 
     print("\nBuilding consumer packages...")
     build_consumer_packages()
+
+    print("\nBuilding synthetic project compositions...")
+    spec = importlib.util.spec_from_file_location("compose_project", REPO_ROOT / "bin/compose-project.py")
+    composer = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(composer)
+    composition_root = DIST / "composition-examples"
+    if composition_root.exists():
+        shutil.rmtree(composition_root)
+    for project in ("strict-release", "synthetic-trunk"):
+        composer.package(
+            REPO_ROOT / "examples/composition", composition_root / project,
+            "github.example.invalid/synthetic-org/" + project,
+        )
 
     print("\nScoring skill quality...")
     all_skill_slugs = set(skills_src) | set(project_skills_src)

@@ -54,6 +54,12 @@ jobs:
             python3 "dist/$pkg/skills/drive-while-away/scripts/work_cycle.py" examples/coordination/work-cycle.json
           done
 
+      - name: Project procedure and resident composition
+        run: |
+          python3 bin/_test/procedure_composition_test.py
+          python3 bin/_test/project_composition_test.py
+          python3 bin/ontology.py --validate-bindings examples/composition/ontology-bindings.json
+
       - name: Canonical terminology and generated wiki
         run: |
           python3 bin/_test/ontology_test.py
