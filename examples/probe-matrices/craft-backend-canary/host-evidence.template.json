@@ -12,6 +12,15 @@
       "sequence": 1,
       "connection": "claude-max",
       "model": "claude-opus-4-8",
+      "installed_build_key": "claude_sdk",
+      "installed_build_discovery_sha256": "REPLACE_WITH_AUTHORIZATION_ATTESTATION_DISCOVERY_SHA256",
+      "runtime_identity": {
+        "state": "unsupported-unverified",
+        "source": "not-observed",
+        "identity": null,
+        "artifact_reference": null,
+        "artifact_sha256": null
+      },
       "started_at": "REPLACE_WITH_ISO8601",
       "ended_at": "REPLACE_WITH_ISO8601",
       "outcome": "not-run",
@@ -77,6 +86,15 @@
       "sequence": 2,
       "connection": "chatgpt-plus",
       "model": "pi/gpt-5.5",
+      "installed_build_key": "pi_adapter",
+      "installed_build_discovery_sha256": "REPLACE_WITH_AUTHORIZATION_ATTESTATION_DISCOVERY_SHA256",
+      "runtime_identity": {
+        "state": "unsupported-unverified",
+        "source": "not-observed",
+        "identity": null,
+        "artifact_reference": null,
+        "artifact_sha256": null
+      },
       "started_at": "REPLACE_WITH_ISO8601",
       "ended_at": "REPLACE_WITH_ISO8601",
       "outcome": "not-run",

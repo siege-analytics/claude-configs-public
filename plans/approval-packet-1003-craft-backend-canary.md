@@ -14,16 +14,17 @@ This packet is reviewable preparation only. One future live run requires accepte
 - Budgets: 900 seconds per backend; 180 transition; 300 cleanup; 2,400 overall
 - Cleanup owner: Dheeraj
 
-Current preparation pins are in `approval.proposal.json`. Exact materialized package bytes and external operator approval remain deliberately null. The proposal cannot pass `--require-approval-record`; all commands return `authorization_effect: none`.
+Current preparation pins are in `approval.proposal.json`. They separately bind exact installed Craft application manifest/main-bundle digests, the installed Claude SDK manifest/version and Pi/OpenAI implementation markers; connection/model aliases are not build identities. Exact materialized package/payload bytes and external operator approval remain deliberately null. The proposal cannot pass `--require-approval-record`; all commands return `authorization_effect: none`.
 
 ## Prepared driver operations
 
 1. `validate`: proposal paths, closed effects/limits, backend order, budgets and pins.
-2. `materialize`: only the exact temp root, detached source, rebuilt outputs, strict-release composition, exact allowlisted workspace payload, canonical synthetic fixture over local transport, control markers, local bare remote and receipt; no Craft workspace/session.
-3. `validate --require-approval-record`: checks a separately supplied approval record bound to the exact subject without granting authority.
-4. `attest-materialized`: checks the existing exact source/package/fixture bytes.
-5. `validate-evidence`: requires two sequential runs, exactly nine unique expected events each, unique confined artifact files with matching SHA-256, and recorded per-backend/transition/overall durations within the pinned budgets.
-6. `verify-cleanup`: deletes nothing; checks a matching imported receipt and directly observes exact path absence.
+2. `discover-installed-builds`: reads only three absolute installed application artifacts, compares exact versions/digests/adapter markers and grants no authority.
+3. `materialize`: only the exact temp root, detached source, rebuilt outputs, strict-release composition, exact allowlisted workspace payload, canonical synthetic fixture over local transport, control markers, local bare remote, refreshed installed-build discovery and receipt; no Craft workspace/session.
+4. `validate --require-approval-record`: checks a separately supplied approval record bound to the exact subject without granting authority.
+5. `attest-materialized`: checks the existing exact source/package/fixture bytes and re-runs installed-build discovery.
+6. `validate-evidence`: requires two sequential runs, artifact-backed host-observed active runtime identity bound to the discovery digest, exactly nine unique expected events each, unique confined artifact files with matching SHA-256, and recorded per-backend/transition/overall durations within the pinned budgets. Unknown identity remains `unsupported-unverified`; Pi/OpenAI evidence is not Codex CLI evidence.
+7. `verify-cleanup`: deletes nothing; checks a matching imported receipt and directly observes exact path absence.
 
 ## Future disposable setup boundary
 

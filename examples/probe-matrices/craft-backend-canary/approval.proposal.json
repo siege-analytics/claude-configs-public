@@ -24,7 +24,7 @@
     "craft_package_tree_sha256": null,
     "composition_tree_sha256": "7abab83d505b9ff3370db8519f698d28372f338d512b99c6e19051e6da12efe1",
     "workspace_payload_tree_sha256": null,
-    "approval_driver_sha256": "25dd66dca1705e80e67e09734d23bebc74789d239b684388cb6b1d66f4c6cd95",
+    "approval_driver_sha256": "6f92b69951b5da69f8e86915df4fc632a8457740aa375c78d83797f2ed52a834",
     "effective_policy_revision": "ecef9e8620f477cdea4962cd3d737e16873f06fa",
     "effective_policy_blob": "086e7bda8e9f588c57294ed0899f9ff2ffa982c5",
     "effective_policy_raw_sha256": "cf45e80b063d58501ca6dd297c4fcec3c99273507cef8dce7e566d3377a253ea",
@@ -32,7 +32,7 @@
     "gate_contract_revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
     "gate_contract_version": "1.2.0",
     "gate_contract_sha256": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
-    "workspace_setup_driver_sha256": "0e0394699193590a0df635f57a75dd7a1caa6832a7e5e8f7a57dfe7cb43fa654"
+    "workspace_setup_driver_sha256": "7b4fc0165cf3fdb060dc89c93ab00bf96b00a210d0eab686ad08b6cbf565858d"
   },
   "fixture": {
     "canonical_identity": "github.example.invalid/synthetic-org/strict-release",
@@ -40,16 +40,47 @@
     "composition_layout": "flat",
     "resident_marker": "STRICT_OVERLAY: run the project regression command."
   },
+  "installed_builds": {
+    "craft_application": {
+      "package_manifest_path": "/Applications/Craft Agents.app/Contents/Resources/app/package.json",
+      "package_name": "@craft-agent/electron",
+      "version": "0.15.2",
+      "package_manifest_sha256": "5ab2c0f968a56e56f3a19cb994ae8256fc466eff63f3d5cc68d4eff39d02fa67",
+      "main_bundle_path": "/Applications/Craft Agents.app/Contents/Resources/app/dist/main.cjs",
+      "main_bundle_sha256": "85dcbd47f2dec6cb1d38360a580391f52161d4742878f478c0e1997310cc72a0"
+    },
+    "claude_sdk": {
+      "package_manifest_path": "/Applications/Craft Agents.app/Contents/Resources/app/node_modules/@anthropic-ai/claude-agent-sdk/package.json",
+      "package_name": "@anthropic-ai/claude-agent-sdk",
+      "version": "0.3.296",
+      "package_manifest_sha256": "a2f4bd57129cb99253877099ab6deed575b3bdd37aa0e09aa6469a63bc81690f",
+      "active_selection_state": "requires-host-session-evidence"
+    },
+    "pi_adapter": {
+      "implementation_package": "@earendil-works/pi-ai",
+      "adapter_id": "openai-codex-responses",
+      "discovery_artifact_path": "/Applications/Craft Agents.app/Contents/Resources/app/dist/main.cjs",
+      "discovery_artifact_sha256": "85dcbd47f2dec6cb1d38360a580391f52161d4742878f478c0e1997310cc72a0",
+      "required_bundle_markers": [
+        "@earendil-works/pi-ai",
+        "openai-codex-responses"
+      ],
+      "public_manifest_state": "unavailable-unverified",
+      "active_selection_state": "requires-host-session-evidence"
+    }
+  },
   "backends": [
     {
       "sequence": 1,
       "provider_type": "anthropic",
+      "installed_build_key": "claude_sdk",
       "connection": "claude-max",
       "model": "claude-opus-4-8"
     },
     {
       "sequence": 2,
       "provider_type": "pi",
+      "installed_build_key": "pi_adapter",
       "connection": "chatgpt-plus",
       "model": "pi/gpt-5.5"
     }

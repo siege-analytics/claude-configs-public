@@ -95,7 +95,58 @@ def approval_subject_sha256(manifest: dict[str, Any]) -> str:
     return sha256_bytes(canonical_bytes(subject))
 
 
-def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool = False) -> dict[str, Any]:
+def discover_installed_builds(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Read exact installed host artifacts; this is evidence, never authority."""
+    expected = manifest["installed_builds"]
+    craft = expected["craft_application"]
+    claude = expected["claude_sdk"]
+    pi = expected["pi_adapter"]
+    craft_manifest = Path(craft["package_manifest_path"])
+    main_bundle = Path(craft["main_bundle_path"])
+    claude_manifest = Path(claude["package_manifest_path"])
+    for path in (craft_manifest, main_bundle, claude_manifest):
+        require(path.is_file() and not path.is_symlink(), f"installed build artifact is absent or symlinked: {path}")
+    craft_value = json.loads(craft_manifest.read_text())
+    claude_value = json.loads(claude_manifest.read_text())
+    require(craft_value.get("name") == craft["package_name"], "installed Craft package name mismatch")
+    require(craft_value.get("version") == craft["version"], "installed Craft version mismatch")
+    require(sha256_bytes(craft_manifest.read_bytes()) == craft["package_manifest_sha256"], "installed Craft manifest digest mismatch")
+    require(sha256_bytes(main_bundle.read_bytes()) == craft["main_bundle_sha256"], "installed Craft main bundle digest mismatch")
+    require(claude_value.get("name") == claude["package_name"], "installed Claude SDK package name mismatch")
+    require(claude_value.get("version") == claude["version"], "installed Claude SDK version mismatch")
+    require(sha256_bytes(claude_manifest.read_bytes()) == claude["package_manifest_sha256"], "installed Claude SDK manifest digest mismatch")
+    main_text = main_bundle.read_text(errors="ignore")
+    for marker in pi["required_bundle_markers"]:
+        require(marker in main_text, f"installed Pi/OpenAI adapter marker is absent: {marker}")
+    observed = {
+        "craft_application": {
+            "package_name": craft_value["name"], "version": craft_value["version"],
+            "package_manifest_sha256": craft["package_manifest_sha256"],
+            "main_bundle_sha256": craft["main_bundle_sha256"],
+            "state": "artifact-match",
+        },
+        "claude_sdk": {
+            "package_name": claude_value["name"], "version": claude_value["version"],
+            "package_manifest_sha256": claude["package_manifest_sha256"],
+            "state": "artifact-match-active-selection-unverified",
+        },
+        "pi_adapter": {
+            "implementation_package": pi["implementation_package"],
+            "adapter_id": pi["adapter_id"],
+            "main_bundle_sha256": craft["main_bundle_sha256"],
+            "public_manifest_state": "unavailable-unverified",
+            "state": "bundle-markers-match-active-selection-unverified",
+        },
+        "authorization_effect": "none",
+    }
+    observed["discovery_sha256"] = sha256_bytes(canonical_bytes(observed))
+    return observed
+
+
+def validate_manifest(
+    manifest: dict[str, Any], *, require_approval_record: bool = False,
+    _test_expected_temp_base: Path = Path("/private/tmp"),
+) -> dict[str, Any]:
     require(manifest.get("schema_version") == SCHEMA_VERSION, "unsupported schema_version")
     run = manifest.get("run")
     require(isinstance(run, dict), "run must be an object")
@@ -105,7 +156,8 @@ def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool
 
     paths = manifest.get("paths")
     require(isinstance(paths, dict), "paths must be an object")
-    temp_root = exact_path(paths.get("temp_root"), Path("/private/tmp") / run_id, "paths.temp_root")
+    require(_test_expected_temp_base.is_absolute(), "expected temp base must be absolute")
+    temp_root = exact_path(paths.get("temp_root"), _test_expected_temp_base / run_id, "paths.temp_root")
     workspace_root = exact_path(
         paths.get("workspace_root"),
         Path.home() / ".craft-agent" / "workspaces" / run_id,
@@ -166,14 +218,42 @@ def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool
         "fixture resident marker mismatch",
     )
 
+    installed = manifest.get("installed_builds")
+    require(isinstance(installed, dict) and set(installed) == {"craft_application", "claude_sdk", "pi_adapter"}, "installed_builds must name the exact host, Claude SDK and Pi adapter records")
+    craft = installed["craft_application"]
+    claude = installed["claude_sdk"]
+    pi = installed["pi_adapter"]
+    require(craft == {
+        "package_manifest_path": "/Applications/Craft Agents.app/Contents/Resources/app/package.json",
+        "package_name": "@craft-agent/electron", "version": "0.15.2",
+        "package_manifest_sha256": "5ab2c0f968a56e56f3a19cb994ae8256fc466eff63f3d5cc68d4eff39d02fa67",
+        "main_bundle_path": "/Applications/Craft Agents.app/Contents/Resources/app/dist/main.cjs",
+        "main_bundle_sha256": "85dcbd47f2dec6cb1d38360a580391f52161d4742878f478c0e1997310cc72a0",
+    }, "installed Craft application pin set mismatch")
+    require(claude == {
+        "package_manifest_path": "/Applications/Craft Agents.app/Contents/Resources/app/node_modules/@anthropic-ai/claude-agent-sdk/package.json",
+        "package_name": "@anthropic-ai/claude-agent-sdk", "version": "0.3.296",
+        "package_manifest_sha256": "a2f4bd57129cb99253877099ab6deed575b3bdd37aa0e09aa6469a63bc81690f",
+        "active_selection_state": "requires-host-session-evidence",
+    }, "installed Claude SDK pin set mismatch")
+    require(pi == {
+        "implementation_package": "@earendil-works/pi-ai", "adapter_id": "openai-codex-responses",
+        "discovery_artifact_path": craft["main_bundle_path"],
+        "discovery_artifact_sha256": craft["main_bundle_sha256"],
+        "required_bundle_markers": ["@earendil-works/pi-ai", "openai-codex-responses"],
+        "public_manifest_state": "unavailable-unverified",
+        "active_selection_state": "requires-host-session-evidence",
+    }, "installed Pi adapter pin set mismatch")
+
     backends = manifest.get("backends")
     require(isinstance(backends, list) and len(backends) == 2, "exactly two backend runs are required")
-    expected = [(1, "anthropic"), (2, "pi")]
+    expected = [(1, "anthropic", "claude_sdk"), (2, "pi", "pi_adapter")]
     seen: set[tuple[str, str]] = set()
-    for entry, (sequence, provider) in zip(backends, expected):
+    for entry, (sequence, provider, build_key) in zip(backends, expected):
         require(isinstance(entry, dict), "backend entries must be objects")
         require(entry.get("sequence") == sequence, "backend sequence must be 1 then 2")
         require(entry.get("provider_type") == provider, f"backend {sequence} provider_type must be {provider}")
+        require(entry.get("installed_build_key") == build_key, f"backend {sequence} installed_build_key mismatch")
         connection = entry.get("connection")
         model = entry.get("model")
         require(isinstance(connection, str) and connection, f"backend {sequence} connection is required")
@@ -460,11 +540,15 @@ def fixture_commit_message(subject: str) -> str:
     )
 
 
-def materialize(manifest: dict[str, Any]) -> dict[str, Any]:
-    facts = validate_manifest(manifest)
+def materialize(
+    manifest: dict[str, Any], *, _test_discovery_reader: Any = discover_installed_builds,
+    _test_expected_temp_base: Path = Path("/private/tmp"),
+) -> dict[str, Any]:
+    facts = validate_manifest(manifest, _test_expected_temp_base=_test_expected_temp_base)
     root: Path = facts["temp_root"]
     require(not root.exists(), f"refusing existing temp root: {root}")
     require(not facts["workspace_root"].exists(), "refusing because exact disposable workspace already exists")
+    installed_build_discovery = _test_discovery_reader(manifest)
     fixture = root / "fixture"
     evidence = facts["evidence_root"]
     repo = fixture / "repo"
@@ -534,6 +618,7 @@ def materialize(manifest: dict[str, Any]) -> dict[str, Any]:
             "remote_main": run_git(["--git-dir", str(remote), "rev-parse", "refs/heads/main"], cwd=fixture),
         },
         "resolver_probe": resolver_probe,
+        "installed_build_discovery": installed_build_discovery,
         "workspace_preexisting": False,
         "live_session_created": False,
         "credentials_read": False,
@@ -543,8 +628,16 @@ def materialize(manifest: dict[str, Any]) -> dict[str, Any]:
     return {"receipt": str(out), "receipt_sha256": sha256_bytes(out.read_bytes())}
 
 
-def attest_materialized(manifest: dict[str, Any]) -> dict[str, Any]:
-    facts = validate_manifest(manifest, require_approval_record=True)
+def attest_materialized(
+    manifest: dict[str, Any], *, _test_discovery_reader: Any = discover_installed_builds,
+    _test_expected_temp_base: Path = Path("/private/tmp"),
+) -> dict[str, Any]:
+    facts = validate_manifest(manifest, require_approval_record=True, _test_expected_temp_base=_test_expected_temp_base)
+    materialization_path = facts["temp_root"] / "materialization.json"
+    require(materialization_path.is_file() and not materialization_path.is_symlink(), "materialization receipt is absent or symlinked")
+    materialization = json.loads(materialization_path.read_text())
+    installed_build_discovery = _test_discovery_reader(manifest)
+    require(materialization.get("installed_build_discovery") == installed_build_discovery, "installed build discovery changed since materialization")
     source: Path = facts["source_root"]
     package = source / "dist" / "craft-agent"
     require(source.is_dir() and package.is_dir(), "materialized source/package is absent")
@@ -587,6 +680,7 @@ def attest_materialized(manifest: dict[str, Any]) -> dict[str, Any]:
         "workspace_payload_tree_sha256": manifest["pins"]["workspace_payload_tree_sha256"],
         "fixture_identity": manifest["fixture"]["canonical_identity"],
         "resolver_probe": resolver_probe,
+        "installed_build_discovery": installed_build_discovery,
         "live_session_created": False,
     }
     output = facts["evidence_root"] / "authorization-attestation.json"
@@ -609,8 +703,11 @@ def evidence_timestamp(value: Any, label: str) -> datetime:
     return observed
 
 
-def validate_evidence(manifest: dict[str, Any], evidence: dict[str, Any]) -> dict[str, Any]:
-    facts = validate_manifest(manifest, require_approval_record=True)
+def validate_evidence(
+    manifest: dict[str, Any], evidence: dict[str, Any], *, _test_discovery_reader: Any = discover_installed_builds,
+    _test_expected_temp_base: Path = Path("/private/tmp"),
+) -> dict[str, Any]:
+    facts = validate_manifest(manifest, require_approval_record=True, _test_expected_temp_base=_test_expected_temp_base)
     require(evidence.get("schema_version") == SCHEMA_VERSION, "unsupported evidence schema")
     require(evidence.get("run_id") == facts["run_id"], "evidence run_id mismatch")
     require(evidence.get("manifest_sha256") == facts["manifest_sha256"], "evidence manifest digest mismatch")
@@ -624,6 +721,7 @@ def validate_evidence(manifest: dict[str, Any], evidence: dict[str, Any]) -> dic
     validated_events = 0
     artifact_references: set[str] = set()
     evidence_root: Path = facts["evidence_root"]
+    installed_discovery = _test_discovery_reader(manifest)
     require(evidence_root.is_dir() and not evidence_root.is_symlink(), "evidence root is absent or symlinked")
     require(evidence_root.resolve() == evidence_root, "evidence root must resolve to its exact approved path")
     for expected, observed in zip(manifest["backends"], runs):
@@ -631,6 +729,25 @@ def validate_evidence(manifest: dict[str, Any], evidence: dict[str, Any]) -> dic
         sequence = expected["sequence"]
         for name in ("sequence", "connection", "model"):
             require(observed.get(name) == expected[name], f"backend evidence {name} mismatch")
+        require(observed.get("installed_build_key") == expected["installed_build_key"], f"backend {sequence} installed build key mismatch")
+        require(observed.get("installed_build_discovery_sha256") == installed_discovery["discovery_sha256"], f"backend {sequence} installed build discovery mismatch")
+        runtime = observed.get("runtime_identity")
+        require(isinstance(runtime, dict), f"backend {sequence} runtime identity evidence is required")
+        if runtime.get("state") == "unsupported-unverified":
+            raise PacketError(f"backend {sequence} runtime identity is unsupported/unverified")
+        require(runtime.get("state") == "observed" and runtime.get("source") == "host-observed", f"backend {sequence} runtime identity must be host-observed")
+        expected_identity = (
+            "@anthropic-ai/claude-agent-sdk@0.3.296"
+            if expected["installed_build_key"] == "claude_sdk"
+            else "@earendil-works/pi-ai/openai-codex-responses"
+        )
+        require(runtime.get("identity") == expected_identity, f"backend {sequence} runtime identity mismatch")
+        runtime_reference = runtime.get("artifact_reference")
+        require(isinstance(runtime_reference, str) and runtime_reference and not Path(runtime_reference).is_absolute() and ".." not in Path(runtime_reference).parts, f"backend {sequence} runtime identity reference must be confined")
+        runtime_artifact = evidence_root / runtime_reference
+        require(runtime_artifact.is_file() and not runtime_artifact.is_symlink() and runtime_artifact.resolve() == runtime_artifact, f"backend {sequence} runtime identity artifact is absent or unsafe")
+        runtime_digest = runtime.get("artifact_sha256")
+        require(isinstance(runtime_digest, str) and HEX64.fullmatch(runtime_digest) and sha256_bytes(runtime_artifact.read_bytes()) == runtime_digest, f"backend {sequence} runtime identity artifact digest mismatch")
         outcome = observed.get("outcome")
         if outcome == "unsupported-unverified":
             raise PacketError(f"backend {sequence} capability evidence is unsupported/unverified")
@@ -699,8 +816,10 @@ def validate_evidence(manifest: dict[str, Any], evidence: dict[str, Any]) -> dic
     }
 
 
-def verify_cleanup(manifest: dict[str, Any], receipt: dict[str, Any]) -> dict[str, Any]:
-    facts = validate_manifest(manifest, require_approval_record=True)
+def verify_cleanup(
+    manifest: dict[str, Any], receipt: dict[str, Any], *, _test_expected_temp_base: Path = Path("/private/tmp"),
+) -> dict[str, Any]:
+    facts = validate_manifest(manifest, require_approval_record=True, _test_expected_temp_base=_test_expected_temp_base)
     require(receipt.get("schema_version") == SCHEMA_VERSION, "unsupported cleanup schema")
     require(receipt.get("run_id") == facts["run_id"], "cleanup run_id mismatch")
     require(receipt.get("manifest_sha256") == facts["manifest_sha256"], "cleanup manifest digest mismatch")
@@ -724,6 +843,8 @@ def main() -> int:
     validate = sub.add_parser("validate", help="validate a proposal or non-authorizing external approval record")
     validate.add_argument("--manifest", type=Path, required=True)
     validate.add_argument("--require-approval-record", action="store_true")
+    discover = sub.add_parser("discover-installed-builds", help="read and compare installed host/backend artifacts without granting authority")
+    discover.add_argument("--manifest", type=Path, required=True)
     prepare = sub.add_parser("materialize", help="create synthetic local fixtures only")
     prepare.add_argument("--manifest", type=Path, required=True)
     attest = sub.add_parser("attest-materialized", help="bind an external approval record to existing exact fixture bytes without granting authority")
@@ -740,6 +861,9 @@ def main() -> int:
         if args.command == "validate":
             facts = validate_manifest(manifest, require_approval_record=args.require_approval_record)
             result = {"status": "manifest-valid", **{k: str(v) for k, v in facts.items()}}
+        elif args.command == "discover-installed-builds":
+            validate_manifest(manifest)
+            result = discover_installed_builds(manifest)
         elif args.command == "materialize":
             result = materialize(manifest)
         elif args.command == "attest-materialized":

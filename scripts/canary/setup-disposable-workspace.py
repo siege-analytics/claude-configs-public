@@ -90,8 +90,11 @@ def run(command: list[str], *, cwd: Path) -> str:
     return result.stdout
 
 
-def configure(canary: Any, manifest: dict[str, Any]) -> dict[str, Any]:
-    facts = canary.validate_manifest(manifest, require_approval_record=True)
+def configure(
+    canary: Any, manifest: dict[str, Any], *, _test_discovery_reader: Any | None = None,
+    _test_expected_temp_base: Path = Path("/private/tmp"),
+) -> dict[str, Any]:
+    facts = canary.validate_manifest(manifest, require_approval_record=True, _test_expected_temp_base=_test_expected_temp_base)
     source: Path = facts["source_root"]
     payload = facts["temp_root"] / "workspace-payload"
     workspace: Path = facts["workspace_root"]
@@ -101,7 +104,13 @@ def configure(canary: Any, manifest: dict[str, Any]) -> dict[str, Any]:
     # never trusted: source/package/composition/payload and fixture identity/
     # local transport are re-read immediately before any workspace copy or
     # install/wire/verify command.
-    attestation = canary.attest_materialized(manifest)
+    attestation = (
+        canary.attest_materialized(manifest, _test_expected_temp_base=_test_expected_temp_base)
+        if _test_discovery_reader is None
+        else canary.attest_materialized(
+            manifest, _test_discovery_reader=_test_discovery_reader, _test_expected_temp_base=_test_expected_temp_base,
+        )
+    )
     if not workspace.is_dir() or workspace.is_symlink() or workspace.resolve() != workspace:
         raise canary.PacketError("exact disposable workspace must already exist as a real directory")
     if not fixture.is_dir() or fixture.is_symlink():

@@ -13,6 +13,8 @@
 - Attest once, then alter a source command, fixture canonical origin, local push URL, bare-repository shape or local `main`; setup must rerun shared attestation and stop before workspace copy or install/wire/verify execution.
 - Approve a proposal digest, then invalidate it merely by recording status; or exclude a substantive run field from the immutable subject.
 - Let prefix-related markers create duplicate starts, truncate no-op restoration/compaction tails, or write a receipt before backend/evidence paths are initialized.
+- Substitute a same-named connection/model after approval, change installed Craft/SDK/bundle bytes after materialization, omit active runtime identity, or claim Pi/OpenAI bundle presence proves Codex CLI behavior.
+- Remove the installed application on a hosted runner, accept changed/missing/symlinked artifact fixtures, expose a CLI discovery override, or relax production `/Applications` and `/private/tmp` paths to make tests green.
 - Build from working-tree bytes rather than the exact detached revision.
 - Substitute a package with the same source revision but changed nonvolatile bytes.
 - Reuse a proposal receipt as if it recorded external approval or granted authority.

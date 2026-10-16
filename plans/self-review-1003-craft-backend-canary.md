@@ -8,6 +8,7 @@ Hostile-review-artifact: plans/hostile-review-1003-craft-backend-canary.md
 - The driver prepares artifacts only and cannot create a Craft session/workspace, install, delete, publish or mutate a provider.
 - Direct user instruction outside the manifest is the only future live-run authority. A recorded approval source/reference cannot verify or create that authority.
 - Imported host exports can be checked for internal consistency but remain unverified until independently observed through an approved live procedure.
+- Installed application/package presence is artifact evidence, not proof that a live session selected that backend or adapter.
 - Final accepted #1002/#845/develop identities and materialized exact package bytes must be refreshed before review or authorization.
 
 ## Classification
@@ -41,6 +42,8 @@ The final change must register driver/tests/templates in the review-risk policy 
 - The accepted-develop packet cannot call production `build.py --deploy`, whose current-origin/main check remains intact. A separately pinned setup script copies an exact top-level allowlist, rejects changed/unexpected/symlinked content, runs only disposable hook registration/wiring/verification, and creates no production deploy stamp.
 - Setup previously trusted that materialization had been attested earlier, leaving source install/wire/verify scripts and fixture configuration mutable before execution. The setup entrypoint now reruns shared attestation immediately before its first workspace mutation, checks exact HEAD/full clean tree/package/composition/payload plus canonical origin/local bare push transport, and binds that receipt. Regression mutations prove no workspace copy or setup command occurs after source, identity or transport drift.
 - The approval subject previously included lifecycle `status`, so proposal → approval-recorded changed the digest named by external approval. The subject now excludes only `status` and `operator_approval`; a regression proves lifecycle stability and stale-approval rejection after substantive backend mutation.
+- Connection/model aliases did not bind installed host/backend builds. The subject now separately pins exact Craft application manifest/main bundle, Claude SDK manifest/version and Pi/OpenAI implementation markers. Read-only discovery is captured at materialization and replayed by fresh attestation; backend evidence must bind its digest and artifact-backed host-observed active runtime identity. Missing identity remains `unsupported-unverified`, and the Pi adapter cannot imply Codex CLI behavior.
+- The first discovery tests accidentally required this Mac application and therefore could not run on hosted Linux. Internal-only dependency seams now inject a real temporary artifact reader and platform temp base into unit materialization/attestation/evidence/setup paths; production CLI defaults remain exact `/Applications/...` and `/private/tmp`. The portable test exercises matching, changed, missing, symlinked and missing-adapter-marker files, retains real source/package/composition/local-hook work, and is registered exactly once in the hosted build workflow.
 - Raw substring extraction treated `NO_OP_RESTORED` as a second `NO_OP` start and compaction variables were initialized too late. The executable README regression now matches prescribed delimiters in actual user content and proves complete, distinct no-op/restored and compaction before/after slices; backend identity/evidence directory are initialized before the first compaction receipt.
 
 ## Peer review
@@ -53,12 +56,12 @@ Self-review found and corrected three blockers: nondeterministic package timesta
 
 ## Quantified claims
 
-Ten focused tests pass without creating a Craft workspace/session. They cover path confinement, missing approval/prerequisites, detached source/package/composition/payload materialization, canonical synthetic identity over local transport, selected resident content and controls, native trailers, exact allowlisted payload copying without a deploy stamp, existing-root refusal, exact-byte attestation, exact event cardinality, artifact confinement/digests, backend/transition/overall budgets, unsupported capability state, no-self-report, synthetic relabeling, side-effect closure and cleanup residue. The proposal validates in preparation mode and rejects `--require-approval-record`; structurally consistent imported evidence remains unverified and non-authorizing.
+Twelve focused tests pass without creating a Craft workspace/session. They cover path confinement, missing approval/prerequisites, detached source/package/composition/payload materialization, canonical synthetic identity over local transport, selected resident content and controls, native trailers, exact allowlisted payload copying without a deploy stamp, existing-root refusal, exact-byte attestation, exact event cardinality, artifact confinement/digests, backend/transition/overall budgets, unsupported capability state, no-self-report, synthetic relabeling, side-effect closure and cleanup residue. The proposal validates in preparation mode and rejects `--require-approval-record`; structurally consistent imported evidence remains unverified and non-authorizing.
 
 ## Pending before publication
 
-- Integrate the final independently accepted `develop` prerequisites and refresh every source/package/composition/payload/driver digest.
-- Register the setup driver in Tier C risk/workflow coverage and run the complete Python/hook/workflow/package/scanner/freshness matrix.
+- Refresh exact generated package/payload observations from one post-review materialization before external approval; stable accepted source/canonical/composition/driver pins are already refreshed.
+- Complete the Python/hook/workflow/package/scanner/freshness publication matrix, including installed-build discovery and stale/unverified identity denials.
 - Publish a draft PR and obtain independent exact-head review.
 - After review/integration, materialize exact package bytes and request separate direct user authorization; the remaining shared-parent #1002 slice is not claimed or satisfied by this packet.
 

@@ -15,6 +15,9 @@ This directory prepares one reversible, sequential canary. **Nothing here author
 - Source tree SHA-256: `3b00d388fed5e78bf26cab5dfb7122a171110a6249cf869fe929c9b6c8b87124`
 - Canonical Craft package SHA-256: `012f67fb4641d28d0b3970e137f324304dcb45b5a86909b28aca60d5e2d6ff08`
 - Strict-release composition SHA-256: `7abab83d505b9ff3370db8519f698d28372f338d512b99c6e19051e6da12efe1`
+- Installed Craft application: `@craft-agent/electron@0.15.2`; manifest `5ab2c0f968a56e56f3a19cb994ae8256fc466eff63f3d5cc68d4eff39d02fa67`; `main.cjs` `85dcbd47f2dec6cb1d38360a580391f52161d4742878f478c0e1997310cc72a0`
+- Installed Claude SDK: `@anthropic-ai/claude-agent-sdk@0.3.296`; manifest `a2f4bd57129cb99253877099ab6deed575b3bdd37aa0e09aa6469a63bc81690f`
+- Pi/OpenAI adapter discovery: `@earendil-works/pi-ai` / `openai-codex-responses` markers in the exact `main.cjs`; no separate public manifest, so active runtime identity starts `unverified`
 
 The backend runs are sequential. Parallel sessions are outside scope. The proposal deliberately leaves exact package and workspace-payload digests null: timestamp-bearing generated package bytes do not exist until the one materialization. The later approval record must copy both exact observations from that single receipt before computing the externally named subject.
 
@@ -44,10 +47,11 @@ export WORKSPACE_ROOT=$HOME/.craft-agent/workspaces/$RUN_ID
 export PROPOSAL=examples/probe-matrices/craft-backend-canary/approval.proposal.json
 
 python3 scripts/canary/craft-backend-canary.py validate --manifest "$PROPOSAL"
+python3 scripts/canary/craft-backend-canary.py discover-installed-builds --manifest "$PROPOSAL"
 python3 scripts/canary/craft-backend-canary.py materialize --manifest "$PROPOSAL"
 ```
 
-Materialization creates only the temp root: detached exact source, rebuilt outputs, marker repository, local bare remote and receipt. It refuses a pre-existing temp root or disposable workspace and records `live_session_created: false` and `credentials_read: false`.
+Discovery reads only the three absolute installed application artifacts named in the proposal; it does not inspect credentials, select a backend or establish authority. Materialization creates only the temp root: detached exact source, rebuilt outputs, marker repository, local bare remote and receipt. It refuses a pre-existing temp root or disposable workspace and records the refreshed `installed_build_discovery`, `live_session_created: false` and `credentials_read: false`.
 
 Review `$TEMP_ROOT/materialization.json`. Copy the proposal to `$TEMP_ROOT/approval.recorded.json` only after the final PR is accepted. Fill the exact package-tree and workspace-payload digests from that same receipt, confirm the pinned composition digest, and fill accepted integration revisions **before** computing the subject. A later direct user instruction must name the `approval_subject_sha256` returned by `validate`; only then may status change to `approval-recorded` and its source/reference, approver and timestamp be recorded. The immutable subject excludes only lifecycle `status` and `operator_approval`, so that recording preserves the named digest while every substantive run/pin/path/backend/timeout/side-effect/cleanup change invalidates it. The record does not grant or verify authority.
 
@@ -61,7 +65,7 @@ python3 scripts/canary/craft-backend-canary.py attest-materialized \
   --manifest "$APPROVAL_RECORDED_MANIFEST"
 ```
 
-Any changed path, pin, connection, model, budget, limit, command or byte requires a new review and direct approval.
+`attest-materialized` re-runs installed-build discovery and rejects any change from the materialization receipt. Any changed application/backend artifact, path, pin, connection, model, budget, limit, command or byte requires a new review and direct approval. Package presence and bundle markers remain artifact evidence only: each live backend record must separately bind the discovery digest and an artifact-backed host-observed active runtime identity. Missing identity is `unsupported-unverified` and cannot pass; the Pi adapter must never be relabeled as Codex CLI evidence.
 
 ## Phase B — authorized disposable workspace setup
 
