@@ -17,15 +17,60 @@
       "outcome": "not-run",
       "model_self_report_used": false,
       "host_events": [
-        {"name": "startup_resolver", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "prompt_hook", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "write_guard_allow", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "write_guard_deny", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "git_push_allow", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "git_push_deny", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "resume_context", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "compaction_context", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "no_op_detection", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"}
+        {
+          "name": "startup_resolver",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/startup_resolver.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "prompt_hook",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/prompt_hook.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "write_guard_allow",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/write_guard_allow.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "write_guard_deny",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/write_guard_deny.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "git_push_allow",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/git_push_allow.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "git_push_deny",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/git_push_deny.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "resume_context",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/resume_context.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "compaction_context",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/compaction_context.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "no_op_detection",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/no_op_detection.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        }
       ]
     },
     {
@@ -37,15 +82,60 @@
       "outcome": "not-run",
       "model_self_report_used": false,
       "host_events": [
-        {"name": "startup_resolver", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "prompt_hook", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "write_guard_allow", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "write_guard_deny", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "git_push_allow", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "git_push_deny", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "resume_context", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "compaction_context", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
-        {"name": "no_op_detection", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"}
+        {
+          "name": "startup_resolver",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/startup_resolver.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "prompt_hook",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/prompt_hook.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "write_guard_allow",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/write_guard_allow.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "write_guard_deny",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/write_guard_deny.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "git_push_allow",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/git_push_allow.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "git_push_deny",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/git_push_deny.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "resume_context",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/resume_context.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "compaction_context",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/compaction_context.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "no_op_detection",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/no_op_detection.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        }
       ]
     }
   ],

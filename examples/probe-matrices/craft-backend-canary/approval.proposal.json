@@ -22,14 +22,23 @@
     "source_tree_sha256": "42ea856dbd140e8445c611bf55dc0f6acd9c90852d85f07d93fad8a0626421bf",
     "craft_package_canonical_sha256": "49acf0788df5fe33582e4b35eda226544909e1232a6215682545c5859adb5d2c",
     "craft_package_tree_sha256": null,
-    "approval_driver_sha256": "bf3feb5f37c1b34fe4542932d865654ccfe5b391f90759daf8170edbca188f4b",
+    "composition_tree_sha256": null,
+    "workspace_payload_tree_sha256": null,
+    "approval_driver_sha256": "e691abf3275bf1dc015ebe869bfd529296f3bade2b952f3b0898ce7033676ae4",
     "effective_policy_revision": "ecef9e8620f477cdea4962cd3d737e16873f06fa",
     "effective_policy_blob": "086e7bda8e9f588c57294ed0899f9ff2ffa982c5",
     "effective_policy_raw_sha256": "cf45e80b063d58501ca6dd297c4fcec3c99273507cef8dce7e566d3377a253ea",
     "effective_policy_canonical_sha256": "debbb2af18af4ad1381ae7355e200049a94e9a02557dd7ccb756cb21834d2efa",
     "gate_contract_revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
     "gate_contract_version": "1.2.0",
-    "gate_contract_sha256": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca"
+    "gate_contract_sha256": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
+    "workspace_setup_driver_sha256": "22002e1a521f41bbb08d9db377c188a7141bb04005537478ce46789b5f02d8cf"
+  },
+  "fixture": {
+    "canonical_identity": "github.example.invalid/synthetic-org/strict-release",
+    "project": "strict-release",
+    "composition_layout": "flat",
+    "resident_marker": "STRICT_OVERLAY: run the project regression command."
   },
   "backends": [
     {
@@ -56,6 +65,8 @@
     "write_exact_temp_root",
     "create_local_bare_remote",
     "create_disposable_git_refs",
+    "deploy_pinned_source_to_exact_workspace",
+    "register_hooks_in_exact_workspace_and_fixture",
     "record_host_event_metadata",
     "remove_exact_workspace",
     "remove_exact_temp_root"
@@ -64,7 +75,7 @@
     "no_credentials_read": true,
     "no_main_mutation": true,
     "no_branch_protection_mutation": true,
-    "no_release_or_install": true,
+    "no_release_or_shared_install": true,
     "no_external_messages": true,
     "no_parallel_sessions": true,
     "no_provider_authority_claim": true,

@@ -45,6 +45,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  ".githooks/pre-push",
  "hooks/_test/review_risk_policy.test.sh",
  "scripts/canary/craft-backend-canary.py",
+ "scripts/canary/setup-disposable-workspace.py",
  "bin/_test/craft_backend_canary_test.py",
  "examples/probe-matrices/craft-backend-canary/approval.proposal.json",
  "examples/probe-matrices/craft-backend-canary/host-evidence.template.json",

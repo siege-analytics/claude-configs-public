@@ -12,11 +12,16 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "canary" / "craft-backend-canary.py"
+SETUP_SCRIPT = ROOT / "scripts" / "canary" / "setup-disposable-workspace.py"
 PROPOSAL = ROOT / "examples" / "probe-matrices" / "craft-backend-canary" / "approval.proposal.json"
 spec = importlib.util.spec_from_file_location("craft_backend_canary", SCRIPT)
 canary = importlib.util.module_from_spec(spec)
 assert spec and spec.loader
 spec.loader.exec_module(canary)
+setup_spec = importlib.util.spec_from_file_location("setup_disposable_workspace", SETUP_SCRIPT)
+setup = importlib.util.module_from_spec(setup_spec)
+assert setup_spec and setup_spec.loader
+setup_spec.loader.exec_module(setup)
 
 
 def packet(run_id: str) -> dict:
@@ -40,6 +45,8 @@ def record_external_approval(value: dict) -> dict:
     value["pins"]["provider_integration_revision"] = "a" * 40
     value["pins"]["native_hooks_revision"] = "b" * 40
     value["pins"]["craft_package_tree_sha256"] = "d" * 64
+    value["pins"]["composition_tree_sha256"] = "e" * 64
+    value["pins"]["workspace_payload_tree_sha256"] = "f" * 64
     value["operator_approval"] = {
         "state": "externally-supplied",
         "source_kind": "direct-user-instruction",
@@ -96,10 +103,42 @@ class CanaryPacketTest(unittest.TestCase):
         receipt = canary.materialize(self.value)
         materialized = json.loads(Path(receipt["receipt"]).read_text())
         self.assertTrue((self.temp / "fixture" / "remote.git").is_dir())
-        self.assertTrue((self.temp / "fixture" / "repo" / "PROMPT_MARKER.txt").is_file())
+        fixture_repo = self.temp / "fixture" / "repo"
+        self.assertTrue((fixture_repo / "PROMPT_MARKER.txt").is_file())
+        self.assertEqual(
+            canary.run_git(["config", "--get", "remote.origin.url"], cwd=fixture_repo),
+            "https://github.example.invalid/synthetic-org/strict-release.git",
+        )
+        message = canary.run_git(["show", "-s", "--format=%B", "HEAD"], cwd=fixture_repo)
+        self.assertIn("Review-Tier: A", message)
+        self.assertIn("Self-Review: disposable canary fixture only", message)
+        composition = self.temp / "composition" / "flat"
+        self.assertIn(self.value["fixture"]["resident_marker"], (composition / "skills/RESIDENT.md").read_text())
+        control = self.temp / "control"
+        self.assertTrue((control / "FOREIGN_PROJECT_MARKER.txt").is_file())
+        self.assertTrue((control / "GLOBAL_BUNDLE_MARKER.txt").is_file())
+        payload = self.temp / "workspace-payload"
+        payload_text = "\n".join(
+            path.read_text(errors="ignore") for path in payload.rglob("*") if path.is_file()
+        )
+        self.assertNotIn("FOREIGN_PROJECT_CONTROL_MUST_NOT_BE_INJECTED", payload_text)
+        self.assertNotIn("GLOBAL_BUNDLE_CONTROL_MUST_NOT_BE_INJECTED", payload_text)
+        self.assertFalse((payload / "deploy-stamp.json").exists())
+        fake_workspace = self.temp / "fake-workspace"
+        fake_workspace.mkdir()
+        setup.validate_payload(canary, payload, materialized["package_observation"]["workspace_payload_tree_sha256"])
+        setup.copy_payload(canary, payload, fake_workspace)
+        self.assertEqual(canary.tree_digest(fake_workspace), canary.tree_digest(payload))
+        self.assertFalse((fake_workspace / "deploy-stamp.json").exists())
+        (payload / "unexpected.txt").write_text("not allowlisted\n")
+        with self.assertRaisesRegex(canary.PacketError, "allowlist mismatch"):
+            setup.validate_payload(canary, payload, canary.tree_digest(payload))
+        (payload / "unexpected.txt").unlink()
         self.assertFalse(self.workspace.exists())
         approved = record_external_approval(self.value)
         approved["pins"]["craft_package_tree_sha256"] = materialized["package_observation"]["exact_tree_sha256"]
+        approved["pins"]["composition_tree_sha256"] = materialized["package_observation"]["composition_tree_sha256"]
+        approved["pins"]["workspace_payload_tree_sha256"] = materialized["package_observation"]["workspace_payload_tree_sha256"]
         approved["operator_approval"]["subject_sha256"] = canary.approval_subject_sha256(approved)
         attestation = canary.attest_materialized(approved)
         self.assertEqual(attestation["status"], "materialization-consistent-unverified")
@@ -107,14 +146,28 @@ class CanaryPacketTest(unittest.TestCase):
         with self.assertRaisesRegex(canary.PacketError, "existing temp root"):
             canary.materialize(self.value)
 
-    def test_imported_evidence_is_consistent_unverified_and_never_model_report(self):
+    def approved_evidence(self) -> tuple[dict, dict]:
         approved = record_external_approval(self.value)
         facts = canary.validate_manifest(approved, require_approval_record=True)
         start = datetime(2026, 10, 16, 12, 0, tzinfo=timezone.utc)
         runs = []
+        evidence_root = Path(approved["paths"]["evidence_root"])
+        evidence_root.mkdir(parents=True, exist_ok=True)
         for index, backend in enumerate(approved["backends"]):
-            began = start + timedelta(minutes=20 * index)
+            began = start + timedelta(minutes=11 * index)
             ended = began + timedelta(minutes=10)
+            events = []
+            for name in sorted(canary.EVENTS):
+                reference = f"backend-{backend['sequence']}/{name}.jsonl"
+                artifact = evidence_root / reference
+                artifact.parent.mkdir(parents=True, exist_ok=True)
+                artifact.write_bytes(f"host-export-fixture:{backend['sequence']}:{name}\n".encode())
+                events.append({
+                    "name": name,
+                    "source": "host-observed",
+                    "artifact_reference": reference,
+                    "artifact_sha256": canary.sha256_bytes(artifact.read_bytes()),
+                })
             runs.append({
                 "sequence": backend["sequence"],
                 "connection": backend["connection"],
@@ -123,12 +176,9 @@ class CanaryPacketTest(unittest.TestCase):
                 "ended_at": ended.isoformat(),
                 "outcome": "observed",
                 "model_self_report_used": False,
-                "host_events": [
-                    {"name": name, "source": "host-observed", "artifact_sha256": "c" * 64}
-                    for name in sorted(canary.EVENTS)
-                ],
+                "host_events": events,
             })
-        evidence = {
+        return approved, {
             "schema_version": canary.SCHEMA_VERSION,
             "run_id": self.run_id,
             "manifest_sha256": facts["manifest_sha256"],
@@ -142,8 +192,14 @@ class CanaryPacketTest(unittest.TestCase):
                 "release_state_unchanged": True,
             },
         }
+
+    def test_imported_evidence_is_consistent_unverified_and_never_model_report(self):
+        approved, evidence = self.approved_evidence()
         result = canary.validate_evidence(approved, evidence)
         self.assertEqual(result["events"], 18)
+        self.assertEqual(result["timing_seconds"], {
+            "backend_runs": [600.0, 600.0], "transitions": [60.0], "overall": 1260.0,
+        })
         self.assertEqual(result["status"], "evidence-consistent-unverified")
         self.assertEqual(result["authorization_effect"], "none")
         evidence["backend_runs"][1]["model_self_report_used"] = True
@@ -152,6 +208,76 @@ class CanaryPacketTest(unittest.TestCase):
         evidence["backend_runs"][1]["model_self_report_used"] = False
         evidence["provenance"]["kind"] = "synthetic"
         with self.assertRaisesRegex(canary.PacketError, "Synthetic|synthetic"):
+            canary.validate_evidence(approved, evidence)
+        approved, evidence = self.approved_evidence()
+        evidence["backend_runs"][0]["outcome"] = "unsupported-unverified"
+        with self.assertRaisesRegex(canary.PacketError, "unsupported/unverified"):
+            canary.validate_evidence(approved, evidence)
+
+    def test_evidence_requires_exactly_nine_unique_expected_events_per_backend(self):
+        for mutation, diagnostic in (
+            (lambda events: events.append(copy.deepcopy(events[0])), "exactly 9"),
+            (lambda events: events.pop(), "exactly 9"),
+            (lambda events: events.__setitem__(-1, {**events[-1], "name": "unexpected_event"}), "event set mismatch"),
+            (lambda events: events.__setitem__(-1, {**events[-1], "name": events[0]["name"]}), "duplicate"),
+        ):
+            approved, evidence = self.approved_evidence()
+            mutation(evidence["backend_runs"][0]["host_events"])
+            with self.assertRaisesRegex(canary.PacketError, diagnostic):
+                canary.validate_evidence(approved, evidence)
+
+    def test_evidence_requires_confined_unique_digest_bound_artifacts(self):
+        approved, evidence = self.approved_evidence()
+        event = evidence["backend_runs"][0]["host_events"][0]
+        event["artifact_sha256"] = "0" * 64
+        with self.assertRaisesRegex(canary.PacketError, "digest mismatch"):
+            canary.validate_evidence(approved, evidence)
+
+        approved, evidence = self.approved_evidence()
+        evidence["backend_runs"][0]["host_events"][0]["artifact_reference"] = "../escape.jsonl"
+        with self.assertRaisesRegex(canary.PacketError, "confined"):
+            canary.validate_evidence(approved, evidence)
+
+        approved, evidence = self.approved_evidence()
+        first = evidence["backend_runs"][0]["host_events"][0]
+        evidence["backend_runs"][1]["host_events"][0]["artifact_reference"] = first["artifact_reference"]
+        with self.assertRaisesRegex(canary.PacketError, "unique"):
+            canary.validate_evidence(approved, evidence)
+
+    def test_evidence_enforces_per_backend_transition_overlap_and_overall_budgets(self):
+        approved, evidence = self.approved_evidence()
+        evidence["backend_runs"][0]["ended_at"] = (
+            datetime.fromisoformat(evidence["backend_runs"][0]["started_at"]) + timedelta(seconds=901)
+        ).isoformat()
+        with self.assertRaisesRegex(canary.PacketError, "per_backend"):
+            canary.validate_evidence(approved, evidence)
+
+        approved, evidence = self.approved_evidence()
+        first_end = datetime.fromisoformat(evidence["backend_runs"][0]["ended_at"])
+        evidence["backend_runs"][1]["started_at"] = (first_end + timedelta(seconds=181)).isoformat()
+        evidence["backend_runs"][1]["ended_at"] = (first_end + timedelta(seconds=781)).isoformat()
+        with self.assertRaisesRegex(canary.PacketError, "transition"):
+            canary.validate_evidence(approved, evidence)
+
+        approved, evidence = self.approved_evidence()
+        first_end = datetime.fromisoformat(evidence["backend_runs"][0]["ended_at"])
+        evidence["backend_runs"][1]["started_at"] = (first_end - timedelta(seconds=1)).isoformat()
+        evidence["backend_runs"][1]["ended_at"] = (first_end + timedelta(seconds=599)).isoformat()
+        with self.assertRaisesRegex(canary.PacketError, "overlap"):
+            canary.validate_evidence(approved, evidence)
+
+        approved, evidence = self.approved_evidence()
+        approved["timeouts_seconds"]["per_backend"] = 1000
+        approved["timeouts_seconds"]["transition"] = 1000
+        approved["timeouts_seconds"]["overall"] = 2400
+        approved["operator_approval"]["subject_sha256"] = canary.approval_subject_sha256(approved)
+        facts = canary.validate_manifest(approved, require_approval_record=True)
+        evidence["manifest_sha256"] = facts["manifest_sha256"]
+        start = datetime.fromisoformat(evidence["backend_runs"][0]["started_at"])
+        evidence["backend_runs"][0]["ended_at"] = (start + timedelta(seconds=900)).isoformat()
+        evidence["backend_runs"][1]["started_at"] = (start + timedelta(seconds=1500)).isoformat()
+        evidence["backend_runs"][1]["ended_at"] = (start + timedelta(seconds=2500)).isoformat()
+        with self.assertRaisesRegex(canary.PacketError, "overall"):
             canary.validate_evidence(approved, evidence)
 
     def test_cleanup_requires_receipt_and_real_absence(self):

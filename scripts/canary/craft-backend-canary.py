@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -55,6 +57,18 @@ def load_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise PacketError(f"expected JSON object: {path}")
     return value
+
+
+def load_module(root: Path, relative: Path, name: str) -> Any:
+    spec = importlib.util.spec_from_file_location(name, root / relative)
+    require(spec is not None and spec.loader is not None, f"cannot load pinned module: {relative}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        sys.modules.pop(name, None)
+    return module
 
 
 def require(condition: bool, message: str) -> None:
@@ -116,18 +130,37 @@ def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool
             require(isinstance(value, str) and HEX40.fullmatch(value) is not None, f"pins.{name} must be a full Git SHA")
         elif value is not None:
             require(isinstance(value, str) and HEX40.fullmatch(value) is not None, f"pins.{name} must be null or a full Git SHA")
-    for name in ("source_tree_sha256", "craft_package_canonical_sha256", "approval_driver_sha256"):
+    for name in (
+        "source_tree_sha256", "craft_package_canonical_sha256",
+        "approval_driver_sha256", "workspace_setup_driver_sha256",
+    ):
         value = pins.get(name)
         require(isinstance(value, str) and HEX64.fullmatch(value) is not None, f"pins.{name} must be SHA-256")
-    package_tree = pins.get("craft_package_tree_sha256")
-    if require_final_pins:
-        require(isinstance(package_tree, str) and HEX64.fullmatch(package_tree) is not None, "pins.craft_package_tree_sha256 must pin materialized bytes")
-    elif package_tree is not None:
-        require(isinstance(package_tree, str) and HEX64.fullmatch(package_tree) is not None, "pins.craft_package_tree_sha256 must be null or SHA-256")
+    for name in ("craft_package_tree_sha256", "composition_tree_sha256", "workspace_payload_tree_sha256"):
+        value = pins.get(name)
+        if require_final_pins:
+            require(isinstance(value, str) and HEX64.fullmatch(value) is not None, f"pins.{name} must pin materialized bytes")
+        elif value is not None:
+            require(isinstance(value, str) and HEX64.fullmatch(value) is not None, f"pins.{name} must be null or SHA-256")
     require(pins.get("develop_revision") == pins.get("source_revision"), "source_revision must equal accepted develop_revision")
     require(
         pins.get("approval_driver_sha256") == sha256_bytes(Path(__file__).read_bytes()),
         "approval driver bytes differ from the pinned digest",
+    )
+    setup_driver = Path(__file__).with_name("setup-disposable-workspace.py")
+    require(
+        pins.get("workspace_setup_driver_sha256") == sha256_bytes(setup_driver.read_bytes()),
+        "workspace setup driver bytes differ from the pinned digest",
+    )
+
+    fixture = manifest.get("fixture")
+    require(isinstance(fixture, dict), "fixture must be an object")
+    require(fixture.get("canonical_identity") == "github.example.invalid/synthetic-org/strict-release", "fixture canonical identity mismatch")
+    require(fixture.get("project") == "strict-release", "fixture project mismatch")
+    require(fixture.get("composition_layout") == "flat", "fixture composition layout must be flat")
+    require(
+        fixture.get("resident_marker") == "STRICT_OVERLAY: run the project regression command.",
+        "fixture resident marker mismatch",
     )
 
     backends = manifest.get("backends")
@@ -149,7 +182,10 @@ def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool
     require(isinstance(timeouts, dict), "timeouts_seconds must be an object")
     for name in ("per_backend", "transition", "cleanup", "overall"):
         require(isinstance(timeouts.get(name), int) and 1 <= timeouts[name] <= 3600, f"invalid timeout {name}")
-    require(timeouts["overall"] >= 2 * timeouts["per_backend"] + timeouts["transition"], "overall timeout is too short")
+    require(
+        timeouts["overall"] >= max(timeouts["per_backend"], timeouts["transition"], timeouts["cleanup"]),
+        "overall timeout is shorter than an individual phase budget",
+    )
 
     effects = manifest.get("allowed_side_effects")
     required_effects = {
@@ -157,6 +193,8 @@ def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool
         "write_exact_temp_root",
         "create_local_bare_remote",
         "create_disposable_git_refs",
+        "deploy_pinned_source_to_exact_workspace",
+        "register_hooks_in_exact_workspace_and_fixture",
         "record_host_event_metadata",
         "remove_exact_workspace",
         "remove_exact_temp_root",
@@ -169,7 +207,7 @@ def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool
         "no_credentials_read",
         "no_main_mutation",
         "no_branch_protection_mutation",
-        "no_release_or_install",
+        "no_release_or_shared_install",
         "no_external_messages",
         "no_parallel_sessions",
         "no_provider_authority_claim",
@@ -278,6 +316,92 @@ def materialize_source(manifest: dict[str, Any], destination: Path) -> None:
     require(run_git(["status", "--porcelain", "--untracked-files=no"], cwd=destination) == "", "pinned build changed tracked source")
 
 
+def copy_workspace_tree(source: Path, destination: Path, strip_markdown: Any | None = None) -> None:
+    require(source.is_dir(), f"workspace payload source is absent: {source}")
+    for item in sorted(source.rglob("*"), key=lambda path: path.relative_to(source).as_posix()):
+        relative = item.relative_to(source)
+        target = destination / relative
+        require(not item.is_symlink(), f"workspace payload source may not contain symlinks: {item}")
+        if item.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+        elif item.is_file():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if strip_markdown is not None and item.suffix.lower() == ".md":
+                target.write_text(strip_markdown(item.read_text()))
+            else:
+                shutil.copy2(item, target)
+
+
+def prepare_composition_and_payload(manifest: dict[str, Any], source: Path, root: Path) -> dict[str, Any]:
+    fixture = manifest["fixture"]
+    composition = root / "composition"
+    proc = subprocess.run(
+        [sys.executable, "bin/compose-project.py", "--identity", fixture["canonical_identity"], "--output", str(composition)],
+        cwd=source,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=180,
+    )
+    require(proc.returncode == 0, f"strict-release composition failed: {proc.stderr.strip()}")
+    flat = composition / fixture["composition_layout"]
+    required = {
+        "composition.json", "skills/RESIDENT.md", "skills/RULES_BUNDLE.md",
+        "skills/_strict-release--rules.md", "skills/strict-release--review/SKILL.md",
+        "skills/strict-release--review/references/steps.md", "skills/strict-release--checks/SKILL.md",
+        "bin/procedure_composition.py", "bin/resolve-load-set.py",
+        "catalog/resolver-manifest.json", "catalog/skills-inventory.json",
+    }
+    require(all((flat / relative).is_file() for relative in required), "strict-release composition is incomplete")
+    receipt = json.loads((flat / "composition.json").read_text())
+    require(receipt.get("identity") == fixture["canonical_identity"], "composition identity mismatch")
+    require(receipt.get("project") == fixture["project"], "composition project mismatch")
+    require(fixture["resident_marker"] in (flat / "skills/RESIDENT.md").read_text(), "strict-release resident marker is absent")
+
+    payload = root / "workspace-payload"
+    payload.mkdir()
+    build_module = load_module(source, Path("bin/build.py"), "canary_pinned_build")
+    strip_markdown = build_module.strip_craft_incompatible_keys
+    copy_workspace_tree(source / "dist/flat/skills", payload / "skills", strip_markdown)
+    copy_workspace_tree(source / "dist/flat/hooks", payload / "hooks")
+    copy_workspace_tree(flat, payload, strip_markdown)
+    for source_path, target_path in (
+        (source / "RESOLVER.md", payload / "RESOLVER.md"),
+        (source / "dist/RULES_BUNDLE.md", payload / "RULES_BUNDLE.md"),
+        (source / "dist/flat/skills/KERNEL.md", payload / "KERNEL.md"),
+        (source / "dist/craft-agent/enforcement-manifest.json", payload / "enforcement-manifest.json"),
+    ):
+        require(source_path.is_file() and not source_path.is_symlink(), f"workspace payload input is absent: {source_path}")
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        if source_path.suffix.lower() == ".md":
+            target_path.write_text(strip_markdown(source_path.read_text()))
+        else:
+            shutil.copy2(source_path, target_path)
+    for relative in (
+        ".githooks", "bin", "catalog",
+    ):
+        package_path = source / "dist/craft-agent" / relative
+        if package_path.is_dir():
+            copy_workspace_tree(package_path, payload / relative)
+    (payload / "CLAUDE.md").symlink_to("KERNEL.md")
+    require(not (payload / "deploy-stamp.json").exists(), "disposable payload must not contain a production deploy stamp")
+    return {
+        "composition_root": str(flat),
+        "composition_tree_sha256": tree_digest(flat),
+        "workspace_payload_root": str(payload),
+        "workspace_payload_tree_sha256": tree_digest(payload),
+    }
+
+
+def fixture_commit_message(subject: str) -> str:
+    return (
+        f"{subject} (#1003)\n\n"
+        "Review-Tier: A\n"
+        "Self-Review: disposable canary fixture only"
+    )
+
+
 def materialize(manifest: dict[str, Any]) -> dict[str, Any]:
     facts = validate_manifest(manifest)
     root: Path = facts["temp_root"]
@@ -290,21 +414,28 @@ def materialize(manifest: dict[str, Any]) -> dict[str, Any]:
     for path in (fixture, evidence, facts["source_root"], repo):
         path.mkdir(parents=True, exist_ok=True)
     materialize_source(manifest, facts["source_root"])
+    payload_observation = prepare_composition_and_payload(manifest, facts["source_root"], root)
+    control = root / "control"
+    control.mkdir()
+    (control / "FOREIGN_PROJECT_MARKER.txt").write_text("FOREIGN_PROJECT_CONTROL_MUST_NOT_BE_INJECTED\n")
+    (control / "GLOBAL_BUNDLE_MARKER.txt").write_text("GLOBAL_BUNDLE_CONTROL_MUST_NOT_BE_INJECTED\n")
     run_git(["init", "--bare", str(remote)], cwd=fixture)
     run_git(["init", "-b", "main"], cwd=repo)
     run_git(["config", "user.name", "Canary Fixture"], cwd=repo)
     run_git(["config", "user.email", "canary@example.invalid"], cwd=repo)
     (repo / "CONTROL.md").write_text("baseline\n")
     run_git(["add", "CONTROL.md"], cwd=repo)
-    run_git(["commit", "-m", "test: seed canary fixture (#1003)"], cwd=repo)
-    run_git(["remote", "add", "origin", str(remote)], cwd=repo)
+    run_git(["commit", "-m", fixture_commit_message("test: seed canary fixture")], cwd=repo)
+    canonical_remote = "https://" + manifest["fixture"]["canonical_identity"] + ".git"
+    run_git(["config", f"url.{remote.as_uri()}.insteadOf", canonical_remote], cwd=repo)
+    run_git(["remote", "add", "origin", canonical_remote], cwd=repo)
     run_git(["push", "-u", "origin", "main"], cwd=repo)
     run_git(["checkout", "-b", "canary/1003-observation"], cwd=repo)
     (repo / "PROMPT_MARKER.txt").write_text("prompt-marker-not-observed\n")
     (repo / "WRITE_MARKER.txt").write_text("write-marker-not-observed\n")
     (repo / "COMPACTION_MARKER.txt").write_text("compaction-marker-not-observed\n")
     run_git(["add", "."], cwd=repo)
-    run_git(["commit", "-m", "test: add synthetic canary markers (#1003)"], cwd=repo)
+    run_git(["commit", "-m", fixture_commit_message("test: add synthetic canary markers")], cwd=repo)
     receipt = {
         "schema_version": SCHEMA_VERSION,
         "run_id": facts["run_id"],
@@ -315,11 +446,23 @@ def materialize(manifest: dict[str, Any]) -> dict[str, Any]:
             "bare_remote": str(remote),
             "evidence_root": str(evidence),
             "source_root": str(facts["source_root"]),
+            "composition_root": payload_observation["composition_root"],
+            "workspace_payload_root": payload_observation["workspace_payload_root"],
+            "control_root": str(control),
         },
         "pins": manifest["pins"],
         "package_observation": {
             "canonical_sha256": tree_digest(facts["source_root"] / "dist" / "craft-agent", canonical_package=True),
             "exact_tree_sha256": tree_digest(facts["source_root"] / "dist" / "craft-agent"),
+            "composition_tree_sha256": payload_observation["composition_tree_sha256"],
+            "workspace_payload_tree_sha256": payload_observation["workspace_payload_tree_sha256"],
+        },
+        "fixture": {
+            **manifest["fixture"],
+            "origin": canonical_remote,
+            "transport": "strictly-local-insteadOf",
+            "foreign_control_sha256": sha256_bytes((control / "FOREIGN_PROJECT_MARKER.txt").read_bytes()),
+            "global_bundle_control_sha256": sha256_bytes((control / "GLOBAL_BUNDLE_MARKER.txt").read_bytes()),
         },
         "git": {
             "main": run_git(["rev-parse", "main"], cwd=repo),
@@ -344,13 +487,28 @@ def attest_materialized(manifest: dict[str, Any]) -> dict[str, Any]:
     require(run_git(["status", "--porcelain", "--untracked-files=no"], cwd=source) == "", "materialized source has tracked drift")
     require(tree_digest(package, canonical_package=True) == manifest["pins"]["craft_package_canonical_sha256"], "materialized canonical package mismatch")
     require(tree_digest(package) == manifest["pins"]["craft_package_tree_sha256"], "materialized exact package mismatch")
+    composition = facts["temp_root"] / "composition" / manifest["fixture"]["composition_layout"]
+    payload = facts["temp_root"] / "workspace-payload"
+    require(tree_digest(composition) == manifest["pins"]["composition_tree_sha256"], "materialized composition tree mismatch")
+    require(tree_digest(payload) == manifest["pins"]["workspace_payload_tree_sha256"], "materialized workspace payload mismatch")
+    require(not (payload / "deploy-stamp.json").exists(), "disposable payload contains a production deploy stamp")
+    composition_receipt = json.loads((composition / "composition.json").read_text())
+    require(composition_receipt.get("identity") == manifest["fixture"]["canonical_identity"], "materialized composition identity mismatch")
+    require(composition_receipt.get("project") == manifest["fixture"]["project"], "materialized composition project mismatch")
+    require(manifest["fixture"]["resident_marker"] in (composition / "skills/RESIDENT.md").read_text(), "materialized resident marker mismatch")
+    fixture_repo = facts["temp_root"] / "fixture" / "repo"
     require((facts["temp_root"] / "fixture" / "remote.git").is_dir(), "synthetic bare remote is absent")
+    expected_origin = "https://" + manifest["fixture"]["canonical_identity"] + ".git"
+    require(run_git(["config", "--get", "remote.origin.url"], cwd=fixture_repo) == expected_origin, "fixture origin identity mismatch")
     receipt = {
         "schema_version": SCHEMA_VERSION,
         "run_id": facts["run_id"],
         "manifest_sha256": facts["manifest_sha256"],
         "source_revision": manifest["pins"]["source_revision"],
         "package_tree_sha256": manifest["pins"]["craft_package_tree_sha256"],
+        "composition_tree_sha256": manifest["pins"]["composition_tree_sha256"],
+        "workspace_payload_tree_sha256": manifest["pins"]["workspace_payload_tree_sha256"],
+        "fixture_identity": manifest["fixture"]["canonical_identity"],
         "live_session_created": False,
     }
     output = facts["evidence_root"] / "authorization-attestation.json"
@@ -363,6 +521,16 @@ def attest_materialized(manifest: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def evidence_timestamp(value: Any, label: str) -> datetime:
+    require(isinstance(value, str) and value, f"{label} must be an ISO-8601 timestamp")
+    try:
+        observed = datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise PacketError(f"{label} must be an ISO-8601 timestamp") from exc
+    require(observed.tzinfo is not None and observed.utcoffset() is not None, f"{label} must include a UTC offset")
+    return observed
+
+
 def validate_evidence(manifest: dict[str, Any], evidence: dict[str, Any]) -> dict[str, Any]:
     facts = validate_manifest(manifest, require_approval_record=True)
     require(evidence.get("schema_version") == SCHEMA_VERSION, "unsupported evidence schema")
@@ -370,26 +538,67 @@ def validate_evidence(manifest: dict[str, Any], evidence: dict[str, Any]) -> dic
     require(evidence.get("manifest_sha256") == facts["manifest_sha256"], "evidence manifest digest mismatch")
     runs = evidence.get("backend_runs")
     require(isinstance(runs, list) and len(runs) == 2, "exactly two backend evidence records required")
+    timeouts = manifest["timeouts_seconds"]
+    first_start: datetime | None = None
     prior_end: datetime | None = None
+    backend_durations: list[float] = []
+    transition_durations: list[float] = []
+    validated_events = 0
+    artifact_references: set[str] = set()
+    evidence_root: Path = facts["evidence_root"]
+    require(evidence_root.is_dir() and not evidence_root.is_symlink(), "evidence root is absent or symlinked")
+    require(evidence_root.resolve() == evidence_root, "evidence root must resolve to its exact approved path")
     for expected, observed in zip(manifest["backends"], runs):
         require(isinstance(observed, dict), "backend evidence must be objects")
+        sequence = expected["sequence"]
         for name in ("sequence", "connection", "model"):
             require(observed.get(name) == expected[name], f"backend evidence {name} mismatch")
-        require(observed.get("outcome") == "observed", "backend outcome must be observed")
+        outcome = observed.get("outcome")
+        if outcome == "unsupported-unverified":
+            raise PacketError(f"backend {sequence} capability evidence is unsupported/unverified")
+        require(outcome == "observed", "backend outcome must be observed or explicitly unsupported-unverified")
         require(observed.get("model_self_report_used") is False, "model self-report cannot be evidence")
-        start = datetime.fromisoformat(observed.get("started_at"))
-        end = datetime.fromisoformat(observed.get("ended_at"))
-        require(start.tzinfo is not None and end.tzinfo is not None and start < end, "invalid backend interval")
+        start = evidence_timestamp(observed.get("started_at"), f"backend {sequence} started_at")
+        end = evidence_timestamp(observed.get("ended_at"), f"backend {sequence} ended_at")
+        require(start < end, f"backend {sequence} interval must have positive duration")
+        duration = (end - start).total_seconds()
+        require(duration <= timeouts["per_backend"], f"backend {sequence} exceeds per_backend time budget")
+        backend_durations.append(duration)
+        if first_start is None:
+            first_start = start
         if prior_end is not None:
             require(start >= prior_end, "backend runs overlap; sequential evidence required")
+            transition = (start - prior_end).total_seconds()
+            require(transition <= timeouts["transition"], "backend transition exceeds transition time budget")
+            transition_durations.append(transition)
         prior_end = end
         events = observed.get("host_events")
         require(isinstance(events, list), "host_events must be a list")
-        names = {event.get("name") for event in events if isinstance(event, dict)}
-        require(names == EVENTS, f"host event set mismatch: {sorted(EVENTS - names)}")
+        require(len(events) == len(EVENTS), f"backend {sequence} must contain exactly {len(EVENTS)} host events")
+        require(all(isinstance(event, dict) for event in events), "every host event must be an object")
+        event_names = [event.get("name") for event in events]
+        require(all(isinstance(name, str) and name for name in event_names), "every host event name must be a non-empty string")
+        require(len(set(event_names)) == len(event_names), f"backend {sequence} contains duplicate host event names")
+        names = set(event_names)
+        require(names == EVENTS, f"host event set mismatch: missing={sorted(EVENTS - names)} unexpected={sorted(names - EVENTS)}")
         for event in events:
             require(event.get("source") == "host-observed", "every event must be host-observed")
-            require(isinstance(event.get("artifact_sha256"), str) and HEX64.fullmatch(event["artifact_sha256"]), "event artifact digest required")
+            reference = event.get("artifact_reference")
+            require(isinstance(reference, str) and reference, "event artifact reference required")
+            relative = Path(reference)
+            require(not relative.is_absolute() and ".." not in relative.parts, "event artifact reference must be confined and relative")
+            require(reference not in artifact_references, "event artifact references must be unique")
+            artifact_references.add(reference)
+            artifact = evidence_root / relative
+            require(artifact.is_file() and not artifact.is_symlink(), f"event artifact is absent or symlinked: {reference}")
+            require(artifact.resolve() == artifact, f"event artifact traverses a symlink: {reference}")
+            digest = event.get("artifact_sha256")
+            require(isinstance(digest, str) and HEX64.fullmatch(digest), "event artifact digest required")
+            require(sha256_bytes(artifact.read_bytes()) == digest, f"event artifact digest mismatch: {reference}")
+        validated_events += len(events)
+    require(first_start is not None and prior_end is not None, "backend timing evidence is absent")
+    overall_duration = (prior_end - first_start).total_seconds()
+    require(overall_duration <= timeouts["overall"], "backend evidence exceeds overall time budget")
     observations = evidence.get("side_effect_observations")
     require(isinstance(observations, dict), "side_effect_observations must be an object")
     for name in ("outside_allowlist_unchanged", "credentials_unread", "main_unchanged", "protections_unchanged", "release_state_unchanged"):
@@ -402,8 +611,13 @@ def validate_evidence(manifest: dict[str, Any], evidence: dict[str, Any]) -> dic
         "status": "evidence-consistent-unverified",
         "authorization_effect": "none",
         "run_id": facts["run_id"],
-        "backend_runs": 2,
-        "events": 2 * len(EVENTS),
+        "backend_runs": len(runs),
+        "events": validated_events,
+        "timing_seconds": {
+            "backend_runs": backend_durations,
+            "transitions": transition_durations,
+            "overall": overall_duration,
+        },
     }
 
 

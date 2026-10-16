@@ -17,6 +17,7 @@ Tier C. The driver prepares executable fixtures, records externally supplied app
 ## Dependency closure
 
 - Driver: `scripts/canary/craft-backend-canary.py`
+- Exact disposable setup: `scripts/canary/setup-disposable-workspace.py`
 - Behavioral tests: `bin/_test/craft_backend_canary_test.py`
 - Proposal: `examples/probe-matrices/craft-backend-canary/approval.proposal.json`
 - Evidence template: `examples/probe-matrices/craft-backend-canary/host-evidence.template.json`
@@ -32,6 +33,10 @@ The final change must register driver/tests/templates in the review-risk policy 
 - A source archive lacked Git ancestry needed by immutable policy selection. Materialization now uses a detached local clone at the full source revision, validates the source tree listing, builds with full history, and requires zero tracked drift.
 - Cleanup receipts originally implied a retained file outside the allowlist. `verify-cleanup` now accepts stdin and performs no deletion, allowing receipt text to be reviewed without creating another path.
 - Proposal-only refusal now occurs before unresolved live prerequisites, making the authorization boundary explicit.
+- Evidence now requires exactly nine unique named events per backend, unique confined artifact bytes with matching digests, and actual per-backend/transition/overall intervals within the pinned budgets; returned counts/timing are observed rather than hard-coded.
+- Startup, no-op and compaction probes no longer substitute ordinary reads/errors for capability evidence. The runbook requires host registration/invocation/boundary records, a real disposable zero-output resolver adapter with exact restoration, and post-compaction nonce plus denial behavior. Missing host records remain `unsupported-unverified` and fail validation.
+- Materialization now gives the fixture the approved strict-release identity over strictly local transport, generates the existing composition and selected resident/skill content, includes foreign/global negative controls and native commit trailers, and pins a separate workspace payload.
+- The accepted-develop packet cannot call production `build.py --deploy`, whose current-origin/main check remains intact. A separately pinned setup script copies an exact top-level allowlist, rejects changed/unexpected/symlinked content, runs only disposable hook registration/wiring/verification, and creates no production deploy stamp.
 
 ## Peer review
 
@@ -43,11 +48,12 @@ Self-review found and corrected three blockers: nondeterministic package timesta
 
 ## Quantified claims
 
-Seven focused cases pass without creating a Craft workspace/session: path confinement, missing external approval, prerequisite pins, detached source/package materialization, existing-root refusal, exact-byte attestation, imported host-event provenance/order, no-self-report, synthetic relabeling, side-effect closure, timeout floor, and cleanup residue detection. The 12 review-policy cases and review-risk dependency/mutation audit pass. After integrating accepted provider/native develop, 16 native scenarios and 13 provider scenarios also pass. The proposal validates in preparation mode and rejects `--require-approval-record`; structurally consistent imported evidence remains unverified and non-authorizing.
+Ten focused tests pass without creating a Craft workspace/session. They cover path confinement, missing approval/prerequisites, detached source/package/composition/payload materialization, canonical synthetic identity over local transport, selected resident content and controls, native trailers, exact allowlisted payload copying without a deploy stamp, existing-root refusal, exact-byte attestation, exact event cardinality, artifact confinement/digests, backend/transition/overall budgets, unsupported capability state, no-self-report, synthetic relabeling, side-effect closure and cleanup residue. The proposal validates in preparation mode and rejects `--require-approval-record`; structurally consistent imported evidence remains unverified and non-authorizing.
 
 ## Pending before publication
 
-- Run the complete combined Python/hook/workflow/package/scanner/freshness matrix.
+- Integrate the final independently accepted `develop` prerequisites and refresh every source/package/composition/payload/driver digest.
+- Register the setup driver in Tier C risk/workflow coverage and run the complete Python/hook/workflow/package/scanner/freshness matrix.
 - Publish a draft PR and obtain independent exact-head review.
 - After review/integration, materialize exact package bytes and request separate direct user authorization; the remaining shared-parent #1002 slice is not claimed or satisfied by this packet.
 
