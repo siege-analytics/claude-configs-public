@@ -246,7 +246,7 @@ def package(source, destination, identity, *, policy_root=ROOT,
             slug = publisher + '--' + local if declaration['qualified'] else local
             composition.require(slug not in sources, f'duplicate qualified skill {slug}; declare an explicit alias')
             sources[slug] = root / path / 'SKILL.md'
-            source_owners[slug] = declaration
+            source_owners[slug] = {**declaration, 'local_slug': local}
             parent_skills[slug] = (path, build.is_router(path, discovered))
         for local, path in sorted(build.find_rules(source / root).items()):
             slug = publisher + '--' + local if declaration['qualified'] else local
@@ -276,7 +276,7 @@ def package(source, destination, identity, *, policy_root=ROOT,
             known[slug] = {'slug': slug, 'project': owner, 'kind': 'project-skill' if owner else 'skill', 'source_path': path.as_posix(), 'package_path': f'skills/{directory}/SKILL.md', 'characters': len(content), 'estimated_tokens': (len(content) + 3) // 4}
             if publisher:
                 known[slug].update(publisher=publisher['id'], publisher_root=publisher['skills_root'],
-                                   publisher_qualified=publisher['qualified'])
+                                   publisher_qualified=publisher['qualified'], publisher_local_slug=publisher['local_slug'])
         graph = composition.ProcedureGraph(known, bindings, project=project, prerequisites=content_selection['prerequisites'])
         for route in routes:
             graph.resolve(route['skills'])

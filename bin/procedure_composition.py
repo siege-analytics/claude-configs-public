@@ -72,9 +72,19 @@ class ProcedureGraph:
                         f"procedure {slug}: publisher cannot borrow project scope")
                 qualified = item.get("publisher_qualified")
                 require(type(qualified) is bool, f"procedure {slug}: publisher qualification must be explicit")
-                require(not qualified or slug.startswith(publisher + "--"),
+                local = identifier(item.get("publisher_local_slug"), f"procedure {slug}.publisher_local_slug")
+                require(slug == (publisher + "--" + local if qualified else local),
                         f"procedure {slug}: qualification disagrees with publisher {publisher}")
                 require(item["source_path"].startswith(root + "/"), f"procedure {slug}: source is outside declared publisher")
+                source = PurePosixPath(item["source_path"])
+                require(source.name == "SKILL.md", f"procedure {slug}: publisher source must be SKILL.md")
+                relative = source.parent.relative_to(root)
+                # Match source discovery, including its existing shelf namespace.
+                source_local = source.parent.name
+                require("--" not in source_local, f"procedure {slug}: publisher source directory must be unqualified")
+                if len(relative.parts) > 1 and relative.parts[0] == "shelves":
+                    source_local = "shelves--" + source_local
+                require(local == source_local, f"procedure {slug}: local slug disagrees with declared publisher source")
             else:
                 require(item["source_path"].startswith("skills/"), f"procedure {slug}: parent source must be under skills/")
             source = item["source_path"]

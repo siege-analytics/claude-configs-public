@@ -60,14 +60,14 @@ class SelectedCompositionTest(unittest.TestCase):
             '--policy-root', str(self.source), '--policy-inputs', str(self.fixture.source),
             '--policy-inputs-sha256', pin or self.fixture.pin,
             '--content-selection', 'projects/independent/content-selection.json',
-        ], cwd='/', capture_output=True, text=True)
+        ], cwd='/', capture_output=True, text=True, timeout=60)
 
     def resolve(self, prompt, *, identity=None, layout='flat', render=False):
         command = [sys.executable, str(self.output / layout / 'bin/resolve-load-set.py'),
                    '--prompt', prompt, '--repo', identity or self.identity]
         if render:
             command += ['--render-hook', '--mode', 'on']
-        result = subprocess.run(command, cwd='/', capture_output=True, text=True)
+        result = subprocess.run(command, cwd='/', capture_output=True, text=True, timeout=60)
         return result, result.stdout if render else json.loads(result.stdout)
 
     def publisher(self, name, *, qualified=True, root=None, skill='format'):
@@ -159,6 +159,73 @@ class SelectedCompositionTest(unittest.TestCase):
         self.assertIn('duplicate qualified skill', result.stdout)
         self.assertFalse(self.output.exists())
 
+    def test_installed_publisher_qualification_mutations_reject_before_resident_output(self):
+        self.publisher('first')
+        self.publisher('legacy', qualified=False, skill='plain')
+        result = self.compose()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        mutations = (
+            ('first--format', {'publisher_qualified': False}, 'qualification disagrees'),
+            ('plain', {'publisher_qualified': True}, 'qualification disagrees'),
+            ('first--format', {'slug': 'second--format'}, 'qualification disagrees'),
+            ('first--format', {'slug': 'first--other'}, 'qualification disagrees'),
+            ('plain', {'slug': 'other'}, 'qualification disagrees'),
+            ('first--format', {'publisher_local_slug': None}, 'invalid qualified slug'),
+            ('first--format', {'publisher_local_slug': '../format'}, 'invalid qualified slug'),
+            ('first--format', {'publisher_local_slug': 'other', 'slug': 'first--other'}, 'local slug disagrees'),
+            ('first--format', {'publisher_qualified': False, 'publisher_local_slug': 'first--format'}, 'local slug disagrees'),
+            ('first--format', {'source_path': 'bundles/first/skills/other/SKILL.md'}, 'local slug disagrees'),
+            ('first--format', {'source_path': 'bundles/first/skills/shelves/format/SKILL.md'}, 'local slug disagrees'),
+            ('first--format', {'source_path': 'bundles/first/skills/first--format/SKILL.md',
+                               'publisher_local_slug': 'first--format', 'slug': 'first--first--format'},
+             'publisher source directory must be unqualified'),
+            ('first--format', {'source_path': 'bundles/first/skills/format/OTHER.md'}, 'publisher source must be SKILL.md'),
+        )
+        for layout in ('flat', 'nested'):
+            path = self.output / layout / 'catalog/skills-inventory.json'
+            original = json.loads(path.read_bytes())
+            for slug, change, diagnostic in mutations:
+                with self.subTest(layout=layout, slug=slug, change=change):
+                    changed = copy.deepcopy(original)
+                    item = next(item for item in changed['items'] if item['slug'] == slug)
+                    item.update(change)
+                    path.write_text(json.dumps(changed))
+                    # Even an unrelated project request must reject the invalid
+                    # inventory before any resident or selected content escapes.
+                    process, text = self.resolve('inspect changes', layout=layout, render=True)
+                    self.assertNotEqual(process.returncode, 0, text + process.stderr)
+                    self.assertIn(diagnostic, process.stderr)
+                    self.assertIn('state: error', text)
+                    self.assertNotIn('PROJECT_RESIDENT', text)
+                    self.assertNotIn('<project-resident>', text)
+                    self.assertNotIn('CONTENT_ONLY', text)
+            path.write_text(json.dumps(original))
+
+    def test_publisher_local_slugs_match_discovery_and_both_installed_layouts(self):
+        self.publisher('first', skill='category/format')
+        self.publisher('legacy', qualified=False, skill='shelves/reference')
+        self.publisher('books', skill='shelves/reference')
+        self.publisher('plain', qualified=False, skill='plain')
+        result = self.compose()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for layout in ('flat', 'nested'):
+            inventory = json.loads((self.output / layout / 'catalog/skills-inventory.json').read_bytes())
+            manifest = json.loads((self.output / layout / 'catalog/resolver-manifest.json').read_bytes())
+            for slug, local in (('first--format', 'format'), ('shelves--reference', 'shelves--reference'),
+                                ('books--shelves--reference', 'shelves--reference'), ('plain', 'plain')):
+                item = next(item for item in inventory['items'] if item['slug'] == slug)
+                self.assertEqual(item['publisher_local_slug'], local)
+                self.assertEqual(manifest['known'][slug], item)
+                process, text = self.resolve(f'[skill:{slug}]', layout=layout, render=True)
+                self.assertEqual(process.returncode, 0, text + process.stderr)
+                self.assertEqual(text.count('PROJECT_RESIDENT'), 1)
+
+    def test_invalid_discovered_publisher_local_slug_rejects_before_output(self):
+        self.publisher('first', skill='bad_name')
+        result = self.compose()
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertFalse(self.output.exists())
+
     def test_publisher_cannot_borrow_foreign_project_source(self):
         self.publisher('foreign', root='projects/foreign/skills')
         result = self.compose()
@@ -248,7 +315,7 @@ class SiegeCompatibilityTest(unittest.TestCase):
                     if mode == 'explicit':
                         command += ['--policy-inputs', 'bundles/siege/policy-inputs.json',
                                     '--policy-inputs-sha256', pin, '--content-selection', 'selected-content.json']
-                    result = subprocess.run(command, cwd='/', capture_output=True, text=True)
+                    result = subprocess.run(command, cwd='/', capture_output=True, text=True, timeout=60)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                     outputs.append({p.relative_to(output).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                                     for p in output.rglob('*') if p.is_file()})
