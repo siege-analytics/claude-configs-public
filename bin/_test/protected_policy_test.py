@@ -111,6 +111,7 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
             "--head", exact_head,
             "--canonical-identity", canonical,
             "--target-branch", target,
+            "--installed-pilot-receipt", ".pilot/composition.json",
         ]
         result = run(*command, cwd=trusted_root, check=False)
         return result.returncode, json.loads(result.stdout)

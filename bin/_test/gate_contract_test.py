@@ -250,6 +250,23 @@ class GateContractTest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "conditional, altered, or non-exact"):
                     gc.validate_protected_workflow(mutation)
 
+    def test_base_controlled_adapter_registration_and_old_guard_are_both_required(self):
+        valid = (ROOT / ".github/workflows/pr-base-guard.yml").read_text()
+        gc.validate_protected_adapter_workflow(valid)
+        mutations = (
+            valid.replace("fetch-depth: 0  # selected policy snapshot must be an available ancestor", "fetch-depth: 1"),
+            valid.replace("run: bash ../policy/scripts/ci/check-branch-topology.sh", "run: true"),
+            valid.replace("--head \"$EXACT_HEAD\"", "--head HEAD"),
+            valid.replace("--canonical-identity \"$CANONICAL_HOST/$CANONICAL_REPOSITORY\"", "--canonical-identity github.example.invalid/synthetic-org/strict-release"),
+            valid.replace("--target-branch \"$TARGET_BRANCH\"", "--target-branch develop"),
+            valid.replace("set -euo pipefail", "set +e"),
+            valid.replace("--target-branch \"$TARGET_BRANCH\" --receipt", "--target-branch \"$TARGET_BRANCH\" || true --receipt"),
+        )
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                with self.assertRaisesRegex(ValueError, "missing, duplicated, or altered|may not be advisory"):
+                    gc.validate_protected_adapter_workflow(mutation)
+
     def test_generated_registration_removal_rejects(self):
         with tempfile.TemporaryDirectory() as raw:
             dist = Path(raw); self.write_generated_fixture(dist)

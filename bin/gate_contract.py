@@ -50,7 +50,7 @@ SUPPORTED_CAPABILITY_TARGETS = {
     },
     "protected-range-validation": {
         "kind": "external",
-        "registered_path": ".github/workflows/build-and-publish.yml",
+        "registered_path": ".github/workflows/pr-base-guard.yml",
         "package_paths": (),
     },
     "procedure-binding-resolution": {
@@ -540,6 +540,37 @@ def validate_protected_workflow(content: str) -> None:
         fail("protected validation workflow gate contract step is conditional, altered, or non-exact")
 
 
+def validate_protected_adapter_workflow(content: str) -> None:
+    """Require the base-controlled adapter after the retained topology guard."""
+    required = (
+        "name: pr-base-guard",
+        "pull_request_target:",
+        "fetch-depth: 0  # selected policy snapshot must be an available ancestor",
+        "- name: Enforce integration and promotion path",
+        "run: bash ../policy/scripts/ci/check-branch-topology.sh",
+        "- name: Evaluate exact project policy range",
+        "POLICY_REVISION: ${{ github.event.pull_request.base.sha }}",
+        "EXACT_BASE: ${{ github.event.pull_request.base.sha }}",
+        "EXACT_HEAD: ${{ github.event.pull_request.head.sha }}",
+        "CANONICAL_REPOSITORY: ${{ github.repository }}",
+        "set -euo pipefail",
+        "python3 ../policy/scripts/ci/protected-policy-range.py \\",
+        '--trusted-root ../policy --trusted-revision "$POLICY_REVISION" \\',
+        '--candidate-repo . --base "$EXACT_BASE" --head "$EXACT_HEAD" \\',
+        '--canonical-identity "$CANONICAL_HOST/$CANONICAL_REPOSITORY" \\',
+        '--target-branch "$TARGET_BRANCH" --receipt /tmp/protected-policy-receipt.json',
+    )
+    if any(content.count(item) != 1 for item in required):
+        fail("base-controlled protected adapter registration is missing, duplicated, or altered")
+    if content.index("- name: Enforce integration and promotion path") > content.index("- name: Evaluate exact project policy range"):
+        fail("protected adapter must follow the retained topology guard")
+    start = content.index("- name: Evaluate exact project policy range")
+    end = content.find("\n      - name:", start + 1)
+    step = content[start:end if end >= 0 else len(content)]
+    if "continue-on-error:" in step or "|| true" in step or "if: ${{ false }}" in step:
+        fail("base-controlled protected adapter may not be advisory or fail-open")
+
+
 def validate_generated(root: Path, generated_root: Path, contract: dict[str, Any]) -> None:
     manifest = read_json(generated_root / "craft-agent/enforcement-manifest.json")
     settings = read_json(generated_root / "craft-agent/settings-enforcement.json")
@@ -637,7 +668,12 @@ def validate_generated(root: Path, generated_root: Path, contract: dict[str, Any
     workflow = repository_path(
         root, protected_capability["registered_path"], "protected validation declared registration"
     )
-    validate_protected_workflow(workflow.read_text(encoding="utf-8"))
+    validate_protected_adapter_workflow(workflow.read_text(encoding="utf-8"))
+    # Candidate CI continues to verify source/generated agreement, but it is
+    # not the protected adapter and cannot authorize its own head.
+    validate_protected_workflow(
+        repository_path(root, Path(".github/workflows/build-and-publish.yml"), "contract CI workflow").read_text(encoding="utf-8")
+    )
 
 
 def _run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:

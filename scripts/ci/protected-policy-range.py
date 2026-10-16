@@ -32,7 +32,6 @@ TRUSTED_DEPENDENCIES = (
     Path("catalog/gate-contract-schema.json"),
     Path("catalog/gate-contracts.json"),
 )
-INSTALL_RECEIPT = Path(".pilot/composition.json")
 POLICY_SENSITIVE = (
     "bin/effective_policy.py",
     "bin/gate_contract.py",
@@ -123,10 +122,12 @@ def candidate_json(repo: Path, head: str, relative: Path, parser: Any) -> dict[s
     return parser(raw, f"candidate:{head}:{relative.as_posix()}")
 
 
-def validate_install(repo: Path, head: str, branch: dict[str, Any], parser: Any) -> dict[str, Any]:
-    receipt = candidate_json(repo, head, INSTALL_RECEIPT, parser)
+def validate_install(repo: Path, head: str, relative: Path, branch: dict[str, Any], parser: Any) -> dict[str, Any]:
+    if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+        raise ValueError("installed pilot receipt path must be confined and repository-relative")
+    receipt = candidate_json(repo, head, relative, parser)
     if receipt is None:
-        raise Denied(f"generated pilot receipt is missing: {INSTALL_RECEIPT}")
+        raise Denied(f"generated pilot receipt is missing: {relative}")
     expected_identity = "/".join(branch["repository_identity"][key] for key in ("host", "owner", "repository"))
     expected = {
         "project": branch["project"],
@@ -149,7 +150,7 @@ def validate_install(repo: Path, head: str, branch: dict[str, Any], parser: Any)
         raise Denied("generated pilot receipt has mixed or stale parent lock")
     if packaged.get("decision", {}).get("final") != "unknown":
         raise Denied("generated configured pilot improperly claims final authorization")
-    raw = git(repo, "show", f"{head}:{INSTALL_RECEIPT.as_posix()}", text=False)
+    raw = git(repo, "show", f"{head}:{relative.as_posix()}", text=False)
     parent_content = receipt.get("parent_content_sha256")
     effective_digest = approved.get("effective_digest")
     if not isinstance(parent_content, str) or not re.fullmatch(r"[0-9a-f]{64}", parent_content):
@@ -157,8 +158,8 @@ def validate_install(repo: Path, head: str, branch: dict[str, Any], parser: Any)
     if not isinstance(effective_digest, str) or not re.fullmatch(r"[0-9a-f]{64}", effective_digest):
         raise Denied("generated pilot receipt has invalid effective policy identity")
     return {
-        "path": INSTALL_RECEIPT.as_posix(),
-        "git_blob": str(git(repo, "rev-parse", f"{head}:{INSTALL_RECEIPT.as_posix()}")).strip(),
+        "path": relative.as_posix(),
+        "git_blob": str(git(repo, "rev-parse", f"{head}:{relative.as_posix()}")).strip(),
         "sha256": hashlib.sha256(raw).hexdigest(),
         "parent_content_sha256": parent_content,
         "effective_policy_sha256": effective_digest,
@@ -258,7 +259,16 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         raise Denied(f"repository identity cannot resolve approved policy: {branch.get('diagnostic', branch.get('state'))}")
     if branch["decision"]["policy"] != "allow":
         raise Denied("target branch contradicts the selected project's approved branch policy")
-    installation = validate_install(candidate, head, branch, ep.parse_json)
+    if args.installed_pilot_receipt:
+        installation = validate_install(candidate, head, args.installed_pilot_receipt, branch, ep.parse_json)
+    else:
+        # The parent repository has policy but no installed consumer package.
+        # This absence grants nothing and is explicit in the receipt; disposable
+        # consumer probes pass --installed-pilot-receipt and fail closed on it.
+        installation = {
+            "state": "not-observed-parent-repository",
+            "authorization_effect": "none",
+        }
 
     observations = []
     sensitive: set[str] = set()
@@ -338,6 +348,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--head", required=True)
     parser.add_argument("--canonical-identity", required=True, help="host-authenticated target as host/owner/repository")
     parser.add_argument("--target-branch", required=True)
+    parser.add_argument("--installed-pilot-receipt", type=Path, help="required configured consumer receipt for disposable consumer probes")
     parser.add_argument("--receipt", type=Path)
     args = parser.parse_args(argv)
     try:
