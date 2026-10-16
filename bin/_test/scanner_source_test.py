@@ -207,6 +207,16 @@ class ScannerSourceTest(unittest.TestCase):
         with self.assertRaises(subprocess.CalledProcessError): self.git('merge', '--no-edit', left)
         self.expect(self.scan(), 2, 'scan-source-error')
 
+    def test_shell_import_fixture_leaves_no_packageable_bytecode_without_environment_help(self):
+        fixture = self.base / 'scanner'; fixture.mkdir()
+        for name in ('scan_ast.py', 'test_is_test_path.sh'):
+            (fixture / name).write_bytes((SKILL / name).read_bytes())
+        environment = dict(self.env); environment.pop('PYTHONDONTWRITEBYTECODE', None)
+        result = subprocess.run(['bash', str(fixture / 'test_is_test_path.sh')],
+                                cwd=self.root, env=environment, capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse(list(fixture.rglob('*.pyc')))
+
     def test_missing_message_input_is_incomplete(self):
         for mode in ('--message-file', '--commit-message-file'):
             self.expect(self.scan(mode, str(self.base / 'missing-message')), 2, 'scan-input-error')

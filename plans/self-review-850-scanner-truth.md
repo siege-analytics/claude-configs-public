@@ -37,8 +37,12 @@ exact final commit independently before integration.
 ## Peer review
 
 Confirmed the three original mismatch/parse reproductions on accepted develop.
-Independent exact-head review will be requested from the existing Craft agent;
-all findings and final verdicts belong on the PR.
+Independent exact-head review reproduced the behavior and found that an existing
+shell import test left packageable bytecode after the CI freshness check. Repair:
+make that import use `python3 -B`, disable bytecode throughout the registered step,
+and assert no bytecode plus current generated authority after all scanner suites.
+A regression runs the import fixture with the environment protection removed.
+Fresh exact-head review remains required before integration.
 
 ## Lead review
 
@@ -48,14 +52,21 @@ Source material remains in temporary local fixtures and is not posted publicly.
 
 ## Quantified claims
 
-- 18 selected-source/error contract tests pass, including index/worktree mismatch
+- 19 selected-source/error contract tests pass, including index/worktree mismatch
   in both directions, PR object fetch/mismatch, same-tree cross-file evidence and
   config, unborn/unmerged index, symlink rejection, and subprocess/input faults.
 - All 11 existing scanner shell suites pass. Both scanner Python files pass
   their own AST scanner with only named, fixture-backed bootstrap exceptions.
-- Full repository validation: 82/82 commands pass in 404.2 seconds on Python
+- Initial full repository validation: 82/82 commands pass in 404.2 seconds on Python
   3.13, including all Python modules, 36 hook suites, two workflow policy suites,
   both output builds, freshness and hook validators.
+- R1 repair validation: the complete 82-command matrix had one expected CI
+  invocation-count failure after adding the second freshness check. Updated the
+  audited count to two; its per-occurrence removal negatives and focused rerun
+  pass. All other 81 commands passed. The exact registered scanner sequence
+  passes 19 scenarios, 11 shell suites, both self-scans, no-bytecode assertion
+  and final authority freshness. Logs: `/tmp/cc-850-r1-full-validation.log`,
+  `/tmp/cc-850-r1-registration-audit.log`, `/tmp/cc-850-r1-ci-clean.log`.
 - Generated authority remains current: 198 sources, 804 artifact snapshots,
   2,916 generated file mappings. The new helper is packaged in both layouts.
 - Validation logs: `/tmp/cc-850-focused.log`, `/tmp/cc-850-skill-tests.log` and

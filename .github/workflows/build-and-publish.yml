@@ -119,6 +119,8 @@ jobs:
         run: python3 bin/_test/settings_drift_test.py
 
       - name: Scanner selected-source truth and incomplete results
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
         run: |
           set -euo pipefail
           python3 bin/_test/scanner_source_test.py
@@ -128,6 +130,8 @@ jobs:
           python3 skills/detect-ai-fingerprints/scan_ast.py \
             skills/detect-ai-fingerprints/scan_ast.py \
             skills/detect-ai-fingerprints/scan_snapshot.py
+          python3 -c 'from pathlib import Path; assert not list(Path("skills/detect-ai-fingerprints").rglob("*.pyc")), "scanner suite left packageable bytecode"'
+          python3 bin/generated-source-authority.py --check
 
       - name: NotebookEdit write-guard fixtures
         run: python3 bin/_test/notebook_edit_guards_test.py
