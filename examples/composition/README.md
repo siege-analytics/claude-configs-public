@@ -8,7 +8,7 @@ The strict project replaces `self-review` with `strict-release--review` and appe
 
 The builder reuses existing skill discovery, flat/nested layout conventions and token rendering. It produces separate consumer directories, omits replaced procedure files and includes only the selected project's content. Existing qualified skill/rule tokens are rebound; supporting files retain relative links. A raw link that points to an omitted default or foreign content rejects with a diagnostic; migrate that link to the explicit skill token. General source and existing production packages remain unchanged by the composition.
 
-Link validation covers inline Markdown destinations, reference definitions and raw HTML `href`/`src` attributes, with package-relative paths normalized after entity/URL decoding. External schemes and same-document anchors remain allowed. This is conservative validation, not a Markdown renderer: local link examples in code must also name packaged content. Both layouts validate before either output is written.
+Link validation covers inline Markdown destinations, reference definitions and raw HTML `href`/`src` attributes, with package-relative paths normalized after entity/URL decoding. External links allow only `http`/`https` with a host and `mailto` with a recipient; local-resource schemes such as `file` reject. Same-document anchors remain allowed. This is conservative validation, not a Markdown renderer: local link examples in code must also name packaged content. Both layouts validate before either output is written.
 
 ## Build and inspect
 

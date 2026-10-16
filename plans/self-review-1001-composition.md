@@ -69,3 +69,15 @@ validated before output. Three regression scenarios cover the reproductions,
 both-layout scope/encoding negatives and valid packaged/external/anchor controls.
 The focused total is now 38 scenarios. The original head's hosted full validation
 passed; its independent rejection remains valid until the replacement is reviewed.
+
+## Independent R2 remediation and design decision
+
+The reviewer independently confirmed R1 closed at `39757b7`, then reproduced
+host-local `file:` URLs bypassing scope through the generic scheme exemption.
+This was a second failure of the same link-scope boundary. The design now uses
+an explicit external-scheme allowlist (http/https with a host; mailto with a
+recipient), rather than preserving arbitrary schemes or adding individual
+file-URL exceptions. Package paths and anchors keep the same validated route.
+Two new direct/full-package scenarios cover absolute/relative/case/entity-encoded
+local-resource URLs, malformed web URLs and positive controls for each allowed
+scheme. The focused total is now 40 scenarios; fresh review remains required.

@@ -93,7 +93,15 @@ def validate_packaged_links(files):
             continue
         for link in raw_link_targets(data.decode()):
             parsed = urlsplit(unescape(link))
-            if parsed.scheme or not parsed.path and not parsed.netloc:
+            if parsed.scheme:
+                composition.require(parsed.scheme in {'http', 'https', 'mailto'},
+                                    f'{name}: unsupported link scheme {parsed.scheme!r}; local-resource URLs are outside package scope')
+                if parsed.scheme in {'http', 'https'}:
+                    composition.require(bool(parsed.hostname), f'{name}: web link requires an external host: {link}')
+                else:
+                    composition.require(bool(parsed.path) and not parsed.netloc, f'{name}: mailto link requires a recipient: {link}')
+                continue
+            if not parsed.path and not parsed.netloc:
                 continue
             path = unquote(parsed.path)
             target = posixpath.normpath(posixpath.join(posixpath.dirname(name), path))

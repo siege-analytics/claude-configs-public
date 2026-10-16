@@ -200,6 +200,26 @@ label]: <references/steps.md>
             files = {directory + '/SKILL.md': content.encode(), directory + '/references/steps.md': b'# Steps', directory + '/references/step (one).md': b'# Steps'}
             m.validate_packaged_links(files)
 
+    def test_local_resource_schemes_reject_directly_and_before_package_writes(self):
+        for target in ('file:///etc/passwd', 'file:../self-review/SKILL.md', 'FILE:///private/secret', 'f&#105;le:///private/secret', 'vscode://file/private/secret'):
+            for caller in ('skills/code-review/SKILL.md', 'skills/coding/code-review/SKILL.md'):
+                for content in (f'[local]({target})', f'[ref]: {target}', f'<img src="{target}">'):
+                    with self.subTest(caller=caller, content=content), self.assertRaisesRegex(ValueError, 'unsupported link scheme'):
+                        m.validate_packaged_links({caller: content.encode()})
+            source, output = self.changed_source()
+            path = source / 'skills/coding/code-review/SKILL.md'
+            path.write_text(path.read_text() + f'\n[local]({target})\n')
+            with self.assertRaisesRegex(ValueError, 'unsupported link scheme'):
+                m.package(source, output, 'github.example.invalid/synthetic-org/strict-release')
+            self.assertFalse(output.exists())
+
+    def test_external_scheme_allowlist_requires_real_external_destinations(self):
+        for target in ('http://example.invalid/doc', 'https://example.invalid/doc', 'mailto:review@example.invalid'):
+            m.validate_packaged_links({'skills/review/SKILL.md': f'[external]({target})'.encode()})
+        for target in ('https:../self-review/SKILL.md', 'http:///private/secret', 'mailto:', 'data:text/plain,local'):
+            with self.subTest(target=target), self.assertRaises(ValueError):
+                m.validate_packaged_links({'skills/review/SKILL.md': f'[invalid]({target})'.encode()})
+
     def test_foreign_project_reference_rejects(self):
         source, output = self.changed_source()
         path = source / 'skills/coding/code-review/SKILL.md'
