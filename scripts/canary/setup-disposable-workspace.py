@@ -11,7 +11,6 @@ import argparse
 import importlib.util
 import json
 import os
-import shlex
 import shutil
 import subprocess
 import sys
@@ -20,7 +19,6 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 CANARY_PATH = HERE / "craft-backend-canary.py"
-RESIDENT_ADAPTER_PATH = HERE / "inject-composed-resident.sh"
 ALLOWED_PAYLOAD_ENTRIES = {
     ".githooks",
     "CLAUDE.md",
@@ -82,70 +80,6 @@ def copy_payload(canary: Any, payload: Path, workspace: Path) -> None:
             shutil.copy2(source, target)
 
 
-def register_resident_adapter(canary: Any, manifest: dict[str, Any], workspace: Path) -> tuple[Path, str]:
-    expected = manifest["pins"]["workspace_resident_adapter_sha256"]
-    if canary.sha256_bytes(RESIDENT_ADAPTER_PATH.read_bytes()) != expected:
-        raise canary.PacketError("resident adapter differs from approved exact digest")
-    target = workspace / "hooks/resolver/cc1003-inject-composed-resident.sh"
-    if target.exists() or target.is_symlink():
-        raise canary.PacketError("refusing pre-existing resident adapter target")
-    shutil.copy2(RESIDENT_ADAPTER_PATH, target)
-    target.chmod(0o755)
-    settings_path = workspace / ".claude/settings.json"
-    settings = canary.load_json(settings_path)
-    canonical = str(workspace / "hooks/resolver/inject-resolver.sh")
-    replacement = str(target)
-    replaced = 0
-    for entry in settings.get("hooks", {}).get("UserPromptSubmit", []):
-        for hook in entry.get("hooks", []):
-            if hook.get("command") == canonical:
-                hook["command"] = replacement
-                replaced += 1
-    if replaced != 1:
-        raise canary.PacketError(f"expected exactly one canonical resolver registration, found {replaced}")
-    settings_path.write_bytes(canary.canonical_bytes(settings))
-    return target, replacement
-
-
-def probe_registered_resident(canary: Any, manifest: dict[str, Any], workspace: Path, fixture: Path, command: str) -> dict[str, Any]:
-    settings = canary.load_json(workspace / ".claude/settings.json")
-    commands = [
-        hook.get("command")
-        for entry in settings.get("hooks", {}).get("UserPromptSubmit", [])
-        for hook in entry.get("hooks", [])
-        if isinstance(hook, dict)
-    ]
-    if commands.count(command) != 1:
-        raise canary.PacketError("resident adapter is not registered exactly once")
-    payload = canary.canonical_bytes({"prompt": "review candidate strict release checks", "cwd": str(fixture)})
-    result = subprocess.run(
-        shlex.split(command), cwd=fixture, input=payload, capture_output=True, check=False, timeout=60,
-        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
-    )
-    if result.returncode:
-        raise canary.PacketError(f"registered resident adapter failed: {result.stderr.decode(errors='replace').strip()}")
-    output = result.stdout.decode("utf-8")
-    marker = manifest["fixture"]["resident_marker"]
-    if output.count(marker) != 1:
-        raise canary.PacketError(f"registered resident marker count is {output.count(marker)}, expected 1")
-    for expected in ("project: strict-release", "strict-release--review", "strict-release--checks"):
-        if expected not in output:
-            raise canary.PacketError(f"registered resident output lacks {expected}")
-    for forbidden in ("FOREIGN_PROJECT_CONTROL_MUST_NOT_BE_INJECTED", "GLOBAL_BUNDLE_CONTROL_MUST_NOT_BE_INJECTED"):
-        if forbidden in output:
-            raise canary.PacketError("registered resident output contains a negative-control marker")
-    return {
-        "command": command,
-        "command_count": 1,
-        "output_sha256": canary.sha256_bytes(result.stdout),
-        "resident_marker_count": 1,
-        "selected_project": "strict-release",
-        "selected_skills": ["strict-release--review", "strict-release--checks"],
-        "negative_controls_absent": True,
-        "authorization_effect": "none",
-    }
-
-
 def run(command: list[str], *, cwd: Path) -> str:
     result = subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False, timeout=180)
     if result.returncode:
@@ -189,8 +123,6 @@ def main() -> int:
             "bash", "bin/verify-enforcement.sh", "--target", str(workspace),
             "--mode", "craft-agent", "--git-repo", str(fixture),
         ], cwd=source))
-        adapter, registered_command = register_resident_adapter(canary, manifest, workspace)
-        registered_probe = probe_registered_resident(canary, manifest, workspace, fixture, registered_command)
         if (workspace / "deploy-stamp.json").exists():
             raise canary.PacketError("disposable setup created a forbidden production deploy stamp")
         receipt = {
@@ -201,8 +133,6 @@ def main() -> int:
             "fixture": str(fixture),
             "fixture_identity": manifest["fixture"]["canonical_identity"],
             "workspace_payload_tree_sha256": canary.tree_digest(payload),
-            "resident_adapter_sha256": canary.sha256_bytes(adapter.read_bytes()),
-            "registered_resident_probe": registered_probe,
             "production_deploy_stamp": False,
             "standing_order_automations_enabled": False,
             "authorization_effect": "none",

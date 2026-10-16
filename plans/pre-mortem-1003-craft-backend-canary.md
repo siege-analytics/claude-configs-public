@@ -16,6 +16,9 @@ Prepare reviewable scripts, synthetic fixtures and an approval packet. Do not la
 8. **Provider authority is inferred.** The packet declares no provider-authority claim; #1019 and required-protection evidence remain separate.
 9. **Credentials leak into evidence.** Credential reading is prohibited; only redacted host metadata and artifact digests may be retained.
 10. **Timeout leaves residue.** Per-run, transition, cleanup and overall deadlines are explicit; any timeout enters cleanup without in-place repair.
+11. **Generic package files overwrite composed resolver data.** Assemble generic dependencies first, composition last, then invoke the final payload resolver and require strict-release plus both scoped skills.
+12. **Resident presence is mistaken for delivery.** Probe the exact canonical registered hook after the separately reviewed selector render-mode correction integrates; require one resident marker and no negative controls without changing `CLAUDE_KERNEL_PATH` validation. Until then, keep the packet blocked rather than installing a parallel adapter.
+13. **Local transport rewrites project identity.** Seed the bare fixture locally, then store the canonical origin with no retained `insteadOf`; assert resolver identity from the final fixture.
 11. **Cleanup script deletes broadly.** The driver performs no deletion. Cleanup uses normal UI plus exact temp removal; verifier requires real absence and unchanged outside state.
 12. **Prerequisite heads change.** Any replacement #1002/#845/develop/script/package identity requires packet refresh and fresh exact-head review.
 

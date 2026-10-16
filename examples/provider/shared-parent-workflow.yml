@@ -1,0 +1,51 @@
+# Preparation example. Install only after independent review and operator choice.
+# Replace both PARENT_SOURCE_REVISION tokens with one exact accepted 40-char SHA.
+# Place in the consumer's .github/workflows/pr-base-guard.yml on its default main.
+# Registration and required-check configuration are separate host operations.
+name: pr-base-guard
+on:
+  pull_request_target:
+    branches: [main, develop]
+    types: [opened, reopened, synchronize, ready_for_review, edited]
+permissions:
+  contents: read
+jobs:
+  check-policy:
+    name: Require approved project policy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out independently pinned parent policy
+        uses: actions/checkout@v4
+        with:
+          repository: siege-analytics/claude-configs-public
+          ref: PARENT_SOURCE_REVISION
+          path: policy
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out candidate as data
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out canonical consumer workflow separately
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.workflow_sha }}
+          path: workflow
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Evaluate exact consumer operation under pinned parent
+        working-directory: candidate
+        env:
+          SIEGE_PARENT_REVISION: PARENT_SOURCE_REVISION
+        run: |
+          python3 ../policy/scripts/ci/protected-policy-range.py \
+            --host-event --trusted-root ../policy \
+            --trusted-revision "$SIEGE_PARENT_REVISION" \
+            --trusted-repository github.com/siege-analytics/claude-configs-public \
+            --candidate-repo . --executed-workflow-root ../workflow \
+            --installed-pilot-receipt .pilot/composition.json

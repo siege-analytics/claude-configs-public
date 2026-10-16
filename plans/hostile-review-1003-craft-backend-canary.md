@@ -6,7 +6,10 @@
 - Point source/workspace/evidence at an existing, shared, relative, symlinked or traversal path.
 - Swap backend order, connection, model, provider type, or overlap intervals.
 - Extend side effects, deadlines or cleanup roots without a new approval identity.
-- Mutate the driver after recording its digest.
+- Mutate the approval driver, setup driver or canonical resident injector after recording its digest.
+- Copy generic package `bin/catalog` after composition and silently erase strict-release selection.
+- Use Git `insteadOf` local transport so resolver identity becomes a file URL or claim that a present `RESIDENT.md` was delivered.
+- Register zero, duplicate or foreign resident adapters; accept a symlink/escaping resident path; emit the marker zero/multiple times; or inject either negative control.
 - Build from working-tree bytes rather than the exact detached revision.
 - Substitute a package with the same source revision but changed nonvolatile bytes.
 - Reuse a proposal receipt as if it recorded external approval or granted authority.

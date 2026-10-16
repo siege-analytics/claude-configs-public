@@ -132,7 +132,7 @@ def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool
             require(isinstance(value, str) and HEX40.fullmatch(value) is not None, f"pins.{name} must be null or a full Git SHA")
     for name in (
         "source_tree_sha256", "craft_package_canonical_sha256",
-        "approval_driver_sha256", "workspace_setup_driver_sha256", "workspace_resident_adapter_sha256",
+        "approval_driver_sha256", "workspace_setup_driver_sha256",
     ):
         value = pins.get(name)
         require(isinstance(value, str) and HEX64.fullmatch(value) is not None, f"pins.{name} must be SHA-256")
@@ -152,12 +152,6 @@ def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool
         pins.get("workspace_setup_driver_sha256") == sha256_bytes(setup_driver.read_bytes()),
         "workspace setup driver bytes differ from the pinned digest",
     )
-    resident_adapter = Path(__file__).with_name("inject-composed-resident.sh")
-    require(
-        pins.get("workspace_resident_adapter_sha256") == sha256_bytes(resident_adapter.read_bytes()),
-        "workspace resident adapter bytes differ from the pinned digest",
-    )
-
     fixture = manifest.get("fixture")
     require(isinstance(fixture, dict), "fixture must be an object")
     require(fixture.get("canonical_identity") == "github.example.invalid/synthetic-org/strict-release", "fixture canonical identity mismatch")
