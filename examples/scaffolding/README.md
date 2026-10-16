@@ -1,6 +1,6 @@
 # Effective-policy resolver pilot
 
-The #848 pilot resolves the three typed fields declared by `catalog/gate-contracts.json` from one approved source, `catalog/effective-policy.json`.
+The #848 pilot resolves the three typed fields declared by `catalog/gate-contracts.json` from the exact reviewed Git snapshot selected by `catalog/effective-policy-selection.json`. The working `catalog/effective-policy.json` is proposal-only; editing it and matching fixtures cannot change active values.
 
 ## Precedence and authority
 
@@ -10,6 +10,8 @@ The #848 pilot resolves the three typed fields declared by `catalog/gate-contrac
 4. `locked_paths` cannot be changed by either layer.
 
 Repository selection requires exact canonical `host/owner/repository` data. Missing, foreign, or disagreeing identity remains `unknown`/`ambiguous`; basename and ambient current-directory guesses are not inputs to the pure evaluator.
+
+The selected receipt is sealed in the resolver and names an ancestor commit, Git blob, raw/canonical digests, and exact review evidence. Receipt-only edits fail; changing the seal is enforcement code and requires Tier C/exact-head review. Missing history, a foreign/non-ancestor revision, blob mismatch, or digest mismatch fails closed with no live-tip fallback.
 
 Capability states, installation metadata, task evidence, and candidate working-tree policy are separate inputs. They appear in `explain`, but cannot change precedence or authorize themselves. Even caller-supplied `verified` capability states leave final enforcement `unknown` in this configured-only slice; #1002/#1003 must provide a trusted protected adapter. Generated manifest metadata is explicitly `configured`, never proof of live or protected enforcement.
 
@@ -48,7 +50,7 @@ Use `check` instead of `explain` for process semantics: final allow would exit 0
 1. Record the consumer's exact canonical remote identity. Do not migrate basename-only or live-tip guesses.
 2. Select a reviewed organization profile or add one in a separately reviewed policy revision.
 3. Translate only fields explicitly permitted by the gate contract. Existing copied hooks, resident overlays, environment flags, and task artifacts are not project-policy layers.
-4. Compare the candidate catalog with `--candidate`. The resolver reports its proposed digest and path changes while continuing to decide under the approved catalog.
+4. Compare the candidate catalog with `--candidate` (or let the CLI inspect the working catalog by default). The resolver reports proposed changes while continuing to decide under the exact selected Git snapshot.
 5. Integrate instructions and guards with the same resolver output in #1002. Until that acceptance exists, this pilot is configuration-valid/configured evidence only.
 6. Preserve pinned compatibility exceptions until #1002/#1003 prove equivalent protected and live behavior; retire copies only under #1004 rollback evidence and #849 parity measurement.
 

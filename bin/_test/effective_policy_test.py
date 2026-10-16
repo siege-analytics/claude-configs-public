@@ -20,7 +20,7 @@ spec.loader.exec_module(policy)
 class EffectivePolicyTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.contract, cls.approved = policy.load_inputs(ROOT)
+        cls.contract, cls.approved, cls.selection = policy.load_inputs(ROOT)
 
     def context(self, repository="strict-release", *, capabilities=None, identities=None):
         if identities is None:
@@ -45,7 +45,7 @@ class EffectivePolicyTest(unittest.TestCase):
 
     def explain(self, repository="strict-release", *, operation=None, capabilities=None, identities=None, candidate=None):
         return policy.explain(
-            self.contract, self.approved,
+            self.contract, self.approved, self.selection,
             self.context(repository, capabilities=capabilities, identities=identities),
             operation or self.operation(), candidate,
         )
@@ -181,27 +181,60 @@ class EffectivePolicyTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "digest disagrees"):
             policy.validate_policy(candidate, self.contract, "candidate")
 
-    def test_alternate_approved_policy_path_rejects(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            path = Path(temporary) / "policy.json"
-            path.write_text(json.dumps(self.approved))
-            with self.assertRaisesRegex(ValueError, "canonical checked-in source"):
-                policy.load_inputs(ROOT, path)
+    def test_selected_snapshot_identifiers_and_review_are_explicit(self):
+        self.assertEqual("3e42303b0ed999524f3ddec75f2ce5b0892aac4f", self.selection["policy_revision"])
+        self.assertEqual("c86b608b90e0f661b5bc949300a88836dfbdf13f", self.selection["git_blob"])
+        self.assertEqual("53fc6fb51d9ae444c789837054040383645b0a2d53262c167a07446b316f2ee5", self.selection["raw_sha256"])
+        result = self.explain(capabilities=self.all_verified())
+        self.assertEqual(self.selection["policy_revision"], result["approved_policy"]["revision"])
+        self.assertEqual(self.selection["review_evidence"], result["policy_selection"]["review_evidence"])
 
-    def test_approved_source_and_fixtures_cannot_drift(self):
-        changed = copy.deepcopy(self.approved)
-        changed["organization_profiles"][0]["values"]["branch-policy"] = {"integration_branch": "main"}
-        policy.validate_policy(changed, self.contract, "changed")
-        with self.assertRaisesRegex(ValueError, "resolved values disagree"):
-            policy.validate_fixture_agreement(ROOT, self.contract, changed, policy._gate_contract_module())
-        changed = copy.deepcopy(self.approved)
-        changed["parent_contract_revision"] = "a" * 40
-        with self.assertRaisesRegex(ValueError, "revision disagrees"):
-            policy.validate_policy(changed, self.contract, "changed")
-        changed["parent_lock"]["revision"] = "a" * 40
-        policy.validate_policy(changed, self.contract, "changed")
-        with self.assertRaisesRegex(ValueError, "parent lock disagrees"):
-            policy.validate_fixture_agreement(ROOT, self.contract, changed, policy._gate_contract_module())
+    def test_selection_tampering_and_missing_revision_reject(self):
+        for key, value in (("policy_revision", "f" * 40), ("git_blob", "0" * 40), ("raw_sha256", "0" * 64), ("review_evidence", ["https://example.invalid/review"])):
+            changed = copy.deepcopy(self.selection); changed[key] = value
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError, "receipt digest"):
+                policy.validate_selection(changed)
+        with self.assertRaisesRegex(ValueError, "unavailable|not an ancestor"):
+            policy.git_snapshot_bytes(ROOT, "f" * 40, policy.POLICY)
+
+    def test_sealed_but_inconsistent_receipt_still_rejects(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            clone = Path(temporary) / "repo"
+            subprocess.run(["git", "clone", "--quiet", "--shared", str(ROOT), str(clone)], check=True)
+            original_seal = policy.SELECTION_SHA256
+            try:
+                for key, value, diagnostic in (
+                    ("raw_sha256", "0" * 64, "raw-byte digest"),
+                    ("canonical_sha256", "0" * 64, "canonical digest"),
+                    ("git_blob", "0" * 40, "Git blob"),
+                ):
+                    changed = copy.deepcopy(self.selection); changed[key] = value
+                    (clone / policy.SELECTION).write_text(json.dumps(changed))
+                    policy.SELECTION_SHA256 = policy.digest(changed)
+                    with self.subTest(key=key), self.assertRaisesRegex(ValueError, diagnostic):
+                        policy.load_inputs(clone)
+            finally:
+                policy.SELECTION_SHA256 = original_seal
+
+    def test_dual_working_edit_cannot_replace_selected_snapshot(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            clone = Path(temporary) / "repo"
+            subprocess.run(["git", "clone", "--quiet", "--shared", str(ROOT), str(clone)], check=True)
+            (clone / policy.SELECTION).write_bytes((ROOT / policy.SELECTION).read_bytes())
+            working = json.loads((clone / policy.POLICY).read_text())
+            working["organization_profiles"][0]["values"] = {"branch-policy": {"integration_branch": "main"}}
+            (clone / policy.POLICY).write_text(json.dumps(working))
+            fixture_path = clone / "examples/scaffolding/strict-release-policy.json"
+            fixture = json.loads(fixture_path.read_text())
+            fixture["values"]["branch-policy"]["integration_branch"] = "main"
+            fixture["declared_overrides"].append({"field_id": "branch-policy", "path": "integration_branch", "layer": "organization-profile"})
+            fixture_path.write_text(json.dumps(fixture))
+            contract, approved, selection = policy.load_inputs(clone)
+            result = policy.explain(contract, approved, selection, self.context(), self.operation(target_branch="main"), working)
+            self.assertEqual("deny", result["decision"]["policy"])
+            self.assertIn("`develop`", result["resident_workflow"])
+            self.assertEqual("schema-valid-proposal", result["proposed_policy"]["state"])
+            self.assertEqual("main", result["proposed_policy"]["changes"][0]["proposed"])
 
     def test_valid_unapproved_loosening_never_selects_itself(self):
         candidate = copy.deepcopy(self.approved)
@@ -239,7 +272,7 @@ class EffectivePolicyTest(unittest.TestCase):
         context = self.context(capabilities={})
         context["install_configuration"] = {"force_allow": True, "integration_branch": "main"}
         context["task_evidence"] = ["approved", "all-capabilities-verified"]
-        result = policy.explain(self.contract, self.approved, context, self.operation(target_branch="main"))
+        result = policy.explain(self.contract, self.approved, self.selection, context, self.operation(target_branch="main"))
         self.assertEqual("deny", result["decision"]["final"])
         self.assertEqual("none", result["install_configuration"]["authorization_effect"])
         self.assertEqual("none", result["task_evidence"]["authorization_effect"])
@@ -288,20 +321,22 @@ class EffectivePolicyTest(unittest.TestCase):
 
     def test_generated_manifest_requires_exact_source_and_configured_label(self):
         manifest = {
-            "effective_policy_source": policy.POLICY.as_posix(),
+            "effective_policy_source": f"git:{self.selection['policy_revision']}:{self.selection['policy_path']}",
             "effective_policy_sha256": policy.digest(self.approved),
             "effective_policy": self.approved,
+            "effective_policy_selection": self.selection,
             "effective_policy_evidence_state": "configured",
         }
-        policy.validate_generated(manifest, self.approved)
+        policy.validate_generated(manifest, self.approved, self.selection)
         for key, value in [
             ("effective_policy_source", "other.json"),
             ("effective_policy_sha256", "0" * 64),
+            ("effective_policy_selection", {}),
             ("effective_policy_evidence_state", "verified"),
         ]:
             changed = copy.deepcopy(manifest); changed[key] = value
             with self.subTest(key=key), self.assertRaises(ValueError):
-                policy.validate_generated(changed, self.approved)
+                policy.validate_generated(changed, self.approved, self.selection)
 
     def test_duplicate_json_key_rejects(self):
         with tempfile.TemporaryDirectory() as temporary:

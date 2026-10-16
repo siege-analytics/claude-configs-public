@@ -5,7 +5,7 @@ Hostile-review-artifact: this document, "Peer review" section
 
 ## Assumptions
 
-- `catalog/effective-policy.json` is a proposed policy snapshot until an independent exact-SHA content verdict and a later immutable selection receipt exist. Its `parent_contract_revision` identifies the accepted #851 contract source only; it is not policy approval.
+- `catalog/effective-policy.json` at `3e42303b0ed999524f3ddec75f2ce5b0892aac4f` has an independent content-only ACCEPT with exact blob/raw/canonical hashes. The working copy is proposal-only. `parent_contract_revision` identifies the accepted #851 contract source, not policy approval.
 - #848 is configured-policy evaluation only. Trusted protected/live adapter evidence remains unavailable until #1002/#1003.
 - The bounded pilot covers exactly the three #851 fields and two synthetic identities; broader composition and migration remain separate tickets.
 
@@ -15,7 +15,7 @@ Bounded to the three #851 pilot policy fields, two synthetic repository identiti
 
 ## Authority model
 
-- Proposed policy is `catalog/effective-policy.json`, sealed to contract digest `0e3b8e869eb0eb90583680d777a58ecfcdb0694d4f5ffe7891e69ebc7de1059b` and parent contract revision `34f014bd8aaf55e545a6a2fe3094242aa40cb182`. A separate exact policy-snapshot revision/digest must be selected before final acceptance.
+- Active policy is loaded from the exact selected ancestor commit/blob and checked against reviewed raw/canonical digests. The receipt is separately sealed in resolver code; working policy/fixture edits remain proposals and missing/non-ancestor history or digest drift fails closed.
 - Parent defaults come from `catalog/gate-contracts.json`; organization and project patches are independently checked against its allowed paths.
 - Exact canonical host/owner/repository identity selects one project. Missing/foreign/disagreeing identity does not inherit another project.
 - Candidate policy, installation metadata, task evidence, and capability state cannot alter precedence. A candidate is diagnostic-only and is never selected as its own approved policy.
@@ -39,20 +39,20 @@ Bounded to the three #851 pilot policy fields, two synthetic repository identiti
 
 A pre-publication hostile audit reproduced one blocking flaw: caller-supplied `verified` capability states could make final decision `allow` and `check` exit 0 without a trusted host/protected adapter. That exploit is closed: policy-allowed operations remain final `unknown`, with exact CLI exit tests.
 
-A collaborator then reproduced a second blocker at `d13c239`: editing both the mutable catalog and matching fixture changed active policy/resident text under the unchanged claimed revision. The first head is rejected. This follow-up separates `parent_contract_revision` from policy approval and publishes a corrected snapshot candidate. Final remediation must load that snapshot by a separately reviewed exact commit/blob digest and treat working-tree files only as proposals.
+A collaborator then reproduced a second blocker at `d13c239`: editing both the mutable catalog and matching fixture changed active policy/resident text under the unchanged claimed revision. The first head is rejected. The corrected policy snapshot at `3e42303…` received a content-only ACCEPT. The remediation now loads that exact ancestor commit/blob, verifies the recorded hashes and review URL, seals the receipt, and treats working-tree catalog/fixtures only as proposals.
 
 ## Lead review
 
-The coordinating session re-executed the capability spoof directly after remediation: synthetic trunk `feature -> main` returns policy `allow`, final `unknown`, and `check` exit 1 even when both required capabilities are passed as `verified`. It reproduced the dual-edit previous-policy gap and invalidated the first implementation head. The current snapshot-candidate commit corrects parent-versus-policy revision semantics; immutable prior-policy selection remains required in the next commit.
+The coordinating session re-executed the capability spoof directly after remediation: synthetic trunk `feature -> main` returns policy `allow`, final `unknown`, and `check` exit 1 even when both required capabilities are passed as `verified`. It reproduced the dual-edit previous-policy gap, invalidated the first head, then reran the same dual edit in a disposable clone: selected policy remains strict `develop`, `feature → main` remains denied, resident text remains `develop`, and the working loosening is reported only as a proposal.
 
 ## Quantified claims
 
-- Focused resolver suite: 31/31 tests.
+- Focused resolver suite: 33/33 tests, including immutable selection, receipt/hash mismatch mutations, generated-selection drift, and the original dual-edit reproduction.
 - Existing gate-contract suite: 20/20 tests.
 - Repository Python modules: 21/21 under Python 3.13.
 - Native hook suites: 36/36.
 - Workflow policy suites: 2/2.
-- Ontology: 34 terms and 131 bound values.
+- Ontology: 34 terms and 136 bound values.
 - Generated authority: 198 sources, 804 artifact snapshots, 2,904 mappings.
 
 ## Test plan

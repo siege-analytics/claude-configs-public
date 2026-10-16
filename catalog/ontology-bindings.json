@@ -54,6 +54,36 @@
           "pointer": "/effective_policy_evidence_state",
           "term": "configured",
           "value_type": "string"
+        },
+        {
+          "pointer": "/effective_policy_selection",
+          "term": "generated-artifact",
+          "value_type": "object"
+        }
+      ]
+    },
+    {
+      "artifact": "catalog/effective-policy-selection.json",
+      "fields": [
+        {
+          "pointer": "/policy_revision",
+          "term": "source-reference",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/policy_path",
+          "term": "source-reference",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/git_blob",
+          "term": "source-reference",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/review_evidence/*",
+          "term": "authorization-record",
+          "value_type": "string"
         }
       ]
     },

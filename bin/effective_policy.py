@@ -14,13 +14,16 @@ import hashlib
 import importlib.util
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 POLICY = Path("catalog/effective-policy.json")
+SELECTION = Path("catalog/effective-policy-selection.json")
 CONTRACT = Path("catalog/gate-contracts.json")
+SELECTION_SHA256 = "dc1a78a33e1125a81b74d7f7eb112328c98d9b50e4846e497e2209e092dae9ef"
 ID = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*\Z")
 SEMVER = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+\Z")
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
@@ -33,6 +36,10 @@ POLICY_FIELDS = {
 }
 PARENT_LOCK_FIELDS = {
     "host", "owner", "repository", "revision", "import_mechanism", "digest", "tool_version",
+}
+SELECTION_FIELDS = {
+    "schema_version", "policy_revision", "policy_path", "git_blob", "raw_sha256",
+    "canonical_sha256", "review_evidence",
 }
 PROFILE_FIELDS = {"id", "values"}
 PROJECT_FIELDS = {"id", "repository_identity", "organization_profile", "values"}
@@ -60,14 +67,21 @@ def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
+def parse_json(raw: bytes | str, context: str) -> dict[str, Any]:
+    try:
+        value = json.loads(raw, object_pairs_hook=unique_object)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        fail(f"cannot read JSON {context}: {exc}")
+    if not isinstance(value, dict):
+        fail(f"{context}: expected an object")
+    return value
+
+
 def read_json(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
-    except (OSError, json.JSONDecodeError) as exc:
+        return parse_json(path.read_bytes(), path.as_posix())
+    except OSError as exc:
         fail(f"cannot read JSON {path}: {exc}")
-    if not isinstance(value, dict):
-        fail(f"{path}: expected an object")
-    return value
 
 
 def exact_fields(value: Any, expected: set[str], context: str) -> dict[str, Any]:
@@ -229,38 +243,99 @@ def validate_policy(data: Any, contract: dict[str, Any], context: str = "effecti
     return data
 
 
-def validate_fixture_agreement(root: Path, contract: dict[str, Any], policy: dict[str, Any], gc: Any) -> None:
-    fixtures = gc.load_fixtures(root, contract)
+def validate_selection(data: Any) -> dict[str, Any]:
+    exact_fields(data, SELECTION_FIELDS, "effective policy selection")
+    if type(data["schema_version"]) is not int or data["schema_version"] != 1:
+        fail("effective policy selection: schema_version must be integer 1")
+    if digest(data) != SELECTION_SHA256:
+        fail("effective policy selection: complete receipt digest differs from reviewed selection")
+    if not HEX40.fullmatch(text(data["policy_revision"], "selection.policy_revision")):
+        fail("selection.policy_revision: expected exact 40-character SHA")
+    if data["policy_path"] != POLICY.as_posix():
+        fail("selection.policy_path: must name the canonical policy artifact")
+    if not HEX40.fullmatch(text(data["git_blob"], "selection.git_blob")):
+        fail("selection.git_blob: expected exact Git blob")
+    for name in ("raw_sha256", "canonical_sha256"):
+        if not HEX64.fullmatch(text(data[name], f"selection.{name}")):
+            fail(f"selection.{name}: expected SHA-256")
+    reviews = data["review_evidence"]
+    if not isinstance(reviews, list) or not reviews or len(reviews) != len(set(reviews)):
+        fail("selection.review_evidence: expected unique nonempty list")
+    for review in reviews:
+        text(review, "selection.review_evidence item")
+        if not re.fullmatch(r"https://github\.com/siege-analytics/claude-configs-public/pull/[0-9]+#pullrequestreview-[0-9]+", review):
+            fail("selection.review_evidence: expected exact GitHub review URL")
+    return data
+
+
+def git_snapshot_bytes(root: Path, revision: str, path: Path) -> bytes:
+    try:
+        ancestor = subprocess.run(
+            ["git", "-C", str(root), "merge-base", "--is-ancestor", revision, "HEAD"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10,
+        )
+        if ancestor.returncode != 0:
+            fail("selected policy revision is unavailable or is not an ancestor of HEAD")
+        return subprocess.check_output(
+            ["git", "-C", str(root), "show", f"{revision}:{path.as_posix()}"],
+            stderr=subprocess.DEVNULL, timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        fail(f"cannot load selected policy snapshot {revision}:{path}: {exc}")
+
+
+def load_selected_json(root: Path, selection: dict[str, Any], path: Path) -> tuple[bytes, dict[str, Any]]:
+    raw = git_snapshot_bytes(root, selection["policy_revision"], path)
+    return raw, parse_json(raw, f"git:{selection['policy_revision']}:{path.as_posix()}")
+
+
+def validate_fixture_agreement(
+    root: Path, contract: dict[str, Any], policy: dict[str, Any], gc: Any,
+    fixtures: list[dict[str, Any]],
+) -> None:
+    validated = [gc.validate_fixture(item, contract, f"selected fixture {item.get('fixture_id', '?')}", root) for item in fixtures]
     by_identity = {
         identity_tuple(normalize_identity(item["repository_identity"], f"fixture {item['fixture_id']} identity", with_source=False)): item
-        for item in fixtures
+        for item in validated
     }
     projects = {
         identity_tuple(normalize_identity(item["repository_identity"], f"project {item['id']} identity", with_source=False)): item
         for item in policy["projects"]
     }
     if set(by_identity) != set(projects):
-        fail("effective policy projects disagree with accepted fixture identities")
+        fail("effective policy projects disagree with selected fixture identities")
     for identity, project in projects.items():
         fixture = by_identity[identity]
         values, _ = resolve_values(contract, policy, project)
         if fixture["fixture_id"] != project["id"] or fixture["values"] != values:
-            fail(f"project {project['id']}: resolved values disagree with accepted fixture")
+            fail(f"project {project['id']}: resolved values disagree with selected fixture")
         if fixture["parent_lock"] != policy["parent_lock"]:
-            fail(f"project {project['id']}: fixture parent lock disagrees with approved policy")
+            fail(f"project {project['id']}: selected fixture parent lock disagrees with policy")
 
 
-def load_inputs(root: Path = ROOT, policy_path: Path | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
+def load_inputs(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     gc = _gate_contract_module()
     contract = gc.load_contract(root)
-    canonical_path = (root / POLICY).resolve()
-    path = (policy_path if policy_path is not None else root / POLICY).resolve()
-    if path != canonical_path:
-        fail("approved policy must be loaded from the canonical checked-in source; use candidate input for proposals")
-    policy = read_json(path)
-    validate_policy(policy, contract, POLICY.as_posix())
-    validate_fixture_agreement(root, contract, policy, gc)
-    return contract, policy
+    selection = validate_selection(read_json(root / SELECTION))
+    raw, selected = load_selected_json(root, selection, POLICY)
+    if hashlib.sha256(raw).hexdigest() != selection["raw_sha256"]:
+        fail("selected policy raw-byte digest disagrees with review receipt")
+    if digest(selected) != selection["canonical_sha256"]:
+        fail("selected policy canonical digest disagrees with review receipt")
+    try:
+        blob = subprocess.check_output(
+            ["git", "-C", str(root), "rev-parse", f"{selection['policy_revision']}:{POLICY.as_posix()}"],
+            text=True, stderr=subprocess.DEVNULL, timeout=10,
+        ).strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        fail(f"cannot verify selected policy Git blob: {exc}")
+    if blob != selection["git_blob"]:
+        fail("selected policy Git blob disagrees with review receipt")
+    policy = selected
+    validate_policy(policy, contract, f"git:{selection['policy_revision']}:{POLICY.as_posix()}")
+    fixtures = [load_selected_json(root, selection, path)[1] for path in gc.FIXTURES]
+    validate_fixture_agreement(root, contract, policy, gc, fixtures)
+    return contract, policy, selection
 
 
 def validate_context(data: Any, contract: dict[str, Any]) -> dict[str, Any]:
@@ -469,8 +544,8 @@ def _candidate_result(
 
 
 def explain(
-    contract: dict[str, Any], policy: dict[str, Any], context: dict[str, Any], operation: dict[str, Any],
-    candidate: dict[str, Any] | None = None,
+    contract: dict[str, Any], policy: dict[str, Any], selection: dict[str, Any],
+    context: dict[str, Any], operation: dict[str, Any], candidate: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     context = validate_context(context, contract)
     operation = validate_operation(operation)
@@ -479,6 +554,15 @@ def explain(
         "schema_version": 1,
         "contract_sha256": policy["contract_sha256"],
         "parent_contract_revision": policy["parent_contract_revision"],
+        "policy_selection": {
+            "source": SELECTION.as_posix(),
+            "policy_revision": selection["policy_revision"],
+            "policy_path": selection["policy_path"],
+            "git_blob": selection["git_blob"],
+            "raw_sha256": selection["raw_sha256"],
+            "canonical_sha256": selection["canonical_sha256"],
+            "review_evidence": list(selection["review_evidence"]),
+        },
         "identity_sources": identities,
         "operation": operation,
         "install_configuration": {"value": context["install_configuration"], "authorization_effect": "none"},
@@ -508,9 +592,13 @@ def explain(
         "project": project["id"],
         "organization_profile": project["organization_profile"],
         "approved_policy": {
-            "source": POLICY.as_posix(),
+            "source": f"git:{selection['policy_revision']}:{selection['policy_path']}",
+            "revision": selection["policy_revision"],
+            "git_blob": selection["git_blob"],
+            "raw_sha256": selection["raw_sha256"],
+            "canonical_snapshot_sha256": selection["canonical_sha256"],
             "parent_contract_revision": policy["parent_contract_revision"],
-            "digest": active_digest,
+            "effective_digest": active_digest,
             "parent_lock": copy.deepcopy(policy["parent_lock"]),
         },
         "values": values,
@@ -528,13 +616,16 @@ def explain(
     return result
 
 
-def validate_generated(manifest: dict[str, Any], policy: dict[str, Any]) -> None:
-    if manifest.get("effective_policy_source") != POLICY.as_posix():
+def validate_generated(manifest: dict[str, Any], policy: dict[str, Any], selection: dict[str, Any]) -> None:
+    expected_source = f"git:{selection['policy_revision']}:{selection['policy_path']}"
+    if manifest.get("effective_policy_source") != expected_source:
         fail("generated manifest has wrong effective policy source")
     if manifest.get("effective_policy_sha256") != digest(policy):
         fail("generated manifest has wrong effective policy digest")
     if manifest.get("effective_policy") != policy:
         fail("generated manifest disagrees with effective policy source")
+    if manifest.get("effective_policy_selection") != selection:
+        fail("generated manifest disagrees with reviewed policy selection")
     if manifest.get("effective_policy_evidence_state") != "configured":
         fail("generated manifest must label effective policy as configured evidence only")
 
@@ -566,10 +657,10 @@ def main() -> int:
     parser.add_argument("--generated-root", type=Path)
     args = parser.parse_args()
     try:
-        contract, policy = load_inputs(ROOT)
+        contract, policy, selection = load_inputs(ROOT)
         if args.generated_root:
             manifest = read_json(args.generated_root / "craft-agent/enforcement-manifest.json")
-            validate_generated(manifest, policy)
+            validate_generated(manifest, policy, selection)
         if args.command == "validate":
             print(json.dumps({"state": "valid", "policy_sha256": digest(policy)}, sort_keys=True))
             return 0
@@ -577,8 +668,8 @@ def main() -> int:
             fail("explain/check requires --operation")
         context = read_json(args.context) if args.context else default_context(args.identity, args.capability)
         operation = read_json(args.operation)
-        candidate = read_json(args.candidate) if args.candidate else None
-        result = explain(contract, policy, context, operation, candidate)
+        candidate = read_json(args.candidate) if args.candidate else read_json(ROOT / POLICY)
+        result = explain(contract, policy, selection, context, operation, candidate)
         print(json.dumps(result, sort_keys=True))
         if args.command == "explain":
             return 0

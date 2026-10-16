@@ -401,6 +401,12 @@ These bindings annotate existing fields without changing their runtime schema. I
   - `/gate_contract` → `generated-artifact` (object).
   - `/effective_policy` → `generated-artifact` (object).
   - `/effective_policy_evidence_state` → `configured` (string).
+  - `/effective_policy_selection` → `generated-artifact` (object).
+- `catalog/effective-policy-selection.json`:
+  - `/policy_revision` → `source-reference` (string).
+  - `/policy_path` → `source-reference` (string).
+  - `/git_blob` → `source-reference` (string).
+  - `/review_evidence/*` → `authorization-record` (string).
 - `catalog/effective-policy.json`:
   - `/organization_profiles/*` → `profile` (object).
   - `/projects/*` → `project` (object).
