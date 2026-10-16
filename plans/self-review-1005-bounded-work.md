@@ -72,3 +72,14 @@ Disposable journals exercise atomic update, retry and restart; reads leave bytes
 unchanged and failed writes preserve the last valid journal. Remove the helper
 invocation to return to the existing coordination protocol; no installed runtime,
 shared workspace, protected branch or release state changes in this pilot.
+
+## Accepted implementation and integration refresh
+
+The independent reviewer accepted `419289565b0a911884d17c991f50db21782453b9`
+after reproducing R5 closure; all hosted checks at that head passed. A disposable
+merge with accepted #848 on `develop@c1b2db760038295c8f470523c40629c7688da500`
+passed all 78 validation commands. GitHub requires the PR branch to include the
+latest base, so the next merge commit retains both accepted implementations and
+requires fresh hosted CI and an exact-head integration review. No behavior is
+changed by this refresh. Full log: `/tmp/cc-1005-integration-validation.log` on
+the shared review laptop; public acceptance is recorded on PR #1010.
