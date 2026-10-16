@@ -59,6 +59,13 @@ cat > "$WIRED/automations.json" <<'JSON'
 {"version":2,"automations":{"SchedulerTick":[{"name":"Standing-order watchdog","cron":"*/10 * * * *","actions":[{"type":"prompt","prompt":"x"}]}]}}
 JSON
 
+# Native acceptance uses the actual packaged range path, never a stub.
+mkdir -p "$WIRED/.githooks" "$WIRED/bin" "$WIRED/catalog"
+cp "$REPO_ROOT/.githooks/pre-push" "$WIRED/.githooks/pre-push"
+cp -R "$REPO_ROOT/hooks/git" "$REPO_ROOT/hooks/lib" "$WIRED/hooks/"
+cp "$REPO_ROOT/bin/review-risk.py" "$WIRED/bin/"
+cp "$REPO_ROOT/catalog/review-risk-policy.json" "$WIRED/catalog/"
+
 if bash "$PROBE" --target "$WIRED" --mode craft-agent >/dev/null 2>&1; then
     ok "fully-wired fixture passes"
 else
