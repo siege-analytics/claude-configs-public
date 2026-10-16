@@ -18,6 +18,8 @@ The first local prototype used the same-repository candidate store for workflow 
 
 Further self-review reproduced a false rejection for a host-reported mixed-case repository: canonical identity normalized correctly but the whole workflow ref was compared against a lowercased expected string. One shared validator now normalizes only owner/repository components, keeps workflow path and branch ref exact, and preserves the original observed ref in the receipt. Both profiles have event/direct positive coverage plus altered path/ref-case negatives.
 
+Hosted run `38873970873` exposed a fixture dependency on local branches: its freshly committed synthetic parent remained on an unadvertised detached HEAD, so recovery via `refs/heads/*` correctly failed closed. A branchless detached source reproduced the error locally; a normal detached worktree sharing local branch refs did not. Fixture setup now creates its own advertised parent branch and synthetic default-workflow ref before committing, without weakening the adapter's unavailable-history error.
+
 ## Boundaries
 
 No local flag, receipt, role label or template authorizes installation or host operation. Forks are unsupported. Non-provider strict compatibility remains labeled and pending separate #849 retirement. Live private-consumer registration, Craft/backend acceptance and runtime rollout remain unverified until their own host evidence is obtained. Exact-head independent review and the public GitHub denial/repair regression are required before declaring provider integration complete.
