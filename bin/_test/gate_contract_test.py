@@ -187,8 +187,9 @@ class GateContractTest(unittest.TestCase):
                 destination = root / relative
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_text((ROOT / relative).read_text())
-            skill = root / "skills/self-review/SKILL.md"
-            skill.parent.mkdir(parents=True, exist_ok=True); skill.write_text("fixture")
+            for procedure in ("self-review", "hostile-review"):
+                skill = root / f"skills/{procedure}/SKILL.md"
+                skill.parent.mkdir(parents=True, exist_ok=True); skill.write_text("fixture")
             first = json.loads((root / gc.FIXTURES[0]).read_text())
             second = json.loads((root / gc.FIXTURES[1]).read_text())
             identity = first["repository_identity"]
@@ -208,8 +209,9 @@ class GateContractTest(unittest.TestCase):
                 destination = root / relative
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_text((ROOT / relative).read_text())
-            skill = root / "skills/self-review/SKILL.md"
-            skill.parent.mkdir(parents=True, exist_ok=True); skill.write_text("fixture")
+            for procedure in ("self-review", "hostile-review"):
+                skill = root / f"skills/{procedure}/SKILL.md"
+                skill.parent.mkdir(parents=True, exist_ok=True); skill.write_text("fixture")
             changed = json.loads((root / gc.FIXTURES[1]).read_text())
             changed["parent_lock"]["revision"] = "a" * 40
             (root / gc.FIXTURES[1]).write_text(json.dumps(changed))
@@ -232,6 +234,8 @@ class GateContractTest(unittest.TestCase):
         run: |
           python3 bin/_test/gate_contract_test.py
           python3 bin/gate_contract.py --check --probe --generated-root dist
+          python3 bin/_test/effective_policy_test.py
+          python3 bin/effective_policy.py validate --generated-root dist
 
       - name: Next step
         run: true

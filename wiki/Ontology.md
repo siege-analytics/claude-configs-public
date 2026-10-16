@@ -399,6 +399,16 @@ These bindings annotate existing fields without changing their runtime schema. I
   - `/gates/*/runtime_policy/*` → `configured` (string).
   - `/gates/*/blocking` → `configured` (boolean).
   - `/gate_contract` → `generated-artifact` (object).
+  - `/effective_policy` → `generated-artifact` (object).
+  - `/effective_policy_evidence_state` → `configured` (string).
+- `catalog/effective-policy.json`:
+  - `/organization_profiles/*` → `profile` (object).
+  - `/projects/*` → `project` (object).
+  - `/projects/*/repository_identity` → `repository-identity` (object).
+  - `/organization_profiles/1/values/branch-policy` → `policy-override` (object).
+  - `/projects/1/values/review-procedure-binding` → `policy-override` (object).
+  - `/approved_policy_revision` → `source-reference` (string).
+  - `/parent_lock` → `parent-lock` (object).
 - `catalog/gate-contracts.json`:
   - `/policy_fields/0` → `policy` (object).
   - `/policy_fields/1` → `policy` (object).

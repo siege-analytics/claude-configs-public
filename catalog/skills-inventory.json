@@ -9063,6 +9063,7 @@
       "source_path": "skills/hostile-review/SKILL.md",
       "test_evidence": [
         "bin/_test/consumer_runtime_test.py",
+        "bin/_test/gate_contract_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
         "hooks/_test/hub_concurrency_gate.test.sh",
@@ -10386,7 +10387,6 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
-        "bin/_test/gate_contract_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/gate_contract.py",
         "catalog/gate-contracts.json",

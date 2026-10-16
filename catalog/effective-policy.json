@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "resolver_version": "1.0.0",
+  "contract_source": "catalog/gate-contracts.json",
+  "contract_sha256": "0e3b8e869eb0eb90583680d777a58ecfcdb0694d4f5ffe7891e69ebc7de1059b",
+  "approved_policy_revision": "34f014bd8aaf55e545a6a2fe3094242aa40cb182",
+  "parent_lock": {
+    "host": "github.com",
+    "owner": "siege-analytics",
+    "repository": "claude-configs-public",
+    "revision": "34f014bd8aaf55e545a6a2fe3094242aa40cb182",
+    "import_mechanism": "git",
+    "digest": "0e3b8e869eb0eb90583680d777a58ecfcdb0694d4f5ffe7891e69ebc7de1059b",
+    "tool_version": "effective-policy/1"
+  },
+  "organization_profiles": [
+    {
+      "id": "strict-release",
+      "values": {}
+    },
+    {
+      "id": "synthetic-trunk",
+      "values": {
+        "branch-policy": {
+          "integration_branch": "main"
+        }
+      }
+    }
+  ],
+  "projects": [
+    {
+      "id": "strict-release",
+      "repository_identity": {
+        "host": "github.example.invalid",
+        "owner": "synthetic-org",
+        "repository": "strict-release"
+      },
+      "organization_profile": "strict-release",
+      "values": {}
+    },
+    {
+      "id": "synthetic-trunk",
+      "repository_identity": {
+        "host": "github.example.invalid",
+        "owner": "synthetic-org",
+        "repository": "synthetic-trunk"
+      },
+      "organization_profile": "synthetic-trunk",
+      "values": {
+        "review-procedure-binding": {
+          "procedure": "hostile-review"
+        }
+      }
+    }
+  ]
+}

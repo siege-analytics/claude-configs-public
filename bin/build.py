@@ -32,7 +32,9 @@ from typing import Optional
 # functions; that copy does not contain runtime siblings and must remain
 # importable until a contract-dependent build function is actually called.
 GATE_CONTRACT_SOURCE = Path("catalog/gate-contracts.json")
+EFFECTIVE_POLICY_SOURCE = Path("catalog/effective-policy.json")
 _GATE_CONTRACT = None
+_EFFECTIVE_POLICY = None
 
 
 def _gate_contract_module():
@@ -59,6 +61,28 @@ def load_fixtures(*args, **kwargs):
 
 def contract_digest(*args, **kwargs):
     return _gate_contract_module().contract_digest(*args, **kwargs)
+
+
+def _effective_policy_module():
+    global _EFFECTIVE_POLICY
+    if _EFFECTIVE_POLICY is None:
+        spec = importlib.util.spec_from_file_location(
+            "effective_policy", Path(__file__).resolve().with_name("effective_policy.py")
+        )
+        if spec is None or spec.loader is None:
+            raise ImportError("cannot load bin/effective_policy.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _EFFECTIVE_POLICY = module
+    return _EFFECTIVE_POLICY
+
+
+def load_effective_policy(*args, **kwargs):
+    return _effective_policy_module().load_inputs(*args, **kwargs)[1]
+
+
+def effective_policy_digest(*args, **kwargs):
+    return _effective_policy_module().digest(*args, **kwargs)
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -1214,6 +1238,8 @@ def build_ca_enforcement() -> None:
 
     contract = load_contract(REPO_ROOT)
     contract_sha256 = contract_digest(contract)
+    effective_policy = load_effective_policy(REPO_ROOT)
+    effective_policy_sha256 = effective_policy_digest(effective_policy)
     version = _get_version()
     try:
         commit = subprocess.check_output(
@@ -1231,6 +1257,10 @@ def build_ca_enforcement() -> None:
         "gate_contract_source": GATE_CONTRACT_SOURCE.as_posix(),
         "gate_contract_sha256": contract_sha256,
         "gate_contract": contract,
+        "effective_policy_source": EFFECTIVE_POLICY_SOURCE.as_posix(),
+        "effective_policy_sha256": effective_policy_sha256,
+        "effective_policy": effective_policy,
+        "effective_policy_evidence_state": "configured",
         "gates": CA_ENFORCEMENT_GATES,
     }
     manifest_text = json.dumps(manifest, indent=2) + "\n"
@@ -1850,13 +1880,15 @@ def main() -> int:
     try:
         gate_contract = load_contract(REPO_ROOT)
         gate_fixtures = load_fixtures(REPO_ROOT, gate_contract)
+        effective_policy = load_effective_policy(REPO_ROOT)
     except ValueError as e:
-        print(f"BUILD ERROR: gate contract: {e}", file=sys.stderr)
+        print(f"BUILD ERROR: gate/effective policy: {e}", file=sys.stderr)
         return 1
     print(
         f"  {len(gate_contract['policy_fields'])} policy field(s), "
         f"{len(gate_contract['capabilities'])} capability declaration(s), "
-        f"{len(gate_fixtures)} synthetic fixture(s)"
+        f"{len(gate_fixtures)} synthetic fixture(s), "
+        f"{len(effective_policy['projects'])} effective project policy(s)"
     )
 
     # Phase 1: Validate project manifests (repo uniqueness, required fields, status).

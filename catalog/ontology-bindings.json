@@ -44,6 +44,56 @@
           "pointer": "/gate_contract",
           "term": "generated-artifact",
           "value_type": "object"
+        },
+        {
+          "pointer": "/effective_policy",
+          "term": "generated-artifact",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/effective_policy_evidence_state",
+          "term": "configured",
+          "value_type": "string"
+        }
+      ]
+    },
+    {
+      "artifact": "catalog/effective-policy.json",
+      "fields": [
+        {
+          "pointer": "/organization_profiles/*",
+          "term": "profile",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/projects/*",
+          "term": "project",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/projects/*/repository_identity",
+          "term": "repository-identity",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/organization_profiles/1/values/branch-policy",
+          "term": "policy-override",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/projects/1/values/review-procedure-binding",
+          "term": "policy-override",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/approved_policy_revision",
+          "term": "source-reference",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/parent_lock",
+          "term": "parent-lock",
+          "value_type": "object"
         }
       ]
     },
