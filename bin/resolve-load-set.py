@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Deterministically select task/project skills from the compact resolver manifest."""
 from __future__ import annotations
-import argparse, json, re, subprocess, sys
+import argparse, importlib.util, json, re, subprocess, sys
 from pathlib import Path
 from typing import Any
 ROOT=Path(__file__).resolve().parents[1]
@@ -114,6 +114,11 @@ def validate_manifest(manifest:dict[str,Any],known:dict[str,Any])->None:
 
 def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str="")->dict[str,Any]:
     known,typed=inventory_maps(inventory);validate_manifest(manifest,known)
+    composition=None
+    if "procedure_composition" in manifest:
+        spec=importlib.util.spec_from_file_location("procedure_composition",Path(__file__).with_name("procedure_composition.py"))
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        composition=module.graph_from_manifest(manifest,inventory,norm_repo(repo))
     # An explicit task/code heading owns its next line; unrelated lines remain
     # separate clauses so README notes cannot borrow an earlier action verb.
     prompt=re.sub(r"(?im)^\s*(implement(?: the following)?|review this code|write the following|analyze the following)\s*:\s*\n",r"\1: ",prompt)
@@ -146,14 +151,19 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
     explicit_actions=set()
     for kind,slug in sorted(explicit_refs):
         item=known.get(slug) if kind=="untyped" else typed.get((kind,slug))
+        if composition and kind in ("untyped","skill") and slug in composition.aliases:
+            effective=composition.resolve([slug])["selected"][0]["slug"]
+            item={**known[effective],"slug":slug}
         is_shelf=item is not None and (slug.startswith(SHELF_PREFIX) or item["kind"].startswith("shelf"))
         is_wrong_project=item is not None and item["kind"].startswith("project") and slug not in permitted_project_slugs
+        if composition and item is not None and item.get("project")==composition.project:
+            is_wrong_project=False
         if item is not None and not is_shelf and not is_wrong_project:
             matches.append((1000,"explicit",item,["explicit-slug"]))
             if slug in TICKET_ACTIONS:explicit_actions.add(slug)
             # Stacks are assigned to the concrete kind: a rule token with the
             # same slug as a skill must not inherit the skill's prerequisites.
-            if known[slug] is item:
+            if known.get(slug) is item and not (composition and typed_kind(item["kind"])=="skill"):
                 for dependency in manifest.get("explicit_stacks",{}).get(slug,[]):
                     matches.append((999,"explicit-prerequisite",known[dependency],[f"prerequisite:{slug}"]))
             if slug in TICKET_ACTIONS:matches.append((999,"explicit-ticket-guard",known["ticket-guard"],["ticket-action-prerequisite"]))
@@ -186,6 +196,8 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
         slug=item["slug"]
         if item["kind"].startswith("shelf") or slug.startswith(SHELF_PREFIX): raise ValueError(f"shelf cannot auto-select: {slug}")
         source=item.get("source_path",f"{typed_kind(item['kind'])}:{slug}")
+        if composition and typed_kind(item['kind'])=="skill":
+            source=f"composition:{slug}"
         selected.setdefault(source,{
             "slug":slug,
             "source_path":item.get("source_path","unknown"),
@@ -196,6 +208,17 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
             "_item":item,
         })
     selected_items=list(selected.values())
+    if composition:
+        skill_rows=[row for row in selected_items if typed_kind(row["_item"]["kind"])=="skill"]
+        # Resolve before the final content budget, and use the same graph as
+        # package links. All routes, aliases and prerequisite edges converge.
+        requests=[row["slug"] for row in skill_rows]
+        by_request={row["slug"]:row for row in skill_rows}
+        composed=[]
+        for entry in composition.resolve(requests)["selected"]:
+            first=by_request[entry["requested_by"][0]]
+            composed.append({**first,**entry,"_item":typed[("skill",entry["slug"])]})
+        selected_items=composed+[row for row in selected_items if typed_kind(row["_item"]["kind"])=="rule"]
     # Explicit selection is discovery, never permission to bypass protected CI.
     # The legacy billing skill is retained only as a non-authorizing diagnostic.
     diagnostic_only=sorted({item["slug"] for item in selected_items}&DIAGNOSTIC_ONLY)
@@ -224,6 +247,7 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
     return {
         "schema_version":1,"state":state,"kernel":manifest["kernel"],"project":project_id,"selected":selected_items,
         "selected_content":{"items":len(selected_items),"characters":selected_characters,"estimated_tokens":selected_tokens},
+        "authorization_effect":"none",
         "diagnostic":diagnostic,
     }
 

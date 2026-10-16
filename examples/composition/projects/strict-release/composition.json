@@ -1,0 +1,35 @@
+{
+  "bindings": {
+    "replacements": [
+      {
+        "target": "self-review",
+        "replacement": "strict-release--review",
+        "source": "projects/strict-release/composition.json"
+      }
+    ],
+    "extensions": [
+      {
+        "target": "strict-release--review",
+        "append": [
+          "strict-release--checks"
+        ],
+        "source": "projects/strict-release/composition.json"
+      }
+    ],
+    "aliases": []
+  },
+  "heading_map": {
+    "Conventions": {
+      "id": "conventions",
+      "mode": "extend"
+    },
+    "Notes": {
+      "id": "strict-release--notes",
+      "mode": "add"
+    }
+  },
+  "resident_budget": {
+    "max_characters": 2500,
+    "max_estimated_tokens": 625
+  }
+}

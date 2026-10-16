@@ -1,0 +1,17 @@
+{
+  "bindings": {
+    "replacements": [],
+    "extensions": [],
+    "aliases": []
+  },
+  "heading_map": {
+    "Conventions": {
+      "id": "conventions",
+      "mode": "extend"
+    }
+  },
+  "resident_budget": {
+    "max_characters": 2500,
+    "max_estimated_tokens": 625
+  }
+}
