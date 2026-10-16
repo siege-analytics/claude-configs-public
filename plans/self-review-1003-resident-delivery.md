@@ -15,6 +15,11 @@ owns the preparation driver and will repin it only after this adapter’s exact
 head is independently accepted and normally integrated. No extra worker was
 created. Implementation review is pending publication of the exact head.
 
+The coordinator's read-only review of initial commit `8553d1e` requested naming
+`github.com/siege-analytics/claude-configs-public` explicitly in K5. That wording
+and its generated kernel/verifier digests are updated together. The renderer
+implementation is unchanged by this follow-up.
+
 ## Lead review
 
 The registered hook retains canonical kernel validation and delegates its
@@ -29,9 +34,11 @@ the deployment guard remains unchanged.
 The focused local suite has 11 test methods, with subcases across both project
 identities and both layouts. It checks exact resident bytes once, canonical
 kernel once, selected path order/readability and the documented negative cases.
-Full validation and hosted results will be recorded against the actual source
-head on the PR. These counts do not claim live runtime acceptance or completed
-#1003 acceptance.
+The full local matrix passed 88/88 commands at `8553d1e` in 697.6 seconds;
+`/tmp/cc-1003-resident-full.log` retains the results. The explicit-identity
+follow-up receives affected-path checks, with terminal hosted validation and
+independent review required at its final head. These counts do not claim live
+runtime acceptance or completed #1003 acceptance.
 
 Pre-mortem-artifact: plans/pre-mortem-1003-resident-delivery.md
 Hostile-review-artifact: plans/hostile-review-1003-resident-delivery.md
