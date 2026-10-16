@@ -431,6 +431,13 @@ These bindings annotate existing fields without changing their runtime schema. I
   - `/repository_identity` → `repository-identity` (object).
   - `/parent_lock` → `parent-lock` (object).
   - `/values/review-procedure-binding` → `procedure-binding` (object).
+- `bundles/siege/policy-inputs.json`:
+  - `/selection_source` → `source-reference` (string).
+  - `/selection_sha256` → `source-reference` (string).
+  - `/contract_source` → `source-reference` (string).
+  - `/review_repository` → `repository-identity` (string).
+  - `/capability_targets/*` → `host-capability` (object).
+  - `/fixture_sources/*` → `source-reference` (string).
 
 ## Consumer compatibility
 

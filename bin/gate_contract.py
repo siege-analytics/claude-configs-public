@@ -35,31 +35,17 @@ DECISIONS = ["allow", "deny", "not-applicable", "unknown", "error"]
 CAPABILITY_STATES = ["verified", "unsupported", "unverified"]
 SCHEMA_SHA256 = "3cd65d6ffee11f39baca5c066d550fb89e5e2ccab4ee73e51f8a87bf00974d72"
 PROTECTED_ADAPTER_WORKFLOW_SHA256 = "13b83c61b8326f9c2deaab9beb8611968a7c00562dcb1b155dba9c37f0748d50"
-# The bounded pilot supports one reviewed registration/package shape per
-# capability. Reject alternate declarations until a migrated behavior needs
-# them; otherwise metadata can drift from the concrete builder/verifier path.
-SUPPORTED_CAPABILITY_TARGETS = {
-    "native-ticket-commit-msg": {
-        "kind": "executable",
-        "registered_path": ".githooks/commit-msg",
-        "package_paths": ("dist/craft-agent/.githooks/commit-msg",),
-    },
-    "native-branch-pre-push": {
-        "kind": "generated-executable",
-        "registered_path": "dist/craft-agent/.githooks/pre-push",
-        "package_paths": ("dist/craft-agent/.githooks/pre-push",),
-    },
-    "protected-range-validation": {
-        "kind": "external",
-        "registered_path": ".github/workflows/pr-base-guard.yml",
-        "package_paths": (),
-    },
-    "procedure-binding-resolution": {
-        "kind": "declarative",
-        "registered_path": "skills/self-review/SKILL.md",
-        "package_paths": ("dist/craft-agent/skills/self-review/SKILL.md",),
-    },
+# Compatibility registration for this repository's explicitly adopted Siege
+# profile. Generic callers supply their independently pinned input registration;
+# publishing a descriptor or selecting skill content cannot supply that pin.
+SIEGE_INPUTS = Path("bundles/siege/policy-inputs.json")
+SIEGE_INPUTS_SHA256 = "6d78791cb0f151f9d2f11cb00546640c56b439ed35fd3c32b3f0deb3848e1e46"
+INPUT_FIELDS = {
+    "schema_version", "selection_source", "selection_sha256", "contract_source",
+    "review_repository", "capability_targets", "fixture_sources",
 }
+TARGET_FIELDS = {"kind", "registered_path", "package_paths"}
+CAPABILITY_KINDS = {"executable", "generated-executable", "external", "declarative"}
 CONTRACT_FIELDS = {
     "schema_version", "contract_version", "ontology_version", "decision_values",
     "capability_states", "policy_fields", "capabilities",
@@ -147,7 +133,7 @@ def string_list(value: Any, context: str, *, empty: bool = False) -> list[str]:
 def repository_path(root: Path, value: str, context: str, *, must_exist: bool = True) -> Path:
     text(value, context)
     relative = Path(value)
-    if relative.is_absolute() or ".." in relative.parts or "\\" in value:
+    if relative.is_absolute() or ".." in relative.parts or "\\" in value or "\x00" in value or not relative.parts or relative.as_posix() != value:
         fail(f"{context}: path must stay within repository: {value}")
     resolved_root = root.resolve()
     current = resolved_root
@@ -161,6 +147,51 @@ def repository_path(root: Path, value: str, context: str, *, must_exist: bool = 
     if must_exist and not resolved.exists():
         fail(f"{context}: path is missing: {value}")
     return resolved
+
+
+def load_policy_inputs(root: Path, source: Path, expected_sha256: str) -> dict[str, Any]:
+    """Read a data-only registration against a separately supplied trust pin.
+
+    A protected caller must obtain both arguments from its trusted host/repository
+    configuration, never from a candidate, bundle descriptor or composition
+    receipt. This verifier neither discovers executables nor registers a host.
+    Supplying a matching pin to this API alone establishes no authorization.
+    """
+    if not isinstance(expected_sha256, str) or not HEX64.fullmatch(expected_sha256):
+        fail("policy inputs: expected independent SHA-256 pin")
+    path = repository_path(root, source.as_posix(), "policy input registration")
+    data = read_json(path)
+    if contract_digest(data) != expected_sha256:
+        fail("policy inputs: registration digest differs from independent pin")
+    exact_fields(data, INPUT_FIELDS, "policy inputs")
+    if type(data["schema_version"]) is not int or data["schema_version"] != 1:
+        fail("policy inputs: schema_version must be integer 1")
+    for field in ("selection_source", "contract_source"):
+        repository_path(root, data[field], "policy inputs." + field)
+    if not HEX64.fullmatch(text(data["selection_sha256"], "policy inputs.selection_sha256")):
+        fail("policy inputs.selection_sha256: expected SHA-256")
+    repo_part = r"[a-z0-9](?:[a-z0-9_.-]*[a-z0-9])?"
+    if not re.fullmatch(r"github\.com/" + repo_part + "/" + repo_part, text(data["review_repository"], "policy inputs.review_repository")):
+        fail("policy inputs.review_repository: expected canonical GitHub repository")
+    targets = data["capability_targets"]
+    if not isinstance(targets, dict) or not targets:
+        fail("policy inputs.capability_targets: expected nonempty object")
+    for ident, target in targets.items():
+        identifier(ident, "policy input capability")
+        exact_fields(target, TARGET_FIELDS, f"policy input capability {ident}")
+        if text(target["kind"], f"{ident}.kind") not in CAPABILITY_KINDS:
+            fail(f"policy input capability {ident}: unsupported kind")
+        repository_path(root, target["registered_path"], f"{ident}.registered_path", must_exist=False)
+        for package in string_list(target["package_paths"], f"{ident}.package_paths", empty=True):
+            repository_path(root, package, f"{ident}.package_paths", must_exist=False)
+    for fixture in string_list(data["fixture_sources"], "policy inputs.fixture_sources", empty=True):
+        repository_path(root, fixture, "policy input fixture", must_exist=False)
+    return data
+
+
+def siege_policy_inputs(root: Path = ROOT) -> dict[str, Any]:
+    """Compatibility selection; generic validation never needs this fallback."""
+    return load_policy_inputs(root, SIEGE_INPUTS, SIEGE_INPUTS_SHA256)
 
 
 def validate_property_schema(schema: Any, context: str) -> None:
@@ -322,7 +353,10 @@ def validate_schema_document(data: Any) -> dict[str, Any]:
     return data
 
 
-def validate_contract(data: Any, root: Path = ROOT, *, check_paths: bool = True) -> dict[str, Any]:
+def validate_contract(data: Any, root: Path = ROOT, *, check_paths: bool = True,
+                      capability_targets: dict[str, Any] | None = None) -> dict[str, Any]:
+    if capability_targets is None:
+        capability_targets = siege_policy_inputs(root)["capability_targets"]
     exact_fields(data, CONTRACT_FIELDS, "gate contract")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
         fail("gate contract: schema_version must be integer 1")
@@ -347,7 +381,7 @@ def validate_contract(data: Any, root: Path = ROOT, *, check_paths: bool = True)
             fail(f"{ident}: ontology_term must be host-capability")
         identifier(capability["boundary"], f"{ident}.boundary")
         kind = text(capability["kind"], f"{ident}.kind")
-        if kind not in {"executable", "generated-executable", "external", "declarative"}:
+        if kind not in CAPABILITY_KINDS:
             fail(f"{ident}.kind: unsupported kind {kind}")
         path = repository_path(root, capability["registered_path"], f"{ident}.registered_path", must_exist=check_paths and kind != "generated-executable")
         if check_paths and kind == "executable" and (not path.is_file() or not path.stat().st_mode & 0o111):
@@ -371,13 +405,13 @@ def validate_contract(data: Any, root: Path = ROOT, *, check_paths: bool = True)
         packages = string_list(capability["package_paths"], f"{ident}.package_paths", empty=True)
         for package in packages:
             repository_path(root, package, f"{ident}.package_paths", must_exist=False)
-        target = SUPPORTED_CAPABILITY_TARGETS.get(ident)
+        target = capability_targets.get(ident)
         if target is None:
             fail(f"unsupported pilot capability id: {ident}")
         if (
             kind != target["kind"]
             or capability["registered_path"] != target["registered_path"]
-            or tuple(packages) != target["package_paths"]
+            or packages != target["package_paths"]
         ):
             fail(f"{ident}: registration/package declaration differs from the supported bounded target")
         probes = string_list(capability["acceptance_probe_ids"], f"{ident}.acceptance_probe_ids")
@@ -390,8 +424,8 @@ def validate_contract(data: Any, root: Path = ROOT, *, check_paths: bool = True)
             fail(f"{ident}: generated registration must be configured evidence only")
         capabilities[ident] = capability
 
-    if set(capabilities) != set(SUPPORTED_CAPABILITY_TARGETS):
-        fail(f"pilot capabilities differ from supported IDs: {sorted(set(capabilities) ^ set(SUPPORTED_CAPABILITY_TARGETS))}")
+    if set(capabilities) != set(capability_targets):
+        fail(f"pilot capabilities differ from supported IDs: {sorted(set(capabilities) ^ set(capability_targets))}")
 
     fields: dict[str, dict[str, Any]] = {}
     if not isinstance(data["policy_fields"], list) or not data["policy_fields"]:
@@ -436,11 +470,13 @@ def contract_digest(data: dict[str, Any]) -> str:
     return hashlib.sha256(canonical).hexdigest()
 
 
-def load_contract(root: Path = ROOT, *, check_paths: bool = True) -> dict[str, Any]:
+def load_contract(root: Path = ROOT, *, check_paths: bool = True,
+                  contract_source: Path = CONTRACT,
+                  capability_targets: dict[str, Any] | None = None) -> dict[str, Any]:
     schema = validate_schema_document(read_json(root / SCHEMA))
-    data = read_json(root / CONTRACT)
+    data = read_json(repository_path(root, contract_source.as_posix(), "contract source"))
     validate_json_schema_instance(data, schema, schema)
-    return validate_contract(data, root, check_paths=check_paths)
+    return validate_contract(data, root, check_paths=check_paths, capability_targets=capability_targets)
 
 
 def validate_fixture(data: Any, contract: dict[str, Any], context: str, root: Path = ROOT) -> dict[str, Any]:
