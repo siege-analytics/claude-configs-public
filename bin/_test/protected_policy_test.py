@@ -51,6 +51,7 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
             Path("scripts/ci/check-branch-topology.sh"),
             Path(".github/workflows/pr-base-guard.yml"),
             Path("bin/effective_policy.py"), Path("bin/gate_contract.py"),
+            Path("bundles/siege/policy-inputs.json"),
             Path("catalog/effective-policy-selection.json"),
             Path("catalog/gate-contract-schema.json"), Path("catalog/gate-contracts.json"),
         )
@@ -275,6 +276,26 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
         self.assertEqual(receipt["candidate_policy"]["authorization_effect"], "none")
         self.assertIn("catalog/effective-policy.json", receipt["candidate"]["policy_sensitive_paths"])
 
+    def test_candidate_policy_input_replacement_keeps_prior_policy_binding(self):
+        repo, base = self.make_repo()
+        relative = Path('bundles/siege/policy-inputs.json')
+        inputs = json.loads((repo / relative).read_text())
+        inputs['selection_sha256'] = '0' * 64
+        (repo / relative).write_text(json.dumps(inputs))
+        git(repo, 'add', str(relative))
+        git(repo, 'commit', '--no-verify', '-m', self.message('Candidate input replacement'))
+        code, receipt = self.evaluate(repo, base, 'develop')
+        self.assertEqual((code, receipt['state']), (0, 'eligible'))
+        self.assertIn(str(relative), receipt['candidate']['policy_sensitive_paths'])
+        self.assertIn(str(relative), {item['path'] for item in receipt['trusted']['authority_dependencies']})
+        code, denied = self.evaluate(repo, base, 'main')
+        self.assertEqual((code, denied['state']), (1, 'denied'))
+        self.assertIn('target branch contradicts', denied['diagnostic'])
+        self.change(repo, 'missing-ticket', self.message('Candidate without ticket', ticket=False), no_verify=True)
+        code, denied = self.evaluate(repo, base, 'develop')
+        self.assertEqual((code, denied['state']), (1, 'denied'))
+        self.assertIn('lacks required approved ticket evidence', denied['diagnostic'])
+
     def test_installed_bytes_and_recomputed_digests_fail_closed(self):
         mutations = ("stale", "mixed", "missing", "resident", "parent-digest", "effective-digest")
         for mutation in mutations:
@@ -343,12 +364,12 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
     def test_mutable_trusted_validator_or_missing_range_errors(self):
         repo, base = self.make_repo()
         self.change(repo, "valid", self.message("valid"))
-        for dirty_path in (SCRIPT, Path("scripts/ci/check-branch-topology.sh")):
+        for dirty_path in (SCRIPT, Path("scripts/ci/check-branch-topology.sh"), Path("bundles/siege/policy-inputs.json")):
             with self.subTest(dirty_path=dirty_path):
                 dirty = Path(tempfile.mkdtemp(prefix="dirty-trusted-", dir=self.temp))
                 run("git", "clone", "--quiet", "--no-hardlinks", str(self.trusted), str(dirty), cwd=self.temp)
                 with (dirty / dirty_path).open("a", encoding="utf-8") as handle:
-                    handle.write("# mutable candidate bytes\n")
+                    handle.write("\n" if dirty_path.suffix == '.json' else "# mutable candidate bytes\n")
                 code, error = self.evaluate(repo, base, "develop", trusted=dirty)
                 self.assertEqual((code, error["state"]), (2, "error"))
                 self.assertIn("working bytes differ", error["diagnostic"])

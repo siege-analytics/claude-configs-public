@@ -37,6 +37,7 @@ class OntologyTest(unittest.TestCase):
         self.write("catalog/gate-contracts.json", contract)
         self.write("catalog/effective-policy.json", effective_policy)
         self.write("catalog/effective-policy-selection.json", effective_selection)
+        self.write("bundles/siege/policy-inputs.json", ontology.read_json(ROOT / "bundles/siege/policy-inputs.json"))
         self.write("examples/scaffolding/strict-release-policy.json", ontology.read_json(ROOT / "examples/scaffolding/strict-release-policy.json"))
         self.write("examples/scaffolding/synthetic-trunk-policy.json", ontology.read_json(ROOT / "examples/scaffolding/synthetic-trunk-policy.json"))
         self.write("dist/craft-agent/enforcement-manifest.json", {
@@ -59,7 +60,7 @@ class OntologyTest(unittest.TestCase):
     def test_real_registry_and_existing_artifact_bindings(self):
         terms = ontology.validate_registry(self.registry)
         self.assertNotEqual(terms["host-capability"], terms["procedure-binding"])
-        self.assertEqual(ontology.validate_bindings(self.bindings, self.registry, self.root), 51)
+        self.assertEqual(ontology.validate_bindings(self.bindings, self.registry, self.root), 61)
 
     def test_duplicate_ids_labels_and_json_keys_reject(self):
         for field in ("id", "label"):

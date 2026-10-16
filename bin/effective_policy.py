@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Resolve and explain the bounded effective policy approved by issue #848.
+"""Resolve and explain explicitly selected bounded policy inputs.
 
-Only the checked-in approved catalog participates in precedence. Target identity,
+Only the independently pinned catalog participates in precedence. Target identity,
 operation facts, host capability states, installation metadata, task evidence,
 and an optional candidate catalog are explicit inputs; none can grant policy
-authority or replace the approved catalog.
+authority or replace the approved catalog. The legacy entrypoint selects this
+repository's Siege adoption; registered inputs use the same verifier/evaluator.
 """
 from __future__ import annotations
 
@@ -23,7 +24,6 @@ ROOT = Path(__file__).resolve().parents[1]
 POLICY = Path("catalog/effective-policy.json")
 SELECTION = Path("catalog/effective-policy-selection.json")
 CONTRACT = Path("catalog/gate-contracts.json")
-SELECTION_SHA256 = "4239574892d29bf1fad44a316c8ece5e24ec14d34c4257d099b2f1cfc050db6f"
 ID = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*\Z")
 SEMVER = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+\Z")
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
@@ -177,13 +177,14 @@ def validate_partial_values(
     return result
 
 
-def validate_policy(data: Any, contract: dict[str, Any], context: str = "effective policy") -> dict[str, Any]:
+def validate_policy(data: Any, contract: dict[str, Any], context: str = "effective policy",
+                    *, contract_source: str = CONTRACT.as_posix()) -> dict[str, Any]:
     exact_fields(data, POLICY_FIELDS, context)
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
         fail(f"{context}.schema_version: expected integer 1")
     if not SEMVER.fullmatch(text(data["resolver_version"], f"{context}.resolver_version")):
         fail(f"{context}.resolver_version: expected major.minor.patch")
-    if data["contract_source"] != CONTRACT.as_posix():
+    if data["contract_source"] != contract_source:
         fail(f"{context}: contract source differs from authoritative source")
     if not HEX64.fullmatch(text(data["contract_sha256"], f"{context}.contract_sha256")):
         fail(f"{context}: invalid contract digest")
@@ -243,16 +244,23 @@ def validate_policy(data: Any, contract: dict[str, Any], context: str = "effecti
     return data
 
 
-def validate_selection(data: Any) -> dict[str, Any]:
+def validate_selection(data: Any, *, expected_sha256: str | None = None,
+                       review_repository: str | None = None) -> dict[str, Any]:
+    if expected_sha256 is None and review_repository is None:
+        inputs = _gate_contract_module().siege_policy_inputs(ROOT)
+        expected_sha256, review_repository = inputs["selection_sha256"], inputs["review_repository"]
+    if not isinstance(expected_sha256, str) or not HEX64.fullmatch(expected_sha256) or not review_repository:
+        fail("effective policy selection: independent digest and review repository required")
     exact_fields(data, SELECTION_FIELDS, "effective policy selection")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
         fail("effective policy selection: schema_version must be integer 1")
-    if digest(data) != SELECTION_SHA256:
+    if digest(data) != expected_sha256:
         fail("effective policy selection: complete receipt digest differs from reviewed selection")
     if not HEX40.fullmatch(text(data["policy_revision"], "selection.policy_revision")):
         fail("selection.policy_revision: expected exact 40-character SHA")
-    if data["policy_path"] != POLICY.as_posix():
-        fail("selection.policy_path: must name the canonical policy artifact")
+    relative = Path(text(data["policy_path"], "selection.policy_path"))
+    if relative.is_absolute() or ".." in relative.parts or "\\" in data["policy_path"] or "\x00" in data["policy_path"] or relative.as_posix() != data["policy_path"] or not relative.parts:
+        fail("selection.policy_path: expected canonical relative path")
     if not HEX40.fullmatch(text(data["git_blob"], "selection.git_blob")):
         fail("selection.git_blob: expected exact Git blob")
     for name in ("raw_sha256", "canonical_sha256"):
@@ -263,7 +271,7 @@ def validate_selection(data: Any) -> dict[str, Any]:
         fail("selection.review_evidence: expected unique nonempty list")
     for review in reviews:
         text(review, "selection.review_evidence item")
-        if not re.fullmatch(r"https://github\.com/siege-analytics/claude-configs-public/pull/[0-9]+#(?:pullrequestreview|issuecomment)-[0-9]+", review):
+        if not re.fullmatch(re.escape("https://" + review_repository) + r"/pull/[0-9]+#(?:pullrequestreview|issuecomment)-[0-9]+", review):
             fail("selection.review_evidence: expected exact GitHub PR review or conversation-comment URL")
     return data
 
@@ -317,18 +325,31 @@ def validate_fixture_agreement(
             fail(f"project {project['id']}: selected fixture parent lock disagrees with policy")
 
 
-def load_inputs(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+def load_registered_inputs(root: Path, *, registration_source: Path,
+                           registration_sha256: str) -> dict[str, Any]:
+    """Verify explicitly registered policy inputs using the existing evaluator.
+
+    The caller supplies an independent pin, as described by load_policy_inputs.
+    The result is configured evidence only; this function does not authenticate
+    that caller, adopt a profile, install hooks or establish a host capability.
+    """
     gc = _gate_contract_module()
-    contract = gc.load_contract(root)
-    selection = validate_selection(read_json(root / SELECTION))
-    raw, selected = load_selected_json(root, selection, POLICY)
+    inputs = gc.load_policy_inputs(root, registration_source, registration_sha256)
+    contract = gc.load_contract(root, contract_source=Path(inputs["contract_source"]),
+                                capability_targets=inputs["capability_targets"])
+    selection = validate_selection(read_json(root / inputs["selection_source"]),
+                                   expected_sha256=inputs["selection_sha256"],
+                                   review_repository=inputs["review_repository"])
+    policy_path = Path(selection["policy_path"])
+    gc.repository_path(root, policy_path.as_posix(), "selected policy path", must_exist=False)
+    raw, selected = load_selected_json(root, selection, policy_path)
     if hashlib.sha256(raw).hexdigest() != selection["raw_sha256"]:
         fail("selected policy raw-byte digest disagrees with review receipt")
     if digest(selected) != selection["canonical_sha256"]:
         fail("selected policy canonical digest disagrees with review receipt")
     try:
         blob = subprocess.check_output(
-            ["git", "-C", str(root), "rev-parse", f"{selection['policy_revision']}:{POLICY.as_posix()}"],
+            ["git", "-C", str(root), "rev-parse", f"{selection['policy_revision']}:{policy_path.as_posix()}"],
             text=True, stderr=subprocess.DEVNULL, timeout=10,
         ).strip()
     except (OSError, subprocess.SubprocessError) as exc:
@@ -336,10 +357,26 @@ def load_inputs(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, Any], dict
     if blob != selection["git_blob"]:
         fail("selected policy Git blob disagrees with review receipt")
     policy = selected
-    validate_policy(policy, contract, f"git:{selection['policy_revision']}:{POLICY.as_posix()}")
-    fixtures = [load_selected_json(root, selection, path)[1] for path in gc.FIXTURES]
+    validate_policy(policy, contract, f"git:{selection['policy_revision']}:{policy_path.as_posix()}",
+                    contract_source=inputs["contract_source"])
+    fixtures = [load_selected_json(root, selection, Path(path))[1] for path in inputs["fixture_sources"]]
     validate_fixture_agreement(root, contract, policy, gc, fixtures)
-    return contract, policy, selection
+    return {
+        "contract": contract, "policy": policy, "selection": selection,
+        "registration": {"source": registration_source.as_posix(), "sha256": registration_sha256,
+                         "selection_source": inputs["selection_source"],
+                         "contract_source": inputs["contract_source"],
+                         "contract_sha256": digest(contract)},
+        "evidence_state": "configured", "authorization_effect": "none",
+    }
+
+
+def load_inputs(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Compatibility entrypoint for this repository's explicit Siege adoption."""
+    gc = _gate_contract_module()
+    loaded = load_registered_inputs(root, registration_source=gc.SIEGE_INPUTS,
+                                    registration_sha256=gc.SIEGE_INPUTS_SHA256)
+    return loaded["contract"], loaded["policy"], loaded["selection"]
 
 
 def validate_context(data: Any, contract: dict[str, Any]) -> dict[str, Any]:
@@ -519,11 +556,12 @@ def _candidate_result(
     contract: dict[str, Any],
     active_identity: tuple[str, str, str],
     active_values: dict[str, Any],
+    contract_source: str,
 ) -> dict[str, Any] | None:
     if candidate is None:
         return None
     try:
-        validate_policy(candidate, contract, "candidate policy")
+        validate_policy(candidate, contract, "candidate policy", contract_source=contract_source)
         projects = {identity_tuple(normalize_identity(item["repository_identity"], "candidate project identity", with_source=False)): item for item in candidate["projects"]}
         project = projects.get(active_identity)
         if project is None:
@@ -550,6 +588,7 @@ def _candidate_result(
 def explain(
     contract: dict[str, Any], policy: dict[str, Any], selection: dict[str, Any],
     context: dict[str, Any], operation: dict[str, Any], candidate: dict[str, Any] | None = None,
+    *, selection_source: str = SELECTION.as_posix(),
 ) -> dict[str, Any]:
     context = validate_context(context, contract)
     operation = validate_operation(operation)
@@ -559,7 +598,7 @@ def explain(
         "contract_sha256": policy["contract_sha256"],
         "parent_contract_revision": policy["parent_contract_revision"],
         "policy_selection": {
-            "source": SELECTION.as_posix(),
+            "source": selection_source,
             "policy_revision": selection["policy_revision"],
             "policy_path": selection["policy_path"],
             "git_blob": selection["git_blob"],
@@ -614,7 +653,7 @@ def explain(
         "resident_workflow": resident_workflow(values),
         "decision": decide(operation, values, contract, context["capabilities"]),
     }
-    proposed = _candidate_result(candidate, contract, target, values)
+    proposed = _candidate_result(candidate, contract, target, values, policy["contract_source"])
     if proposed is not None:
         result["proposed_policy"] = proposed
     return result

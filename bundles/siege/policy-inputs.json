@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "selection_source": "catalog/effective-policy-selection.json",
+  "selection_sha256": "4239574892d29bf1fad44a316c8ece5e24ec14d34c4257d099b2f1cfc050db6f",
+  "contract_source": "catalog/gate-contracts.json",
+  "review_repository": "github.com/siege-analytics/claude-configs-public",
+  "capability_targets": {
+    "native-ticket-commit-msg": {
+      "kind": "executable",
+      "registered_path": ".githooks/commit-msg",
+      "package_paths": [
+        "dist/craft-agent/.githooks/commit-msg"
+      ]
+    },
+    "native-branch-pre-push": {
+      "kind": "generated-executable",
+      "registered_path": "dist/craft-agent/.githooks/pre-push",
+      "package_paths": [
+        "dist/craft-agent/.githooks/pre-push"
+      ]
+    },
+    "protected-range-validation": {
+      "kind": "external",
+      "registered_path": ".github/workflows/pr-base-guard.yml",
+      "package_paths": []
+    },
+    "procedure-binding-resolution": {
+      "kind": "declarative",
+      "registered_path": "skills/self-review/SKILL.md",
+      "package_paths": [
+        "dist/craft-agent/skills/self-review/SKILL.md"
+      ]
+    }
+  },
+  "fixture_sources": [
+    "examples/scaffolding/strict-release-policy.json",
+    "examples/scaffolding/synthetic-trunk-policy.json"
+  ]
+}
