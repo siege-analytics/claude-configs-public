@@ -31,8 +31,13 @@ class OntologyTest(unittest.TestCase):
             "routes": [{"skills": ["code-review"]}],
             "projects": [{"repos": ["github.com/example/project"], "routes": [{"skills": ["project--review"]}]}],
         })
+        contract = ontology.read_json(ROOT / "catalog/gate-contracts.json")
+        self.write("catalog/gate-contracts.json", contract)
+        self.write("examples/scaffolding/strict-release-policy.json", ontology.read_json(ROOT / "examples/scaffolding/strict-release-policy.json"))
+        self.write("examples/scaffolding/synthetic-trunk-policy.json", ontology.read_json(ROOT / "examples/scaffolding/synthetic-trunk-policy.json"))
         self.write("dist/craft-agent/enforcement-manifest.json", {
             "gates": [{"id": "ticket", "runtime_policy": {"craft": "advisory"}, "blocking": True}],
+            "gate_contract": contract,
         })
 
     def write(self, name, data):
@@ -47,7 +52,7 @@ class OntologyTest(unittest.TestCase):
     def test_real_registry_and_existing_artifact_bindings(self):
         terms = ontology.validate_registry(self.registry)
         self.assertNotEqual(terms["host-capability"], terms["procedure-binding"])
-        self.assertEqual(ontology.validate_bindings(self.bindings, self.registry, self.root), 6)
+        self.assertEqual(ontology.validate_bindings(self.bindings, self.registry, self.root), 32)
 
     def test_duplicate_ids_labels_and_json_keys_reject(self):
         for field in ("id", "label"):

@@ -398,6 +398,23 @@ These bindings annotate existing fields without changing their runtime schema. I
   - `/gates/*` → `gate` (object).
   - `/gates/*/runtime_policy/*` → `configured` (string).
   - `/gates/*/blocking` → `configured` (boolean).
+  - `/gate_contract` → `generated-artifact` (object).
+- `catalog/gate-contracts.json`:
+  - `/policy_fields/0` → `policy` (object).
+  - `/policy_fields/1` → `policy` (object).
+  - `/policy_fields/2` → `procedure-binding` (object).
+  - `/policy_fields/*/override_policy` → `policy-override` (object).
+  - `/policy_fields/*/required_capability_ids/*` → `host-capability` (string).
+  - `/capabilities/*` → `host-capability` (object).
+  - `/capabilities/*/configured_evidence_only` → `configured` (boolean).
+- `examples/scaffolding/strict-release-policy.json`:
+  - `/repository_identity` → `repository-identity` (object).
+  - `/parent_lock` → `parent-lock` (object).
+  - `/values/review-procedure-binding` → `procedure-binding` (object).
+- `examples/scaffolding/synthetic-trunk-policy.json`:
+  - `/repository_identity` → `repository-identity` (object).
+  - `/parent_lock` → `parent-lock` (object).
+  - `/values/review-procedure-binding` → `procedure-binding` (object).
 
 ## Consumer compatibility
 
