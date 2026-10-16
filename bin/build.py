@@ -1509,7 +1509,7 @@ def build_consumer_packages() -> None:
     version = _get_version()
     try:
         commit = subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"],
+            ["git", "rev-parse", "HEAD"],
             cwd=REPO_ROOT, text=True,
         ).strip()
     except Exception:

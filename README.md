@@ -366,8 +366,8 @@ The same source serves two consumer runtimes via a build step. Pick the layout t
 |---|---|---|---|
 | **nested** | `release/nested`, `vX.Y.Z-nested` | Skills under category folders (`coding/code-review/`, `git-workflow/commit/`, ...) | **Claude Code** with the resolver hook |
 | **flat** | `release/flat`, `vX.Y.Z-flat` | Leaf skills at `skills/<slug>/`; routers stay at category root | **Craft Agent** (slash-command pane) |
-| **claude-code package** | GitHub Release archive | Flat skills, hooks, settings snippet, resolver/rules bundle | Claude Code / Codex-style runtimes |
-| **craft-agent package** | GitHub Release archive | Flat skills, hooks, settings/enforcement files, Craft automation snippets | Craft Agent workspaces |
+| **claude-code package** | `release/claude-code`, `vX.Y.Z-claude-code`, release archive | Flat skills, hooks, settings snippet, resolver/rules bundle | Claude Code / Codex-style runtimes |
+| **craft-agent package** | `release/craft-agent`, `vX.Y.Z-craft-agent`, release archive | Flat skills, hooks, settings/enforcement files, Craft automation snippets | Craft Agent workspaces |
 
 Both layouts contain identical content; only the file-tree shape differs. Every hook-bearing layout is self-contained: `hooks/`, `bin/resolve-load-set.py`, `bin/review-risk.py`, and their `catalog/` manifests/policies ship together. Each resolver manifest records canonical `source_path` provenance separately from its layout-correct `package_path`; emitted hook instructions resolve that runtime path against the installation root. The build resolves `[skill:slug]` and `[rule:slug]` tokens to layout-appropriate paths so cross-references work in both worlds without manual maintenance.
 
@@ -391,10 +391,26 @@ Versions follow [SemVer](https://semver.org/). Major version bumps for incompati
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the per-version diff.
 
-**Tag scheme.** Each source tag (`v1.0.0` on `main`) produces two consumer-facing tags via CI:
+**Tag scheme.** Each main release produces a source tag (`v1.0.0`) and four consumer tags from one verified build:
 
 - `v1.0.0-nested` on the `release/nested` branch -- pull this for Claude Code with the resolver hook
 - `v1.0.0-flat` on the `release/flat` branch -- pull this for Craft Agent
+- `v1.0.0-claude-code` -- the Claude Code package
+- `v1.0.0-craft-agent` -- the Craft Agent package
+
+The release includes `release-manifest.json` and an archive for each output. The
+manifest records the exact source commit/tree, output commit/trees, prepared
+changelog digest and archive SHA-256 digests. Version and changelog preparation
+happen before building, so every output contains the same release section. These
+workflow-local preparations do not commit version changes back to protected main.
+The producer saves the complete handoff as a workflow artifact before updating
+remote refs, preserving recovery evidence if GitHub Release creation fails.
+
+The release-event tag repair verifies this handoff and the downloaded archives.
+It uses only the recorded commits; moving `release/*` branches cannot choose a
+repair target. An existing tag with a different target fails verification. Older
+releases without a manifest require a reviewed provenance record before repair.
+The manifest is producer provenance, not a signature or proof of host enforcement.
 
 `main` is the rolling source-of-truth (with build infrastructure and unresolved tokens). Always pin downstream consumers to one of the resolved release-branch tags.
 

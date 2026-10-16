@@ -125,7 +125,9 @@ jobs:
         run: bash .github/workflows/_test_pr_base_guard_policy.sh
 
       - name: Main-only release policy fixtures
-        run: bash .github/workflows/_test_release_source_policy.sh
+        run: |
+          bash .github/workflows/_test_release_source_policy.sh
+          python3 bin/_test/release_handoff_test.py
 
       - name: Exact-main deployment source fixtures
         run: python3 bin/_test/deploy_source_policy_test.py
@@ -211,7 +213,7 @@ jobs:
     needs: validate
     # `develop` is integration-only. Publishing, tagging, and releases are
     # authorized exclusively by a successful push/merge to `main`.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     # Serialize main releases so force-updates to the consumer branches cannot
     # race one another.
@@ -236,8 +238,8 @@ jobs:
 
       - name: Resolve release version
         id: resolve-version
-        if: github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
         run: |
+          set -euo pipefail
           VERSION=$(cat VERSION | tr -d '[:space:]')
           MAJOR=$(echo "$VERSION" | cut -d. -f1)
           MINOR=$(echo "$VERSION" | cut -d. -f2)
@@ -253,116 +255,90 @@ jobs:
           echo "tag=v${RESOLVED}" >> "$GITHUB_OUTPUT"
           echo "bumped=$( [ "$RESOLVED" != "$VERSION" ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
 
+      - name: Prepare versioned changelog before building
+        env:
+          RELEASE_TAG: ${{ steps.resolve-version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          python3 scripts/ci/promote-unreleased.py --version "$RELEASE_TAG"
+          python3 scripts/ci/release-notes.py --version "$RELEASE_TAG" --out /tmp/release-notes.md
+
       - name: Build dist/nested and dist/flat
         run: python3 bin/build.py
 
-      - name: Publish dist/nested → release/nested branch
+      - name: Stage exact nested output
         run: |
-          # Worktree from a fresh orphan branch; force-overwrite the remote.
+          set -euo pipefail
+          # Stage all four outputs locally; publish only after manifest checks.
           # Don't pre-fetch the remote branch — that would create a local ref
           # that conflicts with `worktree add -B`.
           rm -rf /tmp/release-nested
           git branch -D release/nested 2>/dev/null || true
           git worktree add --orphan -B release/nested /tmp/release-nested
           rsync -a --delete --exclude='.git' dist/nested/ /tmp/release-nested/
-          cp -f README.md LICENSE CHANGELOG.md /tmp/release-nested/ 2>/dev/null || true
-          cp -f THIRD_PARTY_NOTICES.md CONTRIBUTING.md /tmp/release-nested/ 2>/dev/null || true
-          (cd /tmp/release-nested && git add -A && git commit -m "Publish nested layout from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
-          (cd /tmp/release-nested && git push origin release/nested --force)
+          (cd /tmp/release-nested && git add --force -A && git commit -m "Publish nested layout from ${GITHUB_SHA}")
 
-      - name: Publish dist/flat → release/flat branch
+      - name: Stage exact flat output
         run: |
+          set -euo pipefail
           rm -rf /tmp/release-flat
           git branch -D release/flat 2>/dev/null || true
           git worktree add --orphan -B release/flat /tmp/release-flat
           rsync -a --delete --exclude='.git' dist/flat/ /tmp/release-flat/
-          cp -f README.md LICENSE CHANGELOG.md /tmp/release-flat/ 2>/dev/null || true
-          cp -f THIRD_PARTY_NOTICES.md CONTRIBUTING.md /tmp/release-flat/ 2>/dev/null || true
-          (cd /tmp/release-flat && git add -A && git commit -m "Publish flat layout from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
-          (cd /tmp/release-flat && git push origin release/flat --force)
+          (cd /tmp/release-flat && git add --force -A && git commit -m "Publish flat layout from ${GITHUB_SHA}")
 
-      - name: Publish dist/claude-code → release/claude-code branch
+      - name: Stage exact claude-code output
         run: |
+          set -euo pipefail
           rm -rf /tmp/release-claude-code
           git branch -D release/claude-code 2>/dev/null || true
           git worktree add --orphan -B release/claude-code /tmp/release-claude-code
           rsync -a --delete --exclude='.git' dist/claude-code/ /tmp/release-claude-code/
-          (cd /tmp/release-claude-code && git add -A && git commit -m "Publish claude-code package from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
-          (cd /tmp/release-claude-code && git push origin release/claude-code --force)
+          (cd /tmp/release-claude-code && git add --force -A && git commit -m "Publish claude-code package from ${GITHUB_SHA}")
 
-      - name: Publish dist/craft-agent → release/craft-agent branch
+      - name: Stage exact craft-agent output
         run: |
+          set -euo pipefail
           rm -rf /tmp/release-craft-agent
           git branch -D release/craft-agent 2>/dev/null || true
           git worktree add --orphan -B release/craft-agent /tmp/release-craft-agent
           rsync -a --delete --exclude='.git' dist/craft-agent/ /tmp/release-craft-agent/
-          (cd /tmp/release-craft-agent && git add -A && git commit -m "Publish craft-agent package from ${GITHUB_SHA::7}" 2>/dev/null || echo "no changes")
-          (cd /tmp/release-craft-agent && git push origin release/craft-agent --force)
+          (cd /tmp/release-craft-agent && git add --force -A && git commit -m "Publish craft-agent package from ${GITHUB_SHA}")
 
-      - name: Tag resolved version
-        id: auto-tag
-        if: github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
+      - name: Record immutable release handoff and archives
+        env:
+          RELEASE_TAG: ${{ steps.resolve-version.outputs.tag }}
         run: |
-          # The resolve-version step walks past existing tags to pick the next
-          # free version and already wrote it to the working-tree VERSION, so the
-          # build embedded it. The tag is the release identity. We do NOT commit
-          # VERSION back to main: main is a protected branch and CI cannot push to
-          # it (GH006 "Changes must be made through a pull request"), which failed
-          # every release run since this step was introduced. VERSION-in-repo is a
-          # floor only -- bump it via a normal PR for minor/major changes; patch
-          # auto-increment is driven entirely by the tag walk above.
-          TAG="${{ steps.resolve-version.outputs.tag }}"
-          git tag "$TAG"
-          git push origin "$TAG"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          python3 scripts/ci/release-handoff.py record \
+            --assets /tmp/release-assets --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" --source "$GITHUB_SHA"
 
-      - name: Tag release branches
-        if: steps.auto-tag.outputs.tag != ''
+      - name: Preserve handoff before remote mutation
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-handoff-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/release-assets/
+          if-no-files-found: error
+
+      - name: Publish exact source, consumer tags and release branches
+        env:
+          RELEASE_TAG: ${{ steps.resolve-version.outputs.tag }}
         run: |
-          if [ -n "${{ steps.auto-tag.outputs.tag }}" ]; then
-            TAG="${{ steps.auto-tag.outputs.tag }}"
-          else
-            TAG=${GITHUB_REF#refs/tags/}
-          fi
-          NESTED_SHA=$(git -C /tmp/release-nested rev-parse HEAD)
-          FLAT_SHA=$(git -C /tmp/release-flat rev-parse HEAD)
-          CC_SHA=$(git -C /tmp/release-claude-code rev-parse HEAD)
-          CA_SHA=$(git -C /tmp/release-craft-agent rev-parse HEAD)
-          git tag "${TAG}-nested" "$NESTED_SHA"
-          git tag "${TAG}-flat" "$FLAT_SHA"
-          git tag "${TAG}-claude-code" "$CC_SHA"
-          git tag "${TAG}-craft-agent" "$CA_SHA"
-          git push origin "${TAG}-nested" "${TAG}-flat" "${TAG}-claude-code" "${TAG}-craft-agent"
+          python3 scripts/ci/release-handoff.py publish --branches \
+            --assets /tmp/release-assets --repository "$GITHUB_REPOSITORY" \
+            --tag "$RELEASE_TAG" --source "$GITHUB_SHA"
 
       - name: Create GitHub Release
-        if: steps.auto-tag.outputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.resolve-version.outputs.tag }}
         run: |
-          if [ -n "${{ steps.auto-tag.outputs.tag }}" ]; then
-            TAG="${{ steps.auto-tag.outputs.tag }}"
-          else
-            TAG=${GITHUB_REF#refs/tags/}
-          fi
-          # #633: promote CHANGELOG [Unreleased] to [<version>] before cutting
-          # notes. Without this, every auto-cut release reads from the same
-          # growing [Unreleased] block and each release body describes changes
-          # that partly shipped in earlier releases. The promoter is idempotent
-          # (no-op when [<version>] already exists) and refuses to create an
-          # empty versioned section (which would poison future promotions).
-          # The mutation is workflow-local; this main-push job publishes the
-          # built artifacts and does not commit the promoted CHANGELOG.md.
-          python3 scripts/ci/promote-unreleased.py --version "$TAG" || {
-            echo "::warning::promote-unreleased.py returned non-zero; falling back to release-notes.py alone"
-          }
-          python3 scripts/ci/release-notes.py --version "$TAG" --out /tmp/release-notes.md
-          printf '\nConsumer packages: `%s-claude-code` and `%s-craft-agent`.\n' "$TAG" "$TAG" >> /tmp/release-notes.md
-          printf 'Layout tags: `%s-nested` and `%s-flat`.\n' "$TAG" "$TAG" >> /tmp/release-notes.md
-          tar -czf "claude-code-${TAG}.tar.gz" -C dist/claude-code .
-          tar -czf "craft-agent-${TAG}.tar.gz" -C dist/craft-agent .
-          gh release create "$TAG" \
-            --title "$TAG" \
+          set -euo pipefail
+          printf '\nConsumer tags: `%s-{nested,flat,claude-code,craft-agent}`.\n' "$RELEASE_TAG" >> /tmp/release-notes.md
+          printf 'Exact output commits and archive SHA-256 digests: release-manifest.json.\n' >> /tmp/release-notes.md
+          gh release create "$RELEASE_TAG" \
+            --verify-tag \
+            --title "$RELEASE_TAG" \
             --notes-file /tmp/release-notes.md \
             --latest \
-            "claude-code-${TAG}.tar.gz#Claude Code hooks package" \
-            "craft-agent-${TAG}.tar.gz#Craft Agent hooks package"
+            /tmp/release-assets/*
