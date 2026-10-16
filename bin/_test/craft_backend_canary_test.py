@@ -227,7 +227,11 @@ class CanaryPacketTest(unittest.TestCase):
         self.assertNotIn("CC1003_B1_NO_OP.", compaction)
 
     def test_materialize_and_external_record_attest_exact_existing_bytes(self):
-        receipt = canary.materialize(self.value, _test_discovery_reader=self._test_discovery_reader, _test_expected_temp_base=self.temp_base)
+        # Probe execution must preserve the hashed payload even when the caller
+        # has not globally disabled Python bytecode writes (the ordinary CI/CLI case).
+        with mock.patch.dict(os.environ):
+            os.environ.pop("PYTHONDONTWRITEBYTECODE", None)
+            receipt = canary.materialize(self.value, _test_discovery_reader=self._test_discovery_reader, _test_expected_temp_base=self.temp_base)
         materialized = json.loads(Path(receipt["receipt"]).read_text())
         self.assertTrue((self.temp / "fixture" / "remote.git").is_dir())
         fixture_repo = self.temp / "fixture" / "repo"
@@ -245,6 +249,7 @@ class CanaryPacketTest(unittest.TestCase):
         self.assertTrue((control / "FOREIGN_PROJECT_MARKER.txt").is_file())
         self.assertTrue((control / "GLOBAL_BUNDLE_MARKER.txt").is_file())
         payload = self.temp / "workspace-payload"
+        self.assertEqual(list(payload.rglob("*.pyc")), [], "the read-only probe mutated the payload")
         payload_text = "\n".join(
             path.read_text(errors="ignore") for path in payload.rglob("*") if path.is_file()
         )
