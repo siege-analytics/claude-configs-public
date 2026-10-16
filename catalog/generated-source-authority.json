@@ -1693,30 +1693,30 @@
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/detect-ai-fingerprints",
-          "file_count": 14,
-          "tree_sha256": "4a80b9d0183739fb8d77d07ffe128646b0e4a083397af25843458aa0d756cbfe"
+          "file_count": 15,
+          "tree_sha256": "f8ac750a519008ce5cd41af59dff531afca5862271f61101e12ebe8589f28b94"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/detect-ai-fingerprints",
-          "file_count": 14,
-          "tree_sha256": "4a80b9d0183739fb8d77d07ffe128646b0e4a083397af25843458aa0d756cbfe"
+          "file_count": 15,
+          "tree_sha256": "f8ac750a519008ce5cd41af59dff531afca5862271f61101e12ebe8589f28b94"
         },
         "flat": {
           "destination": "dist/flat/skills/detect-ai-fingerprints",
-          "file_count": 14,
-          "tree_sha256": "4a80b9d0183739fb8d77d07ffe128646b0e4a083397af25843458aa0d756cbfe"
+          "file_count": 15,
+          "tree_sha256": "f8ac750a519008ce5cd41af59dff531afca5862271f61101e12ebe8589f28b94"
         },
         "nested": {
           "destination": "dist/nested/skills/detect-ai-fingerprints",
-          "file_count": 14,
-          "tree_sha256": "4a80b9d0183739fb8d77d07ffe128646b0e4a083397af25843458aa0d756cbfe"
+          "file_count": 15,
+          "tree_sha256": "f8ac750a519008ce5cd41af59dff531afca5862271f61101e12ebe8589f28b94"
         }
       },
       "canonical_source": "skills/detect-ai-fingerprints/SKILL.md",
       "kind": "skill",
       "slug": "detect-ai-fingerprints",
-      "source_file_count": 14,
-      "source_tree_sha256": "4d123e8f944a54ff828ebf5331be4c4d838d72d14cc7479046d96efe50a2a269"
+      "source_file_count": 15,
+      "source_tree_sha256": "bde924a441c538c17fb21361ccca9d1b4731321631b344e6a02e929978d163cc"
     },
     {
       "artifacts": {
@@ -5755,8 +5755,8 @@
     "artifact_snapshot_count": 804,
     "canonical_source_count": 198,
     "destination_collision_count": 0,
-    "generated_file_mapping_count": 2912,
-    "source_owned_file_count": 728,
+    "generated_file_mapping_count": 2916,
+    "source_owned_file_count": 729,
     "support_source_count": 3,
     "unowned_generated_file_count": 0
   },

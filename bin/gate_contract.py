@@ -34,6 +34,7 @@ HEX64 = re.compile(r"[0-9a-f]{64}\Z")
 DECISIONS = ["allow", "deny", "not-applicable", "unknown", "error"]
 CAPABILITY_STATES = ["verified", "unsupported", "unverified"]
 SCHEMA_SHA256 = "3cd65d6ffee11f39baca5c066d550fb89e5e2ccab4ee73e51f8a87bf00974d72"
+PROTECTED_ADAPTER_WORKFLOW_SHA256 = "2e47e6a6b43be37c99614e0b91feff7cf48068d8ab6622f446e09829944688b0"
 # The bounded pilot supports one reviewed registration/package shape per
 # capability. Reject alternate declarations until a migrated behavior needs
 # them; otherwise metadata can drift from the concrete builder/verifier path.
@@ -50,7 +51,7 @@ SUPPORTED_CAPABILITY_TARGETS = {
     },
     "protected-range-validation": {
         "kind": "external",
-        "registered_path": ".github/workflows/build-and-publish.yml",
+        "registered_path": ".github/workflows/pr-base-guard.yml",
         "package_paths": (),
     },
     "procedure-binding-resolution": {
@@ -540,6 +541,23 @@ def validate_protected_workflow(content: str) -> None:
         fail("protected validation workflow gate contract step is conditional, altered, or non-exact")
 
 
+def validate_protected_adapter_workflow(content: str) -> None:
+    """Require the one reviewed complete base-controlled workflow shape.
+
+    The digest covers event filters, permissions, the enclosing job, every
+    checkout/fetch/topology/adapter condition, exact event-derived inputs,
+    working directories, shell fail-closed behavior, and merge-group handling.
+    This intentionally rejects all alternate registrations rather than trying
+    to enumerate YAML spellings for disabled or advisory execution.
+    """
+    actual = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    if actual != PROTECTED_ADAPTER_WORKFLOW_SHA256:
+        fail(
+            "base-controlled protected adapter workflow bytes differ from the "
+            "reviewed complete registration"
+        )
+
+
 def validate_generated(root: Path, generated_root: Path, contract: dict[str, Any]) -> None:
     manifest = read_json(generated_root / "craft-agent/enforcement-manifest.json")
     settings = read_json(generated_root / "craft-agent/settings-enforcement.json")
@@ -637,7 +655,12 @@ def validate_generated(root: Path, generated_root: Path, contract: dict[str, Any
     workflow = repository_path(
         root, protected_capability["registered_path"], "protected validation declared registration"
     )
-    validate_protected_workflow(workflow.read_text(encoding="utf-8"))
+    validate_protected_adapter_workflow(workflow.read_text(encoding="utf-8"))
+    # Candidate CI continues to verify source/generated agreement, but it is
+    # not the protected adapter and cannot authorize its own head.
+    validate_protected_workflow(
+        repository_path(root, ".github/workflows/build-and-publish.yml", "contract CI workflow").read_text(encoding="utf-8")
+    )
 
 
 def _run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:

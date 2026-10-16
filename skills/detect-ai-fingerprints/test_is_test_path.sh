@@ -22,7 +22,7 @@ check() {
     local expected="$2"  # "true" or "false"
     local label="$3"
     local got
-    got=$(python3 -c "
+    got=$(python3 -B -c "
 import importlib.util
 spec = importlib.util.spec_from_file_location('scan_ast', '$SCAN')
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
