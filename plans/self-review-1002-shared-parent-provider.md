@@ -5,7 +5,7 @@ Hostile-review-artifact: plans/hostile-review-1002-shared-parent-provider.md
 
 ## Assumptions
 
-- Accepted develop `cd014600d7262492c7ce95512ba308b307a8efa5` includes the verified public provider and native registration repairs.
+- Accepted develop `6fb4d463b5861b79100ee048c7c069f1ff937db7` includes the verified public provider, native registration and coherent generation repairs. Both parents retain their independent acceptance evidence.
 - Host registration pins parent authority independently of consumer event data. The normalizer validates that pin and never grants it.
 - Parent, canonical consumer/base, candidate/head and executed consumer workflow are distinct identity domains.
 - The host supplies complete canonical workflow history through a separate authenticated checkout, then removes credentials. The public self-hosted exact-base checkout already serves as its independent canonical object store.

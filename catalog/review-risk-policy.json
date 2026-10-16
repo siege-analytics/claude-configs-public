@@ -40,6 +40,7 @@
     "^\\.claude/(deploy-model|settings\\.json)$",
     "(^|/)(credential|credentials|secret|secrets|auth|permission|permissions)([._/-]|$)",
     "(^|/)(release|deploy|destructive)([._/-]|$)",
+    "^bin/(package-generation\\.py|_test/package_generation_test\\.py)$",
     "^VERSION$",
     "^bin/_test/native_push_test\\.py$",
     "^bin/_test/provider_event_test\\.py$",
