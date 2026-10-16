@@ -53,13 +53,17 @@ disable this repository's selected two-fixture agreement check. The policy
 selection source in explanation can now describe the actual selected path.
 
 Capability target validation is declarative and never executes a declared path.
+The existing protected-range adapter includes the new descriptor in its exact
+trusted-byte closure and candidate-sensitive-path receipt. A real candidate
+replacement still uses the prior trusted policy for branch and ticket decisions;
+even whitespace drift in the trusted descriptor rejects before policy loading.
 The existing three operation kinds remain required; each project supplies its
 own reviewed defaults and capability requirements within that vocabulary.
 Symlink and path escape checks apply before descriptor/contract reads.
 
 ## Quantified claims
 
-Focused working-tree validation passed 42/42 policy tests in 4.336 seconds,
+Focused working-tree validation passed 42/42 policy tests,
 including eight new independent-input scenarios. Log:
 `/tmp/cc-1027-policy-inputs-tests.log`. An earlier run failed one existing clone
 fixture because the imported working module expected a new registration absent
@@ -68,7 +72,9 @@ registration associated with that imported module. This was a fixture issue,
 not a relaxed loader check. Gate tests passed 21/21 in 2.019 seconds; ontology
 tests passed 25/25 in 0.639 seconds, and review-risk tests passed. Both normal
 build and build-check passed. Generated inventory, ontology, review-risk,
-progressive-loading and source-authority checks are current. The independent
+progressive-loading and source-authority checks are current. The protected-range
+suite passed 14/14 in 59.348 seconds, including a candidate input replacement and
+trusted descriptor drift, in `/tmp/cc-1027-protected-tests.log`. The independent
 review and full committed-checkout validation remain pending at this checkpoint.
 
 ## Canary and rollback
