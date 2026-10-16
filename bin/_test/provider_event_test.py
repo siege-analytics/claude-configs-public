@@ -128,6 +128,23 @@ class ProviderEventTest(unittest.TestCase):
             main = f.run('git', '--git-dir=' + str(value['remote']), 'rev-parse', 'refs/heads/main', cwd=value['repo']).stdout.strip()
             self.assertEqual(main, value['base'])
 
+    def test_repository_case_normalizes_without_relaxing_workflow_path_or_ref(self):
+        for project in ['strict-release', 'synthetic-trunk']:
+            value = self.consumer(project)
+            value['canonical'] = 'Synthetic-Org/' + project.title()
+            self.publish_event(value)
+            code, result = self.probe(value)
+            ref = value['canonical'] + '/.github/workflows/pr-base-guard.yml@refs/heads/main'
+            self.assertEqual((code, result['state']), (0, 'eligible'), result)
+            self.assertEqual(result['trusted']['executed_workflow']['source_ref'], ref)
+            direct_code, direct = self.case.evaluate(
+                value['repo'], value['base'], value['target'],
+                canonical_identity='github.example.invalid/' + value['canonical'], workflow_ref=ref)
+            self.assertEqual((direct_code, direct['state']), (0, 'eligible'), direct)
+            for altered in [ref.replace('.github/', '.GITHUB/'), ref.replace('/heads/main', '/heads/Main')]:
+                code, result = self.probe(value, environment={'GITHUB_WORKFLOW_REF': altered})
+                self.assertEqual((code, result['state']), (2, 'error'), result)
+
     def test_parent_pin_event_and_workflow_mismatches_fail_closed(self):
         value = self.consumer()
         code, result = self.probe(value, parent=value['base'])

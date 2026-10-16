@@ -16,6 +16,8 @@ A tenth regression calls the public self-hosted shell entrypoint from a real sha
 
 The first local prototype used the same-repository candidate store for workflow object reads. Direction review required independent canonical provenance. Shared-parent mode now requires a separate canonical consumer workflow checkout, verifies its repository/HEAD/default-main ref, and refuses the candidate checkout as authority. Parent repository identity is independently configured and checked before ancestry recovery. The public self-hosted case retains its separately verified canonical base checkout.
 
+Further self-review reproduced a false rejection for a host-reported mixed-case repository: canonical identity normalized correctly but the whole workflow ref was compared against a lowercased expected string. One shared validator now normalizes only owner/repository components, keeps workflow path and branch ref exact, and preserves the original observed ref in the receipt. Both profiles have event/direct positive coverage plus altered path/ref-case negatives.
+
 ## Boundaries
 
 No local flag, receipt, role label or template authorizes installation or host operation. Forks are unsupported. Non-provider strict compatibility remains labeled and pending separate #849 retirement. Live private-consumer registration, Craft/backend acceptance and runtime rollout remain unverified until their own host evidence is obtained. Exact-head independent review and the public GitHub denial/repair regression are required before declaring provider integration complete.

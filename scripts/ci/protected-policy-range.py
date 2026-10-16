@@ -123,6 +123,20 @@ def declared_identity(raw: str) -> dict[str, str]:
     return {"host": host.lower().rstrip("."), "owner": owner.lower(), "repository": repository.removesuffix(".git").lower()}
 
 
+def validate_workflow_ref(ref: str, identity: dict[str, str]) -> None:
+    # Repository identity is normalized; Git paths and refs remain case-sensitive.
+    # Preserve the original host-observed ref in the receipt.
+    parts = ref.split("/", 2)
+    suffix = f"{WORKFLOW_PATH.as_posix()}@refs/heads/main"
+    if (len(parts) != 3 or parts[0].lower() != identity["owner"]
+            or parts[1].lower() != identity["repository"] or parts[2] != suffix):
+        expected = f"{identity['owner']}/{identity['repository']}/{suffix}"
+        raise ValueError(
+            "executed workflow ref is not the canonical default-branch registration: "
+            f"expected {expected}"
+        )
+
+
 def candidate_json(repo: Path, head: str, relative: Path, parser: Any) -> dict[str, Any] | None:
     try:
         raw = git(repo, "show", f"{head}:{relative.as_posix()}", text=False)
@@ -332,9 +346,7 @@ def normalize_host_event(args: argparse.Namespace) -> None:
     }.items():
         if key in os.environ and os.environ[key] != value:
             raise ValueError(f"workflow {key} disagrees with exact host event")
-    expected_ref = f"{repository}/{WORKFLOW_PATH.as_posix()}@refs/heads/main"
-    if args.executed_workflow_ref != expected_ref:
-        raise ValueError("host workflow ref is not the canonical default-branch registration")
+    validate_workflow_ref(args.executed_workflow_ref, declared_identity(args.canonical_identity))
     candidate = args.candidate_repo.resolve()
     trusted = args.trusted_root.resolve()
     if str(git(candidate, "rev-parse", "HEAD")).strip() != args.head:
@@ -401,15 +413,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
     workflow_root = (args.executed_workflow_root or trusted).resolve()
     workflow_blob, workflow_raw = revision_blob(workflow_root, workflow_revision, WORKFLOW_PATH)
     canonical_identity = declared_identity(args.canonical_identity)
-    expected_workflow_ref = (
-        f"{canonical_identity['owner']}/{canonical_identity['repository']}/"
-        f"{WORKFLOW_PATH.as_posix()}@refs/heads/main"
-    )
-    if args.executed_workflow_ref != expected_workflow_ref:
-        raise ValueError(
-            "executed workflow ref is not the canonical default-branch registration: "
-            f"expected {expected_workflow_ref}"
-        )
+    validate_workflow_ref(args.executed_workflow_ref, canonical_identity)
     if str(git(candidate, "rev-parse", "HEAD")).strip() != head:
         raise Denied("stale reviewed head: candidate HEAD differs from exact requested head")
     if subprocess.run(
