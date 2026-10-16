@@ -19,6 +19,8 @@ AUTHORITY_DEPENDENCY_FLOOR = [
  "catalog/gate-contracts.json",
 ]
 AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
+ "bin/package-generation.py",
+ "bin/_test/package_generation_test.py",
  "hooks/agent-comms/hub-concurrency-gate.sh",
  "hooks/agent-comms/no-slug-form-outbound.sh",
  "hooks/agent-comms/spawn-guard.sh",
