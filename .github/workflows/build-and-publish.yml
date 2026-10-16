@@ -121,6 +121,9 @@ jobs:
       - name: Consumer package documentation and clean-home diagnostics
         run: python3 bin/_test/package_documentation_test.py
 
+      - name: Native consumer Git registration and destination range
+        run: python3 bin/_test/native_push_test.py
+
       - name: Settings-drift check fixtures
         run: python3 bin/_test/settings_drift_test.py
 

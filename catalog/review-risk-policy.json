@@ -41,7 +41,8 @@
     "(^|/)(credential|credentials|secret|secrets|auth|permission|permissions)([._/-]|$)",
     "(^|/)(release|deploy|destructive)([._/-]|$)",
     "^bin/(package-generation\\.py|_test/package_generation_test\\.py)$",
-    "^VERSION$"
+    "^VERSION$",
+    "^bin/_test/native_push_test\\.py$"
   ],
   "standard_path_patterns": [
     "^skills/",
