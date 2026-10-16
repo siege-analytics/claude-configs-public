@@ -44,3 +44,9 @@ Full-suite results: 21/21 Python modules, 36/36 hook suites, and 2/2 workflow su
 ## Canary and rollback
 
 Canary: changing only `catalog/effective-policy-selection.json` or only `bin/effective_policy.py` must compute Tier C and reject declared Tier B. Counter-canary: changing only `catalog/effective-policy.json` remains Tier B and has no authorization effect. Revert this commit to restore prior review classification; no runtime/install/protected state changes require rollback.
+
+## Independent review and integration refresh
+
+Independent review at exact `eec0dd5383c3351115c67fd53a68fc5759a8da27` reproduced all 7 direct Tier B rejections, all 21 staged modify/delete/rename-source rejections, the 3 proposal controls, the complete review-risk suite and 12 hook-policy scenarios. It found no classifier blocker. It did find stale generated metrics: the policy grew from 2,621 to 2,746 characters without refreshing `catalog/review-risk-metrics.json`.
+
+The replacement merges accepted `develop@4ca8f4060a511920190e3c2346f23512a289e906` without rewriting the reviewed commit and regenerates that metric. The combined matrix passes 22/22 Python modules, 36/36 hook suites, 2/2 workflow suites, all 25 work-cycle scenarios, review-risk mutations, build/freshness and ontology checks. Terminal hosted checks and a fresh exact-head integration verdict remain required. No broader classifier or runtime behavior changes are included.
