@@ -92,11 +92,12 @@ test ! -e "$WORKSPACE_ROOT/deploy-stamp.json"
 - flat parent skills plus the exact composed strict-release `RESIDENT.md`, `_strict-release--rules.md`, `strict-release--review`, and `strict-release--checks` content under `$WORKSPACE_ROOT/skills`;
 - `composition.json`, `KERNEL.md`, `RESOLVER.md`, and composition resolver/catalog support under `$WORKSPACE_ROOT`;
 - hook scripts under `$WORKSPACE_ROOT/hooks`;
-- merged prompt/tool hook registration in `$WORKSPACE_ROOT/.claude/settings.json`;
+- merged prompt/tool hook assembly evidence in `$WORKSPACE_ROOT/.claude/settings.json`;
 - the blocking `ca-enforcement-gate.sh` wrapper merged by `wire-enforcement.py` after base hook settings;
+- one byte-identical Claude project registration at `$TEMP_ROOT/fixture/repo/.claude/settings.json`, the path resolved from the fresh ordinary session's fixture `sdkCwd`;
 - native `core.hooksPath` only in `$TEMP_ROOT/fixture/repo`.
 
-Materialization pins the reviewed package, strict-release composition and final workspace payload separately. Setup copies those payload bytes rather than rebuilding them. `materialization.json` and `authorization-attestation.json` record a real invocation of the final payload's canonical resolver hook: exactly one canonical kernel, one byte-identical strict-release resident, both selected project skills and no control markers. `workspace-setup.json` binds the fresh mutation-boundary attestation receipt digest; source or fixture drift after any earlier attestation stops before workspace payload targets or setup commands. Preserve all receipts and `workspace-setup.log`, record their digests, and stop if registration or verification fails. Local hook output proves prepared bytes, not live Craft registration/request-context delivery; the host records remain mandatory.
+Materialization pins the reviewed package, strict-release composition and final workspace payload separately. Setup copies those payload bytes rather than rebuilding them. `materialization.json` and `authorization-attestation.json` record a real invocation of the final payload's canonical resolver hook: exactly one canonical kernel, one byte-identical strict-release resident, both selected project skills and no control markers. `workspace-setup.json` binds the fresh mutation-boundary attestation receipt digest and the complete canonical command inventory plus identical workspace/fixture settings digests. The workspace copy is assembly evidence only; the fixture-local file is the proposed Claude project registration, and neither proves host consumption. Source or fixture drift after any earlier attestation stops before workspace payload targets or setup commands. Preserve all receipts and `workspace-setup.log`, record their digests, and stop if registration or verification fails. Local hook output proves prepared bytes, not live Craft registration/request-context delivery; the host records remain mandatory. Pi remains `unsupported-unverified` and cannot inherit this Claude registration.
 
 ## Phase C — exact sessions and prompts
 
@@ -170,12 +171,12 @@ The host export must separately show that the policy-sensitive write was attempt
 
 ### Scoped resolver no-op and exact restore
 
-Run this only for the active backend, substituting `1` or `2` for `BACKEND_SEQUENCE`. It mutates only the disposable workspace settings and creates only temp-root evidence:
+Run this only for backend 1 (Claude). Pi has no supported command/result adapter and remains `unsupported-unverified`; do not reuse this Claude project registration as Pi evidence. This mutates only the fixture-local project settings actually read from the ordinary session's `sdkCwd` and creates only temp-root evidence:
 
 ```bash
 export BACKEND_SEQUENCE=1
 export BACKEND_MARKER=B$BACKEND_SEQUENCE
-export SETTINGS=$WORKSPACE_ROOT/.claude/settings.json
+export SETTINGS=$TEMP_ROOT/fixture/repo/.claude/settings.json
 export NOOP=$TEMP_ROOT/no-op-resolver-$BACKEND_SEQUENCE.sh
 export NOOP_INVOCATIONS=$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no-op-adapter-invocations.jsonl
 export SETTINGS_BACKUP=$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/settings.before-no-op.json
@@ -217,13 +218,25 @@ test -s "$NOOP_INVOCATIONS"
 cp "$SETTINGS_BACKUP" "$SETTINGS"
 test "$(shasum -a 256 "$SETTINGS" | awk '{print $1}')" = "$SETTINGS_BEFORE_SHA256"
 python3 - "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no-op-restore-receipt.jsonl" \
-  "$SETTINGS_BEFORE_SHA256" "$NOOP_SHA256" "$NOOP_INVOCATIONS" <<'PY'
+  "$SETTINGS_BEFORE_SHA256" "$NOOP_SHA256" "$NOOP" "$NOOP_INVOCATIONS" "$SETTINGS" <<'PY'
 import hashlib,json,sys
 from pathlib import Path
-out,before,noop,invocations=Path(sys.argv[1]),sys.argv[2],sys.argv[3],Path(sys.argv[4])
+out,before,noop_sha,noop_path,invocations,settings=Path(sys.argv[1]),sys.argv[2],sys.argv[3],Path(sys.argv[4]),Path(sys.argv[5]),Path(sys.argv[6])
+value=json.loads(settings.read_text())
+commands=[
+ hook['command']
+ for group in value.get('hooks',{}).get('UserPromptSubmit',[])
+ for hook in group.get('hooks',[])
+ if str(hook.get('command','')).endswith('/hooks/resolver/inject-resolver.sh')
+]
+if len(commands) != 1:
+    raise SystemExit(f'expected one restored resolver adapter; found {len(commands)}')
 out.write_text(json.dumps({
+ 'settings_path':str(settings),
+ 'registered_resolver_command':commands[0],
  'settings_restored_sha256':before,
- 'no_op_adapter_sha256':noop,
+ 'no_op_adapter_path':str(noop_path.resolve()),
+ 'no_op_adapter_sha256':noop_sha,
  'invocations_sha256':hashlib.sha256(invocations.read_bytes()).hexdigest(),
  'restore_verified':True,
 },sort_keys=True)+'\n')
@@ -339,15 +352,18 @@ find "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE" -name '*.jsonl' -type f -exec sh
 Augment three capability artifacts with objective local/host records before hashing:
 
 ```bash
-# Registration bytes for startup; the event also needs host invocation/request-context records proving
-# strict-release project/two-skill selection and absence of both control-marker strings.
-cp "$WORKSPACE_ROOT/.claude/settings.json" \
-  "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup-registration.json"
-cat "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup-registration.json" \
-    "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup_resolver.jsonl" \
-  >"$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup_resolver.combined"
-mv "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup_resolver.combined" \
-   "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup_resolver.jsonl"
+# Claude registration bytes for startup; workspace settings are assembly evidence and cannot substitute.
+# The event also needs host invocation/request-context records proving strict-release project/two-skill
+# selection and absence of both control-marker strings.
+if [ "$BACKEND_SEQUENCE" = 1 ]; then
+  cp "$TEMP_ROOT/fixture/repo/.claude/settings.json" \
+    "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup-registration.json"
+  cat "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup-registration.json" \
+      "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup_resolver.jsonl" \
+    >"$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup_resolver.combined"
+  mv "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup_resolver.combined" \
+     "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup_resolver.jsonl"
+fi
 
 # Compaction boundary receipt plus both pre/post-boundary host turns.
 cat "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/compaction-receipt.jsonl" \
@@ -356,20 +372,22 @@ cat "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/compaction-receipt.jsonl" \
 mv "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/compaction_context.combined" \
    "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/compaction_context.jsonl"
 
-# Real no-op invocation plus exact restore receipt and both host turns.
-cat "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no-op-adapter-invocations.jsonl" \
-    "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no-op-restore-receipt.jsonl" \
-    "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no_op_detection.jsonl" \
-  >"$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no_op_detection.combined"
-mv "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no_op_detection.combined" \
-   "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no_op_detection.jsonl"
+# Real Claude no-op invocation plus exact restore receipt and both host turns.
+if [ "$BACKEND_SEQUENCE" = 1 ]; then
+  cat "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no-op-adapter-invocations.jsonl" \
+      "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no-op-restore-receipt.jsonl" \
+      "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no_op_detection.jsonl" \
+    >"$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no_op_detection.combined"
+  mv "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no_op_detection.combined" \
+     "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no_op_detection.jsonl"
+fi
 ```
 
 For compaction, save the generated nonce outside the model transcript, require the host compaction-boundary record, verify `COMPACTION-BN-RESULT.txt` equals that nonce plus newline without any intervening read, and save a receipt containing the expected/result SHA-256 and the post-boundary denial result. Prepend that receipt to `compaction_context.jsonl` before hashing. If the exact nonce or denial does not match, stop.
 
 The materialization and fresh attestation receipts include a real local probe of the **final assembled payload**. They must show `project: strict-release`, both `strict-release--review` and `strict-release--checks`, `resident_delivery: observed-local-payload-hook`, `resident_marker_count: 1`, `canonical_kernel_count: 1`, and `negative_controls_absent: true`. The live host must additionally expose registration, invocation and injected-request-context records proving those bytes reached each backend; a local hook result or model quote alone remains insufficient. Never point `CLAUDE_KERNEL_PATH` at RESIDENT; arbitrary kernel substitution remains forbidden.
 
-The operator must inspect each slice for the corresponding host registration/invocation/tool/boundary record and before/after state. A user prompt, assistant assertion, manual policy/resident-file read, ordinary marker reread or generic tool error is insufficient. Record each relative `artifact_reference` and computed digest in a copy of `host-evidence.template.json` at `$EVIDENCE_ROOT/host-evidence.json`; fill exact host timestamps, manifest digest and external-host-export reference. Use `outcome: observed` only when all claimed event records exist; record unavailable capabilities separately as `unsupported-unverified`. If resident delivery is required for the final profile and remains unavailable, the run is acceptance-blocking even if structural event validation succeeds. Do not edit artifact bytes after hashing.
+The operator must inspect each slice for the corresponding host registration/invocation/tool/boundary record and before/after state. A user prompt, assistant assertion, manual policy/resident-file read, ordinary marker reread or generic tool error is insufficient. Record each relative `artifact_reference` and computed digest in a copy of `host-evidence.template.json` at `$EVIDENCE_ROOT/host-evidence.json`; fill exact host timestamps, manifest digest and external-host-export reference. For backend 1, copy the exact `claude_project_registration.destination_path` and `destination_sha256` from `workspace-setup.json` into `registered_settings_path` and `registered_settings_sha256` on both `startup_resolver` and `no_op_detection`, and copy the verified restored digest into `settings_restored_sha256` on `no_op_detection`. The validator rejects the workspace assembly path and forbids these Claude fields on Pi. Use `outcome: observed` only when all claimed event records exist; record unavailable capabilities separately as `unsupported-unverified`. If resident delivery is required for the final profile and remains unavailable, the run is acceptance-blocking even if structural event validation succeeds. Do not edit artifact bytes after hashing.
 
 Validation requires exactly nine records and nine unique expected names for each backend, unique confined artifact files with matching SHA-256, duration ≤ 900 seconds per backend, no overlap, transition ≤ 180 seconds, and overall first-start to final-end ≤ 2,400 seconds. It reports the actual validated event count and timing:
 
@@ -385,26 +403,31 @@ The only success state is `evidence-consistent-unverified`. Imported exports rem
 
 Start an external 2,400-second overall timer before backend 1. Start a 900-second timer for each backend and a 180-second timer when backend 1 ends. A timeout, identity mismatch, missing host record, credential prompt, external request, overlap, unexpected write/ref change, false no-op, or validation failure stops the run immediately. Do not repair in place or start the next backend.
 
-Before removing the temp root, hold the non-secret approved manifest bytes in memory for the final absence check:
+Before removing the temp root, hold the non-secret approved manifest bytes and exact setup/registration observations in memory for the final absence check:
 
 ```bash
 APPROVAL_MANIFEST_JSON=$(cat "$APPROVAL_RECORDED_MANIFEST")
+WORKSPACE_SETUP_RECEIPT_SHA256=$(shasum -a 256 "$EVIDENCE_ROOT/workspace-setup.json" | awk '{print $1}')
+REGISTERED_SETTINGS_SHA256=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["claude_project_registration"]["destination_sha256"])' "$EVIDENCE_ROOT/workspace-setup.json")
+OBSERVED_SETTINGS_SHA256=$(shasum -a 256 "$TEMP_ROOT/fixture/repo/.claude/settings.json" | awk '{print $1}')
+test "$OBSERVED_SETTINGS_SHA256" = "$REGISTERED_SETTINGS_SHA256"
 ```
 
 Cleanup order, owned by Dheeraj and bounded to 300 seconds:
 
 1. End/archive the disposable sessions through the Craft UI.
-2. Delete only workspace `cc-1003-provider-canary-20261016` through the normal workspace UI and confirm `$WORKSPACE_ROOT` is absent.
-3. Remove only `$TEMP_ROOT`; this removes the fixture, local remote, disposable refs, evidence and detached source.
-4. Confirm no shared workspace/default, credential, external system, `main`, protection, release or production installation changed.
-5. Preserve only redacted receipt/digest text in the reviewed issue/PR.
+2. Preserve the setup receipt SHA-256, its registered destination SHA-256 and the independently observed current fixture settings SHA-256 as shown above. Require registered and observed values to match exactly. A mismatch is a cleanup conflict: stop and report it rather than deleting or overwriting unknown bytes.
+3. Delete only workspace `cc-1003-provider-canary-20261016` through the normal workspace UI and confirm `$WORKSPACE_ROOT` is absent.
+4. Remove only `$TEMP_ROOT`; explicitly confirm the fixture settings path is absent before accepting broader temp-root absence. This also removes the fixture, local remote, disposable refs, evidence and detached source.
+5. Confirm no shared workspace/default, credential, external system, `main`, protection, release or production installation changed.
+6. Preserve only redacted receipt/digest text in the reviewed issue/PR.
 
 `verify-cleanup` deletes nothing. After cleanup, pipe the completed receipt over stdin:
 
 ```bash
 python3 scripts/canary/craft-backend-canary.py verify-cleanup \
   --manifest <(printf '%s' "$APPROVAL_MANIFEST_JSON") --receipt - <<'JSON'
-{"schema_version":"1.0.0","run_id":"cc-1003-provider-canary-20261016","manifest_sha256":"REPLACE","workspace_absent":true,"temp_root_absent":true,"disposable_refs_absent":true,"outside_allowlist_unchanged":true}
+{"schema_version":"1.0.0","run_id":"cc-1003-provider-canary-20261016","manifest_sha256":"REPLACE","workspace_absent":true,"workspace_setup_receipt_sha256":"REPLACE_WITH_WORKSPACE_SETUP_RECEIPT_SHA256","fixture_claude_settings_registered_sha256":"REPLACE_WITH_WORKSPACE_SETUP_REGISTERED_SETTINGS_SHA256","fixture_claude_settings_observed_sha256_before_cleanup":"REPLACE_WITH_OBSERVED_PRE_CLEANUP_SETTINGS_SHA256","fixture_claude_settings_digest_match":true,"fixture_claude_settings_absent":true,"temp_root_absent":true,"disposable_refs_absent":true,"outside_allowlist_unchanged":true}
 JSON
 ```
 
