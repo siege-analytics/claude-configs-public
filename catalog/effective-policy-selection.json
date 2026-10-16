@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "policy_revision": "3e42303b0ed999524f3ddec75f2ce5b0892aac4f",
+  "policy_revision": "a631d0f1ba14becc8ba790d77fd4cb116d01a28f",
   "policy_path": "catalog/effective-policy.json",
-  "git_blob": "c86b608b90e0f661b5bc949300a88836dfbdf13f",
-  "raw_sha256": "53fc6fb51d9ae444c789837054040383645b0a2d53262c167a07446b316f2ee5",
-  "canonical_sha256": "e5574d938509a34a47a0bc267dbb1ae5b3cc063d1abe69f21c1fd8fea185bf9a",
+  "git_blob": "909fe5c90f76cea89491d27dcd346bd4fa535c68",
+  "raw_sha256": "179ffdea751e39d19f9d03afe8aea0b4447474b3e3644eaf67e05705d2d504a6",
+  "canonical_sha256": "2a36efce42500d5c66cfffef15310a457779f6874919037c4be11c0bfc1841b2",
   "review_evidence": [
-    "https://github.com/siege-analytics/claude-configs-public/pull/1011#pullrequestreview-5542782507"
+    "https://github.com/siege-analytics/claude-configs-public/pull/1015#pullrequestreview-5543485593"
   ]
 }

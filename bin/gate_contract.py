@@ -672,7 +672,7 @@ def validate_generated(root: Path, generated_root: Path, contract: dict[str, Any
     # Candidate CI continues to verify source/generated agreement, but it is
     # not the protected adapter and cannot authorize its own head.
     validate_protected_workflow(
-        repository_path(root, Path(".github/workflows/build-and-publish.yml"), "contract CI workflow").read_text(encoding="utf-8")
+        repository_path(root, ".github/workflows/build-and-publish.yml", "contract CI workflow").read_text(encoding="utf-8")
     )
 
 

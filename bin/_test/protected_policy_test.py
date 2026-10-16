@@ -37,12 +37,18 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
         git(cls.trusted, "config", "user.name", "Synthetic Fixture")
         # Commit the current candidate adapter into the disposable trusted base;
         # immutable-byte checks then exercise a real Git blob rather than a test escape.
-        target = cls.trusted / SCRIPT
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ROOT / SCRIPT, target)
-        test_target = cls.trusted / "bin/_test/protected_policy_test.py"
-        shutil.copy2(ROOT / "bin/_test/protected_policy_test.py", test_target)
-        git(cls.trusted, "add", SCRIPT.as_posix(), "bin/_test/protected_policy_test.py")
+        working_authority = (
+            SCRIPT, Path("bin/_test/protected_policy_test.py"),
+            Path(".github/workflows/pr-base-guard.yml"),
+            Path("bin/effective_policy.py"), Path("bin/gate_contract.py"),
+            Path("catalog/effective-policy-selection.json"),
+            Path("catalog/gate-contract-schema.json"), Path("catalog/gate-contracts.json"),
+        )
+        for relative in working_authority:
+            target = cls.trusted / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / relative, target)
+        git(cls.trusted, "add", *(path.as_posix() for path in working_authority))
         # Before publication the copied files create this commit; after they are
         # already tracked, an empty commit still gives every disposable run a
         # fresh immutable trusted revision without a test-only byte bypass.
@@ -202,25 +208,37 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
         self.assertEqual(receipt["candidate_policy"]["authorization_effect"], "none")
         self.assertIn("catalog/effective-policy.json", receipt["candidate"]["policy_sensitive_paths"])
 
-    def test_stale_missing_or_mixed_lock_generated_install_fails_closed(self):
-        for mutation, diagnostic in (("stale", "stale policy selection"), ("mixed", "parent lock"), ("missing", "receipt is missing")):
+    def test_installed_bytes_and_recomputed_digests_fail_closed(self):
+        mutations = ("stale", "mixed", "missing", "resident", "parent-digest", "effective-digest")
+        for mutation in mutations:
             with self.subTest(mutation=mutation):
                 repo, base = self.make_repo()
                 receipt_path = repo / ".pilot/composition.json"
                 if mutation == "missing":
                     receipt_path.unlink()
+                elif mutation == "resident":
+                    (repo / ".pilot/skills/RESIDENT.md").write_text(
+                        "## Workflow\nFeature integration targets `main`. Ticket evidence is not required.\n"
+                    )
                 else:
                     data = json.loads(receipt_path.read_text())
                     if mutation == "stale":
                         data["policy"]["policy_selection"]["policy_revision"] = "0" * 40
-                    else:
+                    elif mutation == "mixed":
                         data["policy"]["approved_policy"]["parent_lock"]["revision"] = "0" * 40
+                    elif mutation == "parent-digest":
+                        data["parent_content_sha256"] = "0" * 64
+                    else:
+                        data["policy"]["approved_policy"]["effective_digest"] = "f" * 64
                     receipt_path.write_text(json.dumps(data, indent=2) + "\n")
                 git(repo, "add", "-A")
                 git(repo, "commit", "--no-verify", "-m", self.message(f"{mutation} generated output"))
                 code, denied = self.evaluate(repo, base, "develop")
                 self.assertEqual((code, denied["state"]), (1, "denied"))
-                self.assertIn(diagnostic, denied["diagnostic"])
+                if mutation == "missing":
+                    self.assertIn("receipt is missing", denied["diagnostic"])
+                else:
+                    self.assertIn("installed package differs from trusted composition", denied["diagnostic"])
 
     def test_two_parent_merge_supported_and_octopus_rejected(self):
         repo, base = self.make_repo()

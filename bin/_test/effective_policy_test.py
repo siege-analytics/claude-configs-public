@@ -55,7 +55,7 @@ class EffectivePolicyTest(unittest.TestCase):
 
     def test_catalog_valid_and_sealed_to_contract(self):
         self.assertEqual(policy.digest(self.contract), self.approved["contract_sha256"])
-        self.assertEqual("34f014bd8aaf55e545a6a2fe3094242aa40cb182", self.approved["parent_contract_revision"])
+        self.assertEqual("eb660b058c0a983dff692204616597a76a54f0ba", self.approved["parent_contract_revision"])
 
     def test_strict_feature_to_develop_policy_allows_but_enforcement_is_unproved(self):
         result = self.explain(capabilities=self.all_verified())
@@ -65,6 +65,19 @@ class EffectivePolicyTest(unittest.TestCase):
         self.assertEqual("develop", result["values"]["branch-policy"]["integration_branch"])
         self.assertEqual("github.com", result["approved_policy"]["parent_lock"]["host"])
         self.assertEqual(self.approved["contract_sha256"], result["approved_policy"]["parent_lock"]["digest"])
+
+    def test_canonical_repository_uses_the_reviewed_strict_profile(self):
+        identities = [{
+            "source": "protected-target", "host": "github.com",
+            "owner": "siege-analytics", "repository": "claude-configs-public",
+        }]
+        result = self.explain(identities=identities, capabilities=self.all_verified())
+        self.assertEqual(("resolved", "claude-configs-public", "strict-release"),
+                         (result["state"], result["project"], result["organization_profile"]))
+        self.assertEqual(("allow", "unknown"),
+                         (result["decision"]["policy"], result["decision"]["final"]))
+        self.assertIn("targets `develop`", result["resident_workflow"])
+        self.assertIn("Ticket evidence is required", result["resident_workflow"])
 
     def test_strict_feature_to_main_denies(self):
         result = self.explain(operation=self.operation(target_branch="main"), capabilities=self.all_verified())
@@ -182,9 +195,9 @@ class EffectivePolicyTest(unittest.TestCase):
             policy.validate_policy(candidate, self.contract, "candidate")
 
     def test_selected_snapshot_identifiers_and_review_are_explicit(self):
-        self.assertEqual("3e42303b0ed999524f3ddec75f2ce5b0892aac4f", self.selection["policy_revision"])
-        self.assertEqual("c86b608b90e0f661b5bc949300a88836dfbdf13f", self.selection["git_blob"])
-        self.assertEqual("53fc6fb51d9ae444c789837054040383645b0a2d53262c167a07446b316f2ee5", self.selection["raw_sha256"])
+        self.assertEqual("a631d0f1ba14becc8ba790d77fd4cb116d01a28f", self.selection["policy_revision"])
+        self.assertEqual("909fe5c90f76cea89491d27dcd346bd4fa535c68", self.selection["git_blob"])
+        self.assertEqual("179ffdea751e39d19f9d03afe8aea0b4447474b3e3644eaf67e05705d2d504a6", self.selection["raw_sha256"])
         result = self.explain(capabilities=self.all_verified())
         self.assertEqual(self.selection["policy_revision"], result["approved_policy"]["revision"])
         self.assertEqual(self.selection["review_evidence"], result["policy_selection"]["review_evidence"])

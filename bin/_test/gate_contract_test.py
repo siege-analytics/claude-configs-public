@@ -40,7 +40,8 @@ class GateContractTest(unittest.TestCase):
                        "surface": "native-git-pre-push", "blocking": True}],
         }))
         (ca / "settings-enforcement.json").write_text(json.dumps({
-            "_gate_contract": {"schema_version": 1, "contract_version": "1.0.0",
+            "_gate_contract": {"schema_version": self.contract["schema_version"],
+                               "contract_version": self.contract["contract_version"],
                                "source": gc.CONTRACT.as_posix(), "sha256": digest,
                                "evidence_state": "configured"},
             "hooks": {"UserPromptSubmit": [{"hooks": [{"type": "command",

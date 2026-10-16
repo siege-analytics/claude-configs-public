@@ -15,6 +15,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -122,13 +123,69 @@ def candidate_json(repo: Path, head: str, relative: Path, parser: Any) -> dict[s
     return parser(raw, f"candidate:{head}:{relative.as_posix()}")
 
 
-def validate_install(repo: Path, head: str, relative: Path, branch: dict[str, Any], parser: Any) -> dict[str, Any]:
-    if relative.is_absolute() or ".." in relative.parts or not relative.parts:
-        raise ValueError("installed pilot receipt path must be confined and repository-relative")
+def commit_tree_files(repo: Path, revision: str, directory: Path) -> dict[str, bytes]:
+    raw = git(repo, "ls-tree", "-r", "-z", revision, "--", directory.as_posix(), text=False)
+    result: dict[str, bytes] = {}
+    for record in raw.split(b"\0"):
+        if not record:
+            continue
+        metadata, encoded_path = record.split(b"\t", 1)
+        mode, kind, _ = metadata.decode().split()
+        if kind != "blob" or mode == "120000":
+            raise Denied(f"installed pilot contains unsupported non-file entry: {encoded_path!r}")
+        path = encoded_path.decode("utf-8", "surrogateescape")
+        relative_path = Path(path).relative_to(directory).as_posix()
+        result[relative_path] = git(repo, "show", f"{revision}:{path}", text=False)
+    return result
+
+
+def trusted_composition_files(trusted: Path, trusted_revision: str, identity: str, layout: str) -> dict[str, bytes]:
+    if layout not in {"flat", "nested"}:
+        raise Denied("generated pilot receipt has unsupported layout")
+    with tempfile.TemporaryDirectory(prefix="protected-policy-composition-") as raw:
+        temporary = Path(raw)
+        exact = temporary / "trusted"
+        output = temporary / "output"
+        subprocess.run(
+            ["git", "clone", "--quiet", "--shared", "--no-checkout", str(trusted), str(exact)],
+            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30,
+        )
+        subprocess.run(
+            ["git", "-C", str(exact), "checkout", "--quiet", "--detach", trusted_revision],
+            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20,
+        )
+        subprocess.run(
+            [sys.executable, str(exact / "bin/compose-project.py"), "--identity", identity, "--output", str(output)],
+            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=90,
+        )
+        root = output / layout
+        return {
+            path.relative_to(root).as_posix(): path.read_bytes()
+            for path in sorted(root.rglob("*")) if path.is_file() and not path.is_symlink()
+        }
+
+
+def validate_install(
+    repo: Path, head: str, relative: Path, branch: dict[str, Any], parser: Any,
+    trusted: Path, trusted_revision: str,
+) -> dict[str, Any]:
+    if relative.is_absolute() or ".." in relative.parts or len(relative.parts) < 2:
+        raise ValueError("installed pilot receipt path must be confined under a repository-relative package directory")
     receipt = candidate_json(repo, head, relative, parser)
     if receipt is None:
         raise Denied(f"generated pilot receipt is missing: {relative}")
     expected_identity = "/".join(branch["repository_identity"][key] for key in ("host", "owner", "repository"))
+    layout = receipt.get("layout")
+    expected_files = trusted_composition_files(trusted, trusted_revision, expected_identity, layout)
+    installed_files = commit_tree_files(repo, head, relative.parent)
+    if installed_files != expected_files:
+        missing = sorted(set(expected_files) - set(installed_files))
+        extra = sorted(set(installed_files) - set(expected_files))
+        changed = sorted(path for path in set(expected_files) & set(installed_files) if expected_files[path] != installed_files[path])
+        raise Denied(f"installed package differs from trusted composition: missing={missing} extra={extra} changed={changed}")
+    expected_receipt = parser(expected_files[relative.name], f"trusted composition:{layout}/{relative.name}")
+    if receipt != expected_receipt:
+        raise Denied("installed composition receipt differs from trusted recomputation")
     expected = {
         "project": branch["project"],
         "identity": expected_identity,
@@ -260,7 +317,10 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
     if branch["decision"]["policy"] != "allow":
         raise Denied("target branch contradicts the selected project's approved branch policy")
     if args.installed_pilot_receipt:
-        installation = validate_install(candidate, head, args.installed_pilot_receipt, branch, ep.parse_json)
+        installation = validate_install(
+            candidate, head, args.installed_pilot_receipt, branch, ep.parse_json,
+            trusted, trusted_revision,
+        )
     else:
         # The parent repository has policy but no installed consumer package.
         # This absence grants nothing and is explicit in the receipt; disposable
