@@ -22,7 +22,7 @@ Apply instructions in this order:
 5. task-specific skills and procedures;
 6. reference material consulted by those skills.
 
-Project overlays are authoritative inside their declared project scope and may refine defaults, terminology, tests, and workflows. User goals select the desired outcome, but execution preferences do not silently waive an applicable project requirement. Project overlays must not weaken the non-overridable boundary: permission limits, credential handling, destructive-action confirmation, protected branch topology, exact-main deployment, evidence for claims, or honest reporting. If an explicit user constraint and an applicable overlay remain incompatible, stop at the smallest blocked decision, preserve work, and ask rather than silently choosing either interpretation.
+Project overlays are authoritative inside their declared project scope and may refine defaults, terminology, tests, and workflows. User goals select the desired outcome, but execution preferences do not silently waive an applicable project requirement. Project overlays must not weaken the non-overridable boundary: permission limits, credential handling, destructive-action confirmation, approved project branch topology, Siege scaffold exact-main deployment, evidence for claims, or honest reporting. If an explicit user constraint and an applicable overlay remain incompatible, stop at the smallest blocked decision, preserve work, and ask rather than silently choosing either interpretation.
 
 ## K1: Intent, authorization, and scope
 
@@ -42,7 +42,7 @@ Never expose, commit, log, or place credentials, tokens, private keys, secrets, 
 
 ## K5: Preserve canonical branch and deployment topology
 
-Integrate feature and fix work into `develop`. Promote releases only through the canonical `develop` to `main` path. `develop` validates but does not publish, tag, release, deploy, or install. Deployment and workspace installation must use the exact current remote `main` commit and must verify that source before and after mutation. Do not bypass protected checks, required ancestry, or fail-closed deployment gates. Use [skill:develop-guard], [skill:create-pr], [skill:merge], and [rule:writing-releases] for procedures.
+For the Siege scaffold repository (`github.com/siege-analytics/claude-configs-public`), integrate feature and fix work into `develop` and promote releases only through `develop` to `main`. Its `develop` branch validates but does not publish, tag, release, deploy, or install. Scaffold deployment and workspace installation must use the exact current remote `main` commit and verify that source before and after mutation. Other consumers follow their exact, independently approved project topology; missing or ambiguous policy is not permission to guess a default. Project content describes that policy and cannot authorize a protected operation. Do not bypass protected checks, required ancestry, or fail-closed deployment gates. Use the matching project's selected procedures; Siege's procedures are [skill:develop-guard], [skill:create-pr], [skill:merge], and [rule:writing-releases].
 
 ## K6: Test in proportion to behavioral risk
 
@@ -66,4 +66,4 @@ Use the smallest relevant task skill and project overlay for the work at hand. P
 
 ## Runtime loading contract
 
-`CLAUDE.md` mounts this kernel, not the full rules bundle. The resolver hook emits the ordered task/project load set and a reason for every selection. Unknown or ambiguous inputs remain visibly kernel-only. `RULES_BUNDLE.md` is retained as an on-demand compatibility artifact and rollback target; it is not globally mounted.
+`CLAUDE.md` mounts this kernel, not the full rules bundle. The resolver hook emits the ordered task/project load set and a reason for every selection. An exact matching composed project also supplies its bounded resident context. Unknown task routing loads no task skills; ambiguous or invalid project selection remains visibly kernel-only. `RULES_BUNDLE.md` is retained as an on-demand compatibility artifact and rollback target; it is not globally mounted.
