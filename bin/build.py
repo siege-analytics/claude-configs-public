@@ -1058,21 +1058,13 @@ def build_rules_bundle(
         f"\n"
         f"**Version:** {version} | **Commit:** {commit} | **Built:** {built_at}\n"
         f"\n"
-        f"This file concatenates the always-on rule set from claude-configs-public.\n"
-        f"Mount it as a system-prompt addendum if your runtime does not run\n"
-        f"`.claude/settings.json` hooks (e.g. Craft Agent, Cursor, Cody).\n"
+        f"This is a compatibility reference bundle produced by the source build.\n"
+        f"The four consumer packages use their compact kernel and task-selected\n"
+        f"skills; they do not include this root bundle.\n"
         f"\n"
-        f"**Craft Agent (verified 2026-06-07):** rename this file to `CLAUDE.md`\n"
-        f"(or symlink it) and place it in the session's working directory. CA\n"
-        f"auto-injects CLAUDE.md / AGENTS.md content from cwd and its\n"
-        f"subdirectories. CA does NOT walk parent directories, so the file\n"
-        f"must be at or below the session's cwd. For workspace-wide coverage,\n"
-        f"set Settings -> Workspace Settings -> Default Working Directory to\n"
-        f"the directory that contains the CLAUDE.md. `bin/install.sh --deploy`\n"
-        f"handles the symlink automatically.\n"
-        f"\n"
-        f"For hook-capable runtimes (Claude Code CLI), hooks remain the preferred\n"
-        f"path. This bundle is a fallback, not a replacement.\n"
+        f"Loading this text establishes neither hook registration nor enforcement.\n"
+        f"Use the exact host/backend acceptance procedure before claiming runtime\n"
+        f"delivery, and avoid injecting this full bundle alongside the kernel.\n"
         f"{project_note}"
         f"\n"
         f"Source: siege-analytics/claude-configs-public @ {commit}\n"
@@ -1489,6 +1481,81 @@ def install_hook_runtime(pkg_dir: Path, layout: str, include_validator: bool = F
     shutil.copy2(
         REPO_ROOT / "catalog" / "review-risk-policy.json",
         pkg_dir / "catalog" / "review-risk-policy.json",
+    )
+
+
+def write_package_documentation(pkg_dir: Path, form: str) -> None:
+    """Describe this output's shipped contract, not the source checkout's tools."""
+    if form not in ('nested', 'flat', 'claude-code', 'craft-agent'):
+        raise BuildError(f'Unknown package documentation form: {form}')
+    source_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO_ROOT, text=True).strip()
+    upstream = f'https://github.com/siege-analytics/claude-configs-public/tree/{source_commit}'
+    metadata = 'build-info.json' if form in ('nested', 'flat') else 'package.json'
+    paths = [metadata, 'skills/KERNEL.md', 'catalog/resolver-manifest.json',
+             'catalog/review-risk-policy.json', 'bin/resolve-load-set.py',
+             'bin/review-risk.py', 'hooks/settings-snippet.json',
+             'hooks/resolver/inject-resolver.sh', 'CHANGELOG.md', 'LICENSE',
+             'THIRD_PARTY_NOTICES.md']
+    if form in ('claude-code', 'craft-agent'):
+        paths.append('bin/validate-hooks.py')
+    if form == 'craft-agent':
+        paths.extend(['settings-enforcement.json', 'enforcement-manifest.json',
+                      '.githooks/commit-msg', '.githooks/pre-push',
+                      'automations-snippet.json', 'standing-order-watchdog.json'])
+    for name in paths:
+        if not (pkg_dir / name).is_file():
+            raise BuildError(f'{form} documentation requires missing package file: {name}')
+    kind = ('Nested skill layout' if form == 'nested' else 'Flat skill layout')
+    if form in ('claude-code', 'craft-agent'):
+        kind += ' with runtime-specific hook configuration and a package validator'
+    lines = [f'# Siege {form} package', '', kind + '.', '',
+             f'Source revision: `{source_commit}`. Consumer tag: `vX.Y.Z-{form}`.',
+             'Use the release manifest and its exact archive digest to select a version.',
+             '', '## Included files', '',
+             *[f'- [{name}]({name})' for name in paths], '',
+             'The skill tree and resolver catalog form one unit. Keep the package directory',
+             'structure intact when extracting or copying it to a new consumer location.',
+             'Each resolver result reports the actual package-relative load path.', '',
+             '## Package-local diagnostics', '',
+             'From this package root, with Python 3, run these read-only diagnostics:', '',
+             '```sh',
+             'python3 bin/resolve-load-set.py --prompt "review this Python diff" --repo other/repo',
+             'python3 bin/review-risk.py --paths README.md',
+             '```', '',
+             'The first command reports selected content; the second classifies a sample',
+             'path. Neither command grants permission or proves host hook registration.']
+    if form in ('claude-code', 'craft-agent'):
+        lines.extend(['', 'Validate the packaged hook configuration:', '', '```sh',
+                      'python3 bin/validate-hooks.py .', '```', '',
+                      'This checks configuration and files, not actual host invocation.'])
+    lines.extend(['', '## Integration boundary', '',
+                  'The runtime prompt hook reads `skills/KERNEL.md` and loads selected skills',
+                  'on demand. This output does not ship root `RESOLVER.md` or',
+                  '`RULES_BUNDLE.*`, and does not require them for that prompt path.',
+                  'Do not mount a global compatibility bundle alongside the compact kernel.', '',
+                  'Hook snippets are unregistered configuration with path placeholders.',
+                  'Extracting this archive does not install an enforcement stack. The source',
+                  'installer, wiring tools, drift tooling and generation-management tools',
+                  'are not part of this package. Use the separately reviewed source workflow',
+                  'for host-specific registration and upgrade; preserve existing operator',
+                  'settings and project declarations there. Never replace a live workspace',
+                  'with an unchecked copy of a new archive.', '',
+                  'The presence of a hook, manifest, procedure or model label establishes',
+                  'no live capability. Verify the exact host/backend, registered path and',
+                  'allowed/denied behavior before calling enforcement live. A required',
+                  'unsupported capability remains a failed acceptance condition.'])
+    if form == 'craft-agent':
+        lines.extend(['', 'The Craft-specific fragments and native Git hook files listed above are',
+                      'configuration candidates. Native hooks require explicit registration in',
+                      'each target repository; local hook bypass is not server-side protection.'])
+    lines.extend(['', f'[Source integration and development documentation]({upstream}/README.md).',
+                  f'[Report or review changes in the source repository]({upstream}/CONTRIBUTING.md).', ''])
+    (pkg_dir / 'README.md').write_text('\n'.join(lines))
+    (pkg_dir / 'CONTRIBUTING.md').write_text(
+        '# Contributing\n\nThis is a generated consumer package. Submit source changes through the\n'
+        f'[source contribution guide]({upstream}/CONTRIBUTING.md), then rebuild and\n'
+        'select a newly reviewed immutable release. See [this package contract](README.md)\n'
+        'for included files and local diagnostics.\n'
     )
 
 
@@ -1987,6 +2054,10 @@ def main() -> int:
 
     print("\nBuilding consumer packages...")
     build_consumer_packages()
+
+    print("\nWriting consumer package contracts...")
+    for form in (*layouts, "claude-code", "craft-agent"):
+        write_package_documentation(DIST / form, form)
 
     print("\nBuilding synthetic project compositions...")
     spec = importlib.util.spec_from_file_location("compose_project", REPO_ROOT / "bin/compose-project.py")

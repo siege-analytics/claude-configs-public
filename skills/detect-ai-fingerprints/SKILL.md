@@ -1,6 +1,6 @@
 ---
 name: detect-ai-fingerprints
-description: "Mechanical scanner for AI-fingerprint rules across the per-act rule files. Covers writing-prose:1-4, writing-code:2/4/7/8/9/15, writing-tests:3/5, writing-claims:2, writing-releases:3, plus rule-citation Rule-executed evidence, in staged diffs, working-tree diffs, GitHub PR diffs, or commit/PR message bodies. Reports file:line violations and a 0/1 exit code. Remaining rules require [skill:code-review] judgment and are not in scope."
+description: "Mechanical scanner for AI-fingerprint rules across the per-act rule files. Covers writing-prose:1-4, writing-code:2/4/7/8/9/15, writing-tests:3/5, writing-claims:2, writing-releases:3, plus rule-citation Rule-executed evidence, in staged diffs, working-tree diffs, GitHub PR diffs, or commit/PR message bodies. Reports file:line violations and 0/1/2 exit codes. Remaining rules require [skill:code-review] judgment and are not in scope."
 allowed-tools: Bash Read
 ---
 
@@ -10,7 +10,7 @@ Mechanical pre-flight scan for the AI-fingerprint rules across the per-act rule 
 
 **Prose-side (scan.sh regex):** em-dashes and broader typographic Unicode, banned adverbs, structured `Why:` / `How to apply:` rationale blocks in commit messages, bullets and `##` headers in commit bodies, history references in code comments, countable claims missing the `Verified-by:` trailer, rule citations missing the `Rule-executed:` evidence trailer, skip messages without actionable remediation.
 
-**Code-side (scan_ast.py AST scanner):** Django ORM kwarg validation against same-file models (writing-code:4), silent exception swallowing (writing-code:7), optional-import callsite guards (writing-code:8), silently-dropped defaulted parameters (writing-code:9), unbounded blocking I/O without timeout (writing-code:15), untested named exception handlers cross-file (writing-tests:5), deprecation messages missing removal anchor + keyword (writing-releases:3). Includes 10 dedicated test files with ~140 fixtures total.
+**Code-side (scan_ast.py AST scanner):** Django ORM kwarg validation against same-file models (writing-code:4), silent exception swallowing (writing-code:7), optional-import callsite guards (writing-code:8), silently-dropped defaulted parameters (writing-code:9), unbounded blocking I/O without timeout (writing-code:15), untested named exception handlers cross-file (writing-tests:5), deprecation messages missing removal anchor + keyword (writing-releases:3). Dedicated rule fixtures and selected-source/error regressions verify these paths.
 
 The remaining structural rules — vacuous tests (writing-tests:1), cargo-culted patterns (writing-tests:2), speculative abstractions (writing-code:3), asserting non-existent symbols (writing-code:4-broader), scope-of-fix (writing-claims:1), hypothetical code (writing-code:5), doc-edit symmetry (writing-code:6), unquantified completeness claims (writing-claims:3), BREAKING-changelog determination (writing-releases:1), skip-count trending (writing-releases:2), mock-without-spec (writing-tests:4) — remain judgment-bound and stay in `[skill:code-review]` and (for `[rule:writing-code]` writing-code:5) `[skill:commit]` step 4 (the affected-tests gate).
 
@@ -48,17 +48,53 @@ bash <this-skill-dir>/scan.sh --message-file /tmp/message-body.txt
 bash <this-skill-dir>/scan.sh --commit-message-file /tmp/COMMIT_EDITMSG
 ```
 
-Exit code is 0 when clean, 1 when any violation is found, 2 on usage error.
+Exit code is 0 when clean, 1 when rule findings are present, and 2 when usage,
+source selection, a required read/parse/configuration step, or a scanner process
+fails. Exit 2 means the scan is incomplete; it must never satisfy a clean-scan
+requirement. Required read/parse failures in related test evidence also return 2.
+
+### Source selection
+
+`scan_snapshot.py` selects one index tree for staged scans, or one exact PR
+base/head pair for PR scans. It derives the textual diff, Python files, related
+Python test evidence and `.claude/scanner-config.toml` from that same selection.
+Local working edits cannot hide or create findings for staged/PR content. PR mode
+uses `gh pr view` once, fetches missing exact objects from origin, and compares
+against the selected merge base. Missing metadata/objects are incomplete results;
+there is no fallback to the local checkout.
+
+Working mode reads working files and refuses changes observed during selection.
+AST rules inspect whole changed Python files, including pre-existing findings.
+Snapshots preserve logical repository paths, support spaces and subdirectory
+invocation, and reject unmerged indexes, relevant symlinks and case-colliding
+inputs. Candidate Python is parsed as data and is never executed. Source and
+snapshot temporary files stay local and are removed when the wrapper exits.
+
+Code scans require Python. Configured decorator extensions require Python's
+`tomllib` or the `tomli` fallback; a missing parser, malformed TOML or invalid
+`allow_decorators` value produces exit 2. Message-only modes keep their existing
+lexical rules and report missing/unreadable input files as incomplete.
 
 ### Path filter
 
-`--ignore <glob>` (repeatable) skips files matching the glob. The narrow legitimate use is scanning the scanner's own definition files, which contain the rule source, the regex, and the worked examples by design:
+`--ignore <glob>` (repeatable) restricts reporting for ad-hoc inspection of
+literal rule examples. Production callers (`[skill:commit]` step 3 and
+`[skill:code-review]` start) do not pass it. An ignored-path run is a partial scan;
+it cannot establish that the excluded code is clean. Source-selection/configuration
+failures still return exit 2.
 
-```bash
-bash <this-skill-dir>/scan.sh --ignore 'skills/detect-ai-fingerprints/*'
-```
+### Scanner self-scan policy
 
-Production gates (`[skill:commit]` step 3, `[skill:code-review]` start) do **not** pass `--ignore`. The flag is for ad-hoc inspection and for the bootstrap commit that lands changes to the scanner itself. Using it elsewhere is a smell: if you find yourself excluding paths to make the scanner shut up, the rules are firing for a reason.
+The scanner's AST implementation and snapshot helper are scanned without a path
+exclusion in CI. Their exception handlers use narrow `writing-tests-5 bootstrap`
+annotations naming `bin/_test/scanner_source_test.py`, whose fault fixtures verify
+non-clean CLI outcomes and preserved error causes. The cross-file heuristic
+cannot infer those CLI/wrapped-cause tests, so the existing controlled vocabulary
+records that evidence at each handler. There is no blanket self-exclusion or
+repository-wide suppression baseline. Rule examples may still trigger lexical
+findings during ad-hoc scans, and unrelated repository style findings remain
+visible. Changing the exception vocabulary or hiding those findings requires its
+own reviewed change.
 
 ## Output format
 
