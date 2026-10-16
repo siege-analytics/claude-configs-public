@@ -118,6 +118,17 @@ jobs:
       - name: Settings-drift check fixtures
         run: python3 bin/_test/settings_drift_test.py
 
+      - name: Scanner selected-source truth and incomplete results
+        run: |
+          set -euo pipefail
+          python3 bin/_test/scanner_source_test.py
+          for test_file in skills/detect-ai-fingerprints/test_*.sh; do
+            bash "$test_file"
+          done
+          python3 skills/detect-ai-fingerprints/scan_ast.py \
+            skills/detect-ai-fingerprints/scan_ast.py \
+            skills/detect-ai-fingerprints/scan_snapshot.py
+
       - name: NotebookEdit write-guard fixtures
         run: python3 bin/_test/notebook_edit_guards_test.py
 
