@@ -183,7 +183,20 @@ class CanaryPacketTest(unittest.TestCase):
         self.assertFalse((fake_workspace / "deploy-stamp.json").exists())
         self.assertEqual(materialized["resolver_probe"]["project"], "strict-release")
         self.assertTrue({"strict-release--review", "strict-release--checks"}.issubset(materialized["resolver_probe"]["selected"]))
-        self.assertEqual(materialized["resolver_probe"]["resident_delivery"], "not-observed-local-adapter")
+        self.assertEqual(materialized["resolver_probe"]["resident_delivery"], "observed-local-payload-hook")
+        self.assertEqual(materialized["resolver_probe"]["resident_marker_count"], 1)
+        self.assertEqual(materialized["resolver_probe"]["canonical_kernel_count"], 1)
+        self.assertTrue(materialized["resolver_probe"]["negative_controls_absent"])
+        bad_payload_pin = copy.deepcopy(self.value)
+        bad_payload_pin["pins"]["workspace_payload_tree_sha256"] = "0" * 64
+        shutil.rmtree(self.temp / "composition")
+        shutil.rmtree(payload)
+        with self.assertRaisesRegex(canary.PacketError, "workspace payload differs from approved exact digest"):
+            canary.prepare_composition_and_payload(bad_payload_pin, self.temp / "source", self.temp)
+        shutil.rmtree(self.temp / "composition")
+        shutil.rmtree(payload)
+        rebuilt = canary.prepare_composition_and_payload(self.value, self.temp / "source", self.temp)
+        self.assertEqual(rebuilt["workspace_payload_tree_sha256"], materialized["package_observation"]["workspace_payload_tree_sha256"])
         (payload / "unexpected.txt").write_text("not allowlisted\n")
         with self.assertRaisesRegex(canary.PacketError, "allowlist mismatch"):
             setup.validate_payload(canary, payload, canary.tree_digest(payload))

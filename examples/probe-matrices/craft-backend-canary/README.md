@@ -11,8 +11,12 @@ This directory prepares one reversible, sequential canary. **Nothing here author
 - Backend 2: `chatgpt-plus` / `pi/gpt-5.5`
 - Budgets: 900 seconds per backend, 180 seconds transition, 300 seconds cleanup, 2,400 seconds overall
 - Cleanup owner: Dheeraj
+- Accepted source/develop: `6a3c2efc593f209ba6d9594a29e43bfb8cab634a`
+- Source tree SHA-256: `3b00d388fed5e78bf26cab5dfb7122a171110a6249cf869fe929c9b6c8b87124`
+- Canonical Craft package SHA-256: `012f67fb4641d28d0b3970e137f324304dcb45b5a86909b28aca60d5e2d6ff08`
+- Strict-release composition SHA-256: `7abab83d505b9ff3370db8519f698d28372f338d512b99c6e19051e6da12efe1`
 
-The backend runs are sequential. Parallel sessions are outside scope.
+The backend runs are sequential. Parallel sessions are outside scope. The proposal deliberately leaves exact package and workspace-payload digests null: timestamp-bearing generated package bytes do not exist until the one materialization. The later approval record must copy both exact observations from that single receipt before computing the externally named subject.
 
 ## Installation boundary
 
@@ -45,7 +49,7 @@ python3 scripts/canary/craft-backend-canary.py materialize --manifest "$PROPOSAL
 
 Materialization creates only the temp root: detached exact source, rebuilt outputs, marker repository, local bare remote and receipt. It refuses a pre-existing temp root or disposable workspace and records `live_session_created: false` and `credentials_read: false`.
 
-Review `$TEMP_ROOT/materialization.json`. Copy the proposal to `$TEMP_ROOT/approval.recorded.json` only after the final PR is accepted. Fill the exact package-tree digest and accepted integration revisions **before** computing the subject. A later direct user instruction must name the `approval_subject_sha256` returned by `validate`; only then may status change to `approval-recorded` and its source/reference, approver and timestamp be recorded. The immutable subject excludes only lifecycle `status` and `operator_approval`, so that recording preserves the named digest while every substantive run/pin/path/backend/timeout/side-effect/cleanup change invalidates it. The record does not grant or verify authority.
+Review `$TEMP_ROOT/materialization.json`. Copy the proposal to `$TEMP_ROOT/approval.recorded.json` only after the final PR is accepted. Fill the exact package-tree and workspace-payload digests from that same receipt, confirm the pinned composition digest, and fill accepted integration revisions **before** computing the subject. A later direct user instruction must name the `approval_subject_sha256` returned by `validate`; only then may status change to `approval-recorded` and its source/reference, approver and timestamp be recorded. The immutable subject excludes only lifecycle `status` and `operator_approval`, so that recording preserves the named digest while every substantive run/pin/path/backend/timeout/side-effect/cleanup change invalidates it. The record does not grant or verify authority.
 
 After that separate instruction:
 
@@ -88,7 +92,7 @@ test ! -e "$WORKSPACE_ROOT/deploy-stamp.json"
 - the blocking `ca-enforcement-gate.sh` wrapper merged by `wire-enforcement.py` after base hook settings;
 - native `core.hooksPath` only in `$TEMP_ROOT/fixture/repo`.
 
-Materialization pins the reviewed package, strict-release composition and final workspace payload separately. Setup copies those payload bytes rather than rebuilding them. `workspace-setup.json` binds the fresh mutation-boundary attestation receipt digest; source or fixture drift after any earlier attestation stops before workspace payload targets or setup commands. Preserve both receipts and `workspace-setup.log`, record their digests, and stop if registration or verification fails. Final publication remains blocked until a separately reviewed canonical resident injector is integrated, source pins are refreshed, and this packet proves the actual registered hook emits the strict-release resident exactly once with both controls absent.
+Materialization pins the reviewed package, strict-release composition and final workspace payload separately. Setup copies those payload bytes rather than rebuilding them. `materialization.json` and `authorization-attestation.json` record a real invocation of the final payload's canonical resolver hook: exactly one canonical kernel, one byte-identical strict-release resident, both selected project skills and no control markers. `workspace-setup.json` binds the fresh mutation-boundary attestation receipt digest; source or fixture drift after any earlier attestation stops before workspace payload targets or setup commands. Preserve all receipts and `workspace-setup.log`, record their digests, and stop if registration or verification fails. Local hook output proves prepared bytes, not live Craft registration/request-context delivery; the host records remain mandatory.
 
 ## Phase C — exact sessions and prompts
 
@@ -359,7 +363,7 @@ mv "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no_op_detection.combined" \
 
 For compaction, save the generated nonce outside the model transcript, require the host compaction-boundary record, verify `COMPACTION-BN-RESULT.txt` equals that nonce plus newline without any intervening read, and save a receipt containing the expected/result SHA-256 and the post-boundary denial result. Prepend that receipt to `compaction_context.jsonl` before hashing. If the exact nonce or denial does not match, stop.
 
-The materialization receipt includes a real local probe of the **final assembled payload**. At the current accepted source it must show `project: strict-release`, both `strict-release--review` and `strict-release--checks`, and `resident_delivery: not-observed-local-adapter`: the current canonical `inject-resolver.sh` injects byte-validated `KERNEL.md` plus selected paths, not `skills/RESIDENT.md`. This is an acceptance blocker, not an unsupported capability to relabel. After the separately reviewed canonical injector integrates, refresh the source/package/payload pins and change this regression to require one exact resident marker with both controls absent. The live host must additionally expose registration, invocation and injected-request-context records; a model quote alone remains insufficient. Never point `CLAUDE_KERNEL_PATH` at RESIDENT; arbitrary kernel substitution remains forbidden.
+The materialization and fresh attestation receipts include a real local probe of the **final assembled payload**. They must show `project: strict-release`, both `strict-release--review` and `strict-release--checks`, `resident_delivery: observed-local-payload-hook`, `resident_marker_count: 1`, `canonical_kernel_count: 1`, and `negative_controls_absent: true`. The live host must additionally expose registration, invocation and injected-request-context records proving those bytes reached each backend; a local hook result or model quote alone remains insufficient. Never point `CLAUDE_KERNEL_PATH` at RESIDENT; arbitrary kernel substitution remains forbidden.
 
 The operator must inspect each slice for the corresponding host registration/invocation/tool/boundary record and before/after state. A user prompt, assistant assertion, manual policy/resident-file read, ordinary marker reread or generic tool error is insufficient. Record each relative `artifact_reference` and computed digest in a copy of `host-evidence.template.json` at `$EVIDENCE_ROOT/host-evidence.json`; fill exact host timestamps, manifest digest and external-host-export reference. Use `outcome: observed` only when all claimed event records exist; record unavailable capabilities separately as `unsupported-unverified`. If resident delivery is required for the final profile and remains unavailable, the run is acceptance-blocking even if structural event validation succeeds. Do not edit artifact bytes after hashing.
 

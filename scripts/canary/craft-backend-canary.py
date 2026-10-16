@@ -390,11 +390,19 @@ def prepare_composition_and_payload(manifest: dict[str, Any], source: Path, root
             shutil.copy2(source_path, target_path)
     (payload / "CLAUDE.md").symlink_to("KERNEL.md")
     require(not (payload / "deploy-stamp.json").exists(), "disposable payload must not contain a production deploy stamp")
+    composition_digest = tree_digest(flat)
+    payload_digest = tree_digest(payload)
+    pinned_composition = manifest["pins"].get("composition_tree_sha256")
+    pinned_payload = manifest["pins"].get("workspace_payload_tree_sha256")
+    if pinned_composition is not None:
+        require(composition_digest == pinned_composition, "composition differs from approved exact digest")
+    if pinned_payload is not None:
+        require(payload_digest == pinned_payload, "workspace payload differs from approved exact digest")
     return {
         "composition_root": str(flat),
-        "composition_tree_sha256": tree_digest(flat),
+        "composition_tree_sha256": composition_digest,
         "workspace_payload_root": str(payload),
-        "workspace_payload_tree_sha256": tree_digest(payload),
+        "workspace_payload_tree_sha256": payload_digest,
     }
 
 
@@ -420,8 +428,14 @@ def probe_workspace_payload(manifest: dict[str, Any], payload: Path, fixture_rep
     output = hook.stdout.decode("utf-8")
     require("project: strict-release" in output, "inject-resolver output lost strict-release project")
     require(all(slug in output for slug in required), "inject-resolver output lost scoped skill paths")
-    resident_delivered = manifest["fixture"]["resident_marker"] in output
-    require(not resident_delivered, "resident delivery behavior changed; review capability evidence before proceeding")
+    resident = (payload / "skills/RESIDENT.md").read_text()
+    kernel = (payload / "skills/KERNEL.md").read_text()
+    marker = manifest["fixture"]["resident_marker"]
+    require(output.count("<project-resident>") == 1, "assembled payload hook did not emit exactly one project resident")
+    require(output.count(resident) == 1 and output.count(marker) == 1, "assembled payload hook resident bytes/count mismatch")
+    require(output.count(kernel) == 1, "assembled payload hook canonical kernel count mismatch")
+    for forbidden in ("FOREIGN_PROJECT_CONTROL_MUST_NOT_BE_INJECTED", "GLOBAL_BUNDLE_CONTROL_MUST_NOT_BE_INJECTED"):
+        require(forbidden not in output, "assembled payload hook emitted a negative-control marker")
     return {
         "prompt": prompt,
         "project": result["project"],
@@ -430,7 +444,10 @@ def probe_workspace_payload(manifest: dict[str, Any], payload: Path, fixture_rep
         "inject_resolver_sha256": sha256_bytes(hook.stdout),
         "kernel_sha256": sha256_bytes((payload / "KERNEL.md").read_bytes()),
         "resident_file_sha256": sha256_bytes((payload / "skills/RESIDENT.md").read_bytes()),
-        "resident_delivery": "not-observed-local-adapter",
+        "resident_delivery": "observed-local-payload-hook",
+        "resident_marker_count": 1,
+        "canonical_kernel_count": 1,
+        "negative_controls_absent": True,
         "authorization_effect": "none",
     }
 
