@@ -23,10 +23,11 @@ from urllib.parse import urlsplit
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 TICKET = re.compile(r"(?<![A-Za-z0-9])#[0-9]+(?![A-Za-z0-9])")
 VALIDATOR_PATH = Path("scripts/ci/protected-policy-range.py")
+ENTRYPOINT_PATH = Path("scripts/ci/check-branch-topology.sh")
 WORKFLOW_PATH = Path(".github/workflows/pr-base-guard.yml")
 TRUSTED_DEPENDENCIES = (
     VALIDATOR_PATH,
-    WORKFLOW_PATH,
+    ENTRYPOINT_PATH,
     Path("bin/effective_policy.py"),
     Path("bin/gate_contract.py"),
     Path("catalog/effective-policy-selection.json"),
@@ -42,6 +43,7 @@ POLICY_SENSITIVE = (
     "catalog/gate-contracts.json",
     ".githooks/commit-msg",
     VALIDATOR_PATH.as_posix(),
+    ENTRYPOINT_PATH.as_posix(),
     WORKFLOW_PATH.as_posix(),
 )
 
@@ -72,11 +74,15 @@ def load_module(root: Path, relative: Path, name: str) -> Any:
     return module
 
 
-def tracked_blob(root: Path, revision: str, relative: Path) -> str:
+def revision_blob(root: Path, revision: str, relative: Path) -> tuple[str, bytes]:
     blob = str(git(root, "rev-parse", f"{revision}:{relative.as_posix()}")).strip()
     if not HEX40.fullmatch(blob):
         raise ValueError(f"trusted {relative}: invalid Git blob identity")
-    raw = git(root, "show", f"{revision}:{relative.as_posix()}", text=False)
+    return blob, git(root, "show", f"{revision}:{relative.as_posix()}", text=False)
+
+
+def tracked_blob(root: Path, revision: str, relative: Path) -> str:
+    blob, raw = revision_blob(root, revision, relative)
     if (root / relative).read_bytes() != raw:
         raise ValueError(f"trusted {relative}: working bytes differ from trusted revision")
     return blob
@@ -287,6 +293,18 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         path.as_posix(): tracked_blob(trusted, trusted_revision, path)
         for path in TRUSTED_DEPENDENCIES
     }
+    workflow_revision = exact_sha(args.executed_workflow_revision, "executed_workflow_revision")
+    workflow_blob, workflow_raw = revision_blob(trusted, workflow_revision, WORKFLOW_PATH)
+    canonical_identity = declared_identity(args.canonical_identity)
+    expected_workflow_ref = (
+        f"{canonical_identity['owner']}/{canonical_identity['repository']}/"
+        f"{WORKFLOW_PATH.as_posix()}@refs/heads/main"
+    )
+    if args.executed_workflow_ref != expected_workflow_ref:
+        raise ValueError(
+            "executed workflow ref is not the canonical default-branch registration: "
+            f"expected {expected_workflow_ref}"
+        )
     if str(git(candidate, "rev-parse", "HEAD")).strip() != head:
         raise Denied("stale reviewed head: candidate HEAD differs from exact requested head")
     if subprocess.run(
@@ -299,7 +317,6 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
     if not commits:
         raise Denied("exact candidate range is empty")
     source_identity = remote_identity(candidate)
-    canonical_identity = declared_identity(args.canonical_identity)
     if source_identity != canonical_identity:
         raise Denied("unsupported fork or source repository: candidate origin differs from canonical policy target")
     ep = load_module(trusted, Path("bin/effective_policy.py"), "trusted_effective_policy")
@@ -404,7 +421,14 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
                 for path, blob in sorted(dependency_blobs.items())
             ],
             "validator": {"path": VALIDATOR_PATH.as_posix(), "git_blob": dependency_blobs[VALIDATOR_PATH.as_posix()]},
-            "workflow": {"path": WORKFLOW_PATH.as_posix(), "git_blob": dependency_blobs[WORKFLOW_PATH.as_posix()]},
+            "entrypoint": {"path": ENTRYPOINT_PATH.as_posix(), "git_blob": dependency_blobs[ENTRYPOINT_PATH.as_posix()]},
+            "executed_workflow": {
+                "path": WORKFLOW_PATH.as_posix(),
+                "source_ref": args.executed_workflow_ref,
+                "revision": workflow_revision,
+                "git_blob": workflow_blob,
+                "sha256": hashlib.sha256(workflow_raw).hexdigest(),
+            },
             "policy_selection": branch["policy_selection"],
         },
         "candidate": {
@@ -441,6 +465,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--canonical-identity", required=True, help="host-authenticated target as host/owner/repository")
     parser.add_argument("--head-branch", required=True, help="host-authenticated candidate branch name")
     parser.add_argument("--target-branch", required=True)
+    parser.add_argument("--executed-workflow-ref", required=True, help="host-observed workflow source ref")
+    parser.add_argument("--executed-workflow-revision", required=True, help="host-observed default-branch workflow commit")
     parser.add_argument("--installed-pilot-receipt", type=Path, help="required configured consumer receipt for disposable consumer probes")
     parser.add_argument("--receipt", type=Path)
     args = parser.parse_args(argv)

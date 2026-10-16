@@ -13,6 +13,7 @@ AUTHORITY_DEPENDENCY_FLOOR = [
  "bin/_test/gate_contract_test.py",
  "bin/_test/protected_policy_test.py",
  "scripts/ci/protected-policy-range.py",
+ "scripts/ci/check-branch-topology.sh",
  "catalog/effective-policy-selection.json",
  "catalog/gate-contract-schema.json",
  "catalog/gate-contracts.json",
