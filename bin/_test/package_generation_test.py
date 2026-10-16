@@ -162,12 +162,16 @@ class PackageGenerationTest(unittest.TestCase):
             git(repo, 'commit', '-qm', 'Operation #1004')
 
             def probe(target):
+                # Synthetic host facts exercise receipt shape only; real provider
+                # activation is independently probed on GitHub under #1002.
                 result = subprocess.run([
                     sys.executable, str(version['parent_root'] / 'scripts/ci/protected-policy-range.py'),
                     '--trusted-root', str(version['parent_root']), '--trusted-revision', version['source'],
                     '--candidate-repo', str(repo), '--base', base, '--head', git(repo, 'rev-parse', 'HEAD'),
                     '--canonical-identity', self.identity, '--head-branch', 'feature/generation',
                     '--target-branch', target, '--installed-pilot-receipt', '.pilot/composition.json',
+                    '--executed-workflow-ref', self.identity.split('/', 1)[1] + '/.github/workflows/pr-base-guard.yml@refs/heads/main',
+                    '--executed-workflow-revision', version['source'],
                 ], capture_output=True, text=True, timeout=90)
                 self.assertTrue(result.stdout, result.stderr)
                 receipt = json.loads(result.stdout)
@@ -177,6 +181,8 @@ class PackageGenerationTest(unittest.TestCase):
             self.assertEqual((code, allowed['state']), (0, 'eligible'))
             self.assertEqual(allowed['trusted']['revision'], version['source'])
             self.assertEqual(allowed['authorization'], 'protected-host-check-required')
+            self.assertEqual(allowed['trusted']['executed_workflow']['revision'], version['source'])
+            self.assertEqual(allowed['trusted']['entrypoint']['path'], 'scripts/ci/check-branch-topology.sh')
             _, manifest = m.generation(self.store, selected['generation'])
             self.assertEqual(allowed['candidate']['installed_pilot']['parent_content_sha256'], manifest['parent_content_sha256'])
             branch_code, branch_denied = probe('main')

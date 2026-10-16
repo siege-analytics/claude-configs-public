@@ -39,6 +39,7 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
         # immutable-byte checks then exercise a real Git blob rather than a test escape.
         working_authority = (
             SCRIPT, Path("bin/_test/protected_policy_test.py"),
+            Path("scripts/ci/check-branch-topology.sh"),
             Path(".github/workflows/pr-base-guard.yml"),
             Path("bin/effective_policy.py"), Path("bin/gate_contract.py"),
             Path("catalog/effective-policy-selection.json"),
@@ -104,21 +105,27 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
     def evaluate(self, repo: Path, base: str, target: str, *, head: str | None = None,
                  head_branch: str = "feature/pilot",
                  trusted: Path | None = None, trusted_revision: str | None = None,
-                 canonical_identity: str | None = None) -> tuple[int, dict]:
+                 canonical_identity: str | None = None,
+                 workflow_ref: str | None = None,
+                 workflow_revision: str | None = None) -> tuple[int, dict]:
         exact_head = head or git(repo, "rev-parse", "HEAD").stdout.strip()
         trusted_root = trusted or self.trusted
         project = "synthetic-trunk" if "synthetic-trunk" in repo.name else "strict-release"
         canonical = canonical_identity or f"github.example.invalid/synthetic-org/{project}"
+        selected_trusted_revision = trusted_revision or self.trusted_revision
+        owner_repository = "/".join(canonical.split("/")[1:])
         command = [
             sys.executable, str(trusted_root / SCRIPT),
             "--trusted-root", str(trusted_root),
-            "--trusted-revision", trusted_revision or self.trusted_revision,
+            "--trusted-revision", selected_trusted_revision,
             "--candidate-repo", str(repo),
             "--base", base,
             "--head", exact_head,
             "--canonical-identity", canonical,
             "--head-branch", head_branch,
             "--target-branch", target,
+            "--executed-workflow-ref", workflow_ref or f"{owner_repository}/.github/workflows/pr-base-guard.yml@refs/heads/main",
+            "--executed-workflow-revision", workflow_revision or selected_trusted_revision,
             "--installed-pilot-receipt", ".pilot/composition.json",
         ]
         result = run(*command, cwd=trusted_root, check=False)
@@ -327,17 +334,77 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
     def test_mutable_trusted_validator_or_missing_range_errors(self):
         repo, base = self.make_repo()
         self.change(repo, "valid", self.message("valid"))
-        dirty = self.temp / "dirty-trusted"
-        run("git", "clone", "--quiet", "--no-hardlinks", str(self.trusted), str(dirty), cwd=self.temp)
-        with (dirty / SCRIPT).open("a", encoding="utf-8") as handle:
-            handle.write("# mutable candidate bytes\n")
-        code, error = self.evaluate(repo, base, "develop", trusted=dirty)
-        self.assertEqual((code, error["state"]), (2, "error"))
-        self.assertIn("working bytes differ", error["diagnostic"])
+        for dirty_path in (SCRIPT, Path("scripts/ci/check-branch-topology.sh")):
+            with self.subTest(dirty_path=dirty_path):
+                dirty = Path(tempfile.mkdtemp(prefix="dirty-trusted-", dir=self.temp))
+                run("git", "clone", "--quiet", "--no-hardlinks", str(self.trusted), str(dirty), cwd=self.temp)
+                with (dirty / dirty_path).open("a", encoding="utf-8") as handle:
+                    handle.write("# mutable candidate bytes\n")
+                code, error = self.evaluate(repo, base, "develop", trusted=dirty)
+                self.assertEqual((code, error["state"]), (2, "error"))
+                self.assertIn("working bytes differ", error["diagnostic"])
         missing = "0" * 40
         code, error = self.evaluate(repo, missing, "develop")
         self.assertNotEqual(code, 0)
         self.assertNotEqual(error["state"], "eligible")
+
+    def test_registered_topology_entrypoint_uses_exact_event_and_denies_missing_ticket(self):
+        candidate = self.temp / "provider-candidate"
+        run("git", "clone", "--quiet", "--no-hardlinks", str(self.trusted), str(candidate), cwd=self.temp)
+        git(candidate, "config", "user.email", "fixture@example.invalid")
+        git(candidate, "config", "user.name", "Synthetic Fixture")
+        git(candidate, "remote", "set-url", "origin", "https://github.com/siege-analytics/claude-configs-public.git")
+        base = git(candidate, "rev-parse", "HEAD").stdout.strip()
+        git(candidate, "update-ref", "refs/remotes/upstream/main", base)
+        (candidate / "provider-negative.md").write_text("missing ticket\n", encoding="utf-8")
+        git(candidate, "add", "provider-negative.md")
+        git(candidate, "-c", "core.hooksPath=/dev/null", "commit", "-q", "-m", "provider negative")
+        head = git(candidate, "rev-parse", "HEAD").stdout.strip()
+        event = self.temp / "event.json"
+        event.write_text(json.dumps({
+            "repository": {"full_name": "siege-analytics/claude-configs-public"},
+            "pull_request": {
+                "base": {"sha": base, "ref": "develop", "repo": {"full_name": "siege-analytics/claude-configs-public"}},
+                "head": {"sha": head, "ref": "test/provider-negative", "repo": {"full_name": "siege-analytics/claude-configs-public"}},
+            },
+        }), encoding="utf-8")
+        env = {
+            **os.environ,
+            "BASE_BRANCH": "develop", "HEAD_BRANCH": "test/provider-negative",
+            "HEAD_REPO": "siege-analytics/claude-configs-public",
+            "CANONICAL_REPO": "siege-analytics/claude-configs-public",
+            "MAIN_REF": "upstream/main", "GITHUB_EVENT_NAME": "pull_request_target",
+            "GITHUB_EVENT_PATH": str(event), "GITHUB_REPOSITORY": "siege-analytics/claude-configs-public",
+            "GITHUB_SERVER_URL": "https://github.com",
+            "GITHUB_WORKFLOW_REF": "siege-analytics/claude-configs-public/.github/workflows/pr-base-guard.yml@refs/heads/main",
+            "GITHUB_WORKFLOW_SHA": git(self.trusted, "rev-parse", "refs/remotes/origin/main").stdout.strip(),
+        }
+        result = run(
+            "bash", str(self.trusted / "scripts/ci/check-branch-topology.sh"),
+            cwd=candidate, check=False, env=env,
+        )
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn('"state":"denied"', result.stdout)
+        self.assertIn("lacks required approved ticket evidence", result.stdout)
+
+    def test_executed_default_workflow_identity_is_distinct_and_fail_closed(self):
+        repo, base = self.make_repo()
+        self.change(repo, "valid", self.message("valid"))
+        code, receipt = self.evaluate(repo, base, "develop")
+        self.assertEqual(code, 0)
+        self.assertEqual(receipt["trusted"]["entrypoint"]["path"], "scripts/ci/check-branch-topology.sh")
+        self.assertEqual(receipt["trusted"]["executed_workflow"]["revision"], self.trusted_revision)
+        self.assertNotIn(".github/workflows/pr-base-guard.yml", {
+            item["path"] for item in receipt["trusted"]["authority_dependencies"]
+        })
+        code, error = self.evaluate(
+            repo, base, "develop",
+            workflow_ref="synthetic-org/strict-release/.github/workflows/pr-base-guard.yml@refs/heads/develop",
+        )
+        self.assertEqual((code, error["state"]), (2, "error"))
+        self.assertIn("default-branch registration", error["diagnostic"])
+        code, error = self.evaluate(repo, base, "develop", workflow_revision="0" * 40)
+        self.assertEqual((code, error["state"]), (2, "error"))
 
 
 if __name__ == "__main__":
