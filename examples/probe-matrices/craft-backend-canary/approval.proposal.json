@@ -24,7 +24,7 @@
     "craft_package_tree_sha256": null,
     "composition_tree_sha256": "7abab83d505b9ff3370db8519f698d28372f338d512b99c6e19051e6da12efe1",
     "workspace_payload_tree_sha256": null,
-    "approval_driver_sha256": "09d005c7589c116a27f8d4d1789bba355c387b8870d215b61cec40d416461ffe",
+    "approval_driver_sha256": "166932724cb3e880e7c23cff0fa11477d10bb54b3601165ed459764d7ca42a53",
     "effective_policy_revision": "ecef9e8620f477cdea4962cd3d737e16873f06fa",
     "effective_policy_blob": "086e7bda8e9f588c57294ed0899f9ff2ffa982c5",
     "effective_policy_raw_sha256": "cf45e80b063d58501ca6dd297c4fcec3c99273507cef8dce7e566d3377a253ea",
@@ -32,7 +32,7 @@
     "gate_contract_revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
     "gate_contract_version": "1.2.0",
     "gate_contract_sha256": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
-    "workspace_setup_driver_sha256": "7b4fc0165cf3fdb060dc89c93ab00bf96b00a210d0eab686ad08b6cbf565858d"
+    "workspace_setup_driver_sha256": "bfa2d96135976b278993932cbd9a73d0794054b2022201bc3a08d999cec9371c"
   },
   "fixture": {
     "canonical_identity": "github.example.invalid/synthetic-org/strict-release",

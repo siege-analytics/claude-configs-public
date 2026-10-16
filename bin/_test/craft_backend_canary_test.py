@@ -335,6 +335,191 @@ class CanaryPacketTest(unittest.TestCase):
         with self.assertRaisesRegex(canary.PacketError, "existing temp root"):
             canary.materialize(self.value, _test_discovery_reader=self._test_discovery_reader, _test_expected_temp_base=self.temp_base)
 
+    def test_fixture_claude_registration_is_exact_atomic_and_fail_closed(self):
+        receipt = canary.materialize(
+            self.value, _test_discovery_reader=self._test_discovery_reader,
+            _test_expected_temp_base=self.temp_base,
+        )
+        materialized = json.loads(Path(receipt["receipt"]).read_text())
+        source = self.temp / "source"
+        payload = self.temp / "workspace-payload"
+        assembly = self.temp / "registration-assembly"
+        assembly.mkdir()
+        setup.copy_payload(canary, payload, assembly)
+        subprocess.run([
+            "bash", "bin/install-hooks.sh", "--workspace", str(assembly), "--hooks-root", str(assembly),
+        ], cwd=source, check=True, text=True, capture_output=True)
+        subprocess.run([
+            sys.executable, "bin/wire-enforcement.py", "--workspace", str(assembly),
+            "--dist", str(source / "dist"),
+        ], cwd=source, check=True, text=True, capture_output=True)
+        settings = assembly / ".claude/settings.json"
+        original = settings.read_bytes()
+        settings_bytes, settings_sha256, inventory = setup.verify_wired_settings(
+            canary, payload, assembly, source,
+        )
+        self.assertEqual(settings_bytes, original)
+        expected_count = sum(
+            len(group["hooks"])
+            for groups in json.loads(original)["hooks"].values()
+            for group in groups
+        )
+        self.assertEqual(len(inventory), expected_count)
+        self.assertTrue(all(item["argv"] == [str(assembly / item["payload_relative_path"])] for item in inventory))
+        self.assertEqual(
+            materialized["package_observation"]["workspace_payload_tree_sha256"],
+            canary.tree_digest(payload),
+        )
+
+        def mutate_validated_bytes():
+            settings.write_bytes(original + b"\n")
+        with self.assertRaisesRegex(ValueError, "path or bytes changed during validation"):
+            setup.verify_wired_settings(
+                canary, payload, assembly, source, _test_after_snapshot=mutate_validated_bytes,
+            )
+        settings.write_bytes(original)
+
+        replacement = settings.with_name("settings.replacement.json")
+        def replace_validated_path():
+            replacement.write_bytes(original)
+            os.replace(replacement, settings)
+        with self.assertRaisesRegex(ValueError, "path or bytes changed during validation"):
+            setup.verify_wired_settings(
+                canary, payload, assembly, source, _test_after_snapshot=replace_validated_path,
+            )
+        settings.write_bytes(original)
+
+        fixtures = self.temp / "registration-fixtures"
+        fixtures.mkdir()
+        positive = fixtures / "positive"
+        positive.mkdir()
+        registration = setup.register_fixture_settings(canary, settings, positive, settings_sha256)
+        target = positive / ".claude/settings.json"
+        self.assertEqual(target.read_bytes(), original)
+        self.assertEqual(registration["source_sha256"], registration["destination_sha256"])
+        with self.assertRaisesRegex(canary.PacketError, "existing fixture Claude settings"):
+            setup.register_fixture_settings(canary, settings, positive, settings_sha256)
+
+        actual = json.loads(original)
+        command = actual["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"]
+        for replacement in (command + " ; echo substituted", "sh " + command, "/foreign/inject-resolver.sh"):
+            with self.subTest(command=replacement):
+                changed = copy.deepcopy(actual)
+                changed["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"] = replacement
+                settings.write_text(json.dumps(changed, indent=2) + "\n")
+                with self.assertRaisesRegex(canary.PacketError, "inventory differs"):
+                    setup.verify_wired_settings(canary, payload, assembly, source)
+        changed = copy.deepcopy(actual)
+        changed["hooks"]["Unexpected"] = [{"hooks": []}]
+        settings.write_text(json.dumps(changed, indent=2) + "\n")
+        with self.assertRaisesRegex(canary.PacketError, "inventory differs"):
+            setup.verify_wired_settings(canary, payload, assembly, source)
+        settings.write_bytes(original)
+
+        executable = assembly / inventory[0]["payload_relative_path"]
+        executable_original = executable.read_bytes()
+        executable.write_bytes(executable_original + b"# substitution\n")
+        with self.assertRaisesRegex(canary.PacketError, "differs from pinned payload"):
+            setup.verify_wired_settings(canary, payload, assembly, source)
+        executable.write_bytes(executable_original)
+
+        symlinked = fixtures / "symlinked"
+        symlinked.mkdir()
+        (symlinked / ".claude").symlink_to(positive / ".claude", target_is_directory=True)
+        with self.assertRaisesRegex(canary.PacketError, "must not be a symlink"):
+            setup.register_fixture_settings(canary, settings, symlinked, settings_sha256)
+
+        raced = fixtures / "raced"
+        raced.mkdir()
+        race_target = raced / ".claude/settings.json"
+        def create_race_target():
+            race_target.write_text("operator-owned\n")
+        with self.assertRaisesRegex(canary.PacketError, "appeared during registration"):
+            setup.register_fixture_settings(
+                canary, settings, raced, settings_sha256, _test_before_link=create_race_target,
+            )
+        self.assertEqual(race_target.read_text(), "operator-owned\n")
+        self.assertEqual(list((raced / ".claude").glob(".cc-1003-settings-*")), [])
+
+        parent_raced = fixtures / "parent-raced"
+        parent_raced.mkdir()
+        outside = fixtures / "outside-parent"
+        outside.mkdir()
+        def swap_parent_directory():
+            directory = parent_raced / ".claude"
+            temporary = next(directory.glob(".cc-1003-settings-*"))
+            shutil.copy2(temporary, outside / temporary.name)
+            directory.rename(parent_raced / ".claude-moved")
+            directory.symlink_to(outside, target_is_directory=True)
+        with self.assertRaisesRegex(canary.PacketError, "parent changed during registration"):
+            setup.register_fixture_settings(
+                canary, settings, parent_raced, settings_sha256,
+                _test_before_link=swap_parent_directory,
+            )
+        self.assertFalse((outside / "settings.json").exists())
+        self.assertFalse((parent_raced / ".claude-moved/settings.json").exists())
+        self.assertEqual(list((parent_raced / ".claude-moved").glob(".cc-1003-settings-*")), [])
+
+        source_raced = fixtures / "source-raced"
+        source_raced.mkdir()
+        def mutate_source_settings():
+            settings.write_bytes(original + b"\n")
+        with self.assertRaisesRegex(canary.PacketError, "changed during fixture registration"):
+            setup.register_fixture_settings(
+                canary, settings, source_raced, settings_sha256,
+                _test_before_link=mutate_source_settings,
+            )
+        self.assertFalse((source_raced / ".claude/settings.json").exists())
+        self.assertFalse((source_raced / ".claude").exists())
+        settings.write_bytes(original)
+
+    def test_full_setup_registers_fixture_settings_under_isolated_test_home(self):
+        isolated_home = tempfile.TemporaryDirectory(prefix="cc-1003-test-home-", dir=self.temp_base)
+        self.addCleanup(isolated_home.cleanup)
+        run_id = f"cc-1003-configure-{os.getpid()}"
+        with mock.patch.dict(os.environ, {"HOME": isolated_home.name}):
+            value = packet(run_id, self.temp_base)
+            temp_root = Path(value["paths"]["temp_root"])
+            workspace = Path(value["paths"]["workspace_root"])
+            shutil.rmtree(temp_root, ignore_errors=True)
+            shutil.rmtree(workspace, ignore_errors=True)
+            try:
+                materialization = canary.materialize(
+                    value, _test_discovery_reader=self._test_discovery_reader,
+                    _test_expected_temp_base=self.temp_base,
+                )
+                observed = json.loads(Path(materialization["receipt"]).read_text())["package_observation"]
+                approved = record_external_approval(value)
+                approved["pins"]["craft_package_tree_sha256"] = observed["exact_tree_sha256"]
+                approved["pins"]["composition_tree_sha256"] = observed["composition_tree_sha256"]
+                approved["pins"]["workspace_payload_tree_sha256"] = observed["workspace_payload_tree_sha256"]
+                approved["operator_approval"]["subject_sha256"] = canary.approval_subject_sha256(approved)
+                workspace.mkdir(parents=True)
+                result = setup.configure(
+                    canary, approved, _test_discovery_reader=self._test_discovery_reader,
+                    _test_expected_temp_base=self.temp_base,
+                )
+                receipt = json.loads(Path(result["receipt"]).read_text())
+                registration = receipt["claude_project_registration"]
+                fixture_settings = temp_root / "fixture/repo/.claude/settings.json"
+                workspace_settings = workspace / ".claude/settings.json"
+                self.assertEqual(fixture_settings.read_bytes(), workspace_settings.read_bytes())
+                self.assertEqual(
+                    registration["destination_path"], str(fixture_settings),
+                )
+                self.assertEqual(
+                    registration["destination_sha256"],
+                    canary.sha256_bytes(fixture_settings.read_bytes()),
+                )
+                self.assertEqual(receipt["workspace_settings_role"], "assembly-evidence-only")
+                self.assertEqual(receipt["pi_capability_state"], "unsupported-unverified")
+                self.assertFalse(registration["host_invocation_observed"])
+                self.assertTrue(registration["command_inventory"])
+                self.assertFalse((workspace / "deploy-stamp.json").exists())
+            finally:
+                shutil.rmtree(workspace, ignore_errors=True)
+                shutil.rmtree(temp_root, ignore_errors=True)
+
     def approved_evidence(self) -> tuple[dict, dict]:
         approved = record_external_approval(self.value)
         facts = self.validate_manifest(approved, require_approval_record=True)
@@ -343,6 +528,38 @@ class CanaryPacketTest(unittest.TestCase):
         discovery = self._test_discovery_reader(approved)
         evidence_root = Path(approved["paths"]["evidence_root"])
         evidence_root.mkdir(parents=True, exist_ok=True)
+        fixture = Path(approved["paths"]["temp_root"]) / "fixture/repo"
+        fixture_settings = fixture / ".claude/settings.json"
+        registration_sha256 = "9" * 64
+        (evidence_root / "workspace-setup.json").write_bytes(canary.canonical_bytes({
+            "schema_version": canary.SCHEMA_VERSION,
+            "run_id": self.run_id,
+            "manifest_sha256": facts["manifest_sha256"],
+            "workspace": approved["paths"]["workspace_root"],
+            "fixture": str(fixture),
+            "workspace_settings_role": "assembly-evidence-only",
+            "claude_project_registration": {
+                "source_path": str(Path(approved["paths"]["workspace_root"]) / ".claude/settings.json"),
+                "destination_path": str(fixture_settings),
+                "source_sha256": registration_sha256,
+                "destination_sha256": registration_sha256,
+                "sdk_cwd": str(fixture),
+                "registration_state": "configured-unverified",
+                "host_invocation_observed": False,
+                "command_inventory": [{
+                    "event": "UserPromptSubmit",
+                    "matcher": None,
+                    "group_index": 0,
+                    "hook_index": 0,
+                    "argv": [str(Path(approved["paths"]["workspace_root"]) / "hooks/resolver/inject-resolver.sh")],
+                    "payload_relative_path": "hooks/resolver/inject-resolver.sh",
+                    "executable_sha256": "8" * 64,
+                }],
+            },
+            "standing_order_automations_enabled": False,
+            "pi_capability_state": "unsupported-unverified",
+            "authorization_effect": "none",
+        }))
         for index, backend in enumerate(approved["backends"]):
             began = start + timedelta(minutes=11 * index)
             ended = began + timedelta(minutes=10)
@@ -352,12 +569,20 @@ class CanaryPacketTest(unittest.TestCase):
                 artifact = evidence_root / reference
                 artifact.parent.mkdir(parents=True, exist_ok=True)
                 artifact.write_bytes(f"host-export-fixture:{backend['sequence']}:{name}\n".encode())
-                events.append({
+                event = {
                     "name": name,
                     "source": "host-observed",
                     "artifact_reference": reference,
                     "artifact_sha256": canary.sha256_bytes(artifact.read_bytes()),
-                })
+                }
+                if backend["sequence"] == 1 and name in {"startup_resolver", "no_op_detection"}:
+                    event.update({
+                        "registered_settings_path": str(fixture_settings),
+                        "registered_settings_sha256": registration_sha256,
+                    })
+                    if name == "no_op_detection":
+                        event["settings_restored_sha256"] = registration_sha256
+                events.append(event)
             runtime_event = next(event for event in events if event["name"] == "startup_resolver")
             runtime_identity = (
                 "@anthropic-ai/claude-agent-sdk@0.3.296"
@@ -424,6 +649,29 @@ class CanaryPacketTest(unittest.TestCase):
         evidence["backend_runs"][0]["installed_build_discovery_sha256"] = "0" * 64
         with self.assertRaisesRegex(canary.PacketError, "installed build discovery mismatch"):
             self.validate_evidence(approved, evidence)
+        approved, evidence = self.approved_evidence()
+        startup = next(
+            event for event in evidence["backend_runs"][0]["host_events"]
+            if event["name"] == "startup_resolver"
+        )
+        startup["registered_settings_path"] = str(Path(approved["paths"]["workspace_root"]) / ".claude/settings.json")
+        with self.assertRaisesRegex(canary.PacketError, "fixture-local registered settings path"):
+            self.validate_evidence(approved, evidence)
+        approved, evidence = self.approved_evidence()
+        pi_startup = next(
+            event for event in evidence["backend_runs"][1]["host_events"]
+            if event["name"] == "startup_resolver"
+        )
+        pi_startup["registered_settings_path"] = str(Path(approved["paths"]["temp_root"]) / "fixture/repo/.claude/settings.json")
+        with self.assertRaisesRegex(canary.PacketError, "cannot establish Pi"):
+            self.validate_evidence(approved, evidence)
+        approved, evidence = self.approved_evidence()
+        setup_receipt_path = Path(approved["paths"]["evidence_root"]) / "workspace-setup.json"
+        setup_receipt = json.loads(setup_receipt_path.read_text())
+        setup_receipt["claude_project_registration"]["command_inventory"][0]["argv"] = ["/foreign/hook"]
+        setup_receipt_path.write_bytes(canary.canonical_bytes(setup_receipt))
+        with self.assertRaisesRegex(canary.PacketError, "argv differs from pinned workspace payload"):
+            self.validate_evidence(approved, evidence)
 
     def test_evidence_requires_exactly_nine_unique_expected_events_per_backend(self):
         for mutation, diagnostic in (
@@ -484,6 +732,10 @@ class CanaryPacketTest(unittest.TestCase):
         approved["operator_approval"]["subject_sha256"] = canary.approval_subject_sha256(approved)
         facts = self.validate_manifest(approved, require_approval_record=True)
         evidence["manifest_sha256"] = facts["manifest_sha256"]
+        setup_receipt_path = Path(approved["paths"]["evidence_root"]) / "workspace-setup.json"
+        setup_receipt = json.loads(setup_receipt_path.read_text())
+        setup_receipt["manifest_sha256"] = facts["manifest_sha256"]
+        setup_receipt_path.write_bytes(canary.canonical_bytes(setup_receipt))
         start = datetime.fromisoformat(evidence["backend_runs"][0]["started_at"])
         evidence["backend_runs"][0]["ended_at"] = (start + timedelta(seconds=900)).isoformat()
         evidence["backend_runs"][1]["started_at"] = (start + timedelta(seconds=1500)).isoformat()
@@ -499,6 +751,11 @@ class CanaryPacketTest(unittest.TestCase):
             "run_id": self.run_id,
             "manifest_sha256": facts["manifest_sha256"],
             "workspace_absent": True,
+            "workspace_setup_receipt_sha256": "7" * 64,
+            "fixture_claude_settings_registered_sha256": "9" * 64,
+            "fixture_claude_settings_observed_sha256_before_cleanup": "9" * 64,
+            "fixture_claude_settings_digest_match": True,
+            "fixture_claude_settings_absent": True,
             "temp_root_absent": True,
             "disposable_refs_absent": True,
             "outside_allowlist_unchanged": True,
@@ -506,6 +763,10 @@ class CanaryPacketTest(unittest.TestCase):
         result = canary.verify_cleanup(approved, receipt, _test_expected_temp_base=self.temp_base)
         self.assertEqual(result["status"], "local-cleanup-absence-observed")
         self.assertEqual(result["authorization_effect"], "none")
+        mismatched = copy.deepcopy(receipt)
+        mismatched["fixture_claude_settings_observed_sha256_before_cleanup"] = "8" * 64
+        with self.assertRaisesRegex(canary.PacketError, "differs from setup registration"):
+            canary.verify_cleanup(approved, mismatched, _test_expected_temp_base=self.temp_base)
         self.temp.mkdir(parents=True)
         with self.assertRaisesRegex(canary.PacketError, "temp root still exists"):
             canary.verify_cleanup(approved, receipt, _test_expected_temp_base=self.temp_base)
