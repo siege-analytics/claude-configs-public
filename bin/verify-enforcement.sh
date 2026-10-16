@@ -32,7 +32,7 @@ MODE="craft-agent"
 NATIVE_GIT_REPO=""
 # Code-owned trust anchor for the canonical compact kernel. This verifier is a
 # Tier C surface; never derive the expected digest from the mutable target.
-EXPECTED_KERNEL_SHA256="00fd4c7c2aee069ed5a6349bbfa4a925ab7f4c60a2a44a5b5134f859d40b3842"
+EXPECTED_KERNEL_SHA256="98f92ddc9eb8d05fddfbae3dffdcf4cd6d7c4fbedf88caefae4696d7966d8e66"
 KERNEL_VERIFIED=0
 
 usage() {

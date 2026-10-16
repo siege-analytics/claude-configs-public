@@ -44,6 +44,7 @@
     "^VERSION$",
     "^bin/_test/native_push_test\\.py$",
     "^bin/_test/provider_event_test\\.py$",
+    "^bin/_test/resident_delivery_test\\.py$",
     "^examples/provider/"
   ],
   "standard_path_patterns": [

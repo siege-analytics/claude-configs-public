@@ -41,21 +41,19 @@ $(cat "$KERNEL")
 <progressive-loading-warning>Selector unavailable; kernel-only mode. No broad fallback was loaded.</progressive-loading-warning>
 EOF
 else
-  RESULT="$(python3 "$SELECTOR" --prompt "$PROMPT" --cwd "$PROMPT_CWD" 2>/dev/null || true)"
-  LABEL="load"; ACTION="Read each selected skill before acting."
-  if [[ "$MODE" == "canary" ]]; then LABEL="candidate"; ACTION="Canary mode: report candidates but do not load them automatically."; fi
+  RENDER_MODE="on"
+  [[ "$MODE" != "canary" ]] || RENDER_MODE="canary"
+  RESULT="$(python3 "$SELECTOR" --prompt "$PROMPT" --cwd "$PROMPT_CWD" --render-hook --mode "$RENDER_MODE" 2>/dev/null || true)"
   cat <<EOF
 <skill-kernel mode="$MODE">
 $(cat "$KERNEL")
 </skill-kernel>
-<progressive-load-set>
 EOF
-  printf '%s' "$RESULT" | python3 -c 'import json,sys; from pathlib import Path; label=sys.argv[1]; root=Path(sys.argv[2]).resolve(); d=json.load(sys.stdin); selected=d.get("selected",[]); resolved=[(x,(root/x.get("load_path",x.get("source_path","unknown"))).resolve()) for x in selected]; [p.relative_to(root) for _,p in resolved]; missing=[str(p) for _,p in resolved if not p.is_file()]; assert not missing,"unreadable runtime path(s): "+",".join(missing); print("state: "+d["state"]); print("project: "+str(d.get("project") or "none")); [print("%s: %s | path=%s | source=%s | route=%s | reasons=%s"%(label,x["slug"],p,x.get("source_path","unknown"),x["route"],",".join(x["reasons"]))) for x,p in resolved]; print("diagnostic: "+d["diagnostic"])' "$LABEL" "$REPO_ROOT" 2>/dev/null || printf 'state: error\ndiagnostic: selector output invalid or selected runtime path unreadable; kernel only\n'
-  cat <<EOF
-$ACTION Unknown or ambiguous means kernel only; do not load the full library.
-Reference shelves never self-select and may load only through an active skill's declared reference.
-</progressive-load-set>
-EOF
+  if [[ -n "$RESULT" ]]; then
+    printf '%s\n' "$RESULT"
+  else
+    printf '%s\n' '<progressive-load-set>' 'state: error' 'diagnostic: selector unavailable; kernel only' '</progressive-load-set>'
+  fi
 fi
 
 # --- Pipeline status: scan for plan artifacts and warn on incomplete chains ---

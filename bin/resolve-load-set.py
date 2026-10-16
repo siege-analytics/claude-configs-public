@@ -2,7 +2,7 @@
 """Deterministically select task/project skills from the compact resolver manifest."""
 from __future__ import annotations
 import argparse, importlib.util, json, re, subprocess, sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 ROOT=Path(__file__).resolve().parents[1]
 SHELF_PREFIX="shelves"
@@ -12,6 +12,7 @@ DIAGNOSTIC_ONLY={"ci-billing-failure-merge"}
 MAX_SELECTED_ITEMS=12
 MAX_SELECTED_CHARACTERS=80000
 MAX_SELECTED_ESTIMATED_TOKENS=20000
+MAX_RESIDENT_BYTES=80000
 
 def norm_repo(value:str)->str:
     value=value.strip().removesuffix(".git").replace("\\","/")
@@ -241,7 +242,7 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
             ),
         }
     state="matched" if selected_items else "unknown"
-    diagnostic="no route matched; kernel only" if state=="unknown" else f"{len(selected_items)} capability item(s) selected"
+    diagnostic=("no task route matched; matched project context only" if composition else "no route matched; kernel only") if state=="unknown" else f"{len(selected_items)} capability item(s) selected"
     if diagnostic_only:diagnostic+=f"; diagnostic-only (no merge authorization): {','.join(diagnostic_only)}"
     if rejected_explicit:diagnostic+=f"; rejected explicit slugs: {','.join(rejected_explicit)}"
     return {
@@ -251,18 +252,107 @@ def select(manifest:dict[str,Any],inventory:dict[str,Any],prompt:str,repo:str=""
         "diagnostic":diagnostic,
     }
 
+def runtime_file(root:Path,relative:str)->Path:
+    """Resolve a regular package file without following links or escaping root."""
+    if not isinstance(relative,str) or not relative or "\\" in relative or "\x00" in relative:
+        raise ValueError("invalid runtime path")
+    path=PurePosixPath(relative)
+    if path.is_absolute() or ".." in path.parts or str(path)!=relative:
+        raise ValueError("runtime path must be canonical and package-relative")
+    current=root.resolve()
+    for part in path.parts:
+        current=current/part
+        if current.is_symlink():raise ValueError("symlink runtime path is unsupported: "+relative)
+    if not current.is_file():raise ValueError("unreadable runtime path: "+relative)
+    return current
+
+def composed_resident(root:Path,manifest:dict[str,Any],result:dict[str,Any],repo:str)->str:
+    """Check installed composition consistency, never package authenticity.
+
+    Content comes from the already selected package. A receipt or matching
+    digest cannot authorize an operation or establish a live host capability.
+    The mandatory canonical kernel is emitted separately by the prompt hook.
+    """
+    if manifest.get("kernel")!="skills/RESIDENT.md" or "procedure_composition" not in manifest:
+        raise ValueError("unsupported composed resident path or missing composition")
+    config=manifest["procedure_composition"]
+    receipt=json.loads(runtime_file(root,"composition.json").read_bytes())
+    project=result.get("project")
+    if not project or project!=config["project"] or project!=receipt["project"]:
+        raise ValueError("resident project differs from selected composition")
+    if norm_repo(repo)!=config["identity"] or config["identity"]!=receipt["identity"]:
+        raise ValueError("resident repository identity differs from target")
+    resident=receipt["resident"]
+    if (receipt.get("authorization_effect")!="none" or receipt.get("evidence_state")!="configured"
+        or resident.get("authorization_effect")!="none" or resident.get("project")!=project):
+        raise ValueError("resident receipt is not non-authorizing configured content")
+    content=runtime_file(root,"skills/RESIDENT.md").read_bytes()
+    if len(content)>MAX_RESIDENT_BYTES:raise ValueError("composed resident exceeds runtime byte budget")
+    rendered=resident["rendered"]
+    if not isinstance(rendered,str) or not rendered or content!=rendered.encode("utf-8"):
+        raise ValueError("resident bytes differ from composition receipt")
+    if (type(resident["characters"]) is not int or resident["characters"]!=len(rendered)
+        or type(resident["estimated_tokens"]) is not int or resident["estimated_tokens"]!=(len(rendered)+3)//4):
+        raise ValueError("resident size differs from composition receipt")
+    return rendered
+
+def render_hook_result(root:Path,manifest:dict[str,Any],result:dict[str,Any],repo:str,mode:str)->str:
+    """Render one fully checked load set; failures cannot emit partial content."""
+    state=result["state"]
+    if state not in {"matched","unknown","ambiguous","over-budget"}:
+        raise ValueError("invalid selector state")
+    selected=result.get("selected",[])
+    resolved=[(item,runtime_file(root,item.get("load_path",item.get("source_path","unknown")))) for item in selected]
+    kernel=manifest.get("kernel")
+    if kernel not in {"skills/KERNEL.md","skills/RESIDENT.md"}:
+        raise ValueError("unsupported resident path")
+    if "procedure_composition" in manifest and kernel!="skills/RESIDENT.md":
+        raise ValueError("composed package is missing its resident binding")
+    resident=None
+    if kernel=="skills/RESIDENT.md" and state in {"matched","unknown"}:
+        resident=composed_resident(root,manifest,result,repo)
+    label="candidate" if mode=="canary" else "load"
+    action="Canary mode: report candidates but do not load them automatically." if mode=="canary" else "Read each selected skill before acting."
+    lines=[]
+    if resident is not None and mode!="canary":
+        lines.extend(["<project-resident>",resident,"</project-resident>"])
+    lines.extend(["<progressive-load-set>","state: "+state,"project: "+str(result.get("project") or "none")])
+    if resident is not None:
+        lines.append("resident-"+label+": skills/RESIDENT.md")
+    for item,path in resolved:
+        lines.append("%s: %s | path=%s | source=%s | route=%s | reasons=%s"%(label,item["slug"],path,item.get("source_path","unknown"),item["route"],",".join(item["reasons"])))
+    lines.extend(["diagnostic: "+result["diagnostic"],action,
+                  "Unknown task routing loads no task skills; only an independently matched composed project may supply resident context. Ambiguous or invalid selection means kernel only; do not load the full library.",
+                  "Reference shelves never self-select and may load only through an active skill's declared reference.","</progressive-load-set>"])
+    return "\n".join(lines)
+
 def main()->int:
-    p=argparse.ArgumentParser();p.add_argument("--prompt",default="");p.add_argument("--cwd",type=Path,default=Path.cwd());p.add_argument("--repo",default="");p.add_argument("--manifest",type=Path,default=ROOT/"catalog/resolver-manifest.json");p.add_argument("--inventory",type=Path,default=ROOT/"catalog/skills-inventory.json");a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument("--prompt",default="");p.add_argument("--cwd",type=Path,default=Path.cwd());p.add_argument("--repo",default="");p.add_argument("--manifest",type=Path,default=ROOT/"catalog/resolver-manifest.json");p.add_argument("--inventory",type=Path,default=ROOT/"catalog/skills-inventory.json")
+    p.add_argument("--render-hook",action="store_true",help="render checked package content for the registered prompt hook")
+    p.add_argument("--mode",choices=("on","canary"),default="on")
+    a=p.parse_args()
     try:
+        if a.render_hook:
+            runtime_file(ROOT,a.manifest.relative_to(ROOT).as_posix())
+            if a.inventory.exists() or a.inventory.is_symlink():
+                runtime_file(ROOT,a.inventory.relative_to(ROOT).as_posix())
         manifest=json.loads(a.manifest.read_text())
+        if a.render_hook and "procedure_composition" in manifest:
+            runtime_file(ROOT,a.inventory.relative_to(ROOT).as_posix())
         if a.inventory.is_file():
             inventory=json.loads(a.inventory.read_text())
         else:
             entries=manifest.get("known_by_source")
             inventory={"items":list(entries.values()) if entries is not None else
                        [{"slug":slug,**meta} for slug,meta in manifest.get("known",{}).items()]}
-        result=select(manifest,inventory,a.prompt,a.repo or detect_repo(a.cwd))
+        repo=a.repo or detect_repo(a.cwd)
+        result=select(manifest,inventory,a.prompt,repo)
+        if a.render_hook:
+            print(render_hook_result(ROOT,manifest,result,repo,a.mode));return 0
     except (OSError,ValueError,KeyError,TypeError,AttributeError,IndexError,json.JSONDecodeError) as e:
+        if a.render_hook:
+            print("<progressive-load-set>\nstate: error\ndiagnostic: selector or runtime content invalid; kernel only\n</progressive-load-set>")
+            print(str(e),file=sys.stderr);return 1
         print(json.dumps({"schema_version":1,"state":"error","kernel":"skills/KERNEL.md","selected":[],"diagnostic":str(e)},sort_keys=True));return 1
     print(json.dumps(result,sort_keys=True));return 0
 if __name__=="__main__":raise SystemExit(main())

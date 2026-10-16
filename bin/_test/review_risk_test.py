@@ -13,6 +13,7 @@ AUTHORITY_DEPENDENCY_FLOOR = [
  "bin/_test/gate_contract_test.py",
  "bin/_test/protected_policy_test.py",
  "bin/_test/provider_event_test.py",
+ "bin/_test/resident_delivery_test.py",
  "examples/provider/shared-parent-workflow.yml",
  "scripts/ci/protected-policy-range.py",
  "scripts/ci/check-branch-topology.sh",
@@ -98,6 +99,7 @@ REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "67e52755ef66fb4ba9ad1bf32df1e51653924b41
 REQUIRED_MANIFEST_REGISTRATIONS_SHA256 = "868ca27fe41ca9d2e6f9335e2ddaf05d7cb992617b42f24cbc3ff2794099414b"
 REQUIRED_GENERATED_SETTINGS_REGISTRATIONS_SHA256 = "19a972d9471da0d66c46568c0efb8a16c356ed66f620702b7f06b8251bc809f0"
 CI_INVOCATION_SITES = [
+ (".github/workflows/build-and-publish.yml","bin/_test/resident_delivery_test.py","python3 bin/_test/resident_delivery_test.py",1),
  (".github/workflows/build-and-publish.yml","bin/_test/provider_event_test.py","run: python3 bin/_test/provider_event_test.py",1),
  (".github/workflows/build-and-publish.yml","bin/_test/native_push_test.py","run: python3 bin/_test/native_push_test.py",1),
  ("bin/generated-source-authority.py","bin/skill-inventory.py",'[sys.executable, str(root / "bin" / "skill-inventory.py"), "--check"],',1),
