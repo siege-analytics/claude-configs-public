@@ -8,12 +8,15 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+from html import unescape
+from html.parser import HTMLParser
 import importlib.util
 import json
 import posixpath
 import re
 import sys
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -29,6 +32,73 @@ def module(name, filename):
 composition = module('procedure_composition', 'procedure_composition.py')
 build = module('composition_build', 'build.py')
 effective = module('composition_policy', 'effective_policy.py')
+
+
+def raw_link_targets(content):
+    """Read Markdown destinations and HTML href/src without interpreting prose.
+
+    This is a conservative package validator, not a Markdown renderer: even
+    local link examples in code must name packaged content. Destination parsing
+    handles angle brackets, escapes and balanced parentheses; external schemes
+    and same-document anchors are classified by the caller.
+    """
+    def destination(offset):
+        while offset < len(content) and content[offset].isspace():
+            offset += 1
+        angled = offset < len(content) and content[offset] == '<'
+        if angled:
+            offset += 1
+        result, depth = [], 0
+        while offset < len(content):
+            char = content[offset]
+            if char == '\\' and offset + 1 < len(content):
+                result.append(content[offset + 1]); offset += 2; continue
+            if angled:
+                if char == '>':
+                    return ''.join(result)
+                composition.require(char not in '\r\n', 'unsupported multiline angle link destination')
+            else:
+                if char.isspace() or char == ')' and depth == 0:
+                    composition.require(depth == 0, 'unbalanced raw link destination')
+                    return ''.join(result)
+                if char == '(':
+                    depth += 1
+                elif char == ')':
+                    depth -= 1
+            result.append(char); offset += 1
+        composition.require(not angled and depth == 0, 'unclosed raw link destination')
+        return ''.join(result)
+
+    targets = [destination(match.end()) for match in re.finditer(r'\]\(', content)]
+    # Reference definitions are checked even if unused. Labels may contain
+    # escaped brackets; whitespace before the destination may include a newline.
+    definitions = re.finditer(r'(?m)^[ \t]{0,3}\[(?:\\.|[^\]\\]){1,999}\]:', content)
+    targets.extend(destination(match.end()) for match in definitions)
+
+    class Links(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            for name, value in attrs:
+                if name in {'href', 'src'} and value is not None:
+                    targets.append(value)
+
+    parser = Links(convert_charrefs=True)
+    parser.feed(content)
+    parser.close()
+    return targets
+
+
+def validate_packaged_links(files):
+    for name, data in files.items():
+        if not name.endswith('.md'):
+            continue
+        for link in raw_link_targets(data.decode()):
+            parsed = urlsplit(unescape(link))
+            if parsed.scheme or not parsed.path and not parsed.netloc:
+                continue
+            path = unquote(parsed.path)
+            target = posixpath.normpath(posixpath.join(posixpath.dirname(name), path))
+            composition.require(not parsed.netloc and not path.startswith('/') and target in files,
+                                f'{name}: missing or out-of-scope packaged link {link}; use a qualified skill/rule token')
 
 
 def package(source, destination, identity, *, policy_root=ROOT):
@@ -156,15 +226,7 @@ def package(source, destination, identity, *, policy_root=ROOT):
         # A pre-existing Markdown link must not resurrect the replaced default
         # or escape into another consumer. Tokens are rebound; unsupported raw
         # references reject with a concrete path instead of shipping broken.
-        for name, data in files.items():
-            if not name.endswith('.md'):
-                continue
-            for match in re.finditer(r'\]\(([^\s)]+)\)', data.decode()):
-                link = match[1].split('#', 1)[0]
-                if not link or re.match(r'^[a-zA-Z][a-zA-Z0-9+.-]*:', link):
-                    continue
-                target = posixpath.normpath(posixpath.join(posixpath.dirname(name), link))
-                composition.require(not link.startswith('/') and target in files, f'{name}: missing or out-of-scope packaged link {link}; use a qualified skill/rule token')
+        validate_packaged_links(files)
         outputs[layout] = files
     for layout, files in outputs.items():
         for relative, data in files.items():

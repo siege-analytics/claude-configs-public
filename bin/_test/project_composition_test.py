@@ -153,6 +153,53 @@ class ProjectCompositionTest(unittest.TestCase):
             m.package(source, output, 'github.example.invalid/synthetic-org/strict-release')
         self.assertFalse(output.exists())
 
+    def test_reference_and_html_replaced_links_reject_before_any_layout_write(self):
+        forms = [
+            '[Old review][legacy]\n\n[legacy]: ../self-review/SKILL.md\n',
+            '[Old review][legacy]\n\n[legacy]:\n  <../self-review/SKILL.md> "Old"\n',
+            '<a href="../self-review/SKILL.md">Old review</a>\n',
+            '<img SRC="../self-review/SKILL.md" />\n',
+            '<a href="&#46;&#46;/self-review/SKILL.md">Old</a>\n',
+            '[Old]( <../self-review/SKILL.md> )\n',
+        ]
+        for content in forms:
+            source, output = self.changed_source()
+            path = source / 'skills/coding/code-review/SKILL.md'
+            path.write_text(path.read_text() + '\n' + content)
+            with self.subTest(content=content), self.assertRaisesRegex(ValueError, 'missing or out-of-scope packaged link'):
+                m.package(source, output, 'github.example.invalid/synthetic-org/strict-release')
+            self.assertFalse(output.exists())
+
+    def test_link_scope_validation_covers_both_layouts_and_encodings(self):
+        for caller in ('skills/code-review/SKILL.md', 'skills/coding/code-review/SKILL.md'):
+            for target in ('../self-review/SKILL.md', '../../../foreign/secret.md', '%2e%2e/%2e%2e/%2e%2e/private.md'):
+                forms = [f'[label]({target})', f'[label](<{target}>)', f'[label][ref]\n[ref]: {target}', f'<a href="{target}">label</a>', f'<img src="{target}">']
+                for content in forms:
+                    with self.subTest(caller=caller, target=target, content=content), self.assertRaisesRegex(ValueError, 'out-of-scope packaged link'):
+                        m.validate_packaged_links({caller: content.encode()})
+
+    def test_link_forms_preserve_packaged_assets_external_schemes_and_anchors(self):
+        content = '''[inline](references/steps.md#section)
+[angle](<references/step%20(one).md>)
+[reference][ref]
+[ref]: references/steps.md "Steps"
+[multiline][long label]
+[long
+label]: <references/steps.md>
+<a HREF="references/steps.md#section">Steps</a>
+<img src='references/steps.md'/>
+[external](<https://example.invalid/path?q=1#x>)
+[external-ref]: https://example.invalid/path
+<a href="mailto:example@example.invalid">Email</a>
+<img src="https://example.invalid/image.png"/>
+[anchor](#local)
+[anchor-ref]: #local
+<a href="#local">Local</a>
+'''
+        for directory in ('skills/review', 'skills/coding/review'):
+            files = {directory + '/SKILL.md': content.encode(), directory + '/references/steps.md': b'# Steps', directory + '/references/step (one).md': b'# Steps'}
+            m.validate_packaged_links(files)
+
     def test_foreign_project_reference_rejects(self):
         source, output = self.changed_source()
         path = source / 'skills/coding/code-review/SKILL.md'

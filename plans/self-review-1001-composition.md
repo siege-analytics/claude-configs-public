@@ -56,3 +56,16 @@ Generated authority remains current at 198 sources, 804 snapshots and 2,912 mapp
 these counts cover the normal production layouts. The separate synthetic outputs
 are tested directly and carry their own composition/source-policy receipts.
 Independent exact-commit review and hosted CI remain pending at publication.
+
+## Independent R1 remediation
+
+The Craft reviewer rejected `ec18168357eb72bd49d3558d0f348089609f29bf` because
+reference-style Markdown and HTML links could retain a missing replaced-default
+path. The original inline-only regex was insufficient. Destination validation now
+reads inline/angle/reference destinations and uses the standard-library HTML
+parser for href/src attributes; it normalizes decoded package-relative paths.
+External schemes and same-document anchors remain allowed. Both layouts are
+validated before output. Three regression scenarios cover the reproductions,
+both-layout scope/encoding negatives and valid packaged/external/anchor controls.
+The focused total is now 38 scenarios. The original head's hosted full validation
+passed; its independent rejection remains valid until the replacement is reviewed.
