@@ -40,7 +40,8 @@ class GateContractTest(unittest.TestCase):
                        "surface": "native-git-pre-push", "blocking": True}],
         }))
         (ca / "settings-enforcement.json").write_text(json.dumps({
-            "_gate_contract": {"schema_version": 1, "contract_version": "1.0.0",
+            "_gate_contract": {"schema_version": self.contract["schema_version"],
+                               "contract_version": self.contract["contract_version"],
                                "source": gc.CONTRACT.as_posix(), "sha256": digest,
                                "evidence_state": "configured"},
             "hooks": {"UserPromptSubmit": [{"hooks": [{"type": "command",
@@ -249,6 +250,26 @@ class GateContractTest(unittest.TestCase):
             with self.subTest(mutation=mutation):
                 with self.assertRaisesRegex(ValueError, "conditional, altered, or non-exact"):
                     gc.validate_protected_workflow(mutation)
+
+    def test_base_controlled_adapter_registration_and_old_guard_are_both_required(self):
+        valid = (ROOT / ".github/workflows/pr-base-guard.yml").read_text()
+        gc.validate_protected_adapter_workflow(valid)
+        mutations = (
+            valid.replace("fetch-depth: 0  # selected policy snapshot must be an available ancestor", "fetch-depth: 1"),
+            valid.replace("run: bash ../policy/scripts/ci/check-branch-topology.sh", "run: true"),
+            valid.replace("--head \"$EXACT_HEAD\"", "--head HEAD"),
+            valid.replace("--canonical-identity \"$CANONICAL_HOST/$CANONICAL_REPOSITORY\"", "--canonical-identity github.example.invalid/synthetic-org/strict-release"),
+            valid.replace("--head-branch \"$HEAD_BRANCH\"", "--head-branch feature/untrusted"),
+            valid.replace("set -euo pipefail", "set +e"),
+            valid.replace("      - name: Evaluate exact project policy range\n        if: github.event_name == 'pull_request_target'",
+                          "      - name: Evaluate exact project policy range\n        if: false"),
+            valid.replace("    runs-on: ubuntu-latest", "    if: false\n    runs-on: ubuntu-latest"),
+        )
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                self.assertNotEqual(valid, mutation)
+                with self.assertRaisesRegex(ValueError, "reviewed complete registration"):
+                    gc.validate_protected_adapter_workflow(mutation)
 
     def test_generated_registration_removal_rejects(self):
         with tempfile.TemporaryDirectory() as raw:
