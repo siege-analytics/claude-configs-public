@@ -227,5 +227,61 @@ class ProviderEventTest(unittest.TestCase):
         self.assertEqual(result['candidate_policy']['authorization_effect'], 'none')
         self.assertEqual(result['trusted']['revision'], self.fixture.trusted_revision)
 
+    def test_public_self_hosted_entrypoint_preserves_denial_repair_and_workflow_identity(self):
+        remote = Path(tempfile.mkdtemp(prefix='public-canonical-', dir=self.fixture.temp))
+        f.run('git', 'init', '--bare', '-q', '--initial-branch=develop', str(remote), cwd=self.fixture.temp)
+        # The synthetic default branch precedes the pinned protected base;
+        # do not depend on a runner having a local refs/heads/main checkout.
+        main = f.git(self.fixture.trusted, 'rev-parse', 'HEAD^').stdout.strip()
+        base = self.fixture.trusted_revision
+        f.git(self.fixture.trusted, 'push', '-q', '--no-verify', str(remote),
+              main + ':refs/heads/main', base + ':refs/heads/develop')
+        policy = Path(tempfile.mkdtemp(prefix='public-policy-', dir=self.fixture.temp))
+        candidate = Path(tempfile.mkdtemp(prefix='public-candidate-', dir=self.fixture.temp))
+        f.run('git', 'clone', '-q', '--depth', '1', '--branch', 'develop', remote.as_uri(), str(policy), cwd=self.fixture.temp)
+        f.run('git', 'clone', '-q', '--branch', 'develop', str(remote), str(candidate), cwd=self.fixture.temp)
+        identity = 'siege-analytics/claude-configs-public'
+        origin = 'https://github.com/' + identity + '.git'
+        for repo in (policy, candidate):
+            f.git(repo, 'remote', 'set-url', 'origin', origin)
+            f.git(repo, 'config', 'url.' + remote.as_uri() + '.insteadOf', origin)
+        f.git(candidate, 'config', 'user.name', 'Synthetic Fixture')
+        f.git(candidate, 'config', 'user.email', 'fixture@example.invalid')
+        f.git(candidate, 'checkout', '-q', '-b', 'feature/public-probe')
+        self.case.change(candidate, 'public-operation', self.case.message('missing ticket', ticket=False), no_verify=True)
+        event = candidate.parent / (candidate.name + '-event.json')
+        env = dict(os.environ, GITHUB_EVENT_NAME='pull_request_target', GITHUB_EVENT_PATH=str(event),
+                   GITHUB_REPOSITORY=identity, GITHUB_SERVER_URL='https://github.com',
+                   GITHUB_WORKFLOW_REF=identity + '/.github/workflows/pr-base-guard.yml@refs/heads/main',
+                   GITHUB_WORKFLOW_SHA=main)
+        for key in ('BASE_BRANCH', 'HEAD_BRANCH', 'HEAD_REPO', 'CANONICAL_REPO'):
+            env.pop(key, None)
+
+        def probe(target='develop', changes=None):
+            repository = {'full_name': identity}
+            event.write_text(json.dumps({'repository': repository, 'pull_request': {
+                'base': {'sha': base, 'ref': target, 'repo': repository},
+                'head': {'sha': f.git(candidate, 'rev-parse', 'HEAD').stdout.strip(),
+                         'ref': 'feature/public-probe', 'repo': repository},
+            }}))
+            result = f.run('bash', str(policy / 'scripts/ci/check-branch-topology.sh'),
+                           cwd=candidate, env=dict(env, **(changes or {})), check=False)
+            return result.returncode, json.loads(result.stdout)
+
+        self.assertEqual(f.git(policy, 'rev-parse', '--is-shallow-repository').stdout.strip(), 'true')
+        code, denied = probe()
+        self.assertEqual((code, denied['state']), (1, 'denied'), denied)
+        self.assertIn('lacks required approved ticket evidence', denied['diagnostic'])
+        self.assertEqual(f.git(policy, 'rev-parse', '--is-shallow-repository').stdout.strip(), 'false')
+        f.git(candidate, '-c', 'core.hooksPath=/dev/null', 'commit', '--amend', '-qm', self.case.message('repair'))
+        code, repaired = probe()
+        self.assertEqual((code, repaired['state']), (0, 'eligible'), repaired)
+        self.assertEqual(repaired['host_event_binding']['mode'], 'self-hosted-base')
+        self.assertEqual(repaired['trusted']['revision'], base)
+        self.assertEqual(repaired['trusted']['executed_workflow']['revision'], main)
+        self.assertNotEqual(base, main)
+        self.assertEqual(probe('main')[0], 1)
+        self.assertEqual(probe(changes={'GITHUB_WORKFLOW_SHA': '0' * 40})[0], 2)
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

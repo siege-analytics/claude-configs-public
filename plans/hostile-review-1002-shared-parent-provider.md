@@ -10,6 +10,8 @@ Nine registered-event scenarios use two actual Git consumers, local bare remotes
 
 The reviewed preparation example contains separate pinned-parent, candidate-data and canonical-workflow checkouts. The consumer checkout fetches history while authenticated; credentials are removed afterwards. No second anonymous consumer fetch is needed. Parent shallow recovery is restricted to its independently validated configured origin.
 
+A tenth regression calls the public self-hosted shell entrypoint from a real shallow protected-base clone. Its unchanged canonical default workflow remains a distinct revision. Missing ticket and wrong branch deny, an amended ticketed head becomes eligible, and mismatched workflow provenance errors. The fixture creates its own default-branch ref and requires no local runner branch named main.
+
 ## Reviewer-directed correction
 
 The first local prototype used the same-repository candidate store for workflow object reads. Direction review required independent canonical provenance. Shared-parent mode now requires a separate canonical consumer workflow checkout, verifies its repository/HEAD/default-main ref, and refuses the candidate checkout as authority. Parent repository identity is independently configured and checked before ancestry recovery. The public self-hosted case retains its separately verified canonical base checkout.

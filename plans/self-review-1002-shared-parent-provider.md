@@ -25,7 +25,7 @@ Pending exact-head review and hosted evidence.
 
 ## Quantified claims
 
-Nine focused registered-event scenarios pass. Full current-tree validation passes 86/86 commands in 596.0 seconds: all Python modules, 36 hook suites, both workflow suites, canonical build, freshness and source/consumer validators. This includes the existing 13 policy cases and 10 local topology cases. Log: `/tmp/cc-shared-provider-full.log`. All local fixtures are synthetic and disposable. No host registration, shared installation or authorization is established by these tests.
+Nine focused registered-event scenarios and full validation passed 86/86 commands in 596.0 seconds: all Python modules, 36 hook suites, both workflow suites, canonical build, freshness and source/consumer validators. This includes the existing 13 policy cases and 10 local topology cases. Log: `/tmp/cc-shared-provider-full.log`. A subsequent test-only addition brings the event suite to ten passing scenarios, covering the actual public self-hosted shell entrypoint, shallow-parent recovery, missing-ticket denial/repair, strict branch denial and distinct workflow provenance. Logs: `/tmp/cc-shared-provider-final-events.log` and `/tmp/cc-shared-provider-public-event.log`. All local fixtures are synthetic and disposable. No host registration, shared installation or authorization is established by these tests.
 
 ## Rollback
 
