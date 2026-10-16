@@ -4,6 +4,7 @@ import copy
 from concurrent.futures import ThreadPoolExecutor
 import importlib.util
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -66,6 +67,9 @@ class PackageGenerationTest(unittest.TestCase):
                 'repository': 'synthetic-owner/configs', 'tag': tag, 'source': source}
 
     def setUp(self):
+        self.prepare_consumer()
+
+    def prepare_consumer(self, project='strict-release'):
         temporary = tempfile.TemporaryDirectory(prefix='package-generation-consumer-')
         self.addCleanup(temporary.cleanup); self.base_case = Path(temporary.name)
         self.consumer = self.base_case / 'consumer'; self.consumer.mkdir()
@@ -74,8 +78,8 @@ class PackageGenerationTest(unittest.TestCase):
         git(self.consumer, 'config', 'user.name', 'Consumer fixture')
         git(self.consumer, 'config', 'user.email', 'fixture@example.invalid')
         self.store = self.base_case / 'store'
-        self.identity = 'github.example.invalid/synthetic-org/strict-release'
-        shutil.copytree(self.parent / 'examples/composition/projects/strict-release', self.consumer / 'project')
+        self.identity = 'github.example.invalid/synthetic-org/' + project
+        shutil.copytree(self.parent / 'examples/composition/projects' / project, self.consumer / 'project')
         local = self.consumer / 'operator/local-skills/checks'; local.mkdir(parents=True)
         (local / 'SKILL.md').write_text('# Local checks\nRetained nested operator skill.\n')
         (self.consumer / 'settings.json').write_text(json.dumps({'theme': 'dark', 'customTool': {'timeout': 42}}))
@@ -201,6 +205,155 @@ class PackageGenerationTest(unittest.TestCase):
             results.append((code, branch_code, ticket_code, drift_code))
             self.assertEqual(selected['epoch'], index + 1)
         self.assertEqual(results, [(0, 1, 1, 1)] * 3)
+
+    def test_shared_parent_events_follow_resolved_generations_for_both_projects(self):
+        # These explicit host pins are independent inputs, never derived from
+        # current.json. A generation selection does not register a provider.
+        parent_identity = 'github.com/synthetic-owner/configs'
+        original_origin = git(self.parent, 'remote', 'get-url', 'origin')
+        git(self.parent, 'remote', 'set-url', 'origin', 'https://' + parent_identity + '.git')
+        self.addCleanup(git, self.parent, 'remote', 'set-url', 'origin', original_origin)
+        shared_pins = {}
+        for project, target in [('strict-release', 'develop'), ('synthetic-trunk', 'main')]:
+            with self.subTest(project=project):
+                if project != 'strict-release':
+                    self.prepare_consumer(project)
+                first, second = self.stage(), self.stage(self.second)
+                m.select(self.store, first, expected_epoch=0)
+                first_scope = m.resolve(self.store)
+                first_payload = Path(first_scope['payload'])
+                previous_head = None
+                for index, version in enumerate((self.first, self.second, self.first)):
+                    with self.subTest(project=project, epoch=index + 1):
+                        if index == 1:
+                            self.select(second)
+                        elif index == 2:
+                            self.select(first, rollback=True)
+                        scope = m.resolve(self.store)
+                        payload = Path(scope['payload'])
+                        _, generation = m.generation(self.store, scope['generation'])
+                        self.assertEqual(scope['epoch'], index + 1)
+                        self.assertEqual(scope['authorization_effect'], 'none')
+                        if index == 2:
+                            self.assertEqual(scope['generation'], first_scope['generation'])
+                            self.assertNotEqual(scope, first_scope)
+                        for relative in ['operator-settings.json', 'operator/local-skills/checks/SKILL.md',
+                                         'content/skills/RESIDENT.md']:
+                            self.assertEqual((payload / relative).read_bytes(), (first_payload / relative).read_bytes())
+                        content = payload / 'content'
+                        composition = json.loads((content / 'composition.json').read_bytes())
+                        self.assertEqual(composition['identity'], self.identity)
+                        self.assertEqual(composition['project'], project)
+                        self.assertEqual((content / 'skills/RESIDENT.md').read_text(), composition['resident']['rendered'])
+                        selected = composition['composition']['selected']
+                        self.assertTrue(selected)
+                        for entry in selected:
+                            self.assertTrue((content / entry['load_path']).is_file())
+                        self.assertEqual(
+                            [entry['slug'] for entry in selected],
+                            [entry['slug'] for entry in json.loads((first_payload / 'content/composition.json').read_bytes())['composition']['selected']])
+                        if project == 'strict-release':
+                            for slug in ['strict-release--review', 'strict-release--checks']:
+                                relative = 'skills/' + slug + '/SKILL.md'
+                                self.assertEqual((content / relative).read_bytes(), (first_payload / 'content' / relative).read_bytes())
+
+                        repo = self.base_case / f'provider-{index}'; repo.mkdir()
+                        git(repo, 'init', '-q', '-b', 'main')
+                        git(repo, 'config', 'core.hooksPath', '/dev/null')
+                        git(repo, 'config', 'user.name', 'Provider transition fixture')
+                        git(repo, 'config', 'user.email', 'fixture@example.invalid')
+                        canonical = 'synthetic-org/' + project
+                        origin = 'https://' + self.identity + '.git'
+                        git(repo, 'remote', 'add', 'origin', origin)
+                        shutil.copytree(content, repo / '.pilot')
+                        workflow_path = '.github/workflows/pr-base-guard.yml'
+                        workflow = repo / workflow_path; workflow.parent.mkdir(parents=True)
+                        template = (version['parent_root'] / 'examples/provider/shared-parent-workflow.yml').read_text()
+                        workflow.write_text(template.replace('PARENT_SOURCE_REVISION', version['source']))
+                        base = commit(repo)
+                        workflow_root = self.base_case / f'workflow-{index}'
+                        subprocess.run(['git', 'clone', '-q', '--no-local', str(repo), str(workflow_root)], check=True)
+                        git(workflow_root, 'remote', 'set-url', 'origin', origin)
+                        git(repo, 'update-ref', 'refs/remotes/origin/main', base)
+                        git(repo, 'checkout', '-q', '-b', 'feature/generation')
+                        (repo / 'change.md').write_text('Synthetic provider operation.\n')
+                        git(repo, 'add', 'change.md')
+                        git(repo, 'commit', '-qm', 'Provider operation #1004')
+                        event_path = self.base_case / f'event-{index}.json'
+                        workflow_ref = canonical + '/' + workflow_path + '@refs/heads/main'
+
+                        def probe(*, branch=target, parent=version, head=None):
+                            exact_head = head or git(repo, 'rev-parse', 'HEAD')
+                            identity = {'full_name': canonical}
+                            event_path.write_text(json.dumps({'repository': identity, 'pull_request': {
+                                'base': {'sha': base, 'ref': branch, 'repo': identity},
+                                'head': {'sha': exact_head, 'ref': 'feature/generation', 'repo': identity}}}))
+                            env = {key: value for key, value in os.environ.items()
+                                   if key not in {'BASE_BRANCH', 'HEAD_BRANCH', 'HEAD_REPO', 'CANONICAL_REPO'}}
+                            env.update(GITHUB_EVENT_NAME='pull_request_target', GITHUB_EVENT_PATH=str(event_path),
+                                       GITHUB_REPOSITORY=canonical, GITHUB_SERVER_URL='https://github.example.invalid',
+                                       GITHUB_WORKFLOW_REF=workflow_ref, GITHUB_WORKFLOW_SHA=base)
+                            result = subprocess.run([
+                                sys.executable, str(parent['parent_root'] / 'scripts/ci/protected-policy-range.py'),
+                                '--host-event', '--trusted-root', str(parent['parent_root']),
+                                '--trusted-revision', parent['source'], '--trusted-repository', parent_identity,
+                                '--candidate-repo', str(repo), '--executed-workflow-root', str(workflow_root),
+                                '--installed-pilot-receipt', '.pilot/composition.json',
+                            ], cwd=repo, env=env, capture_output=True, text=True, timeout=90)
+                            self.assertTrue(result.stdout, result.stderr)
+                            return result.returncode, json.loads(result.stdout)
+
+                        code, allowed = probe()
+                        self.assertEqual((code, allowed['state']), (0, 'eligible'), allowed)
+                        self.assertEqual(allowed['authorization'], 'protected-host-check-required')
+                        self.assertEqual(allowed['authorization_effect'], 'none-outside-trusted-host-receipt')
+                        self.assertEqual(allowed['trusted']['revision'], version['source'])
+                        shared_pins.setdefault(index, []).append(allowed['trusted']['revision'])
+                        self.assertEqual(allowed['host_event_binding']['mode'], 'shared-parent')
+                        self.assertEqual(allowed['host_event_binding']['consumer_base'], base)
+                        self.assertEqual(allowed['host_event_binding']['consumer_head'], git(repo, 'rev-parse', 'HEAD'))
+                        self.assertNotEqual(base, version['source'])
+                        observed_workflow = allowed['trusted']['executed_workflow']
+                        self.assertEqual(observed_workflow['revision'], base)
+                        self.assertEqual(observed_workflow['source_ref'], workflow_ref)
+                        self.assertEqual(observed_workflow['repository_identity'], {
+                            'host': 'github.example.invalid', 'owner': 'synthetic-org', 'repository': project})
+                        self.assertEqual(observed_workflow['git_blob'], git(workflow_root, 'rev-parse', f'{base}:{workflow_path}'))
+                        self.assertEqual(observed_workflow['sha256'], m.handoff.digest(workflow.read_bytes()))
+                        installed = allowed['candidate']['installed_pilot']
+                        self.assertEqual(installed['sha256'], m.handoff.digest((content / 'composition.json').read_bytes()))
+                        self.assertEqual(installed['parent_content_sha256'], generation['parent_content_sha256'])
+                        self.assertEqual(installed['effective_policy_sha256'], generation['effective_policy_sha256'])
+                        self.assertEqual(installed['authorization_effect'], 'none')
+                        self.assertIn(f'targets `{target}`', allowed['resident_workflow'])
+                        initial_head = allowed['candidate']['head']
+
+                        code, wrong = probe(branch='main' if target == 'develop' else 'develop')
+                        self.assertEqual((code, wrong['state']), (1, 'denied'), wrong)
+                        self.assertIn('target branch contradicts', wrong['diagnostic'])
+                        git(repo, 'commit', '--amend', '-qm', 'Missing ticket')
+                        code, denied = probe()
+                        self.assertEqual((code, denied['state']), (1, 'denied'), denied)
+                        self.assertIn('lacks required approved ticket evidence', denied['diagnostic'])
+                        git(repo, 'commit', '--amend', '-qm', 'Repaired exact provider head #1004')
+                        code, repaired = probe()
+                        self.assertEqual((code, repaired['state']), (0, 'eligible'), repaired)
+                        self.assertNotEqual(repaired['candidate']['head'], initial_head)
+                        code, stale = probe(head=previous_head or initial_head)
+                        self.assertEqual((code, stale['state']), (2, 'error'), stale)
+                        self.assertIn('checkout differs from exact host event head', stale['diagnostic'])
+                        previous_head = repaired['candidate']['head']
+                        other = self.first if index == 1 else self.second
+                        code, mixed = probe(parent=other)
+                        self.assertEqual((code, mixed['state']), (1, 'denied'), mixed)
+                        self.assertIn('differs from trusted composition', mixed['diagnostic'])
+                        for denied_result in [wrong, denied, stale, mixed]:
+                            self.assertEqual(denied_result['authorization'], 'none')
+                        self.assertEqual(git(repo, 'rev-parse', 'main'), base)
+                        self.assertEqual(git(workflow_root, 'rev-parse', 'HEAD'), base)
+                        self.assertEqual(m.resolve(self.store), scope)
+        for index, version in enumerate((self.first, self.second, self.first)):
+            self.assertEqual(shared_pins.get(index, []), [version['source']] * 2)
 
     def test_selected_project_replacement_extension_and_resident_survive(self):
         first = self.stage(); second = self.stage(self.second)
