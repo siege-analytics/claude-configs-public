@@ -25,7 +25,7 @@ FIELDS = {
     "checkpoint": {"state", "summary", "next_action", "dependency", "wait_seconds", "evidence"},
     "candidate": {"sha"},
     "review": {"sha", "verdict", "evidence", "failure_class"},
-    "checks": {"sha", "status", "evidence"},
+    "checks": {"sha", "run_id", "status", "evidence"},
     "finding": {"finding_id", "summary", "evidence"},
     "resolve-finding": {"finding_id", "evidence"},
     "decision": {"failure_class", "choice", "evidence"},
@@ -81,7 +81,7 @@ def transition(previous, event):
         return {
             **data, "state": "working", "generation": 1, "candidate_sha": None,
             "review": {"verdict": "pending", "evidence": []},
-            "checks": {"status": "pending", "evidence": []},
+            "checks": {"run_id": None, "status": "pending", "evidence": []}, "check_runs": {},
             "review_history": [], "findings": {}, "failures": {}, "failure_heads": {}, "decisions": [],
             "suspended_approaches": [], "ownership_history": [], "interrupted": False,
             "summary": "Work initialized", "dependency": "", "evidence": [],
@@ -95,6 +95,7 @@ def transition(previous, event):
     coordinator_action = kind in {"decision", "supersede"}
     require(event["actor"] == previous["coordinator" if coordinator_action else "owner"], "wrong actor")
     s = copy.deepcopy(previous)
+    check_progress = False
     if kind == "checkpoint":
         require(data["state"] in STATES, "unknown work state")
         for name in ("summary", "next_action"):
@@ -130,7 +131,7 @@ def transition(previous, event):
                     receipt["invalidated"] = True
             s["candidate_sha"] = data["sha"]
             s["review"] = {"verdict": "pending", "evidence": []}
-            s["checks"] = {"status": "pending", "evidence": []}
+            s["checks"] = {"run_id": None, "status": "pending", "evidence": []}
             s["state"] = "waiting" if s["interrupted"] else "working"
             s["next_action"] = "Obtain review and checks for the new candidate"
     elif kind in {"review", "checks"}:
@@ -139,7 +140,20 @@ def transition(previous, event):
         evidence(data["evidence"])
         if kind == "checks":
             require(data["status"] in {"pending", "passed", "failed"}, "unknown check status")
-            s["checks"] = {"status": data["status"], "evidence": data["evidence"]}
+            string(data["run_id"], "run_id")
+            run_id = data["run_id"]
+            receipt = {"sha": data["sha"], "status": data["status"], "evidence": data["evidence"]}
+            old = s["check_runs"].get(run_id)
+            if old is not None:
+                require(old["sha"] == data["sha"], "check run belongs to another candidate")
+                if old["status"] != "pending":
+                    require(old == receipt, "terminal check run is immutable; use the actual new run identity")
+                    return previous  # A delayed duplicate cannot restore an old result.
+            s["check_runs"][run_id] = receipt
+            # A late old run may finish, but cannot supersede the selected run.
+            if old is None or s["checks"]["run_id"] == run_id:
+                s["checks"] = {"run_id": run_id, "status": data["status"], "evidence": data["evidence"]}
+                check_progress = data["status"] in {"passed", "failed"}
         else:
             verdict = data["verdict"]
             require(verdict in {"queued", "active", "accepted", "changes-required", "unavailable"}, "unknown review verdict")
@@ -228,8 +242,7 @@ def transition(previous, event):
         progress = kind in {"candidate", "finding", "resolve-finding", "decision"}
         progress |= (kind == "review" and data["verdict"] in {"accepted", "changes-required"}
                      and s["review"]["verdict"] != previous["review"]["verdict"])
-        progress |= (kind == "checks" and data["status"] in {"passed", "failed"}
-                     and s["checks"]["status"] != previous["checks"]["status"])
+        progress |= kind == "checks" and check_progress
         if progress:
             s["last_progress_at"] = event["at"]
             s["progress_sequence"] += 1

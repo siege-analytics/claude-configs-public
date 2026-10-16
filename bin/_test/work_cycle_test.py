@@ -33,7 +33,8 @@ class WorkCycleTest(unittest.TestCase):
         }, actor="hub")
 
     def event(self, kind, data, actor=None):
-        return {"id": str(len(self.events)), "at": 1000 + len(self.events) * 10,
+        now = max(1000 + len(self.events) * 10, self.state["last_event_at"] + 10 if self.state else 1000)
+        return {"id": str(len(self.events)), "at": now,
                 "actor": actor or self.state["owner"], "generation": self.state["generation"] if self.state else 1,
                 "kind": kind, "data": data}
 
@@ -57,7 +58,7 @@ class WorkCycleTest(unittest.TestCase):
 
     def test_changed_head_invalidates_review_and_checks(self):
         self.candidate(); self.review()
-        self.step("checks", {"sha": SHA_A, "status": "passed", "evidence": ["ci/1"]})
+        self.step("checks", {"sha": SHA_A, "run_id": "ci-1", "status": "passed", "evidence": ["ci/1"]})
         self.candidate(SHA_B)
         self.assertEqual(self.state["review"]["verdict"], "pending")
         self.assertEqual(self.state["checks"]["status"], "pending")
@@ -117,10 +118,10 @@ class WorkCycleTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "candidate was rejected"):
             self.checkpoint("complete-for-review")
         self.candidate(SHA_B)
-        self.step("checks", {"sha": SHA_B, "status": "failed", "evidence": ["ci/fail"]})
+        self.step("checks", {"sha": SHA_B, "run_id": "ci-fail", "status": "failed", "evidence": ["ci/fail"]})
         with self.assertRaisesRegex(ValueError, "failed checks"):
             self.checkpoint("complete-for-review")
-        self.step("checks", {"sha": SHA_B, "status": "pending", "evidence": ["ci/rerun"]})
+        self.step("checks", {"sha": SHA_B, "run_id": "ci-rerun", "status": "pending", "evidence": ["ci/rerun"]})
         self.checkpoint("complete-for-review")
         self.assertEqual(self.state["checks"]["status"], "pending")
 
@@ -139,7 +140,7 @@ class WorkCycleTest(unittest.TestCase):
 
     def test_material_receipt_in_same_clock_second_can_start_next_chunk(self):
         self.candidate(); self.checkpoint()
-        event = self.event("checks", {"sha": SHA_A, "status": "passed", "evidence": ["ci/pass"]})
+        event = self.event("checks", {"sha": SHA_A, "run_id": "ci-pass", "status": "passed", "evidence": ["ci/pass"]})
         event["at"] = self.state["last_event_at"]
         self.state = wc.transition(self.state, event); self.events.append(event)
         self.checkpoint()
@@ -165,7 +166,7 @@ class WorkCycleTest(unittest.TestCase):
     def test_green_checks_do_not_erase_falsification(self):
         self.candidate(); self.review()
         self.step("finding", {"finding_id": "F1", "summary": "Reproducer bypasses declared guard", "evidence": ["repro.log"]})
-        self.step("checks", {"sha": SHA_A, "status": "passed", "evidence": ["ci/green"]})
+        self.step("checks", {"sha": SHA_A, "run_id": "ci-green", "status": "passed", "evidence": ["ci/green"]})
         with self.assertRaisesRegex(ValueError, "falsification"):
             self.review()
         self.candidate(SHA_B)
@@ -187,6 +188,58 @@ class WorkCycleTest(unittest.TestCase):
         self.assertEqual(self.state["review"]["verdict"], "pending")
         self.review(proof="pr/review/3")
         self.assertEqual(self.state["review"]["verdict"], "accepted")
+
+    def test_same_run_status_toggle_cannot_restart_chunk(self):
+        self.candidate()
+        receipt = {"sha": SHA_A, "run_id": "run-1/attempt-1", "status": "passed", "evidence": ["same-run"]}
+        self.step("checks", receipt); self.checkpoint()
+        progress = self.state["progress_sequence"]
+        started = self.state["chunk_started_at"]
+        for index in range(1, 6):
+            contradictory = {**receipt, "status": "failed"}
+            with self.assertRaisesRegex(ValueError, "immutable"):
+                self.step("checks", contradictory)
+            self.step("checks", receipt)  # Different transport ID, same run outcome.
+            event = self.event("checkpoint", {"state": "working", "summary": "Poll check", "next_action": "Wait",
+                               "dependency": "", "wait_seconds": 0, "evidence": ["same-run"]})
+            event["at"] = max(event["at"], started + index * 119)
+            self.state = wc.transition(self.state, event); self.events.append(event)
+            self.assertEqual(self.state["progress_sequence"], progress)
+            self.assertEqual(self.state["chunk_started_at"], started)
+        self.assertTrue(wc.status(self.state, len(self.events), self.state["last_event_at"])["chunk_due"])
+
+    def test_new_check_run_counts_once_and_terminal_cannot_regress(self):
+        self.candidate()
+        first = {"sha": SHA_A, "run_id": "run-1", "status": "pending", "evidence": ["ci/1"]}
+        self.step("checks", first)
+        before = self.state["progress_sequence"]
+        self.step("checks", {**first, "status": "passed"})
+        self.assertEqual(self.state["progress_sequence"], before + 1)
+        self.step("checks", {**first, "status": "passed"})
+        self.assertEqual(self.state["progress_sequence"], before + 1)
+        with self.assertRaisesRegex(ValueError, "immutable"):
+            self.step("checks", first)
+        self.step("checks", {**first, "run_id": "run-2", "status": "passed", "evidence": ["ci/2"]})
+        self.assertEqual(self.state["progress_sequence"], before + 2)
+
+    def test_late_old_run_cannot_restore_green_or_manufacture_progress(self):
+        self.candidate()
+        first = {"sha": SHA_A, "run_id": "run-1", "status": "pending", "evidence": ["ci/1"]}
+        self.step("checks", first)
+        self.step("checks", {"sha": SHA_A, "run_id": "run-2", "status": "failed", "evidence": ["ci/2"]})
+        progress = self.state["progress_sequence"]
+        self.step("checks", {**first, "status": "passed"})
+        self.assertEqual(self.state["checks"]["run_id"], "run-2")
+        self.assertEqual(self.state["checks"]["status"], "failed")
+        self.assertEqual(self.state["progress_sequence"], progress)
+        self.assertEqual(self.state["check_runs"]["run-1"]["status"], "passed")
+
+    def test_check_run_identity_cannot_move_to_another_candidate(self):
+        self.candidate()
+        receipt = {"sha": SHA_A, "run_id": "run-1", "status": "passed", "evidence": ["ci/1"]}
+        self.step("checks", receipt); self.candidate(SHA_B)
+        with self.assertRaisesRegex(ValueError, "another candidate"):
+            self.step("checks", {**receipt, "sha": SHA_B})
 
     def test_supersession_preserves_pending_evidence_and_fences_old_owner(self):
         self.candidate(); self.review("queued", proof="review/request")

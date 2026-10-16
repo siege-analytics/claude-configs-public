@@ -105,7 +105,7 @@ not hostile impersonation by another process with file access.
 | `checkpoint` | `state`, `summary`, `next_action`, `dependency`, `wait_seconds`, `evidence` | Explicit heartbeat/chunk boundary. Waiting, blocked and needs-input require a dependency. A working checkpoint with evidence begins another chunk only after an unconsumed material receipt. Narration and waiting/working cycles alone never reset the chunk deadline. |
 | `candidate` | `sha` | Exact lowercase 40-character SHA; a change resets review/check status and retains invalidated history. Findings and failure counts survive. |
 | `review` | `sha`, `verdict`, `evidence`, `failure_class` | Verdict: queued, active, accepted, changes-required or unavailable. Nonempty failure class only for changes-required. Evidence is a nonempty array of references. |
-| `checks` | `sha`, `status`, `evidence` | Pending, passed or failed for the current SHA. Never resolves a finding or accepts a review. |
+| `checks` | `sha`, `run_id`, `status`, `evidence` | Pending, passed or failed for the current SHA. Use the actual provider run/attempt identity; one run cannot change candidate or terminal result. Only a selected run's first terminal outcome counts as progress. Never resolves a finding or accepts a review. |
 | `finding` | `finding_id`, `summary`, `evidence` | Records an unresolved falsification and invalidates current acceptance. |
 | `resolve-finding` | `finding_id`, `evidence` | One-way resolution with evidence; a fresh review receipt is still needed. Record a new finding ID for a later counterexample. |
 | `decision` | `failure_class`, `choice`, `evidence` | Coordinator records the design choice for a suspended approach. Resets only that class's budget; prior failures/reviews remain in the journal. |
@@ -133,6 +133,15 @@ assignment is human/model judgment; renaming the same failure is not a reset.
 Each failure class counts at most once per distinct candidate SHA until a
 recorded design decision resets that class. Adding or reordering review evidence
 on one candidate does not constitute a failed replacement attempt.
+
+Check receipts use a stable provider run ID, including the attempt when a rerun
+has the same provider job number. Pending may become one terminal result;
+terminal status/evidence are immutable. An identical retry is a no-op. Late
+completion of an older known run is retained in `check_runs` but cannot replace
+the selected run or count as current progress. A new actual run gets its own ID.
+The caller must observe that identity honestly; the local journal cannot
+authenticate CI or detect an invented new run. Early unmerged prototype journals
+without `run_id` reject rather than infer an identity or silently accept a run.
 
 Recovery: for safe-mode, rate-limited, wrong-scope or context-exhausted reviewers,
 record `review(unavailable)` with the diagnostic reference, then a `blocked`
