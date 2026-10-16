@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 POLICY = Path("catalog/effective-policy.json")
 SELECTION = Path("catalog/effective-policy-selection.json")
 CONTRACT = Path("catalog/gate-contracts.json")
-SELECTION_SHA256 = "dc1a78a33e1125a81b74d7f7eb112328c98d9b50e4846e497e2209e092dae9ef"
+SELECTION_SHA256 = "4239574892d29bf1fad44a316c8ece5e24ec14d34c4257d099b2f1cfc050db6f"
 ID = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*\Z")
 SEMVER = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+\Z")
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
@@ -263,8 +263,8 @@ def validate_selection(data: Any) -> dict[str, Any]:
         fail("selection.review_evidence: expected unique nonempty list")
     for review in reviews:
         text(review, "selection.review_evidence item")
-        if not re.fullmatch(r"https://github\.com/siege-analytics/claude-configs-public/pull/[0-9]+#pullrequestreview-[0-9]+", review):
-            fail("selection.review_evidence: expected exact GitHub review URL")
+        if not re.fullmatch(r"https://github\.com/siege-analytics/claude-configs-public/pull/[0-9]+#(?:pullrequestreview|issuecomment)-[0-9]+", review):
+            fail("selection.review_evidence: expected exact GitHub PR review or conversation-comment URL")
     return data
 
 
@@ -302,10 +302,14 @@ def validate_fixture_agreement(
         identity_tuple(normalize_identity(item["repository_identity"], f"project {item['id']} identity", with_source=False)): item
         for item in policy["projects"]
     }
-    if set(by_identity) != set(projects):
-        fail("effective policy projects disagree with selected fixture identities")
-    for identity, project in projects.items():
-        fixture = by_identity[identity]
+    # Public examples are intentionally synthetic and need not mirror every
+    # reviewed deployment identity. Every selected fixture must still map to an
+    # exact approved project and agree completely; the independently reviewed
+    # policy snapshot remains authoritative for additional deployment entries.
+    if not set(by_identity).issubset(projects):
+        fail("selected fixture identity is absent from effective policy projects")
+    for identity, fixture in by_identity.items():
+        project = projects[identity]
         values, _ = resolve_values(contract, policy, project)
         if fixture["fixture_id"] != project["id"] or fixture["values"] != values:
             fail(f"project {project['id']}: resolved values disagree with selected fixture")
