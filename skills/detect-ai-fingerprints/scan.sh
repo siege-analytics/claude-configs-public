@@ -13,8 +13,9 @@
 # incl. except* PEP 654), writing-releases:3 (deprecation msg format).
 # Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4,
 # writing-claims:1/3, writing-releases:1/2.
-# Operates on a unified diff from stdin OR fetches the diff itself based on flags.
-# Reports violations as <file>:<line>:<rule>:<excerpt>. Exit 0 if clean, 1 if violations found.
+# Selects index/PR objects or working-tree input based on flags.
+# Reports violations as <file>:<line>:<rule>:<excerpt>. Exit 0 clean, 1 findings,
+# 2 usage/input/configuration/process errors (incomplete scan).
 #
 # Usage:
 #   scan.sh                       # scan staged diff (git diff --cached)
@@ -375,74 +376,59 @@ while (( $# > 0 )); do
 done
 
 case "$mode" in
-    staged)
-        scan_diff_stdin < <(git diff --cached --unified=3)
-        ;;
-    working)
-        scan_diff_stdin < <(git diff --unified=3)
-        ;;
-    pr)
-        if ! command -v gh >/dev/null 2>&1; then
-            echo "gh CLI required for --pr mode" >&2
+    staged|working|pr)
+        if ! command -v python3 >/dev/null 2>&1; then
+            echo "scan-source-error: python3 is required; scan incomplete" >&2
             exit 2
         fi
-        scan_diff_stdin < <(gh pr diff "$arg")
+        snapshot_tmp=$(mktemp -d) || exit 2
+        trap 'rm -rf "$snapshot_tmp"' EXIT
+        snapshot="$snapshot_tmp/selection"
+        if ! python3 "$SCRIPT_DIR/scan_snapshot.py" --mode "$mode" --pr "$arg" --output "$snapshot"; then
+            echo "scan incomplete: source selection failed" >&2
+            exit 2
+        fi
+        scan_diff_stdin < "$snapshot/diff"
+        : > "$snapshot/selected-python-paths"
+        while IFS= read -r -d '' f; do
+            is_ignored "$f" && continue
+            printf '%s\0' "$f" >> "$snapshot/selected-python-paths"
+        done < "$snapshot/python-paths"
+        # Related tests and scanner config share the selected source tree. Only
+        # the trusted scanner is executed; selected Python is parsed as data.
+        if [[ -f "$snapshot/source/.claude/scanner-config.toml" ]]; then
+            ast_out=$(cd "$snapshot/source" && python3 "$SCRIPT_DIR/scan_ast.py" --config .claude/scanner-config.toml --files-from "$snapshot/selected-python-paths" 2>&1)
+            ast_status=$?
+        else
+            ast_out=$(cd "$snapshot/source" && python3 "$SCRIPT_DIR/scan_ast.py" --files-from "$snapshot/selected-python-paths" 2>&1)
+            ast_status=$?
+        fi
+        [[ -n "$ast_out" ]] && printf '%s\n' "$ast_out"
+        ast_n=$(printf '%s\n' "$ast_out" | grep -cE ':writing-(code-(4|7|8|9|15)|tests-5|releases-3)' || true)
+        if [[ "$ast_status" -gt 1 ]] || { [[ "$ast_status" -eq 1 ]] && [[ "$ast_n" -eq 0 ]]; }; then
+            echo "scan incomplete: AST scanner failed (exit $ast_status)" >&2
+            exit 2
+        fi
+        violations=$((violations + ast_n))
         ;;
     message-inline)
         scan_message_stdin "<inline-message>" < <(printf '%s\n' "$arg")
         ;;
     message-file)
+        if [[ ! -f "$arg" || ! -r "$arg" ]]; then
+            echo "scan-input-error: message file is missing or unreadable: $arg" >&2
+            exit 2
+        fi
         scan_message_stdin "$arg" < "$arg"
         ;;
     commit-message-file)
+        if [[ ! -f "$arg" || ! -r "$arg" ]]; then
+            echo "scan-input-error: commit message file is missing or unreadable: $arg" >&2
+            exit 2
+        fi
         scan_message_stdin "$arg" full < "$arg"
         ;;
 esac
-
-# --- AST scanner: invoke scan_ast.py on changed .py files for the AST rule
-# set (writing-code:4/7/8/9/15, writing-tests:5, writing-releases:3).
-# Skipped for message modes since those are not code. Scans the post-state
-# file from disk and reports ALL violations in that file (not diff-line-
-# filtered). Pre-existing violations are flagged along with newly-added
-# ones; rule grace-window text covers the expectation.
-if [[ "$mode" == staged || "$mode" == working || "$mode" == pr ]]; then
-    py_files=""
-    case "$mode" in
-        staged)  py_files=$(git diff --cached --name-only --diff-filter=AM | grep '\.py$' || true) ;;
-        working) py_files=$(git diff --name-only --diff-filter=AM | grep '\.py$' || true) ;;
-        pr)      py_files=$(gh pr diff "$arg" --name-only 2>/dev/null | grep '\.py$' || true) ;;
-    esac
-    if [[ -n "$py_files" ]] && command -v python3 >/dev/null 2>&1; then
-        # Look for project-local scanner config relative to the git root.
-        repo_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-        config_arg=()
-        if [[ -n "$repo_root" && -f "$repo_root/.claude/scanner-config.toml" ]]; then
-            config_arg=(--config "$repo_root/.claude/scanner-config.toml")
-        fi
-        ast_files=()
-        while IFS= read -r f; do
-            [[ -z "$f" ]] && continue
-            is_ignored "$f" && continue
-            ast_files+=("$f")
-        done <<< "$py_files"
-        if (( ${#ast_files[@]} > 0 )); then
-            if (( ${#config_arg[@]} > 0 )); then
-                ast_out=$(python3 "$SCRIPT_DIR/scan_ast.py" "${config_arg[@]}" "${ast_files[@]}" 2>&1) || true
-            else
-                ast_out=$(python3 "$SCRIPT_DIR/scan_ast.py" "${ast_files[@]}" 2>&1) || true
-            fi
-            if [[ -n "$ast_out" ]]; then
-                echo "$ast_out"
-                # B-1 (#766): must include every rule the AST scanner emits.
-                # scan_ast.py can emit writing-code-4, -7, -8, -9, -15,
-                # writing-tests-5, writing-releases-3. Missing any means the
-                # violations counter stays 0 and exit 1 doesn't fire.
-                ast_n=$(printf '%s\n' "$ast_out" | grep -cE ':writing-(code-(4|7|8|9|15)|tests-5|releases-3)' || true)
-                violations=$((violations + ast_n))
-            fi
-        fi
-    fi
-fi
 
 COVERAGE_NOTE='scanned: writing-prose:1-4 (stylistic; broader Unicode class), writing-code:2 (history references in code comments), writing-code:4 (Django ORM kwarg validation, same-file models; AST), writing-code:7 (silent error swallowing; AST), writing-code:8 (optional-import callsite guards; AST), writing-code:9 (silently-dropped parameters; AST scoped visitor), writing-code:15 (unbounded blocking I/O; AST, incl. Popen chains, Session/Client instance methods, invalid literal timeouts), writing-tests:3 (skip messages must be actionable), writing-tests:5 (untested named exception handlers, cross-file; AST), writing-claims:2 (countable claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:3 (deprecation messages need version+removal-keyword anchors; AST). Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4, writing-claims:1/3, writing-releases:1/2.'
 
