@@ -39,6 +39,11 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "bin/validate-hooks.py",
  "bin/_test/review_risk_test.py",
  "hooks/_test/review_risk_policy.test.sh",
+ "scripts/canary/craft-backend-canary.py",
+ "bin/_test/craft_backend_canary_test.py",
+ "examples/probe-matrices/craft-backend-canary/approval.proposal.json",
+ "examples/probe-matrices/craft-backend-canary/host-evidence.template.json",
+ "examples/probe-matrices/craft-backend-canary/cleanup-receipt.template.json",
 ]
 ADVISORY_DEPENDENCY_EXCLUSIONS = {"hooks/lib/log-block.sh"}
 REQUIRED_SOURCE_ENTRYPOINTS = set("""
@@ -103,6 +108,7 @@ CI_INVOCATION_SITES = [
  (".github/workflows/build-and-publish.yml","bin/validate-hooks.py","run: python3 bin/validate-hooks.py",1),
  (".github/workflows/build-and-publish.yml","bin/_test/review_risk_test.py","python3 bin/_test/review_risk_test.py",1),
  (".github/workflows/build-and-publish.yml","hooks/_test/review_risk_policy.test.sh","bash hooks/_test/review_risk_policy.test.sh",1),
+ (".github/workflows/build-and-publish.yml","bin/_test/craft_backend_canary_test.py","python3 bin/_test/craft_backend_canary_test.py",1),
 ]
 REQUIRED_HELPER_EDGES = {
  tuple(row.split("|")) for row in """

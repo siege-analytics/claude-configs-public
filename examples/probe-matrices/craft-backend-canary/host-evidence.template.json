@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "cc-1003-provider-canary-20261016",
+  "manifest_sha256": "REPLACE_WITH_APPROVAL_RECORDED_MANIFEST_SHA256",
+  "provenance": {
+    "kind": "external-host-export",
+    "reference": "REPLACE_WITH_HOST_EXPORT_REFERENCE",
+    "verification_state": "imported-unverified"
+  },
+  "backend_runs": [
+    {
+      "sequence": 1,
+      "connection": "claude-max",
+      "model": "claude-opus-4-8",
+      "started_at": "REPLACE_WITH_ISO8601",
+      "ended_at": "REPLACE_WITH_ISO8601",
+      "outcome": "not-run",
+      "model_self_report_used": false,
+      "host_events": [
+        {"name": "startup_resolver", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "prompt_hook", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "write_guard_allow", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "write_guard_deny", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "git_push_allow", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "git_push_deny", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "resume_context", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "compaction_context", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "no_op_detection", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"}
+      ]
+    },
+    {
+      "sequence": 2,
+      "connection": "chatgpt-plus",
+      "model": "pi/gpt-5.5",
+      "started_at": "REPLACE_WITH_ISO8601",
+      "ended_at": "REPLACE_WITH_ISO8601",
+      "outcome": "not-run",
+      "model_self_report_used": false,
+      "host_events": [
+        {"name": "startup_resolver", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "prompt_hook", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "write_guard_allow", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "write_guard_deny", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "git_push_allow", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "git_push_deny", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "resume_context", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "compaction_context", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"},
+        {"name": "no_op_detection", "source": "host-observed", "artifact_sha256": "REPLACE_WITH_SHA256"}
+      ]
+    }
+  ],
+  "side_effect_observations": {
+    "outside_allowlist_unchanged": false,
+    "credentials_unread": false,
+    "main_unchanged": false,
+    "protections_unchanged": false,
+    "release_state_unchanged": false
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0.0",
+  "status": "proposal",
+  "run": {
+    "id": "cc-1003-provider-canary-20261016",
+    "mode": "sequential",
+    "purpose": "Observe host-native enforcement and backend parity without treating model output as evidence"
+  },
+  "paths": {
+    "temp_root": "/private/tmp/cc-1003-provider-canary-20261016",
+    "workspace_root": "/Users/dheerajchand/.craft-agent/workspaces/cc-1003-provider-canary-20261016",
+    "evidence_root": "/private/tmp/cc-1003-provider-canary-20261016/evidence",
+    "source_root": "/private/tmp/cc-1003-provider-canary-20261016/source"
+  },
+  "pins": {
+    "develop_revision": "c2ed26de0b9d936884df473527f5226667ff4f06",
+    "source_revision": "c2ed26de0b9d936884df473527f5226667ff4f06",
+    "provider_integration_revision": null,
+    "native_hooks_revision": null,
+    "source_tree_sha256": "c4b9bf2b88df07bfe4138deb5254e9ce1ac059ba94d515e7a56b15d7967fe8af",
+    "craft_package_canonical_sha256": "5e5fb54ec522d79c96877c53622e6e0b969aec482de2aa3fcf2613ef89d7ed12",
+    "craft_package_tree_sha256": null,
+    "approval_driver_sha256": "22e77153a79d4165fd5ee2d9d123c85f9bce8ac0cf6a0bdbd744c07428bbd248",
+    "effective_policy_revision": "ecef9e8620f477cdea4962cd3d737e16873f06fa",
+    "effective_policy_blob": "086e7bda8e9f588c57294ed0899f9ff2ffa982c5",
+    "effective_policy_raw_sha256": "cf45e80b063d58501ca6dd297c4fcec3c99273507cef8dce7e566d3377a253ea",
+    "effective_policy_canonical_sha256": "debbb2af18af4ad1381ae7355e200049a94e9a02557dd7ccb756cb21834d2efa",
+    "gate_contract_revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
+    "gate_contract_version": "1.2.0",
+    "gate_contract_sha256": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca"
+  },
+  "backends": [
+    {
+      "sequence": 1,
+      "provider_type": "anthropic",
+      "connection": "claude-max",
+      "model": "claude-opus-4-8"
+    },
+    {
+      "sequence": 2,
+      "provider_type": "pi",
+      "connection": "chatgpt-plus",
+      "model": "pi/gpt-5.5"
+    }
+  ],
+  "timeouts_seconds": {
+    "per_backend": 900,
+    "transition": 180,
+    "cleanup": 300,
+    "overall": 2400
+  },
+  "allowed_side_effects": [
+    "create_exact_workspace",
+    "write_exact_temp_root",
+    "create_local_bare_remote",
+    "create_disposable_git_refs",
+    "record_host_event_metadata",
+    "remove_exact_workspace",
+    "remove_exact_temp_root"
+  ],
+  "limits": {
+    "no_credentials_read": true,
+    "no_main_mutation": true,
+    "no_branch_protection_mutation": true,
+    "no_release_or_install": true,
+    "no_external_messages": true,
+    "no_parallel_sessions": true,
+    "no_provider_authority_claim": true,
+    "no_model_self_report_as_evidence": true
+  },
+  "cleanup": {
+    "owner": "Dheeraj",
+    "verify_absent": [
+      "/Users/dheerajchand/.craft-agent/workspaces/cc-1003-provider-canary-20261016",
+      "/private/tmp/cc-1003-provider-canary-20261016"
+    ],
+    "retain": "redacted receipts and digests only"
+  },
+  "operator_approval": {
+    "state": "not-supplied",
+    "source_kind": null,
+    "source_reference": null,
+    "approved_by": null,
+    "approved_at": null,
+    "subject_sha256": null
+  }
+}

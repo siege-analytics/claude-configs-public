@@ -118,6 +118,15 @@ jobs:
       - name: Consumer package documentation and clean-home diagnostics
         run: python3 bin/_test/package_documentation_test.py
 
+      - name: Canary packet preparation remains non-authorizing
+        run: |
+          python3 bin/_test/craft_backend_canary_test.py
+          python3 scripts/canary/craft-backend-canary.py validate --manifest examples/probe-matrices/craft-backend-canary/approval.proposal.json
+          if python3 scripts/canary/craft-backend-canary.py validate --require-approval-record --manifest examples/probe-matrices/craft-backend-canary/approval.proposal.json; then
+            echo "proposal unexpectedly recorded external approval" >&2
+            exit 1
+          fi
+
       - name: Settings-drift check fixtures
         run: python3 bin/_test/settings_drift_test.py
 
