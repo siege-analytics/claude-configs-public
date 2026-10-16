@@ -55,7 +55,7 @@ class EffectivePolicyTest(unittest.TestCase):
 
     def test_catalog_valid_and_sealed_to_contract(self):
         self.assertEqual(policy.digest(self.contract), self.approved["contract_sha256"])
-        self.assertEqual("eb660b058c0a983dff692204616597a76a54f0ba", self.approved["parent_contract_revision"])
+        self.assertEqual("f0b6ea8c428a9de089b09e2f79062cf57677140f", self.approved["parent_contract_revision"])
 
     def test_strict_feature_to_develop_policy_allows_but_enforcement_is_unproved(self):
         result = self.explain(capabilities=self.all_verified())
@@ -195,9 +195,9 @@ class EffectivePolicyTest(unittest.TestCase):
             policy.validate_policy(candidate, self.contract, "candidate")
 
     def test_selected_snapshot_identifiers_and_review_are_explicit(self):
-        self.assertEqual("a631d0f1ba14becc8ba790d77fd4cb116d01a28f", self.selection["policy_revision"])
-        self.assertEqual("909fe5c90f76cea89491d27dcd346bd4fa535c68", self.selection["git_blob"])
-        self.assertEqual("179ffdea751e39d19f9d03afe8aea0b4447474b3e3644eaf67e05705d2d504a6", self.selection["raw_sha256"])
+        self.assertEqual("ecef9e8620f477cdea4962cd3d737e16873f06fa", self.selection["policy_revision"])
+        self.assertEqual("086e7bda8e9f588c57294ed0899f9ff2ffa982c5", self.selection["git_blob"])
+        self.assertEqual("cf45e80b063d58501ca6dd297c4fcec3c99273507cef8dce7e566d3377a253ea", self.selection["raw_sha256"])
         result = self.explain(capabilities=self.all_verified())
         self.assertEqual(self.selection["policy_revision"], result["approved_policy"]["revision"])
         self.assertEqual(self.selection["review_evidence"], result["policy_selection"]["review_evidence"])

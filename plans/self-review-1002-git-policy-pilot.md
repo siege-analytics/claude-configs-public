@@ -5,7 +5,7 @@ Hostile-review-artifact: plans/hostile-review-1002-git-policy-pilot.md
 
 ## Assumptions
 
-- The active selection is the independently accepted exact snapshot `a631d0f1ba14becc8ba790d77fd4cb116d01a28f`, blob `909fe5c90f76cea89491d27dcd346bd4fa535c68`, review `5543485593`; working policy remains proposal-only.
+- The active selection is the independently accepted exact snapshot `ecef9e8620f477cdea4962cd3d737e16873f06fa`, blob `086e7bda8e9f588c57294ed0899f9ff2ffa982c5`, review `5543665034`; working policy remains proposal-only.
 - #1001 composition is configured content and cannot establish operation authority.
 - A base-controlled host provider and required-check protection are unavailable to the introducing PR; #1003 must prove them on a later head.
 - The bounded first deployment supports same-repository PRs, linear commits and two-parent merges only.
@@ -22,7 +22,7 @@ Hostile-review-artifact: plans/hostile-review-1002-git-policy-pilot.md
 
 ## Peer review
 
-A hostile model review found a concrete port-identity collapse and noted candidate-origin/host-input boundaries. The port reproduction was added and the interface split canonical target from source origin; unsupported forks now reject. Independent adapter review then reproduced two configured-integrity bypasses: contradictory installed `RESIDENT.md` bytes and invented parent/effective digests were still eligible. The adapter now performs an exact trusted composition rebuild and full installed-tree comparison. The same review found the published fixture could run zero tests when its setup copy was unchanged; setup now commits conditionally/allow-empty, and 10 scenarios execute from the sealed bytes. Fresh exact-head peer review remains required.
+A hostile model review found a concrete port-identity collapse and noted candidate-origin/host-input boundaries. The port reproduction was added and the interface split canonical target from source origin; unsupported forks now reject. Independent adapter review then reproduced two configured-integrity bypasses: contradictory installed `RESIDENT.md` bytes and invented parent/effective digests were still eligible. The adapter now performs an exact trusted composition rebuild and full installed-tree comparison. The same review found the published fixture could run zero tests when its setup copy was unchanged; setup now commits conditionally/allow-empty. Follow-up review found canonical `develop -> main` was incorrectly evaluated as feature integration and that `if: false` could disable the registered adapter without invalidating configured evidence. Canonical promotion is now a distinct operation using the explicit authenticated head branch, while strict feature integration remains `develop`; the complete workflow registration is sealed rather than validated by bypassable substrings. Fresh exact-head peer review remains required.
 
 ## Lead review
 
@@ -30,7 +30,7 @@ Pending exact-head review. The acceptance question is whether the adapter correc
 
 ## Quantified claims
 
-- 10 focused disposable-history scenarios currently pass, including six independent installed-package mutations.
+- 11 focused disposable-history scenarios currently pass, including six independent installed-package mutations and the full retained-topology-plus-adapter canonical-promotion chain with feature, main-head and fork negatives.
 - 34 effective-policy and 21 gate-contract scenarios pass at the selected snapshot/contract.
 - Final checkpoint validation passes 26/26 Python modules, 36/36 native hook suites, 2/2 workflow suites and 22/22 canonical build/freshness commands.
 - Two synthetic projects share one recomputed parent-content SHA-256 and produce distinct effective-policy SHA-256 identities.
