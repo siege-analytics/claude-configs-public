@@ -51,6 +51,16 @@
           "procedure": "hostile-review"
         }
       }
+    },
+    {
+      "id": "claude-configs-public",
+      "repository_identity": {
+        "host": "github.com",
+        "owner": "siege-analytics",
+        "repository": "claude-configs-public"
+      },
+      "organization_profile": "strict-release",
+      "values": {}
     }
   ]
 }
