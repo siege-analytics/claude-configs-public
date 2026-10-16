@@ -7,6 +7,7 @@ ROOT=Path(__file__).resolve().parents[2];SCRIPT=ROOT/"bin/review-risk.py"
 spec=importlib.util.spec_from_file_location("review_risk",SCRIPT);m=importlib.util.module_from_spec(spec);sys.modules[spec.name]=m;spec.loader.exec_module(m)
 policy=json.loads((ROOT/"catalog/review-risk-policy.json").read_text())
 AUTHORITY_DEPENDENCY_FLOOR = [
+ "bundles/siege/policy-inputs.json",
  "bin/effective_policy.py",
  "bin/gate_contract.py",
  "bin/_test/effective_policy_test.py",

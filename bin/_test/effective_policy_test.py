@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -214,25 +216,32 @@ class EffectivePolicyTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             clone = Path(temporary) / "repo"
             subprocess.run(["git", "clone", "--quiet", "--shared", str(ROOT), str(clone)], check=True)
-            original_seal = policy.SELECTION_SHA256
-            try:
-                for key, value, diagnostic in (
-                    ("raw_sha256", "0" * 64, "raw-byte digest"),
-                    ("canonical_sha256", "0" * 64, "canonical digest"),
-                    ("git_blob", "0" * 40, "Git blob"),
-                ):
-                    changed = copy.deepcopy(self.selection); changed[key] = value
-                    (clone / policy.SELECTION).write_text(json.dumps(changed))
-                    policy.SELECTION_SHA256 = policy.digest(changed)
-                    with self.subTest(key=key), self.assertRaisesRegex(ValueError, diagnostic):
-                        policy.load_inputs(clone)
-            finally:
-                policy.SELECTION_SHA256 = original_seal
+            gc = policy._gate_contract_module()
+            for key, value, diagnostic in (
+                ("raw_sha256", "0" * 64, "raw-byte digest"),
+                ("canonical_sha256", "0" * 64, "canonical digest"),
+                ("git_blob", "0" * 40, "Git blob"),
+            ):
+                changed = copy.deepcopy(self.selection); changed[key] = value
+                (clone / policy.SELECTION).write_text(json.dumps(changed))
+                inputs = gc.siege_policy_inputs(ROOT)
+                inputs["selection_sha256"] = policy.digest(changed)
+                source = Path("test-policy-inputs.json")
+                (clone / source).write_text(json.dumps(inputs))
+                with self.subTest(key=key), self.assertRaisesRegex(ValueError, diagnostic):
+                    policy.load_registered_inputs(clone, registration_source=source,
+                                                  registration_sha256=policy.digest(inputs))
 
     def test_dual_working_edit_cannot_replace_selected_snapshot(self):
         with tempfile.TemporaryDirectory() as temporary:
             clone = Path(temporary) / "repo"
             subprocess.run(["git", "clone", "--quiet", "--shared", str(ROOT), str(clone)], check=True)
+            # The imported module may be the current working implementation;
+            # supply its unchanged explicit compatibility registration too.
+            gc = policy._gate_contract_module()
+            registration = clone / gc.SIEGE_INPUTS
+            registration.parent.mkdir(parents=True, exist_ok=True)
+            registration.write_bytes((ROOT / gc.SIEGE_INPUTS).read_bytes())
             (clone / policy.SELECTION).write_bytes((ROOT / policy.SELECTION).read_bytes())
             working = json.loads((clone / policy.POLICY).read_text())
             working["organization_profiles"][0]["values"] = {"branch-policy": {"integration_branch": "main"}}
@@ -357,6 +366,214 @@ class EffectivePolicyTest(unittest.TestCase):
             path.write_text('{"schema_version":1,"schema_version":1}')
             with self.assertRaisesRegex(ValueError, "duplicate JSON key"):
                 policy.read_json(path)
+
+
+class RegisteredPolicyInputsTest(unittest.TestCase):
+    """Independent input closure; this is not package/host independence proof."""
+
+    def git(self, *args):
+        return subprocess.check_output(['git', '-C', str(self.root), *args], text=True).strip()
+
+    def write_json(self, relative, data):
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(data, indent=2) + '\n')
+
+    def commit(self):
+        self.git('add', '.')
+        self.git('commit', '-qm', 'Synthetic independent policy #1027')
+        return self.git('rev-parse', 'HEAD')
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='registered-policy-')
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.git('init', '-q', '-b', 'trunk')
+        self.git('config', 'core.hooksPath', '/dev/null')
+        self.git('config', 'user.name', 'Policy fixture')
+        self.git('config', 'user.email', 'fixture@example.invalid')
+        # Copy only the two actual engine modules and their bounded schema.
+        # There is no bundles/, skills/, hooks/, examples/ or Siege catalog.
+        for relative in ['bin/effective_policy.py', 'bin/gate_contract.py', 'catalog/gate-contract-schema.json']:
+            destination = self.root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / relative, destination)
+        self.contract = policy.read_json(ROOT / policy.CONTRACT)
+        fields = {item['id']: item for item in self.contract['policy_fields']}
+        fields['branch-policy']['value_schema']['properties']['integration_branch']['enum'] = ['trunk', 'release']
+        fields['branch-policy']['default']['integration_branch'] = 'trunk'
+        fields['ticket-requirement']['default']['required'] = False
+        fields['review-procedure-binding']['default']['procedure'] = 'independent--review'
+        self.targets = {}
+        for field in fields.values():
+            field['owner'] = 'project-profile'
+            field['required_capability_ids'] = ['project-' + ident for ident in field['required_capability_ids']]
+        for capability in self.contract['capabilities']:
+            capability['id'] = 'project-' + capability['id']
+            # Declarations deliberately do not pretend to be implemented host
+            # adapters. Caller-supplied verified states still cannot authorize.
+            capability['kind'] = 'declarative'
+            capability['registered_path'] = 'project/requirements.md'
+            if capability['id'] == 'project-procedure-binding-resolution':
+                capability['registered_path'] = 'projects/independent/skills/review/SKILL.md'
+            capability['package_paths'] = []
+            self.targets[capability['id']] = {key: capability[key] for key in ('kind', 'registered_path', 'package_paths')}
+        self.write_json('project/contract.json', self.contract)
+        (self.root / 'project/requirements.md').write_text('Project adapter requirements, not observations.\n')
+        review = self.root / 'projects/independent/skills/review/SKILL.md'
+        review.parent.mkdir(parents=True)
+        review.write_text('# Independent review\n\nReview the project changes.\n')
+        revision = self.commit()
+        self.approved = {
+            'schema_version': 1, 'resolver_version': '1.0.0',
+            'contract_source': 'project/contract.json', 'contract_sha256': policy.digest(self.contract),
+            'parent_contract_revision': revision,
+            'parent_lock': {'host': 'github.com', 'owner': 'independent-fixture', 'repository': 'policies',
+                            'revision': revision, 'import_mechanism': 'git',
+                            'digest': policy.digest(self.contract), 'tool_version': 'effective-policy/1'},
+            'organization_profiles': [{'id': 'independent', 'values': {}}],
+            'projects': [{'id': 'independent', 'repository_identity': {
+                'host': 'github.example.invalid', 'owner': 'independent-org', 'repository': 'application'},
+                'organization_profile': 'independent', 'values': {}}],
+        }
+        self.write_json('project/policy.json', self.approved)
+        revision = self.commit()
+        self.selection = {
+            'schema_version': 1, 'policy_revision': revision, 'policy_path': 'project/policy.json',
+            'git_blob': self.git('rev-parse', revision + ':project/policy.json'),
+            'raw_sha256': hashlib.sha256((self.root / 'project/policy.json').read_bytes()).hexdigest(),
+            'canonical_sha256': policy.digest(self.approved),
+            'review_evidence': ['https://github.com/independent-fixture/policies/pull/1#pullrequestreview-1'],
+        }
+        self.write_json('project/selection.json', self.selection)
+        self.inputs = {
+            'schema_version': 1, 'selection_source': 'project/selection.json',
+            'selection_sha256': policy.digest(self.selection), 'contract_source': 'project/contract.json',
+            'review_repository': 'github.com/independent-fixture/policies',
+            'capability_targets': self.targets, 'fixture_sources': [],
+        }
+        self.source = Path('project/policy-inputs.json')
+        self.write_json(self.source, self.inputs)
+        # The test host holds this independently of subsequent candidate writes.
+        self.pin = policy.digest(self.inputs)
+
+    def load(self):
+        return policy.load_registered_inputs(self.root, registration_source=self.source, registration_sha256=self.pin)
+
+    def explain(self, operation, candidate=None):
+        loaded = self.load()
+        context = policy.default_context('github.example.invalid/independent-org/application', [])
+        context['capabilities'] = {ident: 'verified' for ident in self.targets}
+        return policy.explain(loaded['contract'], loaded['policy'], loaded['selection'], context,
+                              operation, candidate, selection_source=loaded['registration']['selection_source'])
+
+    def test_independent_profile_loads_with_all_siege_inputs_absent(self):
+        for relative in ['bundles', 'skills', 'hooks', 'examples', 'catalog/gate-contracts.json',
+                         'catalog/effective-policy.json', 'catalog/effective-policy-selection.json']:
+            self.assertFalse((self.root / relative).exists(), relative)
+        # Run the copied engine itself, so a hidden import/read from this source
+        # checkout cannot satisfy the independent source-closure assertion.
+        code = ('import json,sys; from pathlib import Path; sys.path.insert(0,"bin"); '
+                'import effective_policy as p; '
+                'print(json.dumps(p.load_registered_inputs(Path.cwd(), '
+                'registration_source=Path(sys.argv[1]),registration_sha256=sys.argv[2])))')
+        result = subprocess.run([sys.executable, '-B', '-c', code, str(self.source), self.pin],
+                                cwd=self.root, capture_output=True, text=True, check=True)
+        loaded = json.loads(result.stdout)
+        self.assertEqual((loaded['evidence_state'], loaded['authorization_effect']), ('configured', 'none'))
+        self.assertEqual(loaded['registration']['contract_sha256'], policy.digest(self.contract))
+        self.assertEqual(loaded['registration']['sha256'], self.pin)
+        for operation, decision in [
+            ({'type': 'feature-merge', 'target_branch': 'trunk'}, 'allow'),
+            ({'type': 'feature-merge', 'target_branch': 'release'}, 'deny'),
+            ({'type': 'ticket-commit', 'message': 'Project change without a ticket'}, 'allow'),
+            ({'type': 'review-procedure'}, 'allow'),
+        ]:
+            with self.subTest(operation=operation):
+                explained = self.explain(operation)
+                self.assertEqual(explained['decision']['policy'], decision)
+                self.assertEqual(explained['decision']['final'], 'deny' if decision == 'deny' else 'unknown')
+                self.assertEqual(explained['policy_selection']['source'], 'project/selection.json')
+                self.assertIn('independent--review', explained['resident_workflow'])
+
+    def test_untrusted_replacement_registration_cannot_select_itself(self):
+        changed = copy.deepcopy(self.approved)
+        changed['organization_profiles'][0]['values'] = {'branch-policy': {'integration_branch': 'release'}}
+        before = self.explain({'type': 'feature-merge', 'target_branch': 'release'}, changed)
+        self.assertEqual(before['decision']['final'], 'deny')
+        self.assertEqual(before['proposed_policy']['authorization_effect'], 'none')
+        self.write_json('project/policy.json', changed)
+        revision = self.commit()
+        self.selection.update(policy_revision=revision, git_blob=self.git('rev-parse', revision + ':project/policy.json'),
+                              raw_sha256=hashlib.sha256((self.root / 'project/policy.json').read_bytes()).hexdigest(),
+                              canonical_sha256=policy.digest(changed))
+        self.write_json('project/selection.json', self.selection)
+        self.inputs['selection_sha256'] = policy.digest(self.selection)
+        self.write_json(self.source, self.inputs)
+        with self.assertRaisesRegex(ValueError, 'registration digest differs from independent pin'):
+            self.load()
+
+    def test_unselected_working_policy_is_ignored(self):
+        changed = copy.deepcopy(self.approved)
+        changed['organization_profiles'][0]['values'] = {'branch-policy': {'integration_branch': 'release'}}
+        self.write_json('project/policy.json', changed)
+        self.assertEqual(self.explain({'type': 'feature-merge', 'target_branch': 'release'})['decision']['final'], 'deny')
+        self.assertEqual(self.load()['policy'], self.approved)
+
+    def test_contract_tampering_cannot_follow_working_policy(self):
+        self.contract['policy_fields'][1]['default']['required'] = True
+        self.write_json('project/contract.json', self.contract)
+        with self.assertRaisesRegex(ValueError, 'contract digest disagrees'):
+            self.load()
+
+    def test_selection_and_registration_tampering_reject(self):
+        self.selection['review_evidence'] = ['https://github.com/independent-fixture/policies/pull/2#issuecomment-2']
+        self.write_json('project/selection.json', self.selection)
+        with self.assertRaisesRegex(ValueError, 'receipt digest differs'):
+            self.load()
+        self.inputs['fixture_sources'] = ['candidate-fixture.json']
+        self.write_json(self.source, self.inputs)
+        with self.assertRaisesRegex(ValueError, 'registration digest differs'):
+            self.load()
+
+    def test_missing_and_symlink_inputs_reject(self):
+        for relative in [self.source, 'project/selection.json', 'project/contract.json']:
+            with self.subTest(path=str(relative)):
+                original = self.root / relative
+                saved = original.with_suffix('.saved')
+                original.rename(saved)
+                with self.assertRaisesRegex(ValueError, 'path is missing'):
+                    self.load()
+                original.symlink_to(saved)
+                with self.assertRaisesRegex(ValueError, 'symlink'):
+                    self.load()
+                original.unlink()
+                saved.rename(original)
+
+    def test_sealed_but_unsafe_or_unknown_inputs_reject(self):
+        gc = policy._gate_contract_module()
+        for field, value, diagnostic in [
+            ('selection_source', '../outside.json', 'stay within repository'),
+            ('contract_source', '/tmp/outside.json', 'stay within repository'),
+            ('fixture_sources', ['project/../outside.json'], 'stay within repository'),
+            ('review_repository', 'github.com/independent-fixture/policies.evil/extra', 'canonical GitHub'),
+            ('review_repository', 'github.com/../..', 'canonical GitHub'),
+            ('unexpected_authorization', True, 'fields differ'),
+        ]:
+            changed = copy.deepcopy(self.inputs); changed[field] = value
+            self.write_json(self.source, changed)
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, diagnostic):
+                gc.load_policy_inputs(self.root, self.source, policy.digest(changed))
+
+    def test_explicit_siege_selection_uses_same_loader_and_preserves_receipts(self):
+        gc = policy._gate_contract_module()
+        explicit = policy.load_registered_inputs(ROOT, registration_source=gc.SIEGE_INPUTS,
+                                                 registration_sha256=gc.SIEGE_INPUTS_SHA256)
+        legacy = policy.load_inputs(ROOT)
+        self.assertEqual(tuple(explicit[key] for key in ('contract', 'policy', 'selection')), legacy)
+        self.assertEqual(explicit['authorization_effect'], 'none')
+        with self.assertRaisesRegex(ValueError, 'path is missing'):
+            policy.load_inputs(self.root)
 
 
 if __name__ == "__main__":

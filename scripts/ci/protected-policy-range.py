@@ -31,6 +31,7 @@ TRUSTED_DEPENDENCIES = (
     ENTRYPOINT_PATH,
     Path("bin/effective_policy.py"),
     Path("bin/gate_contract.py"),
+    Path("bundles/siege/policy-inputs.json"),
     Path("catalog/effective-policy-selection.json"),
     Path("catalog/gate-contract-schema.json"),
     Path("catalog/gate-contracts.json"),
@@ -38,6 +39,7 @@ TRUSTED_DEPENDENCIES = (
 POLICY_SENSITIVE = (
     "bin/effective_policy.py",
     "bin/gate_contract.py",
+    "bundles/siege/policy-inputs.json",
     "catalog/effective-policy-selection.json",
     "catalog/effective-policy.json",
     "catalog/gate-contract-schema.json",

@@ -206,6 +206,41 @@
           "value_type": "object"
         }
       ]
+    },
+    {
+      "artifact": "bundles/siege/policy-inputs.json",
+      "fields": [
+        {
+          "pointer": "/selection_source",
+          "term": "source-reference",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/selection_sha256",
+          "term": "source-reference",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/contract_source",
+          "term": "source-reference",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/review_repository",
+          "term": "repository-identity",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/capability_targets/*",
+          "term": "host-capability",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/fixture_sources/*",
+          "term": "source-reference",
+          "value_type": "string"
+        }
+      ]
     }
   ]
 }

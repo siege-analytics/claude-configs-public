@@ -38,6 +38,7 @@
     "^hooks/_test/review_risk_policy\\.test\\.sh$",
     "^catalog/data-scope-(fixtures|ledger)\\.json$",
     "^catalog/(effective-policy-selection|gate-contract-schema|gate-contracts|review-risk-policy|resolver-manifest|skill-lifecycle-(schema|bootstrap|approved-exceptions|completed))\\.json$",
+    "^bundles/[^/]+/policy-inputs\\.json$",
     "^hooks/resolver/inject-resolver\\.sh$",
     "^\\.claude/(deploy-model|settings\\.json)$",
     "(^|/)(credential|credentials|secret|secrets|auth|permission|permissions)([._/-]|$)",
