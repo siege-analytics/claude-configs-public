@@ -81,6 +81,69 @@ class WorkCycleTest(unittest.TestCase):
         self.assertEqual(self.state["state"], "complete-for-review")
         self.assertEqual(wc.status(self.state, len(self.events), 1500)["authorization"], "not-evaluated")
 
+    def test_resolved_finding_cannot_manufacture_more_progress(self):
+        self.step("finding", {"finding_id": "F1", "summary": "Counterexample", "evidence": ["repro"]})
+        self.step("resolve-finding", {"finding_id": "F1", "evidence": ["fix1"]})
+        progress = self.state["last_progress_at"]
+        for proof in ("fix1", "fix2"):
+            with self.assertRaisesRegex(ValueError, "already resolved"):
+                self.step("resolve-finding", {"finding_id": "F1", "evidence": [proof]})
+        self.assertEqual(self.state["findings"]["F1"]["resolved_by"], ["fix1"])
+        self.assertEqual(self.state["last_progress_at"], progress)
+
+    def test_repeated_working_checkpoints_cannot_restart_chunk(self):
+        self.candidate(); self.checkpoint()
+        started = self.state["chunk_started_at"]
+        for index in range(1, 5):
+            event = self.event("checkpoint", {"state": "working", "summary": "Still working",
+                               "next_action": "Finish tests", "dependency": "", "wait_seconds": 0,
+                               "evidence": ["same-receipt"]})
+            event["at"] = started + index * 119
+            self.state = wc.transition(self.state, event); self.events.append(event)
+            self.assertEqual(self.state["chunk_started_at"], started)
+        self.assertTrue(wc.status(self.state, len(self.events), started + 476)["chunk_due"])
+        # Even a wait/resume-shaped narration loop cannot reset without a receipt.
+        for state in ("waiting", "working"):
+            event = self.event("checkpoint", {"state": state, "summary": "Status",
+                               "next_action": "Finish tests", "dependency": "timer", "wait_seconds": 0,
+                               "evidence": ["same-receipt"]})
+            event["at"] = started + 500
+            self.state = wc.transition(self.state, event); self.events.append(event)
+        self.assertEqual(self.state["chunk_started_at"], started)
+
+    def test_rejected_or_failed_candidate_cannot_be_complete_for_review(self):
+        self.candidate(); self.review("changes-required", "parser")
+        with self.assertRaisesRegex(ValueError, "candidate was rejected"):
+            self.checkpoint("complete-for-review")
+        self.candidate(SHA_B)
+        self.step("checks", {"sha": SHA_B, "status": "failed", "evidence": ["ci/fail"]})
+        with self.assertRaisesRegex(ValueError, "failed checks"):
+            self.checkpoint("complete-for-review")
+        self.step("checks", {"sha": SHA_B, "status": "pending", "evidence": ["ci/rerun"]})
+        self.checkpoint("complete-for-review")
+        self.assertEqual(self.state["checks"]["status"], "pending")
+
+    def test_one_head_counts_once_per_failure_class_despite_receipt_updates(self):
+        self.candidate()
+        self.review("changes-required", "parser", "review/1")
+        progress = self.state["last_progress_at"]
+        for proof in ("review/1-plus-more", "review/2"):
+            self.review("changes-required", "parser", proof)
+        self.assertEqual(self.state["last_progress_at"], progress)
+        self.assertEqual(self.state["failures"], {"parser": 1})
+        self.assertEqual(self.state["suspended_approaches"], [])
+        self.candidate(SHA_B); self.review("changes-required", "parser", "review/3")
+        self.assertEqual(self.state["failures"], {"parser": 2})
+        self.assertEqual(self.state["suspended_approaches"], ["parser"])
+
+    def test_material_receipt_in_same_clock_second_can_start_next_chunk(self):
+        self.candidate(); self.checkpoint()
+        event = self.event("checks", {"sha": SHA_A, "status": "passed", "evidence": ["ci/pass"]})
+        event["at"] = self.state["last_event_at"]
+        self.state = wc.transition(self.state, event); self.events.append(event)
+        self.checkpoint()
+        self.assertEqual(self.state["chunk_started_at"], self.events[-1]["at"])
+
     def test_new_head_alone_does_not_consume_failure_budget(self):
         for head in (SHA_A, SHA_B, SHA_C):
             self.candidate(head)

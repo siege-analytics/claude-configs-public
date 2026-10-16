@@ -41,7 +41,9 @@ contracts; this helper neither reads nor changes those decisions.
 `working` means a bounded chunk is underway; `waiting` names an external result;
 `blocked` names an obstacle; `needs-input` names a decision; `complete-for-review`
 means a candidate and evidence are ready for review, not that review/CI/merge
-has finished. Suspended approaches are visible even during independent work.
+has finished. It rejects a currently rejected candidate, failed checks or open
+findings. Pending external checks remain explicitly pending during a review
+handoff. Suspended approaches are visible even during independent work.
 Do not describe a merely overdue heartbeat as a stalled session: consult the
 last coherent transcript and actual tool state using the recovery skill.
 
@@ -100,12 +102,12 @@ not hostile impersonation by another process with file access.
 
 | Kind | Data fields | Effect |
 | --- | --- | --- |
-| `checkpoint` | `state`, `summary`, `next_action`, `dependency`, `wait_seconds`, `evidence` | Explicit heartbeat/chunk boundary. Waiting, blocked and needs-input require a dependency. A working checkpoint begins the next bounded chunk. |
+| `checkpoint` | `state`, `summary`, `next_action`, `dependency`, `wait_seconds`, `evidence` | Explicit heartbeat/chunk boundary. Waiting, blocked and needs-input require a dependency. A working checkpoint with evidence begins another chunk only after an unconsumed material receipt. Narration and waiting/working cycles alone never reset the chunk deadline. |
 | `candidate` | `sha` | Exact lowercase 40-character SHA; a change resets review/check status and retains invalidated history. Findings and failure counts survive. |
 | `review` | `sha`, `verdict`, `evidence`, `failure_class` | Verdict: queued, active, accepted, changes-required or unavailable. Nonempty failure class only for changes-required. Evidence is a nonempty array of references. |
 | `checks` | `sha`, `status`, `evidence` | Pending, passed or failed for the current SHA. Never resolves a finding or accepts a review. |
 | `finding` | `finding_id`, `summary`, `evidence` | Records an unresolved falsification and invalidates current acceptance. |
-| `resolve-finding` | `finding_id`, `evidence` | Records resolution evidence; a fresh review receipt is still needed. |
+| `resolve-finding` | `finding_id`, `evidence` | One-way resolution with evidence; a fresh review receipt is still needed. Record a new finding ID for a later counterexample. |
 | `decision` | `failure_class`, `choice`, `evidence` | Coordinator records the design choice for a suspended approach. Resets only that class's budget; prior failures/reviews remain in the journal. |
 | `interrupt` | `reason` | Preserve objective, SHA, evidence and unresolved decisions, enter waiting. |
 | `resume` | *(empty object)* | Preserve records, require reconciliation before working. Never manufactures a review verdict. |
@@ -128,6 +130,9 @@ rejected(parser-ambiguity)` reaches a budget of two for that class. Present
 redesign, reduced scope, and continued repair trade-offs. New SHAs alone do not
 consume the budget. Duplicate identical receipts do not increment it. Class
 assignment is human/model judgment; renaming the same failure is not a reset.
+Each failure class counts at most once per distinct candidate SHA until a
+recorded design decision resets that class. Adding or reordering review evidence
+on one candidate does not constitute a failed replacement attempt.
 
 Recovery: for safe-mode, rate-limited, wrong-scope or context-exhausted reviewers,
 record `review(unavailable)` with the diagnostic reference, then a `blocked`

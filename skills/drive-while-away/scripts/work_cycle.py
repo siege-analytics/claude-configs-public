@@ -82,11 +82,12 @@ def transition(previous, event):
             **data, "state": "working", "generation": 1, "candidate_sha": None,
             "review": {"verdict": "pending", "evidence": []},
             "checks": {"status": "pending", "evidence": []},
-            "review_history": [], "findings": {}, "failures": {}, "decisions": [],
+            "review_history": [], "findings": {}, "failures": {}, "failure_heads": {}, "decisions": [],
             "suspended_approaches": [], "ownership_history": [], "interrupted": False,
             "summary": "Work initialized", "dependency": "", "evidence": [],
             "last_checkpoint_at": event["at"], "last_progress_at": event["at"],
             "chunk_started_at": event["at"], "last_event_at": event["at"],
+            "progress_sequence": 0, "chunk_progress_sequence": 0,
         }
     require(previous is not None, "initialize first")
     require(event["generation"] == previous["generation"], "stale ownership generation")
@@ -110,11 +111,17 @@ def transition(previous, event):
         if data["state"] == "complete-for-review":
             require(s["candidate_sha"] is not None and data["evidence"], "review handoff needs candidate and evidence")
             require(not any(v["resolved_by"] is None for v in s["findings"].values()), "unresolved findings remain")
+            require(s["review"]["verdict"] != "changes-required", "current candidate was rejected")
+            require(s["checks"]["status"] != "failed", "current candidate has failed checks")
         # Polling, repeated acknowledgements and rewording an update are not progress.
         s.update({key: data[key] for key in ("state", "summary", "next_action", "dependency", "evidence")})
         s["last_checkpoint_at"] = event["at"]
-        if s["state"] == "working":
+        # Narration or cycling through waiting/working cannot buy another chunk.
+        # Only an unconsumed material receipt followed by a checkpoint does so.
+        if (s["state"] == "working" and data["evidence"]
+                and s["progress_sequence"] > s["chunk_progress_sequence"]):
             s["chunk_started_at"] = event["at"]
+            s["chunk_progress_sequence"] = s["progress_sequence"]
     elif kind == "candidate":
         sha(data["sha"])
         if data["sha"] != s["candidate_sha"]:
@@ -151,7 +158,10 @@ def transition(previous, event):
                 s["review"] = record
                 if verdict == "changes-required":
                     failure = data["failure_class"]
-                    count = s["failures"].get(failure, 0) + 1
+                    heads = s["failure_heads"].setdefault(failure, [])
+                    if data["sha"] not in heads:
+                        heads.append(data["sha"])
+                    count = len(heads)
                     s["failures"][failure] = count
                     if count >= s["failure_budget"]:
                         if failure not in s["suspended_approaches"]:
@@ -175,6 +185,7 @@ def transition(previous, event):
         string(data["finding_id"], "finding_id")
         evidence(data["evidence"])
         require(data["finding_id"] in s["findings"], "unknown finding")
+        require(s["findings"][data["finding_id"]]["resolved_by"] is None, "finding already resolved; record a new finding for new evidence")
         s["findings"][data["finding_id"]]["resolved_by"] = data["evidence"]
         # Resolution evidence does not itself accept review.
     elif kind == "decision":
@@ -184,6 +195,7 @@ def transition(previous, event):
         require(data["failure_class"] in s["suspended_approaches"], "approach is not suspended")
         s["suspended_approaches"].remove(data["failure_class"])
         s["failures"][data["failure_class"]] = 0
+        s["failure_heads"][data["failure_class"]] = []
         s["decisions"].append(data)
         s["state"] = "waiting"
         s["dependency"] = "Plan the selected approach"
@@ -214,10 +226,13 @@ def transition(previous, event):
     if s != previous:
         s["last_event_at"] = event["at"]
         progress = kind in {"candidate", "finding", "resolve-finding", "decision"}
-        progress |= kind == "review" and data["verdict"] in {"accepted", "changes-required"}
-        progress |= kind == "checks" and data["status"] in {"passed", "failed"}
+        progress |= (kind == "review" and data["verdict"] in {"accepted", "changes-required"}
+                     and s["review"]["verdict"] != previous["review"]["verdict"])
+        progress |= (kind == "checks" and data["status"] in {"passed", "failed"}
+                     and s["checks"]["status"] != previous["checks"]["status"])
         if progress:
             s["last_progress_at"] = event["at"]
+            s["progress_sequence"] += 1
     return s
 
 

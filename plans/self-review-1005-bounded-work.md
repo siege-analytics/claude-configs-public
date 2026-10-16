@@ -1,7 +1,7 @@
 # #1005 bounded checkpoint self-review
 
 Pre-mortem-artifact: plans/pre-mortem-1005-bounded-work.md
-Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1005
+Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/pull/1010#issuecomment-6207412702
 
 ## Assumptions
 
@@ -13,9 +13,10 @@ an owner cannot cancel its tools, grant permissions or authenticate identities.
 
 ## Peer review
 
-Independent review is pending. The draft PR is the concrete handoff for the
-existing #848 coordinating session; no additional worker is required. The issue
-link above is a tracking destination, not an accepted review verdict.
+Independent review at 89f3ec2 rejected four transition gaps (R1–R4):
+https://github.com/siege-analytics/claude-configs-public/pull/1010#issuecomment-6207412702
+Each is reproduced and remediated with a focused regression. The replacement
+requires fresh exact-head review; the prior verdict remains rejection.
 
 ## Lead review
 
@@ -40,7 +41,7 @@ Both packaged skills carry the same helper without changing the builder.
 
 ## Quantified claims
 
-Fifteen focused scenarios pass locally. The synthetic journal reports a queued
+Twenty focused scenarios pass locally. The synthetic journal reports a queued
 review, never acceptance. The build packages three owned files for the drive
 skill in each layout. Full-suite results and hosted CI are recorded in the PR;
 this document does not assert they passed before terminal evidence exists.
@@ -49,6 +50,11 @@ Follow-up self-review corrected ambiguous history: invalidation now marks the
 original receipt instead of appending a second copy with a different validity
 flag. An invalidated receipt cannot become current again after finding resolution
 or returning to a previous SHA; fresh review evidence is required.
+
+R1 makes finding resolution one-way; R2 consumes a material receipt sequence
+before restarting a chunk (timestamps alone lose same-second events); R3 rejects
+rejected/failed/open-finding review handoffs while exposing pending CI separately;
+R4 counts distinct candidate heads per failure class, not evidence-array edits.
 
 ## Canary and rollback
 
