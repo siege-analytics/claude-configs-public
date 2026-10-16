@@ -28,7 +28,7 @@ Pending independent exact-head review.
 
 ## Quantified claims
 
-Sixteen focused scenarios pass for actual push effects, installer preservation/registration and verifier negative mutations. The full 85-command matrix completed in 513.1 seconds with 84 passes and one stale settings-count assertion: removal of the native hook from tool-JSON registration changes 40/31 to 39/30. That expectation was corrected and the full settings-drift fixture replay passes. All other Python modules, 36 hook suites, both workflow suites, build/freshness and three validators pass. Logs: `/tmp/cc-845-full-validation.log`, `/tmp/cc-845-settings-drift-replay.log`. Independent exact-head review and hosted validation remain required before integration.
+Sixteen focused scenarios pass for actual push effects, installer preservation/registration and verifier negative mutations. The full 85-command matrix completed in 513.1 seconds with 84 passes and one stale settings-count assertion: removal of the native hook from tool-JSON registration changes 40/31 to 39/30. That expectation was corrected and the full settings-drift fixture replay passes. All other Python modules, 36 hook suites, both workflow suites, build/freshness and three validators pass. Logs: `/tmp/cc-845-full-validation.log`, `/tmp/cc-845-settings-drift-replay.log`. After merging accepted provider repair `b97c99dfce05ca6f5f6e8fe7839b9dc2585065a8`, ten fresh integration checks pass: native push, gate contract, protected policy, review-risk audit, settings drift and five generated-catalog freshness checks. Independent exact-head review and hosted validation remain required before integration.
 
 ## Rollback and non-claims
 
