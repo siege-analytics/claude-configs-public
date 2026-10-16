@@ -35,6 +35,9 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
         run("git", "clone", "--quiet", "--no-hardlinks", str(ROOT), str(cls.trusted), cwd=cls.temp)
         git(cls.trusted, "config", "user.email", "fixture@example.invalid")
         git(cls.trusted, "config", "user.name", "Synthetic Fixture")
+        # Synthetic transport retains an explicit canonical parent identity.
+        git(cls.trusted, "remote", "set-url", "origin", "https://github.com/siege-analytics/claude-configs-public.git")
+        git(cls.trusted, "config", "url." + ROOT.as_uri() + ".insteadOf", "https://github.com/siege-analytics/claude-configs-public.git")
         # Commit the current candidate adapter into the disposable trusted base;
         # immutable-byte checks then exercise a real Git blob rather than a test escape.
         working_authority = (
