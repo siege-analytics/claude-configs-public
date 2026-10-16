@@ -19,6 +19,8 @@ AUTHORITY_DEPENDENCY_FLOOR = [
  "catalog/gate-contracts.json",
 ]
 AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
+ "bin/package-generation.py",
+ "bin/_test/package_generation_test.py",
  "hooks/agent-comms/hub-concurrency-gate.sh",
  "hooks/agent-comms/no-slug-form-outbound.sh",
  "hooks/agent-comms/spawn-guard.sh",
@@ -46,6 +48,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/_test/review_risk_policy.test.sh",
  "scripts/canary/craft-backend-canary.py",
  "scripts/canary/setup-disposable-workspace.py",
+ "scripts/canary/inject-composed-resident.sh",
  "bin/_test/craft_backend_canary_test.py",
  "examples/probe-matrices/craft-backend-canary/approval.proposal.json",
  "examples/probe-matrices/craft-backend-canary/host-evidence.template.json",

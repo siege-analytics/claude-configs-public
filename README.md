@@ -253,6 +253,11 @@ git subtree pull --prefix .claude/skills \
   https://github.com/siege-analytics/claude-configs-public.git v0.2.0 --squash
 ```
 
+For disposable, coherent artifact upgrade/rollback tests, use the
+[package-generation workflow](docs/package-generations.md). It preserves declared
+project customizations and verifies the whole generation before selection; host
+registration and live context reload require separate acceptance.
+
 ### With `claude_init`
 
 If you use the [siege_analytics_zshrc](https://github.com/dheerajchand/siege_analytics_zshrc) config:

@@ -13,18 +13,18 @@
     "source_root": "/private/tmp/cc-1003-provider-canary-20261016/source"
   },
   "pins": {
-    "develop_revision": "cd014600d7262492c7ce95512ba308b307a8efa5",
-    "source_revision": "cd014600d7262492c7ce95512ba308b307a8efa5",
+    "develop_revision": "6fb4d463b5861b79100ee048c7c069f1ff937db7",
+    "source_revision": "6fb4d463b5861b79100ee048c7c069f1ff937db7",
     "provider_accepted_head": "9b541dff6452b4782a732356d3e1089e828f9293",
     "provider_integration_revision": "b97c99dfce05ca6f5f6e8fe7839b9dc2585065a8",
     "native_hooks_accepted_head": "0fa16ce6a07b1083a31d80a3f40dd5dbf1639744",
     "native_hooks_revision": "cd014600d7262492c7ce95512ba308b307a8efa5",
-    "source_tree_sha256": "42ea856dbd140e8445c611bf55dc0f6acd9c90852d85f07d93fad8a0626421bf",
-    "craft_package_canonical_sha256": "49acf0788df5fe33582e4b35eda226544909e1232a6215682545c5859adb5d2c",
+    "source_tree_sha256": "9ad3f5ac62a3404ed318a9b40f42bb8f941371d13f8875c6e71592a9c176789e",
+    "craft_package_canonical_sha256": "ff63d5f84838be29c647b2dab5369f1b9e7f59e153d8c82142157ce76ae5b738",
     "craft_package_tree_sha256": null,
     "composition_tree_sha256": null,
     "workspace_payload_tree_sha256": null,
-    "approval_driver_sha256": "e691abf3275bf1dc015ebe869bfd529296f3bade2b952f3b0898ce7033676ae4",
+    "approval_driver_sha256": "f4adf80b51ef4fa037feab0bdc57e9e8a179f0dd78d6384adc6ab3bc6202218a",
     "effective_policy_revision": "ecef9e8620f477cdea4962cd3d737e16873f06fa",
     "effective_policy_blob": "086e7bda8e9f588c57294ed0899f9ff2ffa982c5",
     "effective_policy_raw_sha256": "cf45e80b063d58501ca6dd297c4fcec3c99273507cef8dce7e566d3377a253ea",
@@ -32,7 +32,8 @@
     "gate_contract_revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
     "gate_contract_version": "1.2.0",
     "gate_contract_sha256": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
-    "workspace_setup_driver_sha256": "22002e1a521f41bbb08d9db377c188a7141bb04005537478ce46789b5f02d8cf"
+    "workspace_setup_driver_sha256": "71b8671e25158a2e2bbf6d24b7144c5c083b3451a8f431b7b5019348c15a9631",
+    "workspace_resident_adapter_sha256": "623017a3338616be2e90c5a7e277d964ccc9ef94e0b5b282a11b2d4ec5d7a29e"
   },
   "fixture": {
     "canonical_identity": "github.example.invalid/synthetic-org/strict-release",

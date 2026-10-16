@@ -132,7 +132,7 @@ def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool
             require(isinstance(value, str) and HEX40.fullmatch(value) is not None, f"pins.{name} must be null or a full Git SHA")
     for name in (
         "source_tree_sha256", "craft_package_canonical_sha256",
-        "approval_driver_sha256", "workspace_setup_driver_sha256",
+        "approval_driver_sha256", "workspace_setup_driver_sha256", "workspace_resident_adapter_sha256",
     ):
         value = pins.get(name)
         require(isinstance(value, str) and HEX64.fullmatch(value) is not None, f"pins.{name} must be SHA-256")
@@ -151,6 +151,11 @@ def validate_manifest(manifest: dict[str, Any], *, require_approval_record: bool
     require(
         pins.get("workspace_setup_driver_sha256") == sha256_bytes(setup_driver.read_bytes()),
         "workspace setup driver bytes differ from the pinned digest",
+    )
+    resident_adapter = Path(__file__).with_name("inject-composed-resident.sh")
+    require(
+        pins.get("workspace_resident_adapter_sha256") == sha256_bytes(resident_adapter.read_bytes()),
+        "workspace resident adapter bytes differ from the pinned digest",
     )
 
     fixture = manifest.get("fixture")
@@ -365,6 +370,13 @@ def prepare_composition_and_payload(manifest: dict[str, Any], source: Path, root
     strip_markdown = build_module.strip_craft_incompatible_keys
     copy_workspace_tree(source / "dist/flat/skills", payload / "skills", strip_markdown)
     copy_workspace_tree(source / "dist/flat/hooks", payload / "hooks")
+    # Generic package dependencies are the base. Project composition is copied
+    # last so its selected resolver catalog/runtime and scoped skills cannot be
+    # overwritten by generic package files with the same paths.
+    for relative in (".githooks", "bin", "catalog"):
+        package_path = source / "dist/craft-agent" / relative
+        if package_path.is_dir():
+            copy_workspace_tree(package_path, payload / relative)
     copy_workspace_tree(flat, payload, strip_markdown)
     for source_path, target_path in (
         (source / "RESOLVER.md", payload / "RESOLVER.md"),
@@ -378,12 +390,6 @@ def prepare_composition_and_payload(manifest: dict[str, Any], source: Path, root
             target_path.write_text(strip_markdown(source_path.read_text()))
         else:
             shutil.copy2(source_path, target_path)
-    for relative in (
-        ".githooks", "bin", "catalog",
-    ):
-        package_path = source / "dist/craft-agent" / relative
-        if package_path.is_dir():
-            copy_workspace_tree(package_path, payload / relative)
     (payload / "CLAUDE.md").symlink_to("KERNEL.md")
     require(not (payload / "deploy-stamp.json").exists(), "disposable payload must not contain a production deploy stamp")
     return {
@@ -391,6 +397,43 @@ def prepare_composition_and_payload(manifest: dict[str, Any], source: Path, root
         "composition_tree_sha256": tree_digest(flat),
         "workspace_payload_root": str(payload),
         "workspace_payload_tree_sha256": tree_digest(payload),
+    }
+
+
+def probe_workspace_payload(manifest: dict[str, Any], payload: Path, fixture_repo: Path) -> dict[str, Any]:
+    prompt = "review candidate strict release checks"
+    selector = subprocess.run(
+        [sys.executable, str(payload / "bin/resolve-load-set.py"), "--prompt", prompt, "--cwd", str(fixture_repo)],
+        text=True, capture_output=True, check=False, timeout=60,
+    )
+    require(selector.returncode == 0, f"assembled payload resolver failed: {selector.stderr.strip()}")
+    result = json.loads(selector.stdout)
+    require(result.get("project") == manifest["fixture"]["project"], "assembled payload resolver selected the wrong project")
+    selected = {entry.get("slug") for entry in result.get("selected", []) if isinstance(entry, dict)}
+    required = {"strict-release--review", "strict-release--checks"}
+    require(required.issubset(selected), f"assembled payload resolver lost scoped skills: {sorted(required - selected)}")
+    hook_input = canonical_bytes({"prompt": prompt, "cwd": str(fixture_repo)})
+    hook = subprocess.run(
+        ["bash", str(payload / "hooks/resolver/inject-resolver.sh")],
+        input=hook_input, text=False, capture_output=True, check=False, timeout=60,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+    )
+    require(hook.returncode == 0, f"assembled payload inject-resolver failed: {hook.stderr.decode(errors='replace').strip()}")
+    output = hook.stdout.decode("utf-8")
+    require("project: strict-release" in output, "inject-resolver output lost strict-release project")
+    require(all(slug in output for slug in required), "inject-resolver output lost scoped skill paths")
+    resident_delivered = manifest["fixture"]["resident_marker"] in output
+    require(not resident_delivered, "resident delivery behavior changed; review capability evidence before proceeding")
+    return {
+        "prompt": prompt,
+        "project": result["project"],
+        "selected": sorted(selected),
+        "selector_sha256": sha256_bytes(selector.stdout.encode()),
+        "inject_resolver_sha256": sha256_bytes(hook.stdout),
+        "kernel_sha256": sha256_bytes((payload / "KERNEL.md").read_bytes()),
+        "resident_file_sha256": sha256_bytes((payload / "skills/RESIDENT.md").read_bytes()),
+        "resident_delivery": "not-observed-local-adapter",
+        "authorization_effect": "none",
     }
 
 
@@ -427,15 +470,20 @@ def materialize(manifest: dict[str, Any]) -> dict[str, Any]:
     run_git(["add", "CONTROL.md"], cwd=repo)
     run_git(["commit", "-m", fixture_commit_message("test: seed canary fixture")], cwd=repo)
     canonical_remote = "https://" + manifest["fixture"]["canonical_identity"] + ".git"
-    run_git(["config", f"url.{remote.as_uri()}.insteadOf", canonical_remote], cwd=repo)
-    run_git(["remote", "add", "origin", canonical_remote], cwd=repo)
+    # Seed the bare fixture through a local URL, then replace only the stored
+    # origin URL with the canonical identity. Git insteadOf is deliberately not
+    # retained: `git remote get-url` applies it and would make the resolver see
+    # the local transport as project identity.
+    run_git(["remote", "add", "origin", remote.as_uri()], cwd=repo)
     run_git(["push", "-u", "origin", "main"], cwd=repo)
+    run_git(["remote", "set-url", "origin", canonical_remote], cwd=repo)
     run_git(["checkout", "-b", "canary/1003-observation"], cwd=repo)
     (repo / "PROMPT_MARKER.txt").write_text("prompt-marker-not-observed\n")
     (repo / "WRITE_MARKER.txt").write_text("write-marker-not-observed\n")
     (repo / "COMPACTION_MARKER.txt").write_text("compaction-marker-not-observed\n")
     run_git(["add", "."], cwd=repo)
     run_git(["commit", "-m", fixture_commit_message("test: add synthetic canary markers")], cwd=repo)
+    resolver_probe = probe_workspace_payload(manifest, root / "workspace-payload", repo)
     receipt = {
         "schema_version": SCHEMA_VERSION,
         "run_id": facts["run_id"],
@@ -460,7 +508,7 @@ def materialize(manifest: dict[str, Any]) -> dict[str, Any]:
         "fixture": {
             **manifest["fixture"],
             "origin": canonical_remote,
-            "transport": "strictly-local-insteadOf",
+            "transport": "local-seed-then-canonical-origin-no-network",
             "foreign_control_sha256": sha256_bytes((control / "FOREIGN_PROJECT_MARKER.txt").read_bytes()),
             "global_bundle_control_sha256": sha256_bytes((control / "GLOBAL_BUNDLE_MARKER.txt").read_bytes()),
         },
@@ -469,6 +517,7 @@ def materialize(manifest: dict[str, Any]) -> dict[str, Any]:
             "candidate": run_git(["rev-parse", "HEAD"], cwd=repo),
             "remote_main": run_git(["--git-dir", str(remote), "rev-parse", "refs/heads/main"], cwd=fixture),
         },
+        "resolver_probe": resolver_probe,
         "workspace_preexisting": False,
         "live_session_created": False,
         "credentials_read": False,
@@ -500,6 +549,7 @@ def attest_materialized(manifest: dict[str, Any]) -> dict[str, Any]:
     require((facts["temp_root"] / "fixture" / "remote.git").is_dir(), "synthetic bare remote is absent")
     expected_origin = "https://" + manifest["fixture"]["canonical_identity"] + ".git"
     require(run_git(["config", "--get", "remote.origin.url"], cwd=fixture_repo) == expected_origin, "fixture origin identity mismatch")
+    resolver_probe = probe_workspace_payload(manifest, payload, fixture_repo)
     receipt = {
         "schema_version": SCHEMA_VERSION,
         "run_id": facts["run_id"],
@@ -509,6 +559,7 @@ def attest_materialized(manifest: dict[str, Any]) -> dict[str, Any]:
         "composition_tree_sha256": manifest["pins"]["composition_tree_sha256"],
         "workspace_payload_tree_sha256": manifest["pins"]["workspace_payload_tree_sha256"],
         "fixture_identity": manifest["fixture"]["canonical_identity"],
+        "resolver_probe": resolver_probe,
         "live_session_created": False,
     }
     output = facts["evidence_root"] / "authorization-attestation.json"

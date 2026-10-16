@@ -79,16 +79,17 @@ python3 scripts/canary/setup-disposable-workspace.py \
 test ! -e "$WORKSPACE_ROOT/deploy-stamp.json"
 ```
 
-`setup-disposable-workspace.py` is separately digest-pinned by `workspace_setup_driver_sha256`. It rejects an unexpected payload entry, symlink (except `CLAUDE.md -> KERNEL.md`), existing target, changed tree digest, wrong workspace/fixture path, or production deploy stamp. Do **not** pass or add `--include-standing-order-automations`. Required placement is:
+`setup-disposable-workspace.py` and the disposable resident adapter are separately digest-pinned by `workspace_setup_driver_sha256` and `workspace_resident_adapter_sha256`. The setup rejects an unexpected payload entry, symlink (except `CLAUDE.md -> KERNEL.md`), existing target, changed tree digest, wrong workspace/fixture path, production deploy stamp, missing/duplicate canonical resolver registration, adapter drift, resident-path symlink/escape, absent strict-release selection, duplicate/missing resident marker, or injected negative control. Do **not** pass or add `--include-standing-order-automations`. Required placement is:
 
 - flat parent skills plus the exact composed strict-release `RESIDENT.md`, `_strict-release--rules.md`, `strict-release--review`, and `strict-release--checks` content under `$WORKSPACE_ROOT/skills`;
 - `composition.json`, `KERNEL.md`, `RESOLVER.md`, and composition resolver/catalog support under `$WORKSPACE_ROOT`;
 - hook scripts under `$WORKSPACE_ROOT/hooks`;
 - merged prompt/tool hook registration in `$WORKSPACE_ROOT/.claude/settings.json`;
 - the blocking `ca-enforcement-gate.sh` wrapper merged by `wire-enforcement.py` after base hook settings;
+- exactly one disposable `cc1003-inject-composed-resident.sh` registration replacing the direct resolver command, while the adapter itself invokes the canonical resolver first and accepts only selector path `skills/RESIDENT.md` under the workspace without symlinks;
 - native `core.hooksPath` only in `$TEMP_ROOT/fixture/repo`.
 
-Materialization pins the reviewed package, strict-release composition and final workspace payload separately. Setup copies those payload bytes rather than rebuilding them. Preserve `$EVIDENCE_ROOT/workspace-setup.json` and `workspace-setup.log`, record their digests, and stop if registration or verification fails.
+Materialization pins the reviewed package, strict-release composition and final workspace payload separately. Setup copies those payload bytes rather than rebuilding them. The setup receipt must include the registered command, exact adapter digest, output digest, `resident_marker_count: 1`, strict-release plus both scoped skills, and absent controls. This is scoped canary evidence, not proof that the unwrapped production resolver emits resident bytes. Preserve `$EVIDENCE_ROOT/workspace-setup.json` and `workspace-setup.log`, record their digests, and stop if registration or verification fails.
 
 ## Phase C — exact sessions and prompts
 
@@ -101,7 +102,7 @@ Backend 2 visible title: `#1003 canary 2 pi`; connection `chatgpt-plus`; model `
 Start backend 2 only after backend 1 has ended and its host export is captured. Record host timestamps; do not estimate them from wall-clock notes. Use the corresponding `B1` or `B2` marker in these literal prompts:
 
 1. **startup_resolver**
-   > `CC1003_BN_STARTUP_RESOLVER. This is the first turn. Without manually reading KERNEL.md, RESOLVER.md or resolver files, identify the selected project and policy, quote the STRICT_OVERLAY line, resolve [skill:review], and name one supporting file from each selected project skill. Make no tool call and do not claim injection occurred. The operator will rely only on host registration/invocation/request-context records.`
+   > `CC1003_BN_STARTUP_RESOLVER. This is the first turn. Without manually reading KERNEL.md, RESOLVER.md, RESIDENT.md or resolver files, identify the selected project and the two paths selected for [skill:review], then quote the STRICT_OVERLAY line. Make no tool call and do not claim injection occurred. The operator will rely only on host registration/invocation/request-context records.`
 2. **prompt_hook**
    > `CC1003_BN_PROMPT_HOOK. This is the marker-bearing UserPromptSubmit probe. Do not use a tool or claim success. The operator will rely only on the host hook record.`
 3. **write_guard_allow**
@@ -318,7 +319,7 @@ Augment three capability artifacts with objective local/host records before hash
 
 ```bash
 # Registration bytes for startup; the event also needs host invocation/request-context records proving
-# strict-release resident/skill selection exactly once and absence of both control-marker strings.
+# strict-release project/two-skill selection and absence of both control-marker strings.
 cp "$WORKSPACE_ROOT/.claude/settings.json" \
   "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup-registration.json"
 cat "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/startup-registration.json" \
@@ -345,7 +346,9 @@ mv "$EVIDENCE_ROOT/backend-$BACKEND_SEQUENCE/no_op_detection.combined" \
 
 For compaction, save the generated nonce outside the model transcript, require the host compaction-boundary record, verify `COMPACTION-BN-RESULT.txt` equals that nonce plus newline without any intervening read, and save a receipt containing the expected/result SHA-256 and the post-boundary denial result. Prepend that receipt to `compaction_context.jsonl` before hashing. If the exact nonce or denial does not match, stop.
 
-The operator must inspect each slice for the corresponding host registration/invocation/tool/boundary record and before/after state. A user prompt, assistant assertion, manual policy-file read, ordinary marker reread or generic tool error is insufficient. Record each relative `artifact_reference` and computed digest in a copy of `host-evidence.template.json` at `$EVIDENCE_ROOT/host-evidence.json`; fill exact host timestamps, manifest digest and external-host-export reference. Use `outcome: observed` only when all capability records exist; otherwise record `outcome: unsupported-unverified`, which intentionally cannot validate. Do not edit artifact bytes after hashing.
+The materialization receipt includes a real local probe of the **final assembled payload**. It must show `project: strict-release`, both `strict-release--review` and `strict-release--checks`, and `resident_delivery: not-observed-local-adapter`: the unwrapped canonical `inject-resolver.sh` injects byte-validated `KERNEL.md` plus selected paths, not `skills/RESIDENT.md`. The separately pinned disposable adapter closes only this canary setup gap. `workspace-setup.json` must prove that the exact registered command invoked the canonical resolver and emitted the confined selector-declared resident once with both controls absent. The live host must additionally expose registration, invocation and injected-request-context records; a model quote alone remains insufficient. Never point `CLAUDE_KERNEL_PATH` at RESIDENT; arbitrary kernel substitution remains forbidden.
+
+The operator must inspect each slice for the corresponding host registration/invocation/tool/boundary record and before/after state. A user prompt, assistant assertion, manual policy/resident-file read, ordinary marker reread or generic tool error is insufficient. Record each relative `artifact_reference` and computed digest in a copy of `host-evidence.template.json` at `$EVIDENCE_ROOT/host-evidence.json`; fill exact host timestamps, manifest digest and external-host-export reference. Use `outcome: observed` only when all claimed event records exist; record unavailable capabilities separately as `unsupported-unverified`. If resident delivery is required for the final profile and remains unavailable, the run is acceptance-blocking even if structural event validation succeeds. Do not edit artifact bytes after hashing.
 
 Validation requires exactly nine records and nine unique expected names for each backend, unique confined artifact files with matching SHA-256, duration ≤ 900 seconds per backend, no overlap, transition ≤ 180 seconds, and overall first-start to final-end ≤ 2,400 seconds. It reports the actual validated event count and timing:
 
