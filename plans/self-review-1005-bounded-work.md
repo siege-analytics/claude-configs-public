@@ -41,7 +41,7 @@ Both packaged skills carry the same helper without changing the builder.
 
 ## Quantified claims
 
-Twenty focused scenarios pass locally. The synthetic journal reports a queued
+Twenty-one focused scenarios pass locally. The synthetic journal reports a queued
 review, never acceptance. The build packages three owned files for the drive
 skill in each layout. Full-suite results and hosted CI are recorded in the PR;
 this document does not assert they passed before terminal evidence exists.
@@ -55,6 +55,10 @@ R1 makes finding resolution one-way; R2 consumes a material receipt sequence
 before restarting a chunk (timestamps alone lose same-second events); R3 rejects
 rejected/failed/open-finding review handoffs while exposing pending CI separately;
 R4 counts distinct candidate heads per failure class, not evidence-array edits.
+
+Status returned after a write/retry uses the current observation clock rather
+than the historical event timestamp. Retrying an old receipt leaves journal
+bytes untouched and still reports an overdue heartbeat/chunk correctly.
 
 ## Canary and rollback
 

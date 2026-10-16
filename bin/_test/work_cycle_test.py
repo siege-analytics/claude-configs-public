@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 # This helper is also a packaged skill asset: importing tests must not add a
 # machine-specific .pyc file to its canonical source tree.
@@ -271,6 +272,18 @@ class WorkCycleTest(unittest.TestCase):
             journal = json.loads(path.read_text())
             self.assertEqual(len(journal["events"]), 2)
             wc.replay(journal)
+
+    def test_old_delivery_retry_reports_current_due_time_without_mutation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "work.json"
+            wc.update(path, self.events[0], 0)
+            before = path.read_bytes()
+            with mock.patch.object(wc.time, "time", return_value=2000):
+                result, changed = wc.update(path, self.events[0], 0)
+            self.assertFalse(changed)
+            self.assertTrue(result["checkpoint_due"])
+            self.assertTrue(result["chunk_due"])
+            self.assertEqual(path.read_bytes(), before)
 
     def test_cli_restart_read_and_error_never_mutate_journal(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -278,11 +278,11 @@ def update(path, event, expected_revision):
         for old in journal["events"]:
             if old["id"] == event.get("id"):
                 require(old == event, "event id reused with different content")
-                return status(state, len(journal["events"]), event["at"]), False
+                return status(state, len(journal["events"]), int(time.time())), False
         require(len(journal["events"]) == expected_revision, "stale revision; reload before writing")
         new_state = transition(state, event)
         if new_state == state:
-            return status(state, len(journal["events"]), event["at"]), False
+            return status(state, len(journal["events"]), int(time.time())), False
         journal["events"].append(event)
         fd, temporary = tempfile.mkstemp(prefix=path.name + ".", dir=path.parent)
         try:
@@ -295,7 +295,7 @@ def update(path, event, expected_revision):
         finally:
             if os.path.exists(temporary):
                 os.unlink(temporary)
-        return status(new_state, len(journal["events"]), event["at"]), True
+        return status(new_state, len(journal["events"]), int(time.time())), True
 
 
 def main():
