@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
@@ -45,6 +46,7 @@ POLICY_SENSITIVE = (
     VALIDATOR_PATH.as_posix(),
     ENTRYPOINT_PATH.as_posix(),
     WORKFLOW_PATH.as_posix(),
+    "examples/provider/shared-parent-workflow.yml",
 )
 
 
@@ -119,6 +121,20 @@ def declared_identity(raw: str) -> dict[str, str]:
     if ":" in host:
         raise ValueError("canonical identity with a port is unsupported")
     return {"host": host.lower().rstrip("."), "owner": owner.lower(), "repository": repository.removesuffix(".git").lower()}
+
+
+def validate_workflow_ref(ref: str, identity: dict[str, str]) -> None:
+    # Repository identity is normalized; Git paths and refs remain case-sensitive.
+    # Preserve the original host-observed ref in the receipt.
+    parts = ref.split("/", 2)
+    suffix = f"{WORKFLOW_PATH.as_posix()}@refs/heads/main"
+    if (len(parts) != 3 or parts[0].lower() != identity["owner"]
+            or parts[1].lower() != identity["repository"] or parts[2] != suffix):
+        expected = f"{identity['owner']}/{identity['repository']}/{suffix}"
+        raise ValueError(
+            "executed workflow ref is not the canonical default-branch registration: "
+            f"expected {expected}"
+        )
 
 
 def candidate_json(repo: Path, head: str, relative: Path, parser: Any) -> dict[str, Any] | None:
@@ -280,6 +296,106 @@ def local_feedback(repo: Path, head: str) -> dict[str, Any]:
     return result
 
 
+def normalize_host_event(args: argparse.Namespace) -> None:
+    """Read registered host facts; never select parent authority from candidate data.
+
+    A local process can simulate these variables. Its result remains eligibility,
+    not authorization; actual execution/required-check evidence is external.
+    """
+    required = (
+        "GITHUB_EVENT_NAME", "GITHUB_EVENT_PATH", "GITHUB_REPOSITORY",
+        "GITHUB_SERVER_URL", "GITHUB_WORKFLOW_REF", "GITHUB_WORKFLOW_SHA",
+    )
+    facts = {key: os.environ.get(key, "") for key in required}
+    if any(not value for value in facts.values()):
+        raise ValueError("registered host event inputs are incomplete")
+    if facts["GITHUB_EVENT_NAME"] != "pull_request_target":
+        raise ValueError("unsupported registered provider event")
+    event = json.loads(Path(facts["GITHUB_EVENT_PATH"]).read_text(encoding="utf-8"))
+    pr = event["pull_request"]
+    base, head = pr["base"], pr["head"]
+    repository = facts["GITHUB_REPOSITORY"]
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+        raise ValueError("host repository identity is malformed")
+    if event["repository"]["full_name"] != repository or base["repo"]["full_name"] != repository:
+        raise ValueError("host event base/repository identities disagree")
+    if head["repo"]["full_name"] != repository:
+        raise Denied("unsupported fork: host event head repository differs from canonical repository")
+    server = urlsplit(facts["GITHUB_SERVER_URL"])
+    if (server.scheme != "https" or not server.hostname or server.port is not None
+            or server.username or server.password or server.path or server.query or server.fragment):
+        raise ValueError("provider server URL must be one exact HTTPS host")
+    values = {
+        "base": exact_sha(base["sha"], "event base"),
+        "head": exact_sha(head["sha"], "event head"),
+        "head_branch": head["ref"], "target_branch": base["ref"],
+        "canonical_identity": f"{server.hostname}/{repository}",
+        "executed_workflow_ref": facts["GITHUB_WORKFLOW_REF"],
+        "executed_workflow_revision": exact_sha(facts["GITHUB_WORKFLOW_SHA"], "host workflow revision"),
+    }
+    for name, value in values.items():
+        if not isinstance(value, str) or not value or any(c in value for c in "\t\n\r"):
+            raise ValueError(f"malformed host event field: {name}")
+        supplied = getattr(args, name)
+        if supplied is not None and supplied != value:
+            raise ValueError(f"explicit {name} disagrees with host event")
+        setattr(args, name, value)
+    for key, value in {
+        "BASE_BRANCH": args.target_branch, "HEAD_BRANCH": args.head_branch,
+        "HEAD_REPO": repository, "CANONICAL_REPO": repository,
+    }.items():
+        if key in os.environ and os.environ[key] != value:
+            raise ValueError(f"workflow {key} disagrees with exact host event")
+    validate_workflow_ref(args.executed_workflow_ref, declared_identity(args.canonical_identity))
+    candidate = args.candidate_repo.resolve()
+    trusted = args.trusted_root.resolve()
+    if str(git(candidate, "rev-parse", "HEAD")).strip() != args.head:
+        raise ValueError("candidate checkout differs from exact host event head")
+    if remote_identity(candidate) != declared_identity(args.canonical_identity):
+        raise ValueError("candidate origin disagrees with canonical host repository")
+    # The existing self-hosted registration uses the PR base. External consumers
+    # must supply their independently pinned parent revision in trusted host code.
+    binding = "shared-parent" if args.trusted_revision is not None else "self-hosted-base"
+    if binding == "shared-parent" and not args.trusted_repository:
+        raise ValueError("shared parent requires an independently configured repository identity")
+    args.trusted_repository = args.trusted_repository or args.canonical_identity
+    parent_identity = declared_identity(args.trusted_repository)
+    if remote_identity(trusted) != parent_identity:
+        raise ValueError("trusted parent repository differs from host-configured parent identity")
+    args.trusted_revision = exact_sha(args.trusted_revision or args.base, "trusted parent revision")
+    if str(git(trusted, "rev-parse", "HEAD")).strip() != args.trusted_revision:
+        raise ValueError("trusted parent checkout differs from host-configured parent revision")
+    if str(git(trusted, "rev-parse", "--is-shallow-repository")).strip() == "true":
+        git(trusted, "fetch", "--quiet", "--no-tags", "--unshallow", "origin",
+            "+refs/heads/*:refs/remotes/origin/*")
+    # Workflow bytes belong to a separately validated canonical consumer
+    # checkout, never a candidate/fork checkout. The self-hosted exact base is
+    # already that canonical checkout; shared-parent hosts supply another one.
+    if binding == "shared-parent" and args.executed_workflow_root is None:
+        raise ValueError("shared parent requires a separate canonical workflow checkout")
+    workflow_root = (args.executed_workflow_root or trusted).resolve()
+    if workflow_root == candidate:
+        raise ValueError("candidate checkout cannot serve as canonical workflow authority")
+    if remote_identity(workflow_root) != declared_identity(args.canonical_identity):
+        raise ValueError("workflow checkout is not the canonical consumer repository")
+    if binding == "shared-parent" and str(git(workflow_root, "rev-parse", "HEAD")).strip() != args.executed_workflow_revision:
+        raise ValueError("canonical workflow checkout HEAD differs from host workflow revision")
+    # fetch-depth:0 preserves origin/main even with persist-credentials:false.
+    # A private consumer must not require a later anonymous network fetch.
+    current_main = str(git(workflow_root, "rev-parse", "refs/remotes/origin/main")).strip()
+    if current_main != args.executed_workflow_revision:
+        raise ValueError("host workflow SHA differs from fetched canonical default branch")
+    if subprocess.run(["git", "-C", str(candidate), "merge-base", "--is-ancestor", current_main, args.head],
+                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
+        raise Denied("candidate HEAD does not contain current canonical main")
+    args.executed_workflow_root = workflow_root
+    args.host_event_binding = {"event": facts["GITHUB_EVENT_NAME"], "mode": binding,
+                               "parent_repository": parent_identity, "parent_revision": args.trusted_revision,
+                               "consumer_repository": declared_identity(args.canonical_identity),
+                               "candidate_repository": remote_identity(candidate),
+                               "consumer_base": args.base, "consumer_head": args.head}
+
+
 def evaluate(args: argparse.Namespace) -> dict[str, Any]:
     trusted = args.trusted_root.resolve()
     candidate = args.candidate_repo.resolve()
@@ -294,17 +410,10 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         for path in TRUSTED_DEPENDENCIES
     }
     workflow_revision = exact_sha(args.executed_workflow_revision, "executed_workflow_revision")
-    workflow_blob, workflow_raw = revision_blob(trusted, workflow_revision, WORKFLOW_PATH)
+    workflow_root = (args.executed_workflow_root or trusted).resolve()
+    workflow_blob, workflow_raw = revision_blob(workflow_root, workflow_revision, WORKFLOW_PATH)
     canonical_identity = declared_identity(args.canonical_identity)
-    expected_workflow_ref = (
-        f"{canonical_identity['owner']}/{canonical_identity['repository']}/"
-        f"{WORKFLOW_PATH.as_posix()}@refs/heads/main"
-    )
-    if args.executed_workflow_ref != expected_workflow_ref:
-        raise ValueError(
-            "executed workflow ref is not the canonical default-branch registration: "
-            f"expected {expected_workflow_ref}"
-        )
+    validate_workflow_ref(args.executed_workflow_ref, canonical_identity)
     if str(git(candidate, "rev-parse", "HEAD")).strip() != head:
         raise Denied("stale reviewed head: candidate HEAD differs from exact requested head")
     if subprocess.run(
@@ -414,8 +523,10 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         "state": "eligible",
         "authorization": "protected-host-check-required",
         "authorization_effect": "none-outside-trusted-host-receipt",
+        "host_event_binding": getattr(args, "host_event_binding", None),
         "trusted": {
             "revision": trusted_revision,
+            "repository_identity": declared_identity(args.trusted_repository) if args.trusted_repository else None,
             "authority_dependencies": [
                 {"path": path, "git_blob": blob}
                 for path, blob in sorted(dependency_blobs.items())
@@ -425,6 +536,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
             "executed_workflow": {
                 "path": WORKFLOW_PATH.as_posix(),
                 "source_ref": args.executed_workflow_ref,
+                "repository_identity": canonical_identity if getattr(args, "host_event_binding", None) else None,
                 "revision": workflow_revision,
                 "git_blob": workflow_blob,
                 "sha256": hashlib.sha256(workflow_raw).hexdigest(),
@@ -458,19 +570,29 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--trusted-root", type=Path, required=True)
-    parser.add_argument("--trusted-revision", required=True)
+    parser.add_argument("--trusted-revision")
+    parser.add_argument("--trusted-repository", help="independently configured parent host/owner/repository")
     parser.add_argument("--candidate-repo", type=Path, required=True)
-    parser.add_argument("--base", required=True)
-    parser.add_argument("--head", required=True)
-    parser.add_argument("--canonical-identity", required=True, help="host-authenticated target as host/owner/repository")
-    parser.add_argument("--head-branch", required=True, help="host-authenticated candidate branch name")
-    parser.add_argument("--target-branch", required=True)
-    parser.add_argument("--executed-workflow-ref", required=True, help="host-observed workflow source ref")
-    parser.add_argument("--executed-workflow-revision", required=True, help="host-observed default-branch workflow commit")
+    parser.add_argument("--base")
+    parser.add_argument("--head")
+    parser.add_argument("--canonical-identity", help="host-authenticated target as host/owner/repository")
+    parser.add_argument("--head-branch", help="host-authenticated candidate branch name")
+    parser.add_argument("--target-branch")
+    parser.add_argument("--executed-workflow-ref", help="host-observed workflow source ref")
+    parser.add_argument("--executed-workflow-revision", help="host-observed default-branch workflow commit")
+    parser.add_argument("--host-event", action="store_true", help="normalize fixed GitHub host-event facts")
+    parser.add_argument("--executed-workflow-root", type=Path, help="Git object store containing actual workflow revision")
     parser.add_argument("--installed-pilot-receipt", type=Path, help="required configured consumer receipt for disposable consumer probes")
     parser.add_argument("--receipt", type=Path)
     args = parser.parse_args(argv)
     try:
+        if args.host_event:
+            normalize_host_event(args)
+        elif any(getattr(args, name) is None for name in (
+            "trusted_revision", "base", "head", "canonical_identity", "head_branch",
+            "target_branch", "executed_workflow_ref", "executed_workflow_revision",
+        )):
+            raise ValueError("direct evaluator requires complete explicit operation/provenance inputs")
         result = evaluate(args)
         code = 0
     except Denied as exc:

@@ -35,6 +35,15 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
         run("git", "clone", "--quiet", "--no-hardlinks", str(ROOT), str(cls.trusted), cwd=cls.temp)
         git(cls.trusted, "config", "user.email", "fixture@example.invalid")
         git(cls.trusted, "config", "user.name", "Synthetic Fixture")
+        # Hosted PR checkouts may have no local branches. Publish the synthetic
+        # parent through an explicit branch so a later shallow clone can recover
+        # its complete history from advertised refs. Its default workflow ref is
+        # also fixture-owned, not inherited from the runner's local branch set.
+        git(cls.trusted, "checkout", "-q", "-B", "fixture/trusted-parent")
+        git(cls.trusted, "update-ref", "refs/remotes/origin/main", "HEAD")
+        # Synthetic transport retains an explicit canonical parent identity.
+        git(cls.trusted, "remote", "set-url", "origin", "https://github.com/siege-analytics/claude-configs-public.git")
+        git(cls.trusted, "config", "url." + ROOT.as_uri() + ".insteadOf", "https://github.com/siege-analytics/claude-configs-public.git")
         # Commit the current candidate adapter into the disposable trusted base;
         # immutable-byte checks then exercise a real Git blob rather than a test escape.
         working_authority = (

@@ -42,7 +42,9 @@
     "(^|/)(release|deploy|destructive)([._/-]|$)",
     "^bin/(package-generation\\.py|_test/package_generation_test\\.py)$",
     "^VERSION$",
-    "^bin/_test/native_push_test\\.py$"
+    "^bin/_test/native_push_test\\.py$",
+    "^bin/_test/provider_event_test\\.py$",
+    "^examples/provider/"
   ],
   "standard_path_patterns": [
     "^skills/",
