@@ -490,6 +490,7 @@ def probe_workspace_payload(manifest: dict[str, Any], payload: Path, fixture_rep
     prompt = "review candidate strict release checks"
     selector = subprocess.run(
         [sys.executable, str(payload / "bin/resolve-load-set.py"), "--prompt", prompt, "--cwd", str(fixture_repo)],
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
         text=True, capture_output=True, check=False, timeout=60,
     )
     require(selector.returncode == 0, f"assembled payload resolver failed: {selector.stderr.strip()}")

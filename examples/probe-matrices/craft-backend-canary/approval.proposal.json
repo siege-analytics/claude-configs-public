@@ -24,7 +24,7 @@
     "craft_package_tree_sha256": null,
     "composition_tree_sha256": "7abab83d505b9ff3370db8519f698d28372f338d512b99c6e19051e6da12efe1",
     "workspace_payload_tree_sha256": null,
-    "approval_driver_sha256": "6f92b69951b5da69f8e86915df4fc632a8457740aa375c78d83797f2ed52a834",
+    "approval_driver_sha256": "09d005c7589c116a27f8d4d1789bba355c387b8870d215b61cec40d416461ffe",
     "effective_policy_revision": "ecef9e8620f477cdea4962cd3d737e16873f06fa",
     "effective_policy_blob": "086e7bda8e9f588c57294ed0899f9ff2ffa982c5",
     "effective_policy_raw_sha256": "cf45e80b063d58501ca6dd297c4fcec3c99273507cef8dce7e566d3377a253ea",
