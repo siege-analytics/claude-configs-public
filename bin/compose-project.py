@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build bounded, project-specific content packages using the #848 selection.
+"""Build bounded project content from explicit content and approved policy inputs.
 
 This produces configured content evidence only. It does not install packages or
 change policy, permissions, required evidence, or host enforcement.
@@ -119,24 +119,106 @@ def validate_packaged_links(files):
                                 f'{name}: missing or out-of-scope packaged link {link}; use a qualified skill/rule token')
 
 
-def package(source, destination, identity, *, policy_root=ROOT):
-    """Render both supported layouts from one parent and explicit project inputs.
+def selected_content(value, source, resolved):
+    """Expand declared content inputs without adopting policy or capabilities.
 
-    ``source`` follows the existing skills/ and projects/ source convention.
+    The bounded policy substitutions render the separately verified selection. They
+    are not an expression language and cannot modify its values or authority.
+    Publisher ownership is independent of the selected project's scope.
+    """
+    composition.fields(value, {'schema_version', 'publishers', 'policy_aliases', 'prerequisites',
+                               'routes', 'resident_blocks'}, 'content selection')
+    composition.require(type(value['schema_version']) is int and value['schema_version'] == 1,
+                        'unsupported content selection schema')
+    composition.require(isinstance(value['publishers'], list), 'publishers must be an ordered list')
+    publishers, roots = {}, []
+    for entry in value['publishers']:
+        composition.fields(entry, {'id', 'skills_root', 'qualified'}, 'publisher')
+        ident = composition.identifier(entry['id'], 'publisher')
+        composition.require(ident not in publishers, f'duplicate publisher {ident}')
+        relative = composition.relative_path(entry['skills_root'], f'publisher {ident} source')
+        path = Path(relative)
+        composition.require(path.parts and path.parts[0] != 'projects', 'publisher source cannot borrow project scope')
+        composition.require(type(entry['qualified']) is bool, 'publisher qualification must be explicit')
+        composition.require(not any(path.is_relative_to(prior) or prior.is_relative_to(path) for prior in roots),
+                            f'overlapping publisher source {relative}')
+        current = source
+        for part in path.parts:
+            current /= part
+            composition.require(not current.is_symlink(), f'symlink publisher source: {current}')
+        composition.require(current.is_dir(), f'missing selected publisher source: {relative}')
+        for asset in current.rglob('*'):
+            composition.require(not asset.is_symlink(), f'symlink publisher asset: {asset}')
+        roots.append(path)
+        publishers[ident] = copy.deepcopy(entry)
+    aliases = value['policy_aliases']
+    composition.require(isinstance(aliases, list), 'policy_aliases must be a list')
+    for alias in aliases:
+        composition.identifier(alias, 'policy alias')
+    composition.require(len(set(aliases)) == len(aliases), 'duplicate policy alias')
+    composition.require(isinstance(value['routes'], list), 'routes must be a list')
+    procedure = resolved['values']['review-procedure-binding']['procedure']
+    route_ids, routes = set(), copy.deepcopy(value['routes'])
+    for route in routes:
+        composition.fields(route, {'id', 'priority', 'terms', 'skills'}, 'content route')
+        ident = composition.identifier(route['id'], 'route')
+        composition.require(ident not in route_ids, f'duplicate route {ident}')
+        route_ids.add(ident)
+        composition.require(type(route['priority']) is int, f'route {ident}: priority must be an integer')
+        composition.require(isinstance(route['terms'], list) and route['terms']
+                            and all(isinstance(term, str) and term.strip() for term in route['terms']),
+                            f'route {ident}: nonempty terms required')
+        composition.require(isinstance(route['skills'], list) and route['skills'], f'route {ident}: skills required')
+        route['skills'] = [procedure if slug == '${policy.review_procedure}' else slug for slug in route['skills']]
+        for slug in route['skills']:
+            composition.identifier(slug, 'route skill')
+    review_reference = aliases[0] if aliases else procedure
+    workflow = resolved['resident_workflow'].replace(f'Run `{procedure}`', f'Run [skill:{review_reference}]')
+    composition.require(isinstance(value['resident_blocks'], list), 'resident_blocks must be a list')
+    blocks = copy.deepcopy(value['resident_blocks'])
+    for block in blocks:
+        composition.fields(block, {'id', 'content', 'source', 'allow'}, 'resident block')
+        composition.require(isinstance(block['content'], str) and isinstance(block['source'], str),
+                            'resident block content/source must be strings')
+        block['content'] = block['content'].replace('${policy.resident_workflow}', workflow)
+        block['source'] = block['source'].replace('${policy.source}', resolved['approved_policy']['source'])
+        composition.require('${policy.' not in block['content'] and '${policy.' not in block['source'],
+                            'unknown policy substitution in resident block')
+    return publishers, blocks, routes
+
+
+def package(source, destination, identity, *, policy_root=ROOT,
+            policy_registration_source=None, policy_registration_sha256=None,
+            content_selection=None):
+    """Render both layouts through one graph and renderer for every selection.
+
+    ``source`` contains declared publisher roots and projects/ source inputs.
+    Omitted arguments select the explicit Siege compatibility descriptors.
+    Explicit content selection never establishes the policy registration pin.
     Destination must be new so a stale output cannot masquerade as a current
     composition. Parent source and parent packages are never rewritten.
     """
     source = source.resolve()
     composition.require(not destination.resolve().is_relative_to(source), 'composition output must be outside the source tree')
-    contract, policy, selection = effective.load_inputs(policy_root)
-    resolved = effective.explain(contract, policy, selection, effective.default_context(identity, []), {'type': 'review-procedure'})
+    if policy_registration_source is None and policy_registration_sha256 is None:
+        contract, policy, selection = effective.load_inputs(policy_root)
+        selection_source = 'catalog/effective-policy-selection.json'
+    else:
+        composition.require(policy_registration_source is not None and policy_registration_sha256 is not None,
+                            'policy registration source and independent digest must be supplied together')
+        loaded = effective.load_registered_inputs(policy_root, registration_source=policy_registration_source,
+                                                  registration_sha256=policy_registration_sha256)
+        contract, policy, selection = (loaded[key] for key in ('contract', 'policy', 'selection'))
+        selection_source = loaded['registration']['selection_source']
+    resolved = effective.explain(contract, policy, selection, effective.default_context(identity, []),
+                                 {'type': 'review-procedure'}, selection_source=selection_source)
     composition.require(resolved['state'] == 'resolved', 'cannot compose: ' + resolved.get('diagnostic', 'unknown identity'))
     canonical_identity = '/'.join(resolved['repository_identity'][key] for key in ('host', 'owner', 'repository'))
     project = resolved['project']
     project_root = source / 'projects' / project
     # Check the bounded source tree before any content reads. No symlink may
     # borrow a private or foreign project's files into a generated package.
-    for tree in (source / 'skills', project_root):
+    for tree in (project_root,):
         current = source
         for part in tree.relative_to(source).parts:
             current = current / part
@@ -148,28 +230,39 @@ def package(source, destination, identity, *, policy_root=ROOT):
     composition.fields(config['resident_budget'], {'max_characters', 'max_estimated_tokens'}, 'resident_budget')
     bindings = copy.deepcopy(config['bindings'])
     composition.fields(bindings, {'replacements', 'extensions', 'aliases'}, 'bindings')
-    # The logical review capability points to the accepted procedure identifier.
-    # A project may replace its content; it cannot replace the selected policy.
-    bindings['aliases'].append({'alias': 'review', 'target': resolved['values']['review-procedure-binding']['procedure'], 'source': resolved['approved_policy']['source']})
-    parent_skills = build.find_skills(source / 'skills')
-    sources = {slug: Path('skills') / path / 'SKILL.md' for slug, path in sorted(parent_skills.items())}
+    if content_selection is None:
+        # Explicit Siege compatibility input; the generic path never reads it.
+        content_selection = effective.read_json(effective._gate_contract_module().repository_path(
+            policy_root, 'bundles/siege/composition-inputs.json', 'Siege composition input'))
+    publishers, parent_blocks, routes = selected_content(content_selection, source, resolved)
+    procedure = resolved['values']['review-procedure-binding']['procedure']
+    for alias in content_selection['policy_aliases']:
+        bindings['aliases'].append({'alias': alias, 'target': procedure, 'source': resolved['approved_policy']['source']})
+    sources, source_owners, parent_skills, rules = {}, {}, {}, {}
+    for publisher, declaration in publishers.items():
+        root = Path(declaration['skills_root'])
+        discovered = build.find_skills(source / root)
+        for local, path in sorted(discovered.items()):
+            slug = publisher + '--' + local if declaration['qualified'] else local
+            composition.require(slug not in sources, f'duplicate qualified skill {slug}; declare an explicit alias')
+            sources[slug] = root / path / 'SKILL.md'
+            source_owners[slug] = declaration
+            parent_skills[slug] = (path, build.is_router(path, discovered))
+        for local, path in sorted(build.find_rules(source / root).items()):
+            slug = publisher + '--' + local if declaration['qualified'] else local
+            composition.require(slug not in rules, f'duplicate qualified rule {slug}')
+            rules[slug] = root / path
     for entry in sorted((project_root / 'skills').glob('*/SKILL.md')):
         slug = project + '--' + entry.parent.name
         composition.require(slug not in sources, f'duplicate qualified skill {slug}')
         sources[slug] = entry.relative_to(source)
-    rules = {slug: Path('skills') / path for slug, path in sorted(build.find_rules(source / 'skills').items())}
     if (project_root / '_rules.md').is_file():
+        composition.require(project + '--rules' not in rules, f'duplicate qualified rule {project}--rules')
         rules[project + '--rules'] = (project_root / '_rules.md').relative_to(source)
-    procedure = resolved['values']['review-procedure-binding']['procedure']
-    workflow = resolved['resident_workflow'].replace(f'Run `{procedure}`', 'Run [skill:review]')
-    parent_blocks = [
-        {'id': 'integrity', 'content': '## Integrity\n\nRequired evidence and permissions remain independent of procedure content. Configuration is not enforcement proof.', 'source': 'parent:composition-integrity', 'allow': []},
-        {'id': 'workflow', 'content': '## Workflow\n\n' + workflow, 'source': resolved['approved_policy']['source'], 'allow': []},
-        {'id': 'conventions', 'content': '## Shared conventions\n\nRecord observed results.', 'source': 'parent:composition-conventions', 'allow': ['extend', 'replace']},
-    ]
     legacy = project_root / 'CLAUDE.md'
     overlays = composition.import_heading_overlay(legacy.read_text(), config['heading_map'], source=legacy.relative_to(source).as_posix())
     resident = composition.compose_resident(parent_blocks, overlays, project=project, **config['resident_budget'])
+    composition.require(resident['rendered'].strip(), 'selected resident composition must not be empty')
     composition.require(not destination.exists(), f'composition destination already exists: {destination}')
     outputs = {}
     # Validate and render everything in memory before any destination writes.
@@ -177,10 +270,18 @@ def package(source, destination, identity, *, policy_root=ROOT):
         known = {}
         for slug, path in sources.items():
             owner = project if path.parts[0] == 'projects' else None
-            directory = slug if owner or layout == 'flat' and not build.is_router(parent_skills[slug], parent_skills) else str(parent_skills[slug])
+            publisher = source_owners.get(slug)
+            directory = slug if owner or publisher['qualified'] or layout == 'flat' and not parent_skills[slug][1] else str(parent_skills[slug][0])
             content = (source / path).read_text()
             known[slug] = {'slug': slug, 'project': owner, 'kind': 'project-skill' if owner else 'skill', 'source_path': path.as_posix(), 'package_path': f'skills/{directory}/SKILL.md', 'characters': len(content), 'estimated_tokens': (len(content) + 3) // 4}
-        graph = composition.ProcedureGraph(known, bindings, project=project, prerequisites={'code-review': ['review']})
+            if publisher:
+                known[slug].update(publisher=publisher['id'], publisher_root=publisher['skills_root'],
+                                   publisher_qualified=publisher['qualified'])
+        graph = composition.ProcedureGraph(known, bindings, project=project, prerequisites=content_selection['prerequisites'])
+        for route in routes:
+            graph.resolve(route['skills'])
+            composition.require(all(slug in known for slug in route['skills']),
+                                f'route {route["id"]}: name concrete procedures; use policy.review_procedure for the selected binding')
         selected = graph.resolve(list(known))['selected']
         files = {}
         rule_paths = {slug: f'_{slug}.md' for slug in rules}
@@ -224,10 +325,10 @@ def package(source, destination, identity, *, policy_root=ROOT):
         files['skills/RESIDENT.md'] = rendered_resident.encode()
         manifest = {
             'schema_version': 1, 'kernel': 'skills/RESIDENT.md',
-            'routes': [{'id': 'review-procedure', 'priority': 100, 'terms': ['review candidate'], 'skills': [resolved['values']['review-procedure-binding']['procedure']]}],
+            'routes': routes,
             'projects': [{'id': project, 'repos': [canonical_identity], 'always': [], 'routes': []}],
             'explicit_stacks': {},
-            'procedure_composition': {'project': project, 'identity': canonical_identity, 'bindings': bindings, 'prerequisites': {'code-review': ['review']}},
+            'procedure_composition': {'project': project, 'identity': canonical_identity, 'bindings': bindings, 'prerequisites': copy.deepcopy(content_selection['prerequisites'])},
             'known': known,
         }
         for entry in selected:
@@ -238,8 +339,16 @@ def package(source, destination, identity, *, policy_root=ROOT):
         files['catalog/skills-inventory.json'] = (json.dumps({'items': list(known.values())}, indent=2) + '\n').encode()
         for filename in ('resolve-load-set.py', 'procedure_composition.py'):
             files['bin/' + filename] = (ROOT / 'bin' / filename).read_bytes()
-        parent_digest = effective.digest({p.relative_to(source).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((source / 'skills').rglob('*')) if p.is_file()})
-        receipt = {'project': project, 'identity': canonical_identity, 'layout': layout, 'parent_content_sha256': parent_digest, 'policy': resolved, 'composition': graph.resolve(['review']), 'resident': {**resident, 'rendered': rendered_resident, 'characters': final_chars, 'estimated_tokens': (final_chars + 3) // 4}, 'evidence_state': 'configured', 'authorization_effect': 'none'}
+        publisher_files = {p.relative_to(source).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                           for declaration in publishers.values()
+                           for p in sorted((source / declaration['skills_root']).rglob('*')) if p.is_file()}
+        parent_digest = effective.digest(publisher_files)
+        review_request = content_selection['policy_aliases'][0] if content_selection['policy_aliases'] else procedure
+        receipt = {'project': project, 'identity': canonical_identity, 'layout': layout, 'parent_content_sha256': parent_digest, 'policy': resolved, 'composition': graph.resolve([review_request]), 'resident': {**resident, 'rendered': rendered_resident, 'characters': final_chars, 'estimated_tokens': (final_chars + 3) // 4}, 'evidence_state': 'configured', 'authorization_effect': 'none',
+                   'content_selection_sha256': effective.digest(content_selection),
+                   'publishers': [{'id': name, 'skills_root': entry['skills_root'], 'qualified': entry['qualified'],
+                                   'content_sha256': effective.digest({path: sha for path, sha in publisher_files.items() if Path(path).is_relative_to(entry['skills_root'])})}
+                                  for name, entry in publishers.items()]}
         files['composition.json'] = (json.dumps(receipt, indent=2) + '\n').encode()
         # A pre-existing Markdown link must not resurrect the replaced default
         # or escape into another consumer. Tokens are rebound; unsupported raw
@@ -259,11 +368,20 @@ def main():
     parser.add_argument('--source', type=Path, default=ROOT / 'examples/composition')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--identity', required=True)
+    parser.add_argument('--policy-root', type=Path, default=ROOT)
+    parser.add_argument('--policy-inputs', type=Path)
+    parser.add_argument('--policy-inputs-sha256')
+    parser.add_argument('--content-selection', type=Path, help='content-only selection relative to --source')
     args = parser.parse_args()
     try:
-        print(json.dumps(package(args.source, args.output, args.identity), sort_keys=True))
+        content = None if args.content_selection is None else effective.read_json(effective._gate_contract_module().repository_path(
+            args.source, args.content_selection.as_posix(), 'content selection'))
+        print(json.dumps(package(args.source, args.output, args.identity, policy_root=args.policy_root,
+                                 policy_registration_source=args.policy_inputs,
+                                 policy_registration_sha256=args.policy_inputs_sha256,
+                                 content_selection=content), sort_keys=True))
         return 0
-    except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, build.BuildError) as exc:
         print(json.dumps({'state': 'error', 'diagnostic': str(exc)}))
         return 1
 

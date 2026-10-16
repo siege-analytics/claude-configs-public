@@ -23,6 +23,12 @@ AUTHORITY_DEPENDENCY_FLOOR = [
  "catalog/gate-contracts.json",
 ]
 AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
+ "bundles/siege/composition-inputs.json",
+ "bin/compose-project.py",
+ "bin/procedure_composition.py",
+ "bin/_test/selected_composition_test.py",
+ "bin/_test/project_composition_test.py",
+ "bin/_test/procedure_composition_test.py",
  "bin/package-generation.py",
  "bin/_test/package_generation_test.py",
  "hooks/agent-comms/hub-concurrency-gate.sh",

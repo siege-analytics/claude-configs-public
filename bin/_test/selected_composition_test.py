@@ -1,0 +1,259 @@
+#!/usr/bin/env python3
+"""Exercise copied composer/resolver modules with explicit independent inputs.
+
+This verifies content composition, not the source builder, installation or live
+host capabilities. The approved-policy fixture is shared with its verifier's
+tests; no load/evaluation path is mocked.
+"""
+from __future__ import annotations
+
+import copy
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[2]
+spec = importlib.util.spec_from_file_location('policy_fixture_tests', ROOT / 'bin/_test/effective_policy_test.py')
+policy_tests = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(policy_tests)
+
+
+class SelectedCompositionTest(unittest.TestCase):
+    def setUp(self):
+        self.fixture = policy_tests.RegisteredPolicyInputsTest()
+        self.fixture.setUp()
+        self.addCleanup(self.fixture.doCleanups)
+        self.source = self.fixture.root
+        temporary = tempfile.TemporaryDirectory(prefix='selected-composition-output-')
+        self.addCleanup(temporary.cleanup)
+        self.output = Path(temporary.name) / 'output'
+        self.identity = 'github.example.invalid/independent-org/application'
+        for relative in ('bin/compose-project.py', 'bin/build.py', 'bin/procedure_composition.py',
+                         'bin/resolve-load-set.py'):
+            shutil.copy2(ROOT / relative, self.source / relative)
+        self.project = self.source / 'projects/independent'
+        self.fixture.write_json('projects/independent/composition.json', {
+            'bindings': {'replacements': [], 'extensions': [], 'aliases': []},
+            'heading_map': {}, 'resident_budget': {'max_characters': 2500, 'max_estimated_tokens': 625},
+        })
+        (self.project / 'CLAUDE.md').write_text('')
+        self.selection = {
+            'schema_version': 1, 'publishers': [], 'policy_aliases': [], 'prerequisites': {},
+            'routes': [{'id': 'project-review', 'priority': 100, 'terms': ['inspect changes'],
+                        'skills': ['${policy.review_procedure}']}],
+            'resident_blocks': [{'id': 'independent--instructions',
+                                 'content': '# Project instructions\n\nPROJECT_RESIDENT\n\n${policy.resident_workflow}',
+                                 'source': '${policy.source}', 'allow': []}],
+        }
+
+    def compose(self, *, pin=None):
+        self.fixture.write_json('projects/independent/content-selection.json', self.selection)
+        return subprocess.run([
+            sys.executable, str(self.source / 'bin/compose-project.py'),
+            '--source', str(self.source), '--output', str(self.output), '--identity', self.identity,
+            '--policy-root', str(self.source), '--policy-inputs', str(self.fixture.source),
+            '--policy-inputs-sha256', pin or self.fixture.pin,
+            '--content-selection', 'projects/independent/content-selection.json',
+        ], cwd='/', capture_output=True, text=True)
+
+    def resolve(self, prompt, *, identity=None, layout='flat', render=False):
+        command = [sys.executable, str(self.output / layout / 'bin/resolve-load-set.py'),
+                   '--prompt', prompt, '--repo', identity or self.identity]
+        if render:
+            command += ['--render-hook', '--mode', 'on']
+        result = subprocess.run(command, cwd='/', capture_output=True, text=True)
+        return result, result.stdout if render else json.loads(result.stdout)
+
+    def publisher(self, name, *, qualified=True, root=None, skill='format'):
+        root = root or f'bundles/{name}/skills'
+        path = self.source / root / skill / 'SKILL.md'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f'# {name} formatting\n\n{name.upper()}_CONTENT_ONLY\n')
+        self.selection['publishers'].append({'id': name, 'skills_root': root, 'qualified': qualified})
+
+    def test_real_composer_and_resolver_without_any_siege_inputs(self):
+        absent = ('skills', 'bundles', 'hooks', 'examples', 'catalog/gate-contracts.json',
+                  'catalog/effective-policy.json', 'catalog/effective-policy-selection.json')
+        for relative in absent:
+            self.assertFalse((self.source / relative).exists(), relative)
+        result = self.compose()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for layout in ('flat', 'nested'):
+            selected, value = self.resolve('inspect changes', layout=layout)
+            self.assertEqual(selected.returncode, 0, value)
+            self.assertEqual([item['slug'] for item in value['selected']], ['independent--review'])
+            receipt = json.loads((self.output / layout / 'composition.json').read_bytes())
+            self.assertEqual(receipt['publishers'], [])
+            self.assertEqual(receipt['authorization_effect'], 'none')
+            self.assertFalse(receipt['policy']['values']['ticket-requirement']['required'])
+            self.assertEqual(receipt['policy']['decision']['final'], 'unknown')
+            self.assertEqual(receipt['policy']['policy_selection']['source'], 'project/selection.json')
+            resident = (self.output / layout / 'skills/RESIDENT.md').read_text()
+            self.assertIn('PROJECT_RESIDENT', resident)
+            self.assertNotIn('Shared conventions', resident)
+            self.assertNotIn('Siege', resident)
+            self.assertFalse((self.output / layout / 'skills/code-review').exists())
+            rendered, text = self.resolve('inspect changes', layout=layout, render=True)
+            self.assertEqual(rendered.returncode, 0, text + rendered.stderr)
+            self.assertEqual(text.count('PROJECT_RESIDENT'), 1)
+
+    def test_siege_content_does_not_adopt_siege_workflow(self):
+        self.publisher('siege')
+        result = self.compose()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        selected, value = self.resolve('[skill:siege--format]')
+        self.assertEqual(selected.returncode, 0, value)
+        self.assertEqual([(item['slug'], item['project'], item['publisher']) for item in value['selected']],
+                         [('siege--format', None, 'siege')])
+        receipt = json.loads((self.output / 'flat/composition.json').read_bytes())
+        self.assertEqual(receipt['policy']['values']['branch-policy']['integration_branch'], 'trunk')
+        self.assertFalse(receipt['policy']['values']['ticket-requirement']['required'])
+        self.assertEqual(receipt['policy']['values']['review-procedure-binding']['procedure'], 'independent--review')
+        self.assertEqual(receipt['policy']['decision']['final'], 'unknown')
+        self.assertEqual(receipt['publishers'][0]['id'], 'siege')
+
+    def test_same_local_name_uses_distinct_publisher_namespaces(self):
+        self.publisher('first')
+        self.publisher('second')
+        result = self.compose()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        _, value = self.resolve('[skill:first--format] [skill:second--format]')
+        self.assertEqual([item['slug'] for item in value['selected']], ['first--format', 'second--format'])
+        for publisher in ('first', 'second'):
+            self.assertIn(publisher.upper() + '_CONTENT_ONLY',
+                          (self.output / f'flat/skills/{publisher}--format/SKILL.md').read_text())
+
+    def test_installed_resolver_rejects_forged_publisher_scope_before_resident_output(self):
+        self.publisher('first')
+        result = self.compose()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        path = self.output / 'flat/catalog/skills-inventory.json'
+        original = json.loads(path.read_bytes())
+        for change in (
+            {'project': 'independent'},
+            {'publisher': 'second'},
+            {'publisher_root': 'projects/foreign/skills'},
+            {'source_path': 'projects/foreign/skills/format/SKILL.md'},
+        ):
+            changed = copy.deepcopy(original)
+            item = next(item for item in changed['items'] if item['slug'] == 'first--format')
+            item.update(change)
+            path.write_text(json.dumps(changed))
+            with self.subTest(change=change):
+                process, text = self.resolve('[skill:first--format]', render=True)
+                self.assertNotEqual(process.returncode, 0, text)
+                self.assertNotIn('PROJECT_RESIDENT', text)
+                self.assertNotIn('<project-resident>', text)
+
+    def test_ambiguous_legacy_names_fail_before_output(self):
+        self.publisher('first', qualified=False)
+        self.publisher('second', qualified=False)
+        result = self.compose()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('duplicate qualified skill', result.stdout)
+        self.assertFalse(self.output.exists())
+
+    def test_publisher_cannot_borrow_foreign_project_source(self):
+        self.publisher('foreign', root='projects/foreign/skills')
+        result = self.compose()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('cannot borrow project scope', result.stdout)
+        self.assertFalse(self.output.exists())
+
+    def test_publisher_and_project_qualifier_collision_rejects(self):
+        self.publisher('independent', skill='review')
+        result = self.compose()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('duplicate qualified skill independent--review', result.stdout)
+        self.assertFalse(self.output.exists())
+
+    def test_duplicate_publishers_missing_sources_symlinks_and_cycles_reject(self):
+        baseline = copy.deepcopy(self.selection)
+        self.publisher('first')
+        publisher = copy.deepcopy(self.selection['publishers'][0])
+        (self.source / 'linked').symlink_to(self.source / 'bundles/first/skills', target_is_directory=True)
+        variants = [
+            {'publishers': [publisher, publisher]},
+            {'publishers': [{**publisher, 'skills_root': 'absent'}]},
+            {'publishers': [{**publisher, 'skills_root': 'linked'}]},
+            {'publishers': [{**publisher, 'skills_root': '.'}]},
+            {'publishers': [{**publisher, 'skills_root': '../escape'}]},
+            {'prerequisites': {'independent--review': ['independent--review']}},
+            {'routes': [{'id': 'missing', 'priority': 1, 'terms': ['missing'], 'skills': ['absent']}]},
+            {'policy_aliases': ['independent--review']},
+            {'authorization_effect': 'allow'},
+        ]
+        for variant in variants:
+            self.selection = {**copy.deepcopy(baseline), **variant}
+            with self.subTest(variant=variant):
+                result = self.compose()
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertFalse(self.output.exists())
+
+    def test_content_selection_cannot_replace_independently_pinned_policy(self):
+        self.fixture.inputs['review_repository'] = 'github.com/candidate/policy'
+        self.fixture.write_json(self.fixture.source, self.fixture.inputs)
+        result = self.compose()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('registration digest differs from independent pin', result.stdout)
+        self.assertFalse(self.output.exists())
+
+    def test_empty_resident_rejects_before_generating_an_unusable_package(self):
+        for blocks in ([], [{'id': 'independent--blank', 'content': ' \n ', 'source': 'blank.md', 'allow': []}]):
+            self.selection['resident_blocks'] = blocks
+            with self.subTest(blocks=blocks):
+                result = self.compose()
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertIn('selected resident composition must not be empty', result.stdout)
+                self.assertFalse(self.output.exists())
+
+    def test_foreign_resolver_identity_and_unused_wrong_project_binding_reject(self):
+        result = self.compose()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        selected, value = self.resolve('inspect changes', identity='github.example.invalid/foreign/application')
+        self.assertNotEqual(selected.returncode, 0)
+        self.assertIn('identity differs', value['diagnostic'])
+        self.output = self.output.parent / 'invalid'
+        path = self.project / 'composition.json'
+        config = json.loads(path.read_bytes())
+        config['bindings']['aliases'].append({'alias': 'foreign', 'target': 'foreign--review', 'source': 'foreign.json'})
+        path.write_text(json.dumps(config))
+        result = self.compose()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(self.output.exists())
+
+
+class SiegeCompatibilityTest(unittest.TestCase):
+    def test_explicit_siege_and_compatibility_use_identical_composer_outputs(self):
+        with tempfile.TemporaryDirectory(prefix='explicit-siege-composition-') as temporary:
+            root = Path(temporary)
+            source = root / 'source'
+            shutil.copytree(ROOT / 'examples/composition', source)
+            shutil.copy2(ROOT / 'bundles/siege/composition-inputs.json', source / 'selected-content.json')
+            inputs = json.loads((ROOT / 'bundles/siege/policy-inputs.json').read_bytes())
+            pin = policy_tests.policy.digest(inputs)
+            for project in ('strict-release', 'synthetic-trunk'):
+                identity = 'github.example.invalid/synthetic-org/' + project
+                outputs = []
+                for mode in ('compatibility', 'explicit'):
+                    output = root / project / mode
+                    command = [sys.executable, str(ROOT / 'bin/compose-project.py'),
+                               '--source', str(source), '--output', str(output), '--identity', identity]
+                    if mode == 'explicit':
+                        command += ['--policy-inputs', 'bundles/siege/policy-inputs.json',
+                                    '--policy-inputs-sha256', pin, '--content-selection', 'selected-content.json']
+                    result = subprocess.run(command, cwd='/', capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    outputs.append({p.relative_to(output).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                                    for p in output.rglob('*') if p.is_file()})
+                self.assertEqual(outputs[0], outputs[1], project)
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

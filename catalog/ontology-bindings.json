@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "ontology_version": "1.0.0",
+  "ontology_version": "1.1.0",
   "bindings": [
     {
       "artifact": "catalog/resolver-manifest.json",
@@ -239,6 +239,26 @@
           "pointer": "/fixture_sources/*",
           "term": "source-reference",
           "value_type": "string"
+        }
+      ]
+    },
+    {
+      "artifact": "bundles/siege/composition-inputs.json",
+      "fields": [
+        {
+          "pointer": "/publishers/*/id",
+          "term": "content-publisher",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/publishers/*/skills_root",
+          "term": "source-reference",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/resident_blocks/*",
+          "term": "resident-block",
+          "value_type": "object"
         }
       ]
     }

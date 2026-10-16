@@ -62,8 +62,19 @@ class ProcedureGraph:
             owner = item.get("project")
             require(owner is None or isinstance(owner, str) and SLUG.fullmatch(owner), f"procedure {slug}: invalid project")
             if owner is not None:
+                require(item.get("publisher") is None, f"procedure {slug}: project scope and publisher ownership are distinct")
                 require(slug.startswith(owner + "--"), f"procedure {slug}: qualification disagrees with project {owner}")
                 require(item["source_path"].startswith(f"projects/{owner}/skills/"), f"procedure {slug}: source is outside declared project")
+            elif item.get("publisher") is not None:
+                publisher = identifier(item["publisher"], f"procedure {slug}.publisher")
+                root = relative_path(item.get("publisher_root"), f"procedure {slug}.publisher_root")
+                require(PurePosixPath(root).parts and PurePosixPath(root).parts[0] != "projects",
+                        f"procedure {slug}: publisher cannot borrow project scope")
+                qualified = item.get("publisher_qualified")
+                require(type(qualified) is bool, f"procedure {slug}: publisher qualification must be explicit")
+                require(not qualified or slug.startswith(publisher + "--"),
+                        f"procedure {slug}: qualification disagrees with publisher {publisher}")
+                require(item["source_path"].startswith(root + "/"), f"procedure {slug}: source is outside declared publisher")
             else:
                 require(item["source_path"].startswith("skills/"), f"procedure {slug}: parent source must be under skills/")
             source = item["source_path"]
@@ -149,6 +160,8 @@ class ProcedureGraph:
                         "slug": slug, "source_path": item["source_path"], "load_path": item["package_path"],
                         "project": item.get("project"), "requested_by": [], "binding_traces": [],
                     }
+                    if item.get("publisher") is not None:
+                        selected[slug]["publisher"] = item["publisher"]
                 entry = selected[slug]
                 if root not in entry["requested_by"]:
                     entry["requested_by"].append(root)

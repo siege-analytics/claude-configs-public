@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "ontology_version": "1.0.0",
+  "ontology_version": "1.1.0",
   "terms": [
     {
       "id": "parent-scaffold",
@@ -583,6 +583,40 @@
       "references": [
         "#1000",
         "#851"
+      ]
+    },
+    {
+      "id": "content-publisher",
+      "label": "Content publisher",
+      "definition": "A namespace identifying the source of selected skills and resident instructions. Publisher ownership is distinct from project scope, profile adoption and observed host capability; publication grants no authorization.",
+      "owner": "composition",
+      "examples": [
+        "Siege supplies a reference bundle while an independent project keeps its own workflow profile."
+      ],
+      "distinguished_from": [
+        "project",
+        "profile",
+        "host-capability"
+      ],
+      "references": [
+        "#1027"
+      ]
+    },
+    {
+      "id": "content-selection",
+      "label": "Content selection",
+      "definition": "An explicit configured set of publisher sources, procedure edges, routes and resident blocks consumed by the shared composer. It may reference the separately approved policy but cannot adopt, replace or authorize that policy.",
+      "owner": "composition",
+      "examples": [
+        "A project selects a Siege formatting skill without adopting Siege ticket or branch requirements."
+      ],
+      "distinguished_from": [
+        "profile",
+        "effective-policy",
+        "authorization-record"
+      ],
+      "references": [
+        "#1027"
       ]
     }
   ],
