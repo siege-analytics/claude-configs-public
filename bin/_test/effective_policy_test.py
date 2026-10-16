@@ -55,7 +55,7 @@ class EffectivePolicyTest(unittest.TestCase):
 
     def test_catalog_valid_and_sealed_to_contract(self):
         self.assertEqual(policy.digest(self.contract), self.approved["contract_sha256"])
-        self.assertEqual("34f014bd8aaf55e545a6a2fe3094242aa40cb182", self.approved["approved_policy_revision"])
+        self.assertEqual("34f014bd8aaf55e545a6a2fe3094242aa40cb182", self.approved["parent_contract_revision"])
 
     def test_strict_feature_to_develop_policy_allows_but_enforcement_is_unproved(self):
         result = self.explain(capabilities=self.all_verified())
@@ -195,7 +195,7 @@ class EffectivePolicyTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "resolved values disagree"):
             policy.validate_fixture_agreement(ROOT, self.contract, changed, policy._gate_contract_module())
         changed = copy.deepcopy(self.approved)
-        changed["approved_policy_revision"] = "a" * 40
+        changed["parent_contract_revision"] = "a" * 40
         with self.assertRaisesRegex(ValueError, "revision disagrees"):
             policy.validate_policy(changed, self.contract, "changed")
         changed["parent_lock"]["revision"] = "a" * 40

@@ -5,7 +5,7 @@ Hostile-review-artifact: this document, "Peer review" section
 
 ## Assumptions
 
-- `catalog/effective-policy.json` is reviewed and accepted only through exact-SHA Git history; its declared revision is metadata, not independent proof.
+- `catalog/effective-policy.json` is a proposed policy snapshot until an independent exact-SHA content verdict and a later immutable selection receipt exist. Its `parent_contract_revision` identifies the accepted #851 contract source only; it is not policy approval.
 - #848 is configured-policy evaluation only. Trusted protected/live adapter evidence remains unavailable until #1002/#1003.
 - The bounded pilot covers exactly the three #851 fields and two synthetic identities; broader composition and migration remain separate tickets.
 
@@ -15,7 +15,7 @@ Bounded to the three #851 pilot policy fields, two synthetic repository identiti
 
 ## Authority model
 
-- Approved policy is `catalog/effective-policy.json`, sealed to contract digest `0e3b8e869eb0eb90583680d777a58ecfcdb0694d4f5ffe7891e69ebc7de1059b` and accepted source revision `34f014bd8aaf55e545a6a2fe3094242aa40cb182`.
+- Proposed policy is `catalog/effective-policy.json`, sealed to contract digest `0e3b8e869eb0eb90583680d777a58ecfcdb0694d4f5ffe7891e69ebc7de1059b` and parent contract revision `34f014bd8aaf55e545a6a2fe3094242aa40cb182`. A separate exact policy-snapshot revision/digest must be selected before final acceptance.
 - Parent defaults come from `catalog/gate-contracts.json`; organization and project patches are independently checked against its allowed paths.
 - Exact canonical host/owner/repository identity selects one project. Missing/foreign/disagreeing identity does not inherit another project.
 - Candidate policy, installation metadata, task evidence, and capability state cannot alter precedence. A candidate is diagnostic-only and is never selected as its own approved policy.
@@ -37,11 +37,13 @@ Bounded to the three #851 pilot policy fields, two synthetic repository identiti
 
 ## Peer review
 
-A pre-publication hostile audit reproduced one blocking flaw: caller-supplied `verified` capability states could make final decision `allow` and `check` exit 0 without a trusted host/protected adapter. The remediation makes all policy-allowed operations final `unknown` in #848, adds exact CLI exit tests, and labels capability inputs unauthenticated. A second hostile audit returned `no blocking finding`; it retained only the declared-revision authenticity and live-adapter gaps already deferred to exact-SHA review and #1002/#1003.
+A pre-publication hostile audit reproduced one blocking flaw: caller-supplied `verified` capability states could make final decision `allow` and `check` exit 0 without a trusted host/protected adapter. That exploit is closed: policy-allowed operations remain final `unknown`, with exact CLI exit tests.
+
+A collaborator then reproduced a second blocker at `d13c239`: editing both the mutable catalog and matching fixture changed active policy/resident text under the unchanged claimed revision. The first head is rejected. This follow-up separates `parent_contract_revision` from policy approval and publishes a corrected snapshot candidate. Final remediation must load that snapshot by a separately reviewed exact commit/blob digest and treat working-tree files only as proposals.
 
 ## Lead review
 
-The coordinating session re-executed the capability spoof directly after remediation: synthetic trunk `feature -> main` returns policy `allow`, final `unknown`, and `check` exit 1 even when both required capabilities are passed as `verified`. It also reviewed canonical approved-path enforcement, fixture/source parent-lock agreement, same-value provenance, generated configured-only labeling, and protected CI step sealing.
+The coordinating session re-executed the capability spoof directly after remediation: synthetic trunk `feature -> main` returns policy `allow`, final `unknown`, and `check` exit 1 even when both required capabilities are passed as `verified`. It reproduced the dual-edit previous-policy gap and invalidated the first implementation head. The current snapshot-candidate commit corrects parent-versus-policy revision semantics; immutable prior-policy selection remains required in the next commit.
 
 ## Quantified claims
 

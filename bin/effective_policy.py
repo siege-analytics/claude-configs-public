@@ -29,7 +29,7 @@ HOST = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
 REPO_PART = re.compile(r"[a-z0-9](?:[a-z0-9_.-]*[a-z0-9])?\Z")
 POLICY_FIELDS = {
     "schema_version", "resolver_version", "contract_source", "contract_sha256",
-    "approved_policy_revision", "parent_lock", "organization_profiles", "projects",
+    "parent_contract_revision", "parent_lock", "organization_profiles", "projects",
 }
 PARENT_LOCK_FIELDS = {
     "host", "owner", "repository", "revision", "import_mechanism", "digest", "tool_version",
@@ -175,8 +175,8 @@ def validate_policy(data: Any, contract: dict[str, Any], context: str = "effecti
         fail(f"{context}: invalid contract digest")
     if data["contract_sha256"] != digest(contract):
         fail(f"{context}: contract digest disagrees with authoritative contract")
-    if not HEX40.fullmatch(text(data["approved_policy_revision"], f"{context}.approved_policy_revision")):
-        fail(f"{context}: approved revision must be exact 40-character SHA")
+    if not HEX40.fullmatch(text(data["parent_contract_revision"], f"{context}.parent_contract_revision")):
+        fail(f"{context}: parent contract revision must be exact 40-character SHA")
     lock = exact_fields(data["parent_lock"], PARENT_LOCK_FIELDS, f"{context}.parent_lock")
     lock_identity = normalize_identity(
         {key: lock[key] for key in ("host", "owner", "repository")},
@@ -184,8 +184,8 @@ def validate_policy(data: Any, contract: dict[str, Any], context: str = "effecti
     )
     if any(lock[key] != lock_identity[key] for key in ("host", "owner", "repository")):
         fail(f"{context}.parent_lock: identity must already be canonical")
-    if lock["revision"] != data["approved_policy_revision"]:
-        fail(f"{context}.parent_lock: revision disagrees with approved revision")
+    if lock["revision"] != data["parent_contract_revision"]:
+        fail(f"{context}.parent_lock: revision disagrees with parent contract revision")
     if lock["digest"] != data["contract_sha256"]:
         fail(f"{context}.parent_lock: digest disagrees with contract digest")
     if lock["import_mechanism"] != "git" or lock["tool_version"] != "effective-policy/1":
@@ -359,7 +359,7 @@ def policy_payload(policy: dict[str, Any], identity: dict[str, str], project: di
     return {
         "resolver_version": policy["resolver_version"],
         "contract_sha256": policy["contract_sha256"],
-        "approved_policy_revision": policy["approved_policy_revision"],
+        "parent_contract_revision": policy["parent_contract_revision"],
         "parent_lock": policy["parent_lock"],
         "repository_identity": {key: identity[key] for key in ("host", "owner", "repository")},
         "project": project["id"],
@@ -459,7 +459,7 @@ def _candidate_result(
         return {
             "state": "schema-valid-proposal",
             "digest": digest(policy_payload(candidate, {"host": active_identity[0], "owner": active_identity[1], "repository": active_identity[2]}, project, candidate_values)),
-            "declared_revision": candidate["approved_policy_revision"],
+            "declared_parent_contract_revision": candidate["parent_contract_revision"],
             "fixture_agreement": "not-evaluated-for-unapproved-proposal",
             "changes": changes,
             "authorization_effect": "none",
@@ -478,7 +478,7 @@ def explain(
     base = {
         "schema_version": 1,
         "contract_sha256": policy["contract_sha256"],
-        "approved_policy_revision": policy["approved_policy_revision"],
+        "parent_contract_revision": policy["parent_contract_revision"],
         "identity_sources": identities,
         "operation": operation,
         "install_configuration": {"value": context["install_configuration"], "authorization_effect": "none"},
@@ -509,7 +509,7 @@ def explain(
         "organization_profile": project["organization_profile"],
         "approved_policy": {
             "source": POLICY.as_posix(),
-            "revision": policy["approved_policy_revision"],
+            "parent_contract_revision": policy["parent_contract_revision"],
             "digest": active_digest,
             "parent_lock": copy.deepcopy(policy["parent_lock"]),
         },

@@ -86,7 +86,7 @@
           "value_type": "object"
         },
         {
-          "pointer": "/approved_policy_revision",
+          "pointer": "/parent_contract_revision",
           "term": "source-reference",
           "value_type": "string"
         },
