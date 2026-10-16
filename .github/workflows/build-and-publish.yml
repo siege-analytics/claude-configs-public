@@ -128,6 +128,30 @@ jobs:
       - name: Native consumer Git registration and destination range
         run: python3 bin/_test/native_push_test.py
 
+      - name: Canary packet preparation remains non-authorizing
+        run: |
+          set -euo pipefail
+          python3 bin/_test/craft_backend_canary_test.py
+          ci_proposal=$(mktemp)
+          trap 'rm -f "$ci_proposal"' EXIT
+          python3 - "$ci_proposal" <<'PYTHON'
+          import json
+          import sys
+          from pathlib import Path
+          proposal = Path("examples/probe-matrices/craft-backend-canary/approval.proposal.json")
+          value = json.loads(proposal.read_text())
+          workspace = str(Path.home() / ".craft-agent" / "workspaces" / value["run"]["id"])
+          value["paths"]["workspace_root"] = workspace
+          value["cleanup"]["verify_absent"][0] = workspace
+          Path(sys.argv[1]).write_text(json.dumps(value))
+          PYTHON
+          python3 scripts/canary/craft-backend-canary.py validate --manifest "$ci_proposal"
+          if output=$(python3 scripts/canary/craft-backend-canary.py validate --require-approval-record --manifest "$ci_proposal" 2>&1); then
+            echo "proposal unexpectedly recorded external approval" >&2
+            exit 1
+          fi
+          grep -F "external operator approval has not been recorded" <<<"$output"
+
       - name: Settings-drift check fixtures
         run: python3 bin/_test/settings_drift_test.py
 

@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0.0",
+  "status": "proposal",
+  "run": {
+    "id": "cc-1003-provider-canary-20261016",
+    "mode": "sequential",
+    "purpose": "Observe host-native enforcement and backend parity without treating model output as evidence"
+  },
+  "paths": {
+    "temp_root": "/private/tmp/cc-1003-provider-canary-20261016",
+    "workspace_root": "/Users/dheerajchand/.craft-agent/workspaces/cc-1003-provider-canary-20261016",
+    "evidence_root": "/private/tmp/cc-1003-provider-canary-20261016/evidence",
+    "source_root": "/private/tmp/cc-1003-provider-canary-20261016/source"
+  },
+  "pins": {
+    "develop_revision": "6a3c2efc593f209ba6d9594a29e43bfb8cab634a",
+    "source_revision": "6a3c2efc593f209ba6d9594a29e43bfb8cab634a",
+    "provider_accepted_head": "f9a3739c29379f746f87defced2c894f8bfd1882",
+    "provider_integration_revision": "c4adf438a9d24a1dca39be61efcc61ed0ee5342a",
+    "native_hooks_accepted_head": "0fa16ce6a07b1083a31d80a3f40dd5dbf1639744",
+    "native_hooks_revision": "cd014600d7262492c7ce95512ba308b307a8efa5",
+    "source_tree_sha256": "3b00d388fed5e78bf26cab5dfb7122a171110a6249cf869fe929c9b6c8b87124",
+    "craft_package_canonical_sha256": "012f67fb4641d28d0b3970e137f324304dcb45b5a86909b28aca60d5e2d6ff08",
+    "craft_package_tree_sha256": null,
+    "composition_tree_sha256": "7abab83d505b9ff3370db8519f698d28372f338d512b99c6e19051e6da12efe1",
+    "workspace_payload_tree_sha256": null,
+    "approval_driver_sha256": "09d005c7589c116a27f8d4d1789bba355c387b8870d215b61cec40d416461ffe",
+    "effective_policy_revision": "ecef9e8620f477cdea4962cd3d737e16873f06fa",
+    "effective_policy_blob": "086e7bda8e9f588c57294ed0899f9ff2ffa982c5",
+    "effective_policy_raw_sha256": "cf45e80b063d58501ca6dd297c4fcec3c99273507cef8dce7e566d3377a253ea",
+    "effective_policy_canonical_sha256": "debbb2af18af4ad1381ae7355e200049a94e9a02557dd7ccb756cb21834d2efa",
+    "gate_contract_revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
+    "gate_contract_version": "1.2.0",
+    "gate_contract_sha256": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
+    "workspace_setup_driver_sha256": "7b4fc0165cf3fdb060dc89c93ab00bf96b00a210d0eab686ad08b6cbf565858d"
+  },
+  "fixture": {
+    "canonical_identity": "github.example.invalid/synthetic-org/strict-release",
+    "project": "strict-release",
+    "composition_layout": "flat",
+    "resident_marker": "STRICT_OVERLAY: run the project regression command."
+  },
+  "installed_builds": {
+    "craft_application": {
+      "package_manifest_path": "/Applications/Craft Agents.app/Contents/Resources/app/package.json",
+      "package_name": "@craft-agent/electron",
+      "version": "0.15.2",
+      "package_manifest_sha256": "5ab2c0f968a56e56f3a19cb994ae8256fc466eff63f3d5cc68d4eff39d02fa67",
+      "main_bundle_path": "/Applications/Craft Agents.app/Contents/Resources/app/dist/main.cjs",
+      "main_bundle_sha256": "85dcbd47f2dec6cb1d38360a580391f52161d4742878f478c0e1997310cc72a0"
+    },
+    "claude_sdk": {
+      "package_manifest_path": "/Applications/Craft Agents.app/Contents/Resources/app/node_modules/@anthropic-ai/claude-agent-sdk/package.json",
+      "package_name": "@anthropic-ai/claude-agent-sdk",
+      "version": "0.3.296",
+      "package_manifest_sha256": "a2f4bd57129cb99253877099ab6deed575b3bdd37aa0e09aa6469a63bc81690f",
+      "active_selection_state": "requires-host-session-evidence"
+    },
+    "pi_adapter": {
+      "implementation_package": "@earendil-works/pi-ai",
+      "adapter_id": "openai-codex-responses",
+      "discovery_artifact_path": "/Applications/Craft Agents.app/Contents/Resources/app/dist/main.cjs",
+      "discovery_artifact_sha256": "85dcbd47f2dec6cb1d38360a580391f52161d4742878f478c0e1997310cc72a0",
+      "required_bundle_markers": [
+        "@earendil-works/pi-ai",
+        "openai-codex-responses"
+      ],
+      "public_manifest_state": "unavailable-unverified",
+      "active_selection_state": "requires-host-session-evidence"
+    }
+  },
+  "backends": [
+    {
+      "sequence": 1,
+      "provider_type": "anthropic",
+      "installed_build_key": "claude_sdk",
+      "connection": "claude-max",
+      "model": "claude-opus-4-8"
+    },
+    {
+      "sequence": 2,
+      "provider_type": "pi",
+      "installed_build_key": "pi_adapter",
+      "connection": "chatgpt-plus",
+      "model": "pi/gpt-5.5"
+    }
+  ],
+  "timeouts_seconds": {
+    "per_backend": 900,
+    "transition": 180,
+    "cleanup": 300,
+    "overall": 2400
+  },
+  "allowed_side_effects": [
+    "create_exact_workspace",
+    "write_exact_temp_root",
+    "create_local_bare_remote",
+    "create_disposable_git_refs",
+    "deploy_pinned_source_to_exact_workspace",
+    "register_hooks_in_exact_workspace_and_fixture",
+    "record_host_event_metadata",
+    "remove_exact_workspace",
+    "remove_exact_temp_root"
+  ],
+  "limits": {
+    "no_credentials_read": true,
+    "no_main_mutation": true,
+    "no_branch_protection_mutation": true,
+    "no_release_or_shared_install": true,
+    "no_external_messages": true,
+    "no_parallel_sessions": true,
+    "no_provider_authority_claim": true,
+    "no_model_self_report_as_evidence": true
+  },
+  "cleanup": {
+    "owner": "Dheeraj",
+    "verify_absent": [
+      "/Users/dheerajchand/.craft-agent/workspaces/cc-1003-provider-canary-20261016",
+      "/private/tmp/cc-1003-provider-canary-20261016"
+    ],
+    "retain": "redacted receipts and digests only"
+  },
+  "operator_approval": {
+    "state": "not-supplied",
+    "source_kind": null,
+    "source_reference": null,
+    "approved_by": null,
+    "approved_at": null,
+    "subject_sha256": null
+  }
+}
