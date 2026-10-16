@@ -115,6 +115,9 @@ jobs:
       - name: Validate repo hooks match snippet
         run: python3 bin/validate-hooks.py
 
+      - name: Coherent package upgrade and rollback fixtures
+        run: python3 bin/_test/package_generation_test.py
+
       - name: Settings-drift check fixtures
         run: python3 bin/_test/settings_drift_test.py
 
