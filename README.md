@@ -18,6 +18,8 @@ For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zsh
 |---|---|
 | [`RESOLVER.md`](RESOLVER.md) | **Skill resolver** -- master index mapping task patterns to required skills. Mandatory first read before any non-trivial action. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release notes by version. |
+| [`docs/skill-lifecycle.md`](docs/skill-lifecycle.md) | Lifecycle migration ratchet and first-promotion boundary. |
+| [`wiki/Ontology.md`](wiki/Ontology.md) | Canonical terms, relationships and checked contract bindings; generated from `catalog/ontology.json`. |
 | `skills/` | Categorized reusable skills for Claude Code sessions. |
 | `skills/_*-rules.md` | **Always-on conventions** -- applied across every skill that touches code, data, or output. See [Conventions](#always-on-conventions). |
 | `skills/shelves/` | **DBrain book-skill library** -- book-derived skills (Clean Code, DDIA, Effective Python, etc.) organized into 11 topic shelves. See [DBrain](#dbrain--book-skill-library). |
@@ -43,7 +45,7 @@ The problem this repo solves: **skills are only useful if they fire before the a
 Three enforcement layers keep the resolver active:
 
 1. **Session start** -- every project `CLAUDE.md` references `RESOLVER.md` as the first action of any non-trivial task.
-2. **Every user turn** -- [`hooks/resolver/inject-resolver.sh`](hooks/resolver/inject-resolver.sh) is a `UserPromptSubmit` hook that injects the resolver summary into active context on every prompt. Context doesn't decay by turn 20.
+2. **Every user turn** -- [`hooks/resolver/inject-resolver.sh`](hooks/resolver/inject-resolver.sh) injects the compact safety kernel plus a deterministic task/project load set with reasons. Unknown or ambiguous prompts remain visibly kernel-only; the legacy resolver prose is not globally injected.
 3. **Pre-tool-use** -- [`hooks/infrastructure/catalog-guard.sh`](hooks/infrastructure/catalog-guard.sh) is a `PreToolUse` hook on `Bash` that matches dangerous catalog-bypass patterns and blocks them with a STOP-read-skill reminder.
 
 Wire the hooks by merging [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into `~/.claude/settings.json` (or project `.claude/settings.local.json`), replacing `/path/to/claude-configs-public` with the actual absolute path to the on-disk `hooks/` (typically a workspace path -- see [Wire and verify hooks](#wire-and-verify-hooks) for the rsync-first sequence and the canonical verify-it-fires invocation).
@@ -61,7 +63,7 @@ Files at the root of `skills/` named `_*-rules.md` are loaded by the resolver Co
 | [`_jvm-rules.md`](skills/_jvm-rules.md) | Effective Java + Effective Kotlin (merged) | Touching JVM languages, including Scala on Spark |
 | [`_typescript-rules.md`](skills/_typescript-rules.md) | Effective TypeScript idioms | Touching `*.ts` / `*.tsx` |
 | [`_rust-rules.md`](skills/_rust-rules.md) | Rust idioms | Touching `*.rs` |
-| [`_siege-utilities-rules.md`](skills/_siege-utilities-rules.md) | Prefer [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) for utility-shaped problems before writing a new helper. Consider PRs upstream when the gap is generic. | Writing Python utilities |
+| [`_siege-utilities-rules.md`](skills/_siege-utilities-rules.md) | Legacy compatibility pointer, not an always-on preference. Project-specific guidance is gated to the exact Siege Utilities origin. | Existing rule references only |
 | [`_definition-of-done-rules.md`](skills/_definition-of-done-rules.md) | Five hard criteria for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists. | Every behavior change |
 
 ## Rules bundle
@@ -126,7 +128,7 @@ Routers cover an entire category with one description slot. Sub-skills are loade
 | **Apache Sedona** | [`coding/sedona/`](skills/coding/sedona/SKILL.md) | Distributed spatial joins on Spark. Same skill for PySpark and Scala scaffolding. Includes raster. |
 | **DuckDB-spatial** | [`coding/duckdb-spatial/`](skills/coding/duckdb-spatial/SKILL.md) | SQL on Parquet without server; bundles GEOS/GDAL/PROJ -- the strongest single tool for GDAL-less environments. |
 
-Always start spatial work with `siege_utilities.geo.capabilities.geo_capabilities()` to detect the environment tier, then route from [`analysis/spatial/SKILL.md`](skills/analysis/spatial/SKILL.md).
+Start spatial work by verifying the target environment and choosing an engine from [`analysis/spatial/SKILL.md`](skills/analysis/spatial/SKILL.md). Siege Utilities examples are historical references for its exact repository origin only.
 
 ### Action Skills
 
@@ -193,14 +195,14 @@ bash bin/install.sh
 
 **What it does:**
 
-- **Craft Agent detected** (`~/.craft-agent/workspaces/` exists): builds the flat layout + rules bundle, deploys skills/hooks/resolver/bundle to your workspace, installs hook settings, validates the deployment.
-- **No Craft Agent**: builds both layouts, installs hooks to `.claude/settings.local.json` for Claude Code CLI.
+- **Craft Agent detected** (`~/.craft-agent/workspaces/` exists): builds the flat layout + rules bundle, deploys skills/hooks/resolver/bundle plus the selector and review-classifier runtimes (`bin/` + `catalog/`) to your workspace, installs hook settings, validates the deployment.
+- **No Craft Agent**: builds both self-contained layouts, including their hook runtimes, and installs hooks to `.claude/settings.local.json` for Claude Code CLI.
 
 Options: `--workspace <slug>` to target a specific workspace (default: `my-workspace`), `--no-craft-agent` to force CLI-only mode.
 
 ### Pin to a release tag
 
-This repo publishes **two release-branch artifacts per tag** for two consumer runtimes -- see [Distribution layouts](#distribution-layouts) below for the full explanation.
+This repo publishes **two release-branch artifacts on pushes to `main`** for two consumer runtimes; source tag pushes alone do not publish -- see [Distribution layouts](#distribution-layouts) below for the full explanation.
 
 For Claude Code with the resolver hook (the original target), pull from `release/nested`:
 
@@ -216,12 +218,16 @@ For Craft Agent (slash-command pane), pull from `release/flat`:
 TMP=$(mktemp -d)
 git clone --depth 1 --branch release/flat \
   https://github.com/siege-analytics/claude-configs-public.git "$TMP/repo"
-rsync -a "$TMP/repo/skills/" ~/.craft-agent/workspaces/<ws>/skills/
-rsync -a "$TMP/repo/hooks/"  ~/.craft-agent/workspaces/<ws>/hooks/
+WS=~/.craft-agent/workspaces/<ws>
+mkdir -p "$WS/bin" "$WS/catalog"
+rsync -a "$TMP/repo/skills/"  "$WS/skills/"
+rsync -a "$TMP/repo/hooks/"   "$WS/hooks/"
+rsync -a "$TMP/repo/bin/"     "$WS/bin/"
+rsync -a "$TMP/repo/catalog/" "$WS/catalog/"
 rm -rf "$TMP"
 ```
 
-Plain `rsync -a` (no `--delete`): preserves any local files in the workspace's `skills/` or `hooks/` that aren't shipped upstream. The hooks rsync MUST run before wiring `~/.claude/settings.json` (next step), because the snippet's `command` paths reference workspace files that have to exist on disk first.
+Plain `rsync -a` (no `--delete`): preserves local files not shipped upstream. Copy all four directories as one sync unit: the prompt hook requires `bin/resolve-load-set.py` plus `catalog/resolver-manifest.json`, and the push hook requires `bin/review-risk.py` plus `catalog/review-risk-policy.json`. The hooks rsync MUST run before wiring `~/.claude/settings.json` (next step), because the snippet's `command` paths reference workspace files that have to exist on disk first.
 
 ### Wire and verify hooks
 
@@ -246,6 +252,11 @@ To upgrade later:
 git subtree pull --prefix .claude/skills \
   https://github.com/siege-analytics/claude-configs-public.git v0.2.0 --squash
 ```
+
+For disposable, coherent artifact upgrade/rollback tests, use the
+[package-generation workflow](docs/package-generations.md). It preserves declared
+project customizations and verifies the whole generation before selection; host
+registration and live context reload require separate acceptance.
 
 ### With `claude_init`
 
@@ -328,9 +339,9 @@ See [`skills/shelves/SKILL.md`](skills/shelves/SKILL.md) (the meta-router) and t
 
 ## siege_utilities
 
-Many skills explicitly delegate to [`siege_utilities`](https://github.com/siege-analytics/siege_utilities) when it covers the task. The [`_siege-utilities-rules.md`](skills/_siege-utilities-rules.md) always-on rule formalizes this preference: **before writing a Python utility, helper, or one-off function, check whether `siege_utilities` already provides it.** If it almost solves the problem but doesn't, file an upstream PR before adding a local helper.
+[`_siege-utilities-rules.md`](skills/_siege-utilities-rules.md) is a compatibility pointer, not a global dependency or upstream-PR requirement. Implementation and review guidance applies only to the exact `github.com/siege-analytics/siege_utilities` origin via its project overlay. Other repositories follow their own declared dependencies.
 
-The spatial skills in particular (per-engine `siege-utilities-<engine>.md` references) document what SU obviates and what's still bring-your-own.
+Spatial skills retain historical per-engine `siege-utilities-<engine>.md` references, explicitly scoped to that exact origin.
 
 ## Works well with
 
@@ -360,16 +371,16 @@ The same source serves two consumer runtimes via a build step. Pick the layout t
 |---|---|---|---|
 | **nested** | `release/nested`, `vX.Y.Z-nested` | Skills under category folders (`coding/code-review/`, `git-workflow/commit/`, ...) | **Claude Code** with the resolver hook |
 | **flat** | `release/flat`, `vX.Y.Z-flat` | Leaf skills at `skills/<slug>/`; routers stay at category root | **Craft Agent** (slash-command pane) |
-| **claude-code package** | GitHub Release archive | Flat skills, hooks, settings snippet, resolver/rules bundle | Claude Code / Codex-style runtimes |
-| **craft-agent package** | GitHub Release archive | Flat skills, hooks, settings/enforcement files, Craft automation snippets | Craft Agent workspaces |
+| **claude-code package** | `release/claude-code`, `vX.Y.Z-claude-code`, release archive | Flat skills, hooks, settings snippet, resolver/rules bundle | Claude Code / Codex-style runtimes |
+| **craft-agent package** | `release/craft-agent`, `vX.Y.Z-craft-agent`, release archive | Flat skills, hooks, settings/enforcement files, Craft automation snippets | Craft Agent workspaces |
 
-Both layouts contain identical content; only the file-tree shape differs. The build resolves `[skill:slug]` and `[rule:slug]` tokens to layout-appropriate paths so cross-references work in both worlds without manual maintenance.
+Both layouts contain identical content; only the file-tree shape differs. Every hook-bearing layout is self-contained: `hooks/`, `bin/resolve-load-set.py`, `bin/review-risk.py`, and their `catalog/` manifests/policies ship together. Each resolver manifest records canonical `source_path` provenance separately from its layout-correct `package_path`; emitted hook instructions resolve that runtime path against the installation root. The build resolves `[skill:slug]` and `[rule:slug]` tokens to layout-appropriate paths so cross-references work in both worlds without manual maintenance.
 
 Craft Agent consumers must use `release/flat` or the `craft-agent` package. The host resolver matches bare skill slugs against top-level `skills/<slug>/SKILL.md` directories; nested leaf paths such as `skills/coding/code-review/SKILL.md` are not reachable by bare slug in affected workspaces. CI validates that the flat layout and Craft Agent package expose known nested leaf skills, including `code-review` and `qml-component-review`, at top level.
 
 Standing-order continuity ships in two forms. Claude Code / Codex-style consumers use the resolver rule plus `hooks/resolver/standing-order-guard.sh` from the flat hook package. Craft Agent consumers get the same signal-file hook; the periodic watchdog in `automations-snippet.json` is **opt-in and not wired by default**, because each `SchedulerTick` tick spawns a watchdog session (~144/day at the shipped `*/10` cadence) and each `done`/`blocked` transition spawns an audit session, which floods the session list. Enable it only for workspaces that want periodic batch-continuity enforcement and accept that session cost, by merging `craft-agent/automations-snippet.json` into the workspace `automations.json`; see `craft-agent/standing-order-watchdog.json` for the mechanism and cost.
 
-`main` is the source of truth (nested layout with tokens). Build outputs are published to `release/nested` and `release/flat` by CI on every push to main and every tag. **Pin downstream consumers to a release-branch tag (`v1.0.0-nested` / `v1.0.0-flat`), not the source tag** -- the source has the build infrastructure but tokens are unresolved.
+`main` is the source of truth (nested layout with tokens). Build outputs are published to `release/nested` and `release/flat` by CI on pushes to `main` only; a source tag push alone does not publish them. **Pin downstream consumers to a release-branch tag (`v1.0.0-nested` / `v1.0.0-flat`), not the source tag** -- the source has the build infrastructure but tokens are unresolved.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the slug-token convention, build-script details, and contributor workflow.
 
@@ -385,10 +396,26 @@ Versions follow [SemVer](https://semver.org/). Major version bumps for incompati
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the per-version diff.
 
-**Tag scheme.** Each source tag (`v1.0.0` on `main`) produces two consumer-facing tags via CI:
+**Tag scheme.** Each main release produces a source tag (`v1.0.0`) and four consumer tags from one verified build:
 
 - `v1.0.0-nested` on the `release/nested` branch -- pull this for Claude Code with the resolver hook
 - `v1.0.0-flat` on the `release/flat` branch -- pull this for Craft Agent
+- `v1.0.0-claude-code` -- the Claude Code package
+- `v1.0.0-craft-agent` -- the Craft Agent package
+
+The release includes `release-manifest.json` and an archive for each output. The
+manifest records the exact source commit/tree, output commit/trees, prepared
+changelog digest and archive SHA-256 digests. Version and changelog preparation
+happen before building, so every output contains the same release section. These
+workflow-local preparations do not commit version changes back to protected main.
+The producer saves the complete handoff as a workflow artifact before updating
+remote refs, preserving recovery evidence if GitHub Release creation fails.
+
+The release-event tag repair verifies this handoff and the downloaded archives.
+It uses only the recorded commits; moving `release/*` branches cannot choose a
+repair target. An existing tag with a different target fails verification. Older
+releases without a manifest require a reviewed provenance record before repair.
+The manifest is producer provenance, not a signature or proof of host enforcement.
 
 `main` is the rolling source-of-truth (with build infrastructure and unresolved tokens). Always pin downstream consumers to one of the resolved release-branch tags.
 

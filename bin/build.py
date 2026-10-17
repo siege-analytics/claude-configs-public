@@ -9,11 +9,13 @@ Validates project manifests: required frontmatter, repo uniqueness, status lifec
 
 Usage:
     python bin/build.py            # build both layouts + rules bundle
-    python bin/build.py --check    # validate tokens only, no output
+    python bin/build.py --check    # validate tokens only, no repository output
+    python bin/build.py --dist DIR # build into an isolated output root
 """
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 import shlex
@@ -24,6 +26,63 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+# Load the sibling validator lazily by absolute path. Tier C discovery tests
+# import a deliberately isolated copy of build.py to inspect pure discovery
+# functions; that copy does not contain runtime siblings and must remain
+# importable until a contract-dependent build function is actually called.
+GATE_CONTRACT_SOURCE = Path("catalog/gate-contracts.json")
+_GATE_CONTRACT = None
+_EFFECTIVE_POLICY = None
+
+
+def _gate_contract_module():
+    global _GATE_CONTRACT
+    if _GATE_CONTRACT is None:
+        spec = importlib.util.spec_from_file_location(
+            "gate_contract", Path(__file__).resolve().with_name("gate_contract.py")
+        )
+        if spec is None or spec.loader is None:
+            raise ImportError("cannot load bin/gate_contract.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _GATE_CONTRACT = module
+    return _GATE_CONTRACT
+
+
+def load_contract(*args, **kwargs):
+    return _gate_contract_module().load_contract(*args, **kwargs)
+
+
+def load_fixtures(*args, **kwargs):
+    return _gate_contract_module().load_fixtures(*args, **kwargs)
+
+
+def contract_digest(*args, **kwargs):
+    return _gate_contract_module().contract_digest(*args, **kwargs)
+
+
+def _effective_policy_module():
+    global _EFFECTIVE_POLICY
+    if _EFFECTIVE_POLICY is None:
+        spec = importlib.util.spec_from_file_location(
+            "effective_policy", Path(__file__).resolve().with_name("effective_policy.py")
+        )
+        if spec is None or spec.loader is None:
+            raise ImportError("cannot load bin/effective_policy.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _EFFECTIVE_POLICY = module
+    return _EFFECTIVE_POLICY
+
+
+def load_effective_policy_inputs(*args, **kwargs):
+    return _effective_policy_module().load_inputs(*args, **kwargs)
+
+
+def effective_policy_digest(*args, **kwargs):
+    return _effective_policy_module().digest(*args, **kwargs)
+
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_SKILLS = REPO_ROOT / "skills"
@@ -596,7 +655,7 @@ def inject_project_frontmatter(content: str, project_slug: str) -> str:
 # Token resolution
 # ---------------------------------------------------------------------------
 
-def resolve_tokens(content: str, layout: str, skill_paths: dict[str, str], rule_paths: dict[str, str], from_path: Path) -> str:
+def resolve_tokens(content: str, layout: str, skill_paths: dict[str, str], rule_paths: dict[str, str], from_path: Path, composition=None) -> str:
     """Expand [skill:slug] and [rule:slug] tokens to layout-appropriate Markdown links.
 
     `from_path` is the SKILL.md (or .md) file's path relative to skills/, used to compute
@@ -613,6 +672,11 @@ def resolve_tokens(content: str, layout: str, skill_paths: dict[str, str], rule_
 
     def replace_skill(match: re.Match[str]) -> str:
         slug = match.group("slug")
+        if composition is not None:
+            return ", ".join(
+                f"[`{item['slug']}`]({link_to(item['load_path'].removeprefix('skills/'))})"
+                for item in composition.resolve([slug])["selected"]
+            )
         if slug not in skill_paths:
             UNKNOWN_SKILLS.setdefault(str(from_path), set()).add(slug)
             return f"`{slug}` (planned)"
@@ -834,8 +898,8 @@ def build_layout(
     if template.exists():
         write_resolved(template, out_root / "RESOLVER.md", layout, skill_out_paths, rule_out_paths, Path("RESOLVER.md"))
 
-    # Copy entry-point and matrix files at skills/ root.
-    for fname in ("RULES.md", "_coverage.md"):
+    # Copy the candidate kernel, entry-point, and matrix files at skills/ root.
+    for fname in ("KERNEL.md", "RULES.md", "_coverage.md"):
         src = SOURCE_SKILLS / fname
         if src.exists():
             write_resolved(src, out_root / fname, layout, skill_out_paths, rule_out_paths, Path(fname))
@@ -876,7 +940,7 @@ def write_build_info(
     info = {
         "layout": layout,
         "source_commit": commit,
-        "built_at": datetime.now(timezone.utc).isoformat(),
+        "built_at": build_time().isoformat(),
         "skill_count": len(skills_src),
         "slugs": sorted(skills_src.keys()),
         "active_projects": {
@@ -948,7 +1012,7 @@ def build_rules_bundle(
         ).strip()
     except Exception:
         commit = "unknown"
-    built_at = datetime.now(timezone.utc).isoformat()
+    built_at = build_time().isoformat()
 
     # Read RULES.md (entry point)
     rules_entry = SOURCE_SKILLS / "RULES.md"
@@ -994,21 +1058,13 @@ def build_rules_bundle(
         f"\n"
         f"**Version:** {version} | **Commit:** {commit} | **Built:** {built_at}\n"
         f"\n"
-        f"This file concatenates the always-on rule set from claude-configs-public.\n"
-        f"Mount it as a system-prompt addendum if your runtime does not run\n"
-        f"`.claude/settings.json` hooks (e.g. Craft Agent, Cursor, Cody).\n"
+        f"This is a compatibility reference bundle produced by the source build.\n"
+        f"The four consumer packages use their compact kernel and task-selected\n"
+        f"skills; they do not include this root bundle.\n"
         f"\n"
-        f"**Craft Agent (verified 2026-06-07):** rename this file to `CLAUDE.md`\n"
-        f"(or symlink it) and place it in the session's working directory. CA\n"
-        f"auto-injects CLAUDE.md / AGENTS.md content from cwd and its\n"
-        f"subdirectories. CA does NOT walk parent directories, so the file\n"
-        f"must be at or below the session's cwd. For workspace-wide coverage,\n"
-        f"set Settings -> Workspace Settings -> Default Working Directory to\n"
-        f"the directory that contains the CLAUDE.md. `bin/install.sh --deploy`\n"
-        f"handles the symlink automatically.\n"
-        f"\n"
-        f"For hook-capable runtimes (Claude Code CLI), hooks remain the preferred\n"
-        f"path. This bundle is a fallback, not a replacement.\n"
+        f"Loading this text establishes neither hook registration nor enforcement.\n"
+        f"Use the exact host/backend acceptance procedure before claiming runtime\n"
+        f"delivery, and avoid injecting this full bundle alongside the kernel.\n"
         f"{project_note}"
         f"\n"
         f"Source: siege-analytics/claude-configs-public @ {commit}\n"
@@ -1121,10 +1177,10 @@ CA_ENFORCEMENT_GATES = [
     {
         "id": "self-review",
         "rule_source": "_definition-of-done-rules.md",
-        "hook": "hooks/git/self-review.sh",
+        "hook": "hooks/git/pre-push-self-review.sh",
         "surface": "native-git-pre-push",
         "blocking": True,
-        "condition": "Push without Self-Review trailers",
+        "condition": "Any new non-merge commit lacks required review evidence",
         "action_class": "mutation",
         "runtime_policy": {"craft": "block", "claude-code": "block", "codex-cli": "block", "unknown": "block"},
         "block_signals": [],
@@ -1171,11 +1227,15 @@ def build_ca_enforcement() -> None:
     Emits:
       dist/craft-agent/enforcement-manifest.json  -- gate definitions for auditability
       dist/craft-agent/settings-enforcement.json   -- hook settings fragment for merge
-      dist/craft-agent/.githooks/pre-push           -- native git hook for push-time gates
+      dist/craft-agent/.githooks/{commit-msg,pre-push} -- native git boundaries
     """
     ca_dist = DIST / "craft-agent"
     ca_dist.mkdir(parents=True, exist_ok=True)
 
+    contract = load_contract(REPO_ROOT)
+    contract_sha256 = contract_digest(contract)
+    _, effective_policy, effective_policy_selection = load_effective_policy_inputs(REPO_ROOT)
+    effective_policy_sha256 = effective_policy_digest(effective_policy)
     version = _get_version()
     try:
         commit = subprocess.check_output(
@@ -1189,7 +1249,18 @@ def build_ca_enforcement() -> None:
     manifest = {
         "version": version,
         "source_commit": commit,
-        "built_at": datetime.now(timezone.utc).isoformat(),
+        "built_at": build_time().isoformat(),
+        "gate_contract_source": GATE_CONTRACT_SOURCE.as_posix(),
+        "gate_contract_sha256": contract_sha256,
+        "gate_contract": contract,
+        "effective_policy_source": (
+            f"git:{effective_policy_selection['policy_revision']}:"
+            f"{effective_policy_selection['policy_path']}"
+        ),
+        "effective_policy_sha256": effective_policy_sha256,
+        "effective_policy": effective_policy,
+        "effective_policy_selection": effective_policy_selection,
+        "effective_policy_evidence_state": "configured",
         "gates": CA_ENFORCEMENT_GATES,
     }
     manifest_text = json.dumps(manifest, indent=2) + "\n"
@@ -1211,6 +1282,13 @@ def build_ca_enforcement() -> None:
             "into blocking continue:false signals.  Merge into workspace "
             ".claude/settings.json — do not replace the full file."
         ),
+        "_gate_contract": {
+            "schema_version": contract["schema_version"],
+            "contract_version": contract["contract_version"],
+            "source": GATE_CONTRACT_SOURCE.as_posix(),
+            "sha256": contract_sha256,
+            "evidence_state": "configured",
+        },
         "hooks": {
             "UserPromptSubmit": [
                 {
@@ -1232,60 +1310,32 @@ def build_ca_enforcement() -> None:
         json.dumps(settings_fragment, indent=2) + "\n"
     )
 
-    # 3. Native git pre-push hook — calls push-time gates.
+    # 3. Native git hooks. Both boundaries have canonical, reviewed source
+    # files and are copied byte-for-byte. Range review uses the native protocol.
+    # Retained legacy dispatch is configured evidence only; it does not establish
+    # native branch/test semantics. Their migration remains separately gated.
     githooks_dir = ca_dist / ".githooks"
     githooks_dir.mkdir(parents=True, exist_ok=True)
+    for hook_name in ("commit-msg", "pre-push"):
+        hook_source = REPO_ROOT / ".githooks" / hook_name
+        if not hook_source.is_file() or not hook_source.stat().st_mode & 0o111:
+            raise BuildError(
+                f"gate contract registered .githooks/{hook_name} is missing or not executable"
+            )
+        shutil.copy2(hook_source, githooks_dir / hook_name)
 
     push_gates = [g for g in CA_ENFORCEMENT_GATES if g["surface"] == "native-git-pre-push"]
-    pre_push_lines = [
-        "#!/usr/bin/env bash",
-        "# Generated by build.py — do not edit manually.",
-        "# Native git pre-push hook for Craft Agent enforcement.",
-        "# Runs push-time gates that need to block in CA where PreToolUse exit 2",
-        "# is advisory only.  Native git hooks exit 1 → push is rejected.",
-        "#",
-        "# Refs: #409",
-        "",
-        'set -euo pipefail',
-        "",
-        '# Resolve hooks directory relative to this script.',
-        '# When installed: .githooks/pre-push → ../hooks/',
-        'HOOKS_ROOT="$(cd "$(dirname "$0")/../hooks" && pwd 2>/dev/null || echo "")"',
-        "",
-        'if [[ -z "$HOOKS_ROOT" || ! -d "$HOOKS_ROOT" ]]; then',
-        '    echo "pre-push: hooks/ directory not found, skipping enforcement" >&2',
-        '    exit 0',
-        'fi',
-        "",
-    ]
-
-    for gate in push_gates:
-        hook_path = gate["hook"]
-        script_name = hook_path.split("/")[-1]
-        gate_dir = "/".join(hook_path.split("/")[1:-1])
-        pre_push_lines.extend([
-            f'# Gate: {gate["id"]} — {gate["condition"]}',
-            f'GATE_SCRIPT="$HOOKS_ROOT/{gate_dir}/{script_name}"',
-            f'if [[ -x "$GATE_SCRIPT" ]]; then',
-            f'    if ! bash "$GATE_SCRIPT" "$@" 2>/dev/null; then',
-            f'        echo "pre-push: {gate["id"]} gate BLOCKED push" >&2',
-            f'        exit 1',
-            f'    fi',
-            f'fi',
-            "",
-        ])
-
-    pre_push_lines.append('exit 0')
-    pre_push_content = "\n".join(pre_push_lines) + "\n"
-    pre_push_path = githooks_dir / "pre-push"
-    pre_push_path.write_text(pre_push_content)
-    pre_push_path.chmod(0o755)
+    if [g["hook"] for g in push_gates] != [
+        "hooks/git/pre-push-self-review.sh", "hooks/git/branch-guard.sh", "hooks/git/test-guard.sh",
+    ]:
+        raise BuildError("native pre-push dispatch disagrees with its reviewed registration")
 
     print(f"  CA enforcement: {len(CA_ENFORCEMENT_GATES)} gates")
     print(f"    {sum(1 for g in CA_ENFORCEMENT_GATES if g['surface'] == 'UserPromptSubmit')} UserPromptSubmit (continue:false)")
     print(f"    {len(push_gates)} native git pre-push")
     print(f"  -> dist/craft-agent/enforcement-manifest.json")
     print(f"  -> dist/craft-agent/settings-enforcement.json")
+    print(f"  -> dist/craft-agent/.githooks/commit-msg")
     print(f"  -> dist/craft-agent/.githooks/pre-push")
 
 
@@ -1319,6 +1369,162 @@ def _filter_settings_for_claude_code(settings: dict) -> dict:
     return filtered
 
 
+def build_resolver_runtime_manifest(layout: str = "flat") -> dict:
+    """Create resolver metadata with paths for one installed skill layout."""
+    if layout not in ("nested", "flat"):
+        raise BuildError(f"Unknown resolver runtime layout: {layout}")
+    manifest = json.loads((REPO_ROOT / "catalog" / "resolver-manifest.json").read_text())
+    inventory = json.loads((REPO_ROOT / "catalog" / "skills-inventory.json").read_text())
+    known = {}
+    known_by_source = {}
+    output_prefix = f"dist/{layout}/skills/"
+    package_root = Path("dist") / layout
+    for item in sorted(inventory["items"], key=lambda value: value["slug"]):
+        layout_outputs = [
+            Path(value) for value in item["generated_outputs"]
+            if str(value).startswith(output_prefix)
+        ]
+        if len(layout_outputs) != 1:
+            raise BuildError(
+                f"resolver source {item['slug']} must have exactly one {layout} generated output"
+            )
+        package_path = layout_outputs[0].relative_to(package_root)
+        if package_path.suffix.lower() != ".md":
+            package_path /= "SKILL.md"
+        metadata = {
+            "slug": item["slug"],
+            "kind": item["kind"],
+            "source_path": item["source_path"],
+            "package_path": package_path.as_posix(),
+            "characters": item["characters"],
+            "estimated_tokens": item["estimated_tokens"],
+        }
+        known[item["slug"]] = metadata
+        known_by_source[item["source_path"]] = metadata
+    manifest["known"] = known
+    manifest["known_by_source"] = known_by_source
+    # Preserve the historical flat intermediate for tooling that inspects dist/.
+    if layout == "flat":
+        (DIST / "resolver-manifest.json").write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+        )
+    return manifest
+
+
+def write_package_resolver_manifest(pkg_dir: Path, layout: str = "flat") -> None:
+    """Write layout-correct resolver metadata from final generated skill bytes."""
+    manifest = build_resolver_runtime_manifest(layout)
+    for source, metadata in manifest["known_by_source"].items():
+        generated = pkg_dir / metadata["package_path"]
+        if not generated.is_file():
+            raise BuildError(f"package resolver metadata has no generated source for {source}: {generated}")
+        characters = len(generated.read_text())
+        metadata["characters"] = characters
+        metadata["estimated_tokens"] = (characters + 3) // 4
+    for slug, winner in manifest["known"].items():
+        refreshed = manifest["known_by_source"][winner["source_path"]]
+        if refreshed["slug"] != slug:
+            raise BuildError(f"package resolver identity mismatch: {slug}")
+        winner["characters"] = refreshed["characters"]
+        winner["estimated_tokens"] = refreshed["estimated_tokens"]
+    catalog = pkg_dir / "catalog"
+    catalog.mkdir(parents=True, exist_ok=True)
+    (catalog / "resolver-manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+    )
+
+
+def install_hook_runtime(pkg_dir: Path, layout: str, include_validator: bool = False) -> None:
+    """Install all scripts and catalogs required by shipped hooks."""
+    bin_dir = pkg_dir / "bin"
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    script_names = ["resolve-load-set.py", "review-risk.py"]
+    if include_validator:
+        script_names.insert(0, "validate-hooks.py")
+    for script_name in script_names:
+        shutil.copy2(REPO_ROOT / "bin" / script_name, bin_dir / script_name)
+    write_package_resolver_manifest(pkg_dir, layout)
+    shutil.copy2(
+        REPO_ROOT / "catalog" / "review-risk-policy.json",
+        pkg_dir / "catalog" / "review-risk-policy.json",
+    )
+
+
+def write_package_documentation(pkg_dir: Path, form: str) -> None:
+    """Describe this output's shipped contract, not the source checkout's tools."""
+    if form not in ('nested', 'flat', 'claude-code', 'craft-agent'):
+        raise BuildError(f'Unknown package documentation form: {form}')
+    source_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO_ROOT, text=True).strip()
+    upstream = f'https://github.com/siege-analytics/claude-configs-public/tree/{source_commit}'
+    metadata = 'build-info.json' if form in ('nested', 'flat') else 'package.json'
+    paths = [metadata, 'skills/KERNEL.md', 'catalog/resolver-manifest.json',
+             'catalog/review-risk-policy.json', 'bin/resolve-load-set.py',
+             'bin/review-risk.py', 'hooks/settings-snippet.json',
+             'hooks/resolver/inject-resolver.sh', 'CHANGELOG.md', 'LICENSE',
+             'THIRD_PARTY_NOTICES.md']
+    if form in ('claude-code', 'craft-agent'):
+        paths.append('bin/validate-hooks.py')
+    if form == 'craft-agent':
+        paths.extend(['settings-enforcement.json', 'enforcement-manifest.json',
+                      '.githooks/commit-msg', '.githooks/pre-push',
+                      'automations-snippet.json', 'standing-order-watchdog.json'])
+    for name in paths:
+        if not (pkg_dir / name).is_file():
+            raise BuildError(f'{form} documentation requires missing package file: {name}')
+    kind = ('Nested skill layout' if form == 'nested' else 'Flat skill layout')
+    if form in ('claude-code', 'craft-agent'):
+        kind += ' with runtime-specific hook configuration and a package validator'
+    lines = [f'# Siege {form} package', '', kind + '.', '',
+             f'Source revision: `{source_commit}`. Consumer tag: `vX.Y.Z-{form}`.',
+             'Use the release manifest and its exact archive digest to select a version.',
+             '', '## Included files', '',
+             *[f'- [{name}]({name})' for name in paths], '',
+             'The skill tree and resolver catalog form one unit. Keep the package directory',
+             'structure intact when extracting or copying it to a new consumer location.',
+             'Each resolver result reports the actual package-relative load path.', '',
+             '## Package-local diagnostics', '',
+             'From this package root, with Python 3, run these read-only diagnostics:', '',
+             '```sh',
+             'python3 bin/resolve-load-set.py --prompt "review this Python diff" --repo other/repo',
+             'python3 bin/review-risk.py --paths README.md',
+             '```', '',
+             'The first command reports selected content; the second classifies a sample',
+             'path. Neither command grants permission or proves host hook registration.']
+    if form in ('claude-code', 'craft-agent'):
+        lines.extend(['', 'Validate the packaged hook configuration:', '', '```sh',
+                      'python3 bin/validate-hooks.py .', '```', '',
+                      'This checks configuration and files, not actual host invocation.'])
+    lines.extend(['', '## Integration boundary', '',
+                  'The runtime prompt hook reads `skills/KERNEL.md` and loads selected skills',
+                  'on demand. This output does not ship root `RESOLVER.md` or',
+                  '`RULES_BUNDLE.*`, and does not require them for that prompt path.',
+                  'Do not mount a global compatibility bundle alongside the compact kernel.', '',
+                  'Hook snippets are unregistered configuration with path placeholders.',
+                  'Extracting this archive does not install an enforcement stack. The source',
+                  'installer, wiring tools, drift tooling and generation-management tools',
+                  'are not part of this package. Use the separately reviewed source workflow',
+                  'for host-specific registration and upgrade; preserve existing operator',
+                  'settings and project declarations there. Never replace a live workspace',
+                  'with an unchecked copy of a new archive.', '',
+                  'The presence of a hook, manifest, procedure or model label establishes',
+                  'no live capability. Verify the exact host/backend, registered path and',
+                  'allowed/denied behavior before calling enforcement live. A required',
+                  'unsupported capability remains a failed acceptance condition.'])
+    if form == 'craft-agent':
+        lines.extend(['', 'The Craft-specific fragments and native Git hook files listed above are',
+                      'configuration candidates. Native hooks require explicit registration in',
+                      'each target repository; local hook bypass is not server-side protection.'])
+    lines.extend(['', f'[Source integration and development documentation]({upstream}/README.md).',
+                  f'[Report or review changes in the source repository]({upstream}/CONTRIBUTING.md).', ''])
+    (pkg_dir / 'README.md').write_text('\n'.join(lines))
+    (pkg_dir / 'CONTRIBUTING.md').write_text(
+        '# Contributing\n\nThis is a generated consumer package. Submit source changes through the\n'
+        f'[source contribution guide]({upstream}/CONTRIBUTING.md), then rebuild and\n'
+        'select a newly reviewed immutable release. See [this package contract](README.md)\n'
+        'for included files and local diagnostics.\n'
+    )
+
+
 def build_consumer_packages() -> None:
     """Build dist/claude-code/ and dist/craft-agent/ consumer packages.
 
@@ -1336,7 +1542,7 @@ def build_consumer_packages() -> None:
     version = _get_version()
     try:
         commit = subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"],
+            ["git", "rev-parse", "HEAD"],
             cwd=REPO_ROOT, text=True,
         ).strip()
     except Exception:
@@ -1420,18 +1626,16 @@ def build_consumer_packages() -> None:
                 if artifact_src.exists():
                     shutil.copy2(artifact_src, pkg_dir / artifact_name)
 
-        # Copy validate-hooks.py
-        validator = REPO_ROOT / "bin" / "validate-hooks.py"
-        if validator.exists():
-            (pkg_dir / "bin").mkdir(exist_ok=True)
-            shutil.copy2(validator, pkg_dir / "bin" / "validate-hooks.py")
+        # Copy validators plus all hook runtime dependencies. Dedicated
+        # consumer packages use the flat skill tree copied above.
+        install_hook_runtime(pkg_dir, "flat", include_validator=True)
 
         # Write package manifest
         pkg_manifest = {
             "package": target,
             "version": version,
             "source_commit": commit,
-            "built_at": datetime.now(timezone.utc).isoformat(),
+            "built_at": build_time().isoformat(),
         }
         (pkg_dir / "package.json").write_text(
             json.dumps(pkg_manifest, indent=2) + "\n"
@@ -1592,46 +1796,37 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
         hooks_count = sum(1 for _ in ws_hooks.rglob("*.sh"))
         print(f"  Synced {hooks_count} hook script(s) to {ws_hooks}/")
 
-    # Deploy rules bundle to workspace.
+    # Keep the full rules bundle as an on-demand compatibility artifact, but
+    # auto-mount only the compact kernel. Existing installer-owned bundle
+    # symlinks are migrated; operator-owned files/symlinks remain untouched.
     bundle_md = DIST / "RULES_BUNDLE.md"
-    if bundle_md.exists():
-        bundle_dst = craft_workspace / "RULES_BUNDLE.md"
-        shutil.copy2(bundle_md, bundle_dst)
-        print(f"  Copied RULES_BUNDLE.md to {craft_workspace}/")
-
-        # Craft Agent auto-injects CLAUDE.md / AGENTS.md content from cwd and
-        # its subdirectories on every session start. Wire the bundle into that
-        # mechanism by symlinking CLAUDE.md -> RULES_BUNDLE.md at the workspace
-        # root. Sessions whose cwd is set to the workspace root (via Settings
-        # -> Workspace Settings -> Default Working Directory) pick up the
-        # bundle automatically. Empirically verified 2026-06-07 against a
-        # probe session reporting `# claudeMd` content injection in its
-        # initial system prompt.
+    if not bundle_md.exists():
+        raise BuildError("dist/RULES_BUNDLE.md missing — compatibility rollback unavailable")
+    shutil.copy2(bundle_md, craft_workspace / "RULES_BUNDLE.md")
+    print(f"  Copied RULES_BUNDLE.md to {craft_workspace}/ (on-demand compatibility)")
+    kernel_md = DIST / "flat" / "skills" / "KERNEL.md"
+    if not kernel_md.exists():
+        raise BuildError("dist/flat/skills/KERNEL.md missing — refusing ungoverned deployment")
+    else:
+        shutil.copy2(kernel_md, craft_workspace / "KERNEL.md")
+        print(f"  Copied KERNEL.md to {craft_workspace}/")
         claudemd_dst = craft_workspace / "CLAUDE.md"
         if claudemd_dst.is_symlink():
-            # Only replace a symlink we own (one already pointing at
-            # RULES_BUNDLE.md). An operator-owned symlink to some other
-            # target is left untouched.
-            if claudemd_dst.readlink() == Path("RULES_BUNDLE.md"):
+            target = claudemd_dst.readlink()
+            if target in (Path("RULES_BUNDLE.md"), Path("KERNEL.md")):
                 claudemd_dst.unlink()
-                claudemd_dst.symlink_to("RULES_BUNDLE.md")
-                print("  Symlinked CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount)")
+                claudemd_dst.symlink_to("KERNEL.md")
+                print("  Symlinked CLAUDE.md -> KERNEL.md (progressive auto-mount)")
             else:
-                print(
-                    f"  [warn] {claudemd_dst} is a symlink to "
-                    f"{claudemd_dst.readlink()}; not overwriting operator-owned CLAUDE.md."
-                )
+                print(f"  [warn] {claudemd_dst} points at {target}; not overwriting operator-owned CLAUDE.md.")
         elif not claudemd_dst.exists():
-            claudemd_dst.symlink_to("RULES_BUNDLE.md")
-            print("  Symlinked CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount)")
+            claudemd_dst.symlink_to("KERNEL.md")
+            print("  Symlinked CLAUDE.md -> KERNEL.md (progressive auto-mount)")
         else:
-            # A non-symlink CLAUDE.md already exists. Don't clobber operator
-            # content; surface the situation and let them resolve it.
             print(
                 f"  [warn] {claudemd_dst} exists as a regular file; not overwriting.\n"
-                f"         To wire the bundle into CA auto-inject, either rename your\n"
-                f"         existing CLAUDE.md and re-run --deploy, or append the\n"
-                f"         contents of RULES_BUNDLE.md to your CLAUDE.md manually."
+                f"         Kernel-only verification requires byte-identical KERNEL.md content; "
+                f"replace it explicitly or rename it and re-run --deploy."
             )
 
     # Deploy CA enforcement artifacts.
@@ -1641,6 +1836,21 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
         manifest_src = ca_dist / "enforcement-manifest.json"
         if manifest_src.exists():
             shutil.copy2(manifest_src, craft_workspace / "enforcement-manifest.json")
+
+        # Install selector and review-policy runtimes used by prompt/native hooks.
+        # Hooks execute relative to the workspace root after deployment, so
+        # packaging these only inside dist/craft-agent is insufficient.
+        for rel in (
+            Path("bin/resolve-load-set.py"),
+            Path("catalog/resolver-manifest.json"),
+            Path("bin/review-risk.py"),
+            Path("catalog/review-risk-policy.json"),
+        ):
+            src = ca_dist / rel
+            if src.exists():
+                dst = craft_workspace / rel
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
 
         # Install native git hooks (.githooks/pre-push).
         githooks_src = ca_dist / ".githooks"
@@ -1670,7 +1880,7 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
         head_commit = "unknown"
     stamp = {
         "commit": head_commit,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": build_time().isoformat(),
         "repo_root": str(REPO_ROOT),
     }
     stamp_path = craft_workspace / "deploy-stamp.json"
@@ -1679,13 +1889,66 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
     print(f"  Deployed to {craft_workspace}/ ({stripped_count} files stripped)")
 
 
+BUILD_EPOCH = None
+
+
+def build_time():
+    """Use a supplied source epoch for reproducible exports; normal builds use now."""
+    return datetime.now(timezone.utc) if BUILD_EPOCH is None else datetime.fromtimestamp(BUILD_EPOCH, timezone.utc)
+
+
 def main() -> int:
+    global DIST, BUILD_EPOCH
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source-date-epoch", type=int, help="reproducible export timestamp from the selected source commit")
     parser.add_argument("--check", action="store_true", help="Validate tokens; do not write output")
     parser.add_argument("--layout", choices=("nested", "flat", "both"), default="both")
     parser.add_argument("--deploy", action="store_true", help="After building, sync flat layout to Craft Agent workspace")
     parser.add_argument("--craft-workspace", type=Path, default=CRAFT_WORKSPACE, help="Target Craft Agent workspace path for --deploy (default: %(default)s)")
+    parser.add_argument("--dist", type=Path, help="Build into this isolated output root instead of repository dist/")
+    parser.add_argument("--selection", type=Path, help="versioned selected build input; registration requires independent pins")
+    parser.add_argument("--source", type=Path, default=REPO_ROOT, help="local Git source for selected components")
+    parser.add_argument("--policy-root", type=Path, help="independently registered policy repository")
+    parser.add_argument("--policy-inputs", type=Path, help="independent policy registration source")
+    parser.add_argument("--policy-inputs-sha256", help="independent host/repository policy pin")
+    parser.add_argument("--registration-inputs", type=Path, help="independent local registration definition")
+    parser.add_argument("--registration-inputs-sha256", help="independent registration pin")
     args = parser.parse_args()
+
+    if args.source_date_epoch is not None:
+        if args.source_date_epoch < 0 or args.deploy or args.selection:
+            parser.error("source-date-epoch requires a nonnegative local compatibility export")
+        BUILD_EPOCH = args.source_date_epoch
+
+    if args.selection:
+        try:
+            if args.deploy or not args.dist or args.layout != "both":
+                raise BuildError("selected builds require --dist, both layouts and no deployment")
+            if args.policy_root is None or args.policy_inputs is None or args.policy_inputs_sha256 is None:
+                raise BuildError("selected builds require independent policy root, source and digest")
+            spec = importlib.util.spec_from_file_location("package_selection", REPO_ROOT / "bin/package_selection.py")
+            selected = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(selected)
+            receipt = selected.build(args.source, args.dist, selected.effective.read_json(args.selection),
+                                     policy_root=args.policy_root, policy_source=args.policy_inputs,
+                                     policy_sha256=args.policy_inputs_sha256, check=args.check,
+                                     registration_source=args.registration_inputs,
+                                     registration_sha256=args.registration_inputs_sha256)
+            print(json.dumps(receipt, sort_keys=True))
+            return 0
+        except (BuildError, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+            print(json.dumps({"state": "error", "diagnostic": str(error), "authorization_effect": "none"}), file=sys.stderr)
+            return 1
+    if args.source != REPO_ROOT or any(value is not None for value in
+                                      (args.policy_root, args.policy_inputs, args.policy_inputs_sha256,
+                                       args.registration_inputs, args.registration_inputs_sha256)):
+        parser.error("explicit source/policy arguments require --selection")
+
+    if args.dist:
+        if args.deploy:
+            print("BUILD ERROR: --dist cannot be combined with --deploy", file=sys.stderr)
+            return 1
+        DIST = args.dist.resolve()
 
     if args.deploy:
         try:
@@ -1695,6 +1958,25 @@ def main() -> int:
             return 1
         if deploy_source:
             print(f"Deploy source verified: current origin/main {deploy_source}")
+
+    # Phase 0: Validate the bounded gate/capability source and fixtures. This is
+    # structural/configured evidence only; live host proof is intentionally not
+    # inferred by the build.
+    print("Validating gate contracts...")
+    try:
+        gate_contract = load_contract(REPO_ROOT)
+        gate_fixtures = load_fixtures(REPO_ROOT, gate_contract)
+        _, effective_policy, effective_policy_selection = load_effective_policy_inputs(REPO_ROOT)
+    except ValueError as e:
+        print(f"BUILD ERROR: gate/effective policy: {e}", file=sys.stderr)
+        return 1
+    print(
+        f"  {len(gate_contract['policy_fields'])} policy field(s), "
+        f"{len(gate_contract['capabilities'])} capability declaration(s), "
+        f"{len(gate_fixtures)} synthetic fixture(s), "
+        f"{len(effective_policy['projects'])} effective project policy(s), "
+        f"selected at {effective_policy_selection['policy_revision'][:12]}"
+    )
 
     # Phase 1: Validate project manifests (repo uniqueness, required fields, status).
     print("Validating project manifests...")
@@ -1739,7 +2021,6 @@ def main() -> int:
 
     if args.check:
         import tempfile
-        global DIST
         DIST = Path(tempfile.mkdtemp(prefix="claude-configs-build-check-"))
         try:
             for layout in ("nested", "flat"):
@@ -1748,6 +2029,7 @@ def main() -> int:
                     project_skills_src, project_rules_src,
                     skill_provenance, active_projects,
                 )
+                install_hook_runtime(DIST / layout, layout)
             warn_unknown()
             print("Build check complete.")
             return 0
@@ -1776,8 +2058,30 @@ def main() -> int:
     print("\nBuilding CA enforcement artifacts...")
     build_ca_enforcement()
 
+    print("\nBuilding resolver runtime manifests and hook dependencies...")
+    build_resolver_runtime_manifest()
+    for layout in layouts:
+        install_hook_runtime(DIST / layout, layout)
+
     print("\nBuilding consumer packages...")
     build_consumer_packages()
+
+    print("\nWriting consumer package contracts...")
+    for form in (*layouts, "claude-code", "craft-agent"):
+        write_package_documentation(DIST / form, form)
+
+    print("\nBuilding synthetic project compositions...")
+    spec = importlib.util.spec_from_file_location("compose_project", REPO_ROOT / "bin/compose-project.py")
+    composer = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(composer)
+    composition_root = DIST / "composition-examples"
+    if composition_root.exists():
+        shutil.rmtree(composition_root)
+    for project in ("strict-release", "synthetic-trunk"):
+        composer.package(
+            REPO_ROOT / "examples/composition", composition_root / project,
+            "github.example.invalid/synthetic-org/" + project,
+        )
 
     print("\nScoring skill quality...")
     all_skill_slugs = set(skills_src) | set(project_skills_src)

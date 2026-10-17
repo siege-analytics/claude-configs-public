@@ -2,7 +2,6 @@
 name: analysis-methods
 description: "Analysis methodology. TRIGGER: geographic data, spatial joins, statistical modeling, graph analysis, entity matching, or text processing. Routes to the method."
 user-invocable: false
-paths: "**/*.py,**/*.geojson,**/*.shp,**/*.gpkg,**/*.parquet"
 ---
 
 # Analysis Methods Router
@@ -33,7 +32,7 @@ Not all sub-skills exist yet. If a routing table entry points to a file that doe
 2. **Consult the decision framework inside each sub-skill.** The spatial sub-skill, having confirmed the trust premise, then asks "given that I have to use geometry, which engine and which path?" Many spatial-sounding problems are still graph or string-lookup problems -- but only after the trust check.
 3. **Load only the relevant methodology.** Most analysis tasks need exactly one sub-skill.
 4. **Stack rarely.** Entity resolution + graph analysis may combine for network deduplication. Spatial + statistical may combine for geographic modeling. But the default is one sub-skill.
-5. **`_data-trust-rules.md` applies to any skill that ingests or joins external data.** It's an always-on convention, not a sub-skill -- sibling of `_output-rules.md`. Load it once at session start.
+5. **`_data-trust-rules.md` applies to analysis that ingests or joins external data.** Load it when this methodology is selected, not for unrelated tasks or merely because a data file exists.
 6. **Reference files load on demand.** Each sub-skill may have a `reference.md` or per-axis references under `references/`. Load on demand, not eagerly.
 
 ## Gotchas

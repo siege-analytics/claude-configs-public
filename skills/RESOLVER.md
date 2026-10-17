@@ -1,6 +1,6 @@
 # Skill Resolver
 
-This is the top-level dispatcher. Skills live under category directories. **Read the skill file before acting.** If two skills could match, read both -- they chain.
+This is a navigation and compatibility index, not the executable auto-selection contract. `catalog/resolver-manifest.json` controls automatic routes and `bin/resolve-load-set.py` enforces budgets, ambiguity, shelf isolation, and exact host/repo scope. A row here alone does not authorize loading. **Read a selected skill before acting.**
 
 ## Conventions (apply to everything)
 
@@ -13,7 +13,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | [rule:jvm] | Effective Java + Effective Kotlin merged -- applied when touching JVM languages, including Scala on Spark |
 | [rule:typescript] | Effective TypeScript idioms -- applied when touching `*.ts` / `*.tsx` |
 | [rule:rust] | Rust idioms -- applied when touching `*.rs` |
-| [rule:siege-utilities] | Prefer `siege_utilities` for utility-shaped problems before writing a new helper. If `siege_utilities` almost solves it but doesn't, consider a PR upstream. |
+| [rule:siege-utilities] | Compatibility pointer only; project prescriptions live in the exact `github.com/siege-analytics/siege_utilities` overlay. |
 | [rule:definition-of-done] | Five hard criteria plus one opt-in for "done": code-reviewed, edge cases explored, tests written, ticket updated, ticket exists, KB delta validated. Behavior changes are not finished until all five mandatory criteria pass. |
 | [rule:knowledge-base] | Knowledge-base consultation discipline -- read before claiming, tag every assumption, update on contradiction, silence is a finding. Applied when the project declares `knowledge_base:` in PROJECT.md. |
 | [rule:robustness] | Robust Python (Viafore) -- type safety, invariant enforcement, fail fast, constrain mutability. Applied when writing or reviewing Python code. |
@@ -35,28 +35,34 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 | Library code architecture -- DRY, dataclass discipline, interface integrity, runtime types | [skill:python-patterns] |
 | "Why is this try/except too broad?", silent-failure patterns, `except Exception: pass` | [skill:python-exceptions] |
 | Django models, views, forms, migrations, settings | [skill:django] |
-| Data pipeline, scheduled job, Rundeck YAML, Airflow DAG | [skill:pipeline-jobs] |
+| Explicit DRF / `rest_framework` | [skill:django-rest-framework] + [skill:django] + [skill:python] + [skill:coding] |
+| React + TypeScript / TSX | [skill:react] + [rule:typescript] + [skill:coding] |
+| Explicit Vue / Pinia | [skill:vue] |
+| Explicit Rust / `.rs` | [rule:rust] + [skill:coding] |
+| Implement or review an ETL/data pipeline job, Airflow DAG, or scheduled processing script | [skill:pipeline-jobs] (add [skill:coding] + [skill:python] only on a Python signal; explicit Java/Scala jobs do not select Python-first pattern; no electinfo overlay inferred) |
 | PySpark DataFrame work, tuning, shuffle / skew | [skill:spark] |
-| Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | [skill:scala-on-spark] |
+| Write or review Scala on Spark / Databricks (`.scala`, `%scala`, `Dataset[T]`) | [skill:scala-on-spark] + [skill:spark] |
 | SQL query structure, joins, window functions, Postgres performance | [skill:sql] |
 | PostGIS -- ST_* functions, spatial indexes, spatial joins | [skill:postgis] |
 | GeoPandas + Shapely -- `import geopandas`, `gpd.`, `.sjoin`, raw `from shapely.geometry import` | [skill:geopandas] |
 | Apache Sedona -- `from sedona`, `SedonaContext`, ST_* in Spark SQL, `%scala` Sedona | [skill:sedona] |
 | DuckDB-spatial -- `import duckdb` + `INSTALL spatial` / `LOAD spatial` / `ST_Read` (single-node SQL on Parquet, GDAL-less) | [skill:duckdb-spatial] |
-| QML component review -- properties-in / signals-out, MuseScore plugins, Qt Quick decomposition | [skill:qml-component-review] |
+| Explicit QML component review -- optional generic Qt Quick checklist (not auto-routed; ChordLibrary/MuseScore identity UNKNOWN) | [skill:qml-component-review] |
 | Auditing error-path test coverage, writing-tests:5 compliance | [skill:test-coverage-audit] |
 | Choosing a test framework, declaring test layers in PROJECT.md, test-guard enforcement | [skill:testing-frameworks] |
 | Fix a bug or issue identified by code review / audit / static analysis | [skill:think] Step 1 sibling-grep gate is MANDATORY. The audit finding is a hypothesis, not an investigation. The ticket must state: (a) the sibling-set from grep, (b) a falsification criterion per [skill:evaluate-ticket] criterion 6, (c) the test that goes red on revert. Without these three, the fix is untested speculation that happened to compile. |
+
+Named data/engine routes require an operational task in the same clause, not a bare mention in documentation or a read-only “what/how-to” question. A pure choropleth/map request does not activate geometry engines just because its input is a GeoDataFrame; a requested spatial join, overlay, or reprojection does. Shelves remain opt-in, never auto-selected.
 
 ### Analysis
 
 | Trigger | Skill |
 |---|---|
-| Geospatial data -- pick engine + GDAL-availability path, cross-engine principles | [skill:spatial] (router; dispatches to `coding/{postgis,geopandas,sedona,duckdb-spatial}/`) |
-| Statistical modeling, regression, hypothesis tests | `analysis/statistical/SKILL.md` (if present) |
-| Graph / network analysis, entity relationships | `analysis/graph/SKILL.md` (if present) |
-| Record linkage, dedup, fuzzy matching | `analysis/entity-resolution/SKILL.md` (if present) |
-| NLP, text classification, extraction | `analysis/nlp/SKILL.md` (if present) |
+| Implement or analyze geospatial data -- pick engine + GDAL-availability path, cross-engine principles | [skill:spatial] (router; named engine signals select [skill:postgis], [skill:geopandas], [skill:sedona], or [skill:duckdb-spatial]); shelves remain on-demand |
+| Perform statistical modeling, regression analysis, hypothesis tests | [skill:analysis] (methodology router; statistical sub-skill is not published) |
+| Perform graph / network analysis | [skill:analysis] (graph sub-skill is not published) |
+| Perform record linkage / entity matching | [skill:analysis] (entity-resolution sub-skill is not published) |
+| NLP / text classification / extraction | Planned sub-skill; explicit [skill:analysis] is available, but no prose route is asserted. |
 
 ### Maintenance
 
@@ -121,7 +127,7 @@ This is the top-level dispatcher. Skills live under category directories. **Read
 
 ### Shelves (book-derived libraries)
 
-DBrain book-skill library. Each shelf is itself a router -- load the shelf, it tells you which book to read in full. See `skills/shelves/SKILL.md` for the meta-router.
+DBrain book-skill library. The table below is a navigation index, **not** an ambient/global resolver route. Shelves cannot self-select (including explicit shelf slugs). Consult a category/book only through an active non-shelf skill's scoped inbound path recorded in `catalog/shelf-ownership.json`; quarantined entries are non-routable. See `skills/shelves/SKILL.md` for the meta-router.
 
 | Trigger | Shelf |
 |---|---|
@@ -137,7 +143,7 @@ DBrain book-skill library. Each shelf is itself a router -- load the shelf, it t
 | Team motivation, ways of working, organizational practice | `skills/shelves/team/SKILL.md` |
 | Communicating data, presenting findings, animation in slides | `skills/shelves/storytelling/SKILL.md` |
 
-> **Status:** shelves are added incrementally via the `feat/dbrain-*` PR stack. Rows above pointing at not-yet-merged shelf files will resolve as PRs land.
+> **Status:** all 14 category routers exist. The navigation rows do not authorize routing or override quarantine; `bin/resolve-load-set.py` rejects all shelf selection.
 
 ### Infrastructure
 
@@ -175,11 +181,11 @@ Items marked **[build-enforced]** are validated by `bin/build.py`. Items marked 
 
 | Project | Repo | Rules | Skills |
 |---|---|---|---|
-| `siege-utilities` | `siege-analytics/siege_utilities` | [rule:siege-utilities-] | [skill:siege-utilities--hostile-review], [skill:siege-utilities--notebook-impact], [skill:siege-utilities--error-path-tests] |
+| `siege-utilities` | `github.com/siege-analytics/siege_utilities` | [rule:siege-utilities-] | [skill:siege-utilities--hostile-review], [skill:siege-utilities--notebook-impact], [skill:siege-utilities--error-path-tests] |
 
 ### siege-utilities-specific routing
 
-These triggers apply only when the working directory matches `siege-analytics/siege_utilities`.
+These hints apply only to the exact `github.com/siege-analytics/siege_utilities` origin. A bare owner/repo or same-name foreign host is not sufficient.
 
 | Trigger | Skill |
 |---|---|

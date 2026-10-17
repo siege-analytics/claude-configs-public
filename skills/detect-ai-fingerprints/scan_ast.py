@@ -2,7 +2,8 @@
 """AST scanner for writing-code:4 (Django ORM kwargs), :7, :8, :9, :15, writing-tests:5 and writing-releases:3.
 
 Invoked by scan.sh for .py files in the diff. Reports violations as
-<file>:<line>:<rule>: <excerpt>. Exit 0 if clean, 1 if violations.
+<file>:<line>:<rule>: <excerpt>. Exit 0 if clean, 1 if violations,
+2 if input/configuration/parse errors make the scan incomplete.
 
 Usage:
   scan_ast.py [--config <path>] [--exclude-tests] <file> [<file> ...]
@@ -49,19 +50,28 @@ DEPRECATION_WARNING_NAMES = {"DeprecationWarning", "PendingDeprecationWarning"}
 
 
 def load_decorator_allowlist(config_path):
-    if config_path is None or not Path(config_path).exists():
+    if config_path is None:
         return DEFAULT_ALLOW_DECORATORS
     try:
         import tomllib
-    except ImportError:
+    except ImportError:  # noqa: writing-tests-5 bootstrap TOML dependency fault test in bin/_test/scanner_source_test.py
         try:
             import tomli as tomllib
-        except ImportError:
-            return DEFAULT_ALLOW_DECORATORS
+        except ImportError:  # noqa: writing-tests-5 bootstrap missing-both-dependencies test in bin/_test/scanner_source_test.py
+            raise ValueError('scanner config requires tomllib or tomli')
     with open(config_path, "rb") as f:
         config = tomllib.load(f)
-    extra = set(config.get("scanner", {}).get("allow_decorators", []))
-    return DEFAULT_ALLOW_DECORATORS | extra
+    scanner = config.get('scanner', {})
+    if not isinstance(scanner, dict):
+        raise ValueError('scanner config section must be a table')
+    extra = scanner.get('allow_decorators', [])
+    if not isinstance(extra, list) or not all(isinstance(item, str) and item for item in extra):
+        raise ValueError('allow_decorators must be an array of nonempty strings')
+    return DEFAULT_ALLOW_DECORATORS | set(extra)
+
+
+class ScanInputError(ValueError):
+    """Required input could not be read or parsed; never a clean result."""
 
 
 def decorator_name(node):
@@ -1637,21 +1647,17 @@ def _test_files_for_source(source_path):
     # F6: mirror the source's relative path under `tests/`. For
     # `<root>/pkg/sub/thing.py`, add `<root>/tests/pkg/sub/test_thing.py` plus
     # every prefix (`<root>/tests/pkg/test_thing.py`, `<root>/tests/sub/...`).
-    try:
-        rel_parent = src.parent.relative_to(root)
-    except ValueError:
-        rel_parent = None
-    if rel_parent is not None:
-        parts = rel_parent.parts
-        for i in range(len(parts) + 1):
-            candidates.append(root / "tests" / Path(*parts[:i]) / f"test_{stem}.py")
+    # root was found by walking this resolved path's ancestors.
+    rel_parent = src.parent.relative_to(root)
+    parts = rel_parent.parts
+    for i in range(len(parts) + 1):
+        candidates.append(root / "tests" / Path(*parts[:i]) / f"test_{stem}.py")
     # Glob for test_X_*.py in tests/ (both the flat root and the mirrored dir)
     if (root / "tests").is_dir():
         candidates.extend(sorted((root / "tests").glob(f"test_{stem}_*.py")))
-        if rel_parent is not None:
-            mirror_dir = root / "tests" / rel_parent
-            if mirror_dir.is_dir():
-                candidates.extend(sorted(mirror_dir.glob(f"test_{stem}_*.py")))
+        mirror_dir = root / "tests" / rel_parent
+        if mirror_dir.is_dir():
+            candidates.extend(sorted(mirror_dir.glob(f"test_{stem}_*.py")))
 
     # Deduplicate while preserving order
     seen = set()
@@ -1715,23 +1721,18 @@ def _test_ast_covers_exception(test_path, exc_class):
     positional arg names `exc_class`. Comments and TODOs cannot satisfy
     coverage because they are not in the AST.
 
-    Returns True if such a call is found. On unreadable/unparseable files,
-    emits a scanner diagnostic to stderr and returns False (writing-code:11
-    no-silent-process compliance)."""
+    Returns True if such a call is found. Unreadable/unparseable required test
+    inputs raise ScanInputError so the caller cannot report a complete scan."""
     if not exc_class:
         return False
     try:
         source = test_path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as e:
-        print(f"{test_path}:0:scan-ast-warning: test file unreadable: {e}",
-              file=sys.stderr)
-        return False
+    except (OSError, UnicodeDecodeError) as e:  # noqa: writing-tests-5 bootstrap related-file input/cause fixtures in bin/_test/scanner_source_test.py
+        raise ScanInputError(f"{test_path}:0:scan-ast-error: test file unreadable: {e}") from e
     try:
         tree = ast.parse(source, filename=str(test_path))
-    except SyntaxError as e:
-        print(f"{test_path}:{e.lineno or 0}:scan-ast-warning: test file "
-              f"unparseable: {e.msg}", file=sys.stderr)
-        return False
+    except SyntaxError as e:  # noqa: writing-tests-5 bootstrap related-test syntax fixture in bin/_test/scanner_source_test.py
+        raise ScanInputError(f"{test_path}:{e.lineno or 0}:scan-ast-syntax-error: test file unparseable: {e.msg}") from e
 
     RAISES_NAMES = ("raises", "assertRaises")
     for node in ast.walk(tree):
@@ -1866,15 +1867,12 @@ def _is_test_path(path):
 def scan_file(path, allow_decorators, exclude_tests=False):
     try:
         source = Path(path).read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as e:
-        print(f"{path}:0:scan-ast-error: {e}", file=sys.stderr)
-        return []
+    except (OSError, UnicodeDecodeError) as e:  # noqa: writing-tests-5 bootstrap missing/binary source fixtures in bin/_test/scanner_source_test.py
+        raise ScanInputError(f"{path}:0:scan-ast-error: {e}") from e
     try:
         tree = ast.parse(source, filename=path)
-    except SyntaxError as e:
-        print(f"{path}:{e.lineno or 0}:scan-ast-syntax-error: {e.msg}",
-              file=sys.stderr)
-        return []
+    except SyntaxError as e:  # noqa: writing-tests-5 bootstrap selected-source syntax fixture in bin/_test/scanner_source_test.py
+        raise ScanInputError(f"{path}:{e.lineno or 0}:scan-ast-syntax-error: {e.msg}") from e
     source_lines = source.splitlines()
     results = (check_writing_code_7(tree, source_lines)
                + check_writing_code_9(tree, allow_decorators)
@@ -1895,29 +1893,48 @@ def main(argv):
     i = 0
     while i < len(argv):
         a = argv[i]
+        if a in ('--config', '--files-from') and i + 1 >= len(argv):
+            print(f'scan-ast-usage-error: {a} requires a path', file=sys.stderr)
+            return 2
         if a == "--config":
             config_path = argv[i + 1]
             i += 2
         elif a == "--exclude-tests":
             exclude_tests = True
             i += 1
+        elif a == '--files-from':
+            try:
+                files.extend(path for path in Path(argv[i + 1]).read_bytes().decode().split('\0') if path)
+            except (OSError, UnicodeError) as e:  # noqa: writing-tests-5 bootstrap missing/binary file-list CLI fixtures in bin/_test/scanner_source_test.py
+                print(f'scan-ast-error: cannot read file list: {e}', file=sys.stderr)
+                return 2
+            i += 2
         elif a in ("-h", "--help"):
             print(__doc__)
             return 0
         else:
             files.append(a)
             i += 1
-    if not files:
-        return 0
-    allow_decorators = load_decorator_allowlist(config_path)
+    try:
+        allow_decorators = load_decorator_allowlist(config_path)
+    except (OSError, ValueError) as e:  # noqa: writing-tests-5 bootstrap missing/malformed/config-type fixtures in bin/_test/scanner_source_test.py
+        print(f'scan-ast-config-error: {e}', file=sys.stderr)
+        return 2
     total = 0
+    incomplete = False
     for path in files:
         if not path.endswith(".py"):
             continue
-        for line, rule, excerpt in scan_file(path, allow_decorators, exclude_tests):
+        try:
+            findings = scan_file(path, allow_decorators, exclude_tests)
+        except ScanInputError as e:  # noqa: writing-tests-5 bootstrap incomplete-result CLI fixtures in bin/_test/scanner_source_test.py
+            print(str(e), file=sys.stderr)
+            incomplete = True
+            continue
+        for line, rule, excerpt in findings:
             print(f"{path}:{line}:{rule}: {excerpt}")
             total += 1
-    return 1 if total > 0 else 0
+    return 2 if incomplete else 1 if total > 0 else 0
 
 
 if __name__ == "__main__":

@@ -159,11 +159,62 @@ fi
 # commit," not "the message adheres to RFC-2822 trailer syntax." Grep at
 # line-start enforces presence; ordering / contiguity is left to the
 # agent's discretion.
-REVIEW_LINE=$(echo "$COMMIT_MSG" | { grep -E '^Self-Review:[[:space:]]+\S' || true; } | head -1)
-SOURCE_LINES=$(echo "$COMMIT_MSG" | grep -cE '^Self-Review-Source:[[:space:]]+\S')
+TRAILERS=$(printf '%s' "$COMMIT_MSG" | git interpret-trailers --parse 2>/dev/null || true)
+REVIEW_COUNT=$(echo "$TRAILERS" | grep -cE '^Self-Review:[[:space:]]+\S')
+REVIEW_LINE=$(echo "$TRAILERS" | grep -E '^Self-Review:[[:space:]]+\S' || true)
+SOURCE_LINES=$(echo "$TRAILERS" | grep -cE '^Self-Review-Source:[[:space:]]+\S')
+TIER_COUNT=$(echo "$TRAILERS" | grep -ci '^Review-Tier:[[:space:]]*[ABC][[:space:]]*$')
+REVIEW_TIER=$(echo "$TRAILERS" | grep -i '^Review-Tier:' | sed -E 's/^Review-Tier:[[:space:]]+//' | tr '[:lower:]' '[:upper:]')
+RISK_SCRIPT="$HOOK_DIR/../../bin/review-risk.py"
+LEGACY_TIER=false
+if [[ ! -f "$RISK_SCRIPT" ]]; then
+    echo "BLOCKED: canonical review risk classifier is unavailable." >&2
+    exit 2
+fi
+if [[ "$TIER_COUNT" -ne 1 || ! "$REVIEW_TIER" =~ ^[ABC]$ ]]; then
+    POLICY_PATH="$HOOK_DIR/../../catalog/review-risk-policy.json"
+    COMMIT_EPOCH=$(git -C "$EFFECTIVE_CWD" log -1 --format=%ct HEAD 2>/dev/null || echo 0)
+    LEGACY_EPOCH=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["legacy_before_epoch"])' "$POLICY_PATH" 2>/dev/null || echo 0)
+    if [[ "$COMMIT_EPOCH" -ge "$LEGACY_EPOCH" ]]; then
+        echo "BLOCKED: post-policy commit requires exactly one Review-Tier: A|B|C trailer." >&2
+        exit 2
+    fi
+    # Pre-policy history preserves full validation rather than weakening.
+    LEGACY_TIER=true
+    if ! RISK_RESULT=$(python3 "$RISK_SCRIPT" --repo "$EFFECTIVE_CWD" --commit HEAD 2>&1); then
+        echo "BLOCKED: review classifier failure: $RISK_RESULT" >&2; exit 2
+    fi
+    COMPUTED_LEGACY_TIER=$(printf '%s' "$RISK_RESULT" | python3 -c 'import json,sys; print(json.load(sys.stdin)["computed_tier"])' 2>/dev/null || true)
+    REVIEW_TIER="C"
+    echo "[self-review] warn: legacy commit has no Review-Tier; computed Tier $COMPUTED_LEGACY_TIER and preserving legacy full validation." >&2
+elif [[ "$REVIEW_TIER" != "C" ]] && git -C "$EFFECTIVE_CWD" diff-tree --root --no-renames --name-only -r HEAD | grep -Eq '^(bin/review-risk\.py|catalog/review-risk-policy\.json|\.githooks/commit-msg|hooks/git/(self-review|pre-push-self-review)\.sh)$'; then
+    echo "BLOCKED: review-policy bootstrap files independently require Tier C." >&2
+    exit 2
+elif ! RISK_RESULT=$(python3 "$RISK_SCRIPT" --repo "$EFFECTIVE_CWD" --commit HEAD --declared "$REVIEW_TIER" 2>&1); then
+    echo "BLOCKED: review tier downgrade or classifier failure: $RISK_RESULT" >&2
+    exit 2
+fi
+if [[ "$REVIEW_TIER" == "C" && "$LEGACY_TIER" == "false" ]]; then
+    for EVIDENCE in Hostile-Review Negative-Tests Full-Suite Canary-Rollback; do
+        if [[ $(echo "$TRAILERS" | grep -cE "^${EVIDENCE}:[[:space:]]+\\S") -ne 1 ]]; then
+            echo "BLOCKED: Tier C requires exactly one ${EVIDENCE}: evidence trailer." >&2
+            exit 2
+        fi
+    done
+fi
 
-if [[ -z "$REVIEW_LINE" ]]; then
-    cat >&2 <<HOOKEOF
+NO_REVIEW=false; [[ "$COMMIT_MSG" == *'[no-review]'* ]] && NO_REVIEW=true
+if [[ "$NO_REVIEW" == "true" && "$REVIEW_TIER" != "A" ]]; then
+    echo "BLOCKED: [no-review] is allowed only for independently validated Tier A." >&2
+    exit 2
+fi
+if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
+    echo "BLOCKED: missing ticket reference or [no-ticket]." >&2
+    exit 2
+fi
+if [[ "$REVIEW_COUNT" -ne 1 ]]; then
+    if [[ "$NO_REVIEW" != "true" || "$REVIEW_TIER" != "A" ]]; then
+        cat >&2 <<HOOKEOF
 BLOCKED: Latest commit is missing the Self-Review: trailer.
 
 Add to the commit message's trailer block (after the last paragraph):
@@ -178,7 +229,13 @@ The review artifact must follow skills/self-review/SKILL.md:
 
 Amend the commit (git commit --amend) and retry.
 HOOKEOF
-    exit 2
+        exit 2
+    fi
+fi
+
+# Tier A uses the one-line Self-Review trailer as its short review record.
+if [[ "$REVIEW_TIER" == "A" ]]; then
+    exit 0
 fi
 
 if [[ "$SOURCE_LINES" -eq 0 ]]; then
@@ -200,7 +257,7 @@ HOOKEOF
     exit 2
 fi
 
-SOURCE_VALUE=$(echo "$COMMIT_MSG" | { grep -E '^Self-Review-Source:[[:space:]]+' || true; } | head -1 | sed -E 's/^Self-Review-Source:[[:space:]]+'//)
+SOURCE_VALUE=$(echo "$TRAILERS" | grep -E '^Self-Review-Source:[[:space:]]+' | sed -E 's/^Self-Review-Source:[[:space:]]+'//)
 
 # If source looks like a path, run the structural checks against the file.
 # Ticket references (e.g. "#123") are accepted but not yet validated --
@@ -221,9 +278,14 @@ HOOKEOF
         exit 2
     fi
 
-    # Required section headers.
+    # Required section headers scale with the validated tier.
     MISSING_SECTIONS=()
-    for section in "## Assumptions" "## Peer review" "## Lead review"; do
+    if [[ "$REVIEW_TIER" == "B" ]]; then
+        REQUIRED_SECTIONS=("## Assumptions" "## Test plan")
+    else
+        REQUIRED_SECTIONS=("## Assumptions" "## Peer review" "## Lead review")
+    fi
+    for section in "${REQUIRED_SECTIONS[@]}"; do
         if ! grep -qF "$section" "$SOURCE_PATH"; then
             MISSING_SECTIONS+=("$section")
         fi
@@ -301,7 +363,18 @@ HOOKEOF
         exit 2
     fi
 
-    # v1.2: Pre-author-inventory field must be present and non-empty.
+    # Tier B stops after focused assumptions, roles, and a concrete test plan.
+    # Investigation, pre-mortem, hostile review, and full-suite ceremony are
+    # Tier C requirements only.
+    if [[ "$REVIEW_TIER" == "B" ]]; then
+        if ! grep -qE '^## Test plan|^Test plan:[[:space:]]+\S' "$SOURCE_PATH"; then
+            echo "BLOCKED: Tier B review artifact requires ## Test plan or Test plan: evidence." >&2
+            exit 2
+        fi
+        exit 0
+    fi
+
+    # v1.2: Tier C pre-author inventory must be present and non-empty.
     # Points at the ## Pre-author inventory section in the ticket or plan,
     # per _authoring-against-state-rules.md:6. NONE is accepted only when
     # paired with a Trivial-against-state: declaration in the artifact.

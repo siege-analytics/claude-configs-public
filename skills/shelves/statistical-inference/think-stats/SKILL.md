@@ -108,4 +108,4 @@ These two tools subsume most of an introductory statistics course. When parametr
 ## See also
 
 - *Think Bayes* (same author, free at greenteapress.com) -- Bayesian counterpart to Think Stats; not absorbed in this shelf because statistical-rethinking-course covers Bayesian more completely.
-- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` -- context on Think Stats as the applied-statistical-rigor entry. Operator wanted "all three" statistical flavors; this is the practical / EDA / simulation-based flavor.
+- Session 260502-pure-vista's unavailable historical session plan (not shipped in this repository; provenance only, not a local reading target) -- context on Think Stats as the applied-statistical-rigor entry. Operator wanted "all three" statistical flavors; this is the practical / EDA / simulation-based flavor.

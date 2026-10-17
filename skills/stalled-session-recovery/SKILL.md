@@ -62,6 +62,14 @@ Also check the session's own `status` field. A session already at a terminal sta
 
 ## Respawning: what the successor needs
 
+When the work uses [skill:drive-while-away]'s bounded checkpoint journal, read it
+alongside the last coherent transcript. Have the coordinator record supersession
+before the successor writes, then resume and reconcile the actual candidate,
+pending review/checks and unresolved findings. Preserve evidence links and the
+objective; never transfer an accepted verdict to a changed SHA. The journal's
+generation prevents accidental stale checkpoint writes; it does not stop the
+old session's tools or grant the successor mutation authority.
+
 A minimal respawn prompt is a liability. Include, at minimum:
 
 - **The real diagnosis**, not the surface error -- state plainly what actually killed the predecessor and why the visible error was misleading, so the successor doesn't waste its own time re-diagnosing or repeat the same mistake.

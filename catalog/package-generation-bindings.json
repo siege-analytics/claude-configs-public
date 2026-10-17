@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "ontology_version": "1.4.0",
+  "bindings": [
+    {
+      "artifact": "generation.json",
+      "fields": [
+        {"pointer": "/identity", "term": "repository-identity", "value_type": "string"},
+        {"pointer": "/parent_source", "term": "source-reference", "value_type": "string"},
+        {"pointer": "/consumer_revision", "term": "source-reference", "value_type": "string"},
+        {"pointer": "/runtime_commit", "term": "source-reference", "value_type": "string"},
+        {"pointer": "/policy_selection", "term": "generated-artifact", "value_type": "object"},
+        {"pointer": "/effective_policy_sha256", "term": "effective-policy", "value_type": "string"},
+        {"pointer": "/evidence_state", "term": "artifact-verified", "value_type": "string"},
+        {"pointer": "/composition_tools/*", "term": "source-reference", "value_type": "string"}
+      ]
+    }
+  ]
+}

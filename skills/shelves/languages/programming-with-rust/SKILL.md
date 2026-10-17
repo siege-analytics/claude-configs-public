@@ -12,22 +12,18 @@ description: >
 
 Apply the practices from Donis Marshall's "Programming with Rust" to review existing code and write new Rust. This skill operates in two modes: **Review Mode** (analyze code for violations of Rust idioms) and **Write Mode** (produce safe, idiomatic Rust from scratch).
 
-## Reference Files
+## Shipped reference coverage
 
-- `ref-01-fundamentals.md` -- Ch 1-3: Rust model, tooling, variables, primitives, references
-- `ref-02-types-strings.md` -- Ch 4-5: String vs &str, formatting, Display/Debug traits
-- `ref-03-control-collections.md` -- Ch 6-7: Control flow, iterators, arrays, Vec, HashMap
-- `ref-04-ownership-lifetimes.md` -- Ch 8-10: Ownership, move semantics, borrowing, lifetimes
-- `ref-05-functions-errors.md` -- Ch 11-12: Functions, Result, Option, panics, custom errors
-- `ref-06-structs-generics.md` -- Ch 13-14: Structs, impl blocks, generics, bounds
-- `ref-07-patterns-closures.md` -- Ch 15-16: Pattern matching, closures, Fn/FnMut/FnOnce
-- `ref-08-traits.md` -- Ch 17: Trait definition, dispatch, supertraits, associated types
-- `ref-09-concurrency.md` -- Ch 18-19: Threads, channels, Mutex, RwLock, atomics
-- `ref-10-advanced.md` -- Ch 20-23: Memory, interior mutability, macros, FFI, modules
+The original per-chapter `ref-*` files are not shipped. Consult
+[`references/practices-catalog.md`](references/practices-catalog.md) for selected
+before/after practices and [`references/api_reference.md`](references/api_reference.md)
+for the shipped API notes. These are selective, not full chapter-by-chapter coverage.
+For topics not covered there, use the guidance in this SKILL.md and verify claims
+against the upstream book; do not assume absent chapters were absorbed.
 
 ## How to Use This Skill
 
-**Before responding**, read the reference files relevant to the code's topic. For ownership/borrowing issues read `ref-04`. For error handling read `ref-05`. For a full review, read all files.
+**Before responding**, consult the shipped practices catalog for relevant topics; it is selective, not a full chapter set.
 
 ---
 
@@ -36,7 +32,7 @@ Apply the practices from Donis Marshall's "Programming with Rust" to review exis
 When the user asks you to **review** Rust code, follow this process:
 
 ### Step 1: Read Relevant References
-Identify which chapters apply. If unsure, read all reference files.
+Identify which chapters apply. If unsure, consult the shipped practices catalog and verify uncovered chapters against the upstream book.
 
 ### Step 2: Analyze the Code
 

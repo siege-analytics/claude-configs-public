@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # Spatial Statistics
 
 When the analysis goes beyond joins and measurements into inference, clustering, smoothing, or diagnostic work. Civic / Census / FEC / redistricting data is exactly where these methods earn their keep -- the patterns you're looking for usually aren't obvious from a map alone.

@@ -1,0 +1,2293 @@
+{
+  "schema_version": 1,
+  "base_sha": "f115158b58db3690d2ea63999699284dc79db1bb",
+  "note": "UNKNOWN means no verified production consumer, not zero usage. The sole exact overlay is github.com/siege-analytics/siege_utilities. Reference links are consultation, never consumer evidence or auto-selection. Costs are authored/packaged Python character counts and ceil(chars/4), not observed runtime tokens. Baseline packaged sizes are verified by rebuilding the isolated exact-base git archive; baseline source routes are independently verified from git. No retirement, ambient/runtime saving, or transitive reference load is claimed. Rollback: revert this develop-only batch; retain compatibility and shelves.",
+  "items": [
+    {
+      "source": "projects/siege-utilities/_rules.md",
+      "slug": "siege-utilities--rules",
+      "kind": "project-rule",
+      "classification": "exact-project",
+      "known_consumers": [
+        "github.com/siege-analytics/siege_utilities"
+      ],
+      "consumer_evidence": "projects/siege-utilities/PROJECT.md and catalog/resolver-manifest.json exact GitHub origin",
+      "auto_select": "exact-project",
+      "baseline": {
+        "authored": {
+          "characters": 11286,
+          "estimated_tokens": 2822,
+          "bytes": 11326
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11286,
+            "estimated_tokens": 2822,
+            "bytes": 11326
+          },
+          "flat": {
+            "characters": 11286,
+            "estimated_tokens": 2822,
+            "bytes": 11326
+          },
+          "claude-code": {
+            "characters": 11286,
+            "estimated_tokens": 2822,
+            "bytes": 11326
+          },
+          "craft-agent": {
+            "characters": 11286,
+            "estimated_tokens": 2822,
+            "bytes": 11326
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 11286,
+          "estimated_tokens": 2822,
+          "bytes": 11326
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11286,
+            "estimated_tokens": 2822,
+            "bytes": 11326
+          },
+          "flat": {
+            "characters": 11286,
+            "estimated_tokens": 2822,
+            "bytes": 11326
+          },
+          "claude-code": {
+            "characters": 11286,
+            "estimated_tokens": 2822,
+            "bytes": 11326
+          },
+          "craft-agent": {
+            "characters": 11286,
+            "estimated_tokens": 2822,
+            "bytes": 11326
+          }
+        }
+      }
+    },
+    {
+      "source": "projects/siege-utilities/skills/error-path-tests/SKILL.md",
+      "slug": "siege-utilities--error-path-tests",
+      "kind": "project-skill",
+      "classification": "exact-project",
+      "known_consumers": [
+        "github.com/siege-analytics/siege_utilities"
+      ],
+      "consumer_evidence": "projects/siege-utilities/PROJECT.md and catalog/resolver-manifest.json exact GitHub origin",
+      "auto_select": "exact-project",
+      "baseline": {
+        "authored": {
+          "characters": 11830,
+          "estimated_tokens": 2958,
+          "bytes": 11904
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11962,
+            "estimated_tokens": 2991,
+            "bytes": 12036
+          },
+          "flat": {
+            "characters": 11962,
+            "estimated_tokens": 2991,
+            "bytes": 12036
+          },
+          "claude-code": {
+            "characters": 11962,
+            "estimated_tokens": 2991,
+            "bytes": 12036
+          },
+          "craft-agent": {
+            "characters": 11962,
+            "estimated_tokens": 2991,
+            "bytes": 12036
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 11830,
+          "estimated_tokens": 2958,
+          "bytes": 11904
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11962,
+            "estimated_tokens": 2991,
+            "bytes": 12036
+          },
+          "flat": {
+            "characters": 11962,
+            "estimated_tokens": 2991,
+            "bytes": 12036
+          },
+          "claude-code": {
+            "characters": 11962,
+            "estimated_tokens": 2991,
+            "bytes": 12036
+          },
+          "craft-agent": {
+            "characters": 11962,
+            "estimated_tokens": 2991,
+            "bytes": 12036
+          }
+        }
+      }
+    },
+    {
+      "source": "projects/siege-utilities/skills/hostile-review/SKILL.md",
+      "slug": "siege-utilities--hostile-review",
+      "kind": "project-skill",
+      "classification": "exact-project",
+      "known_consumers": [
+        "github.com/siege-analytics/siege_utilities"
+      ],
+      "consumer_evidence": "projects/siege-utilities/PROJECT.md and catalog/resolver-manifest.json exact GitHub origin",
+      "auto_select": "exact-project",
+      "baseline": {
+        "authored": {
+          "characters": 25909,
+          "estimated_tokens": 6478,
+          "bytes": 25925
+        },
+        "packaged": {
+          "nested": {
+            "characters": 38280,
+            "estimated_tokens": 9570,
+            "bytes": 38296
+          },
+          "flat": {
+            "characters": 38280,
+            "estimated_tokens": 9570,
+            "bytes": 38296
+          },
+          "claude-code": {
+            "characters": 38280,
+            "estimated_tokens": 9570,
+            "bytes": 38296
+          },
+          "craft-agent": {
+            "characters": 38249,
+            "estimated_tokens": 9563,
+            "bytes": 38265
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 25909,
+          "estimated_tokens": 6478,
+          "bytes": 25925
+        },
+        "packaged": {
+          "nested": {
+            "characters": 38280,
+            "estimated_tokens": 9570,
+            "bytes": 38296
+          },
+          "flat": {
+            "characters": 38280,
+            "estimated_tokens": 9570,
+            "bytes": 38296
+          },
+          "claude-code": {
+            "characters": 38280,
+            "estimated_tokens": 9570,
+            "bytes": 38296
+          },
+          "craft-agent": {
+            "characters": 38249,
+            "estimated_tokens": 9563,
+            "bytes": 38265
+          }
+        }
+      }
+    },
+    {
+      "source": "projects/siege-utilities/skills/notebook-impact/SKILL.md",
+      "slug": "siege-utilities--notebook-impact",
+      "kind": "project-skill",
+      "classification": "exact-project",
+      "known_consumers": [
+        "github.com/siege-analytics/siege_utilities"
+      ],
+      "consumer_evidence": "projects/siege-utilities/PROJECT.md and catalog/resolver-manifest.json exact GitHub origin",
+      "auto_select": "exact-project",
+      "baseline": {
+        "authored": {
+          "characters": 6821,
+          "estimated_tokens": 1706,
+          "bytes": 6861
+        },
+        "packaged": {
+          "nested": {
+            "characters": 6846,
+            "estimated_tokens": 1712,
+            "bytes": 6886
+          },
+          "flat": {
+            "characters": 6846,
+            "estimated_tokens": 1712,
+            "bytes": 6886
+          },
+          "claude-code": {
+            "characters": 6846,
+            "estimated_tokens": 1712,
+            "bytes": 6886
+          },
+          "craft-agent": {
+            "characters": 6846,
+            "estimated_tokens": 1712,
+            "bytes": 6886
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 6821,
+          "estimated_tokens": 1706,
+          "bytes": 6861
+        },
+        "packaged": {
+          "nested": {
+            "characters": 6846,
+            "estimated_tokens": 1712,
+            "bytes": 6886
+          },
+          "flat": {
+            "characters": 6846,
+            "estimated_tokens": 1712,
+            "bytes": 6886
+          },
+          "claude-code": {
+            "characters": 6846,
+            "estimated_tokens": 1712,
+            "bytes": 6886
+          },
+          "craft-agent": {
+            "characters": 6846,
+            "estimated_tokens": 1712,
+            "bytes": 6886
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/_data-trust-rules.md",
+      "slug": "data-trust",
+      "kind": "rule",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-only",
+      "baseline": {
+        "authored": {
+          "characters": 4219,
+          "estimated_tokens": 1055,
+          "bytes": 4221
+        },
+        "packaged": {
+          "nested": {
+            "characters": 4219,
+            "estimated_tokens": 1055,
+            "bytes": 4221
+          },
+          "flat": {
+            "characters": 4219,
+            "estimated_tokens": 1055,
+            "bytes": 4221
+          },
+          "claude-code": {
+            "characters": 4219,
+            "estimated_tokens": 1055,
+            "bytes": 4221
+          },
+          "craft-agent": {
+            "characters": 4219,
+            "estimated_tokens": 1055,
+            "bytes": 4221
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 4219,
+          "estimated_tokens": 1055,
+          "bytes": 4221
+        },
+        "packaged": {
+          "nested": {
+            "characters": 4219,
+            "estimated_tokens": 1055,
+            "bytes": 4221
+          },
+          "flat": {
+            "characters": 4219,
+            "estimated_tokens": 1055,
+            "bytes": 4221
+          },
+          "claude-code": {
+            "characters": 4219,
+            "estimated_tokens": 1055,
+            "bytes": 4221
+          },
+          "craft-agent": {
+            "characters": 4219,
+            "estimated_tokens": 1055,
+            "bytes": 4221
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/_siege-utilities-rules.md",
+      "slug": "siege-utilities",
+      "kind": "rule",
+      "classification": "compatibility",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-only",
+      "baseline": {
+        "authored": {
+          "characters": 695,
+          "estimated_tokens": 174,
+          "bytes": 695
+        },
+        "packaged": {
+          "nested": {
+            "characters": 695,
+            "estimated_tokens": 174,
+            "bytes": 695
+          },
+          "flat": {
+            "characters": 695,
+            "estimated_tokens": 174,
+            "bytes": 695
+          },
+          "claude-code": {
+            "characters": 695,
+            "estimated_tokens": 174,
+            "bytes": 695
+          },
+          "craft-agent": {
+            "characters": 695,
+            "estimated_tokens": 174,
+            "bytes": 695
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 695,
+          "estimated_tokens": 174,
+          "bytes": 695
+        },
+        "packaged": {
+          "nested": {
+            "characters": 695,
+            "estimated_tokens": 174,
+            "bytes": 695
+          },
+          "flat": {
+            "characters": 695,
+            "estimated_tokens": 174,
+            "bytes": 695
+          },
+          "claude-code": {
+            "characters": 695,
+            "estimated_tokens": 174,
+            "bytes": 695
+          },
+          "craft-agent": {
+            "characters": 695,
+            "estimated_tokens": 174,
+            "bytes": 695
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/analysis/SKILL.md",
+      "slug": "analysis",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 4049,
+          "estimated_tokens": 1013,
+          "bytes": 4049
+        },
+        "packaged": {
+          "nested": {
+            "characters": 4088,
+            "estimated_tokens": 1022,
+            "bytes": 4088
+          },
+          "flat": {
+            "characters": 4088,
+            "estimated_tokens": 1022,
+            "bytes": 4088
+          },
+          "claude-code": {
+            "characters": 4088,
+            "estimated_tokens": 1022,
+            "bytes": 4088
+          },
+          "craft-agent": {
+            "characters": 4088,
+            "estimated_tokens": 1022,
+            "bytes": 4088
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 3980,
+          "estimated_tokens": 995,
+          "bytes": 3980
+        },
+        "packaged": {
+          "nested": {
+            "characters": 4019,
+            "estimated_tokens": 1005,
+            "bytes": 4019
+          },
+          "flat": {
+            "characters": 4019,
+            "estimated_tokens": 1005,
+            "bytes": 4019
+          },
+          "claude-code": {
+            "characters": 4019,
+            "estimated_tokens": 1005,
+            "bytes": 4019
+          },
+          "craft-agent": {
+            "characters": 4019,
+            "estimated_tokens": 1005,
+            "bytes": 4019
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/coding/SKILL.md",
+      "slug": "coding",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 4787,
+          "estimated_tokens": 1197,
+          "bytes": 4787
+        },
+        "packaged": {
+          "nested": {
+            "characters": 5149,
+            "estimated_tokens": 1288,
+            "bytes": 5149
+          },
+          "flat": {
+            "characters": 5149,
+            "estimated_tokens": 1288,
+            "bytes": 5149
+          },
+          "claude-code": {
+            "characters": 5149,
+            "estimated_tokens": 1288,
+            "bytes": 5149
+          },
+          "craft-agent": {
+            "characters": 5149,
+            "estimated_tokens": 1288,
+            "bytes": 5149
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 4787,
+          "estimated_tokens": 1197,
+          "bytes": 4787
+        },
+        "packaged": {
+          "nested": {
+            "characters": 5149,
+            "estimated_tokens": 1288,
+            "bytes": 5149
+          },
+          "flat": {
+            "characters": 5149,
+            "estimated_tokens": 1288,
+            "bytes": 5149
+          },
+          "claude-code": {
+            "characters": 5149,
+            "estimated_tokens": 1288,
+            "bytes": 5149
+          },
+          "craft-agent": {
+            "characters": 5149,
+            "estimated_tokens": 1288,
+            "bytes": 5149
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/databricks/SKILL.md",
+      "slug": "databricks",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 9676,
+          "estimated_tokens": 2419,
+          "bytes": 9684
+        },
+        "packaged": {
+          "nested": {
+            "characters": 9694,
+            "estimated_tokens": 2424,
+            "bytes": 9702
+          },
+          "flat": {
+            "characters": 9694,
+            "estimated_tokens": 2424,
+            "bytes": 9702
+          },
+          "claude-code": {
+            "characters": 9694,
+            "estimated_tokens": 2424,
+            "bytes": 9702
+          },
+          "craft-agent": {
+            "characters": 9694,
+            "estimated_tokens": 2424,
+            "bytes": 9702
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 9676,
+          "estimated_tokens": 2419,
+          "bytes": 9684
+        },
+        "packaged": {
+          "nested": {
+            "characters": 9694,
+            "estimated_tokens": 2424,
+            "bytes": 9702
+          },
+          "flat": {
+            "characters": 9694,
+            "estimated_tokens": 2424,
+            "bytes": 9702
+          },
+          "claude-code": {
+            "characters": 9694,
+            "estimated_tokens": 2424,
+            "bytes": 9702
+          },
+          "craft-agent": {
+            "characters": 9694,
+            "estimated_tokens": 2424,
+            "bytes": 9702
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/duckdb-spatial/SKILL.md",
+      "slug": "duckdb-spatial",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 6852,
+          "estimated_tokens": 1713,
+          "bytes": 6867
+        },
+        "packaged": {
+          "nested": {
+            "characters": 39383,
+            "estimated_tokens": 9846,
+            "bytes": 39455
+          },
+          "flat": {
+            "characters": 39383,
+            "estimated_tokens": 9846,
+            "bytes": 39455
+          },
+          "claude-code": {
+            "characters": 39383,
+            "estimated_tokens": 9846,
+            "bytes": 39455
+          },
+          "craft-agent": {
+            "characters": 39383,
+            "estimated_tokens": 9846,
+            "bytes": 39455
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 6852,
+          "estimated_tokens": 1713,
+          "bytes": 6867
+        },
+        "packaged": {
+          "nested": {
+            "characters": 39383,
+            "estimated_tokens": 9846,
+            "bytes": 39455
+          },
+          "flat": {
+            "characters": 39383,
+            "estimated_tokens": 9846,
+            "bytes": 39455
+          },
+          "claude-code": {
+            "characters": 39383,
+            "estimated_tokens": 9846,
+            "bytes": 39455
+          },
+          "craft-agent": {
+            "characters": 39383,
+            "estimated_tokens": 9846,
+            "bytes": 39455
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/geopandas/SKILL.md",
+      "slug": "geopandas",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 6841,
+          "estimated_tokens": 1711,
+          "bytes": 6849
+        },
+        "packaged": {
+          "nested": {
+            "characters": 58753,
+            "estimated_tokens": 14689,
+            "bytes": 58782
+          },
+          "flat": {
+            "characters": 58753,
+            "estimated_tokens": 14689,
+            "bytes": 58782
+          },
+          "claude-code": {
+            "characters": 58753,
+            "estimated_tokens": 14689,
+            "bytes": 58782
+          },
+          "craft-agent": {
+            "characters": 58753,
+            "estimated_tokens": 14689,
+            "bytes": 58782
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 6841,
+          "estimated_tokens": 1711,
+          "bytes": 6849
+        },
+        "packaged": {
+          "nested": {
+            "characters": 58753,
+            "estimated_tokens": 14689,
+            "bytes": 58782
+          },
+          "flat": {
+            "characters": 58753,
+            "estimated_tokens": 14689,
+            "bytes": 58782
+          },
+          "claude-code": {
+            "characters": 58753,
+            "estimated_tokens": 14689,
+            "bytes": 58782
+          },
+          "craft-agent": {
+            "characters": 58753,
+            "estimated_tokens": 14689,
+            "bytes": 58782
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/pipeline-jobs/SKILL.md",
+      "slug": "pipeline-jobs",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 5755,
+          "estimated_tokens": 1439,
+          "bytes": 5815
+        },
+        "packaged": {
+          "nested": {
+            "characters": 12613,
+            "estimated_tokens": 3154,
+            "bytes": 12675
+          },
+          "flat": {
+            "characters": 12613,
+            "estimated_tokens": 3154,
+            "bytes": 12675
+          },
+          "claude-code": {
+            "characters": 12613,
+            "estimated_tokens": 3154,
+            "bytes": 12675
+          },
+          "craft-agent": {
+            "characters": 12613,
+            "estimated_tokens": 3154,
+            "bytes": 12675
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 5755,
+          "estimated_tokens": 1439,
+          "bytes": 5815
+        },
+        "packaged": {
+          "nested": {
+            "characters": 12613,
+            "estimated_tokens": 3154,
+            "bytes": 12675
+          },
+          "flat": {
+            "characters": 12613,
+            "estimated_tokens": 3154,
+            "bytes": 12675
+          },
+          "claude-code": {
+            "characters": 12613,
+            "estimated_tokens": 3154,
+            "bytes": 12675
+          },
+          "craft-agent": {
+            "characters": 12613,
+            "estimated_tokens": 3154,
+            "bytes": 12675
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/postgis/SKILL.md",
+      "slug": "postgis",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 10045,
+          "estimated_tokens": 2512,
+          "bytes": 10154
+        },
+        "packaged": {
+          "nested": {
+            "characters": 136609,
+            "estimated_tokens": 34153,
+            "bytes": 136824
+          },
+          "flat": {
+            "characters": 136609,
+            "estimated_tokens": 34153,
+            "bytes": 136824
+          },
+          "claude-code": {
+            "characters": 136609,
+            "estimated_tokens": 34153,
+            "bytes": 136824
+          },
+          "craft-agent": {
+            "characters": 136609,
+            "estimated_tokens": 34153,
+            "bytes": 136824
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 10045,
+          "estimated_tokens": 2512,
+          "bytes": 10154
+        },
+        "packaged": {
+          "nested": {
+            "characters": 136609,
+            "estimated_tokens": 34153,
+            "bytes": 136824
+          },
+          "flat": {
+            "characters": 136609,
+            "estimated_tokens": 34153,
+            "bytes": 136824
+          },
+          "claude-code": {
+            "characters": 136609,
+            "estimated_tokens": 34153,
+            "bytes": 136824
+          },
+          "craft-agent": {
+            "characters": 136609,
+            "estimated_tokens": 34153,
+            "bytes": 136824
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/scala-on-spark/SKILL.md",
+      "slug": "scala-on-spark",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 3176,
+          "estimated_tokens": 794,
+          "bytes": 3178
+        },
+        "packaged": {
+          "nested": {
+            "characters": 3206,
+            "estimated_tokens": 802,
+            "bytes": 3208
+          },
+          "flat": {
+            "characters": 3206,
+            "estimated_tokens": 802,
+            "bytes": 3208
+          },
+          "claude-code": {
+            "characters": 3206,
+            "estimated_tokens": 802,
+            "bytes": 3208
+          },
+          "craft-agent": {
+            "characters": 3206,
+            "estimated_tokens": 802,
+            "bytes": 3208
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 3176,
+          "estimated_tokens": 794,
+          "bytes": 3178
+        },
+        "packaged": {
+          "nested": {
+            "characters": 3206,
+            "estimated_tokens": 802,
+            "bytes": 3208
+          },
+          "flat": {
+            "characters": 3206,
+            "estimated_tokens": 802,
+            "bytes": 3208
+          },
+          "claude-code": {
+            "characters": 3206,
+            "estimated_tokens": 802,
+            "bytes": 3208
+          },
+          "craft-agent": {
+            "characters": 3206,
+            "estimated_tokens": 802,
+            "bytes": 3208
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/sedona/SKILL.md",
+      "slug": "sedona",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 8498,
+          "estimated_tokens": 2125,
+          "bytes": 8508
+        },
+        "packaged": {
+          "nested": {
+            "characters": 51650,
+            "estimated_tokens": 12913,
+            "bytes": 51686
+          },
+          "flat": {
+            "characters": 51650,
+            "estimated_tokens": 12913,
+            "bytes": 51686
+          },
+          "claude-code": {
+            "characters": 51650,
+            "estimated_tokens": 12913,
+            "bytes": 51686
+          },
+          "craft-agent": {
+            "characters": 51650,
+            "estimated_tokens": 12913,
+            "bytes": 51686
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 8498,
+          "estimated_tokens": 2125,
+          "bytes": 8508
+        },
+        "packaged": {
+          "nested": {
+            "characters": 51650,
+            "estimated_tokens": 12913,
+            "bytes": 51686
+          },
+          "flat": {
+            "characters": 51650,
+            "estimated_tokens": 12913,
+            "bytes": 51686
+          },
+          "claude-code": {
+            "characters": 51650,
+            "estimated_tokens": 12913,
+            "bytes": 51686
+          },
+          "craft-agent": {
+            "characters": 51650,
+            "estimated_tokens": 12913,
+            "bytes": 51686
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/data-and-pipelines/SKILL.md",
+      "slug": "shelves--data-and-pipelines",
+      "kind": "shelf-router",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 1573,
+          "estimated_tokens": 394,
+          "bytes": 1574
+        },
+        "packaged": {
+          "nested": {
+            "characters": 73491,
+            "estimated_tokens": 18373,
+            "bytes": 73605
+          },
+          "flat": {
+            "characters": 73491,
+            "estimated_tokens": 18373,
+            "bytes": 73605
+          },
+          "claude-code": {
+            "characters": 73491,
+            "estimated_tokens": 18373,
+            "bytes": 73605
+          },
+          "craft-agent": {
+            "characters": 73491,
+            "estimated_tokens": 18373,
+            "bytes": 73605
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 1573,
+          "estimated_tokens": 394,
+          "bytes": 1574
+        },
+        "packaged": {
+          "nested": {
+            "characters": 73491,
+            "estimated_tokens": 18373,
+            "bytes": 73605
+          },
+          "flat": {
+            "characters": 73491,
+            "estimated_tokens": 18373,
+            "bytes": 73605
+          },
+          "claude-code": {
+            "characters": 73491,
+            "estimated_tokens": 18373,
+            "bytes": 73605
+          },
+          "craft-agent": {
+            "characters": 73491,
+            "estimated_tokens": 18373,
+            "bytes": 73605
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/data-and-pipelines/data-pipelines/SKILL.md",
+      "slug": "shelves--data-pipelines",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 15460,
+          "estimated_tokens": 3865,
+          "bytes": 15521
+        },
+        "packaged": {
+          "nested": {
+            "characters": 71918,
+            "estimated_tokens": 17980,
+            "bytes": 72031
+          },
+          "flat": {
+            "characters": 71918,
+            "estimated_tokens": 17980,
+            "bytes": 72031
+          },
+          "claude-code": {
+            "characters": 71918,
+            "estimated_tokens": 17980,
+            "bytes": 72031
+          },
+          "craft-agent": {
+            "characters": 71918,
+            "estimated_tokens": 17980,
+            "bytes": 72031
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 15460,
+          "estimated_tokens": 3865,
+          "bytes": 15521
+        },
+        "packaged": {
+          "nested": {
+            "characters": 71918,
+            "estimated_tokens": 17980,
+            "bytes": 72031
+          },
+          "flat": {
+            "characters": 71918,
+            "estimated_tokens": 17980,
+            "bytes": 72031
+          },
+          "claude-code": {
+            "characters": 71918,
+            "estimated_tokens": 17980,
+            "bytes": 72031
+          },
+          "craft-agent": {
+            "characters": 71918,
+            "estimated_tokens": 17980,
+            "bytes": 72031
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/geospatial/SKILL.md",
+      "slug": "shelves--geospatial",
+      "kind": "shelf-router",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 3651,
+          "estimated_tokens": 913,
+          "bytes": 3657
+        },
+        "packaged": {
+          "nested": {
+            "characters": 26259,
+            "estimated_tokens": 6565,
+            "bytes": 26276
+          },
+          "flat": {
+            "characters": 26259,
+            "estimated_tokens": 6565,
+            "bytes": 26276
+          },
+          "claude-code": {
+            "characters": 26259,
+            "estimated_tokens": 6565,
+            "bytes": 26276
+          },
+          "craft-agent": {
+            "characters": 26259,
+            "estimated_tokens": 6565,
+            "bytes": 26276
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 3651,
+          "estimated_tokens": 913,
+          "bytes": 3657
+        },
+        "packaged": {
+          "nested": {
+            "characters": 26259,
+            "estimated_tokens": 6565,
+            "bytes": 26276
+          },
+          "flat": {
+            "characters": 26259,
+            "estimated_tokens": 6565,
+            "bytes": 26276
+          },
+          "claude-code": {
+            "characters": 26259,
+            "estimated_tokens": 6565,
+            "bytes": 26276
+          },
+          "craft-agent": {
+            "characters": 26259,
+            "estimated_tokens": 6565,
+            "bytes": 26276
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/geospatial/geocomputation-with-r/SKILL.md",
+      "slug": "shelves--geocomputation-with-r",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 11805,
+          "estimated_tokens": 2952,
+          "bytes": 11816
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11805,
+            "estimated_tokens": 2952,
+            "bytes": 11816
+          },
+          "flat": {
+            "characters": 11805,
+            "estimated_tokens": 2952,
+            "bytes": 11816
+          },
+          "claude-code": {
+            "characters": 11805,
+            "estimated_tokens": 2952,
+            "bytes": 11816
+          },
+          "craft-agent": {
+            "characters": 11805,
+            "estimated_tokens": 2952,
+            "bytes": 11816
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 11805,
+          "estimated_tokens": 2952,
+          "bytes": 11816
+        },
+        "packaged": {
+          "nested": {
+            "characters": 11805,
+            "estimated_tokens": 2952,
+            "bytes": 11816
+          },
+          "flat": {
+            "characters": 11805,
+            "estimated_tokens": 2952,
+            "bytes": 11816
+          },
+          "claude-code": {
+            "characters": 11805,
+            "estimated_tokens": 2952,
+            "bytes": 11816
+          },
+          "craft-agent": {
+            "characters": 11805,
+            "estimated_tokens": 2952,
+            "bytes": 11816
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/geospatial/spatial-data-science/SKILL.md",
+      "slug": "shelves--spatial-data-science",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 10803,
+          "estimated_tokens": 2701,
+          "bytes": 10803
+        },
+        "packaged": {
+          "nested": {
+            "characters": 10803,
+            "estimated_tokens": 2701,
+            "bytes": 10803
+          },
+          "flat": {
+            "characters": 10803,
+            "estimated_tokens": 2701,
+            "bytes": 10803
+          },
+          "claude-code": {
+            "characters": 10803,
+            "estimated_tokens": 2701,
+            "bytes": 10803
+          },
+          "craft-agent": {
+            "characters": 10803,
+            "estimated_tokens": 2701,
+            "bytes": 10803
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 10803,
+          "estimated_tokens": 2701,
+          "bytes": 10803
+        },
+        "packaged": {
+          "nested": {
+            "characters": 10803,
+            "estimated_tokens": 2701,
+            "bytes": 10803
+          },
+          "flat": {
+            "characters": 10803,
+            "estimated_tokens": 2701,
+            "bytes": 10803
+          },
+          "claude-code": {
+            "characters": 10803,
+            "estimated_tokens": 2701,
+            "bytes": 10803
+          },
+          "craft-agent": {
+            "characters": 10803,
+            "estimated_tokens": 2701,
+            "bytes": 10803
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/statistical-inference/SKILL.md",
+      "slug": "shelves--statistical-inference",
+      "kind": "shelf-router",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 6631,
+          "estimated_tokens": 1658,
+          "bytes": 6633
+        },
+        "packaged": {
+          "nested": {
+            "characters": 44639,
+            "estimated_tokens": 11160,
+            "bytes": 44677
+          },
+          "flat": {
+            "characters": 44639,
+            "estimated_tokens": 11160,
+            "bytes": 44677
+          },
+          "claude-code": {
+            "characters": 44639,
+            "estimated_tokens": 11160,
+            "bytes": 44677
+          },
+          "craft-agent": {
+            "characters": 44639,
+            "estimated_tokens": 11160,
+            "bytes": 44677
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 6631,
+          "estimated_tokens": 1658,
+          "bytes": 6633
+        },
+        "packaged": {
+          "nested": {
+            "characters": 44639,
+            "estimated_tokens": 11160,
+            "bytes": 44677
+          },
+          "flat": {
+            "characters": 44639,
+            "estimated_tokens": 11160,
+            "bytes": 44677
+          },
+          "claude-code": {
+            "characters": 44639,
+            "estimated_tokens": 11160,
+            "bytes": 44677
+          },
+          "craft-agent": {
+            "characters": 44639,
+            "estimated_tokens": 11160,
+            "bytes": 44677
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/statistical-inference/causal-inference-mixtape/SKILL.md",
+      "slug": "shelves--causal-inference-mixtape",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 10111,
+          "estimated_tokens": 2528,
+          "bytes": 10118
+        },
+        "packaged": {
+          "nested": {
+            "characters": 10111,
+            "estimated_tokens": 2528,
+            "bytes": 10118
+          },
+          "flat": {
+            "characters": 10111,
+            "estimated_tokens": 2528,
+            "bytes": 10118
+          },
+          "claude-code": {
+            "characters": 10111,
+            "estimated_tokens": 2528,
+            "bytes": 10118
+          },
+          "craft-agent": {
+            "characters": 10111,
+            "estimated_tokens": 2528,
+            "bytes": 10118
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 10111,
+          "estimated_tokens": 2528,
+          "bytes": 10118
+        },
+        "packaged": {
+          "nested": {
+            "characters": 10111,
+            "estimated_tokens": 2528,
+            "bytes": 10118
+          },
+          "flat": {
+            "characters": 10111,
+            "estimated_tokens": 2528,
+            "bytes": 10118
+          },
+          "claude-code": {
+            "characters": 10111,
+            "estimated_tokens": 2528,
+            "bytes": 10118
+          },
+          "craft-agent": {
+            "characters": 10111,
+            "estimated_tokens": 2528,
+            "bytes": 10118
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/statistical-inference/causal-inference-what-if/SKILL.md",
+      "slug": "shelves--causal-inference-what-if",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 9224,
+          "estimated_tokens": 2306,
+          "bytes": 9229
+        },
+        "packaged": {
+          "nested": {
+            "characters": 9224,
+            "estimated_tokens": 2306,
+            "bytes": 9229
+          },
+          "flat": {
+            "characters": 9224,
+            "estimated_tokens": 2306,
+            "bytes": 9229
+          },
+          "claude-code": {
+            "characters": 9224,
+            "estimated_tokens": 2306,
+            "bytes": 9229
+          },
+          "craft-agent": {
+            "characters": 9224,
+            "estimated_tokens": 2306,
+            "bytes": 9229
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 9224,
+          "estimated_tokens": 2306,
+          "bytes": 9229
+        },
+        "packaged": {
+          "nested": {
+            "characters": 9224,
+            "estimated_tokens": 2306,
+            "bytes": 9229
+          },
+          "flat": {
+            "characters": 9224,
+            "estimated_tokens": 2306,
+            "bytes": 9229
+          },
+          "claude-code": {
+            "characters": 9224,
+            "estimated_tokens": 2306,
+            "bytes": 9229
+          },
+          "craft-agent": {
+            "characters": 9224,
+            "estimated_tokens": 2306,
+            "bytes": 9229
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/statistical-inference/statistical-rethinking-course/SKILL.md",
+      "slug": "shelves--statistical-rethinking-course",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 10210,
+          "estimated_tokens": 2553,
+          "bytes": 10228
+        },
+        "packaged": {
+          "nested": {
+            "characters": 10210,
+            "estimated_tokens": 2553,
+            "bytes": 10228
+          },
+          "flat": {
+            "characters": 10210,
+            "estimated_tokens": 2553,
+            "bytes": 10228
+          },
+          "claude-code": {
+            "characters": 10210,
+            "estimated_tokens": 2553,
+            "bytes": 10228
+          },
+          "craft-agent": {
+            "characters": 10210,
+            "estimated_tokens": 2553,
+            "bytes": 10228
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 10210,
+          "estimated_tokens": 2553,
+          "bytes": 10228
+        },
+        "packaged": {
+          "nested": {
+            "characters": 10210,
+            "estimated_tokens": 2553,
+            "bytes": 10228
+          },
+          "flat": {
+            "characters": 10210,
+            "estimated_tokens": 2553,
+            "bytes": 10228
+          },
+          "claude-code": {
+            "characters": 10210,
+            "estimated_tokens": 2553,
+            "bytes": 10228
+          },
+          "craft-agent": {
+            "characters": 10210,
+            "estimated_tokens": 2553,
+            "bytes": 10228
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/statistical-inference/think-stats/SKILL.md",
+      "slug": "shelves--think-stats",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 8463,
+          "estimated_tokens": 2116,
+          "bytes": 8469
+        },
+        "packaged": {
+          "nested": {
+            "characters": 8463,
+            "estimated_tokens": 2116,
+            "bytes": 8469
+          },
+          "flat": {
+            "characters": 8463,
+            "estimated_tokens": 2116,
+            "bytes": 8469
+          },
+          "claude-code": {
+            "characters": 8463,
+            "estimated_tokens": 2116,
+            "bytes": 8469
+          },
+          "craft-agent": {
+            "characters": 8463,
+            "estimated_tokens": 2116,
+            "bytes": 8469
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 8463,
+          "estimated_tokens": 2116,
+          "bytes": 8469
+        },
+        "packaged": {
+          "nested": {
+            "characters": 8463,
+            "estimated_tokens": 2116,
+            "bytes": 8469
+          },
+          "flat": {
+            "characters": 8463,
+            "estimated_tokens": 2116,
+            "bytes": 8469
+          },
+          "claude-code": {
+            "characters": 8463,
+            "estimated_tokens": 2116,
+            "bytes": 8469
+          },
+          "craft-agent": {
+            "characters": 8463,
+            "estimated_tokens": 2116,
+            "bytes": 8469
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/storytelling/SKILL.md",
+      "slug": "shelves--storytelling",
+      "kind": "shelf-router",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 2039,
+          "estimated_tokens": 510,
+          "bytes": 2039
+        },
+        "packaged": {
+          "nested": {
+            "characters": 141252,
+            "estimated_tokens": 35313,
+            "bytes": 141549
+          },
+          "flat": {
+            "characters": 141252,
+            "estimated_tokens": 35313,
+            "bytes": 141549
+          },
+          "claude-code": {
+            "characters": 141252,
+            "estimated_tokens": 35313,
+            "bytes": 141549
+          },
+          "craft-agent": {
+            "characters": 141252,
+            "estimated_tokens": 35313,
+            "bytes": 141549
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 2039,
+          "estimated_tokens": 510,
+          "bytes": 2039
+        },
+        "packaged": {
+          "nested": {
+            "characters": 141252,
+            "estimated_tokens": 35313,
+            "bytes": 141549
+          },
+          "flat": {
+            "characters": 141252,
+            "estimated_tokens": 35313,
+            "bytes": 141549
+          },
+          "claude-code": {
+            "characters": 141252,
+            "estimated_tokens": 35313,
+            "bytes": 141549
+          },
+          "craft-agent": {
+            "characters": 141252,
+            "estimated_tokens": 35313,
+            "bytes": 141549
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/storytelling/animation-at-work/SKILL.md",
+      "slug": "shelves--animation-at-work",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 13620,
+          "estimated_tokens": 3405,
+          "bytes": 13674
+        },
+        "packaged": {
+          "nested": {
+            "characters": 58898,
+            "estimated_tokens": 14725,
+            "bytes": 59003
+          },
+          "flat": {
+            "characters": 58898,
+            "estimated_tokens": 14725,
+            "bytes": 59003
+          },
+          "claude-code": {
+            "characters": 58898,
+            "estimated_tokens": 14725,
+            "bytes": 59003
+          },
+          "craft-agent": {
+            "characters": 58898,
+            "estimated_tokens": 14725,
+            "bytes": 59003
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 13620,
+          "estimated_tokens": 3405,
+          "bytes": 13674
+        },
+        "packaged": {
+          "nested": {
+            "characters": 58898,
+            "estimated_tokens": 14725,
+            "bytes": 59003
+          },
+          "flat": {
+            "characters": 58898,
+            "estimated_tokens": 14725,
+            "bytes": 59003
+          },
+          "claude-code": {
+            "characters": 58898,
+            "estimated_tokens": 14725,
+            "bytes": 59003
+          },
+          "craft-agent": {
+            "characters": 58898,
+            "estimated_tokens": 14725,
+            "bytes": 59003
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/storytelling/storytelling-with-data/SKILL.md",
+      "slug": "shelves--storytelling-with-data",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 13163,
+          "estimated_tokens": 3291,
+          "bytes": 13196
+        },
+        "packaged": {
+          "nested": {
+            "characters": 59564,
+            "estimated_tokens": 14891,
+            "bytes": 59705
+          },
+          "flat": {
+            "characters": 59564,
+            "estimated_tokens": 14891,
+            "bytes": 59705
+          },
+          "claude-code": {
+            "characters": 59564,
+            "estimated_tokens": 14891,
+            "bytes": 59705
+          },
+          "craft-agent": {
+            "characters": 59564,
+            "estimated_tokens": 14891,
+            "bytes": 59705
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 13163,
+          "estimated_tokens": 3291,
+          "bytes": 13196
+        },
+        "packaged": {
+          "nested": {
+            "characters": 59564,
+            "estimated_tokens": 14891,
+            "bytes": 59705
+          },
+          "flat": {
+            "characters": 59564,
+            "estimated_tokens": 14891,
+            "bytes": 59705
+          },
+          "claude-code": {
+            "characters": 59564,
+            "estimated_tokens": 14891,
+            "bytes": 59705
+          },
+          "craft-agent": {
+            "characters": 59564,
+            "estimated_tokens": 14891,
+            "bytes": 59705
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/storytelling/tufte-data-viz/SKILL.md",
+      "slug": "shelves--tufte-data-viz",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 20678,
+          "estimated_tokens": 5170,
+          "bytes": 20729
+        },
+        "packaged": {
+          "nested": {
+            "characters": 20751,
+            "estimated_tokens": 5188,
+            "bytes": 20802
+          },
+          "flat": {
+            "characters": 20751,
+            "estimated_tokens": 5188,
+            "bytes": 20802
+          },
+          "claude-code": {
+            "characters": 20751,
+            "estimated_tokens": 5188,
+            "bytes": 20802
+          },
+          "craft-agent": {
+            "characters": 20751,
+            "estimated_tokens": 5188,
+            "bytes": 20802
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 20678,
+          "estimated_tokens": 5170,
+          "bytes": 20729
+        },
+        "packaged": {
+          "nested": {
+            "characters": 20751,
+            "estimated_tokens": 5188,
+            "bytes": 20802
+          },
+          "flat": {
+            "characters": 20751,
+            "estimated_tokens": 5188,
+            "bytes": 20802
+          },
+          "claude-code": {
+            "characters": 20751,
+            "estimated_tokens": 5188,
+            "bytes": 20802
+          },
+          "craft-agent": {
+            "characters": 20751,
+            "estimated_tokens": 5188,
+            "bytes": 20802
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/shelves/systems-architecture/data-intensive/SKILL.md",
+      "slug": "shelves--data-intensive",
+      "kind": "reference-shelf",
+      "classification": "reference-only",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "never",
+      "baseline": {
+        "authored": {
+          "characters": 23688,
+          "estimated_tokens": 5922,
+          "bytes": 23689
+        },
+        "packaged": {
+          "nested": {
+            "characters": 122056,
+            "estimated_tokens": 30514,
+            "bytes": 122057
+          },
+          "flat": {
+            "characters": 122056,
+            "estimated_tokens": 30514,
+            "bytes": 122057
+          },
+          "claude-code": {
+            "characters": 122056,
+            "estimated_tokens": 30514,
+            "bytes": 122057
+          },
+          "craft-agent": {
+            "characters": 122056,
+            "estimated_tokens": 30514,
+            "bytes": 122057
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 23688,
+          "estimated_tokens": 5922,
+          "bytes": 23689
+        },
+        "packaged": {
+          "nested": {
+            "characters": 122056,
+            "estimated_tokens": 30514,
+            "bytes": 122057
+          },
+          "flat": {
+            "characters": 122056,
+            "estimated_tokens": 30514,
+            "bytes": 122057
+          },
+          "claude-code": {
+            "characters": 122056,
+            "estimated_tokens": 30514,
+            "bytes": 122057
+          },
+          "craft-agent": {
+            "characters": 122056,
+            "estimated_tokens": 30514,
+            "bytes": 122057
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/spark/SKILL.md",
+      "slug": "spark",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 6292,
+          "estimated_tokens": 1573,
+          "bytes": 6294
+        },
+        "packaged": {
+          "nested": {
+            "characters": 26293,
+            "estimated_tokens": 6574,
+            "bytes": 26299
+          },
+          "flat": {
+            "characters": 26293,
+            "estimated_tokens": 6574,
+            "bytes": 26299
+          },
+          "claude-code": {
+            "characters": 26293,
+            "estimated_tokens": 6574,
+            "bytes": 26299
+          },
+          "craft-agent": {
+            "characters": 26293,
+            "estimated_tokens": 6574,
+            "bytes": 26299
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 6292,
+          "estimated_tokens": 1573,
+          "bytes": 6294
+        },
+        "packaged": {
+          "nested": {
+            "characters": 26293,
+            "estimated_tokens": 6574,
+            "bytes": 26299
+          },
+          "flat": {
+            "characters": 26293,
+            "estimated_tokens": 6574,
+            "bytes": 26299
+          },
+          "claude-code": {
+            "characters": 26293,
+            "estimated_tokens": 6574,
+            "bytes": 26299
+          },
+          "craft-agent": {
+            "characters": 26293,
+            "estimated_tokens": 6574,
+            "bytes": 26299
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/spatial/SKILL.md",
+      "slug": "spatial",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 10947,
+          "estimated_tokens": 2737,
+          "bytes": 11071
+        },
+        "packaged": {
+          "nested": {
+            "characters": 197094,
+            "estimated_tokens": 49274,
+            "bytes": 197887
+          },
+          "flat": {
+            "characters": 197094,
+            "estimated_tokens": 49274,
+            "bytes": 197887
+          },
+          "claude-code": {
+            "characters": 197094,
+            "estimated_tokens": 49274,
+            "bytes": 197887
+          },
+          "craft-agent": {
+            "characters": 197094,
+            "estimated_tokens": 49274,
+            "bytes": 197887
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 10967,
+          "estimated_tokens": 2742,
+          "bytes": 11091
+        },
+        "packaged": {
+          "nested": {
+            "characters": 197114,
+            "estimated_tokens": 49279,
+            "bytes": 197907
+          },
+          "flat": {
+            "characters": 197114,
+            "estimated_tokens": 49279,
+            "bytes": 197907
+          },
+          "claude-code": {
+            "characters": 197114,
+            "estimated_tokens": 49279,
+            "bytes": 197907
+          },
+          "craft-agent": {
+            "characters": 197114,
+            "estimated_tokens": 49279,
+            "bytes": 197907
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/sql/SKILL.md",
+      "slug": "sql",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 5272,
+          "estimated_tokens": 1318,
+          "bytes": 5272
+        },
+        "packaged": {
+          "nested": {
+            "characters": 25446,
+            "estimated_tokens": 6362,
+            "bytes": 25446
+          },
+          "flat": {
+            "characters": 25446,
+            "estimated_tokens": 6362,
+            "bytes": 25446
+          },
+          "claude-code": {
+            "characters": 25446,
+            "estimated_tokens": 6362,
+            "bytes": 25446
+          },
+          "craft-agent": {
+            "characters": 25446,
+            "estimated_tokens": 6362,
+            "bytes": 25446
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 5272,
+          "estimated_tokens": 1318,
+          "bytes": 5272
+        },
+        "packaged": {
+          "nested": {
+            "characters": 25446,
+            "estimated_tokens": 6362,
+            "bytes": 25446
+          },
+          "flat": {
+            "characters": 25446,
+            "estimated_tokens": 6362,
+            "bytes": 25446
+          },
+          "claude-code": {
+            "characters": 25446,
+            "estimated_tokens": 6362,
+            "bytes": 25446
+          },
+          "craft-agent": {
+            "characters": 25446,
+            "estimated_tokens": 6362,
+            "bytes": 25446
+          }
+        }
+      }
+    },
+    {
+      "source": "skills/unity-catalog/SKILL.md",
+      "slug": "unity-catalog",
+      "kind": "skill",
+      "classification": "reusable-global",
+      "known_consumers": "UNKNOWN",
+      "consumer_evidence": "UNKNOWN: no verified production consumer identity; inbound references do not prove usage",
+      "auto_select": "explicit-signal-only",
+      "baseline": {
+        "authored": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "bytes": 7743
+        },
+        "packaged": {
+          "nested": {
+            "characters": 7781,
+            "estimated_tokens": 1946,
+            "bytes": 7781
+          },
+          "flat": {
+            "characters": 7781,
+            "estimated_tokens": 1946,
+            "bytes": 7781
+          },
+          "claude-code": {
+            "characters": 7781,
+            "estimated_tokens": 1946,
+            "bytes": 7781
+          },
+          "craft-agent": {
+            "characters": 7781,
+            "estimated_tokens": 1946,
+            "bytes": 7781
+          }
+        }
+      },
+      "current": {
+        "authored": {
+          "characters": 7743,
+          "estimated_tokens": 1936,
+          "bytes": 7743
+        },
+        "packaged": {
+          "nested": {
+            "characters": 7781,
+            "estimated_tokens": 1946,
+            "bytes": 7781
+          },
+          "flat": {
+            "characters": 7781,
+            "estimated_tokens": 1946,
+            "bytes": 7781
+          },
+          "claude-code": {
+            "characters": 7781,
+            "estimated_tokens": 1946,
+            "bytes": 7781
+          },
+          "craft-agent": {
+            "characters": 7781,
+            "estimated_tokens": 1946,
+            "bytes": 7781
+          }
+        }
+      }
+    }
+  ]
+}

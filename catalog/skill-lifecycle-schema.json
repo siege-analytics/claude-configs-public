@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/siege-analytics/claude-configs-public/catalog/skill-lifecycle-schema.json",
+  "title": "Skill and rule lifecycle metadata",
+  "description": "Governance metadata for canonical skill/rule sources. Project tier and owner may be inherited from projects/<slug>/PROJECT.md; other fields are source frontmatter.",
+  "type": "object",
+  "required": [
+    "tier",
+    "owner",
+    "status",
+    "last-reviewed",
+    "verification"
+  ],
+  "properties": {
+    "tier": {
+      "enum": ["kernel", "on-demand", "project", "reference"]
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": ["experimental", "active", "deprecated", "retired"]
+    },
+    "last-reviewed": {
+      "type": "string",
+      "format": "date"
+    },
+    "verification": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Test path, command, or explicit none:<reason>."
+    },
+    "supersedes": {
+      "type": "string"
+    },
+    "superseded-by": {
+      "type": "string"
+    },
+    "retirement-rationale": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"status": {"const": "deprecated"}},
+        "required": ["status"]
+      },
+      "then": {"required": ["superseded-by"]}
+    },
+    {
+      "if": {
+        "properties": {"status": {"const": "retired"}},
+        "required": ["status"]
+      },
+      "then": {
+        "anyOf": [
+          {"required": ["superseded-by"]},
+          {"required": ["retirement-rationale"]}
+        ]
+      }
+    }
+  ],
+  "additionalProperties": true
+}

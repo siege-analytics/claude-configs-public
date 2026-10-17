@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "contract_version": "1.2.0",
+  "ontology_version": "1.0.0",
+  "decision_values": [
+    "allow",
+    "deny",
+    "not-applicable",
+    "unknown",
+    "error"
+  ],
+  "capability_states": [
+    "verified",
+    "unsupported",
+    "unverified"
+  ],
+  "policy_fields": [
+    {
+      "id": "branch-policy",
+      "ontology_term": "policy",
+      "owner": "project-profile",
+      "scope": "repository",
+      "value_schema": {
+        "type": "object",
+        "properties": {
+          "integration_branch": {
+            "type": "string",
+            "enum": [
+              "trunk",
+              "release"
+            ]
+          },
+          "local_feedback": {
+            "type": "string",
+            "enum": [
+              "native-git-pre-push"
+            ]
+          },
+          "protected_acceptance": {
+            "type": "string",
+            "enum": [
+              "exact-range-and-head"
+            ]
+          }
+        },
+        "required": [
+          "integration_branch",
+          "local_feedback",
+          "protected_acceptance"
+        ],
+        "additional_properties": false
+      },
+      "default": {
+        "integration_branch": "trunk",
+        "local_feedback": "native-git-pre-push",
+        "protected_acceptance": "exact-range-and-head"
+      },
+      "override_policy": {
+        "organization_profile_paths": [
+          "integration_branch"
+        ],
+        "project_paths": [],
+        "locked_paths": [
+          "local_feedback",
+          "protected_acceptance"
+        ]
+      },
+      "required_capability_ids": [
+        "project-review"
+      ]
+    },
+    {
+      "id": "ticket-requirement",
+      "ontology_term": "policy",
+      "owner": "project-profile",
+      "scope": "commit-message",
+      "value_schema": {
+        "type": "object",
+        "properties": {
+          "required": {
+            "type": "boolean"
+          },
+          "match_policy": {
+            "type": "string",
+            "enum": [
+              "canonical-ticket-reference-v1"
+            ]
+          },
+          "exception_policy": {
+            "type": "string",
+            "enum": [
+              "scoped-evidence-record-only"
+            ]
+          }
+        },
+        "required": [
+          "required",
+          "match_policy",
+          "exception_policy"
+        ],
+        "additional_properties": false
+      },
+      "default": {
+        "required": false,
+        "match_policy": "canonical-ticket-reference-v1",
+        "exception_policy": "scoped-evidence-record-only"
+      },
+      "override_policy": {
+        "organization_profile_paths": [],
+        "project_paths": [],
+        "locked_paths": [
+          "required",
+          "match_policy",
+          "exception_policy"
+        ]
+      },
+      "required_capability_ids": [
+        "project-review"
+      ]
+    },
+    {
+      "id": "review-procedure-binding",
+      "ontology_term": "procedure-binding",
+      "owner": "project-profile",
+      "scope": "review-procedure",
+      "value_schema": {
+        "type": "object",
+        "properties": {
+          "procedure": {
+            "type": "string",
+            "pattern": "[a-z][a-z0-9-]*(?:--[a-z][a-z0-9-]*)?"
+          },
+          "authorization_effect": {
+            "type": "string",
+            "enum": [
+              "none"
+            ]
+          }
+        },
+        "required": [
+          "procedure",
+          "authorization_effect"
+        ],
+        "additional_properties": false
+      },
+      "default": {
+        "procedure": "independent--review",
+        "authorization_effect": "none"
+      },
+      "override_policy": {
+        "organization_profile_paths": [],
+        "project_paths": [
+          "procedure"
+        ],
+        "locked_paths": [
+          "authorization_effect"
+        ]
+      },
+      "required_capability_ids": [
+        "project-review"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "project-review",
+      "ontology_term": "host-capability",
+      "boundary": "procedure-selection",
+      "kind": "declarative",
+      "registered_path": "projects/independent/skills/review/SKILL.md",
+      "input_contract": [
+        "qualified-procedure-id",
+        "repository-identity"
+      ],
+      "result_contract": {
+        "type": "decision",
+        "allow": [
+          0
+        ],
+        "deny": [
+          1
+        ],
+        "error": [
+          2
+        ]
+      },
+      "failure_semantics": "unknown-never-allow",
+      "package_paths": [],
+      "acceptance_probe_ids": [
+        "project-review-resolves"
+      ],
+      "configured_evidence_only": true
+    }
+  ]
+}

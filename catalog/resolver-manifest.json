@@ -1,0 +1,860 @@
+{
+  "schema_version": 1,
+  "kernel": "skills/KERNEL.md",
+  "policy": {
+    "unknown": "kernel-only-visible",
+    "ambiguous": "kernel-only-visible",
+    "shelves_auto_select": false,
+    "ordering": "priority-descending-then-route-id"
+  },
+  "routes": [
+    {
+      "id": "git-branch",
+      "priority": 100,
+      "terms": [
+        "create branch",
+        "new branch",
+        "checkout branch"
+      ],
+      "skills": [
+        "branch"
+      ]
+    },
+    {
+      "id": "git-commit",
+      "priority": 100,
+      "terms": [
+        "commit changes",
+        "git commit",
+        "create commit"
+      ],
+      "skills": [
+        "commit"
+      ]
+    },
+    {
+      "id": "git-pr",
+      "priority": 100,
+      "terms": [
+        "open pr",
+        "create pr",
+        "pull request"
+      ],
+      "skills": [
+        "create-pr"
+      ]
+    },
+    {
+      "id": "git-merge",
+      "priority": 100,
+      "terms": [
+        "merge pr",
+        "merge pull request"
+      ],
+      "skills": [
+        "merge"
+      ]
+    },
+    {
+      "id": "code-review",
+      "priority": 90,
+      "terms": [
+        "review this pr",
+        "review this diff",
+        "code review"
+      ],
+      "skills": [
+        "code-review"
+      ]
+    },
+    {
+      "id": "skill-authoring",
+      "priority": 90,
+      "terms": [
+        "create a skill",
+        "audit skills",
+        "fix this skill",
+        "skill library"
+      ],
+      "skills": [
+        "skillbuilder"
+      ]
+    },
+    {
+      "id": "ticketing",
+      "priority": 85,
+      "exclusive_group": "ticket-action",
+      "terms": [
+        "create ticket",
+        "create tickets",
+        "create issue",
+        "create issues",
+        "file a ticket",
+        "file an issue",
+        "open a ticket"
+      ],
+      "skills": [
+        "ticket-guard",
+        "create-ticket"
+      ]
+    },
+    {
+      "id": "ticketing-update",
+      "priority": 85,
+      "exclusive_group": "ticket-action",
+      "terms": [
+        "update ticket",
+        "update tickets",
+        "update issue",
+        "update issues",
+        "edit ticket",
+        "edit issue"
+      ],
+      "skills": [
+        "ticket-guard",
+        "update-ticket"
+      ]
+    },
+    {
+      "id": "ticketing-close",
+      "priority": 85,
+      "exclusive_group": "ticket-action",
+      "terms": [
+        "close ticket",
+        "close tickets",
+        "close issue",
+        "close issues",
+        "mark ticket closed",
+        "mark issue closed"
+      ],
+      "skills": [
+        "ticket-guard",
+        "close-ticket"
+      ]
+    },
+    {
+      "id": "python",
+      "priority": 70,
+      "terms": [
+        "python",
+        "pytest",
+        "pyproject"
+      ],
+      "suffixes": [
+        ".py"
+      ],
+      "skills": [
+        "coding",
+        "python"
+      ]
+    },
+    {
+      "id": "testing",
+      "priority": 70,
+      "terms": [
+        "write tests",
+        "test coverage",
+        "regression test"
+      ],
+      "skills": [
+        "testing-frameworks",
+        "test-coverage-audit"
+      ]
+    },
+    {
+      "id": "sql",
+      "priority": 70,
+      "terms": [
+        "sql",
+        "postgres",
+        "query"
+      ],
+      "suffixes": [
+        ".sql"
+      ],
+      "skills": [
+        "coding",
+        "sql"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "analyze",
+        "edit"
+      ]
+    },
+    {
+      "id": "spatial",
+      "priority": 75,
+      "terms": [
+        "geospatial",
+        "spatial join",
+        "postgis",
+        "geopandas",
+        "sedona",
+        "duckdb spatial",
+        "spatial analysis"
+      ],
+      "skills": [
+        "spatial"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "analyze",
+        "edit"
+      ],
+      "exclude_pure_visualization": true
+    },
+    {
+      "id": "spark",
+      "priority": 75,
+      "terms": [
+        "pyspark",
+        "spark dataframe",
+        "spark sql"
+      ],
+      "skills": [
+        "spark"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "edit"
+      ]
+    },
+    {
+      "id": "databricks",
+      "priority": 75,
+      "terms": [
+        "databricks",
+        "unity catalog",
+        "delta table"
+      ],
+      "skills": [
+        "databricks",
+        "unity-catalog"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "register",
+        "save",
+        "edit"
+      ]
+    },
+    {
+      "id": "django",
+      "priority": 75,
+      "terms": [
+        "django",
+        "migration",
+        "queryset"
+      ],
+      "skills": [
+        "django"
+      ]
+    },
+    {
+      "id": "django-rest-framework",
+      "priority": 78,
+      "terms": [
+        "django rest framework",
+        "django-rest-framework",
+        "drf",
+        "rest_framework"
+      ],
+      "skills": [
+        "coding",
+        "python",
+        "django",
+        "django-rest-framework"
+      ]
+    },
+    {
+      "id": "react",
+      "priority": 75,
+      "terms": [
+        "react",
+        "tsx",
+        "jsx"
+      ],
+      "suffixes": [
+        ".tsx",
+        ".jsx"
+      ],
+      "skills": [
+        "react"
+      ]
+    },
+    {
+      "id": "typescript",
+      "priority": 76,
+      "terms": [
+        "typescript",
+        "tsx"
+      ],
+      "suffixes": [
+        ".ts",
+        ".tsx"
+      ],
+      "skills": [
+        "coding",
+        "typescript"
+      ]
+    },
+    {
+      "id": "vue",
+      "priority": 75,
+      "terms": [
+        "vue",
+        "pinia"
+      ],
+      "suffixes": [
+        ".vue"
+      ],
+      "skills": [
+        "vue"
+      ]
+    },
+    {
+      "id": "rust",
+      "priority": 75,
+      "terms": [
+        "rust",
+        "cargo.toml"
+      ],
+      "suffixes": [
+        ".rs"
+      ],
+      "skills": [
+        "coding",
+        "rust"
+      ]
+    },
+    {
+      "id": "session-recovery",
+      "priority": 95,
+      "terms": [
+        "stalled session",
+        "context limit",
+        "session recovery"
+      ],
+      "skills": [
+        "stalled-session-recovery"
+      ]
+    },
+    {
+      "id": "release",
+      "priority": 95,
+      "terms": [
+        "release",
+        "publish",
+        "deploy",
+        "tag version"
+      ],
+      "skills": [
+        "develop-guard"
+      ]
+    },
+    {
+      "id": "pipeline-jobs",
+      "priority": 77,
+      "terms": [
+        "etl pipeline",
+        "data pipeline job",
+        "pipeline script",
+        "airflow dag",
+        "rundeck job",
+        "scheduled data processing",
+        "recurring pipeline job",
+        "etl job",
+        "batch data processing job",
+        "schedule pipeline"
+      ],
+      "skills": [
+        "pipeline-jobs"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze"
+      ],
+      "exclude_terms": [
+        "java",
+        "scala"
+      ]
+    },
+    {
+      "id": "analysis-methods",
+      "priority": 76,
+      "terms": [
+        "statistical modeling",
+        "hypothesis testing",
+        "regression analysis",
+        "entity matching",
+        "record linkage",
+        "graph analysis",
+        "spatial analysis",
+        "statistical analysis",
+        "analyze distributions",
+        "sampling analysis",
+        "geospatial analysis"
+      ],
+      "skills": [
+        "analysis"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze"
+      ]
+    },
+    {
+      "id": "unity-catalog-write",
+      "priority": 79,
+      "terms": [
+        "saveastable",
+        "catalog-managed s3",
+        "s3a://hive-warehouse",
+        "s3://silver",
+        "s3://gold",
+        "raw delta path",
+        "raw parquet path",
+        "raw iceberg path",
+        "register table in unity catalog",
+        "register table in hive metastore",
+        "delta to s3",
+        "parquet to s3",
+        "iceberg to s3",
+        "df.write.parquet",
+        "delta path",
+        "parquet path",
+        "iceberg path",
+        "register table",
+        "write delta",
+        "write parquet",
+        "write iceberg",
+        "write orc",
+        "orc to s3",
+        "s3://bronze",
+        "insert overwrite table",
+        "insertinto",
+        "using delta location",
+        "hive metastore",
+        "register analytics table",
+        "write.format(\"delta\")",
+        "write.format(\"iceberg\")",
+        "write.format('delta')",
+        "write.format('iceberg')"
+      ],
+      "skills": [
+        "unity-catalog"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "call",
+        "modify",
+        "touch",
+        "insert",
+        "edit"
+      ]
+    },
+    {
+      "id": "scala-on-spark",
+      "priority": 78,
+      "terms": [
+        "scala spark",
+        "scala on spark",
+        "scala databricks",
+        "%scala",
+        "dataset[t]"
+      ],
+      "skills": [
+        "scala-on-spark",
+        "spark"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design"
+      ],
+      "suffixes": [
+        ".scala"
+      ],
+      "context_terms": [
+        "spark",
+        "databricks",
+        "dataset[t]",
+        "%scala"
+      ]
+    },
+    {
+      "id": "postgis-engine",
+      "priority": 78,
+      "terms": [
+        "postgis",
+        "postgis extension",
+        "postgis sql",
+        "st_intersects in postgres",
+        "st_dwithin in postgres",
+        "st_contains in postgres"
+      ],
+      "skills": [
+        "postgis",
+        "sql",
+        "spatial"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ],
+      "exclude_pure_visualization": true
+    },
+    {
+      "id": "geopandas-engine",
+      "priority": 78,
+      "terms": [
+        "geopandas",
+        "gpd.sjoin",
+        "geodataframe",
+        "shapely.geometry",
+        "gpd.overlay",
+        "gpd.to_file"
+      ],
+      "skills": [
+        "geopandas",
+        "spatial"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ],
+      "exclude_pure_visualization": true
+    },
+    {
+      "id": "sedona-engine",
+      "priority": 78,
+      "terms": [
+        "sedona",
+        "sedonacontext",
+        "sedonaregistrator"
+      ],
+      "skills": [
+        "sedona",
+        "spark",
+        "spatial"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ],
+      "exclude_pure_visualization": true
+    },
+    {
+      "id": "duckdb-spatial-engine",
+      "priority": 78,
+      "terms": [
+        "duckdb spatial",
+        "duckdb-spatial",
+        "duckdb spatial extension",
+        "st_read in duckdb",
+        "geoparquet without gdal",
+        "st_read",
+        "duckdb install spatial",
+        "duckdb load spatial"
+      ],
+      "skills": [
+        "duckdb-spatial",
+        "sql",
+        "spatial"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ],
+      "all_terms": [
+        "import duckdb",
+        "install spatial"
+      ],
+      "exclude_pure_visualization": true
+    },
+    {
+      "id": "unity-catalog-insert",
+      "priority": 79,
+      "terms": [
+        "insert into"
+      ],
+      "context_terms": [
+        "spark",
+        "unity catalog",
+        "hive metastore",
+        "catalog-managed",
+        "delta table",
+        "s3://bronze",
+        "s3://silver",
+        "s3://gold"
+      ],
+      "verbs": [
+        "insert",
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "edit",
+        "run",
+        "analyze"
+      ],
+      "skills": [
+        "unity-catalog"
+      ]
+    },
+    {
+      "id": "unity-catalog-sparkapplication",
+      "priority": 79,
+      "terms": [
+        "sparkapplication crd"
+      ],
+      "required_groups": [
+        [
+          "writes",
+          "writing"
+        ],
+        [
+          "delta",
+          "parquet"
+        ],
+        [
+          "shared storage"
+        ]
+      ],
+      "verbs": [
+        "modify",
+        "review",
+        "implement",
+        "write",
+        "fix"
+      ],
+      "skills": [
+        "unity-catalog"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "siege-utilities",
+      "repos": [
+        "github.com/siege-analytics/siege_utilities"
+      ],
+      "always": [
+        "siege-utilities--rules"
+      ],
+      "routes": [
+        {
+          "id": "su-review",
+          "priority": 110,
+          "terms": [
+            "review",
+            "pull request",
+            "diff"
+          ],
+          "skills": [
+            "siege-utilities--hostile-review"
+          ]
+        },
+        {
+          "id": "su-contract",
+          "priority": 110,
+          "terms": [
+            "signature",
+            "return type",
+            "exception contract"
+          ],
+          "skills": [
+            "siege-utilities--notebook-impact"
+          ]
+        },
+        {
+          "id": "su-error-tests",
+          "priority": 110,
+          "terms": [
+            "error path",
+            "exception test"
+          ],
+          "skills": [
+            "siege-utilities--error-path-tests"
+          ]
+        }
+      ]
+    }
+  ],
+  "explicit_stacks": {
+    "django-rest-framework": [
+      "coding",
+      "django",
+      "python"
+    ],
+    "typescript": [
+      "coding"
+    ],
+    "rust": [
+      "coding"
+    ]
+  }
+}

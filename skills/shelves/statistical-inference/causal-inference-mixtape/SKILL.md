@@ -117,4 +117,4 @@ For repeated observations of the same units over time, panel-data methods contro
 
 ## See also
 
-- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` -- context on why Mixtape was the applied-causal complement to What If on the statistical-inference shelf. Operator wanted "all three" statistical flavors; Mixtape + What If together cover the causal flavor at both applied and theoretical depth.
+- Session 260502-pure-vista's unavailable historical session plan (not shipped in this repository; provenance only, not a local reading target) -- context on why Mixtape was the applied-causal complement to What If on the statistical-inference shelf. Operator wanted "all three" statistical flavors; Mixtape + What If together cover the causal flavor at both applied and theoretical depth.

@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "id": "siege",
+  "publisher": {
+    "id": "siege",
+    "skills_root": "skills",
+    "qualified": false
+  },
+  "requires_profiles": []
+}

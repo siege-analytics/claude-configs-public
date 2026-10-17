@@ -22,17 +22,17 @@ allowed-tools: Bash
 > | **Gitflow** (a develop-role branch exists; recent merged PRs target it) | the develop-role branch | Feature/task/bugfix branches merge to the develop-role branch; the main-role branch only receives commits via promotion from develop-role or back-merged hotfix. `main-role` ⊆ `develop-role`. |
 > | **GitHub Flow / Trunk-based** (no develop-role branch, or it is decorative; recent merged PRs target main-role) | the main-role branch itself | Feature/task/bugfix branches merge to main-role via PR; the PR review is the curation gate. Only blessed work lands; half-baked work stays on its feature branch. |
 >
-> **Don't fight the repo's actual workflow.** Detect which mode the repo is in (next section); apply the rule's substantive shape (curate, don't bypass), not its surface (literal branch name).
+> **Do not override an explicit project topology.** This repository mandates feature/fix → develop → main (K5); observed PR history may reveal drift but cannot authorize main-direct work. In other projects, detect mode and ask when uncertain; never silently create or push an integration branch.
 
 # Instructions
 
-This skill is a guardrail that runs before branching or merging. It enforces the curation invariant above per the repo's actual workflow mode.
+This skill is a guardrail that runs before branching or merging. A declared project topology takes precedence over observed workflow history.
 
-1. **Detect the repo's workflow mode** (see Mode detection below). Sample the last ~10 merged PRs on `main`'s history: if most/all had `base=main`, the repo is **GitHub Flow / Trunk-based**; if most/all had `base=develop` (or synonym), the repo is **Gitflow**.
-2. **Apply the mode's branching rule:**
+1. **Verify the declared topology, then detect workflow drift** (see Mode detection below). Sample the last ~10 merged PR bases; main-direct history in a declared develop-first repository is drift to surface, not permission to change the PR base.
+2. **Apply the declared project topology first (this repository: develop-first), then the verified mode where no project policy exists:**
    - *Gitflow*: branch from `develop`; PR base is `develop`; merges to main are promotion events that require explicit user approval. A `promote/*` branch may target `main` only when it represents an already-merged `develop` tree and the PR body carries `Self-Review-Source: <artifact>` evidence.
    - *GitHub Flow*: branch from `main`; PR base is `main`; the PR review IS the curation gate. Don't insist on a develop layer the repo doesn't use.
-3. **If Gitflow but `develop` is missing or stale relative to main** -- STOP. Ask the user before creating develop OR before doing a sync. Do not silently create the branch or silently fall through to main. The recurring stale-develop pattern is itself a signal that the repo may actually be GitHub Flow with an aspirational develop; surface that observation.
+3. **If a declared develop-first project has a missing or stale integration branch** -- STOP. Ask the user before creating develop or syncing. Do not silently create the branch or fall through to main. Repeated stale-develop history may signal drift; surface it without changing the declared topology.
 4. **Before any merge to main, verify the user intended it** (Gitflow: this is a release event; GitHub Flow: this is the standard PR merge -- still confirm scope on first PR open per session).
 
 # Develop-role branch detection
@@ -60,22 +60,22 @@ If any synonym is found, use it as the integration branch. Do not rename it -- a
 
 If multiple develop-role synonyms exist (e.g., both `dev` and `staging`), ask the user which is the primary integration branch.
 
-## Stale-develop detection (Gitflow repos only)
+## Stale-develop detection (declared develop-first or verified Gitflow repos)
 
-This check applies only when Mode detection has identified the repo as Gitflow. If recent merged PRs target main (GitHub Flow), staleness of a decorative develop branch is not a blocking concern -- that's the workflow.
+This check applies when project policy requires develop-first or when an undeclared project's verified mode is Gitflow. If recent merged PRs target main, this may be drift: check the declared project policy before treating develop as decorative. For this repository staleness blocks branching regardless of PR history.
 
-For Gitflow repos:
+For develop-first repos:
 
 ```bash
 # Commits on main but not on develop (this set must be empty for develop to be a true superset)
 git log --oneline origin/develop..origin/main | head
 ```
 
-If that command returns ANY commits in a confirmed-Gitflow repo, develop is stale relative to main. **Stop branching** and surface to the user:
+If that command returns ANY commits in a develop-first repo, develop is stale relative to main. **Stop branching** and surface to the user:
 
-> `develop` is behind `main` by N commits. Per the curation invariant for this Gitflow repo, `main` ⊆ `develop`. I can either (a) open a sync PR to merge `main` into `develop` before opening the feature branch, or (b) target `main` for this single piece of work and file a sync ticket for later, or (c) reconsider whether this repo is actually Gitflow given the pattern of main-direct PRs that produced the staleness. Which?
+> `develop` is behind `main` by N commits. The declared topology requires `main` ⊆ `develop`. Should we open a reviewed sync PR into `develop`, or investigate whether project topology should change? I will not branch or target `main` directly without a separately approved policy change.
 
-Do not silently choose any option -- it's a judgement call the user should make. The "(c) reconsider mode" option is on the menu precisely because recurring stale-develop is itself a signal that the repo may be operating as GitHub Flow despite the branch existing.
+Do not silently choose an option; changing declared topology requires an explicit project policy decision, not just a single PR override.
 
 # Creating develop when missing
 
@@ -83,9 +83,9 @@ If no integration branch exists (no `develop`, no synonym):
 
 1. **ASK FIRST.** Do not silently create the branch. Phrase it explicitly:
 
-   > This repository has no `develop` branch (and no synonym -- `dev`, `development`, `staging`, `next`, `integration`, `trunk`). The develop-first workflow needs an integration branch. Should I create one from `main` for this repository going forward, or target `main` directly for this single piece of work?
+   > This repository has no `develop` branch (and no synonym -- `dev`, `development`, `staging`, `next`, `integration`, `trunk`). The develop-first workflow needs an integration branch. Should we explicitly approve creation of an integration branch from verified `main`, or stop and decide a different documented topology? I will not target `main` directly under a develop-first project policy.
 
-   The "create develop" answer is the workflow default, but the user owns the decision to onboard a repository to the workflow.
+   The user owns the decision to onboard a repository to the workflow. Never treat creation or push as implicit.
 
 2. After explicit user approval, **create and push**:
 
@@ -125,7 +125,7 @@ Merge target is main?
 │   └── User did NOT request it? → Ask first, explain hotfix flow
 ├── Source is any other branch?
 │   └── STOP. Inform user: "Feature branches should merge to develop, not main."
-│       ├── User overrides? → Proceed with warning
+│       ├── User overrides? → STOP under a develop-first project policy; require a separate policy change
 │       └── User agrees? → Redirect merge to develop
 └── Direct commit to main? → STOP. "All changes should go through a branch."
 ```
@@ -140,7 +140,7 @@ or
 
 > This branch (`feature/xyz`) targets `main` directly. The standard workflow is to merge into `develop` first. Should I:
 > 1. Merge into `develop` instead (recommended)
-> 2. Merge into `main` anyway (release/hotfix)
+> 2. Stop and request a separate topology/policy decision (no direct feature merge to main)
 
 Be clear about what you're doing and why you're asking.
 
@@ -154,11 +154,11 @@ gh pr list --repo "$OWNER/$REPO" --state merged --limit 10 \
 ```
 
 Decision rule:
-- **All / nearly-all merged PRs based on `main`** → repo is **GitHub Flow** (or trunk-based). The PR review is the curation gate. Branch from main; PR to main. If `develop` exists, it's decorative -- flag this to the user as a possible cleanup but do not insist on using it.
+- **All / nearly-all merged PRs based on `main`** → in a project without a declared integration policy this suggests GitHub Flow; branch from main only after verifying topology. In a declared develop-first project, flag drift and retain develop as the base.
 - **All / nearly-all merged PRs based on `develop` (or synonym)** → repo is **Gitflow**. Branch from develop; PR to develop. Merges to main are release events.
 - **Mixed** → ASK the user which mode the repo should be in. A mixed history is itself a smell (workflow drift); don't pick on the agent's behalf.
 
-A `develop` branch that exists but receives no PRs is NOT evidence of Gitflow -- it's evidence of a workflow that aspires to Gitflow but operates as GitHub Flow. Treat the repo by its actual workflow (PR-base history), not its branch-list pretensions.
+A `develop` branch that exists but receives no PRs is NOT evidence of Gitflow -- it's evidence of a workflow that aspires to Gitflow but operates as GitHub Flow. Surface observed workflow and check declared project topology; PR-base history cannot silently override this repository's develop-first policy.
 
 # Repository setup patterns
 
@@ -168,7 +168,7 @@ A `develop` branch that exists but receives no PRs is NOT evidence of Gitflow --
 | **GitHub Flow** | main + feature/* | Recent merged PRs target main; `develop` is absent OR decorative |
 | **Trunk-based** | main only, short-lived branches | Same as GitHub Flow with even shorter branch lifetimes |
 
-**Aspirational-Gitflow gotcha:** if `develop` exists but recent merged PRs all target main, this repo is operating as GitHub Flow despite the branch existing. Don't force a Gitflow merge sequence on it -- that's the rule fighting the workflow. Surface the observation; let the user decide whether to (a) accept GitHub Flow and document it, (b) migrate the repo to Gitflow via a one-time sync, or (c) something else.
+**Aspirational-Gitflow gotcha:** if `develop` exists but recent merged PRs all target main, this repo is operating as GitHub Flow despite the branch existing. Surface the observation and ask about a policy decision. Under an existing develop-first declaration, do not switch to main-direct work or silently sync/create branches.
 
 **Onboarding a new repo to Gitflow:** if the user explicitly tells you a repo SHOULD be Gitflow but isn't yet (no develop, or develop stale), don't silently create / sync. Ask first -- onboarding has migration cost and the user should own that decision.
 
@@ -176,7 +176,7 @@ A `develop` branch that exists but receives no PRs is NOT evidence of Gitflow --
 
 ## Newly initialised repository
 
-For a brand new repository with only an initial commit on main:
+For a brand new repository with only an initial commit on main, **ask for explicit approval** before the following steps:
 
 ```bash
 git checkout -b develop
@@ -187,7 +187,7 @@ git push -u origin develop
 
 Some feature branches may already target main. When you encounter this:
 
-1. Create develop from main
+1. Ask and verify topology, then create develop from main only after explicit approval
 2. For new branches going forward, branch from develop
 3. Do not retroactively rebase existing branches unless the user asks
 
@@ -216,10 +216,10 @@ When this skill fires on a Gitflow repo missing the guard, propose adding it -- 
 
 # Checklist
 
-- [ ] Detected the repo's **workflow mode** (Gitflow vs GitHub Flow) by sampling recent merged PR bases
-- [ ] Picked branch / PR-base per the detected mode (develop for Gitflow; main for GitHub Flow)
-- [ ] *Gitflow only*: checked that develop is a superset of main; if not, surfaced sync decision to user with the "reconsider mode" option on the menu
-- [ ] *Gitflow only*: if develop missing or stale, **asked the user** before creating / syncing (no silent action)
+- [ ] Checked declared project topology first; sampled PR bases to identify drift, not to override it
+- [ ] Picked branch / PR-base per declared topology (this repository: develop; only undeclared GitHub Flow projects may target main after verification)
+- [ ] *Develop-first*: checked that develop is a superset of main; if not, surfaced sync/policy decision to user
+- [ ] *Develop-first*: if develop missing or stale, **asked the user** before creating / syncing (no silent action)
 - [ ] *GitHub Flow*: did not insist on a develop layer the repo doesn't use
 - [ ] Merges to main verified intended (release event in Gitflow; standard PR-merge in GitHub Flow)
 - [ ] For `promote/*` -> main PRs: final tree matches the intended develop snapshot and PR body includes `Self-Review-Source: <artifact>`

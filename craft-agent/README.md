@@ -48,11 +48,35 @@ gates run as the `UserPromptSubmit` `continue:false` wrapper above.
 
 CA auto-injects `CLAUDE.md` / `AGENTS.md` content from the session working
 directory and its subdirectories into the system prompt. The installer wires
-the always-on rules into that mechanism by symlinking
-`CLAUDE.md -> RULES_BUNDLE.md` at the workspace root. Point the workspace
-Default Working Directory at the workspace root so new sessions pick it up.
-Without this symlink the rules never enter the system prompt, no matter how
-current `skills/` is.
+the always-on safety constitution into that mechanism by symlinking
+`CLAUDE.md -> KERNEL.md` at the workspace root. Point the workspace Default
+Working Directory at the workspace root so new sessions pick it up. The broad
+`RULES_BUNDLE.md` remains compatibility/rollback material and must never be
+mounted globally; detailed capabilities load deterministically on demand.
+Without the kernel mount, mandatory safety policy never enters the system
+prompt, no matter how current `skills/` is.
+
+Kernel-only verification is deliberately strict across both root instruction
+surfaces Craft auto-injects. `CLAUDE.md` must be the direct `KERNEL.md` symlink
+or a byte-identical regular copy. `AGENTS.md` must be absent, empty, the direct
+`KERNEL.md` symlink, or a byte-identical regular copy. The installer preserves
+other operator-owned files but verification fails rather than trying to infer
+whether arbitrary prose, aliases, or pasted content secretly mounts broader
+policy. The same allowlist applies recursively and case-insensitively to
+descendant `CLAUDE.md` and `AGENTS.md` names because those become auto-injected
+instruction surfaces when a session enters their directories and APFS may
+resolve case variants to the canonical names. Descendant directory symlinks
+fail verification: default traversal cannot prove that an external linked tree
+does not hide another instruction file. The verifier target root itself must
+also be a physical directory, not a symlink, so recursive scans cannot be
+skipped by BSD `find` starting-point semantics.
+
+Before adopting this deployment in an existing workspace, run the verifier and
+inspect every reported nested instruction surface, including those under
+`sessions/`. These paths are intentionally not excluded: session directories
+can be working roots, so non-canonical operator or session guidance must be
+removed, migrated, or explicitly reconciled before a later authorized install.
+The installer must not silently flatten or overwrite that content.
 
 ## Artifacts in this directory
 
@@ -81,8 +105,9 @@ to `safe`.
 ## The install / harmonise contract
 
 1. `bin/build.py --layout flat --deploy --craft-workspace <ws>` builds and
-   deploys skills, hooks, `RULES_BUNDLE.md`, the `CLAUDE.md` symlink, the
-   enforcement manifest, and the native git hook.
+   deploys skills, hooks, `KERNEL.md`, compatibility-only `RULES_BUNDLE.md`,
+   the `CLAUDE.md -> KERNEL.md` symlink, the enforcement manifest, and the
+   native git hook.
 2. `bin/install-hooks.sh` writes `.claude/settings.json` from the base snippet.
    It overwrites that file, so it must run before the enforcement merge.
 3. `bin/wire-enforcement.py --workspace <ws>` merges the blocking

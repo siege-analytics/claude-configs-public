@@ -146,10 +146,9 @@ install_craft_agent() {
         --hooks-root "$ws_path"
     echo
 
-    # Wire the blocking enforcement layer LAST. install-hooks.sh overwrites
-    # settings.json from the base snippet (advisory injectors only), so the
-    # blocking ca-enforcement-gate.sh wrapper must be merged after it or it is
-    # clobbered. Standing-order prompt automations are intentionally opt-in;
+    # Merge the blocking wrapper after the base hook settings. Both operations
+    # preserve unrelated project settings; neither establishes live host
+    # invocation by itself. Standing-order prompt automations are opt-in;
     # auto-registering them can spawn recurring watchdog/audit sessions.
     echo "--- Wiring enforcement (blocking gate; standing-order automations are opt-in) ---"
     python3 "$REPO_ROOT/bin/wire-enforcement.py" --workspace "$ws_path"
@@ -177,19 +176,26 @@ install_craft_agent() {
         errors=$((errors + 1))
     fi
 
+    if [[ -f "$ws_path/KERNEL.md" ]]; then
+        echo "  [ok] KERNEL.md present (compact global policy)"
+    else
+        echo "  [FAIL] KERNEL.md not found" >&2
+        errors=$((errors + 1))
+    fi
+
     if [[ -L "$ws_path/CLAUDE.md" ]]; then
         local link_target
         link_target="$(readlink "$ws_path/CLAUDE.md")"
-        if [[ "$link_target" == "RULES_BUNDLE.md" ]]; then
-            echo "  [ok] CLAUDE.md -> RULES_BUNDLE.md (CA auto-mount wired)"
+        if [[ "$link_target" == "KERNEL.md" ]]; then
+            echo "  [ok] CLAUDE.md -> KERNEL.md (progressive auto-mount wired)"
         else
-            echo "  [warn] CLAUDE.md is a symlink but points at '$link_target', not RULES_BUNDLE.md"
+            echo "  [warn] CLAUDE.md is a symlink but points at '$link_target', not KERNEL.md"
         fi
     elif [[ -f "$ws_path/CLAUDE.md" ]]; then
-        echo "  [warn] CLAUDE.md exists as a regular file (operator-owned); bundle NOT auto-mounted"
-        echo "         (rename or append to wire the bundle into CA auto-inject)"
+        echo "  [warn] CLAUDE.md exists as a regular file (operator-owned); kernel NOT auto-mounted"
+        echo "         (kernel-only verification requires exact KERNEL.md bytes; replace explicitly or rename and re-run)"
     else
-        echo "  [warn] CLAUDE.md missing; bundle present but CA will not auto-inject it"
+        echo "  [warn] CLAUDE.md missing; kernel present but CA will not auto-inject it"
         errors=$((errors + 1))
     fi
 
@@ -221,6 +227,20 @@ install_craft_agent() {
         echo "  [FAIL] hooks/ not found" >&2
         errors=$((errors + 1))
     fi
+
+    local runtime_file
+    for runtime_file in \
+        bin/resolve-load-set.py \
+        catalog/resolver-manifest.json \
+        bin/review-risk.py \
+        catalog/review-risk-policy.json; do
+        if [[ -f "$ws_path/$runtime_file" ]]; then
+            echo "  [ok] $runtime_file deployed"
+        else
+            echo "  [FAIL] $runtime_file not found (installed hooks are incomplete)" >&2
+            errors=$((errors + 1))
+        fi
+    done
 
     # CA enforcement artifacts
     if [[ -f "$ws_path/enforcement-manifest.json" ]]; then
@@ -257,9 +277,10 @@ install_craft_agent() {
 
     echo "Deployment complete. Workspace '$WORKSPACE_SLUG' is ready."
     echo
-    echo "Bundle mount status (Craft Agent):"
-    echo "  RULES_BUNDLE.md  -> $ws_path/RULES_BUNDLE.md (always written)"
-    echo "  CLAUDE.md        -> symlink to RULES_BUNDLE.md (if no operator CLAUDE.md present)"
+    echo "Progressive mount status (Craft Agent):"
+    echo "  KERNEL.md        -> $ws_path/KERNEL.md (globally mounted policy)"
+    echo "  RULES_BUNDLE.md  -> $ws_path/RULES_BUNDLE.md (on-demand compatibility)"
+    echo "  CLAUDE.md        -> symlink to KERNEL.md (if no operator CLAUDE.md present)"
     echo
     echo "CA auto-injects CLAUDE.md content into the system prompt of any session whose"
     echo "working directory is at or above the CLAUDE.md (CA walks cwd and its"
@@ -268,7 +289,7 @@ install_craft_agent() {
     echo "  1. Open Settings -> Workspace Settings -> Default Working Directory"
     echo "  2. Set it to: $ws_path"
     echo "  3. New sessions in this workspace will start with cwd there and pick"
-    echo "     up CLAUDE.md (= RULES_BUNDLE.md) on first system-prompt render."
+    echo "     up CLAUDE.md (= KERNEL.md) on first system-prompt render."
     echo
     echo "Existing sessions inherit their old cwd; restart them to apply the new mount."
     echo

@@ -3,7 +3,6 @@ name: react
 description: "React conventions for components, hooks, effects, server components, forms, and testing. TRIGGER: *.jsx/*.tsx files, *.js/*.ts importing from 'react', writing a component/hook/server action, or configuring an error boundary. Layers on top of typescript."
 routed-by: coding-standards
 user-invocable: false
-paths: "**/*.jsx,**/*.tsx"
 ---
 
 # React

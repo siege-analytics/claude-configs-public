@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # GeoPandas I/O Formats
 
 Format selection for spatial Python work. Defaults: GeoParquet for storage, GeoJSON for interchange.

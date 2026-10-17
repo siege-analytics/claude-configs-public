@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "empty_placeholders": {
+    "skills/shelves/engineering-principles/design-patterns/references/api_reference.md": "One-byte empty upstream placeholder, retained to avoid destructive removal; contains no content to consult and is not a promised local target.",
+    "skills/shelves/languages/effective-java/references/api_reference.md": "One-byte empty upstream placeholder, retained to avoid destructive removal; contains no content to consult and is not a promised local target.",
+    "skills/shelves/languages/effective-kotlin/references/api_reference.md": "One-byte empty upstream placeholder, retained to avoid destructive removal; contains no content to consult and is not a promised local target.",
+    "skills/shelves/languages/kotlin-in-action/references/api_reference.md": "One-byte empty upstream placeholder, retained to avoid destructive removal; contains no content to consult and is not a promised local target."
+  }
+}

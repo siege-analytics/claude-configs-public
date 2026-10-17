@@ -1,25 +1,21 @@
 #!/usr/bin/env bash
-# Verify that enforcement is actually LIVE in a target root, not merely that
-# the advisory files were copied in.
+# Verify local wiring and executable behavior in disposable fixtures.
+# This does not establish that a live Craft backend invokes the configured hooks.
 #
-# This is the "corner-cutting agent cannot evade it" acceptance probe. Skills
-# and rules can be perfectly authored and perfectly synced and still be
-# honor-system if the hook wiring, the RULES_BUNDLE mount, and the automation
-# watchdog were never installed. A sync that copies skills/ alone passes every
-# file-presence check and still leaves enforcement dark. This probe fails when
-# that happens.
-#
-# It runs a LIVE block test: it drives the installed ca-enforcement-gate.sh
-# with a mock resolver whose think-gate reports STALE DESIGN, and asserts the
-# gate emits a single {"continue": false} object. A gate that cannot block is
-# not enforcement.
+# Prompt-wrapper conversion is exercised with a mock blocking child; native Git
+# range behavior is exercised with actual local pushes. Files and these probes
+# establish neither host invocation nor protected server-side authorization.
+# Local Git hooks can be bypassed with --no-verify.
 #
 # Usage:
 #   bash bin/verify-enforcement.sh --target <root> [--mode craft-agent|direct]
+#       [--git-repo <consumer-root>]
 #
-#   --target <root>   Workspace root (CA) or repo root (direct-clone) to check.
+#   --target <root>   Installed package/workspace root to check.
 #   --mode            craft-agent (default) or direct. Selects the settings
 #                     filename and whether CLAUDE.md / automations are required.
+#   --git-repo        Exact consumer Git root whose core.hooksPath must resolve
+#                     to the target's packaged .githooks directory.
 #
 # Exit codes:
 #   0  every enforcement-critical check passed
@@ -31,12 +27,24 @@
 
 set -uo pipefail
 
+for argument in "$@"; do
+    if [[ "$argument" == "--selected" ]]; then
+        ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+        exec python3 -B "$ROOT/bin/selected_registration.py" verify "$@"
+    fi
+done
+
 TARGET=""
 MODE="craft-agent"
+NATIVE_GIT_REPO=""
+# Code-owned trust anchor for the canonical compact kernel. This verifier is a
+# Tier C surface; never derive the expected digest from the mutable target.
+EXPECTED_KERNEL_SHA256="063230c4e75ee2ba6cf8c1afd16d3f3261320c60460bfb550fa599d44f4cb13a"
+KERNEL_VERIFIED=0
 
 usage() {
     cat <<'USAGE'
-Usage: bash bin/verify-enforcement.sh --target <root> [--mode craft-agent|direct]
+Usage: bash bin/verify-enforcement.sh --target <root> [--mode craft-agent|direct] [--git-repo <consumer-root>]
 USAGE
 }
 
@@ -44,10 +52,13 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --target)
             [[ -z "${2:-}" ]] && { echo "ERROR: --target requires a path" >&2; exit 2; }
-            TARGET="${2%/}"; shift 2 ;;
+            TARGET="$2"; shift 2 ;;
         --mode)
             [[ -z "${2:-}" ]] && { echo "ERROR: --mode requires a value" >&2; exit 2; }
             MODE="$2"; shift 2 ;;
+        --git-repo)
+            [[ -z "${2:-}" ]] && { echo "ERROR: --git-repo requires a path" >&2; exit 2; }
+            NATIVE_GIT_REPO="${2%/}"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "ERROR: unknown arg: $1" >&2; usage >&2; exit 2 ;;
     esac
@@ -56,8 +67,14 @@ done
 if [[ -z "$TARGET" ]]; then
     echo "ERROR: --target is required" >&2; usage >&2; exit 2
 fi
+while [[ "$TARGET" != "/" && "$TARGET" == */ ]]; do
+    TARGET="${TARGET%/}"
+done
 if [[ "$MODE" != "craft-agent" && "$MODE" != "direct" ]]; then
     echo "ERROR: --mode must be craft-agent or direct" >&2; exit 2
+fi
+if [[ -L "$TARGET" ]]; then
+    echo "ERROR: target root must not be a symlink: $TARGET" >&2; exit 1
 fi
 if [[ ! -d "$TARGET" ]]; then
     echo "ERROR: target not found: $TARGET" >&2; exit 1
@@ -90,7 +107,7 @@ else
     SETTINGS="$TARGET/.claude/settings.local.json"
 fi
 
-# --- Check 1: the LIVE block test (the load-bearing check) -------------------
+# --- Check 1: local wrapper conversion probe -------------------
 
 GATE="$HOOKS_ROOT/resolver/ca-enforcement-gate.sh"
 if [[ ! -f "$GATE" ]]; then
@@ -128,9 +145,9 @@ MOCK
     probe_out="$(bash "$mock_resolver/ca-enforcement-gate.sh" 2>/dev/null || true)"
     if printf '%s' "$probe_out" \
         | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get("continue") is False else 1)' 2>/dev/null; then
-        ok "live block test: gate emitted continue:false on STALE DESIGN"
+        ok "local block probe: gate emitted continue:false on STALE DESIGN"
     else
-        fail "live block test: gate did NOT emit continue:false (enforcement is advisory-only)"
+        fail "local block probe: gate did NOT emit continue:false (enforcement is advisory-only)"
         echo "         gate stdout was: ${probe_out:-<empty>}" >&2
     fi
 fi
@@ -139,7 +156,7 @@ fi
 
 if [[ ! -f "$SETTINGS" ]]; then
     fail "settings file missing: $SETTINGS (hooks not registered)"
-elif ! python3 -c "import json; json.load(open('$SETTINGS'))" 2>/dev/null; then
+elif ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$SETTINGS" 2>/dev/null; then
     fail "settings file is not valid JSON: $SETTINGS"
 else
     # Extract the registered wrapper command. #843: accepting a substring like
@@ -215,20 +232,33 @@ MOCK
         registered_probe_out="$(printf '%s' '{"prompt":"registered-wrapper-probe"}' | bash "$mock_resolver/ca-enforcement-gate.sh" 2>/dev/null || true)"
         if printf '%s' "$registered_probe_out" \
             | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get("continue") is False else 1)' 2>/dev/null; then
-            ok "registered wrapper live block test: emitted continue:false on STALE DESIGN"
+            ok "registered wrapper local block probe: emitted continue:false on STALE DESIGN"
         else
-            fail "registered wrapper live block test: registered gate did NOT emit continue:false"
+            fail "registered wrapper local block probe: registered gate did NOT emit continue:false"
             echo "         registered gate stdout was: ${registered_probe_out:-<empty>}" >&2
         fi
     fi
 fi
 
-# --- Check 3: RULES_BUNDLE present -------------------------------------------
+# --- Check 3: compact kernel + compatibility bundle present ------------------
 
-if [[ -f "$TARGET/RULES_BUNDLE.md" ]]; then
-    ok "RULES_BUNDLE.md present"
+if [[ -f "$TARGET/KERNEL.md" && ! -L "$TARGET/KERNEL.md" && -s "$TARGET/KERNEL.md" ]] \
+    && python3 - "$TARGET/KERNEL.md" "$EXPECTED_KERNEL_SHA256" <<'PY'
+from pathlib import Path
+import hashlib, sys
+actual = hashlib.sha256(Path(sys.argv[1]).read_bytes()).hexdigest()
+sys.exit(0 if actual == sys.argv[2] else 1)
+PY
+then
+    KERNEL_VERIFIED=1
+    ok "KERNEL.md is a non-symlink file matching the pinned canonical digest"
 else
-    fail "RULES_BUNDLE.md missing (non-hook injection fallback absent)"
+    fail "KERNEL.md is missing, empty, symlinked, or differs from the pinned canonical kernel"
+fi
+if [[ -f "$TARGET/RULES_BUNDLE.md" ]]; then
+    ok "RULES_BUNDLE.md present (on-demand compatibility)"
+else
+    fail "RULES_BUNDLE.md missing (compatibility rollback absent)"
 fi
 
 # --- Check 4: RESOLVER present -----------------------------------------------
@@ -242,7 +272,7 @@ fi
 # --- Check 5: enforcement manifest present -----------------------------------
 
 if [[ -f "$TARGET/enforcement-manifest.json" ]]; then
-    gate_count="$(python3 -c "import json; print(len(json.load(open('$TARGET/enforcement-manifest.json')).get('gates', [])))" 2>/dev/null || echo 0)"
+    gate_count="$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1])).get("gates", [])))' "$TARGET/enforcement-manifest.json" 2>/dev/null || echo 0)"
     if [[ "$gate_count" -gt 0 ]]; then
         ok "enforcement-manifest.json present ($gate_count gates)"
     else
@@ -252,25 +282,176 @@ else
     fail "enforcement-manifest.json missing (CA enforcement not deployed)"
 fi
 
+# --- Check 6: native Git registration and real range push -------------------
+
+NATIVE_HOOKS="$TARGET/.githooks"
+NATIVE_PRE_PUSH="$NATIVE_HOOKS/pre-push"
+if [[ ! -f "$NATIVE_PRE_PUSH" || ! -x "$NATIVE_PRE_PUSH" ]]; then
+    fail "native .githooks/pre-push missing or not executable"
+elif [[ ! -f "$TARGET/hooks/git/pre-push-self-review.sh" || ! -x "$TARGET/hooks/git/pre-push-self-review.sh" ]]; then
+    fail "range-aware hooks/git/pre-push-self-review.sh missing or not executable"
+elif [[ ! -f "$TARGET/bin/review-risk.py" || ! -f "$TARGET/catalog/review-risk-policy.json" ]]; then
+    fail "native pre-push trusted risk helper or policy missing"
+else
+    if [[ -n "$NATIVE_GIT_REPO" ]]; then
+        git_top=$(git -C "$NATIVE_GIT_REPO" rev-parse --show-toplevel 2>/dev/null || true)
+        requested_real=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$NATIVE_GIT_REPO")
+        git_top_real=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "${git_top:-/nonexistent}")
+        configured=$(git -C "$NATIVE_GIT_REPO" config --get core.hooksPath 2>/dev/null || true)
+        if [[ -z "$git_top" || "$requested_real" != "$git_top_real" || -z "$configured" ]]; then
+            fail "consumer repository or core.hooksPath registration is missing/ambiguous: $NATIVE_GIT_REPO"
+        else
+            if [[ "$configured" = /* ]]; then
+                configured_path="$configured"
+            else
+                configured_path="$NATIVE_GIT_REPO/$configured"
+            fi
+            configured_real=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$configured_path")
+            expected_real=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$NATIVE_HOOKS")
+            if [[ "$configured_real" == "$expected_real" ]]; then
+                ok "consumer core.hooksPath resolves to installed native hooks"
+            else
+                fail "consumer core.hooksPath resolves outside installed native hooks: $configured"
+            fi
+        fi
+    else
+        warn "no consumer repository supplied; native consumer registration is unverified"
+    fi
+
+    native_probe=$(mktemp -d)
+    trap 'rm -rf "${probe_dir:-}" "${native_probe:-}"' EXIT
+    remote="$native_probe/remote.git"
+    consumer="$native_probe/consumer"
+    git init -q --bare "$remote"
+    git init -q "$consumer"
+    git -C "$consumer" config user.email probe@example.invalid
+    git -C "$consumer" config user.name "Native Hook Probe"
+    git -C "$consumer" remote add origin "$remote"
+    printf 'baseline\n' > "$consumer/README.md"
+    git -C "$consumer" add README.md
+    GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z \
+        git -C "$consumer" commit -q --no-verify -m 'baseline'
+    git -C "$consumer" branch -M main
+    git -C "$consumer" push -q --no-verify -u origin main
+    git -C "$consumer" checkout -q -b feature
+    git -C "$consumer" config core.hooksPath "$NATIVE_HOOKS"
+
+    printf 'missing source evidence\n' > "$consumer/probe.py"
+    git -C "$consumer" add probe.py
+    git -C "$consumer" commit -q --no-verify -m $'test: invalid interior #845\n\nReview-Tier: B\nSelf-Review: intentionally incomplete'
+    printf 'valid head after invalid interior\n' > "$consumer/head.md"
+    git -C "$consumer" add head.md
+    git -C "$consumer" commit -q --no-verify -m $'docs: valid head #845\n\nReview-Tier: A\nSelf-Review: probe'
+
+    invalid_log="$native_probe/invalid-push.log"
+    if git -C "$consumer" push origin HEAD:refs/heads/feature >"$invalid_log" 2>&1; then
+        fail "real native push accepted an invalid interior commit"
+    elif git --git-dir="$remote" show-ref --verify --quiet refs/heads/feature; then
+        fail "denied native push still changed the remote feature ref"
+    elif grep -qF 'BLOCKED by pre-push-self-review hook' "$invalid_log"; then
+        ok "real native push rejected invalid interior evidence with no remote side effect"
+    else
+        fail "native push failed without observed range-hook denial"
+    fi
+
+    git -C "$consumer" reset -q --hard origin/main
+    printf 'repaired range\n' > "$consumer/repaired.md"
+    git -C "$consumer" add repaired.md
+    git -C "$consumer" commit -q --no-verify -m $'docs: repaired range #845\n\nReview-Tier: A\nSelf-Review: probe'
+    repaired_head=$(git -C "$consumer" rev-parse HEAD)
+    if git -C "$consumer" push -q origin HEAD:refs/heads/feature \
+        && [[ "$(git --git-dir="$remote" rev-parse refs/heads/feature 2>/dev/null || true)" == "$repaired_head" ]]; then
+        ok "same registered hook permits repaired range and advances only the intended ref"
+    else
+        fail "registered native hook did not permit the repaired valid range"
+    fi
+fi
+
 # --- Craft-Agent-only checks -------------------------------------------------
 
 if [[ "$MODE" == "craft-agent" ]]; then
-    # Check 6: CLAUDE.md must auto-mount the bundle into the CA system prompt.
+    # Check 6: CLAUDE.md must auto-mount only the compact kernel.
     if [[ -L "$TARGET/CLAUDE.md" ]]; then
         link_target="$(readlink "$TARGET/CLAUDE.md")"
-        if [[ "$link_target" == "RULES_BUNDLE.md" ]]; then
-            ok "CLAUDE.md -> RULES_BUNDLE.md (CA auto-inject wired)"
+        if [[ "$link_target" == "KERNEL.md" ]]; then
+            ok "CLAUDE.md -> KERNEL.md (progressive CA auto-inject wired)"
         else
-            fail "CLAUDE.md symlink points at '$link_target', not RULES_BUNDLE.md"
+            fail "CLAUDE.md symlink points at '$link_target', not KERNEL.md"
         fi
     elif [[ -f "$TARGET/CLAUDE.md" ]]; then
-        if grep -q "RULES_BUNDLE\|Always-on\|RESOLVER" "$TARGET/CLAUDE.md" 2>/dev/null; then
-            ok "CLAUDE.md is an operator file that references the bundle"
+        if [[ "$KERNEL_VERIFIED" -eq 1 ]] && cmp -s "$TARGET/KERNEL.md" "$TARGET/CLAUDE.md"; then
+            ok "CLAUDE.md operator file is byte-identical to the verified compact kernel"
         else
-            fail "CLAUDE.md exists but does not mount the bundle (CA will not auto-inject rules)"
+            fail "CLAUDE.md operator file must equal the verified compact kernel exactly"
         fi
     else
         fail "CLAUDE.md missing (CA has nothing to auto-inject; rules never enter the system prompt)"
+    fi
+
+    # Check 6b: AGENTS.md is another Craft auto-injected root instruction
+    # surface. It may be absent or contain operator guidance, but it must not
+    # mount the compatibility bundle or redirect to an unverified policy file.
+    if [[ -L "$TARGET/AGENTS.md" ]]; then
+        agents_target="$(readlink "$TARGET/AGENTS.md")"
+        if [[ "$agents_target" == "KERNEL.md" && "$KERNEL_VERIFIED" -eq 1 ]]; then
+            ok "AGENTS.md duplicates only the verified compact kernel"
+        else
+            fail "AGENTS.md symlink points at '$agents_target'; only verified KERNEL.md is permitted"
+        fi
+    elif [[ -f "$TARGET/AGENTS.md" ]]; then
+        if [[ ! -s "$TARGET/AGENTS.md" ]]; then
+            ok "AGENTS.md is empty (no second root policy surface)"
+        elif [[ "$KERNEL_VERIFIED" -eq 1 ]] && cmp -s "$TARGET/KERNEL.md" "$TARGET/AGENTS.md"; then
+            ok "AGENTS.md regular file duplicates only the verified compact kernel"
+        else
+            fail "AGENTS.md regular file must be empty or equal the verified compact kernel exactly"
+        fi
+    else
+        ok "AGENTS.md absent (no second root instruction mount)"
+    fi
+
+    # Check 6c: Craft may auto-inject descendant CLAUDE.md/AGENTS.md files as
+    # sessions enter subdirectories. `find` does not traverse directory
+    # symlinks by default, so reject every descendant directory symlink before
+    # scanning; otherwise an external tree can hide an injected instruction.
+    symlinked_directories=0
+    while IFS= read -r -d '' descendant_link; do
+        if [[ -d "$descendant_link" ]]; then
+            symlinked_directories=$((symlinked_directories + 1))
+            fail "descendant directory symlink is not verifiable: ${descendant_link#"$TARGET"/}"
+        fi
+    done < <(find "$TARGET" -mindepth 1 -type l -print0 2>/dev/null)
+    if [[ "$symlinked_directories" -eq 0 ]]; then
+        ok "no descendant directory symlinks can hide instruction files"
+    fi
+
+    # Apply the exact-content allowlist to every directly traversable nested
+    # instruction surface; file aliases must resolve to root KERNEL.md.
+    nested_instructions=0
+    while IFS= read -r -d '' instruction_file; do
+        nested_instructions=$((nested_instructions + 1))
+        rel_instruction="${instruction_file#"$TARGET"/}"
+        if [[ -L "$instruction_file" ]]; then
+            if [[ "$KERNEL_VERIFIED" -eq 1 ]] && python3 - "$TARGET/KERNEL.md" "$instruction_file" <<'PY'
+from pathlib import Path
+import sys
+sys.exit(0 if Path(sys.argv[1]).resolve() == Path(sys.argv[2]).resolve() else 1)
+PY
+            then
+                ok "$rel_instruction resolves only to verified root KERNEL.md"
+            else
+                fail "$rel_instruction symlink does not resolve to verified root KERNEL.md"
+            fi
+        elif [[ ! -s "$instruction_file" ]]; then
+            ok "$rel_instruction is empty (no nested policy surface)"
+        elif [[ "$KERNEL_VERIFIED" -eq 1 ]] && cmp -s "$TARGET/KERNEL.md" "$instruction_file"; then
+            ok "$rel_instruction duplicates only the verified compact kernel"
+        else
+            fail "$rel_instruction must be empty, equal verified KERNEL.md, or resolve directly to it"
+        fi
+    done < <(find "$TARGET" -mindepth 2 \( -iname CLAUDE.md -o -iname AGENTS.md \) -print0 2>/dev/null)
+    if [[ "$nested_instructions" -eq 0 ]]; then
+        ok "no nested CLAUDE.md/AGENTS.md instruction surfaces"
     fi
 
     # Check 7: the standing-order watchdog automation (advisory).
@@ -280,7 +461,7 @@ if [[ "$MODE" == "craft-agent" ]]; then
     # session list, so standing-order continuity is delivered by the always-on
     # injected resolver rules instead. Its absence is therefore not an
     # enforcement failure; warn (advisory), do not fail. The load-bearing
-    # pass/fail is the blocking gate's live block test (Checks 1-6).
+    # pass/fail is the blocking gate's local probe (Checks 1-6).
     AUTO="$TARGET/automations.json"
     if [[ ! -f "$AUTO" ]]; then
         warn "automations.json has no standing-order watchdog (opt-in; continuity via injected rules)"
@@ -306,10 +487,10 @@ fi
 
 echo
 if [[ $errors -gt 0 ]]; then
-    echo "ENFORCEMENT NOT LIVE: $errors check(s) failed." >&2
-    echo "Skills may be present and current, but they are advisory-only." >&2
+    echo "LOCAL ENFORCEMENT PROBES FAILED: $errors check(s) failed." >&2
+    echo "Local wiring or executable behavior is incomplete; live host status is unverified." >&2
     echo "Run bin/install.sh (Craft Agent) or bin/install-hooks.sh (direct) to wire them." >&2
     exit 1
 fi
-echo "ENFORCEMENT LIVE: all checks passed for $TARGET"
+echo "LOCAL ENFORCEMENT PROBES PASSED for $TARGET; live host invocation remains unverified."
 exit 0

@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import importlib.util
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "bin" / "skill-inventory.py"
+SPEC = importlib.util.spec_from_file_location("skill_inventory", SCRIPT)
+assert SPEC and SPEC.loader
+MODULE = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = MODULE
+SPEC.loader.exec_module(MODULE)
+
+
+def write(root: Path, rel: str, content: str) -> None:
+    path = root / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
+
+
+def skill(name: str, body: str = "") -> str:
+    return f"---\nname: {name}\ndescription: fixture {name}\n---\n\n# {name}\n{body}\n"
+
+
+def main() -> None:
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        write(root, "skills/alpha/SKILL.md", skill("alpha"))
+        write(root, "skills/router/SKILL.md", skill("router"))
+        write(root, "skills/router/child/SKILL.md", skill("child"))
+        write(root, "skills/shelves/SKILL.md", skill("shelves"))
+        write(root, "skills/shelves/topic/SKILL.md", skill("topic"))
+        write(root, "skills/shelves/topic/book/SKILL.md", skill("book"))
+        write(root, "skills/_writing-rules-rules.md", "# Rules\n**writing-rules:1. first**\n")
+        write(root, "skills/_claims-rules.md", "# Claims\nwriting-rules:1. duplicate\n")
+        write(root, "skills/_alpha-rules.md", "# Alpha rule\n")
+        write(root, "skills/generated--copy/SKILL.md", skill("generated-copy"))
+        write(root, "skills/nested/_hidden-rules.md", "# Unsupported nested rule\n")
+        write(
+            root,
+            "projects/demo/PROJECT.md",
+            "---\nname: demo\ndescription: demo\nrepo: org/demo\nowners:\n  - owner@example.test\n---\n",
+        )
+        write(root, "projects/demo/skills/reviewer/SKILL.md", skill("demo--reviewer"))
+        write(root, "projects/demo/_rules.md", "# Demo rules\n")
+        write(
+            root,
+            "projects/old/PROJECT.md",
+            "---\nname: old\ndescription: archived fixture\nrepo: org/old\nowners:\n  - old@example.test\nstatus: archived\n---\n",
+        )
+        write(root, "projects/old/skills/legacy/SKILL.md", skill("old--legacy"))
+        write(root, "docs/consumer.md", "Use [skill:alpha], [rule:alpha], and [rule:writing-rules].\n")
+        (root / "bin").mkdir(exist_ok=True)
+        shutil.copy2(ROOT / "bin" / "build.py", root / "bin" / "build.py")
+        write(root, "hooks/_test/alpha.test.sh", "# alpha behavior\n")
+        subprocess.run(["git", "init", "-q", str(root)], check=True)
+        subprocess.run(["git", "-C", str(root), "add", "."], check=True)
+
+        inventory = MODULE.build_inventory(root)
+        by_key = {(item["kind"], item["slug"]): item for item in inventory["items"]}
+
+        assert inventory["summary"]["item_count"] == 11, inventory["summary"]
+        assert by_key[("skill-router", "router")]["kind"] == "skill-router"
+        assert by_key[("shelf-router", "shelves--topic")]["kind"] == "shelf-router"
+        assert by_key[("reference-shelf", "shelves--book")]["tier"] == "reference"
+        assert by_key[("project-skill", "demo--reviewer")]["tier"] == "project"
+        assert by_key[("project-skill", "demo--reviewer")]["owner"] == ["owner@example.test"]
+        assert by_key[("skill", "alpha")]["inbound_source_references"] == ["docs/consumer.md"]
+        assert by_key[("rule", "alpha")]["inbound_source_references"] == ["docs/consumer.md"]
+        assert by_key[("skill", "alpha")]["test_evidence"] == ["hooks/_test/alpha.test.sh"]
+        assert by_key[("project-rule", "demo--rules")]["generated_outputs"] == [
+            "dist/nested/skills/_demo--rules.md",
+            "dist/flat/skills/_demo--rules.md",
+        ]
+        assert {entry["path"] for entry in inventory["diagnostics"]["ignored_sources"]} == {
+            "projects/old/skills/legacy/SKILL.md",
+            "skills/generated--copy/SKILL.md",
+            "skills/nested/_hidden-rules.md",
+        }
+        assert inventory["diagnostics"]["discovery_parity"]["status"] == "matched"
+        assert inventory["diagnostics"]["generated_output_plan"]["status"] == "derived-from-build.py"
+        assert inventory["diagnostics"]["duplicate_rule_ids"] == {
+            "writing-rules:1": ["skills/_claims-rules.md", "skills/_writing-rules-rules.md"]
+        }
+        first = MODULE.serialized(inventory)
+        second = MODULE.serialized(MODULE.build_inventory(root))
+        assert first == second, "inventory output is not deterministic"
+
+        generate = [sys.executable, str(SCRIPT), "--root", str(root)]
+        assert subprocess.run(generate, capture_output=True, text=True).returncode == 0
+        json_path = root / "catalog" / "skills-inventory.json"
+        report_path = root / "catalog" / "skills-inventory.md"
+        subprocess.run(["git", "-C", str(root), "add", "catalog"], check=True)
+        check = [*generate, "--check"]
+        assert subprocess.run(check, capture_output=True, text=True).returncode == 0
+        tracked_catalog = __import__("json").loads(json_path.read_text())
+        assert all(
+            not any(ref.startswith("catalog/skills-inventory") for ref in item["inbound_source_references"])
+            for item in tracked_catalog["items"]
+        ), "generated catalog supplied its own source-reference evidence"
+        report_path.write_text("stale\n")
+        stale = subprocess.run(check, capture_output=True, text=True)
+        assert stale.returncode == 1
+        assert "STALE skill inventory outputs" in stale.stderr
+
+    try:
+        MODULE.validate_output_collisions({
+            "skills/one/SKILL.md": ["dist/flat/skills/shared"],
+            "projects/demo/skills/shared/SKILL.md": ["dist/flat/skills/shared"],
+        })
+    except ValueError as exc:
+        assert "generated output collision" in str(exc)
+    else:
+        raise AssertionError("duplicate generated destinations were marked verified")
+
+    with tempfile.TemporaryDirectory() as td:
+        collision = Path(td)
+        write(collision, "skills/shelves/a/book/SKILL.md", skill("book-a"))
+        write(collision, "skills/shelves/b/book/SKILL.md", skill("book-b"))
+        try:
+            MODULE.source_items(collision)
+        except ValueError as exc:
+            assert "duplicate general skill slug shelves--book" in str(exc)
+        else:
+            raise AssertionError("same-named books in different shelves silently collapsed")
+
+    print("skill_inventory_test: PASS")
+
+
+if __name__ == "__main__":
+    main()

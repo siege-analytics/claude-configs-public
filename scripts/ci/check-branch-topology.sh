@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
-# Enforce the canonical integration and promotion graph.
+# Delegate registered GitHub events to the approved effective-policy adapter.
+# The self-hosted workflow supplies this script from the exact protected base.
+# Direct/local compatibility checks remain pending their separate retirement.
 set -euo pipefail
+
+# Registered host events use the approved effective policy. Do not apply the
+# legacy strict-only local branch cases to an authorized alternative profile.
+if [[ "${GITHUB_EVENT_NAME:-}" == "pull_request_target" ]]; then
+  POLICY_ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+  exec python3 "$POLICY_ROOT/scripts/ci/protected-policy-range.py" \
+    --host-event --trusted-root "$POLICY_ROOT" --candidate-repo . \
+    --receipt /tmp/protected-policy-receipt.json
+fi
+
+# Retained direct/local compatibility feedback, pending #849 retirement. This
+# path does not establish protected authorization or shared-parent capability.
 
 BASE_BRANCH="${BASE_BRANCH:-}"
 HEAD_BRANCH="${HEAD_BRANCH:-}"

@@ -4,6 +4,51 @@ This repo serves two runtimes from one source: Claude Code (with the resolver ho
 
 If you're adding a skill or editing one, the only conventions you need to know are below.
 
+## Shared terminology
+
+Use the [shared ontology](wiki/Ontology.md) when defining policy, composition,
+host behavior or verification claims. Its canonical source is
+`catalog/ontology.json`; the wiki page is generated. Keep this reference on
+demand rather than adding it to always-loaded instructions.
+
+New structured contracts should register their semantic fields in
+`catalog/ontology-bindings.json`, or supply a binding manifest to
+`python3 bin/ontology.py --validate-bindings <path>`. Each binding declares an
+artifact, JSON Pointer (with `*` for every child), canonical term ID and JSON
+value type. Every wildcard branch must match; missing fields and ambiguous or
+deprecated term references fail. A binding annotates existing names without
+renaming runtime fields or changing their behavior. The initial checked
+surfaces are the resolver manifest and generated Craft enforcement manifest;
+other interfaces require explicit adoption through #851.
+
+Use `host-capability` for runtime mechanisms and `procedure-binding` for skill
+selection. Distinguish `policy-override`, `skill-replacement` and
+`resident-composition`. Name the evidence stage of a verification claim:
+configuration validation, artifact verification, runtime observation and
+protected acceptance are separate facts.
+
+After changing definitions or bindings, build the referenced artifacts and run:
+
+```sh
+python3 bin/build.py --layout both
+python3 bin/ontology.py --write
+python3 bin/_test/ontology_test.py
+python3 bin/ontology.py --check
+```
+
+CI checks the registry, opted-in bindings and generated-page freshness. It does
+not infer authorization or prove runtime behavior from a label. Relationships
+involving `authorization-record`, `authorization-scope` or an `authority`-owned
+term must match the explicit validator allowlist: currently only
+`authorization-record binds authorization-scope`. That edge and its endpoints
+are required. Ownership is maintenance metadata; changing it cannot qualify
+another subject or remove protection from the canonical terms. Extending this
+boundary requires a reviewed validator change, not a new verb in the registry.
+For optional prose feedback, use `python3 bin/ontology.py --lint <path>`; warnings
+remain advisory. Consumer-specific names need explicit scoped mappings, with
+private operational evidence retained privately. Review an incompatible meaning
+as a new term ID and migration rather than silently changing an existing ID.
+
 ## The slug-token convention
 
 Skills cross-reference each other by **slug token**, not file path:
@@ -94,7 +139,7 @@ CI runs `--check` on every PR. If it fails, run the script locally and re-push.
 
 - **On every PR:** `sync-skill-references.py --check` + `build.py --check`
 - **On push to main:** the validate job + publishes `dist/nested/` to `release/nested` branch and `dist/flat/` to `release/flat` branch
-- **On tag push (`vX.Y.Z`):** all of the above + tags `release/nested` and `release/flat` with `vX.Y.Z-nested` / `vX.Y.Z-flat` for stable consumer pinning
+- **On source tag push (`vX.Y.Z`):** no build-and-publish run. After a separately published GitHub release, `publish-consumption-tags.yml` may tag already-published `release/nested` and `release/flat` as `vX.Y.Z-nested` / `vX.Y.Z-flat` for consumer pinning; the tag alone does not publish artifacts.
 
 ## How downstream consumes this repo
 
@@ -135,9 +180,9 @@ Versions follow [SemVer](https://semver.org/):
 - **Minor** -- new skills, new shelves, new always-on rules, additive changes
 - **Patch** -- fixes to existing skills, doc corrections
 
-Every tag on `main` produces matching tags on the release branches:
+A source tag on `main` does not itself publish artifacts. After the main-push publication and a separately published GitHub release, the consumption-tag workflow can mint matching tags on the already-published release branches:
 
-- `v1.0.0` (source) → `v1.0.0-nested` and `v1.0.0-flat` (release branches)
+- `v1.0.0` (source release) → `v1.0.0-nested` and `v1.0.0-flat` (existing release branches)
 
 Pin downstream consumers to a release-branch tag, not the source tag -- the source tag is on `main`, which has the build infrastructure but not the resolved skills.
 

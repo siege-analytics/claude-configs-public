@@ -14,15 +14,18 @@ jobs:
     name: Require canonical branch topology
     runs-on: ubuntu-latest
     steps:
-      # pull_request_target loads this workflow from the protected base branch.
-      # Keep policy and candidate in separate directories and never execute code
-      # from the untrusted candidate checkout.
+      # Since 2025-12-08, pull_request_target loads this workflow from the
+      # repository default branch (main), not the PR base. This registered
+      # workflow checks out the exact PR base as trusted policy and executes its
+      # check-branch-topology.sh entrypoint. Checked-out YAML is not represented
+      # as the workflow GitHub executed. Candidate code remains data only.
       - name: Check out trusted policy
         if: github.event_name == 'pull_request_target'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: policy
+          fetch-depth: 0  # selected policy snapshot must be an available ancestor
           persist-credentials: false
 
       - name: Check out candidate as data

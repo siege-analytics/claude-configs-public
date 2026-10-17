@@ -167,6 +167,9 @@ def register_ca_automations(snippet: Path, dst: Path) -> None:
 
 
 def main() -> int:
+    if "--selected" in sys.argv[1:]:
+        import selected_registration
+        return selected_registration.main(["wire", *sys.argv[1:]])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace", type=Path, required=True, help="Craft Agent workspace path")
     parser.add_argument("--dist", type=Path, default=REPO_ROOT / "dist", help="Build dist directory (default: %(default)s)")

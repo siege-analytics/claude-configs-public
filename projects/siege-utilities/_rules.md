@@ -14,6 +14,12 @@ Any project rule that weakens a general rule must be declared here. If a project
 |---|---|---|
 | *(none yet)* | | |
 
+## Reuse and review-before-implementation
+
+Within this exact repository, before writing a utility-shaped helper (filesystem, HTTP/retry, storage, time, spatial, logging, or Pandas), search the existing `siege_utilities` API first. Prefer existing suitable functions; do not import a utility for a one-line standard-library equivalent. For a generic gap, propose an upstream improvement before adding a local duplicate; for a repo-specific gap, keep it local with a clear boundary.
+
+Hostile-review findings are not authorization to implement. First review public function chains (including lazy imports, caches, IO, dependency and CLI surfaces), separate merge-blocking contracts from edge hardening, and cite applicable general guidance. Consult data-intensive/geospatial reference shelves only through the active hostile-review skill's scoped guidance when the reviewed code warrants them. Wait for an operator authorization naming the repo/branch, findings, files, tests, push and PR/comment permissions; then implement with function- and chain-level tests and request re-review on the new commit range. Green tests, a PR comment, or an obvious fix do not grant implementation authority. Review-only agents remain review-only until reauthorized.
+
 ## Error handling philosophy
 
 ### Rule SU-1: Errors are not data
@@ -108,7 +114,7 @@ python3 -c "import ast; ast.parse(open('path/to/file.py').read())"
 
 - All work branches from `develop`, PRs target `develop`
 - `main` is downstream of `develop` — never merge unblessed work directly to `main`
-- CI billing is currently disabled on this repo; merges may require `--admin` flag
+- If CI cannot start because of billing, diagnose and escalate to the operator; this overlay does not authorize `--admin`, protected-check bypass, or a standing exception. Normal required-check and review gates remain in force.
 
 ## Bookshelf cross-reference
 

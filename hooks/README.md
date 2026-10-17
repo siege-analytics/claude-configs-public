@@ -104,7 +104,7 @@ the body -- the call should be blocked with the same stderr.
 ## How Hooks Work
 
 - `PreToolUse` hooks run before Claude Code executes a tool. They receive JSON on stdin with the tool name and arguments. Exit 0 = allow, Exit 2 = block (message shown to agent). Hooks cannot be bypassed by the agent — they are system-level.
-- `UserPromptSubmit` hooks run on every user turn. `resolver/inject-resolver.sh` injects the skill resolver and universal checks into active context. It also scans for plan artifacts (think-*.md, investigate-*.md, pre-mortem-*.md) and warns when the downstream pipeline is incomplete (#253). Set `CRAFT_AGENT_PLANS_PATH` to a session plans directory for Craft Agent sessions; the hook also checks `$CWD/plans/` by default.
+- `UserPromptSubmit` hooks run on every user turn. `resolver/inject-resolver.sh` injects `skills/KERNEL.md` plus the deterministic load set selected from `catalog/resolver-manifest.json`; it does not inject the broad legacy resolver. Unknown/ambiguous inputs remain visibly kernel-only, project overlays require a matching Git remote, and shelves never self-select. Set `CLAUDE_PROGRESSIVE_LOADING=canary` to report `candidate:` routes without activating them, or `kernel-only` to disable selection without broad fallback. The hook also scans for plan artifacts (think-*.md, investigate-*.md, pre-mortem-*.md) and warns when the downstream pipeline is incomplete (#253). Set `CRAFT_AGENT_PLANS_PATH` to a session plans directory for Craft Agent sessions; the hook also checks `$CWD/plans/` by default.
 
 ## Testing
 

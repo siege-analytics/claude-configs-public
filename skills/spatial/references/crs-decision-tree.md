@@ -1,5 +1,8 @@
 # CRS Decision Tree
 
+> **Scope:** Siege Utilities upstream proposals in this reference are historical examples only for exact `github.com/siege-analytics/siege_utilities`. Other repositories use their verified dependencies and local project instructions.
+
+
 Cross-engine projection rules. Same principles apply whether you're in PostGIS, GeoPandas, Sedona, or DuckDB-spatial.
 
 ## The two questions

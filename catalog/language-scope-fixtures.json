@@ -1,0 +1,3146 @@
+{
+  "schema_version": 1,
+  "fixtures": [
+    {
+      "id": "unknown",
+      "prompt": "write a friendly greeting",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "qml-unknown",
+      "prompt": "review ChordLibrary MuseScore QML component",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "generic-python",
+      "prompt": "review this Python diff",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "python"
+      ],
+      "measurements": {
+        "source": {
+          "characters": 11420,
+          "estimated_tokens": 2856,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10591,
+            "estimated_tokens": 2649,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "exact-project",
+      "prompt": "review this Python diff",
+      "repo": "git@github.com:siege-analytics/siege_utilities.git",
+      "state": "matched",
+      "slugs": [
+        "siege-utilities--rules",
+        "siege-utilities--hostile-review",
+        "coding",
+        "python"
+      ],
+      "measurements": {
+        "source": {
+          "characters": 48615,
+          "estimated_tokens": 12156,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 49047,
+          "estimated_tokens": 12264,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 49016,
+          "estimated_tokens": 12256,
+          "items": 4
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "siege-utilities--hostile-review",
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 46537,
+            "estimated_tokens": 11637,
+            "items": 4
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "siege-utilities--hostile-review",
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 46789,
+            "estimated_tokens": 11699,
+            "items": 4
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "siege-utilities--hostile-review",
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 46758,
+            "estimated_tokens": 11691,
+            "items": 4
+          }
+        }
+      }
+    },
+    {
+      "id": "foreign-host",
+      "prompt": "review this Python diff",
+      "repo": "git@other-host:siege-analytics/siege_utilities.git",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "python"
+      ],
+      "measurements": {
+        "source": {
+          "characters": 11420,
+          "estimated_tokens": 2856,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10591,
+            "estimated_tokens": 2649,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "drf",
+      "prompt": "review DRF rest_framework serializer .py",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "django",
+        "django-rest-framework",
+        "python"
+      ],
+      "measurements": {
+        "source": {
+          "characters": 31938,
+          "estimated_tokens": 7986,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 32610,
+          "estimated_tokens": 8155,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 32610,
+          "estimated_tokens": 8155,
+          "items": 4
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10591,
+            "estimated_tokens": 2649,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "react-tsx",
+      "prompt": "review React TypeScript .tsx component",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "typescript",
+        "react"
+      ],
+      "measurements": {
+        "source": {
+          "characters": 18160,
+          "estimated_tokens": 4541,
+          "items": 3
+        },
+        "claude-code": {
+          "characters": 18629,
+          "estimated_tokens": 4659,
+          "items": 3
+        },
+        "craft-agent": {
+          "characters": 18629,
+          "estimated_tokens": 4659,
+          "items": 3
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11194,
+            "estimated_tokens": 2799,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "vue",
+      "prompt": "review Vue Pinia store .vue",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "vue"
+      ],
+      "measurements": {
+        "source": {
+          "characters": 9580,
+          "estimated_tokens": 2395,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 9667,
+          "estimated_tokens": 2417,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 9667,
+          "estimated_tokens": 2417,
+          "items": 1
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "rust",
+      "prompt": "review Rust .rs module",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "rust"
+      ],
+      "measurements": {
+        "source": {
+          "characters": 7005,
+          "estimated_tokens": 1752,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 7367,
+          "estimated_tokens": 1843,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 7367,
+          "estimated_tokens": 1843,
+          "items": 2
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "multi-route",
+      "prompt": "review Python Spark SQL Databricks Unity Catalog spatial PostGIS code",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "postgis",
+        "spatial",
+        "sql",
+        "databricks",
+        "unity-catalog",
+        "spark",
+        "coding",
+        "python"
+      ],
+      "measurements": {
+        "source": {
+          "characters": 61415,
+          "estimated_tokens": 15356,
+          "items": 8
+        },
+        "claude-code": {
+          "characters": 62060,
+          "estimated_tokens": 15518,
+          "items": 8
+        },
+        "craft-agent": {
+          "characters": 62060,
+          "estimated_tokens": 15518,
+          "items": 8
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog",
+            "spark",
+            "spatial",
+            "coding",
+            "python",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 50356,
+            "estimated_tokens": 12591,
+            "items": 7
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog",
+            "spark",
+            "spatial",
+            "coding",
+            "python",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 50803,
+            "estimated_tokens": 12703,
+            "items": 7
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "databricks",
+            "unity-catalog",
+            "spark",
+            "spatial",
+            "coding",
+            "python",
+            "sql"
+          ],
+          "selected_content": {
+            "characters": 50803,
+            "estimated_tokens": 12703,
+            "items": 7
+          }
+        }
+      }
+    },
+    {
+      "id": "over-budget",
+      "prompt": "[skill:branch] [skill:commit] [skill:create-pr] [skill:merge] [skill:code-review] [skill:skillbuilder] [skill:ticket-guard] [skill:create-ticket] [skill:spatial] [skill:coding] [skill:python] [skill:testing-frameworks] [skill:sql]",
+      "repo": "other/repo",
+      "state": "over-budget",
+      "slugs": [],
+      "measurements": {
+        "source": {
+          "characters": 148198,
+          "estimated_tokens": 37054,
+          "items": 13
+        },
+        "claude-code": {
+          "characters": 150393,
+          "estimated_tokens": 37602,
+          "items": 13
+        },
+        "craft-agent": {
+          "characters": 150393,
+          "estimated_tokens": 37602,
+          "items": 13
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "over-budget",
+          "slugs": [],
+          "selected_content": {
+            "characters": 147184,
+            "estimated_tokens": 36801,
+            "items": 13
+          }
+        },
+        "claude-code": {
+          "state": "over-budget",
+          "slugs": [],
+          "selected_content": {
+            "characters": 149199,
+            "estimated_tokens": 37303,
+            "items": 13
+          }
+        },
+        "craft-agent": {
+          "state": "over-budget",
+          "slugs": [],
+          "selected_content": {
+            "characters": 149199,
+            "estimated_tokens": 37303,
+            "items": 13
+          }
+        }
+      }
+    },
+    {
+      "id": "explicit-project-foreign",
+      "prompt": "[skill:siege-utilities--hostile-review]",
+      "repo": "git@other-host:siege-analytics/siege_utilities.git",
+      "state": "unknown",
+      "slugs": [],
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "explicit-shelf",
+      "prompt": "[skill:shelves--effective-python]",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10591,
+            "estimated_tokens": 2649,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "slash-shelf",
+      "prompt": "/shelves--effective-python",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10591,
+            "estimated_tokens": 2649,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "slash-project-foreign",
+      "prompt": "/siege-utilities--hostile-review",
+      "repo": "git@other-host:siege-analytics/siege_utilities.git",
+      "state": "unknown",
+      "slugs": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "scala-deferred",
+      "prompt": "review Scala-on-Spark Dataset[T]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "scala-on-spark",
+        "spark"
+      ],
+      "measurements": {
+        "source": {
+          "characters": 9468,
+          "estimated_tokens": 2367,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 9537,
+          "estimated_tokens": 2385,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 9537,
+          "estimated_tokens": 2385,
+          "items": 2
+        }
+      },
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "generic-rest",
+      "prompt": "design a REST framework in FastAPI",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "suffix-host",
+      "prompt": "review x.tailnet.ts.net",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "suffix-rust-host",
+      "prompt": "review docs.rs",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "suffix-map",
+      "prompt": "review example.tsx.map",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11194,
+            "estimated_tokens": 2799,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "spatial-foreign",
+      "prompt": "review spatial join in geopandas sjoin",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "geopandas",
+        "spatial"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10782,
+            "estimated_tokens": 2696,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10882,
+            "estimated_tokens": 2721,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 10882,
+            "estimated_tokens": 2721,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 17808,
+          "estimated_tokens": 4453,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 18027,
+          "estimated_tokens": 4507,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "explicit-drf-bracket",
+      "prompt": "[skill:django-rest-framework]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "django-rest-framework",
+        "coding",
+        "django",
+        "python"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20569,
+            "estimated_tokens": 5143,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20809,
+            "estimated_tokens": 5203,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20809,
+            "estimated_tokens": 5203,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 31938,
+          "estimated_tokens": 7986,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 32610,
+          "estimated_tokens": 8155,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 32610,
+          "estimated_tokens": 8155,
+          "items": 4
+        }
+      }
+    },
+    {
+      "id": "explicit-drf-slash",
+      "prompt": "/django-rest-framework",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "django-rest-framework",
+        "coding",
+        "django",
+        "python"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20569,
+            "estimated_tokens": 5143,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20809,
+            "estimated_tokens": 5203,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20809,
+            "estimated_tokens": 5203,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 31938,
+          "estimated_tokens": 7986,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 32610,
+          "estimated_tokens": 8155,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 32610,
+          "estimated_tokens": 8155,
+          "items": 4
+        }
+      }
+    },
+    {
+      "id": "explicit-rust-bracket",
+      "prompt": "[skill:rust]",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "explicit-rust-slash",
+      "prompt": "/rust",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "rust",
+        "coding"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7005,
+          "estimated_tokens": 1752,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 7367,
+          "estimated_tokens": 1843,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 7367,
+          "estimated_tokens": 1843,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "bare-project",
+      "prompt": "review this Python diff",
+      "repo": "siege-analytics/siege_utilities",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "python"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "siege-utilities--hostile-review",
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 46537,
+            "estimated_tokens": 11637,
+            "items": 4
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "siege-utilities--hostile-review",
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 46789,
+            "estimated_tokens": 11699,
+            "items": 4
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "siege-utilities--hostile-review",
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 46758,
+            "estimated_tokens": 11691,
+            "items": 4
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 11420,
+          "estimated_tokens": 2856,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "python-dotted",
+      "prompt": "add a field to models.py",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "python"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10591,
+            "estimated_tokens": 2649,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 11420,
+          "estimated_tokens": 2856,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "python-period",
+      "prompt": "please fix utils.py.",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "python"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10591,
+            "estimated_tokens": 2649,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 11420,
+          "estimated_tokens": 2856,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 11852,
+          "estimated_tokens": 2964,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "typescript-dotted",
+      "prompt": "fix vite.config.ts",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "typescript"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 6993,
+          "estimated_tokens": 1749,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 7355,
+          "estimated_tokens": 1840,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 7355,
+          "estimated_tokens": 1840,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "typescript-declaration",
+      "prompt": "edit index.d.ts",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "typescript"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 6993,
+          "estimated_tokens": 1749,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 7355,
+          "estimated_tokens": 1840,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 7355,
+          "estimated_tokens": 1840,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "react-dotted",
+      "prompt": "fix foo.test.tsx",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "coding",
+        "typescript",
+        "react"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11194,
+            "estimated_tokens": 2799,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 18160,
+          "estimated_tokens": 4541,
+          "items": 3
+        },
+        "claude-code": {
+          "characters": 18629,
+          "estimated_tokens": 4659,
+          "items": 3
+        },
+        "craft-agent": {
+          "characters": 18629,
+          "estimated_tokens": 4659,
+          "items": 3
+        }
+      }
+    },
+    {
+      "id": "vue-file",
+      "prompt": "update Button.vue",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "vue"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 9580,
+          "estimated_tokens": 2395,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 9667,
+          "estimated_tokens": 2417,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 9667,
+          "estimated_tokens": 2417,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "vue-sentence",
+      "prompt": "migrate this to Vue.",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "vue"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 9580,
+          "estimated_tokens": 2395,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 9667,
+          "estimated_tokens": 2417,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 9667,
+          "estimated_tokens": 2417,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "vue-js",
+      "prompt": "fix Vue.js routing",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "vue"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 9580,
+          "estimated_tokens": 2395,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 9667,
+          "estimated_tokens": 2417,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 9667,
+          "estimated_tokens": 2417,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "explicit-typescript-rule",
+      "prompt": "[rule:typescript]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "typescript",
+        "coding"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 6993,
+          "estimated_tokens": 1749,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 7355,
+          "estimated_tokens": 1840,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 7355,
+          "estimated_tokens": 1840,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "explicit-rust-rule",
+      "prompt": "[rule:rust]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "rust",
+        "coding"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 7005,
+          "estimated_tokens": 1752,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 7367,
+          "estimated_tokens": 1843,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 7367,
+          "estimated_tokens": 1843,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "rejected-rule-create",
+      "prompt": "[rule:close-ticket] create ticket",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "create-ticket",
+        "ticket-guard"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "create-ticket",
+            "ticket-guard"
+          ],
+          "selected_content": {
+            "characters": 20890,
+            "estimated_tokens": 5223,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "create-ticket",
+            "ticket-guard"
+          ],
+          "selected_content": {
+            "characters": 20978,
+            "estimated_tokens": 5245,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "create-ticket",
+            "ticket-guard"
+          ],
+          "selected_content": {
+            "characters": 20978,
+            "estimated_tokens": 5245,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 20890,
+          "estimated_tokens": 5223,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 20978,
+          "estimated_tokens": 5245,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 20978,
+          "estimated_tokens": 5245,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "rejected-rule-close",
+      "prompt": "[rule:create-ticket] close ticket",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "close-ticket",
+        "ticket-guard"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "close-ticket",
+            "ticket-guard"
+          ],
+          "selected_content": {
+            "characters": 13057,
+            "estimated_tokens": 3265,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "close-ticket",
+            "ticket-guard"
+          ],
+          "selected_content": {
+            "characters": 13085,
+            "estimated_tokens": 3272,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "close-ticket",
+            "ticket-guard"
+          ],
+          "selected_content": {
+            "characters": 13085,
+            "estimated_tokens": 3272,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 13057,
+          "estimated_tokens": 3265,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 13085,
+          "estimated_tokens": 3272,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 13085,
+          "estimated_tokens": 3272,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "typed-python-rule",
+      "prompt": "[rule:python]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "python"
+      ],
+      "source_paths": [
+        "skills/_python-rules.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10591,
+            "estimated_tokens": 2649,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "coding",
+            "python"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 1994,
+          "estimated_tokens": 499,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 1994,
+          "estimated_tokens": 499,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 1994,
+          "estimated_tokens": 499,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "typed-python-skill",
+      "prompt": "[skill:python]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "python"
+      ],
+      "source_paths": [
+        "skills/python/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "python",
+            "coding"
+          ],
+          "selected_content": {
+            "characters": 10591,
+            "estimated_tokens": 2649,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "python",
+            "coding"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "python",
+            "coding"
+          ],
+          "selected_content": {
+            "characters": 10843,
+            "estimated_tokens": 2711,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 6633,
+          "estimated_tokens": 1659,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 6703,
+          "estimated_tokens": 1676,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 6703,
+          "estimated_tokens": 1676,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "typed-react-rule",
+      "prompt": "[rule:react]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "react"
+      ],
+      "source_paths": [
+        "skills/_react-rules.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11194,
+            "estimated_tokens": 2799,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 9002,
+          "estimated_tokens": 2251,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 9062,
+          "estimated_tokens": 2266,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 9062,
+          "estimated_tokens": 2266,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "typed-react-skill",
+      "prompt": "[skill:react]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "react"
+      ],
+      "source_paths": [
+        "skills/react/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11194,
+            "estimated_tokens": 2799,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 11167,
+          "estimated_tokens": 2792,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 11274,
+          "estimated_tokens": 2819,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 11274,
+          "estimated_tokens": 2819,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "typed-drf-rule",
+      "prompt": "[rule:django-rest-framework]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "django-rest-framework"
+      ],
+      "source_paths": [
+        "skills/_django-rest-framework-rules.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "django"
+          ],
+          "selected_content": {
+            "characters": 11833,
+            "estimated_tokens": 2959,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "django"
+          ],
+          "selected_content": {
+            "characters": 11851,
+            "estimated_tokens": 2963,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "django"
+          ],
+          "selected_content": {
+            "characters": 11851,
+            "estimated_tokens": 2963,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 9132,
+          "estimated_tokens": 2283,
+          "items": 1
+        },
+        "claude-code": {
+          "characters": 9245,
+          "estimated_tokens": 2312,
+          "items": 1
+        },
+        "craft-agent": {
+          "characters": 9245,
+          "estimated_tokens": 2312,
+          "items": 1
+        }
+      }
+    },
+    {
+      "id": "typed-drf-skill",
+      "prompt": "[skill:django-rest-framework]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "django-rest-framework",
+        "coding",
+        "django",
+        "python"
+      ],
+      "source_paths": [
+        "skills/django-rest-framework/SKILL.md",
+        "skills/coding/SKILL.md",
+        "skills/django/SKILL.md",
+        "skills/python/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20569,
+            "estimated_tokens": 5143,
+            "items": 2
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20809,
+            "estimated_tokens": 5203,
+            "items": 2
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "django-rest-framework",
+            "django"
+          ],
+          "selected_content": {
+            "characters": 20809,
+            "estimated_tokens": 5203,
+            "items": 2
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 31938,
+          "estimated_tokens": 7986,
+          "items": 4
+        },
+        "claude-code": {
+          "characters": 32610,
+          "estimated_tokens": 8155,
+          "items": 4
+        },
+        "craft-agent": {
+          "characters": 32610,
+          "estimated_tokens": 8155,
+          "items": 4
+        }
+      }
+    },
+    {
+      "id": "typed-react-both",
+      "prompt": "[rule:react] [skill:react]",
+      "repo": "other/repo",
+      "state": "matched",
+      "slugs": [
+        "react",
+        "react"
+      ],
+      "source_paths": [
+        "skills/_react-rules.md",
+        "skills/react/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11194,
+            "estimated_tokens": 2799,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "react"
+          ],
+          "selected_content": {
+            "characters": 11301,
+            "estimated_tokens": 2826,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 20169,
+          "estimated_tokens": 5043,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 20336,
+          "estimated_tokens": 5085,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 20336,
+          "estimated_tokens": 5085,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "wrong-kind-typescript",
+      "prompt": "[skill:typescript]",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "typescript"
+          ],
+          "selected_content": {
+            "characters": 2206,
+            "estimated_tokens": 552,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "typescript"
+          ],
+          "selected_content": {
+            "characters": 2206,
+            "estimated_tokens": 552,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "typescript"
+          ],
+          "selected_content": {
+            "characters": 2206,
+            "estimated_tokens": 552,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "wrong-kind-rust",
+      "prompt": "[skill:rust]",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "rust"
+          ],
+          "selected_content": {
+            "characters": 2218,
+            "estimated_tokens": 555,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "wrong-kind-siege-utilities",
+      "prompt": "[skill:siege-utilities]",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities"
+          ],
+          "selected_content": {
+            "characters": 3131,
+            "estimated_tokens": 783,
+            "items": 1
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities"
+          ],
+          "selected_content": {
+            "characters": 3152,
+            "estimated_tokens": 788,
+            "items": 1
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities"
+          ],
+          "selected_content": {
+            "characters": 3152,
+            "estimated_tokens": 788,
+            "items": 1
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "wrong-kind-vue",
+      "prompt": "[rule:vue]",
+      "repo": "other/repo",
+      "state": "unknown",
+      "slugs": [],
+      "source_paths": [],
+      "baseline_load_effect": {
+        "source": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "claude-code": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        },
+        "craft-agent": {
+          "state": "unknown",
+          "slugs": [],
+          "selected_content": {
+            "characters": 0,
+            "estimated_tokens": 0,
+            "items": 0
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "claude-code": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        },
+        "craft-agent": {
+          "characters": 0,
+          "estimated_tokens": 0,
+          "items": 0
+        }
+      }
+    },
+    {
+      "id": "foreign-spatial-content",
+      "prompt": "[skill:geopandas] [skill:sedona]",
+      "repo": "git@foreign-host:siege-analytics/siege_utilities.git",
+      "state": "matched",
+      "slugs": [
+        "geopandas",
+        "sedona"
+      ],
+      "source_paths": [
+        "skills/geopandas/SKILL.md",
+        "skills/sedona/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 25919,
+            "estimated_tokens": 6481,
+            "items": 3
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 26389,
+            "estimated_tokens": 6599,
+            "items": 3
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 26389,
+            "estimated_tokens": 6599,
+            "items": 3
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 15339,
+          "estimated_tokens": 3836,
+          "items": 2
+        },
+        "claude-code": {
+          "characters": 15628,
+          "estimated_tokens": 3907,
+          "items": 2
+        },
+        "craft-agent": {
+          "characters": 15628,
+          "estimated_tokens": 3907,
+          "items": 2
+        }
+      }
+    },
+    {
+      "id": "exact-spatial-content",
+      "prompt": "[skill:geopandas] [skill:sedona]",
+      "repo": "github.com/siege-analytics/siege_utilities",
+      "state": "matched",
+      "slugs": [
+        "siege-utilities--rules",
+        "geopandas",
+        "sedona"
+      ],
+      "source_paths": [
+        "projects/siege-utilities/_rules.md",
+        "skills/geopandas/SKILL.md",
+        "skills/sedona/SKILL.md"
+      ],
+      "baseline_load_effect": {
+        "source": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 35956,
+            "estimated_tokens": 8991,
+            "items": 4
+          }
+        },
+        "claude-code": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 36426,
+            "estimated_tokens": 9109,
+            "items": 4
+          }
+        },
+        "craft-agent": {
+          "state": "matched",
+          "slugs": [
+            "siege-utilities--rules",
+            "geopandas",
+            "sedona",
+            "spatial"
+          ],
+          "selected_content": {
+            "characters": 36426,
+            "estimated_tokens": 9109,
+            "items": 4
+          }
+        }
+      },
+      "measurements": {
+        "source": {
+          "characters": 26625,
+          "estimated_tokens": 6658,
+          "items": 3
+        },
+        "claude-code": {
+          "characters": 26914,
+          "estimated_tokens": 6729,
+          "items": 3
+        },
+        "craft-agent": {
+          "characters": 26914,
+          "estimated_tokens": 6729,
+          "items": 3
+        }
+      }
+    }
+  ]
+}

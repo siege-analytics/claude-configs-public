@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "events": [
+    {
+      "id": "example-start", "actor": "hub", "generation": 1, "at": 1000, "kind": "init",
+      "data": {
+        "objective": "Review a synthetic candidate", "scope": "Synthetic review coordination only",
+        "owner": "worker", "coordinator": "hub", "heartbeat_seconds": 60,
+        "chunk_seconds": 300, "failure_budget": 2, "next_action": "Request review"
+      }
+    },
+    {
+      "id": "example-candidate", "actor": "worker", "generation": 1, "at": 1010, "kind": "candidate",
+      "data": {"sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+    },
+    {
+      "id": "example-queued", "actor": "worker", "generation": 1, "at": 1020, "kind": "review",
+      "data": {
+        "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "verdict": "queued",
+        "evidence": ["https://example.invalid/synthetic-review-request"], "failure_class": ""
+      }
+    }
+  ]
+}

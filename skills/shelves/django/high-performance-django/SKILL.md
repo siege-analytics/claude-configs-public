@@ -598,3 +598,9 @@ onboarding, maintenance, testing, documentation.
 - **Verified:** 2026-06-02 via WebFetch (all chapters confirmed readable:
   preface, intro, build, deployment, preparation, launch, road-ahead,
   final-thoughts)
+
+## Additional shipped references
+
+Optional supplemental material (consult only when the topic applies; these are not mandatory chapters):
+- [`references/monitoring-tools.md`](references/monitoring-tools.md)
+- [`references/stack-tuning.md`](references/stack-tuning.md)

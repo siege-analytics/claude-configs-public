@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "fixture_id": "strict-release",
+  "repository_identity": {
+    "host": "github.example.invalid",
+    "owner": "synthetic-org",
+    "repository": "strict-release"
+  },
+  "parent_lock": {
+    "host": "github.com",
+    "owner": "siege-analytics",
+    "repository": "claude-configs-public",
+    "revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
+    "import_mechanism": "git",
+    "digest": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
+    "tool_version": "effective-policy/1"
+  },
+  "values": {
+    "branch-policy": {
+      "integration_branch": "develop",
+      "local_feedback": "native-git-pre-push",
+      "protected_acceptance": "exact-range-and-head"
+    },
+    "ticket-requirement": {
+      "required": true,
+      "match_policy": "canonical-ticket-reference-v1",
+      "exception_policy": "scoped-evidence-record-only"
+    },
+    "review-procedure-binding": {
+      "procedure": "self-review",
+      "authorization_effect": "none"
+    }
+  },
+  "declared_overrides": []
+}

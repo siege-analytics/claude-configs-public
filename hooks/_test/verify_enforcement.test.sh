@@ -41,9 +41,14 @@ for guard in think-gate-guard.sh investigate-gate-guard.sh skill-enforcement-gat
     printf '#!/usr/bin/env bash\n' > "$WIRED/hooks/resolver/$guard"
     chmod +x "$WIRED/hooks/resolver/$guard"
 done
-: > "$WIRED/RULES_BUNDLE.md"
+if [[ ! -f "$REPO_ROOT/dist/flat/skills/KERNEL.md" ]]; then
+    echo "verify_enforcement: full build required before kernel digest fixtures" >&2
+    exit 1
+fi
+cp "$REPO_ROOT/dist/flat/skills/KERNEL.md" "$WIRED/KERNEL.md"
+printf '# Compatibility bundle\nBroad compatibility rules\n' > "$WIRED/RULES_BUNDLE.md"
 : > "$WIRED/RESOLVER.md"
-(cd "$WIRED" && ln -s RULES_BUNDLE.md CLAUDE.md)
+(cd "$WIRED" && ln -s KERNEL.md CLAUDE.md)
 cat > "$WIRED/enforcement-manifest.json" <<'JSON'
 {"gates":[{"id":"think-gate"},{"id":"investigate-gate"}]}
 JSON
@@ -53,6 +58,13 @@ JSON
 cat > "$WIRED/automations.json" <<'JSON'
 {"version":2,"automations":{"SchedulerTick":[{"name":"Standing-order watchdog","cron":"*/10 * * * *","actions":[{"type":"prompt","prompt":"x"}]}]}}
 JSON
+
+# Native acceptance uses the actual packaged range path, never a stub.
+mkdir -p "$WIRED/.githooks" "$WIRED/bin" "$WIRED/catalog"
+cp "$REPO_ROOT/.githooks/pre-push" "$WIRED/.githooks/pre-push"
+cp -R "$REPO_ROOT/hooks/git" "$REPO_ROOT/hooks/lib" "$WIRED/hooks/"
+cp "$REPO_ROOT/bin/review-risk.py" "$WIRED/bin/"
+cp "$REPO_ROOT/catalog/review-risk-policy.json" "$WIRED/catalog/"
 
 if bash "$PROBE" --target "$WIRED" --mode craft-agent >/dev/null 2>&1; then
     ok "fully-wired fixture passes"
@@ -69,7 +81,7 @@ fi
 NOWATCHDOG="$TMP/nowatchdog"
 cp -r "$WIRED" "$NOWATCHDOG"
 rm -f "$NOWATCHDOG/CLAUDE.md"
-(cd "$NOWATCHDOG" && ln -s RULES_BUNDLE.md CLAUDE.md)
+(cd "$NOWATCHDOG" && ln -s KERNEL.md CLAUDE.md)
 cat > "$NOWATCHDOG/.claude/settings.json" <<JSON
 {"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NOWATCHDOG/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
 JSON
@@ -91,7 +103,7 @@ fi
 NOAUTOMATIONS="$TMP/noautomations"
 cp -r "$WIRED" "$NOAUTOMATIONS"
 rm -f "$NOAUTOMATIONS/CLAUDE.md"
-(cd "$NOAUTOMATIONS" && ln -s RULES_BUNDLE.md CLAUDE.md)
+(cd "$NOAUTOMATIONS" && ln -s KERNEL.md CLAUDE.md)
 cat > "$NOAUTOMATIONS/.claude/settings.json" <<JSON
 {"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NOAUTOMATIONS/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
 JSON
@@ -101,6 +113,287 @@ if bash "$PROBE" --target "$NOAUTOMATIONS" --mode craft-agent >/dev/null 2>&1; t
 else
     bad "no-automations.json fixture should PASS (watchdog opt-in) but failed"
 fi
+
+# --- PASS fixture: operator file equals complete kernel content --------------
+
+OPERATOR_EMBED="$TMP/operator-embed"
+cp -r "$WIRED" "$OPERATOR_EMBED"
+rm -f "$OPERATOR_EMBED/CLAUDE.md"
+cp "$OPERATOR_EMBED/KERNEL.md" "$OPERATOR_EMBED/CLAUDE.md"
+cat > "$OPERATOR_EMBED/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$OPERATOR_EMBED/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$OPERATOR_EMBED" --mode craft-agent >/dev/null 2>&1; then
+    ok "operator CLAUDE.md exactly equal to the complete kernel passes"
+else
+    bad "operator CLAUDE.md exactly equal to kernel content should pass but failed"
+fi
+
+# --- FAIL fixture: decoy kernel filename mention without content -------------
+
+DECOY_MOUNT="$TMP/decoy-mount"
+cp -r "$WIRED" "$DECOY_MOUNT"
+rm -f "$DECOY_MOUNT/CLAUDE.md"
+printf 'The KERNEL.md is not included in this operator file.\n' > "$DECOY_MOUNT/CLAUDE.md"
+cat > "$DECOY_MOUNT/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$DECOY_MOUNT/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$DECOY_MOUNT" --mode craft-agent >/dev/null 2>&1; then
+    bad "operator CLAUDE.md with a decoy kernel mention should FAIL but passed"
+else
+    ok "operator CLAUDE.md decoy kernel mention fails the probe"
+fi
+
+# --- FAIL fixture: operator file mounts kernel and broad bundle --------------
+
+MIXED_MOUNT="$TMP/mixed-mount"
+cp -r "$WIRED" "$MIXED_MOUNT"
+rm -f "$MIXED_MOUNT/CLAUDE.md"
+cat > "$MIXED_MOUNT/CLAUDE.md" <<'EOF'
+Read KERNEL.md as the safety constitution.
+Also read RULES_BUNDLE.md for all detailed rules.
+EOF
+cat > "$MIXED_MOUNT/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$MIXED_MOUNT/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$MIXED_MOUNT" --mode craft-agent >/dev/null 2>&1; then
+    bad "operator CLAUDE.md with a mixed full-bundle mount should FAIL but passed"
+else
+    ok "operator CLAUDE.md mixed full-bundle mount fails the probe"
+fi
+
+# --- FAIL fixture: KERNEL.md redirects to the broad bundle -------------------
+
+KERNEL_SYMLINK="$TMP/kernel-symlink"
+cp -r "$WIRED" "$KERNEL_SYMLINK"
+rm -f "$KERNEL_SYMLINK/KERNEL.md"
+ln -s RULES_BUNDLE.md "$KERNEL_SYMLINK/KERNEL.md"
+cat > "$KERNEL_SYMLINK/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$KERNEL_SYMLINK/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$KERNEL_SYMLINK" --mode craft-agent >/dev/null 2>&1; then
+    bad "KERNEL.md symlink to RULES_BUNDLE.md should FAIL but passed"
+else
+    ok "KERNEL.md symlink to RULES_BUNDLE.md fails pinned kernel verification"
+fi
+
+# --- FAIL fixture: noncanonical regular kernel content -----------------------
+
+ALTERED_KERNEL="$TMP/altered-kernel"
+cp -r "$WIRED" "$ALTERED_KERNEL"
+printf '# Not the canonical kernel\n' > "$ALTERED_KERNEL/KERNEL.md"
+cat > "$ALTERED_KERNEL/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$ALTERED_KERNEL/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$ALTERED_KERNEL" --mode craft-agent >/dev/null 2>&1; then
+    bad "altered regular KERNEL.md should FAIL but passed"
+else
+    ok "altered regular KERNEL.md fails pinned kernel verification"
+fi
+
+# --- FAIL fixture: AGENTS.md symlinks the broad bundle ------------------------
+
+AGENTS_BUNDLE_LINK="$TMP/agents-bundle-link"
+cp -r "$WIRED" "$AGENTS_BUNDLE_LINK"
+ln -s RULES_BUNDLE.md "$AGENTS_BUNDLE_LINK/AGENTS.md"
+cat > "$AGENTS_BUNDLE_LINK/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$AGENTS_BUNDLE_LINK/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$AGENTS_BUNDLE_LINK" --mode craft-agent >/dev/null 2>&1; then
+    bad "AGENTS.md symlink to RULES_BUNDLE.md should FAIL but passed"
+else
+    ok "AGENTS.md symlink to RULES_BUNDLE.md fails the probe"
+fi
+
+# --- FAIL fixture: AGENTS.md regular file requests broad bundle --------------
+
+AGENTS_BUNDLE_FILE="$TMP/agents-bundle-file"
+cp -r "$WIRED" "$AGENTS_BUNDLE_FILE"
+printf 'Read RULES_BUNDLE.md globally.\n' > "$AGENTS_BUNDLE_FILE/AGENTS.md"
+cat > "$AGENTS_BUNDLE_FILE/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$AGENTS_BUNDLE_FILE/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$AGENTS_BUNDLE_FILE" --mode craft-agent >/dev/null 2>&1; then
+    bad "AGENTS.md regular broad-bundle mount should FAIL but passed"
+else
+    ok "AGENTS.md regular broad-bundle mount fails the probe"
+fi
+
+# --- PASS fixture: regular AGENTS.md exactly duplicates verified kernel ------
+
+AGENTS_EXACT="$TMP/agents-exact"
+cp -r "$WIRED" "$AGENTS_EXACT"
+cp "$AGENTS_EXACT/KERNEL.md" "$AGENTS_EXACT/AGENTS.md"
+cat > "$AGENTS_EXACT/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$AGENTS_EXACT/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$AGENTS_EXACT" --mode craft-agent >/dev/null 2>&1; then
+    ok "regular AGENTS.md exactly equal to verified kernel passes"
+else
+    bad "regular AGENTS.md exactly equal to verified kernel should pass"
+fi
+
+# --- FAIL fixture: pasted broad bundle bytes in AGENTS.md --------------------
+
+AGENTS_PASTED="$TMP/agents-pasted"
+cp -r "$WIRED" "$AGENTS_PASTED"
+cp "$AGENTS_PASTED/RULES_BUNDLE.md" "$AGENTS_PASTED/AGENTS.md"
+cat > "$AGENTS_PASTED/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$AGENTS_PASTED/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$AGENTS_PASTED" --mode craft-agent >/dev/null 2>&1; then
+    bad "AGENTS.md containing pasted broad-bundle bytes should FAIL but passed"
+else
+    ok "AGENTS.md pasted broad-bundle bytes fail exact composition"
+fi
+
+# --- FAIL fixture: kernel plus pasted bundle bytes in CLAUDE.md --------------
+
+CLAUDE_PASTED="$TMP/claude-pasted"
+cp -r "$WIRED" "$CLAUDE_PASTED"
+rm -f "$CLAUDE_PASTED/CLAUDE.md"
+cat "$CLAUDE_PASTED/KERNEL.md" "$CLAUDE_PASTED/RULES_BUNDLE.md" > "$CLAUDE_PASTED/CLAUDE.md"
+cat > "$CLAUDE_PASTED/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$CLAUDE_PASTED/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$CLAUDE_PASTED" --mode craft-agent >/dev/null 2>&1; then
+    bad "CLAUDE.md with kernel plus pasted broad bundle should FAIL but passed"
+else
+    ok "CLAUDE.md kernel plus pasted broad bundle fails exact composition"
+fi
+
+# --- FAIL fixture: AGENTS.md indirect alias to broad bundle ------------------
+
+AGENTS_ALIAS="$TMP/agents-alias"
+cp -r "$WIRED" "$AGENTS_ALIAS"
+ln -s RULES_BUNDLE.md "$AGENTS_ALIAS/extra-policy.md"
+printf 'Read extra-policy.md globally before every task.\n' > "$AGENTS_ALIAS/AGENTS.md"
+cat > "$AGENTS_ALIAS/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$AGENTS_ALIAS/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$AGENTS_ALIAS" --mode craft-agent >/dev/null 2>&1; then
+    bad "AGENTS.md indirect alias to broad bundle should FAIL but passed"
+else
+    ok "AGENTS.md indirect policy alias fails exact composition"
+fi
+
+# --- PASS fixture: nested instructions resolve/duplicate verified kernel -----
+
+NESTED_EXACT="$TMP/nested-exact"
+cp -r "$WIRED" "$NESTED_EXACT"
+mkdir -p "$NESTED_EXACT/project/deeper"
+ln -s ../KERNEL.md "$NESTED_EXACT/project/AGENTS.md"
+cp "$NESTED_EXACT/KERNEL.md" "$NESTED_EXACT/project/deeper/CLAUDE.md"
+cat > "$NESTED_EXACT/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NESTED_EXACT/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$NESTED_EXACT" --mode craft-agent >/dev/null 2>&1; then
+    ok "nested exact-kernel instruction files pass"
+else
+    bad "nested exact-kernel instruction files should pass but failed"
+fi
+
+# --- FAIL fixture: nested AGENTS.md redirects through broad-policy alias -----
+
+NESTED_ALIAS="$TMP/nested-alias"
+cp -r "$WIRED" "$NESTED_ALIAS"
+mkdir -p "$NESTED_ALIAS/project"
+ln -s RULES_BUNDLE.md "$NESTED_ALIAS/policy.md"
+printf 'Read %s/policy.md globally before every task.\n' "$NESTED_ALIAS" > "$NESTED_ALIAS/project/AGENTS.md"
+cat > "$NESTED_ALIAS/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NESTED_ALIAS/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$NESTED_ALIAS" --mode craft-agent >/dev/null 2>&1; then
+    bad "nested AGENTS.md indirect broad-policy alias should FAIL but passed"
+else
+    ok "nested AGENTS.md indirect broad-policy alias fails recursive verification"
+fi
+
+# --- FAIL fixtures: case variants resolve as injected names on APFS ----------
+
+for variant in Agents.md claude.md; do
+    CASE_VARIANT="$TMP/case-${variant%%.*}"
+    cp -r "$WIRED" "$CASE_VARIANT"
+    mkdir -p "$CASE_VARIANT/project"
+    cp "$CASE_VARIANT/RULES_BUNDLE.md" "$CASE_VARIANT/project/$variant"
+    cat > "$CASE_VARIANT/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$CASE_VARIANT/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+    if bash "$PROBE" --target "$CASE_VARIANT" --mode craft-agent >/dev/null 2>&1; then
+        bad "nested case-variant $variant pasted bundle should FAIL but passed"
+    else
+        ok "nested case-variant $variant pasted bundle fails verification"
+    fi
+done
+CASE_SYMLINK="$TMP/case-symlink"
+cp -r "$WIRED" "$CASE_SYMLINK"
+mkdir -p "$CASE_SYMLINK/project"
+ln -s ../RULES_BUNDLE.md "$CASE_SYMLINK/project/agents.md"
+cat > "$CASE_SYMLINK/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$CASE_SYMLINK/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$CASE_SYMLINK" --mode craft-agent >/dev/null 2>&1; then
+    bad "nested case-variant agents.md bundle symlink should FAIL but passed"
+else
+    ok "nested case-variant agents.md bundle symlink fails verification"
+fi
+
+# --- FAIL fixture: directory symlink hides external nested instruction -------
+
+NESTED_DIR_LINK="$TMP/nested-dir-link"
+cp -r "$WIRED" "$NESTED_DIR_LINK"
+EXTERNAL_PROJECT="$TMP/external-project"
+mkdir -p "$EXTERNAL_PROJECT"
+cp "$NESTED_DIR_LINK/RULES_BUNDLE.md" "$EXTERNAL_PROJECT/AGENTS.md"
+ln -s "$EXTERNAL_PROJECT" "$NESTED_DIR_LINK/project"
+cat > "$NESTED_DIR_LINK/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$NESTED_DIR_LINK/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$NESTED_DIR_LINK" --mode craft-agent >/dev/null 2>&1; then
+    bad "descendant directory symlink hiding AGENTS.md should FAIL but passed"
+else
+    ok "descendant directory symlink hiding AGENTS.md fails closed"
+fi
+
+# --- FAIL fixture: --target root symlink skips recursive traversal -----------
+
+ROOT_REAL="$TMP/root-real"
+cp -r "$WIRED" "$ROOT_REAL"
+mkdir -p "$ROOT_REAL/project"
+cp "$ROOT_REAL/RULES_BUNDLE.md" "$ROOT_REAL/project/AGENTS.md"
+cat > "$ROOT_REAL/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$ROOT_REAL/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$ROOT_REAL" --mode craft-agent >/dev/null 2>&1; then
+    bad "physical target with nested broad AGENTS.md should FAIL but passed"
+else
+    ok "physical target with nested broad AGENTS.md fails recursive verification"
+fi
+ROOT_ALIAS="$TMP/root-alias"
+ln -s "$ROOT_REAL" "$ROOT_ALIAS"
+if bash "$PROBE" --target "$ROOT_ALIAS" --mode craft-agent >/dev/null 2>&1; then
+    bad "symlinked target root should FAIL before traversal but passed"
+else
+    ok "symlinked target root fails closed before traversal"
+fi
+for suffix in // ///; do
+    if bash "$PROBE" --target "$ROOT_ALIAS$suffix" --mode craft-agent >/dev/null 2>&1; then
+        bad "dirty symlinked target root with $suffix should FAIL but passed"
+    else
+        ok "dirty symlinked target root with $suffix fails closed"
+    fi
+done
+ROOT_CLEAN="$TMP/root-clean"
+cp -r "$WIRED" "$ROOT_CLEAN"
+ROOT_CLEAN_ALIAS="$TMP/root-clean-alias"
+ln -s "$ROOT_CLEAN" "$ROOT_CLEAN_ALIAS"
+for suffix in // ///; do
+    if bash "$PROBE" --target "$ROOT_CLEAN_ALIAS$suffix" --mode craft-agent >/dev/null 2>&1; then
+        bad "clean symlinked target root with $suffix should FAIL but passed"
+    else
+        ok "clean symlinked target root with $suffix fails closed"
+    fi
+done
 
 # --- FAIL fixture: skills only, nothing wired --------------------------------
 

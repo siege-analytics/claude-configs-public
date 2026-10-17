@@ -1,205 +1,162 @@
 #!/usr/bin/env bash
-# Generate a Claude Code settings file from hooks/settings-snippet.json
-# with paths resolved to wherever the hooks actually live on disk.
-#
-# Two install modes:
-#
-# Direct-clone (default — for cloned-siege use):
-#   bash bin/install-hooks.sh
-#   → Generates $REPO_ROOT/.claude/settings.local.json
-#   → Hook paths point at $REPO_ROOT/hooks/
-#
-# Workspace-consumer (Craft Agent, electinfo workspaces, etc.):
-#   bash bin/install-hooks.sh --workspace <workspace-path> --hooks-root <path>
-#   → Generates <workspace>/.claude/settings.json (or --target-file if specified)
-#   → Hook paths point at <hooks-root>/hooks/
-#
-# Relative (regenerating this repo's own committed .claude/settings.json):
-#   bash bin/install-hooks.sh --relative
-#   Generates $REPO_ROOT/.claude/settings.json
-#   Hook paths are repo-relative (hooks/...), so the file is portable and
-#     can be committed. This is the mode that keeps the committed settings
-#     file in step with the snippet; see #703 for what drifts without it.
-#
-# Example for a Craft Agent workspace whose hooks are bind-mounted in via
-# skills/siege/hooks/:
-#   bash bin/install-hooks.sh \
-#     --workspace ~/.craft-agent/workspaces/dheeraj-electinfo \
-#     --hooks-root ~/.craft-agent/workspaces/dheeraj-electinfo/skills/siege
-#
-# This overwrites the target file. If you already have settings.json content
-# you want to preserve, back it up first and merge by hand afterwards.
-
+# Merge hook settings without replacing project customization. Register native
+# Git hooks only for a no-option direct clone or an explicit --git-repo root.
 set -euo pipefail
-
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SNIPPET="$REPO_ROOT/hooks/settings-snippet.json"
-
-# Defaults: direct-clone mode
-TARGET="$REPO_ROOT/.claude/settings.local.json"
-HOOKS_ROOT="$REPO_ROOT"
-RELATIVE=0
-TARGET_EXPLICIT=0
-WORKSPACE_SET=0
-HOOKS_ROOT_SET=0
-
-usage() {
-    cat <<'USAGE'
-Usage: bash bin/install-hooks.sh [options]
-
-Direct-clone mode (default):
-  No args. Generates $REPO_ROOT/.claude/settings.local.json with hook
-  paths pointing at $REPO_ROOT/hooks/.
-
-Workspace-consumer mode:
-  --workspace <path>      Target <path>/.claude/settings.json
-  --hooks-root <path>     Hook paths resolve to <path>/hooks/
-  --target-file <path>    Explicit settings file path (overrides --workspace)
-
-Relative mode:
-  --relative              Emit repo-relative hook paths (hooks/...) and
-                          target $REPO_ROOT/.claude/settings.json. Used to
-                          regenerate this repo's own committed settings file
-                          from the snippet. Incompatible with --hooks-root
-                          and --workspace.
-
-Other:
-  -h, --help              Show this help
-USAGE
-}
-
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --workspace)
-            if [[ -z "${2:-}" ]]; then
-                echo "ERROR: --workspace requires a path" >&2
-                exit 2
-            fi
-            TARGET="${2%/}/.claude/settings.json"
-            WORKSPACE_SET=1
-            shift 2
-            ;;
-        --hooks-root)
-            if [[ -z "${2:-}" ]]; then
-                echo "ERROR: --hooks-root requires a path" >&2
-                exit 2
-            fi
-            HOOKS_ROOT="${2%/}"
-            HOOKS_ROOT_SET=1
-            shift 2
-            ;;
-        --relative)
-            RELATIVE=1
-            shift
-            ;;
-        --target-file)
-            if [[ -z "${2:-}" ]]; then
-                echo "ERROR: --target-file requires a path" >&2
-                exit 2
-            fi
-            TARGET="$2"
-            TARGET_EXPLICIT=1
-            shift 2
-            ;;
-        -h|--help)
-            usage
-            exit 0
-            ;;
-        *)
-            echo "ERROR: unknown arg: $1" >&2
-            usage >&2
-            exit 2
-            ;;
-    esac
+for argument in "$@"; do
+    if [[ "$argument" == "--selected" ]]; then
+        exec python3 -B "$REPO_ROOT/bin/selected_registration.py" install "$@"
+    fi
 done
+exec python3 - "$REPO_ROOT" "$@" <<'PY'
+import argparse
+import copy
+import json
+import os
+from pathlib import Path
+import shlex
+import subprocess
+import sys
+import tempfile
 
-if [[ $RELATIVE -eq 1 ]]; then
-    # Relative mode resolves hooks against the repo it is generating for, so a
-    # caller-supplied root or workspace has nothing to bind to. Refuse rather
-    # than silently ignoring the flag.
-    if [[ $HOOKS_ROOT_SET -eq 1 || $WORKSPACE_SET -eq 1 ]]; then
-        echo "ERROR: --relative is incompatible with --hooks-root and --workspace" >&2
-        exit 2
-    fi
-    if [[ $TARGET_EXPLICIT -eq 0 ]]; then
-        TARGET="$REPO_ROOT/.claude/settings.json"
-    fi
-fi
+root = Path(sys.argv[1]).resolve()
+parser = argparse.ArgumentParser(description='Merge project hook settings; register native hooks only in an explicit consumer or a no-option direct clone.')
+parser.add_argument('--workspace', type=Path)
+parser.add_argument('--hooks-root', type=Path)
+parser.add_argument('--target-file', type=Path)
+parser.add_argument('--git-repo', type=Path, help='exact consumer worktree root for native registration')
+parser.add_argument('--relative', action='store_true', help='generate relative tool settings only, without implicit Git registration')
+args = parser.parse_args(sys.argv[2:])
 
-if [[ ! -f "$SNIPPET" ]]; then
-    echo "ERROR: snippet not found at $SNIPPET" >&2
-    exit 1
-fi
+def git(repo, *argv, optional=False):
+    result = subprocess.run(['git', '-C', str(repo), *argv], text=True, capture_output=True)
+    if result.returncode and not optional:
+        raise ValueError(result.stderr.strip() or 'Git command failed')
+    return result.stdout.strip() if result.returncode == 0 else None
 
-# Validate the hooks actually exist at the resolved location before writing
-# the settings file. Catches "wrong --hooks-root" mistakes at install time
-# rather than at first-turn time when the hook silently exits 127.
-EXPECTED="$HOOKS_ROOT/hooks/resolver/inject-resolver.sh"
-if [[ ! -f "$EXPECTED" ]]; then
-    echo "ERROR: hooks not found at $HOOKS_ROOT/hooks/" >&2
-    echo "       expected $EXPECTED to exist" >&2
-    echo "       (use --hooks-root to point at the actual hooks tree)" >&2
-    exit 1
-fi
+def merge_settings(existing, incoming):
+    if not isinstance(existing, dict):
+        raise ValueError('settings must be an object')
+    result = copy.deepcopy(existing)
+    groups = result.setdefault('hooks', {})
+    if not isinstance(groups, dict):
+        raise ValueError('settings hooks must be an object')
+    for event, additions in incoming['hooks'].items():
+        current = groups.setdefault(event, [])
+        if not isinstance(current, list):
+            raise ValueError(f'settings hooks.{event} must be an array')
+        for addition in additions:
+            metadata = {k: v for k, v in addition.items() if k != 'hooks'}
+            for hook in addition['hooks']:
+                command = hook['command']
+                basename = Path(shlex.split(command)[0]).name
+                present = False
+                for group in current:
+                    if not isinstance(group, dict) or not isinstance(group.get('hooks'), list):
+                        raise ValueError(f'invalid hook group in {event}')
+                    for prior in group['hooks']:
+                        if not isinstance(prior, dict):
+                            raise ValueError(f'invalid hook in {event}')
+                        prior_command = prior.get('command', '')
+                        try:
+                            tokens = shlex.split(prior_command)
+                        except ValueError:
+                            tokens = []
+                        if not tokens or Path(tokens[0]).name != basename:
+                            continue
+                        prior_metadata = {k: v for k, v in group.items() if k != 'hooks'}
+                        if prior_metadata != metadata:
+                            continue
+                        if prior != hook:
+                            raise ValueError(f'conflicting existing {event} hook {basename}; reconcile it explicitly before installation')
+                        present = True
+                if not present:
+                    match = next((g for g in current if {k: v for k, v in g.items() if k != 'hooks'} == metadata), None)
+                    if match is None:
+                        match = dict(metadata, hooks=[])
+                        current.append(match)
+                    match['hooks'].append(hook)
+    return result
 
-mkdir -p "$(dirname "$TARGET")"
+try:
+    if args.relative and (args.workspace or args.hooks_root):
+        raise ValueError('--relative is incompatible with --hooks-root and --workspace')
+    hooks_root = (args.hooks_root or root).resolve(strict=True)
+    target = args.target_file or (args.workspace / '.claude/settings.json' if args.workspace else root / ('.claude/settings.json' if args.relative else '.claude/settings.local.json'))
+    target = target.absolute()
+    if target.is_symlink():
+        raise ValueError('settings target must not be a symlink')
+    snippet = json.loads((hooks_root / 'hooks/settings-snippet.json').read_text())
+    snippet.pop('_comment_', None)
+    placeholder = '/path/to/claude-configs-public/'
+    for entries in snippet['hooks'].values():
+        for group in entries:
+            for hook in group['hooks']:
+                command = hook['command']
+                if not command.startswith(placeholder):
+                    raise ValueError('unsupported snippet command')
+                relative = command[len(placeholder):]
+                script = hooks_root / relative
+                if not script.is_file() or not os.access(script, os.X_OK):
+                    raise ValueError(f'hook missing or not executable: {script}')
+                hook['command'] = shlex.quote(relative if args.relative else str(script))
+    existing = json.loads(target.read_text()) if target.exists() else {}
+    merged = merge_settings(existing, snippet)
+    repo = args.git_repo or (root if not sys.argv[2:] else None)
+    hooks_value = None
+    previous_local = None
+    if repo is not None:
+        repo = repo.resolve(strict=True)
+        top = git(repo, 'rev-parse', '--show-toplevel')
+        if Path(top).resolve() != repo:
+            raise ValueError('--git-repo must name an exact Git worktree root')
+        native = hooks_root / '.githooks'
+        for relative in ('.githooks/commit-msg', '.githooks/pre-push', 'hooks/git/pre-push-self-review.sh', 'hooks/git/branch-guard.sh', 'hooks/git/test-guard.sh', 'bin/review-risk.py', 'catalog/review-risk-policy.json'):
+            path = hooks_root / relative
+            if not path.is_file() or (relative.endswith('.sh') or relative.startswith('.githooks/')) and not os.access(path, os.X_OK):
+                raise ValueError(f'native dependency missing or not executable: {path}')
+        configured = git(repo, 'config', '--get', 'core.hooksPath', optional=True)
+        if configured and (repo / configured).resolve() != native.resolve():
+            raise ValueError(f'existing core.hooksPath {configured!r} differs; reconcile native registration explicitly')
+        if not configured:
+            default_hooks = Path(git(repo, 'rev-parse', '--git-path', 'hooks'))
+            if not default_hooks.is_absolute():
+                default_hooks = repo / default_hooks
+            if any(p.is_file() and os.access(p, os.X_OK) and not p.name.endswith('.sample') for p in default_hooks.glob('*')):
+                raise ValueError('existing executable Git hooks would be displaced; reconcile them explicitly')
+        hooks_value = '.githooks' if repo == hooks_root else str(native)
+        previous_local = git(repo, 'config', '--local', '--get', 'core.hooksPath', optional=True)
 
-if [[ $RELATIVE -eq 1 ]]; then
-    # Strip the placeholder prefix entirely so commands are repo-relative, and
-    # drop the snippet's _comment_, whose "replace the literal path segments"
-    # instruction is false once the file is generated.
-    PLACEHOLDER='/path/to/claude-configs-public/' python3 - "$SNIPPET" "$TARGET" <<'PY'
-import json, os, sys
-
-placeholder = os.environ["PLACEHOLDER"]
-snippet = json.load(open(sys.argv[1]))
-snippet.pop("_comment_", None)
-
-for entries in snippet.get("hooks", {}).values():
-    for entry in entries:
-        for hook in entry.get("hooks", []):
-            command = hook.get("command")
-            if isinstance(command, str) and command.startswith(placeholder):
-                hook["command"] = command[len(placeholder):]
-
-with open(sys.argv[2], "w") as fh:
-    json.dump(snippet, fh, indent=2)
-    fh.write("\n")
+    # All settings, target, registration and dependency validation precedes writes.
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix='.siege-hooks-', dir=target.parent)
+    registered = False
+    try:
+        with os.fdopen(fd, 'w') as stream:
+            json.dump(merged, stream, indent=2)
+            stream.write('\n')
+        os.chmod(temporary, target.stat().st_mode & 0o777 if target.exists() else 0o600)
+        if repo is not None:
+            git(repo, 'config', '--local', 'core.hooksPath', hooks_value)
+            registered = True
+        os.replace(temporary, target)
+    except BaseException:
+        if registered:
+            if previous_local is None:
+                git(repo, 'config', '--local', '--unset-all', 'core.hooksPath')
+            else:
+                git(repo, 'config', '--local', 'core.hooksPath', previous_local)
+        raise
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+    print(f'Merged hook settings into: {target}')
+    if repo is not None:
+        print(f'Configured native Git hooks in {repo}: {hooks_value}')
+        print('Local hooks are bypassable feedback; protected acceptance is separate.')
+    else:
+        print('Native Git hooks not registered. Use --git-repo <exact-consumer-root> to register them.')
+except (OSError, ValueError, KeyError, TypeError) as error:
+    print(f'ERROR: {error}', file=sys.stderr)
+    sys.exit(1)
 PY
-else
-    # Substitute the placeholder path. The snippet uses /path/to/claude-configs-public
-    # as the parent of hooks/, so HOOKS_ROOT must be the directory CONTAINING hooks/.
-    sed "s|/path/to/claude-configs-public|$HOOKS_ROOT|g" "$SNIPPET" > "$TARGET"
-fi
-
-# Validate the generated JSON parses.
-if ! python3 -c "import json; json.load(open('$TARGET'))" 2>/dev/null; then
-    echo "ERROR: generated settings file does not parse as JSON: $TARGET" >&2
-    exit 1
-fi
-
-echo "Installed hooks settings to: $TARGET"
-if [[ $RELATIVE -eq 1 ]]; then
-    echo "Hook paths are repo-relative: hooks/"
-else
-    echo "Hook paths point at:          $HOOKS_ROOT/hooks/"
-fi
-echo
-
-# Configure native git hooks (commit-msg, etc.) if .githooks/ exists.
-# These fire for ALL commit sources (Craft Agent, Claude Code, manual git).
-GITHOOKS_DIR="$REPO_ROOT/.githooks"
-if [[ -d "$GITHOOKS_DIR" ]]; then
-    CURRENT_HOOKS_PATH=$(cd "$REPO_ROOT" && git config core.hooksPath 2>/dev/null || true)
-    if [[ "$CURRENT_HOOKS_PATH" != ".githooks" ]]; then
-        (cd "$REPO_ROOT" && git config core.hooksPath .githooks)
-        echo "Configured native git hooks: core.hooksPath = .githooks"
-        echo "  (replaces .git/hooks/ — existing hooks there will not fire)"
-    else
-        echo "Native git hooks already configured: core.hooksPath = .githooks"
-    fi
-fi
-echo
-echo "Verify a hook fires (should print BLOCKED... and exit 2):"
-echo "  echo '{\"tool_input\":{\"message\":\"see [skill:think]\"}}' | $HOOKS_ROOT/hooks/agent-comms/no-slug-form-outbound.sh"
-echo "  echo \"exit=\$?\""

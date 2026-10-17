@@ -1,3 +1,5 @@
+> **Scope:** Siege Utilities calls, imports, proposed upstream work, and SU-specific workflows below are historical examples only for the exact `github.com/siege-analytics/siege_utilities` origin. In other repositories, use only verified dependencies and local project instructions; none of these examples is a global prerequisite.
+
 # Spatial Engine Selection
 
 Given a spatial task, pick the engine. Three axes: **data scale**, **GDAL availability**, **workload pattern**.
@@ -31,9 +33,10 @@ START: I have a spatial task.
   │      → if yes, you NEED geometry. Continue.
   │      → if no, consider a string lookup before any spatial engine.
   │
-  ├─ Capability tier?
-  │      caps = siege_utilities.geo.capabilities.geo_capabilities()
-  │      tier = caps["tier"]  # "geo" | "geo-lite" | "geodjango" | "none"
+  ├─ Verify installed engines and declared dependencies on this host.
+  │      GDAL/GeoPandas? PostGIS? DuckDB spatial? Spark/Sedona?
+  │      In the exact Siege Utilities repo only, SU's geo_capabilities()
+  │      is an optional project-specific capability check.
   │
   ├─ Data scale?
   │      < 1 GB → single-node options
@@ -52,10 +55,9 @@ START: I have a spatial task.
   │   ├─ Pandas idiom + in-memory → GeoPandas
   │   └─ No GDAL + minimal env → DuckDB-spatial
   │
-  └─ Cross-check: does siege_utilities already cover this?
-      → see siege-utilities-spatial.md
-      → if SU does it, prefer SU over native engine API
-      → if SU almost does it, evaluate upstream PR
+  └─ Only for exact github.com/siege-analytics/siege_utilities:
+      → consult siege-utilities-spatial.md for existing helpers.
+      → other repositories use their verified dependency policy.
 ```
 
 ## When to use multiple engines together
@@ -84,4 +86,4 @@ Don't combine for fun -- each engine adds operational surface. Combine only when
 - "Multiple users querying a database" → **PostGIS**
 - "Already on Spark" → **Sedona**
 - "GDAL not available" → **DuckDB-spatial** (bundles it) or pre-convert to GeoParquet on a GDAL machine
-- "siege_utilities already does this" → **siege_utilities** (see [`siege-utilities-spatial.md`](siege-utilities-spatial.md))
+- In the exact Siege Utilities repository, existing SU helpers may apply (see [`siege-utilities-spatial.md`](siege-utilities-spatial.md)); never infer this dependency for another host/repo.

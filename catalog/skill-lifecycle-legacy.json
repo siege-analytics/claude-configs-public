@@ -1,0 +1,2979 @@
+{
+  "entries": [
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "status",
+        "verification"
+      ],
+      "source_path": "projects/siege-utilities/_rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "status",
+        "verification"
+      ],
+      "source_path": "projects/siege-utilities/skills/error-path-tests/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "status",
+        "verification"
+      ],
+      "source_path": "projects/siege-utilities/skills/hostile-review/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "status",
+        "verification"
+      ],
+      "source_path": "projects/siege-utilities/skills/notebook-impact/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_architecture-patterns-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_authoring-against-state-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_autonomy-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_data-trust-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_definition-of-done-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_django-rest-framework-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_enforcement-contradiction-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_environment-preflight-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_jvm-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_knowledge-base-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_output-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_packaging-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_principles-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_property-testing-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_prospective-memory-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_python-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_react-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_robustness-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_rust-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_scipy-spec-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_security-scanning-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_session-coordination-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_siege-utilities-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_standing-approval-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_strategic-agency-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_tandem-agent-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_testing-frameworks-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_ticket-lifecycle-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_typescript-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_verify-before-execute-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_work-item-ownership-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_writing-claims-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_writing-code-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_writing-prose-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_writing-releases-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_writing-rules-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/_writing-tests-rules.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/analysis/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/api-integration/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/branch/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/cascading-documentation/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/ci-billing-failure-merge/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/close-ticket/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/code-review/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/coderabbit-response/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/coding/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/commit/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/compound/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/consolidate/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/create-pr/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/create-ticket/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/cross-review/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/databricks/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/decision-to-ticket/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/detect-ai-fingerprints/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/develop-guard/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/distill-lessons/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/django-rest-framework/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/django/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/drive-while-away/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/duckdb-spatial/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/engagement-post-mortem/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/evaluate-ticket/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/geopandas/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/hostile-review/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/investigate/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/knowledge-base/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/lessons-learned/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/library-api-evolution/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/merge/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/ops/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/over-engineering-audit/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/pipeline-jobs/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/post-error-revision/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/post-mortem/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/postgis/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/pr-comments/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/pre-mortem/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/pre-work-check/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/publish-flat-layout/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/python-exceptions/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/python-patterns/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/python/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/qml-component-review/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/react/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/rule-eval-loop/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/rules-audit/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/scala-on-spark/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/scope-expansion/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/sedona/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/self-review/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shape-space-audit/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/data-and-pipelines/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/data-and-pipelines/data-pipelines/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/design/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/design/design-everyday-things/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/design/ios-hig-design/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/design/microinteractions/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/design/refactoring-ui/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/design/top-design/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/design/ux-heuristics/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/design/web-typography/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/django/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/django/django-design-patterns/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/django/high-performance-django/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/django/two-scoops-django/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/engineering-principles/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/engineering-principles/clean-architecture/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/engineering-principles/clean-code/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/engineering-principles/design-patterns/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/engineering-principles/domain-driven-design/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/engineering-principles/pragmatic-programmer/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/engineering-principles/refactoring-patterns/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/engineering-principles/software-design-philosophy/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/geospatial/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/geospatial/geocomputation-with-r/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/geospatial/spatial-data-science/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/languages/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/languages/effective-java/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/languages/effective-kotlin/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/languages/effective-python/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/languages/effective-typescript/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/languages/kotlin-in-action/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/languages/programming-with-rust/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/languages/rust-in-action/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/languages/spring-boot-in-action/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/languages/using-asyncio-python/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/languages/web-scraping-python/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/marketing/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/marketing/contagious/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/marketing/cro-methodology/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/marketing/hooked-ux/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/marketing/made-to-stick/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/marketing/one-page-marketing/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/marketing/scorecard-marketing/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/marketing/storybrand-messaging/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/product/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/product/continuous-discovery/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/product/design-sprint/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/product/improve-retention/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/product/inspired-product/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/product/jobs-to-be-done/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/product/lean-startup/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/product/lean-ux/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/product/mom-test/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/sales/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/sales/hundred-million-offers/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/sales/influence-psychology/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/sales/negotiation/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/sales/predictable-revenue/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/statistical-inference/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/statistical-inference/causal-inference-mixtape/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/statistical-inference/causal-inference-what-if/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/statistical-inference/statistical-rethinking-course/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/statistical-inference/think-stats/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/storytelling/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/storytelling/animation-at-work/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/storytelling/storytelling-with-data/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/storytelling/tufte-data-viz/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/strategy/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/strategy/blue-ocean-strategy/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/strategy/crossing-the-chasm/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/strategy/obviously-awesome/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/strategy/traction-eos/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/systems-architecture/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/systems-architecture/data-intensive/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/systems-architecture/high-perf-browser/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/systems-architecture/microservices-patterns/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/systems-architecture/release-it/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/systems-architecture/system-design-interview/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/systems-architecture/system-design/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/team/37signals-way/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/team/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/team/drive-motivation/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/shelves/team/staff-engineer/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/skillbuilder/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/solutions-catalog/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/spark/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/spatial/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/sql/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/stalled-session-recovery/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/survey-context/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/test-coverage-audit/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/testing-frameworks/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/think/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/ticket-decomposition/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/ticket-guard/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/tool-availability-probe/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/unity-catalog/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/update-ticket/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/verify-failure-premise/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/vue/SKILL.md"
+    },
+    {
+      "exception_origin": {
+        "kind": "bootstrap",
+        "reference": "develop@c2f27d00ce1e507176814307ba2a9252d7448ff8"
+      },
+      "invalid_fields": [],
+      "missing_fields": [
+        "last-reviewed",
+        "owner",
+        "status",
+        "tier",
+        "verification"
+      ],
+      "source_path": "skills/wrap-up/SKILL.md"
+    }
+  ],
+  "policy": {
+    "exact_paths_only": true,
+    "new_unlisted_gaps_fail": true,
+    "note": "Temporary migration ratchet; bootstrap paths are historical and future gaps require explicit approval records.",
+    "stale_entries_fail": true,
+    "wildcards_allowed": false
+  },
+  "schema_version": 1,
+  "summary": {
+    "authoritative_item_count": 198,
+    "legacy_exception_count": 198,
+    "metadata_complete_count": 0
+  }
+}

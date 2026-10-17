@@ -116,4 +116,4 @@ Pick the language stack that matches your existing workflow.
 ## See also
 
 - McElreath's lectures on YouTube (Statistical Rethinking 2023 playlist linked from the repo) -- auto-transcripts plus slides PDFs are the best free study path until the book is procured.
-- Session 260502-pure-vista's `plans/shelf-recommendations-for-su-roles.md` -- operator wanted "all three" statistical flavors; this entry covers the Bayesian flavor at course-materials depth, with the book queued for procurement.
+- Session 260502-pure-vista's unavailable historical session plan (not shipped in this repository; provenance only, not a local reading target) -- operator wanted "all three" statistical flavors; this entry covers the Bayesian flavor at course-materials depth, with the book queued for procurement.

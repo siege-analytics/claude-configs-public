@@ -3,7 +3,6 @@ name: sedona
 description: "Apache Sedona for distributed spatial work on Spark. PySpark is the default scaffolding; Scala variant covered in references. TRIGGER: from sedona, SedonaContext, SedonaRegistrator, ST_* in Spark SQL, %scala Sedona on Databricks. Stacks with `coding/spark/`, `coding/scala-on-spark/` (when using Scala), and `shelves/systems-architecture/data-intensive/`."
 routed-by: coding-standards
 user-invocable: false
-paths: "**/*.py,**/*.scala,**/*.sql"
 ---
 
 # Apache Sedona -- Distributed Spatial on Spark [RECOMMENDED]
@@ -23,7 +22,7 @@ Don't use Sedona for:
 - [skill:scala-on-spark] -- when scaffolding is `.scala` or `%scala`.
 - [skill:python] -- when scaffolding is PySpark.
 - `skills/shelves/systems-architecture/data-intensive/SKILL.md` -- partitioning, replication, batch/stream theory.
-- [rule:jvm], [rule:python], [rule:data-trust], [rule:siege-utilities].
+- [rule:jvm], [rule:python], [rule:data-trust].
 
 ## References
 
@@ -33,11 +32,11 @@ Don't use Sedona for:
 - [`raster.md`](references/raster.md) -- Sedona raster ops; when in scope vs out
 - [`scaffolding-python-vs-scala.md`](references/scaffolding-python-vs-scala.md) -- Scala variant of the PySpark defaults; same spatial logic, scaffolding diverges in 5–10 known ways
 - [`pitfalls.md`](references/pitfalls.md) -- skew, OOM on join, CRS lost across stages, Kryo registration
-- [`siege-utilities-sedona.md`](references/siege-utilities-sedona.md) -- ALWAYS call `resolve_spatial_runtime_plan()` first; encode/decode geometry for Spark safety
+- [`siege-utilities-sedona.md`](references/siege-utilities-sedona.md) -- exact-project-only SU runtime integration example
 
-## Always start with: runtime detection (siege_utilities)
+## Runtime detection (exact Siege Utilities repository only)
 
-Before writing any Sedona code, ask SU what the runtime offers:
+Check the target cluster's actual native spatial and Sedona availability. The following historical SU examples apply only when the target origin is `github.com/siege-analytics/siege_utilities` and the dependency is present:
 
 ```python
 from siege_utilities.geo.spatial_runtime import resolve_spatial_runtime_plan
@@ -46,13 +45,13 @@ plan = resolve_spatial_runtime_plan()
 # Returns SpatialRuntimePlan with .engine in {"databricks_native", "sedona", "python"}
 ```
 
-Three reasons:
+For that exact origin only, the plan helps distinguish three cases:
 
-1. **Databricks runtimes 13+ have native spatial.** `ST_*` SQL works without Sedona at all on those clusters. SU detects and recommends.
-2. **Sedona presence varies.** SU's plan tells you whether `apache-sedona` is on the classpath without import-time crashes.
-3. **Fallback is real.** If neither native spatial nor Sedona is available, push to a non-Spark path (DuckDB-spatial or single-node Sedona via PySpark local mode).
+1. **Databricks native spatial is available.** `ST_*` SQL can work without Sedona; verify against the actual runtime.
+2. **Sedona is available.** The SU plan can report whether `apache-sedona` is on the classpath.
+3. **Neither is available.** Consider a non-Spark path when the data fits on one node.
 
-For Databricks specifically:
+For Databricks in that exact repository only (never as a global dependency):
 
 ```python
 from siege_utilities.geo.databricks_fallback import select_spatial_loader, SpatialLoaderPlan

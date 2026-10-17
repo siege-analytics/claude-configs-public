@@ -1,0 +1,172 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "cc-1003-provider-canary-20261016",
+  "manifest_sha256": "REPLACE_WITH_APPROVAL_RECORDED_MANIFEST_SHA256",
+  "provenance": {
+    "kind": "external-host-export",
+    "reference": "REPLACE_WITH_HOST_EXPORT_REFERENCE",
+    "verification_state": "imported-unverified"
+  },
+  "backend_runs": [
+    {
+      "sequence": 1,
+      "connection": "claude-max",
+      "model": "claude-opus-4-8",
+      "installed_build_key": "claude_sdk",
+      "installed_build_discovery_sha256": "REPLACE_WITH_AUTHORIZATION_ATTESTATION_DISCOVERY_SHA256",
+      "runtime_identity": {
+        "state": "unsupported-unverified",
+        "source": "not-observed",
+        "identity": null,
+        "artifact_reference": null,
+        "artifact_sha256": null
+      },
+      "started_at": "REPLACE_WITH_ISO8601",
+      "ended_at": "REPLACE_WITH_ISO8601",
+      "outcome": "not-run",
+      "model_self_report_used": false,
+      "host_events": [
+        {
+          "name": "startup_resolver",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/startup_resolver.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256",
+          "registered_settings_path": "/private/tmp/cc-1003-provider-canary-20261016/fixture/repo/.claude/settings.json",
+          "registered_settings_sha256": "REPLACE_WITH_WORKSPACE_SETUP_REGISTERED_SETTINGS_SHA256"
+        },
+        {
+          "name": "prompt_hook",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/prompt_hook.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "write_guard_allow",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/write_guard_allow.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "write_guard_deny",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/write_guard_deny.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "git_push_allow",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/git_push_allow.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "git_push_deny",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/git_push_deny.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "resume_context",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/resume_context.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "compaction_context",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/compaction_context.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "no_op_detection",
+          "source": "host-observed",
+          "artifact_reference": "backend-1/no_op_detection.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256",
+          "registered_settings_path": "/private/tmp/cc-1003-provider-canary-20261016/fixture/repo/.claude/settings.json",
+          "registered_settings_sha256": "REPLACE_WITH_WORKSPACE_SETUP_REGISTERED_SETTINGS_SHA256",
+          "settings_restored_sha256": "REPLACE_WITH_WORKSPACE_SETUP_REGISTERED_SETTINGS_SHA256"
+        }
+      ]
+    },
+    {
+      "sequence": 2,
+      "connection": "chatgpt-plus",
+      "model": "pi/gpt-5.5",
+      "installed_build_key": "pi_adapter",
+      "installed_build_discovery_sha256": "REPLACE_WITH_AUTHORIZATION_ATTESTATION_DISCOVERY_SHA256",
+      "runtime_identity": {
+        "state": "unsupported-unverified",
+        "source": "not-observed",
+        "identity": null,
+        "artifact_reference": null,
+        "artifact_sha256": null
+      },
+      "started_at": "REPLACE_WITH_ISO8601",
+      "ended_at": "REPLACE_WITH_ISO8601",
+      "outcome": "not-run",
+      "model_self_report_used": false,
+      "host_events": [
+        {
+          "name": "startup_resolver",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/startup_resolver.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "prompt_hook",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/prompt_hook.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "write_guard_allow",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/write_guard_allow.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "write_guard_deny",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/write_guard_deny.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "git_push_allow",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/git_push_allow.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "git_push_deny",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/git_push_deny.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "resume_context",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/resume_context.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "compaction_context",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/compaction_context.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        },
+        {
+          "name": "no_op_detection",
+          "source": "host-observed",
+          "artifact_reference": "backend-2/no_op_detection.jsonl",
+          "artifact_sha256": "REPLACE_WITH_SHA256"
+        }
+      ]
+    }
+  ],
+  "side_effect_observations": {
+    "outside_allowlist_unchanged": false,
+    "credentials_unread": false,
+    "main_unchanged": false,
+    "protections_unchanged": false,
+    "release_state_unchanged": false
+  }
+}

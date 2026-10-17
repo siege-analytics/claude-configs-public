@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "ontology_version": "1.4.0",
+  "bindings": [
+    {
+      "artifact": "examples/composition/projects/strict-release/composition.json",
+      "fields": [
+        {"pointer": "/bindings/replacements/*", "term": "skill-replacement", "value_type": "object"},
+        {"pointer": "/bindings/extensions/*", "term": "skill-extension", "value_type": "object"},
+        {"pointer": "/heading_map/*/id", "term": "resident-block", "value_type": "string"}
+      ]
+    },
+    {
+      "artifact": "examples/composition/projects/synthetic-trunk/composition.json",
+      "fields": [
+        {"pointer": "/heading_map/*/id", "term": "resident-block", "value_type": "string"}
+      ]
+    }
+  ]
+}

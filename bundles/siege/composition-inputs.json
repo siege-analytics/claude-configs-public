@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "publishers": [
+    {"id": "siege", "skills_root": "skills", "qualified": false}
+  ],
+  "policy_aliases": ["review"],
+  "prerequisites": {"code-review": ["review"]},
+  "routes": [
+    {"id": "review-procedure", "priority": 100, "terms": ["review candidate"], "skills": ["${policy.review_procedure}"]}
+  ],
+  "resident_blocks": [
+    {
+      "id": "integrity",
+      "content": "## Integrity\n\nRequired evidence and permissions remain independent of procedure content. Configuration is not enforcement proof.",
+      "source": "parent:composition-integrity",
+      "allow": []
+    },
+    {
+      "id": "workflow",
+      "content": "## Workflow\n\n${policy.resident_workflow}",
+      "source": "${policy.source}",
+      "allow": []
+    },
+    {
+      "id": "conventions",
+      "content": "## Shared conventions\n\nRecord observed results.",
+      "source": "parent:composition-conventions",
+      "allow": ["extend", "replace"]
+    }
+  ]
+}
