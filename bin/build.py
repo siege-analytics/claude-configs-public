@@ -940,7 +940,7 @@ def write_build_info(
     info = {
         "layout": layout,
         "source_commit": commit,
-        "built_at": datetime.now(timezone.utc).isoformat(),
+        "built_at": build_time().isoformat(),
         "skill_count": len(skills_src),
         "slugs": sorted(skills_src.keys()),
         "active_projects": {
@@ -1012,7 +1012,7 @@ def build_rules_bundle(
         ).strip()
     except Exception:
         commit = "unknown"
-    built_at = datetime.now(timezone.utc).isoformat()
+    built_at = build_time().isoformat()
 
     # Read RULES.md (entry point)
     rules_entry = SOURCE_SKILLS / "RULES.md"
@@ -1249,7 +1249,7 @@ def build_ca_enforcement() -> None:
     manifest = {
         "version": version,
         "source_commit": commit,
-        "built_at": datetime.now(timezone.utc).isoformat(),
+        "built_at": build_time().isoformat(),
         "gate_contract_source": GATE_CONTRACT_SOURCE.as_posix(),
         "gate_contract_sha256": contract_sha256,
         "gate_contract": contract,
@@ -1635,7 +1635,7 @@ def build_consumer_packages() -> None:
             "package": target,
             "version": version,
             "source_commit": commit,
-            "built_at": datetime.now(timezone.utc).isoformat(),
+            "built_at": build_time().isoformat(),
         }
         (pkg_dir / "package.json").write_text(
             json.dumps(pkg_manifest, indent=2) + "\n"
@@ -1880,7 +1880,7 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
         head_commit = "unknown"
     stamp = {
         "commit": head_commit,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": build_time().isoformat(),
         "repo_root": str(REPO_ROOT),
     }
     stamp_path = craft_workspace / "deploy-stamp.json"
@@ -1889,20 +1889,36 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
     print(f"  Deployed to {craft_workspace}/ ({stripped_count} files stripped)")
 
 
+BUILD_EPOCH = None
+
+
+def build_time():
+    """Use a supplied source epoch for reproducible exports; normal builds use now."""
+    return datetime.now(timezone.utc) if BUILD_EPOCH is None else datetime.fromtimestamp(BUILD_EPOCH, timezone.utc)
+
+
 def main() -> int:
-    global DIST
+    global DIST, BUILD_EPOCH
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source-date-epoch", type=int, help="reproducible export timestamp from the selected source commit")
     parser.add_argument("--check", action="store_true", help="Validate tokens; do not write output")
     parser.add_argument("--layout", choices=("nested", "flat", "both"), default="both")
     parser.add_argument("--deploy", action="store_true", help="After building, sync flat layout to Craft Agent workspace")
     parser.add_argument("--craft-workspace", type=Path, default=CRAFT_WORKSPACE, help="Target Craft Agent workspace path for --deploy (default: %(default)s)")
     parser.add_argument("--dist", type=Path, help="Build into this isolated output root instead of repository dist/")
-    parser.add_argument("--selection", type=Path, help="versioned selected resolver-content build input; no registration")
+    parser.add_argument("--selection", type=Path, help="versioned selected build input; registration requires independent pins")
     parser.add_argument("--source", type=Path, default=REPO_ROOT, help="local Git source for selected components")
     parser.add_argument("--policy-root", type=Path, help="independently registered policy repository")
     parser.add_argument("--policy-inputs", type=Path, help="independent policy registration source")
     parser.add_argument("--policy-inputs-sha256", help="independent host/repository policy pin")
+    parser.add_argument("--registration-inputs", type=Path, help="independent local registration definition")
+    parser.add_argument("--registration-inputs-sha256", help="independent registration pin")
     args = parser.parse_args()
+
+    if args.source_date_epoch is not None:
+        if args.source_date_epoch < 0 or args.deploy or args.selection:
+            parser.error("source-date-epoch requires a nonnegative local compatibility export")
+        BUILD_EPOCH = args.source_date_epoch
 
     if args.selection:
         try:
@@ -1915,14 +1931,17 @@ def main() -> int:
             spec.loader.exec_module(selected)
             receipt = selected.build(args.source, args.dist, selected.effective.read_json(args.selection),
                                      policy_root=args.policy_root, policy_source=args.policy_inputs,
-                                     policy_sha256=args.policy_inputs_sha256, check=args.check)
+                                     policy_sha256=args.policy_inputs_sha256, check=args.check,
+                                     registration_source=args.registration_inputs,
+                                     registration_sha256=args.registration_inputs_sha256)
             print(json.dumps(receipt, sort_keys=True))
             return 0
         except (BuildError, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
             print(json.dumps({"state": "error", "diagnostic": str(error), "authorization_effect": "none"}), file=sys.stderr)
             return 1
     if args.source != REPO_ROOT or any(value is not None for value in
-                                      (args.policy_root, args.policy_inputs, args.policy_inputs_sha256)):
+                                      (args.policy_root, args.policy_inputs, args.policy_inputs_sha256,
+                                       args.registration_inputs, args.registration_inputs_sha256)):
         parser.error("explicit source/policy arguments require --selection")
 
     if args.dist:

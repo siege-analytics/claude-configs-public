@@ -27,6 +27,13 @@
 
 set -uo pipefail
 
+for argument in "$@"; do
+    if [[ "$argument" == "--selected" ]]; then
+        ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+        exec python3 -B "$ROOT/bin/selected_registration.py" verify "$@"
+    fi
+done
+
 TARGET=""
 MODE="craft-agent"
 NATIVE_GIT_REPO=""

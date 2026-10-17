@@ -7,6 +7,14 @@
 
 set -euo pipefail
 
+# Selected registration supplies all policy authority inputs as a host binding.
+# The remaining body is the retained repository compatibility wrapper.
+if [[ "${1:-}" == "--selected" ]]; then
+    shift
+    SELECTED_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+    exec python3 -B "$SELECTED_ROOT/bin/native_git.py" pre-push "$@"
+fi
+
 HOOKS_DIR="$(cd "$(dirname "$0")" && pwd)"
 PACKAGE_ROOT="$(cd "$HOOKS_DIR/.." && pwd)"
 RANGE_HOOK="$PACKAGE_ROOT/hooks/git/pre-push-self-review.sh"

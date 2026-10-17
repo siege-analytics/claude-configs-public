@@ -87,7 +87,7 @@ def independent(source):
     return identity, content, Path('project/policy-inputs.json'), effective.digest(registration)
 
 
-def run(case, output):
+def run(case, output, register=False):
     output.mkdir(parents=True, exist_ok=False)
     source = output / 'source'
     if case == 'siege':
@@ -126,16 +126,25 @@ def run(case, output):
         'bundles': [{'component': selected.describe_component(source, 'siege', revision,
                       sorted([descriptor, selected.prefix(content_root, 'skills')])), 'descriptor': descriptor}
                     for descriptor in bundles]}
+    if register:
+        declaration['backend'] = 'claude-code-local'
+        declaration['required_capabilities'] = ['native-git', 'settings']
     write(output, 'selection.json', declaration)
     command = [sys.executable, '-B', str(source / 'bin/build.py'), '--source', str(source),
         '--selection', str(output / 'selection.json'), '--dist', str(output / 'package'),
         '--policy-root', str(source), '--policy-inputs', str(policy_source), '--policy-inputs-sha256', policy_pin]
-    result = subprocess.run(command, check=True, capture_output=True, text=True, timeout=60)
+    if register:
+        helper = selected.module('registration_example', ROOT, '../examples/selected-registration/run.py')
+        registration_source, registration_pin = helper.definition(source, declaration, policy_source, policy_pin, case)
+        command += ['--registration-inputs', str(registration_source), '--registration-inputs-sha256', registration_pin]
+    result = subprocess.run(command, check=True, capture_output=True, text=True, timeout=240)
     write(output, 'build-receipt.json', json.loads(result.stdout))
     resolver = subprocess.run([sys.executable, '-B', str(output / 'package/flat/bin/resolve-load-set.py'),
         '--repo', identity, '--prompt', 'inspect changes' if case == 'independent' else 'review candidate',
         '--render-hook', '--mode', 'on'], check=True, capture_output=True, text=True, timeout=30)
     (output / 'rendered.txt').write_text(resolver.stdout)
+    if register:
+        return helper.exercise(output, declaration, policy_source, policy_pin, registration_source, registration_pin, case)
     if case == 'siege':
         composer = selected.module('example_compatibility_composer', source, 'compose-project.py')
         composer.package(source / content_root, output / 'compatibility', identity, policy_root=source)

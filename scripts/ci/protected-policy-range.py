@@ -32,6 +32,7 @@ TRUSTED_DEPENDENCIES = (
     Path("bin/effective_policy.py"),
     Path("bin/gate_contract.py"),
     Path("bundles/siege/policy-inputs.json"),
+    Path("bundles/siege/protected-adapter.json"),
     Path("catalog/effective-policy-selection.json"),
     Path("catalog/gate-contract-schema.json"),
     Path("catalog/gate-contracts.json"),
@@ -40,6 +41,7 @@ POLICY_SENSITIVE = (
     "bin/effective_policy.py",
     "bin/gate_contract.py",
     "bundles/siege/policy-inputs.json",
+    "bundles/siege/protected-adapter.json",
     "catalog/effective-policy-selection.json",
     "catalog/effective-policy.json",
     "catalog/gate-contract-schema.json",
@@ -398,6 +400,30 @@ def normalize_host_event(args: argparse.Namespace) -> None:
                                "consumer_base": args.base, "consumer_head": args.head}
 
 
+def siege_compatibility_inputs(ep: Any, trusted: Path) -> tuple[dict[str, Any], list[list[str]]]:
+    """Retained old CLI wrapper for the repository's reviewed Siege registration."""
+    gc = ep._gate_contract_module()
+    descriptor = ep.read_json(gc.repository_path(trusted, "bundles/siege/protected-adapter.json", "compatibility adapter"))
+    if ep.digest(descriptor) != "62448e6f332bf30920560dda2a5e759544dc5790790f891e257c5ae49bebe151":
+        raise ValueError("Siege compatibility adapter differs from independent code pin")
+    binding = descriptor["policy_inputs"]
+    loaded = ep.load_registered_inputs(trusted, registration_source=Path(binding["source"]),
+                                      registration_sha256=binding["sha256"])
+    return loaded, descriptor["promotion_edges"]
+
+
+def registered_policy(args: argparse.Namespace, ep: Any, trusted: Path) -> tuple[dict[str, Any], list[list[str]]]:
+    source, pin = getattr(args, "policy_inputs", None), getattr(args, "policy_inputs_sha256", None)
+    if source is None and pin is None and getattr(args, "policy_root", None) is None:
+        # The legacy wrapper is a measured compatibility path. Selected callers
+        # never enter it, including when their explicit pin is missing or wrong.
+        return siege_compatibility_inputs(ep, trusted)
+    if source is None or pin is None or args.policy_root is None:
+        raise ValueError("selected protected adapter requires independent policy root/source/pin")
+    loaded = ep.load_registered_inputs(args.policy_root, registration_source=source, registration_sha256=pin)
+    return loaded, []
+
+
 def evaluate(args: argparse.Namespace) -> dict[str, Any]:
     trusted = args.trusted_root.resolve()
     candidate = args.candidate_repo.resolve()
@@ -407,9 +433,13 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
 
     if str(git(trusted, "rev-parse", "HEAD")).strip() != trusted_revision:
         raise ValueError("trusted checkout HEAD differs from declared trusted revision")
+    selected_policy = any(getattr(args, name, None) is not None for name in
+                          ("policy_root", "policy_inputs", "policy_inputs_sha256"))
+    dependencies = (VALIDATOR_PATH, ENTRYPOINT_PATH, Path("bin/effective_policy.py"),
+                    Path("bin/gate_contract.py"), Path("catalog/gate-contract-schema.json")) if selected_policy else TRUSTED_DEPENDENCIES
     dependency_blobs = {
         path.as_posix(): tracked_blob(trusted, trusted_revision, path)
-        for path in TRUSTED_DEPENDENCIES
+        for path in dependencies
     }
     workflow_revision = exact_sha(args.executed_workflow_revision, "executed_workflow_revision")
     workflow_root = (args.executed_workflow_root or trusted).resolve()
@@ -431,9 +461,10 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
     if source_identity != canonical_identity:
         raise Denied("unsupported fork or source repository: candidate origin differs from canonical policy target")
     ep = load_module(trusted, Path("bin/effective_policy.py"), "trusted_effective_policy")
-    contract, policy, selection = ep.load_inputs(trusted)
+    loaded, promotion_edges = registered_policy(args, ep, trusted)
+    contract, policy, selection = loaded["contract"], loaded["policy"], loaded["selection"]
     ctx = context(canonical_identity)
-    candidate_policy = candidate_json(candidate, head, ep.POLICY, ep.parse_json)
+    candidate_policy = candidate_json(candidate, head, Path(selection["policy_path"]), ep.parse_json)
 
     if subprocess.run(
         ["git", "-C", str(candidate), "check-ref-format", "--branch", args.head_branch],
@@ -443,7 +474,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
     requested_branch = ep.explain(
         contract, policy, selection, ctx,
         {"type": "feature-merge", "target_branch": args.target_branch},
-        candidate_policy,
+        candidate_policy, selection_source=loaded["registration"]["selection_source"],
     )
     if requested_branch.get("state") != "resolved":
         raise Denied(
@@ -459,20 +490,22 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
         # exact integration branch may be promoted to main in the canonical
         # same-repository range already established above.
         if (
-            args.target_branch == "main"
-            and expected_integration != "main"
-            and args.head_branch == expected_integration
+            ["${integration}" if args.head_branch == expected_integration else args.head_branch,
+             args.target_branch] in promotion_edges
+            and args.target_branch != expected_integration
         ):
             operation = "canonical-promotion"
             branch = ep.explain(
                 contract, policy, selection, ctx,
                 {"type": "feature-merge", "target_branch": expected_integration},
-                candidate_policy,
+                candidate_policy, selection_source=loaded["registration"]["selection_source"],
             )
         else:
             raise Denied("target branch contradicts the selected project's approved branch policy")
     if branch["decision"]["policy"] != "allow":
         raise Denied("effective integration branch is not approved")
+    if args.installed_pilot_receipt and selected_policy:
+        raise ValueError("selected protected installation receipts require independent registration verification")
     if args.installed_pilot_receipt:
         installation = validate_install(
             candidate, head, args.installed_pilot_receipt, branch, ep.parse_json,
@@ -500,7 +533,7 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
             # whitespace; preserve raw bytes in the digest but normalize the
             # operation value exactly once here.
             {"type": "ticket-commit", "message": message.strip()},
-            candidate_policy,
+            candidate_policy, selection_source=loaded["registration"]["selection_source"],
         )
         if ticket.get("state") != "resolved" or ticket["decision"]["policy"] != "allow":
             raise Denied(f"commit {commit} lacks required approved ticket evidence")
@@ -544,6 +577,8 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
                 "sha256": hashlib.sha256(workflow_raw).hexdigest(),
             },
             "policy_selection": branch["policy_selection"],
+            "policy_registration": loaded["registration"],
+            "compatibility_wrapper": None if selected_policy else "siege_compatibility_inputs",
         },
         "candidate": {
             "canonical_repository_identity": canonical_identity,
@@ -572,6 +607,9 @@ def evaluate(args: argparse.Namespace) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--trusted-root", type=Path, required=True)
+    parser.add_argument("--policy-root", type=Path, help="independent selected policy repository")
+    parser.add_argument("--policy-inputs", type=Path, help="independent selected registration source")
+    parser.add_argument("--policy-inputs-sha256", help="independent selected policy pin")
     parser.add_argument("--trusted-revision")
     parser.add_argument("--trusted-repository", help="independently configured parent host/owner/repository")
     parser.add_argument("--candidate-repo", type=Path, required=True)

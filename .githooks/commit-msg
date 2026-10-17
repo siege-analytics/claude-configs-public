@@ -18,6 +18,14 @@
 
 set -euo pipefail
 
+# Selected registration supplies all policy authority inputs as a host binding.
+# The remaining body is the retained repository compatibility wrapper.
+if [[ "${1:-}" == "--selected" ]]; then
+    shift
+    SELECTED_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+    exec python3 -B "$SELECTED_ROOT/bin/native_git.py" commit-msg "$@"
+fi
+
 COMMIT_MSG_FILE="$1"
 COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
 

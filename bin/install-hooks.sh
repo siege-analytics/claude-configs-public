@@ -3,6 +3,11 @@
 # Git hooks only for a no-option direct clone or an explicit --git-repo root.
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+for argument in "$@"; do
+    if [[ "$argument" == "--selected" ]]; then
+        exec python3 -B "$REPO_ROOT/bin/selected_registration.py" install "$@"
+    fi
+done
 exec python3 - "$REPO_ROOT" "$@" <<'PY'
 import argparse
 import copy

@@ -51,7 +51,7 @@ class ProtectedPolicyPilotTest(unittest.TestCase):
             Path("scripts/ci/check-branch-topology.sh"),
             Path(".github/workflows/pr-base-guard.yml"),
             Path("bin/effective_policy.py"), Path("bin/gate_contract.py"),
-            Path("bundles/siege/policy-inputs.json"),
+            Path("bundles/siege/policy-inputs.json"), Path("bundles/siege/protected-adapter.json"),
             Path("catalog/effective-policy-selection.json"),
             Path("catalog/gate-contract-schema.json"), Path("catalog/gate-contracts.json"),
         )

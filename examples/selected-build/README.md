@@ -102,3 +102,8 @@ These are counts of defined source paths/algorithms, not a claim of completion.
 component receipts and rendered inventory. The executable Siege example records
 its exact file comparison. The existing full export is a retained compatibility
 path; this dependency does not claim it has been unified or retired.
+
+Selected registration is a separate explicit backend. See
+[the selected registration fixture](../selected-registration/README.md) for its
+independent inputs, installer and real local Git evidence. The default
+`resolver-only` path described here remains composition-only.

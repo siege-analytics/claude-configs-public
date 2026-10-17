@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "backend": "claude-code-local",
+  "adapter": "siege-compatibility",
+  "required_capabilities": ["native-git", "settings"],
+  "settings_source": "hooks/settings-snippet.json",
+  "protected_targets": [],
+  "authorization_effect": "none"
+}

@@ -1,7 +1,8 @@
 """Verify local selected build inputs without establishing policy or host authority.
 
-This is the selection-to-composition dependency. It publishes resolver content,
-not registered settings, native hooks, release packages or active generations.
+Resolver-only output remains composition-only. The explicit claude-code-local
+backend adds an unregistered inventory for the selected installer to verify.
+Neither output establishes policy authority, release or generation activation.
 """
 from __future__ import annotations
 
@@ -32,6 +33,8 @@ SCAFFOLD_FILES = (
     'bin/gate_contract.py', 'bin/package_selection.py',
     'bin/procedure_composition.py', 'bin/resolve-load-set.py',
     'bin/source_snapshot.py', 'catalog/gate-contract-schema.json',
+    'bin/selected_registration.py', 'bin/native_git.py', 'bin/install-hooks.sh',
+    'bin/wire-enforcement.py', 'bin/verify-enforcement.sh',
 )
 
 
@@ -80,18 +83,28 @@ def verify_component(root, value, label):
     return files
 
 
-def selected_inputs(root, selection, *, policy_root, policy_source, policy_sha256):
+def selected_inputs(root, selection, *, policy_root, policy_source, policy_sha256,
+                    registration_source=None, registration_sha256=None):
     """Return verified source bytes and consistency receipts; never a trust root."""
     effective.exact_fields(selection, {'schema_version', 'identity', 'content_root', 'content',
                                      'scaffold', 'bundles', 'project', 'workflow_profile',
                                      'backend', 'required_capabilities'}, 'selected build')
     require(type(selection['schema_version']) is int and selection['schema_version'] == 1,
             'unsupported selected build schema')
-    require(selection['backend'] == 'resolver-only', 'unsupported selected build backend')
+    require(selection['backend'] in ('resolver-only', 'claude-code-local'), 'unsupported selected build backend')
     requirements = selection['required_capabilities']
     require(isinstance(requirements, list) and all(isinstance(item, str) for item in requirements),
             'required_capabilities must be a list of identifiers')
-    require(not requirements, 'missing implemented registration adapter: ' + ', '.join(requirements))
+    require(policy_root is not None and policy_source is not None and policy_sha256 is not None,
+            'independent policy registration root, source and digest are required')
+    if selection['backend'] == 'resolver-only':
+        require(not requirements, 'missing implemented registration adapter: ' + ', '.join(requirements))
+        require(registration_source is None and registration_sha256 is None, 'resolver-only cannot register adapters')
+    else:
+        require(requirements == ['native-git', 'settings'], 'missing or unsupported selected registration capability')
+        registration = module('selected_registration', ROOT, 'selected_registration.py')
+        registration.load_definition(root, selection, policy_root, policy_source, policy_sha256,
+                                     registration_source, registration_sha256)
     require(policy_source is not None and policy_sha256 is not None,
             'independent policy registration source and digest are required')
     require(isinstance(selection['identity'], str), 'selected identity must be a canonical repository string')
@@ -171,7 +184,8 @@ def selected_inputs(root, selection, *, policy_root, policy_source, policy_sha25
                    'observed_capabilities': [], 'evidence_state': 'configured', 'authorization_effect': 'none'}
 
 
-def build(root, destination, selection, *, policy_root, policy_source, policy_sha256, check=False):
+def build(root, destination, selection, *, policy_root, policy_source, policy_sha256, check=False,
+          registration_source=None, registration_sha256=None):
     """Drive the existing composer with only the selected immutable source closure.
 
     Serialize cooperating publishers in the destination parent. Composer failure
@@ -179,7 +193,18 @@ def build(root, destination, selection, *, policy_root, policy_source, policy_sh
     The receipt is consistency evidence, never an installation or generation lock.
     """
     files, receipt = selected_inputs(root, selection, policy_root=policy_root,
-                                     policy_source=policy_source, policy_sha256=policy_sha256)
+                                     policy_source=policy_source, policy_sha256=policy_sha256,
+                                     registration_source=registration_source, registration_sha256=registration_sha256)
+    definition = runtime = None
+    if selection['backend'] != 'resolver-only':
+        registration = module('selected_registration', ROOT, 'selected_registration.py')
+        definition, runtime = registration.load_definition(root, selection, policy_root, policy_source,
+            policy_sha256, registration_source, registration_sha256)
+        receipt.update(artifact_scope='registration-package', registration_state='unregistered')
+        registration.no_symlinks(destination)
+        ownership = module('registration_source_ownership', ROOT, 'compose-project.py').GeneratedFiles()
+        for name, (data, _) in files.items():
+            ownership.add(name, data, 'selected source ' + name)
     destination = destination.absolute()
     require(not destination.is_symlink() and not destination.exists(), 'selected build destination already exists')
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -207,9 +232,18 @@ def build(root, destination, selection, *, policy_root, policy_source, policy_sh
                 composed = effective.read_json(output / layout / 'composition.json')
                 require(composed['policy'] == receipt['policy'], 'composed policy differs from selected registration')
                 (output / layout / 'selected-build.json').write_bytes(effective.canonical_json(receipt))
+            if definition is not None:
+                if definition['adapter'] == 'siege-compatibility':
+                    runtime = registration.siege_compatibility_package(root, definition, receipt['policy_registration'], temporary)
+                registration.extend_package(output, files, receipt, definition, runtime, composer,
+                                            registration_source, registration_sha256)
             require(effective.load_registered_inputs(policy_root, registration_source=policy_source,
                                                      registration_sha256=policy_sha256)['registration']
                     == receipt['policy_registration'], 'policy registration changed during build')
+            if definition is not None:
+                current, _ = registration.load_definition(root, selection, policy_root, policy_source, policy_sha256,
+                    registration_source, registration_sha256)
+                require(current == definition, 'registration changed during build')
             if not check:
                 require(not destination.exists() and not destination.is_symlink(), 'selected build destination appeared during build')
                 os.rename(output, destination)
