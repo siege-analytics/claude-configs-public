@@ -1,5 +1,10 @@
 # Self-review: selected build input (#1027)
 
+Correction status: all acceptance/readiness verdicts on
+`d00f73faa216d9617323faac362c2281e1a5412d` are obsolete after the reproduced
+generated-path overwrite. Earlier results below remain historical evidence,
+not acceptance of that head. See the correction record at the end.
+
 ## Assumptions
 
 Domain(s): software engineering
@@ -75,7 +80,8 @@ operator-permitted reviewable dependency boundary, not completion of #1027.
 See examples/selected-build/README.md for every remaining acceptance item.
 
 Peer review against writing-code and writing-tests: source snapshots are read
-from exact Git objects; source/descriptor fields and ownership are closed;
+from exact Git objects; source/descriptor fields and ownership are closed
+(ownership claim superseded by the correction record below);
 profile adoption is compared to independent registered policy; graph/token/link
 validation remains in the existing engine. Tests invoke real subprocesses and
 Git objects. The only injected failure is the publication rename error; the
@@ -146,3 +152,119 @@ The fixture now returns the existing exact revision when its index/worktree is
 clean; changed synthetic sources still receive a fixture commit. The existing
 executable-example test covers both construction states on committed replay.
 Evidence: /tmp/cc-1027-example-siege-committed.log.
+
+## Generated ownership correction: pre-commit review
+
+Trigger: [PR blocker 6227734449](https://github.com/siege-analytics/claude-configs-public/pull/1031#issuecomment-6227734449)
+and [issue backlink 6227739609](https://github.com/siege-analytics/claude-configs-public/issues/1027#issuecomment-6227739609).
+The original assumption quoted above is preserved and superseded, not deleted.
+The [pre-fix post-error revision](https://github.com/siege-analytics/claude-configs-public/issues/1027#issuecomment-6227762888)
+records the red replay, intended correction and failure risks before source edits.
+
+Exact rejected source: head d00f73faa216d9617323faac362c2281e1a5412d,
+tree c9a513dac10e7927e15173fbd369a3891ca4620b,
+parent c7d9d65e30dfd4450682a63b33fd0b53b979e2a0.
+The exact posted probe was extracted verbatim and run before source changes:
+
+```text
+declared 0
+SECOND_PUBLISHER_BYTES
+reversed 0
+FIRST_PUBLISHER_BYTES
+AssertionError: duplicate generated path was published
+```
+
+Evidence: `cache/selected-build-correction/parent-collision-red.log`.
+Two distinct pinned sources, `bundles/first/skills/outer/inner/shared.txt` and
+`bundles/second/skills/outer/inner/shared.txt`, reached the same nested target
+`skills/outer/inner/shared.txt`. Source inventory uniqueness did not imply
+output uniqueness. Both receipts retained their source pins despite lost bytes.
+
+The revised invariant is checked at `GeneratedFiles.add`: a generated target
+has one claim, independent of bytes or order. Rendered primary skills, assets,
+rules, resident/rules bundles, manifests, copied resolver tools and composition
+receipts use this insertion function. NFC/casefold identity and ancestor claims
+also reject portable aliases and file/directory conflicts. Diagnostic owners
+contain selected slugs and source-relative paths, never absolute source roots
+or file contents. Both layouts finish validation in memory before writes.
+The existing selected builder's staged publication remains unchanged.
+
+The exact posted probe now exits 0 with both inner builds rejecting:
+
+```text
+declared 1: generated path collision 'skills/outer/inner/shared.txt'
+reversed 1: generated path collision 'skills/outer/inner/shared.txt'
+```
+
+Each actual JSON diagnostic names both source paths and reports
+`authorization_effect: none`; neither destination exists. Full output is in
+`cache/selected-build-correction/parent-collision-green.log`.
+The new nested and flat/router tests were also replayed with the corrected test
+files over the exact original product source. Each entry path reports eight
+failed subcases across two tests, all caused by successful publication where
+rejection was expected (`direct-revert-red.log`, `selected-revert-red.log`).
+
+### Peer and lead review of the correction
+
+Working as: author-side correction and adversarial self-review, not independent
+review. Reading for: the accepted one-composer/no-order-precedence contract.
+Predicted failures: equal bytes silently deduplicated, primary or reserved
+assignments bypassing the guard, flat rejection after nested output is written.
+
+The data-intensive shelf's derived-data lens applies: pinned Git objects remain
+the source of record; packages are rebuildable projections. Previously corrupted
+packages can outlive a code fix, so old-head verdicts are obsolete and consumers
+must rebuild from the corrected source. This session performs no registration.
+
+The call chain is normal copied `build.py --selection`, `package_selection.build`,
+`compose-project.package`, `GeneratedFiles.add`, then publication. Existing direct
+composer, graph, resident and installed resolver callers are included in the
+focused/dependent replay. Tests load `bin/compose-project.py` by an absolute
+path from their checkout, or copy that exact file into the isolated source;
+selected builds additionally enforce scaffold byte equality. No editable install
+or mock renderer supplies the evidence.
+
+The shared hostile corpus executes both public CLIs, both publisher orders,
+equal/different bytes, nested and flat-only router collisions, file/directory
+and Unicode aliases, output absence, sentinel preservation, and preservation
+of a previously built complete package. Qualified publishers retain both assets
+in each layout and repeated identical selections yield byte-identical output.
+The primary/asset case alias rejects during discovery on case-insensitive
+filesystems; on case-sensitive filesystems it reaches the insertion check.
+Root-level primary skills already fail canonical-path validation, so a fake
+root fixture is not presented as generated-resident collision coverage.
+Direct insertion tests cover primary, rule and reserved/generated target claims
+with equal and different bytes, asserting the first claim is never overwritten.
+
+Review-risk already classifies the composer and both suites as Tier C; no
+classifier or policy changes are needed. Algorithmic work is proportional to
+path depth per assignment. No alternate evaluator, output precedence, or
+registration mechanism was added. Independent review remains required.
+
+### Correction validation and scanner disclosure
+
+Working-source direct suite: 22 tests passed. The focused/dependent ledger is
+`cache/selected-build-correction/focused.json`; the exact committed-head full
+matrix and exhaustive legacy parity will be posted to #1031 and #1027 before
+handoff. This pre-commit record does not claim those future runs have passed.
+
+The unfiltered working scanner reports one finding: writing-tests-5 cannot find
+tests for the composer's unchanged CLI exception handler in `bin/_test`.
+The same finding is reproduced on the exact original composer by `scan_ast.py`
+(`scanner-parent.log`). The staged scan will retain and disclose it; no ignore
+filter, annotation, scanner change or hook bypass is used. Full-PR findings
+inherited from d00f73f remain separate from this correction's scan.
+
+### Correction rework ledger
+
+| Trigger | Cause | Correction |
+| --- | --- | --- |
+| Initial red subcases contaminated later subcases | Bad output survived a failed assertion | Remove only fixture output before the next independent attempt |
+| Root reserved-file fixture failed before ownership check | Root skill produces noncanonical `skills/./SKILL.md` | Cover reserved claims directly without widening accepted source layouts |
+| Primary case alias rejected during discovery | Case-insensitive source glob sees the alias as a skill | Accept that specific earlier rejection; retain insertion coverage separately |
+| Repeated pinned build tried an empty fixture commit | Seal helper always committed | Reuse the exact revision when synthetic source is clean |
+| Unicode owner assertion differed from Git snapshot | Git precomposes Unicode names on this filesystem | Compare source-relative diagnostic names in NFC |
+
+Verified-by: the exact posted red/green probe, original-source negative replay,
+focused ledger and subsequent exact committed-head comment; no independent
+ACCEPT, registration completion or merge is asserted.

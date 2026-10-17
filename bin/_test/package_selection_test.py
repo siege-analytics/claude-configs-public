@@ -27,7 +27,21 @@ selected = module('tested_selection', 'bin/package_selection.py')
 fixtures = module('composition_fixtures', 'bin/_test/selected_composition_test.py')
 
 
-class PackageSelectionTest(unittest.TestCase):
+class PackageSelectionTest(fixtures.GeneratedOwnershipCases, unittest.TestCase):
+    @property
+    def content_fixture(self):
+        return self.fixture
+
+    def ownership_publisher(self, name, **kwargs):
+        self.bundle(name, **kwargs)
+
+    def ownership_run(self):
+        (self.source / 'selected-build.json').unlink(missing_ok=True)
+        self.seal()
+        order = [entry['id'] for entry in self.fixture.selection['publishers']]
+        self.selection['bundles'].sort(key=lambda entry: order.index(entry['component']['id']))
+        return self.build()
+
     def setUp(self):
         self.fixture = fixtures.SelectedCompositionTest()
         self.fixture.setUp()
@@ -42,7 +56,8 @@ class PackageSelectionTest(unittest.TestCase):
         self.seal()
 
     def seal(self):
-        revision = self.fixture.fixture.commit()
+        fixture = self.fixture.fixture
+        revision = fixture.commit() if fixture.git('status', '--porcelain') else fixture.git('rev-parse', 'HEAD')
         self.selection = {
             'schema_version': 1, 'identity': self.fixture.identity, 'content_root': '.',
             'scaffold': selected.describe_component(self.source, 'scaffold', revision, sorted(selected.SCAFFOLD_FILES)),

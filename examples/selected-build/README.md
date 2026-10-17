@@ -53,6 +53,13 @@ The destination must be new. Cooperating publishers serialize in its parent;
 rendering failures leave no usable destination. Publication is a directory rename
 from a completed private staging directory. This is not generation activation.
 
+Generated targets have one owner across rendered skills, copied assets, rules
+and generated metadata. A second claim rejects even when the bytes match;
+publisher order never selects a winner. Case/Unicode aliases and file/directory
+conflicts also reject before either layout is written. Diagnostics name the
+target and source-relative owners, without copying source contents or absolute
+source roots. An existing destination is refused and preserved.
+
 ## Acceptance boundary and remaining work
 
 | #1027 requirement | Evidence in this dependency | Still required |
