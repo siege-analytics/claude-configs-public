@@ -411,14 +411,27 @@ if [[ "$MODE" == "craft-agent" ]]; then
     fi
 
     # Check 6c: Craft may auto-inject descendant CLAUDE.md/AGENTS.md files as
-    # sessions enter subdirectories. `find` does not traverse directory
-    # symlinks by default, so reject every descendant directory symlink before
+    # sessions enter subdirectories. Session data directories are immutable
+    # evidence stores, not session working directories or policy roots. Keep
+    # the exclusion segment-exact so lookalikes and deeper aliases still fail.
+    is_session_evidence_path() {
+        local rel="$1" first session evidence remainder
+        IFS='/' read -r first session evidence remainder <<< "$rel"
+        [[ "$first" == "sessions" && -n "$session" && "$evidence" == "data" ]]
+    }
+
+    # `find` does not traverse directory symlinks by default, so reject every
+    # descendant directory symlink outside the same evidence boundary before
     # scanning; otherwise an external tree can hide an injected instruction.
     symlinked_directories=0
     while IFS= read -r -d '' descendant_link; do
+        rel_link="${descendant_link#"$TARGET"/}"
+        if is_session_evidence_path "$rel_link"; then
+            continue
+        fi
         if [[ -d "$descendant_link" ]]; then
             symlinked_directories=$((symlinked_directories + 1))
-            fail "descendant directory symlink is not verifiable: ${descendant_link#"$TARGET"/}"
+            fail "descendant directory symlink is not verifiable: $rel_link"
         fi
     done < <(find "$TARGET" -mindepth 1 -type l -print0 2>/dev/null)
     if [[ "$symlinked_directories" -eq 0 ]]; then
@@ -429,8 +442,11 @@ if [[ "$MODE" == "craft-agent" ]]; then
     # instruction surface; file aliases must resolve to root KERNEL.md.
     nested_instructions=0
     while IFS= read -r -d '' instruction_file; do
-        nested_instructions=$((nested_instructions + 1))
         rel_instruction="${instruction_file#"$TARGET"/}"
+        if is_session_evidence_path "$rel_instruction"; then
+            continue
+        fi
+        nested_instructions=$((nested_instructions + 1))
         if [[ -L "$instruction_file" ]]; then
             if [[ "$KERNEL_VERIFIED" -eq 1 ]] && python3 - "$TARGET/KERNEL.md" "$instruction_file" <<'PY'
 from pathlib import Path
