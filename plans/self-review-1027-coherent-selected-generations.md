@@ -1,5 +1,8 @@
 # Self-review: coherent selected generations (#1027)
 
+Status: initial head fa94d48 is rejected by the unapproved-builder probe.
+The additive correction must pass a new exact-head matrix before acceptance.
+
 ## Assumptions
 
 Domain(s): software engineering
@@ -187,3 +190,44 @@ working-source evidence without claiming a future exact-head run has passed.
 Verified-by: cache/coherent-generations/working-refined/matrix.json; final committed
 head, source scanner output and full command/log digests will be posted on the draft
 PR and issue before handoff. Source scan exit 1 remains disclosed, never called clean.
+
+## Candidate-head rejection and correction plan
+
+Head fa94d48ebeadefa003f6833055f2e534d291d69f is rejected for acceptance despite
+its passing working matrix. A new adversarial fixture preserves the independent
+registration pin, commits an unapproved marker-writing scaffold, and rehashes the
+candidate source/declaration/manifest. Activation returns an error, but the marker
+exists: candidate code executed before the selection seal was checked.
+
+The retained builder must never establish its own approval to run. Before any
+subprocess, compare the candidate declaration digest with the independently pinned
+registration's selection digest. Also compare top-level project identity and derived
+composition-tool hashes with the already verified source inventory. Keep the normal
+builder's full validation and the old-scaffold rollback behavior. Add a regression
+asserting no marker write and no active-state change, then rerun normal registration,
+strict scaffold rollback, the complete generation suite and the final exact-head
+matrix. Use an additive correction commit; do not amend or erase fa94d48 evidence.
+This is a candidate defect, not a new defect in accepted parent 9a884ec.
+
+RED log SHA-256: ed78c7e879a5f1e5feb19cebbbf26aeeea28e81b85e55d9ad283181a4d4fdd88.
+
+The focused correction replay passes two hostile tests in 25.622s: the unapproved
+builder marker is absent, and rehashed identity/tool/receipt forgeries reject while
+current.json remains unchanged. The correction adds the independent declaration
+seal before execution and validates top-level identity/tool hashes. It does not
+relax the normal builder's full registration/policy checks or compare an older
+approved scaffold against newer caller tools. Complete replacement runs remain
+required; no initial-head green result closes this finding.
+
+Correction validation before additive commit: the complete generation suite passes
+13 tests in 248.578s; a fresh strict Siege scaffold upgrade/settings/native/rollback
+example passes epochs 1/2/3 with authorization none and exact prior bytes. Build
+and check pass. The correction source scan reports one inherited bin/_test discovery
+warning (exit 1); no scanner suppression or policy weakening was used.
+
+The initial fa94d48 exact-head matrix also finished 130/130. It remains rejected
+by the independent marker falsification; its rejected.json and complete logs are
+retained. Only the replacement committed-head matrix can establish final author
+validation. The new seal is checked before candidate code, while source and full
+package checks remain in place. Valid old-scaffold rollback still uses its own
+verified builder. No accepted-parent code or history was rewritten.

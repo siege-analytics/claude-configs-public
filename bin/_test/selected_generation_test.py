@@ -241,6 +241,18 @@ class SelectedGenerationTest(unittest.TestCase):
             self.assertNotEqual(failed.returncode, 0, name)
             self.assertEqual((self.store / 'current.json').read_bytes(), original)
             path.write_bytes(before)
+        for field, changed_value, diagnostic in (
+            ('identity', 'github.example.invalid/other/project', 'mixed selected project identity'),
+            ('composition_tools', {}, 'changed selected composition tool identities')):
+            bad = json.loads((root / 'generation.json').read_text())
+            bad[field] = changed_value
+            bad_id = fixture.selected.effective.digest(bad)
+            shutil.copytree(root, root.parent / bad_id)
+            (root.parent / bad_id / 'generation.json').write_text(json.dumps(bad))
+            rejected = self.cli('select', '--generation', bad_id, '--expected-epoch', 1, *self.pins(), ok=False)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn(diagnostic, rejected.stderr)
+            self.assertEqual((self.store / 'current.json').read_bytes(), original)
         # Rehash the entire inventory after forging a build receipt. The normal
         # rebuild, with independent pins, still rejects this self-consistent lie.
         forged_root = root.parent / 'forged-staging'
@@ -270,6 +282,46 @@ class SelectedGenerationTest(unittest.TestCase):
         self.assertIn('mixed selected component identities', failed.stderr)
         self.assertEqual((self.store / 'current.json').read_bytes(), original)
         self.activate(second, 1)
+
+    def test_unapproved_candidate_scaffold_never_executes_before_registration_seal(self):
+        first = self.stage()
+        self.activate(first)
+        before = (self.store / 'current.json').read_bytes()
+        marker = self.case.output.parent / 'unapproved-builder-executed'
+        injected = 'from pathlib import Path\nPath(' + repr(str(marker)) + ').write_text("unapproved")\nraise SystemExit(43)\n'
+        path = self.case.source / 'bin/build.py'
+        path.write_text(injected)
+        self.case.run_cmd(['git', 'add', 'bin/build.py'])
+        self.case.run_cmd(['git', 'commit', '-qm', 'Unapproved synthetic scaffold'])
+        revision = self.case.run_cmd(['git', 'rev-parse', 'HEAD']).stdout.strip()
+        declaration = copy.deepcopy(self.case.fixture.selection)
+        scaffold = declaration['scaffold']
+        declaration['scaffold'] = fixture.selected.describe_component(self.case.source, scaffold['id'], revision, scaffold['paths'])
+        original = self.store / 'generations' / first
+        forged = original.parent / 'forged-scaffold'
+        shutil.copytree(original, forged)
+        (forged / 'payload/source/bin/build.py').write_text(injected)
+        (forged / 'payload/provenance/selected-build.json').write_text(json.dumps(declaration))
+        manifest = json.loads((forged / 'generation.json').read_text())
+        manifest['identities']['scaffold'] = declaration['scaffold']
+        manifest['selection_sha256'] = fixture.selected.effective.digest(declaration)
+        def inventory(root):
+            return fixture.selected.file_inventory({p.relative_to(root).as_posix():
+                (p.read_bytes(), bool(p.stat().st_mode & 0o111)) for p in root.rglob('*') if p.is_file()})
+        manifest['source_files'] = inventory(forged / 'payload/source')
+        manifest['composition_tools']['bin/build.py'] = manifest['source_files']['bin/build.py']['sha256']
+        manifest['files'] = inventory(forged / 'payload')
+        ident = fixture.selected.effective.digest(manifest)
+        (forged / 'generation.json').write_text(json.dumps(manifest))
+        forged.rename(original.parent / ident)
+        # Invoke trusted tools, with the unchanged independently pinned definition.
+        result = self.case.run_cmd([sys.executable, '-B', str(ROOT / 'bin/package-generation.py'),
+            '--store', str(self.store), 'select', '--generation', ident, '--expected-epoch', '1',
+            *map(str, self.pins())], ok=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(marker.exists(), result.stderr)
+        self.assertIn('stale or mixed selected registration', result.stderr)
+        self.assertEqual((self.store / 'current.json').read_bytes(), before)
 
     def test_lock_symlink_existing_target_and_cleanup_preserve_retained_sets(self):
         first = self.stage()

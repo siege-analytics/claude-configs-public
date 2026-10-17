@@ -153,8 +153,10 @@ python3 -B bin/package-generation.py --store /absolute/disposable-store stage-se
 The caller supplies the policy and registration pins from independently reviewed
 inputs. Generated manifests, locks, build receipts and activation receipts cannot
 establish them. `select` and `rollback` require those same five explicit policy/
-registration arguments for the target generation and rebuild its entire package
-before changing the epoch. Immutable component hashes and the registration's
+registration arguments for the target generation. They validate the declaration
+against the independent registration seal and verify copied source/tool hashes
+before invoking the retained builder. The complete rebuild still precedes the
+epoch change. Immutable component hashes and the registration's
 selection digest reject wrong scaffold/bundle/project combinations. Retain the
 exact external policy definitions and Git objects for every rollback target.
 

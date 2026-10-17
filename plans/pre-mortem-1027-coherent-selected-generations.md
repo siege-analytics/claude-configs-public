@@ -108,3 +108,23 @@ are outside the accepted local artifact/registration contract.
 DDIA design score: provisional 7/10. Git/independent adoption are sources of truth;
 packages/receipts are derived. Single commit-point and reader lifetime are explicit;
 process-death/race/rollback proof is required before final assessment.
+
+## Candidate-head rejection and correction plan
+
+Head fa94d48ebeadefa003f6833055f2e534d291d69f is rejected for acceptance despite
+its passing working matrix. A new adversarial fixture preserves the independent
+registration pin, commits an unapproved marker-writing scaffold, and rehashes the
+candidate source/declaration/manifest. Activation returns an error, but the marker
+exists: candidate code executed before the selection seal was checked.
+
+The retained builder must never establish its own approval to run. Before any
+subprocess, compare the candidate declaration digest with the independently pinned
+registration's selection digest. Also compare top-level project identity and derived
+composition-tool hashes with the already verified source inventory. Keep the normal
+builder's full validation and the old-scaffold rollback behavior. Add a regression
+asserting no marker write and no active-state change, then rerun normal registration,
+strict scaffold rollback, the complete generation suite and the final exact-head
+matrix. Use an additive correction commit; do not amend or erase fa94d48 evidence.
+This is a candidate defect, not a new defect in accepted parent 9a884ec.
+
+RED log SHA-256: ed78c7e879a5f1e5feb19cebbbf26aeeea28e81b85e55d9ad283181a4d4fdd88.

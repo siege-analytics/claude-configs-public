@@ -388,6 +388,10 @@ def verify_selected(root, manifest, **pins):
     # own tools when checking an older compatibility runtime during rollback.
     definition = effective.read_json(registration.confined(pins['policy_root'], str(pins['registration_inputs'])))
     require(digest(definition) == pins['registration_inputs_sha256'], 'registration digest differs from independent pin')
+    # Approval to execute the retained scaffold comes from the independent
+    # registration seal, never from its own rehashed candidate inventory.
+    require(definition['selection_sha256'] == digest(declaration), 'stale or mixed selected registration')
+    require(manifest['identity'] == declaration['identity'] == definition['identity'], 'mixed selected project identity')
     require(definition == effective.read_json(payload / 'provenance/registration.json'), 'stale registration receipt')
     require(manifest['identities']['registration']['sha256'] == pins['registration_inputs_sha256'], 'wrong registration pin')
     loaded = effective.load_registered_inputs(pins['policy_root'], registration_source=pins['policy_inputs'],
@@ -404,6 +408,8 @@ def verify_selected(root, manifest, **pins):
         files.update(owned)
     require(selected.file_inventory(files) == manifest['source_files'] == inventory(payload / 'source'),
             'changed canonical selected source inventory')
+    require(manifest['composition_tools'] == {n: v['sha256'] for n, v in manifest['source_files'].items()
+            if n.startswith('bin/')}, 'changed selected composition tool identities')
     with tempfile.TemporaryDirectory(prefix='.generation-verify-', dir=root.parent) as raw:
         output = Path(raw) / 'package'
         selected_build(source, payload / 'provenance/selected-build.json', payload / 'source', output, pins)
