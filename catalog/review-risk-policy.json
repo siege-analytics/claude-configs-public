@@ -65,6 +65,10 @@
     "^examples/provider/",
     "^bundles/[^/]+/composition-inputs\\.json$",
     "^bin/(compose-project|procedure_composition)\\.py$",
+    "^bin/(package_selection|source_snapshot)\\.py$",
+    "^bin/_test/package_selection_test\\.py$",
+    "^bundles/[^/]+/build-bundle\\.json$",
+    "^examples/selected-build/",
     "^bin/_test/(selected_composition|project_composition|procedure_composition)_test\\.py$"
   ],
   "standard_path_patterns": [

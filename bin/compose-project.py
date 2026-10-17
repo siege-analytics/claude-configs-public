@@ -15,6 +15,7 @@ import json
 import posixpath
 import re
 import sys
+import unicodedata
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -187,6 +188,32 @@ def selected_content(value, source, resolved):
     return publishers, blocks, routes
 
 
+class GeneratedFiles:
+    """Collect uniquely owned, portable paths before package publication."""
+
+    def __init__(self):
+        self.files = {}
+        self.owners = {}
+        self.directories = {}
+
+    def add(self, name, data, owner):
+        """Claim a portable target before storing bytes, including equal bytes."""
+        composition.relative_path(name, 'generated target')
+        key = unicodedata.normalize('NFD', unicodedata.normalize('NFD', name).casefold())
+        parents = [parent.as_posix() for parent in Path(key).parents if parent != Path('.')]
+        conflict = self.owners.get(key) or self.directories.get(key)
+        if conflict is None:
+            conflict = next((self.owners[parent] for parent in parents if parent in self.owners), None)
+        if conflict is not None:
+            previous_name, previous_owner = conflict
+            raise ValueError(f'generated path collision {name!r}: {owner} conflicts with '
+                             f'{previous_owner} at {previous_name!r}')
+        self.owners[key] = (name, owner)
+        for parent in parents:
+            self.directories.setdefault(parent, (name, owner))
+        self.files[name] = data
+
+
 def package(source, destination, identity, *, policy_root=ROOT,
             policy_registration_source=None, policy_registration_sha256=None,
             content_selection=None):
@@ -283,7 +310,8 @@ def package(source, destination, identity, *, policy_root=ROOT,
             composition.require(all(slug in known for slug in route['skills']),
                                 f'route {route["id"]}: name concrete procedures; use policy.review_procedure for the selected binding')
         selected = graph.resolve(list(known))['selected']
-        files = {}
+        generated = GeneratedFiles()
+        files, add_file = generated.files, generated.add
         rule_paths = {slug: f'_{slug}.md' for slug in rules}
         for entry in selected:
             src_dir = (source / entry['source_path']).parent
@@ -298,23 +326,26 @@ def package(source, destination, identity, *, policy_root=ROOT,
                 if any(asset.is_relative_to(child) for child in child_skills):
                     continue
                 target = dst_dir / asset.relative_to(src_dir)
+                owner = f'skill {entry["slug"]} source {asset.relative_to(source).as_posix()}'
                 if asset.suffix == '.md':
                     content = asset.read_text()
                     for match in build.RULE_TOKEN.finditer(content):
                         composition.require(match['slug'] in rule_paths, f'missing scoped rule: {match["slug"]}')
                     text = build.resolve_tokens(content, layout, {}, rule_paths, target.relative_to('skills'), composition=graph)
-                    files[target.as_posix()] = text.encode()
+                    add_file(target.as_posix(), text.encode(), owner)
                 else:
-                    files[target.as_posix()] = asset.read_bytes()
+                    add_file(target.as_posix(), asset.read_bytes(), owner)
         for slug, path in rules.items():
             target = Path('skills') / rule_paths[slug]
             content = (source / path).read_text()
             for match in build.RULE_TOKEN.finditer(content):
                 composition.require(match['slug'] in rule_paths, f'missing scoped rule: {match["slug"]}')
-            files[target.as_posix()] = build.resolve_tokens(content, layout, {}, rule_paths, target.relative_to('skills'), composition=graph).encode()
+            add_file(target.as_posix(),
+                     build.resolve_tokens(content, layout, {}, rule_paths, target.relative_to('skills'), composition=graph).encode(),
+                     f'rule {slug} source {path.as_posix()}')
         bundle = '\n\n'.join(files['skills/' + rule_paths[slug]].decode() for slug in sorted(rules))
         # Rule links are rendered at skills/ so the on-demand bundle lives there.
-        files['skills/RULES_BUNDLE.md'] = bundle.encode()
+        add_file('skills/RULES_BUNDLE.md', bundle.encode(), 'generated rules bundle')
         # Resident overlays use the same token resolver and are budgeted after
         # expansion, including longer effective project paths.
         for match in build.RULE_TOKEN.finditer(resident['rendered']):
@@ -322,7 +353,7 @@ def package(source, destination, identity, *, policy_root=ROOT,
         rendered_resident = build.resolve_tokens(resident['rendered'], layout, {}, rule_paths, Path('RESIDENT.md'), composition=graph)
         final_chars = len(rendered_resident)
         composition.require(final_chars <= config['resident_budget']['max_characters'] and (final_chars + 3) // 4 <= config['resident_budget']['max_estimated_tokens'], 'rendered resident exceeds configured budget')
-        files['skills/RESIDENT.md'] = rendered_resident.encode()
+        add_file('skills/RESIDENT.md', rendered_resident.encode(), 'generated resident')
         manifest = {
             'schema_version': 1, 'kernel': 'skills/RESIDENT.md',
             'routes': routes,
@@ -335,10 +366,10 @@ def package(source, destination, identity, *, policy_root=ROOT,
             item = known[entry['slug']]
             item['characters'] = len(files[entry['load_path']].decode())
             item['estimated_tokens'] = (item['characters'] + 3) // 4
-        files['catalog/resolver-manifest.json'] = (json.dumps(manifest, indent=2) + '\n').encode()
-        files['catalog/skills-inventory.json'] = (json.dumps({'items': list(known.values())}, indent=2) + '\n').encode()
+        add_file('catalog/resolver-manifest.json', (json.dumps(manifest, indent=2) + '\n').encode(), 'generated resolver manifest')
+        add_file('catalog/skills-inventory.json', (json.dumps({'items': list(known.values())}, indent=2) + '\n').encode(), 'generated skill inventory')
         for filename in ('resolve-load-set.py', 'procedure_composition.py'):
-            files['bin/' + filename] = (ROOT / 'bin' / filename).read_bytes()
+            add_file('bin/' + filename, (ROOT / 'bin' / filename).read_bytes(), f'scaffold source bin/{filename}')
         publisher_files = {p.relative_to(source).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                            for declaration in publishers.values()
                            for p in sorted((source / declaration['skills_root']).rglob('*')) if p.is_file()}
@@ -349,7 +380,7 @@ def package(source, destination, identity, *, policy_root=ROOT,
                    'publishers': [{'id': name, 'skills_root': entry['skills_root'], 'qualified': entry['qualified'],
                                    'content_sha256': effective.digest({path: sha for path, sha in publisher_files.items() if Path(path).is_relative_to(entry['skills_root'])})}
                                   for name, entry in publishers.items()]}
-        files['composition.json'] = (json.dumps(receipt, indent=2) + '\n').encode()
+        add_file('composition.json', (json.dumps(receipt, indent=2) + '\n').encode(), 'generated composition receipt')
         # A pre-existing Markdown link must not resurrect the replaced default
         # or escape into another consumer. Tokens are rebound; unsupported raw
         # references reject with a concrete path instead of shipping broken.

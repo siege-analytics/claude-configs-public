@@ -1897,7 +1897,33 @@ def main() -> int:
     parser.add_argument("--deploy", action="store_true", help="After building, sync flat layout to Craft Agent workspace")
     parser.add_argument("--craft-workspace", type=Path, default=CRAFT_WORKSPACE, help="Target Craft Agent workspace path for --deploy (default: %(default)s)")
     parser.add_argument("--dist", type=Path, help="Build into this isolated output root instead of repository dist/")
+    parser.add_argument("--selection", type=Path, help="versioned selected resolver-content build input; no registration")
+    parser.add_argument("--source", type=Path, default=REPO_ROOT, help="local Git source for selected components")
+    parser.add_argument("--policy-root", type=Path, help="independently registered policy repository")
+    parser.add_argument("--policy-inputs", type=Path, help="independent policy registration source")
+    parser.add_argument("--policy-inputs-sha256", help="independent host/repository policy pin")
     args = parser.parse_args()
+
+    if args.selection:
+        try:
+            if args.deploy or not args.dist or args.layout != "both":
+                raise BuildError("selected builds require --dist, both layouts and no deployment")
+            if args.policy_root is None or args.policy_inputs is None or args.policy_inputs_sha256 is None:
+                raise BuildError("selected builds require independent policy root, source and digest")
+            spec = importlib.util.spec_from_file_location("package_selection", REPO_ROOT / "bin/package_selection.py")
+            selected = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(selected)
+            receipt = selected.build(args.source, args.dist, selected.effective.read_json(args.selection),
+                                     policy_root=args.policy_root, policy_source=args.policy_inputs,
+                                     policy_sha256=args.policy_inputs_sha256, check=args.check)
+            print(json.dumps(receipt, sort_keys=True))
+            return 0
+        except (BuildError, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+            print(json.dumps({"state": "error", "diagnostic": str(error), "authorization_effect": "none"}), file=sys.stderr)
+            return 1
+    if args.source != REPO_ROOT or any(value is not None for value in
+                                      (args.policy_root, args.policy_inputs, args.policy_inputs_sha256)):
+        parser.error("explicit source/policy arguments require --selection")
 
     if args.dist:
         if args.deploy:

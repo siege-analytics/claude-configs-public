@@ -58,6 +58,7 @@ jobs:
         run: |
           python3 bin/_test/procedure_composition_test.py
           python3 bin/_test/project_composition_test.py
+          python3 bin/_test/package_selection_test.py
           python3 bin/_test/resident_delivery_test.py
           python3 bin/ontology.py --validate-bindings examples/composition/ontology-bindings.json
 

@@ -25,6 +25,11 @@ AUTHORITY_DEPENDENCY_FLOOR = [
 AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "bundles/siege/composition-inputs.json",
  "bin/compose-project.py",
+ "bin/package_selection.py",
+ "bin/source_snapshot.py",
+ "bin/_test/package_selection_test.py",
+ "bundles/siege/build-bundle.json",
+ "examples/selected-build/run.py",
  "bin/procedure_composition.py",
  "bin/_test/selected_composition_test.py",
  "bin/_test/project_composition_test.py",
