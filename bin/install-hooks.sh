@@ -83,6 +83,9 @@ def merge_settings(existing, incoming, hooks_root):
             for hook in group['hooks']:
                 if not isinstance(hook, dict):
                     raise ValueError(f'invalid hook in {event}')
+                if hook.get('type') != 'command':
+                    retained_hooks.append(hook)
+                    continue
                 command = hook.get('command', '')
                 if managed_native_command(command, event, hooks_root, native_names):
                     retired.append((event, command))
@@ -107,6 +110,8 @@ def merge_settings(existing, incoming, hooks_root):
                     for prior in group['hooks']:
                         if not isinstance(prior, dict):
                             raise ValueError(f'invalid hook in {event}')
+                        if prior.get('type') != 'command':
+                            continue
                         prior_command = prior.get('command', '')
                         tokens = command_tokens(prior_command, event)
                         if Path(tokens[0]).name != basename:

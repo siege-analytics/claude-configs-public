@@ -8,7 +8,8 @@ Probe:
 - intentional dual-use `hooks/git` guards that must remain;
 - same basename outside an exact `hooks/git` path;
 - operator hooks sharing event/matcher metadata;
-- malformed, empty, compound, quoted, and whitespace-bearing commands;
+- valid non-command prompt/agent hooks with no `command` field;
+- malformed, empty, compound, quoted, and whitespace-bearing command hooks;
 - repeated installation and interrupted/failed preflight;
 - native `.githooks/pre-push` bytes and real deny/allow behavior after cleanup.
 
