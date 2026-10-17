@@ -131,3 +131,78 @@ This API guarantees a single artifact selection boundary for cooperating readers
 It does not claim power-loss recovery for every filesystem, automatic host context
 reload, a second blocking stack, or a migration of the existing production installer.
 Those claims require the separate host and protected-operation acceptance evidence.
+
+## Selected packages
+
+The additional `stage-selected` input mode extends this same selector for #1027.
+The release/archive `stage` contract above remains unchanged. A selected generation
+contains the full normal selected build (both layouts), its canonical source
+inventory, exact supplied selection document and independently verified policy/
+registration provenance. It uses schema 2; release generations retain schema 1.
+The distinct `identities` entries are scaffold, bundles, workflow/policy, project
+and selected registration. Co-located Git revisions do not collapse those entries.
+
+```sh
+python3 -B bin/package-generation.py --store /absolute/disposable-store stage-selected \
+  --source /absolute/component-repository --selection /absolute/selection.json \
+  --policy-root /absolute/approved-policy-repository \
+  --policy-inputs project/policy-inputs.json --policy-inputs-sha256 POLICY_PIN \
+  --registration-inputs project/registration.json --registration-inputs-sha256 REGISTRATION_PIN
+```
+
+The caller supplies the policy and registration pins from independently reviewed
+inputs. Generated manifests, locks, build receipts and activation receipts cannot
+establish them. `select` and `rollback` require those same five explicit policy/
+registration arguments for the target generation. They validate the declaration
+against the independent registration seal and verify copied source/tool hashes
+before invoking the retained builder. The complete rebuild still precedes the
+epoch change. Immutable component hashes and the registration's
+selection digest reject wrong scaffold/bundle/project combinations. Retain the
+exact external policy definitions and Git objects for every rollback target.
+
+Register the initial selected package through the existing install/wire/verify
+entrypoints, adding `--generation-store /absolute/disposable-store` to their
+ordinary selected arguments. `--hooks-root` names the resolved `package` and
+`--selection` names `payload/provenance/selected-build.json`. Bootstrap uses the
+existing journal and recovery contract; it is a distinct initial setup step.
+After bootstrap, settings and native hook registration remain stable. Each
+invocation resolves and verifies the selected set under the store's shared lock,
+then runs that set's native dispatcher/resolver or exact compatibility payload.
+An exclusive activation cannot interleave with that invocation. A busy selected
+writer refuses; retry after the current reader/writer finishes.
+
+A transition retains the registered event/group/hook shape. An incompatible shape
+rejects before activation; changing that host interface requires explicit new
+registration, not an implicit migration. Policy/registration bindings are checked
+at runtime. Settings command indices are bounded data into the selected template;
+they are never shell commands. Git payloads retain the accepted strict `--` boundary.
+Resolver-only output remains outside this complete-registration mode.
+
+`current.json` remains the sole commit point. Before its atomic replacement the
+prior set stays active; after replacement the complete new set is active. A
+process killed after the commit point can have an uncertain caller result, so
+resolve the token before retrying. No partially published directory can verify or
+activate. The final directory name is reserved exclusively; a failed stage may
+leave an unusable directory which cannot overwrite an earlier generation.
+
+`resolve --expected-token TOKEN` rejects a stale activation token, including after
+rollback to identical bytes. Fresh generation-selection and activation receipts
+bind the new epoch while the immutable manifest and payload are retained. Old
+operation/provider receipts are not accepted as transition inputs, and all
+receipts keep `authorization_effect: none`. The existing observer still reports
+policy decisions separately from final authorization.
+
+`cleanup-candidate --candidate /absolute/disposable-store/.stage-NAME` removes only
+an interrupted private staging directory after path and symlink checks. It cannot
+remove anything under `generations/`, including the active and prior sets. There
+is no automatic generation garbage collection. These are local artifact and
+cooperating-consumer guarantees, not live host context reload, provider protection,
+or a power-loss durability claim.
+
+Runnable independent and explicit Siege examples, acceptance mapping and measured
+retained compatibility are in [selected-generations](../examples/selected-generations/README.md).
+
+Settings command indexes use sorted event keys and preserve group/hook list order.
+A JSON event-key reorder cannot redirect a stable registered command to another
+event. Changed event/group metadata still requires a separate registration shape;
+a generation switch refuses that incompatible shape before the commit point.

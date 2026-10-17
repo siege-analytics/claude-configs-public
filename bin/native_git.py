@@ -6,6 +6,7 @@ live backend invocation or protected provider authority.
 """
 from __future__ import annotations
 import argparse
+from contextlib import ExitStack
 import json
 from pathlib import Path
 import re
@@ -93,6 +94,7 @@ def parse_arguments(argv):
 
 
 def main(argv=None):
+    stack = ExitStack()
     try:
         args = parse_arguments(list(sys.argv[1:] if argv is None else argv))
         if args is None:
@@ -108,14 +110,35 @@ def main(argv=None):
         if not pending.is_absolute():
             pending = registered_repo / pending
         require(not pending.exists(), 'interrupted registration is unusable; recover before retry')
-        definition = registration.verify_runtime(bound)
+        generation_command = False
+        if 'generation_store' in bound:
+            bound, definition, activation_token = stack.enter_context(registration.generation_binding(bound))
+            selected_entry = Path(bound['hooks_root']) / 'bin/native_git.py'
+            if selected_entry.resolve() != Path(__file__).resolve():
+                # Hold the shared lock while the selected scaffold executes. Git
+                # payloads retain the accepted native -- boundary unchanged.
+                return subprocess.run([sys.executable, '-B', str(selected_entry),
+                    *(sys.argv[1:] if argv is None else argv)], timeout=120).returncode
+            generation_command = True
+        else:
+            definition = registration.verify_runtime(bound)
         if args.event == 'settings':
             template = ep.read_json(Path(bound['hooks_root']) / 'hooks/settings-snippet.json')
             allowed = [[part.replace('${package}', bound['hooks_root']) for part in shlex.split(hook['command'])]
-                       for groups in template['hooks'].values() for group in groups for hook in group['hooks']]
+                       for _, groups in sorted(template['hooks'].items()) for group in groups for hook in group['hooks']]
             vector = json.loads(args.command)
-            require(vector in allowed and definition['adapter'] == 'siege-compatibility', 'unregistered settings command vector')
-            return subprocess.run(vector, timeout=90).returncode
+            if generation_command:
+                require(type(vector) is int and 0 <= vector < len(allowed), 'invalid selected settings command index')
+                vector = allowed[vector]
+                if definition['adapter'] == 'policy':
+                    require(vector == ['python3', '-B', str(Path(bound['hooks_root']) / 'bin/native_git.py'), 'prompt'],
+                            'unsupported generation prompt vector')
+                    args.event = 'prompt'
+                else:
+                    return subprocess.run(vector, timeout=90).returncode
+            else:
+                require(vector in allowed and definition['adapter'] == 'siege-compatibility', 'unregistered settings command vector')
+                return subprocess.run(vector, timeout=90).returncode
         if args.event == 'prompt':
             event = ep.parse_json(sys.stdin.buffer.read(), 'prompt event')
             result = subprocess.run([sys.executable, '-B', str(Path(bound['hooks_root']) / 'bin/resolve-load-set.py'),
@@ -152,6 +175,8 @@ def main(argv=None):
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         print('native-git: incomplete registration/evidence: ' + str(exc), file=sys.stderr)
         return 2
+    finally:
+        stack.close()
 
 
 if __name__ == '__main__':

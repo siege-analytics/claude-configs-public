@@ -73,7 +73,10 @@
     "^bin/(selected_registration|native_git)\\.py$",
     "^bin/_test/selected_registration_test\\.py$",
     "^examples/selected-registration/",
-    "^bundles/[^/]+/(registration-profile|protected-adapter)\\.json$"
+    "^bundles/[^/]+/(registration-profile|protected-adapter)\\.json$",
+    "^bin/_test/selected_generation_test\\.py$",
+    "^examples/selected-generations/",
+    "^catalog/selected-generation-bindings\\.json$"
   ],
   "standard_path_patterns": [
     "^skills/",

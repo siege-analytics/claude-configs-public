@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "ontology_version": "1.4.0",
+  "bindings": [
+    {
+      "artifact": "generation.json",
+      "fields": [
+        {
+          "pointer": "/kind",
+          "term": "selected-generation",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/identities/scaffold",
+          "term": "parent-scaffold",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/identities/project",
+          "term": "project",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/identities/bundles",
+          "term": "content-bundle",
+          "value_type": "array"
+        },
+        {
+          "pointer": "/identities/workflow_policy/profile",
+          "term": "profile",
+          "value_type": "string"
+        },
+        {
+          "pointer": "/identities/registration",
+          "term": "selected-registration",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/source_files",
+          "term": "source-reference",
+          "value_type": "object"
+        },
+        {
+          "pointer": "/evidence_state",
+          "term": "artifact-verified",
+          "value_type": "string"
+        }
+      ]
+    }
+  ]
+}

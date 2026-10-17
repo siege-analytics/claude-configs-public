@@ -13,7 +13,7 @@
   },
   "legacy_minimum_artifact_for_all_tiers": true,
   "load_set_change": 0,
-  "policy_characters": 3854,
+  "policy_characters": 3995,
   "required_evidence_counts": {
     "A": 1,
     "B": 3,
