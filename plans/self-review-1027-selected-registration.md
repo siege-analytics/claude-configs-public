@@ -173,3 +173,13 @@ not discover that repository test layout. These diagnostics are disclosed under
 the operator's scanner-disclosure workflow; no clean-scan claim, ignore filter,
 annotation or test/policy weakening is made. The final unfiltered scan and complete
 findings list accompany the exact-head publication evidence.
+
+## Exact-head freshness finding and additive correction
+
+The first committed-head matrix at a78fd8d found a stale skill inventory. Its
+new tracked registration test was absent from forty generated reference lists
+because the earlier generator ran before git add. Generated-source authority,
+kernel-budget and lifecycle freshness correctly refused the stale inventory.
+The catalog is regenerated from the now-tracked source; no checker or assertion
+changes. The first run remains failed evidence, not acceptance. The entire matrix
+must restart at the additive correction commit before push.
