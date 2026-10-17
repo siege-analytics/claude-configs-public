@@ -174,7 +174,10 @@ class NativePush(unittest.TestCase):
         alias.symlink_to(self.package / 'hooks/git/pre-push-self-review.sh')
         original = {'model': 'project-choice', 'permissions': {'deny': ['example']},
                     'hooks': {
-                        'UserPromptSubmit': [{'hooks': [{'type': 'command', 'command': 'project-helper'}]}],
+                        'UserPromptSubmit': [{'hooks': [
+                            {'type': 'command', 'command': 'project-helper'},
+                            {'type': 'prompt', 'prompt': 'operator prompt hook'},
+                        ]}],
                         'PreToolUse': [{'matcher': 'Bash', 'hooks': [
                             {'type': 'command', 'command': '/old/package/hooks/git/pre-push-self-review.sh'},
                             {'type': 'command', 'command': 'hooks/git/pre-push-self-review.sh'},
@@ -190,8 +193,11 @@ class NativePush(unittest.TestCase):
         self.assertEqual(merged['permissions'], original['permissions'])
         self.assertEqual(merged['model'], 'project-choice')
         commands = [hook['command'] for groups in merged['hooks'].values()
-                    for group in groups for hook in group['hooks']]
+                    for group in groups for hook in group['hooks'] if hook.get('type') == 'command']
         self.assertIn('project-helper', commands)
+        prompt_hooks = [hook for groups in merged['hooks'].values() for group in groups
+                        for hook in group['hooks'] if hook.get('type') == 'prompt']
+        self.assertEqual(prompt_hooks, [{'type': 'prompt', 'prompt': 'operator prompt hook'}])
         self.assertIn('operator-bash-helper', commands)
         self.assertIn('/operator/pre-push-self-review.sh', commands)
         self.assertTrue(any(Path(shlex.split(command)[0]).as_posix().endswith('/hooks/git/branch-guard.sh')

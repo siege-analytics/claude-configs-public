@@ -22,6 +22,10 @@ Two harness failures are not product passes: system Python 3.9 could not parse s
 
 The real workspace reconciliation passes deployed hook validation and the source verifier: zero Claude commands contain a managed `hooks/git/pre-push-*` reader, the canonical dual-use branch guard remains, ordinary `probe-ok` Bash runs, and native invalid/valid push probes deny/allow as expected. Live host injection remains unverified.
 
+## Promotion review correction
+
+CodeRabbit found that both scans parsed every hook as a command. Valid non-command hooks such as `type: prompt` have no `command`, so the accepted head could reject operator settings. The promotion was stopped. The additive correction retains non-command hooks during retirement, skips them during command-conflict matching, and adds repeated-install preservation coverage. Prior author and independent verdicts do not transfer to the replacement head. The corrected 19-test native suite passes with a preserved prompt hook across repeated installation. Source/generated validation, build and freshness, 14 selected-registration tests under one physical Python 3.11 interpreter, generated-source authority, review-risk freshness, and all 36 hook suites also pass.
+
 ## Lead verdict
 
-Accept for independent review. The patch retires only pre-push protocol readers, preserves operator and canonical dual-use hooks, leaves native `.githooks` semantics intact, and passes source plus real-workspace replay.
+Accept for independent re-review after the additive correction. The patch retires only pre-push protocol readers, preserves operator and canonical dual-use hooks, leaves native `.githooks` semantics intact, and passes source plus real-workspace replay.
