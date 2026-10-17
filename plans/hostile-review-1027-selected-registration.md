@@ -103,3 +103,17 @@ No further blocker was found in this author review; that is not independent
 acceptance. Final head/tree/parent and the full validation ledger must accompany
 the draft PR. Coherent selected generation identities and transitions remain the
 next #1027 dependency. All #1003 fixture/no-live/non-authorizing boundaries remain.
+
+## F5: compatibility adapter accepted a different approved workflow
+
+Final call-chain review found that the legacy exporter could be selected for the
+approved synthetic-trunk workflow despite retaining strict-release behavior.
+The direct real-exporter probe first had a harness import error; after fixing its
+module search path it failed with `AssertionError: ValueError not raised` in
+3.900 seconds. compatibility-profile-red-2.log is the product falsification.
+The named compatibility export wrapper now rejects every workflow except the
+strict-release profile it implements. Generic selected policy remains unchanged;
+there is no fallback to legacy obligations. The new test fails before usable
+registration on the incompatible profile, and the full strict-release fixture
+must pass again at the correction head. Earlier matrix runs do not cover this
+correction and cannot be acceptance evidence for it.

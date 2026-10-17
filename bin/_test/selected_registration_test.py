@@ -340,6 +340,17 @@ raise SystemExit(r.main(['install', *sys.argv[3:]]))
         self.assertEqual(json.loads(missing.stdout)['state'], 'error')
         self.assertFalse((self.source / 'bundles').exists())
 
+    def test_compatibility_adapter_rejects_a_different_adopted_workflow(self):
+        sys.path.insert(0, str(ROOT / 'bin'))
+        self.addCleanup(sys.path.remove, str(ROOT / 'bin'))
+        registration = selected.module('compatibility_profile_test', ROOT, 'selected_registration.py')
+        gc = selected.effective._gate_contract_module()
+        definition = {'workflow_profile': 'synthetic-trunk', 'runtime': {
+            'revision': self.run_cmd(['git', 'rev-parse', 'HEAD'], cwd=ROOT).stdout.strip()}}
+        policy_registration = {'source': gc.SIEGE_INPUTS.as_posix(), 'sha256': gc.SIEGE_INPUTS_SHA256}
+        with self.assertRaisesRegex(ValueError, 'cannot implement selected workflow profile'):
+            registration.siege_compatibility_package(ROOT, definition, policy_registration, self.output.parent)
+
     def test_independent_registration_build(self):
         for name in ('bundles', 'skills', 'hooks', '.githooks', 'examples', 'craft-agent'):
             self.assertFalse((self.source / name).exists(), name)

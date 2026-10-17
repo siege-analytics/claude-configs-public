@@ -114,6 +114,8 @@ def settings_template(definition, runtime):
 
 def siege_compatibility_package(root, definition, policy_registration, parent):
     """Run the retained full exporter only for the pinned Siege compatibility descriptor."""
+    require(definition['workflow_profile'] == 'strict-release',
+            'compatibility adapter cannot implement selected workflow profile')
     gc = ep._gate_contract_module()
     gc.siege_policy_inputs(root)
     require(policy_registration['source'] == gc.SIEGE_INPUTS.as_posix()

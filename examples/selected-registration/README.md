@@ -60,7 +60,8 @@ content-only probe selects a synthetic Siege skill without adopting its profile
 and repeats real no-ticket/no-review commit and trunk/develop push operations.
 
 The explicit Siege descriptor selects the retained compatibility exporter and its
-complete pinned source closure. It uses the same selected API, installer, verifier
+complete pinned source closure. That adapter supports only the adopted
+`strict-release` workflow; a different approved profile rejects before export. It uses the same selected API, installer, verifier
 and outer native dispatcher. Settings add a checked dispatch wrapper around the
 unchanged complete legacy payload vectors so pending publication cannot execute
 them. The fixture verifies the full wrapper vectors, group metadata, full payload
@@ -95,7 +96,7 @@ host, provider protection, release, deployment or organizational policy adoption
 - Three existing public install/wire/verify entrypoints gained selected dispatch.
   One selected registration implementation owns rebuild, merge and publication.
 - One existing full exporter remains behind one explicit Siege compatibility
-  export function. No legacy exporter or native policy body is claimed removed.
+  export function with one strict-release profile restriction. No legacy exporter or native policy body is claimed removed.
 - Two Git range translators remain: the generic native protocol translator and
   the legacy self-review range script. They retain their different feedback
   contracts; only the existing effective-policy evaluator decides selected policy.

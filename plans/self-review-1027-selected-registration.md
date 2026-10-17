@@ -183,3 +183,18 @@ kernel-budget and lifecycle freshness correctly refused the stale inventory.
 The catalog is regenerated from the now-tracked source; no checker or assertion
 changes. The first run remains failed evidence, not acceptance. The entire matrix
 must restart at the additive correction commit before push.
+
+## Compatibility-profile correction before publication
+
+The compatibility exporter accepted a synthetic-trunk definition while preserving
+strict-release behavior. A real exporter probe reproduced the missing refusal
+(compatibility-profile-red-2.log). The named wrapper now requires the adopted
+strict-release profile. This is a restriction on retained compatibility behavior,
+not an implicit profile or new policy engine. The suite now has eleven tests.
+The full matrix restarts after this normal-hook additive correction.
+
+The first isolated matrix also exposed a harness identity problem: cloning from a
+local path changed origin, so the repository-scoped ticket hook treated the clone
+as an unrelated project. Subsequent clones copy the canonical origin URL without
+fetching and verify every tracked byte/mode. Test assertions and hook scope remain
+unchanged. Superseded runs are retained as failed or interrupted evidence.
