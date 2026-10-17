@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "ontology_version": "1.1.0",
+  "ontology_version": "1.2.0",
   "bindings": [
     {
       "artifact": "examples/coordination/work-cycle.json",

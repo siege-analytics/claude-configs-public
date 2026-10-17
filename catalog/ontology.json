@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "ontology_version": "1.1.0",
+  "ontology_version": "1.2.0",
   "terms": [
     {
       "id": "parent-scaffold",
@@ -617,6 +617,26 @@
       ],
       "references": [
         "#1027"
+      ]
+    },
+    {
+      "id": "content-bundle",
+      "label": "Content bundle",
+      "definition": "A selected, versioned set of publisher-owned content and its descriptor, pinned separately from scaffold and project sources. Its profile requirements diagnose missing adoption; selecting it establishes no policy authority or host capability.",
+      "owner": "composition",
+      "examples": [
+        "bundles/siege/build-bundle.json describes the bounded Siege composition content."
+      ],
+      "distinguished_from": [
+        "content-publisher",
+        "content-selection",
+        "profile",
+        "parent-scaffold"
+      ],
+      "references": [
+        "#1027",
+        "bin/package_selection.py",
+        "examples/selected-build/README.md"
       ]
     }
   ],

@@ -13,7 +13,7 @@ import hashlib
 import importlib.util
 import json
 import os
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 import re
 import subprocess
 import sys
@@ -39,11 +39,10 @@ canonical = effective.canonical_json
 digest = effective.digest
 
 
-def relative(value):
-    require(isinstance(value, str) and value and not value.startswith('/'), 'expected relative path')
-    parts = PurePosixPath(value).parts
-    require(value == '/'.join(parts) and all(p not in ('.', '..') and p.casefold() != '.git' for p in parts), 'unsafe path')
-    return Path(*parts)
+snapshot = module('generation_snapshot', 'bin/source_snapshot.py')
+relative = snapshot.relative
+exact_commit = snapshot.exact_commit
+git_files = snapshot.git_files
 
 
 def canonical_root(path):
@@ -57,43 +56,6 @@ def no_symlinks(path):
     path = path.absolute()
     require(not any(p.is_symlink() for p in (path, *path.parents)), 'symlink store/input unsupported')
     return path
-
-
-def exact_commit(root, revision):
-    require(isinstance(revision, str) and re.fullmatch(r'[0-9a-f]{40}', revision), 'revision must be an exact commit')
-    require(handoff.revision(root, revision + '^{commit}') == revision, 'revision is not the named commit')
-
-
-def git_files(root, revision, prefix=''):
-    """Read regular files from exact Git objects, never the mutable checkout."""
-    exact_commit(root, revision)
-    if prefix:
-        relative(prefix)
-    entries = handoff.git(root, 'ls-tree', '-rz', revision).split(b'\0')
-    selected = []
-    for record in entries:
-        if not record:
-            continue
-        meta, raw = record.split(b'\t', 1)
-        name = raw.decode(); relative(name)
-        if prefix and name != prefix and not name.startswith(prefix + '/'):
-            continue
-        mode, kind, oid = meta.decode().split()
-        require(kind == 'blob' and mode in ('100644', '100755'), f'unsupported Git input {name}')
-        selected.append((name, oid, mode == '100755'))
-    require(selected, f'no input files at {revision}:{prefix}')
-    raw = subprocess.check_output(['git', '-C', str(root), 'cat-file', '--batch'],
-                                  input=('\n'.join(oid for _, oid, _ in selected) + '\n').encode(),
-                                  stderr=subprocess.PIPE, timeout=60)
-    result, offset = {}, 0
-    for name, oid, executable in selected:
-        end = raw.index(b'\n', offset); header = raw[offset:end].decode().split()
-        require(len(header) == 3 and header[:2] == [oid, 'blob'], 'missing Git blob')
-        size = int(header[2]); start = end + 1
-        require(raw[start + size:start + size + 1] == b'\n', 'truncated Git blob')
-        result[name] = (raw[start:start + size], executable); offset = start + size + 1
-    require(offset == len(raw), 'unexpected Git blob output')
-    return result
 
 
 def put(root, name, data, executable=False):
@@ -180,7 +142,8 @@ def stage(store, parent_root, assets, *, release_digest, repository, tag, source
     # A new release may need a newer composer/resolver. Never silently render
     # it with whichever implementation happens to be running this command.
     dependencies = ('bin/compose-project.py', 'bin/procedure_composition.py', 'bin/build.py',
-                    'bin/effective_policy.py', 'bin/gate_contract.py', 'bin/resolve-load-set.py')
+                    'bin/effective_policy.py', 'bin/gate_contract.py', 'bin/resolve-load-set.py',
+                    'bin/source_snapshot.py')
     source_bins = git_files(parent_root, source, 'bin')
     tool_hashes = {}
     for name in dependencies:
