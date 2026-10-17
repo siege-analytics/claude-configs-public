@@ -113,3 +113,29 @@ sources remain the next #1027 dependency: upgrade, mixed/stale generation,
 customization and generation rollback tests are not implemented here. Existing
 component pins and interruption recovery are not a claim that generation
 activation is complete. #1027 stays open.
+
+### Native argument boundary
+
+Generated hooks call `native_git.py commit-msg -- MESSAGE_FILE` or
+`native_git.py pre-push -- REMOTE LOCATION`. The first separator belongs to the
+dispatcher; everything after it is Git data, including another `--`, empty strings,
+spaces and Unicode. Native events accept no control options and read their binding
+only from the repository's local `scaffold.registration` configuration. Exact
+argument counts, repository identity, pending journal and runtime verification
+precede operation execution for both adapters. Direct native callers must supply
+the separator too. Retained shell aliases consume their explicit `--selected`
+sentinel and insert the separator before forwarding the remaining arguments.
+
+Settings retain `prompt --binding JSON` and `settings --binding JSON --command
+JSON`; bindings and command vectors must occur exactly once, with no abbreviated
+options, extra arguments or event-local help. Only standalone `native_git.py
+--help` / `-h` prints usage successfully. Git-owned help-like names never reach
+that path. An empty filename is preserved and fails as an unusable file; it does
+not become a missing control option.
+
+Both executable examples exercise actual pushes through ordinary, option-like
+and Unicode aliases pointing to one bare remote, recording allowed heads and
+unchanged refs on denial in `consumer-native-arguments.json`. Siege also compares
+the retained compatibility installation. Its denied release push contains invalid
+unpublished history; the independent adapter denies the release target itself.
+These preserve the two adapters' existing policy decisions.

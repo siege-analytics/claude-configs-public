@@ -88,7 +88,7 @@ def native_wrapper(kind):
             'import os, sys\nfrom pathlib import Path\n'
             'root = Path(__file__).resolve().parents[1]\n'
             'os.execv(sys.executable, [sys.executable, "-B", str(root / "bin/native_git.py"), '
-            + repr(kind) + ', *sys.argv[1:]])\n').encode()
+            + repr(kind) + ', "--", *sys.argv[1:]])\n').encode()
 
 
 def settings_template(definition, runtime):

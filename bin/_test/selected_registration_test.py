@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import sys
@@ -17,6 +18,7 @@ spec = importlib.util.spec_from_file_location('selection_tests', ROOT / 'bin/_te
 fixtures = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fixtures)
 selected = fixtures.selected
+NATIVE_NAMES = ('--help', '--selected', '--binding', '--command', '-h', '--', '', 'space name', '\u540d\u524d')
 
 
 class SelectedRegistrationTest(unittest.TestCase):
@@ -72,7 +74,7 @@ class SelectedRegistrationTest(unittest.TestCase):
         self.original_settings = {'model': 'operator-choice', 'permissions': {'deny': ['fixture']},
             'hooks': {'UserPromptSubmit': [{'hooks': [{'type': 'command', 'command': 'operator-command'}]}]}}
         self.settings.write_text(json.dumps(self.original_settings))
-        self.remote = self.output.parent / 'remote.git'
+        self.remote = self.output.parent / 'remote with spaces \u540d\u524d.git'
         self.run_cmd(['git', 'init', '--template=', '-q', '--bare', str(self.remote)])
         self.run_cmd(['git', 'remote', 'add', 'origin', str(self.remote)], cwd=self.consumer)
 
@@ -92,6 +94,113 @@ class SelectedRegistrationTest(unittest.TestCase):
 
     def refs(self):
         return self.run_cmd(['git', 'ls-remote', '--heads', str(self.remote)]).stdout
+
+    def test_native_payload_is_opaque_and_controls_are_strict(self):
+        sys.path.insert(0, str(ROOT / 'bin'))
+        import native_git
+        for name in NATIVE_NAMES:
+            for location in (*NATIVE_NAMES, 'file:///path with spaces/\u540d\u524d.git', 'ssh://git@example.invalid/repo'):
+                args = native_git.parse_arguments(['pre-push', '--', name, location])
+                self.assertEqual(args.arguments, [name, location])
+                self.assertIsNone(args.binding)
+            self.assertEqual(native_git.parse_arguments(['commit-msg', '--', name]).arguments, [name])
+        for argv in (['pre-push', '--help'], ['commit-msg', '-h'],
+                     ['pre-push', '--binding', '{}', '--', 'origin', 'url'],
+                     ['pre-push', '--', 'origin'], ['pre-push', '--', 'a', 'b', 'c'],
+                     ['commit-msg', '--'], ['commit-msg', '--', 'a', 'b']):
+            with self.subTest(argv=argv), self.assertRaises(ValueError):
+                native_git.parse_arguments(argv)
+
+    def test_native_wrappers_verify_binding_before_any_payload(self):
+        self.prepare()
+        for action in ('install', 'wire', 'verify'):
+            self.entry(action)
+        self.run_cmd(['git', 'commit', '--allow-empty', '-qm', 'No ticket'], cwd=self.consumer)
+        head = self.run_cmd(['git', 'rev-parse', 'HEAD'], cwd=self.consumer).stdout.strip()
+        native = [sys.executable, '-B', str(self.package / 'bin/native_git.py')]
+        push_entries = [[str(self.package / '.githooks/pre-push')],
+            ['bash', str(ROOT / '.githooks/pre-push'), '--selected'],
+            ['bash', str(ROOT / 'hooks/git/pre-push-self-review.sh'), '--selected'],
+            [*native, 'pre-push', '--']]
+        commit_entries = [[str(self.package / '.githooks/commit-msg')],
+            ['bash', str(ROOT / '.githooks/commit-msg'), '--selected'],
+            [*native, 'commit-msg', '--']]
+        line = f'HEAD {head} refs/heads/release {"0" * 40}\n'
+        before = self.refs()
+        aliases = NATIVE_NAMES[:6]
+        for alias in aliases:
+            self.run_cmd(['git', 'remote', 'add', '--', alias, str(self.remote)], cwd=self.consumer)
+        for name in NATIVE_NAMES:
+            for entry in push_entries:
+                denied = self.run_cmd([*entry, name, str(self.remote)], cwd=self.consumer, input=line, ok=False)
+                self.assertEqual(denied.returncode, 1, denied.stdout + denied.stderr)
+                self.assertIn('policy denied', denied.stderr)
+            if name:
+                (self.consumer / name).write_text('No ticket or review needed\n')
+            for entry in commit_entries:
+                result = self.run_cmd([*entry, name], cwd=self.consumer, ok=False)
+                self.assertEqual(result.returncode, 0 if name else 2, result.stderr)
+        self.assertEqual(self.refs(), before)
+        for entries, valid in ((push_entries, ['origin', str(self.remote)]), (commit_entries, ['--help'])):
+            for entry in entries:
+                for payload in ([], valid[:-1], [*valid, '--help'], [*valid, '--binding', '{}'],
+                                [*valid, '--command', '[]'], [*valid, 'settings']):
+                    result = self.run_cmd([*entry, *payload], cwd=self.consumer, input=line, ok=False)
+                    self.assertNotEqual(result.returncode, 0, (entry, payload, result.stdout))
+        raw = self.run_cmd(['git', 'config', '--get', 'scaffold.registration'], cwd=self.consumer).stdout.strip()
+        for bad in (None, '{}', json.dumps({**json.loads(raw), 'backend': 'other'}),
+                    json.dumps({**json.loads(raw), 'git_repo': str(self.source)})):
+            if bad is None:
+                self.run_cmd(['git', 'config', '--unset', 'scaffold.registration'], cwd=self.consumer)
+            else:
+                self.run_cmd(['git', 'config', 'scaffold.registration', bad], cwd=self.consumer)
+            for entry in push_entries:
+                for name in ('--help', '--binding', '--selected'):
+                    result = self.run_cmd([*entry, name, str(self.remote)], cwd=self.consumer, input=line, ok=False)
+                    self.assertNotEqual(result.returncode, 0, result.stdout)
+            for entry in commit_entries:
+                self.assertNotEqual(self.run_cmd([*entry, '--help'], cwd=self.consumer, ok=False).returncode, 0)
+            for alias in aliases:
+                result = self.run_cmd(['git', 'push', '--', alias, 'HEAD:trunk'], cwd=self.consumer, ok=False)
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertEqual(self.refs(), before)
+        self.run_cmd(['git', 'config', 'scaffold.registration', raw], cwd=self.consumer)
+        pending = self.consumer / '.git/selected-registration-pending.json'
+        pending.write_text('{}')
+        for entry in push_entries:
+            result = self.run_cmd([*entry, '--help', str(self.remote)], cwd=self.consumer, input=line, ok=False)
+            self.assertIn('interrupted registration', result.stderr)
+            self.assertNotEqual(result.returncode, 0)
+        for entry in commit_entries:
+            result = self.run_cmd([*entry, '--help'], cwd=self.consumer, ok=False)
+            self.assertIn('interrupted registration', result.stderr)
+            self.assertNotEqual(result.returncode, 0)
+        for alias in aliases:
+            result = self.run_cmd(['git', 'push', '--', alias, 'HEAD:trunk'], cwd=self.consumer, ok=False)
+            self.assertIn('interrupted registration', result.stderr)
+            self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.refs(), before)
+
+    def test_settings_controls_require_one_binding_and_event_specific_vector(self):
+        self.prepare()
+        self.entry('install')
+        settings = json.loads(self.settings.read_text())
+        vector = shlex.split(settings['hooks']['UserPromptSubmit'][-1]['hooks'][-1]['command'])
+        self.run_cmd(vector, cwd=self.consumer, input='{"prompt":"review"}')
+        native = vector[:3]
+        raw = vector[-1]
+        for argv in (['prompt'], ['prompt', '--help'], ['settings', '--help'],
+                     ['prompt', '--binding', ''], ['prompt', '--binding', raw, '--binding', raw],
+                     ['prompt', '--binding', raw, '--command', '[]'],
+                     ['settings', '--binding', raw],
+                     ['settings', '--binding', raw, '--command', '[]', '--command', '[]'],
+                     ['settings', '--binding', raw, '--command', '[]'],
+                     ['prompt', '--bind', raw], ['prompt', '--binding', raw, 'extra']):
+            result = self.run_cmd([*native, *argv], cwd=self.consumer, input='{}', ok=False)
+            self.assertNotEqual(result.returncode, 0, (argv, result.stdout))
+        for help_option in ('--help', '-h'):
+            result = self.run_cmd([*native, help_option], cwd=self.consumer)
+            self.assertIn('Native usage:', result.stdout)
 
     def test_normal_install_wire_verify_and_real_git_decisions(self):
         self.prepare()

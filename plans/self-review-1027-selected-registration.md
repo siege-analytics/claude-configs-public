@@ -208,3 +208,10 @@ The three aliases now distinguish those shapes before dispatch, and a real push
 regression asserts the destination ref. This changes no legacy policy body.
 Evidence: native-argument-red.log and native-argument-green.log. All earlier
 exact-head runs are superseded by the final correction's full replay.
+
+## Historical evidence notice
+
+The selected dispatcher at 5fc9250 was falsified by PR #1032 comment 6228927453.
+Its matrix is historical and obsolete for the replacement head. Correction and
+new exact-head evidence are tracked in self-review-1027-native-arguments.md; no
+previous verdict transfers. Coherent generation work remains stopped.

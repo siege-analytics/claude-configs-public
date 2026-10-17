@@ -52,7 +52,7 @@ def make_consumer(output, name):
     settings = repo / '.claude/settings.json'
     settings.parent.mkdir()
     settings.write_text(json.dumps({'model': 'operator-choice', 'permissions': {'deny': ['fixture']}}))
-    remote = output / (name + '-remote.git')
+    remote = output / (name + '-remote with spaces \u540d\u524d.git')
     command(['git', 'init', '--template=', '-q', '--bare', str(remote)], repo)
     command(['git', 'remote', 'add', 'origin', str(remote)], repo)
     return repo, remote
@@ -63,21 +63,46 @@ def operations(repo, remote, case):
         return command(['git', 'ls-remote', '--heads', str(remote)], repo).stdout
     initial = refs()
     message = 'No ticket or review obligations' if case == 'independent' else 'docs: selected fixture #1027\n\nReview-Tier: A\nSelf-Review: inspected disposable changes'
+    hook_root = Path(command(['git', 'config', '--get', 'core.hooksPath'], repo).stdout.strip())
+    for name in ('--help', '--selected', '--binding', '--command', '-h', '--', 'space name', '\u540d\u524d'):
+        (repo / name).write_text(message)
+        command([str(hook_root / 'commit-msg'), name], repo)
+        if case == 'siege':
+            (repo / name).write_text('Missing required review and ticket')
+            denied = command([str(hook_root / 'commit-msg'), name], repo, ok=False)
+            selected.require(denied.returncode != 0, 'option-like message path bypassed commit policy')
+        (repo / name).unlink()
+    if (hook_root.parent / 'selected-registration.json').exists():
+        for event, payload in (('commit-msg', []), ('commit-msg', ['--help', 'extra']),
+                               ('pre-push', []), ('pre-push', ['--help']),
+                               ('pre-push', ['origin', str(remote), '--help'])):
+            malformed = command([str(hook_root / event), *payload], repo, ok=False, input='')
+            selected.require(malformed.returncode != 0, 'malformed native arguments accepted')
     if case == 'siege':
         bad = command(['git', 'commit', '--allow-empty', '-qm', 'Missing required review and ticket'], repo, ok=False)
         selected.require(bad.returncode != 0 and refs() == initial, 'compatibility accepted an invalid commit')
-    command(['git', 'commit', '--allow-empty', '-qm', message], repo)
     target = 'trunk' if case == 'independent' else 'feature'
-    command(['git', 'push', 'origin', 'HEAD:' + target], repo)
-    before = refs()
-    if case == 'independent':
-        denied = command(['git', 'push', 'origin', 'HEAD:release'], repo, ok=False)
-    else:
+    aliases = ('origin', '--help', '--selected', '--binding', '--command', '-h', '--', '\u540d\u524d')
+    probes = []
+    for alias in aliases:
+        if alias != 'origin':
+            command(['git', 'remote', 'add', '--', alias, 'file://' + str(remote)], repo)
+        command(['git', 'commit', '--allow-empty', '-qm', message], repo)
+        allowed = command(['git', 'push', '--', alias, 'HEAD:' + target], repo)
+        head = command(['git', 'rev-parse', 'HEAD'], repo).stdout.strip()
+        selected.require(head + '\trefs/heads/' + target in refs(), 'allowed push did not publish head')
+        probes.append({'remote': alias, 'allow_exit': allowed.returncode, 'allowed_head': head})
+    if case == 'siege':
         # A bypassed fixture commit makes the range gate independently observable.
         command(['git', '-c', 'core.hooksPath=/dev/null', 'commit', '--allow-empty', '-qm', 'Invalid interior'], repo)
         command(['git', 'commit', '--allow-empty', '-qm', message], repo)
-        denied = command(['git', 'push', 'origin', 'HEAD:feature'], repo, ok=False)
-    selected.require(denied.returncode != 0 and refs() == before, 'denied push changed destination refs')
+    for probe in probes:
+        before = refs()
+        denied = command(['git', 'push', '--', probe['remote'], 'HEAD:release'], repo, ok=False)
+        after = refs()
+        selected.require(denied.returncode != 0 and after == before, 'denied push changed destination refs')
+        probe.update(deny_exit=denied.returncode, refs_before=before, refs_after=after, stderr=denied.stderr)
+    (repo.parent / (repo.name + '-native-arguments.json')).write_text(json.dumps(probes, indent=2) + '\n')
     return {'commit_allow': True, 'commit_deny': case == 'siege', 'push_allow': True,
             'push_deny': True, 'remote_unchanged_on_deny': True}
 
@@ -140,6 +165,18 @@ def exercise(output, selection, policy_source, policy_pin, registration_source, 
                     selected.require(vector == expected_vector, 'complete registered wrapper vector differs')
                     hook['command'] = shlex.join(json.loads(vector[vector.index('--command') + 1]))
         selected.require(expected == payloads, 'complete compatibility payload vectors differ')
+        pending = repo / '.git/selected-registration-pending.json'
+        pending.write_text('{}')
+        try:
+            for groups in actual['hooks'].values():
+                for group in groups:
+                    for hook in group['hooks']:
+                        vector = shlex.split(hook['command'])
+                        refused = command(vector, repo, input='{}', ok=False)
+                        selected.require(refused.returncode != 0 and 'interrupted registration' in refused.stderr,
+                                         'settings vector escaped pending registration')
+        finally:
+            pending.unlink()
         selected.require(operations(baseline, baseline_remote, case) == decisions, 'actual compatibility decisions differ')
         spec = selected.effective.read_json(source / registration_source)
         baseline_dist = output / 'compatibility-export'

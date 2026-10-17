@@ -129,3 +129,11 @@ now check that arity before interpreting --selected. The new native_push_test.py
 case exercises the real remote name and resulting destination ref. Ordinary native
 Git invocations retain their original interpretation. The full native suite and
 final exact-head matrix replay this correction; older runs do not establish it.
+
+## Historical evidence notice: native argument bypass at 5fc9250
+
+PR finding 6228927453 falsified the selected native argument boundary after the
+historical author checks above. The 5fc9250 ledger and no-further-blocker statement
+are obsolete as acceptance evidence for a replacement head. They remain intact as
+historical observations. See plans/hostile-review-1027-native-arguments.md for the
+reproduced full-path failure and correction probes. Independent review is pending.

@@ -63,16 +63,41 @@ def range_commits(repo, lines, remote):
     return updates
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('event', choices=('commit-msg', 'pre-push', 'prompt', 'settings'))
-    parser.add_argument('--binding')
-    parser.add_argument('--command')
-    parser.add_argument('arguments', nargs='*')
+def parse_arguments(argv):
+    """Keep native payloads outside the control parser, including help handling."""
+    if argv and argv[0] in ('commit-msg', 'pre-push'):
+        event = argv[0]
+        require(argv[1:2] == ['--'], 'native events require -- before Git arguments')
+        arguments = argv[2:]
+        expected = 1 if event == 'commit-msg' else 2
+        require(len(arguments) == expected, event + ' requires exactly ' + str(expected) + ' Git arguments')
+        return argparse.Namespace(event=event, arguments=arguments, binding=None, command=None)
+    parser = argparse.ArgumentParser(description=__doc__, add_help=False, allow_abbrev=False,
+        epilog='Native usage: commit-msg -- MESSAGE_FILE | pre-push -- REMOTE LOCATION')
+    parser.add_argument('event', choices=('prompt', 'settings'))
+    parser.add_argument('--binding', required=True, action='append')
+    parser.add_argument('--command', action='append')
+    if argv in (['--help'], ['-h']):
+        parser.print_help()
+        return None
     args = parser.parse_args(argv)
+    require(len(args.binding) == 1, 'exactly one settings binding is required')
+    args.binding = args.binding[0]
+    if args.event == 'settings':
+        require(args.command is not None and len(args.command) == 1, 'exactly one settings command is required')
+        args.command = args.command[0]
+    else:
+        require(args.command is None, 'prompt does not accept a command')
+    return args
+
+
+def main(argv=None):
     try:
+        args = parse_arguments(list(sys.argv[1:] if argv is None else argv))
+        if args is None:
+            return 0
         repo = Path.cwd()
-        raw = args.binding or registration.git(repo, 'config', '--local', '--get', registration.BINDING_KEY)
+        raw = args.binding if args.binding is not None else registration.git(repo, 'config', '--local', '--get', registration.BINDING_KEY)
         bound = ep.parse_json(raw, 'independently registered native inputs')
         registered_repo = Path(bound['git_repo'])
         if args.event in ('commit-msg', 'pre-push'):

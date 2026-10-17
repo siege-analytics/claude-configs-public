@@ -32,7 +32,7 @@ set -uo pipefail
 if [[ "${1:-}" == "--selected" && $# -ge 3 ]]; then
     shift
     SELECTED_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-    exec python3 -B "$SELECTED_ROOT/bin/native_git.py" pre-push "$@"
+    exec python3 -B "$SELECTED_ROOT/bin/native_git.py" pre-push -- "$@"
 fi
 
 BLOCKED=0

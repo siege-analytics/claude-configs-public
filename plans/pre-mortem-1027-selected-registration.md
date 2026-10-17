@@ -128,3 +128,9 @@ see the self-review/hostile record. No accepted-parent defect was identified.
 
 Generation transitions remain out of this dependency. Publication still requires
 fresh exact-head review; configured/local fixture results grant no live authority.
+
+## Historical evidence notice
+
+The postimplementation native option bypass at 5fc9250 invalidated its acceptance
+evidence. The historical assessment above is preserved; the correction risk plan
+is plans/pre-mortem-1027-native-arguments.md. Generation work remains stopped.
