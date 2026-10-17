@@ -34,13 +34,63 @@ def git(repo, *argv, optional=False):
         raise ValueError(result.stderr.strip() or 'Git command failed')
     return result.stdout.strip() if result.returncode == 0 else None
 
-def merge_settings(existing, incoming):
+def command_tokens(command, event):
+    if not isinstance(command, str):
+        raise ValueError(f'invalid existing hook command in {event}')
+    try:
+        tokens = shlex.split(command)
+    except ValueError as exc:
+        raise ValueError(f'invalid existing hook command in {event}: {exc}') from exc
+    if not tokens:
+        raise ValueError(f'empty existing hook command in {event}')
+    return tokens
+
+
+def managed_native_command(command, event, hooks_root, native_names):
+    tokens = command_tokens(command, event)
+    executable = Path(tokens[0])
+    direct = executable.parts[-3:] if len(executable.parts) >= 3 else ()
+    if direct and direct[:2] == ('hooks', 'git') and direct[2] in native_names:
+        return True
+    candidate = executable if executable.is_absolute() else hooks_root / executable
+    resolved = candidate.resolve(strict=False)
+    native_root = (hooks_root / 'hooks/git').resolve(strict=True)
+    try:
+        relative = resolved.relative_to(native_root)
+    except ValueError:
+        return False
+    return len(relative.parts) == 1 and relative.name in native_names
+
+
+def merge_settings(existing, incoming, hooks_root):
     if not isinstance(existing, dict):
         raise ValueError('settings must be an object')
     result = copy.deepcopy(existing)
     groups = result.setdefault('hooks', {})
     if not isinstance(groups, dict):
         raise ValueError('settings hooks must be an object')
+    native_names = {path.name for path in (hooks_root / 'hooks/git').iterdir()
+                    if path.is_file() and path.name.startswith('pre-push-')}
+    retired = []
+    for event, current in groups.items():
+        if not isinstance(current, list):
+            raise ValueError(f'settings hooks.{event} must be an array')
+        retained_groups = []
+        for group in current:
+            if not isinstance(group, dict) or not isinstance(group.get('hooks'), list):
+                raise ValueError(f'invalid hook group in {event}')
+            retained_hooks = []
+            for hook in group['hooks']:
+                if not isinstance(hook, dict):
+                    raise ValueError(f'invalid hook in {event}')
+                command = hook.get('command', '')
+                if managed_native_command(command, event, hooks_root, native_names):
+                    retired.append((event, command))
+                else:
+                    retained_hooks.append(hook)
+            if retained_hooks:
+                retained_groups.append(dict(group, hooks=retained_hooks))
+        groups[event] = retained_groups
     for event, additions in incoming['hooks'].items():
         current = groups.setdefault(event, [])
         if not isinstance(current, list):
@@ -58,11 +108,8 @@ def merge_settings(existing, incoming):
                         if not isinstance(prior, dict):
                             raise ValueError(f'invalid hook in {event}')
                         prior_command = prior.get('command', '')
-                        try:
-                            tokens = shlex.split(prior_command)
-                        except ValueError:
-                            tokens = []
-                        if not tokens or Path(tokens[0]).name != basename:
+                        tokens = command_tokens(prior_command, event)
+                        if Path(tokens[0]).name != basename:
                             continue
                         prior_metadata = {k: v for k, v in group.items() if k != 'hooks'}
                         if prior_metadata != metadata:
@@ -76,7 +123,7 @@ def merge_settings(existing, incoming):
                         match = dict(metadata, hooks=[])
                         current.append(match)
                     match['hooks'].append(hook)
-    return result
+    return result, retired
 
 try:
     if args.relative and (args.workspace or args.hooks_root):
@@ -101,7 +148,7 @@ try:
                     raise ValueError(f'hook missing or not executable: {script}')
                 hook['command'] = shlex.quote(relative if args.relative else str(script))
     existing = json.loads(target.read_text()) if target.exists() else {}
-    merged = merge_settings(existing, snippet)
+    merged, retired = merge_settings(existing, snippet, hooks_root)
     repo = args.git_repo or (root if not sys.argv[2:] else None)
     hooks_value = None
     previous_local = None
@@ -151,6 +198,8 @@ try:
         if os.path.exists(temporary):
             os.unlink(temporary)
     print(f'Merged hook settings into: {target}')
+    for event, command in retired:
+        print(f'Retired native Git hook from Claude {event}: {command}')
     if repo is not None:
         print(f'Configured native Git hooks in {repo}: {hooks_value}')
         print('Local hooks are bypassable feedback; protected acceptance is separate.')
