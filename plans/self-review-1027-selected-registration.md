@@ -198,3 +198,13 @@ local path changed origin, so the repository-scoped ticket hook treated the clon
 as an unrelated project. Subsequent clones copy the canonical origin URL without
 fetching and verify every tracked byte/mode. Test assertions and hook scope remain
 unchanged. Superseded runs are retained as failed or interrupted evidence.
+
+## Native argument correction before publication
+
+A further real Git probe found a backward-compatibility regression: a remote
+named --selected was consumed as the new dispatch option. Native pre-push calls
+have two arguments; explicit selected dispatch has an additional argument.
+The three aliases now distinguish those shapes before dispatch, and a real push
+regression asserts the destination ref. This changes no legacy policy body.
+Evidence: native-argument-red.log and native-argument-green.log. All earlier
+exact-head runs are superseded by the final correction's full replay.

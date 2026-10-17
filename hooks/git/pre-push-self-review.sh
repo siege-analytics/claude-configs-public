@@ -29,7 +29,7 @@ set -uo pipefail
 
 # Selected registration supplies all policy authority inputs as a host binding.
 # The remaining body is the retained repository compatibility wrapper.
-if [[ "${1:-}" == "--selected" ]]; then
+if [[ "${1:-}" == "--selected" && $# -ge 3 ]]; then
     shift
     SELECTED_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
     exec python3 -B "$SELECTED_ROOT/bin/native_git.py" pre-push "$@"

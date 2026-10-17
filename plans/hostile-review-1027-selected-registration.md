@@ -117,3 +117,15 @@ there is no fallback to legacy obligations. The new test fails before usable
 registration on the incompatible profile, and the full strict-release fixture
 must pass again at the correction head. Earlier matrix runs do not cover this
 correction and cannot be acceptance evidence for it.
+
+## F6: native remote name collided with the dispatch option
+
+Git accepts a remote named --selected. A real valid push through the generated
+legacy hooks failed because the new first-argument dispatch mistook that native
+remote name for the selected API, then looked for an absent selected helper in the
+legacy package. native-argument-red.log records the failed actual push. The
+explicit selected call has an additional argument; all three legacy dispatch sites
+now check that arity before interpreting --selected. The new native_push_test.py
+case exercises the real remote name and resulting destination ref. Ordinary native
+Git invocations retain their original interpretation. The full native suite and
+final exact-head matrix replay this correction; older runs do not establish it.

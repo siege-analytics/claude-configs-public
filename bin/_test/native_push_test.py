@@ -84,6 +84,12 @@ class NativePush(unittest.TestCase):
         self.push('HEAD:second')
         self.assertIn(head + '\trefs/heads/second', self.refs())
 
+    def test_remote_named_selected_is_not_a_dispatch_option(self):
+        self.git('remote', 'add', '--', '--selected', str(self.remote))
+        head = self.commit()
+        self.run_cmd(['git', 'push', '--', '--selected', 'HEAD:feature'])
+        self.assertIn(head + '\trefs/heads/feature', self.refs())
+
     def test_bad_interior_and_repaired_push(self):
         self.bad_interior(); result = self.push(deny=True)
         self.assertIn('Self-Review-Source', result.stderr)
