@@ -170,21 +170,58 @@ class NativePush(unittest.TestCase):
     def test_settings_only_does_not_register_git_and_preserves_project_settings(self):
         self.git('config', '--unset', 'core.hooksPath')
         settings = self.repo / '.claude/settings.json'; settings.parent.mkdir()
+        alias = self.base / 'native-hook-alias'
+        alias.symlink_to(self.package / 'hooks/git/pre-push-self-review.sh')
         original = {'model': 'project-choice', 'permissions': {'deny': ['example']},
-                    'hooks': {'UserPromptSubmit': [{'hooks': [{'type': 'command', 'command': 'project-helper'}]}]}}
+                    'hooks': {
+                        'UserPromptSubmit': [{'hooks': [
+                            {'type': 'command', 'command': 'project-helper'},
+                            {'type': 'prompt', 'prompt': 'operator prompt hook'},
+                        ]}],
+                        'PreToolUse': [{'matcher': 'Bash', 'hooks': [
+                            {'type': 'command', 'command': '/old/package/hooks/git/pre-push-self-review.sh'},
+                            {'type': 'command', 'command': 'hooks/git/pre-push-self-review.sh'},
+                            {'type': 'command', 'command': str(alias)},
+                            {'type': 'command', 'command': 'operator-bash-helper'},
+                            {'type': 'command', 'command': '/operator/pre-push-self-review.sh'},
+                        ]}],
+                    }}
         settings.write_text(json.dumps(original))
-        self.install()
+        result = self.install()
+        self.assertEqual(result.stdout.count('Retired native Git hook from Claude PreToolUse:'), 3)
         first = settings.read_bytes(); merged = json.loads(first)
         self.assertEqual(merged['permissions'], original['permissions'])
         self.assertEqual(merged['model'], 'project-choice')
-        self.assertEqual(merged['hooks']['UserPromptSubmit'][0]['hooks'][0]['command'], 'project-helper')
+        commands = [hook['command'] for groups in merged['hooks'].values()
+                    for group in groups for hook in group['hooks'] if hook.get('type') == 'command']
+        self.assertIn('project-helper', commands)
+        prompt_hooks = [hook for groups in merged['hooks'].values() for group in groups
+                        for hook in group['hooks'] if hook.get('type') == 'prompt']
+        self.assertEqual(prompt_hooks, [{'type': 'prompt', 'prompt': 'operator prompt hook'}])
+        self.assertIn('operator-bash-helper', commands)
+        self.assertIn('/operator/pre-push-self-review.sh', commands)
+        self.assertTrue(any(Path(shlex.split(command)[0]).as_posix().endswith('/hooks/git/branch-guard.sh')
+                            for command in commands))
+        self.assertNotIn('/old/package/hooks/git/pre-push-self-review.sh', commands)
+        self.assertNotIn('hooks/git/pre-push-self-review.sh', commands)
+        self.assertNotIn(str(alias), commands)
         self.assertEqual(self.run_cmd(['git', 'config', '--get', 'core.hooksPath'], ok=False).returncode, 1)
-        for groups in merged['hooks'].values():
-            for group in groups:
-                for hook in group['hooks']:
-                    if hook['command'] != 'project-helper':
-                        self.assertEqual(len(shlex.split(hook['command'])), 1)
+        for command in commands:
+            if command not in ('project-helper', 'operator-bash-helper', '/operator/pre-push-self-review.sh'):
+                self.assertEqual(len(shlex.split(command)), 1)
         self.install(); self.assertEqual(first, settings.read_bytes())
+
+    def test_malformed_existing_command_fails_without_settings_mutation(self):
+        self.git('config', '--unset', 'core.hooksPath')
+        settings = self.repo / '.claude/settings.json'; settings.parent.mkdir()
+        settings.write_text(json.dumps({'hooks': {'PreToolUse': [{'matcher': 'Bash', 'hooks': [
+            {'type': 'command', 'command': "'unterminated"},
+        ]}]}}))
+        before = settings.read_bytes()
+        result = self.install(ok=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('invalid existing hook command', result.stderr)
+        self.assertEqual(settings.read_bytes(), before)
 
     def test_explicit_consumer_registration_permits_real_push(self):
         self.git('config', '--unset', 'core.hooksPath')

@@ -277,6 +277,59 @@ else
     ok "AGENTS.md indirect policy alias fails exact composition"
 fi
 
+# --- PASS fixture: session evidence data is not an active policy root --------
+
+SESSION_EVIDENCE="$TMP/session-evidence"
+cp -r "$WIRED" "$SESSION_EVIDENCE"
+mkdir -p "$SESSION_EVIDENCE/sessions/review-session/data/archive"
+cp "$SESSION_EVIDENCE/RULES_BUNDLE.md" "$SESSION_EVIDENCE/sessions/review-session/data/archive/AGENTS.md"
+EXTERNAL_EVIDENCE="$TMP/external-evidence"
+mkdir -p "$EXTERNAL_EVIDENCE"
+cp "$SESSION_EVIDENCE/RULES_BUNDLE.md" "$EXTERNAL_EVIDENCE/CLAUDE.md"
+ln -s "$EXTERNAL_EVIDENCE" "$SESSION_EVIDENCE/sessions/review-session/data/external"
+cat > "$SESSION_EVIDENCE/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$SESSION_EVIDENCE/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$SESSION_EVIDENCE" --mode craft-agent >/dev/null 2>&1; then
+    ok "session evidence data does not become an active instruction surface"
+else
+    bad "session evidence data should be excluded from active instruction verification"
+fi
+
+# --- FAIL fixture: the session root itself remains an active policy surface --
+
+SESSION_ROOT_POLICY="$TMP/session-root-policy"
+cp -r "$WIRED" "$SESSION_ROOT_POLICY"
+mkdir -p "$SESSION_ROOT_POLICY/sessions/review-session"
+cp "$SESSION_ROOT_POLICY/RULES_BUNDLE.md" "$SESSION_ROOT_POLICY/sessions/review-session/CLAUDE.md"
+cat > "$SESSION_ROOT_POLICY/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$SESSION_ROOT_POLICY/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+if bash "$PROBE" --target "$SESSION_ROOT_POLICY" --mode craft-agent >/dev/null 2>&1; then
+    bad "session-root CLAUDE.md should FAIL but passed"
+else
+    ok "session-root CLAUDE.md remains fail-closed"
+fi
+
+# --- FAIL fixtures: lookalike/deeper data paths are not excluded -------------
+
+for rel in \
+    sessions/review-session/database/AGENTS.md \
+    sessions/review-session/archive/data/CLAUDE.md; do
+    LOOKALIKE="$TMP/lookalike-$(echo "$rel" | tr '/' '-')"
+    cp -r "$WIRED" "$LOOKALIKE"
+    mkdir -p "$(dirname "$LOOKALIKE/$rel")"
+    cp "$LOOKALIKE/RULES_BUNDLE.md" "$LOOKALIKE/$rel"
+    cat > "$LOOKALIKE/.claude/settings.json" <<JSON
+{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"$LOOKALIKE/hooks/resolver/ca-enforcement-gate.sh"}]}]}}
+JSON
+    if bash "$PROBE" --target "$LOOKALIKE" --mode craft-agent >/dev/null 2>&1; then
+        bad "lookalike instruction path $rel should FAIL but passed"
+    else
+        ok "lookalike instruction path $rel remains fail-closed"
+    fi
+done
+
 # --- PASS fixture: nested instructions resolve/duplicate verified kernel -----
 
 NESTED_EXACT="$TMP/nested-exact"
