@@ -91,6 +91,9 @@ def operations(repo, remote, case):
         allowed = command(['git', 'push', '--', alias, 'HEAD:' + target], repo)
         head = command(['git', 'rev-parse', 'HEAD'], repo).stdout.strip()
         selected.require(head + '\trefs/heads/' + target in refs(), 'allowed push did not publish head')
+        before = refs()
+        command(['git', 'push', '--', alias, 'HEAD:' + target], repo)
+        selected.require(refs() == before, 'up-to-date push changed destination refs')
         probes.append({'remote': alias, 'allow_exit': allowed.returncode, 'allowed_head': head})
     if case == 'siege':
         # A bypassed fixture commit makes the range gate independently observable.

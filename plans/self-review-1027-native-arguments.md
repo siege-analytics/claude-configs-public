@@ -44,3 +44,25 @@ Verified-by: cache/selected-registration/argv-correction/evidence contains raw
 red and working logs; the PR publication comment will pin head/tree/parent and
 complete fresh command/log hashes. The source review found no additional blocker;
 independent exact-head review remains pending and the PR stays draft.
+
+## Committed-head freshness correction
+
+The first committed-head matrix at b71dfa7 rejected a stale skills-inventory.json:
+the new selected registration tests now reference the resolver, so regeneration
+adds that test path to the resolver skill's evidence inventory. The generated
+inventory is refreshed additively, without changing checkers or assertions. That
+failed matrix is retained; the full matrix must restart at the new commit.
+
+A separate posted-probe replay initially failed to write its result because the
+harness created the evidence directory relative to the wrong working directory.
+Its log remains posted-replacement-green.log (despite that premature filename).
+The directory correction replays the unchanged posted script in green-2.log;
+neither result is substituted for the original pre-edit red reproduction.
+
+The corrected replay harness (green-2.log) exposed a separate valid no-op failure,
+not a green result: Git sends an empty stream for the second push of the same head.
+The translator previously rejected that stream. It now produces no operations
+only for an empty stream after binding/destination verification, while malformed
+nonempty updates still reject. Effective-policy decisions are unchanged. Both
+examples repeat every allowed push and assert ref stability. The posted probe
+must pass again at the next additive head; failed filenames do not imply passes.

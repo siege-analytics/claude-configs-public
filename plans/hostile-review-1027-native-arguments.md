@@ -57,3 +57,24 @@ as the baseline: native_git.py and selected_registration.py are tested through
 bin/_test/selected_registration_test.py, outside the scanner's discovery layout.
 No scanner filtering, suppression or test/policy weakening is introduced. The
 complete PR scan and hashes will accompany the exact-head publication ledger.
+
+## F2: committed generated inventory freshness
+
+The b71dfa7 exact-head matrix found the missing registration-test reference in
+catalog/skills-inventory.json. Normal regeneration adds that reference. The
+source-authority, inventory, budget and lifecycle failures remain evidence of
+the rejected candidate. All checks restart after an additive refresh commit.
+
+## F3: valid up-to-date push has an empty native update stream
+
+After correcting the replay harness directory, the unchanged posted probe still
+failed at b71dfa7: --selected reached policy dispatch, but Git sent no update lines
+because origin had already published the same head to trunk. The old translator
+rejected that valid no-op as missing protocol. Both release pushes were denied;
+this was not another help bypass. The result and log are retained separately.
+
+The translator now returns no operations for an empty stream after binding and
+destination verification. Malformed nonempty streams still reject. No effective
+policy decision changes: an actual update is still evaluated in full. The normal
+registration test and both examples now repeat successful pushes through aliases
+and assert unchanged refs, covering no-op behavior as well as real new updates.

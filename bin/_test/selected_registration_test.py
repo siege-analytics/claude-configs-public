@@ -217,6 +217,12 @@ class SelectedRegistrationTest(unittest.TestCase):
         head = self.run_cmd(['git', 'rev-parse', 'HEAD'], cwd=self.consumer).stdout.strip()
         self.run_cmd(['git', 'push', 'origin', 'HEAD:trunk'], cwd=self.consumer)
         self.assertIn(head + '\trefs/heads/trunk', self.refs())
+        self.run_cmd(['git', 'remote', 'add', '--', '--selected', str(self.remote)], cwd=self.consumer)
+        self.run_cmd(['git', 'push', '--', '--selected', 'HEAD:trunk'], cwd=self.consumer)
+        for malformed in ('\n', 'garbage\n', f'HEAD {head} refs/heads/trunk invalid\n'):
+            result = self.run_cmd([str(self.package / '.githooks/pre-push'), '--help', str(self.remote)],
+                                  cwd=self.consumer, input=malformed, ok=False)
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         self.run_cmd(['git', 'push', 'origin', 'HEAD:develop'], cwd=self.consumer)
         before = self.refs()
         denied = self.run_cmd(['git', 'push', 'origin', 'HEAD:release'], cwd=self.consumer, ok=False)

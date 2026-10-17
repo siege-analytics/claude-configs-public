@@ -59,7 +59,8 @@ def range_commits(repo, lines, remote):
             bases.append('^' + prior)
         commits = registration.git(repo, 'rev-list', '--reverse', local, *bases).splitlines()
         updates.append((remote_ref, commits))
-    require(updates, 'missing native update protocol')
+    # Git sends no updates for an already up-to-date push. The caller has still
+    # verified the binding and destination; there is no operation to evaluate.
     return updates
 
 
