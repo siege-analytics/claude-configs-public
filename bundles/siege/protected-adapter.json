@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "policy_inputs": {
+    "source": "bundles/siege/policy-inputs.json",
+    "sha256": "6d78791cb0f151f9d2f11cb00546640c56b439ed35fd3c32b3f0deb3848e1e46"
+  },
+  "promotion_edges": [
+    [
+      "${integration}",
+      "main"
+    ]
+  ]
+}

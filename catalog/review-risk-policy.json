@@ -69,7 +69,11 @@
     "^bin/_test/package_selection_test\\.py$",
     "^bundles/[^/]+/build-bundle\\.json$",
     "^examples/selected-build/",
-    "^bin/_test/(selected_composition|project_composition|procedure_composition)_test\\.py$"
+    "^bin/_test/(selected_composition|project_composition|procedure_composition)_test\\.py$",
+    "^bin/(selected_registration|native_git)\\.py$",
+    "^bin/_test/selected_registration_test\\.py$",
+    "^examples/selected-registration/",
+    "^bundles/[^/]+/(registration-profile|protected-adapter)\\.json$"
   ],
   "standard_path_patterns": [
     "^skills/",

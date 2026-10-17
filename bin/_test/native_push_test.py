@@ -84,6 +84,33 @@ class NativePush(unittest.TestCase):
         self.push('HEAD:second')
         self.assertIn(head + '\trefs/heads/second', self.refs())
 
+    def test_remote_named_selected_is_not_a_dispatch_option(self):
+        self.git('remote', 'add', '--', '--selected', str(self.remote))
+        head = self.commit()
+        self.run_cmd(['git', 'push', '--', '--selected', 'HEAD:feature'])
+        self.assertIn(head + '\trefs/heads/feature', self.refs())
+
+    def test_option_like_native_names_and_message_paths_remain_data(self):
+        aliases = ('--help', '--selected', '--binding', '--command', '-h', '--', '\u540d\u524d')
+        for index, alias in enumerate(aliases):
+            self.git('remote', 'add', '--', alias, str(self.remote))
+            head = self.commit(f'alias-{index}.md')
+            self.run_cmd(['git', 'push', '--', alias, 'HEAD:feature'])
+            self.assertIn(head + '\trefs/heads/feature', self.refs())
+        for name in (*aliases, 'space name'):
+            path = self.repo / name
+            path.write_text(VALID)
+            hook = str(self.package / '.githooks/commit-msg')
+            self.run_cmd([hook, name])
+            path.write_text('Missing ticket and review')
+            self.assertNotEqual(self.run_cmd([hook, name], ok=False).returncode, 0)
+        self.bad_interior()
+        for alias in (*aliases, 'origin'):
+            before = self.refs()
+            result = self.run_cmd(['git', 'push', '--', alias, 'HEAD:release'], ok=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(self.refs(), before)
+
     def test_bad_interior_and_repaired_push(self):
         self.bad_interior(); result = self.push(deny=True)
         self.assertIn('Self-Review-Source', result.stderr)

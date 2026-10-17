@@ -59,6 +59,9 @@ jobs:
           python3 bin/_test/procedure_composition_test.py
           python3 bin/_test/project_composition_test.py
           python3 bin/_test/package_selection_test.py
+          python3 bin/_test/selected_registration_test.py
+          python3 examples/selected-registration/run.py --case independent --output "$RUNNER_TEMP/selected-independent"
+          python3 examples/selected-registration/run.py --case siege --output "$RUNNER_TEMP/selected-siege"
           python3 bin/_test/resident_delivery_test.py
           python3 bin/ontology.py --validate-bindings examples/composition/ontology-bindings.json
 

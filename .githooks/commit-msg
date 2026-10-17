@@ -18,8 +18,17 @@
 
 set -euo pipefail
 
+# Selected registration supplies all policy authority inputs as a host binding.
+# The remaining body is the retained repository compatibility wrapper.
+if [[ "${1:-}" == "--selected" && $# -ge 2 ]]; then
+    shift
+    SELECTED_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+    exec python3 -B "$SELECTED_ROOT/bin/native_git.py" commit-msg -- "$@"
+fi
+
+[[ $# -eq 1 ]] || { echo "commit-msg: expected one message file" >&2; exit 2; }
 COMMIT_MSG_FILE="$1"
-COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+COMMIT_MSG=$(cat -- "$COMMIT_MSG_FILE")
 
 # Parse trailers from the commit message.
 TRAILERS=$(echo "$COMMIT_MSG" | git interpret-trailers --parse 2>/dev/null || true)
