@@ -105,7 +105,7 @@ class GeneratedOwnershipCases:
         self.ownership_publisher('first', qualified=False, skill='outer')
         self.ownership_publisher('second', qualified=False, skill='outer/inner')
         for first, second in (('shared-one', 'shared-one/data.txt'), ('Shared-two', 'shared-two/data.txt'),
-                              ('caf\u00e9.txt', 'cafe\u0301.txt')):
+                              ('caf\u00e9.txt', 'cafe\u0301.txt'), ('\u0390.txt', '\u03aa\u0301.txt')):
             owners = [self.write_asset('first', 'outer/inner/' + first, b'FIRST_PRIVATE_CONTENT\n'),
                       self.write_asset('second', 'outer/inner/' + second, b'SECOND_PRIVATE_CONTENT\n')]
             with self.subTest(paths=(first, second)):

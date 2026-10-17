@@ -268,3 +268,39 @@ inherited from d00f73f remain separate from this correction's scan.
 Verified-by: the exact posted red/green probe, original-source negative replay,
 focused ledger and subsequent exact committed-head comment; no independent
 ACCEPT, registration completion or merge is asserted.
+
+## Further falsification before publication: Unicode folding
+
+The unpublished candidate a9db468a9ee99fd7e3cc88143631fc1f8899f713 passed
+ordinary case and Unicode-normalization probes but failed their combination.
+Its partial full-suite run is historical, not an acceptance matrix. The earlier
+NFC/casefold claim above is superseded by canonical caseless comparison.
+
+The real copied builder accepted source filenames `\u0390.txt` and
+`\u03aa\u0301.txt` from the two publishers at the colliding nested directory.
+It returned 0 and the filesystem retained only `SECOND_PUBLISHER_BYTES`.
+Evidence: `cache/selected-build-correction/unicode-collision-red.log`.
+The pre-fix [post-error revision](https://github.com/siege-analytics/claude-configs-public/issues/1027#issuecomment-6228028656)
+records this falsification before the further source change.
+
+`GeneratedFiles.add` now compares `NFD(casefold(NFD(path)))`, normalizing both
+before and after folding. Original names remain in diagnostics. The shared
+hostile corpus includes this mixed case/normalization pair through both CLIs,
+both orders and both absent/existing destinations. The separate Unicode probe
+and targeted regressions must pass before the next commit; the full matrix and
+legacy parity restart at that final committed head. Neither prior commit is
+rewritten. No published green claim is based on the interrupted candidate run.
+
+Two harness assumptions were exposed while keeping disposable work under this
+checkout: a documentation test mistook its nested fixture path for source-root
+leakage, and a scanner non-repository fixture inherited the outer repository by
+Git upward discovery. The unchanged documentation test passes from an exact-head
+isolated clone with temporary files outside that clone. Test processes now bound
+Git discovery at the temporary-fixture parent. Both original failures are kept;
+no product assertion, scanner or hook was disabled.
+
+Further-correction green checkpoint: the direct and copied-builder alias tests
+both pass (one test each, with the complete alias/order/destination subcases).
+The separate mixed-Unicode probe rejects with both owners and no output. The
+original posted F1 probe also passes again. These are working-source results;
+final committed-head receipts remain required before push.

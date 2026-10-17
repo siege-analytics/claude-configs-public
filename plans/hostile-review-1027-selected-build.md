@@ -116,3 +116,26 @@ inherited missing-test-discovery finding remains disclosed in self-review.
 No risk-classification adjustment is needed: touched code/tests already require
 Tier C. No further source blocker was found in this author review, but it is not
 independent ACCEPT. Registration and merge remain outside the correction.
+
+## F2: mixed Unicode normalization and case, found before push
+
+Candidate a9db468a9ee99fd7e3cc88143631fc1f8899f713 still accepted the cross-
+publisher asset pair `\u0390.txt` / `\u03aa\u0301.txt`. The copied selected build
+returned 0 and published one nested file with the second publisher's bytes.
+The prior NFC-then-fold key did not normalize the fold result. This falsifies
+the candidate's alias-rejection claim and its provisional no-further-blocker
+statement above. The partial matrix is retained, never treated as acceptance.
+
+The same checked insertion now uses `NFD(casefold(NFD(path)))`. The mixed pair
+joins the shared CLI regressions. Red evidence is `unicode-collision-red.log`;
+green evidence is `unicode-collision-green.log`, `unicode-direct-green.log` and
+`unicode-selected-green.log`, all under `cache/selected-build-correction/`.
+The full exact-head matrix restarts after a further normal-hook commit. The
+original posted F1 remains covered. No prior commit is amended or pushed as the
+final correction; independent acceptance and registration remain pending.
+
+Green checkpoint before the further commit: both targeted CLI suites pass;
+the mixed-Unicode probe returns 1 from the builder, names both owners, and leaves
+no output. The original F1 probe also rejects both publisher orders. This closes
+the reproduced F2 in working source; the final committed-head matrix still gates
+publication.

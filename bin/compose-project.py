@@ -199,7 +199,7 @@ class GeneratedFiles:
     def add(self, name, data, owner):
         """Claim a portable target before storing bytes, including equal bytes."""
         composition.relative_path(name, 'generated target')
-        key = unicodedata.normalize('NFC', name).casefold()
+        key = unicodedata.normalize('NFD', unicodedata.normalize('NFD', name).casefold())
         parents = [parent.as_posix() for parent in Path(key).parents if parent != Path('.')]
         conflict = self.owners.get(key) or self.directories.get(key)
         if conflict is None:
