@@ -108,11 +108,11 @@ host, provider protection, release, deployment or organizational policy adoption
   commands across three events; wrappers are deliberate additional commands, not
   a claim of byte-identical outer registration.
 
-Coherent generation identities and transitions across scaffold, bundle and project
-sources remain the next #1027 dependency: upgrade, mixed/stale generation,
-customization and generation rollback tests are not implemented here. Existing
-component pins and interruption recovery are not a claim that generation
-activation is complete. #1027 stays open.
+Coherent component identities, transitions and rollback extend this registration
+through the same selector and public APIs. See the [selected generation examples](../selected-generations/README.md)
+and [generation contract](../../docs/package-generations.md). Registration receipts
+remain non-authorizing; the generation extension does not change live-host limits.
+#1027 stays open until independent review and merge.
 
 ### Native argument boundary
 

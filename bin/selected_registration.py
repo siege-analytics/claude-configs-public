@@ -4,6 +4,7 @@ Configuration receipts are rebuildable facts. The caller supplies source,
 selection and independent registration/policy pins at every verification boundary.
 """
 from __future__ import annotations
+from contextlib import contextmanager, ExitStack
 import argparse
 import copy
 import fcntl
@@ -23,7 +24,7 @@ BACKEND = 'claude-code-local'
 CAPABILITIES = ['native-git', 'settings']
 BINDING_KEY = 'scaffold.registration'
 CORE_FILES = (
-    'bin/build.py', 'bin/compose-project.py', 'bin/effective_policy.py',
+    'bin/package-generation.py', 'bin/build.py', 'bin/compose-project.py', 'bin/effective_policy.py',
     'bin/gate_contract.py', 'bin/package_selection.py', 'bin/source_snapshot.py',
     'bin/selected_registration.py', 'bin/native_git.py', 'bin/install-hooks.sh',
     'bin/wire-enforcement.py', 'bin/verify-enforcement.sh', 'catalog/gate-contract-schema.json',
@@ -260,11 +261,39 @@ def verify_package(bound):
     return definition
 
 
+def generation_module():
+    return selected.module('registered_generation', selected.ROOT, 'package-generation.py')
+
+
+@contextmanager
+def generation_binding(bound):
+    """Resolve once under the existing generation lock, retaining bootstrap trust."""
+    package = no_symlinks(Path(bound['hooks_root']))
+    require(ep.digest(selected.file_inventory(package_inventory(package))) == bound['package_sha256'],
+            'generation bootstrap inventory changed')
+    repo = Path(bound['git_repo'])
+    require(git(repo, 'config', '--local', '--get', BINDING_KEY) == json.dumps(bound, sort_keys=True),
+            'generation settings/native binding differs')
+    with generation_module().consume(Path(bound['generation_store'])) as active:
+        resolved = {**active['binding'], 'git_repo': bound['git_repo']}
+        require(resolved['identity'] == bound['identity'], 'generation project identity changed')
+        require(generation_module().settings_shape(Path(resolved['hooks_root'])) == bound['generation_settings_shape'],
+                'generation settings shape differs from registered consumer')
+        definition = verify_runtime(resolved)
+        yield resolved, definition, active['activation_token']
+
+
 def render_settings(bound):
     template = ep.read_json(Path(bound['hooks_root']) / 'hooks/settings-snippet.json')
-    for groups in template['hooks'].values():
+    index = 0
+    for _, groups in sorted(template['hooks'].items()):
         for group in groups:
             for hook in group['hooks']:
+                if 'generation_store' in bound:
+                    hook['command'] = shlex.join([sys.executable, '-B', str(Path(bound['hooks_root']) / 'bin/native_git.py'),
+                        'settings', '--binding', json.dumps(bound, sort_keys=True), '--command', str(index)])
+                    index += 1
+                    continue
                 tokens = shlex.split(hook['command'])
                 tokens = [t.replace('${package}', bound['hooks_root']) for t in tokens]
                 if tokens[:2] == ['python3', '-B']:
@@ -333,6 +362,7 @@ def parser():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('action', choices=('install', 'wire', 'verify'))
     p.add_argument('--selected', action='store_true', required=True)
+    p.add_argument('--generation-store', type=Path, help='bind this consumer to the existing generation selector')
     p.add_argument('--recover', action='store_true', help='restore prior state from an interrupted selected registration')
     for name in ('source', 'selection', 'policy-root', 'policy-inputs', 'registration-inputs', 'hooks-root', 'workspace', 'git-repo', 'target-file'):
         p.add_argument('--' + name, type=Path)
@@ -343,6 +373,7 @@ def parser():
 
 def main(argv=None):
     args = parser().parse_args(argv)
+    stack = ExitStack()
     try:
         bound = binding(args)
         require(args.workspace is not None and args.git_repo is not None, 'selected registration requires workspace and exact Git repository')
@@ -361,6 +392,20 @@ def main(argv=None):
             pending = repo / pending
         require(not pending.exists(), 'interrupted registration requires installer --recover')
         definition = verify_package(bound)
+        if args.generation_store is not None:
+            generation = generation_module()
+            active = stack.enter_context(generation.consume(no_symlinks(args.generation_store)))
+            require(all(bound.get(k) == v for k, v in active['binding'].items()), 'registration differs from active generation')
+            bound['generation_store'] = str(args.generation_store.absolute())
+            bound['generation_settings_shape'] = generation.settings_shape(Path(bound['hooks_root']))
+            prior = git(repo, 'config', '--local', '--get', BINDING_KEY, optional=True)
+            if prior is not None:
+                bootstrap = ep.parse_json(prior, 'registered generation bootstrap')
+                require(bootstrap.get('generation_store') == bound['generation_store']
+                        and bootstrap.get('identity') == bound['identity']
+                        and bootstrap.get('git_repo') == bound['git_repo'], 'different generation registration')
+                with generation_binding(bootstrap):
+                    bound = bootstrap
         native = str(Path(bound['hooks_root']) / '.githooks')
         config = Path(git(repo, 'rev-parse', '--git-path', 'config'))
         if not config.is_absolute():
@@ -393,6 +438,8 @@ def main(argv=None):
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         print(json.dumps({'state': 'error', 'diagnostic': str(exc), 'authorization_effect': 'none'}), file=sys.stderr)
         return 1
+    finally:
+        stack.close()
 
 
 def publish(repo, target, merged, native, bound, settings_before, config_before):

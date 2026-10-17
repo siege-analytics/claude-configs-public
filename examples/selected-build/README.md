@@ -60,7 +60,7 @@ conflicts also reject before either layout is written. Diagnostics name the
 target and source-relative owners, without copying source contents or absolute
 source roots. An existing destination is refused and preserved.
 
-## Acceptance boundary and remaining work
+## Accepted composition boundary
 
 | #1027 requirement | Evidence in this dependency | Still required |
 | --- | --- | --- |
@@ -73,14 +73,12 @@ source roots. An existing destination is refused and preserved.
 | Examples, ontology, complexity | Runnable examples, actual content-bundle term and measurements below | Registration/generation examples after those mechanisms consume selections |
 | Negative cases | Pin replacement, bytes/modes, scope, duplicate/ambiguous names, cycles, unsupported adapters/backends, interrupted publication | Partial activation and old-operation-receipt rejection for selected generations |
 
-The remaining native migration is an authority boundary, not packaging glue:
-`bin/install-hooks.sh` requires fixed review-risk/native dependencies;
-`.githooks/pre-push` runs those fixed gates; the protected-range adapter calls
-the Siege policy wrapper and has its own promotion rule. Copying that stack into
-an independent project would silently impose Siege obligations. Implementing
-another local evaluator to avoid it would violate the accepted single-engine
-plan. This dependency therefore rejects registration requirements, retains the
-strict legacy path and leaves #1027 open for the adapter/generation extraction.
+This table records the composition dependency's original boundary. The accepted
+[selected registration dependency](../selected-registration/README.md) provides
+settings/native adapters, and [selected generations](../selected-generations/README.md)
+provides coherent transitions and rollback through those public APIs. The default
+resolver-only backend remains composition-only. The retained strict exporter is
+measured compatibility debt, not an implicit independent-project dependency.
 
 ## Complexity measurements
 

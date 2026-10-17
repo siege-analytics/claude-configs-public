@@ -113,7 +113,7 @@ class OntologyTest(unittest.TestCase):
             ontology.validate_registry(self.registry)
 
     def test_configuration_and_replacement_cannot_create_authorization(self):
-        for subject in ("skill-replacement", "configured", "policy-override", "procedure-binding", "content-publisher", "content-selection", "content-bundle", "selected-registration"):
+        for subject in ("skill-replacement", "configured", "policy-override", "procedure-binding", "content-publisher", "content-selection", "content-bundle", "selected-registration", "selected-generation"):
             for verb in ("authorizes", "creates", "grants", "permits", "binds", "invented-verb"):
                 for target in ("authorization-record", "authorization-scope"):
                     with self.subTest(subject=subject, verb=verb, target=target):
