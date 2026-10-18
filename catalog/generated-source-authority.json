@@ -2767,29 +2767,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/shape-space-audit",
           "file_count": 1,
-          "tree_sha256": "538267d2b66034e1fed835ff42526017aee94b813b49a4a3a53bc03ff32b89ab"
+          "tree_sha256": "98da8ecbf205040181d37b2e723f46815e64115270f2231d5dec48a201ae4eb8"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/shape-space-audit",
           "file_count": 1,
-          "tree_sha256": "538267d2b66034e1fed835ff42526017aee94b813b49a4a3a53bc03ff32b89ab"
+          "tree_sha256": "98da8ecbf205040181d37b2e723f46815e64115270f2231d5dec48a201ae4eb8"
         },
         "flat": {
           "destination": "dist/flat/skills/shape-space-audit",
           "file_count": 1,
-          "tree_sha256": "538267d2b66034e1fed835ff42526017aee94b813b49a4a3a53bc03ff32b89ab"
+          "tree_sha256": "98da8ecbf205040181d37b2e723f46815e64115270f2231d5dec48a201ae4eb8"
         },
         "nested": {
           "destination": "dist/nested/skills/shape-space-audit",
           "file_count": 1,
-          "tree_sha256": "538267d2b66034e1fed835ff42526017aee94b813b49a4a3a53bc03ff32b89ab"
+          "tree_sha256": "98da8ecbf205040181d37b2e723f46815e64115270f2231d5dec48a201ae4eb8"
         }
       },
       "canonical_source": "skills/shape-space-audit/SKILL.md",
       "kind": "skill",
       "slug": "shape-space-audit",
       "source_file_count": 1,
-      "source_tree_sha256": "87533169ac0188f180d653ea99326a450fde28bd3c8ee7dc72e1579fb501e75d"
+      "source_tree_sha256": "930d8e87a0d7a6d2bfaf11c7717ff5f71fb31d73a4948dc6e0b287785ad48f72"
     },
     {
       "artifacts": {
