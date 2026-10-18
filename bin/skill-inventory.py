@@ -29,6 +29,23 @@ RULE_FILE = re.compile(r"^_([a-z][a-z0-9-]*)-rules\.md$")
 RULE_DEFINITION = re.compile(r"(?m)^\s*(?:#{1,6}\s+)?(?:\*\*)?([a-z][a-z0-9-]*:\d+)\.")
 TEXT_SUFFIXES = {".md", ".py", ".sh", ".json", ".yml", ".yaml", ".toml"}
 TEST_PARTS = {"_test", "tests", "test"}
+SKILL_KINDS = {"skill", "skill-router", "shelf-router", "reference-shelf", "project-skill"}
+RULE_KINDS = {"rule", "project-rule"}
+_FRONTMATTER_VALIDATION = None
+
+
+def frontmatter_validation() -> Any:
+    """Load the shared real-YAML validator beside this script (#1046)."""
+    global _FRONTMATTER_VALIDATION
+    if _FRONTMATTER_VALIDATION is None:
+        path = Path(__file__).resolve().with_name("frontmatter_validation.py")
+        spec = importlib.util.spec_from_file_location("inventory_frontmatter_validation", path)
+        if spec is None or spec.loader is None or not path.is_file():
+            raise ImportError(f"cannot load {path}; frontmatter validation is required")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _FRONTMATTER_VALIDATION = module
+    return _FRONTMATTER_VALIDATION
 
 
 def tracked_files(root: Path) -> list[Path]:
@@ -233,13 +250,19 @@ def make_item(
     text = read_text(path)
     metadata = frontmatter(text)
     rel = path.relative_to(root).as_posix()
-    if kind in {"skill", "skill-router", "shelf-router", "reference-shelf", "project-skill"}:
-        missing = [
-            field for field in ("name", "description")
-            if not (metadata.get(field) or "").strip()
-        ]
-        if missing:
-            raise ValueError(f"skill frontmatter missing {', '.join(missing)}: {rel}")
+    # Real YAML parse with strict types, reading the file strictly so an
+    # undecodable source cannot pass as "no frontmatter" (#1046). The hand
+    # parser above only extracts catalog fields; refuse any header where it
+    # would record different name/description values than YAML (#1048).
+    if kind in SKILL_KINDS or kind in RULE_KINDS:
+        validator = frontmatter_validation()
+        parsed = validator.validate_file(path, kind="skill" if kind in SKILL_KINDS else "rule", source=rel) or {}
+        for field in validator.STRING_FIELDS:
+            if field in parsed and metadata.get(field) != parsed[field]:
+                raise validator.FrontmatterError(
+                    f"frontmatter {field} in {rel} uses YAML the catalog parser reads differently "
+                    f"({metadata.get(field)!r} vs {parsed[field]!r}); use a plain, quoted, or folded scalar"
+                )
     generated: list[str] = []
     return {
         "slug": slug,
@@ -567,7 +590,11 @@ def main() -> int:
         for path in (json_path, report_path)
         if path.is_relative_to(root)
     }
-    json_text, report_text = serialized(build_inventory(root, output_excludes))
+    try:
+        json_text, report_text = serialized(build_inventory(root, output_excludes))
+    except frontmatter_validation().FrontmatterError as exc:
+        print(f"skill inventory: {exc}", file=sys.stderr)
+        return 1
     if args.check:
         stale = []
         if read_text(json_path) != json_text:

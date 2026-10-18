@@ -144,31 +144,63 @@ def main() -> None:
     invalid_fixtures = {
         "skills/missing-all/SKILL.md": (
             "# Missing metadata\n",
-            "skill frontmatter missing name, description: skills/missing-all/SKILL.md",
+            "skill frontmatter invalid in skills/missing-all/SKILL.md: missing frontmatter block",
         ),
         "projects/demo/skills/missing-description/SKILL.md": (
             "---\nname: demo--missing-description\n---\n\n# Missing description\n",
-            "skill frontmatter missing description: projects/demo/skills/missing-description/SKILL.md",
+            "skill frontmatter invalid in projects/demo/skills/missing-description/SKILL.md: missing required description",
         ),
         "skills/quoted-whitespace/SKILL.md": (
             "---\nname: \"   \"\ndescription: whitespace name\n---\n\n# Whitespace name\n",
-            "skill frontmatter missing name: skills/quoted-whitespace/SKILL.md",
+            "skill frontmatter invalid in skills/quoted-whitespace/SKILL.md: name must be a non-empty string, got blank",
         ),
         "skills/comment-name/SKILL.md": (
             "---\nname: # pending\ndescription: comment name\n---\n\n# Comment name\n",
-            "skill frontmatter missing name: skills/comment-name/SKILL.md",
+            "skill frontmatter invalid in skills/comment-name/SKILL.md: name must be a non-empty string, got NoneType None",
         ),
         "skills/comment-description/SKILL.md": (
             "---\nname: comment-description\ndescription: # pending\n---\n\n# Comment description\n",
-            "skill frontmatter missing description: skills/comment-description/SKILL.md",
+            "skill frontmatter invalid in skills/comment-description/SKILL.md: description must be a non-empty string, got NoneType None",
         ),
         "skills/null-name/SKILL.md": (
             "---\nname: null\ndescription: null name\n---\n\n# Null name\n",
-            "skill frontmatter missing name: skills/null-name/SKILL.md",
+            "skill frontmatter invalid in skills/null-name/SKILL.md: name must be a non-empty string, got NoneType None",
         ),
         "skills/tilde-description/SKILL.md": (
             "---\nname: tilde-description\ndescription: ~\n---\n\n# Tilde description\n",
-            "skill frontmatter missing description: skills/tilde-description/SKILL.md",
+            "skill frontmatter invalid in skills/tilde-description/SKILL.md: description must be a non-empty string, got NoneType None",
+        ),
+        # #1046: presence-only parsing accepted these; a real YAML parse must not.
+        "skills/pipeline-jobs/SKILL.md": (
+            "---\nname: pipeline-jobs\ndescription: Pipeline job pattern. TRIGGER: writing data pipeline scripts, "
+            "Rundeck jobs, Airflow DAGs, or scheduled data processing. Python first, scheduler second.\n"
+            "routed-by: coding-standards\n---\n\n# Pipeline Jobs\n",
+            "skill frontmatter invalid in skills/pipeline-jobs/SKILL.md: invalid YAML: "
+            "mapping values are not allowed here at line 3, column 43",
+        ),
+        "skills/_ticket-lifecycle-rules.md": (
+            "---\ndescription: Always-on ticket lifecycle status discipline. Ticket state must move at the point "
+            "of action: work start, PR open, test/UAT handoff, blocker, unblock/resume, merge/verified close. "
+            "Platform-agnostic; requires a comment when a platform lacks a mutable Status field.\n---\n\n# Rule\n",
+            "rule frontmatter invalid in skills/_ticket-lifecycle-rules.md: invalid YAML: "
+            "mapping values are not allowed here at line 2, column 105",
+        ),
+        "skills/bool-description/SKILL.md": (
+            "---\nname: bool-description\ndescription: false\n---\n\n# Bool\n",
+            "skill frontmatter invalid in skills/bool-description/SKILL.md: description must be a non-empty string, got bool False",
+        ),
+        "skills/list-description/SKILL.md": (
+            "---\nname: list-description\ndescription: [release]\n---\n\n# List\n",
+            "skill frontmatter invalid in skills/list-description/SKILL.md: description must be a non-empty string, got list ['release']",
+        ),
+        "skills/unterminated/SKILL.md": (
+            "---\nname: unterminated\ndescription: \"unterminated\n---\n\n# Unterminated\n",
+            "skill frontmatter invalid in skills/unterminated/SKILL.md: invalid YAML: found unexpected end of stream at line 3, column 27",
+        ),
+        "projects/demo/skills/yes-name/SKILL.md": (
+            "---\nname: yes\ndescription: lint\n---\n\n# Yes\n",
+            "skill frontmatter invalid in projects/demo/skills/yes-name/SKILL.md: YAML 1.1/1.2 incompatible frontmatter: "
+            "line 2: unquoted 'yes' resolves as bool under YAML 1.1 but str under YAML 1.2; quote it",
         ),
     }
     for rel, (content, expected) in invalid_fixtures.items():
@@ -187,6 +219,36 @@ def main() -> None:
                 assert str(exc) == expected, exc
             else:
                 raise AssertionError(f"invalid skill frontmatter was accepted: {rel}")
+
+    # #1046: an undecodable rule must not pass as "no frontmatter".
+    with tempfile.TemporaryDirectory() as td:
+        undecodable = Path(td)
+        (undecodable / "skills").mkdir()
+        (undecodable / "skills" / "_bad-rules.md").write_bytes(b"---\ndescription: \xff\n---\n")
+        try:
+            MODULE.source_items(undecodable)
+        except ValueError as exc:
+            assert str(exc).startswith("rule frontmatter unreadable in skills/_bad-rules.md: "), exc
+        else:
+            raise AssertionError("undecodable rule frontmatter was accepted")
+
+    # #1046/#1048: valid YAML the catalog parser would record differently is refused.
+    divergent = {
+        "flow mapping": "---\n{name: flow, description: flow style}\n---\n",
+        "explicit key": "---\n? name\n: explicit\ndescription: explicit key\n---\n",
+        "multi-line plain": "---\nname: multi\ndescription: first\n  second line\n---\n",
+        "keep block": "---\nname: keep\ndescription: |+\n  kept\n---\n",
+    }
+    for label, content in divergent.items():
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            write(root, "skills/divergent/SKILL.md", content + "\n# Divergent\n")
+            try:
+                MODULE.source_items(root)
+            except ValueError as exc:
+                assert "uses YAML the catalog parser reads differently" in str(exc), (label, exc)
+            else:
+                raise AssertionError(f"catalog/YAML divergence accepted: {label}")
 
     print("skill_inventory_test: PASS")
 

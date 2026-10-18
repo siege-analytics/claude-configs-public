@@ -35,6 +35,16 @@ if [[ "$YES" -ne 1 ]]; then
   exit 2
 fi
 
+# The deploy build validates frontmatter with PyYAML and fails closed without
+# it (#1046). Stop before any workspace mutation, with the same guidance.
+if ! DEPENDENCY_STATUS=$(python3 "$REPO_ROOT/bin/frontmatter_validation.py" --check-dependency 2>&1); then
+  echo "ERROR: PyYAML is required for frontmatter validation: $DEPENDENCY_STATUS" >&2
+  echo "  Supported interpreter: CPython 3.12 (the CI-validated version; 3.9+ is compatible) as python3 on PATH," >&2
+  echo "  with the pinned requirement installed:" >&2
+  echo "    python3 -m pip install --require-hashes -r \"$REPO_ROOT/requirements-validation.txt\"" >&2
+  exit 1
+fi
+
 echo "=== Sync workspace hooks ==="
 echo "Repo:      $REPO_ROOT"
 echo "Workspace: $WORKSPACE"

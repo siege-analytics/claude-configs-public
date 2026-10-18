@@ -286,6 +286,11 @@ def package(source, destination, identity, *, policy_root=ROOT,
     if (project_root / '_rules.md').is_file():
         composition.require(project + '--rules' not in rules, f'duplicate qualified rule {project}--rules')
         rules[project + '--rules'] = (project_root / '_rules.md').relative_to(source)
+    # Same real-YAML gate as the scaffold build, before anything is rendered (#1046).
+    build.validate_packaged_frontmatter(sorted(
+        [('skill', source / path, path.as_posix()) for path in sources.values()]
+        + [('rule', source / path, path.as_posix()) for path in rules.values()],
+        key=lambda entry: entry[2]))
     legacy = project_root / 'CLAUDE.md'
     overlays = composition.import_heading_overlay(legacy.read_text(), config['heading_map'], source=legacy.relative_to(source).as_posix())
     resident = composition.compose_resident(parent_blocks, overlays, project=project, **config['resident_budget'])

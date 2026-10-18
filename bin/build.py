@@ -76,6 +76,23 @@ def _effective_policy_module():
     return _EFFECTIVE_POLICY
 
 
+_FRONTMATTER_VALIDATION = None
+
+
+def _frontmatter_validation_module():
+    global _FRONTMATTER_VALIDATION
+    if _FRONTMATTER_VALIDATION is None:
+        spec = importlib.util.spec_from_file_location(
+            "frontmatter_validation", Path(__file__).resolve().with_name("frontmatter_validation.py")
+        )
+        if spec is None or spec.loader is None:
+            raise ImportError("cannot load bin/frontmatter_validation.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _FRONTMATTER_VALIDATION = module
+    return _FRONTMATTER_VALIDATION
+
+
 def load_effective_policy_inputs(*args, **kwargs):
     return _effective_policy_module().load_inputs(*args, **kwargs)
 
@@ -504,6 +521,49 @@ def find_skills(source: Path) -> dict[str, Path]:
             )
         skills[slug] = rel
     return skills
+
+
+def validate_packaged_frontmatter(sources: list[tuple[str, Path, str]]) -> int:
+    """Real-YAML validate every packaged skill/rule header before any output (#1046).
+
+    ``sources`` holds (kind, absolute path, display path) with kind "skill" or
+    "rule". All failures are collected so one build reports every bad header.
+    A missing PyYAML fails closed through the same BuildError path.
+    """
+    try:
+        validator = _frontmatter_validation_module()
+    except (ImportError, OSError) as e:
+        raise BuildError(f"frontmatter validator unavailable: {e}") from None
+    errors: list[str] = []
+    for kind, path, display in sources:
+        try:
+            validator.validate_file(path, kind=kind, source=display)
+        except validator.FrontmatterDependencyError as e:
+            raise BuildError(str(e)) from None
+        except validator.FrontmatterError as e:
+            errors.append(str(e))
+    if errors:
+        raise BuildError("Frontmatter validation failed:\n  " + "\n  ".join(errors))
+    return len(sources)
+
+
+def packaged_frontmatter_sources(
+    skills_src: dict[str, Path], rules_src: dict[str, Path],
+    project_skills_src: dict[str, Path], project_rules_src: dict[str, Path],
+) -> list[tuple[str, Path, str]]:
+    """Every SKILL.md and rule file a layout will package, as validator input."""
+    sources: list[tuple[str, Path, str]] = []
+    for rel in skills_src.values():
+        path = SOURCE_SKILLS / rel / "SKILL.md"
+        sources.append(("skill", path, path.relative_to(REPO_ROOT).as_posix()))
+    for rel in rules_src.values():
+        path = SOURCE_SKILLS / rel
+        sources.append(("rule", path, path.relative_to(REPO_ROOT).as_posix()))
+    for rel in project_skills_src.values():
+        sources.append(("skill", REPO_ROOT / rel / "SKILL.md", (rel / "SKILL.md").as_posix()))
+    for rel in project_rules_src.values():
+        sources.append(("rule", REPO_ROOT / rel, rel.as_posix()))
+    return sorted(sources, key=lambda source: source[2])
 
 
 def is_router(skill_relpath: Path, all_skill_paths: dict[str, Path]) -> bool:
@@ -2008,6 +2068,18 @@ def main() -> int:
         f"Discovered {len(skills_src)} leaf skills, {len(rules_src)} rules, "
         f"{len(project_skills_src)} project skills, {len(project_rules_src)} project rules"
     )
+
+    # Phase 3b: Real-YAML frontmatter validation of every packaged skill and
+    # rule header, before any layout is written or deployed (#1046).
+    print("Validating packaged frontmatter...")
+    try:
+        validated = validate_packaged_frontmatter(packaged_frontmatter_sources(
+            skills_src, rules_src, project_skills_src, project_rules_src,
+        ))
+    except BuildError as e:
+        print(f"BUILD ERROR: {e}", file=sys.stderr)
+        return 1
+    print(f"  {validated} skill/rule header(s) validated")
 
     # Phase 4: Early collision check.
     overlap = set(skills_src) & set(project_skills_src)
