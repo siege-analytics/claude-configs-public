@@ -36,6 +36,10 @@ Focused inventory tests, regenerated inventory freshness, full build/check, gene
 
 The first independent review found that quoted interior whitespace such as `name: "   "` remained truthy after quote stripping. The replacement predicate strips the parsed value before testing emptiness, and the exact hostile input is now a negative fixture. The prior exact-head ACCEPT is historical and does not transfer.
 
+## Promotion-review YAML correction
+
+Promotion review found that comment-only YAML (`name: # pending`) was accepted because the dependency-free parser treated the comment as text. The additive parser now strips comments only outside quoted scalars, maps unquoted `null`/`~` to null, and preserves quoted hashes or quoted `null` as strings. Exact name/description comment-only and null fixtures were added. All prior feature and promotion verdicts are historical and do not transfer.
+
 ## Author verdict
 
 Accept for fresh independent hostile review after a clean staged scan. Do not claim the local invalid skill repaired until an exact corrected release is installed.

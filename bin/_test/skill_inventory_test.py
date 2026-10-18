@@ -137,6 +137,10 @@ def main() -> None:
         else:
             raise AssertionError("same-named books in different shelves silently collapsed")
 
+    assert MODULE._yaml_scalar('"# pending"') == "# pending"
+    assert MODULE._yaml_scalar("real name # operator note") == "real name"
+    assert MODULE._yaml_scalar("'null'") == "null"
+
     invalid_fixtures = {
         "skills/missing-all/SKILL.md": (
             "# Missing metadata\n",
@@ -149,6 +153,22 @@ def main() -> None:
         "skills/quoted-whitespace/SKILL.md": (
             "---\nname: \"   \"\ndescription: whitespace name\n---\n\n# Whitespace name\n",
             "skill frontmatter missing name: skills/quoted-whitespace/SKILL.md",
+        ),
+        "skills/comment-name/SKILL.md": (
+            "---\nname: # pending\ndescription: comment name\n---\n\n# Comment name\n",
+            "skill frontmatter missing name: skills/comment-name/SKILL.md",
+        ),
+        "skills/comment-description/SKILL.md": (
+            "---\nname: comment-description\ndescription: # pending\n---\n\n# Comment description\n",
+            "skill frontmatter missing description: skills/comment-description/SKILL.md",
+        ),
+        "skills/null-name/SKILL.md": (
+            "---\nname: null\ndescription: null name\n---\n\n# Null name\n",
+            "skill frontmatter missing name: skills/null-name/SKILL.md",
+        ),
+        "skills/tilde-description/SKILL.md": (
+            "---\nname: tilde-description\ndescription: ~\n---\n\n# Tilde description\n",
+            "skill frontmatter missing description: skills/tilde-description/SKILL.md",
         ),
     }
     for rel, (content, expected) in invalid_fixtures.items():

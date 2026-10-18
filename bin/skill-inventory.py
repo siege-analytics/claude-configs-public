@@ -50,6 +50,34 @@ def read_text(path: Path) -> str:
         return ""
 
 
+def _yaml_scalar(value: str) -> str | None:
+    """Parse the dependency-free YAML scalar subset used by frontmatter."""
+    value = value.strip()
+    quote: str | None = None
+    escaped = False
+    for index, char in enumerate(value):
+        if escaped:
+            escaped = False
+            continue
+        if quote == '"' and char == "\\":
+            escaped = True
+            continue
+        if char in {"'", '"'}:
+            if quote is None:
+                quote = char
+            elif quote == char:
+                quote = None
+            continue
+        if char == "#" and quote is None and (index == 0 or value[index - 1].isspace()):
+            value = value[:index].rstrip()
+            break
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        return value[1:-1]
+    if value == "~" or value.lower() == "null":
+        return None
+    return value
+
+
 def frontmatter(text: str) -> dict[str, Any]:
     if not text.startswith("---\n"):
         return {}
@@ -65,7 +93,7 @@ def frontmatter(text: str) -> dict[str, Any]:
             index += 1
             continue
         key, value = line.split(":", 1)
-        value = value.strip().strip("\"'")
+        value = value.strip()
         if value in {">-", ">", "|-", "|"}:
             folded: list[str] = []
             index += 1
@@ -74,7 +102,7 @@ def frontmatter(text: str) -> dict[str, Any]:
                 index += 1
             result[key] = " ".join(part for part in folded if part)
             continue
-        result[key] = value
+        result[key] = _yaml_scalar(value)
         index += 1
     return result
 
