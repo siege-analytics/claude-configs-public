@@ -1,0 +1,493 @@
+{
+  "version": "3.5.66",
+  "source_commit": "056b533",
+  "built_at": "2026-10-18T01:53:55.809297+00:00",
+  "gate_contract_source": "catalog/gate-contracts.json",
+  "gate_contract_sha256": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
+  "gate_contract": {
+    "schema_version": 1,
+    "contract_version": "1.2.0",
+    "ontology_version": "1.0.0",
+    "decision_values": [
+      "allow",
+      "deny",
+      "not-applicable",
+      "unknown",
+      "error"
+    ],
+    "capability_states": [
+      "verified",
+      "unsupported",
+      "unverified"
+    ],
+    "policy_fields": [
+      {
+        "id": "branch-policy",
+        "ontology_term": "policy",
+        "owner": "parent-scaffold",
+        "scope": "repository",
+        "value_schema": {
+          "type": "object",
+          "properties": {
+            "integration_branch": {
+              "type": "string",
+              "enum": [
+                "develop",
+                "main"
+              ]
+            },
+            "local_feedback": {
+              "type": "string",
+              "enum": [
+                "native-git-pre-push"
+              ]
+            },
+            "protected_acceptance": {
+              "type": "string",
+              "enum": [
+                "exact-range-and-head"
+              ]
+            }
+          },
+          "required": [
+            "integration_branch",
+            "local_feedback",
+            "protected_acceptance"
+          ],
+          "additional_properties": false
+        },
+        "default": {
+          "integration_branch": "develop",
+          "local_feedback": "native-git-pre-push",
+          "protected_acceptance": "exact-range-and-head"
+        },
+        "override_policy": {
+          "organization_profile_paths": [
+            "integration_branch"
+          ],
+          "project_paths": [],
+          "locked_paths": [
+            "local_feedback",
+            "protected_acceptance"
+          ]
+        },
+        "required_capability_ids": [
+          "native-branch-pre-push",
+          "protected-range-validation"
+        ]
+      },
+      {
+        "id": "ticket-requirement",
+        "ontology_term": "policy",
+        "owner": "parent-scaffold",
+        "scope": "commit-message",
+        "value_schema": {
+          "type": "object",
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "match_policy": {
+              "type": "string",
+              "enum": [
+                "canonical-ticket-reference-v1"
+              ]
+            },
+            "exception_policy": {
+              "type": "string",
+              "enum": [
+                "scoped-evidence-record-only"
+              ]
+            }
+          },
+          "required": [
+            "required",
+            "match_policy",
+            "exception_policy"
+          ],
+          "additional_properties": false
+        },
+        "default": {
+          "required": true,
+          "match_policy": "canonical-ticket-reference-v1",
+          "exception_policy": "scoped-evidence-record-only"
+        },
+        "override_policy": {
+          "organization_profile_paths": [],
+          "project_paths": [],
+          "locked_paths": [
+            "required",
+            "match_policy",
+            "exception_policy"
+          ]
+        },
+        "required_capability_ids": [
+          "native-ticket-commit-msg",
+          "protected-range-validation"
+        ]
+      },
+      {
+        "id": "review-procedure-binding",
+        "ontology_term": "procedure-binding",
+        "owner": "parent-scaffold",
+        "scope": "review-procedure",
+        "value_schema": {
+          "type": "object",
+          "properties": {
+            "procedure": {
+              "type": "string",
+              "pattern": "[a-z][a-z0-9-]*(?:--[a-z][a-z0-9-]*)?"
+            },
+            "authorization_effect": {
+              "type": "string",
+              "enum": [
+                "none"
+              ]
+            }
+          },
+          "required": [
+            "procedure",
+            "authorization_effect"
+          ],
+          "additional_properties": false
+        },
+        "default": {
+          "procedure": "self-review",
+          "authorization_effect": "none"
+        },
+        "override_policy": {
+          "organization_profile_paths": [],
+          "project_paths": [
+            "procedure"
+          ],
+          "locked_paths": [
+            "authorization_effect"
+          ]
+        },
+        "required_capability_ids": [
+          "procedure-binding-resolution"
+        ]
+      }
+    ],
+    "capabilities": [
+      {
+        "id": "native-ticket-commit-msg",
+        "ontology_term": "host-capability",
+        "boundary": "native-git-commit-msg",
+        "kind": "executable",
+        "registered_path": ".githooks/commit-msg",
+        "input_contract": [
+          "commit-message-file",
+          "staged-paths"
+        ],
+        "result_contract": {
+          "type": "process-exit",
+          "allow": [
+            0
+          ],
+          "deny": [
+            1
+          ],
+          "error": [
+            2
+          ]
+        },
+        "failure_semantics": "error-never-allow",
+        "package_paths": [
+          "dist/craft-agent/.githooks/commit-msg"
+        ],
+        "acceptance_probe_ids": [
+          "ticket-valid-reference-allows",
+          "ticket-missing-reference-denies"
+        ],
+        "configured_evidence_only": true
+      },
+      {
+        "id": "native-branch-pre-push",
+        "ontology_term": "host-capability",
+        "boundary": "native-git-pre-push",
+        "kind": "generated-executable",
+        "registered_path": "dist/craft-agent/.githooks/pre-push",
+        "input_contract": [
+          "push-update-lines",
+          "repository-state"
+        ],
+        "result_contract": {
+          "type": "process-exit",
+          "allow": [
+            0
+          ],
+          "deny": [
+            1
+          ],
+          "error": [
+            2
+          ]
+        },
+        "failure_semantics": "error-never-allow",
+        "package_paths": [
+          "dist/craft-agent/.githooks/pre-push"
+        ],
+        "acceptance_probe_ids": [
+          "branch-protected-update-denies"
+        ],
+        "configured_evidence_only": true
+      },
+      {
+        "id": "protected-range-validation",
+        "ontology_term": "host-capability",
+        "boundary": "protected-acceptance",
+        "kind": "external",
+        "registered_path": ".github/workflows/pr-base-guard.yml",
+        "input_contract": [
+          "trusted-base-revision",
+          "canonical-repository-identity",
+          "candidate-source-identity",
+          "exact-base",
+          "exact-head",
+          "authenticated-head-branch",
+          "target-branch",
+          "complete-commit-range"
+        ],
+        "result_contract": {
+          "type": "protected-check",
+          "allow": [
+            0
+          ],
+          "deny": [
+            1
+          ],
+          "error": [
+            2
+          ]
+        },
+        "failure_semantics": "unknown-never-allow",
+        "package_paths": [],
+        "acceptance_probe_ids": [
+          "protected-invalid-range-denies",
+          "protected-stale-head-denies",
+          "protected-wrong-repository-denies",
+          "protected-interior-commit-denies"
+        ],
+        "configured_evidence_only": true
+      },
+      {
+        "id": "procedure-binding-resolution",
+        "ontology_term": "host-capability",
+        "boundary": "procedure-selection",
+        "kind": "declarative",
+        "registered_path": "skills/self-review/SKILL.md",
+        "input_contract": [
+          "qualified-procedure-id",
+          "repository-identity"
+        ],
+        "result_contract": {
+          "type": "decision",
+          "allow": [
+            0
+          ],
+          "deny": [
+            1
+          ],
+          "error": [
+            2
+          ]
+        },
+        "failure_semantics": "unknown-never-allow",
+        "package_paths": [
+          "dist/craft-agent/skills/self-review/SKILL.md"
+        ],
+        "acceptance_probe_ids": [
+          "qualified-procedure-resolves-once"
+        ],
+        "configured_evidence_only": true
+      }
+    ]
+  },
+  "effective_policy_source": "git:ecef9e8620f477cdea4962cd3d737e16873f06fa:catalog/effective-policy.json",
+  "effective_policy_sha256": "debbb2af18af4ad1381ae7355e200049a94e9a02557dd7ccb756cb21834d2efa",
+  "effective_policy": {
+    "schema_version": 1,
+    "resolver_version": "1.0.0",
+    "contract_source": "catalog/gate-contracts.json",
+    "contract_sha256": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
+    "parent_contract_revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
+    "parent_lock": {
+      "host": "github.com",
+      "owner": "siege-analytics",
+      "repository": "claude-configs-public",
+      "revision": "f0b6ea8c428a9de089b09e2f79062cf57677140f",
+      "import_mechanism": "git",
+      "digest": "94e13b49777d2d182bcff3370bd29f885d4306dacae87b70df43541491cf37ca",
+      "tool_version": "effective-policy/1"
+    },
+    "organization_profiles": [
+      {
+        "id": "strict-release",
+        "values": {}
+      },
+      {
+        "id": "synthetic-trunk",
+        "values": {
+          "branch-policy": {
+            "integration_branch": "main"
+          }
+        }
+      }
+    ],
+    "projects": [
+      {
+        "id": "strict-release",
+        "repository_identity": {
+          "host": "github.example.invalid",
+          "owner": "synthetic-org",
+          "repository": "strict-release"
+        },
+        "organization_profile": "strict-release",
+        "values": {}
+      },
+      {
+        "id": "synthetic-trunk",
+        "repository_identity": {
+          "host": "github.example.invalid",
+          "owner": "synthetic-org",
+          "repository": "synthetic-trunk"
+        },
+        "organization_profile": "synthetic-trunk",
+        "values": {
+          "review-procedure-binding": {
+            "procedure": "hostile-review"
+          }
+        }
+      },
+      {
+        "id": "claude-configs-public",
+        "repository_identity": {
+          "host": "github.com",
+          "owner": "siege-analytics",
+          "repository": "claude-configs-public"
+        },
+        "organization_profile": "strict-release",
+        "values": {}
+      }
+    ]
+  },
+  "effective_policy_selection": {
+    "schema_version": 1,
+    "policy_revision": "ecef9e8620f477cdea4962cd3d737e16873f06fa",
+    "policy_path": "catalog/effective-policy.json",
+    "git_blob": "086e7bda8e9f588c57294ed0899f9ff2ffa982c5",
+    "raw_sha256": "cf45e80b063d58501ca6dd297c4fcec3c99273507cef8dce7e566d3377a253ea",
+    "canonical_sha256": "debbb2af18af4ad1381ae7355e200049a94e9a02557dd7ccb756cb21834d2efa",
+    "review_evidence": [
+      "https://github.com/siege-analytics/claude-configs-public/pull/1015#pullrequestreview-5543665034"
+    ]
+  },
+  "effective_policy_evidence_state": "configured",
+  "gates": [
+    {
+      "id": "think-gate",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/resolver/think-gate-guard.sh",
+      "surface": "UserPromptSubmit",
+      "blocking": true,
+      "condition": "Stale, expired, or scope-mismatched design signal; missing design note is advisory until mutation gates",
+      "action_class": "design",
+      "runtime_policy": {
+        "craft": "advisory",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": [
+        "STALE DESIGN",
+        "SCOPE MISMATCH",
+        "EXPIRED SIGNAL"
+      ]
+    },
+    {
+      "id": "investigate-gate",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/resolver/investigate-gate-guard.sh",
+      "surface": "UserPromptSubmit",
+      "blocking": true,
+      "condition": "Think gate exists but no investigation artifact",
+      "action_class": "investigation",
+      "runtime_policy": {
+        "craft": "advisory",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": [
+        "STALE INVESTIGATION"
+      ]
+    },
+    {
+      "id": "self-review",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/git/pre-push-self-review.sh",
+      "surface": "native-git-pre-push",
+      "blocking": true,
+      "condition": "Any new non-merge commit lacks required review evidence",
+      "action_class": "mutation",
+      "runtime_policy": {
+        "craft": "block",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": []
+    },
+    {
+      "id": "branch-guard",
+      "rule_source": "_writing-code-rules.md",
+      "hook": "hooks/git/branch-guard.sh",
+      "surface": "native-git-pre-push",
+      "blocking": true,
+      "condition": "Commit to protected branch",
+      "action_class": "branch-state",
+      "runtime_policy": {
+        "craft": "block",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": []
+    },
+    {
+      "id": "test-guard",
+      "rule_source": "_testing-frameworks-rules.md",
+      "hook": "hooks/git/test-guard.sh",
+      "surface": "native-git-pre-push",
+      "blocking": true,
+      "condition": "Push without test evidence (opt-in via testing: in PROJECT.md)",
+      "action_class": "test-evidence",
+      "runtime_policy": {
+        "craft": "block",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": []
+    },
+    {
+      "id": "skill-enforcement-gate",
+      "rule_source": "_definition-of-done-rules.md",
+      "hook": "hooks/resolver/skill-enforcement-gate.sh",
+      "surface": "UserPromptSubmit",
+      "blocking": true,
+      "condition": "SKILL.md not Read when think-gate status=implementing",
+      "action_class": "skill-read",
+      "runtime_policy": {
+        "craft": "advisory",
+        "claude-code": "block",
+        "codex-cli": "block",
+        "unknown": "block"
+      },
+      "block_signals": [
+        "BLOCKED: knowledge-base consultation required"
+      ]
+    }
+  ]
+}
