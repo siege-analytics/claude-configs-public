@@ -206,7 +206,10 @@ def make_item(
     metadata = frontmatter(text)
     rel = path.relative_to(root).as_posix()
     if kind in {"skill", "skill-router", "shelf-router", "reference-shelf", "project-skill"}:
-        missing = [field for field in ("name", "description") if not metadata.get(field)]
+        missing = [
+            field for field in ("name", "description")
+            if not (metadata.get(field) or "").strip()
+        ]
         if missing:
             raise ValueError(f"skill frontmatter missing {', '.join(missing)}: {rel}")
     generated: list[str] = []

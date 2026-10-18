@@ -146,6 +146,10 @@ def main() -> None:
             "---\nname: demo--missing-description\n---\n\n# Missing description\n",
             "skill frontmatter missing description: projects/demo/skills/missing-description/SKILL.md",
         ),
+        "skills/quoted-whitespace/SKILL.md": (
+            "---\nname: \"   \"\ndescription: whitespace name\n---\n\n# Whitespace name\n",
+            "skill frontmatter missing name: skills/quoted-whitespace/SKILL.md",
+        ),
     }
     for rel, (content, expected) in invalid_fixtures.items():
         with tempfile.TemporaryDirectory() as td:

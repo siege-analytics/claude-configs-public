@@ -32,6 +32,10 @@ Focused inventory tests, regenerated inventory freshness, full build/check, gene
 - All 36 hook suites and source/Craft/Claude hook validation pass.
 - Current v3.5.65 workspace integration probes loaded direct, flattened-project, shelf-router, and flat-layout skills in fresh Craft sessions; this repair still requires post-release native validation and fresh invocation of `shape-space-audit` itself.
 
+## Hostile-review correction
+
+The first independent review found that quoted interior whitespace such as `name: "   "` remained truthy after quote stripping. The replacement predicate strips the parsed value before testing emptiness, and the exact hostile input is now a negative fixture. The prior exact-head ACCEPT is historical and does not transfer.
+
 ## Author verdict
 
-Accept for independent hostile review after a clean staged scan. Do not claim the local invalid skill repaired until an exact corrected release is installed.
+Accept for fresh independent hostile review after a clean staged scan. Do not claim the local invalid skill repaired until an exact corrected release is installed.
