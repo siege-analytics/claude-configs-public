@@ -82,7 +82,7 @@ class GeneratedOwnershipCases:
 
     def test_flat_router_asset_collision_rejects_before_either_layout_is_written(self):
         self.ownership_publisher('first', qualified=False, skill='outer/inner')
-        self.write_asset('first', 'outer/inner/child/SKILL.md', b'# Child\n')
+        self.write_asset('first', 'outer/inner/child/SKILL.md', b'---\nname: child\ndescription: Child fixture.\n---\n\n# Child\n')
         self.ownership_publisher('second', qualified=False, skill='category/outer')
         for equal in (False, True):
             owners = [self.write_asset('first', 'outer/inner/shared.txt', b'FIRST_PRIVATE_CONTENT\n'),
@@ -173,8 +173,8 @@ class SelectedCompositionTest(GeneratedOwnershipCases, unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         self.output = Path(temporary.name) / 'output'
         self.identity = 'github.example.invalid/independent-org/application'
-        for relative in ('bin/compose-project.py', 'bin/build.py', 'bin/procedure_composition.py',
-                         'bin/resolve-load-set.py'):
+        for relative in ('bin/compose-project.py', 'bin/build.py', 'bin/frontmatter_validation.py',
+                         'bin/procedure_composition.py', 'bin/resolve-load-set.py'):
             shutil.copy2(ROOT / relative, self.source / relative)
         self.project = self.source / 'projects/independent'
         self.fixture.write_json('projects/independent/composition.json', {
@@ -213,7 +213,9 @@ class SelectedCompositionTest(GeneratedOwnershipCases, unittest.TestCase):
         root = root or f'bundles/{name}/skills'
         path = self.source / root / skill / 'SKILL.md'
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(f'# {name} formatting\n\n{name.upper()}_CONTENT_ONLY\n')
+        # Packaged skills need valid frontmatter (#1046); the body is the fixture.
+        path.write_text(f'---\nname: {skill.rsplit("/", 1)[-1]}\ndescription: {name} formatting fixture.\n---\n\n'
+                        f'# {name} formatting\n\n{name.upper()}_CONTENT_ONLY\n')
         self.selection['publishers'].append({'id': name, 'skills_root': root, 'qualified': qualified})
 
     def test_real_composer_and_resolver_without_any_siege_inputs(self):
