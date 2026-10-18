@@ -33,16 +33,20 @@ TEST_PARTS = {"_test", "tests", "test"}
 
 def tracked_files(root: Path) -> list[Path]:
     try:
-        raw = subprocess.check_output(["git", "-C", str(root), "ls-files", "-z"])
+        raw = subprocess.check_output(
+            ["git", "-C", str(root), "ls-files", "-z"],
+            timeout=30,
+            stderr=subprocess.DEVNULL,
+        )
         return [root / p.decode() for p in raw.split(b"\0") if p]
-    except (OSError, subprocess.SubprocessError):
+    except (OSError, subprocess.SubprocessError):  # noqa: writing-tests-5 best-effort fallback; exercised in bin/_test/skill_inventory_test.py
         return sorted(p for p in root.rglob("*") if p.is_file())
 
 
 def read_text(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
+    except (OSError, UnicodeDecodeError):  # noqa: writing-tests-5 best-effort malformed-source fallback; exercised in bin/_test/skill_inventory_test.py
         return ""
 
 
@@ -201,6 +205,10 @@ def make_item(
     text = read_text(path)
     metadata = frontmatter(text)
     rel = path.relative_to(root).as_posix()
+    if kind in {"skill", "skill-router", "shelf-router", "reference-shelf", "project-skill"}:
+        missing = [field for field in ("name", "description") if not metadata.get(field)]
+        if missing:
+            raise ValueError(f"skill frontmatter missing {', '.join(missing)}: {rel}")
     generated: list[str] = []
     return {
         "slug": slug,

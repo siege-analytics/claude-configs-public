@@ -29,6 +29,14 @@ def skill(name: str, body: str = "") -> str:
 
 def main() -> None:
     with tempfile.TemporaryDirectory() as td:
+        fallback_root = Path(td)
+        write(fallback_root, "untracked.txt", "fallback\n")
+        assert MODULE.tracked_files(fallback_root) == [fallback_root / "untracked.txt"]
+        malformed = fallback_root / "malformed.md"
+        malformed.write_bytes(b"\xff")
+        assert MODULE.read_text(malformed) == ""
+
+    with tempfile.TemporaryDirectory() as td:
         root = Path(td)
         write(root, "skills/alpha/SKILL.md", skill("alpha"))
         write(root, "skills/router/SKILL.md", skill("router"))
@@ -58,8 +66,8 @@ def main() -> None:
         (root / "bin").mkdir(exist_ok=True)
         shutil.copy2(ROOT / "bin" / "build.py", root / "bin" / "build.py")
         write(root, "hooks/_test/alpha.test.sh", "# alpha behavior\n")
-        subprocess.run(["git", "init", "-q", str(root)], check=True)
-        subprocess.run(["git", "-C", str(root), "add", "."], check=True)
+        subprocess.run(["git", "init", "-q", str(root)], check=True, timeout=30)
+        subprocess.run(["git", "-C", str(root), "add", "."], check=True, timeout=30)
 
         inventory = MODULE.build_inventory(root)
         by_key = {(item["kind"], item["slug"]): item for item in inventory["items"]}
@@ -92,19 +100,19 @@ def main() -> None:
         assert first == second, "inventory output is not deterministic"
 
         generate = [sys.executable, str(SCRIPT), "--root", str(root)]
-        assert subprocess.run(generate, capture_output=True, text=True).returncode == 0
+        assert subprocess.run(generate, capture_output=True, text=True, timeout=30).returncode == 0
         json_path = root / "catalog" / "skills-inventory.json"
         report_path = root / "catalog" / "skills-inventory.md"
-        subprocess.run(["git", "-C", str(root), "add", "catalog"], check=True)
+        subprocess.run(["git", "-C", str(root), "add", "catalog"], check=True, timeout=30)
         check = [*generate, "--check"]
-        assert subprocess.run(check, capture_output=True, text=True).returncode == 0
+        assert subprocess.run(check, capture_output=True, text=True, timeout=30).returncode == 0
         tracked_catalog = __import__("json").loads(json_path.read_text())
         assert all(
             not any(ref.startswith("catalog/skills-inventory") for ref in item["inbound_source_references"])
             for item in tracked_catalog["items"]
         ), "generated catalog supplied its own source-reference evidence"
         report_path.write_text("stale\n")
-        stale = subprocess.run(check, capture_output=True, text=True)
+        stale = subprocess.run(check, capture_output=True, text=True, timeout=30)
         assert stale.returncode == 1
         assert "STALE skill inventory outputs" in stale.stderr
 
@@ -128,6 +136,33 @@ def main() -> None:
             assert "duplicate general skill slug shelves--book" in str(exc)
         else:
             raise AssertionError("same-named books in different shelves silently collapsed")
+
+    invalid_fixtures = {
+        "skills/missing-all/SKILL.md": (
+            "# Missing metadata\n",
+            "skill frontmatter missing name, description: skills/missing-all/SKILL.md",
+        ),
+        "projects/demo/skills/missing-description/SKILL.md": (
+            "---\nname: demo--missing-description\n---\n\n# Missing description\n",
+            "skill frontmatter missing description: projects/demo/skills/missing-description/SKILL.md",
+        ),
+    }
+    for rel, (content, expected) in invalid_fixtures.items():
+        with tempfile.TemporaryDirectory() as td:
+            invalid = Path(td)
+            if rel.startswith("projects/"):
+                write(
+                    invalid,
+                    "projects/demo/PROJECT.md",
+                    "---\nname: demo\ndescription: demo\nrepo: org/demo\nstatus: active\n---\n",
+                )
+            write(invalid, rel, content)
+            try:
+                MODULE.source_items(invalid)
+            except ValueError as exc:
+                assert str(exc) == expected, exc
+            else:
+                raise AssertionError(f"invalid skill frontmatter was accepted: {rel}")
 
     print("skill_inventory_test: PASS")
 
