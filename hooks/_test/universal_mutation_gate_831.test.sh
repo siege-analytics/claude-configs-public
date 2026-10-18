@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# #1051: isolate from the invoking runtime's session/task metadata.
+unset CRAFT_SESSION_ID CRAFT_AGENT_SESSION_ID CLAUDE_SESSION_ID SESSION_ID
+unset CRAFT_SESSION_DIR CLAUDE_SIGNAL_DIR CRAFT_SIGNAL_DIR CRAFT_AGENT_SIGNAL_DIR CRAFT_AGENT_SESSION_DIR CLAUDE_SESSION_DIR CCP_HOOK_INPUT_JSON CCP_TASK_ID
+
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 HOOK="$ROOT/hooks/bash/universal-mutation-gate.sh"
 RESOLVER="$ROOT/hooks/lib/resolve-think-gate.py"
@@ -12,7 +16,8 @@ TICKET="R11-meta remediation PR B+C combined (fallback execution after 3x spawn 
 OLD_TICKET="siege-analytics/claude-configs-public#718"
 WS="$TMP/workspace"
 REPO="$TMP/repo"
-mkdir -p "$WS/sessions/$SESSION_ID" "$WS/plans" "$REPO"
+TASK_DIR="$WS/sessions/$SESSION_ID/tasks/current"
+mkdir -p "$TASK_DIR" "$WS/sessions/$SESSION_ID" "$WS/plans" "$REPO"
 
 git -C "$REPO" init -q
 git -C "$REPO" config user.email test@example.com
@@ -37,10 +42,10 @@ open(path, 'w').write(json.dumps(data, indent=2) + '\n')
 PY
 }
 
-write_current_workspace_artifacts() {
-  write_json "$WS/investigate-gate-repo.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"findings\": [{\"id\": \"F1\"}]}"
-  write_json "$WS/junior-senior-gate-repo.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"junior_found\": true, \"senior_found\": true}"
-  write_json "$WS/artifacts-posted-gate-repo.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"investigate_posted\": true, \"premortem_posted\": true}"
+write_current_task_artifacts() {
+  write_json "$TASK_DIR/investigate-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"findings\": [{\"id\": \"F1\"}]}"
+  write_json "$TASK_DIR/junior-senior-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"junior_found\": true, \"senior_found\": true}"
+  write_json "$TASK_DIR/artifacts-posted-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"investigate_posted\": true, \"premortem_posted\": true}"
   cat > "$WS/plans/pre-mortem-current.md" <<EOF2
 # Pre-mortem
 
@@ -59,8 +64,9 @@ write_stale_session_artifacts() {
 }
 
 write_json "$WS/sessions/$SESSION_ID/think-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"session\": \"$SESSION_ID\", \"status\": \"implementing\", \"repo_root\": \"$REPO\"}"
+cp "$WS/sessions/$SESSION_ID/think-gate.json" "$TASK_DIR/think-gate.json"
 write_stale_session_artifacts
-write_current_workspace_artifacts
+write_current_task_artifacts
 
 known="$(CRAFT_SESSION_ID="$SESSION_ID" python3 "$RESOLVER" --workspace "$WS" --session-known)"
 if [[ "$known" != "1" ]]; then
@@ -69,24 +75,24 @@ if [[ "$known" != "1" ]]; then
 fi
 
 many="$(CRAFT_SESSION_ID="$SESSION_ID" python3 "$RESOLVER" --workspace "$WS" --repo-root "$REPO" --resolve-many investigate-gate,junior-senior-gate,artifacts-posted-gate)"
-if grep -q "$WS/sessions/$SESSION_ID" <<<"$many"; then
+if ! grep -q "$TASK_DIR" <<<"$many"; then
   echo "$many" >&2
-  echo "FAIL: stale wrong-ticket session artifacts should not shadow current workspace repo-scoped artifacts" >&2
+  echo "FAIL: stale wrong-ticket session artifacts should not shadow current canonical task artifacts" >&2
   exit 1
 fi
-if ! grep -q 'investigate-gate-repo.json' <<<"$many"; then
+if ! grep -q 'tasks/current/investigate-gate.json' <<<"$many"; then
   echo "$many" >&2
-  echo "FAIL: current workspace repo-scoped artifacts should be selected" >&2
+  echo "FAIL: current canonical task artifacts should be selected" >&2
   exit 1
 fi
 
 if ! out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HOOK" <<<"$(payload 'git checkout -b feature/test')" 2>&1)"; then
   echo "$out" >&2
-  echo "FAIL: mutation should pass when stale session artifacts exist but current workspace artifacts match the task" >&2
+  echo "FAIL: mutation should pass when stale session artifacts exist but current task artifacts match the task" >&2
   exit 1
 fi
 
-rm -f "$WS"/*-repo.json "$WS/plans/pre-mortem-current.md"
+rm -f "$TASK_DIR/"{investigate,junior-senior,artifacts-posted}-gate.json "$WS/plans/pre-mortem-current.md"
 if out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HOOK" <<<"$(payload 'git checkout -b feature/test2')" 2>&1)"; then
   echo "$out" >&2
   echo "FAIL: mutation should block when only stale wrong-ticket session artifacts exist" >&2
@@ -131,9 +137,9 @@ git -C "$OTHER" remote add origin git@github.com:siege-analytics/other-repo.git
 printf 'y\n' > "$OTHER/file.txt"
 git -C "$OTHER" add file.txt
 git -C "$OTHER" commit -q -m 'baseline other'
-write_json "$WS/investigate-gate-repo.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$OTHER\", \"findings\": [{\"id\": \"OTHER\"}]}"
-write_json "$WS/junior-senior-gate-repo.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$OTHER\", \"junior_found\": true, \"senior_found\": true}"
-write_json "$WS/artifacts-posted-gate-repo.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$OTHER\", \"investigate_posted\": true, \"premortem_posted\": true}"
+write_json "$TASK_DIR/investigate-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$OTHER\", \"findings\": [{\"id\": \"OTHER\"}]}"
+write_json "$TASK_DIR/junior-senior-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$OTHER\", \"junior_found\": true, \"senior_found\": true}"
+write_json "$TASK_DIR/artifacts-posted-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$OTHER\", \"investigate_posted\": true, \"premortem_posted\": true}"
 cat > "$WS/plans/pre-mortem-current.md" <<EOF2
 # Pre-mortem
 

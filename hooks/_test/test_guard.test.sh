@@ -9,6 +9,10 @@
 
 set -uo pipefail
 
+# #1051: isolate from the invoking runtime's session/task metadata.
+unset CRAFT_SESSION_ID CRAFT_AGENT_SESSION_ID CLAUDE_SESSION_ID SESSION_ID
+unset CRAFT_SESSION_DIR CLAUDE_SIGNAL_DIR CRAFT_SIGNAL_DIR CRAFT_AGENT_SIGNAL_DIR CRAFT_AGENT_SESSION_DIR CLAUDE_SESSION_DIR CCP_HOOK_INPUT_JSON CCP_TASK_ID
+
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 HOOK="$REPO_ROOT/hooks/git/test-guard.sh"
@@ -85,6 +89,11 @@ print(json.dumps({'tool_input': {'command': sys.argv[1]}, 'cwd': sys.argv[2]}))
 " "$cmd" "$cwd"
 }
 
+export CRAFT_SESSION_ID=test-fixture
+export CRAFT_SESSION_DIR="$TMPDIR/with-testing/.signals"
+mkdir -p "$CRAFT_SESSION_DIR/tasks/current"
+printf '{"ticket":"#386","repo_root":"%s","status":"implementing"}' "$TMPDIR/with-testing" > "$CRAFT_SESSION_DIR/tasks/current/think-gate.json"
+
 # --- PASS: not a push command ---
 expect_pass "(a) non-push command is ignored" "$HOOK" \
     "$(make_payload 'git status' "$TMPDIR/with-testing")"
@@ -108,7 +117,7 @@ expect_block_because "(c) project with testing: but no test-gate.json" "$HOOK" \
     'no test-gate.json was found'
 
 # --- PASS: project with testing: and valid signal file ---
-cat > "$TMPDIR/with-testing/test-gate.json" <<'SIGEOF'
+cat > "$CRAFT_SESSION_DIR/tasks/current/test-gate.json" <<'SIGEOF'
 {
   "ticket": "#386",
   "lastUpdated": "2026-06-09T14:30:00Z",
@@ -126,7 +135,7 @@ expect_pass "(d) project with testing: and valid evidence" "$HOOK" \
 # #579, which requires the Reason/Evidence/Falsification chain. The scenario
 # still pins down that a valid override opens the gate; only the accepted shape
 # of the override changed.
-rm "$TMPDIR/with-testing/test-gate.json"
+rm "$CRAFT_SESSION_DIR/tasks/current/test-gate.json"
 cd "$TMPDIR/with-testing"
 echo 'def goodbye(): return 0' >> src/app.py
 git add -A
@@ -152,7 +161,7 @@ mkdir -p src/utils
 echo 'def helper(): return 42' > src/utils/helpers.py
 git add -A
 git commit -q -m "add helpers #386"
-cat > "$TMPDIR/with-testing/test-gate.json" <<'SIGEOF'
+cat > "$CRAFT_SESSION_DIR/tasks/current/test-gate.json" <<'SIGEOF'
 {
   "ticket": "#386",
   "lastUpdated": "2026-06-09T14:30:00Z",

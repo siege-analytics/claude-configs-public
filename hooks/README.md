@@ -28,7 +28,7 @@ behavior; the skill explains the correct behavior.
 | `agent-comms/no-slug-form-outbound.sh` | parser-drop guard (LESSON 323a0f5) | `mcp__session__send_agent_message` calls whose body contains `[skill:slug]` or `[rule:slug]` literal forms (host parser silently drops the carrier message). Use the angle-bracket form `[skill:<name>]` instead. |
 | `resolver/standing-order-guard.sh` | RESOLVER.md universal check #12 (standing-order continuity) | Injects shift-work directive on every `UserPromptSubmit` when a session-scoped `standing-order.json` exists and `active` is true. Resolution order: explicit env override, signal/session directory, `<workspace>/sessions/<session-id>/` using env or hook input JSON session id, then legacy `<workspace>/standing-order.json`. Ensures standing orders survive loop prompts, stacked messages, and context compaction without cross-session overwrites. Fail-open: silent when no signal file or `active: false`. Craft Agent packages also include `automations-snippet.json` and `standing-order-watchdog.json` as the periodic watchdog layer for sessions that stop after one item while batch work remains. |
 | `resolver/pre-action-guard.sh` | branch skill, commit skill (branch + ticket enforcement in Craft Agent) | Injects branch and ticket warnings on every `UserPromptSubmit` when cwd is a git repo on a protected branch (main, develop, master, staging, etc.) or in detached HEAD. Closes the enforcement gap where PreToolUse hooks (branch-guard, ticket-required) do not fire in Craft Agent sessions. Advisory, not blocking — fires every turn so the directive is present before every action. Fail-open: silent when not in a git repo or on a feature branch. Ref: #261. |
-| `resolver/think-gate-guard.sh` | think skill (RESOLVER.md universal check #0) | Reads a session-scoped `think-gate.json` / `think-gate-<repo>.json` first using env or hook input JSON session id, then repo-scoped and legacy workspace-root fallbacks, and verifies falsifiable claims against the codebase. Each claim is a grep-checkable assertion about code state that encodes a design premise. All claims pass: "Design for #N is current. Proceed." Any claim fails: "STALE DESIGN: [assertion] no longer holds. Re-examine." No signal file: "No design note registered." **Level 1.5 scope check (#323):** cross-checks signal file ticket against current branch name - detects stale signals from prior tasks. **Level 1.75 temporal decay (#328):** parses `lastUpdated` (ISO 8601) or falls back to file mtime; warns at 4h stale, 24h expired, 4h archive prompt for done signals. Claims require `repo_root` in the signal file to resolve relative paths across repos. Timeout: 10s. Ref: #262, #323, #328, #615. |
+| `resolver/think-gate-guard.sh` | think skill (RESOLVER.md universal check #0) | Reads a session-scoped `think-gate.json` / `think-gate-<repo>.json` first using env or hook input JSON session id, then only legacy session-level reads; workspace-root files never authorize mutation, and verifies falsifiable claims against the codebase. Each claim is a grep-checkable assertion about code state that encodes a design premise. All claims pass: "Design for #N is current. Proceed." Any claim fails: "STALE DESIGN: [assertion] no longer holds. Re-examine." No signal file: "No design note registered." **Level 1.5 scope check (#323):** cross-checks signal file ticket against current branch name - detects stale signals from prior tasks. **Level 1.75 temporal decay (#328):** parses `lastUpdated` (ISO 8601) or falls back to file mtime; warns at 4h stale, 24h expired, 4h archive prompt for done signals. Claims require `repo_root` in the signal file to resolve relative paths across repos. Timeout: 10s. Ref: #262, #323, #328, #615. |
 | `resolver/investigate-gate-guard.sh` | investigate skill (mid-pipeline enforcement) | Checks for session-scoped `investigate-gate.json` beside the active `think-gate.json`, then repo/workspace fallbacks. If a design is registered but investigation is missing, injects BLOCK directive. **Level 2:** spot-checks file:line citations in `verifiedShapes`. **Level 2.5 scope check (#323):** cross-checks signal ticket against branch name. **Level 2.75 temporal decay (#328):** parses `lastUpdated`/`timestamp` or falls back to mtime; warns at 4h stale, 24h expired. **Level 3:** disposition validation (Sagan assumption universe enforcement). Ref: #255, #323, #328, #615. |
 
 ## Installation
@@ -127,3 +127,87 @@ echo "Exit: $?"
 3. Document which skill(s) it enforces in the header comment
 4. Add to `settings-snippet.json`
 5. Update this README
+
+## Task-keyed gate authority (#1051)
+
+Gate identity is `(session, full ticket reference or explicit task_id)`. New
+signals live in `sessions/<id>/tasks/<task-slug>/{think,investigate,junior-senior,artifacts-posted,review,test}-gate.json`.
+The think gate declares absolute `scope_paths` (legacy default: `repo_root`).
+`CCP_TASK_ID` env or a leading Bash `CCP_TASK_ID=...` binding takes priority but
+cannot expand the task's scope. Otherwise canonical target paths/effective CWD
+select the most-specific scope. True ties name competing tasks and block only
+mutations. Split multi-owner actions. Artifact identity matching is exact:
+`org/repo#2` is neither `org/repo#20` nor `other/repo#2`.
+
+Positively recognized read-only shell commands/pipelines bypass gate lookup,
+including cmp, quoted grep and restricted `python3 -I -c` JSON/AST reads.
+The classifier never executes Python; unsupported AST/shell syntax remains
+mutation-gated. Shell substitutions/groups are rejected when targets cannot be
+resolved. Unscoped mutations fail closed without consulting any foreign task.
+Write/Edit/MultiEdit/NotebookEdit targets use the same task authority. A terminal
+status alone does not bypass artifact requirements.
+
+Legacy session-level think/artifact files remain readable as a legacy task;
+canonical task files win. Writers always use canonical task directories,
+including atomic pipeline-state artifact writes. Root singletons are ignored,
+except `find_gate_for_repo`'s diagnostic-only unknown-session legacy read,
+which requires exact canonical repo matching and **never authorizes mutations**.
+Root overrides and repo dotfiles cannot resurrect rejected authority.
+
+## Hub administrative load, not communication limits
+
+The original intent is to bound a hub's **administration**, never lateral or
+vertical communication. Blocking `send_agent_message` was a defect, corrected
+here: all messaging is nonblocking, including parent/operator, own
+workers/reviewers/sub-hubs, adopted sessions, other hubs and stewards. Retained
+per-task `open_threads`/staleness data is advisory audit only; it is not a roster
+of administered spokes. A threshold audit never exits 2 on messaging.
+
+Only `role::hub` senders are capped at **spawn admission**. Steward roles come
+from the single declared list `hooks/lib/hub-concurrency-policy.json`:
+`role::traffic-cop`, `role::workspace-config`, `role::deep-think`, `role::steward`.
+Stewards, workers/reviewers and unresolved roles are never limited; unknown
+roles/policy emit an audit event. Role labels are read from session metadata
+(`sessions/<id>/session.jsonl` header, or `session.json`), never message prose.
+Relationships use `parentSessionId`/`parent_session_id`; declared adoption uses
+`adoptedSessionIds`. Task binding uses `CCP_TASK_ID`, metadata `taskId`/`ticket`,
+or the separate `legacy-unscoped` bucket. No message text creates a relationship.
+
+`hub-threads.json` holds advisory threads plus `administered_spokes` and
+`pending_spawns`. Spawn PreToolUse checks active parent/adoption metadata and
+recorded spokes per task; an allowed admission reserves a slot under a file
+lock. PostToolUse reconciles the request via `tool_use_id` (fallback: tool-input
+hash), recording returned `tool_response.sessionId` (also structured/MCP JSON text responses) and releasing explicit failures. Unresolved result shapes retain their reservation with an audit rather than silently losing administration.
+Unreconciled reservations expire after ten minutes. Metadata terminal/archived
+spokes no longer count. A blocked spawn says to drain/retire a concluded spoke
+or delegate administration; communication stays unrestricted. There is no
+host adoption API hook here: arbitrary manual adoption is not claimed as an
+intercepted operation, but declared adoptions count on the next spawn check.
+
+Overrides for fixture/host adapters: `HUB_THREADS_FILE`, `HUB_THREAD_CAP`,
+`HUB_THREAD_STALE_SECONDS`. Audit records are beside that session state at
+`hub-threads.json.audit.jsonl`; errors fail open because this cap sheds load,
+not mutation authorization. Existing #896/#898/#915 tests retain bookkeeping,
+continuation and prune coverage; their messaging-block assertions migrate to
+nonblocking audit assertions, with cap blocking tested at spawn instead.
+
+### Runtime identity and target-repository diagnostics (#1051)
+
+`repo_root` is the task's **TARGET repository clone/worktree**, not the
+session's CWD and not the Craft workspace (which may itself be a configs
+checkout with a different git origin). `scope_paths` declares the actual
+mutation paths. From a workspace CWD use explicit target paths or `git -C`;
+CWD must not overwrite a correctly targeted gate. Companion signals record
+the same target repo. A rejected repo scope reports the gate path, its
+`repo_root`/origin, and the expected target repo/origin; fix that metadata,
+never restore workspace-root artifact copies to bypass it.
+
+Craft identity precedence is explicit: hook-host `CRAFT_SESSION_DIR` (then
+Craft id variables), then Craft `transcript_path`/Craft-specific payload id,
+then explicitly supplied native runtime identity. A generic SDK UUID alone
+is not a mapped Craft directory. Unresolved task lookup emits an actionable
+`Session id unresolved; gates under sessions/<id>/ are not visible` diagnostic.
+Set variables in the **hook host**, not an unrelated child shell. UUID/hook-environment identity failure is observed in the hook process
+(evidence pending from the Siege Utilities worker). A successful resolver
+run in an agent shell does not prove hook-host identity resolution. Both
+the identity and target-repo cases are tested through real hook entry points.

@@ -133,6 +133,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh",
             "timeout": 10
           },
@@ -153,6 +158,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh"
           },
           {
@@ -168,6 +178,11 @@
       {
         "matcher": "NotebookEdit",
         "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
           {
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh",
@@ -188,6 +203,11 @@
       {
         "matcher": "Write",
         "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
           {
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/write/branch-guard.sh",
@@ -227,6 +247,11 @@
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/agent-comms/spawn-guard.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/agent-comms/hub-concurrency-gate.sh",
+            "timeout": 10
           }
         ]
       }
@@ -239,6 +264,16 @@
             "type": "command",
             "command": "/path/to/claude-configs-public/hooks/git/vergil-quote.sh",
             "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__session__spawn_session",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/agent-comms/hub-concurrency-gate.sh",
+            "timeout": 10
           }
         ]
       }

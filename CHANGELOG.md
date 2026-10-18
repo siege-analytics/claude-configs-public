@@ -4,6 +4,10 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed
+- Correct task gate identity to session/task directories with scoped mutation ownership, exact artifact matching and read-only-first classification; remove shared-root artifact writes/authorization.
+- Correct the hub cap to its original administrative-load intent: communication is never blocked, stewards are never limited, and only hub spawn admission is capped.
+
 ### Added
 - Added a tandem-agent operating model for coordinator/reviewer/implementer collaboration: explicit role contracts, review-only boundaries, scoped implementation authorization, active collaborator checks, durable findings, and post-fix re-review.
 

@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "hub_role": "role::hub",
+  "steward_roles": [
+    "role::traffic-cop",
+    "role::workspace-config",
+    "role::deep-think",
+    "role::steward"
+  ]
+}

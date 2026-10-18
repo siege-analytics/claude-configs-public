@@ -11,11 +11,20 @@
 # Plus the fail-open safety invariant: every error path allows (exit 0).
 set -uo pipefail
 
+# #1051: isolate from the invoking runtime's session/task metadata.
+unset CRAFT_SESSION_ID CRAFT_AGENT_SESSION_ID CLAUDE_SESSION_ID SESSION_ID
+unset CRAFT_SESSION_DIR CLAUDE_SIGNAL_DIR CRAFT_SIGNAL_DIR CRAFT_AGENT_SIGNAL_DIR CRAFT_AGENT_SESSION_DIR CLAUDE_SESSION_DIR CCP_HOOK_INPUT_JSON CCP_TASK_ID
+
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 source "$ROOT/hooks/_test/run_scenarios.sh"
 HOOK="$ROOT/hooks/agent-comms/hub-concurrency-gate.sh"
 TMPD="$(mktemp -d)"
 trap 'rm -rf "$TMPD"' EXIT
+export CRAFT_AGENT_WORKSPACE="$TMPD"
+export CRAFT_SESSION_DIR="$TMPD/sessions/hub-A"
+mkdir -p "$CRAFT_SESSION_DIR"
+printf '{"labels":["role::hub"]}' > "$CRAFT_SESSION_DIR/session.json"
+
 
 now_iso() { python3 -c 'import datetime; print(datetime.datetime.now(datetime.timezone.utc).isoformat())'; }
 old_iso() { python3 -c 'import datetime; print((datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=7200)).isoformat())'; }
@@ -36,21 +45,21 @@ CAP_MSG='concurrency cap reached'
 sf="$TMPD/ac1a.json"; make_state "$sf" 2; scen "$sf" 3
 expect_pass "AC1: 2 open + new peer -> allow (opening the 3rd)" "$HOOK" "$(payload peer-new)"
 sf="$TMPD/ac1b.json"; make_state "$sf" 3; scen "$sf" 3
-expect_block_because "AC1: 3 open + new peer -> BLOCK (would be the 4th)" "$HOOK" "$(payload peer-new)" "$CAP_MSG"
+expect_pass "AC1: 3 open + new peer -> advisory (communication passes) (would be the 4th)" "$HOOK" "$(payload peer-new)"
 
 # --- boundary ---
 sf="$TMPD/b1.json"; make_state "$sf" 3; scen "$sf" 3
-expect_block_because "exactly at cap (3) + new peer -> BLOCK" "$HOOK" "$(payload peer-new)" "$CAP_MSG"
+expect_pass "exactly at cap (3) + new peer -> advisory (communication passes)" "$HOOK" "$(payload peer-new)"
 sf="$TMPD/b2.json"; make_state "$sf" 2; scen "$sf" 3
 expect_pass "1 below cap (2) + new peer -> allow" "$HOOK" "$(payload peer-new)"
 sf="$TMPD/b3.json"; make_state "$sf" 0; scen "$sf" 0
-expect_block_because "cap=0 + new peer -> BLOCK (any new thread)" "$HOOK" "$(payload peer-new)" "$CAP_MSG"
+expect_pass "cap=0 + new peer -> advisory (communication passes) (any new thread)" "$HOOK" "$(payload peer-new)"
 
 # --- AC2: over-cap grandfathering -- only NEW opens blocked ---
 sf="$TMPD/ac2a.json"; make_state "$sf" 5; scen "$sf" 3
 expect_pass "5 open (over cap) + EXISTING peer -> allow" "$HOOK" "$(payload peer-2)"
 sf="$TMPD/ac2b.json"; make_state "$sf" 5; scen "$sf" 3
-expect_block_because "5 open (over cap) + new peer -> BLOCK" "$HOOK" "$(payload peer-new)" "$CAP_MSG"
+expect_pass "5 open (over cap) + new peer -> advisory (communication passes)" "$HOOK" "$(payload peer-new)"
 sf="$TMPD/ac2c.json"; make_state "$sf" 3; scen "$sf" 3
 expect_pass "3 open (at cap) + EXISTING peer -> allow" "$HOOK" "$(payload peer-1)"
 
@@ -70,7 +79,7 @@ expect_pass "auto-append: allowed new thread (2->3)" "$HOOK" "$(payload peer-fre
 # the previous allow appended peer-fresh (now 3); a further new peer is now at cap.
 # This block assertion IS the proof the auto-append persisted: it only trips
 # because the prior allow wrote peer-fresh into the state file, taking it to 3.
-expect_block_because "after auto-append reached cap, next new peer BLOCK" "$HOOK" "$(payload peer-another)" "$CAP_MSG"
+expect_pass "after auto-append reached cap, next new peer remains nonblocking" "$HOOK" "$(payload peer-another)"
 
 # --- AC4 (#915): stale-entry pruning ---
 OLD="$(old_iso)"  # ~2h old; well past the 3600s default staleness window
@@ -96,8 +105,8 @@ expect_pass "1 fresh + 1 stale (of cap 3) + new peer -> allow (stale pruned, 1 f
 # active threads. This re-proves AC1's boundary using real timestamps instead
 # of the placeholder "x" the pre-#915 fixture used.
 sf="$TMPD/fresh3.json"; make_state "$sf" 3; scen "$sf" 3
-expect_block_because "3 fresh entries + new peer -> still BLOCK (freshness preserved)" \
-  "$HOOK" "$(payload peer-new)" "$CAP_MSG"
+expect_pass "3 fresh entries + new peer -> advisory (freshness preserved)" \
+  "$HOOK" "$(payload peer-new)"
 
 # Missing last_activity entirely -> treated as stale -> pruned.
 sf="$TMPD/missing_la.json"
@@ -115,8 +124,8 @@ expect_pass "unparseable last_activity -> treated as stale -> pruned -> allow" \
 # window, and is pruned under a tighter one -- proves the env override wires
 # through to the prune decision, mirroring the existing HUB_THREAD_CAP test.
 sf="$TMPD/window_loose.json"; make_state "$sf" 1 "$OLD"; scen "$sf" 1 999999
-expect_block_because "2h-old entry within a looser (999999s) window -> still counts -> BLOCK" \
-  "$HOOK" "$(payload peer-new)" "$CAP_MSG"
+expect_pass "2h-old entry within a looser (999999s) window -> still counts -> advisory (communication passes)" \
+  "$HOOK" "$(payload peer-new)"
 sf="$TMPD/window_tight.json"; make_state "$sf" 1 "$OLD"; scen "$sf" 1 60
 expect_pass "2h-old entry past a tighter (60s) window -> pruned -> allow" \
   "$HOOK" "$(payload peer-new)"
@@ -166,8 +175,8 @@ sf="$TMPD/boundary_over.json"; make_state "$sf" 1 "$(just_over_iso)"; scen "$sf"
 expect_pass "61s-old entry vs 60s window -> at/past boundary -> pruned -> allow" \
   "$HOOK" "$(payload peer-new)"
 sf="$TMPD/boundary_under.json"; make_state "$sf" 1 "$(just_under_iso)"; scen "$sf" 1 60
-expect_block_because "59s-old entry vs 60s window -> under boundary -> still counts -> BLOCK" \
-  "$HOOK" "$(payload peer-new)" "$CAP_MSG"
+expect_pass "59s-old entry vs 60s window -> under boundary -> still counts -> advisory (communication passes)" \
+  "$HOOK" "$(payload peer-new)"
 
 # Persisted-state check: after a prune, the stale entry must actually be gone
 # from the on-disk file, not just excluded from this one decision.

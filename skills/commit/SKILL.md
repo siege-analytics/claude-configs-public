@@ -35,7 +35,7 @@ allowed-tools: Read Grep Glob Bash
    3. 60-second timeout per affected-test run. Tests slower than that get marked `slow` and run at PR-open time only.
    4. Non-zero exit blocks the commit. No silent skip: if the heuristic finds no test files for a touched source file, that itself is reported and the agent decides whether to write a test or proceed with `[run-skip: <reason>]`.
    5. Override syntax: `[run-skip: <reason>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per `[rule:writing-code]` writing-code:5 escape hatch. Track override frequency; using it more than once per session is a smell.
-   6. After all affected tests pass, write `test-gate.json` to the workspace root (or project root) recording test evidence. The `test-guard.sh` hook reads this file at push time. See `[rule:testing-frameworks]` testing-frameworks:3 for the schema and `[skill:testing-frameworks]` for framework guidance.
+   6. After all affected tests pass, write `test-gate.json` beside the owning task's think gate at `$CRAFT_SESSION_DIR/tasks/<task-slug>/test-gate.json` recording test evidence. The `test-guard.sh` hook reads this file at push time. See `[rule:testing-frameworks]` testing-frameworks:3 for the schema and `[skill:testing-frameworks]` for framework guidance.
 5. **Check for a ticket reference** (see Ticket enforcement below)
    1. If no ticket exists for this work, stop and create one first
    2. If the user explicitly overrides, mark the commit with `[no-ticket]`
@@ -58,6 +58,8 @@ A commit is a unit of meaning, not a unit of time. Each commit should represent 
 # Pre-review gate
 
 **Every commit gets a code-review pass before it lands.** This is the operationalization of criterion (a) of [rule:definition-of-done] at the pre-commit transition -- not just at PR-open.
+
+**Gate target repository:** `repo_root` names the task's TARGET clone/worktree, never the session CWD or the Craft workspace merely because it is a configs checkout. Declare actual task paths in `scope_paths`; run target commands with explicit paths/`git -C` when the session CWD is elsewhere. Companion gates use the same target repo and exact session/task identity. Scope rejections must be corrected, not bypassed with root copies.
 
 ## What runs
 
@@ -413,3 +415,5 @@ If it was already committed, remove it from history and rotate the credential im
 - [ ] Ticket exists for this work (if committable, it's ticketable)
 - [ ] No AI/agent attribution anywhere in the commit message
 - [ ] Verified with `git log -1` and `git status` after committing
+
+Test evidence is task-keyed: include the exact full ticket reference (or explicit task id), session id and repo scope. Legacy workspace/repo `test-gate.json` singletons cannot satisfy the task. Multiple tasks in one session retain independent evidence.

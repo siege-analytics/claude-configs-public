@@ -12,6 +12,8 @@ this skill produces is the durable thing; the diff inspection is
 ephemeral. CodeRabbit, GitGuardian, and sibling-session validation
 compensate but do not substitute.
 
+**Gate target repository:** `repo_root` names the task's TARGET clone/worktree, never the session CWD or the Craft workspace merely because it is a configs checkout. Declare actual task paths in `scope_paths`; run target commands with explicit paths/`git -C` when the session CWD is elsewhere. Companion gates use the same target repo and exact session/task identity. Scope rejections must be corrected, not bypassed with root copies.
+
 ## Why a written artifact
 
 A "look at the diff" reminder is a habit, not a rule -- under context
@@ -365,24 +367,18 @@ matching. All three were written against imagined APIs.
 
 ### Gate 5: Review-gate check
 
-Before push, check whether a `review-gate.json` signal file exists
-(workspace root for Craft Agent, repo root `.review-gate.json` for
-Claude Code). If it exists and the current branch has new commits
-since `reviewed_commit`, the push is blocked until the review is
-re-fired on the current code.
+Before push, resolve the owning task's `review-gate.json` beside
+`$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json`. Use the full ticket
+reference (or explicit task id) and matching session metadata. Do not inspect
+workspace-root or another task's review signal. Multiple tasks in one session
+have independent review/artifact state. Legacy session-level signals are
+read during migration; new writes are task-keyed only.
 
-```bash
-# Check for review-gate signal
-[ -f review-gate.json ] && python3 -c "
-import json, subprocess
-d = json.load(open('review-gate.json'))
-if d.get('verdict') == 'approve': exit(0)
-head = subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip()
-if head != d.get('reviewed_commit',''):
-    print(f'BLOCKED: {d[\"branch\"]} has new commits since review. Re-review required.')
-    exit(1)
-"
-```
+If this task's branch has moved beyond `reviewed_commit` after a request-changes
+review, re-fire review on the current code. Update only this task's signal;
+approval does not clear other tasks' review requirements. Resolve targets by
+`scope_paths` or explicit `CCP_TASK_ID`; unscoped mutations fail closed while
+positively classified reads bypass gate lookup.
 
 **Evidence format in Peer review section:**
 ```

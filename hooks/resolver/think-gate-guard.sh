@@ -1,7 +1,7 @@
 #!/bin/bash
 # UserPromptSubmit hook — think-gate enforcement via falsifiable claims.
 #
-# Reads <workspace>/think-gate.json and verifies each claim against the
+# Reads <session>/tasks/<task-slug>/think-gate.json and verifies each claim against the
 # codebase on every turn. Narrates findings to the agent/user.
 #
 # Signal file supports TWO claim schemas:
@@ -50,7 +50,7 @@
 #   Prose-only claims    → inject "Design for #N registered (prose claims, not machine-verified)"
 #   Malformed signal file → inject warning, fail-open
 #
-# Location: <workspace>/think-gate.json, derived from script path
+# Location: <session>/tasks/<task-slug>/think-gate.json, derived from script path
 # (hooks/resolver/think-gate-guard.sh → ../../).
 #
 # Ref: claude-configs-public#262
@@ -61,20 +61,17 @@ HOOK_INPUT_JSON=$(cat 2>/dev/null || true)
 export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+WORKSPACE_ROOT="${CRAFT_AGENT_WORKSPACE:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 # Repo-scoped resolution (#494 / #653): resolve the gate for the CURRENT
 # session and repo, not "any active gate anywhere in the workspace."
 # The prior --all lookup returned another session's stale gate to every
 # spawned session in the workspace, blocking sessions with zero relationship
 # to the gate's ticket (#653). Now uses find_gate_for_repo which is session-
 # and repo-scoped: session-scoped signal file first, then repo-slug'd
-# workspace-root file, then the legacy singleton only if its repo_root
-# matches the current repo's basename.
+# legacy session-level reads. Workspace-root files never authorize mutations.
 RESOLVE_TG="$SCRIPT_DIR/../lib/resolve-think-gate.py"
-SIGNAL_FILE="${CLAUDE_THINK_GATE:-}"
-RESOLVER_ATTEMPTED=0
+SIGNAL_FILE=""
 if [[ -z "$SIGNAL_FILE" ]] && [[ -f "$RESOLVE_TG" ]]; then
-    RESOLVER_ATTEMPTED=1
     # Derive repo_root from the hook input's cwd (Claude Code hook payload).
     # If no cwd is available, fall back to the workspace root; find_gate_for_repo
     # will still filter the legacy singleton by repo_root basename match.
@@ -97,7 +94,7 @@ try:
 except Exception:
     print(cwd)
 ' 2>/dev/null || echo "$WORKSPACE_ROOT")
-    SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" 2>/dev/null | python3 -c "
+    SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" | python3 -c "
 import json, sys
 try:
     data = json.load(sys.stdin)
@@ -106,13 +103,6 @@ try:
 except Exception:
     pass
 " 2>/dev/null || true)
-fi
-if [[ -z "$SIGNAL_FILE" ]]; then
-    if [[ "$RESOLVER_ATTEMPTED" == "0" ]]; then
-        SIGNAL_FILE="$WORKSPACE_ROOT/think-gate.json"
-    else
-        SIGNAL_FILE="$REPO_ROOT/.think-gate-missing.json"
-    fi
 fi
 
 if [ ! -f "$SIGNAL_FILE" ]; then

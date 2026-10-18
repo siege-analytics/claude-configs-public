@@ -1,0 +1,279 @@
+{
+  "ticket": "siege-analytics/claude-configs-public#1051",
+  "base_main": "056b5337b08bb960fb7796b6bb00c971e22664f1",
+  "target_develop": "dbe21c1968cb1c04ba6eeb780169ae37929cc7b1",
+  "python": "Python 3.14.6",
+  "hook_suite_count": 37,
+  "additional_suite_count": 9,
+  "acceptance_test_count": 28,
+  "suites": [
+    {
+      "suite": "branch_state_advisory.test",
+      "exit": 0
+    },
+    {
+      "suite": "ca_enforcement_gate.test",
+      "exit": 0
+    },
+    {
+      "suite": "ca_enforcement_manifest.test",
+      "exit": 0
+    },
+    {
+      "suite": "ca_enforcement_runtime.test",
+      "exit": 0
+    },
+    {
+      "suite": "coordination_alias.test",
+      "exit": 0
+    },
+    {
+      "suite": "coordinator_status_guard.test",
+      "exit": 0
+    },
+    {
+      "suite": "destructive_bash_guard.test",
+      "exit": 0
+    },
+    {
+      "suite": "detect_ai_fingerprints.test",
+      "exit": 0
+    },
+    {
+      "suite": "detect_host.test",
+      "exit": 0
+    },
+    {
+      "suite": "fix_shape_guard.test",
+      "exit": 0
+    },
+    {
+      "suite": "gate_registry.test",
+      "exit": 0
+    },
+    {
+      "suite": "hub_concurrency_gate.test",
+      "exit": 0
+    },
+    {
+      "suite": "investigate_gate_schema.test",
+      "exit": 0
+    },
+    {
+      "suite": "kb_consultation_advisory.test",
+      "exit": 0
+    },
+    {
+      "suite": "pr_base_guard.test",
+      "exit": 0
+    },
+    {
+      "suite": "progressive_loading.test",
+      "exit": 0
+    },
+    {
+      "suite": "project_scoped_gate.test",
+      "exit": 0
+    },
+    {
+      "suite": "resolve_project.test",
+      "exit": 0
+    },
+    {
+      "suite": "review_risk_policy.test",
+      "exit": 0
+    },
+    {
+      "suite": "scaffold_test_stub.test",
+      "exit": 0
+    },
+    {
+      "suite": "scope_check.test",
+      "exit": 0
+    },
+    {
+      "suite": "self_review_hook_489_deploy_model.test",
+      "exit": 0
+    },
+    {
+      "suite": "self_review_hook_819_820.test",
+      "exit": 0
+    },
+    {
+      "suite": "session_signal_resolution.test",
+      "exit": 0
+    },
+    {
+      "suite": "spawn_guard.test",
+      "exit": 0
+    },
+    {
+      "suite": "survey_context.test",
+      "exit": 0
+    },
+    {
+      "suite": "task_keyed_gates.test",
+      "exit": 0
+    },
+    {
+      "suite": "test_guard.test",
+      "exit": 0
+    },
+    {
+      "suite": "test_tracking_guard.test",
+      "exit": 0
+    },
+    {
+      "suite": "ticket_propagation_guard.test",
+      "exit": 0
+    },
+    {
+      "suite": "ticket_required.test",
+      "exit": 0
+    },
+    {
+      "suite": "universal_mutation_gate.test",
+      "exit": 0
+    },
+    {
+      "suite": "universal_mutation_gate_831.test",
+      "exit": 0
+    },
+    {
+      "suite": "universal_mutation_gate_empty_reporoot.test",
+      "exit": 0
+    },
+    {
+      "suite": "universal_mutation_gate_safelist.test",
+      "exit": 0
+    },
+    {
+      "suite": "verify_enforcement.test",
+      "exit": 0
+    },
+    {
+      "suite": "writing_migration_cleanup.test",
+      "exit": 0
+    },
+    {
+      "suite": "generated_source_authority_test",
+      "exit": 0
+    },
+    {
+      "suite": "review_risk_test",
+      "exit": 0
+    },
+    {
+      "suite": "settings_drift_test",
+      "exit": 0
+    },
+    {
+      "suite": "gate_contract_test",
+      "exit": 0
+    },
+    {
+      "suite": "effective_policy_test",
+      "exit": 0
+    },
+    {
+      "suite": "ontology_test",
+      "exit": 0
+    },
+    {
+      "suite": "skill_inventory_test",
+      "exit": 0
+    },
+    {
+      "suite": "kernel_budget_test",
+      "exit": 0
+    },
+    {
+      "suite": "notebook_edit_guards_test",
+      "exit": 0
+    }
+  ],
+  "checks": [
+    {
+      "command": "python3 bin/sync-skill-references.py --check",
+      "exit": 0
+    },
+    {
+      "command": "python3 bin/build.py --check",
+      "exit": 0
+    },
+    {
+      "command": "python3 bin/validate-hooks.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 bin/validate-hooks.py dist/claude-code/",
+      "exit": 0
+    },
+    {
+      "command": "python3 bin/validate-hooks.py dist/craft-agent/",
+      "exit": 0
+    },
+    {
+      "command": "python3 bin/generated-source-authority.py --check",
+      "exit": 0
+    },
+    {
+      "command": "python3 bin/skill-inventory.py --check",
+      "exit": 0
+    },
+    {
+      "command": "python3 bin/review-risk-metrics.py --check",
+      "exit": 0
+    },
+    {
+      "command": "python3 bin/kernel-budget.py --check",
+      "exit": 0
+    },
+    {
+      "command": "python3 bin/ontology.py --check",
+      "exit": 0
+    },
+    {
+      "command": "python3 bin/gate_contract.py --check --probe --generated-root dist",
+      "exit": 0
+    },
+    {
+      "command": "python3 bin/effective_policy.py validate --generated-root dist",
+      "exit": 0
+    },
+    {
+      "command": "bash scripts/ci/test_flat_skill_layout.sh",
+      "exit": 0
+    }
+  ],
+  "executable_sha256": {
+    "bin/_test/review_risk_test.py": "c091fa1aa38f95dd49c8b6c9766ad46d04d2472878578f29f30123d6dd31d3e3",
+    "bin/_test/settings_drift_test.py": "7b16fe8abe35fc2f1a79acb247d3edd7f7bc76ff2f8ea22667527384fbec7748",
+    "hooks/_test/hub_concurrency_gate.test.sh": "c6f4cc391a24e0084e79284191c636745e927d627e65d97dd32dcfbab5684ded",
+    "hooks/_test/investigate_gate_schema.test.sh": "e94e5a3484d9ec082abe3de3b321c8a74b6ac607fb7c5a2a4dd5537b3737d0b5",
+    "hooks/_test/kb_consultation_advisory.test.sh": "2361e0e53e09c9064a01136d414a8396d0d48032edd6e183642406f79a1b7191",
+    "hooks/_test/project_scoped_gate.test.sh": "39105f607108302f7a77abf653edcfaf838697da2a615693ceb9a33ec4de0ac9",
+    "hooks/_test/session_signal_resolution.test.sh": "cf2d95f49e5445be7af2835b9ae432b9f5265e2adb930d1c34a3b378378d3d31",
+    "hooks/_test/task_keyed_gates.py": "4f09d95ce83986552fd190a4285ad4b409c8f381a10574c1e890ed146a4653ed",
+    "hooks/_test/task_keyed_gates.test.sh": "3b16f3fd457a2b26064ba76286249b16682752887a3e379a1b7a92a104a9bc44",
+    "hooks/_test/test_guard.test.sh": "0301212afdf66d395b81f346aee1f7160fcb035aec93bea7737b9c97c1df2e03",
+    "hooks/_test/universal_mutation_gate.test.sh": "dd9ed4d6f32d2f4a238bcc0d24fe381a802146f822b1e970b68d7be5dc3f6d72",
+    "hooks/_test/universal_mutation_gate_831.test.sh": "c6729cd761fe4dc0532fe3a411b01fd13a8b6bd23c2f9b8c2170b051bc172f00",
+    "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh": "fa03e1472362e78e967b9c755a9898e5de347f3f6876a12f4dcf1381b5cdc5e7",
+    "hooks/_test/universal_mutation_gate_safelist.test.sh": "cac4d5c4b5f9abf0e47b34cc3e5f3959027e89e9a217a7f28ecfbd9617fe302b",
+    "hooks/agent-comms/hub-concurrency-gate.sh": "acb6f58f2a16d1b81dd3a438ffaa63f6a6d78b2de0eab79f7fdaa5d8ad9507e4",
+    "hooks/bash/universal-mutation-gate.sh": "f7df1c07fe4ab92e425db08e7825fc4a33057f145734553e93074fdb922b0a27",
+    "hooks/git/self-review.sh": "2171c0f71456bbaf41082ce8e2e287fcd43a8432926597f25835ec39e237ed4f",
+    "hooks/git/test-guard.sh": "f92a434d0041f92b422164b8c7c08f573a7bc2e246c43d849c68f862bc43fb44",
+    "hooks/lib/pipeline_state.py": "21430d75708c1dbac327f37b8bc620fa6d11b40765e84239f1a352651367add9",
+    "hooks/lib/resolve-think-gate.py": "a6a7768a85e5133ecfaec5842848b0d397233639e0be02a05d55107d51c9a649",
+    "hooks/lib/task_actions.py": "0328845b9a57dd936b39258882509b5901ff7773556eac675ab2b245b31ad011",
+    "hooks/resolver/investigate-gate-guard.sh": "b243d06b1706a7459f2023f0a8cb6bd3d08c8524f1b81f77ff99db70f307b0cb",
+    "hooks/resolver/pipeline-state-guard.sh": "5bef23d9ebb4e22111d237ab7dfcb7342f6f179bc1458a658b7c7a1fc6242da2",
+    "hooks/resolver/review-gate-guard.sh": "eddf58c630f79b1f048e29ff9bced33d34999e39a1f29dc9a7e1e15ea4b5d4bf",
+    "hooks/resolver/skill-enforcement-gate.sh": "5416100e5d37fecb2d0114df395c0ed3a0138ba50df74de12b97de9e3c5ad6ba",
+    "hooks/resolver/think-gate-guard.sh": "e78a7bf6d1aa441cdffb94a87bf21c55cb8c1e62035d97cdd9347a52f76eec23"
+  },
+  "live_activation": false,
+  "exact_sha_acceptance": "pending independent coordinator review"
+}

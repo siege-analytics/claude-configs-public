@@ -5,6 +5,10 @@
 # gate. Unknown sessions, and known sessions with no gate, fail closed.
 set -euo pipefail
 
+# #1051: isolate from the invoking runtime's session/task metadata.
+unset CRAFT_SESSION_ID CRAFT_AGENT_SESSION_ID CLAUDE_SESSION_ID SESSION_ID
+unset CRAFT_SESSION_DIR CLAUDE_SIGNAL_DIR CRAFT_SIGNAL_DIR CRAFT_AGENT_SIGNAL_DIR CRAFT_AGENT_SESSION_DIR CLAUDE_SESSION_DIR CCP_HOOK_INPUT_JSON CCP_TASK_ID
+
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 HOOK="$ROOT/hooks/bash/universal-mutation-gate.sh"
 RESOLVER="$ROOT/hooks/lib/resolve-think-gate.py"
@@ -56,7 +60,7 @@ EOF2
 
 session_think_gate() {
   write_json "$WS/sessions/$SID/think-gate.json" \
-    "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SID\", \"session\": \"$SID\", \"status\": \"implementing\"}"
+    "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SID\", \"session\": \"$SID\", \"status\": \"implementing\", \"scope_paths\": [\"$WS\"]}"
 }
 session_artifacts() {
   write_json "$WS/sessions/$SID/investigate-gate.json" \
@@ -83,7 +87,7 @@ sg="$(resolver "$SID" --workspace "$WS" --session-gate --gate-name think-gate)"
 grep -q "sessions/$SID/think-gate.json" <<<"$sg" || fail "--session-gate should resolve the session's own think-gate ($sg)"
 
 # shared-root singleton for a DIFFERENT ticket must NOT be returned by --session-gate
-write_json "$WS/think-gate.json" "{\"ticket\": \"STRANGER\", \"status\": \"implementing\"}"
+write_json "$WS/think-gate.json" "{\"ticket\": \"STRANGER\", \"status\": \"implementing\", \"scope_paths\": [\"$WS\"]}"
 rm -f "$WS/sessions/$SID/think-gate.json"
 sg_none="$(resolver "$SID" --workspace "$WS" --session-gate --gate-name think-gate)"
 [[ "$sg_none" == "null" ]] || fail "--session-gate must NOT fall back to the shared root ($sg_none)"
@@ -109,7 +113,7 @@ grep -qi 'artifacts missing' <<<"$out" || fail "expected missing-artifacts diagn
 # --- KNOWN-BAD 2: known session, NO session gate, but a shared-root singleton
 # present -> must BLOCK (must not inherit the shared root). This is the bleed.
 rm -f "$WS/sessions/$SID/think-gate.json"
-write_json "$WS/think-gate.json" "{\"ticket\": \"STRANGER\", \"status\": \"implementing\"}"
+write_json "$WS/think-gate.json" "{\"ticket\": \"STRANGER\", \"status\": \"implementing\", \"scope_paths\": [\"$WS\"]}"
 if run_gate "$SID" "git checkout -b feature/empty-reporoot-bleed" >/dev/null 2>&1; then
   fail "known session with no gate must NOT inherit the shared-root singleton"
 fi
@@ -117,13 +121,13 @@ rm -f "$WS/think-gate.json"
 
 # --- KNOWN-BAD 3: another session's gate must not resolve for our session
 write_json "$WS/sessions/$OTHER_SID/think-gate.json" \
-  "{\"ticket\": \"OTHER\", \"sessionId\": \"$OTHER_SID\", \"session\": \"$OTHER_SID\", \"status\": \"implementing\"}"
+  "{\"ticket\": \"OTHER\", \"sessionId\": \"$OTHER_SID\", \"session\": \"$OTHER_SID\", \"status\": \"implementing\", \"scope_paths\": [\"$WS\"]}"
 if run_gate "$SID" "git checkout -b feature/empty-reporoot-cross" >/dev/null 2>&1; then
   fail "a different session's gate must not authorize our session"
 fi
 
 # --- KNOWN-BAD 4: unknown session (no CRAFT_SESSION_ID) + shared singleton -> BLOCK
-write_json "$WS/think-gate.json" "{\"ticket\": \"STRANGER\", \"status\": \"implementing\"}"
+write_json "$WS/think-gate.json" "{\"ticket\": \"STRANGER\", \"status\": \"implementing\", \"scope_paths\": [\"$WS\"]}"
 if run_gate_nosession "git checkout -b feature/empty-reporoot-unknown" >/dev/null 2>&1; then
   fail "unknown session on empty REPO_ROOT must not bind the no-repo shared singleton"
 fi
