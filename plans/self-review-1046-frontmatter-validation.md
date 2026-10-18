@@ -7,7 +7,9 @@ ticket_refs:
 
 ## Assumptions
 
-Pre-author-inventory: NONE
+Goal source: #1046 (ticket body, the 2026-10-18 amendment, and the approved design note https://github.com/siege-analytics/claude-configs-public/issues/1046#issuecomment-6252134552)
+Working as: software engineer, tech lead
+Pre-author-inventory: https://github.com/siege-analytics/claude-configs-public/issues/1046#issuecomment-6252824404 (the Fact Sheet, recorded on the ticket before authoring. It measures the data-shape contact (a full-key real-YAML sweep of all 198 build inputs) and the version-resolution contact (`python3` → /usr/bin 3.9.6 without PyYAML; Homebrew 3.14 with 6.0.3; CI setup-python 3.12 with no install step).)
 Investigate-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1046#issuecomment-6252824404
 Pre-mortem-artifact: plans/pre-mortem-1046-frontmatter-validation.md
 Hostile-review-artifact: plans/hostile-review-1046-frontmatter-validation.md
@@ -22,6 +24,28 @@ Additional assumptions:
 Ticket fitness: `bash scripts/discipline/evaluate-ticket.sh siege-analytics/claude-configs-public#1046` returns `PASS` (rc=0): sections Context, Goal, and Acceptance are present, the /think link is present, and the assumptions block is present. No exemption is claimed.
 
 ## Peer review
+
+Shelf checks:
+- **writing-code:** the validator fails closed on every error path. No exception is swallowed into a pass, PyYAML is never silently skipped, and failures name the file and reason.
+- **writing-tests:** fixtures use the real parser, and the missing-dependency cases block the import in a subprocess rather than mocking the layer under test. A presence-only mutation is detected.
+- **writing-claims:** every count below was observed in this work cycle on this branch, and installed proof is explicitly marked not performed.
+
+Gate evidence on head `c15b56a`, with PyYAML 6.0.3 on CPython 3.12.12:
+- `frontmatter_validation_test` → PASS
+- `skill_inventory_test` → PASS
+- `skill-inventory --check` → current
+- `build.py` → exit 0
+- `gate_contract_test` and `--check --probe` → PASS
+- `effective_policy_test` and `validate` → PASS
+- procedure, project, and package-selection tests → PASS (24 package-selection tests OK)
+- selected-registration examples, independent and siege → exit 0
+- `resident_delivery_test` → PASS
+- `package_generation_test` → PASS
+- `generated_source_authority_test` and `--check` → PASS
+- `review_risk_test` → PASS
+- `review_risk_policy.test.sh` → 12 passed
+- The post-commit replay of `50c1e92` passed 30 of 34 CI validate-job steps; the one failing step, 09, is covered by the step 09 re-run above on `c15b56a`.
+- `selected_registration_test` → 12 failures, identical at base `056b5337` (all "registration path contains symlink", from the macOS `/var` symlink). Pre-existing, not introduced here.
 
 - **Validator** (`bin/frontmatter_validation.py`):
   - It uses only the standard library plus PyYAML, imported lazily. It has no repository path assumptions and exposes a CLI (`--kind`, `--check-dependency`).
