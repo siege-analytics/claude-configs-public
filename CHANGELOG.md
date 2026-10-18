@@ -17,6 +17,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 
 ### Fixed
+- Direct Craft skills now fail inventory validation when `name` or `description` frontmatter is missing; `shape-space-audit` ships valid metadata in both flat and nested consumers (#1042).
 - Hook installation now retires managed native `hooks/git/pre-push-*` protocol readers from Claude event arrays while preserving unrelated operator hooks and intentional dual-use Git guards, preventing a stale pre-push reader from blocking every `PreToolUse:Bash` command (#1038).
 - Craft installer verification now treats exact `sessions/<session>/data/**` paths as immutable evidence storage rather than active instruction surfaces, while workspace roots, session roots, lookalikes, deeper aliases, and directory-symlink concealment remain fail-closed (#1035).
 - Epic #962 F4 review-risk coverage now follows the blocking enforcement dependency graph: shared decision helpers, the catalog infrastructure guard, agent-communication blockers, generated-source/kernel CI checkers, hook validation, authority discovery, and consumer runtime generation compute Tier C. Exhaustive fixtures cover modification, deletion, rename, and declared-Tier-B rejection while logging-only, unregistered, and generated-evidence exclusions remain documented below Tier C.

@@ -33,17 +33,49 @@ TEST_PARTS = {"_test", "tests", "test"}
 
 def tracked_files(root: Path) -> list[Path]:
     try:
-        raw = subprocess.check_output(["git", "-C", str(root), "ls-files", "-z"])
+        raw = subprocess.check_output(
+            ["git", "-C", str(root), "ls-files", "-z"],
+            timeout=30,
+            stderr=subprocess.DEVNULL,
+        )
         return [root / p.decode() for p in raw.split(b"\0") if p]
-    except (OSError, subprocess.SubprocessError):
+    except (OSError, subprocess.SubprocessError):  # noqa: writing-tests-5 best-effort fallback; exercised in bin/_test/skill_inventory_test.py
         return sorted(p for p in root.rglob("*") if p.is_file())
 
 
 def read_text(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
+    except (OSError, UnicodeDecodeError):  # noqa: writing-tests-5 best-effort malformed-source fallback; exercised in bin/_test/skill_inventory_test.py
         return ""
+
+
+def _yaml_scalar(value: str) -> str | None:
+    """Parse the dependency-free YAML scalar subset used by frontmatter."""
+    value = value.strip()
+    quote: str | None = None
+    escaped = False
+    for index, char in enumerate(value):
+        if escaped:
+            escaped = False
+            continue
+        if quote == '"' and char == "\\":
+            escaped = True
+            continue
+        if char in {"'", '"'}:
+            if quote is None:
+                quote = char
+            elif quote == char:
+                quote = None
+            continue
+        if char == "#" and quote is None and (index == 0 or value[index - 1].isspace()):
+            value = value[:index].rstrip()
+            break
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        return value[1:-1]
+    if value == "~" or value.lower() == "null":
+        return None
+    return value
 
 
 def frontmatter(text: str) -> dict[str, Any]:
@@ -61,7 +93,7 @@ def frontmatter(text: str) -> dict[str, Any]:
             index += 1
             continue
         key, value = line.split(":", 1)
-        value = value.strip().strip("\"'")
+        value = value.strip()
         if value in {">-", ">", "|-", "|"}:
             folded: list[str] = []
             index += 1
@@ -70,7 +102,7 @@ def frontmatter(text: str) -> dict[str, Any]:
                 index += 1
             result[key] = " ".join(part for part in folded if part)
             continue
-        result[key] = value
+        result[key] = _yaml_scalar(value)
         index += 1
     return result
 
@@ -201,6 +233,13 @@ def make_item(
     text = read_text(path)
     metadata = frontmatter(text)
     rel = path.relative_to(root).as_posix()
+    if kind in {"skill", "skill-router", "shelf-router", "reference-shelf", "project-skill"}:
+        missing = [
+            field for field in ("name", "description")
+            if not (metadata.get(field) or "").strip()
+        ]
+        if missing:
+            raise ValueError(f"skill frontmatter missing {', '.join(missing)}: {rel}")
     generated: list[str] = []
     return {
         "slug": slug,

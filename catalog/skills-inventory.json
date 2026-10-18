@@ -11061,11 +11061,11 @@
     },
     {
       "canonical_source": "skills/shape-space-audit/SKILL.md",
-      "characters": 11547,
-      "content_sha256": "dca24ef36c4599c7f42f428bfc889609c758aafcf6890f3a2433108cbca17caa",
-      "description": "unknown",
-      "estimated_tokens": 2887,
-      "frontmatter_name": "unknown",
+      "characters": 11816,
+      "content_sha256": "b7986d2fce16ab15e38da6953d40fd190abb8346a740f8d348e425f1ee2c864d",
+      "description": "Audit scanners, parsers, linters, hooks, and coverage claims against the external syntax and data shapes they model. Requires rotating review frames and executable corpus evidence rather than context-free token searches.",
+      "estimated_tokens": 2954,
+      "frontmatter_name": "shape-space-audit",
       "generated_outputs": [
         "dist/nested/skills/shape-space-audit",
         "dist/flat/skills/shape-space-audit"
@@ -11076,6 +11076,7 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/design-note-pr-bc-combined.md",
+        "plans/self-review-1042-skill-frontmatter.md",
         "plans/self-review-pr-bc.md",
         "skills/_writing-code-rules.md",
         "skills/_writing-rules-rules.md",
@@ -11085,7 +11086,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 89,
+      "lines": 94,
       "owner": [
         "unknown"
       ],
@@ -11093,10 +11094,10 @@
       "quality": {
         "completeness": 20,
         "cross_references": 100.0,
-        "grade": "F",
+        "grade": "D",
         "provenance": 20,
-        "structure": 40.0,
-        "total": 45.0
+        "structure": 100.0,
+        "total": 60.0
       },
       "rule_definitions": [],
       "slug": "shape-space-audit",
@@ -12048,9 +12049,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2654398,
+    "characters": 2654667,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 663678,
+    "estimated_tokens": 663745,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12062,8 +12063,8 @@
     },
     "quality_grade_counts": {
       "C": 6,
-      "D": 18,
-      "F": 133,
+      "D": 19,
+      "F": 132,
       "unknown": 41
     },
     "quality_low_grade_count": 151,
@@ -12071,7 +12072,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1258004
+      "unclassified": 1258273
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12083,7 +12084,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 314544
+      "unclassified": 314611
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

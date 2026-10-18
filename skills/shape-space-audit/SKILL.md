@@ -1,3 +1,8 @@
+---
+name: shape-space-audit
+description: "Audit scanners, parsers, linters, hooks, and coverage claims against the external syntax and data shapes they model. Requires rotating review frames and executable corpus evidence rather than context-free token searches."
+---
+
 # Shape-space audit
 
 This skill is the authoritative discipline for authoring or reviewing code that models an external shape space. It complements `self-review`'s adversarial shape audit subsection and `hostile-review`'s Category 10 (scanner-shape coverage) by defining the vocabulary those surfaces consume.
