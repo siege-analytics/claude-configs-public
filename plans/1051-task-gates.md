@@ -94,3 +94,15 @@ Verification: `git log -1 --diff-filter=A --follow --format=%H -- plans/1051-tas
 | Transient provider disconnects | Work interrupted before commit, not an implementation failure | Resumed from clone; full rebuild and all suites re-run |
 
 No commits were amended or deployed during these cycles. Check/rework durations were not measured; no cost ratio is asserted.
+
+## Hosted CI inventory follow-up
+
+Hosted run 39176581026 rejected the initial implementation head's inventory at the generated-source-authority check. Local reproduction after that commit also fails under Python 3.14.6, so this is not interpreter-sensitive output. Regeneration with the existing Python 3.12.12 runtime and Python 3.14.6 produced byte-identical JSON.
+
+**Cause:** the inventory generator discovers evidence inputs with `git ls-files`. The initial regeneration and local freshness checks ran before the new test/writer files were staged, so those untracked files were absent from reference/test-evidence scanning. Once committed, the clean CI checkout included them and expected extra evidence-list entries. This was a verification-order error, not a source-authority check to weaken.
+
+**Correction:** regenerate using Python 3.12 after all source files are tracked; preserve the added reference/test-evidence entries. Re-run the generator, authority, build and policy checks against that file set, then repeat freshness checks after the additive commit and observe hosted CI on its new SHA. No runtime implementation or workflow checks are relaxed. The original verification JSON remains the original implementation snapshot; follow-up logs are clone-local under `.verification/1051/ci-followup/`.
+
+**Focused review:** only generated evidence and this diagnosis change. Existing source hashes are unchanged. Generator tests and post-commit freshness are the relevant regression checks; independent exact-SHA review still applies to the new PR head. No installation, deployment or activation is involved.
+
+Follow-up verification: all 46 prior suites and 13 validators passed with Python 3.12.12. The first local follow-up runner scheduled validators concurrently with rebuilding suites, causing a transient missing-kernel read; a completed rebuild followed by sequential validators (the CI ordering) passed. The 28-test acceptance wrapper also passed. No executable source changed.
