@@ -125,6 +125,9 @@ find . {-delete,-print}
 sort {-o,/etc/x} f
 find . ${X:--delete}
 find . $'-delete'
+find . $"-delete"
+sort $"-o" /etc/x f
+date -us 2020-01-01
 find . *
 file -C -m magic
 env bash evil.sh
@@ -168,7 +171,8 @@ echo "== legacy-safelist reads stay admitted =="
 for c in 'tree -L 2' 'file README.md' 'xxd README.md' 'cat f | wc -l' 'printenv HOME' 'cat f 2>&1' \
          'cat f &>/dev/null' 'git log 2>&1 | head' 'ls 2>/dev/null; echo ok' "gh api x --jq '{a,b}'" \
          'gh api repos/o/r/contents/f.py?ref=develop -q .content' 'echo "${X:-U}"; git rev-parse HEAD' \
-         'cd /tmp && sed -n 1,5p /etc/hostname'; do expect allow "$O" "$c"; done
+         'cd /tmp && sed -n 1,5p /etc/hostname' 'date -Iseconds' 'date -Ins' 'date -u -d @1' 'sort -t, -k2 f' \
+         'grep -E "a$" /etc/hostname'; do expect allow "$O" "$c"; done
 echo "== the classifier itself never proves env/printenv (they print credentials) =="
 for c in 'env' 'printenv' 'printenv HOME'; do
     if python3 "$ROOT/hooks/lib/read-only-command.py" "$c"; then FAIL=$((FAIL + 1)); echo "  FAIL  classifier proved: $c"; else PASS=$((PASS + 1)); fi

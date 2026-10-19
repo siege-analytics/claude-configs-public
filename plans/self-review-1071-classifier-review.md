@@ -55,3 +55,29 @@ Project-contribution: closes no-gate command-execution and write paths in every 
 
 - `read_allowlist`: 178 cases; 46 fail against `develop`.
 - Replay: 2,845 commands. No-gate state: 194 newly allowed (all `cd` compounds), 37 newly blocked. Designing state: 0 real changes.
+
+## Second CodeRabbit pass on #1071 (follow-up commit)
+
+CodeRabbit found two more issues once #1072 reached the release PR.
+- **`short_has` read option arguments as option letters.** `date -Iseconds` was vetoed as `-s`, a fail-closed false block. Each call now stops scanning at the letters that take an argument:
+  - git grep: `efABCm`;
+  - fetch/ls-remote: `jo`;
+  - log/diff/show: `nSGLUMCB`;
+  - gh api: `Hpqt`;
+  - sort: `kStT`;
+  - yq: `poI`;
+  - date: `dfIr`;
+  - sed: `efl`;
+  - file: `mfFeP`;
+  - tree: `LPI`;
+  - xxd: `cglos`.
+- **Unquoted `$"…"` (a locale string) was not treated as an expansion.** Bash drops the `$`, so `find . $"-delete"` ran `find . -delete` with no gate. It now counts as an expansion; a guarded verb fed one is "unproven".
+
+Evidence:
+- `read_allowlist`: 186/186. New must-block cases: `find . $"-delete"`, `sort $"-o" /etc/x f`, `date -us …`. New allow cases: `date -Iseconds`, `date -Ins`, `date -u -d @1`, `sort -t, -k2 f`, `grep -E "a$" f`.
+- `universal_mutation_gate`: 29/29.
+- `safelist`: 60/60.
+- `831` and `empty_reporoot`: PASS.
+- `review_risk_policy`: 12/12.
+- `review_risk_test`: PASS.
+- Replay of 2,845 commands, develop 41af50a vs this branch: 0 verdict changes in either gate state.
