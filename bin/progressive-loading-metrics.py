@@ -34,7 +34,7 @@ def build()->dict:
   "explicit_overflow":inject(overflow_prompt)}
  legacy_root=len((ROOT/"RESOLVER.md").read_text()); skill_resolver=len((ROOT/"skills/RESOLVER.md").read_text()); kernel=len((ROOT/"skills/KERNEL.md").read_text())
  rules=len((ROOT/"dist/RULES_BUNDLE.md").read_text()) if (ROOT/"dist/RULES_BUNDLE.md").is_file() else 0
- if max(injected.values())>=12000:raise ValueError(f"progressive injection exceeds 12k: {injected}")
+ if max(injected.values())>=10000:raise ValueError(f"progressive injection exceeds the 10k inline limit: {injected}")
  if counts["generic"]!=0:raise ValueError("generic fixture must remain kernel-only")
  if fixtures["explicit_overflow"]["state"]!="over-budget" or counts["explicit_overflow"]!=0:raise ValueError("explicit overflow must reject the entire load set")
  return {"schema_version":1,"characters":{"legacy_root_resolver":legacy_root,"legacy_rules_bundle":rules,"skill_resolver":skill_resolver,"kernel":kernel,"injected":injected},"selection_limits":{"items":12,"characters":80000,"estimated_tokens":20000},"fixture_selected_counts":counts,"fixture_selected_content":selected_content,"fixture_states":{k:v["state"] for k,v in fixtures.items()}}
