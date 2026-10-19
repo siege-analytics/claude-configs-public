@@ -339,13 +339,36 @@ fi
 if [[ "$REDIRECT_SCAN" =~ $REDIRECT_INDICATOR ]]; then
     COMPOUND_MUTATION=true
 fi
+# The indicator above skips a '>' preceded by a digit or '&' so that 2>&1 and
+# 2>/dev/null stay reads, which also let `2>/tmp/x`, `1>f` and `&>f` write
+# unnoticed (claude-configs-public#1071 review). Drop the provably safe sinks,
+# then any fd-prefixed redirect left is a write.
+FD_SCAN="$(printf '%s' "$REDIRECT_SCAN" | sed -E 's#([0-9]+|&)?>>?[[:space:]]*/dev/null([[:space:];|&)]|$)#\2#g; s#[0-9]*>&[0-9-]##g')"
+if [[ "$FD_SCAN" =~ (^|[[:space:]\;\|\&\(])([0-9]+|\&)\>  ]]; then
+    COMPOUND_MUTATION=true
+fi
+
+# --- Positive read classifier (lib/read-only-command.py) ---
+# Exit 0: proven read. Exit 3: a known verb used so that it writes or runs a
+# program (`rg --pre`, `gh api -iXDELETE`, `git fetch --upload-pack=`, a
+# guarded verb fed an unquoted expansion). A veto is a mutation: the regex
+# safelist below and the designing-state admissions further down must not
+# admit it (claude-configs-public#1071 review). Exit 4: a compound command the
+# classifier cannot prove; the first-word safelist must not admit it either,
+# since `cat f; bash evil.sh` starts with a read.
+READ_VERDICT=1
+if [[ "$COMPOUND_MUTATION" == "false" ]]; then
+    python3 "$HOOK_DIR/../lib/read-only-command.py" "$COMMAND" 2>/dev/null
+    READ_VERDICT=$?
+    [[ $READ_VERDICT -eq 3 ]] && COMPOUND_MUTATION=true
+fi
 
 # --- Match against safelist (only if no mutation indicator found) ---
 if [[ "$COMPOUND_MUTATION" == "false" ]]; then
     # The safelist regexes match a whole string, so on a multi-line command
     # a read on line one admitted anything after it (`cat f<newline>. ./x`,
     # electinfo#349 re-review). Multi-line commands go to the newline-aware classifier.
-    if [[ "$COMMAND" != *$'\n'* ]]; then
+    if [[ "$COMMAND" != *$'\n'* && $READ_VERDICT -ne 4 ]]; then
         for pattern in "${SAFE_PATTERNS[@]}"; do
             if [[ "$COMMAND" =~ $pattern ]]; then
                 exit 0
@@ -358,7 +381,7 @@ if [[ "$COMPOUND_MUTATION" == "false" ]]; then
     # (positive allowlist, lib/read-only-command.py). Anything it does not
     # recognise falls through to the gate as before, so missing an indicator
     # is never enough on its own (electinfo_claude_skills#349 review).
-    if python3 "$HOOK_DIR/../lib/read-only-command.py" "$COMMAND" 2>/dev/null; then
+    if [[ $READ_VERDICT -eq 0 ]]; then
         exit 0
     fi
 fi

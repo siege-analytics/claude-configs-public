@@ -2,7 +2,12 @@
 """Positive read-only classifier for the electinfo mutation gate.
 
 Exit 0 when every simple command in argv[1] is a known read with read-safe
-arguments; exit 1 otherwise. This is an allowlist: anything it does not
+arguments. Exit 3 (veto) when a known verb is used in a way that writes or runs
+a program (e.g. `rg --pre`, `sort -o`, `env CMD`); the gate then treats the command as a mutation, so neither the
+regex safelist nor a designing gate can admit it. Exit 4 (unproven) for a
+compound command (`;` `&&` `||` `|`) not proven read-only, or a guarded verb fed
+an unquoted expansion: the first-word safelist must not admit it, since `cat f;
+bash evil.sh` starts with a read. Exit 1 otherwise (unknown). This is an allowlist: anything it does not
 recognise is "not proven read-only" and the gate falls back to its normal
 behaviour. It never authorizes a mutation; it only spares a read the cost of
 a task gate (siege#1051, #1057; electinfo#348).
@@ -13,23 +18,41 @@ import sys
 
 # Bare read verbs whose arguments cannot make them write.
 PLAIN = {
-    "ls", "cat", "head", "tail", "wc", "grep", "egrep", "fgrep", "rg", "which", "type", "file",
-    "stat", "du", "df", "ps", "pgrep", "printenv", "echo", "printf", "pwd", "id", "whoami",
+    "ls", "cat", "head", "tail", "wc", "grep", "egrep", "fgrep", "which", "type",
+    "stat", "du", "df", "ps", "pgrep", "echo", "printf", "pwd", "id", "whoami",
     "uname", "cut", "tr", "diff", "cmp", "comm", "sha256sum", "sha1sum",
     "md5sum", "base64", "od", "nl", "tac", "rev", "column", "true", "false", "test", "[", "sleep",
     "readlink", "realpath", "basename", "dirname", "seq", "expr", "strings",
     "hexdump", "getent", "free", "uptime", "lsof", "nproc", "findmnt", "lsblk", "ss", "dig", "host",
-    "nslookup", "ping",
+    "nslookup", "cd",
 }
+# Verbs whose options can write or run programs: their arguments must reach the
+# per-tool check exactly as bash will see them, so no unquoted expansion.
+GUARDED = {"sed", "find", "sort", "uniq", "jq", "yq", "date", "rg", "git", "gh", "kubectl", "docker",
+           "timeout", "nice", "time"}
 SHELL_WORDS = {"do", "done", "then", "else", "fi", "!", "{", "}", "while", "until", "if", "elif"}
 GIT_READ = {"log", "show", "diff", "status", "rev-parse", "rev-list", "ls-files", "ls-remote",
             "ls-tree", "describe", "blame", "grep", "cat-file", "for-each-ref", "merge-base",
-            "shortlog", "reflog", "show-ref", "name-rev", "count-objects", "whatchanged"}
+            "shortlog", "show-ref", "name-rev", "count-objects", "whatchanged"}
 GH_READ_VERBS = {"view", "list", "checks", "diff", "status"}
 KUBECTL_READ = {"get", "describe", "logs", "top", "explain", "version", "api-resources", "api-versions",
                 "cluster-info", "events"}
 DOCKER_READ = {"ps", "images", "logs", "inspect", "version", "info", "top", "port", "history"}
 SAFE_REDIRECT = re.compile(r"^(?:[12]?>{1,2}/dev/null|2>&1|>&2|1>&2)$")
+
+
+def long_opt(a, *names):
+    """True when `a` is any unambiguous prefix (3+ chars) of one of `names`,
+    with or without =VALUE: getopt_long accepts abbreviations."""
+    if not a.startswith("--"):
+        return False
+    n = a.split("=", 1)[0]
+    return len(n) >= 3 and any(full.startswith(n) for full in names)
+
+
+def short_has(a, letters):
+    """True when `a` is a short-option cluster containing any of `letters`."""
+    return a.startswith("-") and not a.startswith("--") and len(a) > 1 and bool(set(a[1:]) & set(letters))
 
 
 def git_ok(args):
@@ -39,7 +62,15 @@ def git_ok(args):
     if i >= len(args) or args[i].startswith("-"):
         return False
     sub, rest = args[i], args[i + 1:]
-    if any(a.startswith(("--output", "-o")) for a in rest) and sub in {"log", "diff", "show"}:
+    # Options that run a program or write a file, for any subcommand.
+    if any(long_opt(a, "--upload-pack", "--receive-pack", "--exec", "--open-files-in-pager", "--output")
+           for a in rest):
+        return False
+    if sub == "grep" and any(short_has(a, "O") for a in rest):
+        return False   # -O<prog> runs <prog> on the matches
+    if sub in {"ls-remote", "fetch"} and any(short_has(a, "u") for a in rest):
+        return False   # -u <cmd> is --upload-pack
+    if sub in {"log", "diff", "show"} and any(short_has(a, "o") for a in rest):
         return False
     if sub in GIT_READ:
         return True
@@ -66,10 +97,9 @@ def gh_ok(args):
     if len(args) >= 2 and args[0] in {"pr", "issue", "run", "repo", "release", "workflow", "label", "project", "search"}:
         return args[1] in GH_READ_VERBS or args[0] == "search"
     if args[:1] == ["api"]:
-        bad = {"-X", "--method", "-f", "-F", "--field", "--raw-field", "--input"}
-        if any(a in bad or a.startswith(("-X", "--method=", "-f", "-F", "--field=", "--raw-field=", "--input="))
-               for a in args[1:]):
-            return False
+        for a in args[1:]:
+            if long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF"):
+                return False   # pflag accepts clusters: -iXDELETE is -i -X DELETE
         return not (len(args) > 1 and args[1] == "graphql")   # graphql may carry a mutation body
     return args[:2] in (["auth", "status"],)
 
@@ -99,12 +129,20 @@ def simple_ok(words):
     if w == "for":   # for NAME in WORDS  (the loop body is a later simple command)
         return True
     if w in {"timeout", "nice", "time"}:
-        rest = [a for a in args if not re.match(r"^-|^[0-9.]+[smhd]?$", a)]
+        # Only `timeout DURATION CMD...`, `nice CMD...`, `time CMD...`: no wrapper
+        # options, and the wrapped command is checked exactly as given.
+        rest = args
+        if w == "timeout":
+            if not rest or re.fullmatch(r"[0-9.]+[smhd]?", rest[0]) is None:
+                return False
+            rest = rest[1:]
+        if not rest or rest[0].startswith("-"):
+            return False
         return simple_ok(rest)
     if w in PLAIN:
         return True
     if w == "sort":
-        return not any(a in {"-o", "--output"} or a.startswith(("-o", "--output=")) for a in args)
+        return not any(long_opt(a, "--output", "--compress-program") or short_has(a, "o") for a in args)
     if w == "uniq":
         return len([a for a in args if not a.startswith("-")]) <= 1   # a second operand is an output file
     if w == "jq":
@@ -113,9 +151,11 @@ def simple_ok(words):
         opts = [a for a in args if a.startswith("-")]
         return all(o in flags for o in opts) and len([a for a in args if not a.startswith("-")]) <= 2
     if w == "yq":
-        return not any(a in {"-i", "--inplace"} or re.match(r"^-[A-Za-z]*i", a) for a in args)
+        return not any(long_opt(a, "--inplace", "--split-exp") or short_has(a, "is") for a in args)
     if w == "date":
-        return not any(a in {"-s", "--set"} or a.startswith("--set") for a in args)
+        return not any(long_opt(a, "--set") or short_has(a, "s") for a in args)
+    if w == "rg":
+        return not any(long_opt(a, "--pre", "--pre-glob") for a in args)   # --pre CMD runs CMD per file
     if w == "sed":
         return sed_ok(args)
     if w == "find":
@@ -130,9 +170,110 @@ def simple_ok(words):
                                                                    ["config", "current-context"]))
     if w == "docker":
         return bool(args) and args[0] in DOCKER_READ
+    return False   # env/printenv are not admitted: they print credentials into the transcript
+
+
+EXPANDS = set("$_{(@*#?!-0123456789'") | set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+
+def segment_expansions(command):
+    """Split `command` at unquoted ; & | ( ) and newlines and return, for each
+    simple command, (text, expansions): what bash will expand into extra or
+    option-shaped words. That is `$` starting a real expansion outside single
+    quotes (word splitting / ${X:--delete} / $'..'; a bare `$` before `"` or at a
+    word's end is literal), a glob character that STARTS an unquoted word (only
+    then can it match `-delete`), and brace expansion in unquoted text. Quoted
+    text is literal, so `--jq '{a,b}'` and `contents/f.py?ref=x` are not."""
+    segs, cur, bare, found, q, i, word_start = [], [], [], set(), None, 0, True
+
+    def close():
+        if re.search(r"\{[^{}\s]*(,|\.\.)[^{}\s]*\}", "".join(bare)):
+            found.add("{")
+        segs.append(("".join(cur), set(found)))
+
+    while i < len(command):
+        c = command[i]
+        nxt = command[i + 1] if i + 1 < len(command) else ""
+        if q is None and c in ";&|()\n":
+            close()
+            cur, bare, found, word_start = [], [], set(), True
+            i += 1
+            continue
+        cur.append(c)
+        if q == "'":
+            if c == "'":
+                q = None
+            bare.append("x")
+            word_start = False
+        elif q == '"':
+            if c == "\\":
+                cur.append(nxt)
+                i += 1
+            elif c == '"':
+                q = None
+            elif c == "$" and nxt in EXPANDS and nxt != "'":
+                found.add("$")
+            bare.append("x")
+            word_start = False
+        else:
+            if c == "\\":
+                cur.append(nxt)
+                i += 1
+                bare.append("x")
+                word_start = False
+            elif c in "'\"":
+                q = c
+                bare.append("x")
+                word_start = False
+            else:
+                if c == "$" and nxt in EXPANDS:
+                    found.add("$")
+                elif c in "*?[" and word_start:
+                    found.add(c)
+                bare.append(c)
+                word_start = c in " \t<>"
+        i += 1
+    close()
+    return segs
+
+
+def lead_verbs(text):
+    """The verb a simple command runs, plus the one a wrapper runs."""
+    try:
+        words = shlex.split(text)
+    except ValueError:
+        return {"?"}
+    words = [w for w in words if w not in SHELL_WORDS]
+    out = set()
+    while words:
+        out.add(words[0])
+        if words[0] in {"timeout", "nice", "time"}:
+            words = words[2:] if words[0] == "timeout" else words[1:]
+            continue
+        break
+    return out
+
+
+# Verbs only the legacy regex safelist admits, with the options that make them
+# write or run a program. The classifier never proves these read-only; it only
+# vetoes the unsafe forms so the safelist cannot admit them.
+VETO_ONLY = {"env", "file", "tree", "xxd", "ag", "ack"}
+
+
+def veto_only_unsafe(w, args):
     if w == "env":
-        return not args
+        return bool(args)   # env OPTS / env NAME=V CMD runs a program
+    if w == "file":
+        return any(long_opt(a, "--compile") or short_has(a, "C") for a in args)
+    if w == "tree":
+        return any(short_has(a, "o") for a in args)   # -o FILE writes FILE
+    if w == "xxd":
+        return any(short_has(a, "r") for a in args)   # -r, -revert: patch a file back
+    if w in {"ag", "ack"}:
+        return any(long_opt(a, "--pager") for a in args)   # --pager CMD runs CMD
     return False
+
+
 
 
 def main(command):
@@ -140,6 +281,12 @@ def main(command):
         return 1
     if re.search(r"\$\(|`|<\(|>\(|<<", command):
         return 1
+    # A verb whose options can write must not receive anything bash will expand
+    # into an option: $VAR / ${X:--delete} / $'..' / a glob matching `-delete` /
+    # brace expansion. Not provable either way, so "unproven" (4), never 0.
+    for text, exp in segment_expansions(command):
+        if exp and lead_verbs(text) & (GUARDED | VETO_ONLY | {"?"}):
+            return 4
     if "\n" in command.strip("\n") or "\r" in command:
         return 1   # multi-line commands are not proven read-only (siege#1057 safelist policy)
     try:
@@ -153,6 +300,7 @@ def main(command):
     except ValueError:
         return 1
     words = []
+    compound = False
     i = 0
     while i < len(tokens):
         t = tokens[i]
@@ -161,8 +309,9 @@ def main(command):
         if t in {";", "&&", "||", "|", "&", ";;"}:
             if t == "&":
                 return 1   # backgrounding is not investigation
+            compound = True
             if not simple_ok(words):
-                return 1
+                return compound_verdict(verdict(words), True)
             words = []
         elif set(t) <= set("<>&|"):
             # Redirection operator: the operator plus its target must be a safe sink.
@@ -180,7 +329,58 @@ def main(command):
         else:
             words.append(t)
         i += 1
-    return 0 if simple_ok(words) else 1
+    return 0 if simple_ok(words) else compound_verdict(verdict(words), compound)
+
+
+def compound_verdict(rc, compound):
+    return 4 if rc == 1 and compound else rc
+
+
+def verdict(words):
+    """3 when the failing simple command carries an option known to write or run
+    a program; else 1 (merely not proven). Unproven is not a mutation: a known
+    verb outside the allowlist (`git hash-object`) must not be blocked harder
+    than an unknown one."""
+    return 3 if unsafe([x for x in words if x not in SHELL_WORDS]) else 1
+
+
+def unsafe(words):
+    if not words:
+        return False
+    w, args = words[0], words[1:]
+    if w in {"timeout", "nice", "time"}:
+        rest = args[1:] if w == "timeout" else args
+        return unsafe(rest)
+    if w in VETO_ONLY:
+        return veto_only_unsafe(w, args)
+    if w == "rg":
+        return any(long_opt(a, "--pre", "--pre-glob") for a in args)
+    if w == "sort":
+        return any(long_opt(a, "--output", "--compress-program") or short_has(a, "o") for a in args)
+    if w == "yq":
+        return any(long_opt(a, "--inplace", "--split-exp") or short_has(a, "is") for a in args)
+    if w == "date":
+        return any(long_opt(a, "--set") or short_has(a, "s") for a in args)
+    if w == "sed":
+        return any(long_opt(a, "--in-place") or short_has(a, "i") for a in args)
+    if w == "find":
+        return not find_ok(args)
+    if w == "uniq":
+        return len([a for a in args if not a.startswith("-")]) > 1
+    if w == "git":
+        if any(long_opt(a, "--upload-pack", "--receive-pack", "--exec", "--open-files-in-pager", "--output")
+               for a in args):
+            return True
+        i = 0
+        while i < len(args) and args[i] in {"-C", "-c"}:
+            i += 2
+        sub = next((a for a in args[i:] if not a.startswith("-")), "")
+        return (sub == "grep" and any(short_has(a, "O") for a in args)
+                or sub in {"ls-remote", "fetch"} and any(short_has(a, "u") for a in args))
+    if w == "gh" and args[:1] == ["api"]:
+        return any(long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF")
+                   for a in args[1:])
+    return False
 
 
 if __name__ == "__main__":

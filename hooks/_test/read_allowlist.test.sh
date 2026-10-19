@@ -3,7 +3,8 @@
 # positive allowlist (hooks/lib/read-only-command.py) does not prove falls
 # through to the gate. Every reproducer from the hostile reviews of the
 # electinfo port (electinfo/electinfo_claude_skills#349) is a must-block case
-# with no gate. Ref: #1057, #1051.
+# with no gate, as is every CodeRabbit finding on the v3.5.69 release PR (#1071).
+# Ref: #1057, #1051.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
@@ -24,7 +25,7 @@ expect() {  # expect <allow|block> <cwd> <command>
 O="$T/home"
 echo "== proven reads pass with no gate =="
 for c in 'which lilypond' 'sed -n 1,20p /etc/hostname' 'git -C /tmp log --oneline -3' \
-         'for f in a b; do echo $f; done' 'git fetch origin --quiet' \
+         'for f in a b; do echo $f; done' 'rg -n TODO src' 'git grep -n TODO' 'git log -u -1' 'timeout 30 git status' 'nice ls -la' 'sort -k2,2 f' "find . -name '*.md'" 'ls *.md' 'echo "$HOME"' 'date -u +%F' 'git fetch origin --quiet' \
          'ls -la /tmp | head -5' 'grep -rn foo . 2>/dev/null | wc -l' 'gh pr view 12 --json state' \
          'gh api repos/o/r/pulls/1' 'find . -maxdepth 2 -name "*.md" | sort' \
          'cd /tmp && git status -sb' 'jq .a f.json'; do expect allow "$O" "$c"; done
@@ -98,6 +99,52 @@ touch notes.txt
 python3 -m venv venv
 pip install requests
 sort -o /etc/x f
+rg --pre sh . scripts/
+rg --pre=./tool x .
+git reflog expire --expire=now --all
+git reflog delete HEAD@{1}
+git grep -Orm -l x
+git grep --open-files-in-pager=rm x
+git ls-remote --upload-pack=touch /tmp/r
+git ls-remote -u touch .
+git fetch --upload-pack=x /tmp/r
+gh api -iXDELETE repos/o/r/issues/1
+gh api -if title=x repos/o/r/issues
+gh api --meth=POST repos/o/r
+timeout 5 sort -o /etc/x f
+nice yq -i '.a=1' f.yaml
+time find . -fprint /tmp/out
+time find . -delete
+timeout -s KILL 5 ls
+sort --out=/etc/x f
+sort -ro /etc/x f
+sort --compress-program=sh f
+date --se=2020-01-01
+yq -s '"/tmp/" + .name' f.yaml
+find . {-delete,-print}
+sort {-o,/etc/x} f
+find . ${X:--delete}
+find . $'-delete'
+find . *
+file -C -m magic
+env bash evil.sh
+env X=1 python3 evil.py
+env -S "bash evil.sh"
+tree -o /etc/x .
+xxd -r a /etc/b
+ag --pager=sh x
+cat f; bash evil.sh
+ls && python3 evil.py
+cat f | sh
+echo x; bash e.sh
+grep x f || node e.js
+ls; rg --pre sh x .
+cat f 2>/tmp/x
+cat f 2>> /tmp/x
+head f 1>/tmp/x
+cat f &> /tmp/x
+cat f &>>/tmp/x
+cat f 2>/dev/null/../../tmp/x
 sed -n '1,2p' -i README.md
 sed -n '1,2p' README.md -i
 curl -s https://example.test
@@ -117,6 +164,15 @@ expect block "$O" $'cat r\n. ./evil.sh'
 expect block "$O" $'ls \\\n; rm -rf /x'
 expect block "$O" $'ls\nwc -l /etc/hostname'   # multi-line is never proven (safelist policy)
 expect block "$O" $'for f in a b\ndo\n  echo $f\ndone'
+echo "== legacy-safelist reads stay admitted =="
+for c in 'tree -L 2' 'file README.md' 'xxd README.md' 'cat f | wc -l' 'printenv HOME' 'cat f 2>&1' \
+         'cat f &>/dev/null' 'git log 2>&1 | head' 'ls 2>/dev/null; echo ok' "gh api x --jq '{a,b}'" \
+         'gh api repos/o/r/contents/f.py?ref=develop -q .content' 'echo "${X:-U}"; git rev-parse HEAD' \
+         'cd /tmp && sed -n 1,5p /etc/hostname'; do expect allow "$O" "$c"; done
+echo "== the classifier itself never proves env/printenv (they print credentials) =="
+for c in 'env' 'printenv' 'printenv HOME'; do
+    if python3 "$ROOT/hooks/lib/read-only-command.py" "$c"; then FAIL=$((FAIL + 1)); echo "  FAIL  classifier proved: $c"; else PASS=$((PASS + 1)); fi
+done
 echo "== quoted ampersands are not backgrounding =="
 expect allow "$O" "grep 'foo & bar' /etc/hostname"
 expect allow "$O" "git log --grep='fix & feat' -3"
