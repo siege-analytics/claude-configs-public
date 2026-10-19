@@ -1,0 +1,158 @@
+#!/bin/bash
+# Native git commit-msg hook for claude-configs-public.
+#
+# Enforces Self-Review trailers and ticket references on all commits
+# regardless of execution environment (Craft Agent, Claude Code, manual).
+#
+# This is the Layer 3 enforcement referenced in self-review/SKILL.md's
+# "Cross-environment enforcement" section. It fires for all push sources
+# because it is a native git hook, not a Claude Code PreToolUse hook.
+#
+# Bypass: git commit --no-verify (visible, intentional)
+# Escape: [no-review] in commit message for genuinely trivial commits
+#
+# Install: git config core.hooksPath .githooks
+# Or run: bin/install-hooks.sh
+#
+# Ref: claude-configs-public#355
+
+set -euo pipefail
+
+# Selected registration supplies all policy authority inputs as a host binding.
+# The remaining body is the retained repository compatibility wrapper.
+if [[ "${1:-}" == "--selected" && $# -ge 2 ]]; then
+    shift
+    SELECTED_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+    exec python3 -B "$SELECTED_ROOT/bin/native_git.py" commit-msg -- "$@"
+fi
+
+[[ $# -eq 1 ]] || { echo "commit-msg: expected one message file" >&2; exit 2; }
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(cat -- "$COMMIT_MSG_FILE")
+
+# Parse trailers from the commit message.
+TRAILERS=$(echo "$COMMIT_MSG" | git interpret-trailers --parse 2>/dev/null || true)
+
+# Machine-compute the minimum review tier from staged paths. A declaration may
+# escalate but never downgrade. Fail closed when the policy/helper is absent.
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+HOOK_ROOT=$(cd "$(dirname "$0")/.." 2>/dev/null && pwd || true)
+RISK_SCRIPT="${CLAUDE_CONFIG_ROOT:-$HOOK_ROOT}/bin/review-risk.py"
+[[ -f "$RISK_SCRIPT" ]] || RISK_SCRIPT="$REPO_ROOT/bin/review-risk.py"
+TIER_VALUE=$(echo "$TRAILERS" | grep -i '^Review-Tier:' | sed 's/^[^:]*:[[:space:]]*//' | tr '[:lower:]' '[:upper:]')
+if [[ ! -f "$RISK_SCRIPT" || ! "$TIER_VALUE" =~ ^[ABC]$ ]]; then
+    echo "BLOCKED: add exactly one Review-Tier: A|B|C trailer; risk classifier unavailable or declaration invalid." >&2
+    exit 1
+fi
+PROTECTED_RE='^(bin/review-risk\.py|catalog/review-risk-policy\.json|\.githooks/commit-msg|hooks/git/(self-review|pre-push-self-review)\.sh)$'
+if git diff --cached --no-renames --name-only --diff-filter=ACDMRT | grep -Eq "$PROTECTED_RE" && [[ "$TIER_VALUE" != "C" ]]; then
+    echo "BLOCKED: review-policy bootstrap files require Review-Tier: C independently of the classifier." >&2
+    exit 1
+fi
+if ! RISK_RESULT=$(python3 "$RISK_SCRIPT" --repo "$REPO_ROOT" --staged --declared "$TIER_VALUE" 2>&1); then
+    echo "BLOCKED: review tier downgrade or classifier failure: $RISK_RESULT" >&2
+    exit 1
+fi
+
+# Ticket traceability remains universal, including Tier A and [no-review].
+if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
+    echo "BLOCKED: Missing ticket reference. Include #NNN or [no-ticket]." >&2
+    exit 1
+fi
+
+# The legacy escape is valid only for computed Tier A. Tier B/C can never
+# suppress review by adding a message token.
+if echo "$COMMIT_MSG" | grep -qF '[no-review]'; then
+    if [[ "$TIER_VALUE" == "A" ]]; then exit 0; fi
+    echo "BLOCKED: [no-review] is permitted only for validated Tier A changes." >&2
+    exit 1
+fi
+
+# Check for Self-Review trailer
+if ! echo "$TRAILERS" | grep -qi '^Self-Review:'; then
+    echo ""
+    echo "BLOCKED: Missing Self-Review: trailer."
+    echo ""
+    echo "Every commit to configs-public requires a Self-Review artifact."
+    echo "Add these trailers to your commit message:"
+    echo ""
+    echo "  Self-Review: <one-line summary>"
+    echo "  Self-Review-Source: <path or URL to artifact>"
+    echo ""
+    echo "For genuinely trivial commits (typo fix, whitespace):"
+    echo "  Include [no-review] in the commit message."
+    echo ""
+    echo "See: skills/self-review/SKILL.md"
+    echo "Ref: #355"
+    exit 1
+fi
+
+# Tier A's short review record is the Self-Review line itself.
+if [[ "$TIER_VALUE" == "A" ]]; then
+    exit 0
+fi
+
+# Tier B/C require a durable focused/full artifact.
+if ! echo "$TRAILERS" | grep -qi '^Self-Review-Source:'; then
+    echo ""
+    echo "BLOCKED: Missing Self-Review-Source: trailer."
+    echo "Add: Self-Review-Source: <path or URL to the self-review artifact>"
+    exit 1
+fi
+
+# Check for ticket reference
+if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
+    echo ""
+    echo "BLOCKED: Missing ticket reference."
+    echo "Include #NNN in the commit message, or [no-ticket] if exempt."
+    exit 1
+fi
+
+if [[ "$TIER_VALUE" == "C" ]]; then
+    for REQUIRED_TRAILER in "Hostile-Review" "Negative-Tests" "Full-Suite" "Canary-Rollback"; do
+        COUNT=$(echo "$TRAILERS" | grep -ci "^${REQUIRED_TRAILER}:[[:space:]]*\S")
+        if [[ "$COUNT" -ne 1 ]]; then
+            echo "BLOCKED: Tier C requires exactly one ${REQUIRED_TRAILER}: evidence trailer." >&2
+            exit 1
+        fi
+    done
+fi
+
+# If Self-Review-Source is a file path (not a URL), verify it exists
+SOURCE_VALUE=$(echo "$TRAILERS" | grep -i '^Self-Review-Source:' | head -1 | sed 's/^[^:]*:[[:space:]]*//')
+if [ -n "$SOURCE_VALUE" ] && ! echo "$SOURCE_VALUE" | grep -qE '^(https?://|#[0-9]+$)'; then
+    if [ -f "$SOURCE_VALUE" ]; then
+        MISSING_SECTIONS=""
+        if [[ "$TIER_VALUE" == "B" ]]; then
+            REQUIRED_SECTIONS=("## Assumptions" "## Test plan")
+        else
+            REQUIRED_SECTIONS=("## Assumptions" "## Peer review" "## Lead review" "## Quantified claims")
+        fi
+        for SECTION in "${REQUIRED_SECTIONS[@]}"; do
+            if ! grep -qF "$SECTION" "$SOURCE_VALUE"; then
+                MISSING_SECTIONS="$MISSING_SECTIONS\n  - $SECTION"
+            fi
+        done
+        if [ -n "$MISSING_SECTIONS" ]; then
+            echo ""
+            echo "BLOCKED: Self-review artifact missing required sections:"
+            echo -e "$MISSING_SECTIONS"
+            echo ""
+            echo "See: skills/self-review/SKILL.md"
+            exit 1
+        fi
+        if [[ "$TIER_VALUE" == "C" ]]; then
+            for FIELD in "Pre-mortem-artifact" "Hostile-review-artifact"; do
+                if ! grep -qE "^${FIELD}:[[:space:]]+\S" "$SOURCE_VALUE"; then
+                    echo "BLOCKED: Tier C artifact requires non-empty ${FIELD}: evidence." >&2
+                    exit 1
+                fi
+            done
+        fi
+    else
+        echo "BLOCKED: Self-Review-Source file not found: $SOURCE_VALUE" >&2
+        exit 1
+    fi
+fi
+
+exit 0
