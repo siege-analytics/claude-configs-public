@@ -22,3 +22,11 @@ The final bounded source review covered `resolve-think-gate.py`, the real invest
 The session-identity failure is described as **observed in the hook process, with live evidence pending from the Siege Utilities worker**, per the operator's latest correction. A resolver invocation in an agent shell is not evidence of hook-host behavior. The four identity regressions each exercise the real universal mutation hook and investigate resolver guard. The first three remove `CRAFT_SESSION_ID` and `CRAFT_SESSION_DIR`; the fourth deliberately tests the explicit directory override.
 
 All executable changes remain clone-local. No live install, activation, deployment, release or shared-branch merge was performed. Final exact-SHA review remains pending and must not be inferred from this pre-commit record.
+
+## Catalog dependency-chain follow-up review
+
+The complete generated diff for progressive-loading metrics and language/data fixture costs was independently reviewed before the follow-up commit. Result: “No findings. The diff changes only measured character/token counts and generated rules-bundle size; it does not alter source selections, expected states, budgets, limits, or assertions.”
+
+This review is limited to that supplied generated diff; it does not claim CI execution or final exact-SHA approval. The implementation executables were not changed. Full validate-job replay is separately recorded after completion.
+
+Reviewed generated-diff SHA-256: 248d940bcc1847ed847497db4ca339221583349bf225e176c678b16cc9c64564

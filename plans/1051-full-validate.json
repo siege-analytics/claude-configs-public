@@ -1,0 +1,211 @@
+{
+  "ticket": "siege-analytics/claude-configs-public#1051",
+  "source_commit_before_catalog_followup": "cbbb9758025eee4874f586ecc3bf992a6ef21656",
+  "workflow": ".github/workflows/build-and-publish.yml",
+  "workflow_sha256": "e280386d09df3b36727f0d271ffc38e77d4ab822c765f4418a802abaf6768468",
+  "python": "Python 3.12.12",
+  "applicable_validate_shell_steps": 30,
+  "hook_suites": 37,
+  "steps": [
+    {
+      "index": 0,
+      "name": "Check for path-form references that should be tokens",
+      "sha256": "e24135e197b2c7d3cb1e051531628f3d595c21ad59f7bc962347e7da98663354",
+      "exit": 0
+    },
+    {
+      "index": 1,
+      "name": "Shelf ownership and actionable path integrity",
+      "sha256": "3f851033c601e7fcf5888c4afe0e24d088b25f8151b054a7f3af556c09dbb416",
+      "exit": 0
+    },
+    {
+      "index": 2,
+      "name": "Validate token resolution (build --check)",
+      "sha256": "5a4d94d323ea54135ea5a7ad27f3fc3482d3d38acd25d358bb2306aefa36a536",
+      "exit": 0
+    },
+    {
+      "index": 3,
+      "name": "Full build for hook validation",
+      "sha256": "9e5fa37cb15239c760df557105ef0163c958c0ca2893ce4c0b3fd0ab2fa7b134",
+      "exit": 0
+    },
+    {
+      "index": 4,
+      "name": "Gate contract and generated agreement",
+      "sha256": "e89a744cbf4fc86ae37e7fc4feea4fb71c3bde18562db842354f4c2a26c5151d",
+      "exit": 0
+    },
+    {
+      "index": 5,
+      "name": "Bounded work coordination and recovery",
+      "sha256": "daef810a73a327cff1bd016666eea639610d2fa6c1bc2caff434080f3dec301e",
+      "exit": 0
+    },
+    {
+      "index": 6,
+      "name": "Project procedure and resident composition",
+      "sha256": "28166b6c1dcbc780402a798cc1f5783aebc89adb9282d8bd806e63a6b6d65b58",
+      "exit": 0
+    },
+    {
+      "index": 7,
+      "name": "Canonical terminology and generated wiki",
+      "sha256": "ffc1ab857571f83266ce6144fb204bc5c561374840e46575c8c4ad16c4511218",
+      "exit": 0
+    },
+    {
+      "index": 8,
+      "name": "Generated source authority and drift",
+      "sha256": "d43f5a41e646dfd97d179aa106ae64d922fd2e98bb3f0f8eaa5d21aa6d674144",
+      "exit": 0
+    },
+    {
+      "index": 9,
+      "name": "Compact safety kernel structure and budget",
+      "sha256": "9a60d0ec788742fcc59dbf9e0832ceb606c4d8adb684470df1c0da3e2e5816e3",
+      "exit": 0
+    },
+    {
+      "index": 10,
+      "name": "Proportional review risk policy",
+      "sha256": "ca2913c849fab6831a41c94dd21ea4971174ba03fb4dd2dcb6578ff32acd70b1",
+      "exit": 0
+    },
+    {
+      "index": 11,
+      "name": "Deterministic progressive loading",
+      "sha256": "5056a5167eec6ef95bdfed382220877e7f1642f3dcca5004f80bcfc94b315a3c",
+      "exit": 0
+    },
+    {
+      "index": 12,
+      "name": "Validate Craft Agent flat skill layout",
+      "sha256": "dde64c2f95465ea0eb910d31cd64b43b4aeea27edb5d1a7fcf4de62d851974d6",
+      "exit": 0
+    },
+    {
+      "index": 13,
+      "name": "Validate hook installation (claude-code)",
+      "sha256": "4b75ec40b55d500722cbae1ecf6afd1531a813c744ba108185470c337b1a1aa4",
+      "exit": 0
+    },
+    {
+      "index": 14,
+      "name": "Validate hook installation (craft-agent)",
+      "sha256": "57ecdb16f9802206b7d792e956b148023d95090200f66da76a2b14dc4626dc20",
+      "exit": 0
+    },
+    {
+      "index": 15,
+      "name": "Validate repo hooks match snippet",
+      "sha256": "0e547ffb8de50632129b5cce680bb292e8e9800c633cb2d1f9ca129136fef922",
+      "exit": 0
+    },
+    {
+      "index": 16,
+      "name": "Coherent package upgrade and rollback fixtures",
+      "sha256": "cafb98193ff5da27e4babaae6e16116b1a20f2b60d208562624f932efdf7a3be",
+      "exit": 0
+    },
+    {
+      "index": 17,
+      "name": "Consumer package documentation and clean-home diagnostics",
+      "sha256": "d91f96ebb7e2aa7d92968093ae5c17d17b5c7d5b46e51ad4d0851650bbefe302",
+      "exit": 0
+    },
+    {
+      "index": 18,
+      "name": "Shared-parent registered provider events",
+      "sha256": "e9d24806347d95a84bd9c9e4d4d66ff86b6b6f50985d468cb1dd43013f535460",
+      "exit": 0
+    },
+    {
+      "index": 19,
+      "name": "Native consumer Git registration and destination range",
+      "sha256": "3ab4259dbe5b3e5baec9b64b71c119f07eb8bcdf42339ba1d10cb8981932cc52",
+      "exit": 0
+    },
+    {
+      "index": 20,
+      "name": "Canary packet preparation remains non-authorizing",
+      "sha256": "ad8b95f350c7ba52676b6588b7f4b753ed646eeb4755375bb31f04e4a27ae7de",
+      "exit": 0
+    },
+    {
+      "index": 21,
+      "name": "Settings-drift check fixtures",
+      "sha256": "52b72fa9f349d502b0830f001c6ef0fc0e1fc93a35137c46438f318affcf682b",
+      "exit": 0
+    },
+    {
+      "index": 22,
+      "name": "Scanner selected-source truth and incomplete results",
+      "sha256": "5e4c2c317e907ad677c855357b136273aa2361cdc71bc34931d4c214740fe151",
+      "exit": 0
+    },
+    {
+      "index": 23,
+      "name": "NotebookEdit write-guard fixtures",
+      "sha256": "06140794641d4f9e5af7cf3a10217f2678fef31e691c24d47918250a7f0b7ad5",
+      "exit": 0
+    },
+    {
+      "index": 24,
+      "name": "Branch topology policy fixtures",
+      "sha256": "9380a53c127287a272d48a87c551b36350c21b1413bc98d64eecf00af9f56639",
+      "exit": 0
+    },
+    {
+      "index": 25,
+      "name": "Main-only release policy fixtures",
+      "sha256": "aed6e2b52953f14d687833a7b424151a66f94d0701a6dd9066ba78c1b70dcdec",
+      "exit": 0
+    },
+    {
+      "index": 26,
+      "name": "Exact-main deployment source fixtures",
+      "sha256": "706a8ed5e504ca8df09d489dc829452537e898d02978fa1cc04a0e15d13a3944",
+      "exit": 0
+    },
+    {
+      "index": 27,
+      "name": "Skill inventory fixtures and freshness",
+      "sha256": "ff458eb7772aec15a9fc6c2db9e439471ac1161b9962e34e18ea07f7729a1295",
+      "exit": 0
+    },
+    {
+      "index": 28,
+      "name": "Skill lifecycle schema and migration ratchet",
+      "sha256": "4304dd4ce315569040eb553522c70d0cc1d62bb491c6c806803da45134430afc",
+      "exit": 0
+    },
+    {
+      "index": 29,
+      "name": "Hook scenario tests",
+      "sha256": "71dfc15c9a28c3a71a9e9bccaf1bb56130ad5591057a789c160091e893c2feda",
+      "exit": 0
+    }
+  ],
+  "execution_scope": "local validate job only, no publish job or live activation",
+  "environment_notes": [
+    "PR lifecycle context supplied; first-main-promotion uses-only action not applicable",
+    "Long first chunk resumed after three successful composition commands",
+    "Clean-home fixture rerun with normal temporary paths outside checkout; no test assertion changed"
+  ],
+  "generator_order": [
+    "skill-inventory",
+    "ontology --write",
+    "build",
+    "progressive-loading-metrics",
+    "language-scope --write",
+    "data-scope --write",
+    "review-risk-metrics",
+    "build",
+    "generated-source-authority",
+    "kernel-budget"
+  ],
+  "reviewed_generated_diff_sha256": "248d940bcc1847ed847497db4ca339221583349bf225e176c678b16cc9c64564",
+  "hosted_validation": "must be confirmed on the subsequent commit; local replay is not hosted approval"
+}

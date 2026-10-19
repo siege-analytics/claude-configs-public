@@ -106,3 +106,17 @@ Hosted run 39176581026 rejected the initial implementation head's inventory at t
 **Focused review:** only generated evidence and this diagnosis change. Existing source hashes are unchanged. Generator tests and post-commit freshness are the relevant regression checks; independent exact-SHA review still applies to the new PR head. No installation, deployment or activation is involved.
 
 Follow-up verification: all 46 prior suites and 13 validators passed with Python 3.12.12. The first local follow-up runner scheduled validators concurrently with rebuilding suites, causing a transient missing-kernel read; a completed rebuild followed by sequential validators (the CI ordering) passed. The 28-test acceptance wrapper also passed. No executable source changed.
+
+## Full catalog dependency-chain correction
+
+Hosted run 39187794281 passed the repaired inventory/authority step but then rejected stale progressive-loading metrics. The prior local follow-up ran a hand-picked validator subset, not the full validate job; that subset omitted progressive-loading, language-scope and data-scope freshness. Updated gate-writing skills change selected-content costs and the generated rules-bundle size, so dependent measurement catalogs must be refreshed even though their routing definitions are unchanged.
+
+Correction: use Python 3.12.12 to regenerate inventory and ontology, build, refresh progressive-loading metrics and language/data measurements, refresh risk metrics, rebuild packaged catalogs, then regenerate source authority and kernel budget. All generators were run; only the progressive-loading metrics and language/data fixture measurements changed. No route, budget, expected state, safety predicate or executable source was edited.
+
+The full validate job's 30 shell steps are now replayed directly from the committed workflow, sequentially and with PR lifecycle context. Checkout/setup are supplied locally; the uses-only first-main-promotion provenance step is not applicable to this PR, and the publish job is never executed. Long composition fixtures are monitored in bounded chunks; a tool-call time limit interrupted the first chunk after three completed-successful commands, so replay resumes after those proven successes rather than claiming the incomplete step passed.
+
+The final replay results, step script hashes and logs are retained under `.verification/1051/full-ci/`. Final successful step count and post-commit freshness are recorded after execution, before hosted confirmation. This follow-up is additive and the PR remains draft pending green hosted validation and exact-SHA re-review.
+
+Replay environment correction: placing test temporary homes under the checkout caused the clean-home package diagnostics test to report a source-path leak. The unmodified test passed once standard temporary fixtures were placed outside the source tree, matching CI's separation; no production home or workspace was activated. The original failed harness log is retained separately.
+
+Full replay result: all 30 applicable validate-job shell steps passed under Python 3.12.12, including all 37 hook scenario suites and the 28-test task acceptance wrapper. `plans/1051-full-validate.json` records the workflow hash, ordered step names/script hashes and zero exit statuses. All source/executable files and policy thresholds are unchanged by this follow-up. Hosted approval must still be observed on the new commit.
