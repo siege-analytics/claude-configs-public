@@ -271,7 +271,8 @@ fi
 
 out=$(printf '%s' "$mutation_payload" | CRAFT_AGENT_WORKSPACE="$TMP" CRAFT_AGENT_SESSION_ID=session-brand-new bash "$TMP_MUTATION" 2>&1)
 code=$?
-if [[ "$code" -eq 2 ]] && echo "$out" | grep -q "artifacts missing or wrong ticket"; then
+# Terminal records are excluded from ownership, not merely missing artifacts.
+if [[ "$code" -eq 2 ]] && echo "$out" | grep -q "Unscoped mutation"; then
   _HARNESS_PASS=$((_HARNESS_PASS + 1))
   printf '  [PASS] terminal gate without artifacts does not authorize mutation\n'
 else

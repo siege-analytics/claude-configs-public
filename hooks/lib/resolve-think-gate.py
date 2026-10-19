@@ -127,8 +127,8 @@ def session_id_from_env() -> str:
 
 
 SESSION_UNRESOLVED = ("Session id unresolved; gates under sessions/<id>/ are not visible. "
-                      "Pass the Craft transcript_path or export CRAFT_SESSION_DIR in the hook host environment "
-                      "(CLAUDE_SESSION_ID for a native runtime); an SDK UUID alone is not a Craft id.")
+                      "Have the hook host supply CRAFT_SESSION_DIR "
+                      "(CLAUDE_SESSION_ID for a native runtime); an SDK UUID or ordinary Claude transcript path alone is not a Craft directory id.")
 
 
 def session_dirs(workspace: str, session_id: str = "") -> "list[str]":
@@ -342,6 +342,66 @@ def _scopes(loaded: dict) -> list[str]:
     return [canonical(p) for p in paths]
 
 
+def _canonical_claim(sd: str, sid: str, identity: str) -> str:
+    import hashlib
+    key = hashlib.sha256((sid + '\0' + identity).encode()).hexdigest()
+    return os.path.join(canonical(sd), 'tasks', '.canonical', key + '.json')
+
+
+def _canonical_seen(sd: str, sid: str, identity: str, workspace: str) -> bool:
+    if not identity or canonical(sd) == canonical(workspace):
+        return False
+    path = _canonical_claim(sd, sid, identity)
+    if not _within(canonical(os.path.dirname(path)), canonical(sd)):
+        return True  # An invalid migration namespace cannot lend legacy authority.
+    return os.path.lexists(path)
+
+
+def _remember_canonical(sd: str, sid: str, identity: str, workspace: str) -> None:
+    """Atomic, per-(session,task) denial-only migration claim; never a gate."""
+    import tempfile
+    path = _canonical_claim(sd, sid, identity)
+    parent = canonical(os.path.dirname(path))
+    if canonical(sd) == canonical(workspace) or not _within(parent, canonical(sd)):
+        raise ValueError('canonical claim path escapes current session')
+    expected = {'task_id': identity, 'sessionId': sid}
+    if os.path.lexists(path):
+        if os.path.islink(path):
+            raise ValueError('reserved canonical claim is a symlink: ' + path)
+        existing = _load(path)
+        if not existing or existing['data'] != expected:
+            raise ValueError('repair invalid reserved canonical claim: ' + path)
+        return
+    os.makedirs(parent, exist_ok=True)
+    fd, temp = tempfile.mkstemp(dir=parent, prefix='.claim-')
+    try:
+        with os.fdopen(fd, 'w') as stream:
+            json.dump(expected, stream)
+        try:
+            os.link(temp, path)  # exclusive atomic publish; never replace user data
+        except FileExistsError:
+            if os.path.islink(path):
+                raise ValueError('reserved canonical claim is a symlink: ' + path)
+            existing = _load(path)
+            if not existing or existing['data'] != expected:
+                raise ValueError('repair invalid reserved canonical claim: ' + path)
+    finally:
+        if os.path.exists(temp):
+            os.unlink(temp)
+
+
+def _remember_managed_paths(workspace: str, paths: list[str]) -> None:
+    sid = session_id_from_env()
+    for sd in session_dirs(workspace, sid):
+        for path in paths:
+            think = canonical(os.path.join(os.path.dirname(path), 'think-gate.json'))
+            if os.path.dirname(os.path.dirname(think)) != canonical(os.path.join(sd, 'tasks')):
+                continue
+            loaded = _load(think)
+            if loaded and _gate_matches_session(loaded, sid) and task_identity(loaded['data']):
+                _remember_canonical(sd, sid, task_identity(loaded['data']), workspace)
+
+
 def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
     sid = session_id or session_id_from_env()
     if not sid:
@@ -359,9 +419,13 @@ def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
                 identity = task_identity(loaded["data"])
                 key = canonical(path)
                 if key not in seen:
+                    canonical_ids.add(identity)
+                    try:
+                        _remember_canonical(sd, sid, identity, workspace)
+                    except (OSError, ValueError) as exc:
+                        print(f'Canonical retirement record unavailable for {identity}: {exc}', file=sys.stderr)
                     result.append(loaded)
                     seen.add(key)
-                    canonical_ids.add(identity)
     for sd in session_dirs(workspace, sid):
         if canonical(sd) == canonical(workspace):
             continue
@@ -369,10 +433,17 @@ def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
             if not _within(canonical(path), canonical(sd)):
                 continue
             loaded = _load(path)
-            if loaded and _gate_matches_session(loaded, sid) and task_identity(loaded["data"]) not in canonical_ids and canonical(path) not in seen:
+            if (loaded and _gate_matches_session(loaded, sid)
+                    and task_identity(loaded["data"]) not in canonical_ids
+                    and not any(_canonical_seen(d, sid, task_identity(loaded['data']), workspace)
+                                for d in session_dirs(workspace, sid))
+                    and canonical(path) not in seen):
                 result.append(loaded)
                 seen.add(canonical(path))
-    return result
+    # Per-task canonical claims survive individual gate cleanup. Other legacy
+    # tasks remain independent; no session-wide namespace switch is used.
+    return [g for g in result if str(g['data'].get('status', '')).lower() not in
+            {'disposed', 'complete', 'completed', 'done', 'done-awaiting-pr'}]
 
 
 def _gate_matches_session(loaded: dict, session_id: str) -> bool:
@@ -538,15 +609,53 @@ def _candidate_paths(workspace: str, repo_root: str, gate_name: str, session_id:
     return [g["path"]] if (g := find_gate_for_repo(workspace, repo_root, gate_name, session_id=session_id)) else []
 
 
+def own_session_path(workspace: str, path: str, directory: bool = False, removal: bool = False) -> bool:
+    """Narrow lifecycle exception, not task/repository implementation authority.
+
+    Only the host-resolved current session owns these paths. Canonicalization
+    rejects descendant symlinks into another session/repository.
+    """
+    sid = session_id_from_env()
+    if not sid:
+        return False
+    sd = next((os.environ.get(k) for k in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR')
+               if os.environ.get(k)), os.path.join(workspace, 'sessions', sid))
+    root = canonical(sd)
+    target = canonical(path)
+    if root == canonical(workspace) or not _within(target, root) or target == root:
+        return False
+    if _within(target, canonical(os.path.join(root, 'tasks', '.canonical'))):
+        return False  # Reserved per-task migration claims are not lifecycle files.
+    parts = os.path.relpath(target, root).split(os.sep)
+    if parts[0] in {'plans', 'data'}:
+        return len(parts) > 1 or directory
+    if parts[0] != 'tasks':
+        return False
+    if directory:
+        return len(parts) <= 2 and not (removal and len(parts) == 1)
+    return len(parts) >= 3 and not os.path.isdir(target) and bool(re.fullmatch(r'[A-Za-z0-9_.-]+-gate\.json', parts[-1]))
+
+
 def resolve_action(workspace: str, payload: dict) -> dict:
     ti = payload.get("tool_input") or {}
     command = ti.get("command", "")
     cwd = payload.get("cwd") or os.getcwd()
     shape = action(command, cwd) if command else {"read_only": False, "paths": [canonical(ti.get("file_path") or ti.get("notebook_path") or ti.get("path") or cwd, cwd)]}
-    if shape["read_only"]:
-        return shape  # No gate filesystem access for a positively identified read.
+    if shape["read_only"] or shape.get('investigation'):
+        return shape  # No gate lookup for recognized reads/approved diagnostics.
     if shape.get("error"):
         return {**shape, "gate": None, "error": "Cannot resolve mutation targets: " + shape["error"]}
+    managed_shape = shape.get('self_managed_shape', not command)
+    if managed_shape:
+        directories = shape.get('directory_paths', [])
+        remaining = [p for p in shape['paths'] if not own_session_path(workspace, p, p in directories, p in shape.get('directory_removals', []))]
+        if not remaining:
+            try:
+                _remember_managed_paths(workspace, shape['paths'])
+            except (OSError, ValueError) as exc:
+                return {**shape, 'gate': None, 'error': 'Cannot preserve per-task canonical retirement: ' + str(exc)}
+            return {**shape, 'self_management': True}
+        shape['paths'] = remaining
     binding = shape.get("binding") or task_binding()
     if shape.get("binding") and task_binding() and shape["binding"] != task_binding():
         return {**shape, "gate": None, "error": "Conflicting explicit task bindings."}
@@ -561,6 +670,8 @@ def resolve_action(workspace: str, payload: dict) -> dict:
 
 def _load(path: str) -> Optional[dict]:
     try:
+        if not os.path.isfile(path):
+            return None
         with open(path) as f:
             data = json.load(f)
         return {"path": path, "data": data} if isinstance(data, dict) else None

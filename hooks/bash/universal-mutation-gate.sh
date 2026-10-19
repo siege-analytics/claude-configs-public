@@ -119,6 +119,8 @@ WORKSPACE_FOR_RESOLVE="${CRAFT_AGENT_WORKSPACE:-$WORKSPACE_CANDIDATE}"
 RESOLUTION=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --action-json || true)
 READ_ONLY=$(printf '%s' "$RESOLUTION" | python3 "$EXTRACT" read_only 2>/dev/null || true)
 [[ "$READ_ONLY" == "True" || "$READ_ONLY" == "true" ]] && exit 0
+EARLY_ALLOW=$(printf '%s' "$RESOLUTION" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(bool(d.get("investigation") or d.get("self_management")))' 2>/dev/null || true)
+[[ "$EARLY_ALLOW" == "True" ]] && exit 0
 THINK_GATE=$(printf '%s' "$RESOLUTION" | python3 "$EXTRACT" gate.path 2>/dev/null || true)
 if [[ -z "$THINK_GATE" ]]; then
     REASON=$(printf '%s' "$RESOLUTION" | python3 "$EXTRACT" error 2>/dev/null || true)
@@ -127,7 +129,6 @@ if [[ -z "$THINK_GATE" ]]; then
     exit 2
 fi
 GATE_PATHS_JSON=$(printf '%s' "$RESOLUTION" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin).get("artifacts", {})))' 2>/dev/null || echo '{}')
-COMPOUND_MUTATION=true
 REPO_ROOT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("repo_root", ""))' "$THINK_GATE" 2>/dev/null || true)
 
 if [[ -n "$THINK_GATE" ]]; then
@@ -141,12 +142,8 @@ except Exception:
 " "$THINK_GATE" 2>/dev/null || true)
 
     if [[ "$TG_STATUS" == "designing" || "$TG_STATUS" == "reviewing" ]]; then
-        # Designing/reviewing allows non-safelist commands ONLY if they
-        # are not known mutations. Mutation-indicated commands require
-        # status=implementing with full artifacts. Ref: #574.
-        if [[ "$COMPOUND_MUTATION" == "false" ]]; then
-            exit 0
-        fi
+        # Recognized reads, bounded diagnostics and own signal lifecycle
+        # writes exited above. Other actions require implementation authority.
         CMD_SHORT_DESIGN="${COMMAND:0:120}"
         if [[ ${#COMMAND} -gt 120 ]]; then
             CMD_SHORT_DESIGN="${CMD_SHORT_DESIGN}..."
@@ -157,7 +154,7 @@ BLOCKED by universal-mutation-gate (#574): mutations not allowed during designin
 Command: $CMD_SHORT_DESIGN
 
 Status '$TG_STATUS' allows read-only and investigation commands, but this
-command is not positively classified read-only. Mutation commands require
+command is not a recognized reader or bounded investigation command. Mutations require
 status=implementing with full artifacts (investigate-gate, pre-mortem,
 junior/senior, artifacts-posted).
 
@@ -170,7 +167,7 @@ DESIGNEOF
         exit 2
     fi
 
-    if [[ "$TG_STATUS" == "implementing" || "$TG_STATUS" == "done-awaiting-pr" || "$TG_STATUS" == "disposed" || "$TG_STATUS" == "complete" ]]; then
+    if [[ "$TG_STATUS" == "implementing" ]]; then
         MISSING=$(python3 -c "
 import json, sys, os, glob
 
@@ -247,6 +244,13 @@ if not invest_found:
 # 2. Check pre-mortem artifact (must reference current ticket)
 premortem_found = False
 plan_dirs = []
+# The current host session's own plans are a writable lifecycle surface.
+# Other sessions' plans are never discovered here.
+current_session_dir = os.environ.get('CRAFT_SESSION_DIR') or os.environ.get('CRAFT_AGENT_SESSION_DIR') or os.environ.get('CLAUDE_SESSION_DIR')
+if current_session_dir:
+    session_plans = os.path.join(current_session_dir, 'plans')
+    if os.path.isdir(session_plans):
+        plan_dirs.append(session_plans)
 if plans_path and os.path.isdir(plans_path):
     plan_dirs.append(plans_path)
 ca_ws = os.environ.get('CRAFT_AGENT_WORKSPACE', '')

@@ -5469,6 +5469,7 @@
         "hooks/_test/review_risk_policy.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/survey_context.test.sh",
+        "hooks/_test/task_keyed_gates.py",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
         "hooks/_test/writing_migration_cleanup.test.sh",
@@ -5823,10 +5824,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 21417,
-      "content_sha256": "7ee4949468b95ce5a381953e385035440eb4272a53d1b76a2a4e6c81e2f320be",
+      "characters": 21832,
+      "content_sha256": "2fadaa44e01a0267886694402dffaa4f5590b5ccf07f4bdae2ae0ddad6477326",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 5355,
+      "estimated_tokens": 5458,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -8734,6 +8735,7 @@
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
         "hooks/_test/survey_context.test.sh",
+        "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_guard.test.sh",
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/ticket_required.test.sh",
@@ -10779,7 +10781,8 @@
       "source_path": "skills/react/SKILL.md",
       "test_evidence": [
         "bin/_test/language_scope_test.py",
-        "bin/_test/resolve_load_set_test.py"
+        "bin/_test/resolve_load_set_test.py",
+        "hooks/_test/task_keyed_gates.py"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -11641,10 +11644,10 @@
     },
     {
       "canonical_source": "skills/think/SKILL.md",
-      "characters": 27536,
-      "content_sha256": "ea187cb0395e31945049e1bd6b27b705ea8c6b7c54574e7952a13cda289e21f5",
+      "characters": 29259,
+      "content_sha256": "fc9603473e6736f2abe4f502d323bfc2bbb5192f432c9d41facfb81e4ae1eb14",
       "description": "MANDATORY design-first gate. Enforces structured design before any code is written for a feature, refactor, or architecture change. Slash-invokable as /think; also enforced via the resolver before any non-trivial implementation. Do NOT skip this skill.",
-      "estimated_tokens": 6884,
+      "estimated_tokens": 7315,
       "frontmatter_name": "think",
       "generated_outputs": [
         "dist/nested/skills/think",
@@ -11678,7 +11681,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 457,
+      "lines": 480,
       "owner": [
         "unknown"
       ],
@@ -12120,9 +12123,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2660119,
+    "characters": 2662257,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 665109,
+    "estimated_tokens": 665643,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12143,7 +12146,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1263725
+      "unclassified": 1265863
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12155,7 +12158,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 315975
+      "unclassified": 316509
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

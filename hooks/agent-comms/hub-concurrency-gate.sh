@@ -20,7 +20,7 @@ RESOLVE_TG="$(cd "$(dirname "$0")/../lib" && pwd)/resolve-think-gate.py"
 SENDER=$(python3 "$RESOLVE_TG" --workspace "${CRAFT_AGENT_WORKSPACE:-.}" --session-value 2>/dev/null || true)
 POLICY="$(cd "$(dirname "$0")/../lib" && pwd)/hub-concurrency-policy.json"
 HUB_GATE_SENDER="$SENDER" HUB_GATE_POLICY="$POLICY" HUB_GATE_INPUT="$INPUT" python3 - <<'PYCODE'
-import os, sys, json, datetime, tempfile, fcntl, hashlib, uuid
+import os, sys, json, datetime, tempfile, fcntl, hashlib, uuid, re
 from pathlib import Path
 
 
@@ -143,7 +143,28 @@ def main():
     peer = metadata(root, target)
     if not is_spawn and (labels(peer) & stewards or parent(me) == target or parent(peer) == sender):
         return 0
-    task = os.environ.get('CCP_TASK_ID') or me.get('taskId') or me.get('ticket') or 'legacy-unscoped'
+    # Shell exports do not reach a Craft hook. Bind from the actual tool
+    # payload, or the sender's sole active task gate (not invented header keys).
+    def session_task(sid, directory=''):
+        directory = Path(directory) if directory else Path(root) / sid
+        tasks = set()
+        for gate in (directory / 'tasks').glob('*/think-gate.json'):
+            if not gate.resolve().is_relative_to(directory.resolve()):
+                continue
+            data = load(gate)
+            if any(data.get(k) and data[k] != sid for k in ('session', 'sessionId')):
+                continue
+            if str(data.get('status', '')).lower() in {'disposed', 'complete', 'completed', 'done', 'done-awaiting-pr'}:
+                continue
+            identity = data.get('ticket') or data.get('task_id') or data.get('task')
+            if isinstance(identity, str) and identity.strip():
+                tasks.add(identity.strip())
+        return next(iter(tasks)) if len(tasks) == 1 else ''
+    text = str(ti.get('prompt') if is_spawn else ti.get('message', ''))
+    markers = re.findall(r'^CCP_TASK_ID=([^\s]+)[ \t]*$', text, re.MULTILINE)
+    task = markers[0] if len(markers) == 1 else ''
+    if not markers:
+        task = session_task(sender, own_dir)
     # Serialize read/modify/write; atomic replacement alone loses concurrent opens.
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(str(path) + '.lock', 'a') as lock:
@@ -166,14 +187,20 @@ def main():
                     request_key = next((k for k in pending if k.startswith(request_key + ':')), request_key)
                 else:
                     request_key += ':' + uuid.uuid4().hex
+            task = task or (pending.get(request_key, {}).get('task', '') if phase == 'PostToolUse' else '')
+            if not task:
+                audit(path, 'unresolved spawn task; not capped; add CCP_TASK_ID=<full-task-id> line to tool prompt', sender, target)
+                return 0
             spokes = state.get('administered_spokes', [])
             spokes = [x for x in spokes if isinstance(x, dict) and safe_id(x.get('sessionId'))] if isinstance(spokes, list) else []
-            terminal = {'done', 'cancelled', 'archived', 'complete', 'completed'}
+            terminal = set(policy['concluded_session_statuses'])
             def active(meta):
-                return not meta.get('archived') and (meta.get('status') or meta.get('todoState')) not in terminal
+                status = str(meta.get('sessionStatus') or meta.get('status') or meta.get('todoState') or '').lower().replace('_', '-')
+                return not (meta.get('isArchived') or meta.get('archived')) and status not in terminal
             spokes = [x for x in spokes if active(metadata(root, x['sessionId']))]
-            # Metadata children and declared adoptions are authoritative even
-            # when this hook did not witness their original admission.
+            # Reconcile witnessed children; discover older parent/adoption
+            # records only with an actual unique task gate. Real headers do
+            # not carry taskId/ticket, so unknown history cannot form one bucket.
             ids = {x['sessionId'] for x in spokes}
             adopted = me.get('adoptedSessionIds', [])
             adopted = set(x for x in adopted if safe_id(x)) if isinstance(adopted, list) else set()
@@ -181,8 +208,10 @@ def main():
                 for child_id in os.listdir(root):
                     child = metadata(root, child_id)
                     if child_id not in ids and (parent(child) == sender or child_id in adopted) and active(child):
-                        spokes.append({'sessionId': child_id, 'task': child.get('taskId') or child.get('ticket') or 'legacy-unscoped'})
-                        ids.add(child_id)
+                        child_task = session_task(child_id)
+                        if child_task:
+                            spokes.append({'sessionId': child_id, 'task': child_task})
+                            ids.add(child_id)
             if phase == 'PostToolUse':
                 reservation = pending.get(request_key, {})
                 response = payload.get('tool_response') or payload.get('tool_result') or {}
@@ -200,7 +229,7 @@ def main():
                 state.update(administered_spokes=spokes, pending_spawns=pending)
                 persist(path, state)
                 return 0
-            count = sum((x.get('task') or 'legacy-unscoped') == task for x in spokes)
+            count = sum(x.get('task') == task for x in spokes)
             count += sum(x.get('task') == task for k, x in pending.items() if k != request_key)
             if count >= cap:
                 audit(path, 'administrative cap reached at spawn', sender, target, task)
@@ -211,7 +240,8 @@ def main():
             persist(path, state)
             return 0
         # Message bookkeeping is advisory only. No path below can return 2.
-        same = lambda t: (t.get('task') or 'legacy-unscoped') == task
+        task = task or 'unresolved-task'
+        same = lambda t: (t.get('task') or 'unresolved-task') == task
         continuing = next((t for t in entries if same(t) and t['peer_session'] == target), None)
         kept = [t for t in entries if t is continuing or fresh(t, now, window)]
         kept = [t for t in kept if not (labels(metadata(root, t['peer_session'])) & stewards

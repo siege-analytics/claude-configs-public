@@ -133,8 +133,10 @@ echo "Exit: $?"
 Gate identity is `(session, full ticket reference or explicit task_id)`. New
 signals live in `sessions/<id>/tasks/<task-slug>/{think,investigate,junior-senior,artifacts-posted,review,test}-gate.json`.
 The think gate declares absolute `scope_paths` (legacy default: `repo_root`).
-`CCP_TASK_ID` env or a leading Bash `CCP_TASK_ID=...` binding takes priority but
-cannot expand the task's scope. Otherwise canonical target paths/effective CWD
+A leading Bash `CCP_TASK_ID='org/repo#N' command ...` marker disambiguates but
+cannot expand the task's scope. Agent-shell exports do not change the Craft
+hook process environment; Write/Edit/MultiEdit/NotebookEdit have no inline
+binding channel and require unambiguous path ownership. Otherwise canonical target paths/effective CWD
 select the most-specific scope. True ties name competing tasks and block only
 mutations. Split multi-owner actions. Artifact identity matching is exact:
 `org/repo#2` is neither `org/repo#20` nor `other/repo#2`.
@@ -144,11 +146,36 @@ including cmp, quoted grep and restricted `python3 -I -c` JSON/AST reads.
 The classifier never executes Python; unsupported AST/shell syntax remains
 mutation-gated. Shell substitutions/groups are rejected when targets cannot be
 resolved. Unscoped mutations fail closed without consulting any foreign task.
-Write/Edit/MultiEdit/NotebookEdit targets use the same task authority. A terminal
-status alone does not bypass artifact requirements.
+Write/Edit/MultiEdit/NotebookEdit targets use the same task authority. Git
+mutations use the repository toplevel's owner, never a nested directory's gate;
+explicit output paths are also checked. Terminal `disposed`, `complete`, and
+`done-awaiting-pr` gates cannot authorize mutations or compete with active tasks,
+and a per-task canonical claim suppresses only that task’s stale legacy copy after cleanup.
 
-Legacy session-level think/artifact files remain readable as a legacy task;
-canonical task files win. Writers always use canonical task directories,
+**Own-session lifecycle:** before task lookup, allow the host-resolved current
+session's `tasks/**/<name>-gate.json` files, `plans/**`, and `data/**`. Bounded
+`mkdir`/`rmdir` can scaffold individual task directories; keep the `tasks/` root
+and its reserved `.canonical/` per-task claims (removal is not exempt). This permits bootstrap, artifact
+writes, state transitions and cleanup, not other sessions' signals or workspace
+root singletons. Symlink escapes, recursive removal of the session/tasks root,
+and arbitrary program execution are not exempted.
+
+**Designing/reviewing policy:** pure reads and bounded standard investigation
+commands (syntax checks, tests/bytecode, non-fixing linters, document readers,
+package queries, and `git fetch`) are permitted without implementation artifacts.
+Diagnostic execution is separately marked `investigation`, not certified pure
+`read_only`: tests may execute project code and tools may write caches/metadata.
+This compatibility allowance is not a sandbox. Explicit source-edit/output-file
+options, arbitrary scripts/clones, opaque execution and unrecognized forms remain
+gated or fail closed when targets cannot be resolved. Source mutations still
+require the implementing owner and complete artifacts.
+
+Legacy session tasks remain supported, even beside unrelated canonical tasks.
+A task seen in canonical storage gets an atomic denial-only claim keyed by its
+full session/task identity under `tasks/.canonical/`; cleanup cannot resurrect
+that task’s stale legacy copies. Claims grant no authority and carry no gate
+status. Other legacy tasks and partial companion-writer migration remain
+independent. The reserved claim store is outside the lifecycle exemption. Writers always use canonical task directories,
 including atomic pipeline-state artifact writes. Root singletons are ignored,
 except `find_gate_for_repo`'s diagnostic-only unknown-session legacy read,
 which requires exact canonical repo matching and **never authorizes mutations**.
@@ -169,20 +196,30 @@ from the single declared list `hooks/lib/hub-concurrency-policy.json`:
 Stewards, workers/reviewers and unresolved roles are never limited; unknown
 roles/policy emit an audit event. Role labels are read from session metadata
 (`sessions/<id>/session.jsonl` header, or `session.json`), never message prose.
-Relationships use `parentSessionId`/`parent_session_id`; declared adoption uses
-`adoptedSessionIds`. Task binding uses `CCP_TASK_ID`, metadata `taskId`/`ticket`,
-or the separate `legacy-unscoped` bucket. No message text creates a relationship.
+Relationships use `parentSessionId`/`parent_session_id`; optional declared
+adoption uses `adoptedSessionIds`. Real Craft headers have `isArchived` and
+`sessionStatus`, not task keys. A `CCP_TASK_ID=<full-task-id>` line in the actual
+spawn `tool_input.prompt` binds accounting; absent that marker, use the sender's
+sole active canonical task gate. Messaging may use the same line in `message`
+for advisory accounting only. Shell exports are not an input channel. Missing or
+ambiguous tasks are audited/fail open, never collapsed into one enforced legacy
+bucket. Message prose cannot create parent/adoption relationships.
 
 `hub-threads.json` holds advisory threads plus `administered_spokes` and
-`pending_spawns`. Spawn PreToolUse checks active parent/adoption metadata and
-recorded spokes per task; an allowed admission reserves a slot under a file
+`pending_spawns`. Spawn PreToolUse checks witnessed recorded spokes per task;
+older parent/adoption metadata counts only with an actual unique active task
+gate identifying its task. Unwitnessed taskless historical children are not
+silently assigned to the current task. An allowed admission reserves a slot under a file
 lock. PostToolUse reconciles the request via `tool_use_id` (fallback: tool-input
 hash), recording returned `tool_response.sessionId` (also structured/MCP JSON text responses) and releasing explicit failures. Unresolved result shapes retain their reservation with an audit rather than silently losing administration.
-Unreconciled reservations expire after ten minutes. Metadata terminal/archived
-spokes no longer count. A blocked spawn says to drain/retire a concluded spoke
+Unreconciled reservations expire after ten minutes. `isArchived` and concluded
+`sessionStatus` values (including `needs-review`, `retired`, and `archived`)
+release witnessed spokes; the central policy lists concluded statuses. A blocked spawn says to drain/retire a concluded spoke
 or delegate administration; communication stays unrestricted. There is no
 host adoption API hook here: arbitrary manual adoption is not claimed as an
-intercepted operation, but declared adoptions count on the next spawn check.
+intercepted operation; declared adoptions with a uniquely identified task count
+on the next spawn check. The cap is self-service, metadata-labelled load shedding,
+not a non-spoofable security authority.
 
 Overrides for fixture/host adapters: `HUB_THREADS_FILE`, `HUB_THREAD_CAP`,
 `HUB_THREAD_STALE_SECONDS`. Audit records are beside that session state at
@@ -203,11 +240,16 @@ the same target repo. A rejected repo scope reports the gate path, its
 never restore workspace-root artifact copies to bypass it.
 
 Craft identity precedence is explicit: hook-host `CRAFT_SESSION_DIR` (then
-Craft id variables), then Craft `transcript_path`/Craft-specific payload id,
-then explicitly supplied native runtime identity. A generic SDK UUID alone
-is not a mapped Craft directory. Unresolved task lookup emits an actionable
-`Session id unresolved; gates under sessions/<id>/ are not visible` diagnostic.
-Set variables in the **hook host**, not an unrelated child shell. UUID/hook-environment identity failure is observed in the hook process
-(evidence pending from the Siege Utilities worker). A successful resolver
-run in an agent shell does not prove hook-host identity resolution. Both
-the identity and target-repo cases are tested through real hook entry points.
+Craft id variables), then a compatibility Craft-path/Craft-specific payload id,
+then explicitly supplied native runtime identity. A generic SDK UUID or ordinary
+Claude-project transcript path is not a mapped Craft directory. Unresolved
+lookup emits an actionable `Session id unresolved` diagnostic.
+
+Observed runtime evidence has `CRAFT_SESSION_DIR`, no `CRAFT_SESSION_ID`, SDK
+UUID payload ids, and `~/.claude/projects/<sanitized>/<uuid>.jsonl` transcripts.
+The old UUID-as-known-id precedence caused the hook/shell split; absence of the
+host directory variable was not evidenced. Defaults in the real-hook tests use
+this observed context. Missing identity and conflicting overrides are deliberate
+negative/override fixtures only. Set variables in the **hook host**, not a child
+shell. A successful shell resolver run is not hook-host execution evidence.
+The compatibility transcript fallback remains a separately documented follow-up.

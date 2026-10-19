@@ -1,211 +1,267 @@
 {
   "ticket": "siege-analytics/claude-configs-public#1051",
-  "source_commit_before_catalog_followup": "cbbb9758025eee4874f586ecc3bf992a6ef21656",
+  "round": "post-independent-FAIL repair; final clean complete replay",
+  "source_parent": "8067fae09fca3d6bafaa5dc46245fe104ccc1a85",
+  "merged_develop": "6685879e3d8070fb7ac35d7a638ca27c9c09b20e",
+  "input_index_tree": "10c26fd74d9856ee5a55b3e8bb7898c9e708ed52",
   "workflow": ".github/workflows/build-and-publish.yml",
-  "workflow_sha256": "e280386d09df3b36727f0d271ffc38e77d4ab822c765f4418a802abaf6768468",
+  "workflow_sha256": "24265f613d2d1a01b367ff80dfcc4be9185279cb7179d1b98e28f632aa0300a6",
   "python": "Python 3.12.12",
-  "applicable_validate_shell_steps": 30,
+  "local_dependency_setup": "Disposable no-pip venv references existing pinned PyYAML6.0.3/pip. Exact workflow dependency command was an offline already-satisfied no-op; no local package download/install or managed-Python override.",
+  "applicable_validate_shell_steps": 31,
   "hook_suites": 37,
+  "task_acceptance_tests": 37,
+  "all_steps_replayed_from_zero": true,
+  "resumes_or_skips_in_final_run": false,
+  "runtime_source_unchanged": true,
+  "frozen_input_count": 904,
+  "runtime_source_snapshot_sha256": "8dbe42ca1083b5c27a7a9f703abd820cb02992afec3cf2ec3ebf780c743faad2",
   "steps": [
     {
       "index": 0,
-      "name": "Check for path-form references that should be tokens",
-      "sha256": "e24135e197b2c7d3cb1e051531628f3d595c21ad59f7bc962347e7da98663354",
-      "exit": 0
+      "name": "Install pinned frontmatter validation dependency",
+      "sha256": "646cf2c665b345cb35d7fc624f5d43a594efa7e9f6335a4a8f7a10f81bf1d4da",
+      "exit": 0,
+      "output_sha256": "a87bfa7b9f877fb23e0a2d0b68b05626d3048f91382883e770a1d87ffa61856c"
     },
     {
       "index": 1,
-      "name": "Shelf ownership and actionable path integrity",
-      "sha256": "3f851033c601e7fcf5888c4afe0e24d088b25f8151b054a7f3af556c09dbb416",
-      "exit": 0
+      "name": "Check for path-form references that should be tokens",
+      "sha256": "e24135e197b2c7d3cb1e051531628f3d595c21ad59f7bc962347e7da98663354",
+      "exit": 0,
+      "output_sha256": "245f14f34dfa74cc9c702fc575d8d20f9e0e740879dd5ca85b3f93d131855d1e"
     },
     {
       "index": 2,
-      "name": "Validate token resolution (build --check)",
-      "sha256": "5a4d94d323ea54135ea5a7ad27f3fc3482d3d38acd25d358bb2306aefa36a536",
-      "exit": 0
+      "name": "Shelf ownership and actionable path integrity",
+      "sha256": "3f851033c601e7fcf5888c4afe0e24d088b25f8151b054a7f3af556c09dbb416",
+      "exit": 0,
+      "output_sha256": "fedfd65bd847f85f7dd1a5a437b6b2beb730b217e9d348518559222cfdda5c15"
     },
     {
       "index": 3,
-      "name": "Full build for hook validation",
-      "sha256": "9e5fa37cb15239c760df557105ef0163c958c0ca2893ce4c0b3fd0ab2fa7b134",
-      "exit": 0
+      "name": "Validate token resolution (build --check)",
+      "sha256": "5a4d94d323ea54135ea5a7ad27f3fc3482d3d38acd25d358bb2306aefa36a536",
+      "exit": 0,
+      "output_sha256": "9ce8a212973a61a7a73d126c325ac7d741de178a59cbe42728a58c958a91b5d0"
     },
     {
       "index": 4,
-      "name": "Gate contract and generated agreement",
-      "sha256": "e89a744cbf4fc86ae37e7fc4feea4fb71c3bde18562db842354f4c2a26c5151d",
-      "exit": 0
+      "name": "Full build for hook validation",
+      "sha256": "9e5fa37cb15239c760df557105ef0163c958c0ca2893ce4c0b3fd0ab2fa7b134",
+      "exit": 0,
+      "output_sha256": "2ebe78b457c0931b3131abe3d3911122c58c51d2c39e0e61e5125d2930c58dc6"
     },
     {
       "index": 5,
-      "name": "Bounded work coordination and recovery",
-      "sha256": "daef810a73a327cff1bd016666eea639610d2fa6c1bc2caff434080f3dec301e",
-      "exit": 0
+      "name": "Gate contract and generated agreement",
+      "sha256": "e89a744cbf4fc86ae37e7fc4feea4fb71c3bde18562db842354f4c2a26c5151d",
+      "exit": 0,
+      "output_sha256": "9a740dbb9d8e04e9ff20546b2595cf1896830098a03ea80e5ccc7c01704b6b73"
     },
     {
       "index": 6,
-      "name": "Project procedure and resident composition",
-      "sha256": "28166b6c1dcbc780402a798cc1f5783aebc89adb9282d8bd806e63a6b6d65b58",
-      "exit": 0
+      "name": "Bounded work coordination and recovery",
+      "sha256": "daef810a73a327cff1bd016666eea639610d2fa6c1bc2caff434080f3dec301e",
+      "exit": 0,
+      "output_sha256": "8d2ae5c649bdcda20f9741c12dbd747b12a7f38ccb0bff74758e29e444f9329c"
     },
     {
       "index": 7,
-      "name": "Canonical terminology and generated wiki",
-      "sha256": "ffc1ab857571f83266ce6144fb204bc5c561374840e46575c8c4ad16c4511218",
-      "exit": 0
+      "name": "Project procedure and resident composition",
+      "sha256": "28166b6c1dcbc780402a798cc1f5783aebc89adb9282d8bd806e63a6b6d65b58",
+      "exit": 0,
+      "output_sha256": "4c819bd68fa1b205332ac88f27cbea46bfffbf709218044aa71608caa600c70b"
     },
     {
       "index": 8,
-      "name": "Generated source authority and drift",
-      "sha256": "d43f5a41e646dfd97d179aa106ae64d922fd2e98bb3f0f8eaa5d21aa6d674144",
-      "exit": 0
+      "name": "Canonical terminology and generated wiki",
+      "sha256": "ffc1ab857571f83266ce6144fb204bc5c561374840e46575c8c4ad16c4511218",
+      "exit": 0,
+      "output_sha256": "202a61aae1ce711ec992ad3107adb5841fdf20f05662fbc74b7c0f35d82ba78d"
     },
     {
       "index": 9,
-      "name": "Compact safety kernel structure and budget",
-      "sha256": "9a60d0ec788742fcc59dbf9e0832ceb606c4d8adb684470df1c0da3e2e5816e3",
-      "exit": 0
+      "name": "Generated source authority and drift",
+      "sha256": "d43f5a41e646dfd97d179aa106ae64d922fd2e98bb3f0f8eaa5d21aa6d674144",
+      "exit": 0,
+      "output_sha256": "b38b14cff48f778629f3648b2cef3f408850de1d074f5eaaaf31d4c983c92ccd"
     },
     {
       "index": 10,
-      "name": "Proportional review risk policy",
-      "sha256": "ca2913c849fab6831a41c94dd21ea4971174ba03fb4dd2dcb6578ff32acd70b1",
-      "exit": 0
+      "name": "Compact safety kernel structure and budget",
+      "sha256": "9a60d0ec788742fcc59dbf9e0832ceb606c4d8adb684470df1c0da3e2e5816e3",
+      "exit": 0,
+      "output_sha256": "da9535b376bd632dcf37604681457d920edda8d3a2ef1e64350955be09345bb5"
     },
     {
       "index": 11,
-      "name": "Deterministic progressive loading",
-      "sha256": "5056a5167eec6ef95bdfed382220877e7f1642f3dcca5004f80bcfc94b315a3c",
-      "exit": 0
+      "name": "Proportional review risk policy",
+      "sha256": "ca2913c849fab6831a41c94dd21ea4971174ba03fb4dd2dcb6578ff32acd70b1",
+      "exit": 0,
+      "output_sha256": "d0b7a71a26edd191360e55200d8dc41e7afd36e533e01b1acb0df463235c8189"
     },
     {
       "index": 12,
-      "name": "Validate Craft Agent flat skill layout",
-      "sha256": "dde64c2f95465ea0eb910d31cd64b43b4aeea27edb5d1a7fcf4de62d851974d6",
-      "exit": 0
+      "name": "Deterministic progressive loading",
+      "sha256": "5056a5167eec6ef95bdfed382220877e7f1642f3dcca5004f80bcfc94b315a3c",
+      "exit": 0,
+      "output_sha256": "620ce201fac27d5e5b011277021cefc4d73d68035117957d6feacad17f056fad"
     },
     {
       "index": 13,
-      "name": "Validate hook installation (claude-code)",
-      "sha256": "4b75ec40b55d500722cbae1ecf6afd1531a813c744ba108185470c337b1a1aa4",
-      "exit": 0
+      "name": "Validate Craft Agent flat skill layout",
+      "sha256": "dde64c2f95465ea0eb910d31cd64b43b4aeea27edb5d1a7fcf4de62d851974d6",
+      "exit": 0,
+      "output_sha256": "d3e21e6ac1ded3b376d60284898f048151412f6adb7656b101b660b612192c43"
     },
     {
       "index": 14,
-      "name": "Validate hook installation (craft-agent)",
-      "sha256": "57ecdb16f9802206b7d792e956b148023d95090200f66da76a2b14dc4626dc20",
-      "exit": 0
+      "name": "Validate hook installation (claude-code)",
+      "sha256": "4b75ec40b55d500722cbae1ecf6afd1531a813c744ba108185470c337b1a1aa4",
+      "exit": 0,
+      "output_sha256": "b6479474294bc06519c047539225f42916a074e590a595c78aaf304319ba314b"
     },
     {
       "index": 15,
-      "name": "Validate repo hooks match snippet",
-      "sha256": "0e547ffb8de50632129b5cce680bb292e8e9800c633cb2d1f9ca129136fef922",
-      "exit": 0
+      "name": "Validate hook installation (craft-agent)",
+      "sha256": "57ecdb16f9802206b7d792e956b148023d95090200f66da76a2b14dc4626dc20",
+      "exit": 0,
+      "output_sha256": "32624e5b502c11522c257ddc1d7804c1fcfc4b703efed8935b5eb3383265699f"
     },
     {
       "index": 16,
-      "name": "Coherent package upgrade and rollback fixtures",
-      "sha256": "cafb98193ff5da27e4babaae6e16116b1a20f2b60d208562624f932efdf7a3be",
-      "exit": 0
+      "name": "Validate repo hooks match snippet",
+      "sha256": "0e547ffb8de50632129b5cce680bb292e8e9800c633cb2d1f9ca129136fef922",
+      "exit": 0,
+      "output_sha256": "0e1ecca9fd457583d0f7eed6c1305bb9f2e958a6489093d8b8ae5c2119774f69"
     },
     {
       "index": 17,
-      "name": "Consumer package documentation and clean-home diagnostics",
-      "sha256": "d91f96ebb7e2aa7d92968093ae5c17d17b5c7d5b46e51ad4d0851650bbefe302",
-      "exit": 0
+      "name": "Coherent package upgrade and rollback fixtures",
+      "sha256": "cafb98193ff5da27e4babaae6e16116b1a20f2b60d208562624f932efdf7a3be",
+      "exit": 0,
+      "output_sha256": "c367aa05824f522b88a92e048541a17948ff3d33614915b9eb7a475be63d522b"
     },
     {
       "index": 18,
-      "name": "Shared-parent registered provider events",
-      "sha256": "e9d24806347d95a84bd9c9e4d4d66ff86b6b6f50985d468cb1dd43013f535460",
-      "exit": 0
+      "name": "Consumer package documentation and clean-home diagnostics",
+      "sha256": "d91f96ebb7e2aa7d92968093ae5c17d17b5c7d5b46e51ad4d0851650bbefe302",
+      "exit": 0,
+      "output_sha256": "b98f50546ecc2b0f98e9260fbca2031a488cd2a9892d30925de65e2ce19426a4"
     },
     {
       "index": 19,
-      "name": "Native consumer Git registration and destination range",
-      "sha256": "3ab4259dbe5b3e5baec9b64b71c119f07eb8bcdf42339ba1d10cb8981932cc52",
-      "exit": 0
+      "name": "Shared-parent registered provider events",
+      "sha256": "e9d24806347d95a84bd9c9e4d4d66ff86b6b6f50985d468cb1dd43013f535460",
+      "exit": 0,
+      "output_sha256": "49b5abdb7befc5bff82620dc68c7570dfd079c3da56e5ac6d4a1962fbfb71dd4"
     },
     {
       "index": 20,
-      "name": "Canary packet preparation remains non-authorizing",
-      "sha256": "ad8b95f350c7ba52676b6588b7f4b753ed646eeb4755375bb31f04e4a27ae7de",
-      "exit": 0
+      "name": "Native consumer Git registration and destination range",
+      "sha256": "3ab4259dbe5b3e5baec9b64b71c119f07eb8bcdf42339ba1d10cb8981932cc52",
+      "exit": 0,
+      "output_sha256": "31cea65df2ea18c95c5628dbd5dfed2e38f962e521e7fcf018fe5d52651b99a7"
     },
     {
       "index": 21,
-      "name": "Settings-drift check fixtures",
-      "sha256": "52b72fa9f349d502b0830f001c6ef0fc0e1fc93a35137c46438f318affcf682b",
-      "exit": 0
+      "name": "Canary packet preparation remains non-authorizing",
+      "sha256": "ad8b95f350c7ba52676b6588b7f4b753ed646eeb4755375bb31f04e4a27ae7de",
+      "exit": 0,
+      "output_sha256": "e383959171096da305b3ca310349dba387e8283d4bbc6685c8cd9a182667a668"
     },
     {
       "index": 22,
-      "name": "Scanner selected-source truth and incomplete results",
-      "sha256": "5e4c2c317e907ad677c855357b136273aa2361cdc71bc34931d4c214740fe151",
-      "exit": 0
+      "name": "Settings-drift check fixtures",
+      "sha256": "52b72fa9f349d502b0830f001c6ef0fc0e1fc93a35137c46438f318affcf682b",
+      "exit": 0,
+      "output_sha256": "647cd36449e101c697191e10d2d9a6b58c6935c1fdd7889234b0bdece7e785f2"
     },
     {
       "index": 23,
-      "name": "NotebookEdit write-guard fixtures",
-      "sha256": "06140794641d4f9e5af7cf3a10217f2678fef31e691c24d47918250a7f0b7ad5",
-      "exit": 0
+      "name": "Scanner selected-source truth and incomplete results",
+      "sha256": "5e4c2c317e907ad677c855357b136273aa2361cdc71bc34931d4c214740fe151",
+      "exit": 0,
+      "output_sha256": "f5c44724d2d17fe4545412df20bea299bad886d55e8e92ae5786dac842290b52"
     },
     {
       "index": 24,
-      "name": "Branch topology policy fixtures",
-      "sha256": "9380a53c127287a272d48a87c551b36350c21b1413bc98d64eecf00af9f56639",
-      "exit": 0
+      "name": "NotebookEdit write-guard fixtures",
+      "sha256": "06140794641d4f9e5af7cf3a10217f2678fef31e691c24d47918250a7f0b7ad5",
+      "exit": 0,
+      "output_sha256": "38fe44d9c59344c042647b02fbc40b0d821ba1e3c78516a5bc2bf5a1290ff961"
     },
     {
       "index": 25,
-      "name": "Main-only release policy fixtures",
-      "sha256": "aed6e2b52953f14d687833a7b424151a66f94d0701a6dd9066ba78c1b70dcdec",
-      "exit": 0
+      "name": "Branch topology policy fixtures",
+      "sha256": "9380a53c127287a272d48a87c551b36350c21b1413bc98d64eecf00af9f56639",
+      "exit": 0,
+      "output_sha256": "949b178ea28319a667f984433a7e3fffddb4299601c47375f1947fd46226fa02"
     },
     {
       "index": 26,
-      "name": "Exact-main deployment source fixtures",
-      "sha256": "706a8ed5e504ca8df09d489dc829452537e898d02978fa1cc04a0e15d13a3944",
-      "exit": 0
+      "name": "Main-only release policy fixtures",
+      "sha256": "aed6e2b52953f14d687833a7b424151a66f94d0701a6dd9066ba78c1b70dcdec",
+      "exit": 0,
+      "output_sha256": "50d40b0a58fbb6d45b2faf56e954859db867c74083e35616b80398fa6f3582e7"
     },
     {
       "index": 27,
-      "name": "Skill inventory fixtures and freshness",
-      "sha256": "ff458eb7772aec15a9fc6c2db9e439471ac1161b9962e34e18ea07f7729a1295",
-      "exit": 0
+      "name": "Exact-main deployment source fixtures",
+      "sha256": "706a8ed5e504ca8df09d489dc829452537e898d02978fa1cc04a0e15d13a3944",
+      "exit": 0,
+      "output_sha256": "2d1fb46b02fbebb62fcb2f59114a7fb5964780d73a4e4bfb6b7ddccda304a560"
     },
     {
       "index": 28,
-      "name": "Skill lifecycle schema and migration ratchet",
-      "sha256": "4304dd4ce315569040eb553522c70d0cc1d62bb491c6c806803da45134430afc",
-      "exit": 0
+      "name": "Skill inventory fixtures and freshness",
+      "sha256": "2d93485b85ab1a84e300261e3cfde7ee7f380ad5e64ff61c526b128c216e28e6",
+      "exit": 0,
+      "output_sha256": "f9b13c0126d75f4fe26e5ccc2fecd4cf0578baed6e169f0e51c302e92a02c50f"
     },
     {
       "index": 29,
+      "name": "Skill lifecycle schema and migration ratchet",
+      "sha256": "4304dd4ce315569040eb553522c70d0cc1d62bb491c6c806803da45134430afc",
+      "exit": 0,
+      "output_sha256": "e76005f26ab06f0c79d913347c6c174ad6bda1637c488b9039cbc85372182255"
+    },
+    {
+      "index": 30,
       "name": "Hook scenario tests",
       "sha256": "71dfc15c9a28c3a71a9e9bccaf1bb56130ad5591057a789c160091e893c2feda",
-      "exit": 0
+      "exit": 0,
+      "output_sha256": "550a949ae3e6f0ad38fd48a2491ecb5811b9b34fea039e1d79388c9a2556b417"
     }
   ],
-  "execution_scope": "local validate job only, no publish job or live activation",
-  "environment_notes": [
-    "PR lifecycle context supplied; first-main-promotion uses-only action not applicable",
-    "Long first chunk resumed after three successful composition commands",
-    "Clean-home fixture rerun with normal temporary paths outside checkout; no test assertion changed"
+  "local_fixture_environment": {
+    "external_temporary_root": true,
+    "canonical_no_symlink_ancestor": true,
+    "private_scratch_ignored_in_clone_git_info_only": true,
+    "tracked_inputs_excluded": false,
+    "tests_or_assertions_relaxed": false
+  },
+  "superseded_runs": [
+    {
+      "directory": ".verification/1051/full-ci-round2",
+      "reason": "macOS /var alias violated unchanged registration no-symlink contract; retained failure logs. Reader fixes required a fresh replay."
+    },
+    {
+      "directory": ".verification/1051/full-ci-round2-final",
+      "reason": "Stopped before post-cleanup B6 repair; no partial steps count as final proof."
+    },
+    {
+      "directory": ".verification/1051/full-ci-round2-stable",
+      "reason": "0-29 eventually passed after documented step28 private-scratch correction;37 acceptance tests passed; old nongit fixture expected unresolvable Git command to pass. Fixture aligned with stronger policy, then every step rerun from zero."
+    }
   ],
-  "generator_order": [
-    "skill-inventory",
-    "ontology --write",
-    "build",
-    "progressive-loading-metrics",
-    "language-scope --write",
-    "data-scope --write",
-    "review-risk-metrics",
-    "build",
-    "generated-source-authority",
-    "kernel-budget"
+  "semantic_fixture_updates": [
+    "Terminal signal still requires exit2, with Unscoped mutation instead of missing-artifact diagnostic because terminal gates are not owners.",
+    "Empty-reporoot #926 fixture preserves all original own-session/artifact/root/cross-session/unknown-session assertions with valid filesystem mutations; adds explicit unresolved Git-owner denial. No enforcement change."
   ],
-  "reviewed_generated_diff_sha256": "248d940bcc1847ed847497db4ca339221583349bf225e176c678b16cc9c64564",
-  "hosted_validation": "must be confirmed on the subsequent commit; local replay is not hosted approval"
+  "review_boundaries": "Bounded source reviews/local tests are not independent exact-head acceptance. Hosted exact-head green and coordinator-led re-review remain required.",
+  "excluded": "Uses-only checkout/setup actions, inapplicable first-main provenance, publish job. No live install/deploy/activation/release or shared-branch merge; fixture consumers only.",
+  "historical_baseline_record": "c9cbbecc0dcb98e01e05da1f7614a2fa9263289b:plans/1051-full-validate.json",
+  "local_trace_directory": ".verification/1051/full-ci-round2-clean"
 }

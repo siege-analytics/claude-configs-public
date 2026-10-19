@@ -317,9 +317,16 @@ One session can have multiple tasks in the same repo. Declare absolute
 subdirectories/extra paths are supported). `repo_root` alone is the legacy
 scope default. Canonical path-component containment, including symlinks,
 selects the most-specific task; equal scopes fail closed with task names.
-Set `CCP_TASK_ID='owner/repo#NNN'` in the environment or at the start of a
-Bash command to disambiguate a tie. Binding selects a task but never grants
-permission to mutate outside its scope. Split actions spanning multiple tasks.
+Use a leading in-command marker, `CCP_TASK_ID='owner/repo#NNN' command ...`,
+to disambiguate a Bash tie. Agent-shell exports do not reach the Craft hook
+process; Write/Edit/MultiEdit/NotebookEdit require unambiguous path ownership
+and have no in-command binding channel. Binding never expands scope. Git
+mutations belong to the repository toplevel's owner, not a nested path's task.
+Split actions spanning multiple tasks; prefer isolated worktrees for independent
+Git activity. Terminal disposed/complete/done-awaiting-pr gates are excluded
+from active ownership. Preserve reserved tasks/.canonical/ per-task claims:
+individual gate cleanup cannot resurrect that task's stale legacy copy, and
+unrelated legacy tasks remain independent.
 
 ```json
 {
@@ -340,9 +347,21 @@ session files are read as legacy tasks; new writes always use task directories.
 Workspace-root files cannot authorize mutations. The sole unknown-session
 root read is diagnostic-only and requires an exact canonical repo match.
 
-A positive read-only classifier runs before any gate lookup: investigation
-reads are independent of every task's status. Unknown command shapes are not
-assumed read-only. Unscoped mutations fail closed: open a scoped task gate,
+Own-session lifecycle files do not require an existing task gate: the host's
+current session may create/edit/remove its task gate JSON and write its own
+plans/data. Bounded mkdir/rmdir may scaffold task directories. Other sessions,
+workspace-root signals, symlink escapes and opaque program execution are not
+exempt. Bootstrap designing, write the investigation/pre-mortem evidence, then
+transition the same gate to implementing; dispose and clean up after completion.
+
+A positive reader classifier runs before gate lookup. Bounded diagnostics
+(syntax checks, standard test/bytecode/lint commands, document/package readers,
+and Git fetch) are also allowed without artifacts during designing/reviewing.
+They are an explicit investigation allowance, not proof of no side effects:
+tests execute project code and tools may write caches/metadata. Arbitrary
+scripts, clones, source-fixing/output-file flags and opaque execution are not
+investigation exceptions. Unknown shapes are not assumed read-only.
+Unscoped mutations fail closed: open a scoped task gate,
 never borrow another task's implementing state. In a non-git CWD, use an
 in-command `cd`, `git -C`, an explicit target path, or a declared scope path.
 
@@ -448,9 +467,13 @@ When the PR is merged and work is complete:
 2. Post the disposition to the ticket if not already there
 3. Delete the signal file: `rm "$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json"`
 
-Signal files are scoped per-repo. Leaving done signals around causes
-scope mismatch warnings on the next task for that repo and archive
-prompts after 4h.
+Signal files are scoped per session/task. Terminal records no longer compete
+with active tasks or authorize mutations. Own-session cleanup remains allowed
+without reactivating implementation. Keep the reserved per-task canonical claims;
+remove only individual task directories after their signal files. Keep implementing status through the final
+push/PR operation; if new source or Git mutations are needed after a terminal
+transition, explicitly reactivate implementing with current complete artifacts.
+Never remove another session's signals.
 
 ## Attribution Policy
 
