@@ -46,7 +46,8 @@ def independent(source):
     project = source / 'projects/independent'
     skill = project / 'skills/review/SKILL.md'
     skill.parent.mkdir(parents=True)
-    skill.write_text('# Independent review\n\nInspect the project changes.\n')
+    skill.write_text('---\nname: review\ndescription: Independent review example.\n---\n\n'
+                     '# Independent review\n\nInspect the project changes.\n')
     (project / 'CLAUDE.md').write_text('')
     write(source, 'projects/independent/composition.json', {
         'bindings': {'replacements': [], 'extensions': [], 'aliases': []}, 'heading_map': {},

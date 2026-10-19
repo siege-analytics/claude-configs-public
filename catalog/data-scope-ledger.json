@@ -787,30 +787,30 @@
       },
       "current": {
         "authored": {
-          "characters": 5755,
-          "estimated_tokens": 1439,
-          "bytes": 5815
+          "characters": 5757,
+          "estimated_tokens": 1440,
+          "bytes": 5817
         },
         "packaged": {
           "nested": {
-            "characters": 12613,
+            "characters": 12615,
             "estimated_tokens": 3154,
-            "bytes": 12675
+            "bytes": 12677
           },
           "flat": {
-            "characters": 12613,
+            "characters": 12615,
             "estimated_tokens": 3154,
-            "bytes": 12675
+            "bytes": 12677
           },
           "claude-code": {
-            "characters": 12613,
+            "characters": 12615,
             "estimated_tokens": 3154,
-            "bytes": 12675
+            "bytes": 12677
           },
           "craft-agent": {
-            "characters": 12613,
+            "characters": 12615,
             "estimated_tokens": 3154,
-            "bytes": 12675
+            "bytes": 12677
           }
         }
       }
