@@ -491,6 +491,73 @@ class Gates(unittest.TestCase):
         for command in ['touch ./*.md', 'rm plans/*.md', 'git add ./src/*.py', 'printf x > ./out*.txt', 'rg foo --pre*=evil']:
             with self.subTest(command=command): self.assertGate(2, command)
 
+    def test_stdio_redirect_reads_and_diagnostics_in_real_hooks(self):
+        commands = ['cat x 2>/dev/null', 'grep foo f 2>&1', 'ls 2>&1 | head',
+                    'pytest tests 2>&1 | tail', 'python3 -m pytest -q 2>&1 | tail',
+                    'cat x >&1', 'cat x 3>&12', 'cat x 0<&1',
+                    'cat x 2>&-', 'cat x 3<&-', 'cat x >/dev/null',
+                    'cat x >>/dev/null', 'cat x 2>>/dev/null',
+                    'cat x &>/dev/null', 'cat x &>>/dev/null',
+                    'cat x >&/dev/null', 'cat x 7</dev/null',
+                    'ls >/dev/null 2>&1', 'cat x >|/dev/null', 'cat x 2>|/dev/null',
+                    'cat x 2>"/dev/null"', "cat x >'/dev/null'", 'cat x >&3']
+        for phase in ('no gate', 'designing', 'implementing', 'done-awaiting-pr', 'disposed'):
+            if phase != 'no gate':
+                self.task('o/r#stdio', self.repo, status=phase)
+            # Full operator vocabulary in required no-gate/implementing states;
+            # representative read/diagnostic forms also prove terminal/designing
+            # independence without duplicating the full cross-product.
+            matrix = commands if phase in ('no gate', 'implementing') else commands[:4]
+            for command in matrix:
+                with self.subTest(phase=phase, command=command):
+                    payload = craft_payload(tool_name='Bash', cwd=str(self.repo), tool_input={'command': command})
+                    for result in self.real_identity_hooks(payload, self.identity_env(payload)):
+                        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                        self.assertNotIn('INVESTIGATION REQUIRED', result.stdout)
+
+    def test_stdio_redirect_authorized_mutations_and_scoped_outputs(self):
+        commands = [f"git -C '{self.repo}' commit -m x 2>&1",
+                    f"git -C '{self.repo}' commit -m x 2>/dev/null",
+                    'touch f 2>&1', 'touch f 2>/dev/null', 'touch f &>/dev/null',
+                    'cat x 2>out', 'cat x 2>>out', 'cat x &>out',
+                    'cat x &>>out', 'ls >&out', 'cat x >|out',
+                    '3>out cat x', 'cat x 3>out >&3']
+        for command in commands:
+            with self.subTest(phase='no gate', command=command): self.assertGate(2, command)
+        self.task('o/r#stdio-mutation', self.repo)
+        for command in commands:
+            with self.subTest(phase='implementing', command=command): self.assertGate(0, command)
+
+    def test_stdio_file_redirects_and_expanded_targets_remain_scoped(self):
+        outside = self.ws / 'outside'
+        outside.mkdir()
+        link = self.repo / 'null-link'; link.symlink_to('/dev/null')
+        commands = [f'cat x 2>{outside}/file', f'cat x 2>>{outside}/file',
+                    f'ls >&{outside}/file', f'echo x &>{outside}/file',
+                    f'echo x &>>{outside}/file', f'cat x 2>&1 >{outside}/file',
+                    f'cat x >{outside}/file 2>&1', f'cat x >{outside}/file >/dev/null',
+                    f'touch {outside}/file 2>/dev/null',
+                    'cat x 2>./out*', 'cat x 2>&./out*', 'cat x &>>./out*',
+                    'cat x 2>$OUTPUT', 'cat x 2>&$FD', 'cat x 2>$(pwd)',
+                    'cat x 2>&', 'cat x 2<&word', 'cat x 2>/dev/nul*',
+                    'cat x 2>null-link', 'cat x >/dev/null.txt',
+                    'cat x >/dev/nullx', 'cat x 2>/dev/fd/3',
+                    'cat x >/dev/stdout', 'cat x >/dev/stderr', 'cat x >/dev/tty',
+                    'cat x >/dev/null/../tmp/x', 'cat x >/dev//null',
+                    'exec 3>f; cat x >&3', f'3>{outside}/file cat x',
+                    f'cat x 3>{outside}/file >&3', f'cat x >|{outside}/file',
+                    'cat x >|./out*', 'cat x >|$OUTPUT', 'cat x 2>~/file']
+        for phase in ('no gate', 'implementing'):
+            if phase == 'implementing': self.task('o/r#stdio-negative', self.repo)
+            for command in commands:
+                with self.subTest(phase=phase, command=command): self.assertGate(2, command)
+        from task_actions import shell_tokens
+        for word in ('"2"', "'2'", r'\2'):
+            self.assertEqual([t[0] for t in shell_tokens('cat '+word+'>/dev/null')],
+                             ['cat', '2', '>', '/dev/null'])
+        self.assertEqual([t[0] for t in shell_tokens('cat 2>/dev/null')],
+                         ['cat', '2>', '/dev/null'])
+
     def test_bounded_investigation_policy_without_gate_and_while_designing(self):
         commands = ['bash -n tests/run.sh', 'shellcheck hooks/x.sh', 'python3 -m pytest -q', 'pytest tests',
                     'python3 -m py_compile x.py', 'ruff check .', 'markitdown doc.pdf', 'pdf-tool info doc.pdf',

@@ -1,23 +1,21 @@
 {
   "ticket": "siege-analytics/claude-configs-public#1051",
-  "round": "FINAL v2 plus authorized released-main integration",
-  "source_parent": "67170d80eb7e1d38fafe8dfa32eff4ef37a46e8b",
-  "merged_develop": "4d6fbd27c4f47edc53856396fc58c02cf5bb6183",
+  "round": "FINAL v3.1 NEW-2 fd/null redirects and source changelog correction",
+  "source_parent": "b14a94cd904165173558086462ab5c660db2f319",
   "merged_main": "f5c63baecfffa65b04508beb13d8b16312d215f8",
-  "prior_v2_checkpoint": "c0adbe2 full31/37/39 and hosted validate39231071049 success; separate topology failed before authorized main integration. Historical, not new integration proof.",
-  "changelog_preservation": "Original pinned main header relabelled3.5.67; entire following body preserved byte-for-byte; four1051 notes in fresh Unreleased.",
-  "input_index_tree": "0b811b8622d5360630feb09fa2a06ae5a0bff37a",
+  "merged_develop": "4d6fbd27c4f47edc53856396fc58c02cf5bb6183",
+  "input_index_tree": "a9f0be02121f6e5bcbe1d0f03a6b41eaa1c0c962",
   "workflow": ".github/workflows/build-and-publish.yml",
   "workflow_sha256": "24265f613d2d1a01b367ff80dfcc4be9185279cb7179d1b98e28f632aa0300a6",
   "python": "Python3.12.12",
   "applicable_validate_shell_steps": 31,
   "hook_suites": 37,
-  "task_acceptance_tests": 39,
+  "task_acceptance_tests": 42,
   "all_steps_replayed_from_zero": true,
   "resumes_or_skips_in_final_run": false,
-  "runtime_source_unchanged": true,
+  "runtime_source_unchanged_during_final_run": true,
   "frozen_input_count": 904,
-  "runtime_source_snapshot_sha256": "a5f39ae187da0659dd2ac9ebbcde20fc10d9ac0dab65fb6665b578778a501396",
+  "runtime_source_snapshot_sha256": "6399f130537d8bf4e57de191598f4f2dd76f00fccc20377643e168e14f2fe71a",
   "steps": [
     {
       "index": 0,
@@ -59,28 +57,28 @@
       "name": "Gate contract and generated agreement",
       "sha256": "e89a744cbf4fc86ae37e7fc4feea4fb71c3bde18562db842354f4c2a26c5151d",
       "exit": 0,
-      "output_sha256": "73885d463a29953a7db0db635c8e59e3c12fbb133e7b9cf46dc01a16c4e0585b"
+      "output_sha256": "0e2c0fe58bb63087c5b64be330134a1e907ae2e60914de9a4aee8eb9377c642f"
     },
     {
       "index": 6,
       "name": "Bounded work coordination and recovery",
       "sha256": "daef810a73a327cff1bd016666eea639610d2fa6c1bc2caff434080f3dec301e",
       "exit": 0,
-      "output_sha256": "bb6c85305bd4dd105b99ec7f351618c68c5d7679c93a16f85a28392d29e57a77"
+      "output_sha256": "c53837599da4c2dcbd7c20386c69e9df5f5df37115049e38fb74b8b0d82ff183"
     },
     {
       "index": 7,
       "name": "Project procedure and resident composition",
       "sha256": "28166b6c1dcbc780402a798cc1f5783aebc89adb9282d8bd806e63a6b6d65b58",
       "exit": 0,
-      "output_sha256": "35feeab177b8ee88d273c26be94ee803bf91f2420db27414b7e6b48b0eeaba5f"
+      "output_sha256": "a2692497c7393fa4f4a10d08d20fcde74974fa3818eecc97dc148aa71fd76888"
     },
     {
       "index": 8,
       "name": "Canonical terminology and generated wiki",
       "sha256": "ffc1ab857571f83266ce6144fb204bc5c561374840e46575c8c4ad16c4511218",
       "exit": 0,
-      "output_sha256": "bb1d51d1871f1ea4cfbd4afa3450250818759c8da5631354333ed4bab1fabfcb"
+      "output_sha256": "f262909faa9955d3f665d26c0857f7f341e96aad2c76ec49a1b7257d65408ad3"
     },
     {
       "index": 9,
@@ -143,7 +141,7 @@
       "name": "Coherent package upgrade and rollback fixtures",
       "sha256": "cafb98193ff5da27e4babaae6e16116b1a20f2b60d208562624f932efdf7a3be",
       "exit": 0,
-      "output_sha256": "cd092e4cdaaec4d574c2f5edb7b984a981264b23e7115bfae46c9ccdee706d62"
+      "output_sha256": "6a6dce8005ce71292d7178c3cee7320079e2cd980036742455d60bc6852571e6"
     },
     {
       "index": 18,
@@ -157,21 +155,21 @@
       "name": "Shared-parent registered provider events",
       "sha256": "e9d24806347d95a84bd9c9e4d4d66ff86b6b6f50985d468cb1dd43013f535460",
       "exit": 0,
-      "output_sha256": "0d166fb4a89056cc94aeef9f0af46883bd98efba4a6434d1d6cfadf2cf99bef3"
+      "output_sha256": "0c6c2fb6f915b52bcc7e08d8a2bd2fc0ee9ff1b9bc4f5ac9d87b511839706622"
     },
     {
       "index": 20,
       "name": "Native consumer Git registration and destination range",
       "sha256": "3ab4259dbe5b3e5baec9b64b71c119f07eb8bcdf42339ba1d10cb8981932cc52",
       "exit": 0,
-      "output_sha256": "32c1f43a64c71c5bdb98769acf5475ebbddec89f1d2d0b1852976da701dd80e7"
+      "output_sha256": "78b68d0e5e3c031545177075d4b4fc3647d56f4fee78c4a27cc92a6bec0cc5ed"
     },
     {
       "index": 21,
       "name": "Canary packet preparation remains non-authorizing",
       "sha256": "ad8b95f350c7ba52676b6588b7f4b753ed646eeb4755375bb31f04e4a27ae7de",
       "exit": 0,
-      "output_sha256": "b29d61aa2daca83b996cec9fdb6037c587a0ecaadc218316c3c0240241169a63"
+      "output_sha256": "73c476ca2c3dc9e3ce9ef6254ef023bfb2122a9bb57971f5cb169497d7b1271e"
     },
     {
       "index": 22,
@@ -185,7 +183,7 @@
       "name": "Scanner selected-source truth and incomplete results",
       "sha256": "5e4c2c317e907ad677c855357b136273aa2361cdc71bc34931d4c214740fe151",
       "exit": 0,
-      "output_sha256": "355f065f7f8206dabbf11f8e6713f393209c03749f99fbf18937c690c983efed"
+      "output_sha256": "3497c09974e04174d44b976bf4946a62bad2ab1aebf0df0c59a9c636afe8a411"
     },
     {
       "index": 24,
@@ -206,7 +204,7 @@
       "name": "Main-only release policy fixtures",
       "sha256": "aed6e2b52953f14d687833a7b424151a66f94d0701a6dd9066ba78c1b70dcdec",
       "exit": 0,
-      "output_sha256": "355a594bcf10f4e2a41dd1af2703c47f754f1bd952d4d764b620a766d1e0744f"
+      "output_sha256": "16f68b6007dbae55e7d8661c7bae683fac37aee7ec6c0d9cd6159b315134dd0f"
     },
     {
       "index": 27,
@@ -234,23 +232,36 @@
       "name": "Hook scenario tests",
       "sha256": "71dfc15c9a28c3a71a9e9bccaf1bb56130ad5591057a789c160091e893c2feda",
       "exit": 0,
-      "output_sha256": "5d1ce07894b088654d4c286f639b701a635b705c6790985bf8016e54a9d7b0fa"
+      "output_sha256": "e45046428ad2b70c99dbbf8e851a1342cf7bfe40927bf3f1b35e633836190445"
     }
   ],
-  "local_dependency_setup": "Existing pinned PyYAML6.0.3 reused in clone-local no-pip venv; offline already-satisfied workflow command; no package install or managed-Python override.",
-  "fixture_environment": "Canonical external temporary roots; only untracked private .verification scratch ignored in clone-local Git info. No tracked input excluded.",
-  "scope": "Only NEW-1 classifier/provenance, real-hook glob fixtures,926 owned-worktree positive,R3 Unreleased disclosure,required additive upstream merge and derived/evidence artifacts. R1/R2/R4-R7,N1/N3-N9 remain follow-ups.",
-  "reader_boundary": "V2 bounded pure-reader/pytest argument grammars only; literal-prefix globs before true --, leading globs after true --. Option VALUE -- is not a terminator. Mixed commands/mutations keep concrete paths; NEW glob grammar excludes generic help/viewer admission. Existing brace/parameter/command/escape denials remain.",
-  "superseded_v2": ".verification/1051/full-ci-round3-v2:17/31 before final NEW glob-vocabulary tightening; generic help admission removed, negatives added. Not final proof.",
-  "corpus_1057": "Not reachable: no committed1057/45-of71 fixture, issue has summary/examples only and comments empty. No fabricated full corpus or corpus-wide mutation replay claim.",
-  "superseded_v1": ".verification/1051/full-ci-round3:30/31 before FINAL v2. Existing lexer already rejected escaped newline; initial concern was not a demonstrated bug. Trace retained, not final proof.",
-  "prior_checkpoint": "936978a8535d0eeb2debd10894b9c16deef42e2e: B1-B7 independently verified fixed; hosted run39209841150 success. Its NEW-1 FAIL and old validation are not proof for this delta.",
+  "scope": "FINAL v3.1 NEW-2 fd duplication/closing, exact null sinks including clobber, concrete cumulative file outputs, real-hook tests; source CHANGELOG pinned-main plus five1051 notes only. NEW1 verified fixed;1063 and R1/R2/R4-R7/N1/N3-N9 not changed. No new merge/runtime wiring/install/activation.",
+  "changelog": "Additions-only against f5c63bae; existing Unreleased and next3.5.20 headers identical to main; upstream text preserved. Prior invented3.5.67 heading corrected per hub.",
+  "raw_corpus_replay": {
+    "log_entries_original_snapshot": 253,
+    "unique": 234,
+    "snapshot_sha256": "63b69b8f563dc5ab3111fc682f6457e2d2dab8f95aefd9c07e06507edbfe45f6",
+    "baseline_allowed": 54,
+    "candidate_source_sha256": "f855fdf8c3eec8b4966b306365fc94f1891f2800cfa17d4d9d160d86f5e75ad5",
+    "candidate_allowed": 74,
+    "newly_allowed": 20,
+    "formerly_allowed_now_denied": 0,
+    "all_newly_allowed_read_or_approved_diagnostic": true,
+    "all_newly_allowed_contain_redirect": true,
+    "raw_commands_executed": false,
+    "sandbox": "/private/var/folders/9h/83s_sxx17hv5gkccscgbyvzw0000gn/T/1051-new2-corpus-e60_bpq2",
+    "baseline": "b14a94cd904165173558086462ab5c660db2f319",
+    "limitations": "Raw log, not absent45/71 curated fixture;105 prior commands were truncated; original cwd not recorded. Classification-only no-gate nongit sandbox. This programmatic audit is not independent exact-head acceptance."
+  },
+  "curated_1057": "Actual45/71 curated corpus never committed; raw234-command frozen log used instead. No command execution or fabricated curated replay.",
+  "release_dry_run": "Promotion check succeeds; unchanged release-notes emits entire existing Unreleased including upstream BREAKING/Added plus five1051 notes. Only1051-output condition unresolved unless hub explicitly rules; not fabricated.",
+  "historical": "b14a94cd hosted green and B1-B7/NEW1 verified; independent round3 FAIL for NEW2. Earlier heading-preservation proofs superseded.",
   "focused_traces": [
-    ".verification/1051/round3/v2-final-focused.log",
-    ".verification/1051/round3/v2-final-system-path.log",
-    ".verification/1051/round3/v2-926.log"
+    ".verification/1051/round6/stdio-before-fix.log",
+    ".verification/1051/round6-v31/system-focused-final.log",
+    ".verification/1051/round6/system-glob-final.log"
   ],
-  "review_boundaries": "Local success is not independent exact-head acceptance. New exact-head hosted green must be recorded on PR1055 before handoff.",
-  "excluded": "Uses-only setup/checkout actions,inapplicable first-main provenance,publish job. No live install,activation,deployment,release or shared-branch merge.",
-  "local_trace_directory": ".verification/1051/full-ci-round4-main"
+  "fixture_environment": "Canonical external temps; untracked .verification only ignored; no tracked source exclusion or enforcement/snapshot weakening. Interrupted own fixtures preserved intact.",
+  "review_boundaries": "Local full proof and bounded No findings are not independent exact-head acceptance. Require new hosted Validate/topology green and independent reviewer acceptance.",
+  "local_trace_directory": ".verification/1051/full-ci-round6-new2"
 }

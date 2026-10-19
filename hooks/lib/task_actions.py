@@ -29,6 +29,7 @@ def shell_tokens(command: str) -> list[tuple[str, bool, tuple[int, ...]]]:
     word = ""
     globs = []
     active = False
+    fd_literal = True  # only adjacent, wholly unquoted ASCII digits are IO_NUMBER
     quote = ""
     i = 0
     while i < len(command):
@@ -44,6 +45,7 @@ def shell_tokens(command: str) -> list[tuple[str, bool, tuple[int, ...]]]:
                 raise UnknownShape("escaped newline or incomplete escape")
             word += command[i]
             active = True
+            fd_literal = False
         elif c in "$`" and quote != "'":
             raise UnknownShape("shell expansion requires mutation handling")
         elif quote == '"':
@@ -54,6 +56,7 @@ def shell_tokens(command: str) -> list[tuple[str, bool, tuple[int, ...]]]:
         elif c in "'\"":
             quote = c
             active = True
+            fd_literal = False
         elif c in "(){}":
             raise UnknownShape("shell group requires mutation handling")
         elif c in "*?[" and not (c == "[" and not active and i + 1 < len(command) and command[i + 1].isspace()):
@@ -61,16 +64,28 @@ def shell_tokens(command: str) -> list[tuple[str, bool, tuple[int, ...]]]:
             word += c
             active = True
         elif c.isspace() or c in ";&|<>":
+            fd = ""
             if active:
-                tokens.append((word, False, tuple(globs)))
-                word, active, globs = "", False, []
+                if c in "<>" and fd_literal and re.fullmatch(r"[0-9]+", word):
+                    fd = word
+                else:
+                    tokens.append((word, False, tuple(globs)))
+                word, active, globs, fd_literal = "", False, [], True
             if c == "\n":
                 tokens.append((";", True, ()))
             elif not c.isspace():
-                op = c
-                if i + 1 < len(command) and command[i + 1] == c:
-                    op += c
-                    i += 1
+                # Longest redirect first: &>> is not background + append,
+                # and >&/<& consume their ampersand, not a shell separator.
+                if c in "<>" or command.startswith("&>", i):
+                    op = next(op for op in ("&>>", "&>", ">>", ">&", "<&", ">|", "<<", ">", "<")
+                              if command.startswith(op, i))
+                    i += len(op) - 1
+                    op = fd + op
+                else:
+                    op = c
+                    if i + 1 < len(command) and command[i + 1] == c:
+                        op += c
+                        i += 1
                 tokens.append((op, True, ()))
         elif c == "#" and not active:
             # Comments/markers are deliberately not interpreted as authorization.
@@ -529,21 +544,25 @@ def action(command: str, cwd: str) -> dict:
             if not op:
                 args.append(value)
                 arg_globs.append(globs)
-            elif value in {">", ">>"}:
-                reads = False
+            elif re.fullmatch(r"[0-9]*(?:>>|>&|<&|>\||>|<)|&>>|&>", value):
+                redirect = re.sub(r"^[0-9]+", "", value)
                 i += 1
                 if i >= len(tokens) or tokens[i][1]:
                     raise UnknownShape("missing redirect target")
-                if tokens[i][2]:
-                    raise UnknownShape('expanded mutation targets require explicit concrete paths')
-                paths.append(canonical(tokens[i][0], effective))
-                file_paths.append(canonical(tokens[i][0], effective))
-            elif value == "<":
-                i += 1
-                if i >= len(tokens) or tokens[i][1]:
-                    raise UnknownShape("missing input target")
-                if tokens[i][2]:
-                    raise UnknownShape('input redirection requires an explicit concrete path')
+                target = tokens[i][0]
+                if tokens[i][2] or target.startswith('~'):
+                    raise UnknownShape('redirection requires an explicit concrete path')
+                if redirect in {">&", "<&"} and (re.fullmatch(r"[0-9]+", target) or target == "-"):
+                    pass  # duplicate/close descriptors; no filesystem target
+                elif redirect == "<&":
+                    raise UnknownShape("input fd duplication requires a descriptor or -")
+                elif redirect != "<" and target != "/dev/null":
+                    # Only the literal sink is exempt: aliases/symlinks still
+                    # require ownership. Earlier file writes are never erased
+                    # by a later duplication or /dev/null redirect.
+                    reads = False
+                    paths.append(canonical(target, effective))
+                    file_paths.append(canonical(target, effective))
             elif value in {"&&", ";", "|", "||"}:
                 finish()
             else:
