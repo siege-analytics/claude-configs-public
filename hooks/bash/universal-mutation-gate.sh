@@ -237,6 +237,30 @@ fi
 # in the command, skip the safelist and fall through to think-gate check.
 MUTATION_INDICATORS=(
     'git (push|commit|reset|checkout|rebase|merge|cherry-pick|revert|stash (pop|drop|apply|clear)|clean|tag -[adf]|branch -[dDmM])'
+    # Repo and working-tree writes the list above missed. They passed while a
+    # gate was designing, and replaying the logged block corpus showed them
+    # passing once reads stop depending on gate state (2026-10-19). `git
+    # fetch` stays a read: it only updates remote-tracking refs.
+    'git (init|add|rm|mv|pull|clone|restore|switch|apply|am|submodule|update-ref|gc|prune|worktree (add|remove|move|prune|repair|lock|unlock)|notes (add|append|edit|remove|copy))( |$)'
+    # Package and environment installs change shared interpreters and run
+    # arbitrary install scripts; they are task mutations.
+    '(^|[;&|[:space:]/])(pip3?|uv|npm|pnpm|yarn|gem|cargo|go) +(pip +)?(install|uninstall|add|remove|ci)( |$)'
+    '(^|[;&|[:space:]/])python3?(\.[0-9]+)? +-m +(venv|pip|ensurepip|virtualenv)( |$)'
+    '(^|[;&|[:space:]])virtualenv( |$)'
+    # `git -c key=val <subcommand>` hid the subcommand from the anchored
+    # patterns (siege#928); treat any per-invocation config override as a write.
+    'git( +-C +[^ ]+)? +-c +'
+    # Writes the old safelist admitted (#349 review): a REST write via
+    # gh api's method flag, a fetch refspec that updates a local ref, and a
+    # forced or reconfigured branch. (Backgrounding is rejected by the read
+    # classifier; a raw-string `&` pattern blocked quoted ampersands in reads.)
+    'gh api( .*)? (-X|--method)[= ]?(POST|PUT|PATCH|DELETE)'
+    'git( +-C +[^ ]+)? fetch( .*)? \+?[A-Za-z0-9_.@/-]*[A-Za-z0-9_.@-]:[A-Za-z0-9_.@/-]+( |$)'
+    'git( +-C +[^ ]+)? branch +(-f|--force|-c|-C|--copy|-u|--set-upstream-to|--unset-upstream|--edit-description)'
+    # Signalling processes is not investigation.
+    '(^|[;&|[:space:]])(kill|pkill|killall)( |$)'
+    # GitHub GraphQL writes go through `gh api graphql` with a mutation body.
+    'gh api graphql.*mutation'
     # git remote write subcommands. The safelist admits bare `git remote` and
     # `git remote -v`/`show`/`get-url` as reads, but `remote add/remove/rename/
     # set-url/set-head/prune` mutate the repo config. Block those explicitly so
@@ -315,14 +339,51 @@ fi
 if [[ "$REDIRECT_SCAN" =~ $REDIRECT_INDICATOR ]]; then
     COMPOUND_MUTATION=true
 fi
+# The indicator above skips a '>' preceded by a digit or '&' so that 2>&1 and
+# 2>/dev/null stay reads, which also let `2>/tmp/x`, `1>f` and `&>f` write
+# unnoticed (claude-configs-public#1071 review). Drop the provably safe sinks,
+# then any fd-prefixed redirect left is a write.
+FD_SCAN="$(printf '%s' "$REDIRECT_SCAN" | sed -E 's#([0-9]+|&)?>>?[[:space:]]*/dev/null([[:space:];|&)]|$)#\2#g; s#[0-9]*>&[0-9-]##g')"
+if [[ "$FD_SCAN" =~ (^|[[:space:]\;\|\&\(])([0-9]+|\&)\>  ]]; then
+    COMPOUND_MUTATION=true
+fi
+
+# --- Positive read classifier (lib/read-only-command.py) ---
+# Exit 0: proven read. Exit 3: a known verb used so that it writes or runs a
+# program (`rg --pre`, `gh api -iXDELETE`, `git fetch --upload-pack=`, a
+# guarded verb fed an unquoted expansion). A veto is a mutation: the regex
+# safelist below and the designing-state admissions further down must not
+# admit it (claude-configs-public#1071 review). Exit 4: a compound command the
+# classifier cannot prove; the first-word safelist must not admit it either,
+# since `cat f; bash evil.sh` starts with a read.
+READ_VERDICT=1
+if [[ "$COMPOUND_MUTATION" == "false" ]]; then
+    python3 "$HOOK_DIR/../lib/read-only-command.py" "$COMMAND" 2>/dev/null
+    READ_VERDICT=$?
+    [[ $READ_VERDICT -eq 3 ]] && COMPOUND_MUTATION=true
+fi
 
 # --- Match against safelist (only if no mutation indicator found) ---
 if [[ "$COMPOUND_MUTATION" == "false" ]]; then
-    for pattern in "${SAFE_PATTERNS[@]}"; do
-        if [[ "$COMMAND" =~ $pattern ]]; then
-            exit 0
-        fi
-    done
+    # The safelist regexes match a whole string, so on a multi-line command
+    # a read on line one admitted anything after it (`cat f<newline>. ./x`,
+    # electinfo#349 re-review). Multi-line commands go to the newline-aware classifier.
+    if [[ "$COMMAND" != *$'\n'* && $READ_VERDICT -ne 4 ]]; then
+        for pattern in "${SAFE_PATTERNS[@]}"; do
+            if [[ "$COMMAND" =~ $pattern ]]; then
+                exit 0
+            fi
+        done
+    fi
+    # Gates govern a task's mutations, never investigation (siege#1051,
+    # #1057). A proven read passes whatever the gate state:
+    # every simple command must be a known read verb with read-safe arguments
+    # (positive allowlist, lib/read-only-command.py). Anything it does not
+    # recognise falls through to the gate as before, so missing an indicator
+    # is never enough on its own (electinfo_claude_skills#349 review).
+    if [[ $READ_VERDICT -eq 0 ]]; then
+        exit 0
+    fi
 fi
 
 # [mutation-acknowledged] bypass removed (#477). Self-authorization is the
