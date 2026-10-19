@@ -4,6 +4,47 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### BREAKING
+
+Frontmatter validation now uses a real YAML parser (#1046). Two consumer-visible changes follow.
+
+**1. Frontmatter that was previously accepted is now rejected.**
+
+`bin/skill-inventory.py`, `bin/build.py` (`--check`, full build, and `--deploy`), and `bin/compose-project.py` (composed and selected packages) used to run a presence-only check. They now validate every packaged `SKILL.md` (direct, nested, project, and composed) and every `skills/_*-rules.md` header that has frontmatter, using `bin/frontmatter_validation.py`. A bad header makes these commands exit non-zero, naming the file and the reason. No output is written.
+
+The following are now rejected:
+- frontmatter that is not valid YAML, such as an unquoted value containing `: `, or an unterminated quote;
+- a top level that is not a mapping;
+- duplicate keys;
+- anchors, aliases, explicit tags (`!!set`, `!!omap`, …), and merge keys (`<<`);
+- plain scalars that YAML 1.1 and YAML 1.2 resolve differently, such as unquoted `yes`/`no`/`on`/`off`, unquoted dates, `1_000`, `1:20`, `012`, `0o17`, and `1e3`;
+- a byte-order mark before the opening delimiter, a near-miss delimiter (`--- `, or `---` after blank lines), and a frontmatter block that is opened but never closed;
+- in a skill, a missing `name` or `description`, or one that is empty, whitespace-only, or not a string (for example `description: false`, `[release]`, `42`, `~`, or `null`);
+- in a rule header, a `name` or `description` that is present but empty or not a string.
+
+`skill-inventory.py` also refuses headers whose `name`/`description` its catalog parser would read differently from YAML: flow mappings, explicit `?` keys, multi-line plain scalars, and `|+` blocks.
+
+**2. PyYAML is now a required dependency for build, deploy, and install.**
+
+- `build.py`, `skill-inventory.py`, and `compose-project.py` fail closed if `python3` cannot import PyYAML. There is no fallback parser and no skip switch.
+- `bin/install.sh` and `bin/sync-workspace-hooks.sh` stop before any build or workspace change unless `python3` imports exactly the pinned `PyYAML==6.0.3`.
+- Selected-registration `install`/`wire`/`verify` rebuild the package with `python3` from `PATH`, so they need PyYAML too.
+- Runtime git hooks in registered consumer repositories do not rebuild and are unaffected.
+
+**Migration**
+
+- **Fix headers.** Quote any `name`/`description` or other frontmatter value that contains `: `, that is meant as text but looks like a bool, date, or number, or that starts with a YAML indicator. Use double quotes, or single quotes if the text contains `"`. Quoting does not change the parsed text.
+- **Check a vendored bundle** before cutting over:
+  ```
+  python3 bin/frontmatter_validation.py --kind skill <path>/SKILL.md ...
+  python3 bin/frontmatter_validation.py --kind rule <path>/_*-rules.md
+  ```
+- **Install the dependency** on the supported interpreter, CPython 3.12 (CI-validated; 3.9+ compatible), used as `python3` on `PATH`. Then confirm the check exits 0:
+  ```
+  python3 -m pip install --require-hashes -r requirements-validation.txt
+  python3 bin/frontmatter_validation.py --check-dependency
+  ```
+
 ### Fixed
 - Correct task gate identity to session/task directories with scoped mutation ownership, exact artifact matching and read-only-first classification; remove shared-root artifact writes/authorization.
 - Correct the hub cap to its original administrative-load intent: communication is never blocked, stewards are never limited, and only hub spawn admission is capped.
