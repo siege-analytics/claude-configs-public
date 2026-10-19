@@ -50,9 +50,18 @@ def long_opt(a, *names):
     return len(n) >= 3 and any(full.startswith(n) for full in names)
 
 
-def short_has(a, letters):
-    """True when `a` is a short-option cluster containing any of `letters`."""
-    return a.startswith("-") and not a.startswith("--") and len(a) > 1 and bool(set(a[1:]) & set(letters))
+def short_has(a, letters, takes_arg=""):
+    """True when `a` is a short-option cluster containing any of `letters`.
+    Scanning stops at a letter in `takes_arg`: the rest of the cluster is that
+    option's argument (`date -Iseconds` is -I with "seconds", not -s; #1071)."""
+    if not (a.startswith("-") and not a.startswith("--") and len(a) > 1):
+        return False
+    for c in a[1:]:
+        if c in letters:
+            return True
+        if c in takes_arg:
+            return False
+    return False
 
 
 def git_ok(args):
@@ -66,11 +75,11 @@ def git_ok(args):
     if any(long_opt(a, "--upload-pack", "--receive-pack", "--exec", "--open-files-in-pager", "--output")
            for a in rest):
         return False
-    if sub == "grep" and any(short_has(a, "O") for a in rest):
+    if sub == "grep" and any(short_has(a, "O", "efABCm") for a in rest):
         return False   # -O<prog> runs <prog> on the matches
-    if sub in {"ls-remote", "fetch"} and any(short_has(a, "u") for a in rest):
+    if sub in {"ls-remote", "fetch"} and any(short_has(a, "u", "jo") for a in rest):
         return False   # -u <cmd> is --upload-pack
-    if sub in {"log", "diff", "show"} and any(short_has(a, "o") for a in rest):
+    if sub in {"log", "diff", "show"} and any(short_has(a, "o", "nSGLUMCB") for a in rest):
         return False
     if sub in GIT_READ:
         return True
@@ -98,7 +107,7 @@ def gh_ok(args):
         return args[1] in GH_READ_VERBS or args[0] == "search"
     if args[:1] == ["api"]:
         for a in args[1:]:
-            if long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF"):
+            if long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF", "Hpqt"):
                 return False   # pflag accepts clusters: -iXDELETE is -i -X DELETE
         return not (len(args) > 1 and args[1] == "graphql")   # graphql may carry a mutation body
     return args[:2] in (["auth", "status"],)
@@ -142,7 +151,7 @@ def simple_ok(words):
     if w in PLAIN:
         return True
     if w == "sort":
-        return not any(long_opt(a, "--output", "--compress-program") or short_has(a, "o") for a in args)
+        return not any(long_opt(a, "--output", "--compress-program") or short_has(a, "o", "kStT") for a in args)
     if w == "uniq":
         return len([a for a in args if not a.startswith("-")]) <= 1   # a second operand is an output file
     if w == "jq":
@@ -151,9 +160,9 @@ def simple_ok(words):
         opts = [a for a in args if a.startswith("-")]
         return all(o in flags for o in opts) and len([a for a in args if not a.startswith("-")]) <= 2
     if w == "yq":
-        return not any(long_opt(a, "--inplace", "--split-exp") or short_has(a, "is") for a in args)
+        return not any(long_opt(a, "--inplace", "--split-exp") or short_has(a, "is", "poI") for a in args)
     if w == "date":
-        return not any(long_opt(a, "--set") or short_has(a, "s") for a in args)
+        return not any(long_opt(a, "--set") or short_has(a, "s", "dfIr") for a in args)
     if w == "rg":
         return not any(long_opt(a, "--pre", "--pre-glob") for a in args)   # --pre CMD runs CMD per file
     if w == "sed":
@@ -226,7 +235,7 @@ def segment_expansions(command):
                 bare.append("x")
                 word_start = False
             else:
-                if c == "$" and nxt in EXPANDS:
+                if c == "$" and (nxt in EXPANDS or nxt == '"'):   # $"…" is a locale string: bash drops the $
                     found.add("$")
                 elif c in "*?[" and word_start:
                     found.add(c)
@@ -264,11 +273,11 @@ def veto_only_unsafe(w, args):
     if w == "env":
         return bool(args)   # env OPTS / env NAME=V CMD runs a program
     if w == "file":
-        return any(long_opt(a, "--compile") or short_has(a, "C") for a in args)
+        return any(long_opt(a, "--compile") or short_has(a, "C", "mfFeP") for a in args)
     if w == "tree":
-        return any(short_has(a, "o") for a in args)   # -o FILE writes FILE
+        return any(short_has(a, "o", "LPI") for a in args)   # -o FILE writes FILE
     if w == "xxd":
-        return any(short_has(a, "r") for a in args)   # -r, -revert: patch a file back
+        return any(short_has(a, "r", "cglos") for a in args)   # -r, -revert: patch a file back
     if w in {"ag", "ack"}:
         return any(long_opt(a, "--pager") for a in args)   # --pager CMD runs CMD
     return False
@@ -356,13 +365,13 @@ def unsafe(words):
     if w == "rg":
         return any(long_opt(a, "--pre", "--pre-glob") for a in args)
     if w == "sort":
-        return any(long_opt(a, "--output", "--compress-program") or short_has(a, "o") for a in args)
+        return any(long_opt(a, "--output", "--compress-program") or short_has(a, "o", "kStT") for a in args)
     if w == "yq":
-        return any(long_opt(a, "--inplace", "--split-exp") or short_has(a, "is") for a in args)
+        return any(long_opt(a, "--inplace", "--split-exp") or short_has(a, "is", "poI") for a in args)
     if w == "date":
-        return any(long_opt(a, "--set") or short_has(a, "s") for a in args)
+        return any(long_opt(a, "--set") or short_has(a, "s", "dfIr") for a in args)
     if w == "sed":
-        return any(long_opt(a, "--in-place") or short_has(a, "i") for a in args)
+        return any(long_opt(a, "--in-place") or short_has(a, "i", "efl") for a in args)
     if w == "find":
         return not find_ok(args)
     if w == "uniq":
@@ -375,10 +384,10 @@ def unsafe(words):
         while i < len(args) and args[i] in {"-C", "-c"}:
             i += 2
         sub = next((a for a in args[i:] if not a.startswith("-")), "")
-        return (sub == "grep" and any(short_has(a, "O") for a in args)
-                or sub in {"ls-remote", "fetch"} and any(short_has(a, "u") for a in args))
+        return (sub == "grep" and any(short_has(a, "O", "efABCm") for a in args)
+                or sub in {"ls-remote", "fetch"} and any(short_has(a, "u", "jo") for a in args))
     if w == "gh" and args[:1] == ["api"]:
-        return any(long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF")
+        return any(long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF", "Hpqt")
                    for a in args[1:])
     return False
 
