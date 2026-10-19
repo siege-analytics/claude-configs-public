@@ -18,7 +18,7 @@ The following are now rejected:
 - duplicate keys;
 - anchors, aliases, explicit tags (`!!set`, `!!omap`, …), and merge keys (`<<`);
 - plain scalars that YAML 1.1 and YAML 1.2 resolve differently, such as unquoted `yes`/`no`/`on`/`off`, unquoted dates, `1_000`, `1:20`, `012`, `0o17`, and `1e3`;
-- a BOM or CRLF opening delimiter, a near-miss delimiter (`--- `, or `---` after blank lines), and a frontmatter block that is opened but never closed;
+- a byte-order mark before the opening delimiter, a near-miss delimiter (`--- `, or `---` after blank lines), and a frontmatter block that is opened but never closed;
 - in a skill, a missing `name` or `description`, or one that is empty, whitespace-only, or not a string (for example `description: false`, `[release]`, `42`, `~`, or `null`);
 - in a rule header, a `name` or `description` that is present but empty or not a string.
 
