@@ -47,6 +47,8 @@ The following are now rejected:
 
 ### Fixed
 - Correct task gate identity to session/task directories with scoped mutation ownership, exact artifact matching and read-only-first classification; remove shared-root artifact writes/authorization.
+- Terminal `done-awaiting-pr` and `disposed` task gates no longer authorize mutations or compete for scope ownership; start a new active gate before further implementation.
+- Restore bounded pure-reader/pytest glob arguments with literal prefixes (for example `plans/*.md` and `tests/test_*.py`) or a genuine `--` terminator. Reject leading-glob option injection with a quoting/`./` diagnostic; mixed commands such as `find`, `tree` and `sort`, and all mutation operands, retain explicit concrete paths.
 - Correct the hub cap to its original administrative-load intent: communication is never blocked, stewards are never limited, and only hub spawn admission is capped.
 
 ### Added

@@ -1,21 +1,20 @@
 {
   "ticket": "siege-analytics/claude-configs-public#1051",
-  "round": "post-independent-FAIL repair; final clean complete replay",
-  "source_parent": "8067fae09fca3d6bafaa5dc46245fe104ccc1a85",
-  "merged_develop": "6685879e3d8070fb7ac35d7a638ca27c9c09b20e",
-  "input_index_tree": "10c26fd74d9856ee5a55b3e8bb7898c9e708ed52",
+  "round": "NEW-1 v2 bounded pure-reader glob repair; R3 disclosure and926 positive only",
+  "source_parent": "8538f425a57acaab89edec07f5b0b2eafdcb47b9",
+  "merged_develop": "4d6fbd27c4f47edc53856396fc58c02cf5bb6183",
+  "input_index_tree": "d20ec19274c3c08ede440d96d14dab1da9bb4bb1",
   "workflow": ".github/workflows/build-and-publish.yml",
   "workflow_sha256": "24265f613d2d1a01b367ff80dfcc4be9185279cb7179d1b98e28f632aa0300a6",
-  "python": "Python 3.12.12",
-  "local_dependency_setup": "Disposable no-pip venv references existing pinned PyYAML6.0.3/pip. Exact workflow dependency command was an offline already-satisfied no-op; no local package download/install or managed-Python override.",
+  "python": "Python3.12.12",
   "applicable_validate_shell_steps": 31,
   "hook_suites": 37,
-  "task_acceptance_tests": 37,
+  "task_acceptance_tests": 39,
   "all_steps_replayed_from_zero": true,
   "resumes_or_skips_in_final_run": false,
   "runtime_source_unchanged": true,
   "frozen_input_count": 904,
-  "runtime_source_snapshot_sha256": "8dbe42ca1083b5c27a7a9f703abd820cb02992afec3cf2ec3ebf780c743faad2",
+  "runtime_source_snapshot_sha256": "a5f39ae187da0659dd2ac9ebbcde20fc10d9ac0dab65fb6665b578778a501396",
   "steps": [
     {
       "index": 0,
@@ -57,28 +56,28 @@
       "name": "Gate contract and generated agreement",
       "sha256": "e89a744cbf4fc86ae37e7fc4feea4fb71c3bde18562db842354f4c2a26c5151d",
       "exit": 0,
-      "output_sha256": "9a740dbb9d8e04e9ff20546b2595cf1896830098a03ea80e5ccc7c01704b6b73"
+      "output_sha256": "2495be208fd67c2f53b55aeced41efa622a09b5575760f67fd5928fb7f9ccfc6"
     },
     {
       "index": 6,
       "name": "Bounded work coordination and recovery",
       "sha256": "daef810a73a327cff1bd016666eea639610d2fa6c1bc2caff434080f3dec301e",
       "exit": 0,
-      "output_sha256": "8d2ae5c649bdcda20f9741c12dbd747b12a7f38ccb0bff74758e29e444f9329c"
+      "output_sha256": "5cb1e8e1461227b8b320b1dc535b51d6571601d889ed1ff75a1380629f3db3f9"
     },
     {
       "index": 7,
       "name": "Project procedure and resident composition",
       "sha256": "28166b6c1dcbc780402a798cc1f5783aebc89adb9282d8bd806e63a6b6d65b58",
       "exit": 0,
-      "output_sha256": "4c819bd68fa1b205332ac88f27cbea46bfffbf709218044aa71608caa600c70b"
+      "output_sha256": "83172c2432179f6e9ab819d4efae31395ed5b1376dcaf48f80392ec3a54c240e"
     },
     {
       "index": 8,
       "name": "Canonical terminology and generated wiki",
       "sha256": "ffc1ab857571f83266ce6144fb204bc5c561374840e46575c8c4ad16c4511218",
       "exit": 0,
-      "output_sha256": "202a61aae1ce711ec992ad3107adb5841fdf20f05662fbc74b7c0f35d82ba78d"
+      "output_sha256": "00abf213972f5f27e7df87996e047e1b85bd388e3cff71e30b87417b15550a68"
     },
     {
       "index": 9,
@@ -141,7 +140,7 @@
       "name": "Coherent package upgrade and rollback fixtures",
       "sha256": "cafb98193ff5da27e4babaae6e16116b1a20f2b60d208562624f932efdf7a3be",
       "exit": 0,
-      "output_sha256": "c367aa05824f522b88a92e048541a17948ff3d33614915b9eb7a475be63d522b"
+      "output_sha256": "a3f83ea98cd923cf754ac5e431abb2093abf542c6e9bbadd0b3e75fb11980e89"
     },
     {
       "index": 18,
@@ -155,21 +154,21 @@
       "name": "Shared-parent registered provider events",
       "sha256": "e9d24806347d95a84bd9c9e4d4d66ff86b6b6f50985d468cb1dd43013f535460",
       "exit": 0,
-      "output_sha256": "49b5abdb7befc5bff82620dc68c7570dfd079c3da56e5ac6d4a1962fbfb71dd4"
+      "output_sha256": "54abc8d83113f12ad855dba0c0f2ad9afc229323ad1db7976cf9271a223b1213"
     },
     {
       "index": 20,
       "name": "Native consumer Git registration and destination range",
       "sha256": "3ab4259dbe5b3e5baec9b64b71c119f07eb8bcdf42339ba1d10cb8981932cc52",
       "exit": 0,
-      "output_sha256": "31cea65df2ea18c95c5628dbd5dfed2e38f962e521e7fcf018fe5d52651b99a7"
+      "output_sha256": "f080bbba091ab385d76dfc1ce60a63920df7a8f737381bae3e639bbc10ccdb45"
     },
     {
       "index": 21,
       "name": "Canary packet preparation remains non-authorizing",
       "sha256": "ad8b95f350c7ba52676b6588b7f4b753ed646eeb4755375bb31f04e4a27ae7de",
       "exit": 0,
-      "output_sha256": "e383959171096da305b3ca310349dba387e8283d4bbc6685c8cd9a182667a668"
+      "output_sha256": "afc71e5608876a7acca9fb1ec214d9cdebf424059f8395b53fdd40cc7b30bfd3"
     },
     {
       "index": 22,
@@ -183,7 +182,7 @@
       "name": "Scanner selected-source truth and incomplete results",
       "sha256": "5e4c2c317e907ad677c855357b136273aa2361cdc71bc34931d4c214740fe151",
       "exit": 0,
-      "output_sha256": "f5c44724d2d17fe4545412df20bea299bad886d55e8e92ae5786dac842290b52"
+      "output_sha256": "ae1b7136ee0ceb9c7c5dcf7dade0b2747e27d92f7fc170d96e229ca394642eeb"
     },
     {
       "index": 24,
@@ -204,7 +203,7 @@
       "name": "Main-only release policy fixtures",
       "sha256": "aed6e2b52953f14d687833a7b424151a66f94d0701a6dd9066ba78c1b70dcdec",
       "exit": 0,
-      "output_sha256": "50d40b0a58fbb6d45b2faf56e954859db867c74083e35616b80398fa6f3582e7"
+      "output_sha256": "667bccbde35820a7ac8b4a0ef4195e0f1b493b4bb06f40f00009169ca7b31bf6"
     },
     {
       "index": 27,
@@ -232,36 +231,23 @@
       "name": "Hook scenario tests",
       "sha256": "71dfc15c9a28c3a71a9e9bccaf1bb56130ad5591057a789c160091e893c2feda",
       "exit": 0,
-      "output_sha256": "550a949ae3e6f0ad38fd48a2491ecb5811b9b34fea039e1d79388c9a2556b417"
+      "output_sha256": "db0111c6a0c39f81364051c251710fc8aae705a2c9b9fdf4dd9cc686aeb4d71e"
     }
   ],
-  "local_fixture_environment": {
-    "external_temporary_root": true,
-    "canonical_no_symlink_ancestor": true,
-    "private_scratch_ignored_in_clone_git_info_only": true,
-    "tracked_inputs_excluded": false,
-    "tests_or_assertions_relaxed": false
-  },
-  "superseded_runs": [
-    {
-      "directory": ".verification/1051/full-ci-round2",
-      "reason": "macOS /var alias violated unchanged registration no-symlink contract; retained failure logs. Reader fixes required a fresh replay."
-    },
-    {
-      "directory": ".verification/1051/full-ci-round2-final",
-      "reason": "Stopped before post-cleanup B6 repair; no partial steps count as final proof."
-    },
-    {
-      "directory": ".verification/1051/full-ci-round2-stable",
-      "reason": "0-29 eventually passed after documented step28 private-scratch correction;37 acceptance tests passed; old nongit fixture expected unresolvable Git command to pass. Fixture aligned with stronger policy, then every step rerun from zero."
-    }
+  "local_dependency_setup": "Existing pinned PyYAML6.0.3 reused in clone-local no-pip venv; offline already-satisfied workflow command; no package install or managed-Python override.",
+  "fixture_environment": "Canonical external temporary roots; only untracked private .verification scratch ignored in clone-local Git info. No tracked input excluded.",
+  "scope": "Only NEW-1 classifier/provenance, real-hook glob fixtures,926 owned-worktree positive,R3 Unreleased disclosure,required additive upstream merge and derived/evidence artifacts. R1/R2/R4-R7,N1/N3-N9 remain follow-ups.",
+  "reader_boundary": "V2 bounded pure-reader/pytest argument grammars only; literal-prefix globs before true --, leading globs after true --. Option VALUE -- is not a terminator. Mixed commands/mutations keep concrete paths; NEW glob grammar excludes generic help/viewer admission. Existing brace/parameter/command/escape denials remain.",
+  "superseded_v2": ".verification/1051/full-ci-round3-v2:17/31 before final NEW glob-vocabulary tightening; generic help admission removed, negatives added. Not final proof.",
+  "corpus_1057": "Not reachable: no committed1057/45-of71 fixture, issue has summary/examples only and comments empty. No fabricated full corpus or corpus-wide mutation replay claim.",
+  "superseded_v1": ".verification/1051/full-ci-round3:30/31 before FINAL v2. Existing lexer already rejected escaped newline; initial concern was not a demonstrated bug. Trace retained, not final proof.",
+  "prior_checkpoint": "936978a8535d0eeb2debd10894b9c16deef42e2e: B1-B7 independently verified fixed; hosted run39209841150 success. Its NEW-1 FAIL and old validation are not proof for this delta.",
+  "focused_traces": [
+    ".verification/1051/round3/v2-final-focused.log",
+    ".verification/1051/round3/v2-final-system-path.log",
+    ".verification/1051/round3/v2-926.log"
   ],
-  "semantic_fixture_updates": [
-    "Terminal signal still requires exit2, with Unscoped mutation instead of missing-artifact diagnostic because terminal gates are not owners.",
-    "Empty-reporoot #926 fixture preserves all original own-session/artifact/root/cross-session/unknown-session assertions with valid filesystem mutations; adds explicit unresolved Git-owner denial. No enforcement change."
-  ],
-  "review_boundaries": "Bounded source reviews/local tests are not independent exact-head acceptance. Hosted exact-head green and coordinator-led re-review remain required.",
-  "excluded": "Uses-only checkout/setup actions, inapplicable first-main provenance, publish job. No live install/deploy/activation/release or shared-branch merge; fixture consumers only.",
-  "historical_baseline_record": "c9cbbecc0dcb98e01e05da1f7614a2fa9263289b:plans/1051-full-validate.json",
-  "local_trace_directory": ".verification/1051/full-ci-round2-clean"
+  "review_boundaries": "Local success is not independent exact-head acceptance. New exact-head hosted green must be recorded on PR1055 before handoff.",
+  "excluded": "Uses-only setup/checkout actions,inapplicable first-main provenance,publish job. No live install,activation,deployment,release or shared-branch merge.",
+  "local_trace_directory": ".verification/1051/full-ci-round3-v2-final"
 }

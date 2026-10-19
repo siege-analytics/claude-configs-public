@@ -112,6 +112,15 @@ grep -qi 'cannot resolve repository toplevel' <<<"$out" \
 run_gate "$SID" "touch '$WS/empty-reporoot-good.txt'" \
   || fail "known session with its own implementing gate + artifacts must PASS on empty REPO_ROOT"
 
+# --- #926 follow-up: non-git prompt CWD may target an owned real worktree.
+WT="$TMP/worktree"
+git init -q "$WT"
+write_json "$WS/sessions/$SID/think-gate.json" \
+  "{\"ticket\": \"$TICKET\", \"sessionId\": \"$SID\", \"status\": \"implementing\", \"repo_root\": \"$WT\", \"scope_paths\": [\"$WT\"]}"
+run_gate "$SID" "git -C '$WT' checkout -b feature/empty-cwd-owned-worktree" \
+  || fail "non-git CWD with an implementing worktree owner must allow git -C mutation"
+session_think_gate
+
 # --- KNOWN-BAD 1: known session, implementing gate, MISSING artifacts -> BLOCK
 rm -f "$WS/sessions/$SID/"{investigate-gate,junior-senior-gate,artifacts-posted-gate}.json "$WS/plans/pre-mortem-926test.md"
 if out="$(run_gate "$SID" "touch '$WS/empty-reporoot-noart.txt'" 2>&1)"; then

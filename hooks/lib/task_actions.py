@@ -3,7 +3,9 @@
 Pure readers and explicitly approved diagnostics have separate early-allow
 flags. Candidate commands are never executed; Git ownership uses a bounded
 read-only toplevel query. Unknown syntax remains mutation-gated or fails closed.
-Expansions, subshells, eval and executable reader options are not pure reads.
+Substitutions, subshells, eval and executable reader options are not pure reads.
+Only bounded pure-reader/pytest grammars admit pathname globs, with a literal
+non-option prefix or a genuine -- terminator; quoted patterns do not expand.
 """
 from __future__ import annotations
 
@@ -17,10 +19,15 @@ class UnknownShape(ValueError):
     pass
 
 
-def shell_tokens(command: str) -> list[tuple[str, bool]]:
-    """Return (value, is_operator), preserving quoted operator literals."""
+def shell_tokens(command: str) -> list[tuple[str, bool, tuple[int, ...]]]:
+    """Preserve operators and positions of unquoted glob characters.
+
+    Reader/diagnostic classification decides whether a glob word is safe;
+    mutation operands still require explicit concrete paths.
+    """
     tokens = []
     word = ""
+    globs = []
     active = False
     quote = ""
     i = 0
@@ -50,19 +57,21 @@ def shell_tokens(command: str) -> list[tuple[str, bool]]:
         elif c in "(){}":
             raise UnknownShape("shell group requires mutation handling")
         elif c in "*?[" and not (c == "[" and not active and i + 1 < len(command) and command[i + 1].isspace()):
-            raise UnknownShape("unquoted glob expansion requires mutation handling")
+            globs.append(len(word))
+            word += c
+            active = True
         elif c.isspace() or c in ";&|<>":
             if active:
-                tokens.append((word, False))
-                word, active = "", False
+                tokens.append((word, False, tuple(globs)))
+                word, active, globs = "", False, []
             if c == "\n":
-                tokens.append((";", True))
+                tokens.append((";", True, ()))
             elif not c.isspace():
                 op = c
                 if i + 1 < len(command) and command[i + 1] == c:
                     op += c
                     i += 1
-                tokens.append((op, True))
+                tokens.append((op, True, ()))
         elif c == "#" and not active:
             # Comments/markers are deliberately not interpreted as authorization.
             raise UnknownShape("shell comment requires mutation handling")
@@ -73,8 +82,98 @@ def shell_tokens(command: str) -> list[tuple[str, bool]]:
     if quote:
         raise UnknownShape("unclosed quote")
     if active:
-        tokens.append((word, False))
+        tokens.append((word, False, tuple(globs)))
     return tokens
+
+
+def _reader_globs(args: list[str], positions: list[tuple[int, ...]]) -> None:
+    """V2: expansion only in bounded pure-reader/pytest argument grammars.
+
+    Mixed commands (find/tree/sort, interpreters, fixing linters, etc.) keep
+    concrete paths even when their write/exec switch is absent. The bounded
+    options below also distinguish a real -- from an option VALUE of --.
+    Quoted patterns have no expansion positions and retain existing handling.
+    """
+    if not any(positions):
+        return
+    cmd, start = args[0], 1
+    if cmd == 'git':
+        while start + 1 < len(args) and args[start] == '-C':
+            if positions[start + 1]:
+                raise UnknownShape('Git targeting requires an explicit concrete path')
+            start += 2
+        if start >= len(args) or args[start] not in {'diff', 'log'}:
+            raise UnknownShape('globbed Git arguments require pure diff/log paths')
+        cmd = 'git-' + args[start]
+        start += 1
+    elif cmd in {'python', 'python3'} and args[1:3] == ['-m', 'pytest']:
+        cmd, start = 'pytest', 3
+    elif cmd == 'gh' and args[1:2] == ['api']:
+        cmd, start = 'gh-api', 2
+    grammars = {
+        'ls': ('-a -A -l -h -d -R -t -r -S -1 -F -p -i -n -s --all --almost-all --human-readable --recursive --directory --color --group-directories-first', '--color --sort --format --time --time-style --quoting-style --block-size --ignore --hide'),
+        'cat': ('-n -b -s -v -e -E -t -T -u -A --number --number-nonblank --squeeze-blank --show-all --show-ends --show-tabs --show-nonprinting', ''),
+        'head': ('-q -v --quiet --silent --verbose', '-n --lines -c --bytes'),
+        'tail': ('-q -v -f -F --quiet --silent --verbose --follow --retry', '-n --lines -c --bytes --follow --pid --sleep-interval --max-unchanged-stats'),
+        'grep': ('-n -r -R -i -l -L -c -v -w -x -q -s -h -H -E -F -G -P -o -a -I -z -Z --line-number --recursive --ignore-case --files-with-matches --count --invert-match --only-matching --no-messages --fixed-strings --extended-regexp --quiet', '-e --regexp -f --file -m --max-count -A -B -C --after-context --before-context --context --include --exclude --exclude-dir --binary-files --color --colour --directories --devices --label'),
+        'rg': ('-n -i -l -L -c -v -w -x -q -s -o -a -u -F -P --hidden --files --no-ignore --json --line-number --count --invert-match --quiet --ignore-case --fixed-strings --pcre2 --only-matching --no-line-number --no-heading --heading', '-e --regexp -f --file -m --max-count -A -B -C --after-context --before-context --context -g --glob --iglob -t --type -T --type-not --color --colors -r --replace'),
+        'wc': ('-l -w -c -m -L --lines --words --bytes --chars --max-line-length', ''),
+        'file': ('-b -i -L -h -k -N --brief --mime --mime-type --mime-encoding --dereference --no-dereference --keep-going --no-pad', '-m --magic-file -f --files-from -F --separator -e --exclude --exclude-quiet -P --parameter'),
+        'stat': ('-l -x -n -q -r -s -L --dereference --file-system --terse', '-f -t -c --format --printf --cached'),
+        'diff': ('-u -q -r -s -N -a -b -B -w -i -y --unified --brief --recursive --report-identical-files --new-file --text --ignore-space-change --ignore-all-space --side-by-side', '-U -C -I --ignore-matching-lines --exclude --exclude-from --label --unified'),
+        'git-diff': ('-p -u --patch --stat --name-only --name-status --check --cached --staged --no-index --no-ext-diff --no-textconv --exit-code --quiet --raw --numstat --shortstat --color --no-color --full-index --binary', '-U --unified --src-prefix --dst-prefix --word-diff-regex'),
+        'git-log': ('--oneline --stat --name-only --name-status --no-merges --first-parent --all --graph --decorate --no-decorate --no-color --date-order --reverse --abbrev-commit', '-n --max-count --since --until --author --grep --format --pretty --date'),
+        'pytest': ('-q -qq -v -vv -x -s --collect-only --disable-warnings --strict-markers --strict-config --no-header --no-summary', '-k -m --maxfail --tb --color'),
+        'gh-api': ('--paginate --slurp --silent --include --verbose', '-H --header --hostname -q --jq -t --template'),
+    }
+    if cmd in {'egrep', 'fgrep'}:
+        cmd = 'grep'
+    if cmd not in grammars:
+        raise UnknownShape('this command keeps the explicit concrete-path rule for glob expansions')
+    flags, values = (set(s.split()) for s in grammars[cmd])
+    literal, expecting = False, ''
+
+    def shape(word, globs, offset=0, *, pattern=False):
+        if not globs:
+            return
+        if not word or any(p < offset for p in globs):
+            raise UnknownShape('globbed option key: prefix ./ or quote the pattern')
+        # An attached fixed grep --include= key survives expansion verbatim.
+        if pattern:
+            return
+        forbidden = '-*?[{$`~' if not literal else '{$`~'
+        if word[0] in forbidden:
+            raise UnknownShape('leading glob argument: prefix ./ or quote the pattern')
+
+    for index in range(start, len(args)):
+        word, globs = args[index], positions[index]
+        if expecting:
+            if cmd == 'pytest' and globs:
+                raise UnknownShape('pytest globs are selection paths, not option values')
+            shape(word, globs)
+            expecting = ''
+        elif not literal and word == '--':
+            literal = True
+        elif not literal and word.startswith('-') and word != '-':
+            key, equals, value = word.partition('=')
+            if equals and key in values:
+                if cmd == 'pytest' and globs:
+                    raise UnknownShape('pytest globs are selection paths, not option values')
+                shape(value, globs, len(key) + 1, pattern=cmd == 'grep' and key == '--include')
+            elif word in flags:
+                pass
+            elif word in values:
+                expecting = word
+            elif word.startswith('-') and not word.startswith('--') and len(word) > 2 and all('-' + c in flags for c in word[1:]):
+                pass  # known no-value short flag cluster, never -e/-f/etc.
+            elif not word.startswith('--') and word[:2] in values and len(word) > 2:
+                shape(word[2:], globs, 2)
+            else:
+                raise UnknownShape('unbounded glob reader option: prefix ./ or quote the pattern')
+        else:
+            shape(word, globs)
+    if expecting:
+        raise UnknownShape('missing glob reader option value')
 
 
 def _python_read(args: list[str]) -> bool:
@@ -335,27 +434,37 @@ def action(command: str, cwd: str) -> dict:
     directory_removals = []
     file_paths = []
     args = []
+    arg_globs = []
     effective = canonical(cwd)
     binding = ""
 
     def finish():
-        nonlocal args, effective, reads, binding, diagnostic, self_managed
+        nonlocal args, arg_globs, effective, reads, binding, diagnostic, self_managed
         if not args:
             return
         while args and args[0].startswith("CCP_TASK_ID="):
+            if arg_globs.pop(0):
+                raise UnknownShape('globbed task binding requires an explicit identity')
             value = args.pop(0).split("=", 1)[1]
             if binding and value != binding:
                 raise UnknownShape("conflicting command task bindings")
             binding = value
         if not args:
             raise UnknownShape("missing command")
+        if arg_globs[0]:
+            raise UnknownShape('globbed command requires an explicit executable')
         if args[0] == "cd":
-            if len(args) != 2 or args[1].startswith("-"):
-                raise UnknownShape("unsupported cd")
+            if len(args) != 2 or args[1].startswith("-") or arg_globs[1]:
+                raise UnknownShape("unsupported cd; use an explicit concrete path")
             effective = canonical(args[1], effective)
         elif investigation(args):
+            _reader_globs(args, arg_globs)
             diagnostic = True
-        elif not reader(args):
+        elif reader(args):
+            _reader_globs(args, arg_globs)
+        else:
+            if any(arg_globs):
+                raise UnknownShape('expanded mutation targets require explicit concrete paths')
             reads = False
             self_managed = self_managed and args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown"}
             if args[0] in {'eval', 'exec', 'bash', 'sh', 'zsh', 'dash', 'ksh'} or args[0] in {'python', 'python3'} and any(x == '-c' or x.startswith('-c') for x in args[1:]):
@@ -411,24 +520,30 @@ def action(command: str, cwd: str) -> dict:
                 # Explicit paths cannot escape a task by borrowing CWD scope.
                 paths.extend(canonical(x, effective) for x in args[1:] if x.startswith(("/", "./", "../")))
         args = []
+        arg_globs = []
 
     try:
         i = 0
         while i < len(tokens):
-            value, op = tokens[i]
+            value, op, globs = tokens[i]
             if not op:
                 args.append(value)
+                arg_globs.append(globs)
             elif value in {">", ">>"}:
                 reads = False
                 i += 1
                 if i >= len(tokens) or tokens[i][1]:
                     raise UnknownShape("missing redirect target")
+                if tokens[i][2]:
+                    raise UnknownShape('expanded mutation targets require explicit concrete paths')
                 paths.append(canonical(tokens[i][0], effective))
                 file_paths.append(canonical(tokens[i][0], effective))
             elif value == "<":
                 i += 1
                 if i >= len(tokens) or tokens[i][1]:
                     raise UnknownShape("missing input target")
+                if tokens[i][2]:
+                    raise UnknownShape('input redirection requires an explicit concrete path')
             elif value in {"&&", ";", "|", "||"}:
                 finish()
             else:

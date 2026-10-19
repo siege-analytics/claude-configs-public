@@ -442,6 +442,55 @@ class Gates(unittest.TestCase):
                         'git remote show -n origin', 'git remote get-url --all origin', 'tree -a -L 2 .']:
             with self.subTest(command=command): self.assertGate(0, command)
 
+    def test_literal_prefix_glob_reads_and_diagnostics_in_real_hooks(self):
+        # V2: actual option-named files cannot turn these expansions into
+        # options. Only a genuine -- permits standalone leading glob words.
+        for name in ('-o', '--output=pwn', '-delete', '--pre=evil'):
+            (self.repo / name).write_text('option injection sentinel')
+        commands = ['ls ./*.md', 'cat plans/*.md', 'grep -n foo src/*.py',
+                    'wc -l hooks/*.sh', 'head src/[a-z]*.py', 'head -n 5 src/[a-z]*.py',
+                    'git diff HEAD -- src/*.py', 'git diff HEAD -- *.py',
+                    'cat -- *', 'grep foo -- *.py', "find . -name '*.py'",
+                    'grep --include=*.py foo .', 'grep -n foo --include=*.py .',
+                    'gh api repos/o/r/contents/x?ref=abc', 'pytest tests/test_*.py',
+                    'python3 -m pytest tests/test_*.py', "ls '*.md'",
+                    "git diff HEAD -- '*.py'", "grep foo --include='*.py' ."]
+        for phase in ('no gate', 'implementing'):
+            if phase == 'implementing':
+                self.task('o/r#glob', self.repo)
+            for command in commands:
+                with self.subTest(phase=phase, command=command):
+                    payload = craft_payload(tool_name='Bash', cwd=str(self.repo), tool_input={'command': command})
+                    for result in self.real_identity_hooks(payload, self.identity_env(payload)):
+                        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                        self.assertNotIn('INVESTIGATION REQUIRED', result.stdout)
+
+    def test_leading_glob_injection_and_mutation_globs_remain_denied(self):
+        for name in ('-o', '--output=pwn', '-delete', '--pre=evil'):
+            (self.repo / name).write_text('option injection sentinel')
+        commands = ['ls *.md', 'cat *', 'grep -n foo *.py', 'wc -l *.sh',
+                    'head [a-z]*.py', 'pytest *.py', 'rg foo *', 'rg foo ?x',
+                    'rg foo [a]*', 'ls --ign*=x', 'grep foo *',
+                    'grep -e -- *', 'rg -e -- *', 'head -n -- *',
+                    'git diff --word-diff-regex -- *', 'cat ~/*.md']
+        mixed = ['sort *', 'sort dir/*', 'find . -name x*', 'tree dir/*',
+                 'find . -- dir/*', 'tree -- dir/*', 'git branch --list *',
+                 'git diff --help src/*.py', 'git log --help src/*.py',
+                 'cat {-o,x}', 'cat x{,-o}', 'cat $X', 'cat $(pwd)', 'cat `pwd`',
+                 'cat ' + '\\' + '\n' + '*', 'cat "' + '\\' + '\n' + '"*']
+        for phase in ('no gate', 'implementing'):
+            if phase == 'implementing':
+                self.task('o/r#glob-negative', self.repo)
+            for command in commands:
+                with self.subTest(phase=phase, command=command):
+                    result = self.assertGate(2, command)
+                    self.assertIn('prefix ./ or quote the pattern', result.stderr + result.stdout)
+            for command in mixed:
+                with self.subTest(phase=phase, command=command): self.assertGate(2, command)
+        # Prefixing a mutation glob does not make it an explicit concrete path.
+        for command in ['touch ./*.md', 'rm plans/*.md', 'git add ./src/*.py', 'printf x > ./out*.txt', 'rg foo --pre*=evil']:
+            with self.subTest(command=command): self.assertGate(2, command)
+
     def test_bounded_investigation_policy_without_gate_and_while_designing(self):
         commands = ['bash -n tests/run.sh', 'shellcheck hooks/x.sh', 'python3 -m pytest -q', 'pytest tests',
                     'python3 -m py_compile x.py', 'ruff check .', 'markitdown doc.pdf', 'pdf-tool info doc.pdf',

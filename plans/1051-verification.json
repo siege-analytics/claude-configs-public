@@ -1,13 +1,13 @@
 {
   "ticket": "siege-analytics/claude-configs-public#1051",
   "base_main": "056b5337b08bb960fb7796b6bb00c971e22664f1",
-  "target_develop": "6685879e3d8070fb7ac35d7a638ca27c9c09b20e",
-  "python": "Python 3.12.12",
+  "target_develop": "4d6fbd27c4f47edc53856396fc58c02cf5bb6183",
+  "python": "Python3.12.12",
   "hook_suite_count": 37,
-  "acceptance_test_count": 37,
-  "suite_scope": "All31 merged validate shell steps; supersedes the earlier hand-picked suite/check selection.",
+  "acceptance_test_count": 39,
+  "suite_scope": "All31 merged validate shell steps, fresh frozen snapshot; NEW-1 scoped repair.",
   "full_validate_record": "plans/1051-full-validate.json",
-  "frozen_runtime_snapshot_sha256": "8dbe42ca1083b5c27a7a9f703abd820cb02992afec3cf2ec3ebf780c743faad2",
+  "frozen_runtime_snapshot_sha256": "a5f39ae187da0659dd2ac9ebbcde20fc10d9ac0dab65fb6665b578778a501396",
   "executable_sha256": {
     "bin/_test/effective_policy_test.py": "cef3bc77ffdeff324bacea08fea225f737a83437b5094432fa029ec0da279ba6",
     "bin/_test/frontmatter_validation_test.py": "234336e69748dd277f7a0934a756ce7a4da37d3fa01b2a6280e10e2437d5384e",
@@ -31,12 +31,12 @@
     "hooks/_test/kb_consultation_advisory.test.sh": "2361e0e53e09c9064a01136d414a8396d0d48032edd6e183642406f79a1b7191",
     "hooks/_test/project_scoped_gate.test.sh": "39105f607108302f7a77abf653edcfaf838697da2a615693ceb9a33ec4de0ac9",
     "hooks/_test/session_signal_resolution.test.sh": "3d73658cf58406c0095c45116e7c3efad66c47fc5c1c200b74fc58c6b57aa693",
-    "hooks/_test/task_keyed_gates.py": "4fda2076df08dd460f4cc7689b1c173b7c8bc82e7a0da18ef9cebb641046fa25",
+    "hooks/_test/task_keyed_gates.py": "a63f036700d72acaf3ae1af22ff49c065ed50b57f84d0c8e75cd9cc7f3218d13",
     "hooks/_test/task_keyed_gates.test.sh": "3b16f3fd457a2b26064ba76286249b16682752887a3e379a1b7a92a104a9bc44",
     "hooks/_test/test_guard.test.sh": "0301212afdf66d395b81f346aee1f7160fcb035aec93bea7737b9c97c1df2e03",
     "hooks/_test/universal_mutation_gate.test.sh": "dd9ed4d6f32d2f4a238bcc0d24fe381a802146f822b1e970b68d7be5dc3f6d72",
     "hooks/_test/universal_mutation_gate_831.test.sh": "c6729cd761fe4dc0532fe3a411b01fd13a8b6bd23c2f9b8c2170b051bc172f00",
-    "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh": "72088c20be009ba5cf18fce34d53063ea8fa2421de19586c408213e48f4d5b87",
+    "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh": "8e3b6843aa83e1647d8583184831f0243abd6717705c2dda96ac6b8ff5737d9a",
     "hooks/_test/universal_mutation_gate_safelist.test.sh": "cac4d5c4b5f9abf0e47b34cc3e5f3959027e89e9a217a7f28ecfbd9617fe302b",
     "hooks/agent-comms/hub-concurrency-gate.sh": "7afa981c0de64c4014eb7bcf2b556ecdd304e54cf0a77eb76be445c36c224118",
     "hooks/bash/universal-mutation-gate.sh": "dfad609876d47086bf340a00f0d8628a56f2998e7561b11edf264cb76e75c60e",
@@ -44,7 +44,7 @@
     "hooks/git/test-guard.sh": "f92a434d0041f92b422164b8c7c08f573a7bc2e246c43d849c68f862bc43fb44",
     "hooks/lib/pipeline_state.py": "21430d75708c1dbac327f37b8bc620fa6d11b40765e84239f1a352651367add9",
     "hooks/lib/resolve-think-gate.py": "e917dfd9dd5c7cf8c9ba6eda9d0dfde6b67abd34a8fddc079414ab291853e315",
-    "hooks/lib/task_actions.py": "7bf50c04f7aea99c703cbdedecaa9a65cba04b5d506a55dd636c1a6976f8b404",
+    "hooks/lib/task_actions.py": "48cd39839b66437a25346a90a409f90949a9f84cb8817c7f103b14bec8266a3e",
     "hooks/resolver/investigate-gate-guard.sh": "b243d06b1706a7459f2023f0a8cb6bd3d08c8524f1b81f77ff99db70f307b0cb",
     "hooks/resolver/pipeline-state-guard.sh": "5bef23d9ebb4e22111d237ab7dfcb7342f6f179bc1458a658b7c7a1fc6242da2",
     "hooks/resolver/review-gate-guard.sh": "eddf58c630f79b1f048e29ff9bced33d34999e39a1f29dc9a7e1e15ea4b5d4bf",
@@ -52,7 +52,7 @@
     "hooks/resolver/think-gate-guard.sh": "e78a7bf6d1aa441cdffb94a87bf21c55cb8c1e62035d97cdd9347a52f76eec23"
   },
   "live_activation": false,
-  "exact_sha_acceptance": "pending independent coordinator review",
-  "hosted_green": "Not asserted at this pre-push source checkpoint; see PR1055 exact-head checks/checkpoint comment. Historical c9cbbecc green does not cover this repair.",
-  "historical_verification": "c9cbbecc0dcb98e01e05da1f7614a2fa9263289b:plans/1051-verification.json"
+  "exact_sha_acceptance": "pending independent coordinator review of new repair head",
+  "hosted_green": "Not asserted at pre-push source checkpoint; see exact-head PR checks/comment.936978a green is historical for this delta.",
+  "historical_verification": "936978a8535d0eeb2debd10894b9c16deef42e2e:plans/1051-verification.json"
 }
