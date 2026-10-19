@@ -63,6 +63,8 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/scope-check.sh",
  "hooks/lib/split-frontmatter.py",
  "bin/build.py",
+ "bin/frontmatter_validation.py",
+ "requirements-validation.txt",
  "bin/generated-source-authority.py",
  "bin/kernel-budget.py",
  "bin/skill-inventory.py",

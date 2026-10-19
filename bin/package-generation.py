@@ -170,8 +170,8 @@ def stage(store, parent_root, assets, *, release_digest, repository, tag, source
     # A new release may need a newer composer/resolver. Never silently render
     # it with whichever implementation happens to be running this command.
     dependencies = ('bin/compose-project.py', 'bin/procedure_composition.py', 'bin/build.py',
-                    'bin/effective_policy.py', 'bin/gate_contract.py', 'bin/resolve-load-set.py',
-                    'bin/source_snapshot.py')
+                    'bin/effective_policy.py', 'bin/frontmatter_validation.py', 'bin/gate_contract.py',
+                    'bin/resolve-load-set.py', 'bin/source_snapshot.py')
     source_bins = git_files(parent_root, source, 'bin')
     tool_hashes = {}
     for name in dependencies:

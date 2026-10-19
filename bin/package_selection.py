@@ -30,6 +30,7 @@ effective = module('selection_policy', ROOT, 'effective_policy.py')
 require = snapshot.require
 SCAFFOLD_FILES = (
     'bin/package-generation.py', 'bin/build.py', 'bin/compose-project.py', 'bin/effective_policy.py',
+    'bin/frontmatter_validation.py',
     'bin/gate_contract.py', 'bin/package_selection.py',
     'bin/procedure_composition.py', 'bin/resolve-load-set.py',
     'bin/source_snapshot.py', 'catalog/gate-contract-schema.json',

@@ -121,6 +121,31 @@ python3 bin/build.py --layout flat
 python3 bin/build.py --check      # validate tokens, no output
 ```
 
+### Validation dependency (PyYAML)
+
+`bin/build.py`, `bin/skill-inventory.py`, and `bin/compose-project.py` validate every packaged `SKILL.md` and `_*-rules.md` frontmatter with a real YAML parser (`bin/frontmatter_validation.py`). PyYAML is a required, pinned dependency, and its hashes are pinned in [`requirements-validation.txt`](requirements-validation.txt). If PyYAML is missing, validation **fails closed** with an explicit message. There is no fallback parser and no skip switch.
+
+The supported interpreter is **CPython 3.12**, the version CI validates. The validator is also compatible with 3.9+. Use it as `python3` on `PATH`, with the requirement installed:
+
+```bash
+python3 -m pip install --require-hashes -r requirements-validation.txt
+```
+
+Use the same interpreter for installation and deployment (`bin/install.sh`, `bin/sync-workspace-hooks.sh`, `bin/build.py --deploy`). Both scripts run `python3 bin/frontmatter_validation.py --check-dependency` before any build or workspace mutation. They stop with the instructions above unless `python3` imports exactly the pinned PyYAML version. You can run the same check yourself:
+
+```bash
+python3 bin/frontmatter_validation.py --check-dependency
+```
+
+The validator is self-contained and can be vendored for consumer bundle checks:
+
+```bash
+python3 bin/frontmatter_validation.py --kind skill skills/*/SKILL.md
+python3 bin/frontmatter_validation.py --kind rule skills/_*-rules.md
+```
+
+Skill headers require non-empty string `name` and `description`. Rule headers are optional, but a header that is present must parse, and its `name`/`description`, when present, must be non-empty strings. Duplicate keys are rejected. So are unquoted plain scalars that YAML 1.1 and YAML 1.2 resolve differently (`yes`/`no`/`on`/`off`, dates, `1_000`, `012`, `1:20`). Quote any value containing `: `.
+
 ## Sync (don't fight habits)
 
 `bin/sync-skill-references.py` is the canonical reference normalizer. Run it whenever you've written path-form links by habit:
@@ -202,8 +227,8 @@ When writing a new skill or editing one:
 For Craft Agent compatibility, every `SKILL.md` should:
 
 - Have a top-level slug folder under `skills/<category>/<slug>/` (or in the flat output, `skills/<slug>/`)
-- Have valid YAML frontmatter with `name` and `description` minimum
-- Pass `bin/build.py --check`
+- Have valid YAML frontmatter with `name` and `description` minimum, as non-empty strings. Quote any value containing `: `.
+- Pass `bin/build.py --check`, which runs the real-YAML validator and needs PyYAML (see [Validation dependency](#validation-dependency-pyyaml))
 
 You can also use the Craft Agent skill validator:
 

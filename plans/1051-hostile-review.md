@@ -30,3 +30,9 @@ The complete generated diff for progressive-loading metrics and language/data fi
 This review is limited to that supplied generated diff; it does not claim CI execution or final exact-SHA approval. The implementation executables were not changed. Full validate-job replay is separately recorded after completion.
 
 Reviewed generated-diff SHA-256: 248d940bcc1847ed847497db4ca339221583349bf225e176c678b16cc9c64564
+
+## Independent round-one FAIL supersedes snapshot reviews
+
+The coordinator's independent review of the substantive implementation at `cbbb975` found six functional merge blockers: self-gate lifecycle lockout; real-header hub liveness/task accounting; repo-wide Git ownership; unsafe reader forms; investigation regressions; and terminal gate ownership. Its seventh blocker was historical red CI, subsequently green at `c9cbbecc`, but new code must obtain new hosted green. None of the earlier snapshot “No findings” statements constitutes acceptance of these failures. The complete reviewer evidence is retained by the coordinator/reviewer.
+
+Mandatory upstream integration: merged `6685879e` into the feature branch, retained both changelog contributions, regenerated every conflicted catalog using the merged generators (no hand-merged values), and ran the review-risk snapshot suite successfully. Required validation dependency PyYAML 6.0.3 was reused from the existing installation under Python 3.12; no product installation or activation. Full post-fix validation and exact-head review remain pending.

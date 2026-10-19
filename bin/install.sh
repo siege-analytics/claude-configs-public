@@ -67,6 +67,16 @@ if ! command -v python3 >/dev/null 2>&1; then
     exit 1
 fi
 
+# The build validates every packaged skill/rule frontmatter with PyYAML and
+# fails closed without it (#1046). Stop here, before any build or deploy step.
+if ! DEPENDENCY_STATUS=$(python3 "$REPO_ROOT/bin/frontmatter_validation.py" --check-dependency 2>&1); then
+    echo "ERROR: PyYAML is required for frontmatter validation: $DEPENDENCY_STATUS" >&2
+    echo "  Supported interpreter: CPython 3.12 (the CI-validated version; 3.9+ is compatible) as python3 on PATH," >&2
+    echo "  with the pinned requirement installed:" >&2
+    echo "    python3 -m pip install --require-hashes -r \"$REPO_ROOT/requirements-validation.txt\"" >&2
+    exit 1
+fi
+
 if [[ ! -f "$REPO_ROOT/bin/build.py" ]]; then
     echo "ERROR: bin/build.py not found. Run from the repo root." >&2
     exit 1

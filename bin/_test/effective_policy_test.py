@@ -422,7 +422,8 @@ class RegisteredPolicyInputsTest(unittest.TestCase):
         (self.root / 'project/requirements.md').write_text('Project adapter requirements, not observations.\n')
         review = self.root / 'projects/independent/skills/review/SKILL.md'
         review.parent.mkdir(parents=True)
-        review.write_text('# Independent review\n\nReview the project changes.\n')
+        review.write_text('---\nname: review\ndescription: Independent review fixture.\n---\n\n'
+                          '# Independent review\n\nReview the project changes.\n')
         revision = self.commit()
         self.approved = {
             'schema_version': 1, 'resolver_version': '1.0.0',

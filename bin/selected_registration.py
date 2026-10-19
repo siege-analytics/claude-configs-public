@@ -25,6 +25,7 @@ CAPABILITIES = ['native-git', 'settings']
 BINDING_KEY = 'scaffold.registration'
 CORE_FILES = (
     'bin/package-generation.py', 'bin/build.py', 'bin/compose-project.py', 'bin/effective_policy.py',
+    'bin/frontmatter_validation.py',
     'bin/gate_contract.py', 'bin/package_selection.py', 'bin/source_snapshot.py',
     'bin/selected_registration.py', 'bin/native_git.py', 'bin/install-hooks.sh',
     'bin/wire-enforcement.py', 'bin/verify-enforcement.sh', 'catalog/gate-contract-schema.json',

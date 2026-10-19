@@ -1,5 +1,5 @@
 ---
-description: Always-on. Standing conditional instructions ("do X when Y") decay over the trajectory; compliance drops 2--21% under load (Mittal 2026). This rule names the mitigations: repeat the conditional in each verification block; re-quote standing constraints at decision points; treat self-checks as cognitive-load-dependent and prefer mechanical hooks where available. Sibling to `[rule:standing-approval]` which defines how to PARSE the conditional; this rule defines how to RETAIN it.
+description: 'Always-on. Standing conditional instructions ("do X when Y") decay over the trajectory; compliance drops 2--21% under load (Mittal 2026). This rule names the mitigations: repeat the conditional in each verification block; re-quote standing constraints at decision points; treat self-checks as cognitive-load-dependent and prefer mechanical hooks where available. Sibling to `[rule:standing-approval]` which defines how to PARSE the conditional; this rule defines how to RETAIN it.'
 ---
 
 # Prospective Memory
