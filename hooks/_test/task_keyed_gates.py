@@ -211,6 +211,37 @@ class Gates(unittest.TestCase):
         self.assertGate(2, 'touch "x"', cwd=self.b, env={**self.env, 'CCP_TASK_ID': 'no-such-task'})
         self.assertGate(2, "CCP_TASK_ID='o/r#1' touch x", cwd=self.b, env={**self.env, 'CCP_TASK_ID': 'o/r#2'})
 
+    def test_option_values_cannot_redirect_targets(self):
+        # Review of #1055 at 2bc6e62: trailing or attached option values were
+        # taken as targets (or dropped), so a write into task B's scope was
+        # charged to task A's cwd, or to an own-session path with no gate.
+        self.task('o/r#1', self.a)                    # A implementing
+        self.task('o/r#2', self.b, 'designing')       # B designing: writes into b blocked
+        b = str(self.b / 'f')
+        for command in [
+            'cp src ' + b + ' -S .bak',
+            'cp src ' + b + ' --suffix .bak',
+            'cp -aS .bak src ' + b,
+            'mv src ' + b + ' -S .bak',
+            'chmod --reference=src ' + b,
+            'chmod --reference src ' + b,
+            'chown --reference=src ' + b,
+            'cp -t ' + str(self.b) + ' src',
+            'mv -vt ' + str(self.b) + ' src',
+            'touch -- ' + b,
+            'sort -o' + b + ' src',
+            'sort --output=' + b + ' src',
+        ]:
+            with self.subTest(command=command):
+                self.assertGate(2, command, cwd=self.a)
+        sd = self.ws / 'sessions/one/plans'; sd.mkdir(parents=True, exist_ok=True)
+        self.assertGate(2, 'cp notes.md ' + b + ' -S .bak', cwd=sd)
+        # Legitimate forms inside A's own scope still pass.
+        self.assertGate(0, 'cp src dst -S .bak', cwd=self.a)
+        self.assertGate(0, 'chmod --reference=src dst', cwd=self.a)
+        self.assertGate(0, 'chmod 644 dst', cwd=self.a)
+        self.assertGate(0, 'cp ' + str(self.b / 'src') + ' dst', cwd=self.a)  # sources are reads
+
     def test_symlink_and_prefix_do_not_match(self):
         self.task('o/r#2', self.b)
         outside = self.ws / 'outside'; outside.mkdir()

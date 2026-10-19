@@ -503,24 +503,48 @@ def action(command: str, cwd: str) -> dict:
                 git_operands = [x.split('=', 1)[-1] if '=' in x else x for x in args[i + 1:]]
                 paths.extend(canonical(x, local) for x in git_operands if '/' in x and '://' not in x and not x.startswith('-'))
             elif args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown", "patch"}:
+                # Options that take the next token as their value. Without this,
+                # `cp SRC DST -S .bak` made `.bak` the copy destination (#1051
+                # review): GNU tools permute options, so values can trail.
+                value_options = {
+                    'touch': {'-r', '--reference', '-d', '--date', '-t'},
+                    'cp': {'-S', '--suffix'}, 'mv': {'-S', '--suffix'},
+                    'chmod': {'--reference'}, 'chown': {'--reference'},
+                }.get(args[0], set())
                 operands = []
+                option_paths = []
+                has_reference = False
                 skip = False
+                end_of_options = False
                 for token in args[1:]:
                     if skip:
                         skip = False
                         continue
-                    if args[0] == 'touch' and token in {'-r', '--reference', '-d', '--date', '-t'}:
-                        skip = True
-                        continue
-                    if not token.startswith('-'):
+                    if end_of_options or not token.startswith('-') or token == '-':
                         operands.append(token)
+                        continue
+                    if token == '--':
+                        end_of_options = True
+                        continue
+                    if args[0] in {'cp', 'mv'} and (token in {'-t', '--target-directory'} or token.startswith('--target-directory=')
+                                                   or (not token.startswith('--') and 't' in token[1:])):
+                        raise UnknownShape('use explicit final copy destination')
+                    if token == '--reference' or token.startswith('--reference='):
+                        has_reference = True
+                    elif '/' in token:
+                        # A path attached to an option (`-o/abs`, `--out=/abs`)
+                        # is a potential target: count it, never drop it.
+                        option_paths.append(token.split('=', 1)[1] if token.startswith('--') and '=' in token else token[token.index('/'):])
+                    if token in value_options:
+                        skip = True
+                    elif args[0] in {'cp', 'mv'} and not token.startswith('--') and token.endswith('S'):
+                        skip = True  # a short cluster such as -aS takes the next token
                 if args[0] == 'cp':
                     # Common copy form: source(s) are reads, final operand writes.
-                    if any(x in {'-t', '--target-directory'} or x.startswith('--target-directory=') for x in args):
-                        raise UnknownShape('use explicit final copy destination')
                     operands = operands[-1:]
-                elif args[0] in {'chmod', 'chown'}:
-                    operands = operands[1:]
+                elif args[0] in {'chmod', 'chown'} and not has_reference:
+                    operands = operands[1:]  # the first operand is the mode/owner
+                operands = operands + option_paths
                 paths.extend(canonical(x, effective) for x in operands)
                 if args[0] in {"mkdir", "rmdir"}:
                     directory_paths.extend(canonical(x, effective) for x in operands)
@@ -534,6 +558,13 @@ def action(command: str, cwd: str) -> dict:
                 paths.append(local)
                 # Explicit paths cannot escape a task by borrowing CWD scope.
                 paths.extend(canonical(x, effective) for x in args[1:] if x.startswith(("/", "./", "../")))
+                # Paths attached to options (`-o/abs`, `--out=/abs`) cannot
+                # escape either.
+                for x in args[1:]:
+                    if x.startswith('-') and '/' in x:
+                        value = x.split('=', 1)[1] if x.startswith('--') and '=' in x else x[x.index('/'):]
+                        if value.startswith(("/", "./", "../")):
+                            paths.append(canonical(value, effective))
         args = []
         arg_globs = []
 
