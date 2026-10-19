@@ -154,6 +154,7 @@ hooks/bash/destructive-guard.sh|hooks/lib/extract-json.py
 hooks/bash/destructive-guard.sh|hooks/lib/log-block.sh
 hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/log-block.sh
+hooks/bash/universal-mutation-gate.sh|hooks/lib/read-only-command.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py
 hooks/git/branch-guard.sh|hooks/lib/extract-json.py
 hooks/git/branch-guard.sh|hooks/lib/scope-check.sh
@@ -195,7 +196,7 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "be3eb70e43afc0c3eb747204a06ee2eb2d4ff6057ec9c1b63f119bdd795c9f60"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "2ef999c4d7b7aa5c5bf49971a12d06d3088c6b5e7e3f1b4228fbcb70943fce6b"
 REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "961b75dda8e289f0997bd17cdfefd6b8fd1b4be78473da3577bf747ed6a88bfc"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
