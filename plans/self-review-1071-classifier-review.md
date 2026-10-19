@@ -29,6 +29,7 @@ Project-contribution: closes no-gate command-execution and write paths in every 
   - `831`: PASS.
   - `empty_reporoot`: PASS.
   - `review_risk_policy`: 12/12.
+  - `review_risk_test`: PASS. The first CI run failed here on helper-edge drift; I had run only the policy suite locally.
   - `build.py --check` and `generated-source-authority --check`: pass.
 - **Hostile review:** the CodeRabbit review on #1071 is the hostile review. A delegated adversarial run was stopped before it executed any probe, so it contributes no findings. My own shell-parsing probes covered:
   - redirections (`>|`, `&>`, `>&`, `2>`, `1>`, `<<<`);
@@ -39,6 +40,8 @@ Project-contribution: closes no-gate command-execution and write paths in every 
   - `exec` and `xargs`.
 
   They found the fd-redirect hole, which is fixed here.
+
+- **Review-risk graph:** the gate's classifier call is now a standalone line, which the dependency audit detects as a helper edge. The edge is registered in `bin/_test/review_risk_test.py` and the pinned invocation-site digest is updated. The only new site is that call; the assignment/use digest is unchanged. `hooks/lib/read-only-command.py` is now Tier C in `catalog/review-risk-policy.json`, because it decides what the gate admits. That tightens review, and the metrics are regenerated.
 
 ## Lead review
 
