@@ -2,6 +2,8 @@
   "ticket": "siege-analytics/claude-configs-public#1051",
   "base_main": "056b5337b08bb960fb7796b6bb00c971e22664f1",
   "target_develop": "4d6fbd27c4f47edc53856396fc58c02cf5bb6183",
+  "canonical_main": "f5c63baecfffa65b04508beb13d8b16312d215f8",
+  "prior_hosted_validator": "c0adbe2/run39231071049 success; topology failed before main integration. Historical, not proof for new ancestry.",
   "python": "Python3.12.12",
   "hook_suite_count": 37,
   "acceptance_test_count": 39,

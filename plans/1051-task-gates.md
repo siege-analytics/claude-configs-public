@@ -176,3 +176,17 @@ Final v2 vocabulary tightening: do not add generic --help/--version allowances t
 The final frozen v2 replay (.verification/1051/full-ci-round3-v2-final) passed all31 applicable merged validate shell steps from zero, all37 real-hook suites and39 acceptance tests. All904 frozen runtime/test/skill inputs remained unchanged; no resumed/skipped steps or superseded partial results count. Risk-policy snapshots/thresholds/negative floors and clean-home/canonical-temp/symlink protections were preserved. The proof recorder first refused an incomplete final-loop result, then recorded only the actual all-zero completion. Develop was re-fetched and remains the integrated4d6fbd2 at this checkpoint.
 
 The stopped v1 test scratch was preserved intact under private superseded-fixtures, not deleted or broadly excluded; the untracked export boundary was verified clean before final replay. Pinned dependency setup remained an offline already-satisfied reuse, not installation or a policy waiver. FINAL v2 scope remains NEW-1, R3 disclosure,926 positive and additive upstream integration only. Exact-head hosted success and independent acceptance remain pending; do not treat this local checkpoint as either.
+
+## Released-main additive integration addendum
+
+The09:50Z hub addendum authorizes an additional normal update after merging origin/main exactly f5c63baecfffa65b04508beb13d8b16312d215f8 instead of waiting for develop promotion. Additive merge67170d8 contains that pinned main and develop4d6fbd2. Runtime/test/skill inputs remain byte-identical to the prior904-input full v2 proof. No FINAL v2 behavior or deferred R1/R2/R4-R7/N1/N3-N9 changed.
+
+Pinned main's actual changelog blob still used Unreleased, with no3.5.67 heading. To implement the required placement, only its heading was relabelled3.5.67; the entire following upstream body is byte-for-byte preserved. Four1051 notes, including R3, now occupy a fresh Unreleased above it. The private preservation receipt hashes that complete upstream body. No released note wording was edited.
+
+The actual local compatibility topology entrypoint passes on this ancestry; that local path is NOT protected-host authorization. Prior hosted run39231071049 passed validate and skipped publish, but its separate exact-head topology failed on the pre-main ancestry. That is historical runtime evidence, not proof for the new integration. Fresh full merged replay,13 final-head checks and new hosted green are required before handoff. No force/shared-branch mutation/install/activation is authorized.
+
+### Released-main integration: final complete local proof
+
+The fresh .verification/1051/full-ci-round4-main replay passed all31 applicable merged validate shell steps from zero,37/37 hook suites and39/39 acceptance tests. All904 frozen runtime/test/skill inputs stayed unchanged. The final proof guard also verified actual pinned-main ancestry and RAW BYTE equality of the entire upstream body below3.5.67 against main's original Unreleased body. No partial/historical run counts toward this integration proof. Risk snapshots/thresholds/negative floors and canonical-temp/clean-home/symlink assertions remain unchanged.
+
+Evidence finalization only follows this complete run. New exact-head hosted validator/topology success and independent acceptance remain pending at this immutable pre-push checkpoint; prior hosted validate success is historical and did not override its failed pre-main topology check. No FINAL v2/source-policy behavior changed in this integration.

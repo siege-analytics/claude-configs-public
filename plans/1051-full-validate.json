@@ -1,9 +1,12 @@
 {
   "ticket": "siege-analytics/claude-configs-public#1051",
-  "round": "NEW-1 v2 bounded pure-reader glob repair; R3 disclosure and926 positive only",
-  "source_parent": "8538f425a57acaab89edec07f5b0b2eafdcb47b9",
+  "round": "FINAL v2 plus authorized released-main integration",
+  "source_parent": "67170d80eb7e1d38fafe8dfa32eff4ef37a46e8b",
   "merged_develop": "4d6fbd27c4f47edc53856396fc58c02cf5bb6183",
-  "input_index_tree": "d20ec19274c3c08ede440d96d14dab1da9bb4bb1",
+  "merged_main": "f5c63baecfffa65b04508beb13d8b16312d215f8",
+  "prior_v2_checkpoint": "c0adbe2 full31/37/39 and hosted validate39231071049 success; separate topology failed before authorized main integration. Historical, not new integration proof.",
+  "changelog_preservation": "Original pinned main header relabelled3.5.67; entire following body preserved byte-for-byte; four1051 notes in fresh Unreleased.",
+  "input_index_tree": "0b811b8622d5360630feb09fa2a06ae5a0bff37a",
   "workflow": ".github/workflows/build-and-publish.yml",
   "workflow_sha256": "24265f613d2d1a01b367ff80dfcc4be9185279cb7179d1b98e28f632aa0300a6",
   "python": "Python3.12.12",
@@ -56,28 +59,28 @@
       "name": "Gate contract and generated agreement",
       "sha256": "e89a744cbf4fc86ae37e7fc4feea4fb71c3bde18562db842354f4c2a26c5151d",
       "exit": 0,
-      "output_sha256": "2495be208fd67c2f53b55aeced41efa622a09b5575760f67fd5928fb7f9ccfc6"
+      "output_sha256": "73885d463a29953a7db0db635c8e59e3c12fbb133e7b9cf46dc01a16c4e0585b"
     },
     {
       "index": 6,
       "name": "Bounded work coordination and recovery",
       "sha256": "daef810a73a327cff1bd016666eea639610d2fa6c1bc2caff434080f3dec301e",
       "exit": 0,
-      "output_sha256": "5cb1e8e1461227b8b320b1dc535b51d6571601d889ed1ff75a1380629f3db3f9"
+      "output_sha256": "bb6c85305bd4dd105b99ec7f351618c68c5d7679c93a16f85a28392d29e57a77"
     },
     {
       "index": 7,
       "name": "Project procedure and resident composition",
       "sha256": "28166b6c1dcbc780402a798cc1f5783aebc89adb9282d8bd806e63a6b6d65b58",
       "exit": 0,
-      "output_sha256": "83172c2432179f6e9ab819d4efae31395ed5b1376dcaf48f80392ec3a54c240e"
+      "output_sha256": "35feeab177b8ee88d273c26be94ee803bf91f2420db27414b7e6b48b0eeaba5f"
     },
     {
       "index": 8,
       "name": "Canonical terminology and generated wiki",
       "sha256": "ffc1ab857571f83266ce6144fb204bc5c561374840e46575c8c4ad16c4511218",
       "exit": 0,
-      "output_sha256": "00abf213972f5f27e7df87996e047e1b85bd388e3cff71e30b87417b15550a68"
+      "output_sha256": "bb1d51d1871f1ea4cfbd4afa3450250818759c8da5631354333ed4bab1fabfcb"
     },
     {
       "index": 9,
@@ -140,7 +143,7 @@
       "name": "Coherent package upgrade and rollback fixtures",
       "sha256": "cafb98193ff5da27e4babaae6e16116b1a20f2b60d208562624f932efdf7a3be",
       "exit": 0,
-      "output_sha256": "a3f83ea98cd923cf754ac5e431abb2093abf542c6e9bbadd0b3e75fb11980e89"
+      "output_sha256": "cd092e4cdaaec4d574c2f5edb7b984a981264b23e7115bfae46c9ccdee706d62"
     },
     {
       "index": 18,
@@ -154,21 +157,21 @@
       "name": "Shared-parent registered provider events",
       "sha256": "e9d24806347d95a84bd9c9e4d4d66ff86b6b6f50985d468cb1dd43013f535460",
       "exit": 0,
-      "output_sha256": "54abc8d83113f12ad855dba0c0f2ad9afc229323ad1db7976cf9271a223b1213"
+      "output_sha256": "0d166fb4a89056cc94aeef9f0af46883bd98efba4a6434d1d6cfadf2cf99bef3"
     },
     {
       "index": 20,
       "name": "Native consumer Git registration and destination range",
       "sha256": "3ab4259dbe5b3e5baec9b64b71c119f07eb8bcdf42339ba1d10cb8981932cc52",
       "exit": 0,
-      "output_sha256": "f080bbba091ab385d76dfc1ce60a63920df7a8f737381bae3e639bbc10ccdb45"
+      "output_sha256": "32c1f43a64c71c5bdb98769acf5475ebbddec89f1d2d0b1852976da701dd80e7"
     },
     {
       "index": 21,
       "name": "Canary packet preparation remains non-authorizing",
       "sha256": "ad8b95f350c7ba52676b6588b7f4b753ed646eeb4755375bb31f04e4a27ae7de",
       "exit": 0,
-      "output_sha256": "afc71e5608876a7acca9fb1ec214d9cdebf424059f8395b53fdd40cc7b30bfd3"
+      "output_sha256": "b29d61aa2daca83b996cec9fdb6037c587a0ecaadc218316c3c0240241169a63"
     },
     {
       "index": 22,
@@ -182,7 +185,7 @@
       "name": "Scanner selected-source truth and incomplete results",
       "sha256": "5e4c2c317e907ad677c855357b136273aa2361cdc71bc34931d4c214740fe151",
       "exit": 0,
-      "output_sha256": "ae1b7136ee0ceb9c7c5dcf7dade0b2747e27d92f7fc170d96e229ca394642eeb"
+      "output_sha256": "355f065f7f8206dabbf11f8e6713f393209c03749f99fbf18937c690c983efed"
     },
     {
       "index": 24,
@@ -203,7 +206,7 @@
       "name": "Main-only release policy fixtures",
       "sha256": "aed6e2b52953f14d687833a7b424151a66f94d0701a6dd9066ba78c1b70dcdec",
       "exit": 0,
-      "output_sha256": "667bccbde35820a7ac8b4a0ef4195e0f1b493b4bb06f40f00009169ca7b31bf6"
+      "output_sha256": "355a594bcf10f4e2a41dd1af2703c47f754f1bd952d4d764b620a766d1e0744f"
     },
     {
       "index": 27,
@@ -231,7 +234,7 @@
       "name": "Hook scenario tests",
       "sha256": "71dfc15c9a28c3a71a9e9bccaf1bb56130ad5591057a789c160091e893c2feda",
       "exit": 0,
-      "output_sha256": "db0111c6a0c39f81364051c251710fc8aae705a2c9b9fdf4dd9cc686aeb4d71e"
+      "output_sha256": "5d1ce07894b088654d4c286f639b701a635b705c6790985bf8016e54a9d7b0fa"
     }
   ],
   "local_dependency_setup": "Existing pinned PyYAML6.0.3 reused in clone-local no-pip venv; offline already-satisfied workflow command; no package install or managed-Python override.",
@@ -249,5 +252,5 @@
   ],
   "review_boundaries": "Local success is not independent exact-head acceptance. New exact-head hosted green must be recorded on PR1055 before handoff.",
   "excluded": "Uses-only setup/checkout actions,inapplicable first-main provenance,publish job. No live install,activation,deployment,release or shared-branch merge.",
-  "local_trace_directory": ".verification/1051/full-ci-round3-v2-final"
+  "local_trace_directory": ".verification/1051/full-ci-round4-main"
 }
