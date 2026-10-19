@@ -287,7 +287,9 @@ label]: <references/steps.md>
     def test_router_assets_cannot_resurrect_a_replaced_child(self):
         source, output = self.changed_source()
         (source / 'skills/self-review').rename(source / 'skills/coding/self-review')
-        (source / 'skills/coding/SKILL.md').write_text('# Router\n\nUse [skill:self-review].\n')
+        # Packaged skills need valid frontmatter (#1046); the router is otherwise minimal.
+        (source / 'skills/coding/SKILL.md').write_text(
+            '---\nname: coding\ndescription: Router fixture.\n---\n\n# Router\n\nUse [skill:self-review].\n')
         m.package(source, output, 'github.example.invalid/synthetic-org/strict-release')
         for layout in ('flat', 'nested'):
             root = output / layout

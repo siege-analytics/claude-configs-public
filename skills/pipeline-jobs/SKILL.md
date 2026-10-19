@@ -1,6 +1,6 @@
 ---
 name: pipeline-jobs
-description: Pipeline job pattern. TRIGGER: writing data pipeline scripts, Rundeck jobs, Airflow DAGs, or scheduled data processing. Python first, scheduler second.
+description: "Pipeline job pattern. TRIGGER: writing data pipeline scripts, Rundeck jobs, Airflow DAGs, or scheduled data processing. Python first, scheduler second."
 routed-by: coding-standards
 ---
 

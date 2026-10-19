@@ -1,5 +1,5 @@
 ---
-description: Always-on. When the enforcement system itself produces contradictions -- gates blocking their own prerequisites, false positives forcing workarounds, inter-rule conflicts, integrity failures, or context mismatches -- the agent must capture evidence, classify the failure, file a ticket with a structured contradiction packet, and triage by blast radius. Workarounds normalize evasion; evidence-based escalation preserves the enforcement system's credibility. Provenance: #590 (self-blocking promotion merge), #591 (stderr redirect false positive), #592 (missing terminal status exit path), #595 (original rule), #597--#603 (cross-review hardening).
+description: "Always-on. When the enforcement system itself produces contradictions -- gates blocking their own prerequisites, false positives forcing workarounds, inter-rule conflicts, integrity failures, or context mismatches -- the agent must capture evidence, classify the failure, file a ticket with a structured contradiction packet, and triage by blast radius. Workarounds normalize evasion; evidence-based escalation preserves the enforcement system's credibility. Provenance: #590 (self-blocking promotion merge), #591 (stderr redirect false positive), #592 (missing terminal status exit path), #595 (original rule), #597--#603 (cross-review hardening)."
 ---
 
 # Enforcement Contradiction Escalation

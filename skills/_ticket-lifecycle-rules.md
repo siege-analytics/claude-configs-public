@@ -1,5 +1,5 @@
 ---
-description: Always-on ticket lifecycle status discipline. Ticket state must move at the point of action: work start, PR open, test/UAT handoff, blocker, unblock/resume, merge/verified close. Platform-agnostic; requires a comment when a platform lacks a mutable Status field.
+description: "Always-on ticket lifecycle status discipline. Ticket state must move at the point of action: work start, PR open, test/UAT handoff, blocker, unblock/resume, merge/verified close. Platform-agnostic; requires a comment when a platform lacks a mutable Status field."
 ---
 
 # Ticket Lifecycle Status
