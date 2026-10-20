@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "legacy_before_epoch": 1791898200,
+  "tiers": {
+    "A": {
+      "name": "trivial",
+      "required_evidence": [
+        "Self-Review"
+      ],
+      "description": "Prose, plans, or generated evidence with no runtime behavior."
+    },
+    "B": {
+      "name": "standard",
+      "required_evidence": [
+        "Self-Review",
+        "Self-Review-Source",
+        "focused-tests"
+      ],
+      "description": "Normal skills, rules, code, and non-critical behavior."
+    },
+    "C": {
+      "name": "high-risk",
+      "required_evidence": [
+        "Self-Review",
+        "Self-Review-Source",
+        "Pre-mortem-artifact",
+        "Hostile-Review",
+        "negative-tests",
+        "full-suite",
+        "canary"
+      ],
+      "description": "Enforcement, branch/release/deployment, credentials, destructive operations, or review-policy changes."
+    }
+  },
+  "high_risk_path_patterns": [
+    "^\\.githooks/",
+    "^\\.github/workflows/",
+    "^hooks/(git|bash|write)/",
+    "^hooks/agent-comms/(hub-concurrency-gate|no-slug-form-outbound|spawn-guard)\\.sh$",
+    "^hooks/infrastructure/catalog-guard\\.sh$",
+    "^hooks/lib/(after-image|artifact-casefold-candidate|canonical-path|extract-json|probe-runner|read-only-command|resolve-think-gate|split-frontmatter)\\.py$",
+    "^hooks/lib/(detect-host|gate-registry|scope-check)\\.sh$",
+    "^hooks/resolver/.*(gate|guard|enforcement)",
+    "^hooks/settings-snippet\\.json$",
+    "^scripts/ci/",
+    "^scripts/canary/",
+    "^examples/probe-matrices/craft-backend-canary/.*\\.json$",
+    "^skills/KERNEL\\.md$",
+    "^bin/(install|verify-enforcement|check-deploy|deploy|wire-enforcement)",
+    "^bin/(build|effective_policy|frontmatter_validation|gate_contract|generated-source-authority|kernel-budget|review-risk|resolve-load-set|skill-inventory|skill-lifecycle|data-scope|validate-hooks)\\.py$",
+    "^bin/_test/(craft_backend_canary|data_scope|effective_policy|gate_contract|protected_policy|review_risk)_test\\.py$",
+    "^requirements-validation\\.txt$",
+    "^hooks/_test/review_risk_policy\\.test\\.sh$",
+    "^catalog/data-scope-(fixtures|ledger)\\.json$",
+    "^catalog/(effective-policy-selection|gate-contract-schema|gate-contracts|review-risk-policy|resolver-manifest|skill-lifecycle-(schema|bootstrap|approved-exceptions|completed))\\.json$",
+    "^bundles/[^/]+/policy-inputs\\.json$",
+    "^hooks/resolver/inject-resolver\\.sh$",
+    "^\\.claude/(deploy-model|settings\\.json)$",
+    "(^|/)(credential|credentials|secret|secrets|auth|permission|permissions)([._/-]|$)",
+    "(^|/)(release|deploy|destructive)([._/-]|$)",
+    "^bin/(package-generation\\.py|_test/package_generation_test\\.py)$",
+    "^VERSION$",
+    "^bin/_test/native_push_test\\.py$",
+    "^bin/_test/provider_event_test\\.py$",
+    "^bin/_test/resident_delivery_test\\.py$",
+    "^examples/provider/",
+    "^bundles/[^/]+/composition-inputs\\.json$",
+    "^bin/(compose-project|procedure_composition)\\.py$",
+    "^bin/(package_selection|source_snapshot)\\.py$",
+    "^bin/_test/package_selection_test\\.py$",
+    "^bundles/[^/]+/build-bundle\\.json$",
+    "^examples/selected-build/",
+    "^bin/_test/(selected_composition|project_composition|procedure_composition)_test\\.py$",
+    "^bin/(selected_registration|native_git)\\.py$",
+    "^bin/_test/selected_registration_test\\.py$",
+    "^examples/selected-registration/",
+    "^bundles/[^/]+/(registration-profile|protected-adapter)\\.json$",
+    "^bin/_test/selected_generation_test\\.py$",
+    "^examples/selected-generations/",
+    "^catalog/selected-generation-bindings\\.json$"
+  ],
+  "standard_path_patterns": [
+    "^skills/",
+    "^projects/",
+    "^bin/",
+    "^scripts/",
+    "\\.(py|sh|js|ts|tsx|jsx|sql|json|ya?ml|toml)$"
+  ],
+  "trivial_generated_paths": [
+    "^catalog/(skills-inventory|skill-lifecycle-legacy|generated-source-authority|kernel-budget|progressive-loading-metrics)\\.(json|md)$"
+  ],
+  "trivial_path_patterns": [
+    "^plans/",
+    "^docs/",
+    "(^|/)(README|CHANGELOG|CONTRIBUTING|THIRD_PARTY_NOTICES)\\.md$",
+    "\\.md$"
+  ]
+}
