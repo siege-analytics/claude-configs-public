@@ -29,3 +29,17 @@ Project-contribution: workspace installs from a terminal complete, instead of ha
 
 - `verify_enforcement`: 39/39 with the fix; 38/39 without it (the new case).
 - Install time: 4 s with stdin closed, against a hang of 31+ minutes with it open.
+
+## Follow-up: bash 3.2 portability of the regression case (#1077 review)
+
+CodeRabbit found that the open-stdin case used `exec {fd}<` (bash 4.1+), and it also relied on `$!` after process substitution (bash 4.4+) and on `timeout`, which stock macOS lacks. The case now uses a FIFO held open by a background writer and a 120 s polling deadline.
+- With the fix: `verify_enforcement` 39/39 in 28 s.
+- Against v3.5.69's `verify-enforcement.sh`: the case fails with exit 124, so 38/39.
+- No writer process is left behind afterwards.
+
+## Test plan
+
+- `bash hooks/_test/verify_enforcement.test.sh < /dev/null` after `python3 bin/build.py`: 39/39 expected.
+- The same run against v3.5.69's `bin/verify-enforcement.sh` (`git show 2cebfc3:bin/verify-enforcement.sh`): the open-stdin case must fail with exit 124.
+- `pgrep -af 'sleep 600'` afterwards: no leftover writer.
+- CI: Validate references and build, on the PR head.
