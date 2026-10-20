@@ -222,5 +222,26 @@ echo "== a session's own data/ dir is its scratch (#1051 B1); escapes and non-fi
 for c in 'touch notes.txt' 'rm -rf out'; do expect allow "$D" "$c"; done
 for c in 'python3 -m venv venv' "rm -rf .''./.''./plans" 'env -C x rm -rf plans' \
          'pkill -f airflow' 'glab mr merge 1'; do expect block "$D" "$c"; done
+# Escapes from the scratch folder stay gated (probed on v3.5.73; pinned here).
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$D" "$c"; done <<'EOF'
+touch ../../x
+touch ~/x
+touch /etc/x
+echo x > ../../x
+echo x > /tmp/x
+cd .. && touch x
+cp notes.txt /tmp/elsewhere
+cp notes.txt ../../plans/p
+ln -s /etc/passwd p
+mv notes.txt ../n
+tee ../../x
+mkdir ../../d
+rm -rf ../../plans
+rm -rf ../
+rm -rf /tmp/x
+rm -rf ~/x
+cd .. && rm -rf data
+EOF
+for c in 'echo x > out.txt' 'mkdir sub'; do expect allow "$D" "$c"; done
 printf 'read_allowlist: %d passed, %d failed\n' "$PASS" "$FAIL"
 (( FAIL == 0 ))
