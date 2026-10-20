@@ -7,7 +7,8 @@
 # work. On top of that, a python3 shim counts starts: "skip" cases must start
 # none, "full" cases must start at least one (the full path was taken).
 # Cases include every gap from the #1083 review: \f and \u escapes, empty,
-# nested and non-first commands, and shell-quoted gh for the shlex-based guard.
+# nested and non-first commands, and shell-quoted gh for the shlex-based guard;
+# and from #1098: quoted, backslashed, multi-space and ANSI-C spellings.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
@@ -26,11 +27,14 @@ done
 if grep -q '_FAST_' "$T"/orig/git/*.sh "$T/orig/bash/coordinator-status-guard.sh"; then echo "oracle still contains fast-skip code"; exit 1; fi
 REPO="$T/git/repo"; mkdir -p "$REPO"
 ( cd "$REPO" && { git init -q -b main 2>/dev/null || { git init -q && git checkout -q -b main; }; } &&
-  git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init )
+  git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init &&
+  git remote add origin https://github.com/siege-analytics/x.git && : > .env )
+# The siege-analytics origin puts the repo in every guard's scope (#699), so the
+# exit-code comparison with the oracle bites; .env gives no-sensitive-files work.
 PASS=0; FAIL=0
 run() {  # run <tree> <hook> <stdin> -> "rc python3_starts"
     : > "$T/count"
-    printf '%s' "$3" | (cd "$REPO" && env -i PATH="$T/bin:/usr/bin:/bin" HOME="$T/home" bash "$1/$2.sh" >/dev/null 2>&1)
+    printf '%s' "$3" | (cd "$REPO" && env -i PATH="$T/bin:/usr/bin:/bin" HOME="$T/home" LANG=C.UTF-8 LC_ALL=C.UTF-8 bash "$1/$2.sh" >/dev/null 2>&1)
     echo "$? $(wc -l < "$T/count" | tr -d ' ')"
 }
 payload() {  # payload <command> -> JSON tool payload, cwd = the repo (path contains "git")
@@ -76,7 +80,25 @@ while IFS='|' read -r h trig; do
     expect full "$h" "nested command key" "{\"tool_name\":\"Bash\",\"tool_input\":{\"args\":{\"command\":\"ls\"}},\"cwd\":\"$REPO\"}"
     expect full "$h" "command not the first key" "{\"tool_name\":\"Bash\",\"tool_input\":{\"description\":\"x\",\"command\":\"ls\"},\"cwd\":\"$REPO\"}"
     expect full "$h" "git-hook invocation (refs on stdin)" 'refs/heads/x 0123 refs/heads/x 4567'
+    # #1098: spellings the shell rebuilds into the trigger.
+    w1="${trig%% *}"; rest="${trig#* }"; w2="${rest%% *}"; tail="${rest#"$w2"}"
+    expect full "$h" "second word double-quoted" "$(payload "$w1 \"$w2\"$tail")"
+    expect full "$h" "second word single-quoted" "$(payload "$w1 '$w2'$tail")"
+    expect full "$h" "empty quotes inside the first word" "$(payload "${w1:0:1}''${w1:1} $rest")"
+    expect full "$h" "backslash inside the first word" "$(payload "${w1:0:1}\\${w1:1} $rest")"
+    expect full "$h" "two spaces between the words" "$(payload "$w1  $rest")"
+    expect full "$h" "ANSI-C quoted first word" "$(payload "\$'$w1' $rest")"
+    # A quote or backslash glued to the trigger must not hide it (#1098 review).
+    expect full "$h" "backslash glued before the first word" "$(payload "echo x\\$trig")"
+    expect full "$h" "quote glued after the second word" "$(payload "$w1 $w2\"x\"$tail")"
 done <<< "$CASES"
+# A long command takes the full path and stays well inside the 10 s hook
+# timeout under a UTF-8 locale (#1098 review: a 300 KB heredoc before the
+# trigger used to time out).
+BIG="$("$REAL_PY" -c 'import json,sys;print(json.dumps({"tool_name":"Bash","tool_input":{"command":"cat > f <<EOF\n"+("x = \"y\"  \x27z\x27\n"*20000)+"EOF\ngit add -A"},"cwd":sys.argv[1]}))' "$REPO")"
+start=$(date +%s)
+expect full git/no-broad-staging "300 KB command, then the trigger" "$BIG"
+if (( $(date +%s) - start < 8 )); then PASS=$((PASS + 1)); else FAIL=$((FAIL + 1)); echo "  FAIL  300 KB command took $(( $(date +%s) - start ))s"; fi
 # shlex-based guard: shell quoting rebuilds the gh token.
 for c in 'g\h issue close 5 --comment done' '"g"h issue close 5 --comment done' "g''h issue close 5 --comment done"; do
     expect full bash/coordinator-status-guard "quoted gh: $c" "$(payload "$c")"
