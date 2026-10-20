@@ -6,17 +6,83 @@ set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
 
 INPUT=$(cat)
-export CCP_HOOK_INPUT_JSON="$INPUT"
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 export CCP_HOOK_LIB="$HOOK_DIR/../lib"
-COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
-CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
-
 # Block-event logging (#602): record every block for classification.
 source "$HOOK_DIR/../lib/log-block.sh" 2>/dev/null || true
+_fail_closed() {
+    command -v log_block_event >/dev/null 2>&1 && log_block_event "universal-mutation-gate" "$1" "" 2>/dev/null
+    echo "BLOCKED by universal-mutation-gate: $1; failing closed." >&2
+    exit 2
+}
 
-TOOL_NAME=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_name 2>/dev/null || true)
+# Fail CLOSED when the gate cannot read its own input (#1097). An empty command
+# below means "nothing to check", so every way extraction can break used to
+# allow every command. extract-json.py exits 0 for a missing key, {}, malformed
+# JSON and empty stdin alike, so its result cannot be trusted on its own.
+[[ -f "$EXTRACT" && -r "$EXTRACT" ]] || _fail_closed "cannot read its JSON extractor at $EXTRACT"
+command -v python3 >/dev/null 2>&1 || _fail_closed "python3 is not on PATH, so the payload cannot be read"
+[[ -z "$INPUT" ]] && exit 0   # no event at all: nothing to decide
+
+# One probe parses the payload and returns, NUL-separated: a status, the three
+# fields this hook reads (with extract-json.py's exact output rules), and a slim
+# copy of the payload with every long string emptied except tool_input.command.
+# The status is "ok" only for a JSON object whose fields could be read, so any
+# failure - including a python3 that does nothing - blocks. The slim copy is
+# what the resolver reads from the environment: an exported value over the
+# kernel's 128 KiB per-string limit makes every later exec fail, which used to
+# let a padded command through and would now block a large Write.
+_PROBE_PY='
+import json, sys
+def field(data, path):
+    cur = data
+    for key in path.split("."):
+        if not (isinstance(cur, dict) and key in cur):
+            return ""
+        cur = cur[key]
+    if cur is None or cur == "":
+        return ""
+    text = json.dumps(cur) if isinstance(cur, (dict, list)) else str(cur)
+    return text.rstrip("\n").replace("\0", "")
+def slim(v):
+    if isinstance(v, str):
+        return "" if len(v) > 4096 else v
+    if isinstance(v, dict):
+        return {k: slim(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [slim(x) for x in v]
+    return v
+def emit(*parts):
+    sys.stdout.buffer.write(b"".join(p.encode("utf-8") + b"\0" for p in parts))
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    emit("bad"); sys.exit()
+if not isinstance(data, dict):
+    emit("bad"); sys.exit()
+command = field(data, "tool_input.command")
+if len(command) > 65536:
+    emit("large"); sys.exit()
+out = slim(data)
+if command:
+    out["tool_input"]["command"] = data["tool_input"]["command"]
+try:
+    emit("ok", command, field(data, "cwd"), field(data, "tool_name"), json.dumps(out))
+except UnicodeEncodeError:
+    sys.stdout.buffer.write(b"unreadable\0")
+'
+_STATUS=""; COMMAND=""; CWD=""; TOOL_NAME=""; _SLIM=""
+{ IFS= read -r -d '' _STATUS; IFS= read -r -d '' COMMAND; IFS= read -r -d '' CWD
+  IFS= read -r -d '' TOOL_NAME; IFS= read -r -d '' _SLIM; } \
+    < <(printf '%s' "$INPUT" | python3 -c "$_PROBE_PY" 2>/dev/null)
+case "$_STATUS" in
+    ok) ;;
+    large) _fail_closed "the command is over 64 KiB, too large to check" ;;
+    unreadable) _fail_closed "the command cannot be read as text" ;;
+    *) _fail_closed "input is not a JSON hook payload" ;;
+esac
+export CCP_HOOK_INPUT_JSON="$_SLIM"
 if [[ -z "$COMMAND" && ! "$TOOL_NAME" =~ ^(Write|Edit|MultiEdit|NotebookEdit)$ ]]; then exit 0; fi
 
 # No emergency disable. To disable the gate, comment out the hook in
