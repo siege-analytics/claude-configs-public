@@ -8,6 +8,7 @@ export PATH="/home/craftagents/bin:$PATH"
 INPUT=$(cat)
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
+export CCP_HOOK_LIB="$HOOK_DIR/../lib"
 # Block-event logging (#602): record every block for classification.
 source "$HOOK_DIR/../lib/log-block.sh" 2>/dev/null || true
 _fail_closed() {
@@ -331,6 +332,10 @@ plan_dirs = []
 # The current host session's own plans are a writable lifecycle surface.
 # Other sessions' plans are never discovered here.
 current_session_dir = os.environ.get('CRAFT_SESSION_DIR') or os.environ.get('CRAFT_AGENT_SESSION_DIR') or os.environ.get('CLAUDE_SESSION_DIR')
+# A mis-tagged session dir must not lend this task another session's plans (#1099).
+sys.path.insert(0, os.environ.get('CCP_HOOK_LIB', ''))
+from session_anchor import verified_session_dir, payload_from_env
+current_session_dir = verified_session_dir(current_session_dir or '', payload_from_env()) or current_session_dir
 if current_session_dir:
     session_plans = os.path.join(current_session_dir, 'plans')
     if os.path.isdir(session_plans):
