@@ -187,6 +187,13 @@ EOF
 for c in 'git remote -v' 'git remote show origin' 'git remote get-url origin' 'git tag' 'git tag -l' 'git tag --list "v1*"' \
          'date' 'date +%F' 'date -u +%FT%T' 'date -d @1 +%s' 'date -Iseconds' 'printf "%s\n" x' 'printf %d 3' \
          'rg foo src/*.py' 'ls *.md' 'git config --get user.name'; do expect allow "$O" "$c"; done
+echo "== #1089: kubectl global-flag values are not subcommands; ss -K kills; gh --web launches a browser =="
+for c in 'kubectl -n get delete pod x' 'kubectl --context get delete pod x' 'kubectl -n logs exec -it pod -- sh' \
+         'ss -K dst 1.2.3.4' 'ss --kill' 'gh pr view 1 --web' 'gh search repos x --web' 'gh pr list -w'; do expect block "$O" "$c"; done
+for c in 'ss -tlnp' 'gh pr view 1 --json state' 'gh api repos/o/r -q .workflow'; do expect allow "$O" "$c"; done
+for c in 'kubectl get pods -n x' 'kubectl -n x get pods' 'kubectl --namespace=x logs p' 'kubectl -A get pods'; do
+    if python3 "$ROOT/hooks/lib/read-only-command.py" "$c"; then PASS=$((PASS + 1)); else FAIL=$((FAIL + 1)); echo "  FAIL  classifier did not prove: $c"; fi
+done
 echo "== multi-line commands are never proven read-only =="
 expect block "$O" $'ls\nbash evil.sh'
 expect block "$O" $'ls\nredis-cli -h db FLUSHALL'
