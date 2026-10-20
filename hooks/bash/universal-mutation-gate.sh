@@ -62,13 +62,19 @@ except Exception:
 if not isinstance(data, dict):
     emit("bad"); sys.exit()
 command = field(data, "tool_input.command")
-if len(command) > 65536:
+# Sizes are bytes as exec sees them, not characters: a command of 64k
+# four-byte characters is 256 KiB in argv, and json.dumps escapes each as
+# \uXXXX (#1106 review).
+if len(command.encode("utf-8", "surrogatepass")) > 65536:
     emit("large"); sys.exit()
 out = slim(data)
 if command:
     out["tool_input"]["command"] = data["tool_input"]["command"]
+slim_json = json.dumps(out)
+if len(slim_json.encode("utf-8")) > 98304:
+    emit("large"); sys.exit()
 try:
-    emit("ok", command, field(data, "cwd"), field(data, "tool_name"), json.dumps(out))
+    emit("ok", command, field(data, "cwd"), field(data, "tool_name"), slim_json)
 except UnicodeEncodeError:
     sys.stdout.buffer.write(b"unreadable\0")
 '
@@ -78,7 +84,7 @@ _STATUS=""; COMMAND=""; CWD=""; TOOL_NAME=""; _SLIM=""
     < <(printf '%s' "$INPUT" | python3 -c "$_PROBE_PY" 2>/dev/null)
 case "$_STATUS" in
     ok) ;;
-    large) _fail_closed "the command is over 64 KiB, too large to check" ;;
+    large) _fail_closed "the command or its payload is too large to check (over 64 KiB / 96 KiB)" ;;
     unreadable) _fail_closed "the command cannot be read as text" ;;
     *) _fail_closed "input is not a JSON hook payload" ;;
 esac
