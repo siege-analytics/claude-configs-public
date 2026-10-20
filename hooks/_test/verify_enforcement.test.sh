@@ -72,6 +72,22 @@ else
     bad "fully-wired fixture should pass but did not"
 fi
 
+# An interactive install hands the probe a stdin that never closes (a TTY).
+# The probe must not read it: give it an open, silent pipe and a deadline.
+# The writer holds only the pipe it feeds, and is killed afterwards, so it
+# cannot keep this test's own output open.
+exec {never_closes}< <(exec 2>/dev/null </dev/null; sleep 600)
+writer=$!
+timeout 120 bash "$PROBE" --target "$WIRED" --mode craft-agent <&"$never_closes" >/dev/null 2>&1
+rc=$?
+kill "$writer" 2>/dev/null
+exec {never_closes}<&-
+if [[ $rc -eq 0 ]]; then
+    ok "probe completes when the caller's stdin never closes"
+else
+    bad "probe with an open stdin exited $rc (124 = hung waiting on stdin)"
+fi
+
 # --- PASS fixture: fully wired but NO watchdog automation ---------------------
 # The standing-order watchdog is opt-in and not wired by default (README.md);
 # its absence is advisory, not an enforcement failure. A fully-wired target
