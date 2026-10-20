@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Canonical native pre-push adapter.
+#
+# Review evidence is checked through the native update-line protocol. Retained
+# legacy branch/test dispatch is configuration only, not proof of their native
+# semantics. Local hooks remain bypassable; protected acceptance is separate.
+
+set -euo pipefail
+
+# Selected registration supplies all policy authority inputs as a host binding.
+# The remaining body is the retained repository compatibility wrapper.
+if [[ "${1:-}" == "--selected" && $# -ge 3 ]]; then
+    shift
+    SELECTED_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+    exec python3 -B "$SELECTED_ROOT/bin/native_git.py" pre-push -- "$@"
+fi
+
+HOOKS_DIR="$(cd "$(dirname "$0")" && pwd)"
+PACKAGE_ROOT="$(cd "$HOOKS_DIR/.." && pwd)"
+RANGE_HOOK="$PACKAGE_ROOT/hooks/git/pre-push-self-review.sh"
+HOOKS_ROOT="$PACKAGE_ROOT/hooks"
+RISK_HELPER="$PACKAGE_ROOT/bin/review-risk.py"
+RISK_POLICY="$PACKAGE_ROOT/catalog/review-risk-policy.json"
+
+fail() {
+    echo "pre-push: native range enforcement unavailable: $1" >&2
+    exit 2
+}
+
+[[ -f "$RANGE_HOOK" && -x "$RANGE_HOOK" ]] || fail "missing or non-executable $RANGE_HOOK"
+[[ -f "$RISK_HELPER" ]] || fail "missing $RISK_HELPER"
+[[ -f "$RISK_POLICY" ]] || fail "missing $RISK_POLICY"
+
+INPUT=$(mktemp)
+trap 'rm -f "$INPUT"' EXIT
+cat > "$INPUT"
+
+run_gate() {
+    local gate="$1" code
+    shift
+    [[ -f "$gate" && -x "$gate" ]] || fail "missing or non-executable $gate"
+    if "$gate" "$@" < "$INPUT"; then
+        return 0
+    else
+        code=$?
+        [[ "$code" -eq 1 ]] && return 1
+        return 2
+    fi
+}
+
+run_gate "$RANGE_HOOK" "$@"
+
+# Gate: branch-guard — Commit to protected branch
+GATE_SCRIPT="$HOOKS_ROOT/git/branch-guard.sh"
+if run_gate "$GATE_SCRIPT" "$@"; then
+    :
+else
+    gate_code=$?
+    echo "pre-push: branch-guard gate BLOCKED push" >&2
+    exit "$gate_code"
+fi
+
+# Legacy test feedback remains registered until its separate migration.
+run_gate "$HOOKS_ROOT/git/test-guard.sh" "$@"
