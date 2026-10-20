@@ -65,6 +65,18 @@ The following are now rejected:
 - Part-of epic #655; #661 closes the auto-gen chain by making the templates land as files at ticket creation time.
 
 ### Fixed
+- `hooks/resolver/inject-resolver.sh` now starts one python3 process per prompt instead of three (#1064). `bin/resolve-load-set.py --payload-stdin` reads `prompt` (falling back to `tool_input.prompt`) and `cwd` from the hook payload itself, with the same per-field fallbacks the two removed inline parsers had, including invalid UTF-8 and a BOM. Injected output is byte-identical to `4d6fbd2` across a 23-payload corpus in `on` and `canary` modes.
+
+Three inputs that the old path rejected now select normally:
+- a prompt over the 128 KiB argument limit;
+- a prompt of exactly `--help`;
+- a prompt containing a lone surrogate.
+
+NUL bytes in a prompt are now kept rather than dropped.
+
+Measured per-prompt hook time on one host went from about 350 ms to about 155 ms.
+
+`hooks/_test/progressive_loading.test.sh` now asserts one python3 process per prompt. It also checks the largest multi-route selection. Both it and `bin/progressive-loading-metrics.py` lower their size ceiling from 12,000 to 10,000 bytes, because Claude Code 2.1.302 saves hook output over about 10 KB to a file and shows the model only a 2 KB preview.
 - Skill and rule frontmatter is now validated with a real YAML parser (#1046). `bin/frontmatter_validation.py` applies a duplicate-key-rejecting `yaml.safe_load`, a mapping check, strict non-empty string `name`/`description`, and a YAML 1.1/1.2 compatibility lint. It gates `bin/skill-inventory.py`, `bin/build.py` (`--check`, build, `--deploy`), and `bin/compose-project.py` for every packaged direct, nested, project, and composed `SKILL.md` and rule header.
   - PyYAML is a required dependency, pinned with hashes in `requirements-validation.txt` and installed by CI. Validation fails closed without it. `bin/install.sh` and `bin/sync-workspace-hooks.sh` check for the pinned version (`frontmatter_validation.py --check-dependency`) before any build or deploy, and stop with supported-interpreter guidance if it is missing.
   - The `pipeline-jobs` and `skillbuilder` skill descriptions and the `prospective-memory`, `ticket-lifecycle`, and `enforcement-contradiction` rule descriptions are now quoted. They were unparseable YAML that the presence-only check accepted. Their wording is unchanged.

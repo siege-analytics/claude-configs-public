@@ -15,7 +15,14 @@ python_out="$(run '{"prompt":"review this Python module","cwd":"/tmp"}')"
 grep -q 'load: coding' <<<"$python_out" && grep -q 'load: python' <<<"$python_out" && ok "Python task selects coding capabilities" || bad "Python route missing"
 ! grep -q 'slow is smooth' <<<"$python_out" && ok "legacy resolver prose not injected" || bad "legacy resolver still injected"
 chars=$(printf '%s' "$python_out" | wc -c | tr -d ' ')
-[[ "$chars" -lt 12000 ]] && ok "injection stays below 12k chars ($chars)" || bad "injection too large ($chars)"
+# Claude Code 2.1.302 inlines hook output up to about 10 KB; past that it saves
+# the output to a file and the model sees only a 2 KB preview (#1064).
+[[ "$chars" -lt 10000 ]] && ok "injection stays below the 10k-byte inline limit ($chars)" || bad "injection too large to inline ($chars bytes)"
+# Every load line embeds the install path, so the large in-budget selections
+# are the ones that reach the limit first.
+large_out="$(run '{"prompt":"review Python Spark SQL Databricks Unity Catalog spatial PostGIS code","cwd":"/tmp"}')"
+large_bytes=$(printf '%s' "$large_out" | wc -c | tr -d ' ')
+[[ "$large_bytes" -lt 10000 ]] && ok "large in-budget selection stays below the 10k-byte inline limit ($large_bytes)" || bad "large in-budget selection too large to inline ($large_bytes bytes)"
 overflow_out="$(run '{"prompt":"[skill:branch] [skill:commit] [skill:create-pr] [skill:merge] [skill:code-review] [skill:skillbuilder] [skill:ticket-guard] [skill:create-ticket] [skill:spatial] [skill:coding] [skill:python] [skill:testing-frameworks] [skill:sql]","cwd":"/tmp"}')"
 if grep -q 'state: over-budget' <<<"$overflow_out" && ! grep -q '^load:' <<<"$overflow_out"; then
   ok "oversized explicit selection is visibly rejected kernel-only"
@@ -68,5 +75,14 @@ if grep -q 'state: disabled' <<<"$kernel_only" && ! grep -q 'load: python\|candi
 else
   bad "kernel-only control did not disable selection safely"
 fi
+tool_input_out="$(run '{"tool_input":{"prompt":"review this Python module"},"cwd":"/tmp"}')"
+grep -q 'load: python' <<<"$tool_input_out" && ok "tool_input.prompt is read when prompt is absent" || bad "tool_input.prompt fallback missing"
+fallback_cwd="$(cd "$TMP" && printf '%s' '{"prompt":"review this diff","cwd":"/nonexistent/dir"}' | CRAFT_AGENT_PLANS_PATH=/nonexistent bash "$HOOK")"
+grep -q 'project: siege-utilities' <<<"$fallback_cwd" && ok "missing payload cwd falls back to the hook's working directory" || bad "missing payload cwd did not fall back"
+mkdir "$TMP/shim"; REAL_PY="$(command -v python3)"
+printf '#!/bin/sh\necho x >> "%s/py-count"\nexec "%s" "$@"\n' "$TMP" "$REAL_PY" > "$TMP/shim/python3"; chmod +x "$TMP/shim/python3"
+printf '%s' '{"prompt":"review this Python module","cwd":"/tmp"}' | PATH="$TMP/shim:$PATH" CRAFT_AGENT_PLANS_PATH=/nonexistent bash "$HOOK" >/dev/null
+py_count=0; [[ -f "$TMP/py-count" ]] && py_count=$(wc -l < "$TMP/py-count" | tr -d ' ')
+[[ "$py_count" -eq 1 ]] && ok "one python3 process per prompt" || bad "hook started $py_count python3 processes"
 echo "progressive_loading: $pass passed, $fail failed"
 [[ $fail -eq 0 ]]

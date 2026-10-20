@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Deterministically select task/project skills from the compact resolver manifest."""
 from __future__ import annotations
-import argparse, importlib.util, json, re, subprocess, sys
+import argparse, importlib.util, json, os, re, subprocess, sys
 from pathlib import Path, PurePosixPath
 from typing import Any
 ROOT=Path(__file__).resolve().parents[1]
@@ -24,6 +24,22 @@ def norm_repo(value:str)->str:
     value=value.strip("/").lower()
     # A bare owner/repo string is not proof of a GitHub origin.
     return value
+
+def payload_fields(raw:bytes)->tuple[str,str]:
+    # Same values the hook used to extract with two separate python3 calls: each
+    # field falls back to "" on its own failure (including invalid UTF-8 or a
+    # BOM), rendered the way print() and shell command substitution rendered it
+    # (str(), trailing newlines removed).
+    def field(get)->str:
+        try:value=get(json.loads(raw.decode("utf-8")))
+        except Exception:return ""
+        return str(value).rstrip("\n")
+    prompt=field(lambda d:d.get("prompt") or d.get("tool_input",{}).get("prompt") or "")
+    cwd=field(lambda d:d.get("cwd") or "")
+    if not (cwd and Path(cwd).is_dir()):
+        pwd=os.environ.get("PWD","")
+        cwd=pwd if pwd and Path(pwd).is_dir() else os.getcwd()
+    return prompt,cwd
 
 def detect_repo(cwd:Path)->str:
     try:return norm_repo(subprocess.check_output(["git","-C",str(cwd),"remote","get-url","origin"],text=True,stderr=subprocess.DEVNULL,timeout=5))
@@ -330,7 +346,11 @@ def main()->int:
     p=argparse.ArgumentParser();p.add_argument("--prompt",default="");p.add_argument("--cwd",type=Path,default=Path.cwd());p.add_argument("--repo",default="");p.add_argument("--manifest",type=Path,default=ROOT/"catalog/resolver-manifest.json");p.add_argument("--inventory",type=Path,default=ROOT/"catalog/skills-inventory.json")
     p.add_argument("--render-hook",action="store_true",help="render checked package content for the registered prompt hook")
     p.add_argument("--mode",choices=("on","canary"),default="on")
+    p.add_argument("--payload-stdin",action="store_true",help="read prompt and cwd from the hook's JSON payload on stdin; overrides --prompt and --cwd")
     a=p.parse_args()
+    if a.payload_stdin:
+        prompt,cwd=payload_fields(sys.stdin.buffer.read())
+        a.prompt,a.cwd=prompt,Path(cwd)
     try:
         if a.render_hook:
             runtime_file(ROOT,a.manifest.relative_to(ROOT).as_posix())

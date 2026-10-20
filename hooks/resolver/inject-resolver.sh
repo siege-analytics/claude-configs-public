@@ -18,9 +18,6 @@ block_invalid_kernel() {
 [[ "$(wc -c < "$KERNEL" | tr -d ' ')" -le 80000 ]] || block_invalid_kernel
 cmp -s "$CANONICAL_KERNEL" "$KERNEL" || block_invalid_kernel
 PAYLOAD="$(cat || true)"
-PROMPT="$(printf '%s' "$PAYLOAD" | python3 -c 'import json,sys; d=json.load(sys.stdin) if not sys.stdin.isatty() else {}; print(d.get("prompt") or d.get("tool_input",{}).get("prompt") or "")' 2>/dev/null || true)"
-PROMPT_CWD="$(printf '%s' "$PAYLOAD" | python3 -c 'import json,sys; d=json.load(sys.stdin) if not sys.stdin.isatty() else {}; print(d.get("cwd") or "")' 2>/dev/null || true)"
-[[ -n "$PROMPT_CWD" && -d "$PROMPT_CWD" ]] || PROMPT_CWD="$PWD"
 MODE="${CLAUDE_PROGRESSIVE_LOADING:-on}"
 if [[ "$MODE" == "off" || "$MODE" == "kernel-only" ]]; then
   cat <<EOF
@@ -43,7 +40,9 @@ EOF
 else
   RENDER_MODE="on"
   [[ "$MODE" != "canary" ]] || RENDER_MODE="canary"
-  RESULT="$(python3 "$SELECTOR" --prompt "$PROMPT" --cwd "$PROMPT_CWD" --render-hook --mode "$RENDER_MODE" 2>/dev/null || true)"
+  # One interpreter per prompt: the selector reads prompt and cwd from the
+  # payload itself. Interpreter startup dominates this hook's latency (#1064).
+  RESULT="$(printf '%s' "$PAYLOAD" | python3 "$SELECTOR" --payload-stdin --render-hook --mode "$RENDER_MODE" 2>/dev/null || true)"
   cat <<EOF
 <skill-kernel mode="$MODE">
 $(cat "$KERNEL")
