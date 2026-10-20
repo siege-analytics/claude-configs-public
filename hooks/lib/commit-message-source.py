@@ -123,38 +123,72 @@ def read_heredoc_body(command, body_start, delimiter, strip_tabs):
 
 
 def extract_heredocs(command):
-    """Replace bounded literal cat heredocs without skipping a terminator."""
+    """Replace bounded cat heredocs that begin outside shell quotes."""
     values = {}
     result = []
-    command_start = 0
-    while True:
-        match = HEREDOC_START_RE.search(command, command_start)
-        if match is None:
-            result.append(command[command_start:])
-            break
-        result.append(command[command_start:match.start()])
-        if not match.group("quote"):
-            raise MessageSourceError(
-                "unquoted heredoc delimiter is outside the narrow message model"
+    copy_start = 0
+    quote = None
+    word_start = True
+    position = 0
+    while position < len(command):
+        char = command[position]
+        if quote == "'":
+            if char == "'":
+                quote = None
+            position += 1
+            continue
+        if quote == '"':
+            if char == "\\":
+                position += 2
+                continue
+            if char == '"':
+                quote = None
+            position += 1
+            continue
+
+        match = HEREDOC_START_RE.match(command, position)
+        if match is not None:
+            if not match.group("quote"):
+                raise MessageSourceError(
+                    "unquoted heredoc delimiter is outside the narrow message model"
+                )
+            body, terminator_end = read_heredoc_body(
+                command,
+                match.end(),
+                match.group("delimiter"),
+                match.group("operator") == "<<-",
             )
-        body, terminator_end = read_heredoc_body(
-            command,
-            match.end(),
-            match.group("delimiter"),
-            match.group("operator") == "<<-",
-        )
-        if not command.startswith(')"', terminator_end):
-            raise MessageSourceError(
-                "text after the first heredoc terminator is outside the narrow message model"
-            )
-        index = len(values)
-        placeholder = f"__CCP_LITERAL_HEREDOC_{index}__"
-        while placeholder in command or placeholder in values:
-            index += 1
+            if not command.startswith(')"', terminator_end):
+                raise MessageSourceError(
+                    "text after the first heredoc terminator is outside the narrow message model"
+                )
+            index = len(values)
             placeholder = f"__CCP_LITERAL_HEREDOC_{index}__"
-        values[placeholder] = body
-        result.append(placeholder)
-        command_start = terminator_end + 2
+            while placeholder in command or placeholder in values:
+                index += 1
+                placeholder = f"__CCP_LITERAL_HEREDOC_{index}__"
+            values[placeholder] = body
+            result.append(command[copy_start:position])
+            result.append(placeholder)
+            position = terminator_end + 2
+            copy_start = position
+            word_start = False
+            continue
+
+        if char == "\\":
+            position += 2
+            word_start = False
+            continue
+        if char in {"'", '"'}:
+            quote = char
+            word_start = False
+            position += 1
+            continue
+        if char == "#" and word_start:
+            break
+        word_start = char.isspace()
+        position += 1
+    result.append(command[copy_start:])
     return "".join(result), values
 
 

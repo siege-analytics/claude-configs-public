@@ -163,6 +163,24 @@ EOF
 )"
 COMMAND
 )
+IFS= read -r -d '' HEREDOC_SINGLE_QUOTED_DOUBLE_DENY <<'COMMAND' || true
+git commit --allow-empty -m '"$(cat <<"EOF"
+subject only' # Refs: #994
+EOF
+)"'
+COMMAND
+IFS= read -r -d '' HEREDOC_SINGLE_QUOTED_SINGLE_DENY <<'COMMAND' || true
+git commit --allow-empty -m '"$(cat <<'EOF'
+subject only' # Refs: #994
+EOF
+)"'
+COMMAND
+IFS= read -r -d '' HEREDOC_SINGLE_QUOTED_LITERAL_ALLOW <<'COMMAND' || true
+git commit --allow-empty -m '"$(cat <<"EOF"
+Refs: #994
+EOF
+)"'
+COMMAND
 
 # --- BLOCKS: no ticket reference ---
 
@@ -244,6 +262,12 @@ expect_block_because "(model25) command after first heredoc terminator fails clo
     "text after the first heredoc terminator"
 expect_pass "(model26) space-indented delimiter text remains in ticketed body" "$HOOK" \
     "$(make_payload "$HEREDOC_INDENTED_DELIMITER")"
+expect_block "(model27) R20 double-quoted delimiter text inside single quote stays literal" "$HOOK" \
+    "$(make_payload "$HEREDOC_SINGLE_QUOTED_DOUBLE_DENY")"
+expect_block "(model28) R21 single-quoted delimiter text inside single quote stays literal" "$HOOK" \
+    "$(make_payload "$HEREDOC_SINGLE_QUOTED_SINGLE_DENY")"
+expect_pass "(model29) single-quoted literal heredoc-like text keeps ticket" "$HOOK" \
+    "$(make_payload "$HEREDOC_SINGLE_QUOTED_LITERAL_ALLOW")"
 
 # --- FILE MESSAGE SOURCES: paired allow/deny and fail-closed errors ---
 

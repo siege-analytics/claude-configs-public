@@ -70,10 +70,24 @@ The review tracked custom comment cleanup, editor-default cleanup, and the exist
 - `-e` and `--edit` select Git's default `strip` cleanup unless CLI or repository cleanup configuration overrides it.
 - Eight heredoc allow/deny fixtures cover both reviewer variants, an indented delimiter line, inline `EOF` text, quoted versus unquoted delimiters, and tab stripping. Two edit-cleanup fixtures provide the deny/allow pair. The focused suite passes 116/116.
 
+## Exact PR-head review at 93089c08
+
+Round 3 returned **REJECT** against `93089c0806eee54e2c94defeffac982fbd4b71e5`. It confirmed N1 and FU-B fixed, no regressions in the prior matrices, 116/116 local scenarios, current metrics, and correct option tables. One blocker remained:
+
+- **N2 quoted-context fail-open:** raw heredoc search ran before quote-aware scanning. R20 and R21 placed the `"$(cat <<...)` lookalike inside a single-quoted message, then closed that quote before a `# Refs: #994` shell comment. The helper extracted and restored the commented ticket while Bash passed Git a ticketless literal message.
+
+## N2 rework after 93089c08
+
+- Heredoc extraction now walks the command with the same single/double-quote, escape, word-start, and comment boundaries used by the syntax scanner.
+- Only an opener encountered at an unquoted shell position can enter the bounded cat-substitution model. Lookalike text inside shell quotes remains literal.
+- Exact R20 and R21 fixtures deny; a ticketed single-quoted literal allows; the canonical unquoted-position heredoc still allows.
+- README and CHANGELOG name the unquoted-position boundary instead of claiming quoted heredocs broadly.
+- The focused suite passes 119/119. Real Bash/Git canaries record ticketless messages for R20/R21 and preserve the ticket in the literal allow.
+
 ## Current verdict
 
-All reviewed heads remain rejected: `b37aaebc7b0026b0350bd1ae7f2fe489303eb9c2` is NEEDS_REWORK; `a857c0ef63dd305f050192051a0339c4596737d9` and `3c9f2188f9ec0b7f44120a81f75132636845097a` are REJECT.
+All reviewed heads remain rejected: `b37aaebc7b0026b0350bd1ae7f2fe489303eb9c2` is NEEDS_REWORK; `a857c0ef63dd305f050192051a0339c4596737d9`, `3c9f2188f9ec0b7f44120a81f75132636845097a`, and `93089c0806eee54e2c94defeffac982fbd4b71e5` are REJECT.
 
-The N1/FU-B rework has author-side evidence only. No independent reviewer has verified the next pushed PR head, and this artifact makes no PASS claim for it. The hub will brief `Review #994 alias and command parsing` at the exact new remote head before merge consideration.
+The N2 rework has author-side evidence only. No independent reviewer has verified the next pushed PR head, and this artifact makes no PASS claim for it. The hub will brief `Review #994 alias and command parsing` at the exact new remote head before merge consideration.
 
 Residual scope: FU-A/T2 and T9 remain tracked in #1112. `-qF`, tilde expansion, large-message pipe behavior, compound `cd &&`, editor mutation, #1107 dispatch, and the pre-existing amend/no-edit skip remain follow-up work as directed by the reviews.
