@@ -499,16 +499,26 @@ class Gates(unittest.TestCase):
     def test_leading_glob_injection_and_mutation_globs_remain_denied(self):
         for name in ('-o', '--output=pwn', '-delete', '--pre=evil'):
             (self.repo / name).write_text('option injection sentinel')
-        commands = ['ls *.md', 'cat *', 'grep -n foo *.py', 'wc -l *.sh',
-                    'head [a-z]*.py', 'pytest *.py', 'rg foo *', 'rg foo ?x',
-                    'rg foo [a]*', 'ls --ign*=x', 'grep foo *',
-                    'grep -e -- *', 'rg -e -- *', 'head -n -- *',
-                    'git diff --word-diff-regex -- *', 'cat ~/*.md']
-        mixed = ['sort *', 'sort dir/*', 'find . -name x*', 'tree dir/*',
-                 'find . -- dir/*', 'tree -- dir/*', 'git branch --list *',
-                 'git diff --help src/*.py', 'git log --help src/*.py',
-                 'cat {-o,x}', 'cat x{,-o}', 'cat $X', 'cat $(pwd)', 'cat `pwd`',
+        # Read proof is the released classifier's (hooks/lib/read-only-command.py,
+        # #1057/#1087): a glob may reach a verb only when no option of that verb
+        # writes or runs a program, or when it cannot form an option (it does not
+        # start the word and the word does not start with "-"). Plain readers stay
+        # reads even with the injection sentinels above present: cat/ls/grep/wc/
+        # head have no writing or executing option. tree is never proven (tree -o
+        # FILE writes), so tree with any glob needs a gate.
+        reads = ['ls *.md', 'cat *', 'grep -n foo *.py', 'wc -l *.sh', 'head [a-z]*.py',
+                 'ls --ign*=x', 'grep foo *', 'grep -e -- *', 'head -n -- *', 'cat ~/*.md',
+                 'sort dir/*', 'find . -name x*', 'find . -- dir/*',
+                 'cat {-o,x}', 'cat x{,-o}', 'cat $X']
+        # A glob or expansion that can become an option of a verb that writes or
+        # runs programs (rg --pre, sort -o, tree -o, git options) stays denied.
+        commands = ['rg foo *', 'rg foo ?x', 'rg foo [a]*', 'rg -e -- *',
+                    'git diff --word-diff-regex -- *']
+        mixed = ['pytest *.py', 'sort *', 'tree dir/*', 'tree -- dir/*', 'git branch --list *', 'git diff --help src/*.py',
+                 'git log --help src/*.py', 'cat $(pwd)', 'cat `pwd`',
                  'cat ' + '\\' + '\n' + '*', 'cat "' + '\\' + '\n' + '"*']
+        for command in reads:
+            with self.subTest(phase='no gate', command=command): self.assertGate(0, command)
         for phase in ('no gate', 'implementing'):
             if phase == 'implementing':
                 self.task('o/r#glob-negative', self.repo)
@@ -521,6 +531,87 @@ class Gates(unittest.TestCase):
         # Prefixing a mutation glob does not make it an explicit concrete path.
         for command in ['touch ./*.md', 'rm plans/*.md', 'git add ./src/*.py', 'printf x > ./out*.txt', 'rg foo --pre*=evil']:
             with self.subTest(command=command): self.assertGate(2, command)
+
+    def test_tiered_task_gates_require_only_their_tier(self):
+        """#1086: an implementing task needs only its effective tier's artifacts.
+        The tier is the higher of the gate's declared tier and the floor that
+        bin/review-risk.py computes for the mutation's targets."""
+        (self.repo / 'docs').mkdir(); (self.repo / 'src').mkdir(); (self.repo / 'hooks/bash').mkdir(parents=True)
+        def gate_only(identity, **extra):
+            d = self.task(identity, self.repo, artifacts=False)
+            data = json.loads((d / 'think-gate.json').read_text()); data.update(extra)
+            write(d / 'think-gate.json', data)
+            return d, data
+        def add(d, data, *names):
+            fields = {'investigate': {'findings': [{'claim': 'verified'}]},
+                      'junior-senior': {'junior_found': True, 'senior_found': True},
+                      'artifacts-posted': {'investigate_posted': True, 'premortem_posted': True}}
+            for name in names:
+                if name == 'pre-mortem':
+                    plans = self.repo / 'plans'; plans.mkdir(exist_ok=True)
+                    (plans / ('pre-mortem-' + r.task_slug(data['ticket']) + '.md')).write_text(
+                        'Ticket: ' + data['ticket'] + '\nSeverity: 50\nImplementation may proceed: YES\n')
+                else:
+                    write(d / (name + '-gate.json'), {**data, **fields[name]})
+        # Tier A floor (docs, plans, *.md): the implementing gate alone suffices.
+        d, data = gate_only('o/r#tier-a')
+        self.assertGate(0, f'touch {self.repo}/docs/notes.md')
+        # Tier B floor (ordinary code): needs investigation + pre-mortem, not junior/senior.
+        result = self.assertGate(2, f'touch {self.repo}/src/app.py')
+        self.assertIn('review tier is B', result.stderr)
+        add(d, data, 'investigate', 'pre-mortem')
+        self.assertGate(0, f'touch {self.repo}/src/app.py')
+        # Tier C floor (hooks/bash/**): B's artifacts are not enough; the full set is.
+        result = self.assertGate(2, f'touch {self.repo}/hooks/bash/x.sh')
+        self.assertIn('review tier is C', result.stderr)
+        self.assertIn('Junior', result.stderr)
+        add(d, data, 'junior-senior', 'artifacts-posted')
+        self.assertGate(0, f'touch {self.repo}/hooks/bash/x.sh')
+
+    def test_tree_wide_targets_are_classified_by_their_contents(self):
+        """#1086 review: a directory or repository-wide target is as risky as the
+        files under it. A lone git commit is as risky as what it records."""
+        git = lambda *a: subprocess.run(['git', '-C', str(self.repo), *a], check=True, capture_output=True)
+        (self.repo / 'hooks/bash').mkdir(parents=True); (self.repo / 'docs').mkdir(); (self.repo / 'src').mkdir()
+        (self.repo / 'hooks/bash/guard.sh').write_text('x'); (self.repo / 'docs/a.md').write_text('x')
+        git('add', 'hooks/bash/guard.sh', 'docs/a.md')
+        git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'init')
+        d = self.task('o/r#tree-tier', self.repo, artifacts=False)
+        data = json.loads((d / 'think-gate.json').read_text())
+        write(d / 'investigate-gate.json', {**data, 'findings': [{'claim': 'verified'}]})
+        plans = self.repo / 'plans'; plans.mkdir(exist_ok=True)
+        (plans / ('pre-mortem-' + r.task_slug(data['ticket']) + '.md')).write_text(
+            'Ticket: ' + data['ticket'] + '\nSeverity: 50\nImplementation may proceed: YES\n')
+        # Tier B evidence is present; tree-wide commands over Tier C files need C.
+        for command in [f'rm -rf {self.repo}/hooks/bash', f'cp -r {self.repo}/src {self.repo}/hooks/bash',
+                        f'git -C {self.repo} apply p.diff', f'git -C {self.repo} reset --hard']:
+            with self.subTest(command=command):
+                result = self.assertGate(2, command)
+                self.assertIn('review tier is C', result.stderr)
+        # A tree-wide command over B-only files stays B (passes with B evidence).
+        self.assertGate(0, f'rm -rf {self.repo}/src')
+        # A lone git commit is classified by what it records.
+        (self.repo / 'docs/a.md').write_text('y'); git('add', 'docs/a.md')
+        self.assertGate(0, f'git -C {self.repo} commit -m docs')
+        (self.repo / 'hooks/bash/guard.sh').write_text('y')
+        result = self.assertGate(2, f'git -C {self.repo} commit -m hook')
+        self.assertIn('review tier is C', result.stderr)
+
+    def test_declared_tier_never_lowers_the_floor(self):
+        d = self.task('o/r#tier-declared-low', self.repo, artifacts=False)
+        data = json.loads((d / 'think-gate.json').read_text()); data['tier'] = 'A'
+        write(d / 'think-gate.json', data)
+        (self.repo / 'hooks/bash').mkdir(parents=True)
+        result = self.assertGate(2, f'touch {self.repo}/hooks/bash/x.sh')
+        self.assertIn('review tier is C', result.stderr)
+
+    def test_declared_tier_can_raise_the_floor(self):
+        d = self.task('o/r#tier-declared-high', self.repo, artifacts=False)
+        data = json.loads((d / 'think-gate.json').read_text()); data['tier'] = 'C'
+        write(d / 'think-gate.json', data)
+        (self.repo / 'docs').mkdir()
+        result = self.assertGate(2, f'touch {self.repo}/docs/notes.md')
+        self.assertIn('review tier is C', result.stderr)
 
     def test_stdio_redirect_reads_and_diagnostics_in_real_hooks(self):
         commands = ['cat x 2>/dev/null', 'grep foo f 2>&1', 'ls 2>&1 | head',

@@ -435,8 +435,44 @@ def canonical(path: str, cwd: str = "") -> str:
     return os.path.realpath(path if os.path.isabs(path) else os.path.join(cwd or os.getcwd(), path))
 
 
+_RELEASED_READS = None
+
+
+def released_read_verdict(command: str) -> int:
+    """Verdict of the released read classifier (hooks/lib/read-only-command.py,
+    #1057): 0 proven read, 3 veto (writes or runs a program), 1/4 unproven.
+    One classifier decides what is a read on main and here (#846, #1051 slim)."""
+    global _RELEASED_READS
+    if _RELEASED_READS is None:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "read_only_command", os.path.join(os.path.dirname(os.path.abspath(__file__)), "read-only-command.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _RELEASED_READS = module
+    try:
+        return int(_RELEASED_READS.main(command))
+    except Exception:
+        return 1
+
+
 def action(command: str, cwd: str) -> dict:
     """Classify before gate lookup, and conservatively collect mutation targets."""
+    verdict = released_read_verdict(command)
+    if verdict == 0:
+        return {"read_only": True, "investigation": False, "self_management": False, "paths": [],
+                "binding": "", "proven_by": "read-only-command"}
+    result = _action(command, cwd)
+    if verdict == 3:
+        # A veto is never a read or an investigation, whatever the local reader
+        # thinks; the targets found below still pick the owning task's gate.
+        result.update(read_only=False, investigation=False, self_management=False,
+                      veto="read-only-command: option writes or runs a program")
+        result["paths"] = result.get("paths") or [canonical(cwd)]
+    return result
+
+
+def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
     except UnknownShape as e:

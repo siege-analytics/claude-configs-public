@@ -35,6 +35,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
 import sys
 import glob
 import subprocess
@@ -665,7 +666,84 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         tg = result["gate"]
         result["artifacts"] = {name: g["path"] if (g := _artifact_for(tg, name, workspace)) else None for name in ("investigate-gate", "junior-senior-gate", "artifacts-posted-gate", "review-gate", "test-gate")}
         result["task"] = task_identity(tg["data"])
+        result["tier"] = task_tier(tg["data"], shape["paths"], command)
     return result
+
+
+TIER_ORDER = {"A": 0, "B": 1, "C": 2}
+
+
+def _git_lines(repo: str, *args: str) -> Optional[list]:
+    try:
+        out = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return [l for l in out.stdout.split("\0" if "-z" in args else "\n") if l] if out.returncode == 0 else None
+
+
+def _lone_git_commit(command: str) -> bool:
+    """A single `git [-C dir] commit ...` with no other shell command."""
+    if not command or any(ch in command for ch in ";&|`$\n<>("):
+        return False
+    try:
+        words = shlex.split(command)
+    except ValueError:
+        return False
+    i = 1
+    while i + 1 < len(words) and words[i] in {"-C", "-c"}:
+        i += 2
+    return bool(words) and words[0] == "git" and i < len(words) and words[i] == "commit"
+
+
+def task_tier(gate: dict, paths: list, command: str = "") -> dict:
+    """Effective review tier for this mutation (#1086): the higher of the gate's
+    declared `tier` and the floor bin/review-risk.py computes for the targets.
+
+    A target the shape analysis records as a directory or the repository
+    toplevel (tree-wide commands: rm -r, cp -r, git apply/merge/pull/reset,
+    scripts) is classified by the tracked files under it plus a probe path
+    inside it, so `rm -rf hooks/bash` is C wherever hooks/bash holds Tier C
+    files. A lone `git commit` is classified by the staged and modified files
+    it can record. A declared lower tier never wins; a missing classifier,
+    policy, repo_root or git listing fails closed to C."""
+    declared = str(gate.get("tier") or gate.get("review_tier") or "").strip().upper()
+    declared = declared if declared in TIER_ORDER else ""
+    root = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+    floor, reasons = "C", []
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("review_risk", os.path.join(root, "bin", "review-risk.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with open(os.path.join(root, "catalog", "review-risk-policy.json")) as fh:
+            policy = json.load(fh)
+        repo_root = os.path.realpath(gate["repo_root"]) if gate.get("repo_root") else ""
+        if not repo_root:
+            raise ValueError("gate has no repo_root")
+        rel = []
+        for p in paths:
+            rp = os.path.realpath(p)
+            if not (rp == repo_root or rp.startswith(repo_root + os.sep)):
+                raise ValueError("target outside the gate's repo_root")
+            r = "" if rp == repo_root else os.path.relpath(rp, repo_root).replace(os.sep, "/")
+            if r == "" and _lone_git_commit(command):
+                files = (_git_lines(repo_root, "diff", "--cached", "--name-only", "-z") or []) + \
+                        (_git_lines(repo_root, "diff", "--name-only", "-z") or [])
+                rel.extend(files or ["(empty commit)"])
+            elif r == "" or os.path.isdir(rp):
+                files = _git_lines(repo_root, "ls-files", "-z", "--", r or ".")
+                if files is None:
+                    raise ValueError("cannot list files under " + (r or "the repository"))
+                rel.extend(files + [(r + "/" if r else "") + "__any__"])
+            else:
+                rel.append(r)
+        verdict = module.classify(policy, sorted(set(rel)))
+        floor, reasons = verdict["computed_tier"], [x for x in verdict["reasons"] if x.startswith(verdict["computed_tier"])]
+    except Exception as exc:
+        floor, reasons = "C", [f"C:{exc}; failing closed" if isinstance(exc, ValueError)
+                               else f"C:review-risk classifier unavailable ({type(exc).__name__}); failing closed"]
+    effective = declared if declared and TIER_ORDER[declared] > TIER_ORDER[floor] else floor
+    return {"effective": effective, "declared": declared, "floor": floor, "reasons": reasons[:6]}
 
 
 def _load(path: str) -> Optional[dict]:

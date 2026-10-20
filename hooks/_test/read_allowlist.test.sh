@@ -163,6 +163,37 @@ echo hi > /tmp/x
 cat <<END > /tmp/x
 END
 EOF
+echo "== #1087: listing flags do not make a write a listing; clock, shell-state and option-word globs =="
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
+git remote -v add evil https://example.invalid/e.git
+git remote -v set-url origin https://example.invalid/e.git
+git -C /tmp remote --verbose rename origin x
+git remote -v remove origin
+git tag v1.0
+git tag --list -a x
+git tag -l -d v1
+git config --list --add a b
+git config --get-all x --unset
+date 10182300
+date -u 1018230026
+printf -vNAME value
+printf -v PATH /tmp/x; ls
+printf '%n' PATH
+git log --ext-diff
+git diff --ext-diff HEAD
+rg foo --pre*=evil
+rg foo '-'-pre*=x
+EOF
+for c in 'git remote -v' 'git remote show origin' 'git remote get-url origin' 'git tag' 'git tag -l' 'git tag --list "v1*"' \
+         'date' 'date +%F' 'date -u +%FT%T' 'date -d @1 +%s' 'date -Iseconds' 'printf "%s\n" x' 'printf %d 3' \
+         'rg foo src/*.py' 'ls *.md' 'git config --get user.name'; do expect allow "$O" "$c"; done
+echo "== #1089: kubectl global-flag values are not subcommands; ss -K kills; gh --web launches a browser =="
+for c in 'kubectl -n get delete pod x' 'kubectl --context get delete pod x' 'kubectl -n logs exec -it pod -- sh' \
+         'ss -K dst 1.2.3.4' 'ss --kill' 'gh pr view 1 --web' 'gh search repos x --web' 'gh pr list -w'; do expect block "$O" "$c"; done
+for c in 'ss -tlnp' 'gh pr view 1 --json state' 'gh api repos/o/r -q .workflow'; do expect allow "$O" "$c"; done
+for c in 'kubectl get pods -n x' 'kubectl -n x get pods' 'kubectl --namespace=x logs p' 'kubectl -A get pods'; do
+    if python3 "$ROOT/hooks/lib/read-only-command.py" "$c"; then PASS=$((PASS + 1)); else FAIL=$((FAIL + 1)); echo "  FAIL  classifier did not prove: $c"; fi
+done
 echo "== multi-line commands are never proven read-only =="
 expect block "$O" $'ls\nbash evil.sh'
 expect block "$O" $'ls\nredis-cli -h db FLUSHALL'
@@ -170,7 +201,7 @@ expect block "$O" $'ls\nln -sf /secret /tmp/l'
 expect block "$O" $'ls\nsystemctl restart nginx'
 expect block "$O" $'cat r\n. ./evil.sh'
 expect block "$O" $'ls \\\n; rm -rf /x'
-expect block "$O" $'ls\nwc -l /etc/hostname'   # multi-line is never proven (safelist policy)
+expect allow "$O" $'ls\nwc -l /etc/hostname'   # task-keyed gate proves each line (#1051); the legacy safelist never did
 expect block "$O" $'for f in a b\ndo\n  echo $f\ndone'
 echo "== legacy-safelist reads stay admitted =="
 for c in 'tree -L 2' 'file README.md' 'xxd README.md' 'cat f | wc -l' 'printenv HOME' 'cat f 2>&1' \
@@ -187,8 +218,9 @@ done
 echo "== quoted ampersands are not backgrounding =="
 expect allow "$O" "grep 'foo & bar' /etc/hostname"
 expect allow "$O" "git log --grep='fix & feat' -3"
-echo "== a session's data/ dir is not yet exempt (scratch rule parked; #349 review) =="
-for c in 'touch notes.txt' 'python3 -m venv venv' 'rm -rf out' "rm -rf .''./.''./plans" 'env -C x rm -rf plans' \
+echo "== a session's own data/ dir is its scratch (#1051 B1); escapes and non-file effects still need a gate =="
+for c in 'touch notes.txt' 'rm -rf out'; do expect allow "$D" "$c"; done
+for c in 'python3 -m venv venv' "rm -rf .''./.''./plans" 'env -C x rm -rf plans' \
          'pkill -f airflow' 'glab mr merge 1'; do expect block "$D" "$c"; done
 printf 'read_allowlist: %d passed, %d failed\n' "$PASS" "$FAIL"
 (( FAIL == 0 ))

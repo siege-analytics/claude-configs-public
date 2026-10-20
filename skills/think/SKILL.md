@@ -336,9 +336,25 @@ unrelated legacy tasks remain independent.
   "status": "implementing",
   "lastUpdated": "2026-01-15T14:30:00Z",
   "repo_root": "/path/to/repo",
-  "scope_paths": ["/path/to/repo/task-worktree"]
+  "scope_paths": ["/path/to/repo/task-worktree"],
+  "tier": "B"
 }
 ```
+
+**Tier (optional, #1086).** Before an edit, a task's gate requires only the
+artifacts for the change's review tier:
+
+| Tier | Typical paths | Required before editing |
+|------|---------------|-------------------------|
+| A | prose, plans, `*.md`, generated catalogs | the `implementing` gate itself |
+| B | ordinary code, skills, scripts, config | + investigate-gate (one finding) + pre-mortem (one classified risk) |
+| C | hooks, enforcement libraries, release/deploy, credentials, review policy | + junior/senior and artifacts-posted |
+
+The gate computes a floor from the edit's target paths with
+`bin/review-risk.py` (the same classifier the commit hooks use). A declared
+`tier` can raise the requirement but never lower it below that floor. If the
+classifier is unavailable, the gate requires Tier C. Commit-time `Review-Tier`
+evidence is enforced separately and is unchanged.
 
 Keep investigate, junior-senior, artifacts-posted, review and test gate files
 beside this task's think gate, with the same exact identity. Never overwrite

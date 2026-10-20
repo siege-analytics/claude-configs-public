@@ -129,6 +129,9 @@ if [[ -z "$THINK_GATE" ]]; then
     exit 2
 fi
 GATE_PATHS_JSON=$(printf '%s' "$RESOLUTION" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin).get("artifacts", {})))' 2>/dev/null || echo '{}')
+# Proportional task gates (#1086): the selected task's effective review tier
+# (declared tier, never below the floor review-risk.py computes for the targets).
+TIER_JSON=$(printf '%s' "$RESOLUTION" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin).get("tier") or {"effective": "C", "reasons": ["C:no tier resolved; failing closed"]}))' 2>/dev/null || echo '{"effective": "C"}')
 REPO_ROOT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("repo_root", ""))' "$THINK_GATE" 2>/dev/null || true)
 
 if [[ -n "$THINK_GATE" ]]; then
@@ -175,6 +178,16 @@ think_gate_path = sys.argv[1]
 workspace = sys.argv[2]
 plans_path = sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] != '__none__' else ''
 gate_paths = json.loads(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4] not in ('', '__none__') else {}
+try:
+    tier = json.loads(sys.argv[5]).get('effective', 'C') if len(sys.argv) > 5 else 'C'
+except Exception:
+    tier = 'C'
+tier = tier if tier in ('A', 'B', 'C') else 'C'
+# A: an implementing gate bound to the ticket. B: + investigation and pre-mortem.
+# C: + junior/senior and artifacts-posted (the pre-#1086 requirement).
+need_investigation = tier in ('B', 'C')
+need_premortem = tier in ('B', 'C')
+need_review_comments = tier == 'C' 
 
 try:
     tg = json.load(open(think_gate_path))
@@ -219,6 +232,11 @@ def premortem_has_launch_blocker(path):
     return False
 
 missing = []
+def need(kind, item):
+    # Only the artifacts this task's tier requires can block (#1086).
+    if {'investigation': need_investigation, 'premortem': need_premortem,
+        'review_comments': need_review_comments}[kind]:
+        missing.append(item)
 
 # 1. Check investigate-gate.json (ticket field must match)
 invest_found = False
@@ -233,13 +251,13 @@ for candidate in invest_candidates:
             if (ig.get('ticket') or ig.get('task_id') or ig.get('task', '')) == current_ticket:
                 findings = ig.get('findings', [])
                 if not findings:
-                    missing.append('investigation has no findings (investigate-gate.json for ' + (current_ticket or 'current task') + ')')
+                    need('investigation', 'investigation has no findings (investigate-gate.json for ' + (current_ticket or 'current task') + ')')
                 invest_found = True
                 break
         except Exception:
             pass
 if not invest_found:
-    missing.append('investigate-gate.json for ' + (current_ticket or 'current task'))
+    need('investigation', 'investigate-gate.json for ' + (current_ticket or 'current task'))
 
 # 2. Check pre-mortem artifact (must reference current ticket)
 premortem_found = False
@@ -289,11 +307,11 @@ for d in plan_dirs:
         break
 
 if not premortem_found:
-    missing.append('pre-mortem artifact for ' + (current_ticket or 'current task'))
+    need('premortem', 'pre-mortem artifact for ' + (current_ticket or 'current task'))
 elif premortem_empty:
-    missing.append('pre-mortem artifact has no classified risks (need Severity: or Tiger/Elephant entries)')
+    need('premortem', 'pre-mortem artifact has no classified risks (need Severity: or Tiger/Elephant entries)')
 elif premortem_launch_blocked:
-    missing.append('pre-mortem contains Launch-Blocking Tiger (' + os.path.basename(premortem_path) + ') — mitigate before implementation')
+    need('premortem', 'pre-mortem contains Launch-Blocking Tiger (' + os.path.basename(premortem_path) + ') — mitigate before implementation')
 
 # 3. Check junior-senior-gate.json (#492)
 js_gate_found = False
@@ -310,15 +328,15 @@ for js_candidate in js_candidates:
                     js_gate_found = True
                 else:
                     if not js.get('junior_found'):
-                        missing.append('Junior task description on ' + (current_ticket or 'ticket'))
+                        need('review_comments', 'Junior task description on ' + (current_ticket or 'ticket'))
                     if not js.get('senior_found'):
-                        missing.append('Senior adversarial checklist on ' + (current_ticket or 'ticket'))
+                        need('review_comments', 'Senior adversarial checklist on ' + (current_ticket or 'ticket'))
                     js_gate_found = True  # file found, just incomplete
                 break
         except Exception:
             pass
 if not js_gate_found:
-    missing.append('Junior/Senior comments (junior-senior-gate.json) for ' + (current_ticket or 'current task'))
+    need('review_comments', 'Junior/Senior comments (junior-senior-gate.json) for ' + (current_ticket or 'current task'))
 
 # 4. Check artifacts-posted-gate.json (#513)
 ap_gate_found = False
@@ -332,17 +350,17 @@ for ap_candidate in ap_candidates:
             ap = json.load(open(ap_candidate))
             if (ap.get('ticket') or ap.get('task_id') or ap.get('task', '')) == current_ticket:
                 if not ap.get('investigate_posted'):
-                    missing.append('Investigation not posted to ticket ' + (current_ticket or ''))
+                    need('review_comments', 'Investigation not posted to ticket ' + (current_ticket or ''))
                 if not ap.get('premortem_posted'):
-                    missing.append('Pre-mortem not posted to ticket ' + (current_ticket or ''))
+                    need('review_comments', 'Pre-mortem not posted to ticket ' + (current_ticket or ''))
                 if 'selfreview_posted' in ap and not ap.get('selfreview_posted'):
-                    missing.append('Self-review not posted to ticket ' + (current_ticket or ''))
+                    need('review_comments', 'Self-review not posted to ticket ' + (current_ticket or ''))
                 ap_gate_found = True
                 break
         except Exception:
             pass
 if not ap_gate_found:
-    missing.append('Artifacts-posted check (artifacts-posted-gate.json) for ' + (current_ticket or 'current task'))
+    need('review_comments', 'Artifacts-posted check (artifacts-posted-gate.json) for ' + (current_ticket or 'current task'))
 
 # 5. Check review-gate.json (#526)
 # If a review was done and HEAD has moved since, block until re-review.
@@ -386,7 +404,7 @@ for rg_candidate in rg_candidates:
         break
 
 print('|'.join(missing))
-" "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" "$GATE_PATHS_JSON" 2>/dev/null || echo "artifact validation failed closed")
+" "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" "$GATE_PATHS_JSON" "$TIER_JSON" 2>/dev/null || echo "artifact validation failed closed")
 
         if [[ -z "$MISSING" ]]; then
             exit 0
@@ -394,13 +412,19 @@ print('|'.join(missing))
 
         # Format the missing list for display
         MISSING_DISPLAY=$(echo "$MISSING" | tr '|' '\n' | sed 's/^/  - /')
+        TIER_LABEL=$(printf '%s' "$TIER_JSON" | python3 -c 'import json,sys
+t = json.load(sys.stdin); r = "; ".join(t.get("reasons", [])[:3])
+print(t.get("effective", "C") + (" (" + r + ")" if r else ""))' 2>/dev/null || echo C)
 
         cat >&2 <<ARTEOF
 BLOCKED by universal-mutation-gate (#477/#484): artifacts missing or wrong ticket
 
-The selected task requires complete artifacts, but required artifacts are missing
-or do not reference the current ticket:
+This task's review tier is $TIER_LABEL.
+Its required artifacts are missing or do not reference the current ticket:
 $MISSING_DISPLAY
+Tier A (prose, plans, generated files) needs only this implementing gate; B adds
+an investigation and a pre-mortem; C (enforcement, release, deploy, credentials,
+destructive operations) adds junior/senior review and artifacts-posted (#1086).
 
 The gate requires both an investigation artifact (investigate-gate.json)
 and a pre-mortem artifact (plans/pre-mortem-*.md) that reference the

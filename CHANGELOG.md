@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Changed: task-keyed, proportional task gates (#1051, #1086)
+
+- **Gates are per task, not per session.** Each task's think gate lives in `$CRAFT_SESSION_DIR/tasks/<task-slug>/` and governs only the paths in its `scope_paths`. A mutation is authorized only by the `implementing` gate that owns its targets. One task's gate never blocks another task's reads or mutations, or another agent's.
+- **Terminal gates authorize nothing.** A gate whose status is `done-awaiting-pr`, `disposed`, `complete`, `completed` or `done` no longer authorizes mutations, even when its investigation artifact still exists. Previously, through v3.5.72, it authorized every mutation on released main. Keep `implementing` through the final push and PR. To change anything after a terminal transition, reactivate `implementing` with current artifacts.
+- **Required artifacts follow the change's review tier.** The gate computes a floor from the edit's target paths with `bin/review-risk.py` (A: prose, plans and generated files; B: ordinary code; C: enforcement, release, deploy, credentials). An optional `tier` in the gate can raise the requirement but never lower it.
+  - **A:** the `implementing` gate.
+  - **B:** adds an investigation and a pre-mortem.
+  - **C:** adds junior/senior review and artifacts-posted, the requirement before this change.
+  - If the classifier is missing, the gate requires C.
+- **One read classifier.** The task-keyed gate proves reads with the released `hooks/lib/read-only-command.py`: a proven read passes in every gate state, and a veto is never a read. `task_actions.py` keeps its own reader only for commands the released classifier does not prove.
+- **A session's own `data/` folder is its scratch.** File writes there need no gate. Escapes, other sessions' folders, root gates and non-file effects still do.
+
 ### BREAKING
 
 Frontmatter validation now uses a real YAML parser (#1046). Two consumer-visible changes follow.

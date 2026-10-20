@@ -159,7 +159,6 @@ hooks/bash/destructive-guard.sh|hooks/lib/extract-json.py
 hooks/bash/destructive-guard.sh|hooks/lib/log-block.sh
 hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/log-block.sh
-hooks/bash/universal-mutation-gate.sh|hooks/lib/read-only-command.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py
 hooks/git/branch-guard.sh|hooks/lib/extract-json.py
 hooks/git/branch-guard.sh|hooks/lib/scope-check.sh
