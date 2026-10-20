@@ -45,7 +45,7 @@ Project-contribution: the task-keyed gate's per-session authority holds even whe
 
 ## Test plan
 
-- `bash hooks/_test/session_anchor_mistag.test.sh`: 8/0 here, 3 failures on develop.
+- `bash hooks/_test/session_anchor_mistag.test.sh`: 13/0 here; the mis-tag cases fail on develop.
 - `python3 hooks/_test/task_keyed_gates.py`: 50/50.
 - The hub_concurrency_gate, session_signal_resolution, universal_mutation_gate and read_allowlist suites.
 - The full CI validate job, run locally.

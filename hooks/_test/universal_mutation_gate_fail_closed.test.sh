@@ -70,6 +70,10 @@ expect 2 "command the extractor cannot print (lone surrogate)" '{"tool_name":"Ba
 says "message names the unreadable command" "cannot be read as text"
 expect 2 "command over 64 KiB" "$(payload "rm -rf build #$(head -c 70000 /dev/zero | tr '\0' a)")"
 says "message names the size" "over 64 KiB"
+# Bytes, not characters (#1106 review): 30k four-byte characters is 120 KB of
+# UTF-8 and 360 KB once JSON-escaped, though only 30k characters long.
+expect 2 "command of multi-byte characters over the byte limit" "$(payload "touch x # $("$REAL_PY" -c 'print("\U0001F600"*30000)')")"
+says "message names the size" "too large to check"
 
 echo "--- legitimate input still reaches the normal decision path ---"
 expect 0 "parsed payload with no command field" '{"tool_name":"Read","hook_event_name":"PreToolUse","tool_input":{"file_path":"/etc/hostname"}}'
