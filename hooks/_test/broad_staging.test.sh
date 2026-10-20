@@ -19,13 +19,15 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 GUARD="$SCRIPT_DIR/../git/no-broad-staging.sh"
 pass=0; fail=0
+# Stock macOS has no timeout(1); run unbounded there (#1109).
+_tmo() { if command -v timeout >/dev/null 2>&1; then timeout "$@"; else shift; "$@"; fi; }
 
 run() {
     python3 -c "
 import json, sys
 print(json.dumps({'hook_event_name':'PreToolUse','tool_name':'Bash',
                   'tool_input':{'command': sys.argv[1]}}))" "$1" \
-        | timeout 25 bash "$GUARD" >/dev/null 2>&1
+        | _tmo 25 bash "$GUARD" >/dev/null 2>&1
     printf '%s' "$?"
 }
 
@@ -53,6 +55,8 @@ blocks "the bare dot"       'git add .'
 blocks "the --all form"     'git add --all'
 blocks "chained after cd"   'cd /tmp && git add -A'
 blocks "wrapped in bash -c" 'bash -c "git add -A"'
+blocks "a single-quoted verb" "git 'add' -A"
+blocks "a double-quoted verb" 'git "add" .'
 
 echo
 echo "  -- the same characters as data --"

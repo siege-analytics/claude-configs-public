@@ -652,19 +652,50 @@ def _action(command: str, cwd: str) -> dict:
                 # A target directory can ride on an option (`--target-directory=d`,
                 # `--targ=d`, `-td`), so option values count as operands too.
                 link_operands = []
+                target_dir = None  # -t DIR / -tDIR / --target-directory=DIR
                 ended = False
+                expect_dir = False
                 for x in args[1:]:
-                    if ended or not x.startswith('-') or x == '-':
+                    if expect_dir:
+                        target_dir = x
+                        link_operands.append(x)
+                        expect_dir = False
+                    elif ended or not x.startswith('-') or x == '-':
                         link_operands.append(x)
                     elif x == '--':
                         ended = True
                     elif x.startswith('--'):
                         if '=' in x:
                             link_operands.append(x.split('=', 1)[1])
-                    elif 't' in x[1:] and x[x.index('t', 1) + 1:]:
-                        link_operands.append(x[x.index('t', 1) + 1:])
+                            if '--target-directory'.startswith(x.split('=', 1)[0]):
+                                target_dir = x.split('=', 1)[1]
+                        elif len(x) > 2 and '--target-directory'.startswith(x):
+                            expect_dir = True
+                    elif 't' in x[1:]:
+                        rest = x[x.index('t', 1) + 1:]
+                        if rest:
+                            target_dir = rest
+                            link_operands.append(rest)
+                        else:
+                            expect_dir = True
                 if not link_operands:
                     paths.append(local)
+                # A relative symlink target resolves from the link's directory,
+                # not the cwd (#1109): `ln -s x sub/link` points at sub/x. Count
+                # both readings of every relative operand.
+                # With -t the links live in that directory, so every source
+                # resolves from it.
+                if target_dir is not None:
+                    tdir = os.path.join(effective, target_dir)
+                    for t in [x for x in link_operands if x != target_dir]:
+                        if not t.startswith('/'):
+                            link_operands.append(os.path.join(tdir, t))
+                elif len(link_operands) >= 2:
+                    link_dir = os.path.join(effective, link_operands[-1])
+                    for t in link_operands[:-1]:
+                        if not t.startswith('/'):
+                            for base in (os.path.dirname(link_dir), link_dir):
+                                link_operands.append(os.path.join(base, t))
                 paths.extend(canonical(x, effective) for x in link_operands)
                 file_paths.extend(canonical(x, effective) for x in link_operands)
             else:
