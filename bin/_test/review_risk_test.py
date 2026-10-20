@@ -209,7 +209,7 @@ hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
 REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "7cb2f091cbddc425598893c82170570f48125b8d83ff0a2865ff04aca7ea1aab"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "982ba88fe28129f9cc21452cb9a6394ca96a1b421bfde26f9e8f62afe2614aa5"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "ad9c5491ba6f46ae87cf08bfc3fe8af92b90d641c4c5c49ad7d1da00ad04318c"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
@@ -217,7 +217,7 @@ hooks/agent-comms/no-slug-form-outbound.sh|hooks/lib/extract-json.py|2
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/resolve-think-gate.py|1
 hooks/bash/coordinator-status-guard.sh|hooks/lib/extract-json.py|1
 hooks/bash/destructive-guard.sh|hooks/lib/extract-json.py|2
-hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py|6
+hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py|3
 hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/branch-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/detect-ai-fingerprints.sh|hooks/lib/extract-json.py|2
