@@ -24,7 +24,7 @@ PLAIN = {
     "md5sum", "base64", "od", "nl", "tac", "rev", "column", "true", "false", "test", "[", "sleep",
     "readlink", "realpath", "basename", "dirname", "seq", "expr", "strings",
     "hexdump", "getent", "free", "uptime", "lsof", "nproc", "findmnt", "lsblk", "ss", "dig", "host",
-    "nslookup", "cd",
+    "nslookup", "cd", "shasum",
 }
 # Verbs whose options can write or run programs: their arguments must reach the
 # per-tool check exactly as bash will see them, so no unquoted expansion.
@@ -64,6 +64,12 @@ def short_has(a, letters, takes_arg=""):
     return False
 
 
+def hash_object_writes(args):
+    """`git hash-object` writes only with -w/--write. -t takes an argument, so
+    `-tw` sets the type to "w" and does not write, while `-wt blob` does (#1079)."""
+    return any(long_opt(a, "--write") or short_has(a, "w", "t") for a in args)
+
+
 def git_ok(args):
     i = 0
     while i < len(args) and args[i] == "-C" and i + 1 < len(args):
@@ -83,6 +89,8 @@ def git_ok(args):
         return False
     if sub in GIT_READ:
         return True
+    if sub == "hash-object":   # computes object names; only -w writes into the object store
+        return not hash_object_writes(rest)
     if sub == "fetch":   # remote-tracking refs only: no refspec that names a local ref
         return all(":" not in a and not a.startswith("+") for a in rest)
     if sub == "branch":
@@ -385,7 +393,8 @@ def unsafe(words):
             i += 2
         sub = next((a for a in args[i:] if not a.startswith("-")), "")
         return (sub == "grep" and any(short_has(a, "O", "efABCm") for a in args)
-                or sub in {"ls-remote", "fetch"} and any(short_has(a, "u", "jo") for a in args))
+                or sub in {"ls-remote", "fetch"} and any(short_has(a, "u", "jo") for a in args)
+                or sub == "hash-object" and hash_object_writes(args))
     if w == "gh" and args[:1] == ["api"]:
         return any(long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF", "Hpqt")
                    for a in args[1:])
