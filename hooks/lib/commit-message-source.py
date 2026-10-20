@@ -18,27 +18,40 @@ RESOLVED = 0
 SOURCE_ERROR = 2
 UNSUPPORTED = 3
 MAX_MESSAGE_BYTES = 1024 * 1024
-SHELL_OPERATORS = {";", "&&", "||", "|", "&", "(", ")", "<", ">", "<<", ">>"}
+SHELL_OPERATOR_CHARS = frozenset(";&|()<>")
 
 
 class MessageSourceError(Exception):
     """A recognized message source cannot be resolved safely."""
 
 
+def has_unquoted_shell_operator(command):
+    """Return whether a shell operator appears outside single/double quotes."""
+    quote = None
+    for char in command:
+        if quote is None:
+            if char in {"'", '"'}:
+                quote = char
+            elif char in SHELL_OPERATOR_CHARS:
+                return True
+        elif char == quote:
+            quote = None
+    return False
+
+
 def command_tokens(command):
     """Tokenize a simple shell command without treating ticket hashes as comments."""
     if any(marker in command for marker in ("$", "`", "\\", "\n", "\r")):
         return None
+    if has_unquoted_shell_operator(command):
+        return None
     try:
-        lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
+        lexer = shlex.shlex(command, posix=True)
         lexer.whitespace_split = True
         lexer.commenters = ""
-        tokens = list(lexer)
-    except ValueError:
+        return list(lexer)
+    except ValueError:  # noqa: writing-code-7 handler; noqa: writing-tests-5 handler exercised by ticket_required.test.sh
         return None
-    if any(token in SHELL_OPERATORS for token in tokens):
-        return None
-    return tokens
 
 
 def read_message_file(raw_path, cwd):
@@ -51,7 +64,7 @@ def read_message_file(raw_path, cwd):
     flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_CLOEXEC", 0)
     try:
         fd = os.open(path, flags)
-    except OSError as exc:
+    except OSError as exc:  # noqa: writing-tests-5 handler exercised by ticket_required.test.sh
         raise MessageSourceError(f"message file is not readable: {raw_path}: {exc.strerror}") from exc
     try:
         info = os.fstat(fd)
@@ -133,7 +146,7 @@ def main():
     command = sys.stdin.read()
     try:
         message = resolve(command, args.cwd)
-    except MessageSourceError as exc:
+    except MessageSourceError as exc:  # noqa: writing-tests-5 handler exercised by ticket_required.test.sh
         print(str(exc), file=sys.stderr)
         return SOURCE_ERROR
     if message is None:

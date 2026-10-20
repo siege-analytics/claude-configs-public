@@ -25,6 +25,8 @@ git -C "$FIXTURE" remote add origin git@github.com:siege-analytics/ticket-fixtur
 printf 'file subject\n\nRefs: #994\n' > "$FIXTURE/ticketed message.txt"
 printf 'file subject without reference\n' > "$FIXTURE/no-ticket.txt"
 printf 'filename token is incidental\n' > "$FIXTURE/incidental-#994.txt"
+printf 'quoted operator path\n\nRefs: #994\n' > "$FIXTURE/ticketed;message.txt"
+printf 'quoted operator path without reference\n' > "$FIXTURE/no-ticket;message.txt"
 printf 'unreadable Refs: #994\n' > "$FIXTURE/unreadable.txt"
 chmod 000 "$FIXTURE/unreadable.txt"
 mkfifo "$FIXTURE/message-fifo"
@@ -53,6 +55,12 @@ expect_block "(b2) incidental ticket in author does not satisfy -m" "$HOOK" \
     "$(make_payload 'git commit --author="Refs: #994 <test@example.com>" -m "subject only"')"
 expect_block "(b2a) incidental ticket in pathspec does not satisfy -m" "$HOOK" \
     "$(make_payload 'git commit -m "subject only" -- path-#994.txt')"
+expect_block "(b2b) quoted operator message does not fall back to incidental author" "$HOOK" \
+    "$(make_payload 'git commit -m ";" --author="Refs: #994 <test@example.com>"')"
+expect_pass "(b2c) quoted operator stays literal in ticketed message" "$HOOK" \
+    "$(make_payload 'git commit -m "subject; Refs: #994"')"
+expect_block "(b2d) malformed quoted message remains denied" "$HOOK" \
+    "$(make_payload 'git commit -m "unterminated')"
 expect_pass "(b3) repeated -m paragraphs use effective message" "$HOOK" \
     "$(make_payload 'git commit -m "subject" -m "Refs: #994"')"
 expect_pass "(b4) attached -m uses effective message" "$HOOK" \
@@ -76,12 +84,19 @@ expect_pass "(f7) attached -F relative ticketed file" "$HOOK" \
     "$(make_payload 'git commit -F"ticketed message.txt"')"
 expect_block "(f7a) attached -F relative ticketless file" "$HOOK" \
     "$(make_payload 'git commit -Fno-ticket.txt')"
+expect_pass "(f7b) quoted operator stays literal in ticketed file path" "$HOOK" \
+    "$(make_payload 'git commit -F "ticketed;message.txt"')"
+expect_block "(f7c) quoted operator stays literal in ticketless file path" "$HOOK" \
+    "$(make_payload 'git commit -F "no-ticket;message.txt"')"
 expect_block "(f8) ticket in filename does not satisfy ticketless file" "$HOOK" \
     "$(make_payload 'git commit -F "incidental-#994.txt"')"
 expect_pass "(f9) top-level cwd fallback resolves file" "$HOOK" \
     "$(make_top_level_cwd_payload 'git commit -F "ticketed message.txt"')"
 expect_block_because "(f10) missing file denies" "$HOOK" \
     "$(make_payload 'git commit -F missing.txt')" \
+    "message file is not readable"
+expect_block_because "(f10a) quoted operator missing file does not fall back to incidental author" "$HOOK" \
+    "$(make_payload 'git commit -F ";" --author="Refs: #994 <test@example.com>"')" \
     "message file is not readable"
 expect_block_because "(f11) unreadable file denies" "$HOOK" \
     "$(make_payload 'git commit -F unreadable.txt')" \
