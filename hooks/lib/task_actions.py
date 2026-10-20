@@ -319,6 +319,54 @@ def investigation(args: list[str]) -> bool:
     return False
 
 
+def _long_option_matches(token: str, names) -> bool:
+    """GNU accepts any unambiguous prefix of a long option (`--lin` is --link)."""
+    name = token.split('=', 1)[0]
+    return len(name) > 2 and any(full.startswith(name) for full in names)
+
+
+def _cp_link_copy(tokens) -> bool:
+    """cp -l/-s and their long forms make the destination another name (#1100)."""
+    for t in tokens:
+        if t == '--':
+            break
+        if t.startswith('--'):
+            if _long_option_matches(t, ('--link', '--symbolic-link')):
+                return True
+        elif t.startswith('-') and t != '-' and ('l' in t[1:] or 's' in t[1:]):
+            return True
+    return False
+
+
+def _cp_keeps_symlinks(tokens) -> bool:
+    """Options under which cp copies a symlink as a symlink."""
+    for t in tokens:
+        if t == '--':
+            break
+        if t.startswith('--'):
+            if _long_option_matches(t, ('--no-dereference', '--recursive', '--archive')) or (
+                    t.startswith('--preserve') and ('links' in t or 'all' in t)):
+                return True
+        elif t.startswith('-') and t != '-' and any(c in t[1:] for c in 'PdrRa'):
+            return True
+    return False
+
+
+def _has_symlink(path: str, limit: int = 2000) -> bool:
+    """A symlink at or under path; past `limit` entries, assume one."""
+    if os.path.islink(path):
+        return True
+    if not os.path.isdir(path):
+        return False
+    seen = 0
+    for root, dirs, files in os.walk(path):
+        for name in dirs + files:
+            seen += 1
+            if seen > limit or os.path.islink(os.path.join(root, name)):
+                return True
+    return False
+
+
 def _git_toplevel(directory: str) -> str:
     try:
         return canonical(subprocess.check_output(["git", "-C", directory, "rev-parse", "--show-toplevel"], text=True, stderr=subprocess.DEVNULL, timeout=3).strip())
@@ -483,6 +531,7 @@ def _action(command: str, cwd: str) -> dict:
     self_managed = True
     directory_paths = []
     directory_removals = []
+    file_removals = []  # rm operands: unlinking a name never writes the file (#1100)
     file_paths = []
     args = []
     arg_globs = []
@@ -517,7 +566,7 @@ def _action(command: str, cwd: str) -> dict:
             if any(arg_globs):
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             reads = False
-            self_managed = self_managed and args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown"}
+            self_managed = self_managed and args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown", "ln"}
             if args[0] in {'eval', 'exec', 'bash', 'sh', 'zsh', 'dash', 'ksh'} or args[0] in {'python', 'python3'} and any(x == '-c' or x.startswith('-c') for x in args[1:]):
                 raise UnknownShape('opaque inline execution has unbounded mutation targets')
             local = effective
@@ -575,8 +624,13 @@ def _action(command: str, cwd: str) -> dict:
                         skip = True
                     elif args[0] in {'cp', 'mv'} and not token.startswith('--') and token.endswith('S'):
                         skip = True  # a short cluster such as -aS takes the next token
-                if args[0] == 'cp':
+                if args[0] == 'cp' and not _cp_link_copy(args[1:]) and not (
+                        _cp_keeps_symlinks(args[1:])
+                        and any(_has_symlink(os.path.join(effective, x)) for x in operands[:-1])):
                     # Common copy form: source(s) are reads, final operand writes.
+                    # A link copy, or a copy that carries a symlink across, makes
+                    # the destination reach the source, so every operand is a
+                    # target (#1100).
                     operands = operands[-1:]
                 elif args[0] in {'chmod', 'chown'} and not has_reference:
                     operands = operands[1:]  # the first operand is the mode/owner
@@ -588,8 +642,31 @@ def _action(command: str, cwd: str) -> dict:
                         directory_removals.extend(canonical(x, effective) for x in operands)
                 else:
                     file_paths.extend(canonical(x, effective) for x in operands)
+                    if args[0] == 'rm':
+                        file_removals.extend(canonical(x, effective) for x in operands)
                 if not operands:
                     paths.append(local)
+            elif args[0] == 'ln':
+                # Both ends of a link are targets (#1100): writing through the
+                # link writes the source.
+                # A target directory can ride on an option (`--target-directory=d`,
+                # `--targ=d`, `-td`), so option values count as operands too.
+                link_operands = []
+                ended = False
+                for x in args[1:]:
+                    if ended or not x.startswith('-') or x == '-':
+                        link_operands.append(x)
+                    elif x == '--':
+                        ended = True
+                    elif x.startswith('--'):
+                        if '=' in x:
+                            link_operands.append(x.split('=', 1)[1])
+                    elif 't' in x[1:] and x[x.index('t', 1) + 1:]:
+                        link_operands.append(x[x.index('t', 1) + 1:])
+                if not link_operands:
+                    paths.append(local)
+                paths.extend(canonical(x, effective) for x in link_operands)
+                file_paths.extend(canonical(x, effective) for x in link_operands)
             else:
                 paths.append(local)
                 # Explicit paths cannot escape a task by borrowing CWD scope.
@@ -640,4 +717,6 @@ def _action(command: str, cwd: str) -> dict:
         return {"read_only": False, "paths": list(dict.fromkeys(paths + [effective])), "error": str(e), "binding": binding}
     return {"read_only": reads and not diagnostic and bool(tokens), "investigation": reads and diagnostic,
             "self_managed_shape": self_managed and not diagnostic, "directory_paths": [p for p in directory_paths if p not in file_paths], "directory_removals": directory_removals,
+            # A path only removed, never also written in the same command (#1100).
+            "file_removals": [p for p in file_removals if paths.count(p) == file_removals.count(p)],
             "paths": list(dict.fromkeys(paths or [effective])), "binding": binding}
