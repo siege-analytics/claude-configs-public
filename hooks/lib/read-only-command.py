@@ -19,7 +19,7 @@ import sys
 # Bare read verbs whose arguments cannot make them write.
 PLAIN = {
     "ls", "cat", "head", "tail", "wc", "grep", "egrep", "fgrep", "which", "type",
-    "stat", "du", "df", "ps", "pgrep", "echo", "printf", "pwd", "id", "whoami",
+    "stat", "du", "df", "ps", "pgrep", "echo", "pwd", "id", "whoami",
     "uname", "cut", "tr", "diff", "cmp", "comm", "sha256sum", "sha1sum",
     "md5sum", "base64", "od", "nl", "tac", "rev", "column", "true", "false", "test", "[", "sleep",
     "readlink", "realpath", "basename", "dirname", "seq", "expr", "strings",
@@ -34,6 +34,7 @@ SHELL_WORDS = {"do", "done", "then", "else", "fi", "!", "{", "}", "while", "unti
 GIT_READ = {"log", "show", "diff", "status", "rev-parse", "rev-list", "ls-files", "ls-remote",
             "ls-tree", "describe", "blame", "grep", "cat-file", "for-each-ref", "merge-base",
             "shortlog", "show-ref", "name-rev", "count-objects", "whatchanged"}
+REMOTE_WRITE = {"add", "set-url", "rename", "remove", "rm", "set-head", "set-branches", "prune", "update"}
 GH_READ_VERBS = {"view", "list", "checks", "diff", "status"}
 KUBECTL_READ = {"get", "describe", "logs", "top", "explain", "version", "api-resources", "api-versions",
                 "cluster-info", "events"}
@@ -70,6 +71,30 @@ def hash_object_writes(args):
     return any(long_opt(a, "--write") or short_has(a, "w", "t") for a in args)
 
 
+def date_sets(args):
+    """`date -s X`, `date --set=X`, or a bare MMDDhhmm operand sets the clock (#1087);
+    only +FORMAT operands and the values of -d/-r/-f read."""
+    takes = {"-d", "--date", "-r", "--reference", "-f", "--file"}
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if long_opt(a, "--set") or short_has(a, "s", "dfIr"):
+            return True
+        if a in takes:
+            i += 2
+            continue
+        if not a.startswith(("-", "+")):
+            return True
+        i += 1
+    return False
+
+
+def printf_unsafe(args):
+    """printf -v NAME assigns a shell variable (`printf -v PATH /x; ls` changes
+    what runs next); %n writes through an argument (#1087)."""
+    return any(a.startswith("-v") for a in args[:1]) or any("%n" in a for a in args)
+
+
 def git_ok(args):
     i = 0
     while i < len(args) and args[i] == "-C" and i + 1 < len(args):
@@ -78,9 +103,9 @@ def git_ok(args):
         return False
     sub, rest = args[i], args[i + 1:]
     # Options that run a program or write a file, for any subcommand.
-    if any(long_opt(a, "--upload-pack", "--receive-pack", "--exec", "--open-files-in-pager", "--output")
-           for a in rest):
-        return False
+    if any(long_opt(a, "--upload-pack", "--receive-pack", "--exec", "--open-files-in-pager", "--output",
+                    "--ext-diff", "--help") for a in rest):
+        return False   # --ext-diff runs the configured diff program; --help can launch a pager or browser
     if sub == "grep" and any(short_has(a, "O", "efABCm") for a in rest):
         return False   # -O<prog> runs <prog> on the matches
     if sub in {"ls-remote", "fetch"} and any(short_has(a, "u", "jo") for a in rest):
@@ -98,13 +123,22 @@ def git_ok(args):
                          "--no-merged", "--all", "--remotes"} or not a.startswith("-") and rest and rest[0] in
                    {"--list", "--contains", "--merged", "--no-merged"} for a in rest)
     if sub == "remote":
-        return not rest or rest[0] in {"-v", "show", "get-url"}
+        # `git remote [-v]`, `git remote [-v] show|get-url ...`. A leading -v does
+        # not make what follows a listing: `git remote -v add|set-url ...` writes (#1087).
+        r = [a for a in rest if a not in {"-v", "--verbose"}]
+        return not r or (r[0] in {"show", "get-url"} and not any(a in REMOTE_WRITE for a in r))
     if sub == "worktree":
         return rest[:1] == ["list"]
     if sub == "tag":
-        return not rest or rest[0] in {"-l", "--list", "--contains"}
+        # List mode only, and no creating/signing/deleting option anywhere:
+        # `git tag --list -a x` is not a listing (#1087).
+        return (not rest or rest[0] in {"-l", "--list", "--contains"}) and not any(
+            long_opt(a, "--annotate", "--sign", "--local-user", "--force", "--delete", "--message", "--file",
+                     "--edit", "--create-reflog") or short_has(a, "asufdmFe", "n") for a in rest)
     if sub == "config":
-        return bool(rest) and rest[0] in {"--get", "--get-all", "--list", "-l", "--get-regexp"}
+        return bool(rest) and rest[0] in {"--get", "--get-all", "--list", "-l", "--get-regexp"} and not any(
+            long_opt(a, "--add", "--unset", "--unset-all", "--replace-all", "--rename-section", "--remove-section",
+                     "--edit") or a == "-e" for a in rest)
     if sub == "stash":
         return rest[:1] in (["list"], ["show"])
     return False
@@ -158,6 +192,8 @@ def simple_ok(words):
         return simple_ok(rest)
     if w in PLAIN:
         return True
+    if w == "printf":
+        return not printf_unsafe(args)
     if w == "sort":
         return not any(long_opt(a, "--output", "--compress-program") or short_has(a, "o", "kStT") for a in args)
     if w == "uniq":
@@ -170,7 +206,7 @@ def simple_ok(words):
     if w == "yq":
         return not any(long_opt(a, "--inplace", "--split-exp") or short_has(a, "is", "poI") for a in args)
     if w == "date":
-        return not any(long_opt(a, "--set") or short_has(a, "s", "dfIr") for a in args)
+        return not date_sets(args)
     if w == "rg":
         return not any(long_opt(a, "--pre", "--pre-glob") for a in args)   # --pre CMD runs CMD per file
     if w == "sed":
@@ -198,43 +234,57 @@ def segment_expansions(command):
     simple command, (text, expansions): what bash will expand into extra or
     option-shaped words. That is `$` starting a real expansion outside single
     quotes (word splitting / ${X:--delete} / $'..'; a bare `$` before `"` or at a
-    word's end is literal), a glob character that STARTS an unquoted word (only
-    then can it match `-delete`), and brace expansion in unquoted text. Quoted
-    text is literal, so `--jq '{a,b}'` and `contents/f.py?ref=x` are not."""
+    word's end is literal), an unquoted glob character that starts a word or sits
+    in a word whose first character is `-` (only then can it produce an option:
+    `*` matching `-delete`, `--pre*=x` matching `--pre=x`; #1087), and brace
+    expansion in unquoted text. Quoted text is literal, so `--jq '{a,b}'` and
+    `contents/f.py?ref=x` are not expansions."""
     segs, cur, bare, found, q, i, word_start = [], [], [], set(), None, 0, True
+    fresh, dash = True, False   # no content in the current word yet; word starts with "-"
 
     def close():
         if re.search(r"\{[^{}\s]*(,|\.\.)[^{}\s]*\}", "".join(bare)):
             found.add("{")
         segs.append(("".join(cur), set(found)))
 
+    def content(ch):
+        nonlocal fresh, dash
+        if fresh:
+            fresh, dash = False, ch == "-"
+
     while i < len(command):
         c = command[i]
         nxt = command[i + 1] if i + 1 < len(command) else ""
         if q is None and c in ";&|()\n":
             close()
-            cur, bare, found, word_start = [], [], set(), True
+            cur, bare, found, word_start, fresh, dash = [], [], set(), True, True, False
             i += 1
             continue
         cur.append(c)
         if q == "'":
             if c == "'":
                 q = None
+            else:
+                content(c)
             bare.append("x")
             word_start = False
         elif q == '"':
             if c == "\\":
                 cur.append(nxt)
+                content(nxt)
                 i += 1
             elif c == '"':
                 q = None
-            elif c == "$" and nxt in EXPANDS and nxt != "'":
-                found.add("$")
+            else:
+                content(c)
+                if c == "$" and nxt in EXPANDS and nxt != "'":
+                    found.add("$")
             bare.append("x")
             word_start = False
         else:
             if c == "\\":
                 cur.append(nxt)
+                content(nxt)
                 i += 1
                 bare.append("x")
                 word_start = False
@@ -242,13 +292,17 @@ def segment_expansions(command):
                 q = c
                 bare.append("x")
                 word_start = False
+            elif c in " \t<>":
+                bare.append(c)
+                word_start, fresh, dash = True, True, False
             else:
+                content(c)
                 if c == "$" and (nxt in EXPANDS or nxt == '"'):   # $"…" is a locale string: bash drops the $
                     found.add("$")
-                elif c in "*?[" and word_start:
+                elif c in "*?[" and (word_start or dash):
                     found.add(c)
                 bare.append(c)
-                word_start = c in " \t<>"
+                word_start = False
         i += 1
     close()
     return segs
@@ -377,7 +431,9 @@ def unsafe(words):
     if w == "yq":
         return any(long_opt(a, "--inplace", "--split-exp") or short_has(a, "is", "poI") for a in args)
     if w == "date":
-        return any(long_opt(a, "--set") or short_has(a, "s", "dfIr") for a in args)
+        return date_sets(args)
+    if w == "printf":
+        return printf_unsafe(args)
     if w == "sed":
         return any(long_opt(a, "--in-place") or short_has(a, "i", "efl") for a in args)
     if w == "find":
@@ -392,6 +448,19 @@ def unsafe(words):
         while i < len(args) and args[i] in {"-C", "-c"}:
             i += 2
         sub = next((a for a in args[i:] if not a.startswith("-")), "")
+        rest = args[args.index(sub) + 1:] if sub in args else []
+        if any(long_opt(a, "--ext-diff", "--help") for a in args):
+            return True
+        if sub == "remote" and any(a in REMOTE_WRITE for a in rest):
+            return True   # `git remote -v add|set-url ...` (#1087)
+        if sub == "tag" and (any(long_opt(a, "--annotate", "--sign", "--local-user", "--force", "--delete",
+                                          "--message", "--file", "--edit", "--create-reflog")
+                                 or short_has(a, "asufdmFe", "n") for a in rest)
+                             or (rest and not rest[0].startswith("-"))):
+            return True   # creating, signing or deleting a tag, or `git tag NAME`
+        if sub == "config" and any(long_opt(a, "--add", "--unset", "--unset-all", "--replace-all", "--rename-section",
+                                            "--remove-section", "--edit") or a == "-e" for a in rest):
+            return True
         return (sub == "grep" and any(short_has(a, "O", "efABCm") for a in args)
                 or sub in {"ls-remote", "fetch"} and any(short_has(a, "u", "jo") for a in args)
                 or sub == "hash-object" and hash_object_writes(args))
