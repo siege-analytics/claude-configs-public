@@ -174,7 +174,9 @@ After running affected tests (`[skill:commit]` step 4), write evidence to `test-
 
 ```json
 {
-  "ticket": "#386",
+  "ticket": "owner/repo#386",
+  "sessionId": "current-session-id",
+  "repo_root": "/path/to/repo",
   "lastUpdated": "2026-06-09T14:30:00Z",
   "evidence": [
     {

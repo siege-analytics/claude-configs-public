@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **198**
-- Characters: **2,663,154**
-- Estimated tokens: **665,867** (character/4 estimate)
+- Characters: **2,663,418**
+- Estimated tokens: **665,934** (character/4 estimate)
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 110 | 1,266,760 | 316,733 |
+| unclassified | 110 | 1,267,024 | 316,800 |
 
 ## Largest source items
 

@@ -189,7 +189,7 @@ for c in 'git remote -v' 'git remote show origin' 'git remote get-url origin' 'g
          'rg foo src/*.py' 'ls *.md' 'git config --get user.name'; do expect allow "$O" "$c"; done
 echo "== #1089: kubectl global-flag values are not subcommands; ss -K kills; gh --web launches a browser =="
 for c in 'kubectl -n get delete pod x' 'kubectl --context get delete pod x' 'kubectl -n logs exec -it pod -- sh' \
-         'ss -K dst 1.2.3.4' 'ss --kill' 'gh pr view 1 --web' 'gh search repos x --web' 'gh pr list -w'; do expect block "$O" "$c"; done
+         'ss -K dst 1.2.3.4' 'ss --kill' 'ss -D out.bin' 'ss --diag=out.bin' 'gh pr view 1 --web' 'gh search repos x --web' 'gh pr list -w'; do expect block "$O" "$c"; done
 for c in 'ss -tlnp' 'gh pr view 1 --json state' 'gh api repos/o/r -q .workflow'; do expect allow "$O" "$c"; done
 for c in 'kubectl get pods -n x' 'kubectl -n x get pods' 'kubectl --namespace=x logs p' 'kubectl -A get pods'; do
     if python3 "$ROOT/hooks/lib/read-only-command.py" "$c"; then PASS=$((PASS + 1)); else FAIL=$((FAIL + 1)); echo "  FAIL  classifier did not prove: $c"; fi

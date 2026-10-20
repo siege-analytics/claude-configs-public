@@ -545,7 +545,9 @@ def find_gate_for_repo(workspace: str, repo_root: str, gate_name: str = "think-g
         if payload.get("cwd"):
             ti = payload.get("tool_input") or {}
             shape = action(ti.get("command", ""), payload["cwd"]) if ti.get("command") else {"paths": [repo_root or payload["cwd"]]}
-            paths = shape["paths"]
+            # A proven read has no mutation targets; select the task by the repo
+            # instead of sending an empty target list through mutation selection.
+            paths = shape.get("paths") or [repo_root or payload["cwd"]]
     except (ValueError, TypeError):
         return None
     selection = select_task(workspace, paths, session_id=session_id)
@@ -560,6 +562,13 @@ def find_gate_for_repo(workspace: str, repo_root: str, gate_name: str = "think-g
         legacy = _load(os.path.join(workspace, gate_name + ".json"))
         if legacy and legacy["data"].get("repo_root") and canonical(legacy["data"]["repo_root"]) == canonical(repo_root):
             return legacy
+    # Native pre-push (no session identity): the pre-#1051 workspace or repository
+    # test-gate.json is the evidence a terminal push supplies (#1092 review).
+    if gate_name == "test-gate" and not (session_id or session_id_from_env()):
+        for root in dict.fromkeys(p for p in (workspace, repo_root) if p):
+            legacy = _load(os.path.join(root, "test-gate.json"))
+            if legacy:
+                return legacy
     if selection.get("error") and ("scope rejected" in selection["error"] or not selection["error"].startswith("Unscoped mutation:")):
         print(selection["error"], file=sys.stderr)
     return None
@@ -682,13 +691,18 @@ def _git_lines(repo: str, *args: str) -> Optional[list]:
 
 
 def _lone_git_commit(command: str) -> bool:
-    """A single `git [-C dir] commit ...` with no other shell command."""
-    if not command or any(ch in command for ch in ";&|`$\n<>("):
+    """A single `git [-C dir] commit ...` with no other shell command. Quoted
+    text (a `fix(hooks): a -> b` message) is not an operator (#1092 review)."""
+    if not command:
         return False
+    from task_actions import shell_tokens, UnknownShape
     try:
-        words = shlex.split(command)
-    except ValueError:
+        tokens = shell_tokens(command)
+    except UnknownShape:
         return False
+    if any(is_op for _, is_op, _ in tokens):
+        return False
+    words = [t for t, _, _ in tokens]
     i = 1
     while i + 1 < len(words) and words[i] in {"-C", "-c"}:
         i += 2
@@ -721,12 +735,18 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
         if not repo_root:
             raise ValueError("gate has no repo_root")
         rel = []
+        # A lone commit records only staged/modified files: its other operands
+        # (message words such as "docs: a/b") are not targets. Only when the
+        # repository itself is a target, so the staged set is what gets classified.
+        lone_commit = _lone_git_commit(command) and any(os.path.realpath(p) == repo_root for p in paths)
         for p in paths:
             rp = os.path.realpath(p)
+            if lone_commit and rp != repo_root:
+                continue
             if not (rp == repo_root or rp.startswith(repo_root + os.sep)):
                 raise ValueError("target outside the gate's repo_root")
             r = "" if rp == repo_root else os.path.relpath(rp, repo_root).replace(os.sep, "/")
-            if r == "" and _lone_git_commit(command):
+            if r == "" and lone_commit:
                 files = (_git_lines(repo_root, "diff", "--cached", "--name-only", "-z") or []) + \
                         (_git_lines(repo_root, "diff", "--name-only", "-z") or [])
                 rel.extend(files or ["(empty commit)"])

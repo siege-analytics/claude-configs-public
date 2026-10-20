@@ -5846,10 +5846,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 21832,
-      "content_sha256": "2fadaa44e01a0267886694402dffaa4f5590b5ccf07f4bdae2ae0ddad6477326",
+      "characters": 22017,
+      "content_sha256": "77e65f8425bf6a234372b9b89f95244994c0f7a10fd98b7c2812d433052dd755",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 5458,
+      "estimated_tokens": 5505,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -11632,10 +11632,10 @@
     },
     {
       "canonical_source": "skills/testing-frameworks/SKILL.md",
-      "characters": 13331,
-      "content_sha256": "800259680589df2ee29d1b5c3b14ca62e8a10cfc1f7a2a9358d6dda6b47ddf40",
+      "characters": 13410,
+      "content_sha256": "9137b765f6502716f669afba5cf0b32c232c76090d70cd08efaecfda7db0fe1a",
       "description": "Framework guidance for test writing. Projects declare their test frameworks per architectural layer in PROJECT.md; this skill recommends frameworks by language ecosystem and enforces consistent usage. Pairs with _testing-frameworks-rules.md (always-on) and hooks/git/test-guard.sh (mechanical enforcement at push time). The optional per-layer source globs additionally drive hooks/git/decomposition-guard.sh (one-PR-per-layer warning).",
-      "estimated_tokens": 3333,
+      "estimated_tokens": 3353,
       "frontmatter_name": "testing-frameworks",
       "generated_outputs": [
         "dist/nested/skills/testing-frameworks",
@@ -11669,7 +11669,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 202,
+      "lines": 204,
       "owner": [
         "unknown"
       ],
@@ -12175,9 +12175,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2663154,
+    "characters": 2663418,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 665867,
+    "estimated_tokens": 665934,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12198,7 +12198,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1266760
+      "unclassified": 1267024
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12210,7 +12210,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 316733
+      "unclassified": 316800
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
