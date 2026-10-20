@@ -5362,6 +5362,7 @@
         "hooks/_test/coordination_alias.test.sh",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/progressive_loading.test.sh",
@@ -8328,6 +8329,7 @@
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/gate_registry.test.sh",
+        "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/pr_base_guard.test.sh",
         "hooks/_test/progressive_loading.test.sh",
@@ -8759,6 +8761,7 @@
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/detect_ai_fingerprints.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/pr_base_guard.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/read_allowlist.test.sh",
@@ -8831,6 +8834,7 @@
       "slug": "compound",
       "source_path": "skills/compound/SKILL.md",
       "test_evidence": [
+        "hooks/_test/git_hook_fast_skip.test.sh",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
       ],
       "tier": "unclassified",
@@ -9195,7 +9199,8 @@
       "test_evidence": [
         "bin/_test/review_risk_test.py",
         "bin/_test/scanner_source_test.py",
-        "hooks/_test/detect_ai_fingerprints.test.sh"
+        "hooks/_test/detect_ai_fingerprints.test.sh",
+        "hooks/_test/git_hook_fast_skip.test.sh"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -10208,7 +10213,8 @@
       "slug": "post-error-revision",
       "source_path": "skills/post-error-revision/SKILL.md",
       "test_evidence": [
-        "bin/_test/review_risk_test.py"
+        "bin/_test/review_risk_test.py",
+        "hooks/_test/git_hook_fast_skip.test.sh"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -10596,6 +10602,7 @@
         "hooks/_test/ca_enforcement_manifest.test.sh",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/progressive_loading.test.sh",
@@ -11145,6 +11152,7 @@
         "bin/_test/project_composition_test.py",
         "bin/_test/review_risk_test.py",
         "bin/_test/selected_registration_test.py",
+        "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/review_risk_policy.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
@@ -11558,6 +11566,7 @@
       "source_path": "skills/survey-context/SKILL.md",
       "test_evidence": [
         "bin/_test/review_risk_test.py",
+        "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/survey_context.test.sh"
       ],
       "tier": "unclassified",

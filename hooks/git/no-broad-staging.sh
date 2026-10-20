@@ -11,6 +11,20 @@ set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
 
 INPUT=$(cat)
+# Fast skip (#1083): exit before starting python3 when the tool payload's
+# command cannot match this hook's trigger. Only taken when tool_input's first
+# key is a non-empty "command" (an empty or missing command keeps the git-push
+# fallback) and the command uses no JSON escape other than \n \t \r \" \\ \/
+# (\u, \f, \b could hide letters or whitespace). \n \t \r become spaces, so an
+# escaped newline before the trigger still counts as a boundary. Git-hook
+# invocations (refs on stdin, no JSON) take the full path.
+_FAST_CMDS=$(printf '%s' "$INPUT" | grep -oE '"command"[[:space:]]*:[[:space:]]*"(\\.|[^"\\])*"' 2>/dev/null || true)
+_FAST_ESC="${_FAST_CMDS//'\\'/}"; _FAST_ESC="${_FAST_ESC//'\"'/}"; _FAST_ESC="${_FAST_ESC//'\/'/}"
+_FAST_ESC="${_FAST_ESC//'\n'/}"; _FAST_ESC="${_FAST_ESC//'\t'/}"; _FAST_ESC="${_FAST_ESC//'\r'/}"
+_FAST_CMDS="${_FAST_CMDS//'\n'/ }"; _FAST_CMDS="${_FAST_CMDS//'\t'/ }"; _FAST_CMDS="${_FAST_CMDS//'\r'/ }"
+_FAST_FIRST='"tool_input"[[:space:]]*:[[:space:]]*[{][[:space:]]*"command"[[:space:]]*:[[:space:]]*"[^"]'
+_FAST_RE='(^|[^[:alnum:]])git add([^[:alnum:]]|$)'
+if [[ "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE ]]; then exit 0; fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)

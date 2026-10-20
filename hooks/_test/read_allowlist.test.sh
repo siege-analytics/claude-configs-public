@@ -163,6 +163,30 @@ echo hi > /tmp/x
 cat <<END > /tmp/x
 END
 EOF
+echo "== #1087: listing flags do not make a write a listing; clock, shell-state and option-word globs =="
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
+git remote -v add evil https://example.invalid/e.git
+git remote -v set-url origin https://example.invalid/e.git
+git -C /tmp remote --verbose rename origin x
+git remote -v remove origin
+git tag v1.0
+git tag --list -a x
+git tag -l -d v1
+git config --list --add a b
+git config --get-all x --unset
+date 10182300
+date -u 1018230026
+printf -vNAME value
+printf -v PATH /tmp/x; ls
+printf '%n' PATH
+git log --ext-diff
+git diff --ext-diff HEAD
+rg foo --pre*=evil
+rg foo '-'-pre*=x
+EOF
+for c in 'git remote -v' 'git remote show origin' 'git remote get-url origin' 'git tag' 'git tag -l' 'git tag --list "v1*"' \
+         'date' 'date +%F' 'date -u +%FT%T' 'date -d @1 +%s' 'date -Iseconds' 'printf "%s\n" x' 'printf %d 3' \
+         'rg foo src/*.py' 'ls *.md' 'git config --get user.name'; do expect allow "$O" "$c"; done
 echo "== multi-line commands are never proven read-only =="
 expect block "$O" $'ls\nbash evil.sh'
 expect block "$O" $'ls\nredis-cli -h db FLUSHALL'
