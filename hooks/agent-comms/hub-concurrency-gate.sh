@@ -17,6 +17,7 @@ INPUT=$(cat 2>/dev/null || true)
 export CCP_HOOK_INPUT_JSON="$INPUT"
 
 RESOLVE_TG="$(cd "$(dirname "$0")/../lib" && pwd)/resolve-think-gate.py"
+export CCP_HOOK_LIB="$(cd "$(dirname "$0")/../lib" && pwd)"
 SENDER=$(python3 "$RESOLVE_TG" --workspace "${CRAFT_AGENT_WORKSPACE:-.}" --session-value 2>/dev/null || true)
 POLICY="$(cd "$(dirname "$0")/../lib" && pwd)/hub-concurrency-policy.json"
 HUB_GATE_SENDER="$SENDER" HUB_GATE_POLICY="$POLICY" HUB_GATE_INPUT="$INPUT" python3 - <<'PYCODE'
@@ -121,7 +122,10 @@ def main():
         return 0
     if not is_spawn and not safe_id(target):
         return 0
-    own_dir = os.environ.get('CRAFT_SESSION_DIR', '')
+    # A mis-tagged session dir must not count this hub's load against a sibling (#1099).
+    sys.path.insert(0, os.environ.get('CCP_HOOK_LIB', ''))
+    from session_anchor import verified_session_dir
+    own_dir = verified_session_dir(os.environ.get('CRAFT_SESSION_DIR', ''), payload)
     workspace = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
     root = os.path.join(workspace, 'sessions') if workspace else os.path.dirname(own_dir)
     path = os.environ.get('HUB_THREADS_FILE') or (os.path.join(own_dir, 'hub-threads.json') if own_dir else os.path.join(root, sender, 'hub-threads.json') if root else '')
