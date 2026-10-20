@@ -23,10 +23,9 @@ MAX_MESSAGE_BYTES = 1024 * 1024
 CONFIG_TIMEOUT_SECONDS = 2
 SHELL_OPERATOR_CHARS = frozenset(";&|()<>")
 DIRECT_COMMIT_RE = re.compile(r"^\s*git[ \t]+commit(?:[ \t\r\n]|$)")
-HEREDOC_RE = re.compile(
-    r'"\$\(cat[ \t]+<<(?P<quote>[\'\"])(?P<delimiter>[A-Za-z_][A-Za-z0-9_]*)'
-    r'(?P=quote)\n(?P<body>.*?)\n(?P=delimiter)\n?\)"',
-    re.DOTALL,
+HEREDOC_START_RE = re.compile(
+    r'"\$\(cat[ \t]+(?P<operator><<-?)(?P<quote>[\'\"]?)'
+    r'(?P<delimiter>[A-Za-z_][A-Za-z0-9_]*)(?P=quote)[ \t]*\r?\n'
 )
 SCISSORS_LINE = "# ------------------------ >8 ------------------------"
 
@@ -104,20 +103,59 @@ class MessageSourceError(Exception):
     """A direct commit message cannot be resolved safely."""
 
 
-def extract_heredocs(command):
-    """Replace the canonical quoted-delimiter cat substitution with tokens."""
-    values = {}
+def read_heredoc_body(command, body_start, delimiter, strip_tabs):
+    """Return the body and position after Bash's first terminator line."""
+    lines = []
+    line_start = body_start
+    while line_start < len(command):
+        line_end = command.find("\n", line_start)
+        if line_end < 0:
+            raise MessageSourceError("unterminated heredoc is outside the narrow message model")
+        line = command[line_start:line_end]
+        if line.endswith("\r"):
+            line = line[:-1]
+        candidate = line.lstrip("\t") if strip_tabs else line
+        if candidate == delimiter:
+            return "\n".join(lines).rstrip("\n"), line_end + 1
+        lines.append(candidate)
+        line_start = line_end + 1
+    raise MessageSourceError("unterminated heredoc is outside the narrow message model")
 
-    def replace(match):
+
+def extract_heredocs(command):
+    """Replace bounded literal cat heredocs without skipping a terminator."""
+    values = {}
+    result = []
+    command_start = 0
+    while True:
+        match = HEREDOC_START_RE.search(command, command_start)
+        if match is None:
+            result.append(command[command_start:])
+            break
+        result.append(command[command_start:match.start()])
+        if not match.group("quote"):
+            raise MessageSourceError(
+                "unquoted heredoc delimiter is outside the narrow message model"
+            )
+        body, terminator_end = read_heredoc_body(
+            command,
+            match.end(),
+            match.group("delimiter"),
+            match.group("operator") == "<<-",
+        )
+        if not command.startswith(')"', terminator_end):
+            raise MessageSourceError(
+                "text after the first heredoc terminator is outside the narrow message model"
+            )
         index = len(values)
         placeholder = f"__CCP_LITERAL_HEREDOC_{index}__"
         while placeholder in command or placeholder in values:
             index += 1
             placeholder = f"__CCP_LITERAL_HEREDOC_{index}__"
-        values[placeholder] = match.group("body").rstrip("\n")
-        return placeholder
-
-    return HEREDOC_RE.sub(replace, command), values
+        values[placeholder] = body
+        result.append(placeholder)
+        command_start = terminator_end + 2
+    return "".join(result), values
 
 
 def strip_comment_and_check_syntax(command):
@@ -260,6 +298,8 @@ def apply_long_option(tokens, index, state, heredocs):
     if negated:
         if attached_value is not None or name in LONG_REQUIRED_VALUES:
             raise MessageSourceError(f"negated value option cannot be modeled safely: --{name_text}")
+        if name == "edit":
+            state["editing"] = False
         return index + 1
     if name in LONG_REQUIRED_VALUES:
         value, next_index = take_value(tokens, index, f"--{name_text}", attached_value)
@@ -277,6 +317,8 @@ def apply_long_option(tokens, index, state, heredocs):
         return next_index
     if attached_value is not None and name not in {"gpg-sign", "untracked-files"}:
         raise MessageSourceError(f"--{name_text} does not accept a value")
+    if name == "edit":
+        state["editing"] = True
     return index + 1
 
 
@@ -297,6 +339,8 @@ def apply_short_options(tokens, index, state, heredocs):
     while position < len(cluster):
         option = cluster[position]
         if option in SHORT_FLAGS:
+            if option == "e":
+                state["editing"] = True
             position += 1
             continue
         if option in {"m", "F", "c", "C", "t", "U"}:
@@ -317,7 +361,7 @@ def apply_short_options(tokens, index, state, heredocs):
     return index + 1
 
 
-def configured_cleanup(cwd):
+def configured_cleanup(cwd, default_mode):
     """Read commit.cleanup without invoking a shell."""
     try:
         result = subprocess.run(
@@ -330,11 +374,11 @@ def configured_cleanup(cwd):
     except (OSError, subprocess.SubprocessError) as exc:  # noqa: writing-tests-5 handler exercised by ticket_required.test.sh
         raise MessageSourceError(f"commit.cleanup cannot be read safely: {exc}") from exc
     if result.returncode == 1:
-        return "whitespace"
+        return default_mode
     if result.returncode != 0:
         raise MessageSourceError("commit.cleanup cannot be read safely")
     values = [line.strip() for line in result.stdout.splitlines() if line.strip()]
-    return values[-1] if values else "whitespace"
+    return values[-1] if values else default_mode
 
 
 def strip_space(lines):
@@ -374,7 +418,13 @@ def resolve(command, cwd):
     if tokens is None:
         return None
 
-    state = {"messages": [], "file": None, "trailers": [], "cleanup": None}
+    state = {
+        "messages": [],
+        "file": None,
+        "trailers": [],
+        "cleanup": None,
+        "editing": False,
+    }
     index = 2
     while index < len(tokens):
         token = tokens[index]
@@ -397,7 +447,14 @@ def resolve(command, cwd):
     else:
         raise MessageSourceError("direct git commit has no modeled message source")
 
-    mode = state["cleanup"] if state["cleanup"] is not None else configured_cleanup(cwd)
+    default_mode = "strip" if state["editing"] else "whitespace"
+    mode = (
+        state["cleanup"]
+        if state["cleanup"] is not None
+        else configured_cleanup(cwd, default_mode)
+    )
+    if mode.strip().lower() == "default":
+        mode = default_mode
     message = cleanup_message(message, mode)
     if state["trailers"]:
         suffix = "\n".join(state["trailers"])

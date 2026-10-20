@@ -95,6 +95,74 @@ EOF
 )" --author='Refs: #994 <test@example.com>'
 COMMAND
 )
+HEREDOC_EOF_MENTION_TICKETED=$(cat <<'COMMAND'
+git commit --allow-empty -m "$(cat <<'EOF'
+subject
+
+This body mentions EOF without ending it.
+Refs: #994
+EOF
+)"
+COMMAND
+)
+HEREDOC_EOF_MENTION_TICKETLESS=$(cat <<'COMMAND'
+git commit --allow-empty -m "$(cat <<'EOF'
+subject only mentions EOF inline
+EOF
+)" --author='Refs: #994 <test@example.com>'
+COMMAND
+)
+HEREDOC_UNQUOTED_TICKETED=$(cat <<'COMMAND'
+git commit --allow-empty -m "$(cat <<EOF
+subject
+
+Refs: #994
+EOF
+)"
+COMMAND
+)
+HEREDOC_TAB_TICKETED=$(cat <<'COMMAND'
+git commit --allow-empty -m "$(cat <<-'EOF'
+	subject
+	Refs: #994
+	EOF
+)"
+COMMAND
+)
+HEREDOC_TAB_TICKETLESS=$(cat <<'COMMAND'
+git commit --allow-empty -m "$(cat <<-'EOF'
+	subject only
+	EOF
+)" --author='Refs: #994 <test@example.com>'
+COMMAND
+)
+HEREDOC_FIRST_TERMINATOR=$(cat <<'COMMAND'
+git commit --allow-empty -m "$(cat <<'EOF'
+subject only
+EOF
+Refs: #994
+EOF
+)"
+COMMAND
+)
+HEREDOC_FIRST_TERMINATOR_TRUE=$(cat <<'COMMAND'
+git commit --allow-empty -m "$(cat <<'EOF'
+subject only
+EOF
+true Refs: #994
+EOF
+)"
+COMMAND
+)
+HEREDOC_INDENTED_DELIMITER=$(cat <<'COMMAND'
+git commit --allow-empty -m "$(cat <<'EOF'
+subject
+  EOF
+Refs: #994
+EOF
+)"
+COMMAND
+)
 
 # --- BLOCKS: no ticket reference ---
 
@@ -157,6 +225,25 @@ expect_block "(model17) clustered -am ignores incidental author" "$HOOK" \
 expect_block_because "(model18) direct commit without modeled source fails closed" "$HOOK" \
     "$(make_payload 'git commit --author="Refs: #994 <test@example.com>"')" \
     "no modeled message source"
+expect_pass "(model19) inline EOF mention stays inside quoted heredoc body" "$HOOK" \
+    "$(make_payload "$HEREDOC_EOF_MENTION_TICKETED")"
+expect_block "(model20) ticketless inline EOF mention ignores incidental author" "$HOOK" \
+    "$(make_payload "$HEREDOC_EOF_MENTION_TICKETLESS")"
+expect_block_because "(model21) unquoted heredoc delimiter fails closed" "$HOOK" \
+    "$(make_payload "$HEREDOC_UNQUOTED_TICKETED")" \
+    "unquoted heredoc delimiter"
+expect_pass "(model22) quoted tab-stripping heredoc resolves ticketed body" "$HOOK" \
+    "$(make_payload "$HEREDOC_TAB_TICKETED")"
+expect_block "(model23) quoted tab-stripping ticketless body ignores author" "$HOOK" \
+    "$(make_payload "$HEREDOC_TAB_TICKETLESS")"
+expect_block_because "(model24) text after first heredoc terminator fails closed" "$HOOK" \
+    "$(make_payload "$HEREDOC_FIRST_TERMINATOR")" \
+    "text after the first heredoc terminator"
+expect_block_because "(model25) command after first heredoc terminator fails closed" "$HOOK" \
+    "$(make_payload "$HEREDOC_FIRST_TERMINATOR_TRUE")" \
+    "text after the first heredoc terminator"
+expect_pass "(model26) space-indented delimiter text remains in ticketed body" "$HOOK" \
+    "$(make_payload "$HEREDOC_INDENTED_DELIMITER")"
 
 # --- FILE MESSAGE SOURCES: paired allow/deny and fail-closed errors ---
 
@@ -263,6 +350,10 @@ expect_pass "(parse23) last cleanup option whitespace preserves comment ticket" 
     "$(make_payload 'git commit -m "subject" -m "#994" --cleanup=strip --cleanup=whitespace')"
 expect_block "(parse24) last cleanup option strip removes comment ticket" "$HOOK" \
     "$(make_payload 'git commit -m "subject" -m "#994" --cleanup=whitespace --cleanup=strip')"
+expect_block "(parse25) -e defaults cleanup to strip with no-op editor" "$HOOK" \
+    "$(make_payload 'git commit -e -m "subject only" -m "#994"')"
+expect_pass "(parse26) --edit default strip preserves non-comment ticket" "$HOOK" \
+    "$(make_payload 'git commit --edit -m "subject" -m "Refs: #994"')"
 
 # --- ALLOWS: GitHub/GitLab style ---
 

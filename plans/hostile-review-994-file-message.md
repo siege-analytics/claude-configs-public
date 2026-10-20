@@ -47,16 +47,33 @@ The gate also required README/CHANGELOG claims and the self-review record to mat
 - Direct literal `git commit` now fails closed when its message cannot be modeled; legacy argv fallback remains only for non-direct dispatch shapes outside #994.
 - Raw quote-aware scanning handles word-start Bash comments, literal multiline/single-quoted shell characters, and rejects unmodeled expansion. A bounded parser preserves the canonical quoted-delimiter heredoc body.
 - The option model resolves `--message` and unambiguous prefixes, clustered `-am`, value-taking options, trailers, and CLI/configured `strip` or `scissors` cleanup. Message-producing options outside the model fail closed.
-- The expanded real-hook suite passes 106/106, including every B1/B2 deny reproduction, paired allows, and three real-Git cleanup ordering/scissors regressions; the 15 read controls remain included.
-- The rejected-head reviewer's isolated real-Git differential harness was rerun against the rework. Every F1-F7 and G1-G8 blocker row reports `pr_correct=true`, all 15 reads remain allowed, and only the directed follow-ups remain mismatches.
-- `bin/review-risk-metrics.py` regenerated the single stale `policy_characters` field, and the check passes.
-- Canonical main was merged into the feature with a normal merge commit after CI required it. The PR diff against develop remained the same nine #994 paths.
-- README and CHANGELOG now state the modeled forms, 1 MiB regular-file bound, cleanup/trailer behavior, fail-closed boundary, and deferred dispatch/editor scope.
+- The expanded real-hook suite passed 106/106, including every B1/B2 deny reproduction, paired allows, and three real-Git cleanup ordering/scissors regressions; the 15 read controls remained included.
+- The rejected-head reviewer's isolated real-Git differential harness was rerun against the rework. Every F1-F7 and G1-G8 blocker row reported `pr_correct=true`, all 15 reads remained allowed, and only the directed follow-ups remained mismatches.
+- `bin/review-risk-metrics.py` regenerated the single stale `policy_characters` field, and the check passed.
+- Canonical main was merged into the feature with a normal merge commit after CI required it. The PR diff against develop remained limited to the expected #994 paths.
+- README and CHANGELOG now state the modeled forms, bounded regular-file behavior, known large-multiline fail-closed limit, cleanup/trailer behavior, and deferred dispatch/editor scope.
+
+## Exact PR-head review at 3c9f2188
+
+The required gate returned **REJECT** against `3c9f2188f9ec0b7f44120a81f75132636845097a`. It confirmed B1-B4 no longer reproduced, acceptance remained intact, metrics were current, and topology passed. One new blocker remained:
+
+- **N1 first-terminator fail-open:** the heredoc regex backtracked past Bash's first standalone `EOF` to a later `EOF` followed by `)"`. For `git commit --allow-empty -m "$(cat <<'EOF' ... subject only ... EOF ... Refs: #994 ... EOF ... )"`, the hook allowed while Git recorded only `subject only`.
+
+The review tracked custom comment cleanup, editor-default cleanup, and the existing parse18 scissors semantics as #1112 work. The hub authorized folding only editor-default cleanup (FU-B) into the N1 commit; FU-A and T9 remain deferred.
+
+## N1 and FU-B rework after 3c9f2188
+
+- A line scanner now commits to the first delimiter-only line instead of allowing regex backtracking.
+- Quoted delimiters remain literal. Unquoted delimiters fail closed because body expansion is outside the model.
+- Quoted `<<-` strips leading tabs from body and terminator lines like Bash.
+- The terminator must be followed immediately by `)"`; any other remainder fails closed.
+- `-e` and `--edit` select Git's default `strip` cleanup unless CLI or repository cleanup configuration overrides it.
+- Eight heredoc allow/deny fixtures cover both reviewer variants, an indented delimiter line, inline `EOF` text, quoted versus unquoted delimiters, and tab stripping. Two edit-cleanup fixtures provide the deny/allow pair. The focused suite passes 116/116.
 
 ## Current verdict
 
-Both reviewed heads remain rejected: `b37aaebc7b0026b0350bd1ae7f2fe489303eb9c2` is NEEDS_REWORK and `a857c0ef63dd305f050192051a0339c4596737d9` is REJECT.
+All reviewed heads remain rejected: `b37aaebc7b0026b0350bd1ae7f2fe489303eb9c2` is NEEDS_REWORK; `a857c0ef63dd305f050192051a0339c4596737d9` and `3c9f2188f9ec0b7f44120a81f75132636845097a` are REJECT.
 
-The rework above has author-side evidence only. No independent reviewer has verified the next pushed PR head, and this artifact makes no PASS claim for it. The `Review #994 alias and command parsing` gate must run again at that exact head before merge consideration.
+The N1/FU-B rework has author-side evidence only. No independent reviewer has verified the next pushed PR head, and this artifact makes no PASS claim for it. The hub will brief `Review #994 alias and command parsing` at the exact new remote head before merge consideration.
 
-Residual scope: `-qF`, tilde expansion, large-message pipe behavior, compound `cd &&`, editor mutation, #1107 dispatch, and the pre-existing amend/no-edit skip remain follow-up work as directed by the exact-head review.
+Residual scope: FU-A/T2 and T9 remain tracked in #1112. `-qF`, tilde expansion, large-message pipe behavior, compound `cd &&`, editor mutation, #1107 dispatch, and the pre-existing amend/no-edit skip remain follow-up work as directed by the reviews.
