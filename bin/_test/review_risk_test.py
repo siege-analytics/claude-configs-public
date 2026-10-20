@@ -52,6 +52,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/after-image.py",
  "hooks/lib/artifact-casefold-candidate.py",
  "hooks/lib/canonical-path.py",
+ "hooks/lib/commit-message-source.py",
  "hooks/lib/detect-host.sh",
  "hooks/lib/extract-json.py",
  "hooks/lib/gate-registry.sh",
@@ -186,6 +187,7 @@ hooks/git/test-guard.sh|hooks/lib/extract-json.py
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py
 hooks/git/ticket-required.sh|hooks/lib/command-text.sh
+hooks/git/ticket-required.sh|hooks/lib/commit-message-source.py
 hooks/git/ticket-required.sh|hooks/lib/scope-check.sh
 hooks/git/vergil-quote.sh|hooks/lib/extract-json.py
 hooks/infrastructure/catalog-guard.sh|hooks/lib/extract-json.py
@@ -208,8 +210,8 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "7cb2f091cbddc425598893c82170570f48125b8d83ff0a2865ff04aca7ea1aab"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "ad9c5491ba6f46ae87cf08bfc3fe8af92b90d641c4c5c49ad7d1da00ad04318c"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "6dd6da987f2313115356a7a1ab9cbd100ce3cae98b173f73d6f0f14416a020d6"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "c7060ef70aecbf8aa683bbdd80b1f75afdaa372ed6b2a1c60584e88180fa2e29"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
@@ -233,7 +235,8 @@ hooks/git/survey-context.sh|hooks/lib/extract-json.py|2
 hooks/git/test-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/test-guard.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py|2
-hooks/git/ticket-required.sh|hooks/lib/extract-json.py|2
+hooks/git/ticket-required.sh|hooks/lib/extract-json.py|3
+hooks/git/ticket-required.sh|hooks/lib/commit-message-source.py|1
 hooks/git/vergil-quote.sh|hooks/lib/extract-json.py|1
 hooks/resolver/branch-state-guard.sh|hooks/lib/log-block.sh|1
 hooks/resolver/ca-enforcement-gate.sh|hooks/lib/gate-registry.sh|1

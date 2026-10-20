@@ -12,7 +12,7 @@ behavior; the skill explains the correct behavior.
 | Hook | Enforces | Blocks |
 |------|----------|--------|
 | `git/branch-guard.sh` | develop-guard, branch, commit (step 0) | Commits to main, develop, master, staging |
-| `git/ticket-required.sh` | commit (ticket enforcement) | Commits without a ticket reference |
+| `git/ticket-required.sh` | commit (ticket enforcement) | Direct literal commits whose effective `-m` or `-F`/`--file` message lacks a ticket reference; recognized missing or unreadable file sources fail closed |
 | `git/no-attribution.sh` | commit (attribution policy), all CLAUDE.md | Commits with AI/agent attribution |
 | `git/no-sensitive-files.sh` | commit (sensitive files) | Staging .env, credentials, keys |
 | `git/no-broad-staging.sh` | commit (staging patterns) | `git add -A`, `git add .`, `git add --all` |

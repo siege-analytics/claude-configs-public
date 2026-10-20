@@ -16,6 +16,10 @@ The release notes for v3.5.74 come from this section. Everything under [Unreleas
 
 ## [Unreleased]
 
+### Fixed
+
+- **File-backed commit messages use their effective contents for ticket enforcement (#994).** The ticket hook now resolves direct literal `-m`, `-F <file>`, `--file <file>`, and `--file=<file>` sources after its existing fast skip and command detector. Ticketed files are accepted; ticketless, missing, unreadable, non-regular, mixed, and stdin file sources fail closed. Alias, wrapper, expansion, and dynamic-dispatch handling remains tracked in #1107.
+
 ### Changed: task-keyed, proportional task gates (#1051, #1086)
 
 - **Gates are per task, not per session.** Each task's think gate lives in `$CRAFT_SESSION_DIR/tasks/<task-slug>/` and governs only the paths in its `scope_paths`. A mutation is authorized only by the `implementing` gate that owns its targets. One task's gate never blocks another task's reads or mutations, or another agent's.

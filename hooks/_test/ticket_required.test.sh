@@ -16,8 +16,31 @@ HOOK="$REPO_ROOT/hooks/git/ticket-required.sh"
 # shellcheck source=./run_scenarios.sh
 source "$SCRIPT_DIR/run_scenarios.sh"
 
+TMP=$(mktemp -d)
+trap 'chmod -R u+rwX "$TMP" 2>/dev/null || true; rm -rf "$TMP"' EXIT
+FIXTURE="$TMP/repo with spaces"
+mkdir -p "$FIXTURE/message-dir"
+git -C "$FIXTURE" init -q
+git -C "$FIXTURE" remote add origin git@github.com:siege-analytics/ticket-fixture.git
+printf 'file subject\n\nRefs: #994\n' > "$FIXTURE/ticketed message.txt"
+printf 'file subject without reference\n' > "$FIXTURE/no-ticket.txt"
+printf 'filename token is incidental\n' > "$FIXTURE/incidental-#994.txt"
+printf 'unreadable Refs: #994\n' > "$FIXTURE/unreadable.txt"
+chmod 000 "$FIXTURE/unreadable.txt"
+mkfifo "$FIXTURE/message-fifo"
+
 make_payload() {
-    jq -n --arg cmd "$1" '{"tool_input":{"command":$cmd}}'
+    local command="$1"
+    local cwd="${2:-$FIXTURE}"
+    jq -n --arg cmd "$command" --arg cwd "$cwd" \
+        '{"cwd":$cwd,"tool_input":{"command":$cmd,"cwd":$cwd}}'
+}
+
+make_top_level_cwd_payload() {
+    local command="$1"
+    local cwd="${2:-$FIXTURE}"
+    jq -n --arg cmd "$command" --arg cwd "$cwd" \
+        '{"cwd":$cwd,"tool_input":{"command":$cmd}}'
 }
 
 # --- BLOCKS: no ticket reference ---
@@ -26,6 +49,55 @@ expect_block "(a) bare commit, no ticket" "$HOOK" \
     "$(make_payload 'git commit -m "fix: typo in readme"')"
 expect_block "(b) descriptive message, still no ticket" "$HOOK" \
     "$(make_payload 'git commit -m "refactor: extract helper for boundary lookup"')"
+expect_block "(b2) incidental ticket in author does not satisfy -m" "$HOOK" \
+    "$(make_payload 'git commit --author="Refs: #994 <test@example.com>" -m "subject only"')"
+expect_block "(b2a) incidental ticket in pathspec does not satisfy -m" "$HOOK" \
+    "$(make_payload 'git commit -m "subject only" -- path-#994.txt')"
+expect_pass "(b3) repeated -m paragraphs use effective message" "$HOOK" \
+    "$(make_payload 'git commit -m "subject" -m "Refs: #994"')"
+expect_pass "(b4) attached -m uses effective message" "$HOOK" \
+    "$(make_payload 'git commit -mRefs:#994')"
+
+# --- FILE MESSAGE SOURCES: paired allow/deny and fail-closed errors ---
+
+expect_pass "(f1) -F relative ticketed file" "$HOOK" \
+    "$(make_payload 'git commit -F "ticketed message.txt"')"
+expect_block "(f2) -F relative ticketless file" "$HOOK" \
+    "$(make_payload 'git commit -F no-ticket.txt')"
+expect_pass "(f3) --file relative ticketed file" "$HOOK" \
+    "$(make_payload 'git commit --file "ticketed message.txt"')"
+expect_block "(f4) --file relative ticketless file" "$HOOK" \
+    "$(make_payload 'git commit --file no-ticket.txt')"
+expect_pass "(f5) --file= relative ticketed file" "$HOOK" \
+    "$(make_payload 'git commit --file="ticketed message.txt"')"
+expect_block "(f6) --file= relative ticketless file" "$HOOK" \
+    "$(make_payload 'git commit --file=no-ticket.txt')"
+expect_pass "(f7) attached -F relative ticketed file" "$HOOK" \
+    "$(make_payload 'git commit -F"ticketed message.txt"')"
+expect_block "(f7a) attached -F relative ticketless file" "$HOOK" \
+    "$(make_payload 'git commit -Fno-ticket.txt')"
+expect_block "(f8) ticket in filename does not satisfy ticketless file" "$HOOK" \
+    "$(make_payload 'git commit -F "incidental-#994.txt"')"
+expect_pass "(f9) top-level cwd fallback resolves file" "$HOOK" \
+    "$(make_top_level_cwd_payload 'git commit -F "ticketed message.txt"')"
+expect_block_because "(f10) missing file denies" "$HOOK" \
+    "$(make_payload 'git commit -F missing.txt')" \
+    "message file is not readable"
+expect_block_because "(f11) unreadable file denies" "$HOOK" \
+    "$(make_payload 'git commit -F unreadable.txt')" \
+    "message file is not readable"
+expect_block_because "(f12) directory source denies" "$HOOK" \
+    "$(make_payload 'git commit -F message-dir')" \
+    "not a regular file"
+expect_block_because "(f13) FIFO source denies without reading" "$HOOK" \
+    "$(make_payload 'git commit -F message-fifo')" \
+    "not a regular file"
+expect_block_because "(f14) stdin file source is outside narrow scope" "$HOOK" \
+    "$(make_payload 'git commit -F -')" \
+    "outside the narrow #994 scope"
+expect_block_because "(f15) mixed -m and file source denies" "$HOOK" \
+    "$(make_payload 'git commit -m "Refs: #994" -F no-ticket.txt')" \
+    "cannot be combined"
 
 # --- ALLOWS: GitHub/GitLab style ---
 
@@ -92,6 +164,38 @@ expect_pass "(s) git status (not a commit)" "$HOOK" \
     "$(make_payload 'git status')"
 expect_pass "(t) git push (not a commit)" "$HOOK" \
     "$(make_payload 'git push origin develop')"
+
+# Finding #7 regression matrix: routine reads must stay outside message parsing.
+expect_pass "(read1) git diff tilde revision" "$HOOK" \
+    "$(make_payload 'git diff HEAD~1')"
+expect_pass "(read2) git log revision range" "$HOOK" \
+    "$(make_payload 'git log --oneline HEAD~1..HEAD')"
+expect_pass "(read3) git show reflog expression" "$HOOK" \
+    "$(make_payload 'git show HEAD@{0} --stat')"
+expect_pass "(read4) workflow glob" "$HOOK" \
+    "$(make_payload 'ls .github/workflows/*.yml')"
+expect_pass "(read5) home gitconfig" "$HOOK" \
+    "$(make_payload 'cat ~/.gitconfig')"
+expect_pass "(read6) expanded HOME path containing git" "$HOOK" \
+    "$(make_payload 'echo $HOME/git')"
+expect_pass "(read7) newline-separated git reads" "$HOOK" \
+    "$(make_payload $'git status\ngit log -1 --oneline')"
+expect_pass "(read8) piped git status" "$HOOK" \
+    "$(make_payload 'git status --short | cat')"
+expect_pass "(read9) printf HOME" "$HOOK" \
+    "$(make_payload 'printf '\''%s\\n'\'' "${HOME}"')"
+expect_pass "(read10) literal cd then status" "$HOOK" \
+    "$(make_payload "cd '$FIXTURE' && git status")"
+expect_pass "(read11) expanded cd then ls" "$HOOK" \
+    "$(make_payload 'cd "$HOME" && ls')"
+expect_pass "(read12) expanded cd then status" "$HOOK" \
+    "$(make_payload 'cd "$HOME" && git status')"
+expect_pass "(read13) caret revision" "$HOOK" \
+    "$(make_payload 'git diff HEAD^ --stat')"
+expect_pass "(read14) plain status" "$HOOK" \
+    "$(make_payload 'git status')"
+expect_pass "(read15) plain log" "$HOOK" \
+    "$(make_payload 'git log -1 --oneline')"
 
 # --- ALLOWS: amend/merge commits (skip enforcement) ---
 
