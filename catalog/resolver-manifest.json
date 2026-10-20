@@ -1,0 +1,3992 @@
+{
+  "explicit_stacks": {
+    "django-rest-framework": [
+      "coding",
+      "django",
+      "python"
+    ],
+    "rust": [
+      "coding"
+    ],
+    "typescript": [
+      "coding"
+    ]
+  },
+  "kernel": "skills/KERNEL.md",
+  "known": {
+    "analysis": {
+      "characters": 4019,
+      "estimated_tokens": 1005,
+      "kind": "skill",
+      "package_path": "skills/analysis/SKILL.md",
+      "slug": "analysis",
+      "source_path": "skills/analysis/SKILL.md"
+    },
+    "api-integration": {
+      "characters": 9809,
+      "estimated_tokens": 2453,
+      "kind": "skill",
+      "package_path": "skills/api-integration/SKILL.md",
+      "slug": "api-integration",
+      "source_path": "skills/api-integration/SKILL.md"
+    },
+    "architecture-patterns": {
+      "characters": 2482,
+      "estimated_tokens": 621,
+      "kind": "rule",
+      "package_path": "skills/_architecture-patterns-rules.md",
+      "slug": "architecture-patterns",
+      "source_path": "skills/_architecture-patterns-rules.md"
+    },
+    "authoring-against-state": {
+      "characters": 57691,
+      "estimated_tokens": 14423,
+      "kind": "rule",
+      "package_path": "skills/_authoring-against-state-rules.md",
+      "slug": "authoring-against-state",
+      "source_path": "skills/_authoring-against-state-rules.md"
+    },
+    "autonomy": {
+      "characters": 11561,
+      "estimated_tokens": 2891,
+      "kind": "rule",
+      "package_path": "skills/_autonomy-rules.md",
+      "slug": "autonomy",
+      "source_path": "skills/_autonomy-rules.md"
+    },
+    "branch": {
+      "characters": 6751,
+      "estimated_tokens": 1688,
+      "kind": "skill",
+      "package_path": "skills/branch/SKILL.md",
+      "slug": "branch",
+      "source_path": "skills/branch/SKILL.md"
+    },
+    "cascading-documentation": {
+      "characters": 20181,
+      "estimated_tokens": 5046,
+      "kind": "skill",
+      "package_path": "skills/cascading-documentation/SKILL.md",
+      "slug": "cascading-documentation",
+      "source_path": "skills/cascading-documentation/SKILL.md"
+    },
+    "ci-billing-failure-merge": {
+      "characters": 3189,
+      "estimated_tokens": 798,
+      "kind": "skill",
+      "package_path": "skills/ci-billing-failure-merge/SKILL.md",
+      "slug": "ci-billing-failure-merge",
+      "source_path": "skills/ci-billing-failure-merge/SKILL.md"
+    },
+    "close-ticket": {
+      "characters": 6651,
+      "estimated_tokens": 1663,
+      "kind": "skill",
+      "package_path": "skills/close-ticket/SKILL.md",
+      "slug": "close-ticket",
+      "source_path": "skills/close-ticket/SKILL.md"
+    },
+    "code-review": {
+      "characters": 24158,
+      "estimated_tokens": 6040,
+      "kind": "skill",
+      "package_path": "skills/code-review/SKILL.md",
+      "slug": "code-review",
+      "source_path": "skills/code-review/SKILL.md"
+    },
+    "coderabbit-response": {
+      "characters": 9055,
+      "estimated_tokens": 2264,
+      "kind": "skill",
+      "package_path": "skills/coderabbit-response/SKILL.md",
+      "slug": "coderabbit-response",
+      "source_path": "skills/coderabbit-response/SKILL.md"
+    },
+    "coding": {
+      "characters": 5149,
+      "estimated_tokens": 1288,
+      "kind": "skill",
+      "package_path": "skills/coding/SKILL.md",
+      "slug": "coding",
+      "source_path": "skills/coding/SKILL.md"
+    },
+    "commit": {
+      "characters": 20438,
+      "estimated_tokens": 5110,
+      "kind": "skill",
+      "package_path": "skills/commit/SKILL.md",
+      "slug": "commit",
+      "source_path": "skills/commit/SKILL.md"
+    },
+    "compound": {
+      "characters": 4882,
+      "estimated_tokens": 1221,
+      "kind": "skill",
+      "package_path": "skills/compound/SKILL.md",
+      "slug": "compound",
+      "source_path": "skills/compound/SKILL.md"
+    },
+    "consolidate": {
+      "characters": 4443,
+      "estimated_tokens": 1111,
+      "kind": "skill",
+      "package_path": "skills/consolidate/SKILL.md",
+      "slug": "consolidate",
+      "source_path": "skills/consolidate/SKILL.md"
+    },
+    "create-pr": {
+      "characters": 14592,
+      "estimated_tokens": 3648,
+      "kind": "skill",
+      "package_path": "skills/create-pr/SKILL.md",
+      "slug": "create-pr",
+      "source_path": "skills/create-pr/SKILL.md"
+    },
+    "create-ticket": {
+      "characters": 14544,
+      "estimated_tokens": 3636,
+      "kind": "skill",
+      "package_path": "skills/create-ticket/SKILL.md",
+      "slug": "create-ticket",
+      "source_path": "skills/create-ticket/SKILL.md"
+    },
+    "cross-review": {
+      "characters": 12045,
+      "estimated_tokens": 3012,
+      "kind": "skill",
+      "package_path": "skills/cross-review/SKILL.md",
+      "slug": "cross-review",
+      "source_path": "skills/cross-review/SKILL.md"
+    },
+    "data-trust": {
+      "characters": 4219,
+      "estimated_tokens": 1055,
+      "kind": "rule",
+      "package_path": "skills/_data-trust-rules.md",
+      "slug": "data-trust",
+      "source_path": "skills/_data-trust-rules.md"
+    },
+    "databricks": {
+      "characters": 9694,
+      "estimated_tokens": 2424,
+      "kind": "skill",
+      "package_path": "skills/databricks/SKILL.md",
+      "slug": "databricks",
+      "source_path": "skills/databricks/SKILL.md"
+    },
+    "decision-to-ticket": {
+      "characters": 10997,
+      "estimated_tokens": 2750,
+      "kind": "skill",
+      "package_path": "skills/decision-to-ticket/SKILL.md",
+      "slug": "decision-to-ticket",
+      "source_path": "skills/decision-to-ticket/SKILL.md"
+    },
+    "definition-of-done": {
+      "characters": 10092,
+      "estimated_tokens": 2523,
+      "kind": "rule",
+      "package_path": "skills/_definition-of-done-rules.md",
+      "slug": "definition-of-done",
+      "source_path": "skills/_definition-of-done-rules.md"
+    },
+    "detect-ai-fingerprints": {
+      "characters": 21478,
+      "estimated_tokens": 5370,
+      "kind": "skill",
+      "package_path": "skills/detect-ai-fingerprints/SKILL.md",
+      "slug": "detect-ai-fingerprints",
+      "source_path": "skills/detect-ai-fingerprints/SKILL.md"
+    },
+    "develop-guard": {
+      "characters": 14561,
+      "estimated_tokens": 3641,
+      "kind": "skill",
+      "package_path": "skills/develop-guard/SKILL.md",
+      "slug": "develop-guard",
+      "source_path": "skills/develop-guard/SKILL.md"
+    },
+    "distill-lessons": {
+      "characters": 6610,
+      "estimated_tokens": 1653,
+      "kind": "skill",
+      "package_path": "skills/distill-lessons/SKILL.md",
+      "slug": "distill-lessons",
+      "source_path": "skills/distill-lessons/SKILL.md"
+    },
+    "django": {
+      "characters": 11817,
+      "estimated_tokens": 2955,
+      "kind": "skill",
+      "package_path": "skills/django/SKILL.md",
+      "slug": "django",
+      "source_path": "skills/django/SKILL.md"
+    },
+    "django-rest-framework": {
+      "characters": 8941,
+      "estimated_tokens": 2236,
+      "kind": "skill",
+      "package_path": "skills/django-rest-framework/SKILL.md",
+      "slug": "django-rest-framework",
+      "source_path": "skills/django-rest-framework/SKILL.md"
+    },
+    "drive-while-away": {
+      "characters": 24161,
+      "estimated_tokens": 6041,
+      "kind": "skill",
+      "package_path": "skills/drive-while-away/SKILL.md",
+      "slug": "drive-while-away",
+      "source_path": "skills/drive-while-away/SKILL.md"
+    },
+    "duckdb-spatial": {
+      "characters": 6995,
+      "estimated_tokens": 1749,
+      "kind": "skill",
+      "package_path": "skills/duckdb-spatial/SKILL.md",
+      "slug": "duckdb-spatial",
+      "source_path": "skills/duckdb-spatial/SKILL.md"
+    },
+    "enforcement-contradiction": {
+      "characters": 13725,
+      "estimated_tokens": 3432,
+      "kind": "rule",
+      "package_path": "skills/_enforcement-contradiction-rules.md",
+      "slug": "enforcement-contradiction",
+      "source_path": "skills/_enforcement-contradiction-rules.md"
+    },
+    "engagement-post-mortem": {
+      "characters": 27189,
+      "estimated_tokens": 6798,
+      "kind": "skill",
+      "package_path": "skills/engagement-post-mortem/SKILL.md",
+      "slug": "engagement-post-mortem",
+      "source_path": "skills/engagement-post-mortem/SKILL.md"
+    },
+    "environment-preflight": {
+      "characters": 6606,
+      "estimated_tokens": 1652,
+      "kind": "rule",
+      "package_path": "skills/_environment-preflight-rules.md",
+      "slug": "environment-preflight",
+      "source_path": "skills/_environment-preflight-rules.md"
+    },
+    "evaluate-ticket": {
+      "characters": 7953,
+      "estimated_tokens": 1989,
+      "kind": "skill",
+      "package_path": "skills/evaluate-ticket/SKILL.md",
+      "slug": "evaluate-ticket",
+      "source_path": "skills/evaluate-ticket/SKILL.md"
+    },
+    "geopandas": {
+      "characters": 6960,
+      "estimated_tokens": 1740,
+      "kind": "skill",
+      "package_path": "skills/geopandas/SKILL.md",
+      "slug": "geopandas",
+      "source_path": "skills/geopandas/SKILL.md"
+    },
+    "hostile-review": {
+      "characters": 26954,
+      "estimated_tokens": 6739,
+      "kind": "skill",
+      "package_path": "skills/hostile-review/SKILL.md",
+      "slug": "hostile-review",
+      "source_path": "skills/hostile-review/SKILL.md"
+    },
+    "investigate": {
+      "characters": 39733,
+      "estimated_tokens": 9934,
+      "kind": "skill",
+      "package_path": "skills/investigate/SKILL.md",
+      "slug": "investigate",
+      "source_path": "skills/investigate/SKILL.md"
+    },
+    "jvm": {
+      "characters": 4214,
+      "estimated_tokens": 1054,
+      "kind": "rule",
+      "package_path": "skills/_jvm-rules.md",
+      "slug": "jvm",
+      "source_path": "skills/_jvm-rules.md"
+    },
+    "knowledge-base": {
+      "characters": 6461,
+      "estimated_tokens": 1616,
+      "kind": "skill",
+      "package_path": "skills/knowledge-base/SKILL.md",
+      "slug": "knowledge-base",
+      "source_path": "skills/knowledge-base/SKILL.md"
+    },
+    "lessons-learned": {
+      "characters": 7386,
+      "estimated_tokens": 1847,
+      "kind": "skill",
+      "package_path": "skills/lessons-learned/SKILL.md",
+      "slug": "lessons-learned",
+      "source_path": "skills/lessons-learned/SKILL.md"
+    },
+    "library-api-evolution": {
+      "characters": 8245,
+      "estimated_tokens": 2062,
+      "kind": "skill",
+      "package_path": "skills/library-api-evolution/SKILL.md",
+      "slug": "library-api-evolution",
+      "source_path": "skills/library-api-evolution/SKILL.md"
+    },
+    "merge": {
+      "characters": 9604,
+      "estimated_tokens": 2401,
+      "kind": "skill",
+      "package_path": "skills/merge/SKILL.md",
+      "slug": "merge",
+      "source_path": "skills/merge/SKILL.md"
+    },
+    "ops": {
+      "characters": 4230,
+      "estimated_tokens": 1058,
+      "kind": "skill",
+      "package_path": "skills/ops/SKILL.md",
+      "slug": "ops",
+      "source_path": "skills/ops/SKILL.md"
+    },
+    "output": {
+      "characters": 4501,
+      "estimated_tokens": 1126,
+      "kind": "rule",
+      "package_path": "skills/_output-rules.md",
+      "slug": "output",
+      "source_path": "skills/_output-rules.md"
+    },
+    "over-engineering-audit": {
+      "characters": 6977,
+      "estimated_tokens": 1745,
+      "kind": "skill",
+      "package_path": "skills/over-engineering-audit/SKILL.md",
+      "slug": "over-engineering-audit",
+      "source_path": "skills/over-engineering-audit/SKILL.md"
+    },
+    "packaging": {
+      "characters": 2674,
+      "estimated_tokens": 669,
+      "kind": "rule",
+      "package_path": "skills/_packaging-rules.md",
+      "slug": "packaging",
+      "source_path": "skills/_packaging-rules.md"
+    },
+    "pipeline-jobs": {
+      "characters": 5757,
+      "estimated_tokens": 1440,
+      "kind": "skill",
+      "package_path": "skills/pipeline-jobs/SKILL.md",
+      "slug": "pipeline-jobs",
+      "source_path": "skills/pipeline-jobs/SKILL.md"
+    },
+    "post-error-revision": {
+      "characters": 16514,
+      "estimated_tokens": 4129,
+      "kind": "skill",
+      "package_path": "skills/post-error-revision/SKILL.md",
+      "slug": "post-error-revision",
+      "source_path": "skills/post-error-revision/SKILL.md"
+    },
+    "post-mortem": {
+      "characters": 11861,
+      "estimated_tokens": 2966,
+      "kind": "skill",
+      "package_path": "skills/post-mortem/SKILL.md",
+      "slug": "post-mortem",
+      "source_path": "skills/post-mortem/SKILL.md"
+    },
+    "postgis": {
+      "characters": 10063,
+      "estimated_tokens": 2516,
+      "kind": "skill",
+      "package_path": "skills/postgis/SKILL.md",
+      "slug": "postgis",
+      "source_path": "skills/postgis/SKILL.md"
+    },
+    "pr-comments": {
+      "characters": 10479,
+      "estimated_tokens": 2620,
+      "kind": "skill",
+      "package_path": "skills/pr-comments/SKILL.md",
+      "slug": "pr-comments",
+      "source_path": "skills/pr-comments/SKILL.md"
+    },
+    "pre-mortem": {
+      "characters": 16331,
+      "estimated_tokens": 4083,
+      "kind": "skill",
+      "package_path": "skills/pre-mortem/SKILL.md",
+      "slug": "pre-mortem",
+      "source_path": "skills/pre-mortem/SKILL.md"
+    },
+    "pre-work-check": {
+      "characters": 2795,
+      "estimated_tokens": 699,
+      "kind": "skill",
+      "package_path": "skills/pre-work-check/SKILL.md",
+      "slug": "pre-work-check",
+      "source_path": "skills/pre-work-check/SKILL.md"
+    },
+    "principles": {
+      "characters": 2250,
+      "estimated_tokens": 563,
+      "kind": "rule",
+      "package_path": "skills/_principles-rules.md",
+      "slug": "principles",
+      "source_path": "skills/_principles-rules.md"
+    },
+    "property-testing": {
+      "characters": 3257,
+      "estimated_tokens": 815,
+      "kind": "rule",
+      "package_path": "skills/_property-testing-rules.md",
+      "slug": "property-testing",
+      "source_path": "skills/_property-testing-rules.md"
+    },
+    "prospective-memory": {
+      "characters": 9472,
+      "estimated_tokens": 2368,
+      "kind": "rule",
+      "package_path": "skills/_prospective-memory-rules.md",
+      "slug": "prospective-memory",
+      "source_path": "skills/_prospective-memory-rules.md"
+    },
+    "publish-flat-layout": {
+      "characters": 8469,
+      "estimated_tokens": 2118,
+      "kind": "skill",
+      "package_path": "skills/publish-flat-layout/SKILL.md",
+      "slug": "publish-flat-layout",
+      "source_path": "skills/publish-flat-layout/SKILL.md"
+    },
+    "python": {
+      "characters": 6703,
+      "estimated_tokens": 1676,
+      "kind": "skill",
+      "package_path": "skills/python/SKILL.md",
+      "slug": "python",
+      "source_path": "skills/python/SKILL.md"
+    },
+    "python-exceptions": {
+      "characters": 7117,
+      "estimated_tokens": 1780,
+      "kind": "skill",
+      "package_path": "skills/python-exceptions/SKILL.md",
+      "slug": "python-exceptions",
+      "source_path": "skills/python-exceptions/SKILL.md"
+    },
+    "python-patterns": {
+      "characters": 10564,
+      "estimated_tokens": 2641,
+      "kind": "skill",
+      "package_path": "skills/python-patterns/SKILL.md",
+      "slug": "python-patterns",
+      "source_path": "skills/python-patterns/SKILL.md"
+    },
+    "qml-component-review": {
+      "characters": 2337,
+      "estimated_tokens": 585,
+      "kind": "skill",
+      "package_path": "skills/qml-component-review/SKILL.md",
+      "slug": "qml-component-review",
+      "source_path": "skills/qml-component-review/SKILL.md"
+    },
+    "react": {
+      "characters": 11274,
+      "estimated_tokens": 2819,
+      "kind": "skill",
+      "package_path": "skills/react/SKILL.md",
+      "slug": "react",
+      "source_path": "skills/react/SKILL.md"
+    },
+    "robustness": {
+      "characters": 2348,
+      "estimated_tokens": 587,
+      "kind": "rule",
+      "package_path": "skills/_robustness-rules.md",
+      "slug": "robustness",
+      "source_path": "skills/_robustness-rules.md"
+    },
+    "rule-eval-loop": {
+      "characters": 17620,
+      "estimated_tokens": 4405,
+      "kind": "skill",
+      "package_path": "skills/rule-eval-loop/SKILL.md",
+      "slug": "rule-eval-loop",
+      "source_path": "skills/rule-eval-loop/SKILL.md"
+    },
+    "rules-audit": {
+      "characters": 8042,
+      "estimated_tokens": 2011,
+      "kind": "skill",
+      "package_path": "skills/rules-audit/SKILL.md",
+      "slug": "rules-audit",
+      "source_path": "skills/rules-audit/SKILL.md"
+    },
+    "rust": {
+      "characters": 2218,
+      "estimated_tokens": 555,
+      "kind": "rule",
+      "package_path": "skills/_rust-rules.md",
+      "slug": "rust",
+      "source_path": "skills/_rust-rules.md"
+    },
+    "scala-on-spark": {
+      "characters": 3206,
+      "estimated_tokens": 802,
+      "kind": "skill",
+      "package_path": "skills/scala-on-spark/SKILL.md",
+      "slug": "scala-on-spark",
+      "source_path": "skills/scala-on-spark/SKILL.md"
+    },
+    "scipy-spec": {
+      "characters": 2532,
+      "estimated_tokens": 633,
+      "kind": "rule",
+      "package_path": "skills/_scipy-spec-rules.md",
+      "slug": "scipy-spec",
+      "source_path": "skills/_scipy-spec-rules.md"
+    },
+    "scope-expansion": {
+      "characters": 6300,
+      "estimated_tokens": 1575,
+      "kind": "skill",
+      "package_path": "skills/scope-expansion/SKILL.md",
+      "slug": "scope-expansion",
+      "source_path": "skills/scope-expansion/SKILL.md"
+    },
+    "security-scanning": {
+      "characters": 2699,
+      "estimated_tokens": 675,
+      "kind": "rule",
+      "package_path": "skills/_security-scanning-rules.md",
+      "slug": "security-scanning",
+      "source_path": "skills/_security-scanning-rules.md"
+    },
+    "sedona": {
+      "characters": 8668,
+      "estimated_tokens": 2167,
+      "kind": "skill",
+      "package_path": "skills/sedona/SKILL.md",
+      "slug": "sedona",
+      "source_path": "skills/sedona/SKILL.md"
+    },
+    "self-review": {
+      "characters": 71173,
+      "estimated_tokens": 17794,
+      "kind": "skill",
+      "package_path": "skills/self-review/SKILL.md",
+      "slug": "self-review",
+      "source_path": "skills/self-review/SKILL.md"
+    },
+    "session-coordination": {
+      "characters": 22265,
+      "estimated_tokens": 5567,
+      "kind": "rule",
+      "package_path": "skills/_session-coordination-rules.md",
+      "slug": "session-coordination",
+      "source_path": "skills/_session-coordination-rules.md"
+    },
+    "shape-space-audit": {
+      "characters": 12122,
+      "estimated_tokens": 3031,
+      "kind": "skill",
+      "package_path": "skills/shape-space-audit/SKILL.md",
+      "slug": "shape-space-audit",
+      "source_path": "skills/shape-space-audit/SKILL.md"
+    },
+    "shelves": {
+      "characters": 3167,
+      "estimated_tokens": 792,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/SKILL.md",
+      "slug": "shelves",
+      "source_path": "skills/shelves/SKILL.md"
+    },
+    "shelves--37signals-way": {
+      "characters": 24449,
+      "estimated_tokens": 6113,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/team/37signals-way/SKILL.md",
+      "slug": "shelves--37signals-way",
+      "source_path": "skills/shelves/team/37signals-way/SKILL.md"
+    },
+    "shelves--animation-at-work": {
+      "characters": 13620,
+      "estimated_tokens": 3405,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/storytelling/animation-at-work/SKILL.md",
+      "slug": "shelves--animation-at-work",
+      "source_path": "skills/shelves/storytelling/animation-at-work/SKILL.md"
+    },
+    "shelves--blue-ocean-strategy": {
+      "characters": 17526,
+      "estimated_tokens": 4382,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/strategy/blue-ocean-strategy/SKILL.md",
+      "slug": "shelves--blue-ocean-strategy",
+      "source_path": "skills/shelves/strategy/blue-ocean-strategy/SKILL.md"
+    },
+    "shelves--causal-inference-mixtape": {
+      "characters": 10111,
+      "estimated_tokens": 2528,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/statistical-inference/causal-inference-mixtape/SKILL.md",
+      "slug": "shelves--causal-inference-mixtape",
+      "source_path": "skills/shelves/statistical-inference/causal-inference-mixtape/SKILL.md"
+    },
+    "shelves--causal-inference-what-if": {
+      "characters": 9224,
+      "estimated_tokens": 2306,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/statistical-inference/causal-inference-what-if/SKILL.md",
+      "slug": "shelves--causal-inference-what-if",
+      "source_path": "skills/shelves/statistical-inference/causal-inference-what-if/SKILL.md"
+    },
+    "shelves--clean-architecture": {
+      "characters": 20733,
+      "estimated_tokens": 5184,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/clean-architecture/SKILL.md",
+      "slug": "shelves--clean-architecture",
+      "source_path": "skills/shelves/engineering-principles/clean-architecture/SKILL.md"
+    },
+    "shelves--clean-code": {
+      "characters": 19562,
+      "estimated_tokens": 4891,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/clean-code/SKILL.md",
+      "slug": "shelves--clean-code",
+      "source_path": "skills/shelves/engineering-principles/clean-code/SKILL.md"
+    },
+    "shelves--contagious": {
+      "characters": 25741,
+      "estimated_tokens": 6436,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/contagious/SKILL.md",
+      "slug": "shelves--contagious",
+      "source_path": "skills/shelves/marketing/contagious/SKILL.md"
+    },
+    "shelves--continuous-discovery": {
+      "characters": 19366,
+      "estimated_tokens": 4842,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/continuous-discovery/SKILL.md",
+      "slug": "shelves--continuous-discovery",
+      "source_path": "skills/shelves/product/continuous-discovery/SKILL.md"
+    },
+    "shelves--cro-methodology": {
+      "characters": 22720,
+      "estimated_tokens": 5680,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/cro-methodology/SKILL.md",
+      "slug": "shelves--cro-methodology",
+      "source_path": "skills/shelves/marketing/cro-methodology/SKILL.md"
+    },
+    "shelves--crossing-the-chasm": {
+      "characters": 15091,
+      "estimated_tokens": 3773,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/strategy/crossing-the-chasm/SKILL.md",
+      "slug": "shelves--crossing-the-chasm",
+      "source_path": "skills/shelves/strategy/crossing-the-chasm/SKILL.md"
+    },
+    "shelves--data-and-pipelines": {
+      "characters": 1573,
+      "estimated_tokens": 394,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/data-and-pipelines/SKILL.md",
+      "slug": "shelves--data-and-pipelines",
+      "source_path": "skills/shelves/data-and-pipelines/SKILL.md"
+    },
+    "shelves--data-intensive": {
+      "characters": 23688,
+      "estimated_tokens": 5922,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/data-intensive/SKILL.md",
+      "slug": "shelves--data-intensive",
+      "source_path": "skills/shelves/systems-architecture/data-intensive/SKILL.md"
+    },
+    "shelves--data-pipelines": {
+      "characters": 15460,
+      "estimated_tokens": 3865,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/data-and-pipelines/data-pipelines/SKILL.md",
+      "slug": "shelves--data-pipelines",
+      "source_path": "skills/shelves/data-and-pipelines/data-pipelines/SKILL.md"
+    },
+    "shelves--design": {
+      "characters": 1209,
+      "estimated_tokens": 303,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/design/SKILL.md",
+      "slug": "shelves--design",
+      "source_path": "skills/shelves/design/SKILL.md"
+    },
+    "shelves--design-everyday-things": {
+      "characters": 20004,
+      "estimated_tokens": 5001,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/design-everyday-things/SKILL.md",
+      "slug": "shelves--design-everyday-things",
+      "source_path": "skills/shelves/design/design-everyday-things/SKILL.md"
+    },
+    "shelves--design-patterns": {
+      "characters": 15214,
+      "estimated_tokens": 3804,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/design-patterns/SKILL.md",
+      "slug": "shelves--design-patterns",
+      "source_path": "skills/shelves/engineering-principles/design-patterns/SKILL.md"
+    },
+    "shelves--design-sprint": {
+      "characters": 16545,
+      "estimated_tokens": 4137,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/design-sprint/SKILL.md",
+      "slug": "shelves--design-sprint",
+      "source_path": "skills/shelves/product/design-sprint/SKILL.md"
+    },
+    "shelves--django": {
+      "characters": 5680,
+      "estimated_tokens": 1420,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/django/SKILL.md",
+      "slug": "shelves--django",
+      "source_path": "skills/shelves/django/SKILL.md"
+    },
+    "shelves--django-design-patterns": {
+      "characters": 25629,
+      "estimated_tokens": 6408,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/django/django-design-patterns/SKILL.md",
+      "slug": "shelves--django-design-patterns",
+      "source_path": "skills/shelves/django/django-design-patterns/SKILL.md"
+    },
+    "shelves--domain-driven-design": {
+      "characters": 19200,
+      "estimated_tokens": 4800,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/domain-driven-design/SKILL.md",
+      "slug": "shelves--domain-driven-design",
+      "source_path": "skills/shelves/engineering-principles/domain-driven-design/SKILL.md"
+    },
+    "shelves--drive-motivation": {
+      "characters": 16332,
+      "estimated_tokens": 4083,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/team/drive-motivation/SKILL.md",
+      "slug": "shelves--drive-motivation",
+      "source_path": "skills/shelves/team/drive-motivation/SKILL.md"
+    },
+    "shelves--effective-java": {
+      "characters": 13203,
+      "estimated_tokens": 3301,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/effective-java/SKILL.md",
+      "slug": "shelves--effective-java",
+      "source_path": "skills/shelves/languages/effective-java/SKILL.md"
+    },
+    "shelves--effective-kotlin": {
+      "characters": 16405,
+      "estimated_tokens": 4102,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/effective-kotlin/SKILL.md",
+      "slug": "shelves--effective-kotlin",
+      "source_path": "skills/shelves/languages/effective-kotlin/SKILL.md"
+    },
+    "shelves--effective-python": {
+      "characters": 12201,
+      "estimated_tokens": 3051,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/effective-python/SKILL.md",
+      "slug": "shelves--effective-python",
+      "source_path": "skills/shelves/languages/effective-python/SKILL.md"
+    },
+    "shelves--effective-typescript": {
+      "characters": 10317,
+      "estimated_tokens": 2580,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/effective-typescript/SKILL.md",
+      "slug": "shelves--effective-typescript",
+      "source_path": "skills/shelves/languages/effective-typescript/SKILL.md"
+    },
+    "shelves--engineering-principles": {
+      "characters": 4324,
+      "estimated_tokens": 1081,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/engineering-principles/SKILL.md",
+      "slug": "shelves--engineering-principles",
+      "source_path": "skills/shelves/engineering-principles/SKILL.md"
+    },
+    "shelves--geocomputation-with-r": {
+      "characters": 11805,
+      "estimated_tokens": 2952,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/geospatial/geocomputation-with-r/SKILL.md",
+      "slug": "shelves--geocomputation-with-r",
+      "source_path": "skills/shelves/geospatial/geocomputation-with-r/SKILL.md"
+    },
+    "shelves--geospatial": {
+      "characters": 3651,
+      "estimated_tokens": 913,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/geospatial/SKILL.md",
+      "slug": "shelves--geospatial",
+      "source_path": "skills/shelves/geospatial/SKILL.md"
+    },
+    "shelves--high-perf-browser": {
+      "characters": 19690,
+      "estimated_tokens": 4923,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/high-perf-browser/SKILL.md",
+      "slug": "shelves--high-perf-browser",
+      "source_path": "skills/shelves/systems-architecture/high-perf-browser/SKILL.md"
+    },
+    "shelves--high-performance-django": {
+      "characters": 25890,
+      "estimated_tokens": 6473,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/django/high-performance-django/SKILL.md",
+      "slug": "shelves--high-performance-django",
+      "source_path": "skills/shelves/django/high-performance-django/SKILL.md"
+    },
+    "shelves--hooked-ux": {
+      "characters": 19344,
+      "estimated_tokens": 4836,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/hooked-ux/SKILL.md",
+      "slug": "shelves--hooked-ux",
+      "source_path": "skills/shelves/marketing/hooked-ux/SKILL.md"
+    },
+    "shelves--hundred-million-offers": {
+      "characters": 29309,
+      "estimated_tokens": 7328,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/sales/hundred-million-offers/SKILL.md",
+      "slug": "shelves--hundred-million-offers",
+      "source_path": "skills/shelves/sales/hundred-million-offers/SKILL.md"
+    },
+    "shelves--improve-retention": {
+      "characters": 20049,
+      "estimated_tokens": 5013,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/improve-retention/SKILL.md",
+      "slug": "shelves--improve-retention",
+      "source_path": "skills/shelves/product/improve-retention/SKILL.md"
+    },
+    "shelves--influence-psychology": {
+      "characters": 20411,
+      "estimated_tokens": 5103,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/sales/influence-psychology/SKILL.md",
+      "slug": "shelves--influence-psychology",
+      "source_path": "skills/shelves/sales/influence-psychology/SKILL.md"
+    },
+    "shelves--inspired-product": {
+      "characters": 20428,
+      "estimated_tokens": 5107,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/inspired-product/SKILL.md",
+      "slug": "shelves--inspired-product",
+      "source_path": "skills/shelves/product/inspired-product/SKILL.md"
+    },
+    "shelves--ios-hig-design": {
+      "characters": 24657,
+      "estimated_tokens": 6165,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/ios-hig-design/SKILL.md",
+      "slug": "shelves--ios-hig-design",
+      "source_path": "skills/shelves/design/ios-hig-design/SKILL.md"
+    },
+    "shelves--jobs-to-be-done": {
+      "characters": 20770,
+      "estimated_tokens": 5193,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/jobs-to-be-done/SKILL.md",
+      "slug": "shelves--jobs-to-be-done",
+      "source_path": "skills/shelves/product/jobs-to-be-done/SKILL.md"
+    },
+    "shelves--kotlin-in-action": {
+      "characters": 16189,
+      "estimated_tokens": 4048,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/kotlin-in-action/SKILL.md",
+      "slug": "shelves--kotlin-in-action",
+      "source_path": "skills/shelves/languages/kotlin-in-action/SKILL.md"
+    },
+    "shelves--languages": {
+      "characters": 4003,
+      "estimated_tokens": 1001,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/languages/SKILL.md",
+      "slug": "shelves--languages",
+      "source_path": "skills/shelves/languages/SKILL.md"
+    },
+    "shelves--lean-startup": {
+      "characters": 19898,
+      "estimated_tokens": 4975,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/lean-startup/SKILL.md",
+      "slug": "shelves--lean-startup",
+      "source_path": "skills/shelves/product/lean-startup/SKILL.md"
+    },
+    "shelves--lean-ux": {
+      "characters": 19030,
+      "estimated_tokens": 4758,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/lean-ux/SKILL.md",
+      "slug": "shelves--lean-ux",
+      "source_path": "skills/shelves/product/lean-ux/SKILL.md"
+    },
+    "shelves--made-to-stick": {
+      "characters": 17623,
+      "estimated_tokens": 4406,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/made-to-stick/SKILL.md",
+      "slug": "shelves--made-to-stick",
+      "source_path": "skills/shelves/marketing/made-to-stick/SKILL.md"
+    },
+    "shelves--marketing": {
+      "characters": 1260,
+      "estimated_tokens": 315,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/marketing/SKILL.md",
+      "slug": "shelves--marketing",
+      "source_path": "skills/shelves/marketing/SKILL.md"
+    },
+    "shelves--microinteractions": {
+      "characters": 19543,
+      "estimated_tokens": 4886,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/microinteractions/SKILL.md",
+      "slug": "shelves--microinteractions",
+      "source_path": "skills/shelves/design/microinteractions/SKILL.md"
+    },
+    "shelves--microservices-patterns": {
+      "characters": 19673,
+      "estimated_tokens": 4919,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/microservices-patterns/SKILL.md",
+      "slug": "shelves--microservices-patterns",
+      "source_path": "skills/shelves/systems-architecture/microservices-patterns/SKILL.md"
+    },
+    "shelves--mom-test": {
+      "characters": 21794,
+      "estimated_tokens": 5449,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/mom-test/SKILL.md",
+      "slug": "shelves--mom-test",
+      "source_path": "skills/shelves/product/mom-test/SKILL.md"
+    },
+    "shelves--negotiation": {
+      "characters": 24710,
+      "estimated_tokens": 6178,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/sales/negotiation/SKILL.md",
+      "slug": "shelves--negotiation",
+      "source_path": "skills/shelves/sales/negotiation/SKILL.md"
+    },
+    "shelves--obviously-awesome": {
+      "characters": 24799,
+      "estimated_tokens": 6200,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/strategy/obviously-awesome/SKILL.md",
+      "slug": "shelves--obviously-awesome",
+      "source_path": "skills/shelves/strategy/obviously-awesome/SKILL.md"
+    },
+    "shelves--one-page-marketing": {
+      "characters": 30696,
+      "estimated_tokens": 7674,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/one-page-marketing/SKILL.md",
+      "slug": "shelves--one-page-marketing",
+      "source_path": "skills/shelves/marketing/one-page-marketing/SKILL.md"
+    },
+    "shelves--pragmatic-programmer": {
+      "characters": 18550,
+      "estimated_tokens": 4638,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/pragmatic-programmer/SKILL.md",
+      "slug": "shelves--pragmatic-programmer",
+      "source_path": "skills/shelves/engineering-principles/pragmatic-programmer/SKILL.md"
+    },
+    "shelves--predictable-revenue": {
+      "characters": 14779,
+      "estimated_tokens": 3695,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/sales/predictable-revenue/SKILL.md",
+      "slug": "shelves--predictable-revenue",
+      "source_path": "skills/shelves/sales/predictable-revenue/SKILL.md"
+    },
+    "shelves--product": {
+      "characters": 1986,
+      "estimated_tokens": 497,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/product/SKILL.md",
+      "slug": "shelves--product",
+      "source_path": "skills/shelves/product/SKILL.md"
+    },
+    "shelves--programming-with-rust": {
+      "characters": 12296,
+      "estimated_tokens": 3074,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/programming-with-rust/SKILL.md",
+      "slug": "shelves--programming-with-rust",
+      "source_path": "skills/shelves/languages/programming-with-rust/SKILL.md"
+    },
+    "shelves--refactoring-patterns": {
+      "characters": 21460,
+      "estimated_tokens": 5365,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/refactoring-patterns/SKILL.md",
+      "slug": "shelves--refactoring-patterns",
+      "source_path": "skills/shelves/engineering-principles/refactoring-patterns/SKILL.md"
+    },
+    "shelves--refactoring-ui": {
+      "characters": 19837,
+      "estimated_tokens": 4960,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/refactoring-ui/SKILL.md",
+      "slug": "shelves--refactoring-ui",
+      "source_path": "skills/shelves/design/refactoring-ui/SKILL.md"
+    },
+    "shelves--release-it": {
+      "characters": 21091,
+      "estimated_tokens": 5273,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/release-it/SKILL.md",
+      "slug": "shelves--release-it",
+      "source_path": "skills/shelves/systems-architecture/release-it/SKILL.md"
+    },
+    "shelves--rust-in-action": {
+      "characters": 17149,
+      "estimated_tokens": 4288,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/rust-in-action/SKILL.md",
+      "slug": "shelves--rust-in-action",
+      "source_path": "skills/shelves/languages/rust-in-action/SKILL.md"
+    },
+    "shelves--sales": {
+      "characters": 919,
+      "estimated_tokens": 230,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/sales/SKILL.md",
+      "slug": "shelves--sales",
+      "source_path": "skills/shelves/sales/SKILL.md"
+    },
+    "shelves--scorecard-marketing": {
+      "characters": 18293,
+      "estimated_tokens": 4574,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/scorecard-marketing/SKILL.md",
+      "slug": "shelves--scorecard-marketing",
+      "source_path": "skills/shelves/marketing/scorecard-marketing/SKILL.md"
+    },
+    "shelves--software-design-philosophy": {
+      "characters": 21036,
+      "estimated_tokens": 5259,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/software-design-philosophy/SKILL.md",
+      "slug": "shelves--software-design-philosophy",
+      "source_path": "skills/shelves/engineering-principles/software-design-philosophy/SKILL.md"
+    },
+    "shelves--spatial-data-science": {
+      "characters": 10803,
+      "estimated_tokens": 2701,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/geospatial/spatial-data-science/SKILL.md",
+      "slug": "shelves--spatial-data-science",
+      "source_path": "skills/shelves/geospatial/spatial-data-science/SKILL.md"
+    },
+    "shelves--spring-boot-in-action": {
+      "characters": 16789,
+      "estimated_tokens": 4198,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/spring-boot-in-action/SKILL.md",
+      "slug": "shelves--spring-boot-in-action",
+      "source_path": "skills/shelves/languages/spring-boot-in-action/SKILL.md"
+    },
+    "shelves--staff-engineer": {
+      "characters": 11353,
+      "estimated_tokens": 2839,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/team/staff-engineer/SKILL.md",
+      "slug": "shelves--staff-engineer",
+      "source_path": "skills/shelves/team/staff-engineer/SKILL.md"
+    },
+    "shelves--statistical-inference": {
+      "characters": 6631,
+      "estimated_tokens": 1658,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/statistical-inference/SKILL.md",
+      "slug": "shelves--statistical-inference",
+      "source_path": "skills/shelves/statistical-inference/SKILL.md"
+    },
+    "shelves--statistical-rethinking-course": {
+      "characters": 10210,
+      "estimated_tokens": 2553,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/statistical-inference/statistical-rethinking-course/SKILL.md",
+      "slug": "shelves--statistical-rethinking-course",
+      "source_path": "skills/shelves/statistical-inference/statistical-rethinking-course/SKILL.md"
+    },
+    "shelves--storybrand-messaging": {
+      "characters": 20125,
+      "estimated_tokens": 5032,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/storybrand-messaging/SKILL.md",
+      "slug": "shelves--storybrand-messaging",
+      "source_path": "skills/shelves/marketing/storybrand-messaging/SKILL.md"
+    },
+    "shelves--storytelling": {
+      "characters": 2039,
+      "estimated_tokens": 510,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/storytelling/SKILL.md",
+      "slug": "shelves--storytelling",
+      "source_path": "skills/shelves/storytelling/SKILL.md"
+    },
+    "shelves--storytelling-with-data": {
+      "characters": 13163,
+      "estimated_tokens": 3291,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/storytelling/storytelling-with-data/SKILL.md",
+      "slug": "shelves--storytelling-with-data",
+      "source_path": "skills/shelves/storytelling/storytelling-with-data/SKILL.md"
+    },
+    "shelves--strategy": {
+      "characters": 985,
+      "estimated_tokens": 247,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/strategy/SKILL.md",
+      "slug": "shelves--strategy",
+      "source_path": "skills/shelves/strategy/SKILL.md"
+    },
+    "shelves--system-design": {
+      "characters": 19031,
+      "estimated_tokens": 4758,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/system-design/SKILL.md",
+      "slug": "shelves--system-design",
+      "source_path": "skills/shelves/systems-architecture/system-design/SKILL.md"
+    },
+    "shelves--system-design-interview": {
+      "characters": 12892,
+      "estimated_tokens": 3223,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/system-design-interview/SKILL.md",
+      "slug": "shelves--system-design-interview",
+      "source_path": "skills/shelves/systems-architecture/system-design-interview/SKILL.md"
+    },
+    "shelves--systems-architecture": {
+      "characters": 3284,
+      "estimated_tokens": 821,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/systems-architecture/SKILL.md",
+      "slug": "shelves--systems-architecture",
+      "source_path": "skills/shelves/systems-architecture/SKILL.md"
+    },
+    "shelves--team": {
+      "characters": 2353,
+      "estimated_tokens": 589,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/team/SKILL.md",
+      "slug": "shelves--team",
+      "source_path": "skills/shelves/team/SKILL.md"
+    },
+    "shelves--think-stats": {
+      "characters": 8463,
+      "estimated_tokens": 2116,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/statistical-inference/think-stats/SKILL.md",
+      "slug": "shelves--think-stats",
+      "source_path": "skills/shelves/statistical-inference/think-stats/SKILL.md"
+    },
+    "shelves--top-design": {
+      "characters": 38675,
+      "estimated_tokens": 9669,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/top-design/SKILL.md",
+      "slug": "shelves--top-design",
+      "source_path": "skills/shelves/design/top-design/SKILL.md"
+    },
+    "shelves--traction-eos": {
+      "characters": 15938,
+      "estimated_tokens": 3985,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/strategy/traction-eos/SKILL.md",
+      "slug": "shelves--traction-eos",
+      "source_path": "skills/shelves/strategy/traction-eos/SKILL.md"
+    },
+    "shelves--tufte-data-viz": {
+      "characters": 20751,
+      "estimated_tokens": 5188,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/storytelling/tufte-data-viz/SKILL.md",
+      "slug": "shelves--tufte-data-viz",
+      "source_path": "skills/shelves/storytelling/tufte-data-viz/SKILL.md"
+    },
+    "shelves--two-scoops-django": {
+      "characters": 30998,
+      "estimated_tokens": 7750,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/django/two-scoops-django/SKILL.md",
+      "slug": "shelves--two-scoops-django",
+      "source_path": "skills/shelves/django/two-scoops-django/SKILL.md"
+    },
+    "shelves--using-asyncio-python": {
+      "characters": 13311,
+      "estimated_tokens": 3328,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/using-asyncio-python/SKILL.md",
+      "slug": "shelves--using-asyncio-python",
+      "source_path": "skills/shelves/languages/using-asyncio-python/SKILL.md"
+    },
+    "shelves--ux-heuristics": {
+      "characters": 19987,
+      "estimated_tokens": 4997,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/ux-heuristics/SKILL.md",
+      "slug": "shelves--ux-heuristics",
+      "source_path": "skills/shelves/design/ux-heuristics/SKILL.md"
+    },
+    "shelves--web-scraping-python": {
+      "characters": 14537,
+      "estimated_tokens": 3635,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/web-scraping-python/SKILL.md",
+      "slug": "shelves--web-scraping-python",
+      "source_path": "skills/shelves/languages/web-scraping-python/SKILL.md"
+    },
+    "shelves--web-typography": {
+      "characters": 27391,
+      "estimated_tokens": 6848,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/web-typography/SKILL.md",
+      "slug": "shelves--web-typography",
+      "source_path": "skills/shelves/design/web-typography/SKILL.md"
+    },
+    "siege-utilities": {
+      "characters": 695,
+      "estimated_tokens": 174,
+      "kind": "rule",
+      "package_path": "skills/_siege-utilities-rules.md",
+      "slug": "siege-utilities",
+      "source_path": "skills/_siege-utilities-rules.md"
+    },
+    "siege-utilities--error-path-tests": {
+      "characters": 11962,
+      "estimated_tokens": 2991,
+      "kind": "project-skill",
+      "package_path": "skills/siege-utilities--error-path-tests/SKILL.md",
+      "slug": "siege-utilities--error-path-tests",
+      "source_path": "projects/siege-utilities/skills/error-path-tests/SKILL.md"
+    },
+    "siege-utilities--hostile-review": {
+      "characters": 25909,
+      "estimated_tokens": 6478,
+      "kind": "project-skill",
+      "package_path": "skills/siege-utilities--hostile-review/SKILL.md",
+      "slug": "siege-utilities--hostile-review",
+      "source_path": "projects/siege-utilities/skills/hostile-review/SKILL.md"
+    },
+    "siege-utilities--notebook-impact": {
+      "characters": 6846,
+      "estimated_tokens": 1712,
+      "kind": "project-skill",
+      "package_path": "skills/siege-utilities--notebook-impact/SKILL.md",
+      "slug": "siege-utilities--notebook-impact",
+      "source_path": "projects/siege-utilities/skills/notebook-impact/SKILL.md"
+    },
+    "siege-utilities--rules": {
+      "characters": 11286,
+      "estimated_tokens": 2822,
+      "kind": "project-rule",
+      "package_path": "skills/_siege-utilities--rules.md",
+      "slug": "siege-utilities--rules",
+      "source_path": "projects/siege-utilities/_rules.md"
+    },
+    "skillbuilder": {
+      "characters": 13476,
+      "estimated_tokens": 3369,
+      "kind": "skill",
+      "package_path": "skills/skillbuilder/SKILL.md",
+      "slug": "skillbuilder",
+      "source_path": "skills/skillbuilder/SKILL.md"
+    },
+    "solutions-catalog": {
+      "characters": 4002,
+      "estimated_tokens": 1001,
+      "kind": "skill",
+      "package_path": "skills/solutions-catalog/SKILL.md",
+      "slug": "solutions-catalog",
+      "source_path": "skills/solutions-catalog/SKILL.md"
+    },
+    "spark": {
+      "characters": 6331,
+      "estimated_tokens": 1583,
+      "kind": "skill",
+      "package_path": "skills/spark/SKILL.md",
+      "slug": "spark",
+      "source_path": "skills/spark/SKILL.md"
+    },
+    "spatial": {
+      "characters": 11067,
+      "estimated_tokens": 2767,
+      "kind": "skill",
+      "package_path": "skills/spatial/SKILL.md",
+      "slug": "spatial",
+      "source_path": "skills/spatial/SKILL.md"
+    },
+    "sql": {
+      "characters": 5272,
+      "estimated_tokens": 1318,
+      "kind": "skill",
+      "package_path": "skills/sql/SKILL.md",
+      "slug": "sql",
+      "source_path": "skills/sql/SKILL.md"
+    },
+    "stalled-session-recovery": {
+      "characters": 12045,
+      "estimated_tokens": 3012,
+      "kind": "skill",
+      "package_path": "skills/stalled-session-recovery/SKILL.md",
+      "slug": "stalled-session-recovery",
+      "source_path": "skills/stalled-session-recovery/SKILL.md"
+    },
+    "standing-approval": {
+      "characters": 13543,
+      "estimated_tokens": 3386,
+      "kind": "rule",
+      "package_path": "skills/_standing-approval-rules.md",
+      "slug": "standing-approval",
+      "source_path": "skills/_standing-approval-rules.md"
+    },
+    "strategic-agency": {
+      "characters": 3636,
+      "estimated_tokens": 909,
+      "kind": "rule",
+      "package_path": "skills/_strategic-agency-rules.md",
+      "slug": "strategic-agency",
+      "source_path": "skills/_strategic-agency-rules.md"
+    },
+    "survey-context": {
+      "characters": 13031,
+      "estimated_tokens": 3258,
+      "kind": "skill",
+      "package_path": "skills/survey-context/SKILL.md",
+      "slug": "survey-context",
+      "source_path": "skills/survey-context/SKILL.md"
+    },
+    "tandem-agent": {
+      "characters": 6226,
+      "estimated_tokens": 1557,
+      "kind": "rule",
+      "package_path": "skills/_tandem-agent-rules.md",
+      "slug": "tandem-agent",
+      "source_path": "skills/_tandem-agent-rules.md"
+    },
+    "test-coverage-audit": {
+      "characters": 8095,
+      "estimated_tokens": 2024,
+      "kind": "skill",
+      "package_path": "skills/test-coverage-audit/SKILL.md",
+      "slug": "test-coverage-audit",
+      "source_path": "skills/test-coverage-audit/SKILL.md"
+    },
+    "testing-frameworks": {
+      "characters": 13791,
+      "estimated_tokens": 3448,
+      "kind": "skill",
+      "package_path": "skills/testing-frameworks/SKILL.md",
+      "slug": "testing-frameworks",
+      "source_path": "skills/testing-frameworks/SKILL.md"
+    },
+    "think": {
+      "characters": 30156,
+      "estimated_tokens": 7539,
+      "kind": "skill",
+      "package_path": "skills/think/SKILL.md",
+      "slug": "think",
+      "source_path": "skills/think/SKILL.md"
+    },
+    "ticket-decomposition": {
+      "characters": 10780,
+      "estimated_tokens": 2695,
+      "kind": "skill",
+      "package_path": "skills/ticket-decomposition/SKILL.md",
+      "slug": "ticket-decomposition",
+      "source_path": "skills/ticket-decomposition/SKILL.md"
+    },
+    "ticket-guard": {
+      "characters": 6434,
+      "estimated_tokens": 1609,
+      "kind": "skill",
+      "package_path": "skills/ticket-guard/SKILL.md",
+      "slug": "ticket-guard",
+      "source_path": "skills/ticket-guard/SKILL.md"
+    },
+    "ticket-lifecycle": {
+      "characters": 4036,
+      "estimated_tokens": 1009,
+      "kind": "rule",
+      "package_path": "skills/_ticket-lifecycle-rules.md",
+      "slug": "ticket-lifecycle",
+      "source_path": "skills/_ticket-lifecycle-rules.md"
+    },
+    "tool-availability-probe": {
+      "characters": 5754,
+      "estimated_tokens": 1439,
+      "kind": "skill",
+      "package_path": "skills/tool-availability-probe/SKILL.md",
+      "slug": "tool-availability-probe",
+      "source_path": "skills/tool-availability-probe/SKILL.md"
+    },
+    "typescript": {
+      "characters": 2206,
+      "estimated_tokens": 552,
+      "kind": "rule",
+      "package_path": "skills/_typescript-rules.md",
+      "slug": "typescript",
+      "source_path": "skills/_typescript-rules.md"
+    },
+    "unity-catalog": {
+      "characters": 7781,
+      "estimated_tokens": 1946,
+      "kind": "skill",
+      "package_path": "skills/unity-catalog/SKILL.md",
+      "slug": "unity-catalog",
+      "source_path": "skills/unity-catalog/SKILL.md"
+    },
+    "update-ticket": {
+      "characters": 7839,
+      "estimated_tokens": 1960,
+      "kind": "skill",
+      "package_path": "skills/update-ticket/SKILL.md",
+      "slug": "update-ticket",
+      "source_path": "skills/update-ticket/SKILL.md"
+    },
+    "verify-before-execute": {
+      "characters": 15692,
+      "estimated_tokens": 3923,
+      "kind": "rule",
+      "package_path": "skills/_verify-before-execute-rules.md",
+      "slug": "verify-before-execute",
+      "source_path": "skills/_verify-before-execute-rules.md"
+    },
+    "verify-failure-premise": {
+      "characters": 14817,
+      "estimated_tokens": 3705,
+      "kind": "skill",
+      "package_path": "skills/verify-failure-premise/SKILL.md",
+      "slug": "verify-failure-premise",
+      "source_path": "skills/verify-failure-premise/SKILL.md"
+    },
+    "vue": {
+      "characters": 9667,
+      "estimated_tokens": 2417,
+      "kind": "skill",
+      "package_path": "skills/vue/SKILL.md",
+      "slug": "vue",
+      "source_path": "skills/vue/SKILL.md"
+    },
+    "work-item-ownership": {
+      "characters": 4983,
+      "estimated_tokens": 1246,
+      "kind": "rule",
+      "package_path": "skills/_work-item-ownership-rules.md",
+      "slug": "work-item-ownership",
+      "source_path": "skills/_work-item-ownership-rules.md"
+    },
+    "wrap-up": {
+      "characters": 8931,
+      "estimated_tokens": 2233,
+      "kind": "skill",
+      "package_path": "skills/wrap-up/SKILL.md",
+      "slug": "wrap-up",
+      "source_path": "skills/wrap-up/SKILL.md"
+    },
+    "writing-claims": {
+      "characters": 31689,
+      "estimated_tokens": 7923,
+      "kind": "rule",
+      "package_path": "skills/_writing-claims-rules.md",
+      "slug": "writing-claims",
+      "source_path": "skills/_writing-claims-rules.md"
+    },
+    "writing-code": {
+      "characters": 52603,
+      "estimated_tokens": 13151,
+      "kind": "rule",
+      "package_path": "skills/_writing-code-rules.md",
+      "slug": "writing-code",
+      "source_path": "skills/_writing-code-rules.md"
+    },
+    "writing-prose": {
+      "characters": 9594,
+      "estimated_tokens": 2399,
+      "kind": "rule",
+      "package_path": "skills/_writing-prose-rules.md",
+      "slug": "writing-prose",
+      "source_path": "skills/_writing-prose-rules.md"
+    },
+    "writing-releases": {
+      "characters": 18533,
+      "estimated_tokens": 4634,
+      "kind": "rule",
+      "package_path": "skills/_writing-releases-rules.md",
+      "slug": "writing-releases",
+      "source_path": "skills/_writing-releases-rules.md"
+    },
+    "writing-rules": {
+      "characters": 30414,
+      "estimated_tokens": 7604,
+      "kind": "rule",
+      "package_path": "skills/_writing-rules-rules.md",
+      "slug": "writing-rules",
+      "source_path": "skills/_writing-rules-rules.md"
+    },
+    "writing-tests": {
+      "characters": 28015,
+      "estimated_tokens": 7004,
+      "kind": "rule",
+      "package_path": "skills/_writing-tests-rules.md",
+      "slug": "writing-tests",
+      "source_path": "skills/_writing-tests-rules.md"
+    }
+  },
+  "known_by_source": {
+    "projects/siege-utilities/_rules.md": {
+      "characters": 11286,
+      "estimated_tokens": 2822,
+      "kind": "project-rule",
+      "package_path": "skills/_siege-utilities--rules.md",
+      "slug": "siege-utilities--rules",
+      "source_path": "projects/siege-utilities/_rules.md"
+    },
+    "projects/siege-utilities/skills/error-path-tests/SKILL.md": {
+      "characters": 11962,
+      "estimated_tokens": 2991,
+      "kind": "project-skill",
+      "package_path": "skills/siege-utilities--error-path-tests/SKILL.md",
+      "slug": "siege-utilities--error-path-tests",
+      "source_path": "projects/siege-utilities/skills/error-path-tests/SKILL.md"
+    },
+    "projects/siege-utilities/skills/hostile-review/SKILL.md": {
+      "characters": 25909,
+      "estimated_tokens": 6478,
+      "kind": "project-skill",
+      "package_path": "skills/siege-utilities--hostile-review/SKILL.md",
+      "slug": "siege-utilities--hostile-review",
+      "source_path": "projects/siege-utilities/skills/hostile-review/SKILL.md"
+    },
+    "projects/siege-utilities/skills/notebook-impact/SKILL.md": {
+      "characters": 6846,
+      "estimated_tokens": 1712,
+      "kind": "project-skill",
+      "package_path": "skills/siege-utilities--notebook-impact/SKILL.md",
+      "slug": "siege-utilities--notebook-impact",
+      "source_path": "projects/siege-utilities/skills/notebook-impact/SKILL.md"
+    },
+    "skills/_architecture-patterns-rules.md": {
+      "characters": 2482,
+      "estimated_tokens": 621,
+      "kind": "rule",
+      "package_path": "skills/_architecture-patterns-rules.md",
+      "slug": "architecture-patterns",
+      "source_path": "skills/_architecture-patterns-rules.md"
+    },
+    "skills/_authoring-against-state-rules.md": {
+      "characters": 57691,
+      "estimated_tokens": 14423,
+      "kind": "rule",
+      "package_path": "skills/_authoring-against-state-rules.md",
+      "slug": "authoring-against-state",
+      "source_path": "skills/_authoring-against-state-rules.md"
+    },
+    "skills/_autonomy-rules.md": {
+      "characters": 11561,
+      "estimated_tokens": 2891,
+      "kind": "rule",
+      "package_path": "skills/_autonomy-rules.md",
+      "slug": "autonomy",
+      "source_path": "skills/_autonomy-rules.md"
+    },
+    "skills/_data-trust-rules.md": {
+      "characters": 4219,
+      "estimated_tokens": 1055,
+      "kind": "rule",
+      "package_path": "skills/_data-trust-rules.md",
+      "slug": "data-trust",
+      "source_path": "skills/_data-trust-rules.md"
+    },
+    "skills/_definition-of-done-rules.md": {
+      "characters": 10092,
+      "estimated_tokens": 2523,
+      "kind": "rule",
+      "package_path": "skills/_definition-of-done-rules.md",
+      "slug": "definition-of-done",
+      "source_path": "skills/_definition-of-done-rules.md"
+    },
+    "skills/_django-rest-framework-rules.md": {
+      "characters": 9245,
+      "estimated_tokens": 2312,
+      "kind": "rule",
+      "package_path": "skills/_django-rest-framework-rules.md",
+      "slug": "django-rest-framework",
+      "source_path": "skills/_django-rest-framework-rules.md"
+    },
+    "skills/_enforcement-contradiction-rules.md": {
+      "characters": 13725,
+      "estimated_tokens": 3432,
+      "kind": "rule",
+      "package_path": "skills/_enforcement-contradiction-rules.md",
+      "slug": "enforcement-contradiction",
+      "source_path": "skills/_enforcement-contradiction-rules.md"
+    },
+    "skills/_environment-preflight-rules.md": {
+      "characters": 6606,
+      "estimated_tokens": 1652,
+      "kind": "rule",
+      "package_path": "skills/_environment-preflight-rules.md",
+      "slug": "environment-preflight",
+      "source_path": "skills/_environment-preflight-rules.md"
+    },
+    "skills/_jvm-rules.md": {
+      "characters": 4214,
+      "estimated_tokens": 1054,
+      "kind": "rule",
+      "package_path": "skills/_jvm-rules.md",
+      "slug": "jvm",
+      "source_path": "skills/_jvm-rules.md"
+    },
+    "skills/_knowledge-base-rules.md": {
+      "characters": 5079,
+      "estimated_tokens": 1270,
+      "kind": "rule",
+      "package_path": "skills/_knowledge-base-rules.md",
+      "slug": "knowledge-base",
+      "source_path": "skills/_knowledge-base-rules.md"
+    },
+    "skills/_output-rules.md": {
+      "characters": 4501,
+      "estimated_tokens": 1126,
+      "kind": "rule",
+      "package_path": "skills/_output-rules.md",
+      "slug": "output",
+      "source_path": "skills/_output-rules.md"
+    },
+    "skills/_packaging-rules.md": {
+      "characters": 2674,
+      "estimated_tokens": 669,
+      "kind": "rule",
+      "package_path": "skills/_packaging-rules.md",
+      "slug": "packaging",
+      "source_path": "skills/_packaging-rules.md"
+    },
+    "skills/_principles-rules.md": {
+      "characters": 2250,
+      "estimated_tokens": 563,
+      "kind": "rule",
+      "package_path": "skills/_principles-rules.md",
+      "slug": "principles",
+      "source_path": "skills/_principles-rules.md"
+    },
+    "skills/_property-testing-rules.md": {
+      "characters": 3257,
+      "estimated_tokens": 815,
+      "kind": "rule",
+      "package_path": "skills/_property-testing-rules.md",
+      "slug": "property-testing",
+      "source_path": "skills/_property-testing-rules.md"
+    },
+    "skills/_prospective-memory-rules.md": {
+      "characters": 9472,
+      "estimated_tokens": 2368,
+      "kind": "rule",
+      "package_path": "skills/_prospective-memory-rules.md",
+      "slug": "prospective-memory",
+      "source_path": "skills/_prospective-memory-rules.md"
+    },
+    "skills/_python-rules.md": {
+      "characters": 1994,
+      "estimated_tokens": 499,
+      "kind": "rule",
+      "package_path": "skills/_python-rules.md",
+      "slug": "python",
+      "source_path": "skills/_python-rules.md"
+    },
+    "skills/_react-rules.md": {
+      "characters": 9062,
+      "estimated_tokens": 2266,
+      "kind": "rule",
+      "package_path": "skills/_react-rules.md",
+      "slug": "react",
+      "source_path": "skills/_react-rules.md"
+    },
+    "skills/_robustness-rules.md": {
+      "characters": 2348,
+      "estimated_tokens": 587,
+      "kind": "rule",
+      "package_path": "skills/_robustness-rules.md",
+      "slug": "robustness",
+      "source_path": "skills/_robustness-rules.md"
+    },
+    "skills/_rust-rules.md": {
+      "characters": 2218,
+      "estimated_tokens": 555,
+      "kind": "rule",
+      "package_path": "skills/_rust-rules.md",
+      "slug": "rust",
+      "source_path": "skills/_rust-rules.md"
+    },
+    "skills/_scipy-spec-rules.md": {
+      "characters": 2532,
+      "estimated_tokens": 633,
+      "kind": "rule",
+      "package_path": "skills/_scipy-spec-rules.md",
+      "slug": "scipy-spec",
+      "source_path": "skills/_scipy-spec-rules.md"
+    },
+    "skills/_security-scanning-rules.md": {
+      "characters": 2699,
+      "estimated_tokens": 675,
+      "kind": "rule",
+      "package_path": "skills/_security-scanning-rules.md",
+      "slug": "security-scanning",
+      "source_path": "skills/_security-scanning-rules.md"
+    },
+    "skills/_session-coordination-rules.md": {
+      "characters": 22265,
+      "estimated_tokens": 5567,
+      "kind": "rule",
+      "package_path": "skills/_session-coordination-rules.md",
+      "slug": "session-coordination",
+      "source_path": "skills/_session-coordination-rules.md"
+    },
+    "skills/_siege-utilities-rules.md": {
+      "characters": 695,
+      "estimated_tokens": 174,
+      "kind": "rule",
+      "package_path": "skills/_siege-utilities-rules.md",
+      "slug": "siege-utilities",
+      "source_path": "skills/_siege-utilities-rules.md"
+    },
+    "skills/_standing-approval-rules.md": {
+      "characters": 13543,
+      "estimated_tokens": 3386,
+      "kind": "rule",
+      "package_path": "skills/_standing-approval-rules.md",
+      "slug": "standing-approval",
+      "source_path": "skills/_standing-approval-rules.md"
+    },
+    "skills/_strategic-agency-rules.md": {
+      "characters": 3636,
+      "estimated_tokens": 909,
+      "kind": "rule",
+      "package_path": "skills/_strategic-agency-rules.md",
+      "slug": "strategic-agency",
+      "source_path": "skills/_strategic-agency-rules.md"
+    },
+    "skills/_tandem-agent-rules.md": {
+      "characters": 6226,
+      "estimated_tokens": 1557,
+      "kind": "rule",
+      "package_path": "skills/_tandem-agent-rules.md",
+      "slug": "tandem-agent",
+      "source_path": "skills/_tandem-agent-rules.md"
+    },
+    "skills/_testing-frameworks-rules.md": {
+      "characters": 4559,
+      "estimated_tokens": 1140,
+      "kind": "rule",
+      "package_path": "skills/_testing-frameworks-rules.md",
+      "slug": "testing-frameworks",
+      "source_path": "skills/_testing-frameworks-rules.md"
+    },
+    "skills/_ticket-lifecycle-rules.md": {
+      "characters": 4036,
+      "estimated_tokens": 1009,
+      "kind": "rule",
+      "package_path": "skills/_ticket-lifecycle-rules.md",
+      "slug": "ticket-lifecycle",
+      "source_path": "skills/_ticket-lifecycle-rules.md"
+    },
+    "skills/_typescript-rules.md": {
+      "characters": 2206,
+      "estimated_tokens": 552,
+      "kind": "rule",
+      "package_path": "skills/_typescript-rules.md",
+      "slug": "typescript",
+      "source_path": "skills/_typescript-rules.md"
+    },
+    "skills/_verify-before-execute-rules.md": {
+      "characters": 15692,
+      "estimated_tokens": 3923,
+      "kind": "rule",
+      "package_path": "skills/_verify-before-execute-rules.md",
+      "slug": "verify-before-execute",
+      "source_path": "skills/_verify-before-execute-rules.md"
+    },
+    "skills/_work-item-ownership-rules.md": {
+      "characters": 4983,
+      "estimated_tokens": 1246,
+      "kind": "rule",
+      "package_path": "skills/_work-item-ownership-rules.md",
+      "slug": "work-item-ownership",
+      "source_path": "skills/_work-item-ownership-rules.md"
+    },
+    "skills/_writing-claims-rules.md": {
+      "characters": 31689,
+      "estimated_tokens": 7923,
+      "kind": "rule",
+      "package_path": "skills/_writing-claims-rules.md",
+      "slug": "writing-claims",
+      "source_path": "skills/_writing-claims-rules.md"
+    },
+    "skills/_writing-code-rules.md": {
+      "characters": 52603,
+      "estimated_tokens": 13151,
+      "kind": "rule",
+      "package_path": "skills/_writing-code-rules.md",
+      "slug": "writing-code",
+      "source_path": "skills/_writing-code-rules.md"
+    },
+    "skills/_writing-prose-rules.md": {
+      "characters": 9594,
+      "estimated_tokens": 2399,
+      "kind": "rule",
+      "package_path": "skills/_writing-prose-rules.md",
+      "slug": "writing-prose",
+      "source_path": "skills/_writing-prose-rules.md"
+    },
+    "skills/_writing-releases-rules.md": {
+      "characters": 18533,
+      "estimated_tokens": 4634,
+      "kind": "rule",
+      "package_path": "skills/_writing-releases-rules.md",
+      "slug": "writing-releases",
+      "source_path": "skills/_writing-releases-rules.md"
+    },
+    "skills/_writing-rules-rules.md": {
+      "characters": 30414,
+      "estimated_tokens": 7604,
+      "kind": "rule",
+      "package_path": "skills/_writing-rules-rules.md",
+      "slug": "writing-rules",
+      "source_path": "skills/_writing-rules-rules.md"
+    },
+    "skills/_writing-tests-rules.md": {
+      "characters": 28015,
+      "estimated_tokens": 7004,
+      "kind": "rule",
+      "package_path": "skills/_writing-tests-rules.md",
+      "slug": "writing-tests",
+      "source_path": "skills/_writing-tests-rules.md"
+    },
+    "skills/analysis/SKILL.md": {
+      "characters": 4019,
+      "estimated_tokens": 1005,
+      "kind": "skill",
+      "package_path": "skills/analysis/SKILL.md",
+      "slug": "analysis",
+      "source_path": "skills/analysis/SKILL.md"
+    },
+    "skills/api-integration/SKILL.md": {
+      "characters": 9809,
+      "estimated_tokens": 2453,
+      "kind": "skill",
+      "package_path": "skills/api-integration/SKILL.md",
+      "slug": "api-integration",
+      "source_path": "skills/api-integration/SKILL.md"
+    },
+    "skills/branch/SKILL.md": {
+      "characters": 6751,
+      "estimated_tokens": 1688,
+      "kind": "skill",
+      "package_path": "skills/branch/SKILL.md",
+      "slug": "branch",
+      "source_path": "skills/branch/SKILL.md"
+    },
+    "skills/cascading-documentation/SKILL.md": {
+      "characters": 20181,
+      "estimated_tokens": 5046,
+      "kind": "skill",
+      "package_path": "skills/cascading-documentation/SKILL.md",
+      "slug": "cascading-documentation",
+      "source_path": "skills/cascading-documentation/SKILL.md"
+    },
+    "skills/ci-billing-failure-merge/SKILL.md": {
+      "characters": 3189,
+      "estimated_tokens": 798,
+      "kind": "skill",
+      "package_path": "skills/ci-billing-failure-merge/SKILL.md",
+      "slug": "ci-billing-failure-merge",
+      "source_path": "skills/ci-billing-failure-merge/SKILL.md"
+    },
+    "skills/close-ticket/SKILL.md": {
+      "characters": 6651,
+      "estimated_tokens": 1663,
+      "kind": "skill",
+      "package_path": "skills/close-ticket/SKILL.md",
+      "slug": "close-ticket",
+      "source_path": "skills/close-ticket/SKILL.md"
+    },
+    "skills/code-review/SKILL.md": {
+      "characters": 24158,
+      "estimated_tokens": 6040,
+      "kind": "skill",
+      "package_path": "skills/code-review/SKILL.md",
+      "slug": "code-review",
+      "source_path": "skills/code-review/SKILL.md"
+    },
+    "skills/coderabbit-response/SKILL.md": {
+      "characters": 9055,
+      "estimated_tokens": 2264,
+      "kind": "skill",
+      "package_path": "skills/coderabbit-response/SKILL.md",
+      "slug": "coderabbit-response",
+      "source_path": "skills/coderabbit-response/SKILL.md"
+    },
+    "skills/coding/SKILL.md": {
+      "characters": 5149,
+      "estimated_tokens": 1288,
+      "kind": "skill",
+      "package_path": "skills/coding/SKILL.md",
+      "slug": "coding",
+      "source_path": "skills/coding/SKILL.md"
+    },
+    "skills/commit/SKILL.md": {
+      "characters": 20438,
+      "estimated_tokens": 5110,
+      "kind": "skill",
+      "package_path": "skills/commit/SKILL.md",
+      "slug": "commit",
+      "source_path": "skills/commit/SKILL.md"
+    },
+    "skills/compound/SKILL.md": {
+      "characters": 4882,
+      "estimated_tokens": 1221,
+      "kind": "skill",
+      "package_path": "skills/compound/SKILL.md",
+      "slug": "compound",
+      "source_path": "skills/compound/SKILL.md"
+    },
+    "skills/consolidate/SKILL.md": {
+      "characters": 4443,
+      "estimated_tokens": 1111,
+      "kind": "skill",
+      "package_path": "skills/consolidate/SKILL.md",
+      "slug": "consolidate",
+      "source_path": "skills/consolidate/SKILL.md"
+    },
+    "skills/create-pr/SKILL.md": {
+      "characters": 14592,
+      "estimated_tokens": 3648,
+      "kind": "skill",
+      "package_path": "skills/create-pr/SKILL.md",
+      "slug": "create-pr",
+      "source_path": "skills/create-pr/SKILL.md"
+    },
+    "skills/create-ticket/SKILL.md": {
+      "characters": 14544,
+      "estimated_tokens": 3636,
+      "kind": "skill",
+      "package_path": "skills/create-ticket/SKILL.md",
+      "slug": "create-ticket",
+      "source_path": "skills/create-ticket/SKILL.md"
+    },
+    "skills/cross-review/SKILL.md": {
+      "characters": 12045,
+      "estimated_tokens": 3012,
+      "kind": "skill",
+      "package_path": "skills/cross-review/SKILL.md",
+      "slug": "cross-review",
+      "source_path": "skills/cross-review/SKILL.md"
+    },
+    "skills/databricks/SKILL.md": {
+      "characters": 9694,
+      "estimated_tokens": 2424,
+      "kind": "skill",
+      "package_path": "skills/databricks/SKILL.md",
+      "slug": "databricks",
+      "source_path": "skills/databricks/SKILL.md"
+    },
+    "skills/decision-to-ticket/SKILL.md": {
+      "characters": 10997,
+      "estimated_tokens": 2750,
+      "kind": "skill",
+      "package_path": "skills/decision-to-ticket/SKILL.md",
+      "slug": "decision-to-ticket",
+      "source_path": "skills/decision-to-ticket/SKILL.md"
+    },
+    "skills/detect-ai-fingerprints/SKILL.md": {
+      "characters": 21478,
+      "estimated_tokens": 5370,
+      "kind": "skill",
+      "package_path": "skills/detect-ai-fingerprints/SKILL.md",
+      "slug": "detect-ai-fingerprints",
+      "source_path": "skills/detect-ai-fingerprints/SKILL.md"
+    },
+    "skills/develop-guard/SKILL.md": {
+      "characters": 14561,
+      "estimated_tokens": 3641,
+      "kind": "skill",
+      "package_path": "skills/develop-guard/SKILL.md",
+      "slug": "develop-guard",
+      "source_path": "skills/develop-guard/SKILL.md"
+    },
+    "skills/distill-lessons/SKILL.md": {
+      "characters": 6610,
+      "estimated_tokens": 1653,
+      "kind": "skill",
+      "package_path": "skills/distill-lessons/SKILL.md",
+      "slug": "distill-lessons",
+      "source_path": "skills/distill-lessons/SKILL.md"
+    },
+    "skills/django-rest-framework/SKILL.md": {
+      "characters": 8941,
+      "estimated_tokens": 2236,
+      "kind": "skill",
+      "package_path": "skills/django-rest-framework/SKILL.md",
+      "slug": "django-rest-framework",
+      "source_path": "skills/django-rest-framework/SKILL.md"
+    },
+    "skills/django/SKILL.md": {
+      "characters": 11817,
+      "estimated_tokens": 2955,
+      "kind": "skill",
+      "package_path": "skills/django/SKILL.md",
+      "slug": "django",
+      "source_path": "skills/django/SKILL.md"
+    },
+    "skills/drive-while-away/SKILL.md": {
+      "characters": 24161,
+      "estimated_tokens": 6041,
+      "kind": "skill",
+      "package_path": "skills/drive-while-away/SKILL.md",
+      "slug": "drive-while-away",
+      "source_path": "skills/drive-while-away/SKILL.md"
+    },
+    "skills/duckdb-spatial/SKILL.md": {
+      "characters": 6995,
+      "estimated_tokens": 1749,
+      "kind": "skill",
+      "package_path": "skills/duckdb-spatial/SKILL.md",
+      "slug": "duckdb-spatial",
+      "source_path": "skills/duckdb-spatial/SKILL.md"
+    },
+    "skills/engagement-post-mortem/SKILL.md": {
+      "characters": 27189,
+      "estimated_tokens": 6798,
+      "kind": "skill",
+      "package_path": "skills/engagement-post-mortem/SKILL.md",
+      "slug": "engagement-post-mortem",
+      "source_path": "skills/engagement-post-mortem/SKILL.md"
+    },
+    "skills/evaluate-ticket/SKILL.md": {
+      "characters": 7953,
+      "estimated_tokens": 1989,
+      "kind": "skill",
+      "package_path": "skills/evaluate-ticket/SKILL.md",
+      "slug": "evaluate-ticket",
+      "source_path": "skills/evaluate-ticket/SKILL.md"
+    },
+    "skills/geopandas/SKILL.md": {
+      "characters": 6960,
+      "estimated_tokens": 1740,
+      "kind": "skill",
+      "package_path": "skills/geopandas/SKILL.md",
+      "slug": "geopandas",
+      "source_path": "skills/geopandas/SKILL.md"
+    },
+    "skills/hostile-review/SKILL.md": {
+      "characters": 26954,
+      "estimated_tokens": 6739,
+      "kind": "skill",
+      "package_path": "skills/hostile-review/SKILL.md",
+      "slug": "hostile-review",
+      "source_path": "skills/hostile-review/SKILL.md"
+    },
+    "skills/investigate/SKILL.md": {
+      "characters": 39733,
+      "estimated_tokens": 9934,
+      "kind": "skill",
+      "package_path": "skills/investigate/SKILL.md",
+      "slug": "investigate",
+      "source_path": "skills/investigate/SKILL.md"
+    },
+    "skills/knowledge-base/SKILL.md": {
+      "characters": 6461,
+      "estimated_tokens": 1616,
+      "kind": "skill",
+      "package_path": "skills/knowledge-base/SKILL.md",
+      "slug": "knowledge-base",
+      "source_path": "skills/knowledge-base/SKILL.md"
+    },
+    "skills/lessons-learned/SKILL.md": {
+      "characters": 7386,
+      "estimated_tokens": 1847,
+      "kind": "skill",
+      "package_path": "skills/lessons-learned/SKILL.md",
+      "slug": "lessons-learned",
+      "source_path": "skills/lessons-learned/SKILL.md"
+    },
+    "skills/library-api-evolution/SKILL.md": {
+      "characters": 8245,
+      "estimated_tokens": 2062,
+      "kind": "skill",
+      "package_path": "skills/library-api-evolution/SKILL.md",
+      "slug": "library-api-evolution",
+      "source_path": "skills/library-api-evolution/SKILL.md"
+    },
+    "skills/merge/SKILL.md": {
+      "characters": 9604,
+      "estimated_tokens": 2401,
+      "kind": "skill",
+      "package_path": "skills/merge/SKILL.md",
+      "slug": "merge",
+      "source_path": "skills/merge/SKILL.md"
+    },
+    "skills/ops/SKILL.md": {
+      "characters": 4230,
+      "estimated_tokens": 1058,
+      "kind": "skill",
+      "package_path": "skills/ops/SKILL.md",
+      "slug": "ops",
+      "source_path": "skills/ops/SKILL.md"
+    },
+    "skills/over-engineering-audit/SKILL.md": {
+      "characters": 6977,
+      "estimated_tokens": 1745,
+      "kind": "skill",
+      "package_path": "skills/over-engineering-audit/SKILL.md",
+      "slug": "over-engineering-audit",
+      "source_path": "skills/over-engineering-audit/SKILL.md"
+    },
+    "skills/pipeline-jobs/SKILL.md": {
+      "characters": 5757,
+      "estimated_tokens": 1440,
+      "kind": "skill",
+      "package_path": "skills/pipeline-jobs/SKILL.md",
+      "slug": "pipeline-jobs",
+      "source_path": "skills/pipeline-jobs/SKILL.md"
+    },
+    "skills/post-error-revision/SKILL.md": {
+      "characters": 16514,
+      "estimated_tokens": 4129,
+      "kind": "skill",
+      "package_path": "skills/post-error-revision/SKILL.md",
+      "slug": "post-error-revision",
+      "source_path": "skills/post-error-revision/SKILL.md"
+    },
+    "skills/post-mortem/SKILL.md": {
+      "characters": 11861,
+      "estimated_tokens": 2966,
+      "kind": "skill",
+      "package_path": "skills/post-mortem/SKILL.md",
+      "slug": "post-mortem",
+      "source_path": "skills/post-mortem/SKILL.md"
+    },
+    "skills/postgis/SKILL.md": {
+      "characters": 10063,
+      "estimated_tokens": 2516,
+      "kind": "skill",
+      "package_path": "skills/postgis/SKILL.md",
+      "slug": "postgis",
+      "source_path": "skills/postgis/SKILL.md"
+    },
+    "skills/pr-comments/SKILL.md": {
+      "characters": 10479,
+      "estimated_tokens": 2620,
+      "kind": "skill",
+      "package_path": "skills/pr-comments/SKILL.md",
+      "slug": "pr-comments",
+      "source_path": "skills/pr-comments/SKILL.md"
+    },
+    "skills/pre-mortem/SKILL.md": {
+      "characters": 16331,
+      "estimated_tokens": 4083,
+      "kind": "skill",
+      "package_path": "skills/pre-mortem/SKILL.md",
+      "slug": "pre-mortem",
+      "source_path": "skills/pre-mortem/SKILL.md"
+    },
+    "skills/pre-work-check/SKILL.md": {
+      "characters": 2795,
+      "estimated_tokens": 699,
+      "kind": "skill",
+      "package_path": "skills/pre-work-check/SKILL.md",
+      "slug": "pre-work-check",
+      "source_path": "skills/pre-work-check/SKILL.md"
+    },
+    "skills/publish-flat-layout/SKILL.md": {
+      "characters": 8469,
+      "estimated_tokens": 2118,
+      "kind": "skill",
+      "package_path": "skills/publish-flat-layout/SKILL.md",
+      "slug": "publish-flat-layout",
+      "source_path": "skills/publish-flat-layout/SKILL.md"
+    },
+    "skills/python-exceptions/SKILL.md": {
+      "characters": 7117,
+      "estimated_tokens": 1780,
+      "kind": "skill",
+      "package_path": "skills/python-exceptions/SKILL.md",
+      "slug": "python-exceptions",
+      "source_path": "skills/python-exceptions/SKILL.md"
+    },
+    "skills/python-patterns/SKILL.md": {
+      "characters": 10564,
+      "estimated_tokens": 2641,
+      "kind": "skill",
+      "package_path": "skills/python-patterns/SKILL.md",
+      "slug": "python-patterns",
+      "source_path": "skills/python-patterns/SKILL.md"
+    },
+    "skills/python/SKILL.md": {
+      "characters": 6703,
+      "estimated_tokens": 1676,
+      "kind": "skill",
+      "package_path": "skills/python/SKILL.md",
+      "slug": "python",
+      "source_path": "skills/python/SKILL.md"
+    },
+    "skills/qml-component-review/SKILL.md": {
+      "characters": 2337,
+      "estimated_tokens": 585,
+      "kind": "skill",
+      "package_path": "skills/qml-component-review/SKILL.md",
+      "slug": "qml-component-review",
+      "source_path": "skills/qml-component-review/SKILL.md"
+    },
+    "skills/react/SKILL.md": {
+      "characters": 11274,
+      "estimated_tokens": 2819,
+      "kind": "skill",
+      "package_path": "skills/react/SKILL.md",
+      "slug": "react",
+      "source_path": "skills/react/SKILL.md"
+    },
+    "skills/rule-eval-loop/SKILL.md": {
+      "characters": 17620,
+      "estimated_tokens": 4405,
+      "kind": "skill",
+      "package_path": "skills/rule-eval-loop/SKILL.md",
+      "slug": "rule-eval-loop",
+      "source_path": "skills/rule-eval-loop/SKILL.md"
+    },
+    "skills/rules-audit/SKILL.md": {
+      "characters": 8042,
+      "estimated_tokens": 2011,
+      "kind": "skill",
+      "package_path": "skills/rules-audit/SKILL.md",
+      "slug": "rules-audit",
+      "source_path": "skills/rules-audit/SKILL.md"
+    },
+    "skills/scala-on-spark/SKILL.md": {
+      "characters": 3206,
+      "estimated_tokens": 802,
+      "kind": "skill",
+      "package_path": "skills/scala-on-spark/SKILL.md",
+      "slug": "scala-on-spark",
+      "source_path": "skills/scala-on-spark/SKILL.md"
+    },
+    "skills/scope-expansion/SKILL.md": {
+      "characters": 6300,
+      "estimated_tokens": 1575,
+      "kind": "skill",
+      "package_path": "skills/scope-expansion/SKILL.md",
+      "slug": "scope-expansion",
+      "source_path": "skills/scope-expansion/SKILL.md"
+    },
+    "skills/sedona/SKILL.md": {
+      "characters": 8668,
+      "estimated_tokens": 2167,
+      "kind": "skill",
+      "package_path": "skills/sedona/SKILL.md",
+      "slug": "sedona",
+      "source_path": "skills/sedona/SKILL.md"
+    },
+    "skills/self-review/SKILL.md": {
+      "characters": 71173,
+      "estimated_tokens": 17794,
+      "kind": "skill",
+      "package_path": "skills/self-review/SKILL.md",
+      "slug": "self-review",
+      "source_path": "skills/self-review/SKILL.md"
+    },
+    "skills/shape-space-audit/SKILL.md": {
+      "characters": 12122,
+      "estimated_tokens": 3031,
+      "kind": "skill",
+      "package_path": "skills/shape-space-audit/SKILL.md",
+      "slug": "shape-space-audit",
+      "source_path": "skills/shape-space-audit/SKILL.md"
+    },
+    "skills/shelves/SKILL.md": {
+      "characters": 3167,
+      "estimated_tokens": 792,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/SKILL.md",
+      "slug": "shelves",
+      "source_path": "skills/shelves/SKILL.md"
+    },
+    "skills/shelves/data-and-pipelines/SKILL.md": {
+      "characters": 1573,
+      "estimated_tokens": 394,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/data-and-pipelines/SKILL.md",
+      "slug": "shelves--data-and-pipelines",
+      "source_path": "skills/shelves/data-and-pipelines/SKILL.md"
+    },
+    "skills/shelves/data-and-pipelines/data-pipelines/SKILL.md": {
+      "characters": 15460,
+      "estimated_tokens": 3865,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/data-and-pipelines/data-pipelines/SKILL.md",
+      "slug": "shelves--data-pipelines",
+      "source_path": "skills/shelves/data-and-pipelines/data-pipelines/SKILL.md"
+    },
+    "skills/shelves/design/SKILL.md": {
+      "characters": 1209,
+      "estimated_tokens": 303,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/design/SKILL.md",
+      "slug": "shelves--design",
+      "source_path": "skills/shelves/design/SKILL.md"
+    },
+    "skills/shelves/design/design-everyday-things/SKILL.md": {
+      "characters": 20004,
+      "estimated_tokens": 5001,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/design-everyday-things/SKILL.md",
+      "slug": "shelves--design-everyday-things",
+      "source_path": "skills/shelves/design/design-everyday-things/SKILL.md"
+    },
+    "skills/shelves/design/ios-hig-design/SKILL.md": {
+      "characters": 24657,
+      "estimated_tokens": 6165,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/ios-hig-design/SKILL.md",
+      "slug": "shelves--ios-hig-design",
+      "source_path": "skills/shelves/design/ios-hig-design/SKILL.md"
+    },
+    "skills/shelves/design/microinteractions/SKILL.md": {
+      "characters": 19543,
+      "estimated_tokens": 4886,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/microinteractions/SKILL.md",
+      "slug": "shelves--microinteractions",
+      "source_path": "skills/shelves/design/microinteractions/SKILL.md"
+    },
+    "skills/shelves/design/refactoring-ui/SKILL.md": {
+      "characters": 19837,
+      "estimated_tokens": 4960,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/refactoring-ui/SKILL.md",
+      "slug": "shelves--refactoring-ui",
+      "source_path": "skills/shelves/design/refactoring-ui/SKILL.md"
+    },
+    "skills/shelves/design/top-design/SKILL.md": {
+      "characters": 38675,
+      "estimated_tokens": 9669,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/top-design/SKILL.md",
+      "slug": "shelves--top-design",
+      "source_path": "skills/shelves/design/top-design/SKILL.md"
+    },
+    "skills/shelves/design/ux-heuristics/SKILL.md": {
+      "characters": 19987,
+      "estimated_tokens": 4997,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/ux-heuristics/SKILL.md",
+      "slug": "shelves--ux-heuristics",
+      "source_path": "skills/shelves/design/ux-heuristics/SKILL.md"
+    },
+    "skills/shelves/design/web-typography/SKILL.md": {
+      "characters": 27391,
+      "estimated_tokens": 6848,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/design/web-typography/SKILL.md",
+      "slug": "shelves--web-typography",
+      "source_path": "skills/shelves/design/web-typography/SKILL.md"
+    },
+    "skills/shelves/django/SKILL.md": {
+      "characters": 5680,
+      "estimated_tokens": 1420,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/django/SKILL.md",
+      "slug": "shelves--django",
+      "source_path": "skills/shelves/django/SKILL.md"
+    },
+    "skills/shelves/django/django-design-patterns/SKILL.md": {
+      "characters": 25629,
+      "estimated_tokens": 6408,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/django/django-design-patterns/SKILL.md",
+      "slug": "shelves--django-design-patterns",
+      "source_path": "skills/shelves/django/django-design-patterns/SKILL.md"
+    },
+    "skills/shelves/django/high-performance-django/SKILL.md": {
+      "characters": 25890,
+      "estimated_tokens": 6473,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/django/high-performance-django/SKILL.md",
+      "slug": "shelves--high-performance-django",
+      "source_path": "skills/shelves/django/high-performance-django/SKILL.md"
+    },
+    "skills/shelves/django/two-scoops-django/SKILL.md": {
+      "characters": 30998,
+      "estimated_tokens": 7750,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/django/two-scoops-django/SKILL.md",
+      "slug": "shelves--two-scoops-django",
+      "source_path": "skills/shelves/django/two-scoops-django/SKILL.md"
+    },
+    "skills/shelves/engineering-principles/SKILL.md": {
+      "characters": 4324,
+      "estimated_tokens": 1081,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/engineering-principles/SKILL.md",
+      "slug": "shelves--engineering-principles",
+      "source_path": "skills/shelves/engineering-principles/SKILL.md"
+    },
+    "skills/shelves/engineering-principles/clean-architecture/SKILL.md": {
+      "characters": 20733,
+      "estimated_tokens": 5184,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/clean-architecture/SKILL.md",
+      "slug": "shelves--clean-architecture",
+      "source_path": "skills/shelves/engineering-principles/clean-architecture/SKILL.md"
+    },
+    "skills/shelves/engineering-principles/clean-code/SKILL.md": {
+      "characters": 19562,
+      "estimated_tokens": 4891,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/clean-code/SKILL.md",
+      "slug": "shelves--clean-code",
+      "source_path": "skills/shelves/engineering-principles/clean-code/SKILL.md"
+    },
+    "skills/shelves/engineering-principles/design-patterns/SKILL.md": {
+      "characters": 15214,
+      "estimated_tokens": 3804,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/design-patterns/SKILL.md",
+      "slug": "shelves--design-patterns",
+      "source_path": "skills/shelves/engineering-principles/design-patterns/SKILL.md"
+    },
+    "skills/shelves/engineering-principles/domain-driven-design/SKILL.md": {
+      "characters": 19200,
+      "estimated_tokens": 4800,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/domain-driven-design/SKILL.md",
+      "slug": "shelves--domain-driven-design",
+      "source_path": "skills/shelves/engineering-principles/domain-driven-design/SKILL.md"
+    },
+    "skills/shelves/engineering-principles/pragmatic-programmer/SKILL.md": {
+      "characters": 18550,
+      "estimated_tokens": 4638,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/pragmatic-programmer/SKILL.md",
+      "slug": "shelves--pragmatic-programmer",
+      "source_path": "skills/shelves/engineering-principles/pragmatic-programmer/SKILL.md"
+    },
+    "skills/shelves/engineering-principles/refactoring-patterns/SKILL.md": {
+      "characters": 21460,
+      "estimated_tokens": 5365,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/refactoring-patterns/SKILL.md",
+      "slug": "shelves--refactoring-patterns",
+      "source_path": "skills/shelves/engineering-principles/refactoring-patterns/SKILL.md"
+    },
+    "skills/shelves/engineering-principles/software-design-philosophy/SKILL.md": {
+      "characters": 21036,
+      "estimated_tokens": 5259,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/engineering-principles/software-design-philosophy/SKILL.md",
+      "slug": "shelves--software-design-philosophy",
+      "source_path": "skills/shelves/engineering-principles/software-design-philosophy/SKILL.md"
+    },
+    "skills/shelves/geospatial/SKILL.md": {
+      "characters": 3651,
+      "estimated_tokens": 913,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/geospatial/SKILL.md",
+      "slug": "shelves--geospatial",
+      "source_path": "skills/shelves/geospatial/SKILL.md"
+    },
+    "skills/shelves/geospatial/geocomputation-with-r/SKILL.md": {
+      "characters": 11805,
+      "estimated_tokens": 2952,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/geospatial/geocomputation-with-r/SKILL.md",
+      "slug": "shelves--geocomputation-with-r",
+      "source_path": "skills/shelves/geospatial/geocomputation-with-r/SKILL.md"
+    },
+    "skills/shelves/geospatial/spatial-data-science/SKILL.md": {
+      "characters": 10803,
+      "estimated_tokens": 2701,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/geospatial/spatial-data-science/SKILL.md",
+      "slug": "shelves--spatial-data-science",
+      "source_path": "skills/shelves/geospatial/spatial-data-science/SKILL.md"
+    },
+    "skills/shelves/languages/SKILL.md": {
+      "characters": 4003,
+      "estimated_tokens": 1001,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/languages/SKILL.md",
+      "slug": "shelves--languages",
+      "source_path": "skills/shelves/languages/SKILL.md"
+    },
+    "skills/shelves/languages/effective-java/SKILL.md": {
+      "characters": 13203,
+      "estimated_tokens": 3301,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/effective-java/SKILL.md",
+      "slug": "shelves--effective-java",
+      "source_path": "skills/shelves/languages/effective-java/SKILL.md"
+    },
+    "skills/shelves/languages/effective-kotlin/SKILL.md": {
+      "characters": 16405,
+      "estimated_tokens": 4102,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/effective-kotlin/SKILL.md",
+      "slug": "shelves--effective-kotlin",
+      "source_path": "skills/shelves/languages/effective-kotlin/SKILL.md"
+    },
+    "skills/shelves/languages/effective-python/SKILL.md": {
+      "characters": 12201,
+      "estimated_tokens": 3051,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/effective-python/SKILL.md",
+      "slug": "shelves--effective-python",
+      "source_path": "skills/shelves/languages/effective-python/SKILL.md"
+    },
+    "skills/shelves/languages/effective-typescript/SKILL.md": {
+      "characters": 10317,
+      "estimated_tokens": 2580,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/effective-typescript/SKILL.md",
+      "slug": "shelves--effective-typescript",
+      "source_path": "skills/shelves/languages/effective-typescript/SKILL.md"
+    },
+    "skills/shelves/languages/kotlin-in-action/SKILL.md": {
+      "characters": 16189,
+      "estimated_tokens": 4048,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/kotlin-in-action/SKILL.md",
+      "slug": "shelves--kotlin-in-action",
+      "source_path": "skills/shelves/languages/kotlin-in-action/SKILL.md"
+    },
+    "skills/shelves/languages/programming-with-rust/SKILL.md": {
+      "characters": 12296,
+      "estimated_tokens": 3074,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/programming-with-rust/SKILL.md",
+      "slug": "shelves--programming-with-rust",
+      "source_path": "skills/shelves/languages/programming-with-rust/SKILL.md"
+    },
+    "skills/shelves/languages/rust-in-action/SKILL.md": {
+      "characters": 17149,
+      "estimated_tokens": 4288,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/rust-in-action/SKILL.md",
+      "slug": "shelves--rust-in-action",
+      "source_path": "skills/shelves/languages/rust-in-action/SKILL.md"
+    },
+    "skills/shelves/languages/spring-boot-in-action/SKILL.md": {
+      "characters": 16789,
+      "estimated_tokens": 4198,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/spring-boot-in-action/SKILL.md",
+      "slug": "shelves--spring-boot-in-action",
+      "source_path": "skills/shelves/languages/spring-boot-in-action/SKILL.md"
+    },
+    "skills/shelves/languages/using-asyncio-python/SKILL.md": {
+      "characters": 13311,
+      "estimated_tokens": 3328,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/using-asyncio-python/SKILL.md",
+      "slug": "shelves--using-asyncio-python",
+      "source_path": "skills/shelves/languages/using-asyncio-python/SKILL.md"
+    },
+    "skills/shelves/languages/web-scraping-python/SKILL.md": {
+      "characters": 14537,
+      "estimated_tokens": 3635,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/languages/web-scraping-python/SKILL.md",
+      "slug": "shelves--web-scraping-python",
+      "source_path": "skills/shelves/languages/web-scraping-python/SKILL.md"
+    },
+    "skills/shelves/marketing/SKILL.md": {
+      "characters": 1260,
+      "estimated_tokens": 315,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/marketing/SKILL.md",
+      "slug": "shelves--marketing",
+      "source_path": "skills/shelves/marketing/SKILL.md"
+    },
+    "skills/shelves/marketing/contagious/SKILL.md": {
+      "characters": 25741,
+      "estimated_tokens": 6436,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/contagious/SKILL.md",
+      "slug": "shelves--contagious",
+      "source_path": "skills/shelves/marketing/contagious/SKILL.md"
+    },
+    "skills/shelves/marketing/cro-methodology/SKILL.md": {
+      "characters": 22720,
+      "estimated_tokens": 5680,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/cro-methodology/SKILL.md",
+      "slug": "shelves--cro-methodology",
+      "source_path": "skills/shelves/marketing/cro-methodology/SKILL.md"
+    },
+    "skills/shelves/marketing/hooked-ux/SKILL.md": {
+      "characters": 19344,
+      "estimated_tokens": 4836,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/hooked-ux/SKILL.md",
+      "slug": "shelves--hooked-ux",
+      "source_path": "skills/shelves/marketing/hooked-ux/SKILL.md"
+    },
+    "skills/shelves/marketing/made-to-stick/SKILL.md": {
+      "characters": 17623,
+      "estimated_tokens": 4406,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/made-to-stick/SKILL.md",
+      "slug": "shelves--made-to-stick",
+      "source_path": "skills/shelves/marketing/made-to-stick/SKILL.md"
+    },
+    "skills/shelves/marketing/one-page-marketing/SKILL.md": {
+      "characters": 30696,
+      "estimated_tokens": 7674,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/one-page-marketing/SKILL.md",
+      "slug": "shelves--one-page-marketing",
+      "source_path": "skills/shelves/marketing/one-page-marketing/SKILL.md"
+    },
+    "skills/shelves/marketing/scorecard-marketing/SKILL.md": {
+      "characters": 18293,
+      "estimated_tokens": 4574,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/scorecard-marketing/SKILL.md",
+      "slug": "shelves--scorecard-marketing",
+      "source_path": "skills/shelves/marketing/scorecard-marketing/SKILL.md"
+    },
+    "skills/shelves/marketing/storybrand-messaging/SKILL.md": {
+      "characters": 20125,
+      "estimated_tokens": 5032,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/marketing/storybrand-messaging/SKILL.md",
+      "slug": "shelves--storybrand-messaging",
+      "source_path": "skills/shelves/marketing/storybrand-messaging/SKILL.md"
+    },
+    "skills/shelves/product/SKILL.md": {
+      "characters": 1986,
+      "estimated_tokens": 497,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/product/SKILL.md",
+      "slug": "shelves--product",
+      "source_path": "skills/shelves/product/SKILL.md"
+    },
+    "skills/shelves/product/continuous-discovery/SKILL.md": {
+      "characters": 19366,
+      "estimated_tokens": 4842,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/continuous-discovery/SKILL.md",
+      "slug": "shelves--continuous-discovery",
+      "source_path": "skills/shelves/product/continuous-discovery/SKILL.md"
+    },
+    "skills/shelves/product/design-sprint/SKILL.md": {
+      "characters": 16545,
+      "estimated_tokens": 4137,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/design-sprint/SKILL.md",
+      "slug": "shelves--design-sprint",
+      "source_path": "skills/shelves/product/design-sprint/SKILL.md"
+    },
+    "skills/shelves/product/improve-retention/SKILL.md": {
+      "characters": 20049,
+      "estimated_tokens": 5013,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/improve-retention/SKILL.md",
+      "slug": "shelves--improve-retention",
+      "source_path": "skills/shelves/product/improve-retention/SKILL.md"
+    },
+    "skills/shelves/product/inspired-product/SKILL.md": {
+      "characters": 20428,
+      "estimated_tokens": 5107,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/inspired-product/SKILL.md",
+      "slug": "shelves--inspired-product",
+      "source_path": "skills/shelves/product/inspired-product/SKILL.md"
+    },
+    "skills/shelves/product/jobs-to-be-done/SKILL.md": {
+      "characters": 20770,
+      "estimated_tokens": 5193,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/jobs-to-be-done/SKILL.md",
+      "slug": "shelves--jobs-to-be-done",
+      "source_path": "skills/shelves/product/jobs-to-be-done/SKILL.md"
+    },
+    "skills/shelves/product/lean-startup/SKILL.md": {
+      "characters": 19898,
+      "estimated_tokens": 4975,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/lean-startup/SKILL.md",
+      "slug": "shelves--lean-startup",
+      "source_path": "skills/shelves/product/lean-startup/SKILL.md"
+    },
+    "skills/shelves/product/lean-ux/SKILL.md": {
+      "characters": 19030,
+      "estimated_tokens": 4758,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/lean-ux/SKILL.md",
+      "slug": "shelves--lean-ux",
+      "source_path": "skills/shelves/product/lean-ux/SKILL.md"
+    },
+    "skills/shelves/product/mom-test/SKILL.md": {
+      "characters": 21794,
+      "estimated_tokens": 5449,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/product/mom-test/SKILL.md",
+      "slug": "shelves--mom-test",
+      "source_path": "skills/shelves/product/mom-test/SKILL.md"
+    },
+    "skills/shelves/sales/SKILL.md": {
+      "characters": 919,
+      "estimated_tokens": 230,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/sales/SKILL.md",
+      "slug": "shelves--sales",
+      "source_path": "skills/shelves/sales/SKILL.md"
+    },
+    "skills/shelves/sales/hundred-million-offers/SKILL.md": {
+      "characters": 29309,
+      "estimated_tokens": 7328,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/sales/hundred-million-offers/SKILL.md",
+      "slug": "shelves--hundred-million-offers",
+      "source_path": "skills/shelves/sales/hundred-million-offers/SKILL.md"
+    },
+    "skills/shelves/sales/influence-psychology/SKILL.md": {
+      "characters": 20411,
+      "estimated_tokens": 5103,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/sales/influence-psychology/SKILL.md",
+      "slug": "shelves--influence-psychology",
+      "source_path": "skills/shelves/sales/influence-psychology/SKILL.md"
+    },
+    "skills/shelves/sales/negotiation/SKILL.md": {
+      "characters": 24710,
+      "estimated_tokens": 6178,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/sales/negotiation/SKILL.md",
+      "slug": "shelves--negotiation",
+      "source_path": "skills/shelves/sales/negotiation/SKILL.md"
+    },
+    "skills/shelves/sales/predictable-revenue/SKILL.md": {
+      "characters": 14779,
+      "estimated_tokens": 3695,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/sales/predictable-revenue/SKILL.md",
+      "slug": "shelves--predictable-revenue",
+      "source_path": "skills/shelves/sales/predictable-revenue/SKILL.md"
+    },
+    "skills/shelves/statistical-inference/SKILL.md": {
+      "characters": 6631,
+      "estimated_tokens": 1658,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/statistical-inference/SKILL.md",
+      "slug": "shelves--statistical-inference",
+      "source_path": "skills/shelves/statistical-inference/SKILL.md"
+    },
+    "skills/shelves/statistical-inference/causal-inference-mixtape/SKILL.md": {
+      "characters": 10111,
+      "estimated_tokens": 2528,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/statistical-inference/causal-inference-mixtape/SKILL.md",
+      "slug": "shelves--causal-inference-mixtape",
+      "source_path": "skills/shelves/statistical-inference/causal-inference-mixtape/SKILL.md"
+    },
+    "skills/shelves/statistical-inference/causal-inference-what-if/SKILL.md": {
+      "characters": 9224,
+      "estimated_tokens": 2306,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/statistical-inference/causal-inference-what-if/SKILL.md",
+      "slug": "shelves--causal-inference-what-if",
+      "source_path": "skills/shelves/statistical-inference/causal-inference-what-if/SKILL.md"
+    },
+    "skills/shelves/statistical-inference/statistical-rethinking-course/SKILL.md": {
+      "characters": 10210,
+      "estimated_tokens": 2553,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/statistical-inference/statistical-rethinking-course/SKILL.md",
+      "slug": "shelves--statistical-rethinking-course",
+      "source_path": "skills/shelves/statistical-inference/statistical-rethinking-course/SKILL.md"
+    },
+    "skills/shelves/statistical-inference/think-stats/SKILL.md": {
+      "characters": 8463,
+      "estimated_tokens": 2116,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/statistical-inference/think-stats/SKILL.md",
+      "slug": "shelves--think-stats",
+      "source_path": "skills/shelves/statistical-inference/think-stats/SKILL.md"
+    },
+    "skills/shelves/storytelling/SKILL.md": {
+      "characters": 2039,
+      "estimated_tokens": 510,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/storytelling/SKILL.md",
+      "slug": "shelves--storytelling",
+      "source_path": "skills/shelves/storytelling/SKILL.md"
+    },
+    "skills/shelves/storytelling/animation-at-work/SKILL.md": {
+      "characters": 13620,
+      "estimated_tokens": 3405,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/storytelling/animation-at-work/SKILL.md",
+      "slug": "shelves--animation-at-work",
+      "source_path": "skills/shelves/storytelling/animation-at-work/SKILL.md"
+    },
+    "skills/shelves/storytelling/storytelling-with-data/SKILL.md": {
+      "characters": 13163,
+      "estimated_tokens": 3291,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/storytelling/storytelling-with-data/SKILL.md",
+      "slug": "shelves--storytelling-with-data",
+      "source_path": "skills/shelves/storytelling/storytelling-with-data/SKILL.md"
+    },
+    "skills/shelves/storytelling/tufte-data-viz/SKILL.md": {
+      "characters": 20751,
+      "estimated_tokens": 5188,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/storytelling/tufte-data-viz/SKILL.md",
+      "slug": "shelves--tufte-data-viz",
+      "source_path": "skills/shelves/storytelling/tufte-data-viz/SKILL.md"
+    },
+    "skills/shelves/strategy/SKILL.md": {
+      "characters": 985,
+      "estimated_tokens": 247,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/strategy/SKILL.md",
+      "slug": "shelves--strategy",
+      "source_path": "skills/shelves/strategy/SKILL.md"
+    },
+    "skills/shelves/strategy/blue-ocean-strategy/SKILL.md": {
+      "characters": 17526,
+      "estimated_tokens": 4382,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/strategy/blue-ocean-strategy/SKILL.md",
+      "slug": "shelves--blue-ocean-strategy",
+      "source_path": "skills/shelves/strategy/blue-ocean-strategy/SKILL.md"
+    },
+    "skills/shelves/strategy/crossing-the-chasm/SKILL.md": {
+      "characters": 15091,
+      "estimated_tokens": 3773,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/strategy/crossing-the-chasm/SKILL.md",
+      "slug": "shelves--crossing-the-chasm",
+      "source_path": "skills/shelves/strategy/crossing-the-chasm/SKILL.md"
+    },
+    "skills/shelves/strategy/obviously-awesome/SKILL.md": {
+      "characters": 24799,
+      "estimated_tokens": 6200,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/strategy/obviously-awesome/SKILL.md",
+      "slug": "shelves--obviously-awesome",
+      "source_path": "skills/shelves/strategy/obviously-awesome/SKILL.md"
+    },
+    "skills/shelves/strategy/traction-eos/SKILL.md": {
+      "characters": 15938,
+      "estimated_tokens": 3985,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/strategy/traction-eos/SKILL.md",
+      "slug": "shelves--traction-eos",
+      "source_path": "skills/shelves/strategy/traction-eos/SKILL.md"
+    },
+    "skills/shelves/systems-architecture/SKILL.md": {
+      "characters": 3284,
+      "estimated_tokens": 821,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/systems-architecture/SKILL.md",
+      "slug": "shelves--systems-architecture",
+      "source_path": "skills/shelves/systems-architecture/SKILL.md"
+    },
+    "skills/shelves/systems-architecture/data-intensive/SKILL.md": {
+      "characters": 23688,
+      "estimated_tokens": 5922,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/data-intensive/SKILL.md",
+      "slug": "shelves--data-intensive",
+      "source_path": "skills/shelves/systems-architecture/data-intensive/SKILL.md"
+    },
+    "skills/shelves/systems-architecture/high-perf-browser/SKILL.md": {
+      "characters": 19690,
+      "estimated_tokens": 4923,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/high-perf-browser/SKILL.md",
+      "slug": "shelves--high-perf-browser",
+      "source_path": "skills/shelves/systems-architecture/high-perf-browser/SKILL.md"
+    },
+    "skills/shelves/systems-architecture/microservices-patterns/SKILL.md": {
+      "characters": 19673,
+      "estimated_tokens": 4919,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/microservices-patterns/SKILL.md",
+      "slug": "shelves--microservices-patterns",
+      "source_path": "skills/shelves/systems-architecture/microservices-patterns/SKILL.md"
+    },
+    "skills/shelves/systems-architecture/release-it/SKILL.md": {
+      "characters": 21091,
+      "estimated_tokens": 5273,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/release-it/SKILL.md",
+      "slug": "shelves--release-it",
+      "source_path": "skills/shelves/systems-architecture/release-it/SKILL.md"
+    },
+    "skills/shelves/systems-architecture/system-design-interview/SKILL.md": {
+      "characters": 12892,
+      "estimated_tokens": 3223,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/system-design-interview/SKILL.md",
+      "slug": "shelves--system-design-interview",
+      "source_path": "skills/shelves/systems-architecture/system-design-interview/SKILL.md"
+    },
+    "skills/shelves/systems-architecture/system-design/SKILL.md": {
+      "characters": 19031,
+      "estimated_tokens": 4758,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/systems-architecture/system-design/SKILL.md",
+      "slug": "shelves--system-design",
+      "source_path": "skills/shelves/systems-architecture/system-design/SKILL.md"
+    },
+    "skills/shelves/team/37signals-way/SKILL.md": {
+      "characters": 24449,
+      "estimated_tokens": 6113,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/team/37signals-way/SKILL.md",
+      "slug": "shelves--37signals-way",
+      "source_path": "skills/shelves/team/37signals-way/SKILL.md"
+    },
+    "skills/shelves/team/SKILL.md": {
+      "characters": 2353,
+      "estimated_tokens": 589,
+      "kind": "shelf-router",
+      "package_path": "skills/shelves/team/SKILL.md",
+      "slug": "shelves--team",
+      "source_path": "skills/shelves/team/SKILL.md"
+    },
+    "skills/shelves/team/drive-motivation/SKILL.md": {
+      "characters": 16332,
+      "estimated_tokens": 4083,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/team/drive-motivation/SKILL.md",
+      "slug": "shelves--drive-motivation",
+      "source_path": "skills/shelves/team/drive-motivation/SKILL.md"
+    },
+    "skills/shelves/team/staff-engineer/SKILL.md": {
+      "characters": 11353,
+      "estimated_tokens": 2839,
+      "kind": "reference-shelf",
+      "package_path": "skills/shelves/team/staff-engineer/SKILL.md",
+      "slug": "shelves--staff-engineer",
+      "source_path": "skills/shelves/team/staff-engineer/SKILL.md"
+    },
+    "skills/skillbuilder/SKILL.md": {
+      "characters": 13476,
+      "estimated_tokens": 3369,
+      "kind": "skill",
+      "package_path": "skills/skillbuilder/SKILL.md",
+      "slug": "skillbuilder",
+      "source_path": "skills/skillbuilder/SKILL.md"
+    },
+    "skills/solutions-catalog/SKILL.md": {
+      "characters": 4002,
+      "estimated_tokens": 1001,
+      "kind": "skill",
+      "package_path": "skills/solutions-catalog/SKILL.md",
+      "slug": "solutions-catalog",
+      "source_path": "skills/solutions-catalog/SKILL.md"
+    },
+    "skills/spark/SKILL.md": {
+      "characters": 6331,
+      "estimated_tokens": 1583,
+      "kind": "skill",
+      "package_path": "skills/spark/SKILL.md",
+      "slug": "spark",
+      "source_path": "skills/spark/SKILL.md"
+    },
+    "skills/spatial/SKILL.md": {
+      "characters": 11067,
+      "estimated_tokens": 2767,
+      "kind": "skill",
+      "package_path": "skills/spatial/SKILL.md",
+      "slug": "spatial",
+      "source_path": "skills/spatial/SKILL.md"
+    },
+    "skills/sql/SKILL.md": {
+      "characters": 5272,
+      "estimated_tokens": 1318,
+      "kind": "skill",
+      "package_path": "skills/sql/SKILL.md",
+      "slug": "sql",
+      "source_path": "skills/sql/SKILL.md"
+    },
+    "skills/stalled-session-recovery/SKILL.md": {
+      "characters": 12045,
+      "estimated_tokens": 3012,
+      "kind": "skill",
+      "package_path": "skills/stalled-session-recovery/SKILL.md",
+      "slug": "stalled-session-recovery",
+      "source_path": "skills/stalled-session-recovery/SKILL.md"
+    },
+    "skills/survey-context/SKILL.md": {
+      "characters": 13031,
+      "estimated_tokens": 3258,
+      "kind": "skill",
+      "package_path": "skills/survey-context/SKILL.md",
+      "slug": "survey-context",
+      "source_path": "skills/survey-context/SKILL.md"
+    },
+    "skills/test-coverage-audit/SKILL.md": {
+      "characters": 8095,
+      "estimated_tokens": 2024,
+      "kind": "skill",
+      "package_path": "skills/test-coverage-audit/SKILL.md",
+      "slug": "test-coverage-audit",
+      "source_path": "skills/test-coverage-audit/SKILL.md"
+    },
+    "skills/testing-frameworks/SKILL.md": {
+      "characters": 13791,
+      "estimated_tokens": 3448,
+      "kind": "skill",
+      "package_path": "skills/testing-frameworks/SKILL.md",
+      "slug": "testing-frameworks",
+      "source_path": "skills/testing-frameworks/SKILL.md"
+    },
+    "skills/think/SKILL.md": {
+      "characters": 30156,
+      "estimated_tokens": 7539,
+      "kind": "skill",
+      "package_path": "skills/think/SKILL.md",
+      "slug": "think",
+      "source_path": "skills/think/SKILL.md"
+    },
+    "skills/ticket-decomposition/SKILL.md": {
+      "characters": 10780,
+      "estimated_tokens": 2695,
+      "kind": "skill",
+      "package_path": "skills/ticket-decomposition/SKILL.md",
+      "slug": "ticket-decomposition",
+      "source_path": "skills/ticket-decomposition/SKILL.md"
+    },
+    "skills/ticket-guard/SKILL.md": {
+      "characters": 6434,
+      "estimated_tokens": 1609,
+      "kind": "skill",
+      "package_path": "skills/ticket-guard/SKILL.md",
+      "slug": "ticket-guard",
+      "source_path": "skills/ticket-guard/SKILL.md"
+    },
+    "skills/tool-availability-probe/SKILL.md": {
+      "characters": 5754,
+      "estimated_tokens": 1439,
+      "kind": "skill",
+      "package_path": "skills/tool-availability-probe/SKILL.md",
+      "slug": "tool-availability-probe",
+      "source_path": "skills/tool-availability-probe/SKILL.md"
+    },
+    "skills/unity-catalog/SKILL.md": {
+      "characters": 7781,
+      "estimated_tokens": 1946,
+      "kind": "skill",
+      "package_path": "skills/unity-catalog/SKILL.md",
+      "slug": "unity-catalog",
+      "source_path": "skills/unity-catalog/SKILL.md"
+    },
+    "skills/update-ticket/SKILL.md": {
+      "characters": 7839,
+      "estimated_tokens": 1960,
+      "kind": "skill",
+      "package_path": "skills/update-ticket/SKILL.md",
+      "slug": "update-ticket",
+      "source_path": "skills/update-ticket/SKILL.md"
+    },
+    "skills/verify-failure-premise/SKILL.md": {
+      "characters": 14817,
+      "estimated_tokens": 3705,
+      "kind": "skill",
+      "package_path": "skills/verify-failure-premise/SKILL.md",
+      "slug": "verify-failure-premise",
+      "source_path": "skills/verify-failure-premise/SKILL.md"
+    },
+    "skills/vue/SKILL.md": {
+      "characters": 9667,
+      "estimated_tokens": 2417,
+      "kind": "skill",
+      "package_path": "skills/vue/SKILL.md",
+      "slug": "vue",
+      "source_path": "skills/vue/SKILL.md"
+    },
+    "skills/wrap-up/SKILL.md": {
+      "characters": 8931,
+      "estimated_tokens": 2233,
+      "kind": "skill",
+      "package_path": "skills/wrap-up/SKILL.md",
+      "slug": "wrap-up",
+      "source_path": "skills/wrap-up/SKILL.md"
+    }
+  },
+  "policy": {
+    "ambiguous": "kernel-only-visible",
+    "ordering": "priority-descending-then-route-id",
+    "shelves_auto_select": false,
+    "unknown": "kernel-only-visible"
+  },
+  "projects": [
+    {
+      "always": [
+        "siege-utilities--rules"
+      ],
+      "id": "siege-utilities",
+      "repos": [
+        "github.com/siege-analytics/siege_utilities"
+      ],
+      "routes": [
+        {
+          "id": "su-review",
+          "priority": 110,
+          "skills": [
+            "siege-utilities--hostile-review"
+          ],
+          "terms": [
+            "review",
+            "pull request",
+            "diff"
+          ]
+        },
+        {
+          "id": "su-contract",
+          "priority": 110,
+          "skills": [
+            "siege-utilities--notebook-impact"
+          ],
+          "terms": [
+            "signature",
+            "return type",
+            "exception contract"
+          ]
+        },
+        {
+          "id": "su-error-tests",
+          "priority": 110,
+          "skills": [
+            "siege-utilities--error-path-tests"
+          ],
+          "terms": [
+            "error path",
+            "exception test"
+          ]
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "id": "git-branch",
+      "priority": 100,
+      "skills": [
+        "branch"
+      ],
+      "terms": [
+        "create branch",
+        "new branch",
+        "checkout branch"
+      ]
+    },
+    {
+      "id": "git-commit",
+      "priority": 100,
+      "skills": [
+        "commit"
+      ],
+      "terms": [
+        "commit changes",
+        "git commit",
+        "create commit"
+      ]
+    },
+    {
+      "id": "git-pr",
+      "priority": 100,
+      "skills": [
+        "create-pr"
+      ],
+      "terms": [
+        "open pr",
+        "create pr",
+        "pull request"
+      ]
+    },
+    {
+      "id": "git-merge",
+      "priority": 100,
+      "skills": [
+        "merge"
+      ],
+      "terms": [
+        "merge pr",
+        "merge pull request"
+      ]
+    },
+    {
+      "id": "code-review",
+      "priority": 90,
+      "skills": [
+        "code-review"
+      ],
+      "terms": [
+        "review this pr",
+        "review this diff",
+        "code review"
+      ]
+    },
+    {
+      "id": "skill-authoring",
+      "priority": 90,
+      "skills": [
+        "skillbuilder"
+      ],
+      "terms": [
+        "create a skill",
+        "audit skills",
+        "fix this skill",
+        "skill library"
+      ]
+    },
+    {
+      "exclusive_group": "ticket-action",
+      "id": "ticketing",
+      "priority": 85,
+      "skills": [
+        "ticket-guard",
+        "create-ticket"
+      ],
+      "terms": [
+        "create ticket",
+        "create tickets",
+        "create issue",
+        "create issues",
+        "file a ticket",
+        "file an issue",
+        "open a ticket"
+      ]
+    },
+    {
+      "exclusive_group": "ticket-action",
+      "id": "ticketing-update",
+      "priority": 85,
+      "skills": [
+        "ticket-guard",
+        "update-ticket"
+      ],
+      "terms": [
+        "update ticket",
+        "update tickets",
+        "update issue",
+        "update issues",
+        "edit ticket",
+        "edit issue"
+      ]
+    },
+    {
+      "exclusive_group": "ticket-action",
+      "id": "ticketing-close",
+      "priority": 85,
+      "skills": [
+        "ticket-guard",
+        "close-ticket"
+      ],
+      "terms": [
+        "close ticket",
+        "close tickets",
+        "close issue",
+        "close issues",
+        "mark ticket closed",
+        "mark issue closed"
+      ]
+    },
+    {
+      "id": "python",
+      "priority": 70,
+      "skills": [
+        "coding",
+        "python"
+      ],
+      "suffixes": [
+        ".py"
+      ],
+      "terms": [
+        "python",
+        "pytest",
+        "pyproject"
+      ]
+    },
+    {
+      "id": "testing",
+      "priority": 70,
+      "skills": [
+        "testing-frameworks",
+        "test-coverage-audit"
+      ],
+      "terms": [
+        "write tests",
+        "test coverage",
+        "regression test"
+      ]
+    },
+    {
+      "id": "sql",
+      "priority": 70,
+      "skills": [
+        "coding",
+        "sql"
+      ],
+      "suffixes": [
+        ".sql"
+      ],
+      "terms": [
+        "sql",
+        "postgres",
+        "query"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "analyze",
+        "edit"
+      ]
+    },
+    {
+      "exclude_pure_visualization": true,
+      "id": "spatial",
+      "priority": 75,
+      "skills": [
+        "spatial"
+      ],
+      "terms": [
+        "geospatial",
+        "spatial join",
+        "postgis",
+        "geopandas",
+        "sedona",
+        "duckdb spatial",
+        "spatial analysis"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "analyze",
+        "edit"
+      ]
+    },
+    {
+      "id": "spark",
+      "priority": 75,
+      "skills": [
+        "spark"
+      ],
+      "terms": [
+        "pyspark",
+        "spark dataframe",
+        "spark sql"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "edit"
+      ]
+    },
+    {
+      "id": "databricks",
+      "priority": 75,
+      "skills": [
+        "databricks",
+        "unity-catalog"
+      ],
+      "terms": [
+        "databricks",
+        "unity catalog",
+        "delta table"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "register",
+        "save",
+        "edit"
+      ]
+    },
+    {
+      "id": "django",
+      "priority": 75,
+      "skills": [
+        "django"
+      ],
+      "terms": [
+        "django",
+        "migration",
+        "queryset"
+      ]
+    },
+    {
+      "id": "django-rest-framework",
+      "priority": 78,
+      "skills": [
+        "coding",
+        "python",
+        "django",
+        "django-rest-framework"
+      ],
+      "terms": [
+        "django rest framework",
+        "django-rest-framework",
+        "drf",
+        "rest_framework"
+      ]
+    },
+    {
+      "id": "react",
+      "priority": 75,
+      "skills": [
+        "react"
+      ],
+      "suffixes": [
+        ".tsx",
+        ".jsx"
+      ],
+      "terms": [
+        "react",
+        "tsx",
+        "jsx"
+      ]
+    },
+    {
+      "id": "typescript",
+      "priority": 76,
+      "skills": [
+        "coding",
+        "typescript"
+      ],
+      "suffixes": [
+        ".ts",
+        ".tsx"
+      ],
+      "terms": [
+        "typescript",
+        "tsx"
+      ]
+    },
+    {
+      "id": "vue",
+      "priority": 75,
+      "skills": [
+        "vue"
+      ],
+      "suffixes": [
+        ".vue"
+      ],
+      "terms": [
+        "vue",
+        "pinia"
+      ]
+    },
+    {
+      "id": "rust",
+      "priority": 75,
+      "skills": [
+        "coding",
+        "rust"
+      ],
+      "suffixes": [
+        ".rs"
+      ],
+      "terms": [
+        "rust",
+        "cargo.toml"
+      ]
+    },
+    {
+      "id": "session-recovery",
+      "priority": 95,
+      "skills": [
+        "stalled-session-recovery"
+      ],
+      "terms": [
+        "stalled session",
+        "context limit",
+        "session recovery"
+      ]
+    },
+    {
+      "id": "release",
+      "priority": 95,
+      "skills": [
+        "develop-guard"
+      ],
+      "terms": [
+        "release",
+        "publish",
+        "deploy",
+        "tag version"
+      ]
+    },
+    {
+      "exclude_terms": [
+        "java",
+        "scala"
+      ],
+      "id": "pipeline-jobs",
+      "priority": 77,
+      "skills": [
+        "pipeline-jobs"
+      ],
+      "terms": [
+        "etl pipeline",
+        "data pipeline job",
+        "pipeline script",
+        "airflow dag",
+        "rundeck job",
+        "scheduled data processing",
+        "recurring pipeline job",
+        "etl job",
+        "batch data processing job",
+        "schedule pipeline"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze"
+      ]
+    },
+    {
+      "id": "analysis-methods",
+      "priority": 76,
+      "skills": [
+        "analysis"
+      ],
+      "terms": [
+        "statistical modeling",
+        "hypothesis testing",
+        "regression analysis",
+        "entity matching",
+        "record linkage",
+        "graph analysis",
+        "spatial analysis",
+        "statistical analysis",
+        "analyze distributions",
+        "sampling analysis",
+        "geospatial analysis"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze"
+      ]
+    },
+    {
+      "id": "unity-catalog-write",
+      "priority": 79,
+      "skills": [
+        "unity-catalog"
+      ],
+      "terms": [
+        "saveastable",
+        "catalog-managed s3",
+        "s3a://hive-warehouse",
+        "s3://silver",
+        "s3://gold",
+        "raw delta path",
+        "raw parquet path",
+        "raw iceberg path",
+        "register table in unity catalog",
+        "register table in hive metastore",
+        "delta to s3",
+        "parquet to s3",
+        "iceberg to s3",
+        "df.write.parquet",
+        "delta path",
+        "parquet path",
+        "iceberg path",
+        "register table",
+        "write delta",
+        "write parquet",
+        "write iceberg",
+        "write orc",
+        "orc to s3",
+        "s3://bronze",
+        "insert overwrite table",
+        "insertinto",
+        "using delta location",
+        "hive metastore",
+        "register analytics table",
+        "write.format(\"delta\")",
+        "write.format(\"iceberg\")",
+        "write.format('delta')",
+        "write.format('iceberg')"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "call",
+        "modify",
+        "touch",
+        "insert",
+        "edit"
+      ]
+    },
+    {
+      "context_terms": [
+        "spark",
+        "databricks",
+        "dataset[t]",
+        "%scala"
+      ],
+      "id": "scala-on-spark",
+      "priority": 78,
+      "skills": [
+        "scala-on-spark",
+        "spark"
+      ],
+      "suffixes": [
+        ".scala"
+      ],
+      "terms": [
+        "scala spark",
+        "scala on spark",
+        "scala databricks",
+        "%scala",
+        "dataset[t]"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design"
+      ]
+    },
+    {
+      "exclude_pure_visualization": true,
+      "id": "postgis-engine",
+      "priority": 78,
+      "skills": [
+        "postgis",
+        "sql",
+        "spatial"
+      ],
+      "terms": [
+        "postgis",
+        "postgis extension",
+        "postgis sql",
+        "st_intersects in postgres",
+        "st_dwithin in postgres",
+        "st_contains in postgres"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ]
+    },
+    {
+      "exclude_pure_visualization": true,
+      "id": "geopandas-engine",
+      "priority": 78,
+      "skills": [
+        "geopandas",
+        "spatial"
+      ],
+      "terms": [
+        "geopandas",
+        "gpd.sjoin",
+        "geodataframe",
+        "shapely.geometry",
+        "gpd.overlay",
+        "gpd.to_file"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ]
+    },
+    {
+      "exclude_pure_visualization": true,
+      "id": "sedona-engine",
+      "priority": 78,
+      "skills": [
+        "sedona",
+        "spark",
+        "spatial"
+      ],
+      "terms": [
+        "sedona",
+        "sedonacontext",
+        "sedonaregistrator"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ]
+    },
+    {
+      "all_terms": [
+        "import duckdb",
+        "install spatial"
+      ],
+      "exclude_pure_visualization": true,
+      "id": "duckdb-spatial-engine",
+      "priority": 78,
+      "skills": [
+        "duckdb-spatial",
+        "sql",
+        "spatial"
+      ],
+      "terms": [
+        "duckdb spatial",
+        "duckdb-spatial",
+        "duckdb spatial extension",
+        "st_read in duckdb",
+        "geoparquet without gdal",
+        "st_read",
+        "duckdb install spatial",
+        "duckdb load spatial"
+      ],
+      "verbs": [
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "optimize",
+        "build",
+        "run",
+        "debug",
+        "refactor",
+        "create",
+        "perform",
+        "design",
+        "schedule",
+        "register",
+        "save",
+        "load",
+        "analyze",
+        "edit"
+      ]
+    },
+    {
+      "context_terms": [
+        "spark",
+        "unity catalog",
+        "hive metastore",
+        "catalog-managed",
+        "delta table",
+        "s3://bronze",
+        "s3://silver",
+        "s3://gold"
+      ],
+      "id": "unity-catalog-insert",
+      "priority": 79,
+      "skills": [
+        "unity-catalog"
+      ],
+      "terms": [
+        "insert into"
+      ],
+      "verbs": [
+        "insert",
+        "write",
+        "implement",
+        "fix",
+        "review",
+        "edit",
+        "run",
+        "analyze"
+      ]
+    },
+    {
+      "id": "unity-catalog-sparkapplication",
+      "priority": 79,
+      "required_groups": [
+        [
+          "writes",
+          "writing"
+        ],
+        [
+          "delta",
+          "parquet"
+        ],
+        [
+          "shared storage"
+        ]
+      ],
+      "skills": [
+        "unity-catalog"
+      ],
+      "terms": [
+        "sparkapplication crd"
+      ],
+      "verbs": [
+        "modify",
+        "review",
+        "implement",
+        "write",
+        "fix"
+      ]
+    }
+  ],
+  "schema_version": 1
+}
