@@ -40,6 +40,12 @@ import sys
 import glob
 import subprocess
 from task_actions import action, canonical
+from session_anchor import correct_environ as _correct_session_environ
+
+# A mis-tagged CRAFT_SESSION_DIR must not decide whose gates apply (#1099). Fix
+# it in this process's environment before anything reads it; children inherit.
+for _note in _correct_session_environ():
+    print(f"[resolve-think-gate] {_note}", file=sys.stderr)
 from typing import Optional
 
 
