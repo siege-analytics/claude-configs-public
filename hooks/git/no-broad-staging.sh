@@ -26,6 +26,8 @@ _FAST_FIRST='"tool_input"[[:space:]]*:[[:space:]]*[{][[:space:]]*"command"[[:spa
 _FAST_RE='(^|[^[:alnum:]])git add([^[:alnum:]]|$)'
 if [[ "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE ]]; then exit 0; fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=../lib/command-text.sh
+source "$HOOK_DIR/../lib/command-text.sh"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
@@ -37,7 +39,13 @@ fi
 # Match git add anywhere in the command (not just at start) so
 # `cd /path && git add` doesn't bypass. Uses portable word boundary
 # via character-class form (see branch-guard.sh, issue #106).
-if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git add([^[:alnum:]]|$)'; then
+# Match against CODE only: a heredoc body or quoted string that merely mentions
+# the forbidden form (documentation, a fixture, an issue body) is not staging.
+# ct_code_only takes the command as an ARGUMENT; piping to it returns empty and
+# would turn this guard into a no-op (broad_staging.test.sh asserts the blocks).
+COMMAND_CODE=$(ct_code_only "$COMMAND")
+
+if ! echo "$COMMAND_CODE" | grep -qE '(^|[^[:alnum:]])git add([^[:alnum:]]|$)'; then
     exit 0
 fi
 
@@ -50,7 +58,7 @@ if [[ -f "$HOOK_DIR/../lib/scope-check.sh" ]]; then
 fi
 
 # Block broad staging patterns
-if echo "$COMMAND" | grep -qE 'git add\s+(-A|--all|\.\s*$|\.\s+)'; then
+if echo "$COMMAND_CODE" | grep -qE 'git add\s+(-A|--all|\.\s*$|\.\s+)'; then
     cat >&2 <<EOF
 BLOCKED: Broad staging ('git add -A', 'git add .', 'git add --all') is not allowed.
 
