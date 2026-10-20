@@ -36,7 +36,14 @@ model = str(tool_input.get("model") or "")
 permission = str(tool_input.get("permissionMode") or "")
 thinking = str(tool_input.get("thinkingLevel") or "")
 working_directory = str(tool_input.get("workingDirectory") or os.getcwd())
-labels = " ".join(map(str, tool_input.get("labels") or []))
+labels_key_present = "labels" in tool_input
+raw_labels = tool_input.get("labels")
+valid_labels = (
+    isinstance(raw_labels, list)
+    and bool(raw_labels)
+    and all(isinstance(label, str) and label.strip() for label in raw_labels)
+)
+labels = " ".join(raw_labels) if valid_labels else ""
 attachments = tool_input.get("attachments") or []
 source_key_present = "enabledSourceSlugs" in tool_input
 sources = tool_input.get("enabledSourceSlugs")
@@ -51,6 +58,9 @@ errors = []
 
 if permission != "allow-all":
     errors.append("permissionMode must be explicit allow-all for spawned sessions that may act or reply")
+
+if not labels_key_present or not valid_labels:
+    errors.append("labels must be an explicit nonempty array of nonempty role-label strings; never inherit parent identity")
 
 if not model:
     errors.append("model must be explicit; do not rely on inherited defaults")
@@ -103,7 +113,7 @@ if errors:
     for err in errors:
         print(f"  - {err}", file=sys.stderr)
     print("", file=sys.stderr)
-    print("Required: explicit permissionMode=allow-all, model, thinkingLevel, enabledSourceSlugs,", file=sys.stderr)
+    print("Required: explicit permissionMode=allow-all, nonempty role labels, model, thinkingLevel, enabledSourceSlugs,", file=sys.stderr)
     print("and a prompt/attachment that binds child sessions to RULES_BUNDLE/RESOLVER/session-coordination rules.", file=sys.stderr)
     print("Review/security/bypass sessions require high-or-higher reasoning and a strong reasoning-capable model.", file=sys.stderr)
     sys.exit(2)

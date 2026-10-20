@@ -222,5 +222,67 @@ echo "== a session's own data/ dir is its scratch (#1051 B1); escapes and non-fi
 for c in 'touch notes.txt' 'rm -rf out'; do expect allow "$D" "$c"; done
 for c in 'python3 -m venv venv' "rm -rf .''./.''./plans" 'env -C x rm -rf plans' \
          'pkill -f airflow' 'glab mr merge 1'; do expect block "$D" "$c"; done
+# Escapes from the scratch folder stay gated (probed on v3.5.73; pinned here).
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$D" "$c"; done <<'EOF'
+touch ../../x
+touch ~/x
+touch /etc/x
+echo x > ../../x
+echo x > /tmp/x
+cd .. && touch x
+cp notes.txt /tmp/elsewhere
+cp notes.txt ../../plans/p
+ln -s /etc/passwd p
+mv notes.txt ../n
+tee ../../x
+mkdir ../../d
+rm -rf ../../plans
+rm -rf ../
+rm -rf /tmp/x
+rm -rf ~/x
+cd .. && rm -rf data
+EOF
+for c in 'echo x > out.txt' 'mkdir sub'; do expect allow "$D" "$c"; done
+# Links (#1100): a link's other end is a target, and a file with another name
+# elsewhere is not scratch, because canonical paths cannot see hardlinks.
+mkdir -p "$T/ws/plans"; echo keep > "$T/ws/plans/p.md"; ln "$T/ws/plans/p.md" "$D/hl"
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$D" "$c"; done <<'EOF'
+cp -l ../../../plans/p.md h
+cp --link ../../../plans/p.md h
+cp -al ../../../plans h
+cp -s ../../../plans/p.md h
+cp --symbolic-link ../../../plans/p.md h
+ln ../../../plans/p.md h
+ln sub/../../../../plans/p.md h
+echo x >> hl
+echo x > hl
+tee hl
+cp notes.txt hl
+chmod 600 hl
+EOF
+for c in 'cat hl' 'rm hl' 'cp hl copy.md'; do expect allow "$D" "$c"; done
+# #1100 review: abbreviated long options, copies that carry a symlink across,
+# and a removal of the same name that must not excuse the write before it.
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$D" "$c"; done <<'EOF'
+cp --lin ../../../plans/p.md h
+cp --li ../../../plans/p.md h
+cp --sym ../../../plans/p.md h
+cp --symbolic ../../../plans/p.md h
+cp -P /proc/self/root r
+cp -r /proc/self/root r
+cp -a /proc/self/root r
+cp --no-deref /proc/self/root r
+echo x >> hl; rm hl
+cp notes.txt hl && rm -f hl
+chmod 600 hl; rm hl
+echo x | tee -a hl; rm hl
+EOF
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
+ln -sf /etc/hostname --target-directory=d
+ln -sf /etc/hostname --targ=d
+ln -sf -td /etc/hostname
+EOF
+mkdir -p "$D/sub"; echo s > "$D/sub/f"; echo n > "$D/notes.txt"
+for c in 'ln notes.txt n2' 'ln -s notes.txt n3' 'cp -r sub copy' 'cp -r ../../../plans pcopy' 'cp notes.txt n4'; do expect allow "$D" "$c"; done
 printf 'read_allowlist: %d passed, %d failed\n' "$PASS" "$FAIL"
 (( FAIL == 0 ))

@@ -23,29 +23,44 @@ expect_block \
   "$(payload '{"name":"GPT review","prompt":"Review this diff and return findings.","model":"pi/gpt-5.5"}')"
 
 expect_block \
+  "review spawn missing labels blocks" \
+  "$HOOK" \
+  "$(payload '{"name":"Review","prompt":"Review with RULES_BUNDLE and send_agent_message findings then set_session_status needs-review.","permissionMode":"allow-all","model":"pi/gpt-5.5","thinkingLevel":"high","enabledSourceSlugs":[]}')"
+
+expect_block \
+  "review spawn with empty labels blocks" \
+  "$HOOK" \
+  "$(payload '{"name":"Review","prompt":"Review with RULES_BUNDLE and send_agent_message findings then set_session_status needs-review.","permissionMode":"allow-all","labels":[],"model":"pi/gpt-5.5","thinkingLevel":"high","enabledSourceSlugs":[]}')"
+
+expect_block \
+  "review spawn with non-array labels blocks" \
+  "$HOOK" \
+  "$(payload '{"name":"Review","prompt":"Review with RULES_BUNDLE and send_agent_message findings then set_session_status needs-review.","permissionMode":"allow-all","labels":"content","model":"pi/gpt-5.5","thinkingLevel":"high","enabledSourceSlugs":[]}')"
+
+expect_block \
   "review spawn with weak model blocks" \
   "$HOOK" \
-  "$(payload '{"name":"Review","prompt":"Review with RULES_BUNDLE and send_agent_message findings then set_session_status done.","permissionMode":"allow-all","model":"pi/gpt-5.4-mini","thinkingLevel":"high","enabledSourceSlugs":[]}')"
+  "$(payload '{"name":"Review","prompt":"Review with RULES_BUNDLE and send_agent_message findings then set_session_status needs-review.","permissionMode":"allow-all","labels":["content","research"],"model":"pi/gpt-5.4-mini","thinkingLevel":"high","enabledSourceSlugs":[]}')"
 
 expect_block \
   "review spawn without rules binding blocks" \
   "$HOOK" \
-  "$(payload '{"name":"Review","prompt":"Review and send_agent_message findings then set_session_status done.","permissionMode":"allow-all","model":"pi/gpt-5.5","thinkingLevel":"high","enabledSourceSlugs":[]}')"
+  "$(payload '{"name":"Review","prompt":"Review and send_agent_message findings then set_session_status needs-review.","permissionMode":"allow-all","labels":["content","research"],"model":"pi/gpt-5.5","thinkingLevel":"high","enabledSourceSlugs":[]}')"
 
 expect_block \
   "review spawn with non-reasoning model blocks" \
   "$HOOK" \
-  "$(payload '{"name":"Review","prompt":"Review with RULES_BUNDLE and send_agent_message findings then set_session_status done.","permissionMode":"allow-all","model":"gpt-4o","thinkingLevel":"high","enabledSourceSlugs":[]}')"
+  "$(payload '{"name":"Review","prompt":"Review with RULES_BUNDLE and send_agent_message findings then set_session_status needs-review.","permissionMode":"allow-all","labels":["content","research"],"model":"gpt-4o","thinkingLevel":"high","enabledSourceSlugs":[]}')"
 
 expect_pass \
   "review spawn with explicit rules contract passes" \
   "$HOOK" \
-  "$(payload '{"name":"GPT-5.5 review","prompt":"Review using RULES_BUNDLE and session-coordination. Send findings by send_agent_message and call set_session_status done.","permissionMode":"allow-all","model":"pi/gpt-5.5","thinkingLevel":"high","enabledSourceSlugs":[]}')"
+  "$(payload '{"name":"GPT-5.5 review","prompt":"Review using RULES_BUNDLE and session-coordination. Send findings by send_agent_message and call set_session_status needs-review.","permissionMode":"allow-all","labels":["content","research"],"model":"pi/gpt-5.5","thinkingLevel":"high","enabledSourceSlugs":[]}')"
 
 expect_pass \
   "non-review work with explicit off reasoning and sources passes" \
   "$HOOK" \
-  "$(payload '{"name":"Data extraction","prompt":"Use RESOLVER.md and spawn-protocol. Extract local facts; no reply tools needed.","permissionMode":"allow-all","model":"claude-sonnet-5","thinkingLevel":"off","enabledSourceSlugs":[]}')"
+  "$(payload '{"name":"Data extraction","prompt":"Use RESOLVER.md and spawn-protocol. Extract local facts; no reply tools needed.","permissionMode":"allow-all","labels":["research"],"model":"claude-sonnet-5","thinkingLevel":"off","enabledSourceSlugs":[]}')"
 
 payload_with_root() {
   python3 - "$ROOT" "$1" <<'PY'
@@ -54,7 +69,7 @@ root, kind = sys.argv[1:3]
 prompts = {
   "no-worktree": "Use RESOLVER.md and spawn-protocol. Implement fix 248 and commit changes.",
   "with-worktree": "Use RESOLVER.md and spawn-protocol. Create a git worktree first, then implement fix 248 and commit changes there.",
-  "read-only": "Use RESOLVER.md and spawn-protocol. Review only; do not modify files and send_agent_message findings then set_session_status done.",
+  "read-only": "Use RESOLVER.md and spawn-protocol. Review only; do not modify files and send_agent_message findings then set_session_status needs-review.",
 }
 models = {"read-only": "claude-opus-4-8"}
 thinking = {"read-only": "high"}
@@ -65,6 +80,7 @@ print(json.dumps({"tool_input": {
   "model": models.get(kind, "claude-sonnet-5"),
   "thinkingLevel": thinking.get(kind, "medium"),
   "enabledSourceSlugs": [],
+  "labels": ["content", "research"] if kind == "read-only" else ["implementation"],
   "workingDirectory": root,
 }}))
 PY
@@ -78,7 +94,7 @@ expect_block \
 expect_block \
   "write-capable git child with inherited working directory blocks" \
   "$HOOK" \
-  "$(payload '{"name":"Implementation","prompt":"Use RESOLVER.md and spawn-protocol. Implement fix 248 and commit changes.","permissionMode":"allow-all","model":"claude-sonnet-5","thinkingLevel":"medium","enabledSourceSlugs":[]}')"
+  "$(payload '{"name":"Implementation","prompt":"Use RESOLVER.md and spawn-protocol. Implement fix 248 and commit changes.","permissionMode":"allow-all","labels":["implementation"],"model":"claude-sonnet-5","thinkingLevel":"medium","enabledSourceSlugs":[]}')"
 
 expect_pass \
   "write-capable git child with worktree instruction passes" \

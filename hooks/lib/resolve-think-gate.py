@@ -40,6 +40,12 @@ import sys
 import glob
 import subprocess
 from task_actions import action, canonical
+from session_anchor import correct_environ as _correct_session_environ
+
+# A mis-tagged CRAFT_SESSION_DIR must not decide whose gates apply (#1099). Fix
+# it in this process's environment before anything reads it; children inherit.
+for _note in _correct_session_environ():
+    print(f"[resolve-think-gate] {_note}", file=sys.stderr)
 from typing import Optional
 
 
@@ -636,6 +642,15 @@ def own_session_path(workspace: str, path: str, directory: bool = False, removal
         return False
     if _within(target, canonical(os.path.join(root, 'tasks', '.canonical'))):
         return False  # Reserved per-task migration claims are not lifecycle files.
+    if not removal:
+        # A file with another name elsewhere is not scratch (#1100): canonical
+        # paths see symlinks, not hardlinks, and a write here changes both.
+        try:
+            st = os.stat(target)
+            if not os.path.isdir(target) and st.st_nlink > 1:
+                return False
+        except OSError:
+            pass
     parts = os.path.relpath(target, root).split(os.sep)
     if parts[0] in {'plans', 'data'}:
         return len(parts) > 1 or directory
@@ -658,7 +673,7 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     managed_shape = shape.get('self_managed_shape', not command)
     if managed_shape:
         directories = shape.get('directory_paths', [])
-        remaining = [p for p in shape['paths'] if not own_session_path(workspace, p, p in directories, p in shape.get('directory_removals', []))]
+        remaining = [p for p in shape['paths'] if not own_session_path(workspace, p, p in directories, p in shape.get('directory_removals', []) or p in shape.get('file_removals', []))]
         if not remaining:
             try:
                 _remember_managed_paths(workspace, shape['paths'])

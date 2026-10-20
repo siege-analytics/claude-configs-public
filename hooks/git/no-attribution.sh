@@ -17,13 +17,31 @@ INPUT=$(cat)
 # escaped newline before the trigger still counts as a boundary. Git-hook
 # invocations (refs on stdin, no JSON) take the full path.
 _FAST_CMDS=$(printf '%s' "$INPUT" | grep -oE '"command"[[:space:]]*:[[:space:]]*"(\\.|[^"\\])*"' 2>/dev/null || true)
+# A long command takes the full path (#1098): bash substitutions slow down
+# superlinearly under a UTF-8 locale, and past the hook timeout a skip check
+# would let the command through. 16 KiB keeps the check in milliseconds.
+_FAST_FULL=0; (( ${#_FAST_CMDS} > 16384 )) && { _FAST_FULL=1; _FAST_CMDS=""; }
 _FAST_ESC="${_FAST_CMDS//'\\'/}"; _FAST_ESC="${_FAST_ESC//'\"'/}"; _FAST_ESC="${_FAST_ESC//'\/'/}"
 _FAST_ESC="${_FAST_ESC//'\n'/}"; _FAST_ESC="${_FAST_ESC//'\t'/}"; _FAST_ESC="${_FAST_ESC//'\r'/}"
 _FAST_CMDS="${_FAST_CMDS//'\n'/ }"; _FAST_CMDS="${_FAST_CMDS//'\t'/ }"; _FAST_CMDS="${_FAST_CMDS//'\r'/ }"
+# The shell rebuilds words from quotes and backslashes (#1098): `git "add"`,
+# `g\it add` and `git  add` all run git add. Match the trigger against the text
+# as written and against a copy with quote and backslash characters dropped and
+# blanks squeezed; skip only if neither matches. A command containing ANSI-C
+# $'...' (which can spell any byte) takes the full path.
+[[ "$_FAST_CMDS" == *"\$'"* ]] && _FAST_FULL=1
+# A quote or backslash between two letters or digits (`pr"x"`, `x\git`) joins
+# words; only the full path's quote handling decides what that runs. In the
+# JSON text a shell `"` or `\` is itself escaped, hence the leading backslash.
+[[ "$_FAST_CMDS" == *[[:alnum:]]\\[\"\\][[:alnum:]]* || "$_FAST_CMDS" == *[[:alnum:]]\'[[:alnum:]]* ]] && _FAST_FULL=1
+_FAST_BUILT="${_FAST_CMDS//[\"\'\\]/}"
+while [[ "$_FAST_BUILT" == *"  "* ]]; do _FAST_BUILT="${_FAST_BUILT//  / }"; done
 _FAST_FIRST='"tool_input"[[:space:]]*:[[:space:]]*[{][[:space:]]*"command"[[:space:]]*:[[:space:]]*"[^"]'
 _FAST_RE='(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'
-if [[ "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE ]]; then exit 0; fi
+if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE || "$_FAST_BUILT" =~ $_FAST_RE ]]; then exit 0; fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=../lib/command-text.sh
+source "$HOOK_DIR/../lib/command-text.sh"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
@@ -33,10 +51,10 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-# Match git commit anywhere in the command (not just at start) so
-# `cd /path && git commit` doesn't bypass. Uses portable word boundary
-# via character-class form (see branch-guard.sh, issue #106).
-if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'; then
+# A real `git commit` anywhere in the command (so `cd /path && git commit`
+# doesn't bypass), matched as code: the verb inside a heredoc body or a quoted
+# string (an issue body that mentions git commit) is not a commit (#55).
+if ! ct_is_git_commit "$COMMAND"; then
     exit 0
 fi
 
@@ -51,7 +69,10 @@ if [[ -f "$HOOK_DIR/../lib/scope-check.sh" ]]; then
     fi
 fi
 
-# Extract everything after "git commit" as the message area
+# Extract everything after "git commit" as the message area. This is the RAW
+# text: the commit message lives in quotes, so it must not go through
+# ct_code_only (which strips quoted spans). ct_is_git_commit above already
+# rejected non-commits, so this scan only runs on a real commit.
 MESSAGE_AREA=$(echo "$COMMAND" | sed 's/.*git commit//')
 
 # Case-insensitive check for attribution patterns
