@@ -10,7 +10,7 @@ ticket_refs:
 Pre-author-inventory: on v3.5.71 (main 8b2b84e), installed in a mock workspace, a Bash `ls -la | head` ran 16 PreToolUse hooks with 33 python3 starts, about 3.8 s in total. The operator's Mac, on v3.5.70, measured 2.6 s per Bash call, with python3 starting in about 50 ms.
 Investigate-artifact: https://github.com/siege-analytics/claude-configs-public/issues/1083
 Pre-mortem-artifact: plans/pre-mortem-1083-git-hook-fast-skip.md
-Hostile-review-artifact: plans/self-review-1083-git-hook-fast-skip.md
+Hostile-review-artifact: plans/hostile-review-1083-git-hook-fast-skip.md
 Project-contribution: an ordinary Bash call in every consumer workspace goes from 33 python3 starts to 8, and its hook time drops by about 70%.
 
 - The harness serialises tool payloads with JSON that does not escape ASCII letters. Payloads containing `\u` take the full path in case that assumption is wrong.
