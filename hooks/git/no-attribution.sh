@@ -24,6 +24,8 @@ _FAST_FIRST='"tool_input"[[:space:]]*:[[:space:]]*[{][[:space:]]*"command"[[:spa
 _FAST_RE='(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'
 if [[ "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE ]]; then exit 0; fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=../lib/command-text.sh
+source "$HOOK_DIR/../lib/command-text.sh"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
@@ -33,10 +35,10 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-# Match git commit anywhere in the command (not just at start) so
-# `cd /path && git commit` doesn't bypass. Uses portable word boundary
-# via character-class form (see branch-guard.sh, issue #106).
-if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'; then
+# A real `git commit` anywhere in the command (so `cd /path && git commit`
+# doesn't bypass), matched as code: the verb inside a heredoc body or a quoted
+# string (an issue body that mentions git commit) is not a commit (#55).
+if ! ct_is_git_commit "$COMMAND"; then
     exit 0
 fi
 
@@ -51,7 +53,10 @@ if [[ -f "$HOOK_DIR/../lib/scope-check.sh" ]]; then
     fi
 fi
 
-# Extract everything after "git commit" as the message area
+# Extract everything after "git commit" as the message area. This is the RAW
+# text: the commit message lives in quotes, so it must not go through
+# ct_code_only (which strips quoted spans). ct_is_git_commit above already
+# rejected non-commits, so this scan only runs on a real commit.
 MESSAGE_AREA=$(echo "$COMMAND" | sed 's/.*git commit//')
 
 # Case-insensitive check for attribution patterns

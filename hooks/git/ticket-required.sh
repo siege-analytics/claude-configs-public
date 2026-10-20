@@ -14,6 +14,8 @@
 #
 # Ref: claude-configs-public#320
 
+# shellcheck source=../lib/command-text.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/command-text.sh"
 set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
 
@@ -45,7 +47,7 @@ fi
 # Match git commit anywhere in the command (not just at start) so
 # `cd /path && git commit` doesn't bypass. Uses portable word boundary
 # via character-class form (see branch-guard.sh, issue #106).
-if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'; then
+if ! ct_is_git_commit "$COMMAND"; then
     exit 0
 fi
 

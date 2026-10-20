@@ -6,6 +6,8 @@
 # Blocks commits to protected branches (main, develop, master, etc.).
 # The agent must create a feature branch first.
 
+# shellcheck source=../lib/command-text.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/command-text.sh"
 set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
 
@@ -36,7 +38,7 @@ CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 # Word boundaries via portable character-class form (not BSD-incompatible `\b`);
 # see issue #106 (same fix that landed for self-review.sh in same PR).
 HAS_GIT_COMMIT=false
-if echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'; then
+if ct_is_git_commit "$COMMAND"; then
     HAS_GIT_COMMIT=true
 fi
 

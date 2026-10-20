@@ -36,7 +36,15 @@ fi
 # Match git add anywhere in the command (not just at start) so
 # `cd /path && git add` doesn't bypass. Uses portable word boundary
 # via character-class form (see branch-guard.sh, issue #106).
-if ! echo "$COMMAND" | grep -qE '(^|[^[:alnum:]])git add([^[:alnum:]]|$)'; then
+# shellcheck source=../lib/command-text.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/command-text.sh"
+
+# Paths this command would actually stage, taken from the staging
+# segment only. Matching the verb anywhere in the raw text treated a
+# commit message in the same line as filenames, so a message merely
+# mentioning a config file was refused as an attempt to stage one (#67).
+STAGE_TARGETS="$(ct_stage_args "$COMMAND")"
+if [ -z "$STAGE_TARGETS" ]; then
     exit 0
 fi
 
@@ -67,10 +75,12 @@ SENSITIVE_PATTERNS=(
 
 # Extract files from the git add command
 # Strip everything before "git add", then remove "git add" and any flags
-FILES=$(echo "$COMMAND" | sed 's/.*git add\s*//' | sed 's/\s*-[a-zA-Z]\+\s*//g')
+FILES="$STAGE_TARGETS"
 
 for file in $FILES; do
-    basename=$(basename "$file")
+    # `--` so a path beginning with a dash is a path, not a flag. Without
+        # it every invocation printed "basename: invalid option".
+        basename=$(basename -- "$file")
     for pattern in "${SENSITIVE_PATTERNS[@]}"; do
         if echo "$basename" | grep -qiE "$pattern"; then
             cat >&2 <<EOF

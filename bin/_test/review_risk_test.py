@@ -161,14 +161,18 @@ hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/log-block.sh
 hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py
 hooks/git/branch-guard.sh|hooks/lib/extract-json.py
+hooks/git/branch-guard.sh|hooks/lib/command-text.sh
 hooks/git/branch-guard.sh|hooks/lib/scope-check.sh
 hooks/git/detect-ai-fingerprints.sh|hooks/lib/extract-json.py
 hooks/git/fix-shape-guard.sh|hooks/lib/extract-json.py
 hooks/git/no-attribution.sh|hooks/lib/extract-json.py
+hooks/git/no-attribution.sh|hooks/lib/command-text.sh
 hooks/git/no-attribution.sh|hooks/lib/scope-check.sh
 hooks/git/no-broad-staging.sh|hooks/lib/extract-json.py
+hooks/git/no-broad-staging.sh|hooks/lib/command-text.sh
 hooks/git/no-broad-staging.sh|hooks/lib/scope-check.sh
 hooks/git/no-sensitive-files.sh|hooks/lib/extract-json.py
+hooks/git/no-sensitive-files.sh|hooks/lib/command-text.sh
 hooks/git/no-sensitive-files.sh|hooks/lib/scope-check.sh
 hooks/git/post-error-revision-required.sh|hooks/lib/extract-json.py
 hooks/git/pr-base-guard.sh|hooks/lib/extract-json.py
@@ -181,6 +185,7 @@ hooks/git/survey-context.sh|hooks/lib/scope-check.sh
 hooks/git/test-guard.sh|hooks/lib/extract-json.py
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py
+hooks/git/ticket-required.sh|hooks/lib/command-text.sh
 hooks/git/ticket-required.sh|hooks/lib/scope-check.sh
 hooks/git/vergil-quote.sh|hooks/lib/extract-json.py
 hooks/infrastructure/catalog-guard.sh|hooks/lib/extract-json.py
@@ -203,7 +208,7 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "ef4603d5e6e41a80d9e0c5ae602361fa54e65a520e0cf166c000fccc2f05fdff"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "7cb2f091cbddc425598893c82170570f48125b8d83ff0a2865ff04aca7ea1aab"
 REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "982ba88fe28129f9cc21452cb9a6394ca96a1b421bfde26f9e8f62afe2614aa5"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
