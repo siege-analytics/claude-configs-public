@@ -1,0 +1,267 @@
+{
+  "ticket": "siege-analytics/claude-configs-public#1051",
+  "round": "FINAL v3.1 NEW-2 fd/null redirects and source changelog correction",
+  "source_parent": "b14a94cd904165173558086462ab5c660db2f319",
+  "merged_main": "f5c63baecfffa65b04508beb13d8b16312d215f8",
+  "merged_develop": "4d6fbd27c4f47edc53856396fc58c02cf5bb6183",
+  "input_index_tree": "a9f0be02121f6e5bcbe1d0f03a6b41eaa1c0c962",
+  "workflow": ".github/workflows/build-and-publish.yml",
+  "workflow_sha256": "24265f613d2d1a01b367ff80dfcc4be9185279cb7179d1b98e28f632aa0300a6",
+  "python": "Python3.12.12",
+  "applicable_validate_shell_steps": 31,
+  "hook_suites": 37,
+  "task_acceptance_tests": 42,
+  "all_steps_replayed_from_zero": true,
+  "resumes_or_skips_in_final_run": false,
+  "runtime_source_unchanged_during_final_run": true,
+  "frozen_input_count": 904,
+  "runtime_source_snapshot_sha256": "6399f130537d8bf4e57de191598f4f2dd76f00fccc20377643e168e14f2fe71a",
+  "steps": [
+    {
+      "index": 0,
+      "name": "Install pinned frontmatter validation dependency",
+      "sha256": "646cf2c665b345cb35d7fc624f5d43a594efa7e9f6335a4a8f7a10f81bf1d4da",
+      "exit": 0,
+      "output_sha256": "a87bfa7b9f877fb23e0a2d0b68b05626d3048f91382883e770a1d87ffa61856c"
+    },
+    {
+      "index": 1,
+      "name": "Check for path-form references that should be tokens",
+      "sha256": "e24135e197b2c7d3cb1e051531628f3d595c21ad59f7bc962347e7da98663354",
+      "exit": 0,
+      "output_sha256": "245f14f34dfa74cc9c702fc575d8d20f9e0e740879dd5ca85b3f93d131855d1e"
+    },
+    {
+      "index": 2,
+      "name": "Shelf ownership and actionable path integrity",
+      "sha256": "3f851033c601e7fcf5888c4afe0e24d088b25f8151b054a7f3af556c09dbb416",
+      "exit": 0,
+      "output_sha256": "fedfd65bd847f85f7dd1a5a437b6b2beb730b217e9d348518559222cfdda5c15"
+    },
+    {
+      "index": 3,
+      "name": "Validate token resolution (build --check)",
+      "sha256": "5a4d94d323ea54135ea5a7ad27f3fc3482d3d38acd25d358bb2306aefa36a536",
+      "exit": 0,
+      "output_sha256": "9ce8a212973a61a7a73d126c325ac7d741de178a59cbe42728a58c958a91b5d0"
+    },
+    {
+      "index": 4,
+      "name": "Full build for hook validation",
+      "sha256": "9e5fa37cb15239c760df557105ef0163c958c0ca2893ce4c0b3fd0ab2fa7b134",
+      "exit": 0,
+      "output_sha256": "2ebe78b457c0931b3131abe3d3911122c58c51d2c39e0e61e5125d2930c58dc6"
+    },
+    {
+      "index": 5,
+      "name": "Gate contract and generated agreement",
+      "sha256": "e89a744cbf4fc86ae37e7fc4feea4fb71c3bde18562db842354f4c2a26c5151d",
+      "exit": 0,
+      "output_sha256": "0e2c0fe58bb63087c5b64be330134a1e907ae2e60914de9a4aee8eb9377c642f"
+    },
+    {
+      "index": 6,
+      "name": "Bounded work coordination and recovery",
+      "sha256": "daef810a73a327cff1bd016666eea639610d2fa6c1bc2caff434080f3dec301e",
+      "exit": 0,
+      "output_sha256": "c53837599da4c2dcbd7c20386c69e9df5f5df37115049e38fb74b8b0d82ff183"
+    },
+    {
+      "index": 7,
+      "name": "Project procedure and resident composition",
+      "sha256": "28166b6c1dcbc780402a798cc1f5783aebc89adb9282d8bd806e63a6b6d65b58",
+      "exit": 0,
+      "output_sha256": "a2692497c7393fa4f4a10d08d20fcde74974fa3818eecc97dc148aa71fd76888"
+    },
+    {
+      "index": 8,
+      "name": "Canonical terminology and generated wiki",
+      "sha256": "ffc1ab857571f83266ce6144fb204bc5c561374840e46575c8c4ad16c4511218",
+      "exit": 0,
+      "output_sha256": "f262909faa9955d3f665d26c0857f7f341e96aad2c76ec49a1b7257d65408ad3"
+    },
+    {
+      "index": 9,
+      "name": "Generated source authority and drift",
+      "sha256": "d43f5a41e646dfd97d179aa106ae64d922fd2e98bb3f0f8eaa5d21aa6d674144",
+      "exit": 0,
+      "output_sha256": "b38b14cff48f778629f3648b2cef3f408850de1d074f5eaaaf31d4c983c92ccd"
+    },
+    {
+      "index": 10,
+      "name": "Compact safety kernel structure and budget",
+      "sha256": "9a60d0ec788742fcc59dbf9e0832ceb606c4d8adb684470df1c0da3e2e5816e3",
+      "exit": 0,
+      "output_sha256": "da9535b376bd632dcf37604681457d920edda8d3a2ef1e64350955be09345bb5"
+    },
+    {
+      "index": 11,
+      "name": "Proportional review risk policy",
+      "sha256": "ca2913c849fab6831a41c94dd21ea4971174ba03fb4dd2dcb6578ff32acd70b1",
+      "exit": 0,
+      "output_sha256": "d0b7a71a26edd191360e55200d8dc41e7afd36e533e01b1acb0df463235c8189"
+    },
+    {
+      "index": 12,
+      "name": "Deterministic progressive loading",
+      "sha256": "5056a5167eec6ef95bdfed382220877e7f1642f3dcca5004f80bcfc94b315a3c",
+      "exit": 0,
+      "output_sha256": "620ce201fac27d5e5b011277021cefc4d73d68035117957d6feacad17f056fad"
+    },
+    {
+      "index": 13,
+      "name": "Validate Craft Agent flat skill layout",
+      "sha256": "dde64c2f95465ea0eb910d31cd64b43b4aeea27edb5d1a7fcf4de62d851974d6",
+      "exit": 0,
+      "output_sha256": "d3e21e6ac1ded3b376d60284898f048151412f6adb7656b101b660b612192c43"
+    },
+    {
+      "index": 14,
+      "name": "Validate hook installation (claude-code)",
+      "sha256": "4b75ec40b55d500722cbae1ecf6afd1531a813c744ba108185470c337b1a1aa4",
+      "exit": 0,
+      "output_sha256": "b6479474294bc06519c047539225f42916a074e590a595c78aaf304319ba314b"
+    },
+    {
+      "index": 15,
+      "name": "Validate hook installation (craft-agent)",
+      "sha256": "57ecdb16f9802206b7d792e956b148023d95090200f66da76a2b14dc4626dc20",
+      "exit": 0,
+      "output_sha256": "32624e5b502c11522c257ddc1d7804c1fcfc4b703efed8935b5eb3383265699f"
+    },
+    {
+      "index": 16,
+      "name": "Validate repo hooks match snippet",
+      "sha256": "0e547ffb8de50632129b5cce680bb292e8e9800c633cb2d1f9ca129136fef922",
+      "exit": 0,
+      "output_sha256": "0e1ecca9fd457583d0f7eed6c1305bb9f2e958a6489093d8b8ae5c2119774f69"
+    },
+    {
+      "index": 17,
+      "name": "Coherent package upgrade and rollback fixtures",
+      "sha256": "cafb98193ff5da27e4babaae6e16116b1a20f2b60d208562624f932efdf7a3be",
+      "exit": 0,
+      "output_sha256": "6a6dce8005ce71292d7178c3cee7320079e2cd980036742455d60bc6852571e6"
+    },
+    {
+      "index": 18,
+      "name": "Consumer package documentation and clean-home diagnostics",
+      "sha256": "d91f96ebb7e2aa7d92968093ae5c17d17b5c7d5b46e51ad4d0851650bbefe302",
+      "exit": 0,
+      "output_sha256": "b98f50546ecc2b0f98e9260fbca2031a488cd2a9892d30925de65e2ce19426a4"
+    },
+    {
+      "index": 19,
+      "name": "Shared-parent registered provider events",
+      "sha256": "e9d24806347d95a84bd9c9e4d4d66ff86b6b6f50985d468cb1dd43013f535460",
+      "exit": 0,
+      "output_sha256": "0c6c2fb6f915b52bcc7e08d8a2bd2fc0ee9ff1b9bc4f5ac9d87b511839706622"
+    },
+    {
+      "index": 20,
+      "name": "Native consumer Git registration and destination range",
+      "sha256": "3ab4259dbe5b3e5baec9b64b71c119f07eb8bcdf42339ba1d10cb8981932cc52",
+      "exit": 0,
+      "output_sha256": "78b68d0e5e3c031545177075d4b4fc3647d56f4fee78c4a27cc92a6bec0cc5ed"
+    },
+    {
+      "index": 21,
+      "name": "Canary packet preparation remains non-authorizing",
+      "sha256": "ad8b95f350c7ba52676b6588b7f4b753ed646eeb4755375bb31f04e4a27ae7de",
+      "exit": 0,
+      "output_sha256": "73c476ca2c3dc9e3ce9ef6254ef023bfb2122a9bb57971f5cb169497d7b1271e"
+    },
+    {
+      "index": 22,
+      "name": "Settings-drift check fixtures",
+      "sha256": "52b72fa9f349d502b0830f001c6ef0fc0e1fc93a35137c46438f318affcf682b",
+      "exit": 0,
+      "output_sha256": "647cd36449e101c697191e10d2d9a6b58c6935c1fdd7889234b0bdece7e785f2"
+    },
+    {
+      "index": 23,
+      "name": "Scanner selected-source truth and incomplete results",
+      "sha256": "5e4c2c317e907ad677c855357b136273aa2361cdc71bc34931d4c214740fe151",
+      "exit": 0,
+      "output_sha256": "3497c09974e04174d44b976bf4946a62bad2ab1aebf0df0c59a9c636afe8a411"
+    },
+    {
+      "index": 24,
+      "name": "NotebookEdit write-guard fixtures",
+      "sha256": "06140794641d4f9e5af7cf3a10217f2678fef31e691c24d47918250a7f0b7ad5",
+      "exit": 0,
+      "output_sha256": "38fe44d9c59344c042647b02fbc40b0d821ba1e3c78516a5bc2bf5a1290ff961"
+    },
+    {
+      "index": 25,
+      "name": "Branch topology policy fixtures",
+      "sha256": "9380a53c127287a272d48a87c551b36350c21b1413bc98d64eecf00af9f56639",
+      "exit": 0,
+      "output_sha256": "949b178ea28319a667f984433a7e3fffddb4299601c47375f1947fd46226fa02"
+    },
+    {
+      "index": 26,
+      "name": "Main-only release policy fixtures",
+      "sha256": "aed6e2b52953f14d687833a7b424151a66f94d0701a6dd9066ba78c1b70dcdec",
+      "exit": 0,
+      "output_sha256": "16f68b6007dbae55e7d8661c7bae683fac37aee7ec6c0d9cd6159b315134dd0f"
+    },
+    {
+      "index": 27,
+      "name": "Exact-main deployment source fixtures",
+      "sha256": "706a8ed5e504ca8df09d489dc829452537e898d02978fa1cc04a0e15d13a3944",
+      "exit": 0,
+      "output_sha256": "2d1fb46b02fbebb62fcb2f59114a7fb5964780d73a4e4bfb6b7ddccda304a560"
+    },
+    {
+      "index": 28,
+      "name": "Skill inventory fixtures and freshness",
+      "sha256": "2d93485b85ab1a84e300261e3cfde7ee7f380ad5e64ff61c526b128c216e28e6",
+      "exit": 0,
+      "output_sha256": "f9b13c0126d75f4fe26e5ccc2fecd4cf0578baed6e169f0e51c302e92a02c50f"
+    },
+    {
+      "index": 29,
+      "name": "Skill lifecycle schema and migration ratchet",
+      "sha256": "4304dd4ce315569040eb553522c70d0cc1d62bb491c6c806803da45134430afc",
+      "exit": 0,
+      "output_sha256": "e76005f26ab06f0c79d913347c6c174ad6bda1637c488b9039cbc85372182255"
+    },
+    {
+      "index": 30,
+      "name": "Hook scenario tests",
+      "sha256": "71dfc15c9a28c3a71a9e9bccaf1bb56130ad5591057a789c160091e893c2feda",
+      "exit": 0,
+      "output_sha256": "e45046428ad2b70c99dbbf8e851a1342cf7bfe40927bf3f1b35e633836190445"
+    }
+  ],
+  "scope": "FINAL v3.1 NEW-2 fd duplication/closing, exact null sinks including clobber, concrete cumulative file outputs, real-hook tests; source CHANGELOG pinned-main plus five1051 notes only. NEW1 verified fixed;1063 and R1/R2/R4-R7/N1/N3-N9 not changed. No new merge/runtime wiring/install/activation.",
+  "changelog": "Additions-only against f5c63bae; existing Unreleased and next3.5.20 headers identical to main; upstream text preserved. Prior invented3.5.67 heading corrected per hub.",
+  "raw_corpus_replay": {
+    "log_entries_original_snapshot": 253,
+    "unique": 234,
+    "snapshot_sha256": "63b69b8f563dc5ab3111fc682f6457e2d2dab8f95aefd9c07e06507edbfe45f6",
+    "baseline_allowed": 54,
+    "candidate_source_sha256": "f855fdf8c3eec8b4966b306365fc94f1891f2800cfa17d4d9d160d86f5e75ad5",
+    "candidate_allowed": 74,
+    "newly_allowed": 20,
+    "formerly_allowed_now_denied": 0,
+    "all_newly_allowed_read_or_approved_diagnostic": true,
+    "all_newly_allowed_contain_redirect": true,
+    "raw_commands_executed": false,
+    "sandbox": "/private/var/folders/9h/83s_sxx17hv5gkccscgbyvzw0000gn/T/1051-new2-corpus-e60_bpq2",
+    "baseline": "b14a94cd904165173558086462ab5c660db2f319",
+    "limitations": "Raw log, not absent45/71 curated fixture;105 prior commands were truncated; original cwd not recorded. Classification-only no-gate nongit sandbox. This programmatic audit is not independent exact-head acceptance."
+  },
+  "curated_1057": "Actual45/71 curated corpus never committed; raw234-command frozen log used instead. No command execution or fabricated curated replay.",
+  "release_dry_run": "Promotion check succeeds; unchanged release-notes emits entire existing Unreleased including upstream BREAKING/Added plus five1051 notes. Only1051-output condition unresolved unless hub explicitly rules; not fabricated.",
+  "historical": "b14a94cd hosted green and B1-B7/NEW1 verified; independent round3 FAIL for NEW2. Earlier heading-preservation proofs superseded.",
+  "focused_traces": [
+    ".verification/1051/round6/stdio-before-fix.log",
+    ".verification/1051/round6-v31/system-focused-final.log",
+    ".verification/1051/round6/system-glob-final.log"
+  ],
+  "fixture_environment": "Canonical external temps; untracked .verification only ignored; no tracked source exclusion or enforcement/snapshot weakening. Interrupted own fixtures preserved intact.",
+  "review_boundaries": "Local full proof and bounded No findings are not independent exact-head acceptance. Require new hosted Validate/topology green and independent reviewer acceptance.",
+  "local_trace_directory": ".verification/1051/full-ci-round6-new2"
+}

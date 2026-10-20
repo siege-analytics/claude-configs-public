@@ -57,6 +57,9 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/gate-registry.sh",
  "hooks/lib/probe-runner.py",
  "hooks/lib/resolve-think-gate.py",
+ "hooks/lib/task_actions.py",
+ "hooks/lib/pipeline_state.py",
+ "hooks/lib/hub-concurrency-policy.json",
  "hooks/lib/scope-check.sh",
  "hooks/lib/split-frontmatter.py",
  "bin/build.py",
@@ -113,6 +116,7 @@ hooks/write/ticket-propagation-guard.sh
 hooks/write/write-guard.sh
 """.strip().splitlines())
 REQUIRED_SOURCE_ENTRYPOINT_COUNTS = {path:(4 if path.startswith("hooks/write/") else 1) for path in REQUIRED_SOURCE_ENTRYPOINTS}
+REQUIRED_SOURCE_ENTRYPOINT_COUNTS.update({"hooks/bash/universal-mutation-gate.sh":5,"hooks/agent-comms/hub-concurrency-gate.sh":3})
 REQUIRED_MANIFEST_ENTRYPOINTS = set("""
 hooks/git/branch-guard.sh
 hooks/git/pre-push-self-review.sh
@@ -124,7 +128,7 @@ hooks/resolver/think-gate-guard.sh
 REQUIRED_MANIFEST_ENTRYPOINT_COUNTS = {path:1 for path in REQUIRED_MANIFEST_ENTRYPOINTS}
 REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS = {"hooks/resolver/ca-enforcement-gate.sh"}
 REQUIRED_GENERATED_SETTINGS_ENTRYPOINT_COUNTS = {path:1 for path in REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS}
-REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "67e52755ef66fb4ba9ad1bf32df1e51653924b41ccad535aa7126050e009549c"
+REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "fc9a5f53a4ab1e972b57d7804d9644e28462f0cf74449a12a4355e256f232a84"
 REQUIRED_MANIFEST_REGISTRATIONS_SHA256 = "868ca27fe41ca9d2e6f9335e2ddaf05d7cb992617b42f24cbc3ff2794099414b"
 REQUIRED_GENERATED_SETTINGS_REGISTRATIONS_SHA256 = "19a972d9471da0d66c46568c0efb8a16c356ed66f620702b7f06b8251bc809f0"
 CI_INVOCATION_SITES = [
@@ -149,12 +153,12 @@ CI_INVOCATION_SITES = [
 REQUIRED_HELPER_EDGES = {
  tuple(row.split("|")) for row in """
 hooks/agent-comms/no-slug-form-outbound.sh|hooks/lib/extract-json.py
+hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/resolve-think-gate.py
 hooks/bash/coordinator-status-guard.sh|hooks/lib/extract-json.py
 hooks/bash/destructive-guard.sh|hooks/lib/extract-json.py
 hooks/bash/destructive-guard.sh|hooks/lib/log-block.sh
 hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/log-block.sh
-hooks/bash/universal-mutation-gate.sh|hooks/lib/read-only-command.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py
 hooks/git/branch-guard.sh|hooks/lib/extract-json.py
 hooks/git/branch-guard.sh|hooks/lib/scope-check.sh
@@ -185,6 +189,9 @@ hooks/resolver/ca-enforcement-gate.sh|hooks/lib/detect-host.sh
 hooks/resolver/ca-enforcement-gate.sh|hooks/lib/gate-registry.sh
 hooks/resolver/investigate-gate-guard.sh|hooks/lib/resolve-think-gate.py
 hooks/resolver/pipeline-state-guard.sh|hooks/lib/resolve-think-gate.py
+hooks/resolver/pipeline-state-guard.sh|hooks/lib/pipeline_state.py
+hooks/resolver/skill-enforcement-gate.sh|hooks/lib/extract-json.py
+hooks/git/test-guard.sh|hooks/lib/resolve-think-gate.py
 hooks/resolver/pre-action-guard.sh|hooks/lib/log-block.sh
 hooks/resolver/skill-enforcement-gate.sh|hooks/lib/resolve-think-gate.py
 hooks/resolver/think-gate-guard.sh|hooks/lib/resolve-think-gate.py
@@ -196,16 +203,17 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "2ef999c4d7b7aa5c5bf49971a12d06d3088c6b5e7e3f1b4228fbcb70943fce6b"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "961b75dda8e289f0997bd17cdfefd6b8fd1b4be78473da3577bf747ed6a88bfc"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "ef4603d5e6e41a80d9e0c5ae602361fa54e65a520e0cf166c000fccc2f05fdff"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "982ba88fe28129f9cc21452cb9a6394ca96a1b421bfde26f9e8f62afe2614aa5"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
 hooks/agent-comms/no-slug-form-outbound.sh|hooks/lib/extract-json.py|2
+hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/resolve-think-gate.py|1
 hooks/bash/coordinator-status-guard.sh|hooks/lib/extract-json.py|1
 hooks/bash/destructive-guard.sh|hooks/lib/extract-json.py|2
-hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py|2
-hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py|6
+hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py|6
+hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/branch-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/detect-ai-fingerprints.sh|hooks/lib/extract-json.py|2
 hooks/git/fix-shape-guard.sh|hooks/lib/extract-json.py|2
@@ -218,6 +226,7 @@ hooks/git/self-review.sh|hooks/lib/extract-json.py|2
 hooks/git/self-review.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/survey-context.sh|hooks/lib/extract-json.py|2
 hooks/git/test-guard.sh|hooks/lib/extract-json.py|2
+hooks/git/test-guard.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py|2
 hooks/git/vergil-quote.sh|hooks/lib/extract-json.py|1

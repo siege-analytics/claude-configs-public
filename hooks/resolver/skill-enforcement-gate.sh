@@ -21,7 +21,7 @@ HOOK_INPUT_JSON=$(cat 2>/dev/null || true)
 export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+WORKSPACE_ROOT="${CRAFT_AGENT_WORKSPACE:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 
 SESSION_DIR="${CRAFT_SESSION_DIR:-}"
 if [[ -z "$SESSION_DIR" ]] || [[ ! -f "$SESSION_DIR/session.jsonl" ]]; then
@@ -30,29 +30,10 @@ fi
 
 TRANSCRIPT="$SESSION_DIR/session.jsonl"
 
-# Resolve think-gate (repo-scoped or legacy singleton)
+# Resolve only the current task, never the first task in a multi-task session.
 RESOLVE_TG="$SCRIPT_DIR/../lib/resolve-think-gate.py"
-THINK_GATE=""
-
-if [[ -n "${CLAUDE_THINK_GATE:-}" ]] && [[ -f "$CLAUDE_THINK_GATE" ]]; then
-    THINK_GATE="$CLAUDE_THINK_GATE"
-elif [[ -f "$RESOLVE_TG" ]]; then
-    THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --all 2>/dev/null \
-        | python3 -c "
-import json, sys
-gates = json.load(sys.stdin)
-for g in gates:
-    s = g.get('data', {}).get('status', '')
-    if s not in ('disposed', 'done-awaiting-pr', 'complete'):
-        print(g['path'])
-        sys.exit(0)
-if gates:
-    print(gates[0]['path'])
-" 2>/dev/null || true)
-fi
-if [[ -z "$THINK_GATE" ]] && [[ -f "$WORKSPACE_ROOT/think-gate.json" ]]; then
-    THINK_GATE="$WORKSPACE_ROOT/think-gate.json"
-fi
+TASK_CWD=$(printf '%s' "$HOOK_INPUT_JSON" | python3 "$SCRIPT_DIR/../lib/extract-json.py" cwd 2>/dev/null || pwd)
+THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "${TASK_CWD:-$PWD}" | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
 
 if [[ -z "$THINK_GATE" ]] || [[ ! -f "$THINK_GATE" ]]; then
     exit 0

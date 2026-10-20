@@ -10,6 +10,8 @@ Do NOT write any code, scaffold any project, create any files, or take any imple
 
 This is not a suggestion. It is a hard gate.
 
+**Gate target repository:** `repo_root` names the task's TARGET clone/worktree, never the session CWD or the Craft workspace merely because it is a configs checkout. Declare actual task paths in `scope_paths`; run target commands with explicit paths/`git -C` when the session CWD is elsewhere. Companion gates use the same target repo and exact session/task identity. Scope rejections must be corrected, not bypassed with root copies.
+
 ## Why
 
 Code written without a design is a draft disguised as a solution. It commits you to an approach before you've considered alternatives, understood constraints, or identified risks. The cost of designing first is minutes. The cost of redesigning after implementation is hours or days.
@@ -301,48 +303,83 @@ the design (prose) and the enforcement (hook).
 
 ### Creating a signal file
 
-After the design note is posted to the ticket (Step 7), write the
-signal file to the **current session's** signal directory -- NEVER the
-shared workspace root. Preferred locations, in order:
+After posting the design note (Step 7), write the signal to
+`$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json`, or
+`<workspace>/sessions/<session-id>/tasks/<task-slug>/think-gate.json`.
+Task identity is the **full ticket reference**, or an explicit `task_id` for
+untracked work. Choose a stable unique directory slug; the resolver reads each
+task directory's identity, not its spelling. The helper's `task_slug(identity)`
+provides a collision-safe default for writers migrating a legacy session file.
+Never derive a path from an unset session variable or write to the workspace root.
 
-1. `$CRAFT_SESSION_DIR/think-gate.json` -- `CRAFT_SESSION_DIR` is the only
-   session-directory variable Craft Agent actually sets at runtime (#697).
-2. `<workspace>/sessions/<session-id>/think-gate.json` -- the same directory
-   by its stable path, for when the env var is not exported to your shell.
-
-(The variables `$CLAUDE_SIGNAL_DIR`, `$CRAFT_AGENT_SIGNAL_DIR`,
-`$CRAFT_AGENT_SESSION_DIR`, and `$CLAUDE_SESSION_DIR` were aspirational and
-are NEVER set at runtime -- do not key a write off them; a write to an unset
-variable silently lands in the wrong place.)
-
-If several repos are active inside the same session, use a repo-scoped
-filename inside the session directory: `think-gate-<slug>.json` where
-`<slug>` is the basename of the repo root (e.g.,
-`think-gate-siege_utilities.json`). This allows concurrent sessions and
-concurrent repos to maintain independent gates (#494, #615).
-
-Include `repo_root` so hooks can verify scope:
+One session can have multiple tasks in the same repo. Declare absolute
+`scope_paths` for each task (prefer isolated clone/worktree roots; optional
+subdirectories/extra paths are supported). `repo_root` alone is the legacy
+scope default. Canonical path-component containment, including symlinks,
+selects the most-specific task; equal scopes fail closed with task names.
+Use a leading in-command marker, `CCP_TASK_ID='owner/repo#NNN' command ...`,
+to disambiguate a Bash tie. Agent-shell exports do not reach the Craft hook
+process; Write/Edit/MultiEdit/NotebookEdit require unambiguous path ownership
+and have no in-command binding channel. Binding never expands scope. Git
+mutations belong to the repository toplevel's owner, not a nested path's task.
+Split actions spanning multiple tasks; prefer isolated worktrees for independent
+Git activity. Terminal disposed/complete/done-awaiting-pr gates are excluded
+from active ownership. Preserve reserved tasks/.canonical/ per-task claims:
+individual gate cleanup cannot resurrect that task's stale legacy copy, and
+unrelated legacy tasks remain independent.
 
 ```json
 {
   "ticket": "owner/repo#NNN",
-  "task": "brief description",
+  "sessionId": "current-session-id",
   "design_note_location": "URL to ticket comment",
   "status": "implementing",
   "lastUpdated": "2026-01-15T14:30:00Z",
-  "repo_root": "/path/to/repo"
+  "repo_root": "/path/to/repo",
+  "scope_paths": ["/path/to/repo/task-worktree"],
+  "tier": "B"
 }
 ```
 
-**Never write `<workspace>/think-gate.json` (the shared workspace root).**
-That file is read by every concurrent session in the workspace: a gate
-written there pollutes the mutation gate for others and can be resolved in
-place of another session's own gate (the cross-session jam behind siege#926).
-The mutation gate resolves a session's gate from the session directory above
--- including on a workspace-root (non-git) CWD, where it resolves the
-session's own gate by session id rather than falling back to the shared root
-(#926). A gate at the workspace root earns nothing and costs other sessions;
-the session directory is the only correct home.
+**Tier (optional, #1086).** Before an edit, a task's gate requires only the
+artifacts for the change's review tier:
+
+| Tier | Typical paths | Required before editing |
+|------|---------------|-------------------------|
+| A | prose, plans, `*.md`, generated catalogs | the `implementing` gate itself |
+| B | ordinary code, skills, scripts, config | + investigate-gate (one finding) + pre-mortem (one classified risk) |
+| C | hooks, enforcement libraries, release/deploy, credentials, review policy | + junior/senior and artifacts-posted |
+
+The gate computes a floor from the edit's target paths with
+`bin/review-risk.py` (the same classifier the commit hooks use). A declared
+`tier` can raise the requirement but never lower it below that floor. If the
+classifier is unavailable, the gate requires Tier C. Commit-time `Review-Tier`
+evidence is enforced separately and is unchanged.
+
+Keep investigate, junior-senior, artifacts-posted, review and test gate files
+beside this task's think gate, with the same exact identity. Never overwrite
+another task's signals. Legacy session-level `think-gate.json` and repo-suffixed
+session files are read as legacy tasks; new writes always use task directories.
+Workspace-root files cannot authorize mutations. The sole unknown-session
+root read is diagnostic-only and requires an exact canonical repo match.
+
+Own-session lifecycle files do not require an existing task gate: the host's
+current session may create/edit/remove its task gate JSON and write its own
+plans/data. Bounded mkdir/rmdir may scaffold task directories. Other sessions,
+workspace-root signals, symlink escapes and opaque program execution are not
+exempt. Bootstrap designing, write the investigation/pre-mortem evidence, then
+transition the same gate to implementing; dispose and clean up after completion.
+
+A positive reader classifier runs before gate lookup. Bounded diagnostics
+(syntax checks, standard test/bytecode/lint commands, document/package readers,
+and Git fetch) are also allowed without artifacts during designing/reviewing.
+They are an explicit investigation allowance, not proof of no side effects:
+tests execute project code and tools may write caches/metadata. Arbitrary
+scripts, clones, source-fixing/output-file flags and opaque execution are not
+investigation exceptions. Unknown shapes are not assumed read-only.
+Unscoped mutations fail closed: open a scoped task gate,
+never borrow another task's implementing state. In a non-git CWD, use an
+in-command `cd`, `git -C`, an explicit target path, or a declared scope path.
 
 The `lastUpdated` field (ISO 8601) is consumed by the temporal decay
 check. Omitting it forces the hook to fall back to file modification
@@ -422,7 +459,7 @@ Before writing a new signal file, check for an existing one for the
 same repo. If a signal file exists from a prior task on the same repo:
 
 1. Verify the prior task's disposition was posted to its ticket
-2. Delete the old signal file: `rm think-gate-<slug>.json`
+2. Delete the old signal file: `rm "$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json"`
 3. Then create the new one
 
 A stale signal file from task X gives misleading status on task Y.
@@ -444,11 +481,15 @@ When the PR is merged and work is complete:
 
 1. Set `status` to `done-awaiting-pr` with a `disposition` summarizing outcome
 2. Post the disposition to the ticket if not already there
-3. Delete the signal file: `rm think-gate-<slug>.json`
+3. Delete the signal file: `rm "$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json"`
 
-Signal files are scoped per-repo. Leaving done signals around causes
-scope mismatch warnings on the next task for that repo and archive
-prompts after 4h.
+Signal files are scoped per session/task. Terminal records no longer compete
+with active tasks or authorize mutations. Own-session cleanup remains allowed
+without reactivating implementation. Keep the reserved per-task canonical claims;
+remove only individual task directories after their signal files. Keep implementing status through the final
+push/PR operation; if new source or Git mutations are needed after a terminal
+transition, explicitly reactivate implementing with current complete artifacts.
+Never remove another session's signals.
 
 ## Attribution Policy
 

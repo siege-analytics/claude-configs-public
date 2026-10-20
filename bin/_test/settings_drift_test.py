@@ -64,8 +64,8 @@ def main():
     triples = extract_triples(snippet)
     paths = {t[2] for t in triples}
     check(
-        "snippet has 39 triples over 30 tool-event hooks",
-        (len(triples), len(paths)) == (39, 30),
+        "snippet has 45 triples over 30 tool-event hooks",
+        (len(triples), len(paths)) == (45, 30),
         f"got {len(triples)} triples over {len(paths)} hooks",
     )
 

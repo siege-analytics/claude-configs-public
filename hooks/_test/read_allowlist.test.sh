@@ -201,7 +201,7 @@ expect block "$O" $'ls\nln -sf /secret /tmp/l'
 expect block "$O" $'ls\nsystemctl restart nginx'
 expect block "$O" $'cat r\n. ./evil.sh'
 expect block "$O" $'ls \\\n; rm -rf /x'
-expect block "$O" $'ls\nwc -l /etc/hostname'   # multi-line is never proven (safelist policy)
+expect allow "$O" $'ls\nwc -l /etc/hostname'   # task-keyed gate proves each line (#1051); the legacy safelist never did
 expect block "$O" $'for f in a b\ndo\n  echo $f\ndone'
 echo "== legacy-safelist reads stay admitted =="
 for c in 'tree -L 2' 'file README.md' 'xxd README.md' 'cat f | wc -l' 'printenv HOME' 'cat f 2>&1' \
@@ -218,8 +218,9 @@ done
 echo "== quoted ampersands are not backgrounding =="
 expect allow "$O" "grep 'foo & bar' /etc/hostname"
 expect allow "$O" "git log --grep='fix & feat' -3"
-echo "== a session's data/ dir is not yet exempt (scratch rule parked; #349 review) =="
-for c in 'touch notes.txt' 'python3 -m venv venv' 'rm -rf out' "rm -rf .''./.''./plans" 'env -C x rm -rf plans' \
+echo "== a session's own data/ dir is its scratch (#1051 B1); escapes and non-file effects still need a gate =="
+for c in 'touch notes.txt' 'rm -rf out'; do expect allow "$D" "$c"; done
+for c in 'python3 -m venv venv' "rm -rf .''./.''./plans" 'env -C x rm -rf plans' \
          'pkill -f airflow' 'glab mr merge 1'; do expect block "$D" "$c"; done
 printf 'read_allowlist: %d passed, %d failed\n' "$PASS" "$FAIL"
 (( FAIL == 0 ))

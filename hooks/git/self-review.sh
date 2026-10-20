@@ -546,7 +546,7 @@ HOOKEOF
 
             # Cross-check: if investigate-gate.json exists, compare entity
             # counts between prose and signal file (drift detection).
-            GATE_FILE="${CLAUDE_INVESTIGATE_GATE:-}"
+            GATE_FILE=""
             if [[ -z "$GATE_FILE" ]]; then
                 # Repo-scoped resolution (#578)
                 RESOLVE_TG_SR="$(cd "$(dirname "$0")" && pwd)/../lib/resolve-think-gate.py"
@@ -556,16 +556,6 @@ HOOKEOF
                     if [[ -n "$REPO_TOP_SR" ]]; then
                         GATE_FILE=$(python3 "$RESOLVE_TG_SR" --workspace "$WORKSPACE_SR" --repo-root "$REPO_TOP_SR" --gate-name investigate-gate 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
                     fi
-                fi
-                # Legacy fallback
-                if [[ -z "$GATE_FILE" ]]; then
-                    for CANDIDATE in "$EFFECTIVE_CWD/investigate-gate.json" \
-                        "$HOME/.craft-agent/workspaces/my-workspace/investigate-gate.json"; do
-                        if [[ -f "$CANDIDATE" ]]; then
-                            GATE_FILE="$CANDIDATE"
-                            break
-                        fi
-                    done
                 fi
             fi
             if [[ -n "$GATE_FILE" ]] && [[ -f "$GATE_FILE" ]]; then

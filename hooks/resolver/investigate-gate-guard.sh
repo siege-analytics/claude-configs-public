@@ -1,7 +1,7 @@
 #!/bin/bash
 # UserPromptSubmit hook — investigate-gate enforcement.
 #
-# Checks for <workspace>/investigate-gate.json when think-gate.json exists.
+# Checks for <session>/tasks/<task-slug>/investigate-gate.json when think-gate.json exists.
 # If a design is registered (think-gate) but investigation has not been
 # completed (no investigate-gate), injects a blocking directive.
 #
@@ -72,7 +72,7 @@
 #   this hook ignores is the one whose absence hard-blocks. A signal file
 #   written to satisfy this hook alone will be refused by the mutation gate.
 #
-# Location: <workspace>/investigate-gate.json
+# Location: <session>/tasks/<task-slug>/investigate-gate.json
 # Ref: claude-configs-public#255, #709
 #
 # Levels 1-3 enforcement ladder (standard, always active):
@@ -87,7 +87,7 @@ HOOK_INPUT_JSON=$(cat 2>/dev/null || true)
 export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+WORKSPACE_ROOT="${CRAFT_AGENT_WORKSPACE:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 # Task-scoped resolution: resolve the think gate for the CURRENT hook cwd/repo,
 # not the first active gate anywhere in the workspace. A shared workspace may
 # have many sessions/tasks in flight; only the current repo/session can require
@@ -106,41 +106,19 @@ try:
 except Exception:
     print(cwd)
 ' 2>/dev/null || echo "$WORKSPACE_ROOT")
-THINK_GATE="${CLAUDE_THINK_GATE:-}"
-RESOLVER_ATTEMPTED=0
+THINK_GATE=""
 if [[ -z "$THINK_GATE" ]] && [[ -f "$RESOLVE_TG" ]]; then
-    RESOLVER_ATTEMPTED=1
-    THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" --env-override "${CLAUDE_THINK_GATE:-}" 2>/dev/null | python3 -c "import json,sys
+    THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" --env-override "${CLAUDE_THINK_GATE:-}" | python3 -c "import json,sys
 try:
     r=json.load(sys.stdin)
     print(r['path'] if r else '')
 except Exception:
     print('')" 2>/dev/null || true)
 fi
-if [[ -z "$THINK_GATE" ]]; then
-    if [[ "$RESOLVER_ATTEMPTED" == "0" ]]; then
-        THINK_GATE="$WORKSPACE_ROOT/think-gate.json"
-    else
-        THINK_GATE="$REPO_ROOT/.think-gate-missing.json"
-    fi
-fi
 # Repo-scoped investigate-gate resolution (#578)
-INVESTIGATE_GATE="${CLAUDE_INVESTIGATE_GATE:-}"
+INVESTIGATE_GATE=""
 if [[ -z "$INVESTIGATE_GATE" ]] && [[ -f "$THINK_GATE" ]] && [[ -f "$RESOLVE_TG" ]]; then
-    TG_REPO_ROOT=$(python3 -c "
-import json, sys
-try:
-    d = json.load(open(sys.argv[1]))
-    print(d.get('repo_root', ''))
-except:
-    pass
-" "$THINK_GATE" 2>/dev/null || true)
-    if [[ -n "$TG_REPO_ROOT" ]]; then
-        INVESTIGATE_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$TG_REPO_ROOT" --gate-name investigate-gate 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
-    fi
-fi
-if [[ -z "$INVESTIGATE_GATE" ]]; then
-    INVESTIGATE_GATE="$WORKSPACE_ROOT/investigate-gate.json"
+    INVESTIGATE_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" --gate-name investigate-gate | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
 fi
 
 # No think-gate → no pipeline active → nothing to enforce
@@ -186,7 +164,7 @@ You MUST:
 Until investigate-gate.json exists for this task, implementation writes are blocked
 by the mutation gate and the investigation skill's "no artifact CRUD before investigation" rule.
 
-Signal file location: $INVESTIGATE_GATE
+Signal file location: selected session/task directory (see hooks/README.md)
 Ref: #255 (mid-pipeline enforcement gap)
 </investigate-gate>
 EOF

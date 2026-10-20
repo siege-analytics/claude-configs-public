@@ -22,6 +22,10 @@
 
 set -uo pipefail
 
+# #1051: isolate from the invoking runtime's session/task metadata.
+unset CRAFT_SESSION_ID CRAFT_AGENT_SESSION_ID CLAUDE_SESSION_ID SESSION_ID
+unset CRAFT_SESSION_DIR CLAUDE_SIGNAL_DIR CRAFT_SIGNAL_DIR CRAFT_AGENT_SIGNAL_DIR CRAFT_AGENT_SESSION_DIR CLAUDE_SESSION_DIR CCP_HOOK_INPUT_JSON CCP_TASK_ID
+
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 MUTATION_GATE="$REPO_ROOT/hooks/bash/universal-mutation-gate.sh"
@@ -49,7 +53,9 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 WS="$TMP_DIR/ws"
 CWD_DIR="$TMP_DIR/cwd"
-mkdir -p "$WS" "$CWD_DIR"
+SD="$WS/sessions/current-session-id/tasks/current"
+mkdir -p "$WS" "$CWD_DIR" "$SD"
+export CRAFT_SESSION_ID=current-session-id CRAFT_SESSION_DIR="$WS/sessions/current-session-id"
 
 # --- Setup: transcribe the skill's worked example, and nothing else ---
 
@@ -65,9 +71,9 @@ if [ "$BLOCK_COUNT" != "1" ]; then
     exit 1
 fi
 
-sed -n '/^```json$/,/^```$/p' "$SKILL" | sed '1d;$d' > "$WS/investigate-gate.json"
+sed -n '/^```json$/,/^```$/p' "$SKILL" | sed '1d;$d' > "$SD/investigate-gate.json"
 
-if ! python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$WS/investigate-gate.json" 2>/dev/null; then
+if ! python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$SD/investigate-gate.json" 2>/dev/null; then
     echo "SETUP FAILED: the json block in $SKILL is not valid JSON." >&2
     echo "An operator transcribing it cannot produce a loadable signal file." >&2
     exit 1
@@ -81,7 +87,7 @@ fi
 EXAMPLE_TICKET=$(python3 -c "
 import json, sys
 print(json.load(open(sys.argv[1])).get('ticket', ''))
-" "$WS/investigate-gate.json")
+" "$SD/investigate-gate.json")
 
 if [ -z "$EXAMPLE_TICKET" ]; then
     echo "SETUP FAILED: the documented example has no 'ticket' key." >&2
@@ -90,18 +96,18 @@ fi
 
 python3 -c "
 import json, sys
-json.dump({'ticket': sys.argv[2], 'status': 'implementing'}, open(sys.argv[1], 'w'))
-" "$WS/think-gate.json" "$EXAMPLE_TICKET"
+json.dump({'ticket': sys.argv[2], 'status': 'implementing', 'scope_paths': [sys.argv[3]]}, open(sys.argv[1], 'w'))
+" "$SD/think-gate.json" "$EXAMPLE_TICKET" "$CWD_DIR"
 
 # A command that is neither safelisted nor read-only, so the gate proceeds to
 # the artifact checks instead of short-circuiting.
-PAYLOAD=$(printf '{"tool_input":{"command":"tee /tmp/investigate-gate-schema-test.txt"},"cwd":"%s"}' "$CWD_DIR")
+PAYLOAD=$(printf '{"tool_input":{"command":"tee schema-output.txt"},"cwd":"%s"}' "$CWD_DIR")
 
 NO_FINDINGS='investigation has no findings'
 
 run_gate() {
     printf '%s' "$PAYLOAD" \
-        | CLAUDE_THINK_GATE="$WS/think-gate.json" \
+        | CLAUDE_THINK_GATE="$SD/think-gate.json" \
           CRAFT_AGENT_WORKSPACE="$WS" \
           bash "$MUTATION_GATE" 2>&1
 }
@@ -125,7 +131,7 @@ fi
 
 # --- (a) the documented example is transcribable at all ---
 
-if grep -q '"findings"' "$WS/investigate-gate.json"; then
+if grep -q '"findings"' "$SD/investigate-gate.json"; then
     ok "(a) the worked example in SKILL.md contains a findings key"
 else
     bad "(a) the worked example in SKILL.md contains a findings key" \
@@ -155,7 +161,7 @@ import json, sys
 d = json.load(open(sys.argv[1]))
 d.pop('findings', None)
 json.dump(d, open(sys.argv[1], 'w'))
-" "$WS/investigate-gate.json"
+" "$SD/investigate-gate.json"
 
 OUT_WITHOUT=$(run_gate)
 if printf '%s' "$OUT_WITHOUT" | grep -q "$NO_FINDINGS"; then
@@ -178,7 +184,7 @@ import json, sys
 d = json.load(open(sys.argv[1]))
 d['findings'] = [{'id': 'f1', 'statement': 'shape differs from the recommendation', 'status': 'CONFIRMED'}]
 json.dump(d, open(sys.argv[1], 'w'))
-" "$WS/investigate-gate.json"
+" "$SD/investigate-gate.json"
 
 OUT_OTHER=$(run_gate)
 if printf '%s' "$OUT_OTHER" | grep -q "$NO_FINDINGS"; then
@@ -194,9 +200,9 @@ fi
 # validation is the advisory one. If this ever exits non-zero, the skill's
 # table is wrong and #709's analysis needs revisiting.
 
-sed -n '/^```json$/,/^```$/p' "$SKILL" | sed '1d;$d' > "$WS/investigate-gate.json"
-GUARD_OUT=$(CLAUDE_THINK_GATE="$WS/think-gate.json" \
-    CLAUDE_INVESTIGATE_GATE="$WS/investigate-gate.json" \
+sed -n '/^```json$/,/^```$/p' "$SKILL" | sed '1d;$d' > "$SD/investigate-gate.json"
+GUARD_OUT=$(CLAUDE_THINK_GATE="$SD/think-gate.json" \
+    CLAUDE_INVESTIGATE_GATE="$SD/investigate-gate.json" \
     bash "$GUARD" </dev/null 2>&1)
 GUARD_EXIT=$?
 

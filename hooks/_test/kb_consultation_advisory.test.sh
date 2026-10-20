@@ -10,6 +10,10 @@
 
 set -uo pipefail
 
+# #1051: isolate from the invoking runtime's session/task metadata.
+unset CRAFT_SESSION_ID CRAFT_AGENT_SESSION_ID CLAUDE_SESSION_ID SESSION_ID
+unset CRAFT_SESSION_DIR CLAUDE_SIGNAL_DIR CRAFT_SIGNAL_DIR CRAFT_AGENT_SIGNAL_DIR CRAFT_AGENT_SESSION_DIR CLAUDE_SESSION_DIR CCP_HOOK_INPUT_JSON CCP_TASK_ID
+
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 GUARD_SRC="$ROOT/hooks/resolver/think-gate-guard.sh"
 
@@ -27,7 +31,7 @@ check() {
 # guard's WORKSPACE_ROOT (script/../..) points at our fixture.
 make_ws() {
     local ws="$1" enforcement="$2"
-    mkdir -p "$ws/hooks/resolver" "$ws/hooks/lib" "$ws/projects/demo"
+    mkdir -p "$ws/sessions/kb/tasks/current" "$ws/hooks/resolver" "$ws/hooks/lib" "$ws/projects/demo"
     cp "$GUARD_SRC" "$ws/hooks/resolver/think-gate-guard.sh"
     cp -R "$ROOT/hooks/lib/." "$ws/hooks/lib/"
     # PROJECT.md that declares a knowledge base; optionally opts into blocking.
@@ -41,7 +45,7 @@ make_ws() {
         echo "---"
     } > "$ws/projects/demo/PROJECT.md"
     # A think-gate with NO kb section -> triggers the KB check.
-    cat > "$ws/think-gate.json" <<JSON
+    cat > "$ws/sessions/kb/tasks/current/think-gate.json" <<JSON
 {"ticket":"#demo","status":"implementing","repo_root":"$ws","claims":[{"id":"C1","claim":"x","falsifier":"y"}]}
 JSON
 }
@@ -49,7 +53,7 @@ JSON
 run_guard() {
     local ws="$1"
     printf '{"cwd":"%s"}' "$ws" | env -u CRAFT_SESSION_ID -u CLAUDE_SESSION_ID \
-        CLAUDE_THINK_GATE="$ws/think-gate.json" \
+        CRAFT_SESSION_ID=kb CRAFT_SESSION_DIR="$ws/sessions/kb" \
         bash "$ws/hooks/resolver/think-gate-guard.sh" 2>&1
 }
 

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
+# #1051: isolate from the invoking runtime's session/task metadata.
+unset CRAFT_SESSION_ID CRAFT_AGENT_SESSION_ID CLAUDE_SESSION_ID SESSION_ID
+unset CRAFT_SESSION_DIR CLAUDE_SIGNAL_DIR CRAFT_SIGNAL_DIR CRAFT_AGENT_SIGNAL_DIR CRAFT_AGENT_SESSION_DIR CLAUDE_SESSION_DIR CCP_HOOK_INPUT_JSON CCP_TASK_ID
+
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 source "$ROOT/hooks/_test/run_scenarios.sh"
 RESOLVER="$ROOT/hooks/lib/resolve-think-gate.py"
@@ -115,13 +119,13 @@ gates = json.load(sys.stdin)
 tickets = [g["data"].get("ticket") for g in gates]
 print(",".join(tickets) if tickets else "NONE")
 ')
-if [[ "$resolved_all_owning_session" == *"#foreign"* ]]; then
+if [[ "$resolved_all_owning_session" != *"#foreign"* ]]; then
   _HARNESS_PASS=$((_HARNESS_PASS + 1))
-  printf '  [PASS] owning session --all still sees its own workspace-root think-gate\n'
+  printf '  [PASS] owning session --all ignores workspace-root think-gate\n'
 else
   _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
-  _HARNESS_FAILED_NAMES+=("owning session --all still sees its own workspace-root think-gate")
-  printf '  [FAIL] owning session --all still sees its own workspace-root think-gate (got: %s)\n' "$resolved_all_owning_session"
+  _HARNESS_FAILED_NAMES+=("owning session --all ignores workspace-root think-gate")
+  printf '  [FAIL] owning session --all ignores workspace-root think-gate (got: %s)\n' "$resolved_all_owning_session"
 fi
 
 # Task-scoped prompt gates: a workspace-root singleton for a different repo must
@@ -159,7 +163,8 @@ fi
 # Current-task gates still fire: once the workspace singleton belongs to the
 # current repo, investigate-gate should surface the missing investigation for
 # that task.
-cat >"$TMP/think-gate.json" <<JSON
+mkdir -p "$TMP/sessions/session-brand-new/tasks/current"
+cat >"$TMP/sessions/session-brand-new/tasks/current/think-gate.json" <<JSON
 {"ticket":"#current","repo_root":"$TMP/repo","status":"implementing"}
 JSON
 out=$(printf '%s' "$payload_current_repo" | CRAFT_AGENT_SESSION_ID=session-brand-new bash "$TMP_INVESTIGATE" 2>&1)
@@ -173,13 +178,14 @@ else
   printf '         output: %s\n' "${out:0:300}"
 fi
 
+rm -f "$TMP/sessions/session-brand-new/tasks/current/think-gate.json"
 mutation_payload=$(printf '{"cwd":"%s","tool_input":{"command":"git commit -m x"}}' "$TMP/repo")
 cat >"$TMP/think-gate.json" <<JSON
 {"ticket":"#foreign-root","repo_root":"$TMP/foreign-repo","status":"implementing"}
 JSON
 out=$(printf '%s' "$mutation_payload" | CRAFT_AGENT_WORKSPACE="$TMP" CRAFT_AGENT_SESSION_ID=session-brand-new bash "$TMP_MUTATION" 2>&1)
 code=$?
-if [[ "$code" -eq 2 ]] && echo "$out" | grep -q "no valid think-gate" && ! echo "$out" | grep -q "#foreign-root"; then
+if [[ "$code" -eq 2 ]] && echo "$out" | grep -q "Unscoped mutation" && ! echo "$out" | grep -q "#foreign-root"; then
   _HARNESS_PASS=$((_HARNESS_PASS + 1))
   printf '  [PASS] mutation gate does not use foreign workspace-root gate as current task\n'
 else
@@ -220,7 +226,7 @@ fi
 
 out=$(printf '%s' "$mutation_payload" | CRAFT_AGENT_WORKSPACE="$TMP" CRAFT_AGENT_SESSION_ID=session-brand-new bash "$TMP_MUTATION" 2>&1)
 code=$?
-if [[ "$code" -eq 2 ]] && echo "$out" | grep -q "no valid think-gate" && ! echo "$out" | grep -q "#same-repo-foreign-session"; then
+if [[ "$code" -eq 2 ]] && echo "$out" | grep -q "Unscoped mutation" && ! echo "$out" | grep -q "#same-repo-foreign-session"; then
   _HARNESS_PASS=$((_HARNESS_PASS + 1))
   printf '  [PASS] mutation gate ignores same-repo foreign-session local gate\n'
 else
@@ -230,16 +236,16 @@ else
   printf '         output: %s\n' "${out:0:400}"
 fi
 
-cat >"$TMP/repo/.think-gate.json" <<JSON
+cat >"$TMP/sessions/session-brand-new/tasks/current/think-gate.json" <<JSON
 {"ticket":"#same-repo-current-session","repo_root":"$TMP/repo","session":"session-brand-new","status":"implementing"}
 JSON
 out=$(printf '%s' "$payload_current_repo" | CRAFT_AGENT_SESSION_ID=session-brand-new bash "$TMP_INVESTIGATE" 2>&1)
 if echo "$out" | grep -q "INVESTIGATION REQUIRED" && echo "$out" | grep -q "#same-repo-current-session"; then
   _HARNESS_PASS=$((_HARNESS_PASS + 1))
-  printf '  [PASS] investigate gate still accepts same-repo current-session local gate\n'
+  printf '  [PASS] investigate gate still accepts same-repo current-session task gate\n'
 else
   _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
-  _HARNESS_FAILED_NAMES+=("investigate gate still accepts same-repo current-session local gate")
+  _HARNESS_FAILED_NAMES+=("investigate gate still accepts same-repo current-session task gate")
   printf '  [FAIL] investigate gate rejected current-session local gate\n'
   printf '         output: %s\n' "${out:0:300}"
 fi
@@ -247,7 +253,7 @@ fi
 # Terminal-status gates without artifacts are closed-out markers, not active
 # implementation gates. They must not block read/exploration commands, but they
 # also must not grant mutation ability.
-cat >"$TMP/repo/.think-gate.json" <<JSON
+cat >"$TMP/sessions/session-brand-new/tasks/current/think-gate.json" <<JSON
 {"ticket":"#closed-no-artifacts","repo_root":"$TMP/repo","session":"session-brand-new","status":"complete"}
 JSON
 read_payload=$(printf '{"cwd":"%s","tool_input":{"command":"rg closed-no-artifacts ."}}' "$TMP/repo")
@@ -265,7 +271,8 @@ fi
 
 out=$(printf '%s' "$mutation_payload" | CRAFT_AGENT_WORKSPACE="$TMP" CRAFT_AGENT_SESSION_ID=session-brand-new bash "$TMP_MUTATION" 2>&1)
 code=$?
-if [[ "$code" -eq 2 ]] && echo "$out" | grep -q "terminal gate has no artifact evidence" && ! echo "$out" | grep -q "artifacts missing or wrong ticket"; then
+# Terminal records are excluded from ownership, not merely missing artifacts.
+if [[ "$code" -eq 2 ]] && echo "$out" | grep -q "Unscoped mutation"; then
   _HARNESS_PASS=$((_HARNESS_PASS + 1))
   printf '  [PASS] terminal gate without artifacts does not authorize mutation\n'
 else

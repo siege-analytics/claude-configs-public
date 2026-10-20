@@ -4912,6 +4912,7 @@
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/survey_context.test.sh",
+        "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
@@ -5374,6 +5375,8 @@
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
         "hooks/_test/survey_context.test.sh",
+        "hooks/_test/task_keyed_gates.py",
+        "hooks/_test/task_keyed_gates.test.sh",
         "hooks/_test/test_guard.test.sh",
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/ticket_propagation_guard.test.sh",
@@ -5484,6 +5487,7 @@
         "hooks/_test/review_risk_policy.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/survey_context.test.sh",
+        "hooks/_test/task_keyed_gates.py",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
         "hooks/_test/writing_migration_cleanup.test.sh",
@@ -5842,10 +5846,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 20982,
-      "content_sha256": "2e587e00cfcbf0e35e3b90303dc0b6e8ced9d4b44beb7a7d3cc0d2388efc189b",
+      "characters": 21832,
+      "content_sha256": "2fadaa44e01a0267886694402dffaa4f5590b5ccf07f4bdae2ae0ddad6477326",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 5246,
+      "estimated_tokens": 5458,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -8337,6 +8341,7 @@
         "hooks/_test/scaffold_test_stub.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
+        "hooks/_test/task_keyed_gates.py",
         "hooks/_test/ticket_propagation_guard.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
@@ -8686,10 +8691,10 @@
     },
     {
       "canonical_source": "skills/commit/SKILL.md",
-      "characters": 19232,
-      "content_sha256": "ca12a93d27c68dfbb690bee7d04e197439fed85c51d712a329e860613476c78e",
+      "characters": 19975,
+      "content_sha256": "038a3938998ee776762ea52dc75b369475d21c49d682f2687c17a2201acda33a",
       "description": "Create git commits with descriptive messages that link to tickets and explain the why. Enforces ticket references.",
-      "estimated_tokens": 4808,
+      "estimated_tokens": 4994,
       "frontmatter_name": "commit",
       "generated_outputs": [
         "dist/nested/skills/commit",
@@ -8720,7 +8725,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 415,
+      "lines": 419,
       "owner": [
         "unknown"
       ],
@@ -8772,6 +8777,7 @@
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
         "hooks/_test/survey_context.test.sh",
+        "hooks/_test/task_keyed_gates.py",
         "hooks/_test/test_guard.test.sh",
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/ticket_required.test.sh",
@@ -9004,10 +9010,10 @@
     },
     {
       "canonical_source": "skills/cross-review/SKILL.md",
-      "characters": 11432,
-      "content_sha256": "5c410ceb7d92a7bac3bf8f5dc01b3b99ba02a682fc134a1e03ee76b9b0aceb6e",
+      "characters": 11997,
+      "content_sha256": "a19d9f7222f07f6923ac616ec6ee8104b54c00d8bfa723ba6f9020a07fd6897d",
       "description": "Multi-provider code review dispatcher. Discovers available LLM connections, selects an alternate provider (Claude\u2194Codex, Codex\u2194Gemini, etc.), and spawns a review session on that provider using a portable review skill. Falls back to same-provider review or the MCP cross-review server when no alternate is available.",
-      "estimated_tokens": 2858,
+      "estimated_tokens": 3000,
       "frontmatter_name": "cross-review",
       "generated_outputs": [
         "dist/nested/skills/cross-review",
@@ -9030,7 +9036,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 280,
+      "lines": 281,
       "owner": [
         "unknown"
       ],
@@ -9734,10 +9740,10 @@
     },
     {
       "canonical_source": "skills/investigate/SKILL.md",
-      "characters": 39034,
-      "content_sha256": "ecffb1f272916cfbd983222c03d83044a330747b528deb9b2c91d65014dbb024",
+      "characters": 39733,
+      "content_sha256": "fc33ca3272f4706e98bdbacd2d3f79e8879b9bafac4ac53e6804bc59c997a4e4",
       "description": "Non-discretionary evidentiary gate. Required before any artifact is created, modified, or deleted. Verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations, impact chain, knowledge loci, and environmental readiness. The Fact Sheet is the single source of truth referenced by design, self-review, and post-mortem. Do NOT skip this skill; assumptions that bypass investigation are the #1 cause of shipped bugs.",
-      "estimated_tokens": 9759,
+      "estimated_tokens": 9934,
       "frontmatter_name": "investigate",
       "generated_outputs": [
         "dist/nested/skills/investigate",
@@ -9750,8 +9756,8 @@
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/git/self-review.sh",
+        "hooks/lib/pipeline_state.py",
         "hooks/resolver/investigate-gate-guard.sh",
-        "hooks/resolver/pipeline-state-guard.sh",
         "plans/design-709.md",
         "plans/fact-sheet-709.md",
         "plans/hostile-review-725.md",
@@ -9771,7 +9777,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 615,
+      "lines": 618,
       "owner": [
         "unknown"
       ],
@@ -9796,6 +9802,7 @@
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
+        "hooks/_test/task_keyed_gates.py",
         "hooks/_test/universal_mutation_gate_831.test.sh",
         "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh",
         "hooks/_test/verify_enforcement.test.sh"
@@ -10365,10 +10372,10 @@
     },
     {
       "canonical_source": "skills/pre-mortem/SKILL.md",
-      "characters": 15419,
-      "content_sha256": "535371b7337654190a2a0064148a632f07a2277f8b649641991069a23c243988",
+      "characters": 16331,
+      "content_sha256": "376660c4897cb0a38b6de665fa7ee0ad9453df1da61e77b9f90f4b4eaf518db9",
       "description": "Adversarial risk gate between investigation and implementation. Classifies failure scenarios as Tiger (real and unmitigated), Paper Tiger (feels scary but investigation shows it's handled), or Elephant (uncomfortable truth everyone avoids). Tigers must be grounded in investigated facts with file:line citations. Launch-Blocking Tigers halt implementation until mitigated. Runs after investigate, before implementation.",
-      "estimated_tokens": 3855,
+      "estimated_tokens": 4083,
       "frontmatter_name": "pre-mortem",
       "generated_outputs": [
         "dist/nested/skills/pre-mortem",
@@ -10380,7 +10387,7 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/post-mortems/2026-06-09-pour-now-engagement.md",
-        "hooks/resolver/pipeline-state-guard.sh",
+        "hooks/lib/pipeline_state.py",
         "plans/pre-mortem-1046-frontmatter-validation.md",
         "plans/pre-mortem-682-python-rewrite.md",
         "plans/self-review-397.md",
@@ -10392,7 +10399,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 254,
+      "lines": 265,
       "owner": [
         "unknown"
       ],
@@ -10413,6 +10420,7 @@
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
+        "hooks/_test/task_keyed_gates.py",
         "hooks/_test/universal_mutation_gate_831.test.sh",
         "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh"
       ],
@@ -10611,6 +10619,8 @@
         "hooks/_test/resolve_project.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/task_keyed_gates.py",
+        "hooks/_test/task_keyed_gates.test.sh",
         "hooks/_test/test_guard.test.sh",
         "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/ticket_propagation_guard.test.sh",
@@ -10819,7 +10829,8 @@
       "source_path": "skills/react/SKILL.md",
       "test_evidence": [
         "bin/_test/language_scope_test.py",
-        "bin/_test/resolve_load_set_test.py"
+        "bin/_test/resolve_load_set_test.py",
+        "hooks/_test/task_keyed_gates.py"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -11070,10 +11081,10 @@
     },
     {
       "canonical_source": "skills/self-review/SKILL.md",
-      "characters": 70277,
-      "content_sha256": "6babe9e02e0aa15d85ecd74adb31161b33aa5f70361b4e7f20ee4618a6337ae2",
+      "characters": 70793,
+      "content_sha256": "dda6a871a27682671024ec24dd5f2fb6950b79ee1f75321eab723344193d546d",
       "description": "MANDATORY pre-push / pre-PR-open / pre-PR-merge gate. Produce a structured artifact with Assumptions (including roles + Goal source verification via evaluate-ticket + Pre-author-inventory link + Evidence-predates-work block), Peer review against the shelves, and Lead review naming affirmative standards. The pre-push hook enforces trailer presence, structural completeness, artifact-predates-work, and the writing-rules:4 evidence-chain on any Trivial-change / Exemption blocks. Do NOT skip this skill; the form is checkable but the discipline is what binds.",
-      "estimated_tokens": 17570,
+      "estimated_tokens": 17699,
       "frontmatter_name": "self-review",
       "generated_outputs": [
         "dist/nested/skills/self-review",
@@ -11094,7 +11105,7 @@
         "hooks/README.md",
         "hooks/git/pre-push-self-review.sh",
         "hooks/git/self-review.sh",
-        "hooks/resolver/pipeline-state-guard.sh",
+        "hooks/lib/pipeline_state.py",
         "hooks/resolver/skill-enforcement-gate.sh",
         "plans/design-note-pr-a-vocabulary.md",
         "plans/design-note-pr-bc-combined.md",
@@ -11125,7 +11136,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 1351,
+      "lines": 1347,
       "owner": [
         "unknown"
       ],
@@ -11621,10 +11632,10 @@
     },
     {
       "canonical_source": "skills/testing-frameworks/SKILL.md",
-      "characters": 12569,
-      "content_sha256": "da61dd3f21ede3857978e2357fb2ab746368acce189f4658b5a18596fe3baba3",
+      "characters": 13331,
+      "content_sha256": "800259680589df2ee29d1b5c3b14ca62e8a10cfc1f7a2a9358d6dda6b47ddf40",
       "description": "Framework guidance for test writing. Projects declare their test frameworks per architectural layer in PROJECT.md; this skill recommends frameworks by language ecosystem and enforces consistent usage. Pairs with _testing-frameworks-rules.md (always-on) and hooks/git/test-guard.sh (mechanical enforcement at push time). The optional per-layer source globs additionally drive hooks/git/decomposition-guard.sh (one-PR-per-layer warning).",
-      "estimated_tokens": 3143,
+      "estimated_tokens": 3333,
       "frontmatter_name": "testing-frameworks",
       "generated_outputs": [
         "dist/nested/skills/testing-frameworks",
@@ -11658,7 +11669,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 198,
+      "lines": 202,
       "owner": [
         "unknown"
       ],
@@ -11685,10 +11696,10 @@
     },
     {
       "canonical_source": "skills/think/SKILL.md",
-      "characters": 26726,
-      "content_sha256": "2c8245f0be5451c32158682056fa3551e4d56e22264eb2ee5a47bee1a5f17d9f",
+      "characters": 30156,
+      "content_sha256": "6b3777ecedb119f730f1bc61fb8bc5da1f669896cd8769270911b8759dde1f40",
       "description": "MANDATORY design-first gate. Enforces structured design before any code is written for a feature, refactor, or architecture change. Slash-invokable as /think; also enforced via the resolver before any non-trivial implementation. Do NOT skip this skill.",
-      "estimated_tokens": 6682,
+      "estimated_tokens": 7539,
       "frontmatter_name": "think",
       "generated_outputs": [
         "dist/nested/skills/think",
@@ -11722,7 +11733,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 455,
+      "lines": 496,
       "owner": [
         "unknown"
       ],
@@ -11752,6 +11763,8 @@
         "hooks/_test/resolve_project.test.sh",
         "hooks/_test/session_signal_resolution.test.sh",
         "hooks/_test/spawn_guard.test.sh",
+        "hooks/_test/task_keyed_gates.py",
+        "hooks/_test/test_guard.test.sh",
         "hooks/_test/universal_mutation_gate.test.sh",
         "hooks/_test/universal_mutation_gate_831.test.sh",
         "hooks/_test/universal_mutation_gate_empty_reporoot.test.sh",
@@ -12162,9 +12175,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2654677,
+    "characters": 2663154,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 663748,
+    "estimated_tokens": 665867,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12185,7 +12198,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1258283
+      "unclassified": 1266760
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12197,7 +12210,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 314614
+      "unclassified": 316733
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

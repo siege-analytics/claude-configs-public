@@ -204,13 +204,12 @@ if [[ -z "$SOURCE_FILES" ]]; then
 fi
 
 # --- Source files ARE touched: now require the test-gate.json signal file ---
-# Look in workspace root first (Craft Agent), then repo root.
+# Task evidence only. Shared workspace and repo singleton files are ignored.
 SIGNAL_FILE=""
-WORKSPACE_ROOT="${CRAFT_WORKSPACE_ROOT:-}"
-if [[ -n "$WORKSPACE_ROOT" ]] && [[ -f "$WORKSPACE_ROOT/test-gate.json" ]]; then
-    SIGNAL_FILE="$WORKSPACE_ROOT/test-gate.json"
-elif [[ -f "$REPO_ROOT/test-gate.json" ]]; then
-    SIGNAL_FILE="$REPO_ROOT/test-gate.json"
+WORKSPACE_ROOT="${CRAFT_AGENT_WORKSPACE:-${CRAFT_WORKSPACE_ROOT:-$REPO_ROOT}}"
+RESOLVE_TG="$(cd "$(dirname "$0")/../lib" && pwd)/resolve-think-gate.py"
+if [[ -f "$RESOLVE_TG" ]]; then
+    SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" --gate-name test-gate | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
 fi
 
 if [[ -z "$SIGNAL_FILE" ]]; then

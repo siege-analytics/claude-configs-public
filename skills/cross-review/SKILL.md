@@ -10,6 +10,8 @@ Dispatch a code review to a different LLM provider so the reviewer is
 architecturally independent from the author. Claude reviews Codex's work,
 Codex reviews Claude's, and so on.
 
+**Gate target repository:** `repo_root` names the task's TARGET clone/worktree, never the session CWD or the Craft workspace merely because it is a configs checkout. Declare actual task paths in `scope_paths`; run target commands with explicit paths/`git -C` when the session CWD is elsewhere. Companion gates use the same target repo and exact session/task identity. Scope rejections must be corrected, not bypassed with root copies.
+
 ## When to Use
 
 - After completing work on a ticket, before merge
@@ -232,9 +234,12 @@ pure Claude Code.
 After the review produces a request-changes verdict, write the signal
 file so the hook can detect when fixes land:
 
-**Session-scoped (preferred):** `$CLAUDE_SIGNAL_DIR/review-gate.json`, `$CRAFT_AGENT_SESSION_DIR/review-gate.json`, or `<workspace>/sessions/<session-id>/review-gate.json`
-**Claude Code repo-local fallback:** `<repo>/.review-gate.json`
-**Legacy workspace fallback:** `<workspace>/review-gate.json`
+**Task-keyed only:** `$CRAFT_SESSION_DIR/tasks/<task-slug>/review-gate.json`,
+or `<workspace>/sessions/<session-id>/tasks/<task-slug>/review-gate.json`.
+Use the same full ticket/explicit task identity and session as this task's
+think gate. Multiple concurrent tasks in a session must never overwrite or
+clear one another's signals. Workspace and repo singleton fallbacks are not
+new write targets; legacy session-level files are read during migration.
 
 ```json
 {
@@ -252,13 +257,9 @@ file so the hook can detect when fixes land:
 
 ### On approve verdict
 
-Delete the signal file:
-
-```bash
-rm "$CLAUDE_SIGNAL_DIR/review-gate.json"       # session-scoped
-rm "$CRAFT_AGENT_SESSION_DIR/review-gate.json" # session-scoped
-rm .review-gate.json                          # repo-local fallback
-```
+Update only this task's signal to `verdict: approve`, or remove only this
+task's review signal after confirming the findings are propagated. Never
+clear a workspace singleton or another task's review record.
 
 ### How re-review triggers
 
