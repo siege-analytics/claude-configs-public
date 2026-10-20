@@ -21,7 +21,7 @@ pass=0
 fail=0
 
 detects() {
-    printf '%s' "$1" | python3 "$LIB" --is-commit
+    printf '%s' "$1" | python3 "$LIB" --is-commit >/dev/null
 }
 
 check_catch() {
@@ -58,6 +58,12 @@ check_catch "a left-shift, not a heredoc"   'x=$((1 << 2)); git commit -m y'
 check_catch "--amend"                       'git commit --amend --no-edit'
 check_catch "a message mentioning itself"   'git commit -m "explains git commit"'
 check_catch "semicolon separator"           'echo hi; git commit -m x'
+# #1109: the shell runs these as the verb; quotes and backslashes go away.
+check_catch "a double-quoted verb"           'git "commit" -m x'
+check_catch "a single-quoted verb"           "git 'commit' -m x"
+check_catch "a backslash in git"             'g\it commit -m x'
+check_catch "empty quotes inside git"        "g''it commit -m x"
+check_ignore "an escaped space is one word"   'grep -rn git\ commit hooks/'
 check_catch "a heredoc opener"              'git commit -F - <<MSG
 body
 MSG'
@@ -126,6 +132,17 @@ else
     printf '  FAIL: no-attribution blocked a non-commit (the #55 shape)\n'; fail=$((fail + 1))
 fi
 
+echo
+echo "  -- a crashing helper falls back to over-matching (#1109) --"
+for broken in 'def (' 'import os; os._exit(1)' 'raise SystemExit(3)'; do
+    BR="$(mktemp -d)"; printf '%s\n' "$broken" > "$BR/command-text.py"
+    if bash -c "source '$SCRIPT_DIR/../lib/command-text.sh'; _CT_PY='$BR/command-text.py'; ct_is_git_commit 'git commit -m x'"; then
+        printf '  PASS: ct_is_git_commit still catches a commit when the helper is: %s\n' "$broken"; pass=$((pass + 1))
+    else
+        printf '  FAIL: ct_is_git_commit fails open when the helper is: %s\n' "$broken"; fail=$((fail + 1))
+    fi
+    rm -rf "$BR"
+done
 echo
 echo "Results: $pass passed, $fail failed"
 [[ $fail -gt 0 ]] && exit 1

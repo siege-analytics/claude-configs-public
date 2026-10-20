@@ -10122,6 +10122,7 @@
         "bin/_test/notebook_edit_guards_test.py",
         "hooks/_test/broad_staging.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
+        "hooks/_test/sensitive_files.test.sh",
         "hooks/_test/ticket_propagation_guard.test.sh",
         "hooks/_test/universal_mutation_gate_fail_closed.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh"
