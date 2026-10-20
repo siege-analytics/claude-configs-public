@@ -18,7 +18,7 @@ The release notes for v3.5.74 come from this section. Everything under [Unreleas
 
 ### Fixed
 
-- **File-backed commit messages use their effective contents for ticket enforcement (#994).** The ticket hook now resolves direct literal `-m`, `-F <file>`, `--file <file>`, and `--file=<file>` sources after its existing fast skip and command detector. Ticketed files are accepted; ticketless, missing, unreadable, non-regular, mixed, and stdin file sources fail closed. Alias, wrapper, expansion, and dynamic-dispatch handling remains tracked in #1107.
+- **Modeled direct commit messages use effective contents for ticket enforcement (#994).** After its existing fast skip and detector, the hook resolves literal `-m`/`--message` forms, the canonical quoted-delimiter heredoc idiom, trailers, cleanup rules, and bounded regular `-F`/`--file` sources. Ticketless or indeterminate direct messages and missing, unreadable, non-regular, mixed, stdin, or over-cap file sources fail closed. Large multiline files may also fail closed pending the separate pipeline follow-up. Alias, wrapper, compound-command, editor, and dynamic-dispatch handling remains outside this change; #1107 tracks the dispatch class.
 
 ### Changed: task-keyed, proportional task gates (#1051, #1086)
 

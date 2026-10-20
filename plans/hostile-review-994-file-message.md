@@ -25,20 +25,38 @@ The independent regression reviewer returned **NEEDS_REWORK** against `b37aaebc7
 - Reproductions that incorrectly allowed were `git commit -m ";" --author="Refs: #994 <test@example.com>"` and `git commit -F ";" --author="Refs: #994 <test@example.com>"`, even though the first message is ticketless and the second file is missing.
 - A separate static reviewer initially reported PASS but withdrew it after the executable reproduction. The effective verdict for `b37aaebc7b00` is NEEDS_REWORK.
 
-## Resolution in the follow-up commit
+## Resolution in the first follow-up commit
 
-- Shell operator characters are now identified in the raw command while single/double quote provenance still exists. Only unquoted operators make the narrow parser return unsupported; quoted operator characters remain literal message/path data.
-- Added deny regressions for both exact incidental-author reproductions.
-- Added paired ticketed/ticketless quoted-semicolon message and file-path cases plus malformed-quote handler coverage.
-- The focused suite now passes 64/64; the commit detector passes 24/24.
-- Re-ran the Tier C dependency audit, build/check, package byte comparison, three hook-tree validators, and all 44 hook suites on the fixed worktree.
+- Shell operator characters were identified in the raw command while single/double quote provenance still existed.
+- Added deny regressions for both exact incidental-author reproductions plus paired quoted-semicolon message/path and malformed-quote coverage.
+- The focused suite passed 64/64 before push.
+
+## Exact PR-head review at a857c0ef
+
+The required `Review #994 alias and command parsing` gate returned **REJECT** against `a857c0ef63dd305f050192051a0339c4596737d9`:
+
+1. **B1 fail-open:** other quoted shell characters and unhandled message spellings still returned unsupported, so the hook re-scanned unrelated argv. The blocker covered multiline/single-quoted shell characters, double-quoted expansion, canonical heredoc, `--message`/prefix forms, and clustered `-am`.
+2. **B2 message mismatch:** the helper retained words after an unquoted Bash comment, did not consume value-taking options, ignored `--trailer`, and did not apply CLI or configured cleanup modes.
+3. **B3 stale metrics:** `catalog/review-risk-metrics.json` did not reflect the Tier C policy length change, so hosted validation stopped before Linux hook scenarios.
+4. **B4 topology:** the feature did not contain current canonical main. CI required a normal main-to-feature merge; no rebase or history rewrite was permitted.
+
+The gate also required README/CHANGELOG claims and the self-review record to match only supported behavior. That verdict supersedes every earlier PASS statement for the PR.
+
+## Rework after the exact-head rejection
+
+- Direct literal `git commit` now fails closed when its message cannot be modeled; legacy argv fallback remains only for non-direct dispatch shapes outside #994.
+- Raw quote-aware scanning handles word-start Bash comments, literal multiline/single-quoted shell characters, and rejects unmodeled expansion. A bounded parser preserves the canonical quoted-delimiter heredoc body.
+- The option model resolves `--message` and unambiguous prefixes, clustered `-am`, value-taking options, trailers, and CLI/configured `strip` or `scissors` cleanup. Message-producing options outside the model fail closed.
+- The expanded real-hook suite passes 106/106, including every B1/B2 deny reproduction, paired allows, and three real-Git cleanup ordering/scissors regressions; the 15 read controls remain included.
+- The rejected-head reviewer's isolated real-Git differential harness was rerun against the rework. Every F1-F7 and G1-G8 blocker row reports `pr_correct=true`, all 15 reads remain allowed, and only the directed follow-ups remain mismatches.
+- `bin/review-risk-metrics.py` regenerated the single stale `policy_characters` field, and the check passes.
+- Canonical main was merged into the feature with a normal merge commit after CI required it. The PR diff against develop remained the same nine #994 paths.
+- README and CHANGELOG now state the modeled forms, 1 MiB regular-file bound, cleanup/trailer behavior, fail-closed boundary, and deferred dispatch/editor scope.
 
 ## Current verdict
 
-`b37aaebc7b0026b0350bd1ae7f2fe489303eb9c2` remains **NEEDS_REWORK** and must not be described as a pass.
+Both reviewed heads remain rejected: `b37aaebc7b0026b0350bd1ae7f2fe489303eb9c2` is NEEDS_REWORK and `a857c0ef63dd305f050192051a0339c4596737d9` is REJECT.
 
-The S1 fix has author-side test evidence, but no independent reviewer has yet verified the new commit/PR head. The required `Review #994 alias and command parsing` gate must review the exact pushed PR head before it is considered merge-safe. This artifact makes no exact-head PASS claim in advance of that review.
+The rework above has author-side evidence only. No independent reviewer has verified the next pushed PR head, and this artifact makes no PASS claim for it. The `Review #994 alias and command parsing` gate must run again at that exact head before merge consideration.
 
-Dismissed risks after the local fix: FIFO handling is nonblocking and rejects non-regular descriptors before reading; relative paths use nested then top-level CWD; missing, unreadable, oversized, non-regular, stdin, duplicate-file, and mixed sources fail closed in tests; all 15 Finding #7 reads pass.
-
-Residual risk: unsupported dispatch and editor-generated message shapes retain legacy behavior by design and remain outside #994.
+Residual scope: `-qF`, tilde expansion, large-message pipe behavior, compound `cd &&`, editor mutation, #1107 dispatch, and the pre-existing amend/no-edit skip remain follow-up work as directed by the exact-head review.
