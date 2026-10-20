@@ -72,6 +72,31 @@ else
     bad "fully-wired fixture should pass but did not"
 fi
 
+# An interactive install hands the probe a stdin that never closes (a TTY).
+# The probe must not read it: give it an open, silent pipe and a deadline.
+# Bash 3.2 and stock macOS have neither `exec {fd}<` nor `timeout`, so this
+# uses a FIFO held open by a background writer and a polling deadline. The
+# writer's only open descriptor is the FIFO, so it cannot keep this test's own
+# output open; killing it closes the FIFO and releases any reader.
+mkfifo "$TMP/never_closes"
+sleep 600 > "$TMP/never_closes" 2>/dev/null < /dev/null &
+writer=$!
+bash "$PROBE" --target "$WIRED" --mode craft-agent < "$TMP/never_closes" >/dev/null 2>&1 &
+probe=$!
+waited=0
+while kill -0 "$probe" 2>/dev/null && [ "$waited" -lt 120 ]; do sleep 1; waited=$((waited + 1)); done
+if kill -0 "$probe" 2>/dev/null; then
+    kill "$probe" 2>/dev/null; rc=124
+else
+    wait "$probe"; rc=$?
+fi
+kill "$writer" 2>/dev/null; wait "$writer" 2>/dev/null
+if [[ $rc -eq 0 ]]; then
+    ok "probe completes when the caller's stdin never closes"
+else
+    bad "probe with an open stdin exited $rc (124 = hung waiting on stdin)"
+fi
+
 # --- PASS fixture: fully wired but NO watchdog automation ---------------------
 # The standing-order watchdog is opt-in and not wired by default (README.md);
 # its absence is advisory, not an enforcement failure. A fully-wired target

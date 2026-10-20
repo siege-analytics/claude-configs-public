@@ -142,7 +142,9 @@ MOCK
     done
     chmod +x "$mock_resolver"/*.sh
 
-    probe_out="$(bash "$mock_resolver/ca-enforcement-gate.sh" 2>/dev/null || true)"
+    # Never inherit the caller's stdin: the gate reads its payload with `cat`,
+    # so an install run from a terminal waited on the TTY indefinitely.
+    probe_out="$(bash "$mock_resolver/ca-enforcement-gate.sh" < /dev/null 2>/dev/null || true)"
     if printf '%s' "$probe_out" \
         | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get("continue") is False else 1)' 2>/dev/null; then
         ok "local block probe: gate emitted continue:false on STALE DESIGN"
