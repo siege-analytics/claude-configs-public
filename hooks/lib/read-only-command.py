@@ -173,7 +173,8 @@ def kubectl_ok(args):
 
 
 def ss_kills(args):
-    return any(long_opt(a, "--kill") or short_has(a, "K", "fAFN") for a in args)   # -K kills sockets (#1089)
+    # -K kills sockets (#1089); -D/--diag=FILE writes raw socket data to FILE (#1092 review).
+    return any(long_opt(a, "--kill", "--diag") or short_has(a, "KD", "fAFN") for a in args)
 
 
 def gh_ok(args):

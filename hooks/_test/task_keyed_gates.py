@@ -597,6 +597,37 @@ class Gates(unittest.TestCase):
         result = self.assertGate(2, f'git -C {self.repo} commit -m hook')
         self.assertIn('review tier is C', result.stderr)
 
+    def test_lone_commit_with_conventional_message_is_classified_by_what_it_records(self):
+        """#1092 review: quoted parentheses, arrows and slashes in a commit
+        message do not turn a lone commit into a repository-wide target."""
+        git = lambda *a: subprocess.run(['git', '-C', str(self.repo), *a], check=True, capture_output=True)
+        (self.repo / 'hooks/bash').mkdir(parents=True); (self.repo / 'docs').mkdir()
+        (self.repo / 'hooks/bash/guard.sh').write_text('x'); (self.repo / 'docs/a.md').write_text('x')
+        git('add', 'hooks/bash/guard.sh', 'docs/a.md')
+        git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'init')
+        self.task('o/r#conventional', self.repo, artifacts=False)   # Tier A evidence only
+        (self.repo / 'docs/a.md').write_text('y'); git('add', 'docs/a.md')
+        self.assertGate(0, f'git -C {self.repo} commit -m "fix(docs): a -> b, see docs/a.md"')
+        (self.repo / 'hooks/bash/guard.sh').write_text('y')
+        result = self.assertGate(2, f'git -C {self.repo} commit -m "fix(hooks): a -> b"')
+        self.assertIn('review tier is C', result.stderr)
+
+    def test_native_pre_push_finds_root_test_gate_without_a_session(self):
+        """#1092 review: a terminal push (no session identity) uses the
+        workspace or repository test-gate.json, as before #1051."""
+        write(self.repo / 'test-gate.json', {'evidence': [{'source': 'x.py', 'test': 't', 'result': 'pass'}]})
+        env = {k: v for k, v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_'))}
+        with patch.dict(os.environ, env, clear=True):
+            found = r.find_gate_for_repo(str(self.repo), str(self.repo), gate_name='test-gate')
+        self.assertTrue(found and found['path'].endswith('test-gate.json'), found)
+
+    def test_proven_read_selects_by_repository_not_empty_targets(self):
+        self.task('o/r#read-select', self.repo, artifacts=False)
+        payload = craft_payload(cwd=str(self.repo), tool_input={'command': 'git status'})
+        with patch.dict(os.environ, {**os.environ, 'CCP_HOOK_INPUT_JSON': json.dumps(payload)}):
+            found = r.find_gate_for_repo(str(self.ws), str(self.repo))
+        self.assertTrue(found, 'a proven read should still resolve the repository task gate')
+
     def test_declared_tier_never_lowers_the_floor(self):
         d = self.task('o/r#tier-declared-low', self.repo, artifacts=False)
         data = json.loads((d / 'think-gate.json').read_text()); data['tier'] = 'A'
