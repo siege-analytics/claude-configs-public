@@ -5,6 +5,10 @@
 
 set -uo pipefail
 
+# #1051: isolate from the invoking runtime's session/task metadata.
+unset CRAFT_SESSION_ID CRAFT_AGENT_SESSION_ID CLAUDE_SESSION_ID SESSION_ID
+unset CRAFT_SESSION_DIR CLAUDE_SIGNAL_DIR CRAFT_SIGNAL_DIR CRAFT_AGENT_SIGNAL_DIR CRAFT_AGENT_SESSION_DIR CLAUDE_SESSION_DIR CCP_HOOK_INPUT_JSON CCP_TASK_ID
+
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 RESOLVER="$ROOT/hooks/lib/resolve-think-gate.py"
 
@@ -50,13 +54,13 @@ print(json.loads(d)["data"]["ticket"] if d and d!="null" else "NONE")' 2>/dev/nu
 cat > "$TMP/ws/think-gate-demo.json" <<JSON
 {"ticket":"#project","status":"implementing","repo_root":"$TMP/app"}
 JSON
-check "project-scoped gate resolves for a repo in the project" "#project" "$(ticket_for "$TMP/app")"
+check "workspace project singleton is ignored" "NONE" "$(ticket_for "$TMP/app")"
 
 # Repo-slug gate must WIN over the project gate (more specific).
 cat > "$TMP/ws/think-gate-app.json" <<JSON
 {"ticket":"#repo","status":"implementing","repo_root":"$TMP/app"}
 JSON
-check "repo-slug gate beats project gate" "#repo" "$(ticket_for "$TMP/app")"
+check "workspace repo singleton is ignored" "NONE" "$(ticket_for "$TMP/app")"
 
 # A repo in NO project must not pick up the project gate.
 mkdir -p "$TMP/other"

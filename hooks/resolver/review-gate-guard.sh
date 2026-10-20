@@ -1,8 +1,7 @@
 #!/bin/bash
 # UserPromptSubmit hook — review-gate enforcement.
 #
-# Reads <workspace>/review-gate.json (Craft Agent) or
-# <repo>/.review-gate.json (pure Claude Code) and checks whether the
+# Reads the selected session/task review-gate.json (legacy session read supported) and checks whether the
 # branch has new commits since the last review. If so, emits a
 # re-review directive.
 #
@@ -27,8 +26,7 @@
 #   Branch does not match    → advisory note
 #
 # Works in both Craft Agent and pure Claude Code:
-#   - Craft Agent: signal file at <workspace>/review-gate.json
-#   - Claude Code: signal file at <repo>/.review-gate.json
+#   - All runtimes: <session>/tasks/<task-slug>/review-gate.json
 #
 # Ref: claude-configs-public#468
 
@@ -38,27 +36,12 @@ HOOK_INPUT_JSON=$(cat 2>/dev/null || true)
 export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+WORKSPACE_ROOT="${CRAFT_AGENT_WORKSPACE:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 RESOLVE_TG="$SCRIPT_DIR/../lib/resolve-think-gate.py"
 
-# Search order: env override, repo-scoped (#578), workspace singleton, repo-local
-SIGNAL_FILE="${CLAUDE_REVIEW_GATE:-}"
-
-if [ -z "$SIGNAL_FILE" ]; then
-    REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
-    # Repo-scoped resolution (#578)
-    if [ -n "$REPO_ROOT" ] && [ -f "$RESOLVE_TG" ]; then
-        SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "$REPO_ROOT" --gate-name review-gate 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
-    fi
-    # Legacy fallback
-    if [ -z "$SIGNAL_FILE" ]; then
-        if [ -f "$WORKSPACE_ROOT/review-gate.json" ]; then
-            SIGNAL_FILE="$WORKSPACE_ROOT/review-gate.json"
-        elif [ -n "$REPO_ROOT" ] && [ -f "$REPO_ROOT/.review-gate.json" ]; then
-            SIGNAL_FILE="$REPO_ROOT/.review-gate.json"
-        fi
-    fi
-fi
+# Current task only; no raw workspace or repo-local fallback.
+REPO_ROOT=$(printf '%s' "$HOOK_INPUT_JSON" | python3 "$SCRIPT_DIR/../lib/extract-json.py" cwd 2>/dev/null || pwd)
+SIGNAL_FILE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_ROOT" --repo-root "${REPO_ROOT:-$PWD}" --gate-name review-gate | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
 
 if [ -z "$SIGNAL_FILE" ] || [ ! -f "$SIGNAL_FILE" ]; then
     exit 0

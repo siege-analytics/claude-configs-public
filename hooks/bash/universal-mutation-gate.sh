@@ -1,30 +1,7 @@
 #!/bin/bash
-# Hook: bash/universal-mutation-gate (v2)
-# Enforces: fail-closed mutation gating (#473, hardened #477)
-# Trigger: PreToolUse on Bash — MUST be FIRST in the Bash hook list
-#
-# Inverts the enforcement default: instead of listing guarded mutations
-# (fail-open), this hook lists safe reads (fail-closed). Every Bash
-# command not on the safelist is blocked unless a valid think-gate.json
-# exists with status=implementing.
-#
-# Decision flow:
-#   1. Extract command from stdin JSON
-#   2. Scan for MUTATION_INDICATORS in the full command
-#   3. If no mutation indicator found -> match SAFE_PATTERNS -> PASS
-#   4. Check think-gate.json status=designing|reviewing:
-#      - no mutation indicator -> PASS (non-safelist reads allowed)
-#      - mutation indicator found -> BLOCK (mutations need implementing)
-#   5. Check think-gate.json status=implementing + artifact checks -> PASS
-#   6. BLOCK (exit 2)
-#
-# Designing/reviewing no longer bypasses all commands (#574). Only
-# non-mutation commands pass during design; mutations require implementing.
-#
-# No escape hatches. If the gate blocks a legitimate command, the fix is
-# adding it to SAFE_PATTERNS or producing the required artifacts.
-# See #477 for rationale.
-
+# Hook: universal-mutation-gate — task-owned mutations only (#1051).
+# Positively classified reads bypass ALL gate lookup. Unknown actions remain
+# fail-closed and must resolve one task with complete implementation artifacts.
 set -uo pipefail
 export PATH="/home/craftagents/bin:$PATH"
 
@@ -38,105 +15,11 @@ CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 # Block-event logging (#602): record every block for classification.
 source "$HOOK_DIR/../lib/log-block.sh" 2>/dev/null || true
 
-[[ -z "$COMMAND" ]] && exit 0
+TOOL_NAME=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_name 2>/dev/null || true)
+if [[ -z "$COMMAND" && ! "$TOOL_NAME" =~ ^(Write|Edit|MultiEdit|NotebookEdit)$ ]]; then exit 0; fi
 
 # No emergency disable. To disable the gate, comment out the hook in
 # settings.json — that produces an auditable change. (#477)
-
-# --- SAFE_PATTERNS: read-only commands that pass without check ---
-# Each pattern is an extended regex. Order does not matter.
-# Add new patterns conservatively: if unsure whether a command mutates, leave it off.
-
-# Shared argument grammar for the text-reader entries below (#704). An
-# argument is either a bare token containing no shell metacharacter, or a
-# single-quoted string containing no single quote (so the quote cannot be
-# closed early). This is what keeps process substitution, command
-# substitution, redirects and chaining out of the safelisted forms:
-# `diff <(id) <(id)` and `jq . $(id)` both fail to match.
-#
-# Bare tokens exclude the whole [:space:] class, not a literal space. A
-# newline is a bash command separator, and in `[[ =~ ]]` the `$` anchor
-# matches end-of-string rather than end-of-line, so a class excluding only
-# " " lets `jq .<newline>python3 x.py` match as a single jq invocation with
-# a bare argument, and bash then runs the second line. Quoted content
-# excludes [:cntrl:] for the same reason: a newline there is a legitimate
-# shell word, but reasoning about quote pairing is what was wrong the first
-# time, so the grammar refuses instead.
-_SQ="'"
-_SAFE_ARG="([^[:space:];&|<>()\$\`\"${_SQ}]+|${_SQ}[^${_SQ}[:cntrl:]]*${_SQ})"
-
-SAFE_PATTERNS=(
-    # File reads
-    '^(cat|head|tail|less|more|wc|file|stat|du|df|find|tree|which|type|readlink|realpath|md5|sha256sum|shasum|xxd|od|hexdump) '
-    '^ls( |$)'
-
-    # Content search
-    '^(grep|egrep|fgrep|rg|ag|ack|ripgrep) '
-
-    # Text readers with no write or exec form (#704).
-    # jq has no write or exec builtin; diff and comm write only to stdout.
-    "^(jq|diff|comm)( +${_SAFE_ARG})*\$"
-
-    # sed: ONLY line-range printing, and only in this exact shape.
-    # sed cannot be safelisted by name, and `sed -n` is not read-only:
-    #   printf 'x\n' | sed -n '1w /tmp/probe'   creates /tmp/probe
-    # GNU sed additionally has `e`, which executes a shell command. The
-    # script body below admits digits, an optional comma, and `p`, so `w`,
-    # `e`, `r` and `s` are unreachable by construction rather than by
-    # enumeration. The file argument is a single bare token, which is what
-    # stops `sed -n '1,2p' -i file` from smuggling in-place editing past
-    # MUTATION_INDICATORS (that array matches the literal string "sed -i",
-    # which does not appear when the flag is permuted after the script).
-    "^sed -n ${_SQ}[0-9]+(,[0-9]+)?p${_SQ} [^[:space:];&|<>()\$\`\"${_SQ}]+\$"
-
-    # awk is deliberately NOT safelisted, in any form. It is a general
-    # purpose language with two confirmed shell-exec vectors:
-    #   awk 'BEGIN{system("id")}'
-    #   awk 'BEGIN{ "id" | getline r; print r}'
-    # plus `print > "file"`. Do not add it here for symmetry with sed; use
-    # sed range printing, head or tail instead. Ref: #704.
-
-    # Git reads (status, log, diff, show, branch listing, tag listing, etc.)
-    # Note: git config is read-only only for --get/--list/--get-regexp forms;
-    # bare 'git config' can write. Narrow to read-only subcommands.
-    #
-    # The optional `-C <path>` prefix (#873 P1) lets `git -C <dir> rev-parse`
-    # match. The path token and every trailing argument use the metacharacter-
-    # excluding _SAFE_ARG grammar, and the pattern is anchored at end-of-string
-    # ($), so a chained tail (`git status && curl ...`, `git -C /r log; bash x`,
-    # `git status | tee f`) no longer matches the safelist and falls through to
-    # the gate -- closing the chain bypass this entry had via its old `( |$)`
-    # end (#873 review, finding 1). Real mutations are also caught by
-    # MUTATION_INDICATORS, which scan first.
-    "^(cd .* &&[[:space:]]*)?(git )(-C ${_SAFE_ARG} )?(log|status|diff|show|branch|tag|rev-parse|merge-base|remote|config (--get|--list|--get-regexp|--get-all)|describe|rev-list|shortlog|blame|ls-tree|ls-files|cat-file|name-rev|for-each-ref|stash list|fetch|worktree list)( +${_SAFE_ARG})*\$"
-
-    # GitHub CLI reads (gh api defaults to GET; write methods caught by MUTATION_INDICATORS)
-    '^(cd .* &&[[:space:]]*)?(gh )(issue (view|list)|pr (view|list|checks|diff|status)|repo view|release (view|list)|api|run (view|list))( |$)'
-
-    # GitHub CLI issue reporting carve-out is handled by
-    # is_governance_issue_reporting_command below. Issue close/edit/reopen/label
-    # remain mutations and are not safelisted here.
-
-    # Python read-only operations (no arbitrary -c; only known-safe modules)
-    '^(pip|pip3) (list|show|freeze|check)( |$)'
-    '^python3? -m (pip (list|show|freeze)|pytest|py_compile)( |$)'
-
-    # System info (no side effects)
-    '^(echo|printf|date|env|printenv|uname|hostname|whoami|id|pwd|dirname|basename|true|false) '
-    '^(echo|printf|date|env|printenv|uname|hostname|whoami|id|pwd|dirname|basename|true|false)$'
-    '^test '
-    '^\['
-
-    # Build and test tools (outputs only, gated elsewhere)
-    '^(cd .* &&[[:space:]]*)?(pytest|python3? -m pytest|sphinx-build|bash -n|shellcheck|flake8|mypy|ruff check|pylint|black --check|isort --check) '
-
-    # Package/dependency reads
-    '^(npm|yarn|pnpm) (list|ls|info|view|outdated|audit)( |$)'
-    '^(brew|apt|dnf|yum) (list|info|search|show)( |$)'
-
-    # markitdown and doc tools (read-only conversions to stdout)
-    '^(markitdown|pdf-tool (info|extract)|xlsx-tool (read|info)|pptx-tool info|doc-diff|ical-tool read) '
-)
 
 # Governance issue reporting is a reporting surface, not an implementation
 # mutation. Allow only inspectable `gh issue create` / `gh issue comment`
@@ -230,231 +113,26 @@ if is_governance_issue_reporting_command; then
     exit 0
 fi
 
-# --- Compound command mutation scan ---
-# A command starting with a safe read but containing a mutation via && or ;
-# or | is still a mutation. Scan the full string for mutation indicators
-# BEFORE checking the safelist. If any mutation indicator appears anywhere
-# in the command, skip the safelist and fall through to think-gate check.
-MUTATION_INDICATORS=(
-    'git (push|commit|reset|checkout|rebase|merge|cherry-pick|revert|stash (pop|drop|apply|clear)|clean|tag -[adf]|branch -[dDmM])'
-    # Repo and working-tree writes the list above missed. They passed while a
-    # gate was designing, and replaying the logged block corpus showed them
-    # passing once reads stop depending on gate state (2026-10-19). `git
-    # fetch` stays a read: it only updates remote-tracking refs.
-    'git (init|add|rm|mv|pull|clone|restore|switch|apply|am|submodule|update-ref|gc|prune|worktree (add|remove|move|prune|repair|lock|unlock)|notes (add|append|edit|remove|copy))( |$)'
-    # Package and environment installs change shared interpreters and run
-    # arbitrary install scripts; they are task mutations.
-    '(^|[;&|[:space:]/])(pip3?|uv|npm|pnpm|yarn|gem|cargo|go) +(pip +)?(install|uninstall|add|remove|ci)( |$)'
-    '(^|[;&|[:space:]/])python3?(\.[0-9]+)? +-m +(venv|pip|ensurepip|virtualenv)( |$)'
-    '(^|[;&|[:space:]])virtualenv( |$)'
-    # `git -c key=val <subcommand>` hid the subcommand from the anchored
-    # patterns (siege#928); treat any per-invocation config override as a write.
-    'git( +-C +[^ ]+)? +-c +'
-    # Writes the old safelist admitted (#349 review): a REST write via
-    # gh api's method flag, a fetch refspec that updates a local ref, and a
-    # forced or reconfigured branch. (Backgrounding is rejected by the read
-    # classifier; a raw-string `&` pattern blocked quoted ampersands in reads.)
-    'gh api( .*)? (-X|--method)[= ]?(POST|PUT|PATCH|DELETE)'
-    'git( +-C +[^ ]+)? fetch( .*)? \+?[A-Za-z0-9_.@/-]*[A-Za-z0-9_.@-]:[A-Za-z0-9_.@/-]+( |$)'
-    'git( +-C +[^ ]+)? branch +(-f|--force|-c|-C|--copy|-u|--set-upstream-to|--unset-upstream|--edit-description)'
-    # Signalling processes is not investigation.
-    '(^|[;&|[:space:]])(kill|pkill|killall)( |$)'
-    # GitHub GraphQL writes go through `gh api graphql` with a mutation body.
-    'gh api graphql.*mutation'
-    # git remote write subcommands. The safelist admits bare `git remote` and
-    # `git remote -v`/`show`/`get-url` as reads, but `remote add/remove/rename/
-    # set-url/set-head/prune` mutate the repo config. Block those explicitly so
-    # the read entry cannot be widened into a write. (#873 follow-up.)
-    'git( +-C +[^ ]+)? remote (add|remove|rm|rename|set-url|set-head|set-branches|prune)'
-    # git --output=<file> / -o <file> on log/diff/show/format-patch writes a file
-    # via a read-looking subcommand. Block the write flag so the read safelist
-    # entry cannot be turned into an arbitrary file write. (#873 review, finding 3.)
-    'git( +-C +[^ ]+)? (log|diff|show|format-patch)( .*)? --output[= ]'
-    'gh (issue (create|comment|close|edit|delete|transfer|reopen|label)|pr (create|merge|close|edit|comment|review)|release (create|delete|edit)|repo (create|delete|fork|rename))'
-    'glab (issue (create|close|note)|mr (create|merge|close|note|approve))'
-    'rm (-[rRf]|--force|--recursive)'
-    '\brm [^-]'
-    'sed -i|sed --in-place'
-    'awk -i inplace'
-    '\bpatch '
-    'curl.* -X (POST|PUT|DELETE|PATCH)'
-    'gh api .* (--method|-X) (POST|PUT|DELETE|PATCH)'
-    'gh api .* (--input|--raw-field|-f )'
-    'pip[3]? install'
-    'npm install|yarn add|pnpm add'
-    # redirect / tee / cat-write detection moved out of this array so it can be
-    # scanned quote-aware (see REDIRECT_INDICATOR below). Scanning it here (on the
-    # raw command) misread quoted '>' / '->' as redirects (#591-shape FP).
-    'mkdir |touch |mv |cp '
-    'chmod |chown |chgrp '
-    'git config (--global|--system|--local|--unset|--add|--replace-all)'
-    'docker |kubectl |helm '
-    'psql .* -c|mysql .* -e'
-    'aws s3 (cp|mv|rm|sync)'
-    'spawn_session'
-)
-
-# Normalize `git -C <path>` to `git ` before the mutation scan (#873 follow-up).
-# The git MUTATION_INDICATORS are anchored to `git <subcommand>` -- the
-# subcommand must immediately follow `git `. The safelist accepts an optional
-# `-C <path>` prefix (so `git -C <dir> rev-parse` reads pass), but if the
-# indicators do not also account for `-C`, then `git -C <dir> branch -D`,
-# `git -C <dir> tag -f`, `git -C <dir> remote add`, and `git -C <dir> config
-# --global` slip past the mutation scan AND get admitted by the read safelist --
-# a fail-closed bypass. Collapsing the prefix here keeps the indicators simple
-# and closes the hole for every git mutation at once. The path token excludes
-# shell metacharacters, matching the safelist grammar, so this substitution
-# cannot itself smuggle anything.
-MUTATION_SCAN="$COMMAND"
-if [[ "$MUTATION_SCAN" =~ (^|[[:space:]&|;])git[[:space:]]+-C[[:space:]]+[^[:space:]\;\&\|\<\>\(\)\$\`\"\']+[[:space:]]+ ]]; then
-    MUTATION_SCAN="$(printf '%s' "$MUTATION_SCAN" | sed -E 's/(^|[[:space:]&|;])git[[:space:]]+-C[[:space:]]+[^[:space:];&|<>()$`"'"'"']+[[:space:]]+/\1git /g')"
-fi
-
-COMPOUND_MUTATION=false
-for m_pattern in "${MUTATION_INDICATORS[@]}"; do
-    if [[ "$MUTATION_SCAN" =~ $m_pattern ]]; then
-        COMPOUND_MUTATION=true
-        break
-    fi
-done
-
-# --- Redirect / tee / cat-write detection (quote-aware) ----------------------
-# A shell output redirect ('>' '>>'), a `tee`, or a `cat ... >` is a mutation.
-# But a '>' inside a QUOTED string (an arrow like a->b, a grep pattern, a JSON
-# value) is literal text, not a redirect. Scanning the raw command wrongly
-# blocked read-only commands (#591-shape; sibling of the tee/committee FP,
-# enterprise#2572). Two guards make this precise without under-blocking:
-#   1. '-' added to each redirect lookbehind so a bare arrow (flow->next) is
-#      not read as a redirect. A real redirect is never preceded by '-'.
-#   2. quoted spans are stripped before the scan, so a '>' inside quotes no
-#      longer trips it -- EXCEPT for shell-eval wrappers (bash -c "...>...",
-#      sh -c, eval), where quoted content IS executed, so the redirect is real.
-# All other mutation indicators above still scan the raw command, so a wrapped
-# mutation like bash -c "rm -rf x" is unaffected.
-REDIRECT_INDICATOR='cat .* >|(^|[;|[:space:]])tee[[:space:]]|(^|[^-0-9&>])>[^ 0-9&]|(^|[^-0-9&>])> |(^|[^-0-9&>])>> '
-REDIRECT_SCAN="$COMMAND"
-if ! [[ "$COMMAND" =~ (^|[[:space:]])(bash|sh|zsh|dash|ksh)[[:space:]]+-c([[:space:]]|$)|(^|[[:space:]])eval([[:space:]]|$) ]]; then
-    REDIRECT_SCAN=$(printf '%s' "$COMMAND" | sed -E "s/'[^']*'//g; s/\"[^\"]*\"//g")
-fi
-if [[ "$REDIRECT_SCAN" =~ $REDIRECT_INDICATOR ]]; then
-    COMPOUND_MUTATION=true
-fi
-# The indicator above skips a '>' preceded by a digit or '&' so that 2>&1 and
-# 2>/dev/null stay reads, which also let `2>/tmp/x`, `1>f` and `&>f` write
-# unnoticed (claude-configs-public#1071 review). Drop the provably safe sinks,
-# then any fd-prefixed redirect left is a write.
-FD_SCAN="$(printf '%s' "$REDIRECT_SCAN" | sed -E 's#([0-9]+|&)?>>?[[:space:]]*/dev/null([[:space:];|&)]|$)#\2#g; s#[0-9]*>&[0-9-]##g')"
-if [[ "$FD_SCAN" =~ (^|[[:space:]\;\|\&\(])([0-9]+|\&)\>  ]]; then
-    COMPOUND_MUTATION=true
-fi
-
-# --- Positive read classifier (lib/read-only-command.py) ---
-# Exit 0: proven read. Exit 3: a known verb used so that it writes or runs a
-# program (`rg --pre`, `gh api -iXDELETE`, `git fetch --upload-pack=`, a
-# guarded verb fed an unquoted expansion). A veto is a mutation: the regex
-# safelist below and the designing-state admissions further down must not
-# admit it (claude-configs-public#1071 review). Exit 4: a compound command the
-# classifier cannot prove; the first-word safelist must not admit it either,
-# since `cat f; bash evil.sh` starts with a read.
-READ_VERDICT=1
-if [[ "$COMPOUND_MUTATION" == "false" ]]; then
-    python3 "$HOOK_DIR/../lib/read-only-command.py" "$COMMAND" 2>/dev/null
-    READ_VERDICT=$?
-    [[ $READ_VERDICT -eq 3 ]] && COMPOUND_MUTATION=true
-fi
-
-# --- Match against safelist (only if no mutation indicator found) ---
-if [[ "$COMPOUND_MUTATION" == "false" ]]; then
-    # The safelist regexes match a whole string, so on a multi-line command
-    # a read on line one admitted anything after it (`cat f<newline>. ./x`,
-    # electinfo#349 re-review). Multi-line commands go to the newline-aware classifier.
-    if [[ "$COMMAND" != *$'\n'* && $READ_VERDICT -ne 4 ]]; then
-        for pattern in "${SAFE_PATTERNS[@]}"; do
-            if [[ "$COMMAND" =~ $pattern ]]; then
-                exit 0
-            fi
-        done
-    fi
-    # Gates govern a task's mutations, never investigation (siege#1051,
-    # #1057). A proven read passes whatever the gate state:
-    # every simple command must be a known read verb with read-safe arguments
-    # (positive allowlist, lib/read-only-command.py). Anything it does not
-    # recognise falls through to the gate as before, so missing an indicator
-    # is never enough on its own (electinfo_claude_skills#349 review).
-    if [[ $READ_VERDICT -eq 0 ]]; then
-        exit 0
-    fi
-fi
-
-# [mutation-acknowledged] bypass removed (#477). Self-authorization is the
-# problem, not the solution. If a command is legitimately safe, add it to
-# SAFE_PATTERNS. If the pipeline is incomplete, complete it.
-
-# --- Check think-gate signal file ---
-# Repo-scoped resolution: think-gate-<slug>.json per repo (#494)
-# Fallback: legacy think-gate.json for backward compat
 RESOLVE_TG="$HOOK_DIR/../lib/resolve-think-gate.py"
 WORKSPACE_CANDIDATE="$(dirname "$(dirname "$HOOK_DIR")")"
-
-# Derive repo root from CWD (git toplevel)
-REPO_ROOT=""
-if [[ -n "$CWD" ]]; then
-    REPO_ROOT=$(cd "$CWD" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null || true)
-fi
-
 WORKSPACE_FOR_RESOLVE="${CRAFT_AGENT_WORKSPACE:-$WORKSPACE_CANDIDATE}"
-THINK_GATE=""
-
-if [[ -n "${CLAUDE_THINK_GATE:-}" ]] && [[ -f "$CLAUDE_THINK_GATE" ]]; then
-    THINK_GATE="$CLAUDE_THINK_GATE"
-elif [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
-    THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --repo-root "$REPO_ROOT" --env-override "${CLAUDE_THINK_GATE:-}" 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
-fi
-# Fallback: if resolver returned empty or wasn't available, try legacy paths.
-# The workspace-root file is shared by every concurrent session, so it may only
-# be consulted when this session has no signal directory of its own. This is the
-# fail-closed gate: reading a stranger's stale signal here is what blocked every
-# Bash call in the 2026-08-31 incident. The repo-local file below is per-checkout
-# rather than shared, so it stays available either way.
-UMG_SESSION_KNOWN=0
-if [[ -f "$RESOLVE_TG" ]]; then
-    # See the note in the resolver guards: 0 on failure keeps the shared-state
-    # fallback, which may over-block but never under-enforces. Warn so a degraded
-    # check is visible rather than looking healthy.
-    if ! UMG_SESSION_KNOWN=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --session-known 2>/dev/null); then
-        UMG_SESSION_KNOWN=0
-        echo "[universal-mutation-gate] WARN: session scope unresolved; using shared-state fallback" >&2
-    fi
-fi
-# On a workspace-root (non-git) CWD, REPO_ROOT is empty and the repo-scoped
-# resolver above was skipped -- but a KNOWN session may still have its own gate
-# in its session signal dir. Resolve it directly (session-dir only: no repo
-# binding, no shared-root singleton, no other session's dir), so a
-# coordination/PM session or a build worker whose worktree is not the reported
-# cwd can still gate on its OWN pipeline instead of being hard-blocked. An
-# unknown session resolves nothing here and falls through to the fail-closed
-# handling below; a known session with no gate of its own likewise gets nothing
-# and must NOT inherit the shared root. (#926, building on the #873/#890
-# shared-root bleed guard just above.)
-if [[ -z "$THINK_GATE" ]] && [[ -z "$REPO_ROOT" ]] && [[ "$UMG_SESSION_KNOWN" == "1" ]] && [[ -f "$RESOLVE_TG" ]]; then
-    THINK_GATE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --session-gate --gate-name think-gate 2>/dev/null | python3 -c "import json,sys; r=json.load(sys.stdin); print(r['path'] if r else '')" 2>/dev/null || true)
-fi
+RESOLUTION=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --action-json || true)
+READ_ONLY=$(printf '%s' "$RESOLUTION" | python3 "$EXTRACT" read_only 2>/dev/null || true)
+[[ "$READ_ONLY" == "True" || "$READ_ONLY" == "true" ]] && exit 0
+EARLY_ALLOW=$(printf '%s' "$RESOLUTION" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(bool(d.get("investigation") or d.get("self_management")))' 2>/dev/null || true)
+[[ "$EARLY_ALLOW" == "True" ]] && exit 0
+THINK_GATE=$(printf '%s' "$RESOLUTION" | python3 "$EXTRACT" gate.path 2>/dev/null || true)
 if [[ -z "$THINK_GATE" ]]; then
-    # If the scoped resolver was available for a known repo and returned no
-    # gate, do not fall back to the shared workspace singleton. The resolver
-    # already considered that legacy path and rejected it if its repo/session
-    # did not match. Raw fallback here is the workspace-global blocking bug.
-    if [[ ! ( -n "$REPO_ROOT" && -f "$RESOLVE_TG" ) ]]; then
-        if [[ "$UMG_SESSION_KNOWN" != "1" ]] && [[ -f "$WORKSPACE_FOR_RESOLVE/think-gate.json" ]]; then
-            THINK_GATE="$WORKSPACE_FOR_RESOLVE/think-gate.json"
-        fi
-    fi
-    if [[ -z "$THINK_GATE" ]] && [[ -n "$CWD" ]] && [[ -f "$CWD/.think-gate.json" ]]; then
-        if [[ ! ( -n "$REPO_ROOT" && -f "$RESOLVE_TG" ) ]]; then
-            THINK_GATE="$CWD/.think-gate.json"
-        fi
-    fi
+    REASON=$(printf '%s' "$RESOLUTION" | python3 "$EXTRACT" error 2>/dev/null || true)
+    echo "BLOCKED by universal-mutation-gate: ${REASON:-Task/action resolution failed closed; open a scoped task gate.}" >&2
+    log_block_event "universal-mutation-gate" "unscoped or ambiguous mutation" "$COMMAND"
+    exit 2
 fi
+GATE_PATHS_JSON=$(printf '%s' "$RESOLUTION" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin).get("artifacts", {})))' 2>/dev/null || echo '{}')
+# Proportional task gates (#1086): the selected task's effective review tier
+# (declared tier, never below the floor review-risk.py computes for the targets).
+TIER_JSON=$(printf '%s' "$RESOLUTION" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin).get("tier") or {"effective": "C", "reasons": ["C:no tier resolved; failing closed"]}))' 2>/dev/null || echo '{"effective": "C"}')
+REPO_ROOT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("repo_root", ""))' "$THINK_GATE" 2>/dev/null || true)
 
 if [[ -n "$THINK_GATE" ]]; then
     TG_STATUS=$(python3 -c "
@@ -467,12 +145,8 @@ except Exception:
 " "$THINK_GATE" 2>/dev/null || true)
 
     if [[ "$TG_STATUS" == "designing" || "$TG_STATUS" == "reviewing" ]]; then
-        # Designing/reviewing allows non-safelist commands ONLY if they
-        # are not known mutations. Mutation-indicated commands require
-        # status=implementing with full artifacts. Ref: #574.
-        if [[ "$COMPOUND_MUTATION" == "false" ]]; then
-            exit 0
-        fi
+        # Recognized reads, bounded diagnostics and own signal lifecycle
+        # writes exited above. Other actions require implementation authority.
         CMD_SHORT_DESIGN="${COMMAND:0:120}"
         if [[ ${#COMMAND} -gt 120 ]]; then
             CMD_SHORT_DESIGN="${CMD_SHORT_DESIGN}..."
@@ -483,7 +157,7 @@ BLOCKED by universal-mutation-gate (#574): mutations not allowed during designin
 Command: $CMD_SHORT_DESIGN
 
 Status '$TG_STATUS' allows read-only and investigation commands, but this
-command matches a known mutation indicator. Mutation commands require
+command is not a recognized reader or bounded investigation command. Mutations require
 status=implementing with full artifacts (investigate-gate, pre-mortem,
 junior/senior, artifacts-posted).
 
@@ -496,74 +170,7 @@ DESIGNEOF
         exit 2
     fi
 
-    # Terminal statuses claim the pipeline ran and its artifacts were validated.
-    # That claim is only worth honoring if the artifacts exist: writing
-    # {"status":"disposed"} into a think-gate must not turn every mutation
-    # gate green permanently. But a stale closed-out marker with no artifacts
-    # must also not be converted into an active implementation blocker for
-    # unrelated workspace-cwd exploration. Ref: #592, #69, #784 follow-up.
-    #
-    # Policy:
-    #   - terminal + evidence: authorize the completed pipeline path
-    #   - terminal + no evidence + non-mutating command: allow exploration/read
-    #   - terminal + no evidence + mutation command: block; terminal assertion
-    #     alone does not grant mutation ability
-    if [[ "$TG_STATUS" == "done-awaiting-pr" || "$TG_STATUS" == "disposed" || "$TG_STATUS" == "complete" ]]; then
-        TERMINAL_EVIDENCE=""
-        if [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
-            TERMINAL_EVIDENCE=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" \
-                --repo-root "$REPO_ROOT" --gate-name investigate-gate 2>/dev/null \
-                | python3 -c "import json,sys
-try:
-    r = json.load(sys.stdin)
-    print(r['path'] if r else '')
-except Exception:
-    print('')" 2>/dev/null || true)
-        fi
-        if [[ -n "$TERMINAL_EVIDENCE" ]] && [[ -f "$TERMINAL_EVIDENCE" ]]; then
-            exit 0
-        fi
-        if [[ "$COMPOUND_MUTATION" == "false" ]]; then
-            exit 0
-        fi
-        CMD_SHORT_TERMINAL="${COMMAND:0:120}"
-        if [[ ${#COMMAND} -gt 120 ]]; then
-            CMD_SHORT_TERMINAL="${CMD_SHORT_TERMINAL}..."
-        fi
-        cat >&2 <<TERMINALEOF
-BLOCKED by universal-mutation-gate (#477/#592): terminal gate has no artifact evidence
-
-Command: $CMD_SHORT_TERMINAL
-
-think-gate.json status=$TG_STATUS, but no matching investigation artifact was
-found for the current task. A terminal status without artifacts is treated as a
-closed-out marker for read/exploration commands, not as permission to mutate.
-
-To mutate, create or select a current-task think gate with status=implementing
-and complete the required investigation/pre-mortem artifacts.
-TERMINALEOF
-        log_block_event "universal-mutation-gate" "terminal status without artifacts cannot authorize mutation" "$COMMAND"
-        exit 2
-    fi
-
     if [[ "$TG_STATUS" == "implementing" ]]; then
-        # Artifact checks with ticket association (#477, #484)
-        # Artifacts must exist AND reference the current ticket.
-        WORKSPACE_CANDIDATE="$(dirname "$(dirname "$HOOK_DIR")")"
-
-        # Resolve repo-scoped gate paths in one call (#578)
-        GATE_PATHS_JSON="{}"
-        if [[ -n "$REPO_ROOT" ]] && [[ -f "$RESOLVE_TG" ]]; then
-            GATE_PATHS_JSON=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --repo-root "$REPO_ROOT" --resolve-many "investigate-gate,junior-senior-gate,artifacts-posted-gate,review-gate" 2>/dev/null || echo "{}")
-        elif [[ -z "$REPO_ROOT" ]] && [[ "$UMG_SESSION_KNOWN" == "1" ]] && [[ -f "$RESOLVE_TG" ]]; then
-            # Empty REPO_ROOT (workspace-root CWD) + known session: the session
-            # think-gate above was resolved from the session dir, so resolve its
-            # artifact gates the same way -- from the session's own signal dir,
-            # ticket-matched -- instead of looking under the workspace root where
-            # they do not live (which would read as missing and block). (#926)
-            GATE_PATHS_JSON=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --resolve-many "investigate-gate,junior-senior-gate,artifacts-posted-gate,review-gate" --session-scoped 2>/dev/null || echo "{}")
-        fi
-
         MISSING=$(python3 -c "
 import json, sys, os, glob
 
@@ -571,18 +178,24 @@ think_gate_path = sys.argv[1]
 workspace = sys.argv[2]
 plans_path = sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] != '__none__' else ''
 gate_paths = json.loads(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4] not in ('', '__none__') else {}
+try:
+    tier = json.loads(sys.argv[5]).get('effective', 'C') if len(sys.argv) > 5 else 'C'
+except Exception:
+    tier = 'C'
+tier = tier if tier in ('A', 'B', 'C') else 'C'
+# A: an implementing gate bound to the ticket. B: + investigation and pre-mortem.
+# C: + junior/senior and artifacts-posted (the pre-#1086 requirement).
+need_investigation = tier in ('B', 'C')
+need_premortem = tier in ('B', 'C')
+need_review_comments = tier == 'C' 
 
 try:
     tg = json.load(open(think_gate_path))
 except Exception:
+    print('malformed think gate')
     sys.exit(0)
 
-current_ticket = tg.get('ticket', '')
-
-def ticket_slug(ref):
-    if not ref or '#' not in ref:
-        return ref or ''
-    return '#' + ref.split('#')[-1]
+current_ticket = tg.get('ticket') or tg.get('task_id') or tg.get('task', '')
 
 def file_references_ticket(path, ticket):
     if not ticket:
@@ -591,7 +204,7 @@ def file_references_ticket(path, ticket):
         content = open(path).read(4096)
     except Exception:
         return False
-    return ticket in content or ticket_slug(ticket) in content
+    return bool(re.search(r'(?<![A-Za-z0-9_/#-])' + re.escape(ticket) + r'(?![A-Za-z0-9_#-])', content))
 
 import re
 def premortem_has_risks(path):
@@ -619,6 +232,11 @@ def premortem_has_launch_blocker(path):
     return False
 
 missing = []
+def need(kind, item):
+    # Only the artifacts this task's tier requires can block (#1086).
+    if {'investigation': need_investigation, 'premortem': need_premortem,
+        'review_comments': need_review_comments}[kind]:
+        missing.append(item)
 
 # 1. Check investigate-gate.json (ticket field must match)
 invest_found = False
@@ -626,29 +244,31 @@ invest_candidates = []
 resolved_invest = gate_paths.get('investigate-gate')
 if resolved_invest:
     invest_candidates.append(resolved_invest)
-else:
-    caws = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
-    if caws:
-        invest_candidates.append(caws + '/investigate-gate.json')
-    invest_candidates.append(os.path.join(workspace, 'investigate-gate.json'))
 for candidate in invest_candidates:
     if os.path.isfile(candidate):
         try:
             ig = json.load(open(candidate))
-            if ig.get('ticket', '') == current_ticket or not current_ticket:
+            if (ig.get('ticket') or ig.get('task_id') or ig.get('task', '')) == current_ticket:
                 findings = ig.get('findings', [])
                 if not findings:
-                    missing.append('investigation has no findings (investigate-gate.json for ' + (current_ticket or 'current task') + ')')
+                    need('investigation', 'investigation has no findings (investigate-gate.json for ' + (current_ticket or 'current task') + ')')
                 invest_found = True
                 break
         except Exception:
             pass
 if not invest_found:
-    missing.append('investigate-gate.json for ' + (current_ticket or 'current task'))
+    need('investigation', 'investigate-gate.json for ' + (current_ticket or 'current task'))
 
 # 2. Check pre-mortem artifact (must reference current ticket)
 premortem_found = False
 plan_dirs = []
+# The current host session's own plans are a writable lifecycle surface.
+# Other sessions' plans are never discovered here.
+current_session_dir = os.environ.get('CRAFT_SESSION_DIR') or os.environ.get('CRAFT_AGENT_SESSION_DIR') or os.environ.get('CLAUDE_SESSION_DIR')
+if current_session_dir:
+    session_plans = os.path.join(current_session_dir, 'plans')
+    if os.path.isdir(session_plans):
+        plan_dirs.append(session_plans)
 if plans_path and os.path.isdir(plans_path):
     plan_dirs.append(plans_path)
 ca_ws = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
@@ -687,11 +307,11 @@ for d in plan_dirs:
         break
 
 if not premortem_found:
-    missing.append('pre-mortem artifact for ' + (current_ticket or 'current task'))
+    need('premortem', 'pre-mortem artifact for ' + (current_ticket or 'current task'))
 elif premortem_empty:
-    missing.append('pre-mortem artifact has no classified risks (need Severity: or Tiger/Elephant entries)')
+    need('premortem', 'pre-mortem artifact has no classified risks (need Severity: or Tiger/Elephant entries)')
 elif premortem_launch_blocked:
-    missing.append('pre-mortem contains Launch-Blocking Tiger (' + os.path.basename(premortem_path) + ') — mitigate before implementation')
+    need('premortem', 'pre-mortem contains Launch-Blocking Tiger (' + os.path.basename(premortem_path) + ') — mitigate before implementation')
 
 # 3. Check junior-senior-gate.json (#492)
 js_gate_found = False
@@ -699,29 +319,24 @@ js_candidates = []
 resolved_js = gate_paths.get('junior-senior-gate')
 if resolved_js:
     js_candidates.append(resolved_js)
-else:
-    caws_js = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
-    if caws_js:
-        js_candidates.append(caws_js + '/junior-senior-gate.json')
-    js_candidates.append(os.path.join(workspace, 'junior-senior-gate.json'))
 for js_candidate in js_candidates:
     if os.path.isfile(js_candidate):
         try:
             js = json.load(open(js_candidate))
-            if js.get('ticket', '') == current_ticket or not current_ticket:
+            if (js.get('ticket') or js.get('task_id') or js.get('task', '')) == current_ticket:
                 if js.get('junior_found') and js.get('senior_found'):
                     js_gate_found = True
                 else:
                     if not js.get('junior_found'):
-                        missing.append('Junior task description on ' + (current_ticket or 'ticket'))
+                        need('review_comments', 'Junior task description on ' + (current_ticket or 'ticket'))
                     if not js.get('senior_found'):
-                        missing.append('Senior adversarial checklist on ' + (current_ticket or 'ticket'))
+                        need('review_comments', 'Senior adversarial checklist on ' + (current_ticket or 'ticket'))
                     js_gate_found = True  # file found, just incomplete
                 break
         except Exception:
             pass
 if not js_gate_found:
-    missing.append('Junior/Senior comments (junior-senior-gate.json) for ' + (current_ticket or 'current task'))
+    need('review_comments', 'Junior/Senior comments (junior-senior-gate.json) for ' + (current_ticket or 'current task'))
 
 # 4. Check artifacts-posted-gate.json (#513)
 ap_gate_found = False
@@ -729,28 +344,23 @@ ap_candidates = []
 resolved_ap = gate_paths.get('artifacts-posted-gate')
 if resolved_ap:
     ap_candidates.append(resolved_ap)
-else:
-    caws_ap = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
-    if caws_ap:
-        ap_candidates.append(caws_ap + '/artifacts-posted-gate.json')
-    ap_candidates.append(os.path.join(workspace, 'artifacts-posted-gate.json'))
 for ap_candidate in ap_candidates:
     if os.path.isfile(ap_candidate):
         try:
             ap = json.load(open(ap_candidate))
-            if ap.get('ticket', '') == current_ticket or not current_ticket:
+            if (ap.get('ticket') or ap.get('task_id') or ap.get('task', '')) == current_ticket:
                 if not ap.get('investigate_posted'):
-                    missing.append('Investigation not posted to ticket ' + (current_ticket or ''))
+                    need('review_comments', 'Investigation not posted to ticket ' + (current_ticket or ''))
                 if not ap.get('premortem_posted'):
-                    missing.append('Pre-mortem not posted to ticket ' + (current_ticket or ''))
+                    need('review_comments', 'Pre-mortem not posted to ticket ' + (current_ticket or ''))
                 if 'selfreview_posted' in ap and not ap.get('selfreview_posted'):
-                    missing.append('Self-review not posted to ticket ' + (current_ticket or ''))
+                    need('review_comments', 'Self-review not posted to ticket ' + (current_ticket or ''))
                 ap_gate_found = True
                 break
         except Exception:
             pass
 if not ap_gate_found:
-    missing.append('Artifacts-posted check (artifacts-posted-gate.json) for ' + (current_ticket or 'current task'))
+    need('review_comments', 'Artifacts-posted check (artifacts-posted-gate.json) for ' + (current_ticket or 'current task'))
 
 # 5. Check review-gate.json (#526)
 # If a review was done and HEAD has moved since, block until re-review.
@@ -760,14 +370,6 @@ rg_candidates = []
 resolved_rg = gate_paths.get('review-gate')
 if resolved_rg:
     rg_candidates.append(resolved_rg)
-else:
-    # repo-local first: per-checkout, not shared between sessions
-    if repo_root:
-        rg_candidates.append(os.path.join(repo_root, '.review-gate.json'))
-    caws_rg = os.environ.get('CRAFT_AGENT_WORKSPACE', '')
-    if caws_rg:
-        rg_candidates.append(caws_rg + '/review-gate.json')
-    rg_candidates.append(os.path.join(workspace, 'review-gate.json'))
 for rg_candidate in rg_candidates:
     if os.path.isfile(rg_candidate):
         try:
@@ -798,11 +400,11 @@ for rg_candidate in rg_candidates:
             if not head.startswith(rg_commit) and not rg_commit.startswith(head):
                 missing.append('Re-review required: new commits since last review on ' + rg_branch)
         except Exception:
-            pass
+            missing.append('malformed review gate')
         break
 
 print('|'.join(missing))
-" "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" "$GATE_PATHS_JSON" 2>/dev/null || true)
+" "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" "$GATE_PATHS_JSON" "$TIER_JSON" 2>/dev/null || echo "artifact validation failed closed")
 
         if [[ -z "$MISSING" ]]; then
             exit 0
@@ -810,13 +412,19 @@ print('|'.join(missing))
 
         # Format the missing list for display
         MISSING_DISPLAY=$(echo "$MISSING" | tr '|' '\n' | sed 's/^/  - /')
+        TIER_LABEL=$(printf '%s' "$TIER_JSON" | python3 -c 'import json,sys
+t = json.load(sys.stdin); r = "; ".join(t.get("reasons", [])[:3])
+print(t.get("effective", "C") + (" (" + r + ")" if r else ""))' 2>/dev/null || echo C)
 
         cat >&2 <<ARTEOF
 BLOCKED by universal-mutation-gate (#477/#484): artifacts missing or wrong ticket
 
-think-gate.json status=implementing, but required artifacts are missing
-or do not reference the current ticket:
+This task's review tier is $TIER_LABEL.
+Its required artifacts are missing or do not reference the current ticket:
 $MISSING_DISPLAY
+Tier A (prose, plans, generated files) needs only this implementing gate; B adds
+an investigation and a pre-mortem; C (enforcement, release, deploy, credentials,
+destructive operations) adds junior/senior review and artifacts-posted (#1086).
 
 The gate requires both an investigation artifact (investigate-gate.json)
 and a pre-mortem artifact (plans/pre-mortem-*.md) that reference the
@@ -829,29 +437,7 @@ ARTEOF
     fi
 fi
 
-# --- BLOCK ---
-# Extract a short summary of what was attempted
-CMD_SHORT="${COMMAND:0:120}"
-if [[ ${#COMMAND} -gt 120 ]]; then
-    CMD_SHORT="${CMD_SHORT}..."
-fi
-
-cat >&2 <<HOOKEOF
-BLOCKED by universal-mutation-gate (v2, #473/#477)
-
-Command: $CMD_SHORT
-
-This command is not on the read-only safelist and no valid think-gate.json
-was found with an active status.
-
-To proceed:
-  1. Produce a design note (think gate) and write think-gate.json
-     with status=designing — this is the normal workflow.
-  2. If this command is genuinely read-only and should be on the safelist,
-     add its pattern to hooks/bash/universal-mutation-gate.sh SAFE_PATTERNS.
-
-There are no bypass mechanisms. The enforcement default is fail-closed.
-See #473 (original gate) and #477 (hardening).
-HOOKEOF
-log_block_event "universal-mutation-gate" "command not on safelist, no think-gate" "$COMMAND"
+# Invalid/non-implementation task statuses cannot grant mutation authority.
+echo "BLOCKED by universal-mutation-gate: selected task status '${TG_STATUS:-unknown}' cannot authorize mutation; complete its implementation artifacts." >&2
+log_block_event "universal-mutation-gate" "task status cannot authorize mutation" "$COMMAND"
 exit 2

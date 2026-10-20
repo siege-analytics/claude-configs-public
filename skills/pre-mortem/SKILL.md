@@ -9,6 +9,8 @@ allowed-tools: Read Grep Glob
 
 Adversarial risk classification. Given what investigation has established as fact, ask: "If this ships and fails, why?"
 
+**Gate target repository:** `repo_root` names the task's TARGET clone/worktree, never the session CWD or the Craft workspace merely because it is a configs checkout. Declare actual task paths in `scope_paths`; run target commands with explicit paths/`git -C` when the session CWD is elsewhere. Companion gates use the same target repo and exact session/task identity. Scope rejections must be corrected, not bypassed with root copies.
+
 ## Why
 
 Investigation tells you what is true. Pre-mortem asks what could go wrong given those truths. Without investigation, pre-mortem degrades into speculation ("what if the API is down?"). With investigation, pre-mortem becomes precise ("the API returns paginated results but our code reads only page 1 -- `catalog.py:87`").
@@ -177,6 +179,15 @@ The ticket receives:
 - List of Tigers with urgency tiers and mitigations (or accept-risk decisions)
 - List of Elephants with deferral rationale
 - Paper Tigers are documented in the pre-mortem artifact but do not clutter the ticket
+
+## Task affiliation
+
+Use the owning task's full ticket reference or explicit `task_id`, not a bare
+issue number. Record it in the pre-mortem `ticket_refs` and keep any signal or
+artifact pointer beside `$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json`.
+A session can run several tasks: never replace another task's pre-mortem or
+signal. Read-only investigation is never blocked by another task's status;
+unscoped mutations must first acquire their own scoped task gate.
 
 ## Pre-Mortem artifact format
 

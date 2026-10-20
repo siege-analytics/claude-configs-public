@@ -9,6 +9,8 @@ allowed-tools: Read Grep Glob Bash
 
 Evidentiary fact-finding. Before any artifact is created, modified, or deleted, verify the ticket's claims against reality by reading actual code, schemas, and data shapes. Produces a Fact Sheet artifact with file:line citations, knowledge loci, and an impact chain tracing upstream → task → downstream.
 
+**Gate target repository:** `repo_root` names the task's TARGET clone/worktree, never the session CWD or the Craft workspace merely because it is a configs checkout. Declare actual task paths in `scope_paths`; run target commands with explicit paths/`git -C` when the session CWD is elsewhere. Companion gates use the same target repo and exact session/task identity. Scope rejections must be corrected, not bypassed with root copies.
+
 ## Why
 
 The recurring failure shape: the agent knows what it wants to build, skips straight to code, and discovers at review time (or never) that the entities it referenced don't have the shape it assumed. The Junior optimizes for speed of one task -- it wants to ship this ticket fast, so it skips the 2-second shape verification. The Lead optimizes for speed of the project -- it knows that one unverified assumption costs the human hours of debugging rework. Investigation is the Lead's gate: spend the agent's cheap seconds to protect the human's expensive hours.
@@ -436,11 +438,12 @@ A stale signal from task X gives misleading status on task Y. The scope
 mismatch check (Level 2.5) catches this reactively, but cleanup is better
 than warning.
 
-After posting the Fact Sheet to the ticket, write `<workspace>/investigate-gate.json`. This signal file is checked by `investigate-gate-guard.sh` on every turn. Without it, the guard injects a blocking directive reminding you that investigation is incomplete.
+After posting the Fact Sheet to the ticket, write `$CRAFT_SESSION_DIR/tasks/<task-slug>/investigate-gate.json` beside the owning task's think gate. Use the full ticket reference (or explicit task id), session id, and scope metadata; never write a workspace-root singleton. This signal file is checked by `investigate-gate-guard.sh` on every turn. Without it, the guard injects a blocking directive reminding you that investigation is incomplete.
 
 ```json
 {
-  "ticket": "#NNN",
+  "ticket": "owner/repo#NNN",
+  "sessionId": "current-session-id",
   "factSheetLocation": "https://github.com/.../issues/NNN#issuecomment-...",
   "timestamp": "2026-06-01T18:00:00Z",
   "tier": "full",
@@ -561,7 +564,7 @@ Each verifiedShape entry should include a `dispositions` array encoding the assu
 
 Signal files without dispositions (v1 schema) produce a warning, not a block, for backward compatibility. New investigations should always use the v2 schema.
 
-Write `investigate-gate.json` beside the session-scoped `think-gate.json` (for example `$CLAUDE_SIGNAL_DIR/investigate-gate.json`, `$CRAFT_AGENT_SESSION_DIR/investigate-gate.json`, or `<workspace>/sessions/<session-id>/investigate-gate.json`). Workspace-root `investigate-gate.json` is legacy fallback only and must not be shared by concurrent agents.
+Write `investigate-gate.json` beside the **task-keyed** think gate: `<workspace>/sessions/<session-id>/tasks/<task-slug>/investigate-gate.json`. Multiple tasks in one session keep independent artifacts; cleanup applies only to this task directory. Legacy session files are read during migration, never new write targets. Workspace-root gates are ignored for mutation authorization.
 
 The guard performs four checks:
 1. **Existence** -- investigate-gate.json must exist when think-gate.json exists.

@@ -52,7 +52,7 @@ expect_pass "(h) cat attendee-list.txt ('tee' mid-word, no following space match
 # tee/committee bug above.
 
 expect_pass "(i) grep \"a->b\" data.txt (arrow in grep pattern)" "$HOOK" "$(make_payload 'grep \"a->b\" data.txt')"
-expect_pass "(j) grep flow->next app.log (bare arrow in grep args)" "$HOOK" "$(make_payload 'grep flow->next app.log')"
+expect_block "(j) grep flow->next app.log (unquoted > is a real redirect)" "$HOOK" "$(make_payload 'grep flow->next app.log')"
 expect_pass "(k) echo \"migrate 2026->2027\" (arrow in echo string)" "$HOOK" "$(make_payload 'echo \"migrate 2026->2027\"')"
 expect_pass "(l) grep \"cat .* >\" report.txt (literal redirect op in grep pattern)" "$HOOK" "$(make_payload 'grep \"cat .* >\" report.txt')"
 expect_pass "(m) grep \"append >> file\" report.txt (literal >> in grep pattern)" "$HOOK" "$(make_payload 'grep \"append >> file\" report.txt')"

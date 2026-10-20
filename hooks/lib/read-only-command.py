@@ -23,7 +23,7 @@ PLAIN = {
     "uname", "cut", "tr", "diff", "cmp", "comm", "sha256sum", "sha1sum",
     "md5sum", "base64", "od", "nl", "tac", "rev", "column", "true", "false", "test", "[", "sleep",
     "readlink", "realpath", "basename", "dirname", "seq", "expr", "strings",
-    "hexdump", "getent", "free", "uptime", "lsof", "nproc", "findmnt", "lsblk", "ss", "dig", "host",
+    "hexdump", "getent", "free", "uptime", "lsof", "nproc", "findmnt", "lsblk", "dig", "host",
     "nslookup", "cd", "shasum",
 }
 # Verbs whose options can write or run programs: their arguments must reach the
@@ -144,7 +144,42 @@ def git_ok(args):
     return False
 
 
+KUBECTL_VALUE_FLAGS = {"-n", "--namespace", "--context", "--cluster", "--user", "-s", "--server", "--kubeconfig",
+                       "--token", "--as", "--as-group", "--request-timeout", "--certificate-authority",
+                       "--client-certificate", "--client-key", "--tls-server-name", "-v", "--v"}
+KUBECTL_BOOL_FLAGS = {"--insecure-skip-tls-verify", "-A", "--all-namespaces"}
+
+
+def kubectl_ok(args):
+    """The subcommand is the first word that is not a global option or its value:
+    in `kubectl -n get delete pod x`, `get` is the namespace and kubectl runs
+    `delete` (#1089). An unknown option before the subcommand is not proven."""
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a.startswith("--") and "=" in a:
+            i += 1
+        elif a in KUBECTL_VALUE_FLAGS:
+            i += 2
+        elif a in KUBECTL_BOOL_FLAGS:
+            i += 1
+        elif a.startswith("-"):
+            return False
+        else:
+            break
+    rest = args[i:]
+    return bool(rest) and (rest[0] in KUBECTL_READ or rest[:2] in (["config", "view"], ["config", "get-contexts"],
+                                                                   ["config", "current-context"]))
+
+
+def ss_kills(args):
+    # -K kills sockets (#1089); -D/--diag=FILE writes raw socket data to FILE (#1092 review).
+    return any(long_opt(a, "--kill", "--diag") or short_has(a, "KD", "fAFN") for a in args)
+
+
 def gh_ok(args):
+    if any(long_opt(a, "--web") or short_has(a, "w", "HpqtRJLSB") for a in args[1:]):
+        return False   # --web/-w launches a browser (#1089)
     if len(args) >= 2 and args[0] in {"pr", "issue", "run", "repo", "release", "workflow", "label", "project", "search"}:
         return args[1] in GH_READ_VERBS or args[0] == "search"
     if args[:1] == ["api"]:
@@ -218,9 +253,9 @@ def simple_ok(words):
     if w == "gh":
         return gh_ok(args)
     if w == "kubectl":
-        sub = [a for a in args if not a.startswith("-")]
-        return bool(sub) and (sub[0] in KUBECTL_READ or sub[:2] in (["config", "view"], ["config", "get-contexts"],
-                                                                   ["config", "current-context"]))
+        return kubectl_ok(args)
+    if w == "ss":
+        return not ss_kills(args)
     if w == "docker":
         return bool(args) and args[0] in DOCKER_READ
     return False   # env/printenv are not admitted: they print credentials into the transcript
@@ -434,6 +469,8 @@ def unsafe(words):
         return date_sets(args)
     if w == "printf":
         return printf_unsafe(args)
+    if w == "ss":
+        return ss_kills(args)
     if w == "sed":
         return any(long_opt(a, "--in-place") or short_has(a, "i", "efl") for a in args)
     if w == "find":
@@ -464,6 +501,8 @@ def unsafe(words):
         return (sub == "grep" and any(short_has(a, "O", "efABCm") for a in args)
                 or sub in {"ls-remote", "fetch"} and any(short_has(a, "u", "jo") for a in args)
                 or sub == "hash-object" and hash_object_writes(args))
+    if w == "gh" and any(long_opt(a, "--web") or short_has(a, "w", "HpqtRJLSB") for a in args[1:]):
+        return True   # --web/-w launches a browser (#1089)
     if w == "gh" and args[:1] == ["api"]:
         return any(long_opt(a, "--method", "--field", "--raw-field", "--input") or short_has(a, "XfF", "Hpqt")
                    for a in args[1:])

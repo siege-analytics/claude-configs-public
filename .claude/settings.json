@@ -129,6 +129,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "hooks/write/branch-guard.sh",
             "timeout": 10
           },
@@ -149,6 +154,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "hooks/write/branch-guard.sh",
             "timeout": 10
           },
@@ -167,6 +177,11 @@
       {
         "matcher": "NotebookEdit",
         "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
           {
             "type": "command",
             "command": "hooks/write/branch-guard.sh",
@@ -189,6 +204,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "hooks/write/branch-guard.sh",
             "timeout": 10
           },
@@ -209,6 +229,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "hooks/write/write-guard.sh",
             "timeout": 10
           },
@@ -227,6 +252,11 @@
       {
         "matcher": "MultiEdit",
         "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/bash/universal-mutation-gate.sh",
+            "timeout": 10
+          },
           {
             "type": "command",
             "command": "hooks/write/write-guard.sh",
@@ -265,6 +295,11 @@
           {
             "type": "command",
             "command": "hooks/agent-comms/spawn-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "hooks/agent-comms/hub-concurrency-gate.sh",
+            "timeout": 10
           }
         ]
       }
@@ -276,6 +311,16 @@
           {
             "type": "command",
             "command": "hooks/git/vergil-quote.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__session__spawn_session",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/agent-comms/hub-concurrency-gate.sh",
+            "timeout": 10
           }
         ]
       }

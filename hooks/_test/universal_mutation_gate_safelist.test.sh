@@ -377,18 +377,18 @@ expect_block \
   "$HOOK" \
   "$(payload "$(printf 'comm -23 /tmp/a\n%s /tmp/b' "$SMUGGLE_TAIL")")"
 
-expect_block \
-  "newline cannot smuggle a zero-arg command past sed -n Np" \
+expect_pass \
+  "newline-separated recognized readers pass" \
   "$HOOK" \
   "$(payload "$(printf "sed -n '1p' README.md\nid")")"
 
-expect_block \
-  "tab cannot smuggle an argument past jq" \
+expect_pass \
+  "tab-separated jq arguments are read-only" \
   "$HOOK" \
   "$(payload "$(printf 'jq .\t%s' "$SMUGGLE_TAIL")")"
 
-expect_block \
-  "newline inside a single-quoted argument still blocks" \
+expect_pass \
+  "quoted literal newline stays read-only" \
   "$HOOK" \
   "$(payload "$(printf "jq '.\nid'")")"
 

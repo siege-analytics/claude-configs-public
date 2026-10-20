@@ -10,6 +10,8 @@ This skill answers: **which test framework, for which layer, and why.**
 
 The existing test-writing rules (`[rule:writing-tests]`) govern test _quality_ — what makes a good test. This skill governs test _infrastructure_ — which frameworks to use, how to declare them, and how the pipeline verifies they ran.
 
+**Gate target repository:** `repo_root` names the task's TARGET clone/worktree, never the session CWD or the Craft workspace merely because it is a configs checkout. Declare actual task paths in `scope_paths`; run target commands with explicit paths/`git -C` when the session CWD is elsewhere. Companion gates use the same target repo and exact session/task identity. Scope rejections must be corrected, not bypassed with root copies.
+
 ## Why this exists
 
 The affected-tests gate (`[skill:commit]` step 4) runs tests at commit time, but two gaps remain:
@@ -168,11 +170,13 @@ Three quality tests (apply to any framework):
 
 ## Signal file: test-gate.json
 
-After running affected tests (`[skill:commit]` step 4), write evidence to `test-gate.json` at the workspace root:
+After running affected tests (`[skill:commit]` step 4), write evidence to `test-gate.json` at `$CRAFT_SESSION_DIR/tasks/<task-slug>/test-gate.json`, beside the owning task's think gate:
 
 ```json
 {
-  "ticket": "#386",
+  "ticket": "owner/repo#386",
+  "sessionId": "current-session-id",
+  "repo_root": "/path/to/repo",
   "lastUpdated": "2026-06-09T14:30:00Z",
   "evidence": [
     {
@@ -196,3 +200,5 @@ The `test-guard.sh` hook reads this file at push time and verifies evidence cove
 - `hooks/git/test-guard.sh` — mechanical enforcement at push time
 - `hooks/git/decomposition-guard.sh` — one-PR-per-layer warning at push time, driven by the per-layer `source:` globs
 - `[skill:ticket-decomposition]` — the one-ticket/PR-per-layer doctrine that `source:` globs make mechanically checkable
+
+Test evidence is task-keyed: include the exact full ticket reference (or explicit task id), session id and repo scope. Legacy workspace/repo `test-gate.json` singletons cannot satisfy the task. Multiple tasks in one session retain independent evidence.
