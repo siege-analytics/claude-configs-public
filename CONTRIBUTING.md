@@ -1,0 +1,6 @@
+# Contributing
+
+This is a generated consumer package. Submit source changes through the
+[source contribution guide](https://github.com/siege-analytics/claude-configs-public/tree/bcbb013f5edd42c92b156b8bae9c8bbb81e7be0e/CONTRIBUTING.md), then rebuild and
+select a newly reviewed immutable release. See [this package contract](README.md)
+for included files and local diagnostics.
