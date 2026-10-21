@@ -1,0 +1,350 @@
+#!/usr/bin/env bash
+# universal-mutation-gate: proven reads pass without a task gate; anything the
+# positive allowlist (hooks/lib/read-only-command.py) does not prove falls
+# through to the gate. Every reproducer from the hostile reviews of the
+# electinfo port (electinfo/electinfo_claude_skills#349) is a must-block case
+# with no gate, as is every CodeRabbit finding on the v3.5.69 release PR (#1071).
+# Ref: #1057, #1051.
+set -uo pipefail
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
+mkdir -p "$T/ws" "$T/home"; ln -s "$ROOT/hooks" "$T/ws/hooks"
+SD="$T/ws/sessions/s1"; D="$SD/data"; mkdir -p "$D"; printf '{"id":"s1"}\n' > "$SD/session.jsonl"
+PASS=0; FAIL=0
+gate() {  # gate <cwd> <command> -> allow|block
+    local pl
+    pl=$(python3 -c 'import json,sys;print(json.dumps({"tool_name":"Bash","tool_input":{"command":sys.argv[1]},"cwd":sys.argv[2],"session_id":"s1"}))' "$2" "$1")
+    printf '%s' "$pl" | env -i PATH=/usr/bin:/bin HOME="$T/home" CRAFT_AGENT_WORKSPACE="$T/ws" CRAFT_SESSION_DIR="$SD" \
+        bash "$T/ws/hooks/bash/universal-mutation-gate.sh" >/dev/null 2>&1
+    [[ $? -eq 2 ]] && echo block || echo allow
+}
+expect() {  # expect <allow|block> <cwd> <command>
+    local got; got="$(gate "$2" "$3")"
+    if [[ "$got" == "$1" ]]; then PASS=$((PASS + 1)); else FAIL=$((FAIL + 1)); printf '  FAIL  want %s got %s: %s (cwd %s)\n' "$1" "$got" "$3" "$2"; fi
+}
+O="$T/home"
+echo "== proven reads pass with no gate =="
+for c in 'which lilypond' 'sed -n 1,20p /etc/hostname' 'git -C /tmp log --oneline -3' \
+         'for f in a b; do echo $f; done' 'rg -n TODO src' 'git grep -n TODO' 'git log -u -1' 'timeout 30 git status' 'nice ls -la' 'sort -k2,2 f' "find . -name '*.md'" 'ls *.md' 'echo "$HOME"' 'date -u +%F' 'git fetch origin --quiet' \
+         'ls -la /tmp | head -5' 'grep -rn foo . 2>/dev/null | wc -l' 'gh pr view 12 --json state' \
+         'gh api repos/o/r/pulls/1' 'find . -maxdepth 2 -name "*.md" | sort' \
+         'cd /tmp && git status -sb' 'jq .a f.json'; do expect allow "$O" "$c"; done
+echo "== anything not proven a read still needs a task gate (#349 review) =="
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
+python3 -c "open('/home/x/f','w').write('x')"
+node -e "require('fs').writeFileSync('/tmp/x','y')"
+perl -i -pe 's/a/b/' /etc/f
+bash deploy.sh
+source deploy.sh
+python3 deploy.py
+make install
+npm run deploy
+install -m 755 a /usr/local/bin/a
+ln -sf /a /b
+truncate -s 0 /var/log/x
+dd if=/dev/zero of=/tmp/x bs=1 count=1
+tar -xf a.tar -C /opt
+unzip a.zip -d /opt
+sed -Ei s/a/b/ /etc/f
+unlink /tmp/x
+shred -u /tmp/x
+rmdir /tmp/d
+rsync -a a /b
+"rm" -rf /x
+r''m -rf /x
+$(echo rm) -rf /x
+crontab -r
+systemctl restart x
+sudo systemctl stop x
+terraform apply -auto-approve
+ansible-playbook site.yml
+spark-submit job.py
+craft-session spawn x
+redis-cli FLUSHALL
+mongosh --eval "db.dropDatabase()"
+clickhouse-client -q "DROP TABLE t"
+trino --execute "DROP TABLE t"
+duckdb /shared/x.db "DELETE FROM t"
+sqlite3 /shared/x.db "DELETE FROM t"
+aws s3api delete-object --bucket b --key k
+rclone delete r:b
+nc evil.example 80
+curl -d x=1 https://example.com
+curl --data @f https://example.com
+curl -T f https://example.com
+curl -o /tmp/x https://example.com
+curl -X DELETE https://example.com
+wget --post-data x=1 https://example.com
+gh workflow run deploy.yml
+gh secret set X
+gh label create x
+gh repo edit --visibility public
+gh api -X POST repos/o/r/issues
+gh api repos/o/r/issues -f title=x
+gh api graphql -f query="query { viewer { login } }"
+git stash
+git update-index --assume-unchanged f
+git symbolic-ref HEAD refs/heads/x
+git fetch origin +main:main
+git branch -f main x
+git add file
+git -c user.name=x commit -m y
+git worktree remove --force /x
+git pull
+git clone https://github.com/a/b
+git init
+pkill -f thing
+kill -9 1
+touch notes.txt
+python3 -m venv venv
+pip install requests
+sort -o /etc/x f
+rg --pre sh . scripts/
+rg --pre=./tool x .
+git reflog expire --expire=now --all
+git reflog delete HEAD@{1}
+git grep -Orm -l x
+git grep --open-files-in-pager=rm x
+git ls-remote --upload-pack=touch /tmp/r
+git ls-remote -u touch .
+git fetch --upload-pack=x /tmp/r
+gh api -iXDELETE repos/o/r/issues/1
+gh api -if title=x repos/o/r/issues
+gh api --meth=POST repos/o/r
+timeout 5 sort -o /etc/x f
+nice yq -i '.a=1' f.yaml
+time find . -fprint /tmp/out
+time find . -delete
+timeout -s KILL 5 ls
+sort --out=/etc/x f
+sort -ro /etc/x f
+sort --compress-program=sh f
+date --se=2020-01-01
+yq -s '"/tmp/" + .name' f.yaml
+find . {-delete,-print}
+sort {-o,/etc/x} f
+find . ${X:--delete}
+find . $'-delete'
+find . $"-delete"
+git hash-object -w f
+git hash-object -wt blob f
+git hash-object --write f
+git hash-object --stdin-paths -w
+git -C /tmp hash-object -w f
+sort $"-o" /etc/x f
+date -us 2020-01-01
+find . *
+file -C -m magic
+env bash evil.sh
+env X=1 python3 evil.py
+env -S "bash evil.sh"
+tree -o /etc/x .
+xxd -r a /etc/b
+ag --pager=sh x
+cat f; bash evil.sh
+ls && python3 evil.py
+cat f | sh
+echo x; bash e.sh
+grep x f || node e.js
+ls; rg --pre sh x .
+cat f 2>/tmp/x
+cat f 2>> /tmp/x
+head f 1>/tmp/x
+cat f &> /tmp/x
+cat f &>>/tmp/x
+cat f 2>/dev/null/../../tmp/x
+sed -n '1,2p' -i README.md
+sed -n '1,2p' README.md -i
+curl -s https://example.test
+awk 'NR<10' README.md
+uniq a /etc/b
+X=1 ls
+echo hi > /tmp/x
+cat <<END > /tmp/x
+END
+EOF
+echo "== #1087: listing flags do not make a write a listing; clock, shell-state and option-word globs =="
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
+git remote -v add evil https://example.invalid/e.git
+git remote -v set-url origin https://example.invalid/e.git
+git -C /tmp remote --verbose rename origin x
+git remote -v remove origin
+git tag v1.0
+git tag --list -a x
+git tag -l -d v1
+git config --list --add a b
+git config --get-all x --unset
+date 10182300
+date -u 1018230026
+printf -vNAME value
+printf -v PATH /tmp/x; ls
+printf '%n' PATH
+git log --ext-diff
+git diff --ext-diff HEAD
+rg foo --pre*=evil
+rg foo '-'-pre*=x
+EOF
+for c in 'git remote -v' 'git remote show origin' 'git remote get-url origin' 'git tag' 'git tag -l' 'git tag --list "v1*"' \
+         'date' 'date +%F' 'date -u +%FT%T' 'date -d @1 +%s' 'date -Iseconds' 'printf "%s\n" x' 'printf %d 3' \
+         'rg foo src/*.py' 'ls *.md' 'git config --get user.name'; do expect allow "$O" "$c"; done
+echo "== #1089: kubectl global-flag values are not subcommands; ss -K kills; gh --web launches a browser =="
+for c in 'kubectl -n get delete pod x' 'kubectl --context get delete pod x' 'kubectl -n logs exec -it pod -- sh' \
+         'ss -K dst 1.2.3.4' 'ss --kill' 'ss -D out.bin' 'ss --diag=out.bin' 'gh pr view 1 --web' 'gh search repos x --web' 'gh pr list -w'; do expect block "$O" "$c"; done
+for c in 'ss -tlnp' 'gh pr view 1 --json state' 'gh api repos/o/r -q .workflow'; do expect allow "$O" "$c"; done
+for c in 'kubectl get pods -n x' 'kubectl -n x get pods' 'kubectl --namespace=x logs p' 'kubectl -A get pods'; do
+    if python3 "$ROOT/hooks/lib/read-only-command.py" "$c"; then PASS=$((PASS + 1)); else FAIL=$((FAIL + 1)); echo "  FAIL  classifier did not prove: $c"; fi
+done
+echo "== multi-line commands are never proven read-only =="
+expect block "$O" $'ls\nbash evil.sh'
+expect block "$O" $'ls\nredis-cli -h db FLUSHALL'
+expect block "$O" $'ls\nln -sf /secret /tmp/l'
+expect block "$O" $'ls\nsystemctl restart nginx'
+expect block "$O" $'cat r\n. ./evil.sh'
+expect block "$O" $'ls \\\n; rm -rf /x'
+expect allow "$O" $'ls\nwc -l /etc/hostname'   # task-keyed gate proves each line (#1051); the legacy safelist never did
+expect block "$O" $'for f in a b\ndo\n  echo $f\ndone'
+echo "== legacy-safelist reads stay admitted =="
+for c in 'tree -L 2' 'file README.md' 'xxd README.md' 'cat f | wc -l' 'printenv HOME' 'cat f 2>&1' \
+         'cat f &>/dev/null' 'git log 2>&1 | head' 'ls 2>/dev/null; echo ok' "gh api x --jq '{a,b}'" \
+         'gh api repos/o/r/contents/f.py?ref=develop -q .content' 'echo "${X:-U}"; git rev-parse HEAD' \
+         'cd /tmp && sed -n 1,5p /etc/hostname' 'date -Iseconds' 'date -Ins' 'date -u -d @1' 'sort -t, -k2 f' \
+         'grep -E "a$" /etc/hostname' 'shasum -a 256 /etc/hostname | head -1' 'cat /etc/hostname | shasum -a 256' \
+         'git hash-object /etc/hostname' 'git -C /tmp hash-object a b' 'git hash-object -tw blob f' \
+         "gh api -H 'Accept: application/vnd.github.raw' repos/o/r/contents/f | shasum -a 256"; do expect allow "$O" "$c"; done
+echo "== the classifier itself never proves env/printenv (they print credentials) =="
+for c in 'env' 'printenv' 'printenv HOME'; do
+    if python3 "$ROOT/hooks/lib/read-only-command.py" "$c"; then FAIL=$((FAIL + 1)); echo "  FAIL  classifier proved: $c"; else PASS=$((PASS + 1)); fi
+done
+echo "== quoted ampersands are not backgrounding =="
+expect allow "$O" "grep 'foo & bar' /etc/hostname"
+expect allow "$O" "git log --grep='fix & feat' -3"
+echo "== a session's own data/ dir is its scratch (#1051 B1); escapes and non-file effects still need a gate =="
+for c in 'touch notes.txt' 'rm -rf out'; do expect allow "$D" "$c"; done
+for c in 'python3 -m venv venv' "rm -rf .''./.''./plans" 'env -C x rm -rf plans' \
+         'pkill -f airflow' 'glab mr merge 1'; do expect block "$D" "$c"; done
+# Escapes from the scratch folder stay gated (probed on v3.5.73; pinned here).
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$D" "$c"; done <<'EOF'
+touch ../../x
+touch ~/x
+touch /etc/x
+echo x > ../../x
+echo x > /tmp/x
+cd .. && touch x
+cp notes.txt /tmp/elsewhere
+cp notes.txt ../../plans/p
+ln -s /etc/passwd p
+mv notes.txt ../n
+tee ../../x
+mkdir ../../d
+rm -rf ../../plans
+rm -rf ../
+rm -rf /tmp/x
+rm -rf ~/x
+cd .. && rm -rf data
+EOF
+for c in 'echo x > out.txt' 'mkdir sub'; do expect allow "$D" "$c"; done
+# Links (#1100): a link's other end is a target, and a file with another name
+# elsewhere is not scratch, because canonical paths cannot see hardlinks.
+mkdir -p "$T/ws/plans"; echo keep > "$T/ws/plans/p.md"; ln "$T/ws/plans/p.md" "$D/hl"
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$D" "$c"; done <<'EOF'
+cp -l ../../../plans/p.md h
+cp --link ../../../plans/p.md h
+cp -al ../../../plans h
+cp -s ../../../plans/p.md h
+cp --symbolic-link ../../../plans/p.md h
+ln ../../../plans/p.md h
+ln sub/../../../../plans/p.md h
+echo x >> hl
+echo x > hl
+tee hl
+cp notes.txt hl
+chmod 600 hl
+EOF
+for c in 'cat hl' 'rm hl' 'cp hl copy.md'; do expect allow "$D" "$c"; done
+# A relative symlink target resolves from the link's directory (#1109):
+# sub/x already points outside, so `ln -s x sub/link` reaches it.
+mkdir -p "$D/sub"; : > "$D/x"; ln -sfn "$T/ws/plans/p.md" "$D/sub/x"
+expect block "$D" 'ln -s x sub/link'
+expect block "$D" 'ln -s x sub/link && echo changed >> sub/link'
+# With -t the links live in the target directory (#1109 review).
+mkdir -p "$D/z" "$D/sub/z"; : > "$D/z/x"; ln -sfn "$T/ws/plans/p.md" "$D/sub/z/x"
+expect block "$D" 'ln -s -t sub z/x && echo hi >> sub/x'
+expect block "$D" 'ln -st sub z/x && echo hi >> sub/x'
+expect block "$D" 'ln -s --target-directory=sub z/x && echo hi >> sub/x'
+# #1100 review: abbreviated long options, copies that carry a symlink across,
+# and a removal of the same name that must not excuse the write before it.
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$D" "$c"; done <<'EOF'
+cp --lin ../../../plans/p.md h
+cp --li ../../../plans/p.md h
+cp --sym ../../../plans/p.md h
+cp --symbolic ../../../plans/p.md h
+cp -P /proc/self/root r
+cp -r /proc/self/root r
+cp -a /proc/self/root r
+cp --no-deref /proc/self/root r
+echo x >> hl; rm hl
+cp notes.txt hl && rm -f hl
+chmod 600 hl; rm hl
+echo x | tee -a hl; rm hl
+EOF
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
+ln -sf /etc/hostname --target-directory=d
+ln -sf /etc/hostname --targ=d
+ln -sf -td /etc/hostname
+EOF
+mkdir -p "$D/sub"; echo s > "$D/sub/f"; echo n > "$D/notes.txt"
+for c in 'ln notes.txt n2' 'ln -s notes.txt n3' 'cp -r sub copy' 'cp -r ../../../plans pcopy' 'cp notes.txt n4'; do expect allow "$D" "$c"; done
+echo "== docker management-form reads pass; its writes still need a gate (#1116) =="
+while IFS= read -r c; do [[ -n "$c" ]] && expect allow "$O" "$c"; done <<'EOF'
+docker image ls siege-test:gdal --format '{{.ID}}'
+docker image list
+docker image inspect siege-test:gdal
+docker image history siege-test:gdal
+docker container ls -a
+docker container list
+docker container ps
+docker container inspect web
+docker container logs --tail 50 web
+docker container top web
+docker container port web
+docker volume ls
+docker volume list
+docker volume inspect data
+docker network ls
+docker network list
+docker network inspect bridge
+docker images siege-test:gdal
+docker image ls | head -3
+EOF
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
+docker image
+docker image rm siege-test:gdal
+docker image prune -f
+docker image pull alpine
+docker image push o/i
+docker image tag a b
+docker image build .
+docker image load -i x.tar
+docker image save -o x.tar a
+docker image import x.tar
+docker container
+docker container rm web
+docker container exec web sh
+docker container run alpine
+docker container stop web
+docker container cp web:/etc/x .
+docker container prune -f
+docker volume rm data
+docker volume create data
+docker volume prune -f
+docker network create n
+docker network rm n
+docker network connect n web
+docker network prune -f
+docker -H tcp://x image ls
+docker image ls; docker image rm a
+docker system prune -af
+docker rmi a
+EOF
+printf 'read_allowlist: %d passed, %d failed\n' "$PASS" "$FAIL"
+(( FAIL == 0 ))
