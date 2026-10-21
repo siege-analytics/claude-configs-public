@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "hub_role": "role::hub",
+  "steward_roles": [
+    "role::traffic-cop",
+    "role::workspace-config",
+    "role::deep-think",
+    "role::steward"
+  ],
+  "concluded_session_statuses": [
+    "needs-review",
+    "retired",
+    "archived",
+    "done",
+    "cancelled",
+    "complete",
+    "completed",
+    "done-awaiting-pr",
+    "disposed"
+  ]
+}
