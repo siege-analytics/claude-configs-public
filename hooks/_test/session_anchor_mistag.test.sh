@@ -37,11 +37,13 @@ task_gate() {  # task_gate <session> <ticket>: an implementing gate with every a
 }
 
 PASS=0; FAIL=0
+# Stock macOS has no timeout(1); run unbounded there (#1109).
+_tmo() { if command -v timeout >/dev/null 2>&1; then timeout "$@"; else shift; "$@"; fi; }
 expect() {  # expect allow|block <label> <CRAFT_SESSION_DIR leaf> <payload uuid>
     python3 -c 'import json,sys
 print(json.dumps({"session_id":sys.argv[1],"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"sed -i s/a/b/ "+sys.argv[2]+"/x.py"},"cwd":sys.argv[2]}))' "$4" "$REPO" > "$T/p.json"
-    env -i PATH="$PATH" HOME="$T" CRAFT_SESSION_DIR="$WS/sessions/$3" CRAFT_AGENT_WORKSPACE="$WS" \
-        timeout 30 bash "$WS/hooks/bash/universal-mutation-gate.sh" < "$T/p.json" >/dev/null 2>"$T/err"
+    _tmo 30 env -i PATH="$PATH" HOME="$T" CRAFT_SESSION_DIR="$WS/sessions/$3" CRAFT_AGENT_WORKSPACE="$WS" \
+        bash "$WS/hooks/bash/universal-mutation-gate.sh" < "$T/p.json" >/dev/null 2>"$T/err"
     local rc=$? got; got=$([[ $rc -eq 0 ]] && echo allow || echo block)
     if [[ "$got" == "$1" ]]; then PASS=$((PASS + 1)); printf '  ok    %s\n' "$2"
     else FAIL=$((FAIL + 1)); printf '  FAIL  %s (wanted %s, got %s rc=%s)\n' "$2" "$1" "$got" "$rc"; fi

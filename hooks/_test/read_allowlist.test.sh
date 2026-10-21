@@ -261,6 +261,16 @@ cp notes.txt hl
 chmod 600 hl
 EOF
 for c in 'cat hl' 'rm hl' 'cp hl copy.md'; do expect allow "$D" "$c"; done
+# A relative symlink target resolves from the link's directory (#1109):
+# sub/x already points outside, so `ln -s x sub/link` reaches it.
+mkdir -p "$D/sub"; : > "$D/x"; ln -sfn "$T/ws/plans/p.md" "$D/sub/x"
+expect block "$D" 'ln -s x sub/link'
+expect block "$D" 'ln -s x sub/link && echo changed >> sub/link'
+# With -t the links live in the target directory (#1109 review).
+mkdir -p "$D/z" "$D/sub/z"; : > "$D/z/x"; ln -sfn "$T/ws/plans/p.md" "$D/sub/z/x"
+expect block "$D" 'ln -s -t sub z/x && echo hi >> sub/x'
+expect block "$D" 'ln -st sub z/x && echo hi >> sub/x'
+expect block "$D" 'ln -s --target-directory=sub z/x && echo hi >> sub/x'
 # #1100 review: abbreviated long options, copies that carry a symlink across,
 # and a removal of the same name that must not excuse the write before it.
 while IFS= read -r c; do [[ -n "$c" ]] && expect block "$D" "$c"; done <<'EOF'

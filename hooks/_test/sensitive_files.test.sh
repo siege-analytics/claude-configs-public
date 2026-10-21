@@ -55,6 +55,21 @@ refuses "a forced stage of an env file"      "$ADD -f $ENVF"
 refuses "a credentials file"                 "$ADD $CREDS"
 refuses "a private key"                      "$ADD deploy.pem"
 refuses "one sensitive path among several"   "$ADD src/a.py $ENVF src/b.py"
+# #1109: interpreter arguments are code, and the shell drops quotes/backslashes.
+refuses "staged inside bash -c"              "bash -c \"$ADD $ENVF\""
+refuses "staged inside eval"                 "eval \"$ADD $ENVF\""
+refuses "a backslash in the verb"            "g\\it add $ENVF"
+# #1109 review: an unbalanced quote inside an unwrapped payload, or a quote
+# before eval/bash, must not hide a later `git add`.
+refuses "after bash -c with an apostrophe"   "bash -c \"echo it's done\"; $ADD $ENVF"
+refuses "after eval with an apostrophe"      "eval \"echo don't\" && $ADD $CREDS"
+refuses "after bash -c with cd and can't"    "bash -c \"cd sub && echo can't\" ; $ADD a.py $ENVF"
+refuses "after sh -c with a lone quote"      "sh -c 'echo \"x' ; $ADD $ENVF"
+refuses "after a quoted eval mention"        "echo \"eval 'x'\" ; $ADD $ENVF"
+refuses "after a quoted bash -c mention"     "echo \"bash -c 'x'\"; $ADD $ENVF"
+refuses "after printf of an eval string"     "printf '%s' \"eval 'hi'\" && $ADD id_rsa"
+refuses "inside bash -c with escaped quotes" "bash -c \"$ADD $ENVF; echo \\\"ok\\\"\""
+allows "a grep for an eval string"           "grep -n \"eval '$ADD $ENVF'\" hooks/_test/x.sh"
 
 echo
 echo "  -- must allow (a hit here is #67) --"
@@ -63,6 +78,17 @@ allows "a message that mentions a config"    "$ADD a.py && $COMMIT -m \"note abo
 allows "a command that stages nothing"       "$COMMIT -m \"x\""
 allows "an issue body mentioning staging"    "gh issue create --body \"run $ADD $ENVF\""
 allows "an echo about it"                    "echo \"$ADD $ENVF\""
+
+echo
+echo "  -- a failing helper fails closed (#1109) --"
+BROKEN="$(mktemp -d)"; cp -R "$(dirname "$GUARD")/.." "$BROKEN/hooks"
+printf 'raise SystemExit(3)\n' > "$BROKEN/hooks/lib/command-text.py"
+if payload "$ADD $ENVF" | bash "$BROKEN/hooks/git/no-sensitive-files.sh" >/dev/null 2>&1; then
+    printf '  FAIL: ALLOWS %s with the helper failing -- fails open\n' "$ENVF"; fail=$((fail + 1))
+else
+    printf '  PASS: refuses %s with the helper failing\n' "$ENVF"; pass=$((pass + 1))
+fi
+rm -rf "$BROKEN"
 
 echo
 echo "  -- no basename noise --"
