@@ -68,6 +68,7 @@ refuses "after sh -c with a lone quote"      "sh -c 'echo \"x' ; $ADD $ENVF"
 refuses "after a quoted eval mention"        "echo \"eval 'x'\" ; $ADD $ENVF"
 refuses "after a quoted bash -c mention"     "echo \"bash -c 'x'\"; $ADD $ENVF"
 refuses "after printf of an eval string"     "printf '%s' \"eval 'hi'\" && $ADD id_rsa"
+refuses "inside bash -c with escaped quotes" "bash -c \"$ADD $ENVF; echo \\\"ok\\\"\""
 allows "a grep for an eval string"           "grep -n \"eval '$ADD $ENVF'\" hooks/_test/x.sh"
 
 echo

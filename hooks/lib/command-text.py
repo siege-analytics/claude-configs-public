@@ -48,10 +48,18 @@ _SHELL_ARG = re.compile(
                                     # the boundary char is kept, #1109)
         (?:(?:ba|z|da|a)?sh\s+-c|eval)  # bash -c, sh -c, zsh -c, dash -c, ash -c, eval
         \s+
-        (['"])(.*?)\1                   # its quoted argument
+        (?:"((?:\\.|[^"\\])*)"         # its argument: double-quoted, escapes honoured
+          |'([^']*)')                   # or single-quoted (no escapes in sh)
     """,
     re.VERBOSE | re.DOTALL,
 )
+
+
+def _shell_payload(match):
+    """The code an interpreter argument runs, with double-quote escapes undone."""
+    if match.group(1) is not None:
+        return re.sub(r'\\(["\\$`])', r"\1", match.group(1))
+    return match.group(2)
 
 # Identical to the regex the guards used inline, so this changes where we look,
 # never what counts as a commit once found.
@@ -165,7 +173,7 @@ def code_only(command, depth=0):
     # Unwrap shell-interpreter arguments before anything is dropped, so that
     # `bash -c "git commit"` keeps its payload as code.
     def _unwrap(match):
-        return " " + code_only(match.group(2), depth + 1) + " "
+        return " " + code_only(_shell_payload(match), depth + 1) + " "
 
     unwrapped = _SHELL_ARG.sub(_unwrap, text)
     if unwrapped != text:
@@ -266,7 +274,7 @@ def git_add_targets(command):
 
 def _splice(match):
     """Replace `bash -c '<code>'` with `; <code> ;` so it splits as code."""
-    return " ; " + match.group(2) + " ; "
+    return " ; " + _shell_payload(match) + " ; "
 
 
 def _add_targets(text):

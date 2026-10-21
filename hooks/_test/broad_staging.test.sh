@@ -57,6 +57,12 @@ blocks "chained after cd"   'cd /tmp && git add -A'
 blocks "wrapped in bash -c" 'bash -c "git add -A"'
 blocks "a single-quoted verb" "git 'add' -A"
 blocks "a double-quoted verb" 'git "add" .'
+# With the helper failing, the fallback must still see a quoted verb (#1114 review).
+BR="$(mktemp -d)"; cp -R "$SCRIPT_DIR/.." "$BR/hooks"; printf 'def (\n' > "$BR/hooks/lib/command-text.py"
+GUARD_SAVE="$GUARD"; GUARD="$BR/hooks/git/no-broad-staging.sh"
+blocks "a single-quoted verb, helper broken" "git 'add' -A"
+blocks "the plain form, helper broken"       'git add -A'
+GUARD="$GUARD_SAVE"; rm -rf "$BR"
 
 echo
 echo "  -- the same characters as data --"
