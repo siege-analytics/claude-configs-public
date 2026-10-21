@@ -136,11 +136,13 @@ echo
 echo "  -- a crashing helper falls back to over-matching (#1109) --"
 for broken in 'def (' 'import os; os._exit(1)' 'raise SystemExit(3)'; do
     BR="$(mktemp -d)"; printf '%s\n' "$broken" > "$BR/command-text.py"
-    if bash -c "source '$SCRIPT_DIR/../lib/command-text.sh'; _CT_PY='$BR/command-text.py'; ct_is_git_commit 'git commit -m x'"; then
-        printf '  PASS: ct_is_git_commit still catches a commit when the helper is: %s\n' "$broken"; pass=$((pass + 1))
-    else
-        printf '  FAIL: ct_is_git_commit fails open when the helper is: %s\n' "$broken"; fail=$((fail + 1))
-    fi
+    for verb in 'git commit -m x' 'git \"commit\" -m x' "g\\\\it commit -m x"; do
+        if bash -c "source '$SCRIPT_DIR/../lib/command-text.sh'; _CT_PY='$BR/command-text.py'; ct_is_git_commit \"$verb\""; then
+            printf '  PASS: catches [%s] when the helper is: %s\n' "$verb" "$broken"; pass=$((pass + 1))
+        else
+            printf '  FAIL: misses [%s] when the helper is: %s -- fails open\n' "$verb" "$broken"; fail=$((fail + 1))
+        fi
+    done
     rm -rf "$BR"
 done
 echo

@@ -9,6 +9,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - **The git guards' command-text helper fails closed.** If `command-text.py` crashes, has a syntax error or exits early, the guards fall back to their over-matching path. They no longer treat the failure as "not a commit" or "nothing staged". `--is-commit` prints its verdict, and only a printed verdict is trusted.
 - **Quoted and wrapped verbs are seen.** `git "commit"`, `g\it add` and staging inside `bash -c "..."`/`eval "..."` are caught. An apostrophe inside a wrapped payload can no longer hide a later `git add` on the same line. Multi-word quoted prose (messages, bodies) is still data, and an escaped space is kept as one word.
 - **A relative symlink resolves from the link's own directory.** In a session's scratch folder, `ln -s x sub/link` and `ln -s -t DIR ...` are checked where the link will point, not only from the cwd.
+- **Escaped quotes inside a wrapped command are parsed.** `bash -c "git add .env; echo \"ok\""` is unwrapped correctly. When the helper cannot run, the fallbacks also check the command with quotes and backslashes removed, so `git "commit"` is still caught.
 - **Two hook suites run on stock macOS,** which has no `timeout(1)`.
 
 ## [3.5.74] -- 2026-10-20

@@ -15,6 +15,11 @@ _CT_VERB="git com""mit"
 _CT_ADD_VERB="git ""add"
 _CT_FALLBACK_RE="(^|[^[:alnum:]])${_CT_VERB}([^[:alnum:]]|\$)"
 
+# The fallbacks run when the helper cannot. They see the command with quote and
+# backslash characters removed, so `git "commit"`, `g\it add` and `git 'add' -A`
+# still match: over-matching is the safe direction here (#1114 review).
+_ct_bare() { printf '%s' "$1" | tr -d "\"'\\\\"; }
+
 # ct_is_git_commit <command>  -> 0 when the command invokes the commit verb
 ct_is_git_commit() {
     local cmd="$1"
@@ -27,7 +32,7 @@ ct_is_git_commit() {
         [ "$rc" -eq 0 ] && [ "$out" = "commit" ] && return 0
         [ "$rc" -eq 1 ] && [ "$out" = "none" ] && return 1
     fi
-    printf '%s' "$cmd" | grep -qE "$_CT_FALLBACK_RE"
+    { printf '%s\n' "$cmd"; _ct_bare "$cmd"; } | grep -qE "$_CT_FALLBACK_RE"
 }
 
 # ct_code_only <command>  -> the command with data regions removed
@@ -39,7 +44,8 @@ ct_code_only() {
         printf '%s' "$out"
         return 0
     fi
-    printf '%s' "$cmd"   # helper missing or failed: the raw text over-matches (#1109)
+    # Helper missing or failed: raw text plus its unquoted copy over-matches (#1109).
+    printf '%s\n' "$cmd"; _ct_bare "$cmd"
 }
 
 # ct_stage_args <command>  -> one path per line that a staging command would add.
@@ -58,7 +64,7 @@ ct_stage_args() {
         return 0
     fi
     # Helper missing or failed: the crude extraction over-reports (#1109).
-    printf '%s' "$cmd" \
+    _ct_bare "$cmd" \
         | sed "s/.*${_CT_ADD_VERB}[[:space:]]*//" \
         | sed 's/[[:space:]]*-[a-zA-Z][a-zA-Z]*[[:space:]]*/ /g' \
         | tr ' ' '\n' \
