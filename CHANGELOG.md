@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. Versioning follows [SemVer](https://semver.org/).
 
+## [3.5.76] -- 2026-10-21
+
+### Fixed: Docker's current command form counts as a read (#1116)
+
+- **`docker image ls` and its siblings no longer need a task gate.** The read classifier knew only the legacy one-word reads (`docker images`, `docker ps`). It now also admits `docker image|container|volume|network` followed by one of that object's read verbs: `ls`/`list`, `inspect`, `history`, `ps`, `logs`, `top` or `port`. Every other verb under those objects, a global option before the object, and a bare object still need a gate.
+
 ## [3.5.75] -- 2026-10-20
 
 ### Fixed: follow-ups from the v3.5.74 release review (#1109)
