@@ -39,6 +39,14 @@ GH_READ_VERBS = {"view", "list", "checks", "diff", "status"}
 KUBECTL_READ = {"get", "describe", "logs", "top", "explain", "version", "api-resources", "api-versions",
                 "cluster-info", "events"}
 DOCKER_READ = {"ps", "images", "logs", "inspect", "version", "info", "top", "port", "history"}
+# Management-command form (`docker image ls`): the object, then one of its read
+# verbs. Every other verb under these objects writes or runs something (#1116).
+DOCKER_MGMT_READ = {
+    "image": {"ls", "list", "inspect", "history"},
+    "container": {"ls", "list", "ps", "inspect", "logs", "top", "port"},
+    "volume": {"ls", "list", "inspect"},
+    "network": {"ls", "list", "inspect"},
+}
 SAFE_REDIRECT = re.compile(r"^(?:[12]?>{1,2}/dev/null|2>&1|>&2|1>&2)$")
 
 
@@ -257,6 +265,8 @@ def simple_ok(words):
     if w == "ss":
         return not ss_kills(args)
     if w == "docker":
+        if len(args) >= 2 and args[0] in DOCKER_MGMT_READ:
+            return args[1] in DOCKER_MGMT_READ[args[0]]
         return bool(args) and args[0] in DOCKER_READ
     return False   # env/printenv are not admitted: they print credentials into the transcript
 

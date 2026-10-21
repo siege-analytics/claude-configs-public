@@ -294,5 +294,57 @@ ln -sf -td /etc/hostname
 EOF
 mkdir -p "$D/sub"; echo s > "$D/sub/f"; echo n > "$D/notes.txt"
 for c in 'ln notes.txt n2' 'ln -s notes.txt n3' 'cp -r sub copy' 'cp -r ../../../plans pcopy' 'cp notes.txt n4'; do expect allow "$D" "$c"; done
+echo "== docker management-form reads pass; its writes still need a gate (#1116) =="
+while IFS= read -r c; do [[ -n "$c" ]] && expect allow "$O" "$c"; done <<'EOF'
+docker image ls siege-test:gdal --format '{{.ID}}'
+docker image list
+docker image inspect siege-test:gdal
+docker image history siege-test:gdal
+docker container ls -a
+docker container list
+docker container ps
+docker container inspect web
+docker container logs --tail 50 web
+docker container top web
+docker container port web
+docker volume ls
+docker volume list
+docker volume inspect data
+docker network ls
+docker network list
+docker network inspect bridge
+docker images siege-test:gdal
+docker image ls | head -3
+EOF
+while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
+docker image
+docker image rm siege-test:gdal
+docker image prune -f
+docker image pull alpine
+docker image push o/i
+docker image tag a b
+docker image build .
+docker image load -i x.tar
+docker image save -o x.tar a
+docker image import x.tar
+docker container
+docker container rm web
+docker container exec web sh
+docker container run alpine
+docker container stop web
+docker container cp web:/etc/x .
+docker container prune -f
+docker volume rm data
+docker volume create data
+docker volume prune -f
+docker network create n
+docker network rm n
+docker network connect n web
+docker network prune -f
+docker -H tcp://x image ls
+docker image ls; docker image rm a
+docker system prune -af
+docker rmi a
+EOF
 printf 'read_allowlist: %d passed, %d failed\n' "$PASS" "$FAIL"
 (( FAIL == 0 ))
