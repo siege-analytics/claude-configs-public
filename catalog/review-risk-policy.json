@@ -38,7 +38,7 @@
     "^hooks/(git|bash|write)/",
     "^hooks/agent-comms/(hub-concurrency-gate|no-slug-form-outbound|spawn-guard)\\.sh$",
     "^hooks/infrastructure/catalog-guard\\.sh$",
-    "^hooks/lib/(after-image|artifact-casefold-candidate|canonical-path|extract-json|probe-runner|read-only-command|resolve-think-gate|split-frontmatter|pipeline_state|task_actions|command-text|session_anchor)\\.py$",
+    "^hooks/lib/(after-image|artifact-casefold-candidate|canonical-path|commit-message-source|extract-json|probe-runner|read-only-command|resolve-think-gate|split-frontmatter|pipeline_state|task_actions|command-text|session_anchor)\\.py$",
     "^hooks/lib/hub-concurrency-policy\\.json$",
     "^hooks/lib/(detect-host|gate-registry|scope-check|command-text)\\.sh$",
     "^hooks/resolver/.*(gate|guard|enforcement)",

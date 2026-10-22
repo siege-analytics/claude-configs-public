@@ -39,6 +39,10 @@ The release notes for v3.5.74 come from this section. Everything under [Unreleas
 
 ## [Unreleased]
 
+### Fixed
+
+- **Modeled direct commit messages use effective contents for ticket enforcement (#994).** After its existing fast skip and detector, the hook resolves literal `-m`/`--message` forms, a bounded `$(cat <<...)` form only when its opener is outside shell quotes, trailers, default `#` cleanup (including the `-e`/`--edit` strip default), and bounded regular `-F`/`--file` sources. Ticketless or indeterminate direct messages and invalid sources fail closed; large multiline files may also fail closed pending a pipeline follow-up. Non-default `core.commentChar`/`core.commentString` cleanup remains #1112 work. Alias, wrapper, compound-command, editor mutation, and dynamic dispatch remain outside this change; #1107 tracks the dispatch class.
+
 ### Changed: task-keyed, proportional task gates (#1051, #1086)
 
 - **Gates are per task, not per session.** Each task's think gate lives in `$CRAFT_SESSION_DIR/tasks/<task-slug>/` and governs only the paths in its `scope_paths`. A mutation is authorized only by the `implementing` gate that owns its targets. One task's gate never blocks another task's reads or mutations, or another agent's.
