@@ -61,11 +61,14 @@ grep -q 'advisory' <<<"$out" && r=no || r=yes; check "no advisory record is repo
 grep -q 'old aware block\|old naive block' <<<"$out" && r=no || r=yes; check "blocks older than 4h are not reported" "$r"
 
 echo "== a malformed line does not hide the lines after it"
-printf '[]\n{"timestamp": "9999-12-31T23:59:59", "gate_id": "x", "invariant": "overflow", "command": "c"}\n' > "$TMP/bad.jsonl"
+# Malformed in every time zone: a non-object line, an unparseable timestamp, and
+# year 1, which either overflows when localised (east of UTC) or is far older
+# than the 4h window. None of them may count, or hide the lines after them.
+printf '[]\n{"timestamp": "not-a-time", "gate_id": "x", "invariant": "unparseable", "command": "c"}\n{"timestamp": "0001-01-01T00:00:00", "gate_id": "x", "invariant": "year one", "command": "c"}\n' > "$TMP/bad.jsonl"
 cat "$TMP/bad.jsonl" "$LOG" > "$TMP/mixed.jsonl" && mv "$TMP/mixed.jsonl" "$LOG"
 out=$(cd "$TMP" && env -i PATH="$PATH" HOME="$TMP" CRAFT_AGENT_WORKSPACE="$WS" bash "$WS/hooks/resolver/block-classifier-guard.sh" < /dev/null 2>&1)
 n=$(printf '%s\n' "$out" | sed -n 's/^\([0-9]*\) recent enforcement block(s) are UNCLASSIFIED.*/\1/p')
-[[ $n == 2 ]] && r=yes || r=no; check "two real blocks still reported after a non-object line and an overflow date (got '${n:-none}')" "$r"
+[[ $n == 2 ]] && r=yes || r=no; check "two real blocks still reported after malformed lines (got '${n:-none}')" "$r"
 
 echo "== a classified block is no longer reported"
 bid="universal-mutation-gate:$ts"

@@ -41,3 +41,9 @@ Project-contribution: the block log can be counted directly. Advisories are labe
 - `branch_state_advisory` 8/0.
 - `review_risk_test`; the skill-inventory, generated-source-authority and review-risk-metrics `--check`s.
 - The full local validate job, with hook suites run on stdin closed.
+
+## Follow-up: time-zone-independent malformed-line fixture (CodeRabbit on #1124)
+
+The malformed-line fixture used naive `9999-12-31T23:59:59`. It overflows only east of UTC. On a UTC host it parses as a future, recent block, so the counts came out 3 and 2 instead of 2 and 1. Reproduced: the old fixture under `TZ=UTC` gives 8 passed and 2 failed.
+
+The fixture now uses an unparseable timestamp (`ValueError`) and naive `0001-01-01T00:00:00`. Year one either overflows or falls outside the 4h window, so in every zone it neither counts nor hides later lines. Passes 10/0 under UTC, Asia/Tokyo, America/Chicago and Pacific/Kiritimati (+14). The classifier code is unchanged.
