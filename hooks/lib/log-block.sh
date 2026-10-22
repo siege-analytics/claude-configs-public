@@ -13,6 +13,10 @@
 #   exit 2
 #
 # Ref: #602 (mechanical enforcement for contradiction rule)
+#
+# Timestamps are UTC with an explicit offset. An invariant ending in
+# "(advisory)" is a would-have-blocked audit record, not a block: it is
+# written with "advisory": true and readers must not count it (#1119).
 
 log_block_event() {
     local gate_id="${1:-unknown}"
@@ -30,14 +34,15 @@ log_block_event() {
 
     python3 -c "
 import json, sys, os
-from datetime import datetime
+from datetime import datetime, timezone
 
 event = {
-    'timestamp': datetime.now().isoformat(),
+    'timestamp': datetime.now(timezone.utc).isoformat(),
     'gate_id': sys.argv[1],
     'invariant': sys.argv[2],
     'command': sys.argv[3][:200],
-    'classified': False
+    'classified': False,
+    'advisory': sys.argv[2].endswith('(advisory)'),
 }
 
 logfile = sys.argv[4]
