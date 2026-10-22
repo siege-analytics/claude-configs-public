@@ -37,7 +37,7 @@ fi
 
 UNCLASSIFIED=$(python3 -c "
 import json, sys, os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 blocks_log = sys.argv[1]
 classification_file = sys.argv[2]
@@ -55,7 +55,9 @@ unclassified = []
 try:
     # 4-hour window: blocks older than this are no longer actionable.
     # The context has changed and re-classification serves no purpose.
-    cutoff = datetime.now() - timedelta(hours=4)
+    # Compare aware datetimes. Entries before #1119 carry naive local time;
+    # read those as local so old and new lines compare on one clock.
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=4)
     with open(blocks_log) as f:
         for i, line in enumerate(f):
             line = line.strip()
@@ -63,10 +65,16 @@ try:
                 continue
             try:
                 event = json.loads(line)
+                # Advisory audit records are not blocks (#1119). Older lines
+                # predate the flag and are recognised by their invariant.
+                if event.get('advisory') is True or str(event.get('invariant', '')).endswith('(advisory)'):
+                    continue
                 block_id = f\"{event.get('gate_id', '')}:{event.get('timestamp', '')}\"
                 if block_id in classified_ids:
                     continue
                 ts = datetime.fromisoformat(event['timestamp'])
+                if ts.tzinfo is None:
+                    ts = ts.astimezone()
                 if ts < cutoff:
                     continue
                 unclassified.append({
@@ -75,7 +83,8 @@ try:
                     'invariant': event.get('invariant', ''),
                     'command': event.get('command', '')[:80]
                 })
-            except (json.JSONDecodeError, KeyError, ValueError):
+            # One malformed line must not hide the lines after it.
+            except (json.JSONDecodeError, KeyError, ValueError, TypeError, AttributeError, OverflowError):
                 continue
 except Exception:
     pass

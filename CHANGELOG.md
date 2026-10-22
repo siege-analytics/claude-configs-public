@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here. Versioning follows [SemVer](https://semver.org/).
 
+## [3.5.77] -- 2026-10-22
+
+### Fixed: the block log can be counted (#1119)
+
+- **Advisories are labelled, not counted as blocks.** `pre-action-guard` and `branch-state-guard` record would-have-blocked narration on every prompt. Those lines now carry `"advisory": true`, and `block-classifier-guard` no longer asks about them, including older lines already in a log. On one workspace they were 88% of the log.
+- **Every block-log timestamp is UTC with an offset.** The classifier compares old naive-local and new UTC lines on one clock. A malformed line is skipped by itself instead of hiding every later block.
+
 ## [3.5.76] -- 2026-10-21
 
 ### Fixed: Docker's current command form counts as a read (#1116)
