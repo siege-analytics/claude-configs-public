@@ -108,6 +108,20 @@ ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
 printf '%s 1 /Applications/Craft Agents.app/Contents/MacOS/Craft Agents\n' "$ancestor"
 EOF
 chmod +x "$TMP/process-fixture/ps"
+# A PATH-provided ps must not establish host identity in the production copy.
+spoof_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts)"
+echo "$spoof_out" | grep -q '"continue": false' && spoof_ok=yes || spoof_ok=no
+check "PATH-provided ps cannot forge Craft ancestry" "$spoof_ok"
+# Redirect only this disposable test copy's absolute observation boundary.
+# Production never reads an environment override for the process probe.
+python3 - "$TMP/hooks/resolver/ca-enforcement-gate.sh" "$TMP/process-fixture/ps" <<'PY'
+from pathlib import Path
+import json, sys
+p = Path(sys.argv[1])
+s = p.read_text()
+assert s.count('["/bin/ps",') == 1
+p.write_text(s.replace('["/bin/ps",', '[' + json.dumps(sys.argv[2]) + ','))
+PY
 for marker in CLAUDE_CODE_ENTRYPOINT=sdk-ts CLAUDECODE=1 CODEX_SANDBOX=seatbelt; do
     nested_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CRAFT_SESSION_DIR=/session "$marker")"
     echo "$nested_out" | grep -q '<ca-enforcement-advisory>' && nested_ok=yes || nested_ok=no

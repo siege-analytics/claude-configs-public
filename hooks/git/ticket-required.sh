@@ -110,10 +110,10 @@ esac
 
 # Structured override with evidence chain: accepted per writing-rules:4.
 # Bare [no-ticket] without evidence: blocked. Ref: #580.
-if echo "$MESSAGE" | grep -qE '\[no-ticket:[[:space:]]+Reason:[^]]+;[[:space:]]*Evidence:[^]]+;[[:space:]]*Falsification:[^]]+\]'; then
+if grep -qE '\[no-ticket:[[:space:]]+Reason:[^]]+;[[:space:]]*Evidence:[^]]+;[[:space:]]*Falsification:[^]]+\]' <<< "$MESSAGE"; then
     exit 0
 fi
-if echo "$MESSAGE" | grep -qE '\[no-ticket\]|\[no-ticket:[[:space:]]*\]'; then
+if grep -qE '\[no-ticket\]|\[no-ticket:[[:space:]]*\]' <<< "$MESSAGE"; then
     cat >&2 <<HOOKEOF
 BLOCKED: '[no-ticket]' override now requires evidence chain.
 
@@ -135,7 +135,7 @@ fi
 
 # [task: ...] marker for work tracked outside issue trackers (spreadsheets,
 # shared docs, etc.). Lighter than [no-ticket] — still requires a description.
-if echo "$MESSAGE" | grep -qE '\[task:[[:space:]]+[^]]+\]'; then
+if grep -qE '\[task:[[:space:]]+[^]]+\]' <<< "$MESSAGE"; then
     exit 0
 fi
 
@@ -143,10 +143,10 @@ fi
 #   #NNN, repo#NNN, owner/repo#NNN  — GitHub, GitLab
 #   PROJ-NNN                        — Jira, Linear, Shortcut
 #   URL containing /issues/, /browse/, /tickets/, /merge_requests/, /pull/
-if echo "$MESSAGE" | grep -qE '(#[0-9]+|[A-Z]+-[0-9]+)'; then
+if grep -qE '(#[0-9]+|[A-Z]+-[0-9]+)' <<< "$MESSAGE"; then
     exit 0
 fi
-if echo "$MESSAGE" | grep -qE 'https?://[^[:space:]]+(/(issues|browse|tickets|merge_requests|pull|stories|tasks)/[^[:space:]]+)'; then
+if grep -qE 'https?://[^[:space:]]+(/(issues|browse|tickets|merge_requests|pull|stories|tasks)/[^[:space:]]+)' <<< "$MESSAGE"; then
     exit 0
 fi
 

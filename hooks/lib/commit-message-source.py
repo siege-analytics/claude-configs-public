@@ -432,6 +432,7 @@ def strip_space(lines):
 
 def comment_prefix(cwd):
     """Resolve Git's configured comment prefix without guessing at auto mode."""
+    prefixes = []
     for key in ("core.commentString", "core.commentChar"):
         result = subprocess.run(
             ["git", "-C", cwd, "config", "--get", key],
@@ -445,8 +446,10 @@ def comment_prefix(cwd):
         prefix = result.stdout.rstrip("\n")
         if not prefix or prefix == "auto" or "\n" in prefix:
             raise MessageSourceError("automatic or invalid comment prefix cannot be modeled")
-        return prefix
-    return "#"
+        prefixes.append(prefix)
+    if len(set(prefixes)) > 1:
+        raise MessageSourceError("conflicting core.commentChar and core.commentString cannot be modeled")
+    return prefixes[0] if prefixes else "#"
 
 
 def cleanup_message(message, mode, cwd, editing=False):
