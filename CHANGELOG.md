@@ -37,7 +37,7 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [3.5.74] -- 2026-10-20
 
-The release notes for v3.5.74 come from this section. Everything under [Unreleased] below shipped in v3.5.73 or earlier.
+The release notes for v3.5.74 come from this section. The historical cumulative notes below shipped in v3.5.73 or earlier.
 
 ### Fixed: gate holes found while adopting v3.5.73 downstream
 
@@ -47,7 +47,7 @@ The release notes for v3.5.74 come from this section. Everything under [Unreleas
 - **Links cannot carry a write out of a session's `data/` scratch folder (#1100).** Link copies and `ln` count both ends as targets. A hardlinked file is not scratch, and a copy that carries a symlink across counts its sources.
 - **Git guards match their verbs as code (#1095).** A `git commit` or `git add -A` inside a heredoc or quoted string no longer trips them. `spawn-guard` requires explicit labels.
 
-## [Unreleased]
+## [3.5.73] -- historical cumulative notes
 
 ### Fixed
 

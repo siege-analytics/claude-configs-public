@@ -83,7 +83,7 @@ import sys
 
 try:
     result = subprocess.run(
-        ["ps", "-ax", "-o", "pid=,ppid=,comm="],
+        ["/bin/ps", "-ax", "-o", "pid=,ppid=,comm="],
         capture_output=True, text=True, timeout=2, check=True,
     )
     parents = {}

@@ -16,6 +16,8 @@ HOOK="$REPO_ROOT/hooks/git/ticket-required.sh"
 # shellcheck source=./run_scenarios.sh
 source "$SCRIPT_DIR/run_scenarios.sh"
 
+export GIT_CONFIG_GLOBAL=/dev/null
+export GIT_CONFIG_NOSYSTEM=1
 TMP=$(mktemp -d)
 trap 'chmod -R u+rwX "$TMP" 2>/dev/null || true; rm -rf "$TMP"' EXIT
 FIXTURE="$TMP/repo with spaces"
@@ -554,6 +556,38 @@ print('  [PASS] 13 actual-commit cleanup controls and one command-execution nega
 PY
 then
     _HARNESS_PASS=$((_HARNESS_PASS + 14))
+else
+    _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+fi
+
+if python3 - "$HOOK" "$TMP" <<'PY'
+import json, os, pathlib, shlex, subprocess, sys
+hook, base = sys.argv[1], pathlib.Path(sys.argv[2])
+repo = base / 'promotion-controls'
+repo.mkdir()
+subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+subprocess.run(['git', '-C', str(repo), 'remote', 'add', 'origin',
+                'https://github.com/siege-analytics/ticket-fixture.git'], check=True)
+def run(message, options=''):
+    path = repo / 'message.txt'; path.write_text(message)
+    command = 'git commit -F ' + shlex.quote(str(path)) + ' ' + options
+    payload = {'cwd': str(repo), 'tool_input': {'command': command, 'cwd': str(repo)}}
+    return subprocess.run(['bash', hook], cwd=repo, input=json.dumps(payload),
+                          text=True, capture_output=True, timeout=20)
+for prefix in ('Refs: #994', '[task: meaningful external task]',
+               'https://tracker.example/issues/994',
+               '[no-ticket: Reason: fixture; Evidence: local; Falsification: tracked]'):
+    result = run(prefix + '\n\n' + 'long body\n' * 30000)
+    assert result.returncode == 0, (prefix, result.stderr)
+for key, value in (('core.commentChar', ';'), ('core.commentString', '//')):
+    subprocess.run(['git', '-C', str(repo), 'config', key, value], check=True)
+result = run('subject\n\n; ------------------------ >8 ------------------------\nRefs: #994\n',
+             '-e --cleanup=scissors')
+assert result.returncode == 2 and 'conflicting' in result.stderr, result.stderr
+print('  [PASS] four large-message controls and conflicting comment-prefix negative')
+PY
+then
+    _HARNESS_PASS=$((_HARNESS_PASS + 5))
 else
     _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
 fi
