@@ -11,8 +11,13 @@
 #   - .write.parquet(...s3a://...)
 #   - .write.format("delta").save(...s3a://...)
 #   - .write.format("iceberg").save(...s3a://...)
-#   - mc cp ... s3://{hive-warehouse,silver,gold,bronze}/...
-#   - aws s3 cp ... s3://{hive-warehouse,silver,gold,bronze}/...
+#   - mc cp/mirror ... s3://{hive-warehouse,silver,gold,bronze,...}/...
+#   - aws s3 cp/sync ... s3://{hive-warehouse,silver,gold,bronze,...}/...
+#
+# Classification is invocation-aware: each pipeline/control-list segment is
+# inspected by its effective program after supported wrappers. Quoted prose is
+# not treated as execution, while active shell payloads and substitutions are
+# recursively inspected without eval or shell execution.
 #
 # False-positive policy: err on the side of firing. The agent can re-read
 # unity-catalog skill and confirm intent before proceeding; that's cheaper
@@ -27,72 +32,37 @@ INPUT=$(cat)
 # Extract the command text. For Bash the tool input is like:
 #   {"tool": "Bash", "tool_input": {"command": "...", "description": "..."}}
 HOOKS_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+set +e
 COMMAND=$(printf '%s' "$INPUT" \
   | python3 "$HOOKS_DIR/lib/extract-json.py" tool_input.command \
-  2>/dev/null || echo "")
+  2>/dev/null)
+EXTRACT_STATUS=$?
+set -e
 
-if [ -z "$COMMAND" ]; then
+if [ "$EXTRACT_STATUS" -ne 0 ] || [ -z "$COMMAND" ]; then
+  echo "[catalog-guard] STOP. Could not extract a nonempty Bash command from hook input." >&2
+  exit 2
+fi
+
+# Classify the raw command as data. The classifier does not eval, expand, or
+# execute any part of it. Exit 2 is a policy match; any other nonzero status is
+# treated as a classifier failure and blocks rather than silently disabling the
+# enforcement hook.
+CLASSIFIER="$HOOKS_DIR/lib/classify-catalog-command.py"
+set +e
+REASON=$(printf '%s' "$COMMAND" | python3 "$CLASSIFIER")
+CLASSIFIER_STATUS=$?
+set -e
+
+if [ "$CLASSIFIER_STATUS" -eq 0 ]; then
   exit 0
 fi
-
-# The guard only fires when the command EXECUTES code that performs a write.
-# It skips commands that merely *contain* a dangerous-looking pattern as text
-# (git commits, gh issue/pr bodies, echo/printf/cat building docs or JSON,
-#  sed/awk manipulations). The heuristic: require the command to START with
-# a Python/Spark execution prefix AND contain the dangerous pattern. This
-# is conservative — false negatives (missing a truly dangerous command) are
-# worse than false positives, but the latter have bitten us repeatedly.
-
-# First token — what's actually being executed
-FIRST_TOKEN=$(printf '%s' "$COMMAND" | awk '{print $1}')
-
-# Only scan when the command is clearly executing code
-EXECUTES_CODE=0
-case "$FIRST_TOKEN" in
-  python|python3|pyspark|spark-submit|spark-sql|bash|sh|/snap/bin/kubectl|kubectl)
-    EXECUTES_CODE=1
-    ;;
-esac
-
-# Also match when python is invoked via a common wrapper with -c / heredoc
-if echo "$COMMAND" | grep -qE '(^|\s)(python3?\s+(-c|-m|<<|/tmp/.*\.py))'; then
-  EXECUTES_CODE=1
+if [ "$CLASSIFIER_STATUS" -ne 2 ] || [ -z "$REASON" ]; then
+  echo "[catalog-guard] STOP. Command classification failed (exit $CLASSIFIER_STATUS)." >&2
+  exit 2
 fi
 
-if [ "$EXECUTES_CODE" -eq 0 ]; then
-  exit 0
-fi
-
-# Dangerous pattern matches. Use grep -iE with alternation.
-DANGER=0
-REASON=""
-
-# 1. Raw-path writes from Python/Spark code
-if echo "$COMMAND" | grep -qiE '\.write\.(save|parquet|text|json|csv)\s*\(.*s3a?://'; then
-  DANGER=1
-  REASON="Python/Spark raw-path write (.write.save/parquet/etc. with s3 path)"
-fi
-if echo "$COMMAND" | grep -qiE '\.write\.format\s*\(\s*"?(delta|iceberg|parquet)"?\s*\)\.(save|mode)'; then
-  if echo "$COMMAND" | grep -qiE 'save\s*\(.*s3a?://'; then
-    DANGER=1
-    REASON="Spark write.format().save() with raw s3 path — bypasses catalog"
-  fi
-fi
-
-# 2. s3/mc direct copies into catalog-managed buckets
-if echo "$COMMAND" | grep -qiE '(aws s3 cp|aws s3 sync|mc cp|mc mirror).*(s3a?://(hive-warehouse|silver|gold|bronze|bullion|platinum|quicksilver)/)'; then
-  DANGER=1
-  REASON="Direct S3 copy into catalog-managed bucket"
-fi
-
-# 3. kubectl exec + python3 + .write.save pattern (the one that bit us)
-if echo "$COMMAND" | grep -qiE 'kubectl.*exec.*python3' && \
-   echo "$COMMAND" | grep -qiE '\.write\.format\s*\(\s*"?(delta|iceberg|parquet)"?\s*\)'; then
-  DANGER=1
-  REASON="kubectl exec + Python + Spark Delta write — likely catalog bypass"
-fi
-
-if [ "$DANGER" -eq 1 ]; then
+if [ -n "$REASON" ]; then
   cat >&2 <<EOF
 [catalog-guard] STOP. The command matches a catalog-bypass pattern:
 

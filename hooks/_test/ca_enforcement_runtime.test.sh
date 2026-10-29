@@ -99,6 +99,42 @@ f4c_out="$(run_ca -u CLAUDECODE CLAUDE_PROJECT_DIR=/x CRAFT_RPC_PORT=9100)"
 echo "$f4c_out" | grep -q '"continue": false' && f4c_block=yes || f4c_block=no
 check "F4: CLAUDE_PROJECT_DIR + CRAFT_* still blocks" "$f4c_block"
 
+# Mixed markers from a real packaged Craft ancestor must permit recovery.
+# ps is stubbed at the OS-observation boundary, not with an enforcement bypass.
+mkdir -p "$TMP/process-fixture"
+cat > "$TMP/process-fixture/ps" <<'EOF'
+#!/bin/bash
+ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
+printf '%s 1 /Applications/Craft Agents.app/Contents/MacOS/Craft Agents\n' "$ancestor"
+EOF
+chmod +x "$TMP/process-fixture/ps"
+for marker in CLAUDE_CODE_ENTRYPOINT=sdk-ts CLAUDECODE=1 CODEX_SANDBOX=seatbelt; do
+    nested_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CRAFT_SESSION_DIR=/session "$marker")"
+    echo "$nested_out" | grep -q '<ca-enforcement-advisory>' && nested_ok=yes || nested_ok=no
+    check "verified Craft ancestor + $marker permits advisory recovery" "$nested_ok"
+done
+cat > "$TMP/process-fixture/ps" <<'EOF'
+#!/bin/bash
+ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
+printf '%s 1 /Applications/Other.app/Contents/MacOS/Other\n' "$ancestor"
+printf '999999 1 /Applications/Craft Agents.app/Contents/MacOS/Craft Agents\n'
+EOF
+foreign_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts)"
+echo "$foreign_out" | grep -q '"continue": false' && foreign_ok=yes || foreign_ok=no
+check "unrelated Craft process cannot establish ancestry" "$foreign_ok"
+cat > "$TMP/process-fixture/ps" <<'EOF'
+#!/bin/bash
+ancestor=$(/bin/ps -p "$PPID" -o ppid= | tr -d ' ')
+printf '%s 1 /tmp/Craft Agents.app/Contents/MacOS/Craft Agents\n' "$ancestor"
+EOF
+lookalike_out="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts)"
+echo "$lookalike_out" | grep -q '"continue": false' && lookalike_ok=yes || lookalike_ok=no
+check "a lookalike temporary app path cannot establish host identity" "$lookalike_ok"
+printf '#!/bin/bash\nexit 1\n' > "$TMP/process-fixture/ps"
+failed_ps="$(run_ca PATH="$TMP/process-fixture:$PATH" CRAFT_IS_PACKAGED=true CLAUDE_CODE_ENTRYPOINT=sdk-ts)"
+echo "$failed_ps" | grep -q '"continue": false' && failed_ok=yes || failed_ok=no
+check "failed ancestry probe keeps standalone block" "$failed_ok"
+
 # F3: a child-emitted continue:false passes through verbatim, hard, even in craft.
 cat > "$TMP/hooks/resolver/think-gate-guard.sh" <<'EOF'
 #!/bin/bash

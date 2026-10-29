@@ -20,9 +20,9 @@ bash bin/install.sh --workspace <slug>     # one-shot
 bash bin/harmonize.sh --workspace <slug>   # recurring / unattended (idempotent)
 ```
 
-Both end by running `bin/verify-enforcement.sh`, which fails loudly if
-enforcement did not actually come up. That probe is the contract: green means
-live, not merely present.
+Both end by running `bin/verify-enforcement.sh`, which checks deployment,
+local hook behavior, and native Git enforcement. A green result establishes
+those local checks; a live backend turn is still required to prove host delivery.
 
 ## How CA blocking works
 
@@ -35,14 +35,30 @@ must be the only thing on stdout.
 `hooks/resolver/ca-enforcement-gate.sh` is that wrapper. It runs the advisory
 gates (`think-gate-guard`, `investigate-gate-guard`, `skill-enforcement-gate`),
 scans their output for blocking signals (STALE DESIGN, BLOCKED, missing
-investigation, and similar), and converts a block into `continue:false`. It is
-always active; the opt-in env switch was removed in #572 because an opt-in
-enforcement gate is itself an honor-system hole.
+investigation, and similar), and consults the manifest's per-runtime policy.
+These three prompt checks are advisory in Craft: hard-stopping the prompt
+would prevent the model from answering status questions or repairing missing
+artifacts. Action-level mutation/write gates and native Git hooks still enforce
+their own requirements. Explicit child `continue:false` decisions remain hard
+stops. The wrapper is always active; no opt-in switch is required.
+
+Craft's SDK child legitimately carries both Craft and Claude markers. When
+markers overlap, the wrapper corroborates a packaged macOS Craft ancestor using
+OS process metadata for `/Applications/Craft Agents.app/Contents/MacOS/Craft Agents`.
+Temporary lookalike bundle paths are rejected. Standalone spoofed markers, unavailable process metadata,
+and unrecognized mixed-marker hosts retain fail-closed blocking. Other host
+forms need equivalent observed ancestry support before claiming recovery parity.
+
+The registry manifest must be installed at `hooks/enforcement-manifest.json`.
+The root copy is retained for audit consumers, but does not satisfy runtime
+lookup. The verifier checks this deployment boundary explicitly.
 
 CA does not expose a first-class end-of-turn or PreToolUse deny action through
 `automations.json` (only `prompt` and `webhook` actions). Push-time gates that
-need a hard block therefore run as native git `pre-push` hooks, and turn-level
-gates run as the `UserPromptSubmit` `continue:false` wrapper above.
+need a hard block therefore run as native git `pre-push` hooks. Prompt-time
+diagnostics use the runtime-aware wrapper above. Verify each backend's actual
+tool-hook delivery separately; shared packaged files do not prove a live Codex
+or Claude backend invoked them.
 
 ## Rules reach the model through CLAUDE.md
 
@@ -82,7 +98,7 @@ The installer must not silently flatten or overwrite that content.
 
 | File | Purpose |
 |---|---|
-| `automations-snippet.json` | The standing-order watchdog (`SchedulerTick`) and completion audit (`SessionStatusChange`). Registered into the workspace `automations.json` by `bin/wire-enforcement.py`. Merged by (event, name): re-runs replace in place and never drop a consumer's own automations. |
+| `automations-snippet.json` | Optional standing-order watchdog (`SchedulerTick`) and completion audit (`SessionStatusChange`). Register with `bin/wire-enforcement.py --include-standing-order-automations` only when periodic session creation is wanted. Merged by (event, name), preserving operator automations. |
 | `standing-order-watchdog.json` | Reference spec for the watchdog: the failure case, signal-file schema, completion criteria, and the runtime split between Claude Code (hook) and Craft Agent (automation). |
 
 Generated artifacts (`enforcement-manifest.json`, `settings-enforcement.json`,
@@ -110,12 +126,13 @@ to `safe`.
    native git hook.
 2. `bin/install-hooks.sh` writes `.claude/settings.json` from the base snippet.
    It overwrites that file, so it must run before the enforcement merge.
-3. `bin/wire-enforcement.py --workspace <ws>` merges the blocking
-   `ca-enforcement-gate.sh` wrapper into `.claude/settings.json` and registers
-   the watchdog automations. This is the last writer to settings.json, which is
+3. `bin/wire-enforcement.py --workspace <ws>` merges the runtime-aware
+   `ca-enforcement-gate.sh` wrapper into `.claude/settings.json`. Watchdog
+   automations require the explicit opt-in flag. This is the last writer to settings.json, which is
    why the merge cannot be clobbered. It is idempotent.
-4. `bin/verify-enforcement.sh --target <ws> --mode craft-agent` proves it is
-   live: a real block test plus the wiring assertions. Non-zero means dark.
+4. `bin/verify-enforcement.sh --target <ws> --mode craft-agent` checks local
+   conversion behavior, registry recovery policy, wiring and native Git probes.
+   Non-zero means a failed local check. Then verify a bounded live backend turn.
 
 `bin/install.sh` runs steps 1 to 4 in order. `bin/harmonize.sh` is the
 idempotent wrapper a recurring job should call so that harmonisation re-wires

@@ -1896,6 +1896,9 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
         manifest_src = ca_dist / "enforcement-manifest.json"
         if manifest_src.exists():
             shutil.copy2(manifest_src, craft_workspace / "enforcement-manifest.json")
+            # gate-registry.sh resolves only these trusted colocated bytes in
+            # installed layouts. The root copy is retained for audit clients.
+            shutil.copy2(manifest_src, craft_workspace / "hooks" / "enforcement-manifest.json")
 
         # Install selector and review-policy runtimes used by prompt/native hooks.
         # Hooks execute relative to the workspace root after deployment, so

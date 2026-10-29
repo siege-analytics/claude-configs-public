@@ -73,21 +73,46 @@ _ca_gate_id() {
 # default, when unresolved) -- NOT gate_runtime_policy, whose advisory-default
 # was the review-found disablement bug (#892 FU1 review).
 #
-# Craft-forcing guard (#892 FU1 review f4): a spoofed CRAFT_* var in a real
-# Claude Code session (CLAUDECODE set) must not downgrade enforcement. When both
-# a craft marker and CLAUDECODE are present we do NOT downgrade -- treat it as
-# the recoverable claude-code path and block.
+# Mixed markers are normal for Craft's SDK child. Only an OS-observed packaged
+# Craft ancestor may resolve that ambiguity; environment markers alone cannot.
+_ca_has_craft_ancestor() {
+    python3 - <<'PY' 2>/dev/null
+import os
+import subprocess
+import sys
+
+try:
+    result = subprocess.run(
+        ["ps", "-ax", "-o", "pid=,ppid=,comm="],
+        capture_output=True, text=True, timeout=2, check=True,
+    )
+    parents = {}
+    for line in result.stdout.splitlines():
+        fields = line.strip().split(None, 2)
+        if len(fields) == 3 and fields[0].isdigit() and fields[1].isdigit():
+            parents[int(fields[0])] = (int(fields[1]), fields[2])
+    pid = os.getppid()
+    visited = set()
+    for _ in range(24):
+        if pid <= 1 or pid in visited or pid not in parents:
+            break
+        visited.add(pid)
+        parent, executable = parents[pid]
+        if executable == "/Applications/Craft Agents.app/Contents/MacOS/Craft Agents":
+            sys.exit(0)
+        pid = parent
+except (OSError, subprocess.SubprocessError, ValueError):
+    pass
+sys.exit(1)
+PY
+}
+
 _ca_gate_blocks() {
     [ -n "$_CA_RUNTIME" ] || return 0
     command -v gate_runtime_policy_strict >/dev/null 2>&1 || return 0
-    # Do not honor a craft downgrade when a competing child-runtime marker is
-    # ALSO present (ambiguous / spoofable). detect_host tests craft first, so a
-    # stray CRAFT_* var in a real claude-code OR codex session would otherwise
-    # force craft and downgrade enforcement. Reuse detect-host's OWN marker
-    # arrays via _detect_host_any_set so this guard can never drift from the
-    # detector's claude-code/codex marker sets -- the round-2 fix hardcoded a
-    # 3-var subset and missed CLAUDE_CODE_ENTRYPOINT / CLAUDE_PROJECT_DIR
-    # (#892 FU1 review r3 finding #2).
+    # Craft really spawns Claude/Codex children. Reject ambiguous markers only
+    # when the host cannot be corroborated by process ancestry. This preserves
+    # standalone anti-spoof behavior without deadlocking a real Craft session.
     # Guard the array expansions for `set -u`: on bash 3.2 (macOS) an empty or
     # unset array expands to an unbound-variable error, which under this hook's
     # `set -euo pipefail` would ABORT before emitting any block/advisory JSON --
@@ -97,7 +122,7 @@ _ca_gate_blocks() {
     if [ "$_CA_RUNTIME" = "craft" ] && command -v _detect_host_any_set >/dev/null 2>&1; then
         if _detect_host_any_set "${_DETECT_HOST_CLAUDE_VARS[@]-}" 2>/dev/null \
            || _detect_host_any_set "${_DETECT_HOST_CODEX_VARS[@]-}" 2>/dev/null; then
-            return 0
+            _ca_has_craft_ancestor || return 0
         fi
     fi
     local gid; gid="$(_ca_gate_id "$1")"

@@ -61,6 +61,11 @@ def main() -> int:
         return 2
 
     repo_hooks = hook_files(repo)
+    # This runtime manifest is generated rather than tracked under hooks/.
+    # Deployment must include it, and drift verification must compare its bytes.
+    manifest = repo / "dist" / "craft-agent" / "enforcement-manifest.json"
+    if manifest.is_file():
+        repo_hooks["enforcement-manifest.json"] = sha256(manifest)
     ws_hooks = hook_files(ws)
     if not ws_hooks:
         errors.append({"type": "missing-hooks", "path": "hooks/", "detail": "workspace hooks directory missing or empty"})

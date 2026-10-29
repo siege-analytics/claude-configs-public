@@ -154,6 +154,31 @@ MOCK
     fi
 fi
 
+# Installed registry lookups must work without the source checkout's dist tree.
+# A root-only audit manifest used to pass verification while live prompt hooks
+# failed closed and stopped every recovery turn in Craft.
+if [[ "$MODE" == "craft-agent" ]]; then
+    if [[ ! -r "$HOOKS_ROOT/enforcement-manifest.json" ]]; then
+        fail "registry manifest missing: $HOOKS_ROOT/enforcement-manifest.json (Craft recovery would hard-stop)"
+    elif python3 - "$HOOKS_ROOT/enforcement-manifest.json" <<'PY'
+import json, sys
+try:
+    manifest = json.load(open(sys.argv[1]))
+    gates = {g['id']: g for g in manifest['gates']}
+    if len(gates) != len(manifest['gates']) or not all(
+            gates[gid]['runtime_policy']['craft'] == 'advisory'
+            for gid in ('think-gate', 'investigate-gate', 'skill-enforcement-gate')):
+        sys.exit(1)
+except (OSError, ValueError, KeyError, TypeError):
+    sys.exit(1)
+PY
+    then
+        ok "colocated registry manifest permits Craft prompt recovery"
+    else
+        fail "registry manifest does not declare Craft advisory recovery for all three prompt gates"
+    fi
+fi
+
 # --- Check 2: settings register the blocking wrapper on UserPromptSubmit ------
 
 if [[ ! -f "$SETTINGS" ]]; then
