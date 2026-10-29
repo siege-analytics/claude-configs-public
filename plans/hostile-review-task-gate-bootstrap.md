@@ -1,10 +1,10 @@
 # Independent task-gate guidance review
 
-Reviewed 2026-10-29, branch `bugfix/task_gate_bootstrap`, HEAD `07c26d5ba8a0a6b06e87b5ba2adf51aa08310e7a` plus revised uncommitted diff against `origin/main`: four files, 45 additions and one deletion. Read the corrected recovery plan. Review-only; no source, runtime or user session changes made.
+Reviewed 2026-10-29 in two bounded source rounds on branch `bugfix/task_gate_bootstrap`; exact source commit `b324824150c1ad91a7c3f78d940ca5c4eb4ad96f` approved against `origin/main`. Read the corrected recovery plan. Review-only; no source, runtime or user session changes made.
 
 ## Verdict: no must-fix findings in the revised scope
 
-The final repair teaches the existing per-task contract and improves the actionable denial. It does not alter session identity recovery, path ownership, task selection, execution classification, status enforcement or effective review tiers. The new helper only constructs error text. Kernel and think guidance consistently require an own-session task, explicit identity and target repository scope, without inventing a hash or issue prerequisite.
+The initial guidance repair teaches the existing per-task contract and improves the actionable denial. The final amendment rejects unresolved templates but does not alter session identity recovery, path ownership, task selection, execution classification, status enforcement or effective review tiers. The new helper only constructs error text. Kernel and think guidance consistently require an own-session task, explicit identity and target repository scope, without inventing a hash or issue prerequisite.
 
 The original experimental identity recovery and its tests are entirely removed. My earlier explicit-workspace consistency finding concerned that experiment and does not apply to the shipped diff. No speculative identity repair is required for this scope.
 
@@ -35,3 +35,7 @@ Independently ran the new template safety test plus denial guidance, plain-slug 
 The stricter failure behavior is intentional: any malformed directory binding disables environment identity resolution, including a lower-priority variable alongside a valid Craft directory or explicit environment ID. Repairing that malformed binding restores the established precedence; fallback is unsafe because `own_session_path` independently chooses a directory root. Existing explicit function `session_id` arguments and CLI `--session-id` remain trusted caller overrides; this check does not claim to abolish that API. The actual `--action-json` mutation path uses environment resolution and does not take such an explicit caller argument. No session-anchor source change or speculative workspace scanning is present.
 
 The earlier proposed workspace-recovery CLI finding still does not apply: that feature remains removed. Final acceptance still requires the coordinator's full checks and deployment/UAT receipts.
+
+## Exact source commit approval
+
+Independent reviewer approved `b324824150c1ad91a7c3f78d940ca5c4eb4ad96f` against `origin/main`, with no must-fix. This follow-up corrects review-stage wording only; it changes no executable source or runtime policy.

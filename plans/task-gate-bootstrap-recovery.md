@@ -21,12 +21,12 @@ Alternatives: a global signal/override would recreate cross-task interference; p
 
 - Tiger: guidance is mistaken for broader authority. Retain existing own-session lifecycle boundaries and cross-session negative tests.
 - Tiger: source registration or unrelated task changes affect the fix. Preserve task matching; test independent designing and implementing tasks with arbitrary stable slugs and exact bindings.
-- Tiger: shell environment output is mistaken for actual callback evidence. Require live Write and Bash probes; leave identity resolution unchanged.
+- Tiger: shell environment output is mistaken for actual callback evidence. Require live Write and Bash probes; leave identity recovery unchanged and reject unresolved templates.
 - Tiger: diagnostics are mistaken for task approval. The message describes opening the task; existing status, scope and tier checks still decide the subsequent mutation.
 
 ## Peer review
 
-Independent Codex review found no must-fix in the guidance repair or the narrow template rejection; five focused checks passed for each review. The configs hub assigned its existing cross-model reviewer, which demonstrated the synthetic template isolation flaw and is reviewing the repair. Review must check unchanged identity handling, arbitrary-slug bootstrap, cross-session negatives and unchanged task-tier semantics. Results will be recorded before source promotion.
+Independent Codex review found no must-fix in the guidance repair or the narrow template rejection; five focused checks passed for each review. The configs hub assigned its existing cross-model reviewer, which demonstrated the synthetic template isolation flaw and is reviewing the repair. Review must check unchanged identity recovery and template rejection, arbitrary-slug bootstrap, cross-session negatives and unchanged task-tier semantics. Results will be recorded before source promotion.
 
 ## Lead review
 
@@ -34,7 +34,7 @@ The approved #1051 contract remains unchanged: reads and own signal lifecycle op
 
 ## Quantified claims
 
-Local task-keyed suite: 52 tests passed in 272.910s before the final template rejection; its new dedicated negative passed separately, with five independent identity/isolation checks also passing. The unchanged session-anchor suite passed 13/13. Build succeeded. Full hook scenarios, generated catalog freshness and exact-commit review are still running; promotion requires their results. Actual GA own-task Write, Bash scaffolding, evidence writes and status transition succeeded under original hooks; the report process is running, without a completion claim. No all-runtime parity claim is made.
+Local task-keyed suite: 52 tests passed in 272.910s before the final template rejection; its new dedicated negative passed separately, with five independent identity/isolation checks also passing. The unchanged session-anchor suite passed 13/13. Build succeeded. Build, kernel budget, generated-source authority, skill inventory and review-risk checks pass. Independent exact-source review approved b324824. Full hook scenarios and the cross-model configs review remain required before promotion. Actual GA own-task Write, Bash scaffolding, evidence writes and status transition succeeded under original hooks; the report completed and its PDF exists; the GA session reports no source changes, overrides or shared-gate writes. PDF contents were not inspected. No all-runtime parity claim is made.
 
 ## Test plan
 
