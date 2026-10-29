@@ -44,16 +44,20 @@ closed. A reply-only live Codex check does not prove its tool-hook delivery.
 
 ## Quantified claims
 
-- Full hook run: 45/46 initially passed. The four failing read cases used a Linux
-  procfs path absent on macOS. A real root symlink now exercises the same escape;
-  the rerun passed 354 cases. Updated focused suites are rerun after review fixes.
+- All 46 hook suites pass after the affected-suite reruns. The four initial
+  read-case failures used a Linux procfs path absent on macOS. A real root symlink
+  now exercises the same escape; that suite passes 354 cases. Final targeted
+  results: 133 ticket cases, 15 runtime cases, 41 verifier cases, 5 malformed/KB
+  diagnostic cases, and 398 imported classifier cases. Task-keyed coverage also
+  passed all 50 tests.
 - Independent review: 15 runtime checks, 72 real-commit comparisons with zero
   mismatches, six optimized/unoptimized manifest controls, and a trailer-command
   non-execution sentinel.
-- Package/deployment tests: 12/14 initially passed. Immutable-generation tests
-  require the modified build tool to be in the committed source snapshot;
-  registration tests also need physical macOS temporary paths. These two suites
-  will be rerun after this local checkpoint with TMPDIR=/private/tmp.
+- All 14 selected package/deployment/authority suites pass. After the source
+  checkpoint, immutable generation passed 19 tests and selected registration
+  passed 14 tests with physical TMPDIR=/private/tmp. The initial failures were
+  source-snapshot mismatch and the macOS /var symlink, respectively; neither was
+  silenced by weakening the implementation's provenance/path checks.
 - Live installed Claude session returned CRAFT_RECOVERY_OK; a separate Craft
   ChatGPT session using pi/gpt-6.1-sol returned CODEX_CRAFT_RECOVERY_OK. The older
   pi/gpt-5.5 option was rejected by the service and was removed from that local
@@ -61,7 +65,10 @@ closed. A reply-only live Codex check does not prove its tool-hook delivery.
 
 ## Test plan
 
-Complete immutable package/registration checks against the committed snapshot,
-regenerate packages and inventories, verify freshness, install only the reviewed
-runtime overlay with backups, then run installed allow/deny controls and a final
-bounded live response check. Do not publish a release or mark unrun checks passed.
+Immutable package/registration checks are complete. Regenerated packages and
+inventories are checked for freshness. The current workspace passes local
+enforcement probes, including native push deny/allow controls. The operator has
+also explicitly authorized develop-to-main promotion. After green hosted checks
+and promotion, install the canonical main revision with a rollback backup, then
+repeat installed allow/deny and bounded live response checks. The historical
+architecture audit is a subsequent, separately recorded deliverable.

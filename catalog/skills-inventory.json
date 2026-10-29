@@ -4908,6 +4908,7 @@
         "bin/_test/wire_enforcement_automations_test.py",
         "bin/_test/work_cycle_test.py",
         "hooks/_test/ca_enforcement_gate.test.sh",
+        "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/coordination_alias.test.sh",
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -5378,6 +5379,7 @@
         "hooks/_test/block_log_advisory_utc.test.sh",
         "hooks/_test/broad_staging.test.sh",
         "hooks/_test/ca_enforcement_manifest.test.sh",
+        "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/commit_detector.test.sh",
         "hooks/_test/coordination_alias.test.sh",
         "hooks/_test/coordinator_status_guard.test.sh",
@@ -8728,6 +8730,7 @@
         "bin/_test/resolve_load_set_test.py",
         "bin/_test/scanner_source_test.py",
         "bin/_test/skill_inventory_test.py",
+        "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "scripts/ci/test_flat_skill_layout.sh"
@@ -8811,6 +8814,7 @@
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/branch_state_advisory.test.sh",
         "hooks/_test/broad_staging.test.sh",
+        "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/commit_detector.test.sh",
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/detect_ai_fingerprints.test.sh",
@@ -8892,6 +8896,7 @@
       "slug": "compound",
       "source_path": "skills/compound/SKILL.md",
       "test_evidence": [
+        "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
       ],
@@ -10667,6 +10672,7 @@
         "hooks/_test/block_log_advisory_utc.test.sh",
         "hooks/_test/broad_staging.test.sh",
         "hooks/_test/ca_enforcement_manifest.test.sh",
+        "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/commit_detector.test.sh",
         "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
@@ -11434,6 +11440,7 @@
         "bin/_test/data_scope_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/resolve_load_set_test.py",
+        "hooks/_test/catalog_guard.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/read_allowlist.test.sh",
         "skills/detect-ai-fingerprints/test_writing_code_8.sh"
