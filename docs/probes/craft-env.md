@@ -1,5 +1,21 @@
 # Probe: Craft Agents environment variables
 
+## Local packaged macOS observation, 2026-10-29
+
+The live SDK child under `/Applications/Craft Agents.app` carried
+`CRAFT_IS_PACKAGED=true`, `CRAFT_SESSION_DIR` naming its physical Craft session,
+and `CLAUDE_CODE_ENTRYPOINT=sdk-ts`. The probe selected only these marker names;
+credential values were not printed. Its OS process ancestry terminates at
+`/Applications/Craft Agents.app/Contents/MacOS/Craft Agents`.
+
+Mixed Craft/Claude markers are therefore expected, not evidence of spoofing.
+`ca-enforcement-gate.sh` corroborates ambiguous markers with packaged Craft
+process ancestry before honoring Craft's advisory prompt policy. An unrelated
+Craft process cannot establish ancestry. Unsupported host shapes and failed
+process probes retain hard blocking. No live Codex-backend result is implied.
+
+## Earlier server capture
+
 Evidence for the signals used by `hooks/lib/detect-host.sh`. Captured
 2026-09-01 against `craft-agent` 0.10.4 on cyberpower.
 

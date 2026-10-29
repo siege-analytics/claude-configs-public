@@ -128,6 +128,10 @@ except Exception as e:
     print(f'WARN: think-gate.json is malformed: {e}')
     sys.exit(0)
 
+if not isinstance(data, dict):
+    print('STALE DESIGN: think-gate.json must contain an object. Repair the signal before acting.')
+    sys.exit(0)
+
 ticket = data.get('ticket', 'unknown')
 # Support both schema field names
 design_note = data.get('design_note') or data.get('design_note_location', 'not specified')
@@ -152,6 +156,10 @@ if not claims:
     sys.exit(0)
 
 # Detect schema: Schema A has 'file'+'grep', Schema B has 'claim'+'falsifier'
+if not isinstance(claims, list) or any(not isinstance(c, dict) for c in claims):
+    print('STALE DESIGN: claims must be a list of objects. Repair the signal before acting.')
+    sys.exit(0)
+
 def is_machine_verifiable(claim):
     return bool(claim.get('file')) and bool(claim.get('grep'))
 

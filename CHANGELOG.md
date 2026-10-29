@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented here. Versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed: Craft prompt recovery and reviewed hook repairs
+
+- Restore advisory prompt recovery for a verified packaged Craft host with nested Claude/Codex markers. Standalone spoofing controls and explicit child hard stops remain enforced.
+- Deploy the registry manifest beside the hooks and verify that location, preventing an installed workspace from hard-stopping every status question.
+- Resolve direct commit message sources and use Git's configured comment cleanup, including custom comment prefixes and editor-dependent scissors behavior (#994, PR #1111).
+- Reconcile the invocation-aware catalog guard with current develop and preserve both helpers' high-risk review classification (#993, PR #999).
+- Correct setup guidance: Craft supports Claude SDK hooks, mounts the compact kernel, and keeps the broad rules bundle for on-demand reference. Live backend enforcement must be observed separately.
+
 ## [3.5.77] -- 2026-10-22
 
 ### Fixed: the block log can be counted (#1119)
@@ -38,6 +48,10 @@ The release notes for v3.5.74 come from this section. Everything under [Unreleas
 - **Git guards match their verbs as code (#1095).** A `git commit` or `git add -A` inside a heredoc or quoted string no longer trips them. `spawn-guard` requires explicit labels.
 
 ## [Unreleased]
+
+### Fixed
+
+- **Modeled direct commit messages use effective contents for ticket enforcement (#994).** After its existing fast skip and detector, the hook resolves literal `-m`/`--message` forms, a bounded `$(cat <<...)` form only when its opener is outside shell quotes, trailers, default `#` cleanup (including the `-e`/`--edit` strip default), and bounded regular `-F`/`--file` sources. Ticketless or indeterminate direct messages and invalid sources fail closed; large multiline files may also fail closed pending a pipeline follow-up. Non-default `core.commentChar`/`core.commentString` cleanup remains #1112 work. Alias, wrapper, compound-command, editor mutation, and dynamic dispatch remain outside this change; #1107 tracks the dispatch class.
 
 ### Changed: task-keyed, proportional task gates (#1051, #1086)
 

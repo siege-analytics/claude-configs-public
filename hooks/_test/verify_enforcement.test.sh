@@ -63,6 +63,7 @@ JSON
 mkdir -p "$WIRED/.githooks" "$WIRED/bin" "$WIRED/catalog"
 cp "$REPO_ROOT/.githooks/pre-push" "$WIRED/.githooks/pre-push"
 cp -R "$REPO_ROOT/hooks/git" "$REPO_ROOT/hooks/lib" "$WIRED/hooks/"
+cp "$REPO_ROOT/dist/craft-agent/enforcement-manifest.json" "$WIRED/hooks/"
 cp "$REPO_ROOT/bin/review-risk.py" "$WIRED/bin/"
 cp "$REPO_ROOT/catalog/review-risk-policy.json" "$WIRED/catalog/"
 
@@ -71,6 +72,25 @@ if bash "$PROBE" --target "$WIRED" --mode craft-agent >/dev/null 2>&1; then
 else
     bad "fully-wired fixture should pass but did not"
 fi
+
+mv "$WIRED/hooks/enforcement-manifest.json" "$TMP/registry-manifest.json"
+missing_registry="$(bash "$PROBE" --target "$WIRED" --mode craft-agent 2>&1)"
+if [[ $? -ne 0 && "$missing_registry" == *'registry manifest missing'* ]]; then
+    ok "root audit manifest cannot hide a missing colocated registry manifest"
+else
+    bad "missing registry manifest must fail verification"
+fi
+mv "$TMP/registry-manifest.json" "$WIRED/hooks/enforcement-manifest.json"
+
+cp "$WIRED/hooks/enforcement-manifest.json" "$TMP/registry-manifest.json"
+printf '{"gates":[]}\n' > "$WIRED/hooks/enforcement-manifest.json"
+optimized_registry="$(PYTHONOPTIMIZE=1 bash "$PROBE" --target "$WIRED" --mode craft-agent 2>&1)"
+if [[ $? -ne 0 && "$optimized_registry" == *'does not declare Craft advisory recovery'* ]]; then
+    ok "optimized Python still rejects missing recovery policies"
+else
+    bad "optimized Python must not disable registry validation"
+fi
+mv "$TMP/registry-manifest.json" "$WIRED/hooks/enforcement-manifest.json"
 
 # An interactive install hands the probe a stdin that never closes (a TTY).
 # The probe must not read it: give it an open, silent pipe and a deadline.

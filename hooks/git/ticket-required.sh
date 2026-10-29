@@ -52,8 +52,13 @@ _FAST_RE='(^|[^[:alnum:]])git commit([^[:alnum:]]|$)'
 if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE || "$_FAST_BUILT" =~ $_FAST_RE ]]; then exit 0; fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
+MESSAGE_SOURCE="$HOOK_DIR/../lib/commit-message-source.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
-CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.cwd 2>/dev/null || true)
+if [[ -z "$CWD" ]]; then
+    CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+fi
+CWD="${CWD:-$PWD}"
 
 # If parse fails or command is empty, allow
 if [[ -z "$COMMAND" ]]; then
@@ -80,12 +85,35 @@ if echo "$COMMAND" | grep -qE -- '--amend|--no-edit'; then
     exit 0
 fi
 
+# Resolve only direct literal -m and -F/--file sources (#994). Dispatch shapes
+# owned by #1107 stay on the legacy command-text path. A recognized source that
+# cannot be read or is outside this narrow contract fails closed.
+if [[ ! -f "$MESSAGE_SOURCE" ]]; then
+    echo "BLOCKED: commit-message source resolver is unavailable." >&2
+    exit 2
+fi
+MESSAGE_DETAIL=$(printf '%s' "$COMMAND" | python3 "$MESSAGE_SOURCE" --cwd "$CWD" 2>&1)
+MESSAGE_STATUS=$?
+case "$MESSAGE_STATUS" in
+    0) MESSAGE="$MESSAGE_DETAIL" ;;
+    2)
+        echo "BLOCKED: Cannot safely determine the effective commit message." >&2
+        echo "Reason: ${MESSAGE_DETAIL:-unknown message-source failure}" >&2
+        exit 2
+        ;;
+    3) MESSAGE="$COMMAND" ;;
+    *)
+        echo "BLOCKED: commit-message source resolver failed unexpectedly." >&2
+        exit 2
+        ;;
+esac
+
 # Structured override with evidence chain: accepted per writing-rules:4.
 # Bare [no-ticket] without evidence: blocked. Ref: #580.
-if echo "$COMMAND" | grep -qE '\[no-ticket:[[:space:]]+Reason:[^]]+;[[:space:]]*Evidence:[^]]+;[[:space:]]*Falsification:[^]]+\]'; then
+if echo "$MESSAGE" | grep -qE '\[no-ticket:[[:space:]]+Reason:[^]]+;[[:space:]]*Evidence:[^]]+;[[:space:]]*Falsification:[^]]+\]'; then
     exit 0
 fi
-if echo "$COMMAND" | grep -qE '\[no-ticket\]|\[no-ticket:[[:space:]]*\]'; then
+if echo "$MESSAGE" | grep -qE '\[no-ticket\]|\[no-ticket:[[:space:]]*\]'; then
     cat >&2 <<HOOKEOF
 BLOCKED: '[no-ticket]' override now requires evidence chain.
 
@@ -107,7 +135,7 @@ fi
 
 # [task: ...] marker for work tracked outside issue trackers (spreadsheets,
 # shared docs, etc.). Lighter than [no-ticket] — still requires a description.
-if echo "$COMMAND" | grep -qE '\[task:[[:space:]]+[^]]+\]'; then
+if echo "$MESSAGE" | grep -qE '\[task:[[:space:]]+[^]]+\]'; then
     exit 0
 fi
 
@@ -115,10 +143,10 @@ fi
 #   #NNN, repo#NNN, owner/repo#NNN  — GitHub, GitLab
 #   PROJ-NNN                        — Jira, Linear, Shortcut
 #   URL containing /issues/, /browse/, /tickets/, /merge_requests/, /pull/
-if echo "$COMMAND" | grep -qE '(#[0-9]+|[A-Z]+-[0-9]+)'; then
+if echo "$MESSAGE" | grep -qE '(#[0-9]+|[A-Z]+-[0-9]+)'; then
     exit 0
 fi
-if echo "$COMMAND" | grep -qE 'https?://[^[:space:]]+(/(issues|browse|tickets|merge_requests|pull|stories|tasks)/[^[:space:]]+)'; then
+if echo "$MESSAGE" | grep -qE 'https?://[^[:space:]]+(/(issues|browse|tickets|merge_requests|pull|stories|tasks)/[^[:space:]]+)'; then
     exit 0
 fi
 

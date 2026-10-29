@@ -278,15 +278,22 @@ cp --lin ../../../plans/p.md h
 cp --li ../../../plans/p.md h
 cp --sym ../../../plans/p.md h
 cp --symbolic ../../../plans/p.md h
-cp -P /proc/self/root r
-cp -r /proc/self/root r
-cp -a /proc/self/root r
-cp --no-deref /proc/self/root r
 echo x >> hl; rm hl
 cp notes.txt hl && rm -f hl
 chmod 600 hl; rm hl
 echo x | tee -a hl; rm hl
 EOF
+# Linux exposes a root-directory symlink through procfs. macOS has no procfs;
+# exercise the same escape using a real temporary symlink instead of asserting
+# that copying a nonexistent path would carry an external link into scratch.
+ROOT_LINK=/proc/self/root
+if [[ ! -L "$ROOT_LINK" ]]; then
+    ROOT_LINK="$T/root-link"
+    ln -s / "$ROOT_LINK"
+fi
+for option in -P -r -a --no-deref; do
+    expect block "$D" "cp $option '$ROOT_LINK' r"
+done
 while IFS= read -r c; do [[ -n "$c" ]] && expect block "$O" "$c"; done <<'EOF'
 ln -sf /etc/hostname --target-directory=d
 ln -sf /etc/hostname --targ=d
