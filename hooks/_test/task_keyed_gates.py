@@ -4,6 +4,7 @@ import concurrent.futures
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -60,7 +61,7 @@ class Gates(unittest.TestCase):
                 'artifacts-posted': {'investigate_posted': True, 'premortem_posted': True},
             }.items():
                 write(directory / (name + '-gate.json'), {**data, **fields})
-            plans = self.repo / 'plans' if '#' in identity else self.ws / 'sessions' / sid / 'plans'
+            plans = self.repo / 'plans' if re.fullmatch(r'[^/\s]+/[^#\s]+#[0-9]+', identity) else self.ws / 'sessions' / sid / 'plans'
             plans.mkdir(parents=True, exist_ok=True)
             (plans / ('pre-mortem-' + r.task_slug(identity) + '.md')).write_text('Ticket: ' + identity + '\nSeverity: 50\nImplementation may proceed: YES\n')
         return directory
@@ -146,6 +147,8 @@ class Gates(unittest.TestCase):
             self.assertGate(2, 'touch report.pdf', cwd=self.a, env=env)
             self.assertGate(2, tool='Write', path=directory / 'think-gate.json', env=env)
         self.assertGate(0, 'ls', env={**self.env, 'CRAFT_SESSION_DIR': '{{SESSION_PATH}}'})
+        for value in ('${SESSION_PATH}', '/tmp/${SESSION_PATH}/one', 'relative-session'):
+            self.assertGate(2, 'touch report.pdf', cwd=self.a, env={**self.env, 'CRAFT_SESSION_DIR': value})
 
     def test_template_session_ids_never_create_shared_authority(self):
         directory = self.task('report-run', self.a, sid='__SESSION_ID__', slug='report-run')
@@ -154,6 +157,10 @@ class Gates(unittest.TestCase):
             env[name] = '{{SESSION_ID}}'
             self.assertGate(2, 'touch report.pdf', cwd=self.a, env=env)
             self.assertGate(2, tool='Write', path=directory / 'think-gate.json', env=env)
+        for value in ('${SESSION_ID}', '$SESSION_ID', '%SESSION_ID%', '.', '..'):
+            env = {k:v for k,v in self.env.items() if k != 'CRAFT_SESSION_DIR'}
+            env['CRAFT_SESSION_ID'] = value
+            self.assertGate(2, 'touch report.pdf', cwd=self.a, env=env)
 
     def test_bootstrap_help_uses_alternate_host_directory(self):
         directory = self.ws / 'alternate/one'
@@ -626,7 +633,7 @@ class Gates(unittest.TestCase):
                 else:
                     write(d / (name + '-gate.json'), {**data, **fields[name]})
         # Tier A floor (docs, plans, *.md): the implementing gate alone suffices.
-        d, data = gate_only('o/r#tier-a')
+        d, data = gate_only('o/r#101')
         self.assertGate(0, f'touch {self.repo}/docs/notes.md')
         # Tier B floor (ordinary code): needs investigation + pre-mortem, not junior/senior.
         result = self.assertGate(2, f'touch {self.repo}/src/app.py')

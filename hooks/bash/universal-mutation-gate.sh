@@ -202,6 +202,7 @@ if [[ -z "$THINK_GATE" ]]; then
     exit 2
 fi
 GATE_PATHS_JSON=$(printf '%s' "$RESOLUTION" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin).get("artifacts", {})))' 2>/dev/null || echo '{}')
+HOST_SESSION_DIR=$(printf '%s' "$RESOLUTION" | python3 "$EXTRACT" session_dir 2>/dev/null || true)
 # Proportional task gates (#1086): the selected task's effective review tier
 # (declared tier, never below the floor review-risk.py computes for the targets).
 TIER_JSON=$(printf '%s' "$RESOLUTION" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin).get("tier") or {"effective": "C", "reasons": ["C:no tier resolved; failing closed"]}))' 2>/dev/null || echo '{"effective": "C"}')
@@ -337,7 +338,7 @@ premortem_found = False
 plan_dirs = []
 # The current host session's own plans are a writable lifecycle surface.
 # Other sessions' plans are never discovered here.
-current_session_dir = os.environ.get('CRAFT_SESSION_DIR') or os.environ.get('CRAFT_AGENT_SESSION_DIR') or os.environ.get('CLAUDE_SESSION_DIR')
+current_session_dir = sys.argv[6] if len(sys.argv) > 6 and sys.argv[6] else None
 # A mis-tagged session dir must not lend this task another session's plans (#1099).
 sys.path.insert(0, os.environ.get('CCP_HOOK_LIB', ''))
 from session_anchor import verified_session_dir, payload_from_env
@@ -513,7 +514,7 @@ for rg_candidate in rg_candidates:
         break
 
 print('|'.join(missing))
-" "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" "$GATE_PATHS_JSON" "$TIER_JSON" 2>/dev/null || echo "artifact validation failed closed")
+" "$THINK_GATE" "$WORKSPACE_CANDIDATE" "${CRAFT_AGENT_PLANS_PATH:-__none__}" "$GATE_PATHS_JSON" "$TIER_JSON" "$HOST_SESSION_DIR" 2>/dev/null || echo "artifact validation failed closed")
 
         if [[ -z "$MISSING" ]]; then
             exit 0

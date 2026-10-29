@@ -56,9 +56,9 @@ def repo_slug(repo_root: str) -> str:
 
 
 def _safe_session_id(value: str) -> str:
-    if "{{" in value or "}}" in value:
-        return ""
-    return re.sub(r"[^a-zA-Z0-9_.-]", "_", value.strip())
+    # Identity must be preserved, never collapsed into a shared sanitized name.
+    value = value.strip()
+    return value if value not in {'.', '..'} and re.fullmatch(r'[a-zA-Z0-9_.-]+', value) else ''
 
 
 def _craft_session_value(obj) -> str:
@@ -112,9 +112,11 @@ def session_id_from_env() -> str:
     """Craft directory > Craft id > Craft transcript > native explicit id."""
     # An unexpanded host template is not a session identity or scratch root.
     # Never sanitize it into a shared id, even if another identity is present.
-    if any('{{' in os.environ.get(name, '') or '}}' in os.environ.get(name, '')
-           for name in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR')):
-        return ""
+    for name in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR'):
+        directory = os.environ.get(name, '').strip()
+        if directory and (not os.path.isabs(directory) or
+                          re.search(r'\{\{|\}\}|\$\{|\$[A-Za-z_]|%[A-Za-z_][^%]*%', directory)):
+            return ''
     directory_id = _session_directory_id(("CRAFT_SESSION_DIR", "CRAFT_AGENT_SESSION_DIR"))
     if directory_id:
         return directory_id
@@ -470,9 +472,7 @@ def task_bootstrap_help(workspace: str, session_id: str = "") -> str:
     sid = session_id or session_id_from_env()
     if not sid:
         return "Restore the host session binding first; never create shared workspace-root gates."
-    directory = next((os.environ.get(name, '') for name in
-                      ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR')
-                      if os.environ.get(name)), '')
+    directory = own_session_directory(workspace, sid)
     if not os.path.isabs(directory) or os.path.basename(os.path.normpath(directory)) != sid:
         directory = os.path.join(workspace, 'sessions', sid)
     return (f"Use the Write tool to create {directory}/tasks/<task-slug>/think-gate.json. "
@@ -650,6 +650,14 @@ def _candidate_paths(workspace: str, repo_root: str, gate_name: str, session_id:
     return [g["path"]] if (g := find_gate_for_repo(workspace, repo_root, gate_name, session_id=session_id)) else []
 
 
+def own_session_directory(workspace: str, session_id: str = '') -> str:
+    sid = session_id or session_id_from_env()
+    if not sid:
+        return ''
+    return next((os.environ.get(k) for k in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR')
+                 if os.environ.get(k)), os.path.join(workspace, 'sessions', sid))
+
+
 def own_session_path(workspace: str, path: str, directory: bool = False, removal: bool = False) -> bool:
     """Narrow lifecycle exception, not task/repository implementation authority.
 
@@ -659,8 +667,7 @@ def own_session_path(workspace: str, path: str, directory: bool = False, removal
     sid = session_id_from_env()
     if not sid:
         return False
-    sd = next((os.environ.get(k) for k in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR')
-               if os.environ.get(k)), os.path.join(workspace, 'sessions', sid))
+    sd = own_session_directory(workspace, sid)
     root = canonical(sd)
     target = canonical(path)
     if root == canonical(workspace) or not _within(target, root) or target == root:
@@ -713,6 +720,7 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     result = {**shape, **selected}
     if result["gate"]:
         tg = result["gate"]
+        result["session_dir"] = own_session_directory(workspace)
         result["artifacts"] = {name: g["path"] if (g := _artifact_for(tg, name, workspace)) else None for name in ("investigate-gate", "junior-senior-gate", "artifacts-posted-gate", "review-gate", "test-gate")}
         result["task"] = task_identity(tg["data"])
         result["tier"] = task_tier(tg["data"], shape["paths"], command)

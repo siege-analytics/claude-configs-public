@@ -49,3 +49,8 @@ Independent reviewer approved the one-line verify-enforcement.sh pin update. All
 ## Expanded task ownership follow-up
 
 Configs review identified template-ID sharing, alternate-directory diagnostic mismatch and shared-shelf plain-ID pre-mortem borrowing. Independent Codex review of the corrections additionally found file/directory-link borrowing and then a shell-quoting regression. Both were corrected before source promotion. Final independent review: bash syntax passes, six targeted positive/negative cases pass (9.524s), and a fresh valid full-ticket repository-plan case returns allow. Descriptor-relative no-follow evidence reads require a regular single-link file and reuse the same content for identity/risk/launch checks. No remaining must-fix findings in the corrected diff. Full-suite and cross-model final-head receipts remain separate requirements.
+
+
+## Final host-directory and identity review
+
+Independent review approved central own-session directory derivation and transport from resolver output into artifact validation; tool input does not supply that binding. #831 plus five host/provenance/lifecycle cases passed. Final canonical identity amendment approved after fixture correction: six extended identity/transcript/precedence/alternate-directory tests passed in 12.859s. Known Craft slugs, UUIDs and alphanumeric fixture IDs retain identity; invalid values reject instead of colliding through sanitization. No remaining must-fix. Exact commit and full-suite receipts follow separately.
