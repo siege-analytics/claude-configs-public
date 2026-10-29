@@ -307,7 +307,7 @@ After posting the design note (Step 7), write the signal to
 `$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json`, or
 `<workspace>/sessions/<session-id>/tasks/<task-slug>/think-gate.json`.
 Task identity is the **full ticket reference**, or an explicit `task_id` for
-untracked work. Choose a stable unique directory slug; the resolver reads each
+untracked work. Choose a stable unique non-hidden directory slug; the resolver reads each
 task directory's identity, not its spelling. The helper's `task_slug(identity)`
 provides a collision-safe default for writers migrating a legacy session file.
 Never derive a path from an unset session variable or write to the workspace root.
@@ -367,7 +367,9 @@ Own-session lifecycle files do not require an existing task gate: the host's
 current session may create/edit/remove its task gate JSON and write its own
 plans/data. Bounded mkdir/rmdir may scaffold task directories. Other sessions,
 workspace-root signals, symlink escapes and opaque program execution are not
-exempt. Bootstrap designing, write the investigation/pre-mortem evidence, then
+exempt. For a plain task ID, keep its pre-mortem in the current host session’s `plans/`; shared workspace/repository plans are eligible only for a full repository-qualified ticket.
+
+Bootstrap designing, write the investigation/pre-mortem evidence, then
 transition the same gate to implementing; dispose and clean up after completion.
 
 **Bootstrap without a ticket or shell helper.** Use the Write tool with the

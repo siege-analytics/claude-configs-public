@@ -44,3 +44,8 @@ Independent reviewer approved `b324824150c1ad91a7c3f78d940ca5c4eb4ad96f` against
 ## Kernel digest pin follow-up review
 
 Independent reviewer approved the one-line verify-enforcement.sh pin update. All four packaged kernels independently hash to `1e94ede28fd98551f492ba275991393719e5d657f759113e960a555a031f78a4`, matching the new constant and kernel-budget catalog. The source-to-package change is reference resolution; nonempty regular non-symlink checks and the exact digest comparison remain intact. No weakening or must-fix finding.
+
+
+## Expanded task ownership follow-up
+
+Configs review identified template-ID sharing, alternate-directory diagnostic mismatch and shared-shelf plain-ID pre-mortem borrowing. Independent Codex review of the corrections additionally found file/directory-link borrowing and then a shell-quoting regression. Both were corrected before source promotion. Final independent review: bash syntax passes, six targeted positive/negative cases pass (9.524s), and a fresh valid full-ticket repository-plan case returns allow. Descriptor-relative no-follow evidence reads require a regular single-link file and reuse the same content for identity/risk/launch checks. No remaining must-fix findings in the corrected diff. Full-suite and cross-model final-head receipts remain separate requirements.

@@ -44,3 +44,10 @@ Run the full hook scenario suites, including the final 53-case task-keyed suite;
 ## Kernel verifier integration follow-up
 
 Hosted CI rejected the updated packaged kernel because verify-enforcement.sh still pinned its previous digest. Update only EXPECTED_KERNEL_SHA256 to the SHA256 of all four newly built packaged kernels, `1e94ede28fd98551f492ba275991393719e5d657f759113e960a555a031f78a4`. Independent review verified source-to-package reference resolution, matching kernel-budget catalog and unchanged regular/non-symlink/nonempty exact-digest enforcement. The affected progressive_mount_test passes locally. Hosted full validation must pass on this follow-up before merge.
+
+
+## Expanded configs-review corrections
+
+The configs reviewer ran 104 old/new probes and found additional reproducible cases: template session ID variables still produced shared synthetic authority; alternate directory-variable guidance could name an unwritable bootstrap path; and a plain task ID could borrow a matching pre-mortem from shared workspace/repository shelves. Reject unresolved delimiters in the common session-ID sanitizer, use the same supported directory precedence for the help path, and document non-hidden slugs. Plain task IDs now require the current host session plans; full owner/repo#N ticket evidence retains repository-plan compatibility.
+
+Independent review then reproduced link-based borrowing through the own plans directory. Plain-ID evidence now opens the host directory, plans directory and final file through descriptor-relative no-follow operations, requires a regular single-link file, and reads once for task identity/risk/launch checks. Regressions deny foreign file symlinks, hardlinks and plans-directory links. The first embedded Python docstring broke the enclosing shell quoting; replacing it with a comment restored bash syntax and valid-task allowances. Six corrected positive/negative cases pass independently, with a separate full-ticket repository-plan allowance also passing. No remaining must-fix from that reviewer. The final 57-case suite and hosted validation must pass before promotion.

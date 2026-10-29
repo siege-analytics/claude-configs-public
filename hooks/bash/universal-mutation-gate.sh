@@ -270,19 +270,19 @@ except Exception:
 
 current_ticket = tg.get('ticket') or tg.get('task_id') or tg.get('task', '')
 
-def file_references_ticket(path, ticket):
+def file_references_ticket(path, ticket, content=None):
     if not ticket:
         return True
     try:
-        content = open(path).read(4096)
+        content = open(path).read(4096) if content is None else content[:4096]
     except Exception:
         return False
     return bool(re.search(r'(?<![A-Za-z0-9_/#-])' + re.escape(ticket) + r'(?![A-Za-z0-9_#-])', content))
 
 import re
-def premortem_has_risks(path):
+def premortem_has_risks(path, content=None):
     try:
-        content = open(path).read(8192)
+        content = open(path).read(8192) if content is None else content
     except Exception:
         return False
     lower = content.lower()
@@ -292,9 +292,9 @@ def premortem_has_risks(path):
         or re.search(r'(?:tiger|paper tiger|elephant)\s+\d', lower)
     )
 
-def premortem_has_launch_blocker(path):
+def premortem_has_launch_blocker(path, content=None):
     try:
-        content = open(path).read(8192)
+        content = open(path).read(8192) if content is None else content
     except Exception:
         return False
     lower = content.lower()
@@ -364,18 +364,50 @@ if repo_root:
     if os.path.isdir(repo_plans) and repo_plans not in plan_dirs:
         plan_dirs.append(repo_plans)
 
+# A plain task id is unique only inside its host session. Shared plan shelves
+# cannot establish provenance for it; a full repository-qualified ticket can.
+plain_task_id = not re.fullmatch(r'[^/\s]+/[^#\s]+#[0-9]+', current_ticket)
+if plain_task_id:
+    plan_dirs = [os.path.join(current_session_dir, 'plans')] if current_session_dir else []
+
+def read_own_premortem(path):
+    # Read plain-id evidence once without following borrowed links.
+    import stat
+    root_fd = plans_fd = None
+    try:
+        directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        root_fd = os.open(os.path.realpath(current_session_dir), directory_flags)
+        plans_fd = os.open('plans', directory_flags, dir_fd=root_fd)
+        fd = os.open(os.path.basename(path), os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW,
+                     dir_fd=plans_fd)
+        with os.fdopen(fd) as source:
+            st = os.fstat(source.fileno())
+            if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1:
+                return None
+            return source.read(8192)
+    except (OSError, ValueError, UnicodeError):
+        return None
+    finally:
+        if plans_fd is not None:
+            os.close(plans_fd)
+        if root_fd is not None:
+            os.close(root_fd)
+
 premortem_empty = False
 premortem_launch_blocked = False
 premortem_path = ''
 for d in plan_dirs:
     for pattern in ['pre-mortem*', 'premortem*', 'risk*']:
         for f in glob.glob(os.path.join(d, pattern)):
-            if os.path.isfile(f) and file_references_ticket(f, current_ticket):
+            content = read_own_premortem(f) if plain_task_id else None
+            if plain_task_id and content is None:
+                continue
+            if os.path.isfile(f) and file_references_ticket(f, current_ticket, content):
                 premortem_found = True
                 premortem_path = f
-                if not premortem_has_risks(f):
+                if not premortem_has_risks(f, content):
                     premortem_empty = True
-                if premortem_has_launch_blocker(f):
+                if premortem_has_launch_blocker(f, content):
                     premortem_launch_blocked = True
                 break
         if premortem_found:

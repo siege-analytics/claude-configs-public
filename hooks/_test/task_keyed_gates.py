@@ -60,7 +60,8 @@ class Gates(unittest.TestCase):
                 'artifacts-posted': {'investigate_posted': True, 'premortem_posted': True},
             }.items():
                 write(directory / (name + '-gate.json'), {**data, **fields})
-            plans = self.repo / 'plans'; plans.mkdir(exist_ok=True)
+            plans = self.repo / 'plans' if '#' in identity else self.ws / 'sessions' / sid / 'plans'
+            plans.mkdir(parents=True, exist_ok=True)
             (plans / ('pre-mortem-' + r.task_slug(identity) + '.md')).write_text('Ticket: ' + identity + '\nSeverity: 50\nImplementation may proceed: YES\n')
         return directory
 
@@ -145,6 +146,48 @@ class Gates(unittest.TestCase):
             self.assertGate(2, 'touch report.pdf', cwd=self.a, env=env)
             self.assertGate(2, tool='Write', path=directory / 'think-gate.json', env=env)
         self.assertGate(0, 'ls', env={**self.env, 'CRAFT_SESSION_DIR': '{{SESSION_PATH}}'})
+
+    def test_template_session_ids_never_create_shared_authority(self):
+        directory = self.task('report-run', self.a, sid='__SESSION_ID__', slug='report-run')
+        for name in ('CRAFT_SESSION_ID', 'CRAFT_AGENT_SESSION_ID', 'CLAUDE_SESSION_ID', 'SESSION_ID'):
+            env = {k:v for k,v in self.env.items() if k != 'CRAFT_SESSION_DIR'}
+            env[name] = '{{SESSION_ID}}'
+            self.assertGate(2, 'touch report.pdf', cwd=self.a, env=env)
+            self.assertGate(2, tool='Write', path=directory / 'think-gate.json', env=env)
+
+    def test_bootstrap_help_uses_alternate_host_directory(self):
+        directory = self.ws / 'alternate/one'
+        env = {k:v for k,v in self.env.items() if k != 'CRAFT_SESSION_DIR'}
+        env['CRAFT_AGENT_SESSION_DIR'] = str(directory)
+        result = self.assertGate(2, 'touch report.pdf', cwd=self.a, env=env)
+        self.assertIn(str(directory / 'tasks'), result.stderr)
+        self.assertGate(0, tool='Write', path=directory / 'tasks/report-run/think-gate.json', env=env)
+
+    def test_plain_task_premortem_cannot_come_from_shared_shelves(self):
+        self.task('report-run', self.a, slug='report-run')
+        plans = self.ws / 'sessions/one/plans'
+        for p in plans.iterdir(): p.unlink()
+        for shelf in (self.ws / 'plans', self.repo / 'plans'):
+            shelf.mkdir(exist_ok=True)
+            (shelf / 'pre-mortem-other.md').write_text('report-run\nSeverity: 50\n')
+        self.assertGate(2, 'touch report.pdf', cwd=self.a)
+        (plans / 'pre-mortem-report.md').write_text('report-run\nSeverity: 50\n')
+        self.assertGate(0, 'touch report.pdf', cwd=self.a)
+
+    def test_plain_task_premortem_cannot_follow_cross_session_links(self):
+        self.task('report-run', self.a, slug='report-run')
+        plans = self.ws / 'sessions/one/plans'
+        for p in plans.iterdir(): p.unlink()
+        other = self.ws / 'sessions/two/plans/pre-mortem-other.md'
+        other.parent.mkdir(parents=True)
+        other.write_text('report-run\nSeverity: 50\n')
+        candidate = plans / 'pre-mortem-report.md'
+        candidate.symlink_to(other)
+        self.assertGate(2, 'touch report.pdf', cwd=self.a)
+        candidate.unlink(); os.link(other, candidate)
+        self.assertGate(2, 'touch report.pdf', cwd=self.a)
+        candidate.unlink(); plans.rmdir(); plans.symlink_to(other.parent)
+        self.assertGate(2, 'touch report.pdf', cwd=self.a)
 
     def test_unscoped_action_teaches_own_task_bootstrap_not_global_signals(self):
         result = self.hook('touch new-report.pdf')

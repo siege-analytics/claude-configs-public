@@ -56,6 +56,8 @@ def repo_slug(repo_root: str) -> str:
 
 
 def _safe_session_id(value: str) -> str:
+    if "{{" in value or "}}" in value:
+        return ""
     return re.sub(r"[^a-zA-Z0-9_.-]", "_", value.strip())
 
 
@@ -468,11 +470,13 @@ def task_bootstrap_help(workspace: str, session_id: str = "") -> str:
     sid = session_id or session_id_from_env()
     if not sid:
         return "Restore the host session binding first; never create shared workspace-root gates."
-    directory = os.environ.get('CRAFT_SESSION_DIR', '')
+    directory = next((os.environ.get(name, '') for name in
+                      ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR')
+                      if os.environ.get(name)), '')
     if not os.path.isabs(directory) or os.path.basename(os.path.normpath(directory)) != sid:
         directory = os.path.join(workspace, 'sessions', sid)
     return (f"Use the Write tool to create {directory}/tasks/<task-slug>/think-gate.json. "
-            "Choose any stable unique slug; no hash computation or GitHub ticket is required. "
+            "Choose a stable unique non-hidden slug; no hash computation or GitHub ticket is required. "
             "Set task_id (or the full ticket), sessionId, target repo_root, scope_paths and status for this task. "
             "Own-session task gate JSON and plans can be bootstrapped without another gate. "
             "Keep companion evidence beside this task's gate; never overwrite root signals or another task. "
