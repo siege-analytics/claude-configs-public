@@ -1,0 +1,140 @@
+# Self-review: issue #993 catalog guard invocation classification
+
+## Assumptions
+
+Domain(s): software engineering
+
+Geospatial cross-cut: no
+
+Goal source: https://github.com/siege-analytics/claude-configs-public/issues/993
+
+Goal source verification: `bash scripts/discipline/evaluate-ticket.sh 'siege-analytics/claude-configs-public#993'` → `BLOCK` because the reporter-form issue lacks the repository template headings (`Context`, `Goal`, `Acceptance`), a `/think` design reference, and an `## Assumptions` block.
+
+Plan reference: `plans/pre-mortem-993-catalog-guard.md`
+
+Pre-author-inventory: https://github.com/siege-analytics/claude-configs-public/issues/993#issuecomment-6184547090
+
+Investigate-artifact: issue #993 body plus exact-base reproduction matrix in this artifact.
+
+Pre-mortem-artifact: `plans/pre-mortem-993-catalog-guard.md`
+
+Hostile-review-artifact: `plans/hostile-review-993-catalog-guard.md`
+
+Project-contribution: restore the blocking catalog boundary for direct/wrapped object copies while removing raw-string prose false blocks, with installed-consumer and Tier C dependency evidence.
+
+### Goal-source exemption
+
+Reason: issue #993 is a detailed external-style defect report rather than a repository template ticket. Reformatting the reporter's body would alter provenance without improving the observable acceptance contract.
+
+Evidence: the issue names the exact hook, legacy first-token gate, unreachable object-copy pattern, concrete false-negative/false-positive commands, wrapper/pipeline expectations, direction-blind policy, extraction-control hazard, and a 20-case result target. The exact base reproduction produced policy `10/20` with extraction `20/20`.
+
+Falsification: this exemption is invalid if any implementation decision lacks an observable expectation in the issue or pre-mortem, or if the final matrix cannot reproduce the recorded `10/20 → 20/20` transition.
+
+## Pre-implementation comprehension
+
+**Current behavior.** At exact reproduction base `0bae4ff108de5ad3b339a868818b05ea1e7c70bd`, direct and wrapped `aws`/`mc` copies bypass the first-token allowlist, while executor-prefixed commands can block on quoted write prose. The reconstructed 20-case matrix confirms `10/20` policy matches with `20/20` exact nonempty extraction.
+
+**Intended behavior.** Block supported executable writes/copies regardless of evidenced wrapper, pipeline, payload, substitution, heredoc, or stdin transport; allow quoted prose and non-executing consumers; preserve conservative direction-blind copy matching and all existing Python/Spark/kubectl block paths; fail closed when extraction/classification dependencies fail.
+
+**Steps.** Separate raw-command classification into a non-evaluating Python helper; wire the hook fail-closed; add source and full-consumer regressions; obtain hostile acceptance; merge current develop; classify the decision-changing helper narrowly Tier C under F4; run matrix, fuzz, full suite, and package canaries.
+
+**Success criteria.** Current matrix `20/20`, exact extraction `20/20`; focused suite and all repository suites green; no eval/shell execution primitives; both built consumer packages exhibit block/pass canaries; helper computes Tier C and rejects declared B in direct/modify/delete/rename shapes.
+
+**Risks.** Approximate shell parsing can over-block prose or miss dataflow/redirection precedence; recursive modeling can diverge or execute input; copied hooks can silently lose extraction; a new helper can fall below the F4 review boundary.
+
+## Senior adversarial checklist
+
+1. The initial description under-specified redirection precedence, fd duplication, producer/consumer flow, and nested process substitutions; hostile review exposed each class.
+2. The result is observable: named commands either exit 2 with a policy reason or exit 0, and extraction is independently exact/nonempty.
+3. Parser implementation did not displace consumer packaging, F4 classification, or fail-closed dependency checks; all are independently tested.
+4. Develop moved during work; it was merged without force at `f97d194fedf1eda053a16e938851c6151f308d72`, then policy/evidence were reconciled.
+5. Prior work read: issue #993, `catalog-guard.sh`, hook README/tests, workflow, self-review skill, F4 audit/policy/tests, and F4 evidence examples.
+6. Environment is the selected worktree on `fix/993-catalog-guard-invocation`; target is draft PR to `develop`, never `main`.
+7. Negative cases cover quoted prose, malformed syntax, override ordering, consumed stdin, unknown files, dependency failures, and declared-B rejection.
+8. The class—not one command—is addressed across direct/wrapped/pipelined/payload/substitution/source-consumer forms with bounded explicit models.
+9. Done means draft PR evidence and reporter exact-SHA re-review, not merely a local commit.
+10. Pre-committed non-skips: hostile ACCEPT, exact matrix, deterministic fuzz, full suite, package canaries, F4 shape coverage, hosted checks, external exact-SHA review.
+
+## Test plan
+
+1. Focused source/consumer suite with exact extraction controls and fail-closed dependency fixtures.
+2. Exact 20-case base/current matrix.
+3. Seeded malformed-input determinism/crash fuzz.
+4. Static shell/Python/diff checks and execution-primitive scan.
+5. F4 risk-policy graph and staged modify/delete/rename/declared-B suite.
+6. Current workflow's full build, 18 Python fixture modules, authorities, metrics, package/layout validators, and canaries.
+7. Every hook test file with accumulated failures.
+8. Two-package post-build catalog and Tier C canaries.
+
+## Peer review
+
+- **Parsing safety:** `classify-catalog-command.py` imports no subprocess module and calls no `eval`, `exec`, `os.system`, or `shell=True`; parsed text is data only.
+- **Invocation correctness:** 398 focused cases cover preserved blockers, direct/wrapped copies, AWS streaming-upload operand shifts, pipelines/control lists, shell/Python/kubectl payloads, substitutions, heredocs/here-strings, descriptor state, nested process flow, malformed syntax, wrapper/eval/comment semantics, bounded AST executors, aliases, call-time closures, static arguments/defaults, `os.exec*` executable-path/byte/sequence semantics, and prose consumers.
+- **Consumer correctness:** all 369 full-hook cases independently require the real extractor to return the exact nonempty command before evaluating policy output; missing classifier/extractor, malformed JSON, empty command, and recursion-limit exhaustion exit 2.
+- **F4 boundary:** the policy regex names only `classify-catalog-command`; graph audit pins the exact catalog-guard assignment and Python operand; `review_risk_test.py` exercises direct, staged modification, deletion, rename source, and declared-B rejection.
+- **Syntax/static:** shellcheck on both shell files, Python 3.13 byte compilation, `git diff --check`, and call/import-specific unsafe primitive scan all exit 0.
+- **Suite:** full current-develop non-hook workflow command set exits 0; all 37 hook suite files pass.
+
+## Lead review
+
+**Affirmative standards.** Enforcement is fail-closed at dependency boundaries, parser input is never executed, matching is invocation-scoped rather than raw-string-scoped, existing conservative direction policy remains, and every quantified extraction result is independently controlled. F4 cannot be downgraded merely by moving/deleting the helper.
+
+**Approach fit.** A standalone bounded parser is justified because shell regexes cannot distinguish executor payloads from grep/git/editor prose or model evidenced dataflow. The implementation intentionally models a finite supported subset and keeps malformed non-executable tails from inventing blocks while retaining complete earlier invocations.
+
+**Blast radius.** One configured Bash PreToolUse hook, one packaged helper, its focused tests, and the review-risk policy/audit/metrics needed for the new decision edge. No installation, deployment, release, ready transition, PR merge, or `main` action.
+
+**Sequencing assumption.** `develop` reconciliation and F4 classification must precede publication; hosted checks and exact-SHA external review follow push and draft-PR creation.
+
+## Findings
+
+No unresolved findings. CodeRabbit reviews `5529528446` and `5530995977` were reproduced and remediated for recursion/wrapper/eval/comment handling and AWS `--expected-size` operand shifting. Independent exact-SHA reporter review `5531747431` then rejected frozen SHA `415e1262baabad38af36a64bcd1311a03c149142` with R1–R6: clustered shell `-o`, Python executor spellings, executed Spark callables, parameter/brace `#`, ANSI-C/arithmetic parsing, and AWS `--cli-binary-format`. All 25 supplied commands reproduced with exact extraction and hook exit 0 before editing.
+
+Replacement SHA `90997cc4781a1a745d31afb21715d1f5220b0f5e` was then rejected by fresh CodeRabbit exact-SHA analysis because `os.execv(path, argv)` trusted decoy `argv[0]` instead of the executable path. The exact path/decoy command reproduced with exact/nonempty extraction, raw and full-hook exit 0, and controlled execution. Follow-on hostile review exposed byte vectors plus literal, assigned, function-bound, wrapper-call, vararg, and split-vector expansion shapes. Every valid in-policy command was reproduced before mutation and paired with a control; an out-of-policy `aws s3 rm` example was rejected until its managed `s3 cp` form independently reproduced.
+
+The final model uses the actual `os.exec*` path/file and environment signatures, discards `argv[0]` as process-name data, decodes static bytes using filesystem semantics, and carries bounded static sequences through supported assignment/callable/exec contexts. The complete post-change hostile review returned `ACCEPT`; every earlier verdict that produced a later finding is superseded.
+
+## Quantified claims
+
+- "Focused catalog suite: 398 passed, 0 failed; extraction 369/369" — `bash hooks/_test/catalog_guard.test.sh` → `Results: 398 passed, 0 failed`; `extraction control: 369/369 full-hook commands nonempty`. This preserves all prior `364/364` and `290/290` cases.
+- "Issue matrix current 20/20 with exact extraction" — reconstructed issue matrix → `MATRIX current_policy=20/20 current_exact_nonempty=20/20`. Historical authored-base evidence is `10/20`; independent review recorded a `7/20` reconstruction.
+- "Malformed fuzz deterministic and crash-free" — seed-993 fuzz → `classifier_cases=500 repeated=2 hook_cases=100 exact_nonempty=100/100 exits=[0,2] tracebacks=0`.
+- "18 Python fixture modules and 36 hosted-equivalent gates" — accumulated Python 3.13 runners → `PYTHON_FIXTURES_PY313 passed=18 failed=0 total=18` and `HOSTED_EQUIVALENT_GATES passed=36 failed=0 total=36`. The initial system-Python run's two annotation syntax errors were superseded because hosted CI uses Python 3.12.
+- "37/37 hook files" — accumulated `hooks/_test/*.test.sh` runner → `HOOK_FILES_TOTAL=37 PASS=37 FAIL=0`.
+- "F4 graph/shape suite" — `python3.13 bin/_test/review_risk_test.py` → `review_risk_test: PASS`.
+- "Generated authorities" — checks → `198 sources, 804 artifact snapshots, 2904 generated file mappings`; kernel `6995 chars, 1749 estimated tokens`; inventory current.
+- "Two package canaries" — built `claude-code` and `craft-agent` hooks → direct, expected-size, string-`os.execv`, and byte-vector-`os.execv` block; prose pass; policy and exact extraction `10/10`; Tier C `2/2`.
+- "Tier C classification" — packaged `review-risk.py --paths hooks/lib/classify-catalog-command.py` → `computed_tier: C`, `valid: true`; authoritative declared-B rejection remains covered by `review_risk_test.py`.
+
+## Rework ledger
+
+| Rework trigger | Root skip | Check cost | Rework cost | Ratio |
+|---|---|---:|---:|---:|
+| Repeated hostile parser findings | Initial finite model omitted several shell dataflow/descriptor interactions | One exact-input review + focused rerun per round | Added bounded model + regression per valid finding | High rework, high defect yield |
+| Invalid stdout-duplication finding | Reviewer evaluated stale behavior | One direct reproduction | Added a passing regression; required fresh review | Low |
+| Develop advanced to F4 | Original base predated policy boundary | Fetch/merge and authoritative F4 test | Narrow policy/graph/audit/metrics reconciliation | Moderate |
+| First matrix reconstruction gave 13/20 and 0 extraction | Selected prose cases did not enter legacy gate; compared extractor print newline literally | One matrix run | Corrected case composition and normalized extractor-owned newline | Low |
+| Unsafe primitive grep flagged parser string `exec` | Pattern matched data tokens, not calls | One grep | Refined to call/import-specific scan | Low |
+| Hosted generated-authority check failed | Inventory was checked before, not after, the new focused test/evidence files were committed | One hosted run + local reproduction | Regenerated `catalog/skills-inventory.json`, reran dependent authorities/build checks, and pushed a reviewed follow-up | Low |
+| CodeRabbit review `5529528446` | Recursion, utility wrappers/eval, and `shlex` comment semantics were incomplete at published SHA `3abbcf7` | Three exact reproductions | Added dedicated depth failure, wrapper/eval context, literal `#` handling, and hostile regressions | High |
+| Follow-on AST/dataflow hostile findings | The bounded model lacked several statically knowable executor, alias, invocation, closure, argument/default, and re-annotation shapes | One exact command plus block/pass control per round | Generalized bounded modeling; candidate reached 288/288 before external re-review | High defect yield |
+| Fresh CodeRabbit review `5530995977` | Fixed two-operand slicing let an unlisted value-taking option shift a managed AWS operand | Exact expected-size upload plus local control | Inspect all post-subcommand positionals; candidate reached 290/290 before independent review | Low |
+| Independent exact-SHA review `5531747431` | Shell option/lexical state and bounded Python execution state omitted six executable syntax classes | 25 exact reproductions plus real-execution evidence | Structural R1–R6 fix; all valid commands and controls became regressions | High defect yield |
+| Post-R1–R6 hostile loop | Static bindings did not initially cover all aliases, argv transfers, callable boundaries, overrides, contextual builtins, and named expressions | One exact block/pass pair per finding | Generalized bounded state transfer; candidate reached 364/364 and complete local hostile `ACCEPT` | High defect yield |
+| Fresh CodeRabbit review of `90997cc` | `os.exec*` classification trusted attacker-controlled `argv[0]` instead of the executable path/file | Exact extraction, raw/full hook, and controlled executable-stub reproduction | Rebuilt invocation identity from path/file and added paired block/pass regressions | High |
+| Post-`90997cc` hostile loop | Static bytes and sequence expansion did not initially cross every supported assignment/callable/star/vararg/split boundary | Exact three-layer plus real-execution reproduction per valid finding | Generalized bounded static sequence transfer; final suite 398/398, extraction 369/369, hostile `ACCEPT` | High defect yield |
+
+## Evidence-predates-work
+
+Artifact: `plans/self-review-993-catalog-guard.md`
+
+First-added commit: `96069e69d29ef05ea12f0fb9c1c59c2bf519677b`
+
+Work commit: `0ce418e0a8a156f79b90a4019a04f429484a6967`
+
+Verification: `git merge-base --is-ancestor 96069e69d29ef05ea12f0fb9c1c59c2bf519677b 0ce418e0a8a156f79b90a4019a04f429484a6967; echo $?` → `0`.
+
+## Canary and rollback
+
+Canary: build both consumer packages; direct and `--expected-size` managed copies exit 2 with the direct-copy reason; grep prose exits 0; all six package extractions are exact/nonempty; the authoritative high-risk regex matches the helper and F4 passes. Both packages passed.
+
+Rollback: revert the forthcoming isolated CodeRabbit-remediation commit (or the original implementation series if a full rollback is required). Do not force-push. No install/deployment/release cleanup is required because none occurred.

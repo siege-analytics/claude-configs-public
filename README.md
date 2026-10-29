@@ -16,7 +16,7 @@ For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zsh
 
 | Path | Purpose |
 |---|---|
-| [`RESOLVER.md`](RESOLVER.md) | **Skill resolver** -- master index mapping task patterns to required skills. Mandatory first read before any non-trivial action. |
+| [`RESOLVER.md`](RESOLVER.md) | Legacy navigation index. `catalog/resolver-manifest.json` and `bin/resolve-load-set.py` define executable routing. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Release notes by version. |
 | [`docs/skill-lifecycle.md`](docs/skill-lifecycle.md) | Lifecycle migration ratchet and first-promotion boundary. |
 | [`wiki/Ontology.md`](wiki/Ontology.md) | Canonical terms, relationships and checked contract bindings; generated from `catalog/ontology.json`. |
@@ -24,7 +24,7 @@ For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zsh
 | `skills/_*-rules.md` | **Always-on conventions** -- applied across every skill that touches code, data, or output. See [Conventions](#always-on-conventions). |
 | `skills/shelves/` | **DBrain book-skill library** -- book-derived skills (Clean Code, DDIA, Effective Python, etc.) organized into 11 topic shelves. See [DBrain](#dbrain--book-skill-library). |
 | `hooks/` | Shell hooks (PreToolUse, UserPromptSubmit) that enforce the resolver. |
-| `dist/RULES_BUNDLE.md` | **Rules bundle** -- concatenation of all always-on rules for non-hook runtimes. See [Rules bundle](#rules-bundle). |
+| `dist/RULES_BUNDLE.md` | Compatibility rules bundle for on-demand reference and rollback; never globally mounted in Craft. See [Rules bundle](#rules-bundle). |
 | `dist/RULES_BUNDLE.json` | Same content as JSON for selective injection / staleness hashing. |
 | `bin/install.sh` | **Single-command install** -- detects Craft Agent, builds, deploys, installs hooks. See [Quick Start](#quick-start). |
 | `bin/scaffold-project.py` | Scaffold new project skill directories (in-tree or satellite). |
@@ -34,9 +34,9 @@ For use with [`claude_init`](https://github.com/dheerajchand/siege_analytics_zsh
 
 The problem this repo solves: **skills are only useful if they fire before the action they govern.** A catalog of skills the agent *could* consult is worth nothing if the agent doesn't actually read them first.
 
-[`RESOLVER.md`](RESOLVER.md) is a task-pattern → required-skill index. When Claude is about to do something (write Delta data, create a PR, author a ticket, run a spatial join), it scans the resolver, finds the matching row, and reads the mapped `SKILL.md` before acting. If no pattern matches, universal pre-action checks (catalog-first, brain-first, test-before-bulk, ticket-required, etc.) still apply.
+The deterministic resolver selects a bounded task/project load set from `catalog/resolver-manifest.json`. The agent reads the selected skills before acting. Unknown task routing remains kernel-only; ambiguous or invalid project selection does not load a broad fallback. [`RESOLVER.md`](RESOLVER.md) provides legacy navigation alongside this executable contract.
 
-**The first gate is [`think`](skills/thinking/think/SKILL.md).** Every catalog-bypass, every premature cutover, every half-designed pipeline the resolver exists to prevent traces back to acting before thinking. The `think` skill is not one pattern among many -- it is the mandatory first step before any feature, refactor, architecture change, cutover, or >30-minute task. The rest of the resolver assumes `think` has already fired.
+**The design gate is [`think`](skills/think/SKILL.md).** Read it before a feature, refactor, architecture change, cutover, or substantial implementation task. Task requirements scale with the review policy; prompt-time reminders must permit the agent to answer and recover in Craft.
 
 **Inspired by [GBrain](https://github.com/garrytan/gbrain)'s "thin harness, fat skills" pattern** -- intelligence lives in the skills, not the runtime. The resolver is the discovery layer; `think` is the gate.
 
@@ -68,18 +68,20 @@ Files at the root of `skills/` named `_*-rules.md` are loaded by the resolver Co
 
 ## Rules bundle
 
-The always-on rules reach the agent in hook-capable runtimes (Claude Code CLI) via the resolver injection hook. For runtimes that don't support hooks (Craft Agent, Cursor, Cody), the build emits a **rules bundle** -- a single file concatenating all `_*-rules.md` content:
+Craft Agents and Claude Code share the compact safety kernel and select detailed procedures on demand. Craft's Claude SDK backend supports prompt and tool hooks. Other backend capabilities must be verified in the installed host; a shared skills pane alone does not prove enforcement parity. See [Craft enforcement](craft-agent/README.md).
+
+The build also emits a compatibility **rules bundle**, concatenating the rule sources:
 
 | Artifact | Format | Use |
 |---|---|---|
-| `dist/RULES_BUNDLE.md` | Markdown | Mount as a system-prompt addendum |
+| `dist/RULES_BUNDLE.md` | Markdown | On-demand reference and rollback |
 | `dist/RULES_BUNDLE.json` | JSON with per-rule keys | Selective injection, staleness hashing |
 
 The bundle includes a version/commit banner and is regenerated on every build from source. `bin/install.sh` deploys it to the Craft Agent workspace automatically.
 
-**Tier A (hook-capable):** hooks remain preferred -- they re-inject every turn and handle staleness. The bundle is a fallback.
+**Hook-capable hosts:** install the hook runtime and its manifests together. Craft mounts `CLAUDE.md -> KERNEL.md`; the resolver emits the task/project load set. The full rules bundle must not be mounted globally.
 
-**Tier B (non-hook):** mount `RULES_BUNDLE.md` as a system-prompt addendum via whatever mechanism the runtime provides. The bundle gets the content in front of the agent; it does not provide mechanical enforcement (tool-call blocking), which requires hook support.
+**Hosts without verified hooks:** skills and loaded rules are advisory. Mechanical blocking requires a verified tool hook, native Git hook, or protected provider check; document which mechanism was actually observed.
 
 ## Project scaffolding
 

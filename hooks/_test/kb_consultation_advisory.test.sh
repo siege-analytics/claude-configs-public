@@ -74,6 +74,28 @@ out_blk="$(run_guard "$TMP/blocking")"
 echo "$out_blk" | grep -q "^BLOCKED: knowledge-base" && blocked2=yes || blocked2=no
 check "opt-in: BLOCKED: prefix present when kb_enforcement blocking" "$blocked2"
 
+# Legacy task records sometimes contain string claims. They must produce a
+# visible repair diagnostic, rather than aborting before the model can see why.
+for shape in strings mapping; do
+    python3 - "$TMP/advisory/sessions/kb/tasks/current/think-gate.json" "$shape" <<'PY'
+import json, sys
+path = sys.argv[1]
+with open(path) as f:
+    data = json.load(f)
+data['claims'] = ['legacy prose'] if sys.argv[2] == 'strings' else {'C1': 'legacy prose'}
+with open(path, 'w') as f:
+    json.dump(data, f)
+PY
+    malformed="$(run_guard "$TMP/advisory")"
+    rc=$?
+    if [[ "$rc" == 0 && "$malformed" == *'STALE DESIGN: claims must be a list of objects'* && "$malformed" != *Traceback* ]]; then
+        valid=yes
+    else
+        valid=no
+    fi
+    check "malformed $shape claims produce a repair diagnostic without crashing" "$valid"
+done
+
 echo
 if [[ $_FAIL -eq 0 ]]; then
     echo "Results: $_PASS passed, 0 failed"; exit 0

@@ -3,6 +3,7 @@
 import importlib.util
 import io
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -41,6 +42,16 @@ def main() -> None:
         assert (migrated / "catalog" / "review-risk-policy.json").is_file()
         assert (migrated / "bin" / "resolve-load-set.py").is_file()
         assert (migrated / "catalog" / "resolver-manifest.json").is_file()
+        manifest = migrated / "hooks" / "enforcement-manifest.json"
+        assert manifest.read_bytes() == (migrated / "enforcement-manifest.json").read_bytes()
+        policy = subprocess.run(
+            ["bash", "-c", '. "$1"; gate_runtime_policy_strict think-gate craft',
+             "registry-probe", str(migrated / "hooks/lib/gate-registry.sh")],
+            text=True, capture_output=True, check=True,
+            env={key: value for key, value in os.environ.items()
+                 if key != "CCP_ENFORCEMENT_MANIFEST"},
+        )
+        assert policy.stdout.strip() == "advisory", policy.stdout + policy.stderr
         hook = migrated / "hooks" / "resolver" / "inject-resolver.sh"
         routed = subprocess.run(
             ["bash", str(hook)],

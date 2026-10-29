@@ -38,6 +38,9 @@ def deploy(repo: Path, ws: Path):
     if (ws / "hooks").exists():
         shutil.rmtree(ws / "hooks")
     shutil.copytree(repo / "hooks", ws / "hooks")
+    manifest = repo / "dist" / "craft-agent" / "enforcement-manifest.json"
+    if manifest.is_file():
+        shutil.copy2(manifest, ws / "hooks" / "enforcement-manifest.json")
     head = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
     (ws / "deploy-stamp.json").write_text(json.dumps({"commit": head, "timestamp": "now", "repo_root": str(repo)}) + "\n")
 
@@ -104,6 +107,22 @@ def main():
         r = run(repo, ws)
         assert r.returncode == 1
         assert_type(r, "stamp-incomplete")
+
+        generated = repo / "dist" / "craft-agent" / "enforcement-manifest.json"
+        generated.parent.mkdir(parents=True)
+        generated.write_text('{"gates": []}\n')
+        deploy(repo, ws)
+        r = run(repo, ws)
+        assert r.returncode == 0, (r.stdout, r.stderr)
+        (ws / "hooks/enforcement-manifest.json").unlink()
+        r = run(repo, ws)
+        assert r.returncode == 1
+        assert_type(r, "missing")
+        deploy(repo, ws)
+        (ws / "hooks/enforcement-manifest.json").write_text('{"gates": ["stale"]}\n')
+        r = run(repo, ws)
+        assert r.returncode == 1
+        assert_type(r, "hash-different")
 
         sync = ROOT / "bin" / "sync-workspace-hooks.sh"
         r = subprocess.run(["bash", str(sync), "--workspace", str(ws)], text=True, capture_output=True)
