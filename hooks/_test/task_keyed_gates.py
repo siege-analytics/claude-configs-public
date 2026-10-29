@@ -130,6 +130,35 @@ class Gates(unittest.TestCase):
         self.assertIn('o/r#craft', guard.stdout)
         self.assertNotIn('Session id unresolved', guard.stderr)
 
+    def test_unexpanded_template_cannot_share_task_or_scratch_authority(self):
+        shared = self.ws / '{{SESSION_PATH}}'
+        directory = shared / 'tasks/report-run'
+        write(directory / 'think-gate.json', dict(
+            task_id='report-run', sessionId='__SESSION_PATH__',
+            repo_root=str(self.repo), scope_paths=[str(self.a)],
+            status='implementing', tier='A'))
+        for name in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR'):
+            env = {**self.env, name: str(shared)}
+            with patch.dict(os.environ, env, clear=True):
+                self.assertEqual(r.session_id_from_env(), '')
+                self.assertFalse(r.own_session_path(str(self.ws), str(directory / 'think-gate.json')))
+            self.assertGate(2, 'touch report.pdf', cwd=self.a, env=env)
+            self.assertGate(2, tool='Write', path=directory / 'think-gate.json', env=env)
+        self.assertGate(0, 'ls', env={**self.env, 'CRAFT_SESSION_DIR': '{{SESSION_PATH}}'})
+
+    def test_unscoped_action_teaches_own_task_bootstrap_not_global_signals(self):
+        result = self.hook('touch new-report.pdf')
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn(str(self.ws / 'sessions/one/tasks'), result.stderr)
+        self.assertIn('Use the Write tool', result.stderr)
+        self.assertIn('no hash computation or GitHub ticket is required', result.stderr)
+
+    def test_report_run_and_design_task_are_independent_with_plain_slugs(self):
+        self.task('report-run', self.a, slug='report-run')
+        self.task('other-design', self.b, status='designing', slug='other-design')
+        self.assertGate(0, command='python3 main.py --start 2026-01-01 --end 2026-10-29 --output outputs/reports/ytd.pdf', cwd=self.a)
+        self.assertGate(2, command='touch design.txt', cwd=self.b)
+
     def test_environment_craft_session_dir_wins_conflicting_payload(self):
         self.task('o/r#envdir', self.a)
         payload = {'session_id': 'ffe0010a-0000-4000-8000-000000000000',

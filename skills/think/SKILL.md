@@ -370,6 +370,19 @@ workspace-root signals, symlink escapes and opaque program execution are not
 exempt. Bootstrap designing, write the investigation/pre-mortem evidence, then
 transition the same gate to implementing; dispose and clean up after completion.
 
+**Bootstrap without a ticket or shell helper.** Use the Write tool with the
+literal, host-resolved own session path and a stable directory such as
+`tasks/report-run/think-gate.json`. An explicit `task_id` is sufficient for an
+operational request; a hash-suffixed directory and a GitHub issue are not
+prerequisites. The gate's `repo_root` is the target project, not the Craft
+workspace. A different task's gate never supplies or blocks this task's
+authority. If `CRAFT_SESSION_DIR` is literally `{{SESSION_PATH}}`, use the
+session path resolved by host turn anchors/host session metadata, not a
+directory named after the template. Missing or ambiguous identity requires
+repair of that binding, never writing shared root signals. Older memories
+recommending UUID-keyed workspace-root files describe retired behavior and
+must not be followed.
+
 A positive reader classifier runs before gate lookup. Bounded diagnostics
 (syntax checks, standard test/bytecode/lint commands, document/package readers,
 and Git fetch) are also allowed without artifacts during designing/reviewing.

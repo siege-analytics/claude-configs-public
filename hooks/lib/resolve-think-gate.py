@@ -108,6 +108,11 @@ def _session_directory_id(names) -> str:
 
 def session_id_from_env() -> str:
     """Craft directory > Craft id > Craft transcript > native explicit id."""
+    # An unexpanded host template is not a session identity or scratch root.
+    # Never sanitize it into a shared id, even if another identity is present.
+    if any('{{' in os.environ.get(name, '') or '}}' in os.environ.get(name, '')
+           for name in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR')):
+        return ""
     directory_id = _session_directory_id(("CRAFT_SESSION_DIR", "CRAFT_AGENT_SESSION_DIR"))
     if directory_id:
         return directory_id
@@ -458,6 +463,22 @@ def _gate_matches_session(loaded: dict, session_id: str) -> bool:
                for k in ("session", "sessionId")) if session_id else True
 
 
+def task_bootstrap_help(workspace: str, session_id: str = "") -> str:
+    """Explain an own-task bootstrap without requiring a ticket or hash tool."""
+    sid = session_id or session_id_from_env()
+    if not sid:
+        return "Restore the host session binding first; never create shared workspace-root gates."
+    directory = os.environ.get('CRAFT_SESSION_DIR', '')
+    if not os.path.isabs(directory) or os.path.basename(os.path.normpath(directory)) != sid:
+        directory = os.path.join(workspace, 'sessions', sid)
+    return (f"Use the Write tool to create {directory}/tasks/<task-slug>/think-gate.json. "
+            "Choose any stable unique slug; no hash computation or GitHub ticket is required. "
+            "Set task_id (or the full ticket), sessionId, target repo_root, scope_paths and status for this task. "
+            "Own-session task gate JSON and plans can be bootstrapped without another gate. "
+            "Keep companion evidence beside this task's gate; never overwrite root signals or another task. "
+            "Then satisfy only this task's effective review tier; see [skill:think].")
+
+
 def select_task(workspace: str, paths: list[str], binding: str = "", session_id: str = "") -> dict:
     """Resolve all targets to one owner. Explicit binding disambiguates, not expands scope."""
     if not (session_id or session_id_from_env()):
@@ -480,7 +501,7 @@ def select_task(workspace: str, paths: list[str], binding: str = "", session_id:
             if matching:
                 scores.append((max(matching), gate))
         if not scores:
-            return {"gate": None, "error": "Unscoped mutation: open a task gate with scope_paths for this action." + ("\n" + "\n".join(rejected) if rejected else "")}
+            return {"gate": None, "error": "Unscoped mutation: open a task gate with scope_paths for this action.\n" + task_bootstrap_help(workspace, session_id) + ("\n" + "\n".join(rejected) if rejected else "")}
         best = max(s for s, _ in scores)
         winners = [g for score, g in scores if score == best]
         if len(winners) != 1:

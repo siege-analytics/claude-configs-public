@@ -11770,10 +11770,10 @@
     },
     {
       "canonical_source": "skills/think/SKILL.md",
-      "characters": 30156,
-      "content_sha256": "6b3777ecedb119f730f1bc61fb8bc5da1f669896cd8769270911b8759dde1f40",
+      "characters": 30997,
+      "content_sha256": "6fbeda9e153979122a530d3636ddd67fdfde27fa15f3c22a55554b2225c79e6c",
       "description": "MANDATORY design-first gate. Enforces structured design before any code is written for a feature, refactor, or architecture change. Slash-invokable as /think; also enforced via the resolver before any non-trivial implementation. Do NOT skip this skill.",
-      "estimated_tokens": 7539,
+      "estimated_tokens": 7750,
       "frontmatter_name": "think",
       "generated_outputs": [
         "dist/nested/skills/think",
@@ -11787,6 +11787,7 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "hooks/README.md",
+        "hooks/lib/resolve-think-gate.py",
         "hooks/resolver/skill-enforcement-gate.sh",
         "hooks/resolver/think-gate-guard.sh",
         "plans/investigate-615-session-scoped-signal-files.md",
@@ -11797,6 +11798,7 @@
         "plans/self-review-719.md",
         "plans/self-review-pr-a.md",
         "projects/CONTRIBUTING.md",
+        "skills/KERNEL.md",
         "skills/RESOLVER.md",
         "skills/_knowledge-base-rules.md",
         "skills/_verify-before-execute-rules.md",
@@ -11807,7 +11809,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 496,
+      "lines": 509,
       "owner": [
         "unknown"
       ],
@@ -11817,8 +11819,8 @@
         "cross_references": 50,
         "grade": "F",
         "provenance": 40,
-        "structure": 100.0,
-        "total": 52.5
+        "structure": 90.0,
+        "total": 50.0
       },
       "rule_definitions": [],
       "slug": "think",
@@ -12251,9 +12253,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2663418,
+    "characters": 2664259,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 665934,
+    "estimated_tokens": 666145,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12274,7 +12276,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1267024
+      "unclassified": 1267865
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12286,7 +12288,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 316800
+      "unclassified": 317011
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,
