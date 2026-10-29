@@ -39,3 +39,8 @@ The earlier proposed workspace-recovery CLI finding still does not apply: that f
 ## Exact source commit approval
 
 Independent reviewer approved `b324824150c1ad91a7c3f78d940ca5c4eb4ad96f` against `origin/main`, with no must-fix. This follow-up corrects review-stage wording only; it changes no executable source or runtime policy.
+
+
+## Kernel digest pin follow-up review
+
+Independent reviewer approved the one-line verify-enforcement.sh pin update. All four packaged kernels independently hash to `1e94ede28fd98551f492ba275991393719e5d657f759113e960a555a031f78a4`, matching the new constant and kernel-budget catalog. The source-to-package change is reference resolution; nonempty regular non-symlink checks and the exact digest comparison remain intact. No weakening or must-fix finding.

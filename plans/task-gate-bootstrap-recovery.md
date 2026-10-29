@@ -39,3 +39,8 @@ Local task-keyed suite: 52 tests passed in 272.910s before the final template re
 ## Test plan
 
 Run the full hook scenario suites, including the final 53-case task-keyed suite; build/freshness and review-risk checks; independent current-commit review; installed drift and bounded live-session verification. Roll back managed runtime files to the pre-install backup if the installed task isolation or bootstrap checks regress. Preserve session/task state and unrelated local source.
+
+
+## Kernel verifier integration follow-up
+
+Hosted CI rejected the updated packaged kernel because verify-enforcement.sh still pinned its previous digest. Update only EXPECTED_KERNEL_SHA256 to the SHA256 of all four newly built packaged kernels, `1e94ede28fd98551f492ba275991393719e5d657f759113e960a555a031f78a4`. Independent review verified source-to-package reference resolution, matching kernel-budget catalog and unchanged regular/non-symlink/nonempty exact-digest enforcement. The affected progressive_mount_test passes locally. Hosted full validation must pass on this follow-up before merge.
