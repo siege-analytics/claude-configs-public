@@ -93,6 +93,20 @@ class Payload(unittest.TestCase):
         self.assertEqual(state['pending_spawns'], {})
         self.assertIn('large-child', json.dumps(state['administered_spokes']))
 
+    def test_hub_malformed_advisory_input_does_not_allow_oversize_metadata(self):
+        g = fixture.Hub(methodName='runTest'); g.setUp()
+        self.addCleanup(g.tearDown)
+        g.meta('one', ['role::hub'])
+        for raw, expected in (
+            ('not json', 0), ('', 0), ('[]', 0),
+            (json.dumps(fixture.craft_payload(tool_name='mcp__session__spawn_session',
+                cwd='x' * 98305, tool_input=g.spawn_input('oversize', 'CCP_TASK_ID=o/r#1\nbounded work'))), 2),
+        ):
+            result = subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')],
+                input=raw, env=g.env, text=True, capture_output=True, timeout=30)
+            self.assertEqual(result.returncode, expected, result.stderr)
+        self.assertFalse((g.ws / 'sessions/one/hub-threads.json').exists())
+
 
 if __name__ == '__main__':
     unittest.main()

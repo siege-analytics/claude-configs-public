@@ -15,6 +15,18 @@ command -v python3 >/dev/null 2>&1 || exit 0
 
 INPUT=$(cat 2>/dev/null || true)
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Preserve the existing advisory treatment of missing/malformed callback input.
+# A valid callback whose required metadata exceeds bounds still fails closed.
+if ! printf '%s' "$INPUT" | python3 -c '
+import json, sys
+try:
+    payload = json.load(sys.stdin)
+except ValueError:
+    sys.exit(1)
+sys.exit(0 if isinstance(payload, dict) and isinstance(payload.get("tool_input"), dict) else 1)
+'; then
+    exit 0
+fi
 _HOOK_METADATA=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/../lib/hook_payload.py") || exit 2
 export CCP_HOOK_INPUT_JSON="$_HOOK_METADATA"
 

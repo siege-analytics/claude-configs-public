@@ -35,7 +35,9 @@ set -euo pipefail
 HOOK_INPUT_JSON=$(cat 2>/dev/null || true)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-if ! _HOOK_METADATA=$(printf '%s' "$HOOK_INPUT_JSON" | python3 "$SCRIPT_DIR/../lib/hook_payload.py"); then
+_METADATA_INPUT="$HOOK_INPUT_JSON"
+[[ -n "$_METADATA_INPUT" ]] || _METADATA_INPUT='{}'
+if ! _HOOK_METADATA=$(printf '%s' "$_METADATA_INPUT" | python3 "$SCRIPT_DIR/../lib/hook_payload.py"); then
     echo "Hook input metadata unavailable; prompt diagnostics remain advisory." >&2
     exit 0
 fi
