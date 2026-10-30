@@ -27,13 +27,13 @@ anchor() {  # anchor <session> <sdk id>...: Craft's format, one record per final
 task_gate() {  # task_gate <session> <ticket>: an implementing gate with every artifact
     local td="$WS/sessions/$1/tasks/$(slug "$2")" g
     [[ "$td" != */tasks/ ]] || { echo "  FAIL  could not compute the task slug"; exit 1; }
-    mkdir -p "$td" "$REPO/plans"
+    mkdir -p "$td" "$WS/sessions/$1/plans"
     g="\"ticket\":\"$2\",\"sessionId\":\"$1\",\"repo_root\":\"$REPO\",\"scope_paths\":[\"$REPO\"],\"status\":\"implementing\""
     printf '{%s}\n' "$g" > "$td/think-gate.json"
     printf '{%s,"findings":[{"claim":"verified"}]}\n' "$g" > "$td/investigate-gate.json"
     printf '{%s,"junior_found":true,"senior_found":true}\n' "$g" > "$td/junior-senior-gate.json"
     printf '{%s,"investigate_posted":true,"premortem_posted":true}\n' "$g" > "$td/artifacts-posted-gate.json"
-    printf 'Ticket: %s\nSeverity: 50\nImplementation may proceed: YES\n' "$2" > "$REPO/plans/pre-mortem-$(basename "$td").md"
+    printf 'Ticket: %s\nSeverity: 50\nImplementation may proceed: YES\n' "$2" > "$WS/sessions/$1/plans/pre-mortem-$(basename "$td").md"
 }
 
 PASS=0; FAIL=0

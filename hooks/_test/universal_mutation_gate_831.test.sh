@@ -17,7 +17,7 @@ OLD_TICKET="siege-analytics/claude-configs-public#718"
 WS="$TMP/workspace"
 REPO="$TMP/repo"
 TASK_DIR="$WS/sessions/$SESSION_ID/tasks/current"
-mkdir -p "$TASK_DIR" "$WS/sessions/$SESSION_ID" "$WS/plans" "$REPO"
+mkdir -p "$TASK_DIR" "$WS/sessions/$SESSION_ID" "$WS/sessions/$SESSION_ID/plans" "$REPO"
 
 git -C "$REPO" init -q
 git -C "$REPO" config user.email test@example.com
@@ -46,7 +46,7 @@ write_current_task_artifacts() {
   write_json "$TASK_DIR/investigate-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"findings\": [{\"id\": \"F1\"}]}"
   write_json "$TASK_DIR/junior-senior-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"junior_found\": true, \"senior_found\": true}"
   write_json "$TASK_DIR/artifacts-posted-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$REPO\", \"investigate_posted\": true, \"premortem_posted\": true}"
-  cat > "$WS/plans/pre-mortem-current.md" <<EOF2
+  cat > "$WS/sessions/$SESSION_ID/plans/pre-mortem-current.md" <<EOF2
 # Pre-mortem
 
 Ticket: $TICKET
@@ -92,7 +92,7 @@ if ! out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HO
   exit 1
 fi
 
-rm -f "$TASK_DIR/"{investigate,junior-senior,artifacts-posted}-gate.json "$WS/plans/pre-mortem-current.md"
+rm -f "$TASK_DIR/"{investigate,junior-senior,artifacts-posted}-gate.json "$WS/sessions/$SESSION_ID/plans/pre-mortem-current.md"
 if out="$(CRAFT_SESSION_ID="$SESSION_ID" CRAFT_AGENT_WORKSPACE="$WS" bash "$HOOK" <<<"$(payload 'git checkout -b feature/test2')" 2>&1)"; then
   echo "$out" >&2
   echo "FAIL: mutation should block when only stale wrong-ticket session artifacts exist" >&2
@@ -140,7 +140,7 @@ git -C "$OTHER" commit -q -m 'baseline other'
 write_json "$TASK_DIR/investigate-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$OTHER\", \"findings\": [{\"id\": \"OTHER\"}]}"
 write_json "$TASK_DIR/junior-senior-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$OTHER\", \"junior_found\": true, \"senior_found\": true}"
 write_json "$TASK_DIR/artifacts-posted-gate.json" "{\"ticket\": \"$TICKET\", \"task\": \"$TICKET\", \"sessionId\": \"$SESSION_ID\", \"status\": \"complete\", \"repo_root\": \"$OTHER\", \"investigate_posted\": true, \"premortem_posted\": true}"
-cat > "$WS/plans/pre-mortem-current.md" <<EOF2
+cat > "$WS/sessions/$SESSION_ID/plans/pre-mortem-current.md" <<EOF2
 # Pre-mortem
 
 Ticket: $TICKET

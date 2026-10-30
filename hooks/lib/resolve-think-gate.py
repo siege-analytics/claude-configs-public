@@ -56,7 +56,9 @@ def repo_slug(repo_root: str) -> str:
 
 
 def _safe_session_id(value: str) -> str:
-    return re.sub(r"[^a-zA-Z0-9_.-]", "_", value.strip())
+    # Identity must be preserved, never collapsed into a shared sanitized name.
+    value = value.strip()
+    return value if value not in {'.', '..'} and re.fullmatch(r'[a-zA-Z0-9_.-]+', value) else ''
 
 
 def _craft_session_value(obj) -> str:
@@ -96,6 +98,28 @@ def _find_session_value(obj) -> str:
     return ""
 
 
+def host_binding_present() -> bool:
+    # Invalid host identity is not an unbound native terminal invocation.
+    if any(os.environ.get(name, '').strip() for name in (
+        'CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR',
+        'CRAFT_SESSION_ID', 'CRAFT_AGENT_SESSION_ID', 'CLAUDE_SESSION_ID',
+        'SESSION_ID', 'CLAUDE_CODE_SESSION_ID', 'CLAUDE_SIGNAL_DIR',
+        'CRAFT_SIGNAL_DIR', 'CRAFT_AGENT_SIGNAL_DIR')):
+        return True
+    try:
+        payload = json.loads(os.environ.get('CCP_HOOK_INPUT_JSON', '{}'))
+    except (ValueError, TypeError):
+        return False
+    def bound(obj):
+        if not isinstance(obj, dict):
+            return False
+        if any(obj.get(key) for key in ('craftSessionId', 'craft_session_id',
+               'sessionId', 'session_id', 'sessionID', 'id', 'transcript_path', 'transcriptPath')):
+            return True
+        return any(bound(obj.get(key)) for key in ('session', 'conversation', 'metadata'))
+    return bound(payload)
+
+
 def _session_directory_id(names) -> str:
     for name in names:
         directory = os.environ.get(name, "").strip()
@@ -108,6 +132,13 @@ def _session_directory_id(names) -> str:
 
 def session_id_from_env() -> str:
     """Craft directory > Craft id > Craft transcript > native explicit id."""
+    # An unexpanded host template is not a session identity or scratch root.
+    # Never sanitize it into a shared id, even if another identity is present.
+    for name in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR'):
+        directory = os.environ.get(name, '').strip()
+        if directory and (not os.path.isabs(directory) or
+                          re.search(r'\{\{|\}\}|\$\{|\$[A-Za-z_]|%[A-Za-z_][^%]*%', directory)):
+            return ''
     directory_id = _session_directory_id(("CRAFT_SESSION_DIR", "CRAFT_AGENT_SESSION_DIR"))
     if directory_id:
         return directory_id
@@ -458,6 +489,22 @@ def _gate_matches_session(loaded: dict, session_id: str) -> bool:
                for k in ("session", "sessionId")) if session_id else True
 
 
+def task_bootstrap_help(workspace: str, session_id: str = "") -> str:
+    """Explain an own-task bootstrap without requiring a ticket or hash tool."""
+    sid = session_id or session_id_from_env()
+    if not sid:
+        return "Restore the host session binding first; never create shared workspace-root gates."
+    directory = own_session_directory(workspace, sid)
+    if not os.path.isabs(directory) or os.path.basename(os.path.normpath(directory)) != sid:
+        directory = os.path.join(workspace, 'sessions', sid)
+    return (f"Use the Write tool to create {directory}/tasks/<task-slug>/think-gate.json. "
+            "Choose a stable unique non-hidden slug; no hash computation or GitHub ticket is required. "
+            "Set task_id (or the full ticket), sessionId, target repo_root, scope_paths and status for this task. "
+            "Own-session task gate JSON and plans can be bootstrapped without another gate. "
+            "Keep JSON companions beside this task's gate; write its pre-mortem under this session's plans/ naming the task_id. Never overwrite root signals or another task. "
+            "Then satisfy only this task's effective review tier; see [skill:think].")
+
+
 def select_task(workspace: str, paths: list[str], binding: str = "", session_id: str = "") -> dict:
     """Resolve all targets to one owner. Explicit binding disambiguates, not expands scope."""
     if not (session_id or session_id_from_env()):
@@ -480,7 +527,7 @@ def select_task(workspace: str, paths: list[str], binding: str = "", session_id:
             if matching:
                 scores.append((max(matching), gate))
         if not scores:
-            return {"gate": None, "error": "Unscoped mutation: open a task gate with scope_paths for this action." + ("\n" + "\n".join(rejected) if rejected else "")}
+            return {"gate": None, "error": "Unscoped mutation: open a task gate with scope_paths for this action.\n" + task_bootstrap_help(workspace, session_id) + ("\n" + "\n".join(rejected) if rejected else "")}
         best = max(s for s, _ in scores)
         winners = [g for score, g in scores if score == best]
         if len(winners) != 1:
@@ -564,13 +611,13 @@ def find_gate_for_repo(workspace: str, repo_root: str, gate_name: str = "think-g
         return found if gate_name == "think-gate" else _artifact_for(found, gate_name, workspace, session_id)
     # Sole root legacy read: UNKNOWN session, exact canonical repo match.
     # Diagnostic consumers only: resolve_action never uses this path.
-    if gate_name == "think-gate" and not (session_id or session_id_from_env() or session_dirs(workspace)):
+    if gate_name == "think-gate" and not (session_id or session_id_from_env() or session_dirs(workspace) or host_binding_present()):
         legacy = _load(os.path.join(workspace, gate_name + ".json"))
         if legacy and legacy["data"].get("repo_root") and canonical(legacy["data"]["repo_root"]) == canonical(repo_root):
             return legacy
     # Native pre-push (no session identity): the pre-#1051 workspace or repository
     # test-gate.json is the evidence a terminal push supplies (#1092 review).
-    if gate_name == "test-gate" and not (session_id or session_id_from_env()):
+    if gate_name == "test-gate" and not (session_id or session_id_from_env() or host_binding_present()):
         for root in dict.fromkeys(p for p in (workspace, repo_root) if p):
             legacy = _load(os.path.join(root, "test-gate.json"))
             if legacy:
@@ -625,6 +672,14 @@ def _candidate_paths(workspace: str, repo_root: str, gate_name: str, session_id:
     return [g["path"]] if (g := find_gate_for_repo(workspace, repo_root, gate_name, session_id=session_id)) else []
 
 
+def own_session_directory(workspace: str, session_id: str = '') -> str:
+    sid = session_id or session_id_from_env()
+    if not sid:
+        return ''
+    return next((os.environ.get(k) for k in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR')
+                 if os.environ.get(k)), os.path.join(workspace, 'sessions', sid))
+
+
 def own_session_path(workspace: str, path: str, directory: bool = False, removal: bool = False) -> bool:
     """Narrow lifecycle exception, not task/repository implementation authority.
 
@@ -634,8 +689,7 @@ def own_session_path(workspace: str, path: str, directory: bool = False, removal
     sid = session_id_from_env()
     if not sid:
         return False
-    sd = next((os.environ.get(k) for k in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR')
-               if os.environ.get(k)), os.path.join(workspace, 'sessions', sid))
+    sd = own_session_directory(workspace, sid)
     root = canonical(sd)
     target = canonical(path)
     if root == canonical(workspace) or not _within(target, root) or target == root:
@@ -688,6 +742,7 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     result = {**shape, **selected}
     if result["gate"]:
         tg = result["gate"]
+        result["session_dir"] = own_session_directory(workspace)
         result["artifacts"] = {name: g["path"] if (g := _artifact_for(tg, name, workspace)) else None for name in ("investigate-gate", "junior-senior-gate", "artifacts-posted-gate", "review-gate", "test-gate")}
         result["task"] = task_identity(tg["data"])
         result["tier"] = task_tier(tg["data"], shape["paths"], command)

@@ -307,7 +307,7 @@ After posting the design note (Step 7), write the signal to
 `$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json`, or
 `<workspace>/sessions/<session-id>/tasks/<task-slug>/think-gate.json`.
 Task identity is the **full ticket reference**, or an explicit `task_id` for
-untracked work. Choose a stable unique directory slug; the resolver reads each
+untracked work. Choose a stable unique non-hidden directory slug; the resolver reads each
 task directory's identity, not its spelling. The helper's `task_slug(identity)`
 provides a collision-safe default for writers migrating a legacy session file.
 Never derive a path from an unset session variable or write to the workspace root.
@@ -367,8 +367,24 @@ Own-session lifecycle files do not require an existing task gate: the host's
 current session may create/edit/remove its task gate JSON and write its own
 plans/data. Bounded mkdir/rmdir may scaffold task directories. Other sessions,
 workspace-root signals, symlink escapes and opaque program execution are not
-exempt. Bootstrap designing, write the investigation/pre-mortem evidence, then
+exempt. For a plain task ID, keep its pre-mortem in the current host session’s `plans/`; shared workspace/repository plans are eligible only for a full repository-qualified ticket.
+
+Bootstrap designing, write the investigation/pre-mortem evidence, then
 transition the same gate to implementing; dispose and clean up after completion.
+
+**Bootstrap without a ticket or shell helper.** Use the Write tool with the
+literal, host-resolved own session path and a stable directory such as
+`tasks/report-run/think-gate.json`. An explicit `task_id` is sufficient for an
+operational request; a hash-suffixed directory and a GitHub issue are not
+prerequisites. The gate's `repo_root` is the target project, not the Craft
+workspace. A different task's gate never supplies or blocks this task's
+authority. If the gate reports an unresolved or templated host binding, repair
+that host binding before attempting lifecycle writes; no chosen path bypasses
+it. A transcript displaying `{{SESSION_PATH}}` is normalization, not evidence
+of a literal callback environment. Keep JSON companions beside the task gate
+and its pre-mortem in this session's `plans/`, naming the task identity. Older memories
+recommending UUID-keyed workspace-root files describe retired behavior and
+must not be followed.
 
 A positive reader classifier runs before gate lookup. Bounded diagnostics
 (syntax checks, standard test/bytecode/lint commands, document/package readers,
