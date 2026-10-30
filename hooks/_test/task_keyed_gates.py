@@ -1012,11 +1012,11 @@ class Hub(unittest.TestCase):
             return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')],
                 input=json.dumps(payload), env={**self.env, 'HUB_THREAD_CAP': '1'}, text=True, capture_output=True)
         self.assertEqual(invoke().returncode, 0)
-        self.assertEqual(invoke().returncode, 0)
+        self.assertEqual(invoke().returncode, 2)
         self.assertEqual(invoke(name='different').returncode, 2)
         self.assertEqual(invoke(token='other').returncode, 2)
         self.assertEqual(invoke(phase='PostToolUse', response={'sessionId': 'child'}).returncode, 0)
-        self.assertEqual(invoke().returncode, 0)
+        self.assertEqual(invoke().returncode, 2)
         self.assertEqual(invoke(name='different').returncode, 2)
         self.assertEqual(invoke(token='other').returncode, 2)
 
@@ -1032,9 +1032,14 @@ class Hub(unittest.TestCase):
         state = json.loads((self.ws / 'sessions/one/hub-threads.json').read_text())
         self.assertEqual([x['sessionId'] for x in state['administered_spokes']], ['actual-child'])
         self.assertEqual(set(state['pending_spawns']), {'c'})
-        self.assertEqual(self.spawn('a').returncode, 0)
+        self.assertEqual(self.spawn('a').returncode, 2)
         state = json.loads((self.ws / 'sessions/one/hub-threads.json').read_text())
         self.assertEqual(set(state['pending_spawns']), {'c'})
+        failed = [{'sessionId': 'not-created'}, {'structuredContent': {'content': [{'type': 'text', 'text': json.dumps({'isError': True, 'error': 'failed'})}]}}]
+        self.assertEqual(self.spawn('c', phase='PostToolUse', response=failed).returncode, 0)
+        state = json.loads((self.ws / 'sessions/one/hub-threads.json').read_text())
+        self.assertEqual([x['sessionId'] for x in state['administered_spokes']], ['actual-child'])
+        self.assertEqual(state['pending_spawns'], {})
 
     def test_only_hubs_capped_unknown_role_audited(self):
         for role in ('role::traffic-cop', 'role::workspace-config', 'role::deep-think', 'role::worker', 'role::reviewer'):

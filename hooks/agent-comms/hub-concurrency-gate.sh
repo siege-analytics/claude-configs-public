@@ -246,10 +246,15 @@ def main():
                     except Exception: response = {}
                 child_id = spawned_session(response)
                 def result_failed(value):
+                    if isinstance(value, str):
+                        try: value = json.loads(value)
+                        except (ValueError, TypeError): return False
                     if isinstance(value, list): return any(result_failed(x) for x in value)
                     return isinstance(value, dict) and (bool(value.get('error') or value.get('isError'))
-                        or any(result_failed(value.get(k)) for k in ('toolResults', 'content')))
+                        or any(result_failed(value.get(k)) for k in ('toolResults', 'content', 'text', 'structuredContent', 'tool_result', 'tool_response')))
                 failed = phase == 'PostToolUseFailure' or result_failed(response) or bool(payload.get('tool_error') or payload.get('error') or payload.get('is_error'))
+                if failed:
+                    child_id = ''
                 if child_id or failed:
                     pending.pop(request_key, None)
                 else:
@@ -261,10 +266,11 @@ def main():
                 return 0
             completed = next((x for x in spokes if x.get('request_id') == request_key), None)
             if completed:
-                if completed.get('fingerprint') != fingerprint:
-                    sys.stderr.write('BLOCKED: completed spawn request token was reused for different arguments.\n')
-                    return 2
-                return 0
+                sys.stderr.write('BLOCKED: this spawn request already created session %s; inspect or message that child instead of spawning again.\n' % completed['sessionId'])
+                return 2
+            if reservation and not payload.get('tool_use_id'):
+                sys.stderr.write('BLOCKED: this request token already has a pending spawn; inspect its result or wait for its bounded lease before retrying.\n')
+                return 2
             count = sum(x.get('task') == task for x in spokes)
             count += sum(x.get('task') == task for k, x in pending.items() if k != request_key)
             if count >= cap:

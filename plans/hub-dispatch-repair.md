@@ -32,3 +32,7 @@ Focused Hub suite passes 14 tests before the final fingerprint amendment; final 
 ## Test plan
 
 Real subprocess tests cover repeated protocol-denied calls, slot admission, exact task isolation, outer-array completion, failure/cancellation release, duplicate callbacks and idempotent argument-bound tokens. Preserve all original communication/steward/concluded-child controls. Rollback restores the previous reviewed package; retain derived-state evidence and allow leases to expire without deleting unrelated children.
+
+## Independent correction and acceptance
+
+Independent reviewer reproduced two phantom/replay bugs and a nested error variant. Corrected all before integration. Completed requests and explicit pending token retries now deny instead of authorizing another tool execution; duplicate Post remains idempotent. Overall failure suppresses child creation across all recognized wrappers. Reviewer approved revised sources; focused2 tests pass4.789s, Hub14 pass26.096s before final nested-wrapper-only correction. Full integrated suite follows.
