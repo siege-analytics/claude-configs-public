@@ -58,6 +58,8 @@ def repo_slug(repo_root: str) -> str:
 def _safe_session_id(value: str) -> str:
     # Identity must be preserved, never collapsed into a shared sanitized name.
     value = value.strip()
+    if value.strip('_').upper() in {'SESSION_ID', 'SESSION_PATH', 'CRAFT_SESSION_ID', 'CRAFT_SESSION_DIR', 'CLAUDE_SESSION_ID', 'CLAUDE_SESSION_DIR'}:
+        return ''
     return value if value not in {'.', '..'} and re.fullmatch(r'[a-zA-Z0-9_.-]+', value) else ''
 
 
@@ -113,6 +115,8 @@ def host_binding_present() -> bool:
     def bound(obj):
         if not isinstance(obj, dict):
             return False
+        if isinstance(obj.get('tool_input'), dict) or obj.get('tool_name'):
+            return True
         if any(obj.get(key) for key in ('craftSessionId', 'craft_session_id',
                'sessionId', 'session_id', 'sessionID', 'id', 'transcript_path', 'transcriptPath')):
             return True
@@ -136,7 +140,7 @@ def session_id_from_env() -> str:
     # Never sanitize it into a shared id, even if another identity is present.
     for name in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR'):
         directory = os.environ.get(name, '').strip()
-        if directory and (not os.path.isabs(directory) or
+        if directory and (not os.path.isabs(directory) or not _safe_session_id(os.path.basename(os.path.normpath(directory))) or
                           re.search(r'\{\{|\}\}|\$\{|\$[A-Za-z_]|%[A-Za-z_][^%]*%', directory)):
             return ''
     directory_id = _session_directory_id(("CRAFT_SESSION_DIR", "CRAFT_AGENT_SESSION_DIR"))
@@ -156,7 +160,7 @@ def session_id_from_env() -> str:
     directory_id = _session_directory_id(("CLAUDE_SESSION_DIR",))
     if directory_id:
         return directory_id
-    for name in ("CLAUDE_SESSION_ID", "SESSION_ID"):
+    for name in ("CLAUDE_SESSION_ID", "CLAUDE_CODE_SESSION_ID", "SESSION_ID"):
         value = os.environ.get(name, "").strip()
         if value:
             return _safe_session_id(value)
@@ -165,8 +169,18 @@ def session_id_from_env() -> str:
 
 
 SESSION_UNRESOLVED = ("Session id unresolved; gates under sessions/<id>/ are not visible. "
-                      "Have the hook host supply CRAFT_SESSION_DIR "
-                      "(CLAUDE_SESSION_ID for a native runtime); an SDK UUID or ordinary Claude transcript path alone is not a Craft directory id.")
+                      "Repair the hook host's CRAFT_SESSION_DIR to the absolute actual session directory "
+                      "(native: CLAUDE_SESSION_ID or CLAUDE_CODE_SESSION_ID). "
+                      "Then Write <actual-session-directory>/tasks/<task-slug>/think-gate.json; never use a shared root. "
+                      "An SDK UUID or ordinary Claude transcript path alone is not a Craft directory id.")
+
+
+def session_unresolved_message() -> str:
+    names = ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR',
+             'CRAFT_SESSION_ID', 'CRAFT_AGENT_SESSION_ID', 'CLAUDE_SESSION_ID',
+             'CLAUDE_CODE_SESSION_ID', 'SESSION_ID')
+    present = [name for name in names if os.environ.get(name, '').strip()]
+    return SESSION_UNRESOLVED + (' Present bindings to check: ' + ', '.join(present) + '.' if present else ' No supported environment session binding was supplied.')
 
 
 def session_dirs(workspace: str, session_id: str = "") -> "list[str]":
@@ -443,7 +457,7 @@ def _remember_managed_paths(workspace: str, paths: list[str]) -> None:
 def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
     sid = session_id or session_id_from_env()
     if not sid:
-        print(SESSION_UNRESOLVED, file=sys.stderr)
+        print(session_unresolved_message(), file=sys.stderr)
         return []
     result, seen, canonical_ids = [], set(), set()
     for sd in session_dirs(workspace, sid):
@@ -508,7 +522,7 @@ def task_bootstrap_help(workspace: str, session_id: str = "") -> str:
 def select_task(workspace: str, paths: list[str], binding: str = "", session_id: str = "") -> dict:
     """Resolve all targets to one owner. Explicit binding disambiguates, not expands scope."""
     if not (session_id or session_id_from_env()):
-        return {"gate": None, "error": SESSION_UNRESOLVED}
+        return {"gate": None, "error": session_unresolved_message()}
     candidates = _session_thinks(workspace, session_id)
     binding = binding or task_binding()
     if binding:
@@ -629,7 +643,7 @@ def find_gate_for_repo(workspace: str, repo_root: str, gate_name: str = "think-g
 
 def find_session_gate(workspace: str, gate_name: str = "think-gate", session_id: str = "") -> Optional[dict]:
     if not (session_id or session_id_from_env()):
-        print(SESSION_UNRESOLVED, file=sys.stderr)
+        print(session_unresolved_message(), file=sys.stderr)
         return None
     gates = _session_thinks(workspace, session_id)
     binding = task_binding()

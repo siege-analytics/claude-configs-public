@@ -162,6 +162,35 @@ class Gates(unittest.TestCase):
             env['CRAFT_SESSION_ID'] = value
             self.assertGate(2, 'touch report.pdf', cwd=self.a, env=env)
 
+    def test_reserved_placeholder_ids_and_directories_fail_closed(self):
+        for name in ('CRAFT_SESSION_ID', 'CLAUDE_SESSION_ID', 'CLAUDE_CODE_SESSION_ID'):
+            for value in ('__SESSION_ID__', '__SESSION_PATH__', 'SESSION_ID'):
+                env = {k:v for k,v in self.env.items() if k != 'CRAFT_SESSION_DIR'}
+                env[name] = value
+                with patch.dict(os.environ, env, clear=True):
+                    self.assertEqual(r.session_id_from_env(), '')
+                    self.assertTrue(r.host_binding_present())
+                result = self.assertGate(2, 'touch report.pdf', cwd=self.a, env=env)
+                self.assertIn(name, result.stderr)
+        for name in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR'):
+            env = {**self.env, name: str(self.ws / 'sessions/__SESSION_PATH__')}
+            with patch.dict(os.environ, env, clear=True):
+                self.assertEqual(r.session_id_from_env(), '')
+
+    def test_native_code_session_id_uses_own_task(self):
+        self.task('report-run', self.a, slug='report-run')
+        env = {k:v for k,v in self.env.items() if k != 'CRAFT_SESSION_DIR'}
+        env['CLAUDE_CODE_SESSION_ID'] = 'one'
+        self.assertGate(0, 'touch report.pdf', cwd=self.a, env=env)
+        self.assertGate(2, 'touch report.pdf', cwd=self.b, env=env)
+
+    def test_identity_free_callback_cannot_become_unbound_native(self):
+        env = {k:v for k,v in self.env.items() if not k.startswith(('CRAFT_', 'CLAUDE_'))}
+        env['CCP_HOOK_INPUT_JSON'] = json.dumps({'tool_input': {'command': 'git push'}})
+        with patch.dict(os.environ, env, clear=True):
+            self.assertTrue(r.host_binding_present())
+            self.assertEqual(r.session_id_from_env(), '')
+
     def test_bootstrap_help_uses_alternate_host_directory(self):
         directory = self.ws / 'alternate/one'
         env = {k:v for k,v in self.env.items() if k != 'CRAFT_SESSION_DIR'}
