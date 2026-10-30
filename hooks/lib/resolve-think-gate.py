@@ -58,7 +58,10 @@ def repo_slug(repo_root: str) -> str:
 def _safe_session_id(value: str) -> str:
     # Identity must be preserved, never collapsed into a shared sanitized name.
     value = value.strip()
-    if value.strip('_').upper() in {'SESSION_ID', 'SESSION_PATH', 'CRAFT_SESSION_ID', 'CRAFT_SESSION_DIR', 'CLAUDE_SESSION_ID', 'CLAUDE_SESSION_DIR'}:
+    if value.strip('_').upper() in {'SESSION_ID', 'SESSION_PATH', 'CRAFT_SESSION_ID', 'CRAFT_SESSION_DIR',
+            'CRAFT_AGENT_SESSION_ID', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_ID',
+            'CLAUDE_SESSION_DIR', 'CLAUDE_CODE_SESSION_ID', 'CLAUDE_SIGNAL_DIR',
+            'CRAFT_SIGNAL_DIR', 'CRAFT_AGENT_SIGNAL_DIR'}:
         return ''
     return value if value not in {'.', '..'} and re.fullmatch(r'[a-zA-Z0-9_.-]+', value) else ''
 

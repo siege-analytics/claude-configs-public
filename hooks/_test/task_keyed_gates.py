@@ -163,8 +163,8 @@ class Gates(unittest.TestCase):
             self.assertGate(2, 'touch report.pdf', cwd=self.a, env=env)
 
     def test_reserved_placeholder_ids_and_directories_fail_closed(self):
-        for name in ('CRAFT_SESSION_ID', 'CLAUDE_SESSION_ID', 'CLAUDE_CODE_SESSION_ID'):
-            for value in ('__SESSION_ID__', '__SESSION_PATH__', 'SESSION_ID'):
+        for name in ('CRAFT_SESSION_ID', 'CRAFT_AGENT_SESSION_ID', 'CLAUDE_SESSION_ID', 'CLAUDE_CODE_SESSION_ID'):
+            for value in ('__SESSION_ID__', '__SESSION_PATH__', 'SESSION_ID', '__' + name + '__'):
                 env = {k:v for k,v in self.env.items() if k != 'CRAFT_SESSION_DIR'}
                 env[name] = value
                 with patch.dict(os.environ, env, clear=True):
@@ -173,7 +173,7 @@ class Gates(unittest.TestCase):
                 result = self.assertGate(2, 'touch report.pdf', cwd=self.a, env=env)
                 self.assertIn(name, result.stderr)
         for name in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR'):
-            env = {**self.env, name: str(self.ws / 'sessions/__SESSION_PATH__')}
+            env = {**self.env, name: str(self.ws / 'sessions' / ('__' + name + '__'))}
             with patch.dict(os.environ, env, clear=True):
                 self.assertEqual(r.session_id_from_env(), '')
 

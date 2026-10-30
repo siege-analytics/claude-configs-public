@@ -32,3 +32,5 @@ Four focused real-hook/identity tests pass in 5.704s; kernel rebuilt and exact p
 ## Test plan
 
 Run targeted positive/negative regressions, full generated freshness and relevant hook/packet suites, then required CI and exact-head independent review. Rollback uses the prior reviewed package and retained managed-file backup; preserve session data and evidence.
+
+Independent review found omitted reserved alias names; reserved the entire supported binding family and added name-derived regressions. Final focused reserved test passes6.278s; independent three-test run passes6.314s. All four packaged kernels match the exact verifier pin. No metadata discovery or automatic identity recovery was introduced.
