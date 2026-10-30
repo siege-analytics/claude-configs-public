@@ -19,7 +19,7 @@ SID="261001-empty-reporoot"
 OTHER_SID="261001-other-session"
 TICKET="TEST-926-empty-reporoot-fixture"     # unique: never appears in real plans/
 WS="$TMP/workspace"                           # NOT a git repo -> empty REPO_ROOT
-mkdir -p "$WS/sessions/$SID" "$WS/sessions/$OTHER_SID" "$WS/plans"
+mkdir -p "$WS/sessions/$SID" "$WS/sessions/$OTHER_SID" "$WS/sessions/$SID/plans"
 
 fail() { echo "FAIL: $1" >&2; exit 1; }
 
@@ -45,7 +45,7 @@ PY
 }
 
 write_premortem() {
-  cat > "$WS/plans/pre-mortem-926test.md" <<EOF2
+  cat > "$WS/sessions/$SID/plans/pre-mortem-926test.md" <<EOF2
 ---
 ticket_refs:
   - $TICKET: fixture
@@ -122,7 +122,7 @@ run_gate "$SID" "git -C '$WT' checkout -b feature/empty-cwd-owned-worktree" \
 session_think_gate
 
 # --- KNOWN-BAD 1: known session, implementing gate, MISSING artifacts -> BLOCK
-rm -f "$WS/sessions/$SID/"{investigate-gate,junior-senior-gate,artifacts-posted-gate}.json "$WS/plans/pre-mortem-926test.md"
+rm -f "$WS/sessions/$SID/"{investigate-gate,junior-senior-gate,artifacts-posted-gate}.json "$WS/sessions/$SID/plans/pre-mortem-926test.md"
 if out="$(run_gate "$SID" "touch '$WS/empty-reporoot-noart.txt'" 2>&1)"; then
   fail "known session with implementing gate but no artifacts must BLOCK"
 fi
