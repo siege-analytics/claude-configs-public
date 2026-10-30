@@ -38,7 +38,7 @@
     "^hooks/(git|bash|write)/",
     "^hooks/agent-comms/(hub-concurrency-gate|no-slug-form-outbound|spawn-guard)\\.sh$",
     "^hooks/infrastructure/catalog-guard\\.sh$",
-    "^hooks/lib/(after-image|artifact-casefold-candidate|canonical-path|classify-catalog-command|commit-message-source|extract-json|probe-runner|read-only-command|resolve-think-gate|split-frontmatter|pipeline_state|task_actions|command-text|session_anchor|test-evidence|git_command|craft-settings-router)\\.py$",
+    "^hooks/lib/(after-image|artifact-casefold-candidate|canonical-path|classify-catalog-command|commit-message-source|extract-json|probe-runner|read-only-command|resolve-think-gate|split-frontmatter|pipeline_state|task_actions|command-text|session_anchor|test-evidence|git_command|craft-settings-router|hook_payload)\\.py$",
     "^hooks/lib/hub-concurrency-policy\\.json$",
     "^hooks/lib/(detect-host|gate-registry|scope-check|command-text)\\.sh$",
     "^hooks/resolver/.*(gate|guard|enforcement)",
@@ -49,7 +49,7 @@
     "^skills/KERNEL\\.md$",
     "^bin/(install|verify-enforcement|check-deploy|deploy|wire-enforcement)",
     "^bin/(craft-workspace-trust|build|effective_policy|frontmatter_validation|gate_contract|generated-source-authority|kernel-budget|review-risk|resolve-load-set|skill-inventory|skill-lifecycle|data-scope|validate-hooks|validate-local)\\.py$",
-    "^bin/_test/(craft_hook_router|craft_workspace_trust|craft_backend_canary|data_scope|effective_policy|gate_contract|protected_policy|review_risk|local_validation|scanner_source)_test\\.py$",
+    "^bin/_test/(craft_hook_router|craft_workspace_trust|craft_backend_canary|data_scope|effective_policy|gate_contract|protected_policy|review_risk|local_validation|scanner_source|hook_payload)_test\\.py$",
     "^requirements-validation\\.txt$",
     "^hooks/_test/review_risk_policy\\.test\\.sh$",
     "^catalog/legacy-owned-artifacts\\.json$",
@@ -81,7 +81,8 @@
     "^examples/selected-generations/",
     "^catalog/selected-generation-bindings\\.json$",
     "^skills/(commit|code-review|detect-ai-fingerprints)/SKILL\\.md$",
-    "^skills/detect-ai-fingerprints/(scan\\.sh|scan_ast\\.py|scan_snapshot\\.py)$"
+    "^skills/detect-ai-fingerprints/(scan\\.sh|scan_ast\\.py|scan_snapshot\\.py)$",
+    "^\\.claude/scanner-config\\.toml$"
   ],
   "standard_path_patterns": [
     "^skills/",

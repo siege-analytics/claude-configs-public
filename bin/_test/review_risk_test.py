@@ -23,6 +23,9 @@ AUTHORITY_DEPENDENCY_FLOOR = [
  "catalog/gate-contracts.json",
 ]
 AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
+ ".claude/scanner-config.toml",
+ "hooks/lib/hook_payload.py",
+ "bin/_test/hook_payload_test.py",
  "skills/commit/SKILL.md",
  "skills/code-review/SKILL.md",
  "skills/detect-ai-fingerprints/SKILL.md",
@@ -172,6 +175,13 @@ CI_INVOCATION_SITES = [
 ]
 REQUIRED_HELPER_EDGES = {
  tuple(row.split("|")) for row in """
+hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/hook_payload.py
+hooks/git/test-guard.sh|hooks/lib/hook_payload.py
+hooks/resolver/investigate-gate-guard.sh|hooks/lib/hook_payload.py
+hooks/resolver/pipeline-state-guard.sh|hooks/lib/hook_payload.py
+hooks/resolver/skill-enforcement-gate.sh|hooks/lib/hook_payload.py
+hooks/resolver/standing-order-guard.sh|hooks/lib/hook_payload.py
+hooks/resolver/think-gate-guard.sh|hooks/lib/hook_payload.py
 hooks/agent-comms/no-slug-form-outbound.sh|hooks/lib/extract-json.py
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/resolve-think-gate.py
 hooks/bash/coordinator-status-guard.sh|hooks/lib/extract-json.py
@@ -233,7 +243,7 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "ff541ffa4f58bf0aa7fe24bbc90d693c4ef48d18a39ea147d28f05f677dd4a02"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "5d00e743178a20134a81d59e338eb9a3749dbaf17e02b2229015fcf1df1641ae"
 REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "cb74a6cb13c649e3a341cfdeeec4d0d6a8d47e4f71e598bb8f7976dc779a295d"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
