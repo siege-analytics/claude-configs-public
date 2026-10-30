@@ -120,6 +120,23 @@ to `safe`.
 
 ## The install / harmonise contract
 
+Repositories with the committed `merge-then-deploy` policy require a clean
+tracked source at exact remote `main`. This comparison uses Git-object bytes
+and executable modes, including edits hidden by index flags or `core.fileMode`.
+Ignored outputs and untracked local files are excluded from the private source
+snapshot and cannot enter the deployed generation. The source and target must
+be separate physical directories; managed writes may not traverse symlinks or
+overwrite existing hardlinked files, including target hook settings.
+
+The accepted revision is built in a private Git-backed snapshot and its private
+artifacts are copied and byte-verified before an atomic deploy stamp is written.
+The original source and remote main are rechecked before activation and before
+the stamp. A failed/interrupted compatibility copy has no valid stamp. This is
+artifact-byte verification; it does not make the multi-file copy atomic or prove
+that a backend delivered its hooks. Full installation verification remains the
+later installer stage below. Legacy repositories without that committed policy
+retain the compatibility deployment path.
+
 1. `bin/build.py --layout flat --deploy --craft-workspace <ws>` builds and
    deploys skills, hooks, `KERNEL.md`, compatibility-only `RULES_BUNDLE.md`,
    the `CLAUDE.md -> KERNEL.md` symlink, the enforcement manifest, and the

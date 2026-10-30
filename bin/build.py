@@ -16,12 +16,17 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import hashlib
 import json
+import os
 import re
 import shlex
 import shutil
+import stat
 import subprocess
 import sys
+import tempfile
+import types
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -157,6 +162,84 @@ class BuildError(Exception):
     pass
 
 
+def _deploy_module(path: Path, name: str):
+    """Load a deployment dependency from its explicit source location."""
+    spec = importlib.util.spec_from_file_location(name, path)
+    if spec is None or spec.loader is None:
+        raise BuildError(f"cannot load deployment dependency: {path.name}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _deploy_source_files(repo_root: Path, revision: str):
+    """Read the accepted source directly from immutable Git objects."""
+    if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise BuildError("deployment revision must be an exact commit ID")
+    try:
+        # Bootstrap the reader from the accepted object, not its potentially
+        # modified checkout copy. This reader has only standard-library imports.
+        accepted_reader = subprocess.check_output(
+            ["git", "-C", str(repo_root), "show", revision + ":bin/source_snapshot.py"],
+            stderr=subprocess.PIPE, timeout=15, env=_deploy_git_environment(),
+        )
+        snapshot = types.ModuleType("accepted_deploy_source_snapshot")
+        exec(compile(accepted_reader, "accepted-source_snapshot.py", "exec"), snapshot.__dict__)
+        return snapshot.git_files(repo_root, revision)
+    except (OSError, ValueError, ImportError, SyntaxError, subprocess.SubprocessError) as exc:
+        raise BuildError("cannot read immutable deployment source") from exc
+
+
+def _deploy_git_environment() -> dict[str, str]:
+    """Keep explicit repository roots and accepted object IDs authoritative."""
+    environment = {key: value for key, value in os.environ.items() if key not in (
+        "GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE",
+        "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_NAMESPACE",
+    )}
+    environment["GIT_NO_REPLACE_OBJECTS"] = "1"
+    return environment
+
+
+def _matches_deploy_file(path: Path, data: bytes, executable: bool | None = None) -> bool:
+    """Compare bounded regular-file bytes/mode without following a leaf link."""
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0))
+        with os.fdopen(fd, "rb") as stream:
+            info = os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_size != len(data):
+                return False
+            if executable is not None and bool(info.st_mode & stat.S_IXUSR) != executable:
+                return False
+            return stream.read(len(data) + 1) == data
+    except OSError:
+        return False
+
+
+def _validate_deploy_inputs(repo_root: Path, revision: str) -> None:
+    """Reject tracked edits even when index flags or core.fileMode hide them."""
+    files = _deploy_source_files(repo_root, revision)
+    changed = [name for name, (data, executable) in files.items()
+               if not _matches_deploy_file(repo_root / name, data, executable)]
+    # A staged addition is absent from HEAD but can still enter source discovery.
+    indexed = subprocess.check_output(
+        ["git", "-C", str(repo_root), "ls-files", "-z"], timeout=15,
+        env=_deploy_git_environment(),
+    ).decode().split("\0")
+    changed.extend(name for name in indexed if name and name not in files)
+    staged = subprocess.run(
+        ["git", "-C", str(repo_root), "diff", "--cached", "--quiet", "--no-ext-diff",
+         "--no-textconv", revision, "--"], timeout=15, env=_deploy_git_environment(),
+    )
+    if staged.returncode not in (0, 1):
+        raise BuildError("cannot verify staged deployment inputs")
+    if staged.returncode:
+        changed.append("<staged changes>")
+    if changed:
+        shown = ", ".join(repr(name) for name in sorted(set(changed))[:5])
+        raise BuildError(f"merge-then-deploy refused: tracked deployment inputs differ from {revision[:12]}: {shown}. Use a clean exact-main source.")
+
+
 def validate_deploy_source(repo_root: Path) -> str | None:
     """Require merge-then-deploy installs to use the exact remote main SHA.
 
@@ -172,6 +255,7 @@ def validate_deploy_source(repo_root: Path) -> str | None:
                 text=True,
                 stderr=subprocess.DEVNULL,
                 timeout=5,
+                env=_deploy_git_environment(),
             ).strip()
         except (OSError, subprocess.SubprocessError):
             return ""
@@ -182,12 +266,14 @@ def validate_deploy_source(repo_root: Path) -> str | None:
             text=True,
             stderr=subprocess.DEVNULL,
             timeout=5,
+            env=_deploy_git_environment(),
         ).strip()
         marker_history = subprocess.check_output(
             ["git", "-C", str(repo_root), "log", "-1", "--format=%H", "--all", "--", ".claude/deploy-model"],
             text=True,
             stderr=subprocess.DEVNULL,
             timeout=5,
+            env=_deploy_git_environment(),
         ).strip()
     except (OSError, subprocess.SubprocessError) as exc:
         raise BuildError("cannot inspect repository deployment policy") from exc
@@ -201,6 +287,7 @@ def validate_deploy_source(repo_root: Path) -> str | None:
             text=True,
             stderr=subprocess.DEVNULL,
             timeout=15,
+            env=_deploy_git_environment(),
         ).strip()
         remote_main = remote_line.split()[0]
         if subprocess.run(
@@ -208,6 +295,7 @@ def validate_deploy_source(repo_root: Path) -> str | None:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             timeout=5,
+            env=_deploy_git_environment(),
         ).returncode != 0:
             subprocess.run(
                 ["git", "-C", str(repo_root), "fetch", "--quiet", "origin", "refs/heads/main"],
@@ -215,6 +303,7 @@ def validate_deploy_source(repo_root: Path) -> str | None:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=30,
+                env=_deploy_git_environment(),
             )
         remote_model = show_model(remote_main)
         remote_marker_history = subprocess.check_output(
@@ -222,6 +311,7 @@ def validate_deploy_source(repo_root: Path) -> str | None:
             text=True,
             stderr=subprocess.DEVNULL,
             timeout=5,
+            env=_deploy_git_environment(),
         ).strip()
         policy_known = policy_known or remote_model == "merge-then-deploy" or bool(remote_marker_history)
     except (OSError, subprocess.SubprocessError, IndexError) as exc:
@@ -237,7 +327,182 @@ def validate_deploy_source(repo_root: Path) -> str | None:
             f"{head[:12]} is not current origin/main {remote_main[:12]}. "
             "Merge develop into main, fetch origin, and install that exact main revision."
         )
+    _validate_deploy_inputs(repo_root, head)
     return head
+
+
+def _validate_deploy_target(repo_root: Path, target: Path) -> Path:
+    """Refuse source/runtime overlap and nonphysical target roots."""
+    source = repo_root.resolve()
+    destination = target.expanduser().absolute()
+    resolved = destination.resolve()
+    if destination.is_symlink() or not destination.is_dir():
+        raise BuildError("deployment target must be an existing physical directory")
+    if resolved == source or source in resolved.parents or resolved in source.parents:
+        raise BuildError("deployment source and target must not overlap")
+    return resolved
+
+
+def _validate_deploy_output(repo_root: Path, target: Path, output: Path) -> Path:
+    """Exact deployment exposes only its conventional generated dist copy."""
+    source = repo_root.resolve()
+    destination = target.resolve()
+    candidate = output.absolute()
+    resolved = candidate.resolve()
+    if candidate.is_symlink() or resolved != source / "dist":
+        raise BuildError("exact-main deployment output must be the physical source/dist directory")
+    if resolved == destination or resolved in destination.parents or destination in resolved.parents:
+        raise BuildError("deployment output and target must not overlap")
+    return resolved
+
+
+def _deployed_generation_files(builder) -> dict[str, tuple[bytes, bool | None]]:
+    """Describe managed artifact bytes from the frozen build, excluding settings."""
+    expected = {}
+    for directory in ("skills", "hooks"):
+        for path in (builder.DIST / "flat" / directory).rglob("*"):
+            if path.is_file():
+                relative = Path(directory) / path.relative_to(builder.DIST / "flat" / directory)
+                data = path.read_bytes()
+                if directory == "skills" and path.suffix.lower() == ".md":
+                    data = builder.strip_craft_incompatible_keys(data.decode()).encode()
+                expected[relative.as_posix()] = (data, bool(path.stat().st_mode & stat.S_IXUSR))
+    for name, source in (
+        ("RULES_BUNDLE.md", builder.DIST / "RULES_BUNDLE.md"),
+        ("KERNEL.md", builder.DIST / "flat/skills/KERNEL.md"),
+        ("enforcement-manifest.json", builder.DIST / "craft-agent/enforcement-manifest.json"),
+        ("hooks/enforcement-manifest.json", builder.DIST / "craft-agent/enforcement-manifest.json"),
+    ):
+        expected[name] = (source.read_bytes(), None)
+    resolver = builder.REPO_ROOT / "RESOLVER.md"
+    if resolver.is_file():
+        expected["RESOLVER.md"] = (builder.strip_craft_incompatible_keys(resolver.read_text()).encode(), None)
+    for relative in ("bin/resolve-load-set.py", "catalog/resolver-manifest.json",
+                     "bin/review-risk.py", "catalog/review-risk-policy.json"):
+        source = builder.DIST / "craft-agent" / relative
+        expected[relative] = (source.read_bytes(), bool(source.stat().st_mode & stat.S_IXUSR))
+    for source in (builder.DIST / "craft-agent/.githooks").iterdir():
+        if source.is_file():
+            expected[".githooks/" + source.name] = (source.read_bytes(), True)
+    return expected
+
+
+def _validate_deploy_paths(target: Path, paths) -> None:
+    """Keep managed writes inside the physical target, including their parents."""
+    for name in (*paths, ".claude/settings.json", "deploy-stamp.json"):
+        current = target
+        parts = Path(name).parts
+        for index, part in enumerate(parts):
+            current = current / part
+            try:
+                info = current.lstat()
+            except FileNotFoundError:
+                break
+            if stat.S_ISLNK(info.st_mode):
+                raise BuildError(f"managed deployment path must not be a symlink: {name}")
+            if index < len(parts) - 1:
+                if not stat.S_ISDIR(info.st_mode):
+                    raise BuildError(f"managed deployment parent must be a directory: {name}")
+                continue
+            if not stat.S_ISREG(info.st_mode):
+                raise BuildError(f"managed deployment file must be regular: {name}")
+            if info.st_nlink > 1:
+                raise BuildError(f"managed deployment file must not have hardlink aliases: {name}")
+
+
+def _verify_deployed_generation(builder, target: Path) -> dict:
+    """Verify copied managed bytes; this is not host invocation evidence."""
+    expected = _deployed_generation_files(builder)
+    _validate_deploy_paths(target, expected)
+    changed = [name for name, (data, executable) in expected.items()
+               if not _matches_deploy_file(target / name, data, executable)]
+    mount = target / "CLAUDE.md"
+    kernel = expected["KERNEL.md"][0]
+    if mount.is_symlink():
+        if mount.readlink() != Path("KERNEL.md"):
+            changed.append("CLAUDE.md")
+    elif not _matches_deploy_file(mount, kernel):
+        changed.append("CLAUDE.md")
+    if changed:
+        raise BuildError("deployed artifact verification failed: " + ", ".join(sorted(changed)[:5]))
+    hashes = {name: hashlib.sha256(data).hexdigest() for name, (data, _) in sorted(expected.items())}
+    return {"stage": "artifact-bytes", "file_count": len(hashes),
+            "files_sha256": hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()}
+
+
+def deploy_exact_revision(repo_root: Path, revision: str, target: Path, layout: str,
+                          *, output_root: Path | None = None) -> None:
+    """Build/activate a private accepted snapshot, then verify before stamping."""
+    destination = _validate_deploy_target(repo_root, target)
+    generated = _validate_deploy_output(repo_root, destination, output_root or repo_root / "dist")
+    if validate_deploy_source(repo_root) != revision:
+        raise BuildError("accepted main revision changed before snapshot building")
+    files = _deploy_source_files(repo_root, revision)
+    if any(name == "dist" or name.startswith("dist/") for name in files):
+        raise BuildError("tracked source must not occupy the generated dist directory")
+    attempted = False
+    stamp_path = destination / "deploy-stamp.json"
+    try:
+        with tempfile.TemporaryDirectory(prefix="exact-main-deploy-") as raw:
+            private = Path(raw).resolve()
+            source = private / "source"
+            source.mkdir()
+            for name, (data, executable) in files.items():
+                path = source / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(data)
+                path.chmod(0o755 if executable else 0o644)
+            # Give the frozen builder the accepted Git objects without checking
+            # mutable source files out or running clean/smudge filters.
+            environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+            environment.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
+                               GIT_CONFIG_SYSTEM=os.devnull, GIT_NO_REPLACE_OBJECTS="1")
+            for command in (
+                ["git", "init", "-q", str(source)],
+                ["git", "-C", str(source), "-c", "core.hooksPath=" + os.devnull,
+                 "fetch", "-q", "--no-tags", "--no-auto-maintenance", str(repo_root.resolve()), revision],
+                ["git", "-C", str(source), "update-ref", "HEAD", revision],
+            ):
+                subprocess.run(command, env=environment, check=True, timeout=60)
+            output = private / "dist"
+            subprocess.run(
+                [sys.executable, str(source / "bin/build.py"), "--layout",
+                 "both" if layout == "nested" else layout, "--dist", str(output)],
+                cwd=source, env=environment, check=True,
+            )
+            # Preserve the conventional output consumed by the installer. This
+            # path was constrained before building and is never activation input.
+            _validate_deploy_output(repo_root, destination, generated)
+            if generated.exists():
+                shutil.rmtree(generated)
+            shutil.copytree(output, generated)
+            if validate_deploy_source(repo_root) != revision:
+                raise BuildError("accepted main revision changed before activation")
+            builder = _deploy_module(source / "bin/build.py", "immutable_deploy_builder")
+            builder.DIST = output
+            _validate_deploy_paths(destination, _deployed_generation_files(builder))
+            attempted = True
+            # Invalidate authority before the first write: even an interrupted
+            # compatibility copy must not leave an old stamp over mixed bytes.
+            stamp_path.unlink(missing_ok=True)
+            builder.deploy_to_workspace(destination, write_stamp=False)
+            verified = _verify_deployed_generation(builder, destination)
+            if validate_deploy_source(repo_root) != revision:
+                raise BuildError("accepted main revision changed during activation")
+            stamp = {"commit": revision, "timestamp": builder.build_time().isoformat(),
+                     "repo_root": str(repo_root.resolve()), "verification": verified,
+                     "immutable_source": True}
+            if stamp_path.is_symlink():
+                raise BuildError("deploy stamp must not be a symlink")
+            with tempfile.NamedTemporaryFile(mode="w", dir=destination, prefix=".deploy-stamp-", delete=False) as saved:
+                json.dump(stamp, saved, indent=2)
+                saved.write("\n")
+                temporary_stamp = Path(saved.name)
+            os.replace(temporary_stamp, stamp_path)
+    except (OSError, ValueError, subprocess.SubprocessError, BuildError) as exc:
+        if attempted:
+            stamp_path.unlink(missing_ok=True)
+        raise BuildError(f"exact-main deployment failed: {exc}") from exc
 
 
 # Track unknown slug references for warnings (per build run)
@@ -1795,7 +2060,7 @@ def _merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
     print(f"  Merged CA enforcement into {dst}")
 
 
-def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
+def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE, *, write_stamp: bool = True) -> None:
     """Sync flat layout to the Craft Agent workspace.
 
     Copies dist/flat/skills/ → ~/.craft-agent/workspaces/my-workspace/skills/,
@@ -1947,7 +2212,8 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE) -> None:
         "repo_root": str(REPO_ROOT),
     }
     stamp_path = craft_workspace / "deploy-stamp.json"
-    stamp_path.write_text(json.dumps(stamp, indent=2) + "\n")
+    if write_stamp:
+        stamp_path.write_text(json.dumps(stamp, indent=2) + "\n")
 
     print(f"  Deployed to {craft_workspace}/ ({stripped_count} files stripped)")
 
@@ -2021,6 +2287,16 @@ def main() -> int:
             return 1
         if deploy_source:
             print(f"Deploy source verified: current origin/main {deploy_source}")
+            if args.check:
+                print("BUILD ERROR: --check cannot be combined with exact-main deployment", file=sys.stderr)
+                return 1
+            try:
+                deploy_exact_revision(REPO_ROOT, deploy_source, args.craft_workspace, args.layout,
+                                      output_root=DIST)
+            except BuildError as exc:
+                print(f"BUILD ERROR: {exc}", file=sys.stderr)
+                return 1
+            return 0
 
     # Phase 0: Validate the bounded gate/capability source and fixtures. This is
     # structural/configured evidence only; live host proof is intentionally not

@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: deployment provenance and settings ownership
+
+- Exact-main deployment now uses private immutable source/artifacts, verifies tracked bytes and modes, rejects overlapping or aliased write targets, and verifies installed bytes before stamping provenance (#821).
+- Literal Git-object reads ignore replacement refs and ambient repository routing. Deployment bootstraps its reader from the accepted commit instead of a mutable checkout helper.
+- Hook retirement preserves foreign operator commands with native-looking path suffixes (#1038). Source settings remove duplicate managed registrations, and validation checks multiplicity.
+
 ### Fixed: Craft prompt recovery and reviewed hook repairs
 
 - Restore advisory prompt recovery for a verified packaged Craft host with nested Claude/Codex markers. Standalone spoofing controls and explicit child hard stops remain enforced.

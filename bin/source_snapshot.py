@@ -1,6 +1,7 @@
 """Immutable local Git source files shared by build selection and generations."""
 from __future__ import annotations
 import re
+import os
 import subprocess
 from pathlib import Path, PurePosixPath
 
@@ -10,9 +11,19 @@ def require(condition, message):
         raise ValueError(message)
 
 
+def git_environment():
+    """Read literal objects from the named repository, not ambient replacements."""
+    environment = {key: value for key, value in os.environ.items() if key not in (
+        'GIT_DIR', 'GIT_COMMON_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE',
+        'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_NAMESPACE',
+    )}
+    environment['GIT_NO_REPLACE_OBJECTS'] = '1'
+    return environment
+
+
 def git(root, *args):
     return subprocess.check_output(['git', '-C', str(root), *args],
-                                   stderr=subprocess.PIPE, timeout=60)
+                                   stderr=subprocess.PIPE, timeout=60, env=git_environment())
 
 
 def relative(value):
@@ -47,7 +58,7 @@ def git_files(root, revision, prefix=''):
     require(selected, f'no input files at {revision}:{prefix}')
     raw = subprocess.check_output(['git', '-C', str(root), 'cat-file', '--batch'],
                                   input=('\n'.join(oid for _, oid, _ in selected) + '\n').encode(),
-                                  stderr=subprocess.PIPE, timeout=60)
+                                  stderr=subprocess.PIPE, timeout=60, env=git_environment())
     result, offset = {}, 0
     for name, oid, executable in selected:
         end = raw.index(b'\n', offset); header = raw[offset:end].decode().split()
