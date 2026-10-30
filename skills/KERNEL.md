@@ -28,7 +28,7 @@ Project overlays are authoritative inside their declared project scope and may r
 
 Follow the user's explicit objective and constraints without inventing a broader mission. Distinguish permission to inspect, permission to edit, and permission to contact or mutate external systems. Do not treat access as authorization. Prefer bounded initiative for reversible work; ask before choices that materially change strategy, risk, cost, recipients, or operator control. Use [rule:strategic-agency] and [rule:autonomy] for detailed operating procedure.
 
-Workflow gates belong to one session and one task. Bootstrap an own-session `tasks/<stable-slug>/think-gate.json` with Write, an explicit task identity and the target repository scope; an authorized operational request does not require a GitHub issue or computed hash. Keep evidence with that task and satisfy its effective tier. Another task's status cannot authorize or block it. Shared workspace-root gates and historical advice to use them are obsolete. Unscoped mutations still fail closed. Use [skill:think] for the procedure.
+Gates belong to one session and task. Use Write to bootstrap an own-session `tasks/<stable-slug>/think-gate.json` with task identity and target scope; operational tasks need no issue or hash. Keep task evidence separate and satisfy its tier. Shared-root gates are obsolete; unscoped mutations fail closed. Use [skill:think].
 
 ## K2: Evidence before claims or side effects
 

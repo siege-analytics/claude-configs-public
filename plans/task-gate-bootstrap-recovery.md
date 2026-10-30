@@ -58,3 +58,8 @@ Independent review then reproduced link-based borrowing through the own plans di
 Pass the resolver-produced own-session directory through action JSON into artifact validation. A central helper preserves the existing directory precedence and ID-only fallback, so plain-ID pre-mortems work for hosts supplying an ID without a directory. The #831 descriptive-task fixture now stores its plan in its own session; task fixture helpers distinguish numeric full tickets from plain IDs using the same predicate. Independent #831 and five host/provenance/lifecycle checks passed.
 
 Session identity is validated without lossy sanitization: canonical alphanumeric/dot/dash/underscore IDs (excluding dot and dot-dot) are preserved; template/variable syntax and relative directory bindings fail closed. Extended checks cover dollar/percent templates and dot traversal IDs. Six independent identity/precedence/transcript/alternate-directory cases pass after correcting fixture placement. Final full validation remains required. No automatic session discovery or permission bypass is introduced.
+
+
+## Inline budget integration
+
+Hosted 486e2a5 validation found the larger selected prompt at 10048 bytes, exceeding the existing 10000-byte inline budget on its longer path. Shorten only the new kernel paragraph; keep procedural detail in think and the denial message. All four regenerated kernels match the refreshed verifier pin `6796027e2ce6017c9f84a00eea52fcdf7cb80a18538d745bc14e6c11ad180d9f`. No limit or integrity check is relaxed. Independent review approved the preserved invariants, matching package hashes, load-set test, progressive loading 20/20 and progressive mount. A long-checkout-path local run also passes 20/20, with the large selection at 9664 bytes.

@@ -54,3 +54,8 @@ Configs review identified template-ID sharing, alternate-directory diagnostic mi
 ## Final host-directory and identity review
 
 Independent review approved central own-session directory derivation and transport from resolver output into artifact validation; tool input does not supply that binding. #831 plus five host/provenance/lifecycle cases passed. Final canonical identity amendment approved after fixture correction: six extended identity/transcript/precedence/alternate-directory tests passed in 12.859s. Known Craft slugs, UUIDs and alphanumeric fixture IDs retain identity; invalid values reject instead of colliding through sanitization. No remaining must-fix. Exact commit and full-suite receipts follow separately.
+
+
+## Compact kernel follow-up approval
+
+Independent review approved the concise kernel paragraph: own-session/task identity and scope, separate evidence, effective tier and fail-closed unscoped mutations remain explicit. Detailed bootstrap procedure remains in think and diagnostics. All four packages match pin `6796027e2ce6017c9f84a00eea52fcdf7cb80a18538d745bc14e6c11ad180d9f`. Independent load-set, progressive loading 20/20 (9664-byte large selection) and progressive mount checks pass. No budget relaxation or verifier weakening. No must-fix finding.
