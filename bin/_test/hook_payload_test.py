@@ -70,6 +70,21 @@ class Payload(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertNotIn('empty (sub)expression', result.stderr)
 
+    def test_near_limit_prompt_reaches_all_advisory_guards(self):
+        g = fixture.Gates(methodName='runTest'); g.setUp()
+        self.addCleanup(g.tearDown)
+        env = dict(g.env, AMBIENT_PADDING='p' * 100000)
+        value = fixture.craft_payload(hook_event_name='UserPromptSubmit', cwd=str(g.repo), prompt='p' * 1030000)
+        raw = json.dumps(value)
+        self.assertLess(len(raw.encode()), 1024 * 1024)
+        for name in ('investigate-gate-guard', 'think-gate-guard', 'standing-order-guard',
+                     'skill-enforcement-gate', 'review-gate-guard', 'pipeline-state-guard'):
+            result = subprocess.run(['bash', str(ROOT / 'hooks/resolver' / (name + '.sh'))],
+                input=raw, env=env, text=True, capture_output=True, timeout=60)
+            self.assertEqual(result.returncode, 0, (name, result.stderr))
+            self.assertNotIn('Argument list too long', result.stderr)
+            self.assertNotIn('metadata unavailable', result.stderr.lower())
+
     def test_hub_large_raw_prompt_and_response_preserve_replay_identity(self):
         g = fixture.Hub(methodName='runTest'); g.setUp()
         self.addCleanup(g.tearDown)
