@@ -33,6 +33,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "bundles/siege/protected-adapter.json",
  "examples/selected-registration/run.py",
  "bin/source_snapshot.py",
+ "bin/validate-local.py",
  "bin/_test/package_selection_test.py",
  "bundles/siege/build-bundle.json",
  "examples/selected-build/run.py",

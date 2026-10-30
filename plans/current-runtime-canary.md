@@ -32,3 +32,5 @@ Fifteen canary packet tests passed before capture helper; final rerun pending. A
 ## Test plan
 
 Run targeted positive/negative regressions, full generated freshness and relevant hook/packet suites, then required CI and exact-head independent review. Rollback uses the prior reviewed package and retained managed-file backup; preserve session data and evidence.
+
+Independent exact-source review approved351b9ba; all15 packet tests independently pass20.404s. Current installed public artifact capture confirms Craft0.15.6/SDK0.3.302 with authorization_effect none. This is not live Pi enforcement.

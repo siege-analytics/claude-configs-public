@@ -268,20 +268,17 @@ install_craft_agent() {
         echo "  [warn] .githooks/pre-push not found (push-time enforcement not active)"
     fi
 
-    # Authoritative gate: prove enforcement is actually LIVE, not just that the
-    # files are present. This runs a live block test (drives the deployed
-    # ca-enforcement-gate.sh and asserts continue:false) plus the wiring
-    # assertions. A green file inventory that fails this probe is exactly the
-    # advisory-only failure this install is meant to make impossible.
+    # Local registration and direct-hook probes are installation checks.
+    # Actual backend callback delivery requires separate host-native canaries.
     echo
-    echo "--- Verifying enforcement is live ---"
+    echo "--- Verifying local registration and direct-hook probes ---"
     if ! bash "$REPO_ROOT/bin/verify-enforcement.sh" --target "$ws_path" --mode craft-agent; then
         errors=$((errors + 1))
     fi
 
     echo
     if [[ $errors -gt 0 ]]; then
-        echo "Deployment completed with $errors error(s). Enforcement may not be live." >&2
+        echo "Deployment completed with $errors error(s). Installation verification failed." >&2
         return 1
     fi
 
@@ -303,8 +300,10 @@ install_craft_agent() {
     echo
     echo "Existing sessions inherit their old cwd; restart them to apply the new mount."
     echo
-    echo "CA enforcement is active: UserPromptSubmit gates block via continue:false."
-    echo "Native git pre-push hooks are at: $ws_path/.githooks/"
+    echo "Local hook probes passed; backend callback delivery still needs live verification."
+    echo "Craft 0.15.6 Pi/Codex does not dispatch these Claude settings hooks."
+    echo "Native Git hook files are at: $ws_path/.githooks/"
+    echo "Register each consumer explicitly with install-hooks.sh --git-repo <repo>."
     echo
     echo "Verified empirically 2026-06-07 via probe sessions (claude-configs-public#380)."
     return 0

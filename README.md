@@ -83,6 +83,40 @@ The bundle includes a version/commit banner and is regenerated on every build fr
 
 **Hosts without verified hooks:** skills and loaded rules are advisory. Mechanical blocking requires a verified tool hook, native Git hook, or protected provider check; document which mechanism was actually observed.
 
+Craft 0.15.6's Pi/Codex backend does not dispatch these Claude settings hooks.
+Shared skills therefore do not provide task-gate or mutation enforcement there.
+Use the Claude SDK backend when this hook enforcement is required; native Git
+hooks and provider protection remain separate controls. A newer host must pass
+the backend canary before being described as equivalent. Runtime artifact pins
+can be inspected without changing any approval:
+
+```bash
+python3 scripts/canary/craft-backend-canary.py capture-runtime-pins
+```
+
+Keep Craft hook registrations in the Craft workspace. Do not put absolute paths
+to a particular Craft workspace in user-level Claude Code settings: those paths
+also affect terminal sessions and unrelated workspaces. Preserve operator-owned
+terminal hooks when reconciling an existing installation.
+
+For local validation, use Python 3.10+ with `requirements-validation.txt`
+installed. Run from an isolated development worktree, keeping any checkout used
+by active hooks on clean released `main`:
+
+```bash
+python3 bin/validate-local.py                  # build and CI freshness checks
+python3 bin/validate-local.py --mode refresh   # refresh, then check generated inputs
+python3 bin/validate-local.py --mode full      # the CI workflow's local run steps
+```
+
+`--list` previews commands. Full mode stops on failure and does not publish or
+install. It isolates ambient Git routing and user/system Git configuration;
+fixture-local Git hooks remain available. GitHub event provenance and protected
+CI still run on GitHub. If Craft
+cannot submit a prompt because its manifest or kernel is broken, run these
+diagnostics from an external terminal; repair through the normal clean exact-main
+installer rather than weakening mutation guards or fabricating task evidence.
+
 ## Project scaffolding
 
 `bin/scaffold-project.py` creates project-specific skill directories:
@@ -373,7 +407,7 @@ The same source serves two consumer runtimes via a build step. Pick the layout t
 |---|---|---|---|
 | **nested** | `release/nested`, `vX.Y.Z-nested` | Skills under category folders (`coding/code-review/`, `git-workflow/commit/`, ...) | **Claude Code** with the resolver hook |
 | **flat** | `release/flat`, `vX.Y.Z-flat` | Leaf skills at `skills/<slug>/`; routers stay at category root | **Craft Agent** (slash-command pane) |
-| **claude-code package** | `release/claude-code`, `vX.Y.Z-claude-code`, release archive | Flat skills, hooks, settings snippet, resolver/rules bundle | Claude Code / Codex-style runtimes |
+| **claude-code package** | `release/claude-code`, `vX.Y.Z-claude-code`, release archive | Flat skills, hooks, settings snippet, resolver/rules bundle | Claude Code; other hosts require capability verification |
 | **craft-agent package** | `release/craft-agent`, `vX.Y.Z-craft-agent`, release archive | Flat skills, hooks, settings/enforcement files, Craft automation snippets | Craft Agent workspaces |
 
 Both layouts contain identical content; only the file-tree shape differs. Every hook-bearing layout is self-contained: `hooks/`, `bin/resolve-load-set.py`, `bin/review-risk.py`, and their `catalog/` manifests/policies ship together. Each resolver manifest records canonical `source_path` provenance separately from its layout-correct `package_path`; emitted hook instructions resolve that runtime path against the installation root. The build resolves `[skill:slug]` and `[rule:slug]` tokens to layout-appropriate paths so cross-references work in both worlds without manual maintenance.
