@@ -8452,6 +8452,7 @@
       "source_path": "skills/branch/SKILL.md",
       "test_evidence": [
         "bin/_test/craft_workspace_trust_test.py",
+        "bin/_test/deploy_source_policy_test.py",
         "bin/_test/effective_policy_test.py",
         "bin/_test/gate_contract_test.py",
         "bin/_test/kernel_budget_test.py",

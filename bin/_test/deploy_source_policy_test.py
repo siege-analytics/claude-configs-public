@@ -37,6 +37,10 @@ def immutable_activation_checks(base: Path) -> None:
     git(source, "config", "core.hooksPath", os.devnull)
     git(source, "config", "user.email", "test@example.test")
     git(source, "config", "user.name", "Test")
+    # CI checks out a detached merge commit. Exercise that starting state,
+    # then name the disposable accepted branch independently of clone HEAD.
+    git(source, "checkout", "-q", "--detach")
+    git(source, "checkout", "-q", "-B", "main")
     # The fixture must include this working candidate before it is committed in
     # the outer repository; the fixture's own commit is its accepted main.
     changed = subprocess.check_output(
@@ -59,7 +63,7 @@ def immutable_activation_checks(base: Path) -> None:
     remote = base / "complete-remote.git"
     subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True, timeout=120)
     git(source, "remote", "set-url", "origin", str(remote))
-    git(source, "push", "-q", "origin", "HEAD:main")
+    git(source, "push", "-q", "origin", "HEAD:refs/heads/main")
     untracked = source / "hooks/resolver/untracked-local.sh"
     untracked.write_text("#!/bin/sh\necho must-not-be-deployed\n")
     ignored = source / "dist/local-output.txt"
