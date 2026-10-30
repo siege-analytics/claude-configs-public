@@ -277,6 +277,18 @@
           }
         ]
       }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "mcp__session__spawn_session",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/claude-configs-public/hooks/agent-comms/hub-concurrency-gate.sh",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

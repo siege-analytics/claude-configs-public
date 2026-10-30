@@ -915,9 +915,14 @@ class Hub(unittest.TestCase):
         state = json.loads((self.ws / 'sessions/one/hub-threads.json').read_text())
         self.assertEqual(len(state['open_threads']), 5)
 
+    def spawn_input(self, name, prompt):
+        return {'name': name, 'prompt': prompt + '\nRULES_BUNDLE: read-only bounded work',
+                'permissionMode': 'allow-all', 'labels': ['role::worker'],
+                'model': 'claude-opus-5-5', 'thinkingLevel': 'high', 'enabledSourceSlugs': []}
+
     def spawn(self, key, task='o/r#1', phase='PreToolUse', response=None):
         payload = craft_payload(tool_name='mcp__session__spawn_session', hook_event_name=phase, tool_use_id=key,
-                                tool_input={'name': key, 'prompt': 'CCP_TASK_ID=' + task + '\nbounded work'})
+                                tool_input=self.spawn_input(key, 'CCP_TASK_ID=' + task + '\nbounded work'))
         if response is not None: payload['tool_response'] = response
         return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')], input=json.dumps(payload), env=self.env, capture_output=True, text=True)
 
@@ -948,20 +953,20 @@ class Hub(unittest.TestCase):
 
     def test_same_arguments_without_request_id_cannot_reuse_reservation(self):
         self.meta('one', ['role::hub'])
-        payload = craft_payload(tool_name='mcp__session__spawn_session', tool_input={'name': 'identical', 'prompt': 'CCP_TASK_ID=o/r#1\nwork'})
+        payload = craft_payload(tool_name='mcp__session__spawn_session', tool_input=self.spawn_input('identical', 'CCP_TASK_ID=o/r#1\nwork'))
         env = {**self.env, 'HUB_THREAD_CAP': '1'}
         def invoke():
             return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')], input=json.dumps(payload), env=env, capture_output=True, text=True).returncode
         with concurrent.futures.ThreadPoolExecutor() as pool:
             codes = list(pool.map(lambda _: invoke(), range(2)))
-        self.assertEqual(sorted(codes), [0, 2])
+        self.assertEqual(sorted(codes), [2, 2])
 
     def test_fallback_reservations_reconcile_without_double_counting(self):
         self.meta('one', ['role::hub'])
-        self.assertEqual(self.spawn(None).returncode, 0)
-        self.assertEqual(self.spawn(None).returncode, 0)
-        self.assertEqual(self.spawn(None, phase='PostToolUse', response={'error': 'failed'}).returncode, 0)
-        self.assertEqual(self.spawn(None, phase='PostToolUse', response={'sessionId': 'fallback-child'}).returncode, 0)
+        self.assertEqual(self.spawn('fallback-request').returncode, 0)
+        self.assertEqual(self.spawn('fallback-request').returncode, 0)
+        self.assertEqual(self.spawn('fallback-request', phase='PostToolUse', response={'error': 'failed'}).returncode, 0)
+        self.assertEqual(self.spawn('fallback-request', phase='PostToolUse', response={'sessionId': 'fallback-child'}).returncode, 0)
         state = json.loads((self.ws / 'sessions/one/hub-threads.json').read_text())
         self.assertEqual(len(state['administered_spokes']), 1)
         self.assertEqual(state['pending_spawns'], {})
@@ -973,7 +978,7 @@ class Hub(unittest.TestCase):
             payload = {'session_id':'ffe0010a-0000-4000-8000-000000000000',
                        'transcript_path':TRANSCRIPT,
                        'tool_name':'mcp__session__spawn_session', 'tool_use_id':str(i),
-                       'tool_input':{'name':'worker', 'prompt': 'CCP_TASK_ID=o/r#1\nwork'}}
+                       'tool_input':self.spawn_input('worker', 'CCP_TASK_ID=o/r#1\nwork')}
             result = subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')], input=json.dumps(payload), env=env, text=True, capture_output=True)
             self.assertEqual(result.returncode, 0 if i < 3 else 2, result.stdout + result.stderr)
 
@@ -985,6 +990,51 @@ class Hub(unittest.TestCase):
         state = json.loads((self.ws / 'sessions/one/hub-threads.json').read_text())
         self.assertEqual(state['administered_spokes'][0]['sessionId'], 'wrapped-child')
         self.assertEqual(state['pending_spawns'], {})
+
+    def test_protocol_denials_never_take_reservations(self):
+        self.meta('one', ['role::hub'])
+        for i in range(4):
+            payload = craft_payload(tool_name='mcp__session__spawn_session', tool_use_id=str(i),
+                                    tool_input={'name': 'invalid', 'prompt': 'CCP_TASK_ID=o/r#1'})
+            result = subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')],
+                                    input=json.dumps(payload), env=self.env, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn('spawn-protocol', result.stderr)
+        self.assertFalse((self.ws / 'sessions/one/hub-threads.json').exists())
+        self.assertEqual(self.spawn('valid').returncode, 0)
+
+    def test_explicit_request_tokens_are_idempotent_and_argument_bound(self):
+        self.meta('one', ['role::hub'])
+        def invoke(name='worker', token='request-1', phase='PreToolUse', response=None):
+            payload = craft_payload(tool_name='mcp__session__spawn_session', hook_event_name=phase,
+                tool_input=self.spawn_input(name, 'CCP_TASK_ID=o/r#1\nCCP_SPAWN_REQUEST_ID=' + token))
+            if response is not None: payload['tool_response'] = response
+            return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')],
+                input=json.dumps(payload), env={**self.env, 'HUB_THREAD_CAP': '1'}, text=True, capture_output=True)
+        self.assertEqual(invoke().returncode, 0)
+        self.assertEqual(invoke().returncode, 0)
+        self.assertEqual(invoke(name='different').returncode, 2)
+        self.assertEqual(invoke(token='other').returncode, 2)
+        self.assertEqual(invoke(phase='PostToolUse', response={'sessionId': 'child'}).returncode, 0)
+        self.assertEqual(invoke().returncode, 0)
+        self.assertEqual(invoke(name='different').returncode, 2)
+        self.assertEqual(invoke(token='other').returncode, 2)
+
+    def test_outer_array_success_and_failure_lifecycle(self):
+        self.meta('one', ['role::hub'])
+        self.assertEqual(self.spawn('a').returncode, 0)
+        wrapped = [{'type': 'text', 'text': json.dumps({'sessionId': 'actual-child'})}]
+        self.assertEqual(self.spawn('a', phase='PostToolUse', response=wrapped).returncode, 0)
+        self.assertEqual(self.spawn('a', phase='PostToolUse', response=wrapped).returncode, 0)
+        self.assertEqual(self.spawn('b').returncode, 0)
+        self.assertEqual(self.spawn('c').returncode, 0)
+        self.assertEqual(self.spawn('b', phase='PostToolUseFailure', response={'error': 'cancelled'}).returncode, 0)
+        state = json.loads((self.ws / 'sessions/one/hub-threads.json').read_text())
+        self.assertEqual([x['sessionId'] for x in state['administered_spokes']], ['actual-child'])
+        self.assertEqual(set(state['pending_spawns']), {'c'})
+        self.assertEqual(self.spawn('a').returncode, 0)
+        state = json.loads((self.ws / 'sessions/one/hub-threads.json').read_text())
+        self.assertEqual(set(state['pending_spawns']), {'c'})
 
     def test_only_hubs_capped_unknown_role_audited(self):
         for role in ('role::traffic-cop', 'role::workspace-config', 'role::deep-think', 'role::worker', 'role::reviewer'):
@@ -1031,7 +1081,7 @@ class Hub(unittest.TestCase):
         self.meta('one', ['role::hub'])
         def raw(key):
             payload = craft_payload(tool_name='mcp__session__spawn_session', tool_use_id=key,
-                                    tool_input={'name': key, 'prompt': 'bounded work'})
+                                    tool_input=self.spawn_input(key, 'bounded work'))
             return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')],
                                   input=json.dumps(payload), env=self.env, capture_output=True, text=True)
         self.assertEqual(raw('unresolved').returncode, 0)
