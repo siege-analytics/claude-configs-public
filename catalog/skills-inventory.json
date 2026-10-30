@@ -8906,6 +8906,7 @@
       "test_evidence": [
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/consumer_runtime_test.py",
+        "bin/_test/craft_hook_router_test.py",
         "bin/_test/craft_workspace_trust_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/effective_policy_test.py",
@@ -10183,6 +10184,7 @@
       "source_path": "skills/merge/SKILL.md",
       "test_evidence": [
         "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/craft_hook_router_test.py",
         "bin/_test/craft_workspace_trust_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/effective_policy_test.py",
