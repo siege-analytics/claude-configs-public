@@ -87,6 +87,29 @@ class Gates(unittest.TestCase):
                                           env=env, text=True, capture_output=True, timeout=120))
         return results
 
+    def test_final_approval_comment_preserves_task_authority(self):
+        marker = "[destructive-ok: Reason: approved docs PR; Evidence: operator request; Falsification: wrong target or failed checks]"
+        self.task('approved-pr', self.a)
+        self.task('other-pr', self.b, status='designing')
+        for verb in ('create', 'merge 1'):
+            command = 'gh pr ' + verb + ' # ' + marker
+            self.assertGate(0, command, cwd=self.a)
+            payload = craft_payload(tool_name='Bash', cwd=str(self.a), tool_input={'command': command})
+            guard = subprocess.run(['bash', str(ROOT / 'hooks/bash/destructive-guard.sh')],
+                                   input=json.dumps(payload), env=self.env, text=True,
+                                   capture_output=True, timeout=120)
+            self.assertEqual(guard.returncode, 0, guard.stderr)
+            self.assertGate(2, command, cwd=self.b)
+            self.assertGate(2, command, cwd=self.repo)
+        self.assertGate(2, 'touch ' + str(self.b / 'bad.md') + '; gh pr create # ' + marker, cwd=self.a)
+        for suffix in (' # ordinary comment', ' # [destructive-ok: approved]',
+                       ' # ' + marker + '\ntouch ' + str(self.b / 'bad.md'),
+                       ' #\n' + marker, ' # ' + marker + ' extra'):
+            self.assertGate(2, 'gh pr create' + suffix, cwd=self.a)
+        self.assertGate(0, 'gh pr create # ' + marker + '\n\n', cwd=self.a)
+        self.assertGate(2, 'touch "$(echo bad)"; gh pr create # ' + marker, cwd=self.a)
+        self.assertFalse((self.b / 'bad.md').exists())
+
     def test_sdk_uuid_real_transcript_uses_host_directory(self):
         self.task('o/r#uuid-transcript', self.a, artifacts=False)
         payload = {'session_id': 'ffe0010a-0000-4000-8000-000000000000',

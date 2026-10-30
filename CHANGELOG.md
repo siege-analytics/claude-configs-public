@@ -12,6 +12,12 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Reconcile the invocation-aware catalog guard with current develop and preserve both helpers' high-risk review classification (#993, PR #999).
 - Correct setup guidance: Craft supports Claude SDK hooks, mounts the compact kernel, and keeps the broad rules bundle for on-demand reference. Live backend enforcement must be observed separately.
 
+## [3.5.81] -- 2026-10-30
+
+### Fixed: scoped approval comments
+
+- Parse the documented final structured approval comment without granting task authority. Approved PR commands still require the owning implementing task; malformed comments, command suffixes, substitutions and unrelated task scopes remain denied (#1139).
+
 ## [3.5.80] -- 2026-10-30
 
 ### Fixed: task isolation and runtime recovery
