@@ -60,6 +60,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/probe-runner.py",
  "hooks/lib/resolve-think-gate.py",
  "hooks/lib/task_actions.py",
+ "hooks/lib/test-evidence.py",
  "hooks/lib/pipeline_state.py",
  "hooks/lib/hub-concurrency-policy.json",
  "hooks/lib/scope-check.sh",
@@ -185,6 +186,7 @@ hooks/git/self-review.sh|hooks/lib/scope-check.sh
 hooks/git/survey-context.sh|hooks/lib/extract-json.py
 hooks/git/survey-context.sh|hooks/lib/scope-check.sh
 hooks/git/test-guard.sh|hooks/lib/extract-json.py
+hooks/git/test-guard.sh|hooks/lib/test-evidence.py
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py
 hooks/git/ticket-required.sh|hooks/lib/command-text.sh
@@ -212,8 +214,8 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "d7dfa60ce148854a5d14523ec790478f4794091170c18fad95fc23e80acc1ca7"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "49547810bab12a781ea0b8a233f627f9f9fe1fb4fc23d5ad6f2a63fd7ded0900"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "51ba94e78945b0e64e6f9d535153ab0a1d8e221b63d5b3af880871685c88e701"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "449c5a927ef5bdea5e6ebfce0ba346c3d3720c451e56fce522a31109f8a4dd73"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
@@ -235,6 +237,7 @@ hooks/git/self-review.sh|hooks/lib/extract-json.py|2
 hooks/git/self-review.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/survey-context.sh|hooks/lib/extract-json.py|2
 hooks/git/test-guard.sh|hooks/lib/extract-json.py|2
+hooks/git/test-guard.sh|hooks/lib/test-evidence.py|2
 hooks/git/test-guard.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py|3

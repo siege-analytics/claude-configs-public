@@ -611,6 +611,13 @@ class Gates(unittest.TestCase):
         for command in ['touch ./*.md', 'rm plans/*.md', 'git add ./src/*.py', 'printf x > ./out*.txt', 'rg foo --pre*=evil']:
             with self.subTest(command=command): self.assertGate(2, command)
 
+    def test_designing_denial_reports_effective_tier(self):
+        self.task('design-status', self.repo, status='designing', artifacts=False)
+        for tier, relative in (('A', 'docs/notes.md'), ('B', 'src/app.py'), ('C', 'hooks/bash/guard.sh')):
+            result = self.assertGate(2, f'touch {self.repo / relative}')
+            self.assertIn('Effective tier: ' + tier + '.', result.stderr)
+            self.assertNotIn('with full artifacts', result.stderr)
+
     def test_tiered_task_gates_require_only_their_tier(self):
         """#1086: an implementing task needs only its effective tier's artifacts.
         The tier is the higher of the gate's declared tier and the floor that
@@ -701,7 +708,10 @@ class Gates(unittest.TestCase):
         subprocess.run(['git', '-C', str(self.repo), 'add', 'foo.py'], check=True)
         subprocess.run(commit + ['source change'], check=True)
         for root in (self.ws, self.repo):
-            write(root / 'test-gate.json', {'evidence': [{'source': 'foo.py', 'result': 'passed'}]})
+            subprocess.run(['python3', str(LIB / 'test-evidence.py'), 'record', '--repo', str(self.repo),
+                            '--output', str(root / 'test-gate.json'), '--source', 'foo.py',
+                            '--framework', 'fixture', '--', 'python3', '-c', 'assert True'],
+                           check=True, capture_output=True)
         payload = json.dumps({'cwd': str(self.repo), 'tool_input': {'command': 'git push'}})
         cases = [(name, '{{SESSION_PATH}}') for name in
                  ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR',

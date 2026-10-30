@@ -183,28 +183,13 @@ if [[ -z "$MERGE_BASE" ]]; then
     exit 0
 fi
 
-TOUCHED_FILES=$(git -C "$EFFECTIVE_CWD" diff --name-only "$MERGE_BASE"...HEAD 2>/dev/null || echo "")
-if [[ -z "$TOUCHED_FILES" ]]; then
-    exit 0
+# NUL-delimited Git paths stay in Python; JSON keeps quotes/newlines literal.
+EVIDENCE_TOOL="$HOOK_DIR/../lib/test-evidence.py"
+if ! SOURCE_FILES=$(python3 "$EVIDENCE_TOOL" sources --repo "$REPO_ROOT" --base "$MERGE_BASE"); then
+    echo "BLOCKED: could not determine exact touched source files; repair the evidence helper." >&2
+    exit 2
 fi
-
-# Filter to source files only (exclude docs, configs, tests themselves)
-SOURCE_FILES=""
-while IFS= read -r f; do
-    case "$f" in
-        *.py|*.js|*.ts|*.jsx|*.tsx|*.scala|*.java|*.kt|*.rs|*.sql)
-            # Exclude test files themselves
-            case "$f" in
-                test_*|*_test.*|*.test.*|*.spec.*|tests/*|__tests__/*) ;;
-                *) SOURCE_FILES="${SOURCE_FILES}${f}"$'\n' ;;
-            esac
-            ;;
-    esac
-done <<< "$TOUCHED_FILES"
-
-# No source files touched (docs/config/test-only push) — nothing demands
-# evidence; allow the push without requiring a signal file.
-if [[ -z "$SOURCE_FILES" ]]; then
+if [[ "$SOURCE_FILES" == "[]" ]]; then
     exit 0
 fi
 
@@ -239,41 +224,16 @@ EOF
     exit 2
 fi
 
-# --- Verify evidence covers touched source files ---
-MISSING=""
-while IFS= read -r src; do
-    [[ -z "$src" ]] && continue
-    if ! python3 -c "
-import json, sys
-try:
-    data = json.load(open('$SIGNAL_FILE'))
-    evidence = data.get('evidence', [])
-    found = any(e.get('source','').endswith('$src') or '$src'.endswith(e.get('source','')) for e in evidence)
-    sys.exit(0 if found else 1)
-except Exception:
-    sys.exit(1)
-" 2>/dev/null; then
-        MISSING="${MISSING}  - ${src}"$'\n'
-    fi
-done <<< "$SOURCE_FILES"
-
-if [[ -n "$MISSING" ]]; then
-    cat >&2 <<EOF
-BLOCKED: Test evidence missing for touched source files.
-
-The following files were modified but have no recorded test evidence
-in test-gate.json:
-
-${MISSING}
-Run affected tests via [skill:commit] step 4 to update test-gate.json, or
-add the structured override to the commit body if tests are inapplicable:
-
-  [run-skip: Reason: <why>; Evidence: <obs>; Falsification: <disproof>]
-
-See [skill:testing-frameworks] and [rule:testing-frameworks] for details.
-Ref: #386
+# Strict helper validates exact paths, success and current source content.
+# No receipt/source value is interpolated into executable Python text.
+python3 "$EVIDENCE_TOOL" check --repo "$REPO_ROOT" --base "$MERGE_BASE" --receipt "$SIGNAL_FILE" || {
+    cat >&2 <<'EOF'
+BLOCKED: Test evidence is missing, unsuccessful or stale for touched source files.
+Rerun affected tests with hooks/lib/test-evidence.py record (see [skill:commit]).
+For a compatibility report only, use test-evidence.py check --report-only;
+that report does not authorize this push or upgrade a legacy receipt.
 EOF
     exit 2
-fi
+}
 
 exit 0

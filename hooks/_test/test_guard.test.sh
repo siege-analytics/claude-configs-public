@@ -117,15 +117,10 @@ expect_block_because "(c) project with testing: but no test-gate.json" "$HOOK" \
     'no test-gate.json was found'
 
 # --- PASS: project with testing: and valid signal file ---
-cat > "$CRAFT_SESSION_DIR/tasks/current/test-gate.json" <<'SIGEOF'
-{
-  "ticket": "#386",
-  "lastUpdated": "2026-06-09T14:30:00Z",
-  "evidence": [
-    {"source": "src/app.py", "test": "tests/test_app.py", "result": "pass", "framework": "pytest", "timestamp": "2026-06-09T14:28:00Z"}
-  ]
-}
-SIGEOF
+python3 "$REPO_ROOT/hooks/lib/test-evidence.py" record \
+    --repo "$TMPDIR/with-testing" --think-gate "$CRAFT_SESSION_DIR/tasks/current/think-gate.json" \
+    --output "$CRAFT_SESSION_DIR/tasks/current/test-gate.json" --source src/app.py --framework fixture \
+    -- python3 -c "import runpy; runpy.run_path('tests/test_app.py')['test_hello']()"
 
 expect_pass "(d) project with testing: and valid evidence" "$HOOK" \
     "$(make_payload 'git push origin develop' "$TMPDIR/with-testing")"
@@ -161,15 +156,10 @@ mkdir -p src/utils
 echo 'def helper(): return 42' > src/utils/helpers.py
 git add -A
 git commit -q -m "add helpers #386"
-cat > "$CRAFT_SESSION_DIR/tasks/current/test-gate.json" <<'SIGEOF'
-{
-  "ticket": "#386",
-  "lastUpdated": "2026-06-09T14:30:00Z",
-  "evidence": [
-    {"source": "src/app.py", "test": "tests/test_app.py", "result": "pass", "framework": "pytest", "timestamp": "2026-06-09T14:28:00Z"}
-  ]
-}
-SIGEOF
+python3 "$REPO_ROOT/hooks/lib/test-evidence.py" record \
+    --repo "$TMPDIR/with-testing" --think-gate "$CRAFT_SESSION_DIR/tasks/current/think-gate.json" \
+    --output "$CRAFT_SESSION_DIR/tasks/current/test-gate.json" --source src/app.py --framework fixture \
+    -- python3 -c "import runpy; runpy.run_path('tests/test_app.py')['test_hello']()"
 
 expect_block "(f) evidence exists but missing for new file" "$HOOK" \
     "$(make_payload 'git push origin develop' "$TMPDIR/with-testing")"
