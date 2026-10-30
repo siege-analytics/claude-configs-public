@@ -464,8 +464,35 @@ class Router(unittest.TestCase):
             r.metadata_environment(value)
         value = json.loads(self.payload(tool="Write"))
         value["tool_input"]["many"] = ["x" * 4000] * 25
+        self.assertNotIn("many", json.loads(r.metadata_environment(value))["tool_input"])
+        value["cwd"] = "x" * 98305
         with self.assertRaisesRegex(r.RoutingError, "96 KiB"):
             r.metadata_environment(value)
+
+    def test_many_small_edits_keep_original_stdin_and_scope(self):
+        self.activate()
+        value = json.loads(self.payload(tool="MultiEdit"))
+        value['tool_input'] = {'file_path': str(self.session / 'data/large.txt'),
+                              'edits': [{'old_string': 'a' * 4000, 'new_string': 'b' * 4000}] * 30}
+        raw = json.dumps(value).encode()
+        execute, observed = r.execute_hook, []
+        def capture(command, original, environment, timeout):
+            self.assertEqual(original, raw)
+            self.assertEqual(json.loads(environment['CCP_HOOK_INPUT_JSON'])['tool_input']['edits'], [])
+            observed.append(True)
+            return execute(command, original, environment, timeout)
+        with patch.object(r, 'execute_hook', side_effect=capture):
+            self.assertEqual(self.route(raw)[0], 0)
+        self.assertTrue(observed)
+        value['tool_input']['file_path'] = str(self.fixture.base / 'outside.txt')
+        self.assertEqual(self.route(json.dumps(value).encode())[0], 2)
+
+    def test_metadata_helper_is_verified_before_import(self):
+        self.activate()
+        helper = self.workspace / 'hooks/lib/hook_payload.py'
+        helper.write_text('raise AssertionError("unverified helper executed")\n')
+        with self.assertRaises(r.RoutingError):
+            self.route()
 
     def test_bounded_execution_handles_stdout_stderr_timeout_and_large_stdin(self):
         command = "python3 -c 'import sys; data=sys.stdin.read(); print(len(data)); print(\"diagnostic\", file=sys.stderr)'"

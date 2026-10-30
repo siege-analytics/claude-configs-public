@@ -28,9 +28,13 @@
 set -euo pipefail
 
 HOOK_INPUT_JSON=$(cat 2>/dev/null || true)
-export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if ! _HOOK_METADATA=$(printf '%s' "$HOOK_INPUT_JSON" | python3 "$SCRIPT_DIR/../lib/hook_payload.py"); then
+    echo "Hook input metadata unavailable; prompt diagnostics remain advisory." >&2
+    exit 0
+fi
+export CCP_HOOK_INPUT_JSON="$_HOOK_METADATA"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 safe_session_id() {
   printf '%s' "$1" | tr -c 'A-Za-z0-9_.-' '_'

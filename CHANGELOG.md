@@ -12,6 +12,14 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Reconcile the invocation-aware catalog guard with current develop and preserve both helpers' high-risk review classification (#993, PR #999).
 - Correct setup guidance: Craft supports Claude SDK hooks, mounts the compact kernel, and keeps the broad rules bundle for on-demand reference. Live backend enforcement must be observed separately.
 
+## [3.5.82] -- 2026-10-30
+
+### Fixed: bounded hook transport and scanner evidence
+
+- Preserve exact task identity and action targets while keeping content bodies off hook environment transport; pass full hub prompts and results through a descriptor (#1136).
+- Recognize repository tooling tests and explicit snapshot-selected evidence mappings. Count comprehension captures while respecting loop-variable shadowing (#1135).
+- Remove invalid multiline grep patterns from three Git guards while preserving their compound-command handling (#1142).
+
 ## [3.5.81] -- 2026-10-30
 
 ### Fixed: scoped approval comments

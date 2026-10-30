@@ -67,6 +67,7 @@ def load_decorator_allowlist(config_path):
     extra = scanner.get('allow_decorators', [])
     if not isinstance(extra, list) or not all(isinstance(item, str) and item for item in extra):
         raise ValueError('allow_decorators must be an array of nonempty strings')
+    _mapped_test_files(Path(config_path).resolve().parent.parent)
     return DEFAULT_ALLOW_DECORATORS | set(extra)
 
 
@@ -95,8 +96,8 @@ def _collect_load_names_in_scope(func_node):
     """R3-F1 (#787): return names Load-referenced within func_node's own scope.
 
     Scope-aware: does NOT descend into nested FunctionDef, AsyncFunctionDef,
-    Lambda, or comprehension scopes (those create their own scopes and can
-    shadow the parent's parameters). Load-only: Store/Del contexts do not
+    or Lambda bodies. Comprehension free variables count, while their loop
+    targets shadow the parent's parameters. Load-only: Store/Del contexts do not
     count as a use of a parameter — assigning to a name of the same identifier
     shadows the parameter, not consumes it.
 
@@ -105,10 +106,8 @@ def _collect_load_names_in_scope(func_node):
     so the caller can conservatively silence emission (rare escape hatch)."""
     names = set()
     captures_locals = False
-    NESTED_SCOPE_TYPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda,
-                          ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
 
-    def _walk(node):
+    def _walk(node, shadowed=frozenset()):
         nonlocal captures_locals
         # If the node is itself a nested scope, do NOT walk into its body/args.
         # But default-value expressions and decorators evaluate in the outer
@@ -117,16 +116,29 @@ def _collect_load_names_in_scope(func_node):
             args = node.args
             for default in list(args.defaults) + list(args.kw_defaults or []):
                 if default is not None:
-                    _walk(default)
+                    _walk(default, shadowed)
             for decorator in getattr(node, "decorator_list", []):
-                _walk(decorator)
+                _walk(decorator, shadowed)
             return
         if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
-            # First generator's iterable is evaluated in outer scope.
+            # The outer iterable executes outside the comprehension scope.
+            # All loop targets are local throughout the implicit inner scope.
             if node.generators:
-                _walk(node.generators[0].iter)
+                _walk(node.generators[0].iter, shadowed)
+            bound = {name.id for gen in node.generators for name in ast.walk(gen.target)
+                     if isinstance(name, ast.Name) and isinstance(name.ctx, ast.Store)}
+            inner = shadowed | bound
+            for index, gen in enumerate(node.generators):
+                if index:
+                    _walk(gen.iter, inner)
+                for condition in gen.ifs:
+                    _walk(condition, inner)
+            for field in ('elt', 'key', 'value'):
+                expression = getattr(node, field, None)
+                if expression is not None:
+                    _walk(expression, inner)
             return
-        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load) and node.id not in shadowed:
             names.add(node.id)
         # Detect `**locals()` spread
         if isinstance(node, ast.keyword) and node.arg is None:
@@ -135,7 +147,7 @@ def _collect_load_names_in_scope(func_node):
                     and node.value.func.id == "locals"):
                 captures_locals = True
         for child in ast.iter_child_nodes(node):
-            _walk(child)
+            _walk(child, shadowed)
 
     # Walk the body statements of this function directly (skip walking the
     # signature — parameter names as Store bindings don't count as uses).
@@ -1622,6 +1634,38 @@ def _extract_except_class_names(tree):
     return results
 
 
+def _mapped_test_files(root, src=None):
+    """Validate declared evidence locations even when source has no handlers."""
+    mapped = []
+    config_path = root / '.claude/scanner-config.toml'
+    if config_path.exists():
+        try:
+            try:
+                import tomllib
+            except ImportError:  # noqa: writing-tests-5 bootstrap dependency fault fixtures in bin/_test/scanner_source_test.py
+                import tomli as tomllib
+            config = tomllib.loads(config_path.read_text(encoding='utf-8'))
+            mapping = config.get('scanner', {}).get('test_map', {})
+            if not isinstance(mapping, dict):
+                raise ValueError('test_map must be a table')
+            for source, tests in mapping.items():
+                if not isinstance(tests, list) or not tests or not all(isinstance(t, str) for t in tests):
+                    raise ValueError('test_map values must be nonempty path arrays')
+                for relative in [source, *tests]:
+                    path = Path(relative)
+                    if path.is_absolute() or '..' in path.parts or relative != path.as_posix():
+                        raise ValueError('test_map paths must be canonical repository-relative paths')
+                    target = root / path
+                    if not target.is_file() or not target.resolve().is_relative_to(root):
+                        raise ValueError('test_map input is missing or outside the selected snapshot: ' + relative)
+                if src is not None and source == src.relative_to(root).as_posix():
+                    mapped.extend(root / test for test in tests)
+        except (ImportError, OSError, ValueError, TypeError, AttributeError) as error:  # noqa: writing-tests-5 bootstrap mapping input/cause fixtures in bin/_test/scanner_source_test.py
+            raise ScanInputError(f'{config_path}:0:scan-ast-config-error: {error}') from error
+
+    return mapped
+
+
 def _test_files_for_source(source_path):
     """Return candidate test files for a source file, per the affected-tests
     heuristic. Returns a list of pathlib.Path objects that exist on disk.
@@ -1638,7 +1682,9 @@ def _test_files_for_source(source_path):
     if not (root / ".git").exists():
         return []
 
-    candidates = [
+    mapped = _mapped_test_files(root, src)
+
+    candidates = mapped + [
         root / "tests" / f"test_{stem}.py",
         root / "tests" / src.parent.name / f"test_{stem}.py",
         src.parent / "tests" / f"test_{stem}.py",
@@ -1658,6 +1704,10 @@ def _test_files_for_source(source_path):
         mirror_dir = root / "tests" / rel_parent
         if mirror_dir.is_dir():
             candidates.extend(sorted(mirror_dir.glob(f"test_{stem}_*.py")))
+
+    # Repository tooling often keeps tests beside its source under _test.
+    for directory in (src.parent / '_test', root / 'bin/_test', root / 'hooks/_test'):
+        candidates.extend([directory / f'{stem}_test.py', directory / f'test_{stem}.py'])
 
     # Deduplicate while preserving order
     seen = set()

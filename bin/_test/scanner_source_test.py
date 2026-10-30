@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real index/PR object truth and incomplete-result regressions for the scanner."""
 import importlib.util
+import ast
 import json
 import os
 from pathlib import Path
@@ -100,6 +101,40 @@ class ScannerSourceTest(unittest.TestCase):
         self.expect(self.scan(), 1, 'writing-tests-5')
         self.git('add', 'tests/test_client.py'); path.unlink()
         self.expect(self.scan(), 0, 'clean. scanned:')
+
+    def test_mapped_tests_are_snapshot_inputs_and_not_coverage_waivers(self):
+        source = 'def recover():\n    try:\n        int("bad")\n    except ValueError:\n        raise\n'
+        self.write('bin/client.py', source)
+        config = '[scanner.test_map]\n"bin/client.py" = ["hooks/_test/behavior.py"]\n'
+        self.write('.claude/scanner-config.toml', config)
+        test = self.write('hooks/_test/behavior.py', 'answer = 1\n')
+        self.git('add', 'bin/client.py', '.claude/scanner-config.toml', 'hooks/_test/behavior.py')
+        self.expect(self.scan(), 1, 'writing-tests-5')
+        test.write_text('with raises(ValueError):\n    int("bad")\n')
+        self.expect(self.scan(), 1, 'writing-tests-5')
+        self.git('add', 'hooks/_test/behavior.py')
+        test.unlink()
+        self.expect(self.scan(), 0, 'clean. scanned:')
+        self.git('rm', '--cached', 'hooks/_test/behavior.py')
+        self.expect(self.scan(), 2, 'test_map input is missing')
+        self.write('.claude/scanner-config.toml', '[scanner.test_map]\n"bin/client.py" = "bad"\n')
+        self.git('add', '.claude/scanner-config.toml')
+        self.expect(self.scan(), 2, 'test_map values')
+
+    def test_comprehension_captures_and_shadowing(self):
+        cases = (
+            ('return [shape(offset) for item in items]', {'shape', 'offset', 'items'}),
+            ('return [offset for offset in items]', {'items'}),
+            ('return [x for x in items if x > offset]', {'items', 'offset'}),
+            ('return [y for x in items for y in shape(offset)]', {'items', 'shape', 'offset'}),
+            ('return [offset for offset in offset]', {'offset'}),
+            ('return [[offset for offset in item] for item in items]', {'items'}),
+            ('return lambda offset: offset', set()),
+        )
+        for body, expected in cases:
+            with self.subTest(body=body):
+                tree = ast.parse('def f(offset, items, shape):\n    ' + body + '\n')
+                self.assertEqual(ast_scanner._collect_load_names_in_scope(tree.body[0])[0], expected)
 
     def test_scanner_config_comes_from_index_and_errors_do_not_become_clean(self):
         self.write('client.py', '@project_marker\ndef callback(unused=1):\n    return 1\n'); self.git('add', 'client.py')
