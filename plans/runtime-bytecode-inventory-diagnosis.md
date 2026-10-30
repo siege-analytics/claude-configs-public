@@ -1,0 +1,13 @@
+# Selected Siege read-effect inventory failure
+
+No source edits during diagnosis. Reproduced from integration working tree with `python3 examples/selected-registration/run.py --case siege --output /private/tmp/runtime-selected-siege-repro-author`. Failure is first real native push at operations line95: registered package inventory/bytes changed.
+
+The complete package has one unregistered added file: compatibility/hooks/lib/__pycache__/task_actions.cpython-314.pyc, 73945 bytes, nonexecutable, SHA256 2de0336b4f4ea158e82c208580cebfc80f59c5f3e2213da44c9da6da2ad9d2d0. Registered digest473a468db1236483898b3ce708c92cc6ba60a8882382aa271e76a55e946d232f differs from actual9cfef2f3cb54d8c4fc6b3ddb2d6da6673be2365c5ed90927c90b122661adef5a. Diagnostic subtraction of that single file restores the registered digest exactly. Nothing was removed from preserved fixture.
+
+Independent minimal fixture /private/tmp/git-normalizer-read-effects-ps3pxdfc copies only git_command.py and task_actions.py. Calling unflagged Python git_command.py --cwd fixture --policy branch on stdin git status exits0/handled and creates __pycache__/task_actions.cpython-314.pyc. New git_command.py imports task_actions without disabling bytecode. Shell compatibility guards start fresh Python without -B. Native adapter's own -B applies only to that process and is not inherited by those shell descendants.
+
+Proposed fix: disable bytecode before git_command imports task_actions, and make registered native compatibility/settings subprocess environment carry PYTHONDONTWRITEBYTECODE=1. Add exact before/after inventory controls for read-only CLI and actual complete selected case. Keep package inventory comparison strict; never ignore or delete unexpected bytecode. Actual effect is package mutation by a read-only guard, not a mixed source snapshot issue.
+
+## Implemented bounded repair
+
+Authorized direct integration edits: git_command.py sets sys.dont_write_bytecode before importing task_actions; native_git.py disables bytecode before registration imports and passes PYTHONDONTWRITEBYTECODE=1 in a fresh child environment for all five execution sites. No inventory exclusions/deletions. Existing reader_git_safety.py adds a real unflagged CLI inventory-equality control and actual native settings adapter -> shell -> fresh interpreter import control with parent -B but no inherited env flag. Parent binding verification is stubbed only in this subprocess propagation control; it is not source-registration proof. Nine-method safety suite passes29.525s; syntax and diff checks pass. Complete selected fixture must rerun after root commits accepted source because component snapshots resolve Git objects, not uncommitted working source.

@@ -21,7 +21,7 @@ export CCP_HOOK_LIB="$(cd "$(dirname "$0")/../lib" && pwd)"
 SENDER=$(python3 "$RESOLVE_TG" --workspace "${CRAFT_AGENT_WORKSPACE:-.}" --session-value 2>/dev/null || true)
 POLICY="$(cd "$(dirname "$0")/../lib" && pwd)/hub-concurrency-policy.json"
 HUB_GATE_SENDER="$SENDER" HUB_GATE_POLICY="$POLICY" HUB_GATE_INPUT="$INPUT" python3 - <<'PYCODE'
-import os, sys, json, datetime, tempfile, fcntl, hashlib, uuid, re
+import os, sys, json, datetime, tempfile, fcntl, hashlib, re, subprocess
 from pathlib import Path
 
 
@@ -89,11 +89,20 @@ def spawned_session(response):
     if isinstance(response, str):
         try: response = json.loads(response)
         except Exception: return ''
+    if isinstance(response, list):
+        for item in response:
+            child = spawned_session(item)
+            if child: return child
+        return ''
     if not isinstance(response, dict): return ''
+    if response.get('isError') or response.get('error'): return ''
+    if response.get('type') == 'text':
+        return spawned_session(response.get('text'))
     for key in ('sessionId', 'session_id'):
         if safe_id(response.get(key)): return response[key]
-    nested = spawned_session(response.get('structuredContent'))
-    if nested: return nested
+    for key in ('structuredContent', 'toolResults', 'tool_result', 'tool_response'):
+        nested = spawned_session(response.get(key))
+        if nested: return nested
     content = response.get('content')
     if isinstance(content, list):
         for item in content:
@@ -116,6 +125,15 @@ def main():
         return 0
     target = ti.get('sessionId', '') if not is_spawn else '(spawn)'
     phase = payload.get('hook_event_name') or 'PreToolUse'
+    # Validate the same protocol before taking a lease: sibling PreToolUse
+    # hooks may run concurrently and a denial need not produce a completion.
+    if is_spawn and phase == 'PreToolUse':
+        protocol = Path(os.environ.get('CCP_HOOK_LIB', '')).parent / 'agent-comms' / 'spawn-guard.sh'
+        checked = subprocess.run(['bash', str(protocol)], input=json.dumps(payload),
+                                 text=True, capture_output=True, timeout=10)
+        if checked.returncode:
+            sys.stderr.write(checked.stderr)
+            return checked.returncode
     sender = os.environ.get('HUB_GATE_SENDER', '')
     if not safe_id(sender):
         audit(os.environ.get('HUB_THREADS_FILE') or os.path.join(os.environ.get('CRAFT_AGENT_WORKSPACE', '.'), 'hub-unresolved'), 'unresolved sender session/role; not capped', sender, target)
@@ -185,13 +203,17 @@ def main():
             pending = state.get('pending_spawns', {})
             if not isinstance(pending, dict): pending = {}
             pending = {k: v for k, v in pending.items() if isinstance(v, dict) and fresh(v, now, 600)}
-            request_key = str(payload.get('tool_use_id') or hashlib.sha256(json.dumps(ti, sort_keys=True).encode()).hexdigest())
-            if not payload.get('tool_use_id'):
-                if phase == 'PostToolUse':
-                    request_key = next((k for k in pending if k.startswith(request_key + ':')), request_key)
-                else:
-                    request_key += ':' + uuid.uuid4().hex
-            task = task or (pending.get(request_key, {}).get('task', '') if phase == 'PostToolUse' else '')
+            tokens = re.findall(r'^CCP_SPAWN_REQUEST_ID=([A-Za-z0-9_.-]+)[ \t]*$', text, re.MULTILINE)
+            request_key = payload.get('tool_use_id') or (tokens[0] if len(tokens) == 1 else '')
+            if not isinstance(request_key, str) or not request_key:
+                sys.stderr.write('BLOCKED: hub spawn needs a stable tool_use_id or an explicit unique CCP_SPAWN_REQUEST_ID=<request-token> prompt line; reuse that token only when retrying the same request. Messaging remains unrestricted.\n')
+                return 2
+            fingerprint = hashlib.sha256(json.dumps(ti, sort_keys=True).encode()).hexdigest()
+            reservation = pending.get(request_key, {})
+            if reservation and reservation.get('fingerprint') not in {None, fingerprint}:
+                sys.stderr.write('BLOCKED: spawn request token was reused for different arguments; use a new unique request token.\n')
+                return 2
+            task = task or (pending.get(request_key, {}).get('task', '') if phase in {'PostToolUse', 'PostToolUseFailure'} else '')
             if not task:
                 audit(path, 'unresolved spawn task; not capped; add CCP_TASK_ID=<full-task-id> line to tool prompt', sender, target)
                 return 0
@@ -216,30 +238,48 @@ def main():
                         if child_task:
                             spokes.append({'sessionId': child_id, 'task': child_task})
                             ids.add(child_id)
-            if phase == 'PostToolUse':
+            if phase in {'PostToolUse', 'PostToolUseFailure'}:
                 reservation = pending.get(request_key, {})
                 response = payload.get('tool_response') or payload.get('tool_result') or {}
                 if isinstance(response, str):
                     try: response = json.loads(response)
                     except Exception: response = {}
                 child_id = spawned_session(response)
-                failed = isinstance(response, dict) and bool(response.get('error') or response.get('isError')) or bool(payload.get('tool_error'))
+                def result_failed(value):
+                    if isinstance(value, str):
+                        try: value = json.loads(value)
+                        except (ValueError, TypeError): return False
+                    if isinstance(value, list): return any(result_failed(x) for x in value)
+                    return isinstance(value, dict) and (bool(value.get('error') or value.get('isError'))
+                        or any(result_failed(value.get(k)) for k in ('toolResults', 'content', 'text', 'structuredContent', 'tool_result', 'tool_response')))
+                failed = phase == 'PostToolUseFailure' or result_failed(response) or bool(payload.get('tool_error') or payload.get('error') or payload.get('is_error'))
+                if failed:
+                    child_id = ''
                 if child_id or failed:
                     pending.pop(request_key, None)
                 else:
                     audit(path, 'unresolved spawn result; reservation retained until reconciliation/expiry', sender, target, task)
                 if safe_id(child_id) and child_id not in ids:
-                    spokes.append({'sessionId': child_id, 'task': reservation.get('task') or task})
+                    spokes.append({'sessionId': child_id, 'task': reservation.get('task') or task, 'request_id': request_key, 'fingerprint': fingerprint})
                 state.update(administered_spokes=spokes, pending_spawns=pending)
                 persist(path, state)
                 return 0
+            completed = next((x for x in spokes if x.get('request_id') == request_key), None)
+            if completed:
+                sys.stderr.write('BLOCKED: this spawn request already created session %s; inspect or message that child instead of spawning again.\n' % completed['sessionId'])
+                return 2
+            if reservation and not payload.get('tool_use_id'):
+                sys.stderr.write('BLOCKED: this request token already has a pending spawn; inspect its result or wait for its bounded lease before retrying.\n')
+                return 2
             count = sum(x.get('task') == task for x in spokes)
             count += sum(x.get('task') == task for k, x in pending.items() if k != request_key)
             if count >= cap:
                 audit(path, 'administrative cap reached at spawn', sender, target, task)
                 sys.stderr.write('BLOCKED: hub administrative cap reached -- %d/%d administered spokes for task %s. Drain/retire a concluded spoke or delegate administration before spawning another. Messaging remains unrestricted. Stewards (Traffic Cop, Workspace Config, Deep Think, steward) are never limited.\n' % (count, cap, task))
                 return 2
-            pending[request_key] = {'task': task, 'last_activity': now.isoformat()}
+            # A witnessed completion is idempotent too: duplicated post events
+            # cannot create multiple children or release another request.
+            pending[request_key] = {'task': task, 'last_activity': now.isoformat(), 'fingerprint': fingerprint}
             state.update(administered_spokes=spokes, pending_spawns=pending)
             persist(path, state)
             return 0

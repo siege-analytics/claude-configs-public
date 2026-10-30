@@ -45,15 +45,24 @@ if ! DEPENDENCY_STATUS=$(python3 "$REPO_ROOT/bin/frontmatter_validation.py" --ch
   exit 1
 fi
 
+ROUTER_INSTALLER="$REPO_ROOT/bin/install-craft-hook-router.py"
+if [[ ! -f "$ROUTER_INSTALLER" ]]; then
+  echo "ERROR: required Craft hook router installer missing: $ROUTER_INSTALLER" >&2
+  exit 1
+fi
+SETTINGS_FILE="$WORKSPACE/.claude/craft-settings.json"
+
 echo "=== Sync workspace hooks ==="
 echo "Repo:      $REPO_ROOT"
 echo "Workspace: $WORKSPACE"
 echo
 
 python3 "$REPO_ROOT/bin/build.py" --layout flat --deploy --craft-workspace "$WORKSPACE"
-bash "$REPO_ROOT/bin/install-hooks.sh" --workspace "$WORKSPACE" --hooks-root "$WORKSPACE"
-if [[ -f "$REPO_ROOT/bin/wire-enforcement.py" ]]; then
-  python3 "$REPO_ROOT/bin/wire-enforcement.py" --workspace "$WORKSPACE"
-fi
-bash "$REPO_ROOT/bin/verify-enforcement.sh" --target "$WORKSPACE" --mode craft-agent
+bash "$REPO_ROOT/bin/install-hooks.sh" --workspace "$WORKSPACE" --hooks-root "$WORKSPACE" --target-file "$SETTINGS_FILE"
+python3 "$REPO_ROOT/bin/wire-enforcement.py" --workspace "$WORKSPACE" --settings-file "$SETTINGS_FILE"
+bash "$REPO_ROOT/bin/verify-enforcement.sh" --target "$WORKSPACE" --mode craft-agent --settings-file "$SETTINGS_FILE"
 python3 "$REPO_ROOT/bin/check-deploy-drift.py" --repo-root "$REPO_ROOT" --workspace "$WORKSPACE" --scope hooks --verbose
+
+# Register the scoped bridge only after all local policy/drift checks pass.
+python3 "$ROUTER_INSTALLER" --workspace "$WORKSPACE" --apply
+python3 "$ROUTER_INSTALLER" --workspace "$WORKSPACE" --verify-registration

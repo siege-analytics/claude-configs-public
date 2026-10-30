@@ -48,7 +48,7 @@ Three enforcement layers keep the resolver active:
 2. **Every user turn** -- [`hooks/resolver/inject-resolver.sh`](hooks/resolver/inject-resolver.sh) injects the compact safety kernel plus a deterministic task/project load set with reasons. Unknown or ambiguous prompts remain visibly kernel-only; the legacy resolver prose is not globally injected.
 3. **Pre-tool-use** -- [`hooks/infrastructure/catalog-guard.sh`](hooks/infrastructure/catalog-guard.sh) is a `PreToolUse` hook on `Bash` that matches dangerous catalog-bypass patterns and blocks them with a STOP-read-skill reminder.
 
-Wire the hooks by merging [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into `~/.claude/settings.json` (or project `.claude/settings.local.json`), replacing `/path/to/claude-configs-public` with the actual absolute path to the on-disk `hooks/` (typically a workspace path -- see [Wire and verify hooks](#wire-and-verify-hooks) for the rsync-first sequence and the canonical verify-it-fires invocation).
+For Craft, use the [normal installer](#wire-and-verify-hooks), which keeps managed policy in the workspace and registers a scoped router. For terminal Claude Code, merge [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into project `.claude/settings.local.json` with command paths pointing to that project's installed hooks. User-level terminal hooks are a separate operator choice.
 
 ## Always-on conventions
 
@@ -82,6 +82,42 @@ The bundle includes a version/commit banner and is regenerated on every build fr
 **Hook-capable hosts:** install the hook runtime and its manifests together. Craft mounts `CLAUDE.md -> KERNEL.md`; the resolver emits the task/project load set. The full rules bundle must not be mounted globally.
 
 **Hosts without verified hooks:** skills and loaded rules are advisory. Mechanical blocking requires a verified tool hook, native Git hook, or protected provider check; document which mechanism was actually observed.
+
+Craft 0.15.6's Pi/Codex backend does not dispatch these Claude settings hooks.
+Shared skills therefore do not provide task-gate or mutation enforcement there.
+Use the Claude SDK backend when this hook enforcement is required; native Git
+hooks and provider protection remain separate controls. A newer host must pass
+the backend canary before being described as equivalent. Runtime artifact pins
+can be inspected without changing any approval:
+
+```bash
+python3 scripts/canary/craft-backend-canary.py capture-runtime-pins
+```
+
+Keep managed Craft policy in the workspace's `.claude/craft-settings.json`.
+The normal installer registers a minimal user-level router that loads this policy
+only for the verified Craft process/workspace route. Terminal Claude sessions
+outside Craft return without running Craft policy. Preserve operator-owned
+terminal hooks when reconciling an existing installation; do not merge the full
+Craft hook snippet into user-level settings. See [Craft enforcement](craft-agent/README.md).
+
+For local validation, use Python 3.10+ with `requirements-validation.txt`
+installed. Run from an isolated development worktree, keeping any checkout used
+by active hooks on clean released `main`:
+
+```bash
+python3 bin/validate-local.py                  # build and CI freshness checks
+python3 bin/validate-local.py --mode refresh   # refresh, then check generated inputs
+python3 bin/validate-local.py --mode full      # the CI workflow's local run steps
+```
+
+`--list` previews commands. Full mode stops on failure and does not publish or
+install. It isolates ambient Git routing and user/system Git configuration;
+fixture-local Git hooks remain available. GitHub event provenance and protected
+CI still run on GitHub. If Craft
+cannot submit a prompt because its manifest or kernel is broken, run these
+diagnostics from an external terminal; repair through the normal clean exact-main
+installer rather than weakening mutation guards or fabricating task evidence.
 
 ## Project scaffolding
 
@@ -229,24 +265,28 @@ rsync -a "$TMP/repo/catalog/" "$WS/catalog/"
 rm -rf "$TMP"
 ```
 
-Plain `rsync -a` (no `--delete`): preserves local files not shipped upstream. Copy all four directories as one sync unit: the prompt hook requires `bin/resolve-load-set.py` plus `catalog/resolver-manifest.json`, and the push hook requires `bin/review-risk.py` plus `catalog/review-risk-policy.json`. The hooks rsync MUST run before wiring `~/.claude/settings.json` (next step), because the snippet's `command` paths reference workspace files that have to exist on disk first.
+Plain `rsync -a` (no `--delete`): preserves local files not shipped upstream. Copy all four directories as one sync unit: the prompt hook requires `bin/resolve-load-set.py` plus `catalog/resolver-manifest.json`, and the push hook requires `bin/review-risk.py` plus `catalog/review-risk-policy.json`. Run the normal installer after copying: the policy commands and scoped router must reference files already present on disk.
 
 ### Wire and verify hooks
 
-After the workspace rsync, merge [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into `~/.claude/settings.json` (back the original up first), replacing every `/path/to/claude-configs-public` with the actual workspace path (e.g. `~/.craft-agent/workspaces/<ws>`).
-
-The snippet ships every hook the repo provides: `UserPromptSubmit` (resolver injection) and `PreToolUse` matchers for `Bash` (catalog-guard, branch-guard, no-attribution, ticket-required, no-sensitive-files, no-broad-staging) and `mcp__session__send_agent_message` (no-slug-form-outbound parser-drop guard). Adding new hooks upstream means re-rsync + re-merge.
-
-Verify a hook fires after wiring:
+For Craft, use the normal installer rather than merging the snippet globally:
 
 ```bash
-# Should print BLOCKED... and exit 2
-echo '{"tool_input":{"message":"see [skill:think]"}}' \
-  | ~/.craft-agent/workspaces/<ws>/hooks/agent-comms/no-slug-form-outbound.sh
-echo "exit=$?"
+bash bin/install.sh --workspace <slug>
 ```
 
-If exit is 0 instead of 2, the hook is on disk but not executable -- run `chmod +x ~/.craft-agent/workspaces/<ws>/hooks/agent-comms/*.sh ~/.craft-agent/workspaces/<ws>/hooks/git/*.sh ~/.craft-agent/workspaces/<ws>/hooks/infrastructure/*.sh ~/.craft-agent/workspaces/<ws>/hooks/resolver/*.sh`. If the hook never fires from a real `mcp__session__send_agent_message` call, settings.json is malformed -- validate with `python3 -c 'import json, os; json.load(open(os.path.expanduser("~/.claude/settings.json")))'`.
+It installs the managed snippet and blocking wrapper into workspace
+`.claude/craft-settings.json`, verifies that policy, then applies and
+verifies the minimal scoped router registration. A missing router helper fails
+installation before deployment. The helper retires only owned legacy project
+registrations and preserves operator hooks. Re-running the installer refreshes
+the same managed policy instead of creating a second autoload policy copy.
+
+A local direct-hook probe or registration receipt does not prove that Craft
+invoked the hooks. The SDK child may have a per-session working directory rather
+than the workspace root; project `.claude/settings.json` at the workspace alone
+is insufficient evidence. Run a live backend canary after installation. Native
+terminal Claude policy remains a separate project/user choice.
 
 To upgrade later:
 
@@ -373,7 +413,7 @@ The same source serves two consumer runtimes via a build step. Pick the layout t
 |---|---|---|---|
 | **nested** | `release/nested`, `vX.Y.Z-nested` | Skills under category folders (`coding/code-review/`, `git-workflow/commit/`, ...) | **Claude Code** with the resolver hook |
 | **flat** | `release/flat`, `vX.Y.Z-flat` | Leaf skills at `skills/<slug>/`; routers stay at category root | **Craft Agent** (slash-command pane) |
-| **claude-code package** | `release/claude-code`, `vX.Y.Z-claude-code`, release archive | Flat skills, hooks, settings snippet, resolver/rules bundle | Claude Code / Codex-style runtimes |
+| **claude-code package** | `release/claude-code`, `vX.Y.Z-claude-code`, release archive | Flat skills, hooks, settings snippet, resolver/rules bundle | Claude Code; other hosts require capability verification |
 | **craft-agent package** | `release/craft-agent`, `vX.Y.Z-craft-agent`, release archive | Flat skills, hooks, settings/enforcement files, Craft automation snippets | Craft Agent workspaces |
 
 Both layouts contain identical content; only the file-tree shape differs. Every hook-bearing layout is self-contained: `hooks/`, `bin/resolve-load-set.py`, `bin/review-risk.py`, and their `catalog/` manifests/policies ship together. Each resolver manifest records canonical `source_path` provenance separately from its layout-correct `package_path`; emitted hook instructions resolve that runtime path against the installation root. The build resolves `[skill:slug]` and `[rule:slug]` tokens to layout-appropriate paths so cross-references work in both worlds without manual maintenance.

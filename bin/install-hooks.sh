@@ -49,9 +49,9 @@ def command_tokens(command, event):
 def managed_native_command(command, event, hooks_root, native_names):
     tokens = command_tokens(command, event)
     executable = Path(tokens[0])
-    direct = executable.parts[-3:] if len(executable.parts) >= 3 else ()
-    if direct and direct[:2] == ('hooks', 'git') and direct[2] in native_names:
-        return True
+    # A familiar filename is not ownership: foreign operator commands may use
+    # the same hooks/git layout. Relative spellings and aliases are managed
+    # only when they resolve inside this installation's native directory.
     candidate = executable if executable.is_absolute() else hooks_root / executable
     resolved = candidate.resolve(strict=False)
     native_root = (hooks_root / 'hooks/git').resolve(strict=True)

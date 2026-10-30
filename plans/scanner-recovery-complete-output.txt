@@ -1,0 +1,30 @@
+bin/build.py:190:writing-tests-5: source has 46 except block(s) but no test file found (looked in tests/, bin/tests/, ...)
+bin/craft-workspace-trust.py:352:writing-code-7-silent-swallow(Pass): except (OSError, ValueError): <Pass>
+bin/craft-workspace-trust.py:44:writing-tests-5: source has 15 except block(s) but no test file found (looked in tests/, bin/tests/, ...)
+bin/install-craft-hook-router.py:232:writing-tests-5: source has 7 except block(s) but no test file found (looked in tests/, bin/tests/, ...)
+bin/native_git.py:183:writing-tests-5: source has 5 except block(s) but no test file found (looked in tests/, bin/tests/, ...)
+bin/validate-hooks.py:122:writing-tests-5: source has 2 except block(s) but no test file found (looked in tests/, bin/tests/, ...)
+bin/validate-local.py:97:writing-tests-5: source has 7 except block(s) but no test file found (looked in tests/, bin/tests/, ...)
+bin/wire-enforcement.py:55:writing-tests-5: source has 4 except block(s) but no test file found (looked in tests/, bin/tests/, ...)
+hooks/lib/craft-settings-router.py:517:writing-code-7-silent-swallow(Pass): except (OSError, ValueError): <Pass>
+hooks/lib/craft-settings-router.py:318:writing-code-7-silent-swallow(Pass): except ProcessLookupError: <Pass>
+hooks/lib/craft-settings-router.py:138:writing-code-7-silent-swallow(Continue): except ValueError: <Continue>
+hooks/lib/craft-settings-router.py:517:writing-tests-5: source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)
+hooks/lib/git_command.py:247:writing-tests-5: source has 3 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)
+hooks/lib/read-only-command.py:395:writing-tests-5: source has 2 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)
+hooks/lib/resolve-think-gate.py:392:writing-code-7-silent-swallow(Return): except (ValueError, TypeError): <Return>
+hooks/lib/resolve-think-gate.py:631:writing-code-7-silent-swallow(Return): except (ValueError, TypeError): <Return>
+hooks/lib/resolve-think-gate.py:805:writing-code-7-silent-swallow(Return): except (OSError, SubprocessError): <Return>
+hooks/lib/resolve-think-gate.py:818:writing-code-7-silent-swallow(Return): except UnknownShape: <Return>
+hooks/lib/resolve-think-gate.py:896:writing-code-7-silent-swallow(Return): except (OSError, ValueError, TypeError): <Return>
+hooks/lib/resolve-think-gate.py:117:writing-tests-5: source has 28 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)
+hooks/lib/session_anchor.py:162:writing-code-7-silent-swallow(Return): except (OSError, ValueError): <Return>
+hooks/lib/session_anchor.py:42:writing-tests-5: source has 10 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)
+hooks/lib/task_actions.py:207:writing-code-7-silent-swallow(Return): except (ValueError, SyntaxError): <Return>
+hooks/lib/task_actions.py:153:writing-code-9-silently-dropped-param(offset): def shape(...): parameter 'offset' has a default but is never referenced in this function's own scope, not forwarded, and not named in the docstring
+hooks/lib/task_actions.py:207:writing-tests-5: source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)
+hooks/lib/test-evidence.py:64:writing-tests-5: source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)
+scripts/canary/craft-backend-canary.py:55:writing-tests-5: source has 7 except block(s) but no test file found (looked in tests/, scripts/canary/tests/, ...)
+
+scanned: writing-prose:1-4 (stylistic; broader Unicode class), writing-code:2 (history references in code comments), writing-code:4 (Django ORM kwarg validation, same-file models; AST), writing-code:7 (silent error swallowing; AST), writing-code:8 (optional-import callsite guards; AST), writing-code:9 (silently-dropped parameters; AST scoped visitor), writing-code:15 (unbounded blocking I/O; AST, incl. Popen chains, Session/Client instance methods, invalid literal timeouts), writing-tests:3 (skip messages must be actionable), writing-tests:5 (untested named exception handlers, cross-file; AST), writing-claims:2 (countable claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:3 (deprecation messages need version+removal-keyword anchors; AST). Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4, writing-claims:1/3, writing-releases:1/2.
+violations: 27

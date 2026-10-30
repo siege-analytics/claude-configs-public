@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **198**
-- Characters: **2,664,548**
-- Estimated tokens: **666,217** (character/4 estimate)
+- Characters: **2,672,251**
+- Estimated tokens: **668,143** (character/4 estimate)
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 110 | 1,268,154 | 317,083 |
+| unclassified | 110 | 1,275,857 | 319,009 |
 
 ## Largest source items
 
@@ -46,8 +46,8 @@ This report describes committed source evidence. Missing references or tests do 
 | `writing-code` | rule | 51,999 | 13,000 | `skills/_writing-code-rules.md` |
 | `investigate` | skill | 39,733 | 9,934 | `skills/investigate/SKILL.md` |
 | `shelves--top-design` | reference-shelf | 38,675 | 9,669 | `skills/shelves/design/top-design/SKILL.md` |
+| `think` | skill | 32,200 | 8,050 | `skills/think/SKILL.md` |
 | `writing-claims` | rule | 31,339 | 7,835 | `skills/_writing-claims-rules.md` |
-| `think` | skill | 31,286 | 7,822 | `skills/think/SKILL.md` |
 | `shelves--two-scoops-django` | reference-shelf | 30,998 | 7,750 | `skills/shelves/django/two-scoops-django/SKILL.md` |
 | `shelves--one-page-marketing` | reference-shelf | 30,696 | 7,674 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
 | `writing-rules` | rule | 30,148 | 7,537 | `skills/_writing-rules-rules.md` |
@@ -65,7 +65,7 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--ios-hig-design` | reference-shelf | 24,657 | 6,165 | `skills/shelves/design/ios-hig-design/SKILL.md` |
 | `shelves--37signals-way` | reference-shelf | 24,449 | 6,113 | `skills/shelves/team/37signals-way/SKILL.md` |
 | `drive-while-away` | skill | 24,027 | 6,007 | `skills/drive-while-away/SKILL.md` |
-| `shelves--data-intensive` | reference-shelf | 23,688 | 5,922 | `skills/shelves/systems-architecture/data-intensive/SKILL.md` |
+| `code-review` | skill | 23,840 | 5,960 | `skills/code-review/SKILL.md` |
 
 ## Evidence gaps
 

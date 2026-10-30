@@ -67,7 +67,10 @@ bash/coordinator-status-guard|gh issue close 5 --comment done'
 while IFS='|' read -r h trig; do
     expect skip "$h" "plain read" "$(payload 'ls -la | head')"
     expect skip "$h" "read mentioning neither word" "$(payload 'grep -rn TODO src | wc -l')"
-    expect skip "$h" "git reads that trigger nothing" "$(payload 'git status && git log --oneline -3 && cat f | wc -l')"
+    # Branch policy inspects every Git verb to resolve aliases/global options;
+    # known reads still pass, but cannot use the old adjacent-verb fast skip.
+    if [[ "$h" == git/branch-guard ]]; then git_read_path=full; else git_read_path=skip; fi
+    expect "$git_read_path" "$h" "git reads that trigger nothing" "$(payload 'git status && git log --oneline -3 && cat f | wc -l')"
     expect skip "$h" "read with quotes and an escaped backslash" "$(payload 'grep -n "a\\b" f')"
     expect full "$h" "trigger" "$(payload "$trig")"
     expect full "$h" "trigger after a newline" "$(payload $'ls\n'"$trig")"

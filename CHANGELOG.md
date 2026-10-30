@@ -12,6 +12,30 @@ All notable changes to this project are documented here. Versioning follows [Sem
 - Reconcile the invocation-aware catalog guard with current develop and preserve both helpers' high-risk review classification (#993, PR #999).
 - Correct setup guidance: Craft supports Claude SDK hooks, mounts the compact kernel, and keeps the broad rules bundle for on-demand reference. Live backend enforcement must be observed separately.
 
+## [3.5.80] -- 2026-10-30
+
+### Fixed: task isolation and runtime recovery
+
+- Reject unresolved identities across supported host bindings; keep malformed callbacks separate from native Git invocations. Restore explicit task independence and report effective-tier requirements.
+- Validate test evidence through one shared, content-bound versioned contract and execute tests through the selected task's scoped receipt producer. Legacy assertions require a rerun; report-only inspection grants no authority.
+- Model base64 output options, executable Git readers, copy option abbreviations and protected Git global/alias forms instead of treating their executable names as read authority.
+- Validate spawn protocol before taking capacity; reconcile outer-array results and failures; prevent phantom children and replayed spawns.
+- Derive local validation from CI and make ordered generated refresh explicit. Runtime pins are immutable per-run data, and read-only capture never supplies approval.
+- Document the installed Craft 0.15.6 Pi/Codex hook limitation and preserve terminal/global configuration ownership. Local installer probes do not claim backend parity.
+
+### Fixed: deployment provenance and settings ownership
+
+- Register a minimal per-workspace Claude SDK bootstrap from session working directories. Keep policy outside project autoload settings, skip terminal Claude, seal session identity through child hooks, and retire only exact managed duplicates.
+- Preserve unknown and nested operator skills during upgrades; retire only an exact observed legacy dispatcher digest.
+- Preserve concurrent settings versions with atomic exchange and private recovery. Block SDK startup failures, ambiguous permission results, and duplicate global Craft policy; keep managed environment values outside terminal autoload settings.
+- Prevent read-only Git guards and native adapter descendants from creating bytecode in pinned packages.
+- Cancel validation/test process groups on interruption and keep timed-out evidence pending. Large scans no longer exhaust stock macOS Bash descriptors; matcher process failures are incomplete results.
+- Deny malformed callback recovery, unreadable scratch targets and failed repository/commit classification instead of borrowing native authority or lowering review requirements.
+- Exact-main deployment now uses private immutable source/artifacts, verifies tracked bytes and modes, rejects overlapping or aliased write targets, and verifies installed bytes before stamping provenance (#821).
+- Literal Git-object reads ignore replacement refs and ambient repository routing. Deployment bootstraps its reader from the accepted commit instead of a mutable checkout helper.
+- Hook retirement preserves foreign operator commands with native-looking path suffixes (#1038). Source settings remove duplicate managed registrations, and validation checks multiplicity.
+
+
 ## [3.5.77] -- 2026-10-22
 
 ### Fixed: the block log can be counted (#1119)

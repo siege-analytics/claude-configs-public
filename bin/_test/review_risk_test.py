@@ -23,6 +23,14 @@ AUTHORITY_DEPENDENCY_FLOOR = [
  "catalog/gate-contracts.json",
 ]
 AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
+ "skills/commit/SKILL.md",
+ "skills/code-review/SKILL.md",
+ "skills/detect-ai-fingerprints/SKILL.md",
+ "skills/detect-ai-fingerprints/scan.sh",
+ "skills/detect-ai-fingerprints/scan_ast.py",
+ "skills/detect-ai-fingerprints/scan_snapshot.py",
+ "bin/_test/scanner_source_test.py",
+ "catalog/legacy-owned-artifacts.json",
  "bundles/siege/composition-inputs.json",
  "bin/compose-project.py",
  "bin/package_selection.py",
@@ -33,6 +41,8 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "bundles/siege/protected-adapter.json",
  "examples/selected-registration/run.py",
  "bin/source_snapshot.py",
+ "bin/validate-local.py",
+ "bin/_test/local_validation_test.py",
  "bin/_test/package_selection_test.py",
  "bundles/siege/build-bundle.json",
  "examples/selected-build/run.py",
@@ -54,12 +64,19 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/canonical-path.py",
  "hooks/lib/classify-catalog-command.py",
  "hooks/lib/commit-message-source.py",
+ "hooks/lib/git_command.py",
  "hooks/lib/detect-host.sh",
  "hooks/lib/extract-json.py",
  "hooks/lib/gate-registry.sh",
  "hooks/lib/probe-runner.py",
  "hooks/lib/resolve-think-gate.py",
  "hooks/lib/task_actions.py",
+ "hooks/lib/test-evidence.py",
+ "hooks/lib/craft-settings-router.py",
+ "bin/install-craft-hook-router.py",
+ "bin/craft-workspace-trust.py",
+ "bin/_test/craft_hook_router_test.py",
+ "bin/_test/craft_workspace_trust_test.py",
  "hooks/lib/pipeline_state.py",
  "hooks/lib/hub-concurrency-policy.json",
  "hooks/lib/scope-check.sh",
@@ -118,7 +135,7 @@ hooks/write/ticket-propagation-guard.sh
 hooks/write/write-guard.sh
 """.strip().splitlines())
 REQUIRED_SOURCE_ENTRYPOINT_COUNTS = {path:(4 if path.startswith("hooks/write/") else 1) for path in REQUIRED_SOURCE_ENTRYPOINTS}
-REQUIRED_SOURCE_ENTRYPOINT_COUNTS.update({"hooks/bash/universal-mutation-gate.sh":5,"hooks/agent-comms/hub-concurrency-gate.sh":3})
+REQUIRED_SOURCE_ENTRYPOINT_COUNTS.update({"hooks/bash/universal-mutation-gate.sh":5,"hooks/agent-comms/hub-concurrency-gate.sh":4})
 REQUIRED_MANIFEST_ENTRYPOINTS = set("""
 hooks/git/branch-guard.sh
 hooks/git/pre-push-self-review.sh
@@ -130,10 +147,11 @@ hooks/resolver/think-gate-guard.sh
 REQUIRED_MANIFEST_ENTRYPOINT_COUNTS = {path:1 for path in REQUIRED_MANIFEST_ENTRYPOINTS}
 REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS = {"hooks/resolver/ca-enforcement-gate.sh"}
 REQUIRED_GENERATED_SETTINGS_ENTRYPOINT_COUNTS = {path:1 for path in REQUIRED_GENERATED_SETTINGS_ENTRYPOINTS}
-REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "fc9a5f53a4ab1e972b57d7804d9644e28462f0cf74449a12a4355e256f232a84"
+REQUIRED_SOURCE_REGISTRATIONS_SHA256 = "7ea4f885d679e07e084d7dd757b557cce01da44f2969ada03d4c390b94ab56a2"
 REQUIRED_MANIFEST_REGISTRATIONS_SHA256 = "868ca27fe41ca9d2e6f9335e2ddaf05d7cb992617b42f24cbc3ff2794099414b"
 REQUIRED_GENERATED_SETTINGS_REGISTRATIONS_SHA256 = "19a972d9471da0d66c46568c0efb8a16c356ed66f620702b7f06b8251bc809f0"
 CI_INVOCATION_SITES = [
+ (".github/workflows/build-and-publish.yml","bin/_test/local_validation_test.py","run: python3 bin/_test/local_validation_test.py",1),
  (".github/workflows/build-and-publish.yml","bin/_test/resident_delivery_test.py","python3 bin/_test/resident_delivery_test.py",1),
  (".github/workflows/build-and-publish.yml","bin/_test/provider_event_test.py","run: python3 bin/_test/provider_event_test.py",1),
  (".github/workflows/build-and-publish.yml","bin/_test/native_push_test.py","run: python3 bin/_test/native_push_test.py",1),
@@ -185,6 +203,9 @@ hooks/git/self-review.sh|hooks/lib/scope-check.sh
 hooks/git/survey-context.sh|hooks/lib/extract-json.py
 hooks/git/survey-context.sh|hooks/lib/scope-check.sh
 hooks/git/test-guard.sh|hooks/lib/extract-json.py
+hooks/git/test-guard.sh|hooks/lib/test-evidence.py
+hooks/bash/destructive-guard.sh|hooks/lib/git_command.py
+hooks/git/branch-guard.sh|hooks/lib/git_command.py
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py
 hooks/git/ticket-required.sh|hooks/lib/command-text.sh
@@ -212,8 +233,8 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "d7dfa60ce148854a5d14523ec790478f4794091170c18fad95fc23e80acc1ca7"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "49547810bab12a781ea0b8a233f627f9f9fe1fb4fc23d5ad6f2a63fd7ded0900"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "ff541ffa4f58bf0aa7fe24bbc90d693c4ef48d18a39ea147d28f05f677dd4a02"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "cb74a6cb13c649e3a341cfdeeec4d0d6a8d47e4f71e598bb8f7976dc779a295d"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
@@ -235,6 +256,9 @@ hooks/git/self-review.sh|hooks/lib/extract-json.py|2
 hooks/git/self-review.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/survey-context.sh|hooks/lib/extract-json.py|2
 hooks/git/test-guard.sh|hooks/lib/extract-json.py|2
+hooks/git/test-guard.sh|hooks/lib/test-evidence.py|2
+hooks/bash/destructive-guard.sh|hooks/lib/git_command.py|1
+hooks/git/branch-guard.sh|hooks/lib/git_command.py|1
 hooks/git/test-guard.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py|3
@@ -288,7 +312,7 @@ def entrypoint_surfaces()->tuple[dict,dict,dict]:
  # its emitted blocking manifest/settings for independent per-surface checks.
  source=json.loads((ROOT/"hooks/settings-snippet.json").read_text())
  with tempfile.TemporaryDirectory(prefix="review-risk-entrypoints-") as raw:
-  dist=Path(raw);built=subprocess.run([sys.executable,str(ROOT/"bin/build.py"),"--dist",str(dist)],cwd=ROOT,text=True,capture_output=True)
+  dist=Path(raw);built=subprocess.run([sys.executable,str(ROOT/"bin/build.py"),"--dist",str(dist)],cwd=ROOT,text=True,capture_output=True, timeout=120)
   assert built.returncode==0,(built.stdout,built.stderr)
   manifest=json.loads((dist/"craft-agent/enforcement-manifest.json").read_text())
   generated=json.loads((dist/"craft-agent/settings-enforcement.json").read_text())
@@ -506,17 +530,18 @@ def verify_generated_output_exclusions()->None:
  ]:
   with tempfile.TemporaryDirectory() as raw:
    mutated=Path(raw)/Path(catalog).name;mutated.write_text((ROOT/catalog).read_text()+"\n")
-   changed=subprocess.run([sys.executable,str(ROOT/checker),"--catalog",str(mutated),"--check"],cwd=ROOT,text=True,capture_output=True)
+   changed=subprocess.run([sys.executable,str(ROOT/checker),"--catalog",str(mutated),"--check"],cwd=ROOT,text=True,capture_output=True, timeout=120)
    assert changed.returncode!=0,(checker,"modified output accepted",changed.stdout,changed.stderr)
    mutated.unlink()
-   deleted=subprocess.run([sys.executable,str(ROOT/checker),"--catalog",str(mutated),"--check"],cwd=ROOT,text=True,capture_output=True)
+   deleted=subprocess.run([sys.executable,str(ROOT/checker),"--catalog",str(mutated),"--check"],cwd=ROOT,text=True,capture_output=True, timeout=120)
    assert deleted.returncode!=0,(checker,"deleted output accepted",deleted.stdout,deleted.stderr)
-  current=subprocess.run([sys.executable,str(ROOT/checker),"--check"],cwd=ROOT,text=True,capture_output=True)
+  current=subprocess.run([sys.executable,str(ROOT/checker),"--check"],cwd=ROOT,text=True,capture_output=True, timeout=120)
   assert current.returncode==0,(checker,"current output rejected",current.stdout,current.stderr)
 def declared_b(repo:Path,*args:str)->dict:
  result=subprocess.run(
   [sys.executable,str(SCRIPT),"--repo",str(repo),*args,"--declared","B"],
   text=True,capture_output=True,
+     timeout=120,
  )
  assert result.returncode==2,(args,result.stdout,result.stderr)
  payload=json.loads(result.stdout)
@@ -546,63 +571,63 @@ def main():
  assert tier(["hooks/git/link","vendor/submodule"])=="C"
  assert tier(["vendor/submodule"])=="B"
  assert tier(["docs/copied-example.md"])=="A"
- low=subprocess.run([sys.executable,str(SCRIPT),"--paths","README.md","hooks/git/x.sh","--declared","B"],text=True,capture_output=True)
+ low=subprocess.run([sys.executable,str(SCRIPT),"--paths","README.md","hooks/git/x.sh","--declared","B"],text=True,capture_output=True, timeout=120)
  assert low.returncode==2 and not json.loads(low.stdout)["valid"]
- high=subprocess.run([sys.executable,str(SCRIPT),"--paths","README.md","--declared","C"],text=True,capture_output=True)
+ high=subprocess.run([sys.executable,str(SCRIPT),"--paths","README.md","--declared","C"],text=True,capture_output=True, timeout=120)
  assert high.returncode==0 and json.loads(high.stdout)["valid"]
  malformed=policy.copy();malformed["tiers"]={}
  with tempfile.TemporaryDirectory() as raw:
   path=Path(raw)/"bad.json";path.write_text(json.dumps(malformed))
-  bad=subprocess.run([sys.executable,str(SCRIPT),"--policy",str(path),"--paths","README.md"],text=True,capture_output=True)
+  bad=subprocess.run([sys.executable,str(SCRIPT),"--policy",str(path),"--paths","README.md"],text=True,capture_output=True, timeout=120)
   assert bad.returncode==2 and not json.loads(bad.stdout)["valid"]
-  missing=subprocess.run([sys.executable,str(SCRIPT),"--policy",str(Path(raw)/"missing.json"),"--paths","README.md"],text=True,capture_output=True)
+  missing=subprocess.run([sys.executable,str(SCRIPT),"--policy",str(Path(raw)/"missing.json"),"--paths","README.md"],text=True,capture_output=True, timeout=120)
   assert missing.returncode==2 and not json.loads(missing.stdout)["valid"]
  with tempfile.TemporaryDirectory() as raw:
-  repo=Path(raw);subprocess.run(["git","init","-q"],cwd=repo,check=True);subprocess.run(["git","config","user.email","test@example.com"],cwd=repo,check=True);subprocess.run(["git","config","user.name","Test"],cwd=repo,check=True)
+  repo=Path(raw);subprocess.run(["git","init","-q"],cwd=repo,check=True, timeout=120);subprocess.run(["git","config","user.email","test@example.com"],cwd=repo,check=True, timeout=120);subprocess.run(["git","config","user.name","Test"],cwd=repo,check=True, timeout=120)
   (repo/"hooks/git").mkdir(parents=True);(repo/"hooks/git/gate.sh").write_text("guard\n")
   for dependency in AUDITED_ENFORCEMENT_DEPENDENCIES:
    candidate=repo/dependency;candidate.parent.mkdir(parents=True,exist_ok=True);candidate.write_text("enforcement dependency\n")
-  subprocess.run(["git","add","-f","."],cwd=repo,check=True);subprocess.run(["git","commit","-qm","base"],cwd=repo,check=True)
-  root_commit=subprocess.check_output(["git","rev-parse","HEAD"],cwd=repo,text=True).strip();assert tier(m.changed_paths(repo,commit=root_commit))=="C"
+  subprocess.run(["git","add","-f","."],cwd=repo,check=True, timeout=120);subprocess.run(["git","commit","-qm","base"],cwd=repo,check=True, timeout=120)
+  root_commit=subprocess.check_output(["git","rev-parse","HEAD"],cwd=repo,text=True, timeout=120).strip();assert tier(m.changed_paths(repo,commit=root_commit))=="C"
   # Every audited dependency retains its Tier C floor for modification,
   # deletion, and rename source paths. Each staged shape must reject a
   # declared Tier B rather than relying only on direct --paths fixtures.
   (repo/"docs").mkdir()
   for index,dependency in enumerate(AUDITED_ENFORCEMENT_DEPENDENCIES):
    candidate=repo/dependency
-   candidate.write_text(candidate.read_text()+"modified\n");subprocess.run(["git","add","-f",dependency],cwd=repo,check=True)
+   candidate.write_text(candidate.read_text()+"modified\n");subprocess.run(["git","add","-f",dependency],cwd=repo,check=True, timeout=120)
    assert tier(m.changed_paths(repo,staged=True))=="C",("modify",dependency)
    declared_b(repo,"--staged")
-   subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True)
-   candidate.unlink();subprocess.run(["git","add","-u",dependency],cwd=repo,check=True)
+   subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True, timeout=120)
+   candidate.unlink();subprocess.run(["git","add","-u",dependency],cwd=repo,check=True, timeout=120)
    assert tier(m.changed_paths(repo,staged=True))=="C",("delete",dependency)
    declared_b(repo,"--staged")
-   subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True)
+   subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True, timeout=120)
    (repo/"docs").mkdir(exist_ok=True)
-   renamed=f"docs/renamed-{index}.md";subprocess.run(["git","mv",dependency,renamed],cwd=repo,check=True)
+   renamed=f"docs/renamed-{index}.md";subprocess.run(["git","mv",dependency,renamed],cwd=repo,check=True, timeout=120)
    assert tier(m.changed_paths(repo,staged=True))=="C",("rename",dependency)
    declared_b(repo,"--staged")
-   subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True)
-  subprocess.run(["git","mv","hooks/git/gate.sh","README.md"],cwd=repo,check=True)
+   subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True, timeout=120)
+  subprocess.run(["git","mv","hooks/git/gate.sh","README.md"],cwd=repo,check=True, timeout=120)
   assert tier(m.changed_paths(repo,staged=True))=="C"
-  subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True);(repo/"hooks/git/gate.sh").unlink();subprocess.run(["git","add","-u"],cwd=repo,check=True)
+  subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True, timeout=120);(repo/"hooks/git/gate.sh").unlink();subprocess.run(["git","add","-u"],cwd=repo,check=True, timeout=120)
   assert tier(m.changed_paths(repo,staged=True))=="C"
-  subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True)
+  subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True, timeout=120)
   unusual=["hooks/git/gate\t.sh","hooks/git/gate\n.sh","hooks/git/gaté.sh"]
   for name in unusual:(repo/name).write_text("guard\n")
-  subprocess.run(["git","add","-A"],cwd=repo,check=True)
+  subprocess.run(["git","add","-A"],cwd=repo,check=True, timeout=120)
   observed=m.changed_paths(repo,staged=True)
   assert set(unusual)<=set(observed),observed
   assert tier(observed)=="C"
-  subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True)
+  subprocess.run(["git","reset","--hard","-q","HEAD"],cwd=repo,check=True, timeout=120)
   resolver_newline="hooks/resolver/new\nthink-gate-guard.sh"
   (repo/"hooks/resolver").mkdir(parents=True,exist_ok=True);(repo/resolver_newline).write_text("guard\n")
-  subprocess.run(["git","add","-A"],cwd=repo,check=True)
+  subprocess.run(["git","add","-A"],cwd=repo,check=True, timeout=120)
   added=m.changed_paths(repo,staged=True)
   assert resolver_newline in added,added
   assert tier(added)=="C",added
-  subprocess.run(["git","commit","-qm","add newline resolver gate"],cwd=repo,check=True)
-  (repo/resolver_newline).unlink();subprocess.run(["git","add","-u"],cwd=repo,check=True)
+  subprocess.run(["git","commit","-qm","add newline resolver gate"],cwd=repo,check=True, timeout=120)
+  (repo/resolver_newline).unlink();subprocess.run(["git","add","-u"],cwd=repo,check=True, timeout=120)
   deleted=m.changed_paths(repo,staged=True)
   assert resolver_newline in deleted,deleted
   assert tier(deleted)=="C",deleted

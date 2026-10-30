@@ -12,7 +12,9 @@ from __future__ import annotations
 import ast
 import os
 import re
+import stat
 import subprocess
+import sys
 
 
 class UnknownShape(ValueError):
@@ -282,23 +284,17 @@ def _options(args: list[str], flags=(), values=(), *, minimum=0, maximum=None) -
 def investigation(args: list[str]) -> bool:
     """Approved diagnostic execution, NOT a proof of side-effect-free code.
 
-    Tests may execute project code/write caches. This preserves the base's
-    investigation allowance without labelling test runners pure readers.
-    Explicit source-edit, output-file and arbitrary execution options remain
-    gated; arbitrary scripts/clones are not investigation exceptions.
+    Only bounded diagnostic forms qualify. Test modules/plugins and compilers
+    can execute code or write files and require a separately scoped runner;
+    their executable names alone are not investigation authority.
     """
     if not args:
         return False
     cmd, rest = args[0], args[1:]
-    if cmd in {"python", "python3"} and len(rest) >= 2 and rest[0] == "-m":
-        if rest[1] == "pytest":
-            cmd, rest = "pytest", rest[2:]
-        elif rest[1] == "py_compile":
-            return _options(rest[2:], flags={"-q"}, minimum=1)
-        else:
-            return False
-    if cmd == "pytest":
-        return _options(rest, flags={"-q", "-qq", "-v", "-vv", "-x", "-s", "--collect-only", "--disable-warnings", "--strict-markers", "--strict-config", "--no-header", "--no-summary"}, values={"-k", "-m", "--maxfail", "--tb", "--color"})
+    # Test modules and plugins execute arbitrary project code; py_compile writes
+    # bytecode. A command-line selection is not a scoped execution authority.
+    if cmd == "pytest" or cmd in {"python", "python3"} and rest[:1] == ["-m"]:
+        return False
     if cmd in {"bash", "sh", "zsh", "dash", "ksh"}:
         return bool(rest) and rest[0] == "-n" and _options(rest[1:], minimum=1)
     if cmd == "shellcheck":
@@ -345,7 +341,7 @@ def _cp_keeps_symlinks(tokens) -> bool:
             break
         if t.startswith('--'):
             if _long_option_matches(t, ('--no-dereference', '--recursive', '--archive')) or (
-                    t.startswith('--preserve') and ('links' in t or 'all' in t)):
+                    _long_option_matches(t, ('--preserve',)) and ('links' in t or 'all' in t)):
                 return True
         elif t.startswith('-') and t != '-' and any(c in t[1:] for c in 'PdrRa'):
             return True
@@ -378,7 +374,7 @@ def reader(args: list[str]) -> bool:
     if not args:
         return False
     cmd, rest = args[0], args[1:]
-    if cmd in {"cat", "head", "tail", "less", "more", "wc", "file", "stat", "du", "df", "which", "readlink", "realpath", "md5", "sha256sum", "shasum", "xxd", "od", "hexdump", "ls", "cmp", "comm", "pwd", "dirname", "basename", "uname", "hostname", "whoami", "id", "true", "false", "test", "[", "echo", "printenv"}:
+    if cmd in {"cat", "head", "tail", "less", "more", "wc", "file", "stat", "du", "df", "which", "readlink", "realpath", "md5", "sha256sum", "shasum", "xxd", "od", "hexdump", "ls", "cmp", "comm", "pwd", "dirname", "basename", "uname", "whoami", "id", "true", "false", "test", "[", "echo", "printenv"}:
         # xxd -r reverses into an output file; file -C compiles a database.
         if cmd == "xxd":
             return _options(rest, flags={"-a", "-b", "-e", "-p", "-ps", "-u", "-v"}, values={"-c", "-g", "-l", "-o", "-s"}, maximum=1)
@@ -387,6 +383,8 @@ def reader(args: list[str]) -> bool:
         if cmd in {"less", "more"}:  # interactive shell escapes / LESSOPEN
             return False
         return True
+    if cmd == "hostname":
+        return _options(rest, flags={"-f", "-s", "-d", "-i", "-I", "-a", "-A", "--fqdn", "--short", "--domain", "--ip-address", "--all-ip-addresses", "--all-fqdns", "--alias", "--help", "--version"}, maximum=0)
     if cmd == "type":
         return _options(rest, flags={"-a", "-t", "-p", "-P", "-f"}, minimum=1)
     if cmd == "tree":
@@ -454,6 +452,8 @@ def reader(args: list[str]) -> bool:
         sub, opts = rest[0], rest[1:]
         if any(a.startswith(("--output", "--ext-diff", "--textconv", "--exec", "-o")) for a in opts):
             return False
+        if sub == "reflog":
+            return not any(a in {"expire", "delete", "drop", "write"} for a in opts)
         if sub in {"log", "status", "diff", "show", "rev-parse", "merge-base", "describe", "rev-list", "shortlog", "blame", "ls-tree", "ls-files", "cat-file", "name-rev", "for-each-ref"}:
             return True
         if sub == "branch":
@@ -520,9 +520,100 @@ def action(command: str, cwd: str) -> dict:
     return result
 
 
+def _test_receipt_record(tokens, cwd: str):
+    """Typed execution lane, never a reader or own-scratch exemption.
+
+    Only the producer from this policy generation gets the lane. Its test argv
+    remains opaque computation; repository-wide implementing authority is
+    required later, and receipt ownership is checked after task selection.
+    """
+    words = [word for word, _, _ in tokens]
+    invocation = list(words)
+    while invocation and invocation[0].startswith("CCP_TASK_ID="):
+        invocation.pop(0)
+    script = 1
+    while script < len(invocation) and invocation[script] in {"-I", "-B"}:
+        script += 1
+    python = bool(invocation) and (os.path.basename(invocation[0]) in {"python", "python3"}
+                                   or os.path.isabs(invocation[0]) and os.path.realpath(invocation[0]) == os.path.realpath(sys.executable))
+    executable_producer = bool(invocation) and os.path.basename(invocation[0]) == "test-evidence.py"
+    script_producer = python and script < len(invocation) and os.path.basename(invocation[script]) == "test-evidence.py"
+    option_names = {word.partition("=")[0] for word in words}
+    candidate = executable_producer or script_producer or (
+        python and "record" in words and {"--think-gate", "--output", "--repo"} <= option_names)
+    if not candidate:
+        return None
+    if any("\0" in word for word in words) or any(operator or glob for _, operator, glob in tokens):
+        raise UnknownShape("test receipt producer requires one literal argv command")
+    binding = ""
+    while words and words[0].startswith("CCP_TASK_ID="):
+        value = words.pop(0).split("=", 1)[1]
+        if binding and value != binding:
+            raise UnknownShape("conflicting test receipt task bindings")
+        binding = value
+    if not words or not (words[0] == "python3" or os.path.isabs(words[0]) and
+                          os.path.realpath(words[0]) == os.path.realpath(sys.executable)):
+        raise UnknownShape("test receipts require the known Python interpreter and packaged producer")
+    index = 1
+    while index < len(words) and words[index] in {"-I", "-B"}:
+        index += 1
+    owned = os.path.join(os.path.realpath(os.path.dirname(__file__)), "test-evidence.py")
+    if index >= len(words) or os.path.abspath(os.path.join(cwd, words[index])) != owned:
+        raise UnknownShape("use this policy generation's exact hooks/lib/test-evidence.py producer")
+    if os.path.realpath(owned) != owned:
+        raise UnknownShape("test receipt producer cannot be a symlink")
+    try:
+        info = os.stat(owned, follow_symlinks=False)
+    except OSError as error:
+        raise UnknownShape("this policy generation's test receipt producer is unavailable") from error
+    if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+        raise UnknownShape("test receipt producer must be an owned regular singly linked file")
+    index += 1
+    if words[index:index + 1] != ["record"]:
+        raise UnknownShape("only the fixed test receipt record command has an execution lane")
+    index += 1
+    fields, sources = {}, []
+    while index < len(words) and words[index] != "--":
+        flag = words[index]
+        if flag not in {"--repo", "--source", "--output", "--think-gate", "--framework"} or index + 1 >= len(words):
+            raise UnknownShape("test receipt record requires exact named options and -- before test argv")
+        value = words[index + 1]
+        if not value or value.startswith("--"):
+            raise UnknownShape("test receipt record option requires a nonempty literal value")
+        if flag == "--source":
+            if value.startswith("/") or any(part in {"", ".", ".."} for part in value.split("/")):
+                raise UnknownShape("test receipt source must be an exact repository-relative path")
+            sources.append(value)
+        elif flag in fields:
+            raise UnknownShape("duplicate test receipt option: " + flag)
+        else:
+            fields[flag] = value
+        index += 2
+    if set(fields) != {"--repo", "--output", "--think-gate", "--framework"} or not sources or len(set(sources)) != len(sources):
+        raise UnknownShape("test receipt record requires repo, unique sources, framework, own think gate and output")
+    if index >= len(words) or not words[index + 1:] or not words[index + 1]:
+        raise UnknownShape("test receipt record requires actual test argv after --")
+    for flag in ("--repo", "--output", "--think-gate"):
+        if not os.path.isabs(fields[flag]):
+            raise UnknownShape("test receipt paths must be explicit absolute paths")
+    repo = fields["--repo"]
+    if canonical(repo) != os.path.abspath(repo) or _git_toplevel(repo) != os.path.abspath(repo):
+        raise UnknownShape("test receipt --repo must be the canonical target Git root")
+    paths = [canonical(repo)] + [canonical(source, repo) for source in sources]
+    if any(os.path.commonpath([path, paths[0]]) != paths[0] for path in paths):
+        raise UnknownShape("test receipt source escapes the target repository")
+    return {"read_only": False, "investigation": False, "self_managed_shape": False,
+            "paths": list(dict.fromkeys(paths)), "binding": binding,
+            "test_receipt_repo": paths[0], "test_receipt_gate": fields["--think-gate"],
+            "test_receipt_output": fields["--output"]}
+
+
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
+        receipt = _test_receipt_record(tokens, cwd)
+        if receipt is not None:
+            return receipt
     except UnknownShape as e:
         return {"read_only": False, "paths": [canonical(cwd)], "error": str(e)}
     paths = []
@@ -575,17 +666,19 @@ def _action(command: str, cwd: str) -> dict:
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             if args[0] not in {'touch', 'mkdir', 'rm', 'rmdir', 'cp', 'mv', 'tee', 'chmod', 'chown', 'git'}:
                 paths.extend(canonical(x, effective) for x in operands if '/' in x and '://' not in x and not x.startswith('-'))
-            if args[0] == "git":
-                i = 1
-                while i + 1 < len(args) and args[i] == "-C":
-                    local = canonical(args[i + 1], local)
-                    i += 2
-                if i >= len(args) or args[i].startswith("-"):
+            if os.path.basename(args[0]) == "git" or args[0] in {"env", "command"}:
+                # The operation-policy guards use this same literal boundary.
+                # A valid task does not turn an unresolved alias into authority.
+                from git_command import prefix
+                operation = prefix(args, local)
+                if not operation:
                     raise UnknownShape("unsupported Git mutation options")
-                # Index/refs/worktree commands are conservatively repo-wide,
-                # even with a pathspec: a nested task cannot lend authority.
+                if any(_long_option_matches(a, ('--textconv', '--ext-diff', '--exec', '--open-files-in-pager',
+                                                   '--upload-pack', '--receive-pack')) for a in operation["args"][1:]):
+                    raise UnknownShape("Git helper execution has unbounded effects; use --no-textconv/--no-ext-diff for inspection")
+                local = operation["cwd"]
                 paths.append(_git_toplevel(local))
-                git_operands = [x.split('=', 1)[-1] if '=' in x else x for x in args[i + 1:]]
+                git_operands = [x.split('=', 1)[-1] if '=' in x else x for x in operation["args"][1:]]
                 paths.extend(canonical(x, local) for x in git_operands if '/' in x and '://' not in x and not x.startswith('-'))
             elif args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown", "patch"}:
                 # Options that take the next token as their value. Without this,
@@ -611,7 +704,7 @@ def _action(command: str, cwd: str) -> dict:
                     if token == '--':
                         end_of_options = True
                         continue
-                    if args[0] in {'cp', 'mv'} and (token in {'-t', '--target-directory'} or token.startswith('--target-directory=')
+                    if args[0] in {'cp', 'mv'} and (token == '-t' or _long_option_matches(token, ('--target-directory',))
                                                    or (not token.startswith('--') and 't' in token[1:])):
                         raise UnknownShape('use explicit final copy destination')
                     if token == '--reference' or token.startswith('--reference='):
@@ -620,7 +713,7 @@ def _action(command: str, cwd: str) -> dict:
                         # A path attached to an option (`-o/abs`, `--out=/abs`)
                         # is a potential target: count it, never drop it.
                         option_paths.append(token.split('=', 1)[1] if token.startswith('--') and '=' in token else token[token.index('/'):])
-                    if token in value_options:
+                    if token in value_options or args[0] in {'cp', 'mv'} and _long_option_matches(token, ('--suffix',)) and '=' not in token:
                         skip = True
                     elif args[0] in {'cp', 'mv'} and not token.startswith('--') and token.endswith('S'):
                         skip = True  # a short cluster such as -aS takes the next token

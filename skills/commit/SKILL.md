@@ -25,17 +25,17 @@ allowed-tools: Read Grep Glob Bash
    3. Stage specific files by name -- avoid `git add -A` or `git add .` which can accidentally include secrets, build artifacts, or large binaries
    4. Never commit `.env`, credentials, tokens, or other sensitive files
 3. **Run the AI-fingerprint scanner first, then code review** (see Pre-review gate below)
-   1. Invoke [skill:detect-ai-fingerprints] against the staged diff. Non-zero exit blocks the commit; resolve every reported violation before proceeding (no override).
+   1. Invoke [skill:detect-ai-fingerprints] against the full selected staged snapshot and apply its task-scoped acceptance contract. Exit 2 or incomplete evidence blocks the commit. Fix every new, changed or newly exposed true violation. Exit 1 remains non-clean; only individually evidenced, independently reviewed unaffected inherited findings or demonstrated false positives can receive the documented disposition. No path exclusion or clean-scan claim is permitted for that result.
    2. Invoke [skill:code-review] against `git diff --cached` for the structural rules and the six-layer methodology.
    3. Resolve every Blocker; resolve Majors or document why they're being deferred.
-   4. If the user overrides in writing, mark the commit with `[review-skip]`. Note: `[review-skip]` does not exempt the fingerprint scan; that scan has no override.
+   4. If the user overrides in writing, mark the commit with `[review-skip]`. This does not exempt fingerprint scanning or its task-scoped acceptance contract.
 4. **Run affected tests** (see Affected-tests gate below)
    1. For each `.py` source file in the staged diff under `<package>/`, run `pytest -x tests/test_<X>.py tests/test_<X>_*.py tests/<package>/test_<X>.py` if any exist.
    2. Per-repo override: if `.claude/affected-tests.toml` exists, use its source-glob to test-glob mapping instead of the default heuristic.
    3. 60-second timeout per affected-test run. Tests slower than that get marked `slow` and run at PR-open time only.
-   4. Non-zero exit blocks the commit. No silent skip: if the heuristic finds no test files for a touched source file, that itself is reported and the agent decides whether to write a test or proceed with `[run-skip: <reason>]`.
-   5. Override syntax: `[run-skip: <reason>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per `[rule:writing-code]` writing-code:5 escape hatch. Track override frequency; using it more than once per session is a smell.
-   6. After all affected tests pass, write `test-gate.json` beside the owning task's think gate at `$CRAFT_SESSION_DIR/tasks/<task-slug>/test-gate.json` recording test evidence. The `test-guard.sh` hook reads this file at push time. See `[rule:testing-frameworks]` testing-frameworks:3 for the schema and `[skill:testing-frameworks]` for framework guidance.
+   4. Non-zero exit blocks the commit. No silent skip: if the heuristic finds no test files for a touched source file, that itself is reported and the agent decides whether to write a test or proceed with `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]`.
+   5. Override syntax: `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]` in commit body. Legitimate cases: test infra under repair, dependency unavailable per `[rule:writing-code]` writing-code:5 escape hatch. Track override frequency; using it more than once per session is a smell.
+   6. Run the affected test command through `hooks/lib/test-evidence.py record --repo <target-repo> --think-gate <own-think-gate> --output <own-task-dir>/test-gate.json --source <exact-relative-source> --framework <declared-framework> -- <test-command>`. Repeat `--source` for every touched source. Use resolved literal paths to the exact installed producer and the selected own-task gate/adjacent receipt. The bound-session execution lane requires that task to be implementing with its effective review tier satisfied; running tests is computation, not a read or own-scratch exemption. The producer records a version 2 content/revision receipt only after the command passes without source changes; failed/interrupted reruns invalidate prior success. Tests may run before the commit when it preserves exactly that tested content. Do not hand-upgrade legacy evidence; rerun tests. See `[skill:testing-frameworks]` for the schema and report-only compatibility check.
 5. **Check for a ticket reference** (see Ticket enforcement below)
    1. If no ticket exists for this work, stop and create one first
    2. If the user explicitly overrides, mark the commit with `[no-ticket]`
@@ -137,14 +137,14 @@ The `{stem}` template variable substitutes the basename without extension. Use t
 If a touched source file has no candidate tests under the heuristic (or the configured mapping), the agent must decide:
 
 - Write a test in the same commit (preferred; `[rule:writing-tests]` writing-tests:1 requires it for behaviour changes anyway).
-- Override with `[run-skip: <reason>]` in the commit body. Legitimate cases: pure refactor with no behaviour change, deletion of dead code, docstring-only edits to a public symbol that should also be running R-17.
+- Override with `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]` in the commit body. Legitimate cases: pure refactor with no behaviour change, deletion of dead code, docstring-only edits to a public symbol that should also be running R-17.
 
 A missing test file is not a silent pass. The agent must surface it and the operator sees the `[run-skip]` if one is used.
 
 ## Override
 
 ```
-[run-skip: pure-rename, no behaviour change; affected tests in tests/test_old_name.py run on the next behaviour change]
+[run-skip: Reason: rename-only change with no source content edit; Evidence: git diff --summary and unchanged source blob; Falsification: changed content or import-path behavior requires affected tests]
 ```
 
 Using `[run-skip]` more than once per session is a smell. The threshold is wrong somewhere -- either the affected-tests heuristic is mis-configured for the project, or commits are being scoped to changes that should not be committed without tests.
@@ -406,9 +406,9 @@ If it was already committed, remove it from history and rotate the credential im
 - [ ] Changes are grouped into logical, single-purpose commits
 - [ ] Files are staged by name, not with `git add -A`
 - [ ] No sensitive files (secrets, credentials, keys) are staged
-- [ ] **[skill:detect-ai-fingerprints] ran clean** on the staged diff and the proposed commit message (no override)
+- [ ] **[skill:detect-ai-fingerprints] completed** on the selected staged snapshot and proposed commit message; actual new/changed/newly exposed violations fixed, with any non-clean disposition meeting its independent evidence contract
 - [ ] **[skill:code-review] ran on the staged diff** -- Blockers resolved, Majors addressed or deferred-with-ticket, or `[review-skip]` documented in commit body
-- [ ] **Affected tests ran and passed** -- per the heuristic or `.claude/affected-tests.toml`, or `[run-skip: <reason>]` documented in commit body
+- [ ] **Affected tests ran and passed** -- per the heuristic or `.claude/affected-tests.toml`, or `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]` documented in commit body
 - [ ] Subject line: type prefix, imperative mood, under 72 chars, specific
 - [ ] Body explains the why (if the change is non-trivial)
 - [ ] **Footer references the relevant ticket(s)** -- mandatory unless user overrides with `[no-ticket]`

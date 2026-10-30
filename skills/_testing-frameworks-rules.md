@@ -35,11 +35,11 @@ Enforcement: judgment-enforced via `[skill:code-review]` until a mechanical scan
 
 **testing-frameworks:3. Test evidence is recorded and mechanically verified.**
 
-The affected-tests gate (`[skill:commit]` step 4) writes test results to `test-gate.json` at the workspace root after tests pass. This signal file records which source files were tested, which test files ran, the framework used, and the result.
+The affected-tests gate (`[skill:commit]` step 4) runs the declared affected test command through `hooks/lib/test-evidence.py record`. It writes version 2 `test-gate.json` beside the owning task's think gate, with exact source paths, successful results, tested revision and Git content hashes. Every touched source must match both committed and working content. Empty/suffix coverage, non-success results, old schema and stale content are rejected. See `[skill:testing-frameworks]` for producer and report-only migration commands.
 
-The `test-guard.sh` hook reads this signal file at push time and verifies that every touched source file has recorded test evidence. Projects that declare a `testing:` section in `PROJECT.md` demand test evidence -- the hook blocks (exit 2) when evidence is missing.
+The `test-guard.sh` hook checks the selected task's evidence at push/PR time. Native terminal root lookup remains available only without a host binding and requires the same strict receipt contract. Projects declaring `testing:` demand evidence when source is touched. A receipt documents what ran; reviewers still assess test adequacy.
 
-Override: `[run-skip: reason]` in the commit body. The hook reads the latest commit message and allows the push with a warning when this override is present. Legitimate cases: test infrastructure under repair, external dependency unavailable. Using the override more than once per session is a smell -- track frequency.
+Override requires `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]` in the commit body. A bare skip is blocked. Using the override repeatedly is a review signal, not a substitute for repairing test infrastructure.
 
 ## Operationalization
 

@@ -40,17 +40,31 @@ _FAST_CMDS="${_FAST_CMDS//'\n'/ }"; _FAST_CMDS="${_FAST_CMDS//'\t'/ }"; _FAST_CM
 _FAST_BUILT="${_FAST_CMDS//[\"\'\\]/}"
 while [[ "$_FAST_BUILT" == *"  "* ]]; do _FAST_BUILT="${_FAST_BUILT//  / }"; done
 _FAST_FIRST='"tool_input"[[:space:]]*:[[:space:]]*[{][[:space:]]*"command"[[:space:]]*:[[:space:]]*"[^"]'
-_FAST_RE='(^|[^[:alnum:]])git commit([^[:alnum:]]|$)|(^|[^[:alnum:]])(bash|sh|source|\.)[[:space:]]+[^[:space:]-]'
+_FAST_RE='(^|[^[:alnum:]])git([[:space:]]|$)|(^|[^[:alnum:]])(bash|sh|source|\.)[[:space:]]+[^[:space:]-]'
 if [[ $_FAST_FULL == 0 && "$INPUT" =~ $_FAST_FIRST && "$_FAST_ESC" != *'\'* ]] && ! [[ "$_FAST_CMDS" =~ $_FAST_RE || "$_FAST_BUILT" =~ $_FAST_RE ]]; then exit 0; fi
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 
+# Shared literal normalization protects the actual -C/-c/alias target before
+# workflow checks. An implementing task never waives protected-branch policy.
+GIT_POLICY="$HOOK_DIR/../lib/git_command.py"
+if [[ ! -f "$GIT_POLICY" ]]; then
+    echo "BLOCKED: Git operation policy helper is unavailable." >&2
+    exit 2
+fi
+GIT_RESULT=$(printf '%s' "$COMMAND" | python3 "$GIT_POLICY" --cwd "${CWD:-$PWD}" --policy branch 2>&1)
+GIT_STATUS=$?
+if [[ "$GIT_STATUS" -ne 0 ]]; then
+    echo "${GIT_RESULT:-BLOCKED: Git operation policy failed.}" >&2
+    exit 2
+fi
+
 # Match `git commit` anywhere in the command, not just at the start, so
 # forms like `cd /tmp/foo && git commit ...` and `bash -c "git commit ..."`
-# don't slip through. Known limitation (see issue #97): `git -C <path>
-# commit` without a leading `cd` is not parsed for its target path.
+# don't slip through. Global-option and alias targets are checked by the
+# shared Git operation policy above.
 # Word boundaries via portable character-class form (not BSD-incompatible `\b`);
 # see issue #106 (same fix that landed for self-review.sh in same PR).
 HAS_GIT_COMMIT=false

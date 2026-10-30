@@ -188,7 +188,7 @@ class NativePush(unittest.TestCase):
                     }}
         settings.write_text(json.dumps(original))
         result = self.install()
-        self.assertEqual(result.stdout.count('Retired native Git hook from Claude PreToolUse:'), 3)
+        self.assertEqual(result.stdout.count('Retired native Git hook from Claude PreToolUse:'), 2)
         first = settings.read_bytes(); merged = json.loads(first)
         self.assertEqual(merged['permissions'], original['permissions'])
         self.assertEqual(merged['model'], 'project-choice')
@@ -202,14 +202,33 @@ class NativePush(unittest.TestCase):
         self.assertIn('/operator/pre-push-self-review.sh', commands)
         self.assertTrue(any(Path(shlex.split(command)[0]).as_posix().endswith('/hooks/git/branch-guard.sh')
                             for command in commands))
-        self.assertNotIn('/old/package/hooks/git/pre-push-self-review.sh', commands)
+        self.assertIn('/old/package/hooks/git/pre-push-self-review.sh', commands)
         self.assertNotIn('hooks/git/pre-push-self-review.sh', commands)
         self.assertNotIn(str(alias), commands)
         self.assertEqual(self.run_cmd(['git', 'config', '--get', 'core.hooksPath'], ok=False).returncode, 1)
         for command in commands:
-            if command not in ('project-helper', 'operator-bash-helper', '/operator/pre-push-self-review.sh'):
+            if command not in ('project-helper', 'operator-bash-helper', '/operator/pre-push-self-review.sh',
+                               '/old/package/hooks/git/pre-push-self-review.sh'):
                 self.assertEqual(len(shlex.split(command)), 1)
         self.install(); self.assertEqual(first, settings.read_bytes())
+
+    def test_foreign_native_shaped_command_and_alias_keep_operator_metadata(self):
+        settings = self.repo / '.claude/settings.json'; settings.parent.mkdir()
+        foreign = self.base / 'operator/hooks/git/pre-push-self-review.sh'
+        foreign.parent.mkdir(parents=True)
+        foreign.write_text('#!/bin/sh\nexit 0\n'); foreign.chmod(0o755)
+        alias = self.base / 'foreign-alias'; alias.symlink_to(foreign)
+        commands = [str(foreign), str(alias), 'other/hooks/git/pre-push-self-review.sh']
+        original = {'matcher': 'Bash', 'operator_metadata': 'retain',
+                    'hooks': [{'type': 'command', 'command': command, 'timeout': 17}
+                              for command in commands]}
+        settings.write_text(json.dumps({'hooks': {'PreToolUse': [original]}}))
+        self.install()
+        groups = json.loads(settings.read_text())['hooks']['PreToolUse']
+        self.assertIn(original, groups)
+        first = settings.read_bytes()
+        self.install()
+        self.assertEqual(settings.read_bytes(), first)
 
     def test_malformed_existing_command_fails_without_settings_mutation(self):
         self.git('config', '--unset', 'core.hooksPath')

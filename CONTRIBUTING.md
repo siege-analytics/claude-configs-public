@@ -49,6 +49,15 @@ remain advisory. Consumer-specific names need explicit scoped mappings, with
 private operational evidence retained privately. Review an incompatible meaning
 as a new term ID and migration rather than silently changing an existing ID.
 
+## Hook installation ownership
+
+Hook installation retires obsolete native-protocol readers only when their
+resolved executable belongs to the declared managed `hooks/git` directory.
+An absolute operator command is not managed merely because its filename or path
+suffix resembles a shipped hook. Source settings and their snippet must agree
+on registration multiplicity; duplicate managed event/matcher/command entries
+are errors rather than silently collapsed set members.
+
 ## The slug-token convention
 
 Skills cross-reference each other by **slug token**, not file path:

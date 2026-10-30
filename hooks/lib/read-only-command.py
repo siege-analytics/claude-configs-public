@@ -21,7 +21,7 @@ PLAIN = {
     "ls", "cat", "head", "tail", "wc", "grep", "egrep", "fgrep", "which", "type",
     "stat", "du", "df", "ps", "pgrep", "echo", "pwd", "id", "whoami",
     "uname", "cut", "tr", "diff", "cmp", "comm", "sha256sum", "sha1sum",
-    "md5sum", "base64", "od", "nl", "tac", "rev", "column", "true", "false", "test", "[", "sleep",
+    "md5sum", "od", "nl", "tac", "rev", "column", "true", "false", "test", "[", "sleep",
     "readlink", "realpath", "basename", "dirname", "seq", "expr", "strings",
     "hexdump", "getent", "free", "uptime", "lsof", "nproc", "findmnt", "lsblk", "dig", "host",
     "nslookup", "cd", "shasum",
@@ -29,7 +29,7 @@ PLAIN = {
 # Verbs whose options can write or run programs: their arguments must reach the
 # per-tool check exactly as bash will see them, so no unquoted expansion.
 GUARDED = {"sed", "find", "sort", "uniq", "jq", "yq", "date", "rg", "git", "gh", "kubectl", "docker",
-           "timeout", "nice", "time"}
+           "timeout", "nice", "time", "base64"}
 SHELL_WORDS = {"do", "done", "then", "else", "fi", "!", "{", "}", "while", "until", "if", "elif"}
 GIT_READ = {"log", "show", "diff", "status", "rev-parse", "rev-list", "ls-files", "ls-remote",
             "ls-tree", "describe", "blame", "grep", "cat-file", "for-each-ref", "merge-base",
@@ -103,6 +103,37 @@ def printf_unsafe(args):
     return any(a.startswith("-v") for a in args[:1]) or any("%n" in a for a in args)
 
 
+def base64_ok(args):
+    """Both Darwin and GNU forms are readers only when output stays on stdout.
+
+    Darwin -i takes an input path; GNU -i ignores garbage. Treating it as a
+    value option conservatively is safe on both, unlike Darwin's -o output.
+    Unknown switches are not certified, including future output options.
+    """
+    flags = {"-d", "-D", "--decode", "--ignore-garbage", "-h", "--help", "--version"}
+    values = {"-i", "--input", "-b", "--break", "-w", "--wrap"}
+    i, operands, ended = 0, 0, False
+    while i < len(args):
+        a = args[i]
+        if ended or not a.startswith("-") or a == "-":
+            operands += 1
+        elif a == "--":
+            ended = True
+        elif a in flags:
+            pass
+        elif a.partition("=")[0] in values:
+            if "=" not in a:
+                i += 1
+                if i >= len(args):
+                    return False
+        elif len(a) > 2 and a[:2] in {"-i", "-b", "-w"}:
+            pass
+        else:
+            return False
+        i += 1
+    return operands <= 1
+
+
 def git_ok(args):
     i = 0
     while i < len(args) and args[i] == "-C" and i + 1 < len(args):
@@ -112,7 +143,7 @@ def git_ok(args):
     sub, rest = args[i], args[i + 1:]
     # Options that run a program or write a file, for any subcommand.
     if any(long_opt(a, "--upload-pack", "--receive-pack", "--exec", "--open-files-in-pager", "--output",
-                    "--ext-diff", "--help") for a in rest):
+                    "--ext-diff", "--textconv", "--help") for a in rest):
         return False   # --ext-diff runs the configured diff program; --help can launch a pager or browser
     if sub == "grep" and any(short_has(a, "O", "efABCm") for a in rest):
         return False   # -O<prog> runs <prog> on the matches
@@ -120,6 +151,8 @@ def git_ok(args):
         return False   # -u <cmd> is --upload-pack
     if sub in {"log", "diff", "show"} and any(short_has(a, "o", "nSGLUMCB") for a in rest):
         return False
+    if sub == "reflog":
+        return not any(a in {"expire", "delete", "drop", "write"} for a in rest)
     if sub in GIT_READ:
         return True
     if sub == "hash-object":   # computes object names; only -w writes into the object store
@@ -235,6 +268,8 @@ def simple_ok(words):
         return simple_ok(rest)
     if w in PLAIN:
         return True
+    if w == "base64":
+        return base64_ok(args)
     if w == "printf":
         return not printf_unsafe(args)
     if w == "sort":
@@ -477,6 +512,8 @@ def unsafe(words):
         return any(long_opt(a, "--inplace", "--split-exp") or short_has(a, "is", "poI") for a in args)
     if w == "date":
         return date_sets(args)
+    if w == "base64":
+        return not base64_ok(args)
     if w == "printf":
         return printf_unsafe(args)
     if w == "ss":
@@ -496,7 +533,7 @@ def unsafe(words):
             i += 2
         sub = next((a for a in args[i:] if not a.startswith("-")), "")
         rest = args[args.index(sub) + 1:] if sub in args else []
-        if any(long_opt(a, "--ext-diff", "--help") for a in args):
+        if any(long_opt(a, "--ext-diff", "--textconv", "--help") for a in args):
             return True
         if sub == "remote" and any(a in REMOTE_WRITE for a in rest):
             return True   # `git remote -v add|set-url ...` (#1087)
