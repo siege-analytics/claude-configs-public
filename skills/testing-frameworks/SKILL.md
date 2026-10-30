@@ -173,13 +173,15 @@ Three quality tests (apply to any framework):
 Use the packaged producer to run affected tests and record a **version 2** receipt beside the owning task's think gate. Supply each exact repository-relative touched source path; do not use suffixes or directory names:
 
 ```bash
-python3 "$CRAFT_AGENT_WORKSPACE/hooks/lib/test-evidence.py" record \
+python3 /path/to/installed-policy/hooks/lib/test-evidence.py record \
   --repo /path/to/repo \
-  --think-gate "$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json" \
-  --output "$CRAFT_SESSION_DIR/tasks/<task-slug>/test-gate.json" \
+  --think-gate /path/to/own-session/tasks/<task-slug>/think-gate.json \
+  --output /path/to/own-session/tasks/<task-slug>/test-gate.json \
   --source siege_utilities/geo/boundaries.py --framework pytest \
   -- python3 -m pytest tests/geo/test_boundaries.py
 ```
+
+For a bound session, replace these placeholders with resolved literal absolute paths in the actual tool command. The scoped execution lane accepts only this installed policy generation's exact producer, the selected own-task `implementing` think gate, and its adjacent `test-gate.json`. Copied/renamed producers, sibling task paths, symlink aliases and shell expansion do not acquire this lane. Repository-wide implementation authority and the task's effective review tier are required before execution. Tests remain arbitrary computation, never an ungated read, diagnostic or own-scratch operation; use the test runner after `--` rather than calling bare pytest or py_compile as a reader.
 
 The producer runs argv directly in the target repository. It copies the task/session identity, captures the tested Git revision and each source blob, and records success only for exit code zero on unchanged source. A pending/failed rerun invalidates the earlier receipt. Run it after the final source edit; a later commit of the same tested content is supported. Rerun if source content changes or history no longer descends from the tested revision. Additional affected source paths require additional `--source` arguments in the same run. Choose the tests using the project's affected-test policy; a content receipt does not prove that the chosen tests are adequate.
 

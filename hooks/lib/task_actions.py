@@ -12,7 +12,9 @@ from __future__ import annotations
 import ast
 import os
 import re
+import stat
 import subprocess
+import sys
 
 
 class UnknownShape(ValueError):
@@ -518,9 +520,100 @@ def action(command: str, cwd: str) -> dict:
     return result
 
 
+def _test_receipt_record(tokens, cwd: str):
+    """Typed execution lane, never a reader or own-scratch exemption.
+
+    Only the producer from this policy generation gets the lane. Its test argv
+    remains opaque computation; repository-wide implementing authority is
+    required later, and receipt ownership is checked after task selection.
+    """
+    words = [word for word, _, _ in tokens]
+    invocation = list(words)
+    while invocation and invocation[0].startswith("CCP_TASK_ID="):
+        invocation.pop(0)
+    script = 1
+    while script < len(invocation) and invocation[script] in {"-I", "-B"}:
+        script += 1
+    python = bool(invocation) and (os.path.basename(invocation[0]) in {"python", "python3"}
+                                   or os.path.isabs(invocation[0]) and os.path.realpath(invocation[0]) == os.path.realpath(sys.executable))
+    executable_producer = bool(invocation) and os.path.basename(invocation[0]) == "test-evidence.py"
+    script_producer = python and script < len(invocation) and os.path.basename(invocation[script]) == "test-evidence.py"
+    option_names = {word.partition("=")[0] for word in words}
+    candidate = executable_producer or script_producer or (
+        python and "record" in words and {"--think-gate", "--output", "--repo"} <= option_names)
+    if not candidate:
+        return None
+    if any("\0" in word for word in words) or any(operator or glob for _, operator, glob in tokens):
+        raise UnknownShape("test receipt producer requires one literal argv command")
+    binding = ""
+    while words and words[0].startswith("CCP_TASK_ID="):
+        value = words.pop(0).split("=", 1)[1]
+        if binding and value != binding:
+            raise UnknownShape("conflicting test receipt task bindings")
+        binding = value
+    if not words or not (words[0] == "python3" or os.path.isabs(words[0]) and
+                          os.path.realpath(words[0]) == os.path.realpath(sys.executable)):
+        raise UnknownShape("test receipts require the known Python interpreter and packaged producer")
+    index = 1
+    while index < len(words) and words[index] in {"-I", "-B"}:
+        index += 1
+    owned = os.path.join(os.path.realpath(os.path.dirname(__file__)), "test-evidence.py")
+    if index >= len(words) or os.path.abspath(os.path.join(cwd, words[index])) != owned:
+        raise UnknownShape("use this policy generation's exact hooks/lib/test-evidence.py producer")
+    if os.path.realpath(owned) != owned:
+        raise UnknownShape("test receipt producer cannot be a symlink")
+    try:
+        info = os.stat(owned, follow_symlinks=False)
+    except OSError as error:
+        raise UnknownShape("this policy generation's test receipt producer is unavailable") from error
+    if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+        raise UnknownShape("test receipt producer must be an owned regular singly linked file")
+    index += 1
+    if words[index:index + 1] != ["record"]:
+        raise UnknownShape("only the fixed test receipt record command has an execution lane")
+    index += 1
+    fields, sources = {}, []
+    while index < len(words) and words[index] != "--":
+        flag = words[index]
+        if flag not in {"--repo", "--source", "--output", "--think-gate", "--framework"} or index + 1 >= len(words):
+            raise UnknownShape("test receipt record requires exact named options and -- before test argv")
+        value = words[index + 1]
+        if not value or value.startswith("--"):
+            raise UnknownShape("test receipt record option requires a nonempty literal value")
+        if flag == "--source":
+            if value.startswith("/") or any(part in {"", ".", ".."} for part in value.split("/")):
+                raise UnknownShape("test receipt source must be an exact repository-relative path")
+            sources.append(value)
+        elif flag in fields:
+            raise UnknownShape("duplicate test receipt option: " + flag)
+        else:
+            fields[flag] = value
+        index += 2
+    if set(fields) != {"--repo", "--output", "--think-gate", "--framework"} or not sources or len(set(sources)) != len(sources):
+        raise UnknownShape("test receipt record requires repo, unique sources, framework, own think gate and output")
+    if index >= len(words) or not words[index + 1:] or not words[index + 1]:
+        raise UnknownShape("test receipt record requires actual test argv after --")
+    for flag in ("--repo", "--output", "--think-gate"):
+        if not os.path.isabs(fields[flag]):
+            raise UnknownShape("test receipt paths must be explicit absolute paths")
+    repo = fields["--repo"]
+    if canonical(repo) != os.path.abspath(repo) or _git_toplevel(repo) != os.path.abspath(repo):
+        raise UnknownShape("test receipt --repo must be the canonical target Git root")
+    paths = [canonical(repo)] + [canonical(source, repo) for source in sources]
+    if any(os.path.commonpath([path, paths[0]]) != paths[0] for path in paths):
+        raise UnknownShape("test receipt source escapes the target repository")
+    return {"read_only": False, "investigation": False, "self_managed_shape": False,
+            "paths": list(dict.fromkeys(paths)), "binding": binding,
+            "test_receipt_repo": paths[0], "test_receipt_gate": fields["--think-gate"],
+            "test_receipt_output": fields["--output"]}
+
+
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
+        receipt = _test_receipt_record(tokens, cwd)
+        if receipt is not None:
+            return receipt
     except UnknownShape as e:
         return {"read_only": False, "paths": [canonical(cwd)], "error": str(e)}
     paths = []

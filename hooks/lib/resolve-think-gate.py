@@ -759,6 +759,22 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     result = {**shape, **selected}
     if result["gate"]:
         tg = result["gate"]
+        if shape.get("test_receipt_output"):
+            expected_gate = canonical(tg["path"])
+            requested_gate = shape["test_receipt_gate"]
+            output = shape["test_receipt_output"]
+            expected_output = os.path.join(os.path.dirname(expected_gate), "test-gate.json")
+            valid = (tg["data"].get("status") == "implementing"
+                     and os.path.basename(expected_gate) == "think-gate.json"
+                     and requested_gate == expected_gate == os.path.abspath(tg["path"])
+                     and canonical(requested_gate) == requested_gate
+                     and output == expected_output and canonical(output) == output
+                     and own_session_path(workspace, requested_gate)
+                     and own_session_path(workspace, output)
+                     and bool(tg["data"].get("repo_root"))
+                     and canonical(tg["data"]["repo_root"]) == shape["test_receipt_repo"])
+            if not valid:
+                return {**result, "gate": None, "error": "Test execution requires the selected own-task implementing think gate and its exact adjacent test-gate.json receipt; repair task/output ownership before rerunning."}
         result["session_dir"] = own_session_directory(workspace)
         result["artifacts"] = {name: g["path"] if (g := _artifact_for(tg, name, workspace)) else None for name in ("investigate-gate", "junior-senior-gate", "artifacts-posted-gate", "review-gate", "test-gate")}
         result["task"] = task_identity(tg["data"])
