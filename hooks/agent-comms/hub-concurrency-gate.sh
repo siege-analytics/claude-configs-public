@@ -20,7 +20,7 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 if ! printf '%s' "$INPUT" | python3 -c '
 import json, sys
 try:
-    payload = json.load(sys.stdin)
+    payload = json.load(sys.stdin.buffer)
 except ValueError:
     sys.exit(1)
 sys.exit(0 if isinstance(payload, dict) and isinstance(payload.get("tool_input"), dict) else 1)
@@ -127,7 +127,7 @@ def spawned_session(response):
 
 def main():
     try:
-        payload = json.load(os.fdopen(3))
+        payload = json.load(os.fdopen(3, "rb"))
     except Exception:
         return 0
     if not isinstance(payload, dict) or not isinstance(payload.get('tool_input'), dict):

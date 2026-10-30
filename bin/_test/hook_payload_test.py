@@ -85,6 +85,38 @@ class Payload(unittest.TestCase):
             self.assertNotIn('Argument list too long', result.stderr)
             self.assertNotIn('metadata unavailable', result.stderr.lower())
 
+    def test_spawn_guard_large_payload_still_enforces_prompt_contract(self):
+        g = fixture.Hub(methodName='runTest'); g.setUp()
+        self.addCleanup(g.tearDown)
+        env = dict(g.env, AMBIENT_PADDING='p' * 100000)
+        value = fixture.craft_payload(tool_name='mcp__session__spawn_session',
+                    tool_input=g.spawn_input('large', 'CCP_TASK_ID=o/r#1\n' + 'a' * 800000))
+        for valid in (True, False):
+            if not valid:
+                value['tool_input'].pop('model', None)
+            result = subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/spawn-guard.sh')],
+                input=json.dumps(value), env=env, text=True, capture_output=True, timeout=60)
+            self.assertEqual(result.returncode, 0 if valid else 2, result.stderr)
+            self.assertNotIn('Argument list too long', result.stderr)
+            if not valid:
+                self.assertIn('model must be explicit', result.stderr)
+
+    def test_utf8_spawn_contract_survives_ascii_process_locale(self):
+        g = fixture.Hub(methodName='runTest'); g.setUp()
+        self.addCleanup(g.tearDown)
+        g.meta('one', ['role::hub'])
+        env = dict(g.env, LC_ALL='C', LANG='C', PYTHONUTF8='0', PYTHONCOERCECLOCALE='0')
+        value = fixture.craft_payload(tool_name='mcp__session__spawn_session', tool_use_id='utf8',
+                    tool_input=g.spawn_input('utf8', 'CCP_TASK_ID=o/r#1\n café'))
+        value['tool_input'].pop('model', None)
+        raw = json.dumps(value, ensure_ascii=False).encode('utf-8')
+        for guard in ('spawn-guard', 'hub-concurrency-gate'):
+            result = subprocess.run(['bash', str(ROOT / 'hooks/agent-comms' / (guard + '.sh'))],
+                input=raw, env=env, capture_output=True, timeout=60)
+            self.assertEqual(result.returncode, 2, (guard, result.stderr))
+            self.assertIn(b'model must be explicit', result.stderr)
+        self.assertFalse((g.ws / 'sessions/one/hub-threads.json').exists())
+
     def test_hub_large_raw_prompt_and_response_preserve_replay_identity(self):
         g = fixture.Hub(methodName='runTest'); g.setUp()
         self.addCleanup(g.tearDown)
