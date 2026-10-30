@@ -60,3 +60,7 @@ The snapshot selector includes the JSON map. Validation also runs for map-only d
 The full review-risk audit also passed with the JSON map path and retained TOML floor.
 
 An actual near-limit UserPromptSubmit payload plus100KB ambient environment now passes through all six advisory guards (transport suite7/7). A controlled before/after probe using released392fe4b think-guard bytes reproduces Argument list too long/exit1; candidate bytes return0 without that diagnostic. Raw command, byte count, hashes and results: /private/tmp/followup-prompt-transport-revert.json. This supplements the large edit and full hub-payload controls with the precise prompt transport failure shape.
+
+## Cross-platform spawn transport correction
+
+Protected Ubuntu CI at95b5133 exposed one remaining full-body environment export in spawn-guard.sh, reached by the hub's large raw prompt test. macOS accepted this environment value; Linux rejects one environment string over its per-string limit. The spawn guard now reads the unchanged raw payload from fd3 beside its Python program on stdin. Its existing prompt/model/role/worktree checks remain unchanged. Added a direct large-payload positive and missing-model denial to ensure transport does not suppress validation. The existing hub replay/result test continues to exercise the real nested path. No CI failure is waived.

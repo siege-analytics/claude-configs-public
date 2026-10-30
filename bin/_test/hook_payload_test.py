@@ -85,6 +85,22 @@ class Payload(unittest.TestCase):
             self.assertNotIn('Argument list too long', result.stderr)
             self.assertNotIn('metadata unavailable', result.stderr.lower())
 
+    def test_spawn_guard_large_payload_still_enforces_prompt_contract(self):
+        g = fixture.Hub(methodName='runTest'); g.setUp()
+        self.addCleanup(g.tearDown)
+        env = dict(g.env, AMBIENT_PADDING='p' * 100000)
+        value = fixture.craft_payload(tool_name='mcp__session__spawn_session',
+                    tool_input=g.spawn_input('large', 'CCP_TASK_ID=o/r#1\n' + 'a' * 800000))
+        for valid in (True, False):
+            if not valid:
+                value['tool_input'].pop('model', None)
+            result = subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/spawn-guard.sh')],
+                input=json.dumps(value), env=env, text=True, capture_output=True, timeout=60)
+            self.assertEqual(result.returncode, 0 if valid else 2, result.stderr)
+            self.assertNotIn('Argument list too long', result.stderr)
+            if not valid:
+                self.assertIn('model must be explicit', result.stderr)
+
     def test_hub_large_raw_prompt_and_response_preserve_replay_identity(self):
         g = fixture.Hub(methodName='runTest'); g.setUp()
         self.addCleanup(g.tearDown)

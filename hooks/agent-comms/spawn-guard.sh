@@ -14,7 +14,7 @@ export PATH="/home/craftagents/bin:$PATH:/usr/local/bin:/opt/homebrew/bin"
 
 INPUT=$(cat)
 
-INPUT_JSON="$INPUT" python3 - <<'PY'
+python3 - 3<<<"$INPUT" <<'PY'
 import json
 import os
 import re
@@ -22,7 +22,8 @@ import subprocess
 import sys
 
 try:
-    payload = json.loads(os.environ.get("INPUT_JSON", ""))
+    with os.fdopen(3) as stream:
+        payload = json.load(stream)
 except Exception:
     sys.exit(0)
 
