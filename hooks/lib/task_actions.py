@@ -90,7 +90,14 @@ def shell_tokens(command: str) -> list[tuple[str, bool, tuple[int, ...]]]:
                         i += 1
                 tokens.append((op, True, ()))
         elif c == "#" and not active:
-            # Comments/markers are deliberately not interpreted as authorization.
+            # This documented final comment is syntax only, never task authority.
+            # Every executed prefix still needs its own scope and artifacts.
+            approval = re.fullmatch(
+                r"[ \t]*\[destructive-ok:[ \t]+Reason:([^\]\r\n]+);[ \t]*"
+                r"Evidence:([^\]\r\n]+);[ \t]*Falsification:([^\]\r\n]+)\]"
+                r"[ \t]*(?:\n[ \t]*)*", command[i + 1:])
+            if approval and all(field.strip() for field in approval.groups()):
+                break
             raise UnknownShape("shell comment requires mutation handling")
         else:
             word += c
