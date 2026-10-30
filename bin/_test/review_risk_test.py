@@ -54,6 +54,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/canonical-path.py",
  "hooks/lib/classify-catalog-command.py",
  "hooks/lib/commit-message-source.py",
+ "hooks/lib/git_command.py",
  "hooks/lib/detect-host.sh",
  "hooks/lib/extract-json.py",
  "hooks/lib/gate-registry.sh",

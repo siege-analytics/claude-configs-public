@@ -591,8 +591,7 @@ class Gates(unittest.TestCase):
                     'git diff HEAD -- src/*.py', 'git diff HEAD -- *.py',
                     'cat -- *', 'grep foo -- *.py', "find . -name '*.py'",
                     'grep --include=*.py foo .', 'grep -n foo --include=*.py .',
-                    'gh api repos/o/r/contents/x?ref=abc', 'pytest tests/test_*.py',
-                    'python3 -m pytest tests/test_*.py', "ls '*.md'",
+                    'gh api repos/o/r/contents/x?ref=abc', "ls '*.md'",
                     "git diff HEAD -- '*.py'", "grep foo --include='*.py' ."]
         for phase in ('no gate', 'implementing'):
             if phase == 'implementing':
@@ -806,7 +805,6 @@ class Gates(unittest.TestCase):
 
     def test_stdio_redirect_reads_and_diagnostics_in_real_hooks(self):
         commands = ['cat x 2>/dev/null', 'grep foo f 2>&1', 'ls 2>&1 | head',
-                    'pytest tests 2>&1 | tail', 'python3 -m pytest -q 2>&1 | tail',
                     'cat x >&1', 'cat x 3>&12', 'cat x 0<&1',
                     'cat x 2>&-', 'cat x 3<&-', 'cat x >/dev/null',
                     'cat x >>/dev/null', 'cat x 2>>/dev/null',
@@ -872,8 +870,7 @@ class Gates(unittest.TestCase):
                          ['cat', '2>', '/dev/null'])
 
     def test_bounded_investigation_policy_without_gate_and_while_designing(self):
-        commands = ['bash -n tests/run.sh', 'shellcheck hooks/x.sh', 'python3 -m pytest -q', 'pytest tests',
-                    'python3 -m py_compile x.py', 'ruff check .', 'markitdown doc.pdf', 'pdf-tool info doc.pdf',
+        commands = ['bash -n tests/run.sh', 'shellcheck hooks/x.sh', 'ruff check .', 'markitdown doc.pdf', 'pdf-tool info doc.pdf',
                     'pdf-tool extract doc.pdf', 'xlsx-tool read file.xlsx', 'pptx-tool info deck.pptx',
                     'ical-tool read events.ics', 'doc-diff a.docx b.docx', 'git fetch origin', 'npm list',
                     'yarn list', 'pnpm list', 'brew list', 'type python3', 'mypy x.py', 'flake8 x.py',
@@ -885,7 +882,9 @@ class Gates(unittest.TestCase):
             with self.subTest(phase='designing', command=command): self.assertGate(0, command, cwd=self.a)
         for command in ['bash tests/run.sh', 'python3 tools/check.py', 'git clone https://example.invalid/x repo',
                         "bash -c 'touch x'", 'ruff check --fix .', 'ruff check --output-file=x .',
-                        'pytest --junitxml=out.xml tests', 'pytest -p arbitrary tests',
+                        'pytest --junitxml=out.xml tests', 'pytest -p arbitrary tests', 'pytest tests',
+                        'python3 -m pytest -q', 'python3 -m py_compile x.py',
+                        'pytest tests 2>&1 | tail', 'python3 -m pytest -q 2>&1 | tail',
                         'shellcheck --unknown=x x.sh', 'markitdown -o out.md doc.pdf', 'pdf-tool extract doc.pdf -o out.txt',
                         'npm audit fix', 'npm list; touch file', 'brew install package', 'python3 -m pip install pkg',
                         'git fetch --upload-pack=touch origin', 'git fetch origin HEAD:refs/heads/main',
@@ -893,7 +892,7 @@ class Gates(unittest.TestCase):
                         'file -Cm magic', 'xxd input output -p']:
             with self.subTest(command=command): self.assertGate(2, command, cwd=self.a)
         decision = r.resolve_action(str(self.ws), craft_payload(cwd=str(self.a), tool_input={'command': 'pytest tests'}))
-        self.assertTrue(decision['investigation'])
+        self.assertFalse(decision.get('investigation'))
         self.assertFalse(decision['read_only'])
 
     def test_terminal_gates_do_not_compete_and_stale_legacy_cannot_resurrect(self):
