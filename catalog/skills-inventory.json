@@ -4907,6 +4907,7 @@
         "bin/_test/frontmatter_validation_test.py",
         "bin/_test/gate_contract_test.py",
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/hook_payload_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/local_validation_test.py",
@@ -5390,6 +5391,7 @@
         "bin/_test/frontmatter_validation_test.py",
         "bin/_test/gate_contract_test.py",
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/hook_payload_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/local_validation_test.py",
@@ -5429,6 +5431,7 @@
         "hooks/_test/craft_workspace_trust.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/hook_payload.test.sh",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
@@ -8903,6 +8906,7 @@
       "test_evidence": [
         "bin/_test/check_deploy_drift_test.py",
         "bin/_test/consumer_runtime_test.py",
+        "bin/_test/craft_hook_router_test.py",
         "bin/_test/craft_workspace_trust_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/effective_policy_test.py",
@@ -9377,6 +9381,7 @@
       "slug": "detect-ai-fingerprints",
       "source_path": "skills/detect-ai-fingerprints/SKILL.md",
       "test_evidence": [
+        "bin/_test/hook_payload_test.py",
         "bin/_test/review_risk_test.py",
         "bin/_test/scanner_source_test.py",
         "hooks/_test/detect_ai_fingerprints.test.sh",
@@ -9968,6 +9973,7 @@
       "slug": "investigate",
       "source_path": "skills/investigate/SKILL.md",
       "test_evidence": [
+        "bin/_test/hook_payload_test.py",
         "bin/_test/review_risk_test.py",
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
@@ -10178,6 +10184,7 @@
       "source_path": "skills/merge/SKILL.md",
       "test_evidence": [
         "bin/_test/billing_diagnostic_test.py",
+        "bin/_test/craft_hook_router_test.py",
         "bin/_test/craft_workspace_trust_test.py",
         "bin/_test/deploy_source_policy_test.py",
         "bin/_test/effective_policy_test.py",
@@ -10766,6 +10773,7 @@
         "bin/_test/frontmatter_validation_test.py",
         "bin/_test/gate_contract_test.py",
         "bin/_test/generated_source_authority_test.py",
+        "bin/_test/hook_payload_test.py",
         "bin/_test/kernel_budget_test.py",
         "bin/_test/language_scope_test.py",
         "bin/_test/local_validation_test.py",
@@ -10804,6 +10812,7 @@
         "hooks/_test/craft_workspace_trust.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/hook_payload.test.sh",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",
@@ -11782,6 +11791,7 @@
       "slug": "survey-context",
       "source_path": "skills/survey-context/SKILL.md",
       "test_evidence": [
+        "bin/_test/hook_payload_test.py",
         "bin/_test/review_risk_test.py",
         "hooks/_test/git_hook_fast_skip.test.sh",
         "hooks/_test/survey_context.test.sh"
@@ -11964,6 +11974,7 @@
         "bin/_test/craft_installer_wiring_test.py",
         "bin/_test/data_scope_test.py",
         "bin/_test/deploy_source_policy_test.py",
+        "bin/_test/hook_payload_test.py",
         "bin/_test/progressive_mount_test.py",
         "bin/_test/review_risk_test.py",
         "hooks/_test/ca_enforcement_gate.test.sh",

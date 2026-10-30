@@ -54,13 +54,20 @@ if [[ -z "$COMMAND" ]]; then
     exit 0
 fi
 
-python3 - "$COMMAND" <<'PY'
+CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+python3 -B - "$COMMAND" "$HOOK_DIR/../lib" "$CWD" <<'PY'
 import re
 import shlex
 import sys
 from pathlib import Path
 
 command = sys.argv[1]
+sys.path.insert(0, sys.argv[2])
+from task_actions import action as classify_action
+import os
+# Text edits to existing artifacts are not coordinator state transitions.
+if classify_action(command, sys.argv[3] or os.getcwd()).get("metadata_only"):
+    sys.exit(0)
 normalized_command = command.replace("$(which gh)", "gh")
 
 try:
@@ -88,7 +95,7 @@ if resource == "api":
     resource = "api"
     api_args = tokens[idx + 2:]
     for tok in api_args:
-        if re.search(r'/issues/[0-9]+(?:/comments)?(?:$|[/?#])', tok):
+        if re.search(r'/(?:issues|pulls)/[0-9]+(?:/comments)?(?:$|[/?#])', tok):
             api_path = tok
             break
     action = "api"
@@ -98,6 +105,9 @@ if resource == "api":
         action = "comment"
     elif re.search(r'/issues/[0-9]+(?:$|[/?#])', api_path):
         resource = "issue"
+        action = "edit"
+    elif re.search(r'/pulls/[0-9]+(?:$|[/?#])', api_path):
+        resource = "pr"
         action = "edit"
 
 # Read-only subcommands carry no status claim to evaluate; never gate them.
@@ -175,6 +185,7 @@ if action == "comment":
     body = body or api_field_value("body")
 state_value = api_field_value("state")
 state_reason_value = api_field_value("state_reason")
+api_state_transition = bool(api_path and (state_value or state_reason_value))
 unreadable_body_file = ""
 uninspectable_body = ""
 uninspectable_editor_body = ""
@@ -202,7 +213,7 @@ lower = text.lower()
 # Scope: ordinary issue comments are allowed. The guard only engages when a
 # command performs a state transition directly, or when a comment looks like a
 # coordinator lane/status update.
-state_action = action in {"close", "reopen", "ready"} or (resource == "pr" and action == "review")
+state_action = action in {"close", "reopen", "ready"} or (resource == "pr" and action == "review") or api_state_transition
 coordinator_marker = re.search(
     r'\b(status|state|lane|coordinator|transition|ready for|done|complete|completed|resolved|shipped|merged|blocked|blocker)\b',
     lower,
@@ -255,7 +266,7 @@ if blocked and not re.search(r'\b(blocked because|blocker:|failure reason:|reaso
     sys.exit(2)
 
 # Completion/close/ready transitions require evidence prerequisites.
-if completion or action in {"close", "ready"}:
+if completion or action in {"close", "ready"} or api_state_transition:
     evidence = {
         "owner_signoff": re.search(r'\b(owner|maintainer|operator)\b.{0,40}\b(approved|signoff|sign-off|signed off|confirmed)\b|\b(approved|signed off|confirmed)\b.{0,40}\bby\b.{0,20}\b(owner|maintainer|operator)\b|\bapproval thread\b.{0,80}\bhttps?://|\bowner response\b.{0,80}\bhttps?://', lower, re.S),
         "merge_or_branch": re.search(r'\b(merged|merge commit|merge evidence|pr #[0-9]+|pull/[0-9]+|branch target|target branch|base branch|develop|main|hotfix)\b|\b[0-9a-f]{7,40}\b', lower),
