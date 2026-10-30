@@ -232,8 +232,10 @@ Command: $CMD_SHORT_DESIGN
 
 Status '$TG_STATUS' allows read-only and investigation commands, but this
 command is not a recognized reader or bounded investigation command. Mutations require
-status=implementing with full artifacts (investigate-gate, pre-mortem,
-junior/senior, artifacts-posted).
+status=implementing with this task's effective review tier satisfied.
+Effective tier: $(printf '%s' "$TIER_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("effective", "C"))' 2>/dev/null || echo C).
+Tier A needs its implementing gate; B adds investigation and pre-mortem;
+C also requires junior/senior review and artifacts-posted.
 
 To proceed:
   1. Complete your design, then update think-gate.json status to 'implementing'

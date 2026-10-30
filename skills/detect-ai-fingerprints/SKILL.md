@@ -18,7 +18,7 @@ The remaining structural rules — vacuous tests (writing-tests:1), cargo-culted
 
 The scanner runs as a sub-routine of three callers:
 
-1. `[skill:commit]` step 3 (pre-review gate): scan the staged diff and the proposed commit message before code-review starts. Block the commit on violations.
+1. `[skill:commit]` step 3 (pre-review gate): scan the full selected snapshot and proposed commit message before code-review starts, then apply the acceptance contract below.
 2. `[skill:code-review]` start: scan the diff under review (staged or PR). Surface violations as findings before the six-layer human review begins, so attention is not wasted on em-dash hunting.
 3. Direct invocation as `/detect-ai-fingerprints` for ad-hoc use (PR triage, post-merge spot checks, scanning your own draft before committing).
 
@@ -74,6 +74,38 @@ Code scans require Python. Configured decorator extensions require Python's
 `tomllib` or the `tomli` fallback; a missing parser, malformed TOML or invalid
 `allow_decorators` value produces exit 2. Message-only modes keep their existing
 lexical rules and report missing/unreadable input files as incomplete.
+
+### Task-scoped acceptance of complete results
+
+This is a reviewed acceptance policy, separate from the scanner's exit codes.
+The scanner continues to inspect whole changed Python files, including inherited
+findings. Preserve its raw output; never convert exit 1 to a clean scan or exit 0.
+Exit 2, incomplete source selection, missing configuration or unreadable evidence
+always blocks acceptance.
+
+Every new, changed or newly exposed true violation must be fixed. Judge relevance
+through the function and caller chain: unchanged helper code newly reached by the
+task is in scope. Unchanged lines alone do not establish an inherited exception.
+
+A complete exit-1 result can proceed only when an independent reviewer approves
+each remaining finding as either unaffected inherited behavior or a demonstrated
+false positive. Record all of the following in the committed review artifact:
+
+- Exact protected base, candidate commit or staged tree, source blobs, scanner and
+  configuration identities, and the retained complete raw output.
+- Each finding's rule, location and enclosing behavior/caller chain, compared with
+  the protected base. No count-only baseline, whole-file exception, suppression
+  list or production `--ignore` run can supply this evidence.
+- Reason, Evidence and Falsification for each disposition. A false positive needs
+  a test or other direct evidence of the promised behavior, not author preference.
+- An actionable follow-up ticket for every accepted real inherited debt item.
+  New or newly exposed defects cannot be deferred through this path.
+- The independent reviewer's acceptance and truthful status: complete, non-clean,
+  with reviewed dispositions. Report it separately from tests and protected CI.
+
+This does not waive native Git checks, required CI, source ownership, authorization
+or effective-tier evidence. If the reviewer rejects the relevance/evidence claim,
+fix the finding or narrow the implementation; do not relabel it inherited.
 
 ### Path filter
 
@@ -196,7 +228,7 @@ Reviewer addresses these before opening the six-layer human review.
 
 The scanner has two layers: `scan.sh` (bash + `grep -oE`) parses unified diffs and message bodies for the prose-side rules; `scan_ast.py` (Python AST) is invoked by `scan.sh` on any changed `.py` files for the code-side rules. Prose/regex checks are added-line and message-body scoped (they read the diff hunks only). AST checks scan the full post-state file for each changed `.py`, so pre-existing violations in a touched file surface alongside newly-added ones. See `scan.sh` and `scan_ast.py` for the sources; both are readable top to bottom.
 
-The diff parser handles only added lines (`+` prefix in unified diff), not removed or context lines, so existing-but-untouched fingerprints elsewhere in the file are not flagged. Rule violations are introduced by the diff under review or they are not introduced at all.
+Lexical diff checks inspect added lines (`+` prefix), not removed or context lines. AST checks inspect whole selected Python files and can report inherited findings. Classify each finding by behavior and caller relevance under the task-scoped acceptance contract; do not infer relevance from line numbers alone.
 
 ## Cross-references
 

@@ -215,6 +215,21 @@ if is_governance_issue_reporting_command; then
     exit 0
 fi
 
+# Normalize protected Git operations independently of task artifacts. Explicit
+# env/evidence/allow-list waivers above remain deliberate policy escapes. The
+# helper reads Authorized trailers from each resolved target, never another cwd.
+GIT_POLICY="$HOOK_DIR/../lib/git_command.py"
+if [[ ! -f "$GIT_POLICY" ]]; then
+    echo "BLOCKED: Git operation policy helper is unavailable." >&2
+    exit 2
+fi
+GIT_RESULT=$(printf '%s' "$COMMAND" | python3 "$GIT_POLICY" --cwd "${CWD:-$PWD}" --policy destructive 2>&1)
+GIT_STATUS=$?
+if [[ "$GIT_STATUS" -ne 0 ]]; then
+    echo "${GIT_RESULT:-BLOCKED: Git operation policy failed.}" >&2
+    exit 2
+fi
+
 # Walk deny-list, dispatch per tier.
 MATCHED_BLOCKS=()
 for entry in "${DENY_PATTERNS[@]}"; do

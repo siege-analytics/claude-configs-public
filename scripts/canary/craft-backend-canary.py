@@ -95,6 +95,36 @@ def approval_subject_sha256(manifest: dict[str, Any]) -> str:
     return sha256_bytes(canonical_bytes(subject))
 
 
+def capture_runtime_pins(app_root: Path) -> dict[str, Any]:
+    """Read current public app artifacts; never changes a run or its approval."""
+    app_root = app_root.expanduser().resolve()
+    craft_path = app_root / 'package.json'
+    sdk_path = app_root / 'node_modules/@anthropic-ai/claude-agent-sdk/package.json'
+    bundle = app_root / 'dist/main.cjs'
+    for path in (craft_path, sdk_path, bundle):
+        require(path.is_file() and not path.is_symlink(), f'installed artifact absent or symlinked: {path}')
+    craft = load_json(craft_path)
+    sdk = load_json(sdk_path)
+    require(craft.get('name') == '@craft-agent/electron', 'unexpected Craft package name')
+    require(sdk.get('name') == '@anthropic-ai/claude-agent-sdk', 'unexpected Claude SDK package name')
+    digest = sha256_bytes(bundle.read_bytes())
+    installed = {
+        'craft_application': {'package_manifest_path': str(craft_path), 'package_name': craft['name'],
+            'version': craft.get('version'), 'package_manifest_sha256': sha256_bytes(craft_path.read_bytes()),
+            'main_bundle_path': str(bundle), 'main_bundle_sha256': digest},
+        'claude_sdk': {'package_manifest_path': str(sdk_path), 'package_name': sdk['name'],
+            'version': sdk.get('version'), 'package_manifest_sha256': sha256_bytes(sdk_path.read_bytes()),
+            'active_selection_state': 'requires-host-session-evidence'},
+        'pi_adapter': {'implementation_package': '@earendil-works/pi-ai', 'adapter_id': 'openai-codex-responses',
+            'discovery_artifact_path': str(bundle), 'discovery_artifact_sha256': digest,
+            'required_bundle_markers': ['@earendil-works/pi-ai', 'openai-codex-responses'],
+            'public_manifest_state': 'unavailable-unverified', 'active_selection_state': 'requires-host-session-evidence'},
+    }
+    discovery = discover_installed_builds({'installed_builds': installed})
+    return {'status': 'runtime-pins-captured', 'authorization_effect': 'none',
+            'installed_builds': installed, 'discovery': discovery}
+
+
 def discover_installed_builds(manifest: dict[str, Any]) -> dict[str, Any]:
     """Read exact installed host artifacts; this is evidence, never authority."""
     expected = manifest["installed_builds"]
@@ -223,19 +253,25 @@ def validate_manifest(
     craft = installed["craft_application"]
     claude = installed["claude_sdk"]
     pi = installed["pi_adapter"]
-    require(craft == {
-        "package_manifest_path": "/Applications/Craft Agents.app/Contents/Resources/app/package.json",
-        "package_name": "@craft-agent/electron", "version": "0.15.2",
-        "package_manifest_sha256": "5ab2c0f968a56e56f3a19cb994ae8256fc466eff63f3d5cc68d4eff39d02fa67",
-        "main_bundle_path": "/Applications/Craft Agents.app/Contents/Resources/app/dist/main.cjs",
-        "main_bundle_sha256": "85dcbd47f2dec6cb1d38360a580391f52161d4742878f478c0e1997310cc72a0",
-    }, "installed Craft application pin set mismatch")
-    require(claude == {
-        "package_manifest_path": "/Applications/Craft Agents.app/Contents/Resources/app/node_modules/@anthropic-ai/claude-agent-sdk/package.json",
-        "package_name": "@anthropic-ai/claude-agent-sdk", "version": "0.3.296",
-        "package_manifest_sha256": "a2f4bd57129cb99253877099ab6deed575b3bdd37aa0e09aa6469a63bc81690f",
-        "active_selection_state": "requires-host-session-evidence",
-    }, "installed Claude SDK pin set mismatch")
+    # Versions and artifact digests belong to the immutable approved run
+    # subject. The validator checks their schema; discovery checks installed
+    # bytes. Updating the host never silently updates an approved subject.
+    for label, record, name, keys in (
+        ('Craft application', craft, '@craft-agent/electron',
+         {'package_manifest_path', 'package_name', 'version', 'package_manifest_sha256', 'main_bundle_path', 'main_bundle_sha256'}),
+        ('Claude SDK', claude, '@anthropic-ai/claude-agent-sdk',
+         {'package_manifest_path', 'package_name', 'version', 'package_manifest_sha256', 'active_selection_state'}),
+    ):
+        require(isinstance(record, dict) and set(record) == keys, f'installed {label} pin fields mismatch')
+        require(record.get('package_name') == name, f'installed {label} package name mismatch')
+        require(isinstance(record.get('version'), str) and bool(re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?', record['version'])), f'installed {label} version is invalid')
+        for key, value in record.items():
+            if key.endswith('_sha256'):
+                require(isinstance(value, str) and bool(HEX64.fullmatch(value)), f'installed {label} {key} is invalid')
+            if key.endswith('_path'):
+                require(isinstance(value, str) and Path(value).is_absolute() and '..' not in Path(value).parts, f'installed {label} {key} must be absolute and normalized')
+    require(claude['active_selection_state'] == 'requires-host-session-evidence', 'installed Claude SDK active selection must require host evidence')
+    require(len({craft['package_manifest_path'], craft['main_bundle_path'], claude['package_manifest_path']}) == 3, 'installed artifact paths must be distinct')
     require(pi == {
         "implementation_package": "@earendil-works/pi-ai", "adapter_id": "openai-codex-responses",
         "discovery_artifact_path": craft["main_bundle_path"],
@@ -367,7 +403,7 @@ def tree_digest(root: Path, *, canonical_package: bool = False) -> str:
 def materialize_source(manifest: dict[str, Any], destination: Path) -> None:
     repo = Path(__file__).resolve().parents[2]
     revision = manifest["pins"]["source_revision"]
-    listing = subprocess.check_output(["git", "ls-tree", "-r", "--full-tree", revision], cwd=repo)
+    listing = subprocess.check_output(["git", "ls-tree", "-r", "--full-tree", revision], cwd=repo, timeout=120)
     require(sha256_bytes(listing) == manifest["pins"]["source_tree_sha256"], "source tree digest mismatch")
     clone = subprocess.run(
         ["git", "clone", "--no-hardlinks", "--no-checkout", str(repo), str(destination)],
@@ -801,7 +837,7 @@ def validate_evidence(
             raise PacketError(f"backend {sequence} runtime identity is unsupported/unverified")
         require(runtime.get("state") == "observed" and runtime.get("source") == "host-observed", f"backend {sequence} runtime identity must be host-observed")
         expected_identity = (
-            "@anthropic-ai/claude-agent-sdk@0.3.296"
+            "@anthropic-ai/claude-agent-sdk@" + manifest["installed_builds"]["claude_sdk"]["version"]
             if expected["installed_build_key"] == "claude_sdk"
             else "@earendil-works/pi-ai/openai-codex-responses"
         )
@@ -945,6 +981,8 @@ def verify_cleanup(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
+    capture = sub.add_parser("capture-runtime-pins", help="read current app artifact pins without updating any manifest or approval")
+    capture.add_argument("--app-root", type=Path, default=Path("/Applications/Craft Agents.app/Contents/Resources/app"))
     validate = sub.add_parser("validate", help="validate a proposal or non-authorizing external approval record")
     validate.add_argument("--manifest", type=Path, required=True)
     validate.add_argument("--require-approval-record", action="store_true")
@@ -962,6 +1000,9 @@ def main() -> int:
     cleanup.add_argument("--receipt", type=Path, required=True)
     args = parser.parse_args()
     try:
+        if args.command == "capture-runtime-pins":
+            print(json.dumps(capture_runtime_pins(args.app_root), sort_keys=True))
+            return 0
         manifest = load_json(args.manifest)
         if args.command == "validate":
             facts = validate_manifest(manifest, require_approval_record=args.require_approval_record)
@@ -977,7 +1018,7 @@ def main() -> int:
             result = validate_evidence(manifest, load_json(args.evidence))
         else:
             result = verify_cleanup(manifest, load_json(args.receipt))
-    except (PacketError, ValueError, TypeError) as exc:
+    except (PacketError, ValueError, TypeError, OSError) as exc:
         print(f"CANARY PACKET ERROR: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(result, sort_keys=True))

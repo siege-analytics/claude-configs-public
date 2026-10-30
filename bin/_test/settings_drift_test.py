@@ -64,12 +64,29 @@ def main():
     triples = extract_triples(snippet)
     paths = {t[2] for t in triples}
     check(
-        "snippet has 45 triples over 30 tool-event hooks",
-        (len(triples), len(paths)) == (45, 30),
+        "snippet has 46 triples over 30 tool-event hooks",
+        (len(triples), len(paths)) == (46, 30),
         f"got {len(triples)} triples over {len(paths)} hooks",
+    )
+    check(
+        "source settings and snippet have the same registration multiplicity",
+        sorted(validate_hooks.hook_registrations(settings)) == sorted(validate_hooks.hook_registrations(snippet)),
     )
 
     with tempfile.TemporaryDirectory() as tmp:
+        repeated = copy.deepcopy(settings)
+        group = repeated['hooks']['PreToolUse'][0]
+        duplicate = copy.deepcopy(group['hooks'][0])
+        group['hooks'].append(duplicate)
+        problems = compare(write(tmp, 'duplicate.json', repeated), snippet_path)
+        check("duplicate within one matcher is reported", len(problems) == 1
+              and "Duplicate registration in settings" in problems[0]
+              and duplicate['command'] in problems[0], problems)
+        repeated_group = copy.deepcopy(settings)
+        repeated_group['hooks']['PreToolUse'].append(copy.deepcopy(repeated_group['hooks']['PreToolUse'][0]))
+        problems = compare(write(tmp, 'duplicate-group.json', repeated_group), snippet_path)
+        check("repeated matcher group is reported", problems
+              and all("Duplicate registration in settings" in problem for problem in problems), problems)
         # Fixture 1: delete one hook entirely. The validator must name it.
         one_hook_gone = copy.deepcopy(settings)
         target = "hooks/git/vergil-quote.sh"

@@ -58,6 +58,11 @@ def repo_slug(repo_root: str) -> str:
 def _safe_session_id(value: str) -> str:
     # Identity must be preserved, never collapsed into a shared sanitized name.
     value = value.strip()
+    if value.strip('_').upper() in {'SESSION_ID', 'SESSION_PATH', 'CRAFT_SESSION_ID', 'CRAFT_SESSION_DIR',
+            'CRAFT_AGENT_SESSION_ID', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_ID',
+            'CLAUDE_SESSION_DIR', 'CLAUDE_CODE_SESSION_ID', 'CLAUDE_SIGNAL_DIR',
+            'CRAFT_SIGNAL_DIR', 'CRAFT_AGENT_SIGNAL_DIR'}:
+        return ''
     return value if value not in {'.', '..'} and re.fullmatch(r'[a-zA-Z0-9_.-]+', value) else ''
 
 
@@ -106,13 +111,18 @@ def host_binding_present() -> bool:
         'SESSION_ID', 'CLAUDE_CODE_SESSION_ID', 'CLAUDE_SIGNAL_DIR',
         'CRAFT_SIGNAL_DIR', 'CRAFT_AGENT_SIGNAL_DIR')):
         return True
+    raw_payload = os.environ.get('CCP_HOOK_INPUT_JSON', '').strip()
     try:
-        payload = json.loads(os.environ.get('CCP_HOOK_INPUT_JSON', '{}'))
+        payload = json.loads(raw_payload or '{}')
     except (ValueError, TypeError):
-        return False
+        return True
+    if raw_payload and not isinstance(payload, dict):
+        return True
     def bound(obj):
         if not isinstance(obj, dict):
             return False
+        if 'tool_input' in obj or obj.get('tool_name'):
+            return True
         if any(obj.get(key) for key in ('craftSessionId', 'craft_session_id',
                'sessionId', 'session_id', 'sessionID', 'id', 'transcript_path', 'transcriptPath')):
             return True
@@ -132,11 +142,13 @@ def _session_directory_id(names) -> str:
 
 def session_id_from_env() -> str:
     """Craft directory > Craft id > Craft transcript > native explicit id."""
+    if os.environ.get("CCP_CRAFT_ROUTER_SESSION_UNRESOLVED") == "1":
+        return ""
     # An unexpanded host template is not a session identity or scratch root.
     # Never sanitize it into a shared id, even if another identity is present.
     for name in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR'):
         directory = os.environ.get(name, '').strip()
-        if directory and (not os.path.isabs(directory) or
+        if directory and (not os.path.isabs(directory) or not _safe_session_id(os.path.basename(os.path.normpath(directory))) or
                           re.search(r'\{\{|\}\}|\$\{|\$[A-Za-z_]|%[A-Za-z_][^%]*%', directory)):
             return ''
     directory_id = _session_directory_id(("CRAFT_SESSION_DIR", "CRAFT_AGENT_SESSION_DIR"))
@@ -156,7 +168,7 @@ def session_id_from_env() -> str:
     directory_id = _session_directory_id(("CLAUDE_SESSION_DIR",))
     if directory_id:
         return directory_id
-    for name in ("CLAUDE_SESSION_ID", "SESSION_ID"):
+    for name in ("CLAUDE_SESSION_ID", "CLAUDE_CODE_SESSION_ID", "SESSION_ID"):
         value = os.environ.get(name, "").strip()
         if value:
             return _safe_session_id(value)
@@ -165,8 +177,18 @@ def session_id_from_env() -> str:
 
 
 SESSION_UNRESOLVED = ("Session id unresolved; gates under sessions/<id>/ are not visible. "
-                      "Have the hook host supply CRAFT_SESSION_DIR "
-                      "(CLAUDE_SESSION_ID for a native runtime); an SDK UUID or ordinary Claude transcript path alone is not a Craft directory id.")
+                      "Repair the hook host's CRAFT_SESSION_DIR to the absolute actual session directory "
+                      "(native: CLAUDE_SESSION_ID or CLAUDE_CODE_SESSION_ID). "
+                      "Then Write <actual-session-directory>/tasks/<task-slug>/think-gate.json; never use a shared root. "
+                      "An SDK UUID or ordinary Claude transcript path alone is not a Craft directory id.")
+
+
+def session_unresolved_message() -> str:
+    names = ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR',
+             'CRAFT_SESSION_ID', 'CRAFT_AGENT_SESSION_ID', 'CLAUDE_SESSION_ID',
+             'CLAUDE_CODE_SESSION_ID', 'SESSION_ID')
+    present = [name for name in names if os.environ.get(name, '').strip()]
+    return SESSION_UNRESOLVED + (' Present bindings to check: ' + ', '.join(present) + '.' if present else ' No supported environment session binding was supplied.')
 
 
 def session_dirs(workspace: str, session_id: str = "") -> "list[str]":
@@ -309,8 +331,9 @@ def _same_repo(gate_repo: str, repo_root: str) -> bool:
     try:
         if os.path.realpath(gate_repo) == os.path.realpath(repo_root):
             return True
-    except Exception:
-        pass
+    except (OSError, TypeError, ValueError) as exc:
+        print(f"[resolve-think-gate] Cannot compare repository identity: {exc}", file=sys.stderr)
+        return False
     gate_origin = _git_origin(gate_repo)
     repo_origin = _git_origin(repo_root)
     return bool(gate_origin and repo_origin and gate_origin == repo_origin)
@@ -443,7 +466,7 @@ def _remember_managed_paths(workspace: str, paths: list[str]) -> None:
 def _session_thinks(workspace: str, session_id: str = "") -> list[dict]:
     sid = session_id or session_id_from_env()
     if not sid:
-        print(SESSION_UNRESOLVED, file=sys.stderr)
+        print(session_unresolved_message(), file=sys.stderr)
         return []
     result, seen, canonical_ids = [], set(), set()
     for sd in session_dirs(workspace, sid):
@@ -508,7 +531,7 @@ def task_bootstrap_help(workspace: str, session_id: str = "") -> str:
 def select_task(workspace: str, paths: list[str], binding: str = "", session_id: str = "") -> dict:
     """Resolve all targets to one owner. Explicit binding disambiguates, not expands scope."""
     if not (session_id or session_id_from_env()):
-        return {"gate": None, "error": SESSION_UNRESOLVED}
+        return {"gate": None, "error": session_unresolved_message()}
     candidates = _session_thinks(workspace, session_id)
     binding = binding or task_binding()
     if binding:
@@ -595,8 +618,12 @@ def find_gate_for_repo(workspace: str, repo_root: str, gate_name: str = "think-g
     paths = [repo_root]
     try:
         payload = json.loads(os.environ.get("CCP_HOOK_INPUT_JSON", "{}"))
+        if not isinstance(payload, dict):
+            return None
         if payload.get("cwd"):
             ti = payload.get("tool_input") or {}
+            if not isinstance(ti, dict):
+                return None
             shape = action(ti.get("command", ""), payload["cwd"]) if ti.get("command") else {"paths": [repo_root or payload["cwd"]]}
             # A proven read has no mutation targets; select the task by the repo
             # instead of sending an empty target list through mutation selection.
@@ -629,7 +656,7 @@ def find_gate_for_repo(workspace: str, repo_root: str, gate_name: str = "think-g
 
 def find_session_gate(workspace: str, gate_name: str = "think-gate", session_id: str = "") -> Optional[dict]:
     if not (session_id or session_id_from_env()):
-        print(SESSION_UNRESOLVED, file=sys.stderr)
+        print(session_unresolved_message(), file=sys.stderr)
         return None
     gates = _session_thinks(workspace, session_id)
     binding = task_binding()
@@ -701,10 +728,13 @@ def own_session_path(workspace: str, path: str, directory: bool = False, removal
         # paths see symlinks, not hardlinks, and a write here changes both.
         try:
             st = os.stat(target)
-            if not os.path.isdir(target) and st.st_nlink > 1:
-                return False
-        except OSError:
-            pass
+        except FileNotFoundError:
+            st = None  # Creating a new lifecycle file has no existing hardlink alias.
+        except OSError as exc:
+            print(f"[resolve-think-gate] Cannot inspect lifecycle target: {exc}", file=sys.stderr)
+            return False
+        if st is not None and not os.path.isdir(target) and st.st_nlink > 1:
+            return False
     parts = os.path.relpath(target, root).split(os.sep)
     if parts[0] in {'plans', 'data'}:
         return len(parts) > 1 or directory
@@ -742,6 +772,22 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     result = {**shape, **selected}
     if result["gate"]:
         tg = result["gate"]
+        if shape.get("test_receipt_output"):
+            expected_gate = canonical(tg["path"])
+            requested_gate = shape["test_receipt_gate"]
+            output = shape["test_receipt_output"]
+            expected_output = os.path.join(os.path.dirname(expected_gate), "test-gate.json")
+            valid = (tg["data"].get("status") == "implementing"
+                     and os.path.basename(expected_gate) == "think-gate.json"
+                     and requested_gate == expected_gate == os.path.abspath(tg["path"])
+                     and canonical(requested_gate) == requested_gate
+                     and output == expected_output and canonical(output) == output
+                     and own_session_path(workspace, requested_gate)
+                     and own_session_path(workspace, output)
+                     and bool(tg["data"].get("repo_root"))
+                     and canonical(tg["data"]["repo_root"]) == shape["test_receipt_repo"])
+            if not valid:
+                return {**result, "gate": None, "error": "Test execution requires the selected own-task implementing think gate and its exact adjacent test-gate.json receipt; repair task/output ownership before rerunning."}
         result["session_dir"] = own_session_directory(workspace)
         result["artifacts"] = {name: g["path"] if (g := _artifact_for(tg, name, workspace)) else None for name in ("investigate-gate", "junior-senior-gate", "artifacts-posted-gate", "review-gate", "test-gate")}
         result["task"] = task_identity(tg["data"])
@@ -753,6 +799,7 @@ TIER_ORDER = {"A": 0, "B": 1, "C": 2}
 
 
 def _git_lines(repo: str, *args: str) -> Optional[list]:
+    """Return Git lines, or None when Git cannot establish the requested listing."""
     try:
         out = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True, timeout=10)
     except (OSError, subprocess.SubprocessError):
@@ -817,9 +864,11 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
                 raise ValueError("target outside the gate's repo_root")
             r = "" if rp == repo_root else os.path.relpath(rp, repo_root).replace(os.sep, "/")
             if r == "" and lone_commit:
-                files = (_git_lines(repo_root, "diff", "--cached", "--name-only", "-z") or []) + \
-                        (_git_lines(repo_root, "diff", "--name-only", "-z") or [])
-                rel.extend(files or ["(empty commit)"])
+                staged = _git_lines(repo_root, "diff", "--cached", "--name-only", "-z")
+                modified = _git_lines(repo_root, "diff", "--name-only", "-z")
+                if staged is None or modified is None:
+                    raise ValueError("cannot enumerate commit targets")
+                rel.extend((staged + modified) or ["(empty commit)"])
             elif r == "" or os.path.isdir(rp):
                 files = _git_lines(repo_root, "ls-files", "-z", "--", r or ".")
                 if files is None:
@@ -837,13 +886,14 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
 
 
 def _load(path: str) -> Optional[dict]:
+    """Return a gate object, or None for missing, unreadable or malformed input."""
     try:
         if not os.path.isfile(path):
             return None
         with open(path) as f:
             data = json.load(f)
         return {"path": path, "data": data} if isinstance(data, dict) else None
-    except Exception:
+    except (OSError, ValueError, TypeError):
         return None
 
 

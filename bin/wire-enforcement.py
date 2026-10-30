@@ -1,22 +1,14 @@
 #!/usr/bin/env python3
 """Wire the blocking enforcement layer into an already-deployed CA workspace.
 
-This is the order-independent, idempotent step that guarantees enforcement is
-actually live. It runs AFTER install-hooks.sh (which overwrites settings.json
-from the base snippet, so it must be the last writer to settings.json) and does
-two things the deploy step does not reliably do on a fresh workspace:
+Run after install-hooks.sh to merge the prompt wrapper into the selected
+settings file. Normal Craft installation selects .claude/craft-settings.json;
+the legacy default remains .claude/settings.json for existing direct callers.
+This verifies neither SDK discovery nor actual backend callback delivery.
 
-  1. Merge the ca-enforcement-gate.sh UserPromptSubmit wrapper into
-     .claude/settings.json. The advisory injectors alone do not block; this
-     wrapper converts a gate block into continue:false. On a fresh workspace
-     deploy_to_workspace() skips this merge (it is guarded on settings.json
-     already existing, and install-hooks.sh creates it afterward), leaving the
-     workspace advisory-only.
-
-  2. Optionally register the standing-order watchdog automations when
-     --include-standing-order-automations is passed. They are opt-in because
-     SchedulerTick prompt automations create sessions and SessionStatusChange
-     audits can self-trigger into workspace spam if enabled uncritically.
+Standing-order watchdog automations remain opt-in via
+--include-standing-order-automations. SchedulerTick prompt automations create
+sessions and SessionStatusChange audits can self-trigger if enabled.
 
 The settings merge is idempotent. Optional automation registration is also
 idempotent (replace-by-identity, never append duplicates) and preserves every
@@ -26,6 +18,7 @@ so a bad merge cannot corrupt the file that drives harmonisation.
 
 Usage:
     python3 bin/wire-enforcement.py --workspace <path>
+    python3 bin/wire-enforcement.py --workspace <path> --settings-file <policy-path>
     python3 bin/wire-enforcement.py --workspace <path> --dist <dist-dir>
     python3 bin/wire-enforcement.py --workspace <path> --include-standing-order-automations
 
@@ -34,8 +27,11 @@ Exit codes: 0 wired, 1 error, 2 bad invocation.
 Refs: #96, #409, #416, #572.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
+import shlex
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -43,8 +39,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
-def merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
-    """Merge the CA enforcement wrapper into .claude/settings.json.
+def merge_ca_enforcement_settings(src: Path, dst: Path, *, workspace_root: Path | None = None) -> None:
+    """Merge the CA enforcement wrapper into the selected settings file.
 
     Adds the ca-enforcement-gate.sh UserPromptSubmit entry. Preserves all
     operator-owned settings. Idempotent: an existing ca-enforcement-gate entry
@@ -64,32 +60,52 @@ def merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
         raise SystemExit(f"ERROR: {dst} 'hooks' is not a JSON object; refusing to merge")
 
     generated = json.loads(src.read_text())
+    if not isinstance(existing.get("env", {}), dict):
+        raise SystemExit(f"ERROR: {dst} 'env' is not a JSON object; refusing to merge")
+    generated_environment = generated.get("env", {})
+    if not isinstance(generated_environment, dict):
+        raise SystemExit(f"ERROR: {src} 'env' is not a JSON object; refusing to merge")
+    if generated_environment.get("CLAUDE_CA_ENFORCE") == "1":
+        existing.setdefault("env", {})["CLAUDE_CA_ENFORCE"] = "1"
     existing.setdefault("hooks", {}).setdefault("UserPromptSubmit", [])
     if not isinstance(existing["hooks"].get("UserPromptSubmit"), list):
         raise SystemExit(f"ERROR: {dst} hooks.UserPromptSubmit is not a list; refusing to merge")
 
     # Resolve the path placeholder to the workspace hooks root.
-    ws_root = dst.parent.parent  # .claude/settings.json -> workspace root
+    ws_root = workspace_root if workspace_root is not None else dst.parent.parent
     gen_hooks = generated.get("hooks", {}).get("UserPromptSubmit", [])
     for entry in gen_hooks:
         for hook in entry.get("hooks", []):
             if "command" in hook:
-                hook["command"] = hook["command"].replace("/path/to", str(ws_root))
+                resolved = hook["command"].replace("/path/to", str(ws_root))
+                hook["command"] = shlex.quote(resolved) if resolved.endswith("ca-enforcement-gate.sh") else resolved
 
-    # Idempotent: strip any existing ca-enforcement-gate hook from each group,
-    # then drop groups the strip left empty so re-runs do not accumulate empty
-    # hook groups. The fresh wrapper group is appended once.
+    # Retirement requires the exact generated command identity, not a basename
+    # substring that could belong to an unrelated operator hook.
+    managed_commands = {
+        tuple(shlex.split(hook["command"]))
+        for group in gen_hooks for hook in group.get("hooks", [])
+        if hook.get("type") == "command" and isinstance(hook.get("command"), str)
+    }
+
+    def owned_wrapper(hook: object) -> bool:
+        if not isinstance(hook, dict) or hook.get("type") != "command" or not isinstance(hook.get("command"), str):
+            return False
+        try:
+            tokens = tuple(shlex.split(hook["command"]))
+        except ValueError:
+            tokens = ()  # An unparseable operator command establishes no ownership.
+        return tokens in managed_commands
+
+    retained = []
     for group in existing["hooks"]["UserPromptSubmit"]:
-        if isinstance(group, dict) and "hooks" in group:
-            group["hooks"] = [
-                h for h in group["hooks"]
-                if "ca-enforcement-gate" not in h.get("command", "")
-            ]
-    existing["hooks"]["UserPromptSubmit"] = [
-        g for g in existing["hooks"]["UserPromptSubmit"]
-        if not (isinstance(g, dict) and "hooks" in g and not g["hooks"])
-    ]
-    existing["hooks"]["UserPromptSubmit"].extend(gen_hooks)
+        if isinstance(group, dict) and isinstance(group.get("hooks"), list):
+            original = group["hooks"]
+            group["hooks"] = [hook for hook in original if not owned_wrapper(hook)]
+            if original and not group["hooks"]:
+                continue
+        retained.append(group)
+    existing["hooks"]["UserPromptSubmit"] = retained + gen_hooks
 
     dst.write_text(json.dumps(existing, indent=2) + "\n")
     print(f"  Merged CA enforcement wrapper into {dst}")
@@ -172,6 +188,7 @@ def main() -> int:
         return selected_registration.main(["wire", *sys.argv[1:]])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace", type=Path, required=True, help="Craft Agent workspace path")
+    parser.add_argument("--settings-file", type=Path, help="Explicit managed settings destination (default: workspace/.claude/settings.json)")
     parser.add_argument("--dist", type=Path, default=REPO_ROOT / "dist", help="Build dist directory (default: %(default)s)")
     parser.add_argument(
         "--include-standing-order-automations",
@@ -193,7 +210,7 @@ def main() -> int:
         )
         return 1
 
-    merge_ca_enforcement_settings(settings_src, ws / ".claude" / "settings.json")
+    merge_ca_enforcement_settings(settings_src, args.settings_file.expanduser() if args.settings_file else ws / ".claude" / "settings.json", workspace_root=ws)
     if args.include_standing_order_automations:
         register_ca_automations(REPO_ROOT / "craft-agent" / "automations-snippet.json", ws / "automations.json")
     else:

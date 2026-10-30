@@ -510,3 +510,9 @@ Never remove another session's signals.
 ## Attribution Policy
 
 NEVER include AI or agent attribution in designs, documentation, or any output.
+
+## Session binding compatibility
+
+Literal unresolved placeholder identities such as `__SESSION_ID__` and `__SESSION_PATH__` are rejected, including directory basenames. Directory bindings must be absolute and cannot contain `{{`, `}}`, `${...}`, `$NAME` or `%NAME%`; a legitimate path containing those forms also fails closed and needs a different host binding. Do not create a literal placeholder directory. Native runtimes can bind `CLAUDE_SESSION_ID` or `CLAUDE_CODE_SESSION_ID`; a generic SDK UUID alone does not identify a Craft directory. Any parsed tool callback remains a host invocation even if identity fields are absent, so it cannot borrow terminal root test evidence. Truly unbound native Git stdin remains supported.
+
+Only a fully qualified numeric `owner/repo#N` ticket uses repository-plan compatibility. A short `#N` is a plain task ID and requires a pre-mortem in its owning session's `plans/`.

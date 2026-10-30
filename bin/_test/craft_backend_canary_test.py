@@ -159,6 +159,19 @@ class CanaryPacketTest(unittest.TestCase):
         with self.assertRaisesRegex(canary.PacketError, "adapter marker is absent"):
             canary.discover_installed_builds(unavailable)
 
+    def test_runtime_pin_versions_are_run_data_and_still_digest_bound(self):
+        fresh = copy.deepcopy(self.value)
+        before = canary.approval_subject_sha256(fresh)
+        fresh['installed_builds']['craft_application']['version'] = '0.15.6'
+        fresh['installed_builds']['claude_sdk']['version'] = '0.3.302'
+        self.validate_manifest(fresh)
+        self.assertNotEqual(before, canary.approval_subject_sha256(fresh))
+        for key, value in [('version', ''), ('version', 'latest'), ('package_manifest_sha256', 'bad'), ('package_manifest_path', 'relative.json')]:
+            invalid = copy.deepcopy(fresh)
+            invalid['installed_builds']['craft_application'][key] = value
+            with self.assertRaises(canary.PacketError):
+                self.validate_manifest(invalid)
+
     def test_paths_are_exact_and_confined(self):
         broken = copy.deepcopy(self.value)
         broken["paths"]["temp_root"] = f"/private/tmp/{self.run_id}/../escape"
@@ -213,7 +226,7 @@ class CanaryPacketTest(unittest.TestCase):
         host("restored resolver invocation")
         user("UNRELATED_END. boundary")
         (backend / "session.jsonl").write_text("".join(json.dumps(record) + "\n" for record in records))
-        result = subprocess.run([sys.executable, "-", str(evidence), "1"], input=match.group(1), text=True, capture_output=True)
+        result = subprocess.run([sys.executable, "-", str(evidence), "1"], input=match.group(1), text=True, capture_output=True, timeout=120)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(len(list(backend.glob("*_*.jsonl"))), 9)
         no_op = (backend / "no_op_detection.jsonl").read_text()
@@ -348,11 +361,11 @@ class CanaryPacketTest(unittest.TestCase):
         setup.copy_payload(canary, payload, assembly)
         subprocess.run([
             "bash", "bin/install-hooks.sh", "--workspace", str(assembly), "--hooks-root", str(assembly),
-        ], cwd=source, check=True, text=True, capture_output=True)
+        ], cwd=source, check=True, text=True, capture_output=True, timeout=120)
         subprocess.run([
             sys.executable, "bin/wire-enforcement.py", "--workspace", str(assembly),
             "--dist", str(source / "dist"),
-        ], cwd=source, check=True, text=True, capture_output=True)
+        ], cwd=source, check=True, text=True, capture_output=True, timeout=120)
         settings = assembly / ".claude/settings.json"
         original = settings.read_bytes()
         settings_bytes, settings_sha256, inventory = setup.verify_wired_settings(

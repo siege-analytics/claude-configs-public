@@ -248,6 +248,9 @@ def preflight_cases() -> None:
         (scratch / "bin").mkdir()
         for name in ("install.sh", "sync-workspace-hooks.sh", "frontmatter_validation.py"):
             shutil.copy2(ROOT / "bin" / name, scratch / "bin" / name)
+        # This fixture tests the PyYAML/build preflight, while scoped-router
+        # absence has its own orchestration regression.
+        (scratch / "bin/install-craft-hook-router.py").write_text("raise SystemExit('must not execute')\n")
         shim = scratch / "python-bin"
         shim.mkdir()
         # A wrapper, not a symlink, so a virtualenv interpreter keeps its site-packages.

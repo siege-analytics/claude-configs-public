@@ -77,13 +77,13 @@ def normalise_command(cmd: str) -> str:
     return cmd
 
 
-def extract_hook_triples(settings: dict) -> set[tuple[str, str, str]]:
+def hook_registrations(settings: dict) -> list[tuple[str, str, str]]:
     """Every wiring as (event, matcher, normalised path).
 
     Keying on the path alone answers a different question: a hook wired for
     Write and Edit but not NotebookEdit is present by path and absent by triple.
     """
-    triples = set()
+    triples = []
     for event, event_hooks in settings.get("hooks", {}).items():
         if not isinstance(event_hooks, list):
             continue
@@ -92,8 +92,13 @@ def extract_hook_triples(settings: dict) -> set[tuple[str, str, str]]:
             for hook in group.get("hooks", []):
                 cmd = hook.get("command", "")
                 if cmd:
-                    triples.add((event, matcher, normalise_command(cmd)))
+                    triples.append((event, matcher, normalise_command(cmd)))
     return triples
+
+
+def extract_hook_triples(settings: dict) -> set[tuple[str, str, str]]:
+    """Return distinct wiring identities, retaining the compatibility API."""
+    return set(hook_registrations(settings))
 
 
 def compare_settings_to_snippet(settings_path: Path, snippet_path: Path) -> list[str]:
@@ -107,7 +112,13 @@ def compare_settings_to_snippet(settings_path: Path, snippet_path: Path) -> list
     parsed = {}
     for label, path in (("settings", settings_path), ("snippet", snippet_path)):
         try:
-            parsed[label] = extract_hook_triples(json.loads(path.read_text()))
+            registrations = hook_registrations(json.loads(path.read_text()))
+            parsed[label] = set(registrations)
+            for triple in sorted(parsed[label]):
+                count = registrations.count(triple)
+                if count > 1:
+                    event, matcher, command = triple
+                    problems.append(f"Duplicate registration in {label}: {event} / {matcher or '(no matcher)'} -> {command} ({count} copies)")
         except (OSError, json.JSONDecodeError) as exc:
             problems.append(f"Cannot read {label} at {path}: {exc}")
     if problems:
@@ -181,6 +192,7 @@ def main():
                 ["bash", "-n", str(resolved)],
                 capture_output=True,
                 text=True,
+                timeout=120,
             )
             if result.returncode != 0:
                 errors.append(f"Syntax error: {resolved}\n  {result.stderr.strip()}")

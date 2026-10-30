@@ -170,27 +170,31 @@ Three quality tests (apply to any framework):
 
 ## Signal file: test-gate.json
 
-After running affected tests (`[skill:commit]` step 4), write evidence to `test-gate.json` at `$CRAFT_SESSION_DIR/tasks/<task-slug>/test-gate.json`, beside the owning task's think gate:
+Use the packaged producer to run affected tests and record a **version 2** receipt beside the owning task's think gate. Supply each exact repository-relative touched source path; do not use suffixes or directory names:
 
-```json
-{
-  "ticket": "owner/repo#386",
-  "sessionId": "current-session-id",
-  "repo_root": "/path/to/repo",
-  "lastUpdated": "2026-06-09T14:30:00Z",
-  "evidence": [
-    {
-      "source": "siege_utilities/geo/boundaries.py",
-      "test": "tests/geo/test_boundaries.py",
-      "result": "pass",
-      "framework": "pytest",
-      "timestamp": "2026-06-09T14:28:00Z"
-    }
-  ]
-}
+```bash
+python3 /path/to/installed-policy/hooks/lib/test-evidence.py record \
+  --repo /path/to/repo \
+  --think-gate /path/to/own-session/tasks/<task-slug>/think-gate.json \
+  --output /path/to/own-session/tasks/<task-slug>/test-gate.json \
+  --source siege_utilities/geo/boundaries.py --framework pytest \
+  -- python3 -m pytest tests/geo/test_boundaries.py
 ```
 
-The `test-guard.sh` hook reads this file at push time and verifies evidence covers all touched source files.
+For a bound session, replace these placeholders with resolved literal absolute paths in the actual tool command. The scoped execution lane accepts only this installed policy generation's exact producer, the selected own-task `implementing` think gate, and its adjacent `test-gate.json`. Copied/renamed producers, sibling task paths, symlink aliases and shell expansion do not acquire this lane. Repository-wide implementation authority and the task's effective review tier are required before execution. Tests remain arbitrary computation, never an ungated read, diagnostic or own-scratch operation; use the test runner after `--` rather than calling bare pytest or py_compile as a reader.
+
+The producer runs argv directly in the target repository. It copies the task/session identity, captures the tested Git revision and each source blob, and records success only for exit code zero on unchanged source. A pending/failed rerun invalidates the earlier receipt. Run it after the final source edit; a later commit of the same tested content is supported. Rerun if source content changes or history no longer descends from the tested revision. Additional affected source paths require additional `--source` arguments in the same run. Choose the tests using the project's affected-test policy; a content receipt does not prove that the chosen tests are adequate.
+
+The hook requires `schema_version: 2`, the exact canonical `repo_root`, an ancestor `tested_revision`, a nonempty `command` argv, integer `exit_code: 0`, and one successful evidence entry per touched source with exact `source` and matching `source_blob`. Evidence must match both HEAD and current raw working bytes. Receipt hashing never executes Git clean filters and accepts regular source files up to 64 MiB (or Git symlink text), rejecting devices/FIFOs without blocking. Filter-normalized or CRLF checkouts whose raw bytes differ from HEAD fail closed; use a canonical checkout before rerunning, rather than silently normalizing untested bytes. Deleted source uses `source_blob: "deleted"`. Duplicate, missing, suffix-only, failed, stale and legacy receipts block.
+
+For a **compatibility report only**, inspect an existing receipt before deployment:
+
+```bash
+python3 hooks/lib/test-evidence.py check --report-only --repo /path/to/repo \
+  --base <merge-base-sha> --receipt /path/to/test-gate.json
+```
+
+Report-only prints the same validation problems but does not authorize a push. Legacy receipts are never automatically upgraded: rerun affected tests with the producer. Actual native terminal pushes retain their existing root-file lookup only when no host binding exists; use the same version 2 producer with `--output /path/to/repo/test-gate.json` and omit `--think-gate` for that native case. Bound sessions must use their own task receipt. Structured inapplicability overrides still require Reason, Evidence and Falsification in the commit body.
 
 ## Cross-references
 
