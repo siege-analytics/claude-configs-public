@@ -1784,7 +1784,7 @@ def _test_ast_covers_exception(test_path, exc_class):
     except SyntaxError as e:  # noqa: writing-tests-5 bootstrap related-test syntax fixture in bin/_test/scanner_source_test.py
         raise ScanInputError(f"{test_path}:{e.lineno or 0}:scan-ast-syntax-error: test file unparseable: {e.msg}") from e
 
-    RAISES_NAMES = ("raises", "assertRaises")
+    RAISES_NAMES = ("raises", "assertRaises", "assertRaisesRegex")
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue

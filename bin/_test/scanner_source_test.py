@@ -121,6 +121,11 @@ class ScannerSourceTest(unittest.TestCase):
         self.git('add', '.claude/scanner-config.toml')
         self.expect(self.scan(), 2, 'test_map values')
 
+    def test_regex_exception_assertion_is_evidence_for_its_named_class(self):
+        test = self.write('tests/test_client.py', 'with self.assertRaisesRegex(ValueError, "bad"):\n    int("bad")\n')
+        self.assertTrue(ast_scanner._test_ast_covers_exception(test, 'ValueError'))
+        self.assertFalse(ast_scanner._test_ast_covers_exception(test, 'TypeError'))
+
     def test_comprehension_captures_and_shadowing(self):
         cases = (
             ('return [shape(offset) for item in items]', {'shape', 'offset', 'items'}),
