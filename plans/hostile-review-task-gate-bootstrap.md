@@ -69,3 +69,8 @@ Independent review approved the complete invalid-host/native fallback boundary a
 ## Actual callback transport approval
 
 Independent review approved forwarding current tool INPUT to resolver, while preserving native update-line and inherited host context. Revised tests prove payload transport through actual stdin without pre-set CCP_HOOK_INPUT_JSON. Two boundary/native cases pass 6.354s and test_guard suite passes 8/8. No remaining must-fix. Exact commit receipt and hosted completion follow separately.
+
+
+## Dependency-use snapshot approval
+
+Independent review approved the test-only expected helper-use count/digest refresh. Removing exactly the new HOST_SESSION_DIR extraction record reproduces the old digest. Existing removal, duplication, decoy and registration negatives remain unchanged. Full review-risk suite passes. No runtime changes or enforcement weakening.

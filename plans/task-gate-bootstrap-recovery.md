@@ -75,3 +75,8 @@ Clarify placement: JSON companions beside the task gate; pre-mortems in own sess
 ## Actual callback transport verification
 
 The payload-only regression originally preloaded CCP_HOOK_INPUT_JSON. Tightening it to actual stdin revealed test-guard did not forward that callback to the resolver. Export the parsed tool INPUT before evidence resolution; native pre-push update lines do not overwrite context. The corrected stdin-based regression has no pre-set payload env. Independent boundary/native tests pass (6.354s), and test_guard scenarios pass 8/8. No remaining must-fix in this follow-up. The final complete suite and hosted validation remain required.
+
+
+## Helper dependency snapshot integration
+
+Final hosted validation identified a stale dependency-use snapshot: transporting HOST_SESSION_DIR adds one legitimate extract-json use in universal-mutation-gate (three to four). Update only the expected use count and exact assignment-record digest. Independent review recomputed the new digest `49547810bab12a781ea0b8a233f627f9f9fe1fb4fc23d5ad6f2a63fd7ded0900`; removing exactly that new extraction reproduces the old digest. Removal/duplication/decoy and manifest negative checks remain intact. Full review_risk_test passes locally. This follow-up changes no runtime behavior; approved runtime source remains 4dad246.
