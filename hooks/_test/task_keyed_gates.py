@@ -87,6 +87,116 @@ class Gates(unittest.TestCase):
                                           env=env, text=True, capture_output=True, timeout=120))
         return results
 
+    def metadata_guard(self, name, command, cwd=None):
+        payload = craft_payload(tool_name='Bash', cwd=str(cwd or self.ws), tool_input={'command': command})
+        return subprocess.run(['bash', str(ROOT / 'hooks/bash' / name)], input=json.dumps(payload),
+                              env=self.env, text=True, capture_output=True, timeout=120)
+
+    def test_existing_remote_text_edits_need_no_task_gate(self):
+        body = self.ws / 'sessions/one/data/body.md'
+        body.parent.mkdir(parents=True, exist_ok=True)
+        body.write_text('Completed repair; unrelated blocker remains. Status is not a state transition.')
+        commands = [
+            "gh pr edit 123 --body 'completed but blocked elsewhere'",
+            "gh issue edit 123 --title 'done and pending'",
+            "gh pr edit --body 'current branch PR, done and pending'",
+            "gh pr edit feature/docs --title 'current branch text'",
+            "gh pr comment --edit-last --body 'completed, pending elsewhere'",
+            'gh pr edit 123 --repo example/target --body-file ' + str(body),
+            "gh pr edit 123 --repo example/target --body 'gh pr merge 1; gh pr create; git commit -m done; completed and pending'",
+            "gh issue edit 123 -R example/target --title 'completed with blocker'",
+            "gh pr edit https://github.com/example/target/pull/123 --body 'done, blocked elsewhere'",
+            "gh issue comment 123 -R example/target --edit-last --body 'completed but blocked'",
+            "gh pr comment 123 -R example/target --edit-last --body-file " + str(body),
+            "gh api repos/example/target/pulls/123 -X PATCH -f 'body=completed, blocker remains'",
+            "gh api --method=PATCH repos/example/target/issues/123 --raw-field 'title=done and blocked'",
+            "gh api repos/example/target/issues/comments/123 -X PATCH -f 'body=done and blocked'",
+        ]
+        for command in commands:
+            with self.subTest(command=command):
+                shape = r.action(command, str(self.ws))
+                self.assertTrue(shape.get('metadata_only'), shape)
+                self.assertFalse(shape['read_only'])
+                self.assertEqual(shape['paths'], [])
+                self.assertGate(0, command, cwd=self.ws)
+                for guard in ('coordinator-status-guard.sh', 'destructive-guard.sh'):
+                    result = self.metadata_guard(guard, command)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+        self.task('unrelated', self.ws, status='designing')
+        self.assertGate(0, commands[0], cwd=self.ws)
+
+    def test_remote_text_edits_preserve_mixed_write_and_unknown_controls(self):
+        metadata = "gh pr edit 123 --repo example/target --body 'completed but blocked'"
+        self.task('own-docs', self.a)
+        self.task('other-docs', self.b, status='designing')
+        self.assertGate(0, 'touch ' + str(self.a / 'own.md') + '; ' + metadata, cwd=self.ws)
+        self.assertGate(2, 'touch ' + str(self.b / 'bad.md') + '; ' + metadata, cwd=self.ws)
+        self.assertGate(2, metadata + ' > ' + str(self.b / 'bad.md'), cwd=self.ws)
+        for command in (
+            'gh pr edit 123 --repo example/target --base main',
+            'gh pr edit 123 --repo example/target --add-reviewer operator',
+            'gh issue edit 123 --repo example/target --add-label done',
+            'gh pr merge 123 --repo example/target',
+            'gh pr close 123 --repo example/target',
+            'gh pr ready 123 --repo example/target',
+            'gh issue delete 123 --repo example/target',
+            'gh api repos/example/target/issues/123 -X PATCH -f state=closed',
+            'gh api repos/example/target/pulls/123 -X PATCH -f base=main',
+            'gh api repos/example/target/issues/comments/123 -X DELETE',
+            'gh api repos/example/target/pulls/123 -X PATCH -f body=ok -f state=closed',
+            'gh api repos/example/target/pulls/123 -X PATCH -f body=one -f body=two',
+            'gh api repos/example/target/pulls/123 -X PATCH --method DELETE -f body=ok',
+            'gh api -X PATCH -f body=ok',
+            'gh api repos/example/target/pulls/123 -X PATCH --input payload.json',
+            'gh issue edit --repo example/target --body text',
+            'gh issue comment 123 -R example/target --edit-last --create-if-none --body text',
+            'gh pr edit 123 --repo example/target --body "$(echo bad)"',
+        ):
+            with self.subTest(command=command):
+                self.assertFalse(r.action(command, str(self.ws)).get('metadata_only'))
+                self.assertGate(2, command, cwd=self.ws)
+        status = self.metadata_guard('coordinator-status-guard.sh',
+                                     'gh issue comment 123 --repo example/target --body completed')
+        self.assertEqual(status.returncode, 2, status.stderr)
+        self.assertFalse((self.b / 'bad.md').exists())
+
+    def test_metadata_companions_need_independent_released_read_proof(self):
+        metadata = "gh pr edit 123 --body text"
+        unsafe = ("gh pr view 1 --web", "gh pr view 1 -w", "rg --pre=program text file",
+                  "git show --textconv HEAD:file", "git diff --ext-diff", "find . -delete", "ss -K")
+        for companion in unsafe:
+            for command in (metadata + '; ' + companion, companion + ' && ' + metadata):
+                with self.subTest(command=command):
+                    shape = r.action(command, str(self.ws))
+                    self.assertFalse(shape.get('metadata_only'), shape)
+                    self.assertIn(str(self.ws), shape['paths'])
+                    self.assertGate(2, command, cwd=self.ws)
+        for command in (metadata + '; git status', 'git status && ' + metadata,
+                        'cd ' + str(self.repo) + ' && ' + metadata):
+            self.assertTrue(r.action(command, str(self.ws)).get('metadata_only'))
+            self.assertGate(0, command, cwd=self.ws)
+
+    def test_api_pr_text_and_state_surfaces_agree_in_status_guard(self):
+        body = "gh api repos/example/target/pulls/123 -X PATCH -f 'body=completed, pending blocker'"
+        self.assertEqual(self.metadata_guard('coordinator-status-guard.sh', body).returncode, 0)
+        for command in (
+            "gh api repos/example/target/pulls/123 -X PATCH -f state=closed",
+            "gh api repos/example/target/pulls/123 -X PATCH -f state=open",
+            "gh api repos/example/target/issues/123 -X PATCH -f state=closed",
+            "gh api repos/example/target/pulls/123 -X PATCH --input unreadable.json",
+        ):
+            result = self.metadata_guard('coordinator-status-guard.sh', command)
+            self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_remote_metadata_unreadable_inputs_are_clear_failures(self):
+        for path in (str(self.ws / 'missing.md'), '-', '/dev/null'):
+            command = 'gh pr edit 123 --repo example/target --body-file ' + path
+            result = self.hook(command, cwd=self.ws)
+            self.assertEqual(result.returncode, 2, result.stderr)
+            self.assertIn('metadata body file', result.stderr)
+        shape = r.action("gh pr edit 123 --repo example/target --body 'text' && gh issue close 123 -R example/target", str(self.ws))
+        self.assertFalse(shape.get('metadata_only'))
+
     def test_final_approval_comment_preserves_task_authority(self):
         marker = "[destructive-ok: Reason: approved docs PR; Evidence: operator request; Falsification: wrong target or failed checks]"
         self.task('approved-pr', self.a)

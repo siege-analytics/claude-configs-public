@@ -12,6 +12,7 @@ from __future__ import annotations
 import ast
 import os
 import re
+import shlex
 import stat
 import subprocess
 import sys
@@ -523,7 +524,7 @@ def action(command: str, cwd: str) -> dict:
         # thinks; the targets found below still pick the owning task's gate.
         result.update(read_only=False, investigation=False, self_management=False,
                       veto="read-only-command: option writes or runs a program")
-        result["paths"] = result.get("paths") or [canonical(cwd)]
+        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") else [canonical(cwd)])
     return result
 
 
@@ -615,6 +616,110 @@ def _test_receipt_record(tokens, cwd: str):
             "test_receipt_output": fields["--output"]}
 
 
+def _metadata_file(path: str, cwd: str):
+    """Validate an inspectable body input without executing or reading unbounded data."""
+    if path in {"", "-", "/dev/stdin", "/dev/fd/0", "/proc/self/fd/0"}:
+        raise UnknownShape("metadata body file must be a readable regular file, not stdin")
+    try:
+        fd = os.open(canonical(path, cwd), os.O_RDONLY | os.O_NONBLOCK)
+        try:
+            info = os.fstat(fd)
+            if not stat.S_ISREG(info.st_mode):
+                raise UnknownShape("metadata body file must be a readable regular file")
+        finally:
+            os.close(fd)
+    except (OSError, ValueError) as exc:
+        raise UnknownShape("cannot read metadata body file: " + path) from exc
+
+
+def github_metadata_target(args, cwd: str):
+    """Existing artifact text edits only; no authorship or task authority claim."""
+    if args[:1] != ["gh"]:
+        return None
+    fields, number, repo = {}, "", ""
+    if args[1:2] == ["api"]:
+        method, endpoint, i = "", "", 2
+        while i < len(args):
+            word = args[i]
+            flag, equal, value = word.partition("=")
+            if flag in {"-X", "--method", "-f", "--raw-field"}:
+                if not equal:
+                    i += 1
+                    if i >= len(args):
+                        return None
+                    value = args[i]
+                if flag in {"-X", "--method"}:
+                    if method:
+                        return None
+                    method = value
+                else:
+                    key, sep, text = value.partition("=")
+                    if not sep or key not in {"body", "title"} or key in fields:
+                        return None
+                    fields[key] = text
+            elif not word.startswith("-") and not endpoint:
+                endpoint = word
+            else:
+                return None
+            i += 1
+        match = re.fullmatch(r"repos/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/(issues|pulls)/(?:comments/)?([0-9]+)", endpoint)
+        if method != "PATCH" or not match or not match[3].strip("0") or not fields:
+            return None
+        if "/comments/" in endpoint and set(fields) != {"body"}:
+            return None
+        repo = match[1]
+    else:
+        if args[1:2] not in (["pr"], ["issue"]) or args[2:3] not in (["edit"], ["comment"]):
+            return None
+        comment = args[2] == "comment"
+        edit_last = False
+        aliases = {"-R": "--repo", "-b": "--body", "-t": "--title", "-F": "--body-file"}
+        i = 3
+        while i < len(args):
+            word = args[i]
+            if word == "--edit-last" and comment and not edit_last:
+                edit_last = True
+                i += 1
+                continue
+            # A canonical GitHub artifact URL is itself an explicit remote target.
+            url = re.fullmatch(r"https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/(pull|issues)/([0-9]+)", word)
+            if url and not number and not repo and url[2] == ("pull" if args[1] == "pr" else "issues"):
+                repo, number = url[1], url[3]
+                i += 1
+                continue
+            if not word.startswith("-") and not number:
+                number = word  # Literal number/branch; gh resolves its remote selector.
+                i += 1
+                continue
+            flag, equal, value = word.partition("=")
+            flag = aliases.get(flag, flag)
+            if flag not in {"--repo", "--body", "--title", "--body-file"} or flag in fields:
+                return None
+            if not equal:
+                i += 1
+                if i >= len(args):
+                    return None
+                value = args[i]
+            fields[flag] = value
+            i += 1
+        if comment and (not edit_last or "--title" in fields) or not comment and edit_last:
+            return None
+        if "--repo" in fields and not fields["--repo"]:
+            return None
+        explicit = fields.pop("--repo", "")
+        if repo and explicit and repo.lower() != explicit.lower():
+            return None
+        repo = repo or explicit
+        if (not number and args[1] == "issue") or not fields or {"--body", "--body-file"} <= fields.keys():
+            return None
+        if "--body-file" in fields:
+            _metadata_file(fields["--body-file"], cwd)
+    if repo and (not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo)
+                 or any(x in {".", ".."} for x in repo.split("/"))):
+        return None
+    return repo.lower()
+
+
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
@@ -631,6 +736,8 @@ def _action(command: str, cwd: str) -> dict:
     directory_removals = []
     file_removals = []  # rm operands: unlinking a name never writes the file (#1100)
     file_paths = []
+    remote_repos = []
+    unproven_companions = []
     args = []
     arg_globs = []
     effective = canonical(cwd)
@@ -658,12 +765,24 @@ def _action(command: str, cwd: str) -> dict:
         elif investigation(args):
             _reader_globs(args, arg_globs)
             diagnostic = True
+            if released_read_verdict(shlex.join(args)) != 0:
+                unproven_companions.append(effective)
         elif reader(args):
             _reader_globs(args, arg_globs)
+            # A whole-command reader verdict can stop at the metadata write.
+            # Re-prove each companion before granting the metadata exception.
+            if released_read_verdict(shlex.join(args)) != 0:
+                unproven_companions.append(effective)
         else:
             if any(arg_globs):
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             reads = False
+            remote = github_metadata_target(args, effective)
+            if remote is not None:
+                remote_repos.append(remote)
+                self_managed = False
+                args, arg_globs = [], []
+                return
             self_managed = self_managed and args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown", "ln"}
             if args[0] in {'eval', 'exec', 'bash', 'sh', 'zsh', 'dash', 'ksh'} or args[0] in {'python', 'python3'} and any(x == '-c' or x.startswith('-c') for x in args[1:]):
                 raise UnknownShape('opaque inline execution has unbounded mutation targets')
@@ -846,8 +965,12 @@ def _action(command: str, cwd: str) -> dict:
         finish()
     except UnknownShape as e:
         return {"read_only": False, "paths": list(dict.fromkeys(paths + [effective])), "error": str(e), "binding": binding}
+    if remote_repos:
+        paths.extend(unproven_companions)
     return {"read_only": reads and not diagnostic and bool(tokens), "investigation": reads and diagnostic,
             "self_managed_shape": self_managed and not diagnostic, "directory_paths": [p for p in directory_paths if p not in file_paths], "directory_removals": directory_removals,
             # A path only removed, never also written in the same command (#1100).
             "file_removals": [p for p in file_removals if paths.count(p) == file_removals.count(p)],
-            "paths": list(dict.fromkeys(paths or [effective])), "binding": binding}
+            "paths": list(dict.fromkeys(paths or ([] if remote_repos else [effective]))),
+            "remote_repos": list(dict.fromkeys(remote_repos)),
+            "metadata_only": bool(remote_repos) and not paths and not diagnostic, "binding": binding}

@@ -189,6 +189,9 @@ hooks/resolver/think-gate-guard.sh|hooks/lib/hook_payload.py
 hooks/agent-comms/no-slug-form-outbound.sh|hooks/lib/extract-json.py
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/resolve-think-gate.py
 hooks/bash/coordinator-status-guard.sh|hooks/lib/extract-json.py
+hooks/bash/coordinator-status-guard.sh|hooks/lib/task_actions.py
+hooks/bash/destructive-guard.sh|hooks/lib/task_actions.py
+hooks/git/fix-shape-guard.sh|hooks/lib/task_actions.py
 hooks/bash/destructive-guard.sh|hooks/lib/extract-json.py
 hooks/bash/destructive-guard.sh|hooks/lib/log-block.sh
 hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py
@@ -247,14 +250,14 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "4bc9e6099ddad81eefeabc6f1b5695301ef926804fd4f5357ed0841eb013549d"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "cb74a6cb13c649e3a341cfdeeec4d0d6a8d47e4f71e598bb8f7976dc779a295d"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "8dc43dd7ee0970d7e5d2e32cd77a457a81968130195f0896712afaf075d3d1d8"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "852b9fe50e7b0aa14ca233efe2ff7d42e416c09ae48938b6f237ec2c334aa9d2"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
 hooks/agent-comms/no-slug-form-outbound.sh|hooks/lib/extract-json.py|2
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/resolve-think-gate.py|1
-hooks/bash/coordinator-status-guard.sh|hooks/lib/extract-json.py|1
+hooks/bash/coordinator-status-guard.sh|hooks/lib/extract-json.py|2
 hooks/bash/destructive-guard.sh|hooks/lib/extract-json.py|2
 hooks/bash/universal-mutation-gate.sh|hooks/lib/extract-json.py|4
 hooks/bash/universal-mutation-gate.sh|hooks/lib/resolve-think-gate.py|1

@@ -218,6 +218,9 @@ def install(workspace: Path, home: Path, *, apply=False):
     payload_bytes = source_bytes(revision, "hooks/lib/hook_payload.py", apply=apply)
     if saved(workspace / "hooks/lib/hook_payload.py")["raw"] != payload_bytes:
         raise ValueError("installed hook metadata helper differs from accepted source")
+    actions_bytes = source_bytes(revision, "hooks/lib/task_actions.py", apply=apply)
+    if saved(workspace / "hooks/lib/task_actions.py")["raw"] != actions_bytes:
+        raise ValueError("installed action classifier differs from accepted source")
     receipt = {"schema_version": 1, "state": "active", "source_revision": revision,
                "workspace": str(workspace), "policy_path": str(policy_path),
                "policy_sha256": hashlib.sha256(policy_snapshot["raw"]).hexdigest(),
@@ -226,6 +229,7 @@ def install(workspace: Path, home: Path, *, apply=False):
                "read_classifier_sha256": hashlib.sha256(read_bytes).hexdigest(),
                "task_resolver_sha256": hashlib.sha256(resolver_bytes).hexdigest(),
                "hook_payload_sha256": hashlib.sha256(payload_bytes).hexdigest(),
+               "task_actions_sha256": hashlib.sha256(actions_bytes).hexdigest(),
                "global_settings_path": str(global_path)}
     summary = {"mode": "apply" if apply else "preview", "workspace": str(workspace),
                "router_path": str(target), "policy_path": str(policy_path), "owned_event_count": len(router.EVENTS),
