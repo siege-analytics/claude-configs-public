@@ -22,7 +22,7 @@ import subprocess
 import sys
 
 try:
-    with os.fdopen(3) as stream:
+    with os.fdopen(3, "rb") as stream:
         payload = json.load(stream)
 except Exception:
     sys.exit(0)

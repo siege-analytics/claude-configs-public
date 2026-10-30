@@ -101,6 +101,22 @@ class Payload(unittest.TestCase):
             if not valid:
                 self.assertIn('model must be explicit', result.stderr)
 
+    def test_utf8_spawn_contract_survives_ascii_process_locale(self):
+        g = fixture.Hub(methodName='runTest'); g.setUp()
+        self.addCleanup(g.tearDown)
+        g.meta('one', ['role::hub'])
+        env = dict(g.env, LC_ALL='C', LANG='C', PYTHONUTF8='0', PYTHONCOERCECLOCALE='0')
+        value = fixture.craft_payload(tool_name='mcp__session__spawn_session', tool_use_id='utf8',
+                    tool_input=g.spawn_input('utf8', 'CCP_TASK_ID=o/r#1\n café'))
+        value['tool_input'].pop('model', None)
+        raw = json.dumps(value, ensure_ascii=False).encode('utf-8')
+        for guard in ('spawn-guard', 'hub-concurrency-gate'):
+            result = subprocess.run(['bash', str(ROOT / 'hooks/agent-comms' / (guard + '.sh'))],
+                input=raw, env=env, capture_output=True, timeout=60)
+            self.assertEqual(result.returncode, 2, (guard, result.stderr))
+            self.assertIn(b'model must be explicit', result.stderr)
+        self.assertFalse((g.ws / 'sessions/one/hub-threads.json').exists())
+
     def test_hub_large_raw_prompt_and_response_preserve_replay_identity(self):
         g = fixture.Hub(methodName='runTest'); g.setUp()
         self.addCleanup(g.tearDown)
