@@ -688,6 +688,11 @@ def github_metadata_target(args, cwd: str):
                 i += 1
                 continue
             if not word.startswith("-") and not number:
+                # A URL for another host is not a branch selector. Git refs
+                # cannot contain a colon or start with //; canonical GitHub
+                # artifact URLs were handled above.
+                if ":" in word or word.startswith("//"):
+                    return None
                 number = word  # Literal number/branch; gh resolves its remote selector.
                 i += 1
                 continue

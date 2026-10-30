@@ -66,7 +66,8 @@ sys.path.insert(0, sys.argv[2])
 from task_actions import action as classify_action
 import os
 # Text edits to existing artifacts are not coordinator state transitions.
-if classify_action(command, sys.argv[3] or os.getcwd()).get("metadata_only"):
+shape = classify_action(command, sys.argv[3] or os.getcwd())
+if shape.get("read_only") or shape.get("metadata_only"):
     sys.exit(0)
 normalized_command = command.replace("$(which gh)", "gh")
 
@@ -266,7 +267,7 @@ if blocked and not re.search(r'\b(blocked because|blocker:|failure reason:|reaso
     sys.exit(2)
 
 # Completion/close/ready transitions require evidence prerequisites.
-if completion or action in {"close", "ready"} or api_state_transition:
+if completion or action in {"close", "reopen", "ready"} or api_state_transition:
     evidence = {
         "owner_signoff": re.search(r'\b(owner|maintainer|operator)\b.{0,40}\b(approved|signoff|sign-off|signed off|confirmed)\b|\b(approved|signed off|confirmed)\b.{0,40}\bby\b.{0,20}\b(owner|maintainer|operator)\b|\bapproval thread\b.{0,80}\bhttps?://|\bowner response\b.{0,80}\bhttps?://', lower, re.S),
         "merge_or_branch": re.search(r'\b(merged|merge commit|merge evidence|pr #[0-9]+|pull/[0-9]+|branch target|target branch|base branch|develop|main|hotfix)\b|\b[0-9a-f]{7,40}\b', lower),
