@@ -82,8 +82,9 @@
     "^catalog/selected-generation-bindings\\.json$",
     "^skills/(commit|code-review|detect-ai-fingerprints)/SKILL\\.md$",
     "^skills/detect-ai-fingerprints/(scan\\.sh|scan_ast\\.py|scan_snapshot\\.py)$",
-    "^\\.claude/scanner-config\\.toml$",
-    "^hooks/_test/hook_payload\\.test\\.sh$"
+    "^\\.claude/scanner-test-map\\.json$",
+    "^hooks/_test/hook_payload\\.test\\.sh$",
+    "^\\.claude/scanner-config\\.toml$"
   ],
   "standard_path_patterns": [
     "^skills/",

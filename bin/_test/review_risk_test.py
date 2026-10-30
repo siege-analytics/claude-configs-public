@@ -23,7 +23,7 @@ AUTHORITY_DEPENDENCY_FLOOR = [
  "catalog/gate-contracts.json",
 ]
 AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
- ".claude/scanner-config.toml",
+ ".claude/scanner-test-map.json",
  "hooks/lib/hook_payload.py",
  "bin/_test/hook_payload_test.py",
  "hooks/_test/hook_payload.test.sh",

@@ -30,6 +30,7 @@ PendingDeprecationWarning message strings missing version+keyword.
 """
 
 import ast
+import json
 import re
 import sys
 from pathlib import Path
@@ -67,7 +68,6 @@ def load_decorator_allowlist(config_path):
     extra = scanner.get('allow_decorators', [])
     if not isinstance(extra, list) or not all(isinstance(item, str) and item for item in extra):
         raise ValueError('allow_decorators must be an array of nonempty strings')
-    _mapped_test_files(Path(config_path).resolve().parent.parent)
     return DEFAULT_ALLOW_DECORATORS | set(extra)
 
 
@@ -1634,36 +1634,50 @@ def _extract_except_class_names(tree):
     return results
 
 
+def _repository_root(directory):
+    root = Path(directory).resolve()
+    while root.parent != root and not (root / '.git').exists():
+        root = root.parent
+    return root if (root / '.git').exists() else None
+
+
+def _unique_map_pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError('duplicate test map key: ' + key)
+        result[key] = value
+    return result
+
+
 def _mapped_test_files(root, src=None):
-    """Validate declared evidence locations even when source has no handlers."""
+    """Validate versioned, stdlib-only evidence locations in the selected repo."""
     mapped = []
-    config_path = root / '.claude/scanner-config.toml'
+    config_path = root / '.claude/scanner-test-map.json'
     if config_path.exists():
         try:
-            try:
-                import tomllib
-            except ImportError:  # noqa: writing-tests-5 bootstrap dependency fault fixtures in bin/_test/scanner_source_test.py
-                import tomli as tomllib
-            config = tomllib.loads(config_path.read_text(encoding='utf-8'))
-            mapping = config.get('scanner', {}).get('test_map', {})
-            if not isinstance(mapping, dict):
-                raise ValueError('test_map must be a table')
-            for source, tests in mapping.items():
+            document = json.loads(config_path.read_text(encoding='utf-8'), object_pairs_hook=_unique_map_pairs)
+            if (not isinstance(document, dict) or set(document) != {'schema_version', 'source_to_tests'}
+                    or type(document['schema_version']) is not int or document['schema_version'] != 1
+                    or not isinstance(document['source_to_tests'], dict)):
+                raise ValueError('test_map requires schema_version 1 and a source_to_tests object')
+            for source, tests in document['source_to_tests'].items():
                 if not isinstance(tests, list) or not tests or not all(isinstance(t, str) for t in tests):
                     raise ValueError('test_map values must be nonempty path arrays')
                 for relative in [source, *tests]:
                     path = Path(relative)
-                    if path.is_absolute() or '..' in path.parts or relative != path.as_posix():
-                        raise ValueError('test_map paths must be canonical repository-relative paths')
+                    if (path.is_absolute() or '..' in path.parts or relative != path.as_posix()
+                            or path.suffix != '.py'):
+                        raise ValueError('test_map paths must be canonical repository-relative Python paths')
                     target = root / path
                     if not target.is_file() or not target.resolve().is_relative_to(root):
                         raise ValueError('test_map input is missing or outside the selected snapshot: ' + relative)
                 if src is not None and source == src.relative_to(root).as_posix():
                     mapped.extend(root / test for test in tests)
-        except (ImportError, OSError, ValueError, TypeError, AttributeError) as error:  # noqa: writing-tests-5 bootstrap mapping input/cause fixtures in bin/_test/scanner_source_test.py
+        except (OSError, ValueError) as error:  # noqa: writing-tests-5 bootstrap mapping input/cause fixtures in bin/_test/scanner_source_test.py
             raise ScanInputError(f'{config_path}:0:scan-ast-config-error: {error}') from error
-
     return mapped
+
 
 
 def _test_files_for_source(source_path):
@@ -1675,11 +1689,8 @@ def _test_files_for_source(source_path):
     as well as the shallower locations."""
     src = Path(source_path).resolve()
     stem = src.stem
-    # Walk up to find repo root by looking for .git
-    root = src.parent
-    while root.parent != root and not (root / ".git").exists():
-        root = root.parent
-    if not (root / ".git").exists():
+    root = _repository_root(src.parent)
+    if root is None:
         return []
 
     mapped = _mapped_test_files(root, src)
@@ -1923,6 +1934,10 @@ def scan_file(path, allow_decorators, exclude_tests=False):
         tree = ast.parse(source, filename=path)
     except SyntaxError as e:  # noqa: writing-tests-5 bootstrap selected-source syntax fixture in bin/_test/scanner_source_test.py
         raise ScanInputError(f"{path}:{e.lineno or 0}:scan-ast-syntax-error: {e.msg}") from e
+    # A declared map is required input even for sources without handlers.
+    root = _repository_root(Path(path).resolve().parent)
+    if root is not None:
+        _mapped_test_files(root)
     source_lines = source.splitlines()
     results = (check_writing_code_7(tree, source_lines)
                + check_writing_code_9(tree, allow_decorators)
@@ -1967,6 +1982,9 @@ def main(argv):
             i += 1
     try:
         allow_decorators = load_decorator_allowlist(config_path)
+        root = _repository_root(Path.cwd())
+        if root is not None:
+            _mapped_test_files(root)
     except (OSError, ValueError) as e:  # noqa: writing-tests-5 bootstrap missing/malformed/config-type fixtures in bin/_test/scanner_source_test.py
         print(f'scan-ast-config-error: {e}', file=sys.stderr)
         return 2

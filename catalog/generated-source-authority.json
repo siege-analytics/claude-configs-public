@@ -1694,29 +1694,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/detect-ai-fingerprints",
           "file_count": 15,
-          "tree_sha256": "00896d8f25b45df2a888afc327d8f58eac0a9c39b1f18305464a9a8465f550ce"
+          "tree_sha256": "7a1209e6a403bb4bbde0ea8a3e699e7dac5bb884a79d58bba6d6e3d20e38cd79"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/detect-ai-fingerprints",
           "file_count": 15,
-          "tree_sha256": "00896d8f25b45df2a888afc327d8f58eac0a9c39b1f18305464a9a8465f550ce"
+          "tree_sha256": "7a1209e6a403bb4bbde0ea8a3e699e7dac5bb884a79d58bba6d6e3d20e38cd79"
         },
         "flat": {
           "destination": "dist/flat/skills/detect-ai-fingerprints",
           "file_count": 15,
-          "tree_sha256": "00896d8f25b45df2a888afc327d8f58eac0a9c39b1f18305464a9a8465f550ce"
+          "tree_sha256": "7a1209e6a403bb4bbde0ea8a3e699e7dac5bb884a79d58bba6d6e3d20e38cd79"
         },
         "nested": {
           "destination": "dist/nested/skills/detect-ai-fingerprints",
           "file_count": 15,
-          "tree_sha256": "00896d8f25b45df2a888afc327d8f58eac0a9c39b1f18305464a9a8465f550ce"
+          "tree_sha256": "7a1209e6a403bb4bbde0ea8a3e699e7dac5bb884a79d58bba6d6e3d20e38cd79"
         }
       },
       "canonical_source": "skills/detect-ai-fingerprints/SKILL.md",
       "kind": "skill",
       "slug": "detect-ai-fingerprints",
       "source_file_count": 15,
-      "source_tree_sha256": "89d1c41d80a1a8420f2f1ed3e0565543bc5cf71fc9766b756520e65be3d29821"
+      "source_tree_sha256": "5fb0acf14e01c86eb597b5e539820d2ba7b3ec180fe86f0dfd8fa15b1be94aac"
     },
     {
       "artifacts": {

@@ -105,10 +105,10 @@ class ScannerSourceTest(unittest.TestCase):
     def test_mapped_tests_are_snapshot_inputs_and_not_coverage_waivers(self):
         source = 'def recover():\n    try:\n        int("bad")\n    except ValueError:\n        raise\n'
         self.write('bin/client.py', source)
-        config = '[scanner.test_map]\n"bin/client.py" = ["hooks/_test/behavior.py"]\n'
-        self.write('.claude/scanner-config.toml', config)
+        config = json.dumps({'schema_version': 1, 'source_to_tests': {'bin/client.py': ['hooks/_test/behavior.py']}})
+        self.write('.claude/scanner-test-map.json', config)
         test = self.write('hooks/_test/behavior.py', 'answer = 1\n')
-        self.git('add', 'bin/client.py', '.claude/scanner-config.toml', 'hooks/_test/behavior.py')
+        self.git('add', 'bin/client.py', '.claude/scanner-test-map.json', 'hooks/_test/behavior.py')
         self.expect(self.scan(), 1, 'writing-tests-5')
         test.write_text('with raises(ValueError):\n    int("bad")\n')
         self.expect(self.scan(), 1, 'writing-tests-5')
@@ -117,14 +117,44 @@ class ScannerSourceTest(unittest.TestCase):
         self.expect(self.scan(), 0, 'clean. scanned:')
         self.git('rm', '--cached', 'hooks/_test/behavior.py')
         self.expect(self.scan(), 2, 'test_map input is missing')
-        self.write('.claude/scanner-config.toml', '[scanner.test_map]\n"bin/client.py" = "bad"\n')
-        self.git('add', '.claude/scanner-config.toml')
+        self.write('.claude/scanner-test-map.json', json.dumps({'schema_version': 1, 'source_to_tests': {'bin/client.py': 'bad'}}))
+        self.git('add', '.claude/scanner-test-map.json')
         self.expect(self.scan(), 2, 'test_map values')
 
     def test_regex_exception_assertion_is_evidence_for_its_named_class(self):
         test = self.write('tests/test_client.py', 'with self.assertRaisesRegex(ValueError, "bad"):\n    int("bad")\n')
         self.assertTrue(ast_scanner._test_ast_covers_exception(test, 'ValueError'))
         self.assertFalse(ast_scanner._test_ast_covers_exception(test, 'TypeError'))
+
+    def test_invalid_json_map_fails_even_without_changed_python_or_handlers(self):
+        documents = (
+            '{"schema_version":1,"schema_version":2,"source_to_tests":{}}',
+            json.dumps({'schema_version': True, 'source_to_tests': {}}),
+            json.dumps({'schema_version': 2, 'source_to_tests': {}}),
+            json.dumps({'schema_version': 1, 'source_to_tests': {'client.py': []}}),
+            json.dumps({'schema_version': 1, 'source_to_tests': {'client.py': ['../outside.py']}}),
+            '{broken',
+        )
+        for content in documents:
+            with self.subTest(content=content):
+                self.write('.claude/scanner-test-map.json', content)
+                self.git('add', '.claude/scanner-test-map.json')
+                self.expect(self.scan(), 2, 'scan-ast-config-error')
+                result = subprocess.run([sys.executable, str(SKILL / 'scan_ast.py'), 'client.py'],
+                    cwd=self.root, text=True, capture_output=True, timeout=30)
+                self.expect(result, 2, 'scan-ast-config-error')
+
+    def test_json_map_does_not_require_a_toml_parser(self):
+        self.write('tests/test_client.py', 'with raises(ValueError):\n    int("bad")\n')
+        self.write('.claude/scanner-test-map.json', json.dumps({
+            'schema_version': 1, 'source_to_tests': {'client.py': ['tests/test_client.py']}}))
+        original = __import__
+        def without_toml(name, *args, **kwargs):
+            if name in ('tomllib', 'tomli'):
+                raise ImportError('fixture host has no TOML parser')
+            return original(name, *args, **kwargs)
+        with mock.patch('builtins.__import__', side_effect=without_toml):
+            self.assertIn(self.root / 'tests/test_client.py', ast_scanner._test_files_for_source(self.root / 'client.py'))
 
     def test_comprehension_captures_and_shadowing(self):
         cases = (
