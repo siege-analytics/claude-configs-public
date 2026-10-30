@@ -23,7 +23,7 @@ def git(root, *args, input=None):
 
 
 def relevant(path):
-    return path.endswith('.py') or path == '.claude/scanner-config.toml'
+    return path.endswith('.py') or path in {'.claude/scanner-config.toml', '.claude/scanner-test-map.json'}
 
 
 def safe_path(path):

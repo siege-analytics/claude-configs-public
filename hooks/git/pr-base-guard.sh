@@ -80,7 +80,7 @@ fi
 # Yield on multi-statement-with-cd shapes (mirrors branch-guard.sh / self-review.sh).
 CD_COUNT=$(echo "$COMMAND" | { grep -oE '(^|[^[:alnum:]])cd[[:space:]]' 2>/dev/null || true; } | wc -l | tr -d ' ')
 if [[ "$CD_COUNT" -gt 0 ]]; then
-    if [[ "$CD_COUNT" -gt 1 ]] || echo "$COMMAND" | grep -qE $'\n|;|\\|\\|'; then
+    if [[ "$CD_COUNT" -gt 1 ]] || [[ "$COMMAND" == *$'\n'* || "$COMMAND" == *';'* || "$COMMAND" == *'||'* ]]; then
         exit 0
     fi
 fi

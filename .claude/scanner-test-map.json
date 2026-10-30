@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "source_to_tests": {
+    "bin/build.py": [
+      "bin/_test/package_generation_test.py",
+      "bin/_test/project_composition_test.py"
+    ],
+    "bin/validate-hooks.py": [
+      "bin/_test/gate_contract_test.py"
+    ],
+    "bin/validate-local.py": [
+      "bin/_test/local_validation_test.py"
+    ],
+    "hooks/lib/test-evidence.py": [
+      "hooks/_test/scoped_test_evidence.py"
+    ],
+    "scripts/canary/craft-backend-canary.py": [
+      "bin/_test/craft_backend_canary_test.py"
+    ],
+    "bin/install-craft-hook-router.py": [
+      "bin/_test/craft_hook_router_test.py"
+    ],
+    "hooks/lib/craft-settings-router.py": [
+      "bin/_test/craft_hook_router_test.py"
+    ]
+  }
+}

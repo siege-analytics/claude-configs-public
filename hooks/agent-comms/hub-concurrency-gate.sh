@@ -14,13 +14,27 @@ export PATH="/home/craftagents/bin:$PATH:/usr/local/bin:/opt/homebrew/bin"
 command -v python3 >/dev/null 2>&1 || exit 0
 
 INPUT=$(cat 2>/dev/null || true)
-export CCP_HOOK_INPUT_JSON="$INPUT"
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Preserve the existing advisory treatment of missing/malformed callback input.
+# A valid callback whose required metadata exceeds bounds still fails closed.
+if ! printf '%s' "$INPUT" | python3 -c '
+import json, sys
+try:
+    payload = json.load(sys.stdin.buffer)
+except ValueError:
+    sys.exit(1)
+sys.exit(0 if isinstance(payload, dict) and isinstance(payload.get("tool_input"), dict) else 1)
+'; then
+    exit 0
+fi
+_HOOK_METADATA=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/../lib/hook_payload.py") || exit 2
+export CCP_HOOK_INPUT_JSON="$_HOOK_METADATA"
 
 RESOLVE_TG="$(cd "$(dirname "$0")/../lib" && pwd)/resolve-think-gate.py"
 export CCP_HOOK_LIB="$(cd "$(dirname "$0")/../lib" && pwd)"
 SENDER=$(python3 "$RESOLVE_TG" --workspace "${CRAFT_AGENT_WORKSPACE:-.}" --session-value 2>/dev/null || true)
 POLICY="$(cd "$(dirname "$0")/../lib" && pwd)/hub-concurrency-policy.json"
-HUB_GATE_SENDER="$SENDER" HUB_GATE_POLICY="$POLICY" HUB_GATE_INPUT="$INPUT" python3 - <<'PYCODE'
+HUB_GATE_SENDER="$SENDER" HUB_GATE_POLICY="$POLICY" python3 - 3< <(printf '%s' "$INPUT") <<'PYCODE'
 import os, sys, json, datetime, tempfile, fcntl, hashlib, re, subprocess
 from pathlib import Path
 
@@ -113,7 +127,7 @@ def spawned_session(response):
 
 def main():
     try:
-        payload = json.loads(os.environ.get('HUB_GATE_INPUT', ''))
+        payload = json.load(os.fdopen(3, "rb"))
     except Exception:
         return 0
     if not isinstance(payload, dict) or not isinstance(payload.get('tool_input'), dict):

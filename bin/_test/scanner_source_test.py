@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real index/PR object truth and incomplete-result regressions for the scanner."""
 import importlib.util
+import ast
 import json
 import os
 from pathlib import Path
@@ -100,6 +101,84 @@ class ScannerSourceTest(unittest.TestCase):
         self.expect(self.scan(), 1, 'writing-tests-5')
         self.git('add', 'tests/test_client.py'); path.unlink()
         self.expect(self.scan(), 0, 'clean. scanned:')
+
+    def test_mapped_tests_are_snapshot_inputs_and_not_coverage_waivers(self):
+        source = 'def recover():\n    try:\n        int("bad")\n    except ValueError:\n        raise\n'
+        self.write('bin/client.py', source)
+        config = json.dumps({'schema_version': 1, 'source_to_tests': {'bin/client.py': ['hooks/_test/behavior.py']}})
+        self.write('.claude/scanner-test-map.json', config)
+        test = self.write('hooks/_test/behavior.py', 'answer = 1\n')
+        self.git('add', 'bin/client.py', '.claude/scanner-test-map.json', 'hooks/_test/behavior.py')
+        self.expect(self.scan(), 1, 'writing-tests-5')
+        test.write_text('with raises(ValueError):\n    int("bad")\n')
+        self.expect(self.scan(), 1, 'writing-tests-5')
+        self.git('add', 'hooks/_test/behavior.py')
+        test.unlink()
+        self.expect(self.scan(), 0, 'clean. scanned:')
+        self.git('rm', '--cached', 'hooks/_test/behavior.py')
+        self.expect(self.scan(), 2, 'test_map input is missing')
+        self.write('.claude/scanner-test-map.json', json.dumps({'schema_version': 1, 'source_to_tests': {'bin/client.py': 'bad'}}))
+        self.git('add', '.claude/scanner-test-map.json')
+        self.expect(self.scan(), 2, 'test_map values')
+
+    def test_regex_exception_assertion_is_evidence_for_its_named_class(self):
+        test = self.write('tests/test_client.py', 'with self.assertRaisesRegex(ValueError, "bad"):\n    int("bad")\n')
+        self.assertTrue(ast_scanner._test_ast_covers_exception(test, 'ValueError'))
+        self.assertFalse(ast_scanner._test_ast_covers_exception(test, 'TypeError'))
+
+    def test_invalid_json_map_fails_even_without_changed_python_or_handlers(self):
+        documents = (
+            '{"schema_version":1,"schema_version":2,"source_to_tests":{}}',
+            json.dumps({'schema_version': True, 'source_to_tests': {}}),
+            json.dumps({'schema_version': 2, 'source_to_tests': {}}),
+            json.dumps({'schema_version': 1, 'source_to_tests': {'client.py': []}}),
+            json.dumps({'schema_version': 1, 'source_to_tests': {'client.py': ['../outside.py']}}),
+            '{broken',
+        )
+        for content in documents:
+            with self.subTest(content=content):
+                self.write('.claude/scanner-test-map.json', content)
+                self.git('add', '.claude/scanner-test-map.json')
+                self.expect(self.scan(), 2, 'scan-ast-config-error')
+                result = subprocess.run([sys.executable, str(SKILL / 'scan_ast.py'), 'client.py'],
+                    cwd=self.root, text=True, capture_output=True, timeout=30)
+                self.expect(result, 2, 'scan-ast-config-error')
+
+    def test_json_map_does_not_require_a_toml_parser(self):
+        self.write('tests/test_client.py', 'with raises(ValueError):\n    int("bad")\n')
+        self.write('.claude/scanner-test-map.json', json.dumps({
+            'schema_version': 1, 'source_to_tests': {'client.py': ['tests/test_client.py']}}))
+        original = __import__
+        def without_toml(name, *args, **kwargs):
+            if name in ('tomllib', 'tomli'):
+                raise ImportError('fixture host has no TOML parser')
+            return original(name, *args, **kwargs)
+        with mock.patch('builtins.__import__', side_effect=without_toml):
+            self.assertIn(self.root / 'tests/test_client.py', ast_scanner._test_files_for_source(self.root / 'client.py'))
+
+    def test_comprehension_captures_and_shadowing(self):
+        cases = (
+            ('return [shape(offset) for item in items]', {'shape', 'offset', 'items'}),
+            ('return [offset for offset in items]', {'items'}),
+            ('return [x for x in items if x > offset]', {'items', 'offset'}),
+            ('return [y for x in items for y in shape(offset)]', {'items', 'shape', 'offset'}),
+            ('return [offset for offset in offset]', {'offset'}),
+            ('return [[offset for offset in item] for item in items]', {'items'}),
+            ('return lambda offset: offset', set()),
+        )
+        for body, expected in cases:
+            with self.subTest(body=body):
+                tree = ast.parse('def f(offset, items, shape):\n    ' + body + '\n')
+                self.assertEqual(ast_scanner._collect_load_names_in_scope(tree.body[0])[0], expected)
+
+    def test_comprehension_locals_do_not_capture_parent_parameters(self):
+        for body, expected in (
+            ('return [g(**locals()) for x in items]', False),
+            ('return [x for x in g(**locals())]', True),
+            ('return g(**locals())', True),
+        ):
+            tree = ast.parse('def f(offset, items, g):\n    ' + body + '\n')
+            self.assertEqual(ast_scanner._collect_load_names_in_scope(tree.body[0])[1], expected)
 
     def test_scanner_config_comes_from_index_and_errors_do_not_become_clean(self):
         self.write('client.py', '@project_marker\ndef callback(unused=1):\n    return 1\n'); self.git('add', 'client.py')
