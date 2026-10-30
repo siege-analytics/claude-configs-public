@@ -98,6 +98,28 @@ def _find_session_value(obj) -> str:
     return ""
 
 
+def host_binding_present() -> bool:
+    # Invalid host identity is not an unbound native terminal invocation.
+    if any(os.environ.get(name, '').strip() for name in (
+        'CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR',
+        'CRAFT_SESSION_ID', 'CRAFT_AGENT_SESSION_ID', 'CLAUDE_SESSION_ID',
+        'SESSION_ID', 'CLAUDE_CODE_SESSION_ID', 'CLAUDE_SIGNAL_DIR',
+        'CRAFT_SIGNAL_DIR', 'CRAFT_AGENT_SIGNAL_DIR')):
+        return True
+    try:
+        payload = json.loads(os.environ.get('CCP_HOOK_INPUT_JSON', '{}'))
+    except (ValueError, TypeError):
+        return False
+    def bound(obj):
+        if not isinstance(obj, dict):
+            return False
+        if any(obj.get(key) for key in ('craftSessionId', 'craft_session_id',
+               'sessionId', 'session_id', 'sessionID', 'id', 'transcript_path', 'transcriptPath')):
+            return True
+        return any(bound(obj.get(key)) for key in ('session', 'conversation', 'metadata'))
+    return bound(payload)
+
+
 def _session_directory_id(names) -> str:
     for name in names:
         directory = os.environ.get(name, "").strip()
@@ -479,7 +501,7 @@ def task_bootstrap_help(workspace: str, session_id: str = "") -> str:
             "Choose a stable unique non-hidden slug; no hash computation or GitHub ticket is required. "
             "Set task_id (or the full ticket), sessionId, target repo_root, scope_paths and status for this task. "
             "Own-session task gate JSON and plans can be bootstrapped without another gate. "
-            "Keep companion evidence beside this task's gate; never overwrite root signals or another task. "
+            "Keep JSON companions beside this task's gate; write its pre-mortem under this session's plans/ naming the task_id. Never overwrite root signals or another task. "
             "Then satisfy only this task's effective review tier; see [skill:think].")
 
 
@@ -589,13 +611,13 @@ def find_gate_for_repo(workspace: str, repo_root: str, gate_name: str = "think-g
         return found if gate_name == "think-gate" else _artifact_for(found, gate_name, workspace, session_id)
     # Sole root legacy read: UNKNOWN session, exact canonical repo match.
     # Diagnostic consumers only: resolve_action never uses this path.
-    if gate_name == "think-gate" and not (session_id or session_id_from_env() or session_dirs(workspace)):
+    if gate_name == "think-gate" and not (session_id or session_id_from_env() or session_dirs(workspace) or host_binding_present()):
         legacy = _load(os.path.join(workspace, gate_name + ".json"))
         if legacy and legacy["data"].get("repo_root") and canonical(legacy["data"]["repo_root"]) == canonical(repo_root):
             return legacy
     # Native pre-push (no session identity): the pre-#1051 workspace or repository
     # test-gate.json is the evidence a terminal push supplies (#1092 review).
-    if gate_name == "test-gate" and not (session_id or session_id_from_env()):
+    if gate_name == "test-gate" and not (session_id or session_id_from_env() or host_binding_present()):
         for root in dict.fromkeys(p for p in (workspace, repo_root) if p):
             legacy = _load(os.path.join(root, "test-gate.json"))
             if legacy:

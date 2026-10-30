@@ -59,3 +59,8 @@ Independent review approved central own-session directory derivation and transpo
 ## Compact kernel follow-up approval
 
 Independent review approved the concise kernel paragraph: own-session/task identity and scope, separate evidence, effective tier and fail-closed unscoped mutations remain explicit. Detailed bootstrap procedure remains in think and diagnostics. All four packages match pin `6796027e2ce6017c9f84a00eea52fcdf7cb80a18538d745bc14e6c11ad180d9f`. Independent load-set, progressive loading 20/20 (9664-byte large selection) and progressive mount checks pass. No budget relaxation or verifier weakening. No must-fix finding.
+
+
+## Final R1 and placement independent approval
+
+Independent review approved the complete invalid-host/native fallback boundary after reproducing and fixing its payload-only variant. Two complete tests pass (6.195s), including real guard denials for invalid env/payload bindings and preserved genuinely unbound native allowance. The helper recognizes identity/transcript payload forms without declaring arbitrary tool diagnostics bound. Placement wording and all four package hashes independently match verifier pin `556024416ac1d363597934f5cccc3152c5e8d86ef4116ee5a0a81b8a1748cc26`; no scope/tier, budget or integrity protection is weakened. No remaining must-fix in the reviewed source. Exact final-head and full-suite receipts remain separate.

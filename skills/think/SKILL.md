@@ -378,10 +378,11 @@ literal, host-resolved own session path and a stable directory such as
 operational request; a hash-suffixed directory and a GitHub issue are not
 prerequisites. The gate's `repo_root` is the target project, not the Craft
 workspace. A different task's gate never supplies or blocks this task's
-authority. If `CRAFT_SESSION_DIR` is literally `{{SESSION_PATH}}`, use the
-session path resolved by host turn anchors/host session metadata, not a
-directory named after the template. Missing or ambiguous identity requires
-repair of that binding, never writing shared root signals. Older memories
+authority. If the gate reports an unresolved or templated host binding, repair
+that host binding before attempting lifecycle writes; no chosen path bypasses
+it. A transcript displaying `{{SESSION_PATH}}` is normalization, not evidence
+of a literal callback environment. Keep JSON companions beside the task gate
+and its pre-mortem in this session's `plans/`, naming the task identity. Older memories
 recommending UUID-keyed workspace-root files describe retired behavior and
 must not be followed.
 

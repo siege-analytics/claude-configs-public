@@ -11771,10 +11771,10 @@
     },
     {
       "canonical_source": "skills/think/SKILL.md",
-      "characters": 31182,
-      "content_sha256": "a780b2e1acfb7d81d27844414c743dadc703450e9446142c0a2a5d51ee69b3bd",
+      "characters": 31286,
+      "content_sha256": "8581216df2fcec56c614b4b1c9a1a4a5627ee6d2adbc465fc1034e43fcfbfaa9",
       "description": "MANDATORY design-first gate. Enforces structured design before any code is written for a feature, refactor, or architecture change. Slash-invokable as /think; also enforced via the resolver before any non-trivial implementation. Do NOT skip this skill.",
-      "estimated_tokens": 7796,
+      "estimated_tokens": 7822,
       "frontmatter_name": "think",
       "generated_outputs": [
         "dist/nested/skills/think",
@@ -11810,7 +11810,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 511,
+      "lines": 512,
       "owner": [
         "unknown"
       ],
@@ -12254,9 +12254,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2664444,
+    "characters": 2664548,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 666191,
+    "estimated_tokens": 666217,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12277,7 +12277,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1268050
+      "unclassified": 1268154
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12289,7 +12289,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 317057
+      "unclassified": 317083
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

@@ -655,7 +655,7 @@ class Gates(unittest.TestCase):
         (self.repo / 'hooks/bash/guard.sh').write_text('x'); (self.repo / 'docs/a.md').write_text('x')
         git('add', 'hooks/bash/guard.sh', 'docs/a.md')
         git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'init')
-        d = self.task('o/r#tree-tier', self.repo, artifacts=False)
+        d = self.task('o/r#102', self.repo, artifacts=False)
         data = json.loads((d / 'think-gate.json').read_text())
         write(d / 'investigate-gate.json', {**data, 'findings': [{'claim': 'verified'}]})
         plans = self.repo / 'plans'; plans.mkdir(exist_ok=True)
@@ -690,6 +690,47 @@ class Gates(unittest.TestCase):
         (self.repo / 'hooks/bash/guard.sh').write_text('y')
         result = self.assertGate(2, f'git -C {self.repo} commit -m "fix(hooks): a -> b"')
         self.assertIn('review tier is C', result.stderr)
+
+    def test_invalid_host_binding_cannot_use_native_legacy_test_evidence(self):
+        (self.repo / 'PROJECT.md').write_text('name: fixture\ntesting:\n  command: python3 -m pytest\n')
+        subprocess.run(['git', '-C', str(self.repo), 'add', 'PROJECT.md'], check=True)
+        commit = ['git', '-C', str(self.repo), '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm']
+        subprocess.run(commit + ['base'], check=True)
+        subprocess.run(['git', '-C', str(self.repo), 'update-ref', 'refs/remotes/origin/main', 'HEAD'], check=True)
+        (self.repo / 'foo.py').write_text('x = 1\n')
+        subprocess.run(['git', '-C', str(self.repo), 'add', 'foo.py'], check=True)
+        subprocess.run(commit + ['source change'], check=True)
+        for root in (self.ws, self.repo):
+            write(root / 'test-gate.json', {'evidence': [{'source': 'foo.py', 'result': 'passed'}]})
+        payload = json.dumps({'cwd': str(self.repo), 'tool_input': {'command': 'git push'}})
+        cases = [(name, '{{SESSION_PATH}}') for name in
+                 ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR',
+                  'CRAFT_SESSION_ID', 'CRAFT_AGENT_SESSION_ID', 'CLAUDE_SESSION_ID', 'SESSION_ID')]
+        cases += [('CRAFT_SESSION_DIR', 'sessions/one'), ('CRAFT_SESSION_ID', 'one:x')]
+        for name, value in cases:
+            env = {k:v for k,v in self.env.items() if k != 'CRAFT_SESSION_DIR'}
+            env[name] = value
+            if name.endswith('_DIR'):
+                env['CRAFT_SESSION_ID'] = 'one'
+            with patch.dict(os.environ, env, clear=True):
+                self.assertIsNone(r.find_gate_for_repo(str(self.ws), str(self.repo), 'test-gate'))
+            result = subprocess.run(['bash', str(ROOT / 'hooks/git/test-guard.sh')], input=payload,
+                                    env=env, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        for binding in ({'craftSessionId': '${SESSION_ID}'}, {'session_id': SDK_UUID},
+                        {'transcript_path': '/sessions/{{SESSION_ID}}/session.jsonl'},
+                        {'metadata': {'sessionId': 'one:x'}}):
+            env = {k:v for k,v in self.env.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'SESSION_'))}
+            env['CCP_HOOK_INPUT_JSON'] = json.dumps(binding)
+            with patch.dict(os.environ, env, clear=True):
+                self.assertIsNone(r.find_gate_for_repo(str(self.ws), str(self.repo), 'test-gate'))
+            result = subprocess.run(['bash', str(ROOT / 'hooks/git/test-guard.sh')], input=payload,
+                                    env=env, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        native = {k:v for k,v in self.env.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'SESSION_'))}
+        result = subprocess.run(['bash', str(ROOT / 'hooks/git/test-guard.sh')], input='', cwd=self.repo,
+                                env=native, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_native_pre_push_finds_root_test_gate_without_a_session(self):
         """#1092 review: a terminal push (no session identity) uses the
