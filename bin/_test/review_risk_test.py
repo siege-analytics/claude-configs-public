@@ -26,6 +26,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  ".claude/scanner-config.toml",
  "hooks/lib/hook_payload.py",
  "bin/_test/hook_payload_test.py",
+ "hooks/_test/hook_payload.test.sh",
  "skills/commit/SKILL.md",
  "skills/code-review/SKILL.md",
  "skills/detect-ai-fingerprints/SKILL.md",
@@ -175,6 +176,9 @@ CI_INVOCATION_SITES = [
 ]
 REQUIRED_HELPER_EDGES = {
  tuple(row.split("|")) for row in """
+hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/session_anchor.py
+hooks/bash/universal-mutation-gate.sh|hooks/lib/hook_payload.py
+hooks/bash/universal-mutation-gate.sh|hooks/lib/session_anchor.py
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/hook_payload.py
 hooks/git/test-guard.sh|hooks/lib/hook_payload.py
 hooks/resolver/investigate-gate-guard.sh|hooks/lib/hook_payload.py
@@ -243,7 +247,7 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "5d00e743178a20134a81d59e338eb9a3749dbaf17e02b2229015fcf1df1641ae"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "4bc9e6099ddad81eefeabc6f1b5695301ef926804fd4f5357ed0841eb013549d"
 REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "cb74a6cb13c649e3a341cfdeeec4d0d6a8d47e4f71e598bb8f7976dc779a295d"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
@@ -419,12 +423,16 @@ def helper_invocation_sites(entrypoints:set[str],overrides:dict[str,str]|None=No
    stripped=line.strip()
    if not stripped or stripped.startswith("#"):continue
    for helper in helper_names:
-    if helper not in stripped:continue
+    if helper not in stripped and not (helper.endswith(".py") and Path(helper).stem in stripped):continue
     sourced=bool(re.match(r"^(?:source|\.)\s+.*"+re.escape(helper),stripped))
     literal_operand=r'"[^"]*'+re.escape(helper)+r'"'
     executed=helper!="probe-runner.py" and bool(re.search(r"(?:^|[|;]|&&|\|\||\$\()\s*python3\s+"+literal_operand+r"(?=$|[\s;)|&])",stripped))
     evidence_validation=helper=="probe-runner.py" and 'doc.get("generator") != "probe-runner.py"' in stripped
-    if sourced or executed or evidence_validation:sites.append((entrypoint,f"hooks/lib/{helper}",stripped))
+    # Inline Python imports are real helper dependencies too, even though
+    # no .py filename appears in their module operand.
+    module=re.escape(Path(helper).stem)
+    imported=helper.endswith(".py") and bool(re.match(r"^(?:from "+module+r" import |import "+module+r"(?:\s|$))",stripped))
+    if sourced or executed or evidence_validation or imported:sites.append((entrypoint,f"hooks/lib/{helper}",stripped))
  return sites
 
 def helper_site_problems(entrypoints:set[str],overrides:dict[str,str]|None=None)->list[tuple]:
