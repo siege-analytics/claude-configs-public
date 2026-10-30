@@ -64,3 +64,8 @@ Independent review approved the concise kernel paragraph: own-session/task ident
 ## Final R1 and placement independent approval
 
 Independent review approved the complete invalid-host/native fallback boundary after reproducing and fixing its payload-only variant. Two complete tests pass (6.195s), including real guard denials for invalid env/payload bindings and preserved genuinely unbound native allowance. The helper recognizes identity/transcript payload forms without declaring arbitrary tool diagnostics bound. Placement wording and all four package hashes independently match verifier pin `556024416ac1d363597934f5cccc3152c5e8d86ef4116ee5a0a81b8a1748cc26`; no scope/tier, budget or integrity protection is weakened. No remaining must-fix in the reviewed source. Exact final-head and full-suite receipts remain separate.
+
+
+## Actual callback transport approval
+
+Independent review approved forwarding current tool INPUT to resolver, while preserving native update-line and inherited host context. Revised tests prove payload transport through actual stdin without pre-set CCP_HOOK_INPUT_JSON. Two boundary/native cases pass 6.354s and test_guard suite passes 8/8. No remaining must-fix. Exact commit receipt and hosted completion follow separately.

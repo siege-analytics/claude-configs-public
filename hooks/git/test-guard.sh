@@ -25,6 +25,11 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+# Preserve identity from the actual tool callback for scoped evidence lookup.
+# Native pre-push stdin is update lines, not JSON; leave its context intact.
+if [[ -n "$COMMAND" ]]; then
+    export CCP_HOOK_INPUT_JSON="$INPUT"
+fi
 
 # Native git hook path: when called from .githooks/pre-push, stdin is the
 # ref list (not PreToolUse JSON). Detect and set COMMAND/CWD so the rest

@@ -721,10 +721,11 @@ class Gates(unittest.TestCase):
                         {'transcript_path': '/sessions/{{SESSION_ID}}/session.jsonl'},
                         {'metadata': {'sessionId': 'one:x'}}):
             env = {k:v for k,v in self.env.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'SESSION_'))}
-            env['CCP_HOOK_INPUT_JSON'] = json.dumps(binding)
-            with patch.dict(os.environ, env, clear=True):
+            actual_payload = json.dumps({'cwd': str(self.repo), 'tool_input': {'command': 'git push'}, **binding})
+            resolver_env = {**env, 'CCP_HOOK_INPUT_JSON': actual_payload}
+            with patch.dict(os.environ, resolver_env, clear=True):
                 self.assertIsNone(r.find_gate_for_repo(str(self.ws), str(self.repo), 'test-gate'))
-            result = subprocess.run(['bash', str(ROOT / 'hooks/git/test-guard.sh')], input=payload,
+            result = subprocess.run(['bash', str(ROOT / 'hooks/git/test-guard.sh')], input=actual_payload,
                                     env=env, text=True, capture_output=True)
             self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         native = {k:v for k,v in self.env.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'SESSION_'))}
