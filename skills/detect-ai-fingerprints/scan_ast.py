@@ -107,7 +107,7 @@ def _collect_load_names_in_scope(func_node):
     names = set()
     captures_locals = False
 
-    def _walk(node, shadowed=frozenset()):
+    def _walk(node, shadowed=frozenset(), own_scope=True):
         nonlocal captures_locals
         # If the node is itself a nested scope, do NOT walk into its body/args.
         # But default-value expressions and decorators evaluate in the outer
@@ -116,38 +116,38 @@ def _collect_load_names_in_scope(func_node):
             args = node.args
             for default in list(args.defaults) + list(args.kw_defaults or []):
                 if default is not None:
-                    _walk(default, shadowed)
+                    _walk(default, shadowed, own_scope)
             for decorator in getattr(node, "decorator_list", []):
-                _walk(decorator, shadowed)
+                _walk(decorator, shadowed, own_scope)
             return
         if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
             # The outer iterable executes outside the comprehension scope.
             # All loop targets are local throughout the implicit inner scope.
             if node.generators:
-                _walk(node.generators[0].iter, shadowed)
+                _walk(node.generators[0].iter, shadowed, own_scope)
             bound = {name.id for gen in node.generators for name in ast.walk(gen.target)
                      if isinstance(name, ast.Name) and isinstance(name.ctx, ast.Store)}
             inner = shadowed | bound
             for index, gen in enumerate(node.generators):
                 if index:
-                    _walk(gen.iter, inner)
+                    _walk(gen.iter, inner, False)
                 for condition in gen.ifs:
-                    _walk(condition, inner)
+                    _walk(condition, inner, False)
             for field in ('elt', 'key', 'value'):
                 expression = getattr(node, field, None)
                 if expression is not None:
-                    _walk(expression, inner)
+                    _walk(expression, inner, False)
             return
         if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load) and node.id not in shadowed:
             names.add(node.id)
         # Detect `**locals()` spread
-        if isinstance(node, ast.keyword) and node.arg is None:
+        if own_scope and isinstance(node, ast.keyword) and node.arg is None:
             if (isinstance(node.value, ast.Call)
                     and isinstance(node.value.func, ast.Name)
                     and node.value.func.id == "locals"):
                 captures_locals = True
         for child in ast.iter_child_nodes(node):
-            _walk(child, shadowed)
+            _walk(child, shadowed, own_scope)
 
     # Walk the body statements of this function directly (skip walking the
     # signature — parameter names as Store bindings don't count as uses).

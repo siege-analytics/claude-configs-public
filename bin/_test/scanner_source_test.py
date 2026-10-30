@@ -136,6 +136,15 @@ class ScannerSourceTest(unittest.TestCase):
                 tree = ast.parse('def f(offset, items, shape):\n    ' + body + '\n')
                 self.assertEqual(ast_scanner._collect_load_names_in_scope(tree.body[0])[0], expected)
 
+    def test_comprehension_locals_do_not_capture_parent_parameters(self):
+        for body, expected in (
+            ('return [g(**locals()) for x in items]', False),
+            ('return [x for x in g(**locals())]', True),
+            ('return g(**locals())', True),
+        ):
+            tree = ast.parse('def f(offset, items, g):\n    ' + body + '\n')
+            self.assertEqual(ast_scanner._collect_load_names_in_scope(tree.body[0])[1], expected)
+
     def test_scanner_config_comes_from_index_and_errors_do_not_become_clean(self):
         self.write('client.py', '@project_marker\ndef callback(unused=1):\n    return 1\n'); self.git('add', 'client.py')
         path = self.write('.claude/scanner-config.toml', '[scanner]\nallow_decorators = ["project_marker"]\n')

@@ -34,3 +34,5 @@ Shared metadata contracts, real router/guard large-input controls, scanner missi
 ## Candidate verification
 
 Candidate d0ffc87 passed all 29 router tests through the real reviewed-deployment fixture, without relaxing source authority. The final serializer review removes an artificial two-container nesting cutoff so every recognized nested identity survives projection. The CLI catches ValueError (which includes UnicodeError); TypeError cannot originate from decoded JSON values. Invalid UTF-8 is tested through the actual CLI. Explicit maps now include the router and installer fixtures as well as tooling tests. These are bounded final adjustments awaiting the same independent reviewer; no live apply.
+
+The broader task-keyed suite completed 72/72 controls (prototype source run); the ordered refresh completed with all generated checks current. Final scanner verification passes 24 cases, including locals() in a comprehension body versus its outer iterable. Router29, payload5 and scanner23 also completed through the actual test receipt producer at1045020; the scanner source change requires a new receipt before push. No test-gate hand editing or bypass is used.
