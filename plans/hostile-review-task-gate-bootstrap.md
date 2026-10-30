@@ -74,3 +74,8 @@ Independent review approved forwarding current tool INPUT to resolver, while pre
 ## Dependency-use snapshot approval
 
 Independent review approved the test-only expected helper-use count/digest refresh. Removing exactly the new HOST_SESSION_DIR extraction record reproduces the old digest. Existing removal, duplication, decoy and registration negatives remain unchanged. Full review-risk suite passes. No runtime changes or enforcement weakening.
+
+
+## Legacy fixture placement approval
+
+Independent review approved both fixture-only corrections: anchor13/13 and empty-repository suite pass. Only pre-mortem directory creation/write/removal moves from shared plans to the owning session. All known-good, missing-artifact, cross-session, unknown-session, repository ownership and anchor correction assertions remain intact. No runtime change or weakened assertion.

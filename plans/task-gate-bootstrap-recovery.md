@@ -80,3 +80,8 @@ The payload-only regression originally preloaded CCP_HOOK_INPUT_JSON. Tightening
 ## Helper dependency snapshot integration
 
 Final hosted validation identified a stale dependency-use snapshot: transporting HOST_SESSION_DIR adds one legitimate extract-json use in universal-mutation-gate (three to four). Update only the expected use count and exact assignment-record digest. Independent review recomputed the new digest `49547810bab12a781ea0b8a233f627f9f9fe1fb4fc23d5ad6f2a63fd7ded0900`; removing exactly that new extraction reproduces the old digest. Removal/duplication/decoy and manifest negative checks remain intact. Full review_risk_test passes locally. This follow-up changes no runtime behavior; approved runtime source remains 4dad246.
+
+
+## Final legacy fixture compatibility pass
+
+Rechecked the remaining44 hook suites (excluding the separately exercised58-case task suite and354-case read allowlist). The anchor fixture and non-Git/empty-repository fixture still placed plain-ID pre-mortems in shared plans; move their mkdir/write/remove paths into the owning session. No anchoring, owner resolution, status or negative assertion changes. Independent anchor13/13 and empty-repository suites pass. The wider pass has43 passing suites, with the sole remaining recorded failure resolved by the corrected empty-repository rerun; every one of the44 now has a passing result. Enforcement verification also passes41/41. These are fixture-only changes; runtime remains the reviewed4dad246 implementation.
