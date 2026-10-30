@@ -5,3 +5,5 @@
 "bin/validate-local.py" = ["bin/_test/local_validation_test.py"]
 "hooks/lib/test-evidence.py" = ["hooks/_test/scoped_test_evidence.py"]
 "scripts/canary/craft-backend-canary.py" = ["bin/_test/craft_backend_canary_test.py"]
+"bin/install-craft-hook-router.py" = ["bin/_test/craft_hook_router_test.py"]
+"hooks/lib/craft-settings-router.py" = ["bin/_test/craft_hook_router_test.py"]

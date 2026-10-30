@@ -36,8 +36,8 @@ class Payload(unittest.TestCase):
             payload.metadata_environment(value)
 
     def test_cli_rejects_ambiguous_invalid_and_oversize_input(self):
-        for raw in ('{"cwd":"a","cwd":"b"}', '{"cwd":NaN}', '[1]', 'x' * (1024 * 1024 + 1)):
-            result = subprocess.run([sys.executable, str(ROOT / 'hooks/lib/hook_payload.py')], input=raw, text=True, capture_output=True, timeout=20)
+        for raw in ('{"cwd":"a","cwd":"b"}', '{"cwd":NaN}', '[1]', 'x' * (1024 * 1024 + 1), b'\xff'):
+            result = subprocess.run([sys.executable, str(ROOT / 'hooks/lib/hook_payload.py')], input=raw.encode() if isinstance(raw, str) else raw, capture_output=True, timeout=20)
             self.assertEqual(result.returncode, 2)
 
     def test_real_multiedit_scope_and_large_advisory_guards(self):

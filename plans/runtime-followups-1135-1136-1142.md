@@ -30,3 +30,7 @@ Prototype checks: 5 real-hook transport/bounds tests and 23 selected-source scan
 ## Test plan
 
 Shared metadata contracts, real router/guard large-input controls, scanner missing/unrelated/snapshot evidence negatives, reproduced diagnostic regression, generated freshness, native push and required protected CI. Install only accepted exact main and repeat bounded host acceptance.
+
+## Candidate verification
+
+Candidate d0ffc87 passed all 29 router tests through the real reviewed-deployment fixture, without relaxing source authority. The final serializer review removes an artificial two-container nesting cutoff so every recognized nested identity survives projection. The CLI catches ValueError (which includes UnicodeError); TypeError cannot originate from decoded JSON values. Invalid UTF-8 is tested through the actual CLI. Explicit maps now include the router and installer fixtures as well as tooling tests. These are bounded final adjustments awaiting the same independent reviewer; no live apply.

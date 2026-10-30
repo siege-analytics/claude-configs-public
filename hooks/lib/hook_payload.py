@@ -74,7 +74,7 @@ def main() -> int:
                              parse_constant=lambda _: (_ for _ in ()).throw(ValueError('non-finite hook value')))
         print(metadata_environment(payload))
         return 0
-    except (ValueError, TypeError, UnicodeError) as error:
+    except ValueError as error:
         print('Hook metadata unavailable: ' + str(error), file=sys.stderr)
         return 2
 
