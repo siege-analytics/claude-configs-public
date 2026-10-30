@@ -12,7 +12,7 @@ Review-only current working diff in /private/tmp/claude-config-deployment-repair
 
 Source/target overlap and explicit output overlap preflight now happen before activation; --deploy plus --dist rejects. Exact-object private generation and artifact-only verification/stamp stages distinguish copied bytes from actual host invocation. Native hook cleanup uses actual resolved installation ownership rather than familiar filenames. Duplicate registration detection preserves triple identity and checks multiplicity.
 
-Independent settings-drift suite passed all fixtures. Independent native_push_test.py:20 passed in47.569s. Full deployment/provenance tests and exact-head re-review remain pending author corrections. Aggregate source registration snapshot changes must deliberately account for removed duplicate registrations and dispatch PostToolUseFailure additions.
+Independent settings-drift suite passed all fixtures. Independent native_push_test.py:20 passed in47.569s. Full deployment/provenance tests and exact-head re-review remain pending author corrections. Aggregate source registration snapshot changes must account for removed duplicate registrations and dispatch PostToolUseFailure additions.
 
 ## Corrected working source: approved
 

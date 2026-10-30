@@ -403,7 +403,7 @@ def tree_digest(root: Path, *, canonical_package: bool = False) -> str:
 def materialize_source(manifest: dict[str, Any], destination: Path) -> None:
     repo = Path(__file__).resolve().parents[2]
     revision = manifest["pins"]["source_revision"]
-    listing = subprocess.check_output(["git", "ls-tree", "-r", "--full-tree", revision], cwd=repo)
+    listing = subprocess.check_output(["git", "ls-tree", "-r", "--full-tree", revision], cwd=repo, timeout=120)
     require(sha256_bytes(listing) == manifest["pins"]["source_tree_sha256"], "source tree digest mismatch")
     clone = subprocess.run(
         ["git", "clone", "--no-hardlinks", "--no-checkout", str(repo), str(destination)],

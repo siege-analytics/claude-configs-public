@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import shlex
+import resource
 import sys
 import tempfile
 import unittest
@@ -34,7 +35,7 @@ class ScannerSourceTest(unittest.TestCase):
 
     def git(self, *args):
         if args[0] == 'add': args = ('add', '--force', *args[1:])
-        return subprocess.check_output(['git', *args], cwd=self.root, stderr=subprocess.PIPE).decode().strip()
+        return subprocess.check_output(['git', *args], cwd=self.root, stderr=subprocess.PIPE, timeout=30).decode().strip()
 
     def write(self, name, content):
         p = self.root / name; p.parent.mkdir(parents=True, exist_ok=True)
@@ -131,16 +132,16 @@ class ScannerSourceTest(unittest.TestCase):
 
     def test_unborn_index_is_supported(self):
         root = self.base / 'unborn'; root.mkdir()
-        subprocess.run(['git', 'init', '-q', str(root)], check=True)
+        subprocess.run(['git', 'init', '-q', str(root)], check=True, timeout=30)
         (root / 'client.py').write_text(VIOLATION)
-        subprocess.run(['git', 'add', 'client.py'], cwd=root, check=True)
+        subprocess.run(['git', 'add', 'client.py'], cwd=root, check=True, timeout=30)
         self.expect(self.scan(cwd=root), 1, 'writing-code-15')
 
     def test_ast_cli_missing_config_file_list_and_bad_config_types_fail(self):
         self.write('invalid.toml', '[scanner]\nallow_decorators = "not-an-array"\n')
         self.write('invalid-list', b'\xff')
         for args in (['missing.py'], ['--config', 'missing.toml', 'client.py'], ['--config', 'invalid.toml', 'client.py'], ['--files-from', 'missing-list'], ['--files-from', 'invalid-list'], ['--config'], ['--files-from']):
-            result = subprocess.run([sys.executable, str(SKILL / 'scan_ast.py'), *args], cwd=self.root, capture_output=True, text=True)
+            result = subprocess.run([sys.executable, str(SKILL / 'scan_ast.py'), *args], cwd=self.root, capture_output=True, text=True, timeout=30)
             self.expect(result, 2, 'scan-ast-')
 
     def test_ast_input_error_api_preserves_failure_cause(self):
@@ -180,7 +181,7 @@ class ScannerSourceTest(unittest.TestCase):
 
     def test_snapshot_missing_git_is_an_explicit_source_error(self):
         env = {**self.env, 'PATH': str(self.base / 'empty-path')}
-        result = subprocess.run([sys.executable, str(SKILL / 'scan_snapshot.py'), '--mode', 'staged', '--output', str(self.base / 'snapshot')], cwd=self.root, env=env, text=True, capture_output=True)
+        result = subprocess.run([sys.executable, str(SKILL / 'scan_snapshot.py'), '--mode', 'staged', '--output', str(self.base / 'snapshot')], cwd=self.root, env=env, text=True, capture_output=True, timeout=30)
         self.expect(result, 2, 'scan-source-error')
 
     def test_missing_exact_pr_object_is_fetched_without_using_checkout_bytes(self):
@@ -188,11 +189,11 @@ class ScannerSourceTest(unittest.TestCase):
         self.write('client.py', VIOLATION); self.git('add', 'client.py'); self.git('commit', '-qm', 'PR object')
         head = self.git('rev-parse', 'HEAD')
         remote = self.base / 'remote.git'
-        subprocess.run(['git', 'init', '-q', '--bare', str(remote)], check=True)
+        subprocess.run(['git', 'init', '-q', '--bare', str(remote)], check=True, timeout=30)
         self.git('remote', 'add', 'origin', str(remote))
         self.git('push', '-q', 'origin', base + ':refs/heads/main', head + ':refs/heads/pr-head')
         clone = self.base / 'source-only'
-        subprocess.run(['git', 'clone', '-q', '--single-branch', '--branch', 'main', '--no-tags', 'file://' + str(remote), str(clone)], check=True)
+        subprocess.run(['git', 'clone', '-q', '--single-branch', '--branch', 'main', '--no-tags', 'file://' + str(remote), str(clone)], check=True, timeout=30)
         self.root = clone
         with self.assertRaises(subprocess.CalledProcessError): self.git('cat-file', '-e', head)
         self.gh({'baseRefOid': base, 'headRefOid': head})
@@ -216,6 +217,27 @@ class ScannerSourceTest(unittest.TestCase):
                                 cwd=self.root, env=environment, capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertFalse(list(fixture.rglob('*.pyc')))
+
+    def test_large_diff_under_small_descriptor_budget_completes(self):
+        self.write('large.txt', ''.join('plain line %d\n' % n for n in range(120)))
+        self.git('add', 'large.txt')
+        def limit_descriptors():
+            resource.setrlimit(resource.RLIMIT_NOFILE, (64, 64))
+        result = subprocess.run(['/bin/bash', str(SKILL / 'scan.sh')], cwd=self.root,
+                                env=self.env, text=True, capture_output=True,
+                                preexec_fn=limit_descriptors, timeout=60)
+        self.expect(result, 0, 'clean. scanned:')
+        self.assertNotIn('Too many open files', result.stdout + result.stderr)
+
+    def test_lexical_match_process_failure_is_incomplete(self):
+        command_dir = self.base / 'commands'
+        grep = command_dir / 'grep'
+        grep.write_text('#!/bin/sh\nif [ "$1" = "-oiE" ]; then exit 2; fi\nexec /usr/bin/grep "$@"\n')
+        grep.chmod(0o755)
+        self.write('plain.txt', 'plain content\n')
+        self.git('add', 'plain.txt')
+        self.expect(self.scan(), 2, 'lexical matcher failed')
+        self.expect(self.scan('--message', 'plain content'), 2, 'lexical matcher failed')
 
     def test_missing_message_input_is_incomplete(self):
         for mode in ('--message-file', '--commit-message-file'):

@@ -8,10 +8,12 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import stat
+import signal
 import subprocess
 import sys
 import tempfile
 
+TEST_TIMEOUT_SECONDS = 3600
 SCHEMA_VERSION = 2
 MAX_RECEIPT_BYTES = 4 * 1024 * 1024
 MAX_SOURCE_BYTES = 64 * 1024 * 1024
@@ -20,7 +22,7 @@ SOURCE_SUFFIXES = {'.py', '.js', '.ts', '.jsx', '.tsx', '.scala', '.java', '.kt'
 
 def git(repo: Path, *args: str, data: bytes | None = None) -> bytes:
     return subprocess.run(['git', '-C', str(repo), *args], input=data,
-                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True).stdout
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, timeout=15).stdout
 
 
 def relative_source(value: str) -> str:
@@ -66,7 +68,7 @@ def working_blob(repo: Path, source: str) -> str:
 
 def committed_blob(repo: Path, source: str) -> str:
     result = subprocess.run(['git', '-C', str(repo), 'rev-parse', '--verify', 'HEAD:' + source],
-                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15)
     return result.stdout.decode().strip() if result.returncode == 0 else 'deleted'
 
 
@@ -96,7 +98,7 @@ def check(repo: Path, receipt: Path, paths: list[str]) -> list[str]:
     if not isinstance(revision, str) or len(revision) not in {40, 64} or any(c not in '0123456789abcdef' for c in revision):
         problems.append('missing canonical tested_revision')
     elif subprocess.run(['git', '-C', str(repo), 'merge-base', '--is-ancestor', revision, 'HEAD'],
-                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15).returncode != 0:
         problems.append('tested_revision is not an ancestor of HEAD; rerun affected tests')
     command = document.get('command')
     if not isinstance(command, list) or not command or not all(isinstance(x, str) and x for x in command):
@@ -151,6 +153,22 @@ def write_receipt(output: Path, document: dict) -> None:
             os.unlink(temporary)
 
 
+def execute_tests(command, repo):
+    """Cancel the test process group if its bounded execution is interrupted."""
+    process = subprocess.Popen(command, cwd=repo, start_new_session=True)
+    try:
+        return process.wait(timeout=TEST_TIMEOUT_SECONDS)
+    except BaseException:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            # The group already exited; the bounded wait still reaps its leader.
+            if process.poll() is None:
+                process.kill()
+        process.wait(timeout=5)
+        raise
+
+
 def record(args) -> int:
     repo = Path(args.repo).resolve()
     sources = [relative_source(s) for s in args.source]
@@ -177,14 +195,14 @@ def record(args) -> int:
     # Invalidate an older pass before executing: crashes/failures must not leave
     # an apparently current successful receipt behind.
     write_receipt(output, document)
-    result = subprocess.run(command, cwd=repo)
-    document['exit_code'] = result.returncode
-    if result.returncode != 0:
+    returncode = execute_tests(command, repo)
+    document['exit_code'] = returncode
+    if returncode != 0:
         for entry in document['evidence']:
             entry['result'] = 'fail'
         write_receipt(output, document)
         print('Tests failed; receipt records failure. Rerun after fixing the failure.', file=sys.stderr)
-        return result.returncode if 0 < result.returncode < 126 else 1
+        return returncode if 0 < returncode < 126 else 1
     if revision != git(repo, 'rev-parse', 'HEAD').decode().strip() or before != {s: working_blob(repo, s) for s in sources}:
         raise ValueError('source or HEAD changed during tests; pending receipt cannot authorize a push')
     for entry in document['evidence']:

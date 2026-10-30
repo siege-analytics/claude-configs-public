@@ -139,6 +139,20 @@ emit() {
     violations=$((violations + 1))
 }
 
+# Capture match streams without loop process substitutions. Stock macOS Bash
+# retains those descriptors until the enclosing function returns on large diffs.
+match_lines() {
+    local matches status
+    matches=$(grep "$@")
+    status=$?
+    if (( status > 1 )); then
+        echo "scan incomplete: lexical matcher failed (exit $status)" >&2
+        return 2
+    fi
+    [[ -z "$matches" ]] || printf '%s\n' "$matches"
+    return 0
+}
+
 # --- Diff scanner: reads unified diff from a process substitution (NOT a pipe).
 # Caller MUST invoke as: scan_diff_stdin < <(git diff ...) so the violations
 # counter survives. A bare pipeline puts the while loop in a subshell and
@@ -167,15 +181,18 @@ scan_diff_stdin() {
             check_typographic "$current_file" "$line_no" "$content"
 
             # writing-prose:3: every banned-adverb match on the line.
+            local matches
+            matches=$(match_lines -oiE "$ADVERBS_RE" <<< "$content") || return 2
             while IFS= read -r adverb; do
                 [[ -n "$adverb" ]] && emit "$current_file" "$line_no" "writing-prose-3-adverb($adverb)" "$content"
-            done < <(grep -oiE "$ADVERBS_RE" <<< "$content")
+            done <<< "$matches"
 
             # writing-code:2: history references in code comments (heuristic: line begins with # or //).
             if [[ "$content" =~ ^[[:space:]]*(#|//)[^!] ]]; then
+                matches=$(match_lines -oE "$HISTORY_RE" <<< "$content") || return 2
                 while IFS= read -r ref; do
                     [[ -n "$ref" ]] && emit "$current_file" "$line_no" "writing-code-2-history-ref($ref)" "$content"
-                done < <(grep -oE "$HISTORY_RE" <<< "$content")
+                done <<< "$matches"
             fi
 
             # writing-tests:3: pytest.skip / xfail / skipif / skipTest must name the remediation.
@@ -272,13 +289,15 @@ scan_message_stdin() {
             executed_id=$(sed -E 's/^[[:space:]]*Rule-executed:[[:space:]]+([^[:space:]]+).*/\1/' <<< "$line")
             [[ -n "$executed_id" ]] && executed_rule_ids+="$executed_id "
         fi
+        local matches
+        matches=$(match_lines -oE "$RULE_ID_RE" <<< "$line") || return 2
         while IFS= read -r cited_id; do
             if [[ -n "$cited_id" ]]; then
                 rule_citation_lines+=("$line_no")
                 rule_citation_excerpts+=("$line")
                 rule_citation_ids+=("$cited_id")
             fi
-        done < <(grep -oE "$RULE_ID_RE" <<< "$line")
+        done <<< "$matches"
 
         # writing-claims:2 / :3 claim detection (collect for end-of-message decision).
         if grep -qiE "$COUNTABLE_RE" <<< "$line"; then
@@ -295,9 +314,10 @@ scan_message_stdin() {
         fi
 
         # writing-prose:3: every adverb match.
+        matches=$(match_lines -oiE "$ADVERBS_RE" <<< "$line") || return 2
         while IFS= read -r adverb; do
             [[ -n "$adverb" ]] && emit "$virtual_file" "$line_no" "writing-prose-3-adverb($adverb)" "$line"
-        done < <(grep -oiE "$ADVERBS_RE" <<< "$line")
+        done <<< "$matches"
 
         # writing-prose:4: bullets in commit body.
         if [[ "$line" =~ ^[[:space:]]*[-*\+][[:space:]] ]]; then
@@ -388,7 +408,7 @@ case "$mode" in
             echo "scan incomplete: source selection failed" >&2
             exit 2
         fi
-        scan_diff_stdin < "$snapshot/diff"
+        scan_diff_stdin < "$snapshot/diff" || exit 2
         : > "$snapshot/selected-python-paths"
         while IFS= read -r -d '' f; do
             is_ignored "$f" && continue
@@ -412,21 +432,21 @@ case "$mode" in
         violations=$((violations + ast_n))
         ;;
     message-inline)
-        scan_message_stdin "<inline-message>" < <(printf '%s\n' "$arg")
+        scan_message_stdin "<inline-message>" <<< "$arg" || exit 2
         ;;
     message-file)
         if [[ ! -f "$arg" || ! -r "$arg" ]]; then
             echo "scan-input-error: message file is missing or unreadable: $arg" >&2
             exit 2
         fi
-        scan_message_stdin "$arg" < "$arg"
+        scan_message_stdin "$arg" < "$arg" || exit 2
         ;;
     commit-message-file)
         if [[ ! -f "$arg" || ! -r "$arg" ]]; then
             echo "scan-input-error: commit message file is missing or unreadable: $arg" >&2
             exit 2
         fi
-        scan_message_stdin "$arg" full < "$arg"
+        scan_message_stdin "$arg" full < "$arg" || exit 2
         ;;
 esac
 

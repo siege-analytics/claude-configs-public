@@ -1,0 +1,848 @@
+{
+  "status": "PROPOSED; independent per-finding acceptance pending",
+  "protected_base": "20bb5fb9c4eb88bc40c4f3f43b6c91e5a4fb7903",
+  "candidate_scan_tree": "cea67cd6b7e834a989a0e8481eefcd3a79820186",
+  "actual_scan": {
+    "cwd": "/private/tmp/runtime-recovery-scan-20261030",
+    "detached_head": "20bb5fb9c4eb88bc40c4f3f43b6c91e5a4fb7903",
+    "index_preparation": "git read-tree cea67cd6b7e834a989a0e8481eefcd3a79820186 (index only)",
+    "command": "env PATH=/opt/homebrew/bin:/usr/bin:/bin TMPDIR=/private/tmp bash /private/tmp/claude-runtime-integration-20261029/skills/detect-ai-fingerprints/scan.sh",
+    "mode": "staged",
+    "ignore_paths": [],
+    "configuration_override": null,
+    "actual_exit_code": 1,
+    "completion_evidence": "Coordinator observed functions.write_stdin session39739 completion exit1; raw footer reports27; no resource/incomplete diagnostics.",
+    "raw_path": "/private/tmp/runtime-complete-source-freeze-scan.log",
+    "raw_sha256": "148441b6a8ba9f6efb7aed7fefb08e3737ccf86379a7f09e399bba7250faa172",
+    "raw_size_bytes": 4508,
+    "raw_output": "bin/build.py:190:writing-tests-5: source has 46 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/craft-workspace-trust.py:352:writing-code-7-silent-swallow(Pass): except (OSError, ValueError): <Pass>\nbin/craft-workspace-trust.py:44:writing-tests-5: source has 15 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/install-craft-hook-router.py:232:writing-tests-5: source has 7 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/native_git.py:183:writing-tests-5: source has 5 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/validate-hooks.py:122:writing-tests-5: source has 2 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/validate-local.py:97:writing-tests-5: source has 7 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/wire-enforcement.py:55:writing-tests-5: source has 4 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nhooks/lib/craft-settings-router.py:517:writing-code-7-silent-swallow(Pass): except (OSError, ValueError): <Pass>\nhooks/lib/craft-settings-router.py:318:writing-code-7-silent-swallow(Pass): except ProcessLookupError: <Pass>\nhooks/lib/craft-settings-router.py:138:writing-code-7-silent-swallow(Continue): except ValueError: <Continue>\nhooks/lib/craft-settings-router.py:517:writing-tests-5: source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/git_command.py:247:writing-tests-5: source has 3 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/read-only-command.py:395:writing-tests-5: source has 2 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/resolve-think-gate.py:392:writing-code-7-silent-swallow(Return): except (ValueError, TypeError): <Return>\nhooks/lib/resolve-think-gate.py:631:writing-code-7-silent-swallow(Return): except (ValueError, TypeError): <Return>\nhooks/lib/resolve-think-gate.py:805:writing-code-7-silent-swallow(Return): except (OSError, SubprocessError): <Return>\nhooks/lib/resolve-think-gate.py:818:writing-code-7-silent-swallow(Return): except UnknownShape: <Return>\nhooks/lib/resolve-think-gate.py:896:writing-code-7-silent-swallow(Return): except (OSError, ValueError, TypeError): <Return>\nhooks/lib/resolve-think-gate.py:117:writing-tests-5: source has 28 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/session_anchor.py:162:writing-code-7-silent-swallow(Return): except (OSError, ValueError): <Return>\nhooks/lib/session_anchor.py:42:writing-tests-5: source has 10 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/task_actions.py:207:writing-code-7-silent-swallow(Return): except (ValueError, SyntaxError): <Return>\nhooks/lib/task_actions.py:153:writing-code-9-silently-dropped-param(offset): def shape(...): parameter 'offset' has a default but is never referenced in this function's own scope, not forwarded, and not named in the docstring\nhooks/lib/task_actions.py:207:writing-tests-5: source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/test-evidence.py:64:writing-tests-5: source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nscripts/canary/craft-backend-canary.py:55:writing-tests-5: source has 7 except block(s) but no test file found (looked in tests/, scripts/canary/tests/, ...)\n\nscanned: writing-prose:1-4 (stylistic; broader Unicode class), writing-code:2 (history references in code comments), writing-code:4 (Django ORM kwarg validation, same-file models; AST), writing-code:7 (silent error swallowing; AST), writing-code:8 (optional-import callsite guards; AST), writing-code:9 (silently-dropped parameters; AST scoped visitor), writing-code:15 (unbounded blocking I/O; AST, incl. Popen chains, Session/Client instance methods, invalid literal timeouts), writing-tests:3 (skip messages must be actionable), writing-tests:5 (untested named exception handlers, cross-file; AST), writing-claims:2 (countable claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:3 (deprecation messages need version+removal-keyword anchors; AST). Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4, writing-claims:1/3, writing-releases:1/2.\nviolations: 27\n",
+    "findings": 27
+  },
+  "configuration": {
+    "path": ".claude/scanner-config.toml",
+    "present_in_candidate_tree": false,
+    "semantics": "absent; built-in defaults from pinned scan_ast.py, no override"
+  },
+  "repository_source_test_scanner_policy_identities": [
+    {
+      "path": "bin/_test/craft_backend_canary_test.py",
+      "candidate_git_blob": "20924a2d770a208e5fd269b6b15f78e366a1b8b1",
+      "candidate_sha256": "63e4f3093db8bbd9614bcb97950030df160703a1fa281ce767a57f71ee730bde",
+      "size_bytes": 46379,
+      "mode": "100644",
+      "protected_base_git_blob": "6788ca56ab3427eb5b89114d0410ec195c4ff4f8"
+    },
+    {
+      "path": "bin/_test/craft_hook_router_test.py",
+      "candidate_git_blob": "f81038c7465059f72873c878052e68ac237ce017",
+      "candidate_sha256": "4a87629bc4d128ea1eb060e83fe7993269f44b6ddd65be25a85e4073f34b7740",
+      "size_bytes": 27646,
+      "mode": "100644",
+      "protected_base_git_blob": null
+    },
+    {
+      "path": "bin/_test/craft_workspace_trust_test.py",
+      "candidate_git_blob": "6cc0170328a76150c8a5cf7a631147d5740b5e70",
+      "candidate_sha256": "0d556ecac438ce34d9d071f108bec49358d94b864a6aac184cf984e59a53d86c",
+      "size_bytes": 18790,
+      "mode": "100644",
+      "protected_base_git_blob": null
+    },
+    {
+      "path": "bin/_test/deploy_source_policy_test.py",
+      "candidate_git_blob": "6993cd9b0d76c314f547cfd8f055c9f1441ff674",
+      "candidate_sha256": "4fbd20ad7a1ab6ee2b8332c87da7349b9f213803b6d9bfaa79778394f02156fa",
+      "size_bytes": 17397,
+      "mode": "100644",
+      "protected_base_git_blob": "7d3cbfa1f63380718019f323901fdf6639de434f"
+    },
+    {
+      "path": "bin/_test/local_validation_test.py",
+      "candidate_git_blob": "92e2dba1e8b718a6835fd9f8eda9f5762aa8b214",
+      "candidate_sha256": "bc72081f8e134eadb706ef80739f7a2dc5476a87f9cb717862f2a97a44c165be",
+      "size_bytes": 6363,
+      "mode": "100644",
+      "protected_base_git_blob": null
+    },
+    {
+      "path": "bin/_test/progressive_mount_test.py",
+      "candidate_git_blob": "4b36515e2c4c595696d3d220c973519d746e59f8",
+      "candidate_sha256": "924c24f8c4126ac825275ce46e743c125925ae73ca1e71fcab6d8ab6c9695209",
+      "size_bytes": 6605,
+      "mode": "100644",
+      "protected_base_git_blob": "6724842433ae2f9df08856a7b9580b65f922909b"
+    },
+    {
+      "path": "bin/_test/selected_registration_test.py",
+      "candidate_git_blob": "ef8adbae9c6aaac9f2386fb2fe0bc4eba33b55b7",
+      "candidate_sha256": "55af9e9e25b9b4fcb91e25049a7112e5bebacaa1596a90f511b13dc3ae77c332",
+      "size_bytes": 29047,
+      "mode": "100644",
+      "protected_base_git_blob": "ef8adbae9c6aaac9f2386fb2fe0bc4eba33b55b7"
+    },
+    {
+      "path": "bin/_test/settings_drift_test.py",
+      "candidate_git_blob": "d5c60a86947d064d0f5f4819507d0a44c676c860",
+      "candidate_sha256": "8949607fd45d9a4d759d747ca4a246abe42e767b0ca4eb4a9e31d1884a540f61",
+      "size_bytes": 7208,
+      "mode": "100644",
+      "protected_base_git_blob": "ca78f2cf5b2619221b3ac59f2faede0aa84b3cea"
+    },
+    {
+      "path": "bin/_test/wire_enforcement_automations_test.py",
+      "candidate_git_blob": "50d9467e3f045883aab79f84db2b1a713966d26d",
+      "candidate_sha256": "68b00f885e2ba1ed239d183fa14c760abdd3907743ddb12056f1ee783dc83225",
+      "size_bytes": 5314,
+      "mode": "100755",
+      "protected_base_git_blob": "5ad95bd4768efc75517bcaf27a0382a691c780fc"
+    },
+    {
+      "path": "bin/build.py",
+      "candidate_git_blob": "12d1c928108ab16ff081757325234888a3575ce8",
+      "candidate_sha256": "f30acc0041891b8c2f746b6c4812b815ea59bfff4344041a0b301ba066b9167f",
+      "size_bytes": 115759,
+      "mode": "100644",
+      "protected_base_git_blob": "90f0db3dc71474b55d21901d7d1cf60a5d22d5fa"
+    },
+    {
+      "path": "bin/craft-workspace-trust.py",
+      "candidate_git_blob": "79605fbf86709733bc77401adcf60e6fbd023481",
+      "candidate_sha256": "9493bc43365c654b2ca08a15a0901cc75bdd82edb1fb58aa575c76c327bc6d27",
+      "size_bytes": 19773,
+      "mode": "100644",
+      "protected_base_git_blob": null
+    },
+    {
+      "path": "bin/install-craft-hook-router.py",
+      "candidate_git_blob": "459ee32e0beef0bcef3685b959120753b9371412",
+      "candidate_sha256": "a3f1995d835085d69f8b0337d1430f41564f5689058ac8beeee10b99b9792c2d",
+      "size_bytes": 14781,
+      "mode": "100644",
+      "protected_base_git_blob": null
+    },
+    {
+      "path": "bin/native_git.py",
+      "candidate_git_blob": "a49785a8d2c1c234d666bd4a057cc921981d7a11",
+      "candidate_sha256": "55a1760d28768627c962abaa0f4218a55f68273e1113ae83698c32e91b4dbb62",
+      "size_bytes": 9967,
+      "mode": "100644",
+      "protected_base_git_blob": "5f8a364659adeb4b78b400784acb9be11a0de234"
+    },
+    {
+      "path": "bin/validate-hooks.py",
+      "candidate_git_blob": "2434a1bed1349f871f10d057baedea4593182353",
+      "candidate_sha256": "6dd15cb1f2e7661d89c77ca7abdbd40893dfa29a0d60ae43bb3f77ffde68c258",
+      "size_bytes": 8932,
+      "mode": "100644",
+      "protected_base_git_blob": "c16d9fee77b378f49ca27f1616a20691dd5b5e9c"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "candidate_git_blob": "41afb07e182ae4dfcdea828e19bda546b0a7af21",
+      "candidate_sha256": "ecfe44681704bf211e2ee2915d515916bc532669633200c58306b33f0927bef6",
+      "size_bytes": 6335,
+      "mode": "100644",
+      "protected_base_git_blob": null
+    },
+    {
+      "path": "bin/wire-enforcement.py",
+      "candidate_git_blob": "b1cd41f195f653eae80ed7eac33357c73d0777bb",
+      "candidate_sha256": "7a720c8aa71ced35fee76d7c886ea05802e519a6d7f3dfd9526064916fc4077f",
+      "size_bytes": 9935,
+      "mode": "100644",
+      "protected_base_git_blob": "c851c01e23fb0953b1ec196b9de4fb6b650e3299"
+    },
+    {
+      "path": "hooks/_test/reader_git_safety.py",
+      "candidate_git_blob": "56b36c270aa065566f6380c0c43a8d6f56fffc58",
+      "candidate_sha256": "c803fc614c0d4b507ae6d922178262487c733b9f5e13225471fad961631ee808",
+      "size_bytes": 16585,
+      "mode": "100644",
+      "protected_base_git_blob": null
+    },
+    {
+      "path": "hooks/_test/session_anchor_mistag.test.sh",
+      "candidate_git_blob": "7adcc14529eb829378c945ed3b978f92060a814a",
+      "candidate_sha256": "7b3a639abc8e3d783fd4e53de73c4138931266d0dff06d1eb40913cb1d36934e",
+      "size_bytes": 5359,
+      "mode": "100755",
+      "protected_base_git_blob": "7adcc14529eb829378c945ed3b978f92060a814a"
+    },
+    {
+      "path": "hooks/_test/task_keyed_gates.py",
+      "candidate_git_blob": "59d569af2c92e8188cd5c97200d9ba40664f9a72",
+      "candidate_sha256": "ef1d75b53d3874ac138a67f0cb1433edf652c3e397f6fc9afef6238c95661ef1",
+      "size_bytes": 78102,
+      "mode": "100644",
+      "protected_base_git_blob": "80ffd703c63d8660a5764b891a5bfdb00ea9352e"
+    },
+    {
+      "path": "hooks/_test/test_evidence.py",
+      "candidate_git_blob": "99e65ccc376e91b05c52d892b5fa181f6c56fae0",
+      "candidate_sha256": "0f81c17cc1c17e1909a3e103a0222dcef009cc1c92c2a8ba0b1c5804b4355dde",
+      "size_bytes": 12306,
+      "mode": "100644",
+      "protected_base_git_blob": null
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "candidate_git_blob": "5db4692538d19cc6c0bacb0903f3b35ff2c72fdf",
+      "candidate_sha256": "b174103bcbee31ce4367a6ea09d15060601943d6b852189e106704ed9a1533e3",
+      "size_bytes": 30590,
+      "mode": "100644",
+      "protected_base_git_blob": null
+    },
+    {
+      "path": "hooks/lib/git_command.py",
+      "candidate_git_blob": "c71a0ef219c9ccfcdcfeaeba3d4d810a8c7e64d1",
+      "candidate_sha256": "afc2d6a2c7ec9f19f5e3df16577d108b3dacf71e4f1ef81315b4a3ae89a3cfbf",
+      "size_bytes": 12970,
+      "mode": "100644",
+      "protected_base_git_blob": null
+    },
+    {
+      "path": "hooks/lib/read-only-command.py",
+      "candidate_git_blob": "71119bc6ce5992da8321edb846747328c14b5843",
+      "candidate_sha256": "7f66183f2ab1ca1dbdb0244fd191c957d264f8d43343f7e4251dd7fedf553997",
+      "size_bytes": 24534,
+      "mode": "100644",
+      "protected_base_git_blob": "26954c6fb4827ba096a03aa5fc6393fcc2bd5466"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "candidate_git_blob": "ff2c4ea262f2ab690ca7c99148aa7d4602535625",
+      "candidate_sha256": "0621215ab436e122f2b65ddc7f32d0cc6cf7274b89a3e9281340ff7885df0995",
+      "size_bytes": 46104,
+      "mode": "100644",
+      "protected_base_git_blob": "467e143089d6d4c102a4daceba14a4ab1c4519e8"
+    },
+    {
+      "path": "hooks/lib/session_anchor.py",
+      "candidate_git_blob": "ab161799c85c3b2f764701601e5cafbeaf81fa56",
+      "candidate_sha256": "479dbe4f444eb0e885aa6c25336b06cf08b6331b78478858bb497524ed644f59",
+      "size_bytes": 9792,
+      "mode": "100644",
+      "protected_base_git_blob": "b3f211a2679e7a58886f8badae5e212161d0c5e9"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "candidate_git_blob": "856e92dfb7f478e1df7355028a3772b3c7fd5a2c",
+      "candidate_sha256": "d21fa66728d387d186c074dca6e988a557328eb594cce81de5d585b6dc9cf9f7",
+      "size_bytes": 47102,
+      "mode": "100644",
+      "protected_base_git_blob": "ad1529f2f21253af34b36c5376d15438e907ccc3"
+    },
+    {
+      "path": "hooks/lib/test-evidence.py",
+      "candidate_git_blob": "a26771d63163c52ecaf801a8dc64a56a913f5023",
+      "candidate_sha256": "1174b3a9b76bdfa15539d8ea093290c784f4a06f97138298d50295b13670cbdb",
+      "size_bytes": 12341,
+      "mode": "100644",
+      "protected_base_git_blob": null
+    },
+    {
+      "path": "scripts/canary/craft-backend-canary.py",
+      "candidate_git_blob": "f36e976266475b29b80bf84f9994a778e1fd0612",
+      "candidate_sha256": "3b8092ce77590a50c639c9cad068eaf639688d1306899a70381a1f179bbe3563",
+      "size_bytes": 61639,
+      "mode": "100644",
+      "protected_base_git_blob": "967aee3e0928f32eceda88b6b58f74eaf3303358"
+    },
+    {
+      "path": "skills/code-review/SKILL.md",
+      "candidate_git_blob": "b9421442da9ea1c7c896aea22f8ecf2537f3b79f",
+      "candidate_sha256": "80592612eeb310220217c62b538e7f2d963cf5509a11877e80312bb20a5b99f3",
+      "size_bytes": 23847,
+      "mode": "100644",
+      "protected_base_git_blob": "e394d0adbaf623ad157e782e1d0539d47eef2a4d"
+    },
+    {
+      "path": "skills/commit/SKILL.md",
+      "candidate_git_blob": "4224a17a9bc2758c849c24dea0f267a033b121b0",
+      "candidate_sha256": "e145d8e0d00a1e7b4f66b7ccda4258eb3d5ecdebd5e6cfa690c3159984000e0c",
+      "size_bytes": 21465,
+      "mode": "100644",
+      "protected_base_git_blob": "bd10d3944954104d5159de0a7d7b207c18c6a4fa"
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/SKILL.md",
+      "candidate_git_blob": "ec755091892c25e897be56eee3abecd2d46ef56c",
+      "candidate_sha256": "7fd139e41f3bf0fcd20b6e66b7345c43309abde91cbcd16a22b1af898f1f2a32",
+      "size_bytes": 22578,
+      "mode": "100644",
+      "protected_base_git_blob": "b6f0e8750105dad02125f306122afd69e2fcbcdc"
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/scan.sh",
+      "candidate_git_blob": "633280ea6b4e196e3a4e2eca8819bbce2a2f4669",
+      "candidate_sha256": "e7fc8ef0ab0c77a5e196fbbe26ae2a718463f49a168e90d5fe1de7526896b939",
+      "size_bytes": 21465,
+      "mode": "100755",
+      "protected_base_git_blob": "b3db94f14540606678f03279209b5b55542a9587"
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/scan_ast.py",
+      "candidate_git_blob": "1127a7cbe8388f0ee4bb8d4981c55e6802a48cf1",
+      "candidate_sha256": "181cb8f4a3598e27b2e5dfcffee125b4250b2ee12d041fc02bb49bffb4277979",
+      "size_bytes": 81920,
+      "mode": "100755",
+      "protected_base_git_blob": "1127a7cbe8388f0ee4bb8d4981c55e6802a48cf1"
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/scan_snapshot.py",
+      "candidate_git_blob": "a0c5ab2d511125ec925bc3fa9e7001ee2d44d127",
+      "candidate_sha256": "dc6f838d46ca8264af21faf828db05b317983b990c2482998e7af3580a111ffb",
+      "size_bytes": 7980,
+      "mode": "100644",
+      "protected_base_git_blob": "a0c5ab2d511125ec925bc3fa9e7001ee2d44d127"
+    },
+    {
+      "path": "bin/_test/scanner_source_test.py",
+      "candidate_git_blob": "2c2807045b72b67d11c46ae1aba76e655e7b884e",
+      "candidate_sha256": "6e9ff64758b01a3b98fe7c3fca3e6031a503c745e41470124e5d117fc4e15a8e",
+      "size_bytes": 14936,
+      "mode": "100644",
+      "protected_base_git_blob": "89672722f69920adf2cd33c04cdcbfc485c00af4"
+    },
+    {
+      "path": "hooks/agent-comms/hub-concurrency-gate.sh",
+      "candidate_git_blob": "a1c689fa92abc34af8e78705f485098f61c3ff92",
+      "candidate_sha256": "d39d0099ecc1671e4934d26578c1d8a9de634b0c555ef292aa68926f6e2ab2ca",
+      "size_bytes": 17173,
+      "mode": "100755",
+      "protected_base_git_blob": "9a32bb5f9a087eda55d832d60d98b7cd8759a42b"
+    }
+  ],
+  "external_control_log_review_identities": [
+    {
+      "path": "/private/tmp/runtime-router-disposition-controls.py",
+      "sha256": "7e6bb3c6ac8940ceec078dc1bcb7eeaf2986700ef0b6660cda3a57b3c6dfa562",
+      "size_bytes": 2013,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/runtime-session-header-disposition-control.py",
+      "sha256": "783f714fdb8f0692bfdeeb7e433217d10f962ae2f81e7c5a99b794b63ac13154",
+      "size_bytes": 1365,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/runtime-cas-metadata-control.py",
+      "sha256": "391da951da2d5b323fde67f121cb2472cc576073528d7059d674a9fd05927a61",
+      "size_bytes": 1353,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/runtime-frozen-router-disposition-controls.log",
+      "sha256": "c78bbb1c7257b2016731b31db0143c2c597464e29b94cda993d97ecb38b9b530",
+      "size_bytes": 210,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/runtime-frozen-session-header-control.log",
+      "sha256": "6b34a981deb146c957ff57cbe0bd33372402761c6d0a03c1f4f95791fa22b870",
+      "size_bytes": 110,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/runtime-frozen-cas-metadata-control.log",
+      "sha256": "e3994abedcb5d2fcff598e44d28e7eefa633e68e8f4c13ee33a35ea79aa29f68",
+      "size_bytes": 120,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/runtime-frozen-trust17.log",
+      "sha256": "6e1445d40f531346f44da5212438623e97aa4f8d2b443e8a736450ea1c9f4f6a",
+      "size_bytes": 116,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/runtime-frozen-reader9.log",
+      "sha256": "6427f33c8e7820c2a260f814d0f426a83d4ab8d69ba1469d7b3f0ad44ac6a826",
+      "size_bytes": 108,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/router-final-startup-boundary.log",
+      "sha256": "1cd7a06af260e4f520893a611707277309e38e9624c66dd1f4a5cbf23cd6038d",
+      "size_bytes": 124,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/integration-local-validation-review-test.log",
+      "sha256": "e87ce6d817664e614c8de9c5e3f6763e7beeecf95b66bc9d28958d98454e36f0",
+      "size_bytes": 105,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/integration-producer-review-test.log",
+      "sha256": "9445384bf1343a942ae554f924c56e2be21836b001c0606b28aad46aae26dd0e",
+      "size_bytes": 2205,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/resolver-recovery-targeted-test.log",
+      "sha256": "39faf916fbf78366a1088f0da6dbacbe3a138a2907eb915e2bbf54280d324a7f",
+      "size_bytes": 1122,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/resolver-existing-host-test.log",
+      "sha256": "614ee54d4a8dfb0f02171db0345b7dc0401ed8f32b5808a501d526ce8a054e31",
+      "size_bytes": 5952,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/resolver-existing-scope-test.log",
+      "sha256": "80aa65c8b049bc4b32bc3dc778b2097e749ef72f684c47c45f90851b09328aa8",
+      "size_bytes": 587,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/reader-syntax-independent-test.log",
+      "sha256": "850dd2ad664733a87edc5f1ec0ae6cb32b2612ae19d19544869205df20429acb",
+      "size_bytes": 98,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/wire-owned-env-tests.log",
+      "sha256": "f31e682738797e5a39e90f0fb2c85c2d1f8413ba117d570eb46c74524e069187",
+      "size_bytes": 40,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/runtime-bytecode-independent-review.md",
+      "sha256": "1b8df5c92e631398c241f2fbdd97eea97619ee2a35cf42ab9f8fea4cda39a698",
+      "size_bytes": 2175,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/atomic-settings-publication-independent-review.md",
+      "sha256": "1bfb1d9003b1beb47a7f2659b6cfbda4f9f800be08a1a799acfce6f4ad420fcb",
+      "size_bytes": 5120,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/craft-scoped-wiring-independent-review.md",
+      "sha256": "5e0fbaab11469c8a04f0afa068e1373b405a7892e589595f44097cdf881b971d",
+      "size_bytes": 2836,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/skill-ownership-policy-test.log",
+      "sha256": "958872b078ee59d7682680c2ff515a2564745a28e9a31b19855e847bf705f8ec",
+      "size_bytes": 24776,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/craft-wiring-progressive-test.log",
+      "sha256": "f2cfdd2b0df2b00e6ba2edf1e34b343d75a9df27e2b3a1aa00fc0053a41680bf",
+      "size_bytes": 29,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/canary-refresh-tests.log",
+      "sha256": "36750ae6c28c3f75b312f34d11cef3be9c7325aade98641df08bb4c73301ad10",
+      "size_bytes": 115,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/resolver-recovery-finding-dispositions.md",
+      "sha256": "2e6c552f924ae261905f6aabd1efea7755c895625ff05b28d458355b06a7d274",
+      "size_bytes": 8602,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    },
+    {
+      "path": "/private/tmp/aggregate-craft-final-source-pins.json",
+      "sha256": "48a033e207f84589288174787d72a77d855051cdbad481d26e816da53707b33c",
+      "size_bytes": 1363,
+      "execution_binding": "Only frozen-prefixed and router-final-startup logs are asserted frozen-source runs; other logs/reviews are labelled prior direct evidence/source mapping, not aggregate final PASS."
+    }
+  ],
+  "reconciliation": {
+    "prior_complete_tree": "e285593cd14251afa7d5d011797ab7f686bedccc",
+    "prior_complete_findings": 26,
+    "removed": [
+      "old own_registration malformed-shell except: strict canonical text no longer parses arbitrary shell"
+    ],
+    "moved": [
+      "installer managed_commands ownership nonmatch -> shared router.workspace_policy_commands"
+    ],
+    "added": [
+      "CAS optional recovery metadata failure",
+      "native_git external-test locator"
+    ],
+    "earlier_real_defects": "four missing fixture subprocess budgets and unsafe resolver recoveries were repaired, not accepted as debt"
+  },
+  "individual_proposed_dispositions": [
+    {
+      "id": "F01",
+      "path": "bin/build.py",
+      "line": 190,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 46 except block(s) but no test file found (looked in tests/, bin/tests/, ...)",
+      "enclosing_function": "_deploy_source_files",
+      "source_excerpt": "        return snapshot.git_files(repo_root, revision)\n    except (OSError, ValueError, ImportError, SyntaxError, subprocess.SubprocessError) as exc:\n        raise BuildError(\"cannot read immutable deployment source\") from exc\n\n\ndef _deploy_git_environment() -> dict[str, str]:\n    \"\"\"Keep explicit repository roots and accepted object IDs authoritative.\"\"\"",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: raw-source validation -> immutable private build -> workspace copy/merge -> artifact verification/stamp. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "bin/_test/deploy_source_policy_test.py real immutable success, source-mutation and corrupt-copy negatives; progressive_mount_test.py malformed scoped-policy byte preservation and foreign hook ownership. Executed evidence: /private/tmp/skill-ownership-policy-test.log and /private/tmp/craft-wiring-progressive-test.log; final-source aggregate rerun remains required.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F02",
+      "path": "bin/craft-workspace-trust.py",
+      "line": 352,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "raw_report": "except (OSError, ValueError): <Pass>",
+      "enclosing_function": "publish_staged",
+      "source_excerpt": "                recovery_manifest(recovery, path)\n            except (OSError, ValueError):\n                pass  # Retain every version even if optional metadata cannot be written.\n            raise ValueError(\"concurrent publication not verified; current state retained without blind rollback; displaced versions retained at \" + str(recovery)) from error\n        raise\n\n",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Optional recovery metadata is attempted only while handling an already failed or uncertain atomic publication. Suppressing its expected OSError/ValueError neither deletes retained versions nor returns success: the next statement unconditionally raises not-verified with the retained recovery path. This is failure-preserving observation, not silent activation recovery.",
+      "Evidence and function/caller chain": "publish_staged -> recovery_manifest attempt -> unconditional ValueError -> installer/enable activation abort. Frozen real control /private/tmp/runtime-cas-metadata-control.py injects a last-moment exchange conflict and recovery_manifest OSError; /private/tmp/runtime-frozen-cas-metadata-control.log PASS proves not-verified, concurrent active bytes preserved and a private displaced version retained. Frozen trust suite seventeen PASS /private/tmp/runtime-frozen-trust17.log. Independent publication review /private/tmp/atomic-settings-publication-independent-review.md confirms interruption/retained-version boundaries.",
+      "Falsification": "Metadata failure producing verified success, unlinking a retained version, blindly rolling back over a newer writer, or allowing a caller to publish an active receipt after this exception invalidates the explanation."
+    },
+    {
+      "id": "F03",
+      "path": "bin/craft-workspace-trust.py",
+      "line": 44,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 15 except block(s) but no test file found (looked in tests/, bin/tests/, ...)",
+      "enclosing_function": "snapshot",
+      "source_excerpt": "        fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, \"O_NOFOLLOW\", 0))\n    except FileNotFoundError:\n        if missing and not path.is_symlink():\n            return {\"raw\": None, \"fingerprint\": None}\n        raise\n    with os.fdopen(fd, \"rb\") as source:\n        before = os.fstat(source.fileno())",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: snapshot/document -> inspect_workspace -> lock/stage/replace/rollback. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "bin/_test/craft_workspace_trust_test.py imports the actual helper and exercises malformed/duplicate/nonregular config, concurrent writes, atomic create/exchange/compensation, exchange-then-interrupt preservation, legacy exact env retirement and non-main CLI refusal. Frozen seventeen-test PASS /private/tmp/runtime-frozen-trust17.log; independent review /private/tmp/atomic-settings-publication-independent-review.md. The optional helper is not normal-installer trust enrollment; no claim that all fifteen handlers have independent fault coverage.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F04",
+      "path": "bin/install-craft-hook-router.py",
+      "line": 232,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 7 except block(s) but no test file found (looked in tests/, bin/tests/, ...)",
+      "enclosing_function": "install",
+      "source_excerpt": "        old_receipt = trust.document(snapshots[\"registration.json\"][1])\n    except (ValueError, TypeError):\n        old_receipt = None  # Reserved owned metadata is repairable after main/profile verification.\n    changed = (merged != trust.document(snapshots[\"global-settings.json\"][1]) or legacy != legacy_original\n               or old_router != router_bytes or old_receipt != receipt)\n    summary[\"changed\"] = changed\n    if not apply or not changed:",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: preview/activate -> source and policy pins -> owned migration -> receipt-last publication/verification. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "bin/_test/craft_hook_router_test.py activation migration/idempotence, concurrent CLI change and incomplete-registration controls dispatch the actual installer. Final-source router fixtures include exact legacy bootstrap migration, direct global known-policy refusal before mutation and known global env refusal; frozen 25-test PASS /private/tmp/router-final-startup-boundary.log. Atomic publication/CAS is separately exercised by the frozen trust17 suite.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F05",
+      "path": "bin/native_git.py",
+      "line": 183,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 5 except block(s) but no test file found (looked in tests/, bin/tests/, ...)",
+      "enclosing_function": "main",
+      "source_excerpt": "        return 0\n    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:\n        print('native-git: incomplete registration/evidence: ' + str(exc), file=sys.stderr)\n        return 2\n    finally:\n        stack.close()\n",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery locator false positive only: this adapter is exercised by mapped fixtures outside the scanner naming convention. Chain: native CLI argument/binding verification -> selected or compatibility command execution with descendant bytecode suppression -> policy result/error propagation. Finding an external fixture is not a measurement of all five handlers.",
+      "Evidence and function/caller chain": "hooks/_test/reader_git_safety.py test_read_guard_and_native_shell_descendants_leave_inventory_unchanged executes the actual adapter -> shell -> fresh Python child and verifies unchanged bytes inventory. Frozen nine-test PASS /private/tmp/runtime-frozen-reader9.log; independent bytecode review /private/tmp/runtime-bytecode-independent-review.md. bin/_test/selected_registration_test.py directly imports native_git and dispatches its packaged CLI for opaque controls, binding-before-payload and event-specific-vector failures. That source mapping is not a claim that the previously failed full component workflow now passed.",
+      "Falsification": "If the named fixtures stop importing/dispatching native_git, the shell descendant loses PYTHONDONTWRITEBYTECODE=1 or writes package bytecode, or the stated argument/binding controls cease to reach this adapter, this disposition fails. No all-handler coverage is asserted."
+    },
+    {
+      "id": "F06",
+      "path": "bin/validate-hooks.py",
+      "line": 122,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 2 except block(s) but no test file found (looked in tests/, bin/tests/, ...)",
+      "enclosing_function": "compare_settings_to_snippet",
+      "source_excerpt": "                    problems.append(f\"Duplicate registration in {label}: {event} / {matcher or '(no matcher)'} -> {command} ({count} copies)\")\n        except (OSError, json.JSONDecodeError) as exc:\n            problems.append(f\"Cannot read {label} at {path}: {exc}\")\n    if problems:\n        return problems\n\n    for label in (\"settings\", \"snippet\"):",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: compare_settings_to_snippet -> structured missing/invalid registration problems; syntax checks. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "bin/_test/settings_drift_test.py imports compare_settings_to_snippet and tests duplicate, missing, empty and foreign registrations. Initial rerun exposed a stale expected count; root corrected to actual 46 triples/30 hooks and reports twelve PASS. The only added triple versus protected base was PostToolUseFailure/mcp__session__spawn_session/hub-concurrency-gate.sh. Direct validate-hooks actual source check: 46 paths valid.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F07",
+      "path": "bin/validate-local.py",
+      "line": 97,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 7 except block(s) but no test file found (looked in tests/, bin/tests/, ...)",
+      "enclosing_function": "run_step",
+      "source_excerpt": "        return process.wait(timeout=timeout)\n    except BaseException:\n        # An interrupted shell may own background jobs. Cancel its isolated group\n        # before returning so those jobs cannot keep modifying validation state.\n        try:\n            os.killpg(process.pid, signal.SIGKILL)\n        except ProcessLookupError:",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: workflow parsing -> isolated shell step -> process-group cancellation -> non-success result. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "bin/_test/local_validation_test.py directly dispatches a copied actual adapter. Seven methods cover malformed input, pinned dependency, isolation, first failure, timeout and real background descendant cancellation. /private/tmp/integration-local-validation-review-test.log PASS; root independently ran seven PASS. This reviewer authored the cancellation fix; root separately reviewed it.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F08",
+      "path": "bin/wire-enforcement.py",
+      "line": 55,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 4 except block(s) but no test file found (looked in tests/, bin/tests/, ...)",
+      "enclosing_function": "merge_ca_enforcement_settings",
+      "source_excerpt": "        existing = json.loads(dst.read_text())\n    except json.JSONDecodeError as e:\n        raise SystemExit(f\"ERROR: {dst} is not valid JSON: {e}\")\n    if not isinstance(existing, dict):\n        raise SystemExit(f\"ERROR: {dst} top-level is not a JSON object; refusing to merge\")\n    if not isinstance(existing.get(\"hooks\", {}), dict):\n        raise SystemExit(f\"ERROR: {dst} 'hooks' is not a JSON object; refusing to merge\")",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: actual CLI -> explicit/default destination -> merge_ca_enforcement_settings and opt-in automation merge. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "bin/_test/wire_enforcement_automations_test.py dispatches the actual CLI for default/scoped/alternate paths and repeats; preserves foreign same-basename/malformed shell commands. Independent wiring review receipt /private/tmp/craft-scoped-wiring-independent-review.md and local PASS. No blanket JSON/automation exception coverage claim. Owned-env CLI controls PASS /private/tmp/wire-owned-env-tests.log: copy only generated known flag1, preserve unknown/operator env, reject malformed source/target env without replacing target bytes; no mandatory trust flag was added.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F09",
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 517,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "raw_report": "except (OSError, ValueError): <Pass>",
+      "enclosing_function": "route",
+      "source_excerpt": "        local_audit(child_environment, payload, event, commands, outputs, result[1])\n    except (OSError, ValueError):\n        pass  # Audit availability is not permission and never selects a fallback directory.\n    return result\n\n\ndef main():",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Audit is best-effort observation after the hook aggregate decision. Catching OSError/ValueError here does not choose a fallback directory, change the already computed allow/deny, or execute the protected tool.",
+      "Evidence and function/caller chain": "route -> execute hooks -> aggregate -> local_audit -> return existing result. Real fixture with local_audit raising PermissionError retains a real read allow and real unscoped mutation deny, and no marker appears. PASS /private/tmp/runtime-frozen-router-disposition-controls.log.",
+      "Falsification": "An audit error changing a deny to allow, choosing different scope/identity, creating a protected effect, or selecting an alternate audit directory invalidates this boundary."
+    },
+    {
+      "id": "F10",
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 318,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "raw_report": "except ProcessLookupError: <Pass>",
+      "enclosing_function": "execute_hook",
+      "source_excerpt": "                os.killpg(process.pid, signal.SIGKILL)\n            except ProcessLookupError:\n                pass\n            process.wait(timeout=2)\n        for pipe in (process.stdin, process.stdout, process.stderr):\n            if pipe and not pipe.closed:\n                pipe.close()",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Expected cleanup race: killpg may find that the isolated group already exited. Ignore only ProcessLookupError, then reap the leader and preserve the original routing/I/O failure. This is not recovery to success.",
+      "Evidence and function/caller chain": "execute_hook finally cleanup. Real Popen child exits, selector injects RoutingError after waiting for that exit, original RoutingError survives and leader has returncode zero. PASS /private/tmp/runtime-frozen-router-disposition-controls.log.",
+      "Falsification": "Returning successful hook output after the injected failure, failing to reap the leader, or swallowing a non-ProcessLookupError cancellation failure invalidates this cleanup explanation."
+    },
+    {
+      "id": "F11",
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 138,
+      "rule": "writing-code-7-silent-swallow(Continue)",
+      "raw_report": "except ValueError: <Continue>",
+      "enclosing_function": "workspace_policy_commands",
+      "source_excerpt": "                    path.relative_to(workspace / \"hooks\")\n                except ValueError:\n                    continue  # An operator hook is not ours to retire elsewhere.\n                if path.is_absolute() and path.resolve() == path:\n                    found.add(command)\n    return found\n",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Expected ownership nonmatch: Path.relative_to raises for an operator command outside workspace/hooks. Continue excludes it from the managed retirement set; treating it as managed would delete foreign configuration.",
+      "Evidence and function/caller chain": "Shared workspace_policy_commands -> installer managed_commands compatibility delegate -> exact project retirement and global-duplicate refusal; runtime verify_global also uses the same parser. managed_commands -> retire_project/retire_global. Router activation migration/idempotence fixture preserves foreign hooks. Direct real control appends /operator/hooks/other.sh and proves it is absent from managed_commands; /private/tmp/runtime-frozen-router-disposition-controls.log PASS.",
+      "Falsification": "A foreign command entering the retired set, or failure to retain its metadata during migration, invalidates this ownership-nonmatch explanation."
+    },
+    {
+      "id": "F12",
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 517,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)",
+      "enclosing_function": "route",
+      "source_excerpt": "        local_audit(child_environment, payload, event, commands, outputs, result[1])\n    except (OSError, ValueError):\n        pass  # Audit availability is not permission and never selects a fallback directory.\n    return result\n\n\ndef main():",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: scoped entrypoint -> owned receipt verification -> strict session binding -> bounded hook execution/aggregation. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "bin/_test/craft_hook_router_test.py actual router dispatch covers corrupt/missing enrollment, identity ambiguity, protocol conflicts, execution budget/output, concurrent settings changes and real mutation denial. Frozen 25-test PASS /private/tmp/router-final-startup-boundary.log. Direct malformed ownership/audit/cleanup real fault controls also PASS, without claiming every handler is exercised. Frozen 25-test source additionally exercises markerless missing-router skip, marked startup failure mapping, exact shell ownership, deny normalization/conflicts, full tool-name matching and guarded enrollment resolution. This does not prove every one of eight handlers is covered.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F13",
+      "path": "hooks/lib/git_command.py",
+      "line": 247,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 3 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)",
+      "enclosing_function": "main",
+      "source_excerpt": "        return 0\n    except (UnknownShape, OSError, subprocess.SubprocessError) as exc:\n        # Unrelated shell computation is outside this specialized policy, but\n        # quote/backslash spelling must not hide a literal Git candidate.\n        bare = re.sub(r\"[\\\\\\\"']\", \"\", command)\n        if not re.search(r\"(?:^|[/\\s])git(?:\\s|$)\", bare):\n            print(\"none\")",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: CLI parse/prefix/invocations -> read classifier/branch/destructive/authorization policies. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "hooks/_test/reader_git_safety.py executes actual CLI/hook chains for alternate Git targets, textconv and protected refs. The new unflagged git_command CLI inventory control proves no task_actions.pyc appears; native shell/fresh-Python propagation is checked too. Frozen nine-test PASS /private/tmp/runtime-frozen-reader9.log; independent source review /private/tmp/runtime-bytecode-independent-review.md. No all-handler coverage claim.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F14",
+      "path": "hooks/lib/read-only-command.py",
+      "line": 395,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 2 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)",
+      "enclosing_function": "lead_verbs",
+      "source_excerpt": "        words = shlex.split(text)\n    except ValueError:\n        return {\"?\"}\n    words = [w for w in words if w not in SHELL_WORDS]\n    out = set()\n    while words:\n        out.add(words[0])",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: lead_verbs -> reader classification -> nonzero unknown/unsafe outcome. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "hooks/_test/reader_git_safety.py test_malformed_reader_syntax_grants_no_read_authority imports the actual module and checks malformed quote gives unknown verb and nonzero status; direct /private/tmp/reader-syntax-independent-test.log PASS. Frozen reader nine-test suite also PASS /private/tmp/runtime-frozen-reader9.log. Base64 output and textconv controls use actual effects.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F15",
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 392,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "raw_report": "except (ValueError, TypeError): <Return>",
+      "enclosing_function": "_within",
+      "source_excerpt": "        return os.path.commonpath([canonical(path), canonical(scope)]) == canonical(scope)\n    except (ValueError, TypeError):\n        return False\n\n\ndef _scopes(loaded: dict) -> list[str]:\n    d = loaded[\"data\"]",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Fail-closed containment predicate: uncomparable canonical paths are outside scope, so false cannot grant task or scratch authority.",
+      "Evidence and function/caller chain": "_within -> select_task/own_session_path. ResolverRecovery.test_unsafe_path_and_shell_shapes_do_not_match injects ValueError and demands false. Direct six-test PASS /private/tmp/resolver-recovery-targeted-test.log and actual scope/tie/placeholder three-test PASS /private/tmp/resolver-existing-scope-test.log.",
+      "Falsification": "Any incomparable paths being treated as contained, or a caller using false to grant authority, invalidates this predicate explanation."
+    },
+    {
+      "id": "F16",
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 631,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "raw_report": "except (ValueError, TypeError): <Return>",
+      "enclosing_function": "find_gate_for_repo",
+      "source_excerpt": "            paths = shape.get(\"paths\") or [repo_root or payload[\"cwd\"]]\n    except (ValueError, TypeError):\n        return None\n    selection = select_task(workspace, paths, session_id=session_id)\n    found = selection[\"gate\"]\n    if found:\n        if env_override and canonical(env_override) != canonical(found[\"path\"]):",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Malformed action yields no optional gate, before any native legacy fallback. Nonobject payload and nonmapping tool_input are denied.",
+      "Evidence and function/caller chain": "find_gate_for_repo -> select_task/fallback. ResolverRecovery.test_malformed_callback_is_bound_and_cannot_read_native_gate provides a legacy root gate and malformed callbacks and proves no selection. Existing invalid-host actual test-guard/native-evidence fixture passed /private/tmp/resolver-existing-host-test.log.",
+      "Falsification": "A failed parse selecting a task or legacy gate invalidates this no-authority result."
+    },
+    {
+      "id": "F17",
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 805,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "raw_report": "except (OSError, SubprocessError): <Return>",
+      "enclosing_function": "_git_lines",
+      "source_excerpt": "        out = subprocess.run([\"git\", \"-C\", repo, *args], capture_output=True, text=True, timeout=10)\n    except (OSError, subprocess.SubprocessError):\n        return None\n    return [l for l in out.stdout.split(\"\\0\" if \"-z\" in args else \"\\n\") if l] if out.returncode == 0 else None\n\n\ndef _lone_git_commit(command: str) -> bool:",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Optional Git listing failure is None, not an authoritative empty listing. A real lone-commit caller defect was repaired: either failed staged/modified listing now raises into Tier C instead of using `or []`.",
+      "Evidence and function/caller chain": "_git_lines -> task_tier lone-commit/directory paths. ResolverRecovery.test_failed_git_listing_cannot_lower_commit_review_floor injects TimeoutExpired and fails each listing independently; both yield C with cannot-enumerate reason. Direct six-test PASS; conventional commit real test also PASS.",
+      "Falsification": "Any caller turning None into authoritative emptiness/lower review floor invalidates this contract. This is not a deferral of the earlier caller defect."
+    },
+    {
+      "id": "F18",
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 818,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "raw_report": "except UnknownShape: <Return>",
+      "enclosing_function": "_lone_git_commit",
+      "source_excerpt": "        tokens = shell_tokens(command)\n    except UnknownShape:\n        return False\n    if any(is_op for _, is_op, _ in tokens):\n        return False\n    words = [t for t, _, _ in tokens]\n    i = 1",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Unknown shell shape cannot claim the narrow lone-commit selection. False leaves the generic conservative classification path; it is not a mutation exemption.",
+      "Evidence and function/caller chain": "_lone_git_commit -> task_tier. Malformed quoted commit raises UnknownShape and returns false in ResolverRecovery.test_unsafe_path_and_shell_shapes_do_not_match. Existing conventional-message staged/modified classification test passed.",
+      "Falsification": "UnknownShape being accepted as a lone commit, or false selecting the lone-commit branch, invalidates this explanation."
+    },
+    {
+      "id": "F19",
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 896,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "raw_report": "except (OSError, ValueError, TypeError): <Return>",
+      "enclosing_function": "_load",
+      "source_excerpt": "        return {\"path\": path, \"data\": data} if isinstance(data, dict) else None\n    except (OSError, ValueError, TypeError):\n        return None\n\n\ndef main():\n    import argparse",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Missing/unreadable/malformed/nonobject file is no optional gate authority. Expected read/parse/type errors are now narrow; arbitrary implementation exceptions are not suppressed.",
+      "Evidence and function/caller chain": "_load -> task/companion/native evidence lookup. ResolverRecovery.test_missing_unreadable_and_malformed_gate_is_no_authority exercises absent file, malformed JSON, array and PermissionError, all None; direct six-test PASS.",
+      "Falsification": "Any failed load yielding authority, or a caller treating None as a valid gate, invalidates the optional-result contract."
+    },
+    {
+      "id": "F20",
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 117,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 28 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)",
+      "enclosing_function": "host_binding_present",
+      "source_excerpt": "        payload = json.loads(raw_payload or '{}')\n    except (ValueError, TypeError):\n        return True\n    if raw_payload and not isinstance(payload, dict):\n        return True\n    def bound(obj):\n        if not isinstance(obj, dict):",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: callback/session identity -> task scope selection -> artifact/tier/scratch checks. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "hooks/_test/task_keyed_gates.py imports the actual resolver; ResolverRecovery six direct exception controls PASS plus real invalid-host test-guard and conventional commit/scope/placeholder controls PASS. The earlier eight-finding author analysis is /private/tmp/resolver-recovery-finding-dispositions.md. Root independently reviews the four repaired behaviors; this row does not claim all 28 handlers are covered.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F21",
+      "path": "hooks/lib/session_anchor.py",
+      "line": 162,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "raw_report": "except (OSError, ValueError): <Return>",
+      "enclosing_function": "_registered_header",
+      "source_excerpt": "        return header\n    except (OSError, ValueError):\n        return None\n\n\ndef _registered_anchor_ids(directory):\n    path = os.path.join(directory, 'meta', 'claude-turn-anchors.json')",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Invalid/unreadable registered header yields no session identity. None cannot supply a UUID/directory fallback or authorize scratch. This boundary rejects duplicate header fields, malformed JSON and unsafe file forms.",
+      "Evidence and function/caller chain": "_registered_header -> registered_session_dir -> router identity selection. Actual temporary control /private/tmp/runtime-session-header-disposition-control.py first binds a valid exact header, then injects malformed JSON, duplicate fields and PermissionError; each yields None and registered_session_dir empty. PASS /private/tmp/runtime-frozen-session-header-control.log. Router fixtures separately cover unique header correction, anchor ambiguity and unbound aliases; frozen twenty-five-test PASS /private/tmp/router-final-startup-boundary.log.",
+      "Falsification": "A read/parse failure returning a session directory or permitting alias fallback invalidates this no-identity explanation."
+    },
+    {
+      "id": "F22",
+      "path": "hooks/lib/session_anchor.py",
+      "line": 42,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 10 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)",
+      "enclosing_function": "_read_regular",
+      "source_excerpt": "        fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | getattr(os, \"O_NOFOLLOW\", 0))\n    except OSError:\n        return \"\"\n    try:\n        st = os.fstat(fd)\n        if not stat.S_ISREG(st.st_mode) or st.st_size > MAX_ANCHOR_BYTES:\n            return \"\"",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: regular/header/anchor reads -> strict registered identity selection and environment correction. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "bin/_test/craft_hook_router_test.py real router fixtures cover malformed/missing headers, unique header identity, anchor provenance, ambiguity and mutation denial. hooks/_test/session_anchor_mistag.test.sh is the existing environment-correction fixture. Frozen twenty-five-test router PASS, plus direct malformed/duplicate/unreadable header control PASS /private/tmp/runtime-frozen-session-header-control.log. No claim every one of ten handlers has direct exception coverage.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F23",
+      "path": "hooks/lib/task_actions.py",
+      "line": 207,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "raw_report": "except (ValueError, SyntaxError): <Return>",
+      "enclosing_function": "_python_read",
+      "source_excerpt": "        tree = ast.parse(args[pos + 1])\n    except (ValueError, SyntaxError):\n        return False\n    bound = set()\n    modules = set()\n    reserved = {\"open\", \"print\", \"len\", \"str\", \"int\", \"sorted\", \"list\", \"dict\", \"tuple\", \"bool\"}\n",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Malformed Python cannot be classified as a proven isolated read. Returning false makes action classification conservative; it does not execute the snippet or grant read authority.",
+      "Evidence and function/caller chain": "_python_read -> action/read classification -> mutation gate. Safety.test_malformed_reader_syntax_grants_no_read_authority supplies invalid Python `if`, demands false, and separately rejects malformed shell syntax. Direct /private/tmp/reader-syntax-independent-test.log PASS, frozen reader nine-test PASS /private/tmp/runtime-frozen-reader9.log.",
+      "Falsification": "Malformed Python receiving proven-read authority or bypassing mutation requirements invalidates this fail-closed predicate."
+    },
+    {
+      "id": "F24",
+      "path": "hooks/lib/task_actions.py",
+      "line": 153,
+      "rule": "writing-code-9-silently-dropped-param(offset)",
+      "raw_report": "def shape(...): parameter 'offset' has a default but is never referenced in this function's own scope, not forwarded, and not named in the docstring",
+      "enclosing_function": "shape",
+      "source_excerpt": "\n    def shape(word, globs, offset=0, *, pattern=False):\n        if not globs:\n            return\n        if not word or any(p < offset for p in globs):\n            raise UnknownShape('globbed option key: prefix ./ or quote the pattern')\n        # An attached fixed grep --include= key survives expansion verbatim.",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "The offset parameter is captured by `any(p < offset for p in globs)` inside the nested generator. The scanner own-scope heuristic misses this use; removing the argument would change grammar behavior.",
+      "Evidence and function/caller chain": "_reader_globs -> nested shape -> attached option expansion classification. Safety.test_malformed_reader_syntax_grants_no_read_authority accepts --include= value offset10 and rejects key offset2 with UnknownShape. Direct /private/tmp/reader-syntax-independent-test.log PASS; exact source generator use supplies source proof.",
+      "Falsification": "If changing offset no longer distinguishes value/key expansion, or the nested expression stops reading it, this unused-parameter disposition fails."
+    },
+    {
+      "id": "F25",
+      "path": "hooks/lib/task_actions.py",
+      "line": 207,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)",
+      "enclosing_function": "_python_read",
+      "source_excerpt": "        tree = ast.parse(args[pos + 1])\n    except (ValueError, SyntaxError):\n        return False\n    bound = set()\n    modules = set()\n    reserved = {\"open\", \"print\", \"len\", \"str\", \"int\", \"sorted\", \"list\", \"dict\", \"tuple\", \"bool\"}\n",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: shell token/action parsing -> exact read grammar or conservative mutation targets -> gate authority. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "hooks/_test/task_keyed_gates.py actual mutation/read/scope fixtures plus reader_git_safety.py malformed Python, option grammar and real-effects controls exercise the module. Direct malformed Python/offset test PASS and real scope controls PASS. No claim all eight exception handlers are covered.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F26",
+      "path": "hooks/lib/test-evidence.py",
+      "line": 64,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)",
+      "enclosing_function": "working_blob",
+      "source_excerpt": "            raise ValueError(f'source exceeds 64 MiB: {source!r}')\n    except FileNotFoundError:\n        return 'deleted'\n    return git(repo, 'hash-object', '--stdin', data=data).decode().strip()\n\n\ndef committed_blob(repo: Path, source: str) -> str:",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: read/validate receipt -> exact source/revision checks -> pending-first real test execution/cancellation -> final receipt. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "hooks/_test/test_evidence.py imports producer/checker and runs actual fixture Git/test commands. Seventeen-test PASS /private/tmp/integration-producer-review-test.log includes timed-out descendant cancellation leaving old pass invalidated and pending result. No all-handler coverage claim.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    },
+    {
+      "id": "F27",
+      "path": "scripts/canary/craft-backend-canary.py",
+      "line": 55,
+      "rule": "writing-tests-5",
+      "raw_report": "source has 7 except block(s) but no test file found (looked in tests/, scripts/canary/tests/, ...)",
+      "enclosing_function": "load_json",
+      "source_excerpt": "        value = json.loads(sys.stdin.read() if str(path) == \"-\" else path.read_text())\n    except (OSError, json.JSONDecodeError) as exc:\n        raise PacketError(f\"cannot load JSON {path}: {exc}\") from exc\n    if not isinstance(value, dict):\n        raise PacketError(f\"expected JSON object: {path}\")\n    return value\n",
+      "proposed_disposition": "demonstrated heuristic/expected-outcome false positive; independent approval pending",
+      "Reason": "Test-discovery heuristic only: the scanner does not locate this repository's mapped `_test` fixture. Relevant chain: manifest/artifact reads -> exact/digest/confined canary setup/evidence/cleanup validation. This finding supplies no per-handler coverage measurement.",
+      "Evidence and function/caller chain": "bin/_test/craft_backend_canary_test.py imports and dispatches actual canary helpers for missing/corrupt runtime artifacts, confined paths, registration, evidence and cleanup. Supplied fifteen-test PASS /private/tmp/canary-refresh-tests.log. Tests use isolated homes; they do not attest actual live backend delivery or every exception handler.",
+      "Falsification": "The disposition fails if the named fixture is absent, no longer imports/dispatches this source, or the stated control does not exercise that chain. Unchecked individual handlers are not claimed covered by finding an external test file."
+    }
+  ],
+  "independent_reviewer_approval": null,
+  "aggregate_workflow_status": "NOT PASS: previous full run failed package bytecode inventory; source fix and focused tests passed, full Git-object workflow must rerun after candidate commit.",
+  "proposed_markdown_sha256": "bf0d82ae1c03056d9773466e67bdf68de90a34f2db80de87bb73b6685a2d2234",
+  "integration_working_source_matches_candidate": true,
+  "scanner_runtime_observed_after_run": {
+    "bash": {
+      "resolved_executable": "/bin/bash",
+      "version": "GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25)"
+    },
+    "python3": {
+      "resolved_executable": "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+      "version": "Python 3.14.6"
+    }
+  },
+  "publication": {
+    "reviewed_original_metadata_sha256": "9adce18b1fe477763fadf56dc7bba2ff24f6eaff426a3a718074f0f775e9e431",
+    "change": "Removed one redundant adverb from descriptive strings only. Source/test/scanner/control identities, finding outcomes and raw output are unchanged."
+  }
+}

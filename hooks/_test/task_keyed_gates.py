@@ -37,7 +37,7 @@ class Gates(unittest.TestCase):
         self.ws = Path(self.tmp.name)
         self.repo = self.ws / 'repo'
         self.repo.mkdir()
-        subprocess.run(['git', 'init', '-q', str(self.repo)], check=True)
+        subprocess.run(['git', 'init', '-q', str(self.repo)], check=True, timeout=120)
         self.a = self.repo / 'a'; self.a.mkdir()
         self.b = self.repo / 'b'; self.b.mkdir()
         self.env = {k: v for k, v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'SESSION_', 'HUB_'))}
@@ -68,7 +68,7 @@ class Gates(unittest.TestCase):
 
     def hook(self, command='', cwd=None, env=None, tool='Bash', path=None):
         ti = {'command': command} if tool == 'Bash' else {('notebook_path' if tool == 'NotebookEdit' else 'file_path'): str(path)}
-        return subprocess.run(['bash', str(ROOT / 'hooks/bash/universal-mutation-gate.sh')], input=json.dumps(craft_payload(tool_name=tool, cwd=str(cwd or self.repo), tool_input=ti)), env=env or self.env, text=True, capture_output=True)
+        return subprocess.run(['bash', str(ROOT / 'hooks/bash/universal-mutation-gate.sh')], input=json.dumps(craft_payload(tool_name=tool, cwd=str(cwd or self.repo), tool_input=ti)), env=env or self.env, text=True, capture_output=True, timeout=120)
 
     def assertGate(self, code, command='', **kwargs):
         result = self.hook(command, **kwargs)
@@ -76,14 +76,15 @@ class Gates(unittest.TestCase):
         return result
 
     def identity_env(self, payload, missing=False):
-        env = {k:v for k,v in self.env.items() if not missing or k not in {'CRAFT_SESSION_ID','CRAFT_SESSION_DIR'}}
+        excluded = {'CRAFT_SESSION_ID', 'CRAFT_SESSION_DIR'} if missing else set()
+        env = {k:v for k,v in self.env.items() if k not in excluded}
         return {**env, 'CCP_HOOK_INPUT_JSON': json.dumps(payload)}
 
     def real_identity_hooks(self, payload, env):
         results = []
         for hook in ['hooks/bash/universal-mutation-gate.sh', 'hooks/resolver/investigate-gate-guard.sh']:
             results.append(subprocess.run(['bash', str(ROOT / hook)], input=json.dumps(payload),
-                                          env=env, text=True, capture_output=True))
+                                          env=env, text=True, capture_output=True, timeout=120))
         return results
 
     def test_sdk_uuid_real_transcript_uses_host_directory(self):
@@ -106,12 +107,12 @@ class Gates(unittest.TestCase):
         self.task('o/r#uuid', self.a, sid=uuid)
         payload = {'session_id': uuid, 'cwd': str(self.a), 'tool_input': {'command': 'touch file'}}
         env = self.identity_env(payload, missing=True)
-        result = subprocess.run(['python3', str(LIB / 'resolve-think-gate.py'), '--workspace', str(self.ws), '--action-json'], env=env, text=True, capture_output=True)
+        result = subprocess.run(['python3', str(LIB / 'resolve-think-gate.py'), '--workspace', str(self.ws), '--action-json'], env=env, text=True, capture_output=True, timeout=120)
         selected = json.loads(result.stdout)
         self.assertIsNone(selected['gate'])
         self.assertIn('Session id unresolved', selected['error'])
         self.assertIn('CRAFT_SESSION_DIR', selected['error'])
-        result = subprocess.run(['python3', str(LIB / 'resolve-think-gate.py'), '--workspace', str(self.ws), '--repo-root', str(self.a), '--gate-name', 'investigate-gate'], env=env, text=True, capture_output=True)
+        result = subprocess.run(['python3', str(LIB / 'resolve-think-gate.py'), '--workspace', str(self.ws), '--repo-root', str(self.a), '--gate-name', 'investigate-gate'], env=env, text=True, capture_output=True, timeout=120)
         self.assertIsNone(json.loads(result.stdout))
         self.assertIn('Session id unresolved', result.stderr)
         payload['tool_name'] = 'Bash'
@@ -125,7 +126,7 @@ class Gates(unittest.TestCase):
         payload = {'session_id': 'ffe0010a-0000-4000-8000-000000000000',
                    'transcript_path': TRANSCRIPT,
                    'cwd': str(self.a), 'tool_name': 'Bash', 'tool_input': {'command': 'touch file'}}
-        result = subprocess.run(['bash', str(ROOT / 'hooks/bash/universal-mutation-gate.sh')], input=json.dumps(payload), env=self.identity_env(payload), text=True, capture_output=True)
+        result = subprocess.run(['bash', str(ROOT / 'hooks/bash/universal-mutation-gate.sh')], input=json.dumps(payload), env=self.identity_env(payload), text=True, capture_output=True, timeout=120)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         mutation, guard = self.real_identity_hooks(payload, self.identity_env(payload))
         self.assertEqual(mutation.returncode, 0, mutation.stderr)
@@ -256,8 +257,8 @@ class Gates(unittest.TestCase):
     def target_repositories(self):
         for path, origin in [(self.ws, 'https://example.invalid/owner/configs.git'),
                              (self.repo, 'https://example.invalid/owner/utilities.git')]:
-            subprocess.run(['git', 'init', '-q', str(path)], check=True)
-            subprocess.run(['git', '-C', str(path), 'config', 'remote.origin.url', origin], check=True)
+            subprocess.run(['git', 'init', '-q', str(path)], check=True, timeout=120)
+            subprocess.run(['git', '-C', str(path), 'config', 'remote.origin.url', origin], check=True, timeout=120)
 
     def test_workspace_repo_metadata_for_other_origin_rejected_with_diagnostic(self):
         self.target_repositories()
@@ -448,7 +449,7 @@ class Gates(unittest.TestCase):
                 shutil.rmtree(directory)
                 self.task('o/r#other', self.a, status='designing', sid=sid)
             env = {**self.env, 'CRAFT_SESSION_DIR': str(directory.parent.parent), 'PATH': str(fakebin) + os.pathsep + self.env['PATH']}
-            result = subprocess.run(['bash', str(self.ws / 'hooks/resolver/pipeline-state-guard.sh')], input=json.dumps(craft_payload(cwd=str(self.repo))), env=env, capture_output=True, text=True)
+            result = subprocess.run(['bash', str(self.ws / 'hooks/resolver/pipeline-state-guard.sh')], input=json.dumps(craft_payload(cwd=str(self.repo))), env=env, capture_output=True, text=True, timeout=120)
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
             for name in ('junior-senior', 'artifacts-posted'):
                 self.assertEqual(json.loads((directory / (name + '-gate.json')).read_text())['ticket'], ticket)
@@ -474,7 +475,7 @@ class Gates(unittest.TestCase):
         (plans / 'fact-sheet-other.md').write_text('unrelated-task-b findings')
         (plans / 'pre-mortem-other.md').write_text('unrelated-task-b Severity: low')
         result = subprocess.run(['python3', str(LIB / 'pipeline_state.py'), str(gate), str(self.ws), str(LIB)],
-                                env=self.env, text=True, capture_output=True)
+                                env=self.env, text=True, capture_output=True, timeout=120)
         self.assertEqual(result.returncode, 0)
         self.assertIn('No investigation artifact found', result.stdout)
         self.assertIn('No pre-mortem artifact found', result.stdout)
@@ -508,7 +509,7 @@ class Gates(unittest.TestCase):
         approved(own / 'plans/pre-mortem-lifecycle.md', 'Ticket: o/r#lifecycle\nSeverity: 50\nImplementation may proceed: YES\n')
         data['status'] = 'implementing'; approved(gate, data, tool='Edit')
         self.assertGate(0, 'touch file', cwd=self.a)
-        subprocess.run(['touch', str(self.a / 'file')], check=True)
+        subprocess.run(['touch', str(self.a / 'file')], check=True, timeout=120)
         self.assertTrue((self.a / 'file').is_file())
         data['status'] = 'disposed'; approved(gate, data, tool='Edit')
         self.assertGate(2, 'touch another', cwd=self.a)
@@ -685,7 +686,7 @@ class Gates(unittest.TestCase):
     def test_tree_wide_targets_are_classified_by_their_contents(self):
         """#1086 review: a directory or repository-wide target is as risky as the
         files under it. A lone git commit is as risky as what it records."""
-        git = lambda *a: subprocess.run(['git', '-C', str(self.repo), *a], check=True, capture_output=True)
+        git = lambda *a: subprocess.run(['git', '-C', str(self.repo), *a], check=True, capture_output=True, timeout=120)
         (self.repo / 'hooks/bash').mkdir(parents=True); (self.repo / 'docs').mkdir(); (self.repo / 'src').mkdir()
         (self.repo / 'hooks/bash/guard.sh').write_text('x'); (self.repo / 'docs/a.md').write_text('x')
         git('add', 'hooks/bash/guard.sh', 'docs/a.md')
@@ -714,7 +715,7 @@ class Gates(unittest.TestCase):
     def test_lone_commit_with_conventional_message_is_classified_by_what_it_records(self):
         """#1092 review: quoted parentheses, arrows and slashes in a commit
         message do not turn a lone commit into a repository-wide target."""
-        git = lambda *a: subprocess.run(['git', '-C', str(self.repo), *a], check=True, capture_output=True)
+        git = lambda *a: subprocess.run(['git', '-C', str(self.repo), *a], check=True, capture_output=True, timeout=120)
         (self.repo / 'hooks/bash').mkdir(parents=True); (self.repo / 'docs').mkdir()
         (self.repo / 'hooks/bash/guard.sh').write_text('x'); (self.repo / 'docs/a.md').write_text('x')
         git('add', 'hooks/bash/guard.sh', 'docs/a.md')
@@ -728,18 +729,18 @@ class Gates(unittest.TestCase):
 
     def test_invalid_host_binding_cannot_use_native_legacy_test_evidence(self):
         (self.repo / 'PROJECT.md').write_text('name: fixture\ntesting:\n  command: python3 -m pytest\n')
-        subprocess.run(['git', '-C', str(self.repo), 'add', 'PROJECT.md'], check=True)
+        subprocess.run(['git', '-C', str(self.repo), 'add', 'PROJECT.md'], check=True, timeout=120)
         commit = ['git', '-C', str(self.repo), '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm']
-        subprocess.run(commit + ['base'], check=True)
-        subprocess.run(['git', '-C', str(self.repo), 'update-ref', 'refs/remotes/origin/main', 'HEAD'], check=True)
+        subprocess.run(commit + ['base'], check=True, timeout=120)
+        subprocess.run(['git', '-C', str(self.repo), 'update-ref', 'refs/remotes/origin/main', 'HEAD'], check=True, timeout=120)
         (self.repo / 'foo.py').write_text('x = 1\n')
-        subprocess.run(['git', '-C', str(self.repo), 'add', 'foo.py'], check=True)
-        subprocess.run(commit + ['source change'], check=True)
+        subprocess.run(['git', '-C', str(self.repo), 'add', 'foo.py'], check=True, timeout=120)
+        subprocess.run(commit + ['source change'], check=True, timeout=120)
         for root in (self.ws, self.repo):
             subprocess.run(['python3', str(LIB / 'test-evidence.py'), 'record', '--repo', str(self.repo),
                             '--output', str(root / 'test-gate.json'), '--source', 'foo.py',
                             '--framework', 'fixture', '--', 'python3', '-c', 'assert True'],
-                           check=True, capture_output=True)
+                           check=True, capture_output=True, timeout=120)
         payload = json.dumps({'cwd': str(self.repo), 'tool_input': {'command': 'git push'}})
         cases = [(name, '{{SESSION_PATH}}') for name in
                  ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR',
@@ -753,7 +754,7 @@ class Gates(unittest.TestCase):
             with patch.dict(os.environ, env, clear=True):
                 self.assertIsNone(r.find_gate_for_repo(str(self.ws), str(self.repo), 'test-gate'))
             result = subprocess.run(['bash', str(ROOT / 'hooks/git/test-guard.sh')], input=payload,
-                                    env=env, text=True, capture_output=True)
+                                    env=env, text=True, capture_output=True, timeout=120)
             self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         for binding in ({'craftSessionId': '${SESSION_ID}'}, {'session_id': SDK_UUID},
                         {'transcript_path': '/sessions/{{SESSION_ID}}/session.jsonl'},
@@ -764,11 +765,11 @@ class Gates(unittest.TestCase):
             with patch.dict(os.environ, resolver_env, clear=True):
                 self.assertIsNone(r.find_gate_for_repo(str(self.ws), str(self.repo), 'test-gate'))
             result = subprocess.run(['bash', str(ROOT / 'hooks/git/test-guard.sh')], input=actual_payload,
-                                    env=env, text=True, capture_output=True)
+                                    env=env, text=True, capture_output=True, timeout=120)
             self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         native = {k:v for k,v in self.env.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'SESSION_'))}
         result = subprocess.run(['bash', str(ROOT / 'hooks/git/test-guard.sh')], input='', cwd=self.repo,
-                                env=native, text=True, capture_output=True)
+                                env=native, text=True, capture_output=True, timeout=120)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_native_pre_push_finds_root_test_gate_without_a_session(self):
@@ -926,7 +927,7 @@ class Hub(unittest.TestCase):
     def send(self, target, task='o/r#1', role='role::hub'):
         if role is not None: self.meta('one', [role])
         env = self.env
-        return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')], input=json.dumps(craft_payload(tool_name='mcp__session__send_agent_message', tool_input={'sessionId': target, 'message': 'CCP_TASK_ID=' + task + '\ndispatch'})), env=env, capture_output=True, text=True)
+        return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')], input=json.dumps(craft_payload(tool_name='mcp__session__send_agent_message', tool_input={'sessionId': target, 'message': 'CCP_TASK_ID=' + task + '\ndispatch'})), env=env, capture_output=True, text=True, timeout=120)
 
     def test_hub_per_task_and_exemptions(self):
         for peer in ('a', 'b', 'c'):
@@ -952,7 +953,7 @@ class Hub(unittest.TestCase):
         payload = craft_payload(tool_name='mcp__session__spawn_session', hook_event_name=phase, tool_use_id=key,
                                 tool_input=self.spawn_input(key, 'CCP_TASK_ID=' + task + '\nbounded work'))
         if response is not None: payload['tool_response'] = response
-        return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')], input=json.dumps(payload), env=self.env, capture_output=True, text=True)
+        return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')], input=json.dumps(payload), env=self.env, capture_output=True, text=True, timeout=120)
 
     def test_administration_cap_never_caps_communication(self):
         self.meta('one', ['role::hub'])
@@ -984,7 +985,7 @@ class Hub(unittest.TestCase):
         payload = craft_payload(tool_name='mcp__session__spawn_session', tool_input=self.spawn_input('identical', 'CCP_TASK_ID=o/r#1\nwork'))
         env = {**self.env, 'HUB_THREAD_CAP': '1'}
         def invoke():
-            return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')], input=json.dumps(payload), env=env, capture_output=True, text=True).returncode
+            return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')], input=json.dumps(payload), env=env, capture_output=True, text=True, timeout=120).returncode
         with concurrent.futures.ThreadPoolExecutor() as pool:
             codes = list(pool.map(lambda _: invoke(), range(2)))
         self.assertEqual(sorted(codes), [2, 2])
@@ -1007,7 +1008,7 @@ class Hub(unittest.TestCase):
                        'transcript_path':TRANSCRIPT,
                        'tool_name':'mcp__session__spawn_session', 'tool_use_id':str(i),
                        'tool_input':self.spawn_input('worker', 'CCP_TASK_ID=o/r#1\nwork')}
-            result = subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')], input=json.dumps(payload), env=env, text=True, capture_output=True)
+            result = subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')], input=json.dumps(payload), env=env, text=True, capture_output=True, timeout=120)
             self.assertEqual(result.returncode, 0 if i < 3 else 2, result.stdout + result.stderr)
 
     def test_wrapped_spawn_results_reconcile(self):
@@ -1025,7 +1026,7 @@ class Hub(unittest.TestCase):
             payload = craft_payload(tool_name='mcp__session__spawn_session', tool_use_id=str(i),
                                     tool_input={'name': 'invalid', 'prompt': 'CCP_TASK_ID=o/r#1'})
             result = subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')],
-                                    input=json.dumps(payload), env=self.env, text=True, capture_output=True)
+                                    input=json.dumps(payload), env=self.env, text=True, capture_output=True, timeout=120)
             self.assertEqual(result.returncode, 2)
             self.assertIn('spawn-protocol', result.stderr)
         self.assertFalse((self.ws / 'sessions/one/hub-threads.json').exists())
@@ -1038,7 +1039,7 @@ class Hub(unittest.TestCase):
                 tool_input=self.spawn_input(name, 'CCP_TASK_ID=o/r#1\nCCP_SPAWN_REQUEST_ID=' + token))
             if response is not None: payload['tool_response'] = response
             return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')],
-                input=json.dumps(payload), env={**self.env, 'HUB_THREAD_CAP': '1'}, text=True, capture_output=True)
+                input=json.dumps(payload), env={**self.env, 'HUB_THREAD_CAP': '1'}, text=True, capture_output=True, timeout=120)
         self.assertEqual(invoke().returncode, 0)
         self.assertEqual(invoke().returncode, 2)
         self.assertEqual(invoke(name='different').returncode, 2)
@@ -1116,7 +1117,7 @@ class Hub(unittest.TestCase):
             payload = craft_payload(tool_name='mcp__session__spawn_session', tool_use_id=key,
                                     tool_input=self.spawn_input(key, 'bounded work'))
             return subprocess.run(['bash', str(ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh')],
-                                  input=json.dumps(payload), env=self.env, capture_output=True, text=True)
+                                  input=json.dumps(payload), env=self.env, capture_output=True, text=True, timeout=120)
         self.assertEqual(raw('unresolved').returncode, 0)
         audit = self.ws / 'sessions/one/hub-threads.json.audit.jsonl'
         self.assertIn('unresolved spawn task', audit.read_text())
@@ -1127,6 +1128,63 @@ class Hub(unittest.TestCase):
         self.task('o/r#ambiguous', self.repo, status='designing', artifacts=False)
         self.assertEqual(raw('ambiguous').returncode, 0)
         self.assertIn('unresolved spawn task', audit.read_text())
+
+
+
+class ResolverRecovery(unittest.TestCase):
+    def test_malformed_callback_is_bound_and_cannot_read_native_gate(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / 'test-gate.json').write_text('{"fixture": true}')
+            for payload in ('{', '[', 'null', '[]', '"text"', '{"cwd":"/repo","tool_input":[1]}'):
+                with self.subTest(payload=payload), patch.dict(os.environ, {'CCP_HOOK_INPUT_JSON': payload}, clear=True):
+                    self.assertTrue(r.host_binding_present())
+                    self.assertIsNone(r.find_gate_for_repo(str(root), str(root), 'test-gate'))
+            with patch.dict(os.environ, {}, clear=True):
+                self.assertFalse(r.host_binding_present())
+                self.assertIsNotNone(r.find_gate_for_repo(str(root), str(root), 'test-gate'))
+
+    def test_uncomparable_repository_cannot_recover_through_origin(self):
+        with patch.object(r.os.path, 'realpath', side_effect=OSError('unreadable')), patch.object(r, '_git_origin', return_value='same') as origin:
+            self.assertFalse(r._same_repo('/a', '/b'))
+            origin.assert_not_called()
+
+    def test_unsafe_path_and_shell_shapes_do_not_match(self):
+        with patch.object(r, 'canonical', side_effect=ValueError('invalid path')):
+            self.assertFalse(r._within('/a', '/scope'))
+        self.assertFalse(r._lone_git_commit("git commit -m '"))
+
+    def test_unreadable_lifecycle_target_is_not_owned_scratch(self):
+        with tempfile.TemporaryDirectory() as raw:
+            workspace = Path(raw)
+            session = workspace / 'sessions/one'
+            session.mkdir(parents=True)
+            target = session / 'tasks/task/think-gate.json'
+            with patch.dict(os.environ, {'CRAFT_SESSION_DIR': str(session)}, clear=True):
+                self.assertTrue(r.own_session_path(str(workspace), str(target)))
+                with patch.object(r.os, 'stat', side_effect=PermissionError('unreadable target')):
+                    self.assertFalse(r.own_session_path(str(workspace), str(target)))
+
+    def test_failed_git_listing_cannot_lower_commit_review_floor(self):
+        with patch.object(r.subprocess, 'run', side_effect=subprocess.TimeoutExpired(['git'], 10)):
+            self.assertIsNone(r._git_lines('/repo', 'diff'))
+        with tempfile.TemporaryDirectory() as raw:
+            for listings in ([None, []], [[], None]):
+                with self.subTest(listings=listings), patch.object(r, '_git_lines', side_effect=listings):
+                    tier = r.task_tier({'repo_root': raw, 'tier': 'A'}, [raw], 'git commit -m fixture')
+                    self.assertEqual(tier['floor'], 'C')
+                    self.assertIn('cannot enumerate commit targets', ' '.join(tier['reasons']))
+
+    def test_missing_unreadable_and_malformed_gate_is_no_authority(self):
+        with tempfile.TemporaryDirectory() as raw:
+            gate = Path(raw) / 'gate.json'
+            self.assertIsNone(r._load(str(gate)))
+            for text in ('{', '[]'):
+                gate.write_text(text)
+                self.assertIsNone(r._load(str(gate)))
+            gate.write_text('{"status":"implementing"}')
+            with patch('builtins.open', side_effect=PermissionError('unreadable gate')):
+                self.assertIsNone(r._load(str(gate)))
 
 
 if __name__ == '__main__':

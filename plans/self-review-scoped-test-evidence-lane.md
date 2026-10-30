@@ -9,7 +9,7 @@ Project-contribution: Make the content-bound producer usable through the same ta
 
 ## Assumptions
 
-The operator authorized remaining repairs and the coordinator explicitly delegated this isolated source lane. Base e876812 includes P1 and the reader/protected Git safety changes. The owned policy directory is the existing trusted package boundary; the lane does not establish package provenance or reinterpret arbitrary scripts as trusted. Native terminal producer compatibility remains unchanged.
+The operator authorized remaining repairs and the coordinator delegated this isolated source lane. Base e876812 includes P1 and the reader/protected Git safety changes. The owned policy directory is the existing trusted package boundary; the lane does not establish package provenance or reinterpret arbitrary scripts as trusted. Native terminal producer compatibility remains unchanged.
 
 ## Peer review
 

@@ -48,7 +48,7 @@ Three enforcement layers keep the resolver active:
 2. **Every user turn** -- [`hooks/resolver/inject-resolver.sh`](hooks/resolver/inject-resolver.sh) injects the compact safety kernel plus a deterministic task/project load set with reasons. Unknown or ambiguous prompts remain visibly kernel-only; the legacy resolver prose is not globally injected.
 3. **Pre-tool-use** -- [`hooks/infrastructure/catalog-guard.sh`](hooks/infrastructure/catalog-guard.sh) is a `PreToolUse` hook on `Bash` that matches dangerous catalog-bypass patterns and blocks them with a STOP-read-skill reminder.
 
-Wire the hooks by merging [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into `~/.claude/settings.json` (or project `.claude/settings.local.json`), replacing `/path/to/claude-configs-public` with the actual absolute path to the on-disk `hooks/` (typically a workspace path -- see [Wire and verify hooks](#wire-and-verify-hooks) for the rsync-first sequence and the canonical verify-it-fires invocation).
+For Craft, use the [normal installer](#wire-and-verify-hooks), which keeps managed policy in the workspace and registers a scoped router. For terminal Claude Code, merge [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into project `.claude/settings.local.json` with command paths pointing to that project's installed hooks. User-level terminal hooks are a separate operator choice.
 
 ## Always-on conventions
 
@@ -94,10 +94,12 @@ can be inspected without changing any approval:
 python3 scripts/canary/craft-backend-canary.py capture-runtime-pins
 ```
 
-Keep Craft hook registrations in the Craft workspace. Do not put absolute paths
-to a particular Craft workspace in user-level Claude Code settings: those paths
-also affect terminal sessions and unrelated workspaces. Preserve operator-owned
-terminal hooks when reconciling an existing installation.
+Keep managed Craft policy in the workspace's `.claude/craft-settings.json`.
+The normal installer registers a minimal user-level router that loads this policy
+only for the verified Craft process/workspace route. Terminal Claude sessions
+outside Craft return without running Craft policy. Preserve operator-owned
+terminal hooks when reconciling an existing installation; do not merge the full
+Craft hook snippet into user-level settings. See [Craft enforcement](craft-agent/README.md).
 
 For local validation, use Python 3.10+ with `requirements-validation.txt`
 installed. Run from an isolated development worktree, keeping any checkout used
@@ -263,24 +265,28 @@ rsync -a "$TMP/repo/catalog/" "$WS/catalog/"
 rm -rf "$TMP"
 ```
 
-Plain `rsync -a` (no `--delete`): preserves local files not shipped upstream. Copy all four directories as one sync unit: the prompt hook requires `bin/resolve-load-set.py` plus `catalog/resolver-manifest.json`, and the push hook requires `bin/review-risk.py` plus `catalog/review-risk-policy.json`. The hooks rsync MUST run before wiring `~/.claude/settings.json` (next step), because the snippet's `command` paths reference workspace files that have to exist on disk first.
+Plain `rsync -a` (no `--delete`): preserves local files not shipped upstream. Copy all four directories as one sync unit: the prompt hook requires `bin/resolve-load-set.py` plus `catalog/resolver-manifest.json`, and the push hook requires `bin/review-risk.py` plus `catalog/review-risk-policy.json`. Run the normal installer after copying: the policy commands and scoped router must reference files already present on disk.
 
 ### Wire and verify hooks
 
-After the workspace rsync, merge [`hooks/settings-snippet.json`](hooks/settings-snippet.json) into `~/.claude/settings.json` (back the original up first), replacing every `/path/to/claude-configs-public` with the actual workspace path (e.g. `~/.craft-agent/workspaces/<ws>`).
-
-The snippet ships every hook the repo provides: `UserPromptSubmit` (resolver injection) and `PreToolUse` matchers for `Bash` (catalog-guard, branch-guard, no-attribution, ticket-required, no-sensitive-files, no-broad-staging) and `mcp__session__send_agent_message` (no-slug-form-outbound parser-drop guard). Adding new hooks upstream means re-rsync + re-merge.
-
-Verify a hook fires after wiring:
+For Craft, use the normal installer rather than merging the snippet globally:
 
 ```bash
-# Should print BLOCKED... and exit 2
-echo '{"tool_input":{"message":"see [skill:think]"}}' \
-  | ~/.craft-agent/workspaces/<ws>/hooks/agent-comms/no-slug-form-outbound.sh
-echo "exit=$?"
+bash bin/install.sh --workspace <slug>
 ```
 
-If exit is 0 instead of 2, the hook is on disk but not executable -- run `chmod +x ~/.craft-agent/workspaces/<ws>/hooks/agent-comms/*.sh ~/.craft-agent/workspaces/<ws>/hooks/git/*.sh ~/.craft-agent/workspaces/<ws>/hooks/infrastructure/*.sh ~/.craft-agent/workspaces/<ws>/hooks/resolver/*.sh`. If the hook never fires from a real `mcp__session__send_agent_message` call, settings.json is malformed -- validate with `python3 -c 'import json, os; json.load(open(os.path.expanduser("~/.claude/settings.json")))'`.
+It installs the managed snippet and blocking wrapper into workspace
+`.claude/craft-settings.json`, verifies that policy, then applies and
+verifies the minimal scoped router registration. A missing router helper fails
+installation before deployment. The helper retires only owned legacy project
+registrations and preserves operator hooks. Re-running the installer refreshes
+the same managed policy instead of creating a second autoload policy copy.
+
+A local direct-hook probe or registration receipt does not prove that Craft
+invoked the hooks. The SDK child may have a per-session working directory rather
+than the workspace root; project `.claude/settings.json` at the workspace alone
+is insufficient evidence. Run a live backend canary after installation. Native
+terminal Claude policy remains a separate project/user choice.
 
 To upgrade later:
 

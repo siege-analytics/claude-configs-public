@@ -7,7 +7,7 @@ Pre-mortem-artifact: plans/pre-mortem-scoped-test-evidence-lane.md
 Hostile-review-artifact: plans/hostile-review-scoped-test-evidence-lane.md
 Project-contribution: Give the content-bound test producer a usable execution route without treating arbitrary test code as an ungated reader.
 
-The operator authorized the remaining repairs. The coordinator explicitly delegated this lane after accepting P1 and the reader/protected Git safety slice. Base: e876812 on bugfix/complete_runtime_recovery. Work occurs only in an isolated worktree; no live runtime settings or deployed source are changed.
+The operator authorized the remaining repairs. The coordinator delegated this lane after accepting P1 and the reader/protected Git safety slice. Base: e876812 on bugfix/complete_runtime_recovery. Work occurs only in an isolated worktree; no live runtime settings or deployed source are changed.
 
 ## Design
 

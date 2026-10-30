@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "artifacts": [
+    {
+      "relative_path": "skills/RESOLVER.md",
+      "size_bytes": 17802,
+      "sha256": "c751486ac4833a15ebd75372fd817f95dbe4f4383a4a11bb5633cbdebb36ec84",
+      "provenance": {
+        "kind": "observed-legacy-installation-artifact",
+        "description": "Observed installed top-level dispatcher guidance: 17802 bytes (17796 Unicode characters). No upstream source commit is asserted; deployment backup retains the original artifact."
+      }
+    }
+  ]
+}

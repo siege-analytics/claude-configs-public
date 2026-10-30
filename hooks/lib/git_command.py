@@ -13,6 +13,9 @@ import re
 import subprocess
 import sys
 
+# Read-only guards must not mutate their installed package when importing.
+sys.dont_write_bytecode = True
+
 from task_actions import UnknownShape, shell_tokens
 
 PROTECTED = {"main", "master", "develop", "dev", "development", "staging", "next", "integration"}

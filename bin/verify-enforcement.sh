@@ -9,11 +9,12 @@
 #
 # Usage:
 #   bash bin/verify-enforcement.sh --target <root> [--mode craft-agent|direct]
-#       [--git-repo <consumer-root>]
+#       [--git-repo <consumer-root>] [--settings-file <path>]
 #
 #   --target <root>   Installed package/workspace root to check.
 #   --mode            craft-agent (default) or direct. Selects the settings
 #                     filename and whether CLAUDE.md / automations are required.
+#   --settings-file   Explicit policy path; overrides the mode default.
 #   --git-repo        Exact consumer Git root whose core.hooksPath must resolve
 #                     to the target's packaged .githooks directory.
 #
@@ -37,6 +38,7 @@ done
 TARGET=""
 MODE="craft-agent"
 NATIVE_GIT_REPO=""
+SETTINGS_OVERRIDE=""
 # Code-owned trust anchor for the canonical compact kernel. This verifier is a
 # Tier C surface; never derive the expected digest from the mutable target.
 EXPECTED_KERNEL_SHA256="c9c1f794b8bc93880f71cfea97bd0209f3955e2425489629ac471892a8bfd6fa"
@@ -44,7 +46,7 @@ KERNEL_VERIFIED=0
 
 usage() {
     cat <<'USAGE'
-Usage: bash bin/verify-enforcement.sh --target <root> [--mode craft-agent|direct] [--git-repo <consumer-root>]
+Usage: bash bin/verify-enforcement.sh --target <root> [--mode craft-agent|direct] [--git-repo <consumer-root>] [--settings-file <path>]
 USAGE
 }
 
@@ -56,6 +58,9 @@ while [[ $# -gt 0 ]]; do
         --mode)
             [[ -z "${2:-}" ]] && { echo "ERROR: --mode requires a value" >&2; exit 2; }
             MODE="$2"; shift 2 ;;
+        --settings-file)
+            [[ -z "${2:-}" ]] && { echo "ERROR: --settings-file requires a path" >&2; exit 2; }
+            SETTINGS_OVERRIDE="$2"; shift 2 ;;
         --git-repo)
             [[ -z "${2:-}" ]] && { echo "ERROR: --git-repo requires a path" >&2; exit 2; }
             NATIVE_GIT_REPO="${2%/}"; shift 2 ;;
@@ -101,7 +106,9 @@ if [[ ! -d "$HOOKS_ROOT" ]]; then
     fi
 fi
 
-if [[ "$MODE" == "craft-agent" ]]; then
+if [[ -n "$SETTINGS_OVERRIDE" ]]; then
+    SETTINGS="$SETTINGS_OVERRIDE"
+elif [[ "$MODE" == "craft-agent" ]]; then
     SETTINGS="$TARGET/.claude/settings.json"
 else
     SETTINGS="$TARGET/.claude/settings.local.json"
@@ -191,27 +198,40 @@ else
     # the hook stdout to be one clean JSON object. Accept exactly one shell token
     # resolving to ca-enforcement-gate.sh; no suffixes, redirections, pipes, or
     # control operators. Quoted paths with spaces are valid single tokens.
-    gate_cmd="$(python3 - "$SETTINGS" <<'PY'
-import json, shlex, sys
+    gate_cmd="$(python3 - "$SETTINGS" "$HOOKS_ROOT/resolver/ca-enforcement-gate.sh" <<'PY'
+import json, os, shlex, sys
 s = json.load(open(sys.argv[1]))
 ups = s.get("hooks", {}).get("UserPromptSubmit", [])
 marker = "ca-enforcement-gate.sh"
+expected = os.path.realpath(sys.argv[2])
+candidates = []
+invalid = False
 for grp in ups:
     for h in grp.get("hooks", []):
+        if not isinstance(h, dict) or h.get("type") != "command":
+            continue
         c = h.get("command", "")
-        if marker not in c:
+        if not isinstance(c, str) or marker not in c:
             continue
         try:
             parts = shlex.split(c)
         except ValueError:
-            print("__INVALID_COMMAND__")
-            sys.exit(0)
+            invalid = True
+            continue
         if len(parts) != 1 or not parts[0].endswith(marker):
-            print("__INVALID_COMMAND__")
-            sys.exit(0)
-        print(parts[0])
+            invalid = True
+            continue
+        candidates.append(parts[0])
+# Preserved operator hooks must not shadow the actual managed registration.
+for candidate in candidates:
+    if os.path.realpath(candidate) == expected:
+        print(candidate)
         sys.exit(0)
-sys.exit(0)
+if candidates:
+    print(candidates[0])
+elif invalid:
+    print("__INVALID_COMMAND__")
+
 PY
 )"
     if [[ -z "$gate_cmd" ]]; then

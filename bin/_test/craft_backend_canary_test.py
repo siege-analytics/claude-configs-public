@@ -226,7 +226,7 @@ class CanaryPacketTest(unittest.TestCase):
         host("restored resolver invocation")
         user("UNRELATED_END. boundary")
         (backend / "session.jsonl").write_text("".join(json.dumps(record) + "\n" for record in records))
-        result = subprocess.run([sys.executable, "-", str(evidence), "1"], input=match.group(1), text=True, capture_output=True)
+        result = subprocess.run([sys.executable, "-", str(evidence), "1"], input=match.group(1), text=True, capture_output=True, timeout=120)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(len(list(backend.glob("*_*.jsonl"))), 9)
         no_op = (backend / "no_op_detection.jsonl").read_text()
@@ -361,11 +361,11 @@ class CanaryPacketTest(unittest.TestCase):
         setup.copy_payload(canary, payload, assembly)
         subprocess.run([
             "bash", "bin/install-hooks.sh", "--workspace", str(assembly), "--hooks-root", str(assembly),
-        ], cwd=source, check=True, text=True, capture_output=True)
+        ], cwd=source, check=True, text=True, capture_output=True, timeout=120)
         subprocess.run([
             sys.executable, "bin/wire-enforcement.py", "--workspace", str(assembly),
             "--dist", str(source / "dist"),
-        ], cwd=source, check=True, text=True, capture_output=True)
+        ], cwd=source, check=True, text=True, capture_output=True, timeout=120)
         settings = assembly / ".claude/settings.json"
         original = settings.read_bytes()
         settings_bytes, settings_sha256, inventory = setup.verify_wired_settings(

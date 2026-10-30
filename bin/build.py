@@ -212,7 +212,7 @@ def _matches_deploy_file(path: Path, data: bytes, executable: bool | None = None
             if executable is not None and bool(info.st_mode & stat.S_IXUSR) != executable:
                 return False
             return stream.read(len(data) + 1) == data
-    except OSError:
+    except OSError:  # noqa: writing-code-7 library mismatch predicate; callers reject unreadable or unsafe deployment files
         return False
 
 
@@ -389,7 +389,7 @@ def _deployed_generation_files(builder) -> dict[str, tuple[bytes, bool | None]]:
 
 def _validate_deploy_paths(target: Path, paths) -> None:
     """Keep managed writes inside the physical target, including their parents."""
-    for name in (*paths, ".claude/settings.json", "deploy-stamp.json"):
+    for name in (*paths, ".claude/settings.json", ".claude/craft-settings.json", "deploy-stamp.json"):
         current = target
         parts = Path(name).parts
         for index, part in enumerate(parts):
@@ -469,6 +469,7 @@ def deploy_exact_revision(repo_root: Path, revision: str, target: Path, layout: 
                 [sys.executable, str(source / "bin/build.py"), "--layout",
                  "both" if layout == "nested" else layout, "--dist", str(output)],
                 cwd=source, env=environment, check=True,
+                timeout=120,
             )
             # Preserve the conventional output consumed by the installer. This
             # path was constrained before building and is never activation input.
@@ -1258,6 +1259,7 @@ def write_build_info(
             ["git", "rev-parse", "HEAD"],
             cwd=REPO_ROOT,
             text=True,
+            timeout=120,
         ).strip()
     except Exception:
         commit = "unknown"
@@ -1334,6 +1336,7 @@ def build_rules_bundle(
             ["git", "rev-parse", "--short", "HEAD"],
             cwd=REPO_ROOT,
             text=True,
+            timeout=120,
         ).strip()
     except Exception:
         commit = "unknown"
@@ -1566,6 +1569,7 @@ def build_ca_enforcement() -> None:
         commit = subprocess.check_output(
             ["git", "rev-parse", "--short", "HEAD"],
             cwd=REPO_ROOT, text=True,
+            timeout=120,
         ).strip()
     except Exception:
         commit = "unknown"
@@ -1779,7 +1783,7 @@ def write_package_documentation(pkg_dir: Path, form: str) -> None:
     """Describe this output's shipped contract, not the source checkout's tools."""
     if form not in ('nested', 'flat', 'claude-code', 'craft-agent'):
         raise BuildError(f'Unknown package documentation form: {form}')
-    source_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO_ROOT, text=True).strip()
+    source_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO_ROOT, text=True, timeout=120).strip()
     upstream = f'https://github.com/siege-analytics/claude-configs-public/tree/{source_commit}'
     metadata = 'build-info.json' if form in ('nested', 'flat') else 'package.json'
     paths = [metadata, 'skills/KERNEL.md', 'catalog/resolver-manifest.json',
@@ -1869,6 +1873,7 @@ def build_consumer_packages() -> None:
         commit = subprocess.check_output(
             ["git", "rev-parse", "HEAD"],
             cwd=REPO_ROOT, text=True,
+            timeout=120,
         ).strip()
     except Exception:
         commit = "unknown"
@@ -2016,8 +2021,10 @@ def _merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
     """
     try:
         existing = json.loads(dst.read_text())
-    except (json.JSONDecodeError, FileNotFoundError):
+    except FileNotFoundError:
         existing = {}
+    except json.JSONDecodeError as exc:
+        raise BuildError(f"invalid existing enforcement settings; refusing to overwrite {dst}: {exc}") from exc
 
     generated = json.loads(src.read_text())
 
@@ -2040,16 +2047,32 @@ def _merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
                     resolved = shlex.quote(resolved)
                 hook["command"] = resolved
 
-    # Remove any existing ca-enforcement-gate entry (idempotent reinstall).
-    for ups_group in existing["hooks"]["UserPromptSubmit"]:
-        if "hooks" in ups_group:
-            ups_group["hooks"] = [
-                h for h in ups_group["hooks"]
-                if "ca-enforcement-gate" not in h.get("command", "")
-            ]
+    # Retirement requires the exact generated command identity, not a basename
+    # substring that could belong to an unrelated operator hook.
+    managed_commands = {
+        tuple(shlex.split(hook["command"]))
+        for group in gen_hooks for hook in group.get("hooks", [])
+        if hook.get("type") == "command" and isinstance(hook.get("command"), str)
+    }
 
-    # Append the enforcement entry.
-    existing["hooks"]["UserPromptSubmit"].extend(gen_hooks)
+    def owned_wrapper(hook: object) -> bool:
+        if not isinstance(hook, dict) or hook.get("type") != "command" or not isinstance(hook.get("command"), str):
+            return False
+        try:
+            tokens = tuple(shlex.split(hook["command"]))
+        except ValueError:
+            tokens = ()  # An unparseable operator command establishes no ownership.
+        return tokens in managed_commands
+
+    retained = []
+    for group in existing["hooks"]["UserPromptSubmit"]:
+        if isinstance(group, dict) and isinstance(group.get("hooks"), list):
+            original = group["hooks"]
+            group["hooks"] = [hook for hook in original if not owned_wrapper(hook)]
+            if original and not group["hooks"]:
+                continue
+        retained.append(group)
+    existing["hooks"]["UserPromptSubmit"] = retained + gen_hooks
 
     # Set the enforcement env var.
     if "env" not in existing:
@@ -2058,6 +2081,39 @@ def _merge_ca_enforcement_settings(src: Path, dst: Path) -> None:
 
     dst.write_text(json.dumps(existing, indent=2) + "\n")
     print(f"  Merged CA enforcement into {dst}")
+
+
+def _legacy_owned_artifacts() -> list[dict]:
+    """Bound retirement authority to observed legacy dispatcher bytes."""
+    manifest = json.loads((REPO_ROOT / "catalog/legacy-owned-artifacts.json").read_text())
+    artifacts = manifest.get("artifacts")
+    if manifest.get("schema_version") != 1 or not isinstance(artifacts, list):
+        raise BuildError("invalid legacy-owned artifact manifest")
+    for item in artifacts:
+        if (not isinstance(item, dict)
+                or item.get("relative_path") != "skills/RESOLVER.md"
+                or type(item.get("size_bytes")) is not int or item["size_bytes"] < 0
+                or not re.fullmatch(r"[0-9a-f]{64}", str(item.get("sha256", "")))
+                or not isinstance(item.get("provenance"), dict)
+                or item["provenance"].get("kind") != "observed-legacy-installation-artifact"):
+            raise BuildError("invalid legacy-owned artifact entry")
+    return artifacts
+
+
+def _retire_legacy_owned_artifacts(workspace: Path, artifacts: list[dict]) -> None:
+    for item in artifacts:
+        path = workspace / item["relative_path"]
+        # Unknown files, aliases, and operator modifications retain ownership.
+        if path.parent.is_symlink():
+            continue
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            info = None  # An absent legacy artifact needs no retirement.
+        if info is None or not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+            continue
+        if info.st_size == item["size_bytes"] and hashlib.sha256(path.read_bytes()).hexdigest() == item["sha256"]:
+            path.unlink()
 
 
 def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE, *, write_stamp: bool = True) -> None:
@@ -2075,12 +2131,15 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE, *, write_stamp:
     if not craft_workspace.exists():
         print(f"  Workspace not found at {craft_workspace}, skipping deploy")
         return
-    preserved_root_files: dict[str, str] = {}
-    if ws_skills.exists():
-        for f in ws_skills.iterdir():
-            if f.is_file() and f.suffix.lower() == ".md":
-                preserved_root_files[f.name] = f.read_text()
-        shutil.rmtree(ws_skills)
+    legacy_artifacts = _legacy_owned_artifacts()
+    # Refresh exact incoming managed files; preserve all unclaimed paths,
+    # including operator files inside a managed skill directory. Obsolete paths
+    # remain unless their exact bytes have explicit legacy ownership evidence.
+    _validate_deploy_paths(craft_workspace, [
+        str(Path("skills") / path.relative_to(flat_skills))
+        for path in flat_skills.rglob("*") if path.is_file()
+    ])
+    _retire_legacy_owned_artifacts(craft_workspace, legacy_artifacts)
 
     stripped_count = 0
     for src_path in flat_skills.rglob("*"):
@@ -2098,11 +2157,6 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE, *, write_stamp:
                 stripped_count += 1
         else:
             shutil.copy2(src_path, dst_path)
-
-    for name, content in preserved_root_files.items():
-        target = ws_skills / name
-        if not target.exists():
-            target.write_text(content)
 
     resolver_src = REPO_ROOT / "RESOLVER.md"
     if resolver_src.exists():
@@ -2191,9 +2245,14 @@ def deploy_to_workspace(craft_workspace: Path = CRAFT_WORKSPACE, *, write_stamp:
                 dst.chmod(0o755)
             print(f"  Installed {sum(1 for _ in githooks_src.iterdir())} native git hook(s) to {ws_githooks}/")
 
-        # Merge CA enforcement settings into .claude/settings.json.
+        # A router receipt selects the non-autoload policy filename. Its
+        # presence is routing only; the bootstrap helper verifies its authority.
+        # Never re-add a managed wrapper to SDK-autoload project settings after
+        # scoped registration, even if the receipt itself needs repair.
         settings_src = ca_dist / "settings-enforcement.json"
-        settings_dst = craft_workspace / ".claude" / "settings.json"
+        receipt = craft_workspace / ".claude" / "craft-hook-registration.json"
+        settings_name = "craft-settings.json" if receipt.exists() or receipt.is_symlink() else "settings.json"
+        settings_dst = craft_workspace / ".claude" / settings_name
         if settings_src.exists() and settings_dst.exists():
             _merge_ca_enforcement_settings(settings_src, settings_dst)
 

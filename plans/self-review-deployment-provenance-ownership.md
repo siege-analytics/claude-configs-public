@@ -41,7 +41,7 @@ Added literal-object Git semantics, raw tracked byte/mode checks, immutable buil
 and copy sources, physical target checks, pre-copy stamp invalidation and post-copy
 artifact checks. Static target symlinks, hardlinks, FIFO/device/socket leaves and
 non-directory parents fail before writes. Source/main are rechecked before copy
-and before stamp. Artifact verification is explicitly separate from host UAT.
+and before stamp. Artifact verification is separate from host UAT.
 
 Foreign native-looking commands are preserved by physical ownership. The earlier
 fixture that expected an arbitrary `/old/package/...` command to be deleted was
@@ -58,7 +58,7 @@ live installation; this local slice does not perform or claim those stages.
 
 - `deploy_source_policy_test.py`: PASS after final fixes. Exercises three actual
   private builds: successful immutable activation, original-source mutation after
-  copy, and deliberately corrupted installed bytes. Negative controls include
+  copy, and corrupted installed bytes. Negative controls include
   staged/unstaged/deleted/mode/index-flag changes, dirty-reader side effects,
   replacement refs, ambient Git routing, source/target/output overlaps and aliases,
   hardlinked settings, FIFO leaves and non-directory parents.
@@ -70,7 +70,7 @@ live installation; this local slice does not perform or claim those stages.
   of the shared source snapshot interface.
 - Full build and build `--check`: PASS. Source hook validation: 45 hook paths valid,
   with existing unreferenced-hook warnings. `git diff --check`: PASS.
-- Shared generated catalogs are intentionally left for one coordinated refresh
+- Shared generated catalogs are left for one coordinated refresh
   after integration. Full integrated CI is a later coordinator acceptance stage.
 
 ## Test plan

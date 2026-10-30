@@ -13,20 +13,20 @@ This is the operator-approved remaining-repair slice delegated by the coordinato
 
 ## Peer review
 
-Independent source review identified forced wildcard, per-command targeting/include configuration and hook registration override gaps. Each was fixed and independently re-reviewed. The final seven-method regression suite was run independently and passed; the review artifact distinguishes integration from runtime acceptance. New helper source is explicitly Tier C; combined dependency snapshots remain a named integration obligation rather than a false local pass.
+Independent source review identified forced wildcard, per-command targeting/include configuration and hook registration override gaps. Each was fixed and independently re-reviewed. The final seven-method regression suite was run independently and passed; the review artifact distinguishes integration from runtime acceptance. New helper source is Tier C; combined dependency snapshots remain a named integration obligation rather than a false local pass.
 
 ## Lead review
 
 The changes use existing per-tool read classifiers and the existing literal shell tokenizer. No candidate/alias is executed during normalization. Branch/destructive policy is separate from workflow completeness. Scope resolution uses the same target boundary; a full implementing task does not waive protected operations. Lazy task_actions-to-git_command import avoids initialization recursion, but the modules remain coupled; keep the boundary explicit and test both direct-policy and mutation-resolution consumers.
 
-Blanket pytest/py_compile early allowance was intentionally removed with coordinator approval. Test code/plugins can execute or write files; a typed scoped runner is separate integration work. Normal read-only JSON/AST inspection, base64 stdout decoding, literal reflog inspection and ordinary pipelines remain allowed. No live runtime deployment or real-consumer registration was performed.
+Blanket pytest/py_compile early allowance was removed with coordinator approval. Test code/plugins can execute or write files; a typed scoped runner is separate integration work. Normal read-only JSON/AST inspection, base64 stdout decoding, literal reflog inspection and ordinary pipelines remain allowed. No live runtime deployment or real-consumer registration was performed.
 
 ## Quantified claims
 
 - New safety regression: seven methods pass, including actual benign effects and deny-before-dispatch file/ref comparisons; independent re-run also passes.
 - Existing read allowlist: 354 passed, zero failed.
 - Existing destructive guard: 30 passed, zero failed, preserving existing explicit escapes.
-- Fast-skip suite: 327 passed, zero failed. Branch Git aliases/global options intentionally take full inspection; ordinary reads still pass.
+- Fast-skip suite: 327 passed, zero failed. Branch Git aliases/global options take full inspection; ordinary reads still pass.
 - Task-keyed suite: 58 passed, zero failed. Old tests asserting ungated pytest/py_compile were changed to explicit negatives, preserving unrelated read and diagnostic controls.
 - Python syntax compilation and git diff --check pass. Tier C staged classification passes.
 

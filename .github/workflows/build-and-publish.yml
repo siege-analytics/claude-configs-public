@@ -191,6 +191,9 @@ jobs:
       - name: Exact-main deployment source fixtures
         run: python3 bin/_test/deploy_source_policy_test.py
 
+      - name: Local validation command adapter
+        run: python3 bin/_test/local_validation_test.py
+
       - name: Skill inventory fixtures and freshness
         run: |
           python3 bin/_test/frontmatter_validation_test.py

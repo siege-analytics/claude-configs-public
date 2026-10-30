@@ -1,8 +1,8 @@
-# Runtime recovery follow-up — #1003
+# Runtime recovery follow-up  -  #1003
 
 ## Assumptions
 
-The operator approved the recorded remediation plan and explicitly requested completion. Existing valid host/task compatibility must survive; protected mutations remain fail closed.
+The operator approved the recorded remediation plan and requested completion. Existing valid host/task compatibility must survive; protected mutations remain fail closed.
 
 Pre-mortem-artifact: plans/current-runtime-canary.md
 Hostile-review-artifact: plans/hostile-review-current-runtime-canary.md

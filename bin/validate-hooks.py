@@ -192,6 +192,7 @@ def main():
                 ["bash", "-n", str(resolved)],
                 capture_output=True,
                 text=True,
+                timeout=120,
             )
             if result.returncode != 0:
                 errors.append(f"Syntax error: {resolved}\n  {result.stderr.strip()}")

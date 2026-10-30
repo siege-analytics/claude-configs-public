@@ -1,0 +1,891 @@
+{
+  "status": "Complete non-clean source scan; reconciliation awaits independent review.",
+  "independent_approval": null,
+  "protected_base": "20bb5fb9c4eb88bc40c4f3f43b6c91e5a4fb7903",
+  "prior_scan_tree": "cea67cd6b7e834a989a0e8481eefcd3a79820186",
+  "current_scan_tree": "419799e2c3d3c3d6c5febdd311e7cf907e8f02d6",
+  "supersedes": "Source-freeze binding only. Prior raw records, reasons and review receipts stay unchanged.",
+  "actual_scan": {
+    "cwd": "/private/tmp/runtime-recovery-scan-20261030",
+    "detached_head": "20bb5fb9c4eb88bc40c4f3f43b6c91e5a4fb7903",
+    "index_preparation": "git read-tree 419799e2c3d3c3d6c5febdd311e7cf907e8f02d6; index only",
+    "command": "env PATH=/opt/homebrew/bin:/usr/bin:/bin TMPDIR=/private/tmp bash /private/tmp/claude-runtime-integration-20261029/skills/detect-ai-fingerprints/scan.sh",
+    "mode": "staged",
+    "ignore_paths": [],
+    "config_override": null,
+    "observed_exit_code": 1,
+    "completion_witness": "Coordinator observed tools.write_stdin session82542 completion with exit1.",
+    "findings": 27,
+    "raw_path": "/private/tmp/runtime-final-transport-source-scan.log",
+    "raw_sha256": "82d2aad86c185bb384d2e372446992c1ead21398379ec7185ec63adfa43aa67e",
+    "raw_bytes": 4508,
+    "raw_output": "bin/build.py:190:writing-tests-5: source has 46 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/craft-workspace-trust.py:352:writing-code-7-silent-swallow(Pass): except (OSError, ValueError): <Pass>\nbin/craft-workspace-trust.py:44:writing-tests-5: source has 15 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/install-craft-hook-router.py:232:writing-tests-5: source has 7 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/native_git.py:183:writing-tests-5: source has 5 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/validate-hooks.py:122:writing-tests-5: source has 2 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/validate-local.py:97:writing-tests-5: source has 7 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nbin/wire-enforcement.py:55:writing-tests-5: source has 4 except block(s) but no test file found (looked in tests/, bin/tests/, ...)\nhooks/lib/craft-settings-router.py:542:writing-code-7-silent-swallow(Pass): except (OSError, ValueError): <Pass>\nhooks/lib/craft-settings-router.py:343:writing-code-7-silent-swallow(Pass): except ProcessLookupError: <Pass>\nhooks/lib/craft-settings-router.py:138:writing-code-7-silent-swallow(Continue): except ValueError: <Continue>\nhooks/lib/craft-settings-router.py:542:writing-tests-5: source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/git_command.py:247:writing-tests-5: source has 3 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/read-only-command.py:395:writing-tests-5: source has 2 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/resolve-think-gate.py:392:writing-code-7-silent-swallow(Return): except (ValueError, TypeError): <Return>\nhooks/lib/resolve-think-gate.py:631:writing-code-7-silent-swallow(Return): except (ValueError, TypeError): <Return>\nhooks/lib/resolve-think-gate.py:805:writing-code-7-silent-swallow(Return): except (OSError, SubprocessError): <Return>\nhooks/lib/resolve-think-gate.py:818:writing-code-7-silent-swallow(Return): except UnknownShape: <Return>\nhooks/lib/resolve-think-gate.py:896:writing-code-7-silent-swallow(Return): except (OSError, ValueError, TypeError): <Return>\nhooks/lib/resolve-think-gate.py:117:writing-tests-5: source has 28 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/session_anchor.py:162:writing-code-7-silent-swallow(Return): except (OSError, ValueError): <Return>\nhooks/lib/session_anchor.py:42:writing-tests-5: source has 10 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/task_actions.py:207:writing-code-7-silent-swallow(Return): except (ValueError, SyntaxError): <Return>\nhooks/lib/task_actions.py:153:writing-code-9-silently-dropped-param(offset): def shape(...): parameter 'offset' has a default but is never referenced in this function's own scope, not forwarded, and not named in the docstring\nhooks/lib/task_actions.py:207:writing-tests-5: source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/test-evidence.py:64:writing-tests-5: source has 8 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nscripts/canary/craft-backend-canary.py:55:writing-tests-5: source has 7 except block(s) but no test file found (looked in tests/, scripts/canary/tests/, ...)\n\nscanned: writing-prose:1-4 (stylistic; broader Unicode class), writing-code:2 (history references in code comments), writing-code:4 (Django ORM kwarg validation, same-file models; AST), writing-code:7 (silent error swallowing; AST), writing-code:8 (optional-import callsite guards; AST), writing-code:9 (silently-dropped parameters; AST scoped visitor), writing-code:15 (unbounded blocking I/O; AST, incl. Popen chains, Session/Client instance methods, invalid literal timeouts), writing-tests:3 (skip messages must be actionable), writing-tests:5 (untested named exception handlers, cross-file; AST), writing-claims:2 (countable claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:3 (deprecation messages need version+removal-keyword anchors; AST). Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4, writing-claims:1/3, writing-releases:1/2.\nviolations: 27\n"
+  },
+  "per_finding_reconciliation": [
+    {
+      "prior_id": "F01",
+      "file": "bin/build.py",
+      "rule": "writing-tests-5",
+      "function": "_deploy_source_files",
+      "prior_line": 190,
+      "current_line": 190,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "63161cfa7c6af05efaa0c19f922e7845ee092a0f21380c31dc86983e6610b081",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "2b69e33e555c6483a51b97c25e47fc31c5a367849017fbd7ad269f8eb0f6e01c",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "923182f375e061181fdabda628a0710017aa8207338ee7a27b91e60f42d9755a",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F01",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F02",
+      "file": "bin/craft-workspace-trust.py",
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "function": "publish_staged",
+      "prior_line": 352,
+      "current_line": 352,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "5090e3ba62b479f89dae2929b9d7c88e9652a97e73d755b0eb2becfa234924a7",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "9bac78209d24ddb52271817d6f0ec93d8f45e228fe970c0d2f0f5e5f58ec59d1",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "e8bb13f8dcf7411cd76b92881187cdb5cbfefe4af472aeddde4d514fa9498db5",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F02",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F03",
+      "file": "bin/craft-workspace-trust.py",
+      "rule": "writing-tests-5",
+      "function": "snapshot",
+      "prior_line": 44,
+      "current_line": 44,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "695eb14fdb3aca56c82f63da64681851537671672779b10e262ed3c891b7f07e",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "d90855726e9874900f775462062a6fabd6ef4cde8d19b83f0165fd62f9318210",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "fd942bf2a3be54e8d27febbf17b96ab59830949f7afdf3fb46e9e73791313598",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F03",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F04",
+      "file": "bin/install-craft-hook-router.py",
+      "rule": "writing-tests-5",
+      "function": "install",
+      "prior_line": 232,
+      "current_line": 232,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "205621c82931f8c6755c17a4d668ffcf5236b1fd4f516469fa3f6617cdac8ddb",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "ef7a6f58c6352f656ae2f7a0623f20f991acc043d7f2cc28120b254c46db2733",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "4df4851ca18d1630d2ccaf5a5763767f2ba1264b4b711be0ad168b374cc20697",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F04",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F05",
+      "file": "bin/native_git.py",
+      "rule": "writing-tests-5",
+      "function": "main",
+      "prior_line": 183,
+      "current_line": 183,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "fe803f005ee490daec734d6888b099410ffa9118d8e5218be239bd26fcaad7eb",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "1250e2e6467c6c4158680b4e340233319664e0fbe05595bd6c8f85880b944fe5",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "c78290e844c3a9ac5f6eb75286805ffead71c8cec1f00de4879f81f30572c52b",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F05",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F06",
+      "file": "bin/validate-hooks.py",
+      "rule": "writing-tests-5",
+      "function": "compare_settings_to_snippet",
+      "prior_line": 122,
+      "current_line": 122,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "2a5a736462bc0ab68a6885ebdae06ec26f489bbd23318bca4f30f76ac3837542",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "78857c3d9b586e18d601a967dc215b7fafef5dae1fca7f8b34a80fc20f3e404d",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "fc8012c5f034ad4f3e2651d7d027537d770d910be54074e480b85764eee4f843",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F06",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F07",
+      "file": "bin/validate-local.py",
+      "rule": "writing-tests-5",
+      "function": "run_step",
+      "prior_line": 97,
+      "current_line": 97,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "d7a9ae795bb6fe9622c4bb51f51e76459016dd1cfafc63a5071320fdbcf3e9b7",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "91aa6d946d6e69607bf78fc3d798cd574d1de0595f46c08cfcdcde4838aabf4a",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "15b7b583a347ea1eb439a17c2d7f24c8d4f61eb46bcf1a5775ce2c9596e4a402",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F07",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F08",
+      "file": "bin/wire-enforcement.py",
+      "rule": "writing-tests-5",
+      "function": "merge_ca_enforcement_settings",
+      "prior_line": 55,
+      "current_line": 55,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "30aecc60af9d3a36ecdb27d0318f0b992fc749f43ad3062c7c43bbdfc0f78355",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "fbc6a1aaad9101328d87a48ce6e5943655cd21669b8439ce65e9f386b98936ec",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "1f989fba9330beefa01ac052698cdf1c3078e34290b0e298f002f31671e00f30",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F08",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F09",
+      "file": "hooks/lib/craft-settings-router.py",
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "function": "route",
+      "prior_line": 517,
+      "current_line": 542,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "87e3ab39b0f0270d553bd7b1e7793eae77098f858d8647b1274afb5b1126a0e2",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "9bac78209d24ddb52271817d6f0ec93d8f45e228fe970c0d2f0f5e5f58ec59d1",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "59c78aa01fea2b10aa198a98fb3714ca806b3fa9a1b0c266868ae2829c828263",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F09",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F10",
+      "file": "hooks/lib/craft-settings-router.py",
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "function": "execute_hook",
+      "prior_line": 318,
+      "current_line": 343,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "2af03169af99d9051c71c4bd7c3b0392cf184ed25586bf18b2c260d3892707a2",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "979fb164c2b97ab534410ca0015d7d3405c2af35a180925d2390cb6b61011463",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "46b092dcab8e0b0216ed70dae93fcdbf6f307ae25cb75547851cc6da2f9ea205",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F10",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F11",
+      "file": "hooks/lib/craft-settings-router.py",
+      "rule": "writing-code-7-silent-swallow(Continue)",
+      "function": "workspace_policy_commands",
+      "prior_line": 138,
+      "current_line": 138,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "3481d2bcbe9adceb1fb234f29053eddb871251eb72f3491155da24e0096b2797",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "b4bb7785c26b4f0ad8e392044bb6b097c207c8f3892cb63adb0bc5e552a5eca5",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "9f9c570334d0b3f478ae5a7bdab9cc396b4ab98e09b0b992230807c6cd5cb2f0",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F11",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F12",
+      "file": "hooks/lib/craft-settings-router.py",
+      "rule": "writing-tests-5",
+      "function": "route",
+      "prior_line": 517,
+      "current_line": 542,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "87e3ab39b0f0270d553bd7b1e7793eae77098f858d8647b1274afb5b1126a0e2",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "9bac78209d24ddb52271817d6f0ec93d8f45e228fe970c0d2f0f5e5f58ec59d1",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "59c78aa01fea2b10aa198a98fb3714ca806b3fa9a1b0c266868ae2829c828263",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F12",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F13",
+      "file": "hooks/lib/git_command.py",
+      "rule": "writing-tests-5",
+      "function": "main",
+      "prior_line": 247,
+      "current_line": 247,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "5dd2bd4b0a0f3909c7e8d76175608991dc94229a0a660d309e17803622c63ea1",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "73181ccc212d1c47bf8b0dd484d2f2fedc3a0fe08e03e4b8735d956bb81eb134",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "6eead7feeb9307c2a86cac0aee61824a7c48edc47058597fd2da09cb9509edc2",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F13",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F14",
+      "file": "hooks/lib/read-only-command.py",
+      "rule": "writing-tests-5",
+      "function": "lead_verbs",
+      "prior_line": 395,
+      "current_line": 395,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "183a0afe95c74d449222d63d418b92a735dd7010e06a37dd1ef8cc3a09d09943",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "a0742177f81a0f3162756afff474c015b132abecd70942880e7dd53a3365bdd4",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "594963cc92b86119717d1f4abda3b157c94fe0f6dcf8f5d81627bffbf16aac1f",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F14",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F15",
+      "file": "hooks/lib/resolve-think-gate.py",
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "function": "_within",
+      "prior_line": 392,
+      "current_line": 392,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "5142dbc3a3d4ae8d7d342162e0e14ac462b708fe822030b3e22da6c0582ffdae",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "18243711d79cf3087cc4f9d2246974a45ccbc8f642fc56c3782200b50a8158e5",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "a0df3fd2a11e6f4e3ed88d3e60a1bcb4857c2464028714c8a3d055f6126f6268",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F15",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F16",
+      "file": "hooks/lib/resolve-think-gate.py",
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "function": "find_gate_for_repo",
+      "prior_line": 631,
+      "current_line": 631,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "185d003dea248b916dc61856a05f6bb781c450a07b2d94d03cce40384f2498cb",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "af96bcf80cd6be0fd782011e9cf9c81f312437d4934b0c51a6ce11e7322977c9",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "d415a44b5fefdba0f9a052a54ae0f226e55c66713d683bda5c201ef939d807b2",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F16",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F17",
+      "file": "hooks/lib/resolve-think-gate.py",
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "function": "_git_lines",
+      "prior_line": 805,
+      "current_line": 805,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "3196334a671a935ae5c7853960bc2351c425c9b31b54b6f376b9786b06b67c18",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "9d89f0e975c23927967fa44f081c1af189618aa1445a59c7b6e2d9480fe4b74b",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "f1f47432eea2114a591c896730ab57fe41955048c1a425ec300a6f8e0eb0dc0a",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F17",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F18",
+      "file": "hooks/lib/resolve-think-gate.py",
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "function": "_lone_git_commit",
+      "prior_line": 818,
+      "current_line": 818,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "ea73e949d65f2cc08ed55fd89db6ddbf6967ba527c2edccf89abd84781e18885",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "212a93a801818ac1e825a714c55108a9fbf25d5a1cd1d52bcaab6b823de2103b",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "14bad781e67bea6f7d5b2fd40c842e136d5b6171d98e52643f4c1fccdbdfc485",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F18",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F19",
+      "file": "hooks/lib/resolve-think-gate.py",
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "function": "_load",
+      "prior_line": 896,
+      "current_line": 896,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "53f46ce3a9730a6b26eb0b13433c0ae63881262cf9901959abc8eb7d6c812fe5",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "f59f02ef044d8d354dc160a4d75aa8a8103e2be3ff5158f8aa84eb5b9aaa6ce6",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "cd3fadc206a2268fd5d899ec9c92931d9305b810d4d0da7ee5dae8da4e1e64a0",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F19",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F20",
+      "file": "hooks/lib/resolve-think-gate.py",
+      "rule": "writing-tests-5",
+      "function": "host_binding_present",
+      "prior_line": 117,
+      "current_line": 117,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "44289c11ff919e563f69b9cdfe9702b7e1942454698845246276b3abb70846d4",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "b56725f20840ba26c9a69a93ee32c210e6b9d0cf96d545c5197ba2efd106e5b1",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "2268f92e1a068b8a975cfd919af1ff14279b479a17b9223650a18e980c03ea9a",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F20",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F21",
+      "file": "hooks/lib/session_anchor.py",
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "function": "_registered_header",
+      "prior_line": 162,
+      "current_line": 162,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "d4e2a3d9bda806775422168d51c18299e34e01c01acc151235b1c8414a4a8cbd",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "6f8e8ae5d2fd5c87a99aaa1954d74f8af02c29d40cf115ff660a2529298315c1",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "dc6794998349d680a0391d3bba90fc7a3bf4e4f27bd4a31194ddb7445b4de480",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F21",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F22",
+      "file": "hooks/lib/session_anchor.py",
+      "rule": "writing-tests-5",
+      "function": "_read_regular",
+      "prior_line": 42,
+      "current_line": 42,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "f2ab8d22c18de82be4c75d690913a108d99d5990832a09c5dc5204cf88e04779",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "7fb96206177a1e69620cf4f8e47b29084e0060dd5933712dfa4941a650651ec2",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "e228ede6bccb3d85d938351d02f31a6863ed560a573c5a7229eb153a58473dfc",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F22",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F23",
+      "file": "hooks/lib/task_actions.py",
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "function": "_python_read",
+      "prior_line": 207,
+      "current_line": 207,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "45971c7a82f75ec6f46f21009a72a91d0e2a8b805230a9c018d9df1de1343093",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "5c0b49296f6fe2f3d4cbf2d7c9721225ae861ccdaf0a6d3f39a4cddc1794c4c8",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "0c0fab6bd9b2e400b43e0ad5a98cae24b3f17b98a9ed28ab56d64ed85f268397",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F23",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F24",
+      "file": "hooks/lib/task_actions.py",
+      "rule": "writing-code-9-silently-dropped-param(offset)",
+      "function": "shape",
+      "prior_line": 153,
+      "current_line": 153,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "f010fbae271be75d690c802bfff500ce77a5e7eb5936c827382c1b90da30f28d",
+      "handler_ast_equal": null,
+      "handler_ast_sha256": null,
+      "try_context_ast_equal": null,
+      "try_context_ast_sha256": null,
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F24",
+      "scope": "Same reviewed handler or parameter context; no new waiver."
+    },
+    {
+      "prior_id": "F25",
+      "file": "hooks/lib/task_actions.py",
+      "rule": "writing-tests-5",
+      "function": "_python_read",
+      "prior_line": 207,
+      "current_line": 207,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "45971c7a82f75ec6f46f21009a72a91d0e2a8b805230a9c018d9df1de1343093",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "5c0b49296f6fe2f3d4cbf2d7c9721225ae861ccdaf0a6d3f39a4cddc1794c4c8",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "0c0fab6bd9b2e400b43e0ad5a98cae24b3f17b98a9ed28ab56d64ed85f268397",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F25",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F26",
+      "file": "hooks/lib/test-evidence.py",
+      "rule": "writing-tests-5",
+      "function": "working_blob",
+      "prior_line": 64,
+      "current_line": 64,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "2d53a25e527f26215e0e4bf7ab3870686370d63fb866a1b2fa700d3b0fd640e5",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "442404a39595e56c5fd8687a2b762a0cc3ce35285fa3c3d831fd904d98e3e3a7",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "d9e0b5c2a532f7549562f80958034fc27a75b8cf3f1b15794fe0dd8ed7a3cffd",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F26",
+      "scope": "Locator only; no all-handler coverage claim."
+    },
+    {
+      "prior_id": "F27",
+      "file": "scripts/canary/craft-backend-canary.py",
+      "rule": "writing-tests-5",
+      "function": "load_json",
+      "prior_line": 55,
+      "current_line": 55,
+      "raw_report_equal": true,
+      "function_ast_equal": true,
+      "function_ast_sha256": "d837ceaeb21618a031826107eaa0a9ffedf9e8a525d2ae2dbbc168cd8af56899",
+      "handler_ast_equal": true,
+      "handler_ast_sha256": "16e1bc313500e996d564d76f33174bed4f4a938ef2ee45fd37ef0e6bc67b3173",
+      "try_context_ast_equal": true,
+      "try_context_ast_sha256": "db1af96ccd1e76e021248fea85968280bb45ab41c00fe1a59f5c4d378542f5a3",
+      "reason_evidence_falsifier_reference": "plans/scanner-recovery-dispositions.md#F27",
+      "scope": "Locator only; no all-handler coverage claim."
+    }
+  ],
+  "source_delta": {
+    "changed_code_files": [
+      {
+        "path": "bin/_test/craft_hook_router_test.py",
+        "old": {
+          "path": "bin/_test/craft_hook_router_test.py",
+          "git_blob": "f81038c7465059f72873c878052e68ac237ce017",
+          "sha256": "4a87629bc4d128ea1eb060e83fe7993269f44b6ddd65be25a85e4073f34b7740",
+          "bytes": 27646
+        },
+        "current": {
+          "path": "bin/_test/craft_hook_router_test.py",
+          "git_blob": "2b9204e20cac3121a367114438af9e3d87bb6c2a",
+          "sha256": "da8f77ca5c6dc44736be67fb440757105375bceb55c167271c1ee6780410fe8d",
+          "bytes": 29916
+        }
+      },
+      {
+        "path": "hooks/lib/craft-settings-router.py",
+        "old": {
+          "path": "hooks/lib/craft-settings-router.py",
+          "git_blob": "5db4692538d19cc6c0bacb0903f3b35ff2c72fdf",
+          "sha256": "b174103bcbee31ce4367a6ea09d15060601943d6b852189e106704ed9a1533e3",
+          "bytes": 30590
+        },
+        "current": {
+          "path": "hooks/lib/craft-settings-router.py",
+          "git_blob": "116db089d2a8fe93a66854f7b3d372981684f15e",
+          "sha256": "b66806d8d634d6df84a4be0b7943f34abbffd262c099dfdfd059aa830a7a6485",
+          "bytes": 31786
+        }
+      }
+    ],
+    "changed_receipt_files": [
+      "plans/complete-runtime-recovery-1134.md",
+      "plans/hostile-review-complete-runtime-recovery.md",
+      "plans/hostile-review-router-transport.md",
+      "plans/hostile-review-scanner-dispositions.md",
+      "plans/scanner-recovery-complete-output.txt",
+      "plans/scanner-recovery-dispositions.md",
+      "plans/scanner-recovery-identities.json",
+      "plans/scanner-recovery-publication-acceptance.md"
+    ],
+    "unexpected_code_files": [],
+    "function_changes": {
+      "bin/_test/craft_hook_router_test.py": {
+        "added": [
+          "Router.test_large_write_keeps_original_stdin_and_bounded_metadata_with_context",
+          "Router.test_large_write_keeps_original_stdin_and_bounded_metadata_with_context.capture",
+          "Router.test_metadata_preserves_bash_command_and_enforces_byte_bounds"
+        ],
+        "removed": [],
+        "changed_existing": []
+      },
+      "hooks/lib/craft-settings-router.py": {
+        "added": [
+          "metadata_environment",
+          "metadata_environment.slim"
+        ],
+        "removed": [],
+        "changed_existing": [
+          "session_context"
+        ]
+      }
+    }
+  },
+  "transport_caller_review": {
+    "independent_receipt": {
+      "path": "/private/tmp/router-transport-independent-review.md",
+      "sha256": "a4e9c3e9958eada0d24a5e52d4ceb38bdb0cd78787731b24294a2d7ea96fab09",
+      "bytes": 2244
+    },
+    "reported_result": "ACCEPT bounded two-file delta; actual router27/27 PASS7.084s.",
+    "new_caller": "session_context calls metadata_environment after identity selection. Full original raw stdin still reaches each hook; route AST is unchanged.",
+    "bounds": "Strings longer than4096 characters become empty metadata values. Bash command stays exact within65536 UTF8 bytes. Escaped metadata above98304 bytes fails closed.",
+    "authority_boundary": "Identity comes from full parsed input and is sealed after policy env. Metadata projection grants no content or path authority.",
+    "paired_controls": "Large own-session Write keeps child stdin byte-identical with100000 bytes of other env; overscope request denies with no outside effect. Bash and many-field budget negatives pass. This proves hook authorization, not editor Write execution.",
+    "limits": "This bounds one env value. Total inherited env still has platform limits; startup and routing errors block with2.",
+    "effect_on_prior_rows": "Every reported enclosing function, handler and try context has the same AST. The changed session_context callee and new metadata helper have transport review; equal AST alone is not a whole-call-graph proof."
+  },
+  "current_source_test_scanner_policy_identities": [
+    {
+      "path": "bin/_test/craft_backend_canary_test.py",
+      "git_blob": "20924a2d770a208e5fd269b6b15f78e366a1b8b1",
+      "sha256": "63e4f3093db8bbd9614bcb97950030df160703a1fa281ce767a57f71ee730bde",
+      "bytes": 46379,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/_test/craft_hook_router_test.py",
+      "git_blob": "2b9204e20cac3121a367114438af9e3d87bb6c2a",
+      "sha256": "da8f77ca5c6dc44736be67fb440757105375bceb55c167271c1ee6780410fe8d",
+      "bytes": 29916,
+      "same_blob_as_prior": false
+    },
+    {
+      "path": "bin/_test/craft_workspace_trust_test.py",
+      "git_blob": "6cc0170328a76150c8a5cf7a631147d5740b5e70",
+      "sha256": "0d556ecac438ce34d9d071f108bec49358d94b864a6aac184cf984e59a53d86c",
+      "bytes": 18790,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/_test/deploy_source_policy_test.py",
+      "git_blob": "6993cd9b0d76c314f547cfd8f055c9f1441ff674",
+      "sha256": "4fbd20ad7a1ab6ee2b8332c87da7349b9f213803b6d9bfaa79778394f02156fa",
+      "bytes": 17397,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/_test/local_validation_test.py",
+      "git_blob": "92e2dba1e8b718a6835fd9f8eda9f5762aa8b214",
+      "sha256": "bc72081f8e134eadb706ef80739f7a2dc5476a87f9cb717862f2a97a44c165be",
+      "bytes": 6363,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/_test/progressive_mount_test.py",
+      "git_blob": "4b36515e2c4c595696d3d220c973519d746e59f8",
+      "sha256": "924c24f8c4126ac825275ce46e743c125925ae73ca1e71fcab6d8ab6c9695209",
+      "bytes": 6605,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/_test/selected_registration_test.py",
+      "git_blob": "ef8adbae9c6aaac9f2386fb2fe0bc4eba33b55b7",
+      "sha256": "55af9e9e25b9b4fcb91e25049a7112e5bebacaa1596a90f511b13dc3ae77c332",
+      "bytes": 29047,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/_test/settings_drift_test.py",
+      "git_blob": "d5c60a86947d064d0f5f4819507d0a44c676c860",
+      "sha256": "8949607fd45d9a4d759d747ca4a246abe42e767b0ca4eb4a9e31d1884a540f61",
+      "bytes": 7208,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/_test/wire_enforcement_automations_test.py",
+      "git_blob": "50d9467e3f045883aab79f84db2b1a713966d26d",
+      "sha256": "68b00f885e2ba1ed239d183fa14c760abdd3907743ddb12056f1ee783dc83225",
+      "bytes": 5314,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/build.py",
+      "git_blob": "12d1c928108ab16ff081757325234888a3575ce8",
+      "sha256": "f30acc0041891b8c2f746b6c4812b815ea59bfff4344041a0b301ba066b9167f",
+      "bytes": 115759,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/craft-workspace-trust.py",
+      "git_blob": "79605fbf86709733bc77401adcf60e6fbd023481",
+      "sha256": "9493bc43365c654b2ca08a15a0901cc75bdd82edb1fb58aa575c76c327bc6d27",
+      "bytes": 19773,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/install-craft-hook-router.py",
+      "git_blob": "459ee32e0beef0bcef3685b959120753b9371412",
+      "sha256": "a3f1995d835085d69f8b0337d1430f41564f5689058ac8beeee10b99b9792c2d",
+      "bytes": 14781,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/native_git.py",
+      "git_blob": "a49785a8d2c1c234d666bd4a057cc921981d7a11",
+      "sha256": "55a1760d28768627c962abaa0f4218a55f68273e1113ae83698c32e91b4dbb62",
+      "bytes": 9967,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/validate-hooks.py",
+      "git_blob": "2434a1bed1349f871f10d057baedea4593182353",
+      "sha256": "6dd15cb1f2e7661d89c77ca7abdbd40893dfa29a0d60ae43bb3f77ffde68c258",
+      "bytes": 8932,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/validate-local.py",
+      "git_blob": "41afb07e182ae4dfcdea828e19bda546b0a7af21",
+      "sha256": "ecfe44681704bf211e2ee2915d515916bc532669633200c58306b33f0927bef6",
+      "bytes": 6335,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/wire-enforcement.py",
+      "git_blob": "b1cd41f195f653eae80ed7eac33357c73d0777bb",
+      "sha256": "7a720c8aa71ced35fee76d7c886ea05802e519a6d7f3dfd9526064916fc4077f",
+      "bytes": 9935,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "hooks/_test/reader_git_safety.py",
+      "git_blob": "56b36c270aa065566f6380c0c43a8d6f56fffc58",
+      "sha256": "c803fc614c0d4b507ae6d922178262487c733b9f5e13225471fad961631ee808",
+      "bytes": 16585,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "hooks/_test/session_anchor_mistag.test.sh",
+      "git_blob": "7adcc14529eb829378c945ed3b978f92060a814a",
+      "sha256": "7b3a639abc8e3d783fd4e53de73c4138931266d0dff06d1eb40913cb1d36934e",
+      "bytes": 5359,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "hooks/_test/task_keyed_gates.py",
+      "git_blob": "59d569af2c92e8188cd5c97200d9ba40664f9a72",
+      "sha256": "ef1d75b53d3874ac138a67f0cb1433edf652c3e397f6fc9afef6238c95661ef1",
+      "bytes": 78102,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "hooks/_test/test_evidence.py",
+      "git_blob": "99e65ccc376e91b05c52d892b5fa181f6c56fae0",
+      "sha256": "0f81c17cc1c17e1909a3e103a0222dcef009cc1c92c2a8ba0b1c5804b4355dde",
+      "bytes": 12306,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "git_blob": "116db089d2a8fe93a66854f7b3d372981684f15e",
+      "sha256": "b66806d8d634d6df84a4be0b7943f34abbffd262c099dfdfd059aa830a7a6485",
+      "bytes": 31786,
+      "same_blob_as_prior": false
+    },
+    {
+      "path": "hooks/lib/git_command.py",
+      "git_blob": "c71a0ef219c9ccfcdcfeaeba3d4d810a8c7e64d1",
+      "sha256": "afc2d6a2c7ec9f19f5e3df16577d108b3dacf71e4f1ef81315b4a3ae89a3cfbf",
+      "bytes": 12970,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "hooks/lib/read-only-command.py",
+      "git_blob": "71119bc6ce5992da8321edb846747328c14b5843",
+      "sha256": "7f66183f2ab1ca1dbdb0244fd191c957d264f8d43343f7e4251dd7fedf553997",
+      "bytes": 24534,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "git_blob": "ff2c4ea262f2ab690ca7c99148aa7d4602535625",
+      "sha256": "0621215ab436e122f2b65ddc7f32d0cc6cf7274b89a3e9281340ff7885df0995",
+      "bytes": 46104,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "hooks/lib/session_anchor.py",
+      "git_blob": "ab161799c85c3b2f764701601e5cafbeaf81fa56",
+      "sha256": "479dbe4f444eb0e885aa6c25336b06cf08b6331b78478858bb497524ed644f59",
+      "bytes": 9792,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "git_blob": "856e92dfb7f478e1df7355028a3772b3c7fd5a2c",
+      "sha256": "d21fa66728d387d186c074dca6e988a557328eb594cce81de5d585b6dc9cf9f7",
+      "bytes": 47102,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "hooks/lib/test-evidence.py",
+      "git_blob": "a26771d63163c52ecaf801a8dc64a56a913f5023",
+      "sha256": "1174b3a9b76bdfa15539d8ea093290c784f4a06f97138298d50295b13670cbdb",
+      "bytes": 12341,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "scripts/canary/craft-backend-canary.py",
+      "git_blob": "f36e976266475b29b80bf84f9994a778e1fd0612",
+      "sha256": "3b8092ce77590a50c639c9cad068eaf639688d1306899a70381a1f179bbe3563",
+      "bytes": 61639,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "skills/code-review/SKILL.md",
+      "git_blob": "b9421442da9ea1c7c896aea22f8ecf2537f3b79f",
+      "sha256": "80592612eeb310220217c62b538e7f2d963cf5509a11877e80312bb20a5b99f3",
+      "bytes": 23847,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "skills/commit/SKILL.md",
+      "git_blob": "4224a17a9bc2758c849c24dea0f267a033b121b0",
+      "sha256": "e145d8e0d00a1e7b4f66b7ccda4258eb3d5ecdebd5e6cfa690c3159984000e0c",
+      "bytes": 21465,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/SKILL.md",
+      "git_blob": "ec755091892c25e897be56eee3abecd2d46ef56c",
+      "sha256": "7fd139e41f3bf0fcd20b6e66b7345c43309abde91cbcd16a22b1af898f1f2a32",
+      "bytes": 22578,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/scan.sh",
+      "git_blob": "633280ea6b4e196e3a4e2eca8819bbce2a2f4669",
+      "sha256": "e7fc8ef0ab0c77a5e196fbbe26ae2a718463f49a168e90d5fe1de7526896b939",
+      "bytes": 21465,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/scan_ast.py",
+      "git_blob": "1127a7cbe8388f0ee4bb8d4981c55e6802a48cf1",
+      "sha256": "181cb8f4a3598e27b2e5dfcffee125b4250b2ee12d041fc02bb49bffb4277979",
+      "bytes": 81920,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/scan_snapshot.py",
+      "git_blob": "a0c5ab2d511125ec925bc3fa9e7001ee2d44d127",
+      "sha256": "dc6f838d46ca8264af21faf828db05b317983b990c2482998e7af3580a111ffb",
+      "bytes": 7980,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "bin/_test/scanner_source_test.py",
+      "git_blob": "2c2807045b72b67d11c46ae1aba76e655e7b884e",
+      "sha256": "6e9ff64758b01a3b98fe7c3fca3e6031a503c745e41470124e5d117fc4e15a8e",
+      "bytes": 14936,
+      "same_blob_as_prior": true
+    },
+    {
+      "path": "hooks/agent-comms/hub-concurrency-gate.sh",
+      "git_blob": "a1c689fa92abc34af8e78705f485098f61c3ff92",
+      "sha256": "d39d0099ecc1671e4934d26578c1d8a9de634b0c555ef292aa68926f6e2ab2ca",
+      "bytes": 17173,
+      "same_blob_as_prior": true
+    }
+  ],
+  "scanner_identities": [
+    {
+      "path": "skills/detect-ai-fingerprints/scan.sh",
+      "git_blob": "633280ea6b4e196e3a4e2eca8819bbce2a2f4669",
+      "sha256": "e7fc8ef0ab0c77a5e196fbbe26ae2a718463f49a168e90d5fe1de7526896b939",
+      "bytes": 21465
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/scan_ast.py",
+      "git_blob": "1127a7cbe8388f0ee4bb8d4981c55e6802a48cf1",
+      "sha256": "181cb8f4a3598e27b2e5dfcffee125b4250b2ee12d041fc02bb49bffb4277979",
+      "bytes": 81920
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/scan_snapshot.py",
+      "git_blob": "a0c5ab2d511125ec925bc3fa9e7001ee2d44d127",
+      "sha256": "dc6f838d46ca8264af21faf828db05b317983b990c2482998e7af3580a111ffb",
+      "bytes": 7980
+    }
+  ],
+  "configuration": {
+    "path": ".claude/scanner-config.toml",
+    "present_old": false,
+    "present_current": false,
+    "policy": "Pinned built-in defaults; no override."
+  },
+  "frozen_source_pin_file": {
+    "path": "/private/tmp/aggregate-craft-final-source-pins.json",
+    "sha256": "85250c3e734f24bb32af8aad4c2567703395f91bd4ecd3f886dae92fa2fb3493",
+    "all_pins_match_current_tree": true
+  },
+  "preserved_prior_archive_identities": [
+    {
+      "path": "plans/scanner-recovery-complete-output.txt",
+      "git_blob": "483fa6d50da2f1beb7bcc61dd0cf37c0b1f97ea2",
+      "sha256": "148441b6a8ba9f6efb7aed7fefb08e3737ccf86379a7f09e399bba7250faa172",
+      "bytes": 4508
+    },
+    {
+      "path": "plans/scanner-recovery-dispositions.md",
+      "git_blob": "0ade71b96fa65732639b86904f0e8adcdf436ccd",
+      "sha256": "c9dee08c097f038ee88e9090cf2b861ad3122cfb2f80e3e10608aae53f0c535f",
+      "bytes": 36848
+    },
+    {
+      "path": "plans/scanner-recovery-identities.json",
+      "git_blob": "6fbe729763a6bec7d50142ec724846902c04529d",
+      "sha256": "9468410102820fd68baa5be60605133ad3df34a3550e928571164920487fc283",
+      "bytes": 74410
+    },
+    {
+      "path": "plans/hostile-review-scanner-dispositions.md",
+      "git_blob": "9dc4a58a81fce3709762ab4b8f96e0353b733dfe",
+      "sha256": "46200cc342a533ad25a0e1ef252375a3fe94607286eb4b2e0125f4847ba10c2a",
+      "bytes": 7849
+    },
+    {
+      "path": "plans/scanner-recovery-publication-acceptance.md",
+      "git_blob": "02b95bc16a692ab78aff8c444307857d093984b9",
+      "sha256": "02a870277723745ba09834dcb7c2ef9b2189f58e654a1783e35e06a007323c6f",
+      "bytes": 814
+    },
+    {
+      "path": "plans/hostile-review-router-transport.md",
+      "git_blob": "61f7b3cff823a42e13d9d875a0994d9bb4e8fd32",
+      "sha256": "a4e9c3e9958eada0d24a5e52d4ceb38bdb0cd78787731b24294a2d7ea96fab09",
+      "bytes": 2244
+    }
+  ],
+  "final_commit_tree": null,
+  "rebind_rule": "Adding this receipt may change plans only. Any source, test, scanner or config change needs a new scan and review.",
+  "aggregate_status": "No full workflow PASS claimed. Candidate commit, normal Git-object workflow and live delivery remain separate."
+}

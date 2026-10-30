@@ -111,14 +111,17 @@ def host_binding_present() -> bool:
         'SESSION_ID', 'CLAUDE_CODE_SESSION_ID', 'CLAUDE_SIGNAL_DIR',
         'CRAFT_SIGNAL_DIR', 'CRAFT_AGENT_SIGNAL_DIR')):
         return True
+    raw_payload = os.environ.get('CCP_HOOK_INPUT_JSON', '').strip()
     try:
-        payload = json.loads(os.environ.get('CCP_HOOK_INPUT_JSON', '{}'))
+        payload = json.loads(raw_payload or '{}')
     except (ValueError, TypeError):
-        return False
+        return True
+    if raw_payload and not isinstance(payload, dict):
+        return True
     def bound(obj):
         if not isinstance(obj, dict):
             return False
-        if isinstance(obj.get('tool_input'), dict) or obj.get('tool_name'):
+        if 'tool_input' in obj or obj.get('tool_name'):
             return True
         if any(obj.get(key) for key in ('craftSessionId', 'craft_session_id',
                'sessionId', 'session_id', 'sessionID', 'id', 'transcript_path', 'transcriptPath')):
@@ -139,6 +142,8 @@ def _session_directory_id(names) -> str:
 
 def session_id_from_env() -> str:
     """Craft directory > Craft id > Craft transcript > native explicit id."""
+    if os.environ.get("CCP_CRAFT_ROUTER_SESSION_UNRESOLVED") == "1":
+        return ""
     # An unexpanded host template is not a session identity or scratch root.
     # Never sanitize it into a shared id, even if another identity is present.
     for name in ('CRAFT_SESSION_DIR', 'CRAFT_AGENT_SESSION_DIR', 'CLAUDE_SESSION_DIR'):
@@ -326,8 +331,9 @@ def _same_repo(gate_repo: str, repo_root: str) -> bool:
     try:
         if os.path.realpath(gate_repo) == os.path.realpath(repo_root):
             return True
-    except Exception:
-        pass
+    except (OSError, TypeError, ValueError) as exc:
+        print(f"[resolve-think-gate] Cannot compare repository identity: {exc}", file=sys.stderr)
+        return False
     gate_origin = _git_origin(gate_repo)
     repo_origin = _git_origin(repo_root)
     return bool(gate_origin and repo_origin and gate_origin == repo_origin)
@@ -612,8 +618,12 @@ def find_gate_for_repo(workspace: str, repo_root: str, gate_name: str = "think-g
     paths = [repo_root]
     try:
         payload = json.loads(os.environ.get("CCP_HOOK_INPUT_JSON", "{}"))
+        if not isinstance(payload, dict):
+            return None
         if payload.get("cwd"):
             ti = payload.get("tool_input") or {}
+            if not isinstance(ti, dict):
+                return None
             shape = action(ti.get("command", ""), payload["cwd"]) if ti.get("command") else {"paths": [repo_root or payload["cwd"]]}
             # A proven read has no mutation targets; select the task by the repo
             # instead of sending an empty target list through mutation selection.
@@ -718,10 +728,13 @@ def own_session_path(workspace: str, path: str, directory: bool = False, removal
         # paths see symlinks, not hardlinks, and a write here changes both.
         try:
             st = os.stat(target)
-            if not os.path.isdir(target) and st.st_nlink > 1:
-                return False
-        except OSError:
-            pass
+        except FileNotFoundError:
+            st = None  # Creating a new lifecycle file has no existing hardlink alias.
+        except OSError as exc:
+            print(f"[resolve-think-gate] Cannot inspect lifecycle target: {exc}", file=sys.stderr)
+            return False
+        if st is not None and not os.path.isdir(target) and st.st_nlink > 1:
+            return False
     parts = os.path.relpath(target, root).split(os.sep)
     if parts[0] in {'plans', 'data'}:
         return len(parts) > 1 or directory
@@ -786,6 +799,7 @@ TIER_ORDER = {"A": 0, "B": 1, "C": 2}
 
 
 def _git_lines(repo: str, *args: str) -> Optional[list]:
+    """Return Git lines, or None when Git cannot establish the requested listing."""
     try:
         out = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True, timeout=10)
     except (OSError, subprocess.SubprocessError):
@@ -850,9 +864,11 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
                 raise ValueError("target outside the gate's repo_root")
             r = "" if rp == repo_root else os.path.relpath(rp, repo_root).replace(os.sep, "/")
             if r == "" and lone_commit:
-                files = (_git_lines(repo_root, "diff", "--cached", "--name-only", "-z") or []) + \
-                        (_git_lines(repo_root, "diff", "--name-only", "-z") or [])
-                rel.extend(files or ["(empty commit)"])
+                staged = _git_lines(repo_root, "diff", "--cached", "--name-only", "-z")
+                modified = _git_lines(repo_root, "diff", "--name-only", "-z")
+                if staged is None or modified is None:
+                    raise ValueError("cannot enumerate commit targets")
+                rel.extend((staged + modified) or ["(empty commit)"])
             elif r == "" or os.path.isdir(rp):
                 files = _git_lines(repo_root, "ls-files", "-z", "--", r or ".")
                 if files is None:
@@ -870,13 +886,14 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
 
 
 def _load(path: str) -> Optional[dict]:
+    """Return a gate object, or None for missing, unreadable or malformed input."""
     try:
         if not os.path.isfile(path):
             return None
         with open(path) as f:
             data = json.load(f)
         return {"path": path, "data": data} if isinstance(data, dict) else None
-    except Exception:
+    except (OSError, ValueError, TypeError):
         return None
 
 

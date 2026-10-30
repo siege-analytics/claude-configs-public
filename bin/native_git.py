@@ -8,11 +8,14 @@ from __future__ import annotations
 import argparse
 from contextlib import ExitStack
 import json
+import os
 from pathlib import Path
 import re
 import shlex
 import subprocess
 import sys
+
+sys.dont_write_bytecode = True
 
 import selected_registration as registration
 
@@ -20,6 +23,11 @@ ep = registration.ep
 require = registration.require
 ZERO = '0' * 40
 OID = re.compile(r'[0-9a-f]{40}\Z')
+
+
+def runtime_environment():
+    """Keep shell descendants from writing bytecode into the pinned package."""
+    return dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
 
 
 def explain(bound, operation):
@@ -118,7 +126,7 @@ def main(argv=None):
                 # Hold the shared lock while the selected scaffold executes. Git
                 # payloads retain the accepted native -- boundary unchanged.
                 return subprocess.run([sys.executable, '-B', str(selected_entry),
-                    *(sys.argv[1:] if argv is None else argv)], timeout=120).returncode
+                    *(sys.argv[1:] if argv is None else argv)], timeout=120, env=runtime_environment()).returncode
             generation_command = True
         else:
             definition = registration.verify_runtime(bound)
@@ -135,21 +143,21 @@ def main(argv=None):
                             'unsupported generation prompt vector')
                     args.event = 'prompt'
                 else:
-                    return subprocess.run(vector, timeout=90).returncode
+                    return subprocess.run(vector, timeout=90, env=runtime_environment()).returncode
             else:
                 require(vector in allowed and definition['adapter'] == 'siege-compatibility', 'unregistered settings command vector')
-                return subprocess.run(vector, timeout=90).returncode
+                return subprocess.run(vector, timeout=90, env=runtime_environment()).returncode
         if args.event == 'prompt':
             event = ep.parse_json(sys.stdin.buffer.read(), 'prompt event')
             result = subprocess.run([sys.executable, '-B', str(Path(bound['hooks_root']) / 'bin/resolve-load-set.py'),
                 '--repo', bound['identity'], '--prompt', event.get('prompt', ''), '--render-hook', '--mode', 'on'],
-                capture_output=True, text=True, timeout=30)
+                capture_output=True, text=True, timeout=30, env=runtime_environment())
             require(result.returncode == 0, result.stderr)
             print(result.stdout, end='')
             return 0
         if definition['adapter'] == 'siege-compatibility':
             command = Path(bound['hooks_root']) / 'compatibility/.githooks' / args.event
-            result = subprocess.run([str(command), *args.arguments], timeout=90)
+            result = subprocess.run([str(command), *args.arguments], timeout=90, env=runtime_environment())
             return result.returncode
         if args.event == 'commit-msg':
             require(len(args.arguments) == 1, 'commit-msg requires its message file')

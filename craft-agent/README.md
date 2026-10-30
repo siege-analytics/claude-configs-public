@@ -20,9 +20,35 @@ bash bin/install.sh --workspace <slug>     # one-shot
 bash bin/harmonize.sh --workspace <slug>   # recurring / unattended (idempotent)
 ```
 
-Both end by running `bin/verify-enforcement.sh`, which checks deployment,
-local hook behavior, and native Git enforcement. A green result establishes
-those local checks; a live backend turn is still required to prove host delivery.
+The normal installer writes managed policy to workspace
+`.claude/craft-settings.json` and runs `bin/verify-enforcement.sh --settings-file`
+against that file. Only after local checks pass does it apply and verify the
+minimal user-level router registration with `bin/install-craft-hook-router.py`.
+That helper defaults to preview when invoked directly; `--apply` writes its
+registration, and `--verify-registration` checks registration without claiming a
+live backend invocation. A missing helper fails the normal installation.
+
+The scoped router keeps managed policy outside SDK project autoload settings.
+Its receipt is `.claude/craft-hook-registration.json`; subsequent builds select
+the fixed `craft-settings.json` filename when that receipt is present. Receipt
+presence does not establish authority: the bootstrap helper verifies its content
+and installed router. Unknown operator hooks remain intact. Only owned legacy
+workspace registrations retire, avoiding duplicate policy when a session actually
+starts in the workspace or reaches it through a session settings link.
+
+Each enrolled workspace has a pinned router copy under
+`~/.claude/hooks/siege-craft-router/<workspace-hash>.py`, with one registration
+per `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, and `PostToolUseFailure`.
+Commands carry the canonical workspace argument; another workspace returns
+before reading its policy. Managed hook commands remain in the workspace policy.
+The receipt records the exact router path and digest.
+
+Craft's SDK child was observed running under `workspace/sessions/<session-id>`.
+Workspace project
+settings alone therefore do not establish hook discovery. The user-level router
+supplies the supported Craft workspace route, and returns without running Craft
+policy outside Craft. Local policy/registration checks and live backend callback
+canaries are separate acceptance stages.
 
 ## How CA blocking works
 
@@ -141,17 +167,19 @@ retain the compatibility deployment path.
    deploys skills, hooks, `KERNEL.md`, compatibility-only `RULES_BUNDLE.md`,
    the `CLAUDE.md -> KERNEL.md` symlink, the enforcement manifest, and the
    native git hook.
-2. `bin/install-hooks.sh` writes `.claude/settings.json` from the base snippet.
-   It overwrites that file, so it must run before the enforcement merge.
-3. `bin/wire-enforcement.py --workspace <ws>` merges the runtime-aware
-   `ca-enforcement-gate.sh` wrapper into `.claude/settings.json`. Watchdog
-   automations require the explicit opt-in flag. This is the last writer to settings.json, which is
-   why the merge cannot be clobbered. It is idempotent.
-4. `bin/verify-enforcement.sh --target <ws> --mode craft-agent` checks local
-   conversion behavior, registry recovery policy, wiring and native Git probes.
-   Non-zero means a failed local check. Then verify a bounded live backend turn.
+2. `bin/install-hooks.sh --target-file <ws>/.claude/craft-settings.json`
+   merges the base managed hook registrations while preserving operator entries.
+3. `bin/wire-enforcement.py --workspace <ws> --settings-file <ws>/.claude/craft-settings.json`
+   merges the runtime-aware `ca-enforcement-gate.sh` wrapper. Watchdog automations
+   require the opt-in flag. Re-running the merge does not duplicate the wrapper.
+4. `bin/verify-enforcement.sh --target <ws> --mode craft-agent --settings-file <ws>/.claude/craft-settings.json`
+   checks local conversion behavior, registry recovery policy, wiring and native
+   Git probes. Non-zero means a failed local check.
+5. `bin/install-craft-hook-router.py --workspace <ws> --apply` installs the scoped
+   bootstrap, followed by `--verify-registration`. Then verify a bounded live
+   backend turn; registration is not callback delivery evidence.
 
-`bin/install.sh` runs steps 1 to 4 in order. `bin/harmonize.sh` is the
+`bin/install.sh` runs steps 1 to 5 in order. `bin/harmonize.sh` is the
 idempotent wrapper a recurring job should call so that harmonisation re-wires
 and re-verifies enforcement on every run instead of silently drifting to
 advisory-only.

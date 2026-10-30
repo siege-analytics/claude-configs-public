@@ -9,7 +9,7 @@ Project-contribution: Make exact operation effects, rather than a program name o
 
 ## Context and authorization
 
-The operator authorized the remaining repairs after reviewing the remediation plan. The coordinator explicitly delegated P0.6a/P0.9 implementation in an isolated worktree, including the Darwin base64 output, GNU cp abbreviation, textconv execution and global Git option bypass findings. Base origin/develop: d26317b15c8803d972efe9dff2fde144aedf8908. Live runtime trees and real consumer registration are outside this source slice.
+The operator authorized the remaining repairs after reviewing the remediation plan. The coordinator delegated P0.6a/P0.9 implementation in an isolated worktree, including the Darwin base64 output, GNU cp abbreviation, textconv execution and global Git option bypass findings. Base origin/develop: d26317b15c8803d972efe9dff2fde144aedf8908. Live runtime trees and real consumer registration are outside this source slice.
 
 Issue #1122 records actual foreign writes for cp/base64 and configured-helper execution for textconv. #1121 records falsely blocked literal reflog inspection. Their bodies and comments were read before implementation. The current base still contains these shapes: base64 in unconditional PLAIN; cp exact output-option matching; missing --textconv in the first classifier; branch/destructive triggers looking for adjacent git and verb.
 

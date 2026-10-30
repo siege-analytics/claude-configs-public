@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -20,7 +21,7 @@ SPEC.loader.exec_module(BUILD)
 
 
 def git(repo: Path, *args: str) -> str:
-    return subprocess.check_output(["git", "-C", str(repo), *args], text=True).strip()
+    return subprocess.check_output(["git", "-C", str(repo), *args], text=True, timeout=120).strip()
 
 
 def commit(repo: Path, message: str) -> str:
@@ -32,7 +33,7 @@ def commit(repo: Path, message: str) -> str:
 def immutable_activation_checks(base: Path) -> None:
     """Exercise real private building, untracked isolation and stamp timing."""
     source = base / "complete-source"
-    subprocess.run(["git", "clone", "-q", "--no-local", str(ROOT), str(source)], check=True)
+    subprocess.run(["git", "clone", "-q", "--no-local", str(ROOT), str(source)], check=True, timeout=120)
     git(source, "config", "core.hooksPath", os.devnull)
     git(source, "config", "user.email", "test@example.test")
     git(source, "config", "user.name", "Test")
@@ -40,14 +41,23 @@ def immutable_activation_checks(base: Path) -> None:
     # the outer repository; the fixture's own commit is its accepted main.
     changed = subprocess.check_output(
         ["git", "-C", str(ROOT), "diff", "--name-only", "HEAD"], text=True,
+        timeout=120,
     ).splitlines()
     for name in changed:
         path = ROOT / name
         if path.is_file():
             shutil.copy2(path, source / name)
+    legacy_bytes = b"fixture observed legacy dispatcher\n"
+    manifest_path = source / "catalog/legacy-owned-artifacts.json"
+    # A committed fixture policy proves retirement without vendoring private
+    # observed installation bytes. Production retains its exact observed hash.
+    manifest = json.loads((ROOT / "catalog/legacy-owned-artifacts.json").read_text())
+    manifest["artifacts"][0]["sha256"] = hashlib.sha256(legacy_bytes).hexdigest()
+    manifest["artifacts"][0]["size_bytes"] = len(legacy_bytes)
+    manifest_path.write_text(json.dumps(manifest))
     revision = commit(source, "candidate deployment fixture")
     remote = base / "complete-remote.git"
-    subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
+    subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True, timeout=120)
     git(source, "remote", "set-url", "origin", str(remote))
     git(source, "push", "-q", "origin", "HEAD:main")
     untracked = source / "hooks/resolver/untracked-local.sh"
@@ -58,11 +68,29 @@ def immutable_activation_checks(base: Path) -> None:
     assert BUILD.validate_deploy_source(source) == revision
     workspace = base / "complete-workspace"
     workspace.mkdir()
+    custom = workspace / "skills/operator-only/custom.bin"
+    custom.parent.mkdir(parents=True)
+    custom.write_bytes(b"operator binary\x00")
+    nested = workspace / "skills/think/operator-notes.txt"
+    nested.parent.mkdir(parents=True)
+    nested.write_text("operator nested notes\n")
+    legacy = workspace / "skills/RESOLVER.md"
+    legacy.write_bytes(legacy_bytes)
+    unknown = workspace / "skills/unknown-root.md"
+    unknown.write_text("operator root notes\n")
     result = subprocess.run(
         [sys.executable, str(source / "bin/build.py"), "--layout", "flat", "--deploy",
          "--craft-workspace", str(workspace)], cwd=source, capture_output=True, text=True, timeout=120,
     )
     assert result.returncode == 0, result.stdout[-1500:] + result.stderr[-1500:]
+    assert custom.read_bytes() == b"operator binary\x00"
+    assert nested.read_text() == "operator nested notes\n"
+    assert unknown.read_text() == "operator root notes\n"
+    assert not legacy.exists(), "exact known legacy dispatcher was not retired"
+    # A same-name operator modification survives every subsequent activation.
+    modified_legacy = legacy_bytes.replace(b"fixture", b"custom!")
+    assert len(modified_legacy) == len(legacy_bytes)
+    legacy.write_bytes(modified_legacy)
     stamp = json.loads((workspace / "deploy-stamp.json").read_text())
     assert stamp["commit"] == revision and stamp["repo_root"] == str(source.resolve())
     assert stamp["immutable_source"] is True and stamp["verification"]["stage"] == "artifact-bytes"
@@ -89,6 +117,8 @@ def immutable_activation_checks(base: Path) -> None:
             assert "tracked deployment inputs differ" in str(exc), str(exc)
         else:
             raise AssertionError("source mutation during activation was certified")
+    assert legacy.read_bytes() == modified_legacy
+    assert custom.exists() and nested.exists() and unknown.exists()
     assert not (workspace / "deploy-stamp.json").exists()
     assert (workspace / "hooks/resolver/standing-order-guard.sh").read_bytes() == canonical
     tracked.write_bytes(canonical)
@@ -113,8 +143,8 @@ def main() -> None:
         base = Path(td)
         remote = base / "remote.git"
         repo = base / "repo"
-        subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
-        subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
+        subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True, timeout=120)
+        subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True, timeout=120)
         git(repo, "config", "user.email", "test@example.test")
         git(repo, "config", "user.name", "Test")
         git(repo, "remote", "add", "origin", str(remote))
@@ -212,8 +242,8 @@ def main() -> None:
         alias.symlink_to(repo, target_is_directory=True)
         try:
             BUILD._validate_deploy_target(repo, alias)
-        except BUILD.BuildError:
-            pass
+        except BUILD.BuildError as error:
+            assert "deployment" in str(error)
         else:
             raise AssertionError("source target alias accepted")
         target = base / "workspace"
@@ -224,13 +254,14 @@ def main() -> None:
         for output in (repo, target, base):
             try:
                 BUILD._validate_deploy_output(repo, target, output)
-            except BUILD.BuildError:
-                pass
+            except BUILD.BuildError as error:
+                assert "deployment" in str(error)
             else:
                 raise AssertionError(f"unsafe deployment output accepted: {output}")
             result = subprocess.run(
                 [sys.executable, str(ROOT / "bin/build.py"), "--deploy", "--dist", str(output),
                  "--craft-workspace", str(target)], capture_output=True, text=True,
+                timeout=120,
             )
             assert result.returncode != 0 and "--dist cannot be combined with --deploy" in result.stderr
             assert sentinel.read_text() == "do not remove\n"
@@ -239,8 +270,8 @@ def main() -> None:
         output_alias.symlink_to(repo / "dist", target_is_directory=True)
         try:
             BUILD._validate_deploy_output(repo, target, output_alias)
-        except BUILD.BuildError:
-            pass
+        except BUILD.BuildError as error:
+            assert "deployment" in str(error)
         else:
             raise AssertionError("deployment output alias accepted")
         assert BUILD._validate_deploy_output(repo, target, repo / "dist") == repo.resolve() / "dist"
@@ -316,8 +347,8 @@ def main() -> None:
 
         legacy_remote = base / "legacy-remote.git"
         legacy = base / "legacy"
-        subprocess.run(["git", "init", "-q", "--bare", str(legacy_remote)], check=True)
-        subprocess.run(["git", "init", "-q", "-b", "main", str(legacy)], check=True)
+        subprocess.run(["git", "init", "-q", "--bare", str(legacy_remote)], check=True, timeout=120)
+        subprocess.run(["git", "init", "-q", "-b", "main", str(legacy)], check=True, timeout=120)
         git(legacy, "config", "user.email", "test@example.test")
         git(legacy, "config", "user.name", "Test")
         git(legacy, "remote", "add", "origin", str(legacy_remote))

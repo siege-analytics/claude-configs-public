@@ -36,7 +36,7 @@ class ReceiptLane(unittest.TestCase):
 
     def git(self, *args):
         subprocess.run(["git", "-C", str(self.repo), *args], env=self.env, check=True,
-                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=120)
 
     def argv(self, *, producer=PRODUCER, think=None, output=None, repo=None, source="app.py"):
         return [sys.executable, "-B", str(producer), "record", "--repo", str(repo or self.repo),
@@ -80,7 +80,7 @@ class ReceiptLane(unittest.TestCase):
         self.implementing()
         result = self.hook(argv)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        actual = subprocess.run(argv, env=self.env, cwd=self.repo, text=True, capture_output=True)
+        actual = subprocess.run(argv, env=self.env, cwd=self.repo, text=True, capture_output=True, timeout=120)
         self.assertEqual(actual.returncode, 0, actual.stdout + actual.stderr)
         self.assertEqual(self.marker.read_text(), "ran")
         receipt = json.loads(self.output.read_text())
@@ -108,7 +108,7 @@ class ReceiptLane(unittest.TestCase):
         self.assertNotIn(str(self.output), shape["paths"])
         scratch_repo = self.g.ws / "sessions/one/data/repo"
         scratch_repo.mkdir(parents=True)
-        subprocess.run(["git", "init", "-q", str(scratch_repo)], env=self.env, check=True)
+        subprocess.run(["git", "init", "-q", str(scratch_repo)], env=self.env, check=True, timeout=120)
         (scratch_repo / "app.py").write_text("VALUE = 1\n")
         self.assert_denied(self.argv(repo=scratch_repo))
 

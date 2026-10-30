@@ -25,10 +25,10 @@ allowed-tools: Read Grep Glob Bash
    3. Stage specific files by name -- avoid `git add -A` or `git add .` which can accidentally include secrets, build artifacts, or large binaries
    4. Never commit `.env`, credentials, tokens, or other sensitive files
 3. **Run the AI-fingerprint scanner first, then code review** (see Pre-review gate below)
-   1. Invoke [skill:detect-ai-fingerprints] against the staged diff. Non-zero exit blocks the commit; resolve every reported violation before proceeding (no override).
+   1. Invoke [skill:detect-ai-fingerprints] against the full selected staged snapshot and apply its task-scoped acceptance contract. Exit 2 or incomplete evidence blocks the commit. Fix every new, changed or newly exposed true violation. Exit 1 remains non-clean; only individually evidenced, independently reviewed unaffected inherited findings or demonstrated false positives can receive the documented disposition. No path exclusion or clean-scan claim is permitted for that result.
    2. Invoke [skill:code-review] against `git diff --cached` for the structural rules and the six-layer methodology.
    3. Resolve every Blocker; resolve Majors or document why they're being deferred.
-   4. If the user overrides in writing, mark the commit with `[review-skip]`. Note: `[review-skip]` does not exempt the fingerprint scan; that scan has no override.
+   4. If the user overrides in writing, mark the commit with `[review-skip]`. This does not exempt fingerprint scanning or its task-scoped acceptance contract.
 4. **Run affected tests** (see Affected-tests gate below)
    1. For each `.py` source file in the staged diff under `<package>/`, run `pytest -x tests/test_<X>.py tests/test_<X>_*.py tests/<package>/test_<X>.py` if any exist.
    2. Per-repo override: if `.claude/affected-tests.toml` exists, use its source-glob to test-glob mapping instead of the default heuristic.
@@ -406,7 +406,7 @@ If it was already committed, remove it from history and rotate the credential im
 - [ ] Changes are grouped into logical, single-purpose commits
 - [ ] Files are staged by name, not with `git add -A`
 - [ ] No sensitive files (secrets, credentials, keys) are staged
-- [ ] **[skill:detect-ai-fingerprints] ran clean** on the staged diff and the proposed commit message (no override)
+- [ ] **[skill:detect-ai-fingerprints] completed** on the selected staged snapshot and proposed commit message; actual new/changed/newly exposed violations fixed, with any non-clean disposition meeting its independent evidence contract
 - [ ] **[skill:code-review] ran on the staged diff** -- Blockers resolved, Majors addressed or deferred-with-ticket, or `[review-skip]` documented in commit body
 - [ ] **Affected tests ran and passed** -- per the heuristic or `.claude/affected-tests.toml`, or `[run-skip: Reason: <why>; Evidence: <observation>; Falsification: <disproof>]` documented in commit body
 - [ ] Subject line: type prefix, imperative mood, under 72 chars, specific

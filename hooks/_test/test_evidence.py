@@ -9,6 +9,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import time
+from types import SimpleNamespace
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 TOOL = ROOT / 'hooks/lib/test-evidence.py'
@@ -40,18 +43,34 @@ class Evidence(unittest.TestCase):
         self.temp.cleanup()
 
     def git(self, *args):
-        return subprocess.check_output(['git', '-C', str(self.repo), *args], text=True).strip()
+        return subprocess.check_output(['git', '-C', str(self.repo), *args], text=True, timeout=120).strip()
 
     def produce(self, source='app.py', command=None):
         return subprocess.run([sys.executable, str(TOOL), 'record', '--repo', str(self.repo),
                                '--output', str(self.receipt), '--source', source,
                                '--framework', 'unittest', '--', *(command or [sys.executable, '-c', 'assert 1 + 1 == 2'])],
-                              text=True, capture_output=True)
+                              text=True, capture_output=True, timeout=120)
 
     def check(self, document=None):
         if document is not None:
             self.receipt.write_text(json.dumps(document))
         return e.check(self.repo, self.receipt, e.source_paths(self.repo, self.base))
+
+    def test_timeout_cancels_descendants_and_invalidates_old_pass(self):
+        marker = self.repo / 'late-mutation'
+        child = "import time; from pathlib import Path; time.sleep(0.8); Path(" + repr(str(marker)) + ").write_text('unexpected')"
+        parent = "import subprocess, sys, time; subprocess.Popen([sys.executable, '-c', " + repr(child) + "]); time.sleep(5)"
+        args = SimpleNamespace(repo=str(self.repo), source=['app.py'], output=str(self.receipt),
+                               think_gate=None, framework='unittest', command=[sys.executable, '-c', parent])
+        with patch.object(e, 'TEST_TIMEOUT_SECONDS', 0.3):
+            with self.assertRaises(subprocess.TimeoutExpired):
+                e.record(args)
+        pending = json.loads(self.receipt.read_text())
+        self.assertIsNone(pending['exit_code'])
+        self.assertEqual(pending['evidence'][0]['result'], 'pending')
+        self.assertTrue(self.check())
+        time.sleep(1)
+        self.assertFalse(marker.exists(), 'timed-out test descendant survived cancellation')
 
     def test_success_and_exact_content(self):
         self.assertEqual(self.check(), [])
@@ -72,7 +91,7 @@ class Evidence(unittest.TestCase):
                 except TypeError:
                     # CLI must also fail closed for malformed JSON field types.
                     p = subprocess.run([sys.executable, str(TOOL), 'check', '--repo', str(self.repo),
-                                        '--receipt', str(self.receipt), '--base', self.base], capture_output=True)
+                                        '--receipt', str(self.receipt), '--base', self.base], capture_output=True, timeout=120)
                     self.assertEqual(p.returncode, 2)
                 else:
                     self.assertTrue(problems)
@@ -110,8 +129,8 @@ class Evidence(unittest.TestCase):
         self.receipt.write_text(json.dumps({'evidence': [{'source': '', 'result': 'pass'}]}))
         command = [sys.executable, str(TOOL), 'check', '--repo', str(self.repo),
                    '--receipt', str(self.receipt), '--base', self.base]
-        self.assertEqual(subprocess.run(command, capture_output=True).returncode, 2)
-        self.assertEqual(subprocess.run([*command, '--report-only'], capture_output=True).returncode, 0)
+        self.assertEqual(subprocess.run(command, capture_output=True, timeout=120).returncode, 2)
+        self.assertEqual(subprocess.run([*command, '--report-only'], capture_output=True, timeout=120).returncode, 0)
 
     def test_quotes_unicode_newlines_and_suffix_duplicates(self):
         names = ["quote'file.py", 'line\nfile.py', 'unicode-λ.py', 'nested/app.py']
@@ -122,7 +141,7 @@ class Evidence(unittest.TestCase):
         command = [sys.executable, str(TOOL), 'record', '--repo', str(self.repo), '--output', str(self.receipt)]
         for name in ['app.py', *names]:
             command += ['--source', name]
-        p = subprocess.run([*command, '--framework', 'unittest', '--', sys.executable, '-c', 'assert True'], capture_output=True)
+        p = subprocess.run([*command, '--framework', 'unittest', '--', sys.executable, '-c', 'assert True'], capture_output=True, timeout=120)
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertEqual(self.check(), [])
         d = json.loads(self.receipt.read_text()); d['evidence'] = d['evidence'][:1]
@@ -144,13 +163,13 @@ class Evidence(unittest.TestCase):
                '--think-gate', str(think), '--output', str(receipt), '--framework', 'unittest']
         for name in ['app.py', *names]:
             cmd += ['--source', name]
-        self.assertEqual(subprocess.run([*cmd, '--', sys.executable, '-c', 'assert True'], capture_output=True).returncode, 0)
+        self.assertEqual(subprocess.run([*cmd, '--', sys.executable, '-c', 'assert True'], capture_output=True, timeout=120).returncode, 0)
         env = {k:v for k,v in os.environ.items() if not k.startswith(('CRAFT_', 'CLAUDE_', 'CCP_', 'SESSION_'))}
         env.update(CRAFT_SESSION_DIR=str(session), CRAFT_AGENT_WORKSPACE=str(self.repo))
         payload = json.dumps(dict(cwd=str(self.repo), tool_input={'command': 'git push'}))
         def guard():
             return subprocess.run(['bash', str(ROOT / 'hooks/git/test-guard.sh')], input=payload,
-                                  env=env, text=True, capture_output=True)
+                                  env=env, text=True, capture_output=True, timeout=120)
         result = guard()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse((self.repo / 'INJECTED').exists())

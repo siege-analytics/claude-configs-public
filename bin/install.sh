@@ -140,6 +140,12 @@ detect_craft_agent() {
 
 install_craft_agent() {
     local ws_path="$CA_ROOT/$WORKSPACE_SLUG"
+    local settings_file="$ws_path/.claude/craft-settings.json"
+    local router_installer="$REPO_ROOT/bin/install-craft-hook-router.py"
+    if [[ ! -f "$router_installer" ]]; then
+        echo "ERROR: required Craft hook router installer missing: $router_installer" >&2
+        return 1
+    fi
     echo "=== Craft Agent install ==="
     echo "Workspace: $WORKSPACE_SLUG ($ws_path)"
     echo
@@ -153,7 +159,8 @@ install_craft_agent() {
     echo "--- Installing hook settings ---"
     bash "$REPO_ROOT/bin/install-hooks.sh" \
         --workspace "$ws_path" \
-        --hooks-root "$ws_path"
+        --hooks-root "$ws_path" \
+        --target-file "$settings_file"
     echo
 
     # Merge the blocking wrapper after the base hook settings. Both operations
@@ -161,7 +168,7 @@ install_craft_agent() {
     # invocation by itself. Standing-order prompt automations are opt-in;
     # auto-registering them can spawn recurring watchdog/audit sessions.
     echo "--- Wiring enforcement (blocking gate; standing-order automations are opt-in) ---"
-    python3 "$REPO_ROOT/bin/wire-enforcement.py" --workspace "$ws_path"
+    python3 "$REPO_ROOT/bin/wire-enforcement.py" --workspace "$ws_path" --settings-file "$settings_file"
     echo
 
     # Validate
@@ -216,16 +223,15 @@ install_craft_agent() {
         errors=$((errors + 1))
     fi
 
-    local settings_file="$ws_path/.claude/settings.json"
     if [[ -f "$settings_file" ]]; then
-        if python3 -c "import json; json.load(open('$settings_file'))" 2>/dev/null; then
-            echo "  [ok] .claude/settings.json valid JSON"
+        if python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$settings_file" 2>/dev/null; then
+            echo "  [ok] .claude/craft-settings.json valid JSON"
         else
-            echo "  [FAIL] .claude/settings.json is invalid JSON" >&2
+            echo "  [FAIL] .claude/craft-settings.json is invalid JSON" >&2
             errors=$((errors + 1))
         fi
     else
-        echo "  [FAIL] .claude/settings.json not found (hooks are not registered; enforcement dark)" >&2
+        echo "  [FAIL] .claude/craft-settings.json not found (managed policy missing)" >&2
         errors=$((errors + 1))
     fi
 
@@ -255,7 +261,7 @@ install_craft_agent() {
     # CA enforcement artifacts
     if [[ -f "$ws_path/enforcement-manifest.json" ]]; then
         local gate_count
-        gate_count="$(python3 -c "import json; print(len(json.load(open('$ws_path/enforcement-manifest.json'))['gates']))" 2>/dev/null || echo 0)"
+        gate_count="$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["gates"]))' "$ws_path/enforcement-manifest.json" 2>/dev/null || echo 0)"
         echo "  [ok] enforcement-manifest.json present ($gate_count gates)"
     else
         echo "  [FAIL] enforcement-manifest.json not found (CA enforcement not deployed)" >&2
@@ -272,7 +278,7 @@ install_craft_agent() {
     # Actual backend callback delivery requires separate host-native canaries.
     echo
     echo "--- Verifying local registration and direct-hook probes ---"
-    if ! bash "$REPO_ROOT/bin/verify-enforcement.sh" --target "$ws_path" --mode craft-agent; then
+    if ! bash "$REPO_ROOT/bin/verify-enforcement.sh" --target "$ws_path" --mode craft-agent --settings-file "$settings_file"; then
         errors=$((errors + 1))
     fi
 
@@ -282,30 +288,28 @@ install_craft_agent() {
         return 1
     fi
 
-    echo "Deployment complete. Workspace '$WORKSPACE_SLUG' is ready."
+    # Only verified workspace-local policy reaches the minimal global router.
+    # Registration verification is separate from actual Craft callback proof.
+    python3 "$router_installer" --workspace "$ws_path" --apply
+    python3 "$router_installer" --workspace "$ws_path" --verify-registration
+    echo "Deployment complete. Workspace '$WORKSPACE_SLUG' policy and router registered."
     echo
     echo "Progressive mount status (Craft Agent):"
-    echo "  KERNEL.md        -> $ws_path/KERNEL.md (globally mounted policy)"
+    echo "  KERNEL.md        -> $ws_path/KERNEL.md (compact safety kernel)"
     echo "  RULES_BUNDLE.md  -> $ws_path/RULES_BUNDLE.md (on-demand compatibility)"
     echo "  CLAUDE.md        -> symlink to KERNEL.md (if no operator CLAUDE.md present)"
     echo
-    echo "CA auto-injects CLAUDE.md content into the system prompt of any session whose"
-    echo "working directory is at or above the CLAUDE.md (CA walks cwd and its"
-    echo "subdirectories; it does NOT walk parents). For workspace-wide coverage:"
-    echo
-    echo "  1. Open Settings -> Workspace Settings -> Default Working Directory"
-    echo "  2. Set it to: $ws_path"
-    echo "  3. New sessions in this workspace will start with cwd there and pick"
-    echo "     up CLAUDE.md (= KERNEL.md) on first system-prompt render."
-    echo
-    echo "Existing sessions inherit their old cwd; restart them to apply the new mount."
+    echo "Craft's SDK child may use a per-session working directory rather than the"
+    echo "workspace root. Project settings at the workspace alone do not prove delivery."
+    echo "The scoped router bridges the registered workspace policy from supported"
+    echo "Craft ancestry; terminal sessions outside Craft retain their own policy."
+    echo "Kernel discovery and actual backend callback delivery need a live canary."
     echo
     echo "Local hook probes passed; backend callback delivery still needs live verification."
     echo "Craft 0.15.6 Pi/Codex does not dispatch these Claude settings hooks."
     echo "Native Git hook files are at: $ws_path/.githooks/"
-    echo "Register each consumer explicitly with install-hooks.sh --git-repo <repo>."
+    echo "Register each consumer with install-hooks.sh --git-repo <repo>."
     echo
-    echo "Verified empirically 2026-06-07 via probe sessions (claude-configs-public#380)."
     return 0
 }
 
