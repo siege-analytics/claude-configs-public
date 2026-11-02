@@ -378,7 +378,7 @@ expect_block "(parse24) last cleanup option strip removes comment ticket" "$HOOK
     "$(make_payload 'git commit -m "subject" -m "#994" --cleanup=whitespace --cleanup=strip')"
 expect_block "(parse25) -e defaults cleanup to strip with no-op editor" "$HOOK" \
     "$(make_payload 'git commit -e -m "subject only" -m "#994"')"
-expect_pass "(parse26) --edit default strip preserves non-comment ticket" "$HOOK" \
+expect_block "(parse26) editor-dependent final message cannot be proven" "$HOOK" \
     "$(make_payload 'git commit --edit -m "subject" -m "Refs: #994"')"
 
 # --- ALLOWS: GitHub/GitLab style ---
@@ -481,9 +481,9 @@ expect_pass "(read15) plain log" "$HOOK" \
 
 # --- ALLOWS: amend/merge commits (skip enforcement) ---
 
-expect_pass "(u) git commit --amend" "$HOOK" \
+expect_block "(u) interactive amend message cannot be proven" "$HOOK" \
     "$(make_payload 'git commit --amend')"
-expect_pass "(v) git commit --no-edit" "$HOOK" \
+expect_block "(v) implicit no-edit message cannot be proven" "$HOOK" \
     "$(make_payload 'git commit --no-edit')"
 
 # Validate against actual final Git messages, including custom comment prefixes.
@@ -538,7 +538,7 @@ for i, (name, config, mode, editing, body, ticket, *extra) in enumerate(cases):
     subprocess.run(['git', '-C', str(repo)] + args, env=env, check=True, capture_output=True)
     final = subprocess.check_output(['git', '-C', str(repo), 'log', '-1', '--format=%B'], env=env, text=True)
     assert ('#994' in final) == ticket, (name, final)
-    assert result.returncode == (0 if ticket else 2), (name, result.returncode, result.stderr, final)
+    assert result.returncode == (0 if ticket and not editing else 2), (name, result.returncode, result.stderr, final)
 # Repository trailer commands must never run during a read-only hook probe.
 repo = base / 'trailer-command'; repo.mkdir()
 subprocess.run(['git', 'init', '-q', str(repo)], env=env, check=True)

@@ -69,6 +69,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/classify-catalog-command.py",
  "hooks/lib/commit-message-source.py",
  "hooks/lib/git_command.py",
+ "hooks/lib/command-text.py",
  "hooks/lib/detect-host.sh",
  "hooks/lib/extract-json.py",
  "hooks/lib/gate-registry.sh",
@@ -214,6 +215,7 @@ hooks/git/no-sensitive-files.sh|hooks/lib/scope-check.sh
 hooks/git/post-error-revision-required.sh|hooks/lib/extract-json.py
 hooks/git/pr-base-guard.sh|hooks/lib/extract-json.py
 hooks/git/self-review.sh|hooks/lib/extract-json.py
+hooks/git/self-review.sh|hooks/lib/read-only-command.py
 hooks/git/self-review.sh|hooks/lib/probe-runner.py
 hooks/git/self-review.sh|hooks/lib/resolve-think-gate.py
 hooks/git/self-review.sh|hooks/lib/scope-check.sh
@@ -225,9 +227,7 @@ hooks/bash/destructive-guard.sh|hooks/lib/git_command.py
 hooks/git/branch-guard.sh|hooks/lib/git_command.py
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py
-hooks/git/ticket-required.sh|hooks/lib/command-text.sh
-hooks/git/ticket-required.sh|hooks/lib/commit-message-source.py
-hooks/git/ticket-required.sh|hooks/lib/scope-check.sh
+hooks/git/ticket-required.sh|hooks/lib/git_command.py
 hooks/git/vergil-quote.sh|hooks/lib/extract-json.py
 hooks/infrastructure/catalog-guard.sh|hooks/lib/extract-json.py
 hooks/infrastructure/catalog-guard.sh|hooks/lib/classify-catalog-command.py
@@ -250,8 +250,8 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "8dc43dd7ee0970d7e5d2e32cd77a457a81968130195f0896712afaf075d3d1d8"
-REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "852b9fe50e7b0aa14ca233efe2ff7d42e416c09ae48938b6f237ec2c334aa9d2"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "1231a256a9f45177360f1dcdfb0a82f80282e28a9801fbe727ebd97b9c7fb9bb"
+REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "94457079e711f0e4be9ef27704231842e6c678b1bb0180f79be49bb6708c95f0"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
   row.split("|") for row in """
@@ -270,6 +270,7 @@ hooks/git/no-sensitive-files.sh|hooks/lib/extract-json.py|2
 hooks/git/post-error-revision-required.sh|hooks/lib/extract-json.py|1
 hooks/git/pr-base-guard.sh|hooks/lib/extract-json.py|3
 hooks/git/self-review.sh|hooks/lib/extract-json.py|2
+hooks/git/self-review.sh|hooks/lib/read-only-command.py|1
 hooks/git/self-review.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/survey-context.sh|hooks/lib/extract-json.py|2
 hooks/git/test-guard.sh|hooks/lib/extract-json.py|2
@@ -279,7 +280,7 @@ hooks/git/branch-guard.sh|hooks/lib/git_command.py|1
 hooks/git/test-guard.sh|hooks/lib/resolve-think-gate.py|1
 hooks/git/test-tracking-guard.sh|hooks/lib/extract-json.py|2
 hooks/git/ticket-required.sh|hooks/lib/extract-json.py|3
-hooks/git/ticket-required.sh|hooks/lib/commit-message-source.py|1
+hooks/git/ticket-required.sh|hooks/lib/git_command.py|1
 hooks/infrastructure/catalog-guard.sh|hooks/lib/classify-catalog-command.py|1
 hooks/git/vergil-quote.sh|hooks/lib/extract-json.py|1
 hooks/resolver/branch-state-guard.sh|hooks/lib/log-block.sh|1
