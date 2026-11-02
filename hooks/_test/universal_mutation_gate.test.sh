@@ -64,13 +64,16 @@ expect_pass "(n0) gh issue create with title and body-file passes as governance 
 expect_pass "(n1) gh issue comment with target and body-file passes as governance reporting" "$HOOK" "$(make_payload 'gh issue comment 123 --body-file body.md')"
 expect_block "(n2) gh issue create without body still blocks" "$HOOK" "$(make_payload 'gh issue create --title followup')"
 expect_block "(n3) gh issue close remains mutation-gated" "$HOOK" "$(make_payload 'gh issue close 123')"
-expect_block "(n4) gh issue edit remains mutation-gated" "$HOOK" "$(make_payload 'gh issue edit 123 --title changed')"
+expect_pass "(n4) existing issue title maintenance needs no task gate" "$HOOK" "$(make_payload 'gh issue edit 123 --title changed')"
 expect_block "(n5) gh pr create remains mutation-gated" "$HOOK" "$(make_payload 'gh pr create --title pr --body body')"
 expect_block "(n6) chained gh issue create remains mutation-gated" "$HOOK" "$(make_payload 'gh issue create --title followup --body-file body.md; touch x')"
 expect_block "(n7) gh issue create with metadata flag remains mutation-gated" "$HOOK" "$(make_payload 'gh issue create --title followup --body-file body.md --label bug')"
 expect_block "(n8) gh issue create with duplicate body flags remains mutation-gated" "$HOOK" "$(make_payload 'gh issue create --title followup --body safe --body-file body.md')"
 expect_block "(n9) gh issue create with stdin body-file remains mutation-gated" "$HOOK" "$(make_payload 'gh issue create --title followup --body-file -')"
-expect_block "(n10) gh issue comment edit-last remains mutation-gated" "$HOOK" "$(make_payload 'gh issue comment 123 --body-file body.md --edit-last')"
+expect_pass "(n10) existing last-comment text maintenance needs no task gate" "$HOOK" "$(make_payload 'gh issue comment 123 --body-file body.md --edit-last')"
+
+expect_block "(n11) issue label edits retain task authority" "$HOOK" "$(make_payload 'gh issue edit 123 --title changed --add-label bug')"
+expect_block "(n12) edit-last with create-if-none is not text-only maintenance" "$HOOK" "$(make_payload 'gh issue comment 123 --body-file body.md --edit-last --create-if-none')"
 
 # --- True-positive preservation: real redirects must still block ---
 
