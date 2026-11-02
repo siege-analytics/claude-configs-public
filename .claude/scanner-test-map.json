@@ -22,6 +22,12 @@
     ],
     "hooks/lib/craft-settings-router.py": [
       "bin/_test/craft_hook_router_test.py"
+    ],
+    "hooks/lib/resolve-think-gate.py": [
+      "hooks/_test/task_keyed_gates.py"
+    ],
+    "hooks/lib/task_actions.py": [
+      "hooks/_test/task_keyed_gates.py"
     ]
   }
 }

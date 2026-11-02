@@ -133,6 +133,9 @@ class Gates(unittest.TestCase):
         self.assertGate(2, 'touch ' + str(self.b / 'bad.md') + '; ' + metadata, cwd=self.ws)
         self.assertGate(2, metadata + ' > ' + str(self.b / 'bad.md'), cwd=self.ws)
         for command in (
+            'gh pr edit http://127.0.0.1:1/example/target/pull/123 --body text',
+            'gh issue edit https://example.invalid/example/target/issues/123 --body text',
+            'gh pr comment //example.invalid/example/target/pull/123 --edit-last --body text',
             'gh pr edit 123 --repo example/target --base main',
             'gh pr edit 123 --repo example/target --add-reviewer operator',
             'gh issue edit 123 --repo example/target --add-label done',
