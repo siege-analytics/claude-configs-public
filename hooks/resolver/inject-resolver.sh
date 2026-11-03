@@ -18,6 +18,17 @@ block_invalid_kernel() {
 [[ "$(wc -c < "$KERNEL" | tr -d ' ')" -le 80000 ]] || block_invalid_kernel
 cmp -s "$CANONICAL_KERNEL" "$KERNEL" || block_invalid_kernel
 PAYLOAD="$(cat || true)"
+# Buffer the complete delivery, including optional plan warnings, before stdout.
+# Keep the original descriptor available for a sole structured failure response.
+exec 8>&1
+block_delivery() {
+  printf '%s\n' '{"continue":false,"systemMessage":"BLOCKED: complete mandatory policy cannot be delivered within the inline byte limit; restore compact canonical KERNEL.md and writable temporary storage."}' >&8
+  exit 0
+}
+DELIVERY_FILE="$(mktemp "${TMPDIR:-/tmp}/craft-hook-output.XXXXXX")" || block_delivery
+trap 'rm -f -- "$DELIVERY_FILE"' EXIT
+trap 'block_delivery' ERR
+{
 MODE="${CLAUDE_PROGRESSIVE_LOADING:-on}"
 if [[ "$MODE" == "off" || "$MODE" == "kernel-only" ]]; then
   cat <<EOF
@@ -98,3 +109,18 @@ PIPELINE
         fi
     fi
 fi
+
+} > "$DELIVERY_FILE"
+DELIVERY_BYTES="$(LC_ALL=C wc -c < "$DELIVERY_FILE")"
+if [[ "$DELIVERY_BYTES" -ge 10000 ]]; then
+  {
+    printf '%s\n' '<skill-kernel mode="kernel-only">'
+    cat "$CANONICAL_KERNEL"
+    printf '%s\n' '</skill-kernel>' '<progressive-load-set>' 'state: over-budget' 'project: none' 'diagnostic: final hook output exceeds inline byte limit; kernel only' '</progressive-load-set>'
+  } > "$DELIVERY_FILE"
+  DELIVERY_BYTES="$(LC_ALL=C wc -c < "$DELIVERY_FILE")"
+  [[ "$DELIVERY_BYTES" -lt 10000 ]] || block_delivery
+fi
+# The decision is complete: never append structured failure output after publish.
+trap - ERR
+cat "$DELIVERY_FILE"

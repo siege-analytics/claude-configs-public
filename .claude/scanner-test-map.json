@@ -28,6 +28,9 @@
     ],
     "hooks/lib/task_actions.py": [
       "hooks/_test/task_keyed_gates.py"
+    ],
+    "bin/progressive-loading-metrics.py": [
+      "bin/_test/inline_delivery_test.py"
     ]
   }
 }

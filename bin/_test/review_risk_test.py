@@ -26,6 +26,8 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  ".claude/scanner-test-map.json",
  "hooks/lib/hook_payload.py",
  "bin/_test/hook_payload_test.py",
+ "bin/_test/inline_delivery_test.py",
+ "hooks/_test/progressive_loading.test.sh",
  "hooks/_test/hook_payload.test.sh",
  "skills/commit/SKILL.md",
  "skills/code-review/SKILL.md",
