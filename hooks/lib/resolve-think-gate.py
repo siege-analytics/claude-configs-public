@@ -750,7 +750,7 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     command = ti.get("command", "")
     cwd = payload.get("cwd") or os.getcwd()
     shape = action(command, cwd) if command else {"read_only": False, "paths": [canonical(ti.get("file_path") or ti.get("notebook_path") or ti.get("path") or cwd, cwd)]}
-    if shape["read_only"] or shape.get('investigation'):
+    if shape["read_only"] or shape.get('investigation') or shape.get("metadata_only"):
         return shape  # No gate lookup for recognized reads/approved diagnostics.
     if shape.get("error"):
         return {**shape, "gate": None, "error": "Cannot resolve mutation targets: " + shape["error"]}

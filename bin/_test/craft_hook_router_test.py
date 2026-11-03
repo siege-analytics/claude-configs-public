@@ -55,6 +55,12 @@ class Router(unittest.TestCase):
         self.pinned = patch.object(install, "source_bytes", side_effect=lambda revision, relative, apply: (ROOT / relative).read_bytes())
         self.pinned.start()
         self.addCleanup(self.pinned.stop)
+        # This disposable registration fixture models current candidate bytes;
+        # no fixture revision claims an uncommitted production deployment.
+        self.current_core = patch.object(install.trust, "reviewed_bytes",
+                                         side_effect=lambda revision, relative: (ROOT / relative).read_bytes())
+        self.current_core.start()
+        self.addCleanup(self.current_core.stop)
 
     def activate(self):
         return install.install(self.workspace, self.home, apply=True)
@@ -296,6 +302,37 @@ class Router(unittest.TestCase):
             value["tool_input"] = {"command": "touch forbidden"}
             self.assertEqual(self.route(json.dumps(value).encode())[0], 2)
         self.assertEqual(self.route(self.payload(command="printf READ_OK"))[0], 0)
+
+    def test_metadata_command_prose_passes_entire_registered_bash_stack(self):
+        source = json.loads((ROOT / 'hooks/settings-snippet.json').read_text())
+        policy = json.loads(self.policy_path.read_text())
+        policy['hooks']['PreToolUse'] = source['hooks']['PreToolUse']
+        policy = json.loads(json.dumps(policy).replace('/path/to/claude-configs-public', str(self.workspace)))
+        self.policy_path.write_text(json.dumps(policy))
+        self.activate()
+        command = "gh pr edit 123 -R example/target --body 'gh pr create; gh pr merge 1; git commit -m done; completed with pending blocker'"
+        value = json.loads(self.payload(command=command))
+        value['cwd'] = str(ROOT)
+        hooks = r.matching_hooks(policy, 'PreToolUse', value)
+        self.assertEqual(len(hooks), 16)
+        self.assertEqual(self.route(json.dumps(value).encode())[0], 0)
+        value['tool_input']['command'] = command + '; touch ' + str(self.workspace / 'outside.md')
+        self.assertEqual(self.route(json.dumps(value).encode())[0], 2)
+        self.assertFalse((self.workspace / 'outside.md').exists())
+
+    def test_unbound_metadata_edit_is_explicit_and_classifier_is_pinned(self):
+        self.activate()
+        (self.session / "session.jsonl").write_text('{"id":"one"}\n')
+        command = "gh pr edit 123 --repo example/target --body 'completed, blocked elsewhere'"
+        self.assertEqual(self.route(self.payload(command=command))[0], 0)
+        for suffix in ("; touch forbidden", "; gh pr merge 123 --repo example/target"):
+            self.assertEqual(self.route(self.payload(command=command + suffix))[0], 2)
+        self.assertEqual(self.route(self.payload(command="gh pr edit 123 --repo example/target --base main"))[0], 2)
+        self.assertFalse((self.workspace / 'forbidden').exists())
+        classifier = self.workspace / 'hooks/lib/task_actions.py'
+        classifier.write_text(classifier.read_text() + '\n# changed after registration\n')
+        with self.assertRaisesRegex(r.RoutingError, "digest|hash|pin|generation"):
+            self.route(self.payload(command=command))
 
     def test_enrolled_missing_and_malformed_session_binding(self):
         self.activate()

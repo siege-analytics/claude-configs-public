@@ -241,4 +241,20 @@ expect_pass \
   "$HOOK" \
   "$(payload "gh api repos/siege-analytics/claude-configs-public/pulls/931")"
 
+# Readiness #919: structure-proven numeric API reads and reopening preservation.
+expect_pass \
+  "numeric PR API GET with closed comparison is a read" \
+  "$HOOK" \
+  "$(payload "gh api repos/example/target/pulls/31 --jq '.state == \"closed\"'")"
+
+expect_pass \
+  "numeric issue API GET with done data is a read" \
+  "$HOOK" \
+  "$(payload "gh api repos/example/target/issues/31 --jq '.title == \"done\"'")"
+
+expect_block \
+  "issue reopen still requires transition evidence" \
+  "$HOOK" \
+  "$(payload "gh issue reopen 31")"
+
 report

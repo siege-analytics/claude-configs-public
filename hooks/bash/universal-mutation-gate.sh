@@ -188,7 +188,7 @@ WORKSPACE_FOR_RESOLVE="${CRAFT_AGENT_WORKSPACE:-$WORKSPACE_CANDIDATE}"
 RESOLUTION=$(python3 "$RESOLVE_TG" --workspace "$WORKSPACE_FOR_RESOLVE" --action-json || true)
 READ_ONLY=$(printf '%s' "$RESOLUTION" | python3 "$EXTRACT" read_only 2>/dev/null || true)
 [[ "$READ_ONLY" == "True" || "$READ_ONLY" == "true" ]] && exit 0
-EARLY_ALLOW=$(printf '%s' "$RESOLUTION" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(bool(d.get("investigation") or d.get("self_management")))' 2>/dev/null || true)
+EARLY_ALLOW=$(printf '%s' "$RESOLUTION" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(bool(d.get("metadata_only") or d.get("investigation") or d.get("self_management")))' 2>/dev/null || true)
 [[ "$EARLY_ALLOW" == "True" ]] && exit 0
 THINK_GATE=$(printf '%s' "$RESOLUTION" | python3 "$EXTRACT" gate.path 2>/dev/null || true)
 if [[ -z "$THINK_GATE" ]]; then
