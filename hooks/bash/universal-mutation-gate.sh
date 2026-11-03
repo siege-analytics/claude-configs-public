@@ -45,14 +45,6 @@ def field(data, path):
         return ""
     text = json.dumps(cur) if isinstance(cur, (dict, list)) else str(cur)
     return text.rstrip("\n").replace("\0", "")
-def slim(v):
-    if isinstance(v, str):
-        return "" if len(v) > 4096 else v
-    if isinstance(v, dict):
-        return {k: slim(x) for k, x in v.items()}
-    if isinstance(v, list):
-        return [slim(x) for x in v]
-    return v
 def emit(*parts):
     sys.stdout.buffer.write(b"".join(p.encode("utf-8") + b"\0" for p in parts))
 try:
@@ -67,12 +59,16 @@ command = field(data, "tool_input.command")
 # \uXXXX (#1106 review).
 if len(command.encode("utf-8", "surrogatepass")) > 65536:
     emit("large"); sys.exit()
-out = slim(data)
-if command:
-    out["tool_input"]["command"] = data["tool_input"]["command"]
-slim_json = json.dumps(out)
-if len(slim_json.encode("utf-8")) > 98304:
+try:
+    import os
+    sys.path.insert(0, os.environ["CCP_HOOK_LIB"])
+    sys.dont_write_bytecode = True
+    from hook_payload import metadata_environment
+    slim_json = metadata_environment(data)
+except (ValueError, TypeError):
     emit("large"); sys.exit()
+except (ImportError, OSError):
+    emit("bad"); sys.exit()
 try:
     emit("ok", command, field(data, "cwd"), field(data, "tool_name"), slim_json)
 except UnicodeEncodeError:

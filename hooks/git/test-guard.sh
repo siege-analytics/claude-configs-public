@@ -28,7 +28,8 @@ CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
 # Preserve identity from the actual tool callback for scoped evidence lookup.
 # Native pre-push stdin is update lines, not JSON; leave its context intact.
 if [[ -n "$COMMAND" ]]; then
-    export CCP_HOOK_INPUT_JSON="$INPUT"
+    _HOOK_METADATA=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/../lib/hook_payload.py") || exit 2
+    export CCP_HOOK_INPUT_JSON="$_HOOK_METADATA"
 fi
 
 # Native git hook path: when called from .githooks/pre-push, stdin is the

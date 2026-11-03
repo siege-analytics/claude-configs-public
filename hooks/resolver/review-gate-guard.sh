@@ -33,9 +33,15 @@
 set -euo pipefail
 
 HOOK_INPUT_JSON=$(cat 2>/dev/null || true)
-export CCP_HOOK_INPUT_JSON="$HOOK_INPUT_JSON"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+_METADATA_INPUT="$HOOK_INPUT_JSON"
+[[ -n "$_METADATA_INPUT" ]] || _METADATA_INPUT='{}'
+if ! _HOOK_METADATA=$(printf '%s' "$_METADATA_INPUT" | python3 "$SCRIPT_DIR/../lib/hook_payload.py"); then
+    echo "Hook input metadata unavailable; prompt diagnostics remain advisory." >&2
+    exit 0
+fi
+export CCP_HOOK_INPUT_JSON="$_HOOK_METADATA"
 WORKSPACE_ROOT="${CRAFT_AGENT_WORKSPACE:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 RESOLVE_TG="$SCRIPT_DIR/../lib/resolve-think-gate.py"
 
