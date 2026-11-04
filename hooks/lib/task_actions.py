@@ -22,7 +22,7 @@ class UnknownShape(ValueError):
     pass
 
 
-def shell_tokens(command: str) -> list[tuple[str, bool, tuple[int, ...]]]:
+def shell_tokens(command: str, *, inspection_comments=False) -> list[tuple[str, bool, tuple[int, ...]]]:
     """Preserve operators and positions of unquoted glob characters.
 
     Reader/diagnostic classification decides whether a glob word is safe;
@@ -91,6 +91,10 @@ def shell_tokens(command: str) -> list[tuple[str, bool, tuple[int, ...]]]:
                         i += 1
                 tokens.append((op, True, ()))
         elif c == "#" and not active:
+            if inspection_comments:
+                end = command.find("\n", i)
+                i = len(command) if end < 0 else end
+                continue
             # This documented final comment is syntax only, never task authority.
             # Every executed prefix still needs its own scope and artifacts.
             approval = re.fullmatch(

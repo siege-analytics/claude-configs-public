@@ -664,11 +664,54 @@ for command in ("sed -i '' 's/a/git commit/' notes.md", "sed -i 's|a|git commit|
     check(command + " && watch 'git commit -m none'", repo, 2)
 for command in ("sed -i '' 's/a/git commit/e' notes.md", "sed -i '' 'e git commit -m none' notes.md"):
     check(command, repo, 2)
-assert passed == 146, passed
-print('  [PASS] 146 actual opaque-dispatch, redirect, quoted-prose, scope and mixed-command controls')
+for command in (
+    "watch 'git -C " + str(repo) + " commit -m subject'",
+    "watch 'git -c user.name=Fixture commit -m subject'",
+    "watch 'git --no-pager commit -m subject'",
+    "watch 'git -C " + str(repo) + " commit -m subject' > output",
+):
+    check(command, repo, 2)
+    check(command, foreign, 2 if '-C ' in command else 0)
+for cwd in (repo, foreign):
+    for operation, expected in (('commit -m subject', 2), ('status', 0), ('diff', 0), ("commit -m 'Refs: #1107'", 0)):
+        check('git -C ' + shlex.quote(str(repo)) + ' ' + operation + ' # comment', cwd, expected)
+    check('git -C ' + shlex.quote(str(foreign)) + ' commit -m subject # comment', cwd, 0)
+for marker in ('[task:  ]', '[task: \t ]', '[no-ticket: Reason: ; Evidence: yes; Falsification: yes]',
+               '[no-ticket: Reason: yes; Evidence: ; Falsification: yes]',
+               '[no-ticket: Reason: yes; Evidence: yes; Falsification: ]',
+               '[no-ticket: Reason: \t ; Evidence: yes; Falsification: yes]',
+               '[no-ticket: Reason: yes; Evidence: \t ; Falsification: yes]',
+               '[no-ticket: Reason: yes; Evidence: yes; Falsification: \t ]'):
+    check('git commit -m ' + shlex.quote(marker), repo, 2)
+for marker in ('[task: meaningful task]', '[no-ticket: Reason: own; Evidence: local; Falsification: tracked]'):
+    check('git commit -m ' + shlex.quote(marker), repo, 0)
+spaced = base / 'owned repository with spaces'
+spaced.mkdir()
+subprocess.run(['git', 'init', '-q', str(spaced)], check=True, timeout=10)
+subprocess.run(['git', '-C', str(spaced), 'remote', 'add', 'origin',
+                'https://github.com/siege-analytics/spaced.git'], check=True, timeout=10)
+wrapped = 'watch ' + shlex.quote('git -C ' + shlex.quote(str(spaced)) + ' commit -m subject')
+check(wrapped, repo, 2)
+check(wrapped, foreign, 2)
+check('git -C ' + shlex.quote(str(spaced)) + ' diff # comment', foreign, 0)
+for command in ('git-commit -m subject', '/usr/bin/git-commit -m subject',
+                "watch 'git-commit -m subject'", "watch '/usr/bin/git-commit -m subject'"):
+    check(command, repo, 2)
+    check(command, foreign, 0)
+for operation in ('status', 'diff'):
+    check('watch ' + shlex.quote('git -C ' + shlex.quote(str(repo)) + ' ' + operation), foreign, 0)
+    check('watch ' + shlex.quote('git -C ' + shlex.quote(str(foreign)) + ' ' + operation), repo, 0)
+for directory in (repo, foreign):
+    subprocess.run(['git', '-C', str(directory), 'config', 'alias.ci', 'commit'], check=True, timeout=10)
+check('(git ci -m subject)', repo, 2)
+check('(git ci -m subject)', foreign, 0)
+check('(git status)', foreign, 0)
+check('(git diff)', foreign, 0)
+assert passed == 193, passed
+print('  [PASS] 193 actual opaque-dispatch, redirect, quoted-prose, scope and mixed-command controls')
 PYCONTROLS
 then
-    _HARNESS_PASS=$((_HARNESS_PASS + 146))
+    _HARNESS_PASS=$((_HARNESS_PASS + 193))
 else
     _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
 fi

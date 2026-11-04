@@ -233,12 +233,25 @@ class InlineDelivery(unittest.TestCase):
         self.assertNotIn(b'<skill-kernel', output)
         self.assertNotIn(b'<project-resident>', output)
 
+    def test_failed_underbudget_selector_never_publishes_partial_context(self):
+        selected = b'<project-resident>\nUNVALIDATED\n</project-resident>'
+        self.selector.write_text('import sys\nsys.stdout.buffer.write(' + repr(selected) + ')\nsys.exit(1)\n')
+        output = self.deliver()
+        self.assertIn(self.kernel.read_bytes(), output)
+        self.assertNotIn(b'UNVALIDATED', output)
+        self.assertNotIn(b'<project-resident>', output)
+        self.assertIn(b'selector unavailable; kernel only', output)
+
     def test_generic_marker_environment_and_failed_selector_cannot_promote_budget(self):
         prefix = b'<project-resident>\n' + b'R' * 11000 + b'\n</project-resident>'
         self.stub_selector(b'<progressive-load-set>\n' + prefix)
         self.assert_fallback(self.deliver(extra={'COMPOSED_ENVELOPE': '1', 'DELIVERY_LIMIT': '90000'}))
         self.selector.write_text('import sys\nsys.stdout.buffer.write(' + repr(prefix) + ')\nsys.exit(1)\n')
-        self.assert_fallback(self.deliver())
+        output = self.deliver()
+        self.assertIn(self.kernel.read_bytes(), output)
+        self.assertNotIn(b'<project-resident>', output)
+        self.assertNotIn(prefix, output)
+        self.assertIn(b'selector unavailable; kernel only', output)
 
     def test_reference_copy_refuses_fifo_without_blocking(self):
         fifo = self.case / 'source-fifo'

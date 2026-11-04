@@ -153,8 +153,12 @@ class ScannerSourceTest(unittest.TestCase):
             if name in ('tomllib', 'tomli'):
                 raise ImportError('fixture host has no TOML parser')
             return original(name, *args, **kwargs)
+        alias = self.base / 'repo alias'
+        alias.symlink_to(self.root, target_is_directory=True)
+        expected = (self.root / 'tests/test_client.py').resolve()
         with mock.patch('builtins.__import__', side_effect=without_toml):
-            self.assertIn(self.root / 'tests/test_client.py', ast_scanner._test_files_for_source(self.root / 'client.py'))
+            for source in (self.root / 'client.py', alias / 'client.py'):
+                self.assertIn(expected, ast_scanner._test_files_for_source(source))
 
     def test_comprehension_captures_and_shadowing(self):
         cases = (

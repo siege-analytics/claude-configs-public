@@ -48,7 +48,7 @@ def metadata_environment(payload: dict) -> str:
     command = (payload.get('tool_input') or {}).get('command') if isinstance(payload.get('tool_input'), dict) else None
     if payload.get('tool_name') == 'Bash' and not isinstance(command, str):
         raise ValueError('Bash command metadata must be a string')
-    if isinstance(command, str) and len(command.encode('utf-8', 'surrogatepass')) > COMMAND_LIMIT:
+    if payload.get('tool_name') == 'Bash' and isinstance(command, str) and len(command.encode('utf-8', 'surrogatepass')) > COMMAND_LIMIT:
         raise ValueError('Bash command exceeds its 64 KiB transport bound')
     encoded = json.dumps(metadata, ensure_ascii=True, allow_nan=False)
     if len(encoded.encode('utf-8')) > METADATA_LIMIT:
