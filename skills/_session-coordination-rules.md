@@ -26,13 +26,11 @@ Escalation language ("stuck," "hung," "death spiral") implies a specific failure
 
 Baton declarations name the action expected of the partner ("present the unified plan to operator," "open the consolidation PR," "merge after CI green") so the next move is unambiguous. An implicit baton -- "I'm done" without naming what the partner should now do -- is rule-4 non-compliance and produces the same read-error as a missing at-rest declaration.
 
-**session-coordination:5. Gate spoke coordination behind complete user decision collection.** When the hub needs operator decisions before spoke agents can proceed meaningfully, do not present the operator with a vague bundled blocker such as "need you to decide on X and several other things." Build the complete decision checklist first, present the list up front, then ask exactly one decision question at a time.
+**session-coordination:5. Collect user decisions and scope each dependency.** When a spoke needs an unresolved operator decision, present a concrete checklist of the actual decisions, with the context, options, tradeoffs and recommendation for each. Check prior instructions and available evidence first; do not ask again for a settled decision or treat routine technical methods as operator choices.
 
-Each decision question must include the decision being made, the context needed to answer it, the concrete options, tradeoffs, the hub's recommendation, and the default if the operator has no preference. Wait for the operator's answer before asking the next question. Continue until the checklist is exhausted.
+Hold only briefings or actions that depend on an unanswered decision. As soon as a slice has its required decisions and authorization, coordinate that slice; independent authorized work need not wait for the entire checklist. Summarize each decision as it is settled so collaborators use the same current scope. Do not substitute an assumed answer for missing authority.
 
-Do not begin decision-dependent spoke briefings, tasking, redirects, or updates until all decisions on the checklist have been answered. After the final answer, summarize the collected decisions and then coordinate with spokes using the complete decision set.
-
-Non-blocking status checks or informational updates may occur during decision collection only if they do not interrupt the decision flow or consume the hub's user-facing attention. The operator should experience a coherent decision workflow, not a partial-decision drip into agent coordination.
+Group independent questions when that makes answering easier; sequence questions only when a later question depends on an earlier answer. Keep the operator control surface responsive and avoid repeated status pings that add no new evidence. A checklist is a coordination aid, not a new approval gate.
 
 **session-coordination:6. Preserve the operator control surface during spoke coordination.** The hub session may be the underlying messaging surface, but it must remain the operator's steering wheel. Internal spoke coordination must not become a long foreground activity that prevents the operator from correcting course, answering the next question, changing priority, or stopping the process.
 

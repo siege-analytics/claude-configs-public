@@ -30,7 +30,7 @@ The README often names the canonical companion environment. The siege_utilities 
 
 `pyenv versions`, `ls -d ~/.virtualenvs/* venv .venv`, `cat .python-version pyproject.toml | grep -E "^(version|python|requires-python)"`.
 
-For each interpreter that looks project-relevant, probe the deps the project actually imports. Use the project's own pyproject `optional-dependencies` sections to know what to look for. Do not run `pip install` without permission; just probe with `python -c "import X"` against each candidate interpreter.
+For each interpreter that looks project-relevant, probe the deps the project actually imports. Use the project's own pyproject `optional-dependencies` sections to know what to look for. During this read-only inventory, probe with `python -c "import X"` against each candidate interpreter rather than installing packages. Any later necessary setup follows the project-environment authorization boundary below.
 
 ### 3. Inventory the shell environment
 
@@ -66,7 +66,7 @@ After the preflight, state in chat what was found, in this shape:
     - CI ignores locally: <list of tests CI skips that this machine could run>
     - What this means: <plain English of which test surfaces can be exercised here>
 
-The user sees the summary and either confirms or corrects. The summary anchors later claims about what can and cannot be run.
+Report the summary so the user can correct it, then continue authorized work without waiting for acknowledgment. Ask only if the inventory exposes a material decision or missing authority. The summary anchors later claims about what can and cannot be run.
 
 ## Cost vs. value
 
@@ -84,7 +84,7 @@ If skipping, say so in one sentence so the audit trail is explicit: "Skipping pr
 
 ## What this rule does NOT mean
 
-- Do not run `pip install` without permission. Probing for missing deps is fine; installing them is a separate ask.
+- Inventory is read-only. Necessary dependency setup for authorized implementation or tests may proceed within the project-managed environment and assigned role; an existing setup instruction does not need another approval. Do not infer permission for global/system changes, new spending, or unrelated environment changes from the inventory. If those are needed and not already authorized, ask for that specific scope.
 - Do not run destructive commands during preflight (no `pyenv shell` that changes user-visible state, no `docker stop`, no service restarts).
 - Do not preflight on every command. Preflight once per repo per session; rely on the saved summary thereafter.
 

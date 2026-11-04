@@ -4066,10 +4066,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 11561,
-      "content_sha256": "68f3aed9666197f03b2ff2d3da0877ae23fc20cb70df46715ff764761d541040",
+      "characters": 12831,
+      "content_sha256": "64a8e51852778caab620a2ab04ce6c036a7eb5410d9552dac507ea7f8e75d8d1",
       "description": "unknown",
-      "estimated_tokens": 2891,
+      "estimated_tokens": 3208,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -4077,15 +4077,17 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
-        "skills/KERNEL.md"
+        "skills/KERNEL.md",
+        "skills/RESOLVER.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 169,
+      "lines": 173,
       "owner": [
         "unknown"
       ],
@@ -4551,10 +4553,10 @@
     },
     {
       "canonical_source": "skills/_environment-preflight-rules.md",
-      "characters": 6540,
-      "content_sha256": "eeea02e01a04e538e158eda22c851aaa29a70f9e99d65da6a5d1971a6bf5ced0",
+      "characters": 7076,
+      "content_sha256": "a6cedc95eb3f92e85a9a4dfe22804546a103ece2021cddb783e3cedc76caa549",
       "description": "Always-on. Before writing or testing code in a repo not yet inventoried this session, run an environment preflight. Skipping is allowed but must be explicit. Came out of a session where the agent claimed Spark and pyspark were unavailable when they were installed under pyenv and orchestrated by the user's SZSH config.",
-      "estimated_tokens": 1635,
+      "estimated_tokens": 1769,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_environment-preflight-rules.md",
@@ -5965,10 +5967,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 22017,
-      "content_sha256": "77e65f8425bf6a234372b9b89f95244994c0f7a10fd98b7c2812d433052dd755",
+      "characters": 21806,
+      "content_sha256": "f9d9d38b32840b6962e9007d73bd24329a959ef017607f54e87c16cdd50a4a86",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 5505,
+      "estimated_tokens": 5452,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -5994,7 +5996,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 148,
+      "lines": 146,
       "owner": [
         "unknown"
       ],
@@ -6174,10 +6176,10 @@
     },
     {
       "canonical_source": "skills/_standing-approval-rules.md",
-      "characters": 13301,
-      "content_sha256": "eecc4eee2275a78780f13530aebf1131a2be439d4bcca7bc95a22660fc9882d5",
+      "characters": 13739,
+      "content_sha256": "7638dcdf0237866d3c819d5cd466696ab3d653e430f2f8d408cf03930ffc4672",
       "description": "Always-on. How to interpret instructions that say \"do X when ready,\" \"merge when reviewed,\" \"ship when done,\" or any other conditional gate. \"Ready\" is defined by the process, not by the receiver of the instruction. Standing approvals delegate the TIMING of action upon readiness; they never delegate the JUDGMENT of what readiness means.",
-      "estimated_tokens": 3326,
+      "estimated_tokens": 3435,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_standing-approval-rules.md",
@@ -6185,14 +6187,17 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "bin/_test/frontmatter_validation_test.py",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/post-mortems/2026-06-09-pour-now-engagement.md",
+        "skills/RESOLVER.md",
         "skills/_prospective-memory-rules.md",
         "skills/_tandem-agent-rules.md",
-        "skills/engagement-post-mortem/SKILL.md"
+        "skills/engagement-post-mortem/SKILL.md",
+        "skills/merge/SKILL.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
@@ -6273,10 +6278,10 @@
     },
     {
       "canonical_source": "skills/_strategic-agency-rules.md",
-      "characters": 3636,
-      "content_sha256": "f4233238f8db2f17ec3a6518be7d6f372acc12539258bf216110fb931a597036",
+      "characters": 3874,
+      "content_sha256": "697ae62a652ae1e3bcf07c61e576f3879a960a3cab7cdb5863b85be0b098eaec",
       "description": "Always-on. Mission-first doctrine for hubs and workers. Skills exist to help agents accomplish strategic goals by deriving and advancing tactical goals with bounded initiative. Agents should keep moving when tactical ordering is safe and non-critical, and should ask for guidance when the choice affects strategy, authorization, risk, or operator control.",
-      "estimated_tokens": 909,
+      "estimated_tokens": 969,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_strategic-agency-rules.md",
@@ -9430,10 +9435,10 @@
     },
     {
       "canonical_source": "skills/develop-guard/SKILL.md",
-      "characters": 14561,
-      "content_sha256": "ae9abc3f3dd4c4590fc6ead88ccc60dd08769a3db7a2e36a8833aa59ad9d9c2d",
+      "characters": 16433,
+      "content_sha256": "d72e52db93bbc4ed9e01c58308bffe6e7179ec50d0def2620fb9d0e0e725b7fa",
       "description": "Enforce the curation invariant -- main-role (main, master, prod, production, trunk, stable, release) is the project's best, ready-to-use work; develop-role (develop, dev, development, next, integration, staging, develop-next) is the origin where experiments compete for main. Detect repo mode (Gitflow vs GitHub Flow). Prevent direct feature-PRs to main-role when develop-role is the workflow.",
-      "estimated_tokens": 3641,
+      "estimated_tokens": 4109,
       "frontmatter_name": "develop-guard",
       "generated_outputs": [
         "dist/nested/skills/develop-guard",
@@ -9451,7 +9456,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 227,
+      "lines": 226,
       "owner": [
         "unknown"
       ],
@@ -10176,10 +10181,10 @@
     },
     {
       "canonical_source": "skills/merge/SKILL.md",
-      "characters": 9586,
-      "content_sha256": "79ee9bf8a587217b7909e732d9fecd7b8d6c085e18683c74d9aa5c305de6a395",
-      "description": "Merge branches following a develop-first workflow. Feature branches merge to develop; develop merges to main only with explicit approval.",
-      "estimated_tokens": 2397,
+      "characters": 11284,
+      "content_sha256": "01b9794062fe1a0cd8d20f1bc1f3c661de7f10cff1452dfe538961f7c75c7847",
+      "description": "Merge branches following a develop-first workflow. Feature branches merge to develop; develop merges to main under explicit or applicable standing authorization.",
+      "estimated_tokens": 2821,
       "frontmatter_name": "merge",
       "generated_outputs": [
         "dist/nested/skills/merge",
@@ -10203,7 +10208,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 259,
+      "lines": 244,
       "owner": [
         "unknown"
       ],
@@ -11333,10 +11338,10 @@
     },
     {
       "canonical_source": "skills/self-review/SKILL.md",
-      "characters": 70793,
-      "content_sha256": "dda6a871a27682671024ec24dd5f2fb6950b79ee1f75321eab723344193d546d",
+      "characters": 71287,
+      "content_sha256": "5ddc142b9488681ed56b106080fd8a09594fda290114c224dd5282e8ef92df8f",
       "description": "MANDATORY pre-push / pre-PR-open / pre-PR-merge gate. Produce a structured artifact with Assumptions (including roles + Goal source verification via evaluate-ticket + Pre-author-inventory link + Evidence-predates-work block), Peer review against the shelves, and Lead review naming affirmative standards. The pre-push hook enforces trailer presence, structural completeness, artifact-predates-work, and the writing-rules:4 evidence-chain on any Trivial-change / Exemption blocks. Do NOT skip this skill; the form is checkable but the discipline is what binds.",
-      "estimated_tokens": 17699,
+      "estimated_tokens": 17822,
       "frontmatter_name": "self-review",
       "generated_outputs": [
         "dist/nested/skills/self-review",
@@ -11388,7 +11393,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 1347,
+      "lines": 1353,
       "owner": [
         "unknown"
       ],
@@ -11953,10 +11958,10 @@
     },
     {
       "canonical_source": "skills/think/SKILL.md",
-      "characters": 32200,
-      "content_sha256": "b0d9e87bb1095c24d103995a0f5d8286f8b579e6ba04fa3406f7e28ea1da87ca",
+      "characters": 34205,
+      "content_sha256": "69abe249f33888d4f9bdec611156de46d10d1c35eef10abbde20b21f2da256bc",
       "description": "MANDATORY design-first gate. Enforces structured design before any code is written for a feature, refactor, or architecture change. Slash-invokable as /think; also enforced via the resolver before any non-trivial implementation. Do NOT skip this skill.",
-      "estimated_tokens": 8050,
+      "estimated_tokens": 8552,
       "frontmatter_name": "think",
       "generated_outputs": [
         "dist/nested/skills/think",
@@ -11993,7 +11998,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 518,
+      "lines": 501,
       "owner": [
         "unknown"
       ],
@@ -12444,9 +12449,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2672251,
+    "characters": 2680591,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 668143,
+    "estimated_tokens": 670227,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12467,7 +12472,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1275857
+      "unclassified": 1284197
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12479,7 +12484,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 319009
+      "unclassified": 321093
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

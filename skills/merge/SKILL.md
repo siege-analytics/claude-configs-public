@@ -1,6 +1,6 @@
 ---
 name: merge
-description: Merge branches following a develop-first workflow. Feature branches merge to develop; develop merges to main only with explicit approval.
+description: Merge branches following a develop-first workflow. Feature branches merge to develop; develop merges to main under explicit or applicable standing authorization.
 allowed-tools: Bash
 ---
 
@@ -8,7 +8,7 @@ allowed-tools: Bash
 
 1. Determine the merge direction
    1. Feature/task/bugfix branches merge into `develop`
-   2. `develop` merges into `main` only when explicitly requested or when cutting a release
+   2. `develop` merges into `main` when the operator has authorized that release or an applicable standing approval covers it and its conditions are met
    3. `hotfix/` branches are the only exception -- they may merge directly into `main` (and then back-merge into `develop`)
 2. Verify the branch is ready to merge
    1. All commits pushed to remote
@@ -18,7 +18,7 @@ allowed-tools: Bash
    5. **Self-review artifact exists** (see Self-review gate below)
 3. Perform the merge (see Merge procedures below)
 4. Update tickets and clean up branches
-5. If merging to `main`, ask the user first unless they already requested it
+5. If merging to `main`, verify existing authorization and its readiness conditions; ask only if release authority is missing
 
 # Self-review gate
 
@@ -30,11 +30,9 @@ Before executing any merge (`gh pr merge`, `git merge`, `glab mr merge`), verify
 2. The latest commit on the branch carries `Self-Review:` and `Self-Review-Source:` trailers
 3. The artifact has the required sections: `## Assumptions`, `## Peer review`, `## Lead review`
 
-**If any of these are missing when you are told to merge**, do not proceed silently. Ask:
+**If required evidence is missing**, inspect the ticket, PR and source-bound artifacts before treating it as absent. Produce missing self-review material within your authorized role and request any required independent review from its owner. Keep the merge blocked until its prerequisites are satisfied, while continuing independent authorized preparation. Do not ask for a review waiver as the default response to missing paperwork.
 
-> "This merge would skip the self-review gate. Self-review artifacts are missing. Are you telling me to forego review?"
-
-Do not merge until you have an explicit, affirmative answer to that question. `--admin` bypasses CI, not review. Speed is not a reason to skip review; the prior session merged 10 PRs without review artifacts and every one was a process violation.
+A merge instruction does not waive required review or CI. `--admin`, disabling a guard or labeling an unreviewed artifact as reviewed does not satisfy a missing review. An exception is valid only under an applicable explicit project/operator exception process; do not infer one from urgency or existing merge authority. If completing a prerequisite needs authority outside your role, identify that exact action and ask the responsible owner for the missing scope. Follow [rule:standing-approval] for conditional authorization.
 
 # Merge philosophy
 
@@ -42,7 +40,7 @@ The `develop` branch is the integration branch. It is where all work lands first
 
 **Merge to develop freely.** When a feature branch is done and tested, merge it into develop without ceremony. This is the normal flow.
 
-**Merge to main carefully.** A merge to main is a release event. It should be deliberate, not accidental. Always ask the user before merging to main unless they have explicitly requested it in this conversation.
+**Merge to main carefully.** A merge to main is a release event. It should be deliberate, not accidental. Use an existing explicit request or applicable standing approval, verify its conditions, and proceed without asking again. If that release is not authorized, obtain authorization before merging.
 
 **Never push directly to main.** All changes reach main through either develop (normal) or a hotfix branch (emergency). Direct commits to main skip integration testing and review.
 
@@ -69,7 +67,7 @@ git merge --no-ff feature/geographic_enrichment_phase1
 # Push develop
 git push origin develop
 
-# Delete the feature branch
+# Optional cleanup: only if authorized, fully merged, unused and not retained
 git branch -d feature/geographic_enrichment_phase1
 git push origin --delete feature/geographic_enrichment_phase1
 ```
@@ -78,10 +76,10 @@ The `--no-ff` flag creates a merge commit even if fast-forward is possible. This
 
 ## Release flow: develop → main
 
-**Always ask the user before doing this.** A merge to main is a release.
+**Verify release authorization before doing this.** An explicit request or applicable standing approval is sufficient once its conditions are met; request approval only when it is missing.
 
 ```bash
-# Confirm with user: "Ready to merge develop into main?"
+# Verify existing release authorization and required review/CI; ask only if authority is missing
 
 # Ensure both branches are up to date
 git checkout main
@@ -120,7 +118,7 @@ git checkout -b hotfix/restore_spark_connect
 
 # ... make the fix, commit ...
 
-# Merge to main (ask user first)
+# Merge to main after verifying applicable release authorization and readiness
 git checkout main
 git merge --no-ff hotfix/restore_spark_connect
 git push origin main
@@ -130,35 +128,22 @@ git checkout develop
 git merge main
 git push origin develop
 
-# Clean up
+# Optional cleanup: only if authorized, fully merged, unused and not retained
 git branch -d hotfix/restore_spark_connect
 git push origin --delete hotfix/restore_spark_connect
 ```
 
 # When to merge to main
 
-Merge develop into main when:
+Merge develop into main when the release is authorized by the operator's explicit request or an applicable standing approval, and all required review, CI and release conditions are satisfied. Authorization remains valid across turns until completed, changed or revoked; the passage of time or a new substep does not require asking again.
 
-1. **The user explicitly asks** -- "merge to main", "release", "deploy to production"
-2. **A release is being cut** -- versioned releases, tagged deployments
-3. **A milestone is complete** -- all tickets in a milestone are closed
-
-Do NOT merge to main when:
-
-1. **A single feature is done** -- merge to develop, not main
-2. **You think it's ready** -- ask the user first
-3. **CI passes on develop** -- passing CI is necessary but not sufficient
-
-If you are uncertain whether to merge to main, **ask the user**. The cost of asking is low. The cost of an unwanted merge to main is high.
+A completed feature, milestone, green CI run or available release tag does not create release authority on its own. Ordinary feature work still targets develop. Check the existing instructions before escalating; if release authority is genuinely absent, ask for that specific decision once and continue authorized preparation.
 
 # Handling merge conflicts
 
-When a merge has conflicts:
+When an authorized merge has conflicts, inspect both changes, the intended behavior, prior decisions and relevant tests. Resolve routine conflicts within your implementation role, preserve both intended changes where compatible, and validate the result. Explain material resolutions in the review artifact; changed source must receive the review and checks it requires.
 
-1. **Do not resolve conflicts silently** -- Inform the user what files conflict and what the competing changes are
-2. **Show the conflict markers** -- Let the user see the `<<<<<<<` / `>>>>>>>` context
-3. **Propose a resolution** -- Explain which side should win and why, based on your understanding of the code
-4. **Wait for confirmation** before resolving, unless the resolution is trivially obvious (e.g., a purely additive change)
+Ask only when the conflict exposes an unresolved product choice, incompatible requirements or missing authority. Name the decision and hold the dependent merge, rather than asking for confirmation of every technical resolution. A review-only role still requires explicit implementation authorization before editing.
 
 ```bash
 # If merge conflicts occur
@@ -209,7 +194,7 @@ compound comment on the PR) but is not a process violation.
 
 # Branch cleanup
 
-After every merge, delete the source branch (unless it's `develop` or `main`):
+After a merge, clean up a fully merged source branch only within your authority and when it is no longer needed by another worker or retained for audit. Keep `develop`, `main`, branches designated for retention and branches still in use. Cleanup is not a prerequisite to declaring a verified merge complete:
 
 ```bash
 # Local
@@ -227,10 +212,10 @@ When the project uses pull requests, the merge happens through the PR rather tha
 
 ```bash
 # Merge PR via CLI (GitHub)
-gh pr merge 123 --merge --delete-branch
+gh pr merge 123 --merge
 
 # Merge PR via CLI (GitLab)
-glab mr merge 123 --remove-source-branch
+glab mr merge 123
 ```
 
 The `--merge` flag creates a merge commit (equivalent to `--no-ff`). Avoid `--squash` unless the project specifically uses squash-and-merge workflow.
@@ -250,10 +235,10 @@ The `--merge` flag creates a merge commit (equivalent to `--no-ff`). Avoid `--sq
 - [ ] Source branch is up to date and pushed
 - [ ] Tests pass on the source branch
 - [ ] Using `--no-ff` to preserve branch history
-- [ ] If merging to main: user has explicitly approved
-- [ ] Merge conflicts resolved with user awareness (not silently)
+- [ ] If merging to main: existing explicit request or applicable standing approval covers this release and its conditions are met
+- [ ] Routine conflicts resolved from source intent and verified; unresolved material choices escalated and changed source reviewed
 - [ ] Tickets updated with merge status and commit links
-- [ ] Compound step completed (solutions entry, skill-update ticket, or "nothing novel" declaration)
-- [ ] Source branch deleted after merge (local and remote)
+- [ ] Advisory post-merge compound step considered; it does not block an otherwise-ready merge
+- [ ] Source branch cleanup handled within authority; preserve branches still in use or designated for retention
 - [ ] If merged to main: back-merged into develop
 - [ ] No AI/agent attribution in merge commits, tags, or release notes

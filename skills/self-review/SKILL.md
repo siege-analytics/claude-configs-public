@@ -30,10 +30,16 @@ Required before:
 - `gh pr create`.
 - `gh pr merge` (including `--admin`).
 
-A user instruction to "merge it" authorizes the destination, not the
-method. Self-review still applies. If the artifact is missing when a
-merge is requested, ask: "Are you telling me to forego review?" Do not
-proceed until you have an explicit answer.
+A user instruction to "merge it" authorizes the destination, not skipping
+required review. Inspect the source-bound artifacts first. Produce missing
+self-review material within your authorized role and obtain any required
+independent review from its owner; hold the merge until readiness is proven.
+Do not request a waiver as the default response to missing evidence. Do not
+backdate artifacts or claim pre-work evidence existed when it did not;
+follow the applicable recovery process for a genuinely missed prerequisite.
+Ask the responsible owner only for missing facts or authority, and continue
+independent authorized preparation. Once existing authorization and its
+conditions are satisfied, merge without asking for the same approval again.
 
 Trivial-change escape: review is still required, but a no-findings
 review on a genuinely trivial change is one valid output of the
