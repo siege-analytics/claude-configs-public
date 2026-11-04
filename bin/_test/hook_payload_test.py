@@ -35,6 +35,13 @@ class Payload(unittest.TestCase):
         with self.assertRaises(ValueError):
             payload.metadata_environment(value)
 
+    def test_non_bash_command_uses_only_metadata_limit(self):
+        value = {'tool_name': 'mcp__fixture', 'tool_input': {'command': 'x' * 70000}}
+        self.assertEqual(json.loads(payload.metadata_environment(value)), value)
+        value['tool_input']['command'] = 'x' * 100000
+        with self.assertRaises(ValueError):
+            payload.metadata_environment(value)
+
     def test_cli_rejects_ambiguous_invalid_and_oversize_input(self):
         for raw in ('{"cwd":"a","cwd":"b"}', '{"cwd":NaN}', '[1]', 'x' * (1024 * 1024 + 1), b'\xff'):
             result = subprocess.run([sys.executable, str(ROOT / 'hooks/lib/hook_payload.py')], input=raw.encode() if isinstance(raw, str) else raw, capture_output=True, timeout=20)

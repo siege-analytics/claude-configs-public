@@ -109,11 +109,11 @@ def prefix(words, cwd):
     raise UnknownShape("recursive Git alias cannot be normalized")
 
 
-def invocations(command, cwd, depth=0, *, strict=False, companions=None, redirect_probe=False):
+def invocations(command, cwd, depth=0, *, strict=False, companions=None, redirect_probe=False, inspection_comments=False):
     """Literal commands only. Preserve quote boundaries through shell_tokens."""
     if depth > 4:
         raise UnknownShape("nested Git wrapper exceeds inspection limit")
-    parsed = shell_tokens(command)
+    parsed = shell_tokens(command, inspection_comments=inspection_comments)
     groups, words = [], []
     pending_redirect = False
     for word, operator, glob in parsed:
@@ -163,10 +163,10 @@ def invocations(command, cwd, depth=0, *, strict=False, companions=None, redirec
                 raise UnknownShape("shell Git wrapper is missing code")
             if strict and dispatch[2].startswith("-"):
                 raise UnresolvedLiteralDispatch("shell command/options boundary is unresolved")
-            found.extend(invocations(dispatch[2], cwd, depth + 1, strict=strict, companions=companions, redirect_probe=redirect_probe))
+            found.extend(invocations(dispatch[2], cwd, depth + 1, strict=strict, companions=companions, redirect_probe=redirect_probe, inspection_comments=inspection_comments))
             continue
         if dispatch and (dispatch[0] == "eval" or strict and os.path.basename(dispatch[0]) == "eval"):
-            found.extend(invocations(" ".join(dispatch[1:]), cwd, depth + 1, strict=strict, companions=companions, redirect_probe=redirect_probe))
+            found.extend(invocations(" ".join(dispatch[1:]), cwd, depth + 1, strict=strict, companions=companions, redirect_probe=redirect_probe, inspection_comments=inspection_comments))
             continue
         if strict and dispatch and (os.path.basename(dispatch[0]).startswith("git-") or
                        dispatch[0] in {"!", "if", "then", "elif", "while", "until"} and
@@ -267,12 +267,57 @@ def authorized(cwd):
 
 def ticket_reference(message):
     """The existing platform-neutral traceability grammar, applied per message."""
-    if re.search(r"\[no-ticket:[ \t]+Reason:[^]]+;[ \t]*Evidence:[^]]+;[ \t]*Falsification:[^]]+\]", message):
-        return True
+    for match in re.finditer(r"\[no-ticket:[ \t]+Reason:([^]]*?);[ \t]*Evidence:([^]]*?);[ \t]*Falsification:([^]]*)\]", message):
+        if all(value.strip() for value in match.groups()):
+            return True
     if re.search(r"\[no-ticket\]|\[no-ticket:[ \t]*\]", message):
         raise UnknownShape("'[no-ticket]' override now requires evidence chain")
-    return bool(re.search(r"\[task:[ \t]+[^]]+\]|#[0-9]+|[A-Z]+-[0-9]+|https?://[^\s]+/(?:issues|browse|tickets|merge_requests|pull|stories|tasks)/[^\s]+", message))
+    if any(match.group(1).strip() for match in re.finditer(r"\[task:[ \t]+([^]]+)\]", message)):
+        return True
+    return bool(re.search(r"#[0-9]+|[A-Z]+-[0-9]+|https?://[^\s]+/(?:issues|browse|tickets|merge_requests|pull|stories|tasks)/[^\s]+", message))
 
+
+
+
+def opaque_commit_scope(value, cwd, scoped=None, depth=0):
+    """Inspection only: resolve literal Git options inside opaque argv."""
+    mentions_git = re.search(r"(?:^|[^0-9A-Za-z_.-])git(?:[-\s]|$)", value)
+    if depth > 4:
+        return bool(mentions_git)
+    try:
+        parsed = shell_tokens(value, inspection_comments=True)
+    except UnknownShape:
+        value = re.sub(r"[\\\"']", "", value)
+        # An unparsed target override cannot borrow the payload CWD's scope.
+        if re.search(r"(?:^|[^0-9A-Za-z_.-])git(?:[-\s]|$)", value) and re.search(r"(?:^|\s)(?:-C|-c|--git-dir|--work-tree)", value):
+            return True
+        return bool(re.search(r"(?:^|[^0-9A-Za-z_.-])git(?:[-\s]|$)", value)
+                    and (in_scope(cwd) if scoped is None else scoped))
+    words = []
+    for word, operator, glob in [*parsed, (";", True, ())]:
+        if not operator:
+            words.append(word)
+            continue
+        for index, argument in enumerate(words):
+            if os.path.basename(argument).startswith("git-"):
+                if any(option.startswith(('-C', '-c', '--git-dir', '--work-tree')) for option in words[index + 1:]):
+                    return True
+                if in_scope(cwd) if scoped is None else scoped:
+                    return True
+            elif os.path.basename(argument) == "git":
+                try:
+                    item = prefix(words[index:], cwd)
+                    if item and item["args"][0] == "commit":
+                        target_scope = scoped if item["cwd"] == cwd and scoped is not None else in_scope(item["cwd"])
+                        if target_scope:
+                            return True
+                except (UnknownShape, OSError, subprocess.SubprocessError):
+                    return True
+            elif argument != value and any(char.isspace() or char in "'\"`()" for char in argument):
+                if opaque_commit_scope(argument, cwd, scoped, depth + 1):
+                    return True
+        words = []
+    return False
 
 
 def unresolved_commit_candidate(command, cwd, companions, *, scoped=None):
@@ -308,9 +353,7 @@ def unresolved_commit_candidate(command, cwd, companions, *, scoped=None):
                 candidates.append(text.code_only(literal))
             else:
                 candidates.append(" ".join(words))
-    candidate = any(re.search(r"(?:^|[^0-9A-Za-z])git\s+commit(?:[^0-9A-Za-z]|$)", value)
-                    for value in candidates)
-    return bool(candidate and (in_scope(cwd) if scoped is None else scoped))
+    return any(opaque_commit_scope(value, cwd, scoped) for value in candidates)
 
 
 def ticket_policy(command, cwd):
@@ -339,7 +382,7 @@ def ticket_policy(command, cwd):
                     raise UnknownShape("effective commit message has no ticket reference or structured task override")
                 return
         companions = []
-        items = invocations(command, cwd, strict=True, companions=companions)
+        items = invocations(command, cwd, strict=True, companions=companions, inspection_comments=True)
         commits = [item for item in items if item["args"][0] == "commit" and in_scope(item["cwd"])]
         if not commits:
             if unresolved_commit_candidate(command, cwd, companions):
@@ -398,13 +441,12 @@ def main():
             try:
                 probed_companions = []
                 probed = invocations(command, os.path.realpath(options.cwd or os.getcwd()), strict=True,
-                                     redirect_probe=True, companions=probed_companions)
+                                     redirect_probe=True, companions=probed_companions, inspection_comments=True)
             except (UnknownShape, OSError, subprocess.SubprocessError) as probe_error:
                 if isinstance(probe_error, UnresolvedLiteralDispatch):
                     # Its argument may be code that the data heuristic cannot
                     # unwrap. Preserve the existing conservative candidate test.
-                    candidate = re.sub(r"[\\\"']", "", command)
-                    if re.search(r"(?:^|[^0-9A-Za-z_.-])git(?:[-\s]|$)", candidate) and scoped:
+                    if unresolved_commit_candidate(command, os.path.realpath(options.cwd or os.getcwd()), None, scoped=scoped):
                         print("BLOCKED: Cannot safely determine ticketed Git commit: " + str(exc))
                         return 2
                     print("handled")
@@ -438,7 +480,7 @@ def main():
                 normalized = " ".join(word if operator else shlex.quote(word)
                                       for word, operator, _ in parsed)
             candidate = command_text.code_only(normalized)
-            if not re.search(r"(?:^|[^0-9A-Za-z_.-])git(?:[-\s]|$)", candidate) or not scoped:
+            if not unresolved_commit_candidate(candidate, os.path.realpath(options.cwd or os.getcwd()), None, scoped=scoped):
                 print("handled")  # Unrelated shell computation is not a ticket event.
                 return 0
             print("BLOCKED: Cannot safely determine ticketed Git commit: " + str(exc))

@@ -88,6 +88,14 @@ class Safety(unittest.TestCase):
             self.assertEqual(self.hook('hooks/git/ticket-required.sh', command).returncode, 2, command)
 
     def test_ticket_redirect_fallback_keeps_prose_data_and_shell_payload_code(self):
+        from unittest.mock import patch
+        with patch.object(sys, 'path', [str(ROOT / 'hooks/lib'), *sys.path]):
+            import task_actions
+        with self.assertRaises(task_actions.UnknownShape):
+            task_actions.shell_tokens('git status # ordinary comment')
+        inspected = task_actions.shell_tokens('git status # ordinary comment', inspection_comments=True)
+        self.assertEqual([word for word, _, _ in inspected], ['git', 'status'])
+        self.assertIn('error', task_actions.action('touch file # ordinary comment', str(self.repo)))
         target = shlex.quote(str(self.repo / 'not-executed.txt'))
         for command in (
             "printf '%s' 'git commit example' > " + target,

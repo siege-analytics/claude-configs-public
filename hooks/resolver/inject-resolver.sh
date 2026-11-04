@@ -58,6 +58,8 @@ else
   if RESULT="$(printf '%s' "$PAYLOAD" | python3 "$SELECTOR" --payload-stdin --render-hook --mode "$RENDER_MODE" 2>/dev/null)"; then
     # This leading envelope is emitted only after resident identity/bytes validate.
     if [[ "$RESULT" == '<project-resident>'$'\n'* ]]; then COMPOSED_ENVELOPE=1; fi
+  else
+    RESULT=""
   fi
   cat <<EOF
 <skill-kernel mode="$MODE">
