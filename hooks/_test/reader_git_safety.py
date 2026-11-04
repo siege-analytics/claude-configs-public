@@ -24,14 +24,203 @@ class Safety(unittest.TestCase):
         self.env = dict(self.g.env, GIT_CONFIG_GLOBAL="/dev/null", GIT_CONFIG_NOSYSTEM="1",
                         GIT_AUTHOR_NAME="Fixture", GIT_AUTHOR_EMAIL="fixture@example.org",
                         GIT_COMMITTER_NAME="Fixture", GIT_COMMITTER_EMAIL="fixture@example.org")
+        home = self.g.ws / 'home'
+        home.mkdir()
+        self.env['HOME'] = str(home)
         self.git("checkout", "-q", "-B", "main")
         self.git("commit", "-q", "--allow-empty", "-m", "seed")
         self.git("remote", "add", "origin", "https://github.com/siege-analytics/synthetic.git")
 
+    def ascii_environment(self):
+        environment = dict(self.env, LC_ALL='C', LANG='C', PYTHONUTF8='0', PYTHONCOERCECLOCALE='0')
+        environment.pop('PYTHONIOENCODING', None)
+        return environment
+
+    def test_ticket_unicode_messages_preserve_decision_in_ascii_locale(self):
+        for escaped in (False, True):
+            for message, code in (('café subject only', 2), ('café Refs: #1107', 0)):
+                command = 'git commit --allow-empty -m ' + shlex.quote(message)
+                payload = fixture.craft_payload(tool_name='Bash', cwd=str(self.repo),
+                                                tool_input={'command': command})
+                result = subprocess.run(['bash', str(ROOT / 'hooks/git/ticket-required.sh')],
+                                        input=json.dumps(payload, ensure_ascii=escaped).encode('utf-8'),
+                                        env=self.ascii_environment(), capture_output=True, timeout=20)
+                self.assertEqual(result.returncode, code, result.stderr.decode('utf-8', 'replace'))
+
+    def test_json_extractor_uses_utf8_bytes_and_preserves_fallback_semantics(self):
+        cases = [
+            ('{"value":"café"}'.encode('utf-8'), ['value'], 'café\n'.encode('utf-8')),
+            (b'{"value":"caf\\u00e9"}', ['value'], 'café\n'.encode('utf-8')),
+            (b'{"first":null,"second":"","value":"caf\\u00e9"}',
+             ['first', 'second', 'value'], 'café\n'.encode('utf-8')),
+            (b'{"value":false}', ['value'], b'False\n'),
+            (b'{"value":0}', ['value'], b'0\n'),
+            (b'{"value":{"text":"caf\\u00e9"}}', ['value'], b'{"text": "caf\\u00e9"}\n'),
+            (b'{"value":[1,2]}', ['value'], b'[1, 2]\n'),
+            (b'{', ['value'], b''),
+            (b'{"value":""}', ['missing', 'value'], b''),
+        ]
+        for payload, paths, expected in cases:
+            result = subprocess.run([sys.executable, str(ROOT / 'hooks/lib/extract-json.py'), *paths],
+                                    input=payload, env=self.ascii_environment(), capture_output=True, timeout=10)
+            self.assertEqual((result.returncode, result.stdout, result.stderr), (0, expected, b''))
+
+    def test_ticket_dispatch_normalizes_aliases_wrappers_and_effective_cwd(self):
+        self.git('checkout', '-q', '-b', 'feature/ticket')
+        self.git('config', 'alias.ci', 'commit')
+        target = str(self.repo)
+        prefixes = ['git ci', 'GIT_PAGER=cat git ci', 'command git ci', 'env git ci',
+                    'git -c core.quotepath=off ci', 'git -C ' + shlex.quote(target) + ' ci',
+                    'cd ' + shlex.quote(target) + ' && git ci']
+        for prefix in prefixes:
+            for message, code in (('subject only', 2), ('Refs: #1107', 0)):
+                command = prefix + ' --allow-empty -m ' + shlex.quote(message)
+                result = self.hook('hooks/git/ticket-required.sh', command)
+                self.assertEqual(result.returncode, code, command + result.stderr)
+        self.git('config', 'alias.options', '-p commit')
+        self.git('config', 'alias.shell', '!git commit --allow-empty -m wip #')
+        for command in ('! git ci --allow-empty -m subject',
+                        'if git ci --allow-empty -m subject; then :; fi',
+                        'git options --allow-empty -m subject',
+                        'git shell --allow-empty -m "Refs: #1107"',
+                        'git --git-dir=.git ci --allow-empty -m subject',
+                        'git-commit --allow-empty -m subject'):
+            self.assertEqual(self.hook('hooks/git/ticket-required.sh', command).returncode, 2, command)
+
+    def test_ticket_redirect_fallback_keeps_prose_data_and_shell_payload_code(self):
+        target = shlex.quote(str(self.repo / 'not-executed.txt'))
+        for command in (
+            "printf '%s' 'git commit example' > " + target,
+            "gh pr edit 123 --body 'git commit example' > " + target,
+            "gh pr edit 123 --body '/bin/bash -c \"git commit example\"' > " + target,
+            "git status > " + target,
+            "git diff > " + target,
+        ):
+            result = self.hook('hooks/git/ticket-required.sh', command)
+            self.assertEqual(result.returncode, 0, command + result.stderr)
+        for command in (
+            "git commit --allow-empty -m subject > " + target,
+            "bash -c 'git commit --allow-empty -m subject' > " + target,
+            "/bin/bash -c 'git commit --allow-empty -m subject' > " + target,
+            "'/bin/bash' -c 'git commit --allow-empty -m subject' > " + target,
+            "b\"ash\" -c 'git commit --allow-empty -m subject' > " + target,
+            "'eval' 'git commit --allow-empty -m subject' > " + target,
+            "bash -c " + shlex.quote('b"ash" -c ' + shlex.quote('git commit --allow-empty -m subject')) + ' > ' + target,
+            "eval 'git commit --allow-empty -m subject' > " + target,
+            "git 'commit' --allow-empty -m subject > " + target,
+        ):
+            result = self.hook('hooks/git/ticket-required.sh', command)
+            self.assertEqual(result.returncode, 2, command + result.stderr)
+        self.assertFalse((self.repo / 'not-executed.txt').exists())
+
+    def test_ticket_dispatch_checks_each_message_and_no_raw_amend_escape(self):
+        for command in ("git commit --allow-empty -m 'subject --amend only'",
+                        "git commit --allow-empty -m 'subject --no-edit only'",
+                        "git commit --allow-empty --no-edit -m subject",
+                        "git commit --allow-empty -e -m 'Refs: #1107'",
+                        "git commit --allow-empty -m 'Refs: #1107'; git commit --allow-empty -m subject"):
+            result = self.hook('hooks/git/ticket-required.sh', command)
+            self.assertEqual(result.returncode, 2, command + result.stderr)
+        self.assertEqual(self.hook('hooks/git/ticket-required.sh',
+                                  "git commit --allow-empty --amend --no-edit -m 'Refs: #1107'").returncode, 0)
+        self.git('config', 'alias.ci', 'commit')
+        self.assertEqual(self.hook('hooks/git/ticket-required.sh',
+                                  "git ci --allow-empty -m 'Refs: #1107'; git ci --allow-empty -m subject").returncode, 2)
+        self.assertEqual(self.hook('hooks/git/ticket-required.sh',
+                                  "git commit --allow-empty -m 'Refs: #1107'; git ci --allow-empty -m 'Refs: #1107'").returncode, 0)
+        message = self.repo / 'message.txt'
+        message.write_text('Refs: #1107')
+        (self.repo / 'ticketless.txt').write_text('subject only')
+        result = self.hook('hooks/git/ticket-required.sh', 'cp ticketless.txt message.txt; git ci --allow-empty -F message.txt')
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn('separate configuration/file mutations', result.stderr)
+        for command in (
+            "printf subject > message.txt; git ci --allow-empty -F message.txt",
+            "git config alias.ci '!git commit --allow-empty -m subject #'; git ci -m 'Refs: #1107'",
+        ):
+            self.assertEqual(self.hook('hooks/git/ticket-required.sh', command).returncode, 2, command)
+        self.assertEqual(self.hook('hooks/git/ticket-required.sh',
+                                  "git status && git ci --allow-empty -m 'Refs: #1107'").returncode, 0)
+        self.git('remote', 'set-url', 'origin', 'https://github.com/unrelated/synthetic.git')
+        self.assertEqual(self.hook('hooks/git/ticket-required.sh', "git commit -m subject").returncode, 0)
+
+        # Scope inspection failure must not escape a hook as nonblocking exit 1.
+        import contextlib
+        import io
+        from unittest.mock import patch
+        with patch.object(sys, 'path', [str(ROOT / 'hooks/lib'), *sys.path]):
+            spec = importlib.util.spec_from_file_location('ticket_scope_failure', ROOT / 'hooks/lib/git_command.py')
+            policy = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(policy)
+        for failure in (policy.UnknownShape('scope unavailable'), OSError('scope unavailable')):
+            for command in ("env FOO=1 bash -c '(git commit -m none)'", "watch 'git commit -m none'"):
+                output = io.StringIO()
+                with patch.object(sys, 'argv', ['git_command.py', '--cwd', str(self.repo), '--policy', 'ticket']), \
+                        patch.object(sys, 'stdin', io.StringIO(command)), \
+                        patch.object(policy, 'in_scope', side_effect=failure), contextlib.redirect_stdout(output):
+                    code = policy.main()
+                self.assertEqual(code, 2, output.getvalue())
+                self.assertIn('BLOCKED:', output.getvalue())
+
+    def test_no_git_redirect_proof_preserves_full_stack_and_non_git_denials(self):
+        self.git('checkout', '-q', '-b', 'feature/prose-stack')
+        self.g.task('prose-stack', self.repo)
+        settings = json.loads((ROOT / 'hooks/settings-snippet.json').read_text())
+        import re
+        guards = [entry['command'].replace('/path/to/claude-configs-public', str(ROOT))
+                  for group in settings['hooks']['PreToolUse'] if re.fullmatch(group.get('matcher', '.*'), 'Bash')
+                  for entry in group['hooks']]
+        self.assertEqual(len(guards), 16)
+        output = self.repo / 'prose.md'
+        command = "printf '%s' 'git commit example' > " + shlex.quote(str(output))
+        before = self.git('rev-parse', 'HEAD')
+        for guard in guards:
+            result = self.hook(str(Path(guard).relative_to(ROOT)), command)
+            self.assertEqual(result.returncode, 0, guard + result.stderr)
+        subprocess.run(command, shell=True, cwd=self.repo, env=self.env, check=True, timeout=20)
+        self.assertEqual(output.read_text(), 'git commit example')
+        read = "grep -n 'gh pr merge|gh pr create|git commit' README.md"
+        for guard in guards:
+            result = self.hook(str(Path(guard).relative_to(ROOT)), read)
+            self.assertEqual(result.returncode, 0, guard + result.stderr)
+        # A real shared-resource operation is not the quoted grep pattern.
+        self.assertEqual(self.hook('hooks/bash/destructive-guard.sh', 'gh pr merge 123').returncode, 2)
+        actual = 'git commit --allow-empty -m subject > ' + shlex.quote(str(output))
+        results = [self.hook(str(Path(guard).relative_to(ROOT)), actual) for guard in guards]
+        self.assertTrue(any(result.returncode != 0 for result in results))
+        self.assertEqual(self.git('rev-parse', 'HEAD'), before)
+        for dangerous in ('rm -rf /', "chmod -R 777 .; printf '%s' 'git commit example' > " + shlex.quote(str(output))):
+            self.assertEqual(self.hook('hooks/bash/destructive-guard.sh', dangerous).returncode, 2, dangerous)
+        for payload in ("bash -lc 'git commit -m subject'", "env bash --noprofile -c 'git commit -m subject'",
+                        "command '/bin/bash' -lc 'git commit -m subject'", "'eval' -- 'git commit -m subject'",
+                        "bash -c -- 'git commit -m subject'"):
+            for guard in ('hooks/git/ticket-required.sh', 'hooks/git/branch-guard.sh', 'hooks/bash/destructive-guard.sh'):
+                result = self.hook(guard, payload + ' > ' + shlex.quote(str(output)))
+                self.assertEqual(result.returncode, 2, payload + result.stderr)
+
+    def test_full_registered_stack_blocks_ticketless_alias_before_effect(self):
+        self.git('checkout', '-q', '-b', 'feature/ticket-stack')
+        self.git('config', 'alias.ci', 'commit')
+        self.g.task('ticket-stack', self.repo)
+        settings = json.loads((ROOT / 'hooks/settings-snippet.json').read_text())
+        import re
+        guards = [entry['command'].replace('/path/to/claude-configs-public', str(ROOT))
+                  for group in settings['hooks']['PreToolUse'] if re.fullmatch(group.get('matcher', '.*'), 'Bash')
+                  for entry in group['hooks']]
+        self.assertEqual(len(guards), 16)
+        command = "git ci --allow-empty -m subject"
+        before = self.git('rev-parse', 'HEAD')
+        results = [self.hook(str(Path(guard).relative_to(ROOT)), command) for guard in guards]
+        self.assertEqual(results[[Path(p).name for p in guards].index('ticket-required.sh')].returncode, 2)
+        if all(result.returncode == 0 for result in results):
+            subprocess.run(command, shell=True, cwd=self.repo, env=self.env, check=True, timeout=20)
+        self.assertEqual(self.git('rev-parse', 'HEAD'), before)
+        self.assertEqual(self.hook('hooks/git/ticket-required.sh', "git ci --allow-empty -m 'Refs: #1107'").returncode, 0)
+
     def test_read_guard_and_native_shell_descendants_leave_inventory_unchanged(self):
         directory = self.repo.parent / "bytecode-control"
         directory.mkdir()
-        for name in ("git_command.py", "task_actions.py"):
+        for name in ("git_command.py", "task_actions.py", "read-only-command.py"):
             shutil.copy2(ROOT / "hooks/lib" / name, directory / name)
         def inventory():
             return {p.relative_to(directory).as_posix(): p.read_bytes() for p in directory.rglob("*") if p.is_file()}
@@ -41,7 +230,7 @@ class Safety(unittest.TestCase):
         before = inventory()
         result = subprocess.run([sys.executable, str(directory / "git_command.py"), "--cwd", str(self.repo), "--policy", "branch"],
                                 input="git status", env=env, text=True, capture_output=True, timeout=20)
-        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(inventory(), before)
         (directory / "payload.py").write_text("VALUE = 1\n")
         (directory / "child.py").write_text("import payload, sys; print(sys.dont_write_bytecode)\n")

@@ -378,7 +378,7 @@ expect_block "(parse24) last cleanup option strip removes comment ticket" "$HOOK
     "$(make_payload 'git commit -m "subject" -m "#994" --cleanup=whitespace --cleanup=strip')"
 expect_block "(parse25) -e defaults cleanup to strip with no-op editor" "$HOOK" \
     "$(make_payload 'git commit -e -m "subject only" -m "#994"')"
-expect_pass "(parse26) --edit default strip preserves non-comment ticket" "$HOOK" \
+expect_block "(parse26) editor-dependent final message cannot be proven" "$HOOK" \
     "$(make_payload 'git commit --edit -m "subject" -m "Refs: #994"')"
 
 # --- ALLOWS: GitHub/GitLab style ---
@@ -481,9 +481,9 @@ expect_pass "(read15) plain log" "$HOOK" \
 
 # --- ALLOWS: amend/merge commits (skip enforcement) ---
 
-expect_pass "(u) git commit --amend" "$HOOK" \
+expect_block "(u) interactive amend message cannot be proven" "$HOOK" \
     "$(make_payload 'git commit --amend')"
-expect_pass "(v) git commit --no-edit" "$HOOK" \
+expect_block "(v) implicit no-edit message cannot be proven" "$HOOK" \
     "$(make_payload 'git commit --no-edit')"
 
 # Validate against actual final Git messages, including custom comment prefixes.
@@ -538,7 +538,7 @@ for i, (name, config, mode, editing, body, ticket, *extra) in enumerate(cases):
     subprocess.run(['git', '-C', str(repo)] + args, env=env, check=True, capture_output=True)
     final = subprocess.check_output(['git', '-C', str(repo), 'log', '-1', '--format=%B'], env=env, text=True)
     assert ('#994' in final) == ticket, (name, final)
-    assert result.returncode == (0 if ticket else 2), (name, result.returncode, result.stderr, final)
+    assert result.returncode == (0 if ticket and not editing else 2), (name, result.returncode, result.stderr, final)
 # Repository trailer commands must never run during a read-only hook probe.
 repo = base / 'trailer-command'; repo.mkdir()
 subprocess.run(['git', 'init', '-q', str(repo)], env=env, check=True)
@@ -588,6 +588,87 @@ print('  [PASS] four large-message controls and conflicting comment-prefix negat
 PY
 then
     _HARNESS_PASS=$((_HARNESS_PASS + 5))
+else
+    _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+fi
+
+
+if python3 - "$HOOK" "$TMP" <<'PYCONTROLS'
+import json, pathlib, shlex, subprocess, sys
+hook, base = sys.argv[1], pathlib.Path(sys.argv[2])
+repo = base / 'opaque-ticket-controls'; repo.mkdir()
+foreign = base / 'foreign-ticket-controls'; foreign.mkdir()
+for directory, owner in ((repo, 'siege-analytics'), (foreign, 'foreign-owner')):
+    subprocess.run(['git', 'init', '-q', str(directory)], check=True, timeout=10)
+    subprocess.run(['git', '-C', str(directory), 'remote', 'add', 'origin',
+                    'https://github.com/' + owner + '/ticket-fixture.git'], check=True, timeout=10)
+commit = 'git commit -m "no reference"'
+commands = [
+    '(' + commit + ')',
+    'for item in one; do ' + commit + '; done',
+    'value=$(' + commit + ')',
+    'nohup ' + commit,
+    'echo input | xargs ' + commit,
+    'stdbuf -oL ' + commit,
+    'xcrun ' + commit,
+    'arch -arm64 ' + commit,
+    'caffeinate ' + commit,
+    'find . -maxdepth 0 -exec ' + commit + r' \;',
+    'watch ' + commit,
+    'script -q /dev/null ' + commit,
+    'flock lockfile ' + commit,
+    'chronic ' + commit,
+    'doas ' + commit,
+    'parallel ' + commit + ' ::: one',
+    "watch 'git commit -m no_reference'",
+    "find . -exec sh -c 'git commit -m no_reference' " + r'\;',
+    'printf %s "$(git commit -m no_reference)"',
+    'watch "git commit -m no_reference" &',
+    "env FOO=1 bash -c '(git commit -m none)'",
+    "sudo sh -c '`git commit -m none`'",
+    "time eval '(git commit -m none)'",
+    "nice bash -c 'true;(git commit -m none)'",
+]
+passed = 0
+def check(command, cwd, expected):
+    global passed
+    payload = {'tool_name': 'Bash', 'cwd': str(cwd), 'tool_input': {'command': command}}
+    result = subprocess.run(['bash', hook], input=json.dumps(payload), cwd=cwd,
+                            text=True, capture_output=True, timeout=20)
+    assert result.returncode == expected, (command, expected, result.returncode, result.stderr)
+    passed += 1
+outside_commit = 'git -C ' + shlex.quote(str(foreign)) + ' commit -m subject'
+for command in commands:
+    check(command, repo, 2)
+    check(command + ' > ' + shlex.quote(str(repo / 'output')), repo, 2)
+    check('printf %s ' + shlex.quote(command) + ' > ' + shlex.quote(str(repo / 'prose')), repo, 0)
+    check(command, foreign, 0)
+    check(outside_commit + ' && ' + command, repo, 2)
+check(outside_commit + ' && printf %s ' + shlex.quote('git commit example'), repo, 0)
+check(outside_commit + ' && touch owned-file', repo, 0)
+for resource in ('issue', 'pr'):
+    prose = 'gh ' + resource + ' create --body ' + shlex.quote('see git commit docs')
+    check(prose, repo, 0)
+    check(prose + ' > ' + shlex.quote(str(repo / 'create-output')), repo, 0)
+    check(prose + " && watch 'git commit -m no_reference'", repo, 2)
+    check(prose + ' && git commit -m no_reference', repo, 2)
+for resource in ('issue', 'pr'):
+    prose = 'gh ' + resource + ' comment 1 --body ' + shlex.quote('please git commit later')
+    check(prose, repo, 0)
+    check(prose + ' > ' + shlex.quote(str(repo / 'comment-output')), repo, 0)
+    check(prose + " && watch 'git commit -m no_reference'", repo, 2)
+    check(prose + ' && git commit -m no_reference', repo, 2)
+for command in ("sed -i '' 's/a/git commit/' notes.md", "sed -i 's|a|git commit|g' notes.md"):
+    check(command, repo, 0)
+    check(command + " > output", repo, 0)
+    check(command + " && watch 'git commit -m none'", repo, 2)
+for command in ("sed -i '' 's/a/git commit/e' notes.md", "sed -i '' 'e git commit -m none' notes.md"):
+    check(command, repo, 2)
+assert passed == 146, passed
+print('  [PASS] 146 actual opaque-dispatch, redirect, quoted-prose, scope and mixed-command controls')
+PYCONTROLS
+then
+    _HARNESS_PASS=$((_HARNESS_PASS + 146))
 else
     _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
 fi

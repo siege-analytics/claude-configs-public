@@ -86,3 +86,5 @@ py_count=0; [[ -f "$TMP/py-count" ]] && py_count=$(wc -l < "$TMP/py-count" | tr 
 [[ "$py_count" -eq 1 ]] && ok "one python3 process per prompt" || bad "hook started $py_count python3 processes"
 echo "progressive_loading: $pass passed, $fail failed"
 [[ $fail -eq 0 ]]
+
+python3 -B "$ROOT/bin/_test/inline_delivery_test.py"
