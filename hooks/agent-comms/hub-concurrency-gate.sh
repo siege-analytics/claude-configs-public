@@ -17,14 +17,17 @@ INPUT=$(cat 2>/dev/null || true)
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Preserve the existing advisory treatment of missing/malformed callback input.
 # A valid callback whose required metadata exceeds bounds still fails closed.
-if ! printf '%s' "$INPUT" | python3 -c '
+if ! python3 -c '
 import json, sys
+raw = sys.stdin.buffer.read(1024 * 1024 + 1)
+if len(raw) > 1024 * 1024:
+    sys.exit(0)  # Continue to the metadata helper, which rejects oversize input.
 try:
-    payload = json.load(sys.stdin.buffer)
+    payload = json.loads(raw)
 except ValueError:
     sys.exit(1)
 sys.exit(0 if isinstance(payload, dict) and isinstance(payload.get("tool_input"), dict) else 1)
-'; then
+' < <(printf '%s' "$INPUT"); then
     exit 0
 fi
 _HOOK_METADATA=$(printf '%s' "$INPUT" | python3 "$HOOK_DIR/../lib/hook_payload.py") || exit 2

@@ -65,6 +65,8 @@ class InlineDelivery(unittest.TestCase):
 
     def assert_fallback(self, output):
         self.assertLess(len(output), 10000)
+        self.assertTrue(output.startswith(b'<skill-kernel mode="kernel-only">\n'))
+        self.assertEqual(output.count(b'<skill-kernel'), 1)
         self.assertIn(self.kernel.read_bytes(), output)
         self.assertIn(b'state: over-budget', output)
         self.assertIn(b'kernel only', output)
