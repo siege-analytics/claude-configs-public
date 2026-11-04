@@ -68,7 +68,7 @@ The `think` gate is not a pattern-match entry below — it is the **first gate**
 
 **Companion gate: `survey-context`.** When the task references existing entities (models, tables, functions, files, APIs, env vars), `skills/thinking/survey-context/SKILL.md` is the author-time counterpart to the static scanner. Run it before authoring code that touches existing infrastructure. Pairs with `think` Step 1 (Context) and self-review's `Goal source:` field.
 
-**Post-think pipeline: `investigate` → `pre-mortem`.** After think produces a design note and the user approves, the investigation and risk gates fire before implementation:
+**Post-think pipeline: `investigate` -> `pre-mortem`.** After think produces a design note and verifies existing task authorization plus any explicit design sign-off requirement, the investigation and risk gates fire before implementation. Routine methods within an approved outcome do not require a fresh operator decision:
 
 1. **`investigate`** (`skills/thinking/investigate/SKILL.md`): Evidentiary fact-finding. Produces a Fact Sheet with file:line citations, impact chain (upstream → task → downstream), data shape verification, coherence check, and hypothesis/falsification. Investigation is non-discretionary — it gates ALL artifact CRUD, not just code files. Skill/hook/rule edits are the highest-stakes class (the recursive case) and are never exempt. Two tiers: Full (all sections) for cross-module work, Focused (4 sections) for 1-2 file changes with no interface impact. Hard rule: "File:line or it didn't happen."
 
@@ -235,7 +235,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 |---|---|
 | Create a git branch | `skills/git-workflow/branch/SKILL.md` + `skills/git-workflow/develop-guard/SKILL.md` |
 | Create a commit | `skills/git-workflow/commit/SKILL.md` |
-| Merge a branch | `skills/git-workflow/merge/SKILL.md` — **self-review gate applies at merge time, not just push time.** Before executing `gh pr merge` or `git merge`, verify the self-review artifact exists and trailers are on the latest commit. If artifacts are missing when told to merge, ask: "Are you telling me to forego review?" A "merge" instruction authorizes the destination, not the method. |
+| Merge a branch | `skills/git-workflow/merge/SKILL.md` - **self-review gate applies at merge time, not just push time.** Before executing `gh pr merge` or `git merge`, verify the self-review artifact exists and trailers are on the latest commit. Inspect existing evidence, complete missing preparation within your role and obtain required independent review before merging; do not request a waiver by default. A "merge" instruction authorizes the destination, not the method. |
 | After merging a PR | `skills/compound/SKILL.md` — post-merge success compounding. Answer three questions (what worked, discoverable, skill/rule update needed). Produces a solutions catalog entry, skill-update ticket, or "nothing novel" declaration. Advisory — does not block. |
 | Open a pull request | `skills/git-workflow/create-pr/SKILL.md` |
 | Triage / respond to PR comments | `skills/session/pr-comments/SKILL.md` |
@@ -287,7 +287,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
 6. **Ticket-required + Epic-in-project + Dependency-clear**: Any work that creates a change in state or behavior of the software that will impact the product requires a ticket. Typographical corrections with no functional effect are exempt. That ticket must belong to a project or epic — unprojected tickets are not worked. All blocking upstream tickets must be Done before you start. Include the ticket reference in every commit. Read `skills/planning/pre-work-check/SKILL.md` before starting any such work.
 
-7. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write. The PR base is `develop` (or its synonym — `dev`, `development`, `staging`, `next`, `integration`, `trunk`), NOT `main`. **Invariant:** develop is the origin of all work. `main` is downstream of develop, never upstream of unblessed work. Recurring stale-develop is workflow drift to *repair*, not a workflow to *accept*. If `develop` is missing or stale, STOP and ask the user — do not silently create develop, do not silently fall back to main, and do not patch the rule to accommodate the violation. See `skills/git-workflow/develop-guard/SKILL.md`.
+7. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write. The PR base is `develop` (or its synonym - `dev`, `development`, `staging`, `next`, `integration`, `trunk`), NOT `main`. **Invariant:** develop is the origin of all work. `main` is downstream of develop, never upstream of unblessed work. Recurring stale-develop is workflow drift to *repair*, not a workflow to *accept*. If `develop` is missing or stale, verify current refs and keep dependent branching stopped until repaired. Carry out an already-authorized sync or creation through the required reviewed workflow; otherwise ask for the specific missing authority. Do not infer a topology change, silently fall back to main, overwrite existing work, or patch the rule to accommodate drift. See `skills/git-workflow/develop-guard/SKILL.md`.
 
 8. **Dual-mirror check** (for dual-tracked repos electinfo↔gitlab): after acting on one side, mirror to the other.
 
@@ -409,7 +409,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 If you're doing something truly novel that no skill covers, default to:
 
 1. **Read `skills/thinking/think/SKILL.md`** and write a brief design note.
-2. **Confirm with the user** before acting if blast radius is non-trivial.
+2. **Check scope, authority and consequences.** If the novel approach introduces a material decision not covered by existing authorization, ask for that decision before its dependent action; otherwise proceed through the required preparation and review.
 3. **File a skill-creation task** if this turns out to be a recurring pattern — see `skills/meta/skillbuilder/SKILL.md`.
 
 ---
@@ -438,4 +438,4 @@ Skills collection paths (all relative to their repo roots):
 2. **Skills chain explicitly.** `create-pr` → `commit` → `branch` in reverse.
 3. **Conventions always apply.** Every skill that writes a commit reads `_output-rules.md` first.
 4. **Router sub-skills load only when triggered.** A `.py` file without `pyspark` imports doesn't load `coding/spark/`.
-5. **When in doubt, ask the user.**
+5. **Resolve routine uncertainty from context and available evidence.** Choose the most specific applicable skill and proceed within existing authorization. Ask only when the remaining ambiguity materially changes scope, authority, or consequences; state the missing decision and continue independent authorized work. See [rule:autonomy] and [rule:standing-approval].

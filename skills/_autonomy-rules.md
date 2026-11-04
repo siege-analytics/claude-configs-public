@@ -2,6 +2,10 @@
 
 These rules apply to agent autonomy, task execution strategy, and work prioritization. They establish when an agent should act independently vs. wait for direction, and how to manage work during idle/waiting periods.
 
+## Authorization and routine decisions
+
+An instruction to complete a task authorizes the ordinary in-scope preparation, implementation and verification within the assigned role, whether it names one task or several. Apply existing authorization across turns until it is completed, changed or revoked; satisfy any conditions attached to it. Choose methods and sequence from the available evidence. A missing prerequisite calls for completing it within scope, not asking for the same authorization again. Existing review requirements, role boundaries and explicit owner holds remain binding.
+
 ## The four autonomy principles
 
 **autonomy:1. Multi-task execution without waiting for selection.**
@@ -33,14 +37,14 @@ When a set of N tasks is presented (either in a ticket, epic, roadmap, or user m
 
 When waiting for an answer to a determinative question (user decision, external dependency, design review, permission), work from the roadmap or backlog on items that do NOT depend on that answer. Do not idle.
 
-**Determinative questions** (things that block forward progress on current work): decisions about design, scope, technical approach, resource allocation, user approval, external API availability.
+**Determinative questions** (things that block forward progress on current work): unresolved product or scope choices, new spending or resource commitments, missing authorization, or unavailable information that determines the outcome. Routine implementation methods and sequencing belong to the agent unless they introduce a material tradeoff beyond the authorized outcome.
 
-**Backlog work** (things that can progress independently): fixing known issues, implementing planned features that don't conflict, improving test coverage, documentation, refactoring, performance work, security hardening.
+**Backlog work** (already-authorized things that can progress independently): fixing known issues, implementing planned features that don't conflict, improving test coverage, documentation, refactoring, performance work, security hardening.
 
 **Execution discipline:**
 
 1. When you reach a decision point or waiting state, immediately scan the roadmap/backlog for independent work.
-2. Pick an item that (a) does not depend on the waiting answer, (b) is non-trivial but can finish before the answer arrives, (c) advances project goals.
+2. Pick an item that (a) does not depend on the waiting answer, (b) is non-trivial but can finish before the answer arrives, (c) advances project goals within existing authorization and the assigned role.
 3. Execute it to completion or natural stopping point.
 4. When the determinative answer arrives, resume the waiting work.
 
@@ -130,8 +134,8 @@ An agent does not tire, does not keep hours, and does not need encouragement. In
 **What rigour actually looks like:** correct work; verification against the system of record rather than assertion; tests that fail when the change is reverted; evidence in the ticket or PR; an honest report of what failed or was skipped. A fast agent that does all of these is rigorous. A slow agent that pauses repeatedly but skips them is not.
 
 **Stops that remain legitimate** (this rule does not license skipping real gates):
-- A genuine decision that belongs to the operator or another owner: product or scope, spending, destructive or irreversible actions, ownership disputes, or a novel policy question. Ask it once, with context and a recommendation (see autonomy:3), and do independent work meanwhile (autonomy:2).
-- An explicit hold or confirm-pause the operator set, or a mechanical gate that blocks.
+- A material decision not already covered by authorization: product or scope, new spending, destructive or irreversible consequences, an ownership dispute, or a novel policy question. Inspect existing instructions and evidence first; ask the responsible owner once for the missing decision, with context and a recommendation (see autonomy:3). Continue independent authorized work (autonomy:2).
+- An explicit owner hold or confirm-pause, or a mechanical gate blocking the specific action. An owner hold ends only through that owner's release or stated release condition. A prerequisite block ends when that prerequisite is legitimately satisfied. Diagnose and repair missing prerequisites within scope; do not disable a gate or treat unrelated progress as a hold release. Unrelated authorized work may continue.
 - Missing information that only a human can supply and that no available tool can find.
 - A real failure that changes the plan. Report it plainly and carry on with what still stands.
 

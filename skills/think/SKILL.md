@@ -6,7 +6,7 @@ allowed-tools: Read Grep Glob
 
 # Think First
 
-Do NOT write any code, scaffold any project, create any files, or take any implementation action until you have completed the design workflow below and the user has approved the design.
+Complete the design workflow before implementation, then verify that the design is covered by the task authorization and any explicit project/owner sign-off requirement. Routine methods within an authorized outcome do not require a fresh approval. Unresolved material choices or an explicit design-approval hold must be settled before the dependent implementation.
 
 This is not a suggestion. It is a hard gate.
 
@@ -122,11 +122,11 @@ Identify what's unclear or ambiguous before proposing anything.
 - What assumptions are you making? State them explicitly.
 - Are there stakeholders or downstream systems affected?
 
-If you have questions for the user, ask them now. Do not proceed with unresolved ambiguity.
+Resolve factual and routine-method uncertainty from context and available evidence. Ask the responsible owner for materially unresolved scope, authority or consequences; hold only dependent implementation while independent authorized work continues.
 
 ### Step 3: Proposals
 
-Present 2-3 approaches with tradeoffs. Not 1 (no comparison). Not 5 (decision paralysis).
+Compare viable approaches and record the chosen approach with its tradeoffs. If constraints or established precedent make one method clearly suitable, state why and proceed within authority rather than inventing alternatives. When a material owner decision remains, present a small set of real options with a recommendation.
 
 **Precedent exception:** If a prior ticket in the same repo established a pattern for this exact class of fix (e.g., "ticket #801 already introduced `GeocodingError` for this shape of SU-1 violation"), you may present 1 proposal that follows the precedent plus a brief note explaining why alternatives would diverge from the established pattern. The point of multiple proposals is to ensure you've considered the space -- when the space has already been explored and a convention chosen, re-exploring it is ceremony.
 
@@ -187,20 +187,11 @@ If the project has no `## Mission` section in PROJECT.md, skip this step.
 
 ### Step 6: Implementation Gate
 
-Present the design to the user. Wait for explicit approval before writing any code.
+Record the design, the existing instruction or standing approval that covers its outcome, and any unresolved owner decisions. Use the task, prior decisions and available evidence to choose routine methods within your role. If the design stays within that authority and all required prerequisites are satisfied, continue without requesting the same authorization again.
 
-**Acceptable signals to proceed:**
-- "Looks good, go ahead"
-- "Approved"
-- "Let's do option 2"
-- Any clear affirmative
+Present a concrete decision to the responsible owner when the design changes the authorized outcome, introduces an unapproved material tradeoff or consequence, or requires a sign-off reserved by the owner. Hold only the dependent implementation and continue independent authorized preparation. A task instruction does not release an explicit design hold or waive a project-specific approval requirement.
 
-**NOT acceptable signals:**
-- Silence (do not assume approval)
-- "Interesting" (that's not approval)
-- "Maybe" (that's a question, not approval)
-
-If the user suggests changes, revise the design and present again.
+For a genuinely missing approval, use a clear affirmative instruction tied to the proposed scope. Silence, interest, a vague acknowledgment or your own suggested default cannot supply it. If the user changes the requirements, revise the design and recheck only the affected authorization and readiness conditions.
 
 ### Step 7: Post to ticket and continue (hard gate)
 
@@ -214,7 +205,7 @@ If no ticket exists (exempt per pre-action check 5), skip the post.
 
 ### Step 8: Downstream Routing (hard gate)
 
-After user approval of the design, before implementation begins:
+After design authorization and any required sign-off are verified, before implementation begins:
 
 - [ ] **investigate:** Fact Sheet required? (Default: **YES**. NO requires a Trivial-investigation declaration with falsifiable evidence in the self-review artifact.)
 - [ ] **pre-mortem:** Risk classification required? (YES for non-trivial work)
@@ -261,7 +252,7 @@ This skill is **MANDATORY**. It auto-triggers whenever you are about to:
 - Touch more than 3 files
 - Do anything where the approach isn't obvious
 
-You MUST complete the full design workflow and receive user approval before writing any code. Skipping this skill is not an option.
+Complete the full design workflow and verify its applicable authorization before writing code. An existing task or standing approval can satisfy ordinary implementation authority; any design sign-off required by the owner or project must still be obtained. Do not skip preparation or invent a new approval checkpoint.
 
 **Exemptions** (the ONLY cases where you may skip this skill):
 - Changes to non-executable content only (markdown prose, comments with no functional effect, whitespace). Any change to `.sh`, `.py`, `.sql`, `.js`, `.ts`, or other executable code is non-trivial and requires the full pipeline — the Junior cannot classify code changes out of the pipeline. See #338.
@@ -280,9 +271,9 @@ You MUST complete the full design workflow and receive user approval before writ
 
 1. **No code before design.** Not even "just a quick prototype." Prototypes become production code.
 2. **No implementation during design.** Reading code to understand the system is fine. Writing code is not.
-3. **2-3 proposals, not 1.** If there's only one way to do it, you haven't thought hard enough. If there are more than 3, you're overthinking it.
+3. **Consider real alternatives.** Explain the selected method and tradeoffs. Do not fabricate options or require user selection when the authorized requirements already settle the method.
 4. **State your assumptions.** Every unstated assumption is a future bug.
-5. **The user decides.** Present options with tradeoffs. Don't make the decision for them unless they ask you to.
+5. **Preserve owner decisions and exercise delegated judgment.** Choose routine methods within the authorized outcome. Escalate materially unresolved product, scope, risk or authority choices and explicit sign-offs; do not ask the user to repeat a decision already delegated.
 6. **Measure twice, cut once.** The Junior optimizes for speed of one task. The Lead optimizes for speed of the project. Every 2-second check the Junior skips costs the human operator hours of rework. The agent's seconds are cheap; the human's hours are not. This is not caution -- it is resource allocation.
 
 ## Artifact destination
@@ -469,19 +460,11 @@ answer is "only if they used my exact function name," the claim is
 brittle. Grep for the flag, the condition, the import, or the error
 string — not the wrapper function or class name you expect to find.
 
-### Cleanup before creating
+### Task lifecycle before creating
 
-Before writing a new signal file, check for an existing one for the
-same repo. If a signal file exists from a prior task on the same repo:
+Resolve the current host session and full task identity before writing a signal. An existing gate for that exact task may be resumed within its authorized scope. A new task uses its own task directory and declared scope; sharing a repository does not make another task's signal obsolete.
 
-1. Verify the prior task's disposition was posted to its ticket
-2. Delete the old signal file: `rm "$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json"`
-3. Then create the new one
-
-A stale signal file from task X gives misleading status on task Y.
-The scope mismatch check catches this, but cleanup is better than warning.
-With repo-scoped gates, different repos can have independent signal
-files — only clean up the one for YOUR repo.
+After an owned task completes, record its disposition and mark that task terminal/disposed while preserving its identity, evidence and canonical claims. Removal, when needed, is limited to that completed task's own authorized lifecycle files and must not resurrect a stale legacy signal. Never delete another active task's gate, clear a shared root signal or widen scope to make a new task pass. If ownership is ambiguous, diagnose the binding and hold only the affected mutation.
 
 ### Updating during work
 
@@ -495,9 +478,9 @@ Status transitions: `designing` → `implementing` → `done-awaiting-pr`
 
 When the PR is merged and work is complete:
 
-1. Set `status` to `done-awaiting-pr` with a `disposition` summarizing outcome
+1. Set the completed task to a terminal status such as `disposed`, with a `disposition` summarizing outcome
 2. Post the disposition to the ticket if not already there
-3. Delete the signal file: `rm "$CRAFT_SESSION_DIR/tasks/<task-slug>/think-gate.json"`
+3. Retain its terminal record/evidence, or remove only that completed task's own lifecycle files when authorized cleanup is needed. Deleting a signal is not a prerequisite to starting another task.
 
 Signal files are scoped per session/task. Terminal records no longer compete
 with active tasks or authorize mutations. Own-session cleanup remains allowed

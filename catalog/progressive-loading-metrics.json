@@ -7,14 +7,14 @@
       "python_review": 8675
     },
     "kernel": 7913,
-    "legacy_root_resolver": 47855,
-    "legacy_rules_bundle": 422183,
-    "skill_resolver": 19348
+    "legacy_root_resolver": 48782,
+    "legacy_rules_bundle": 424454,
+    "skill_resolver": 19680
   },
   "fixture_selected_content": {
     "explicit_overflow": {
-      "characters": 154258,
-      "estimated_tokens": 38569,
+      "characters": 155956,
+      "estimated_tokens": 38993,
       "items": 13
     },
     "generic": {
