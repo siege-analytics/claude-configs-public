@@ -27,6 +27,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/hook_payload.py",
  "bin/_test/hook_payload_test.py",
  "bin/_test/inline_delivery_test.py",
+ "bin/_test/consumer_runtime_test.py",
  "hooks/_test/progressive_loading.test.sh",
  "hooks/_test/hook_payload.test.sh",
  "skills/commit/SKILL.md",

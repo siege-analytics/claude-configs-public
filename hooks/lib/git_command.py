@@ -17,7 +17,7 @@ import sys
 # Read-only guards must not mutate their installed package when importing.
 sys.dont_write_bytecode = True
 
-from task_actions import UnknownShape, shell_tokens, released_read_verdict
+from task_actions import UnknownShape, shell_tokens, released_read_verdict, action as classify_action
 
 PROTECTED = {"main", "master", "develop", "dev", "development", "staging", "next", "integration"}
 BUILTINS = set("add am annotate apply archive bisect blame branch bundle cat-file check-attr check-ignore check-mailmap check-ref-format checkout checkout-index cherry cherry-pick clean clone column commit config count-objects credential describe diff diff-files diff-index diff-tree difftool fast-export fast-import fetch filter-branch fmt-merge-msg for-each-ref format-patch fsck gc get-tar-commit-id grep hash-object help index-pack init instaweb interpret-trailers log ls-files ls-remote ls-tree mailinfo mailsplit maintenance merge merge-base merge-file merge-index merge-one-file merge-tree mergetool mktag mktree multi-pack-index mv name-rev notes pack-objects pack-redundant pack-refs patch-id prune prune-packed pull push range-diff read-tree rebase reflog remote repack replace request-pull rerere reset restore rev-list rev-parse revert rm send-email send-pack shortlog show show-branch show-index show-ref sparse-checkout stage stash status stripspace submodule subtree switch symbolic-ref tag unpack-file unpack-objects update-index update-ref update-server-info var verify-commit verify-pack verify-tag version whatchanged worktree write-tree".split())
@@ -274,6 +274,45 @@ def ticket_reference(message):
     return bool(re.search(r"\[task:[ \t]+[^]]+\]|#[0-9]+|[A-Z]+-[0-9]+|https?://[^\s]+/(?:issues|browse|tickets|merge_requests|pull|stories|tasks)/[^\s]+", message))
 
 
+
+def unresolved_commit_candidate(command, cwd, companions, *, scoped=None):
+    """Keep opaque executable payloads as possible code, not presumed prose."""
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("ticket_backstop_text", Path(__file__).with_name("command-text.py"))
+    text = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(text)
+    if companions is None:
+        candidates = [text.strip_heredocs(command)]
+    else:
+        candidates = []
+        for words in companions:
+            literal = shlex.join(words)
+            shape = classify_action(literal, cwd)
+            if released_read_verdict(literal) == 0 or shape.get("read_only") or shape.get("metadata_only"):
+                continue
+            # Plain in-place substitutions contain data, not sed execution flags.
+            sed = words[3:] if words[:3] == ["sed", "-i", ""] else words[2:] if words[:2] == ["sed", "-i"] else []
+            if len(sed) >= 2 and sed[0].startswith("s") and len(sed[0]) >= 2:
+                expression = sed[0]
+                delimiter = expression[1]
+                parts = expression[1:].split(delimiter)
+                if (not delimiter.isalnum() and not delimiter.isspace() and delimiter != "\\"
+                        and "\\" not in expression and "\n" not in expression and len(parts) == 4
+                        and not parts[0] and all(flag in "gpI0123456789" for flag in parts[3])
+                        and all(not filename.startswith("-") for filename in sed[1:])):
+                    continue
+            if words[:3] in (["gh", "issue", "create"], ["gh", "pr", "create"],
+                            ["gh", "issue", "comment"], ["gh", "pr", "comment"]):
+                # Built-in content bodies are data; opaque executors stay code.
+                candidates.append(text.code_only(literal))
+            else:
+                candidates.append(" ".join(words))
+    candidate = any(re.search(r"(?:^|[^0-9A-Za-z])git\s+commit(?:[^0-9A-Za-z]|$)", value)
+                    for value in candidates)
+    return bool(candidate and (in_scope(cwd) if scoped is None else scoped))
+
+
 def ticket_policy(command, cwd):
     """Check effective messages after typed Git dispatch, never incidental argv."""
     import importlib.util
@@ -303,6 +342,8 @@ def ticket_policy(command, cwd):
         items = invocations(command, cwd, strict=True, companions=companions)
         commits = [item for item in items if item["args"][0] == "commit" and in_scope(item["cwd"])]
         if not commits:
+            if unresolved_commit_candidate(command, cwd, companions):
+                raise UnknownShape("literal Git commit remains unresolved; use a supported direct commit form")
             return
         # Earlier mutation can replace an alias/configuration or message file
         # after the hook reads it. Split such work from commit inspection.
@@ -351,13 +392,19 @@ def main():
         # quote/backslash spelling must not hide a literal Git candidate.
         if options.policy == "ticket":
             try:
-                probed = invocations(command, os.path.realpath(options.cwd or os.getcwd()), strict=True, redirect_probe=True)
+                scoped = in_scope(os.path.realpath(options.cwd or os.getcwd()))
+            except (UnknownShape, OSError, subprocess.SubprocessError):
+                scoped = True  # Unavailable scope cannot authorize a Git candidate.
+            try:
+                probed_companions = []
+                probed = invocations(command, os.path.realpath(options.cwd or os.getcwd()), strict=True,
+                                     redirect_probe=True, companions=probed_companions)
             except (UnknownShape, OSError, subprocess.SubprocessError) as probe_error:
                 if isinstance(probe_error, UnresolvedLiteralDispatch):
                     # Its argument may be code that the data heuristic cannot
                     # unwrap. Preserve the existing conservative candidate test.
                     candidate = re.sub(r"[\\\"']", "", command)
-                    if re.search(r"(?:^|[/\s])git(?:[-\s]|$)", candidate):
+                    if re.search(r"(?:^|[^0-9A-Za-z_.-])git(?:[-\s]|$)", candidate) and scoped:
                         print("BLOCKED: Cannot safely determine ticketed Git commit: " + str(exc))
                         return 2
                     print("handled")
@@ -365,8 +412,14 @@ def main():
                 # Other ambiguous shapes retain the shared conservative boundary.
             else:
                 if not any(item["args"][0] == "commit" for item in probed):
-                    print("handled")  # No commit: prose or a resolved non-commit operation.
+                    if unresolved_commit_candidate(command, os.path.realpath(options.cwd or os.getcwd()), probed_companions, scoped=scoped):
+                        print("BLOCKED: Cannot safely determine ticketed Git commit: " + str(exc))
+                        return 2
+                    print("handled")  # No code-only commit candidate remains.
                     return 0
+                print("BLOCKED: Cannot safely determine ticketed Git commit: " + str(exc))
+                return 2
+            if unresolved_commit_candidate(command, os.path.realpath(options.cwd or os.getcwd()), None, scoped=scoped):
                 print("BLOCKED: Cannot safely determine ticketed Git commit: " + str(exc))
                 return 2
             # Use the shared code/data boundary, including shell/eval payload
@@ -385,7 +438,7 @@ def main():
                 normalized = " ".join(word if operator else shlex.quote(word)
                                       for word, operator, _ in parsed)
             candidate = command_text.code_only(normalized)
-            if not re.search(r"(?:^|[/\s])git(?:[-\s]|$)", candidate):
+            if not re.search(r"(?:^|[^0-9A-Za-z_.-])git(?:[-\s]|$)", candidate) or not scoped:
                 print("handled")  # Unrelated shell computation is not a ticket event.
                 return 0
             print("BLOCKED: Cannot safely determine ticketed Git commit: " + str(exc))

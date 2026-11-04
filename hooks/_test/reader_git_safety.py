@@ -144,6 +144,24 @@ class Safety(unittest.TestCase):
         self.git('remote', 'set-url', 'origin', 'https://github.com/unrelated/synthetic.git')
         self.assertEqual(self.hook('hooks/git/ticket-required.sh', "git commit -m subject").returncode, 0)
 
+        # Scope inspection failure must not escape a hook as nonblocking exit 1.
+        import contextlib
+        import io
+        from unittest.mock import patch
+        with patch.object(sys, 'path', [str(ROOT / 'hooks/lib'), *sys.path]):
+            spec = importlib.util.spec_from_file_location('ticket_scope_failure', ROOT / 'hooks/lib/git_command.py')
+            policy = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(policy)
+        for failure in (policy.UnknownShape('scope unavailable'), OSError('scope unavailable')):
+            for command in ("env FOO=1 bash -c '(git commit -m none)'", "watch 'git commit -m none'"):
+                output = io.StringIO()
+                with patch.object(sys, 'argv', ['git_command.py', '--cwd', str(self.repo), '--policy', 'ticket']), \
+                        patch.object(sys, 'stdin', io.StringIO(command)), \
+                        patch.object(policy, 'in_scope', side_effect=failure), contextlib.redirect_stdout(output):
+                    code = policy.main()
+                self.assertEqual(code, 2, output.getvalue())
+                self.assertIn('BLOCKED:', output.getvalue())
+
     def test_no_git_redirect_proof_preserves_full_stack_and_non_git_denials(self):
         self.git('checkout', '-q', '-b', 'feature/prose-stack')
         self.g.task('prose-stack', self.repo)

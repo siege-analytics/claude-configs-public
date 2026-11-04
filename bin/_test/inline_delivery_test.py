@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Actual prompt-hook delivery remains complete inside the SDK byte budget."""
+"""Actual prompt-hook delivery remains complete inside its declared byte budget."""
 from __future__ import annotations
 
 import json
@@ -133,10 +133,43 @@ class InlineDelivery(unittest.TestCase):
         self.assertFalse(json.loads(output)['continue'])
         self.assertNotIn(b'<skill-kernel', output)
 
-    def test_missing_temporary_storage_blocks_with_sole_json(self):
+    def test_missing_preferred_temporary_storage_uses_fallback(self):
         output = self.deliver(extra={'TMPDIR': str(self.case / 'absent' / 'storage')})
+        self.assertIn(self.kernel.read_bytes(), output)
+        self.assertIn(b'<skill-kernel', output)
+
+    def test_all_temporary_storage_unavailable_blocks_with_sole_json(self):
+        tools = self.case / 'tools'
+        tools.mkdir()
+        unavailable = tools / 'mktemp'
+        unavailable.write_text('#!/bin/sh\nexit 1\n')
+        unavailable.chmod(0o700)
+        output = self.deliver(extra={'PATH': str(tools) + os.pathsep + os.environ['PATH']})
         self.assertFalse(json.loads(output)['continue'])
         self.assertNotIn(b'<skill-kernel', output)
+
+    def test_optional_plan_paths_with_spaces_preserve_normal_delivery(self):
+        plans = self.case / 'operator plans'
+        plans.mkdir()
+        (plans / 'think-example.md').write_text('unfinished task')
+        self.stub_selector(b'')
+        output = self.deliver(extra={'CRAFT_AGENT_PLANS_PATH': str(plans)})
+        self.assertIn(self.kernel.read_bytes(), output)
+        self.assertIn(b'PIPELINE STATUS', output)
+        self.assertNotIn(b'"continue":false', output)
+
+    def test_optional_plan_scan_failure_does_not_block_prompt(self):
+        plans = self.case / 'plans'
+        plans.mkdir()
+        tools = self.case / 'tools'
+        tools.mkdir()
+        unavailable = tools / 'find'
+        unavailable.write_text('#!/bin/sh\nexit 1\n')
+        unavailable.chmod(0o700)
+        output = self.deliver(extra={'PATH': str(tools) + os.pathsep + os.environ['PATH'],
+                                     'CRAFT_AGENT_PLANS_PATH': str(plans)})
+        self.assertIn(self.kernel.read_bytes(), output)
+        self.assertNotIn(b'"continue":false', output)
 
     def test_metrics_use_trusted_fixed_reference_not_source_root_or_ambient_plans(self):
         import importlib.util
@@ -179,6 +212,33 @@ class InlineDelivery(unittest.TestCase):
         self.assertEqual(measured[0], measured[1])
         self.assertEqual(measured[0]['characters']['injected']['multi_route'], 9577)
 
+
+
+    def test_owned_selector_composed_envelope_keeps_complete_context(self):
+        # Receipt validation is exercised separately by the resident adapter suite.
+        selected = (b'<project-resident>\n' + b'R' * 5000
+                    + b'\n</project-resident>\n<progressive-load-set>\nstate: matched\n</progressive-load-set>')
+        expected = self.original_envelope(selected)
+        self.assertGreater(len(expected), 10000)
+        self.stub_selector(selected)
+        self.assertEqual(self.deliver(), expected)
+
+    def test_required_composed_envelope_overflow_blocks(self):
+        selected = (b'<project-resident>\n' + b'R' * 79900
+                    + b'\n</project-resident>\n<progressive-load-set>\n' + b'L' * 3000)
+        self.assertGreaterEqual(len(self.original_envelope(selected)), 90000)
+        self.stub_selector(selected)
+        output = self.deliver()
+        self.assertFalse(json.loads(output)['continue'])
+        self.assertNotIn(b'<skill-kernel', output)
+        self.assertNotIn(b'<project-resident>', output)
+
+    def test_generic_marker_environment_and_failed_selector_cannot_promote_budget(self):
+        prefix = b'<project-resident>\n' + b'R' * 11000 + b'\n</project-resident>'
+        self.stub_selector(b'<progressive-load-set>\n' + prefix)
+        self.assert_fallback(self.deliver(extra={'COMPOSED_ENVELOPE': '1', 'DELIVERY_LIMIT': '90000'}))
+        self.selector.write_text('import sys\nsys.stdout.buffer.write(' + repr(prefix) + ')\nsys.exit(1)\n')
+        self.assert_fallback(self.deliver())
 
     def test_reference_copy_refuses_fifo_without_blocking(self):
         fifo = self.case / 'source-fifo'

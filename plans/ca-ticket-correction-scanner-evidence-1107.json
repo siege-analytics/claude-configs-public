@@ -1,0 +1,26 @@
+{
+  "base_accepted": "1212831bc65a899434b698f72230cdf673d91fe6",
+  "protected_develop": "f1621acb1b265a29df26697456ff9c9e82ac63b3",
+  "selected_tree": "b8d66ae1de98303e9a80b56d32c1f0140b21fab0",
+  "source_identities": {
+    "hooks/lib/git_command.py": "cf31ff67a49fe6262b4fc5961c0c0243d7b281659fdece5325b1734d6df70c85",
+    "hooks/_test/ticket_required.test.sh": "f4b2b140d4e0f41f0b40e83894773524e2a9c5b2304101ea774168d8e5d33048",
+    "hooks/_test/reader_git_safety.py": "7a93796f4b95b24d27be4a9ecd7a50deed70391944f731f60d59972bac0dee24",
+    "skills/detect-ai-fingerprints/scan.sh": "e7fc8ef0ab0c77a5e196fbbe26ae2a718463f49a168e90d5fe1de7526896b939",
+    "skills/detect-ai-fingerprints/scan_ast.py": "27e0960e2ee767ff8573d4c02ed0d72e7f92fc37382a63b325fbe11971ae7b44",
+    "skills/detect-ai-fingerprints/scan_snapshot.py": "64745818e514113d12a9ac58264546316fd47f7918af1b03a0b3291edfd4257d",
+    ".claude/scanner-test-map.json": "5da6bc87e51adee6010a4ff2fdfab9957ed8ae99c2767eea6f99d5966c695886",
+    "hooks/resolver/inject-resolver.sh": "1c28ea16e73bb3d94bd1880b6ead82fa0b0f2b0ca4a99a24368d1704a231184d",
+    "bin/_test/inline_delivery_test.py": "93da4a8a080e7186049a5b11c8f21303d1b6417c73e972080cb2a21f60bc4a4a",
+    "bin/_test/consumer_runtime_test.py": "a72bad2f327516c47eb9df208e1deffcbbcc9aa4e07d0763b60d642f78eaba09",
+    "bin/_test/review_risk_test.py": "5e02b579c6618f76fb3dedfc2e389fb823bb34275a59dc8a8f7450269f85224b",
+    "catalog/review-risk-policy.json": "444df34c3250bd4161059d1206447735b1fb03fb4e9235f5eeda59b461bb7255"
+  },
+  "config": "absent/default",
+  "scan_exit": 1,
+  "raw": "hooks/lib/git_command.py:448:writing-code-7-silent-swallow(Pass): except (UnknownShape, OSError, SubprocessError): <Pass>\nhooks/lib/git_command.py:357:writing-tests-5: source has 15 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\n\nscanned: writing-prose:1-4 (stylistic; broader Unicode class), writing-code:2 (history references in code comments), writing-code:4 (Django ORM kwarg validation, same-file models; AST), writing-code:7 (silent error swallowing; AST), writing-code:8 (optional-import callsite guards; AST), writing-code:9 (silently-dropped parameters; AST scoped visitor), writing-code:15 (unbounded blocking I/O; AST, incl. Popen chains, Session/Client instance methods, invalid literal timeouts), writing-tests:3 (skip messages must be actionable), writing-tests:5 (untested named exception handlers, cross-file; AST), writing-claims:2 (countable claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:3 (deprecation messages need version+removal-keyword anchors; AST). Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4, writing-claims:1/3, writing-releases:1/2.\nviolations: 2\n",
+  "raw_sha256": "0bed825a3fdb87984f490657a00b1e327ad5270f8d32b3a791d518e8a8f4e6b6",
+  "control_source": "import importlib.util,sys,io,contextlib\nfrom pathlib import Path\nfrom unittest.mock import patch\nroot=Path('/Users/dheerajchand/git/claude-configs-worktrees/ticket-dispatch-20261103');sys.path.insert(0,str(root/'hooks/lib'))\ns=importlib.util.spec_from_file_location('ticket_failure_probe',root/'hooks/lib/git_command.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m)\nfor policy in ('branch','destructive'):\n for failure in (m.UnknownShape('proof unavailable'),OSError('metadata unavailable')):\n  output=io.StringIO()\n  with patch.object(sys,'argv',['git_command.py','--cwd','/private/tmp','--policy',policy]),patch.object(sys,'stdin',io.StringIO('git commit -m subject > log')),patch.object(m,'invocations',side_effect=[m.UnknownShape('original unresolved operation'),failure]) as calls,contextlib.redirect_stdout(output):\n   code=m.main()\n  assert code==2 and 'original unresolved operation' in output.getvalue(),(policy,code,output.getvalue())\n  assert calls.call_args_list[1].kwargs=={'strict':True,'redirect_probe':True}\nprint('PASS branch/destructive failed inspection never supplies absence proof; original denial/error retained (4 cases)')\n",
+  "control_result": "PASS branch/destructive failed inspection never supplies absence proof; original denial/error retained (4 cases)\n",
+  "scope_failure_regression": "hooks/_test/reader_git_safety.py Safety.test_ticket_dispatch_checks_each_message_and_no_raw_amend_escape: current actual-main UnknownShape/OSError checks cover unresolved-shell and opaque-companion fallback; method PASS."
+}
