@@ -215,7 +215,7 @@ These skills fire automatically before non-trivial work, regardless of which rou
 2. **Skills chain explicitly.** `create-pr` → `commit` → `branch` in reverse. Each skill's Phases section states predecessors.
 3. **Conventions always apply.** Every skill that writes a commit reads `_output-rules.md` first. Every skill that touches tabular identifiers reads `_data-trust-rules.md` first.
 4. **Router sub-skills load only when triggered.** A `.py` file without `pyspark` imports doesn't load `coding/spark/`; ambient loading is off.
-5. **When in doubt, ask the user.**
+5. **Resolve routine uncertainty from context and available evidence.** Choose the most specific applicable skill and proceed within existing authorization. Ask only when the remaining ambiguity materially changes scope, authority, or consequences; state the missing decision and continue independent authorized work. See [rule:autonomy] and [rule:standing-approval].
 
 ## Classification refresher (from `meta/skillbuilder/SKILL.md`)
 
