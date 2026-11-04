@@ -46,6 +46,7 @@ _HEREDOC_OPEN = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
 _SHELL_ARG = re.compile(
     r"""(?<![0-9A-Za-z_/])              # not part of a longer word (lookbehind:
                                     # the boundary char is kept, #1109)
+        (?:/[^\s'";|&]+/)?            # literal absolute interpreter path
         (?:(?:ba|z|da|a)?sh\s+-c|eval)  # bash -c, sh -c, zsh -c, dash -c, ash -c, eval
         \s+
         (?:"((?:\\.|[^"\\])*)"         # its argument: double-quoted, escapes honoured

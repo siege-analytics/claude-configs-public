@@ -1,0 +1,70 @@
+{
+  "protected_base": "b3c560b18faabade9d47e49b3b39cb17883259c3",
+  "reviewed_scan_tree": "60ef5a8747508c401a73e151dd8bab1e0b1a68f9",
+  "scan_command": "env PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin TMPDIR=/private/tmp bash skills/detect-ai-fingerprints/scan.sh",
+  "actual_exit": 1,
+  "complete": true,
+  "raw_sha256": "96a7eefb609a18747e2984ddb85708e7128c633d26498fbc9b516902ae642f12",
+  "raw_output": "hooks/lib/command-text.py:321:writing-tests-5: source has 1 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/extract-json.py:28:writing-tests-5: source has 1 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\nhooks/lib/git_command.py:395:writing-code-7-silent-swallow(Pass): except (UnknownShape, OSError, SubprocessError): <Pass>\nhooks/lib/git_command.py:316:writing-tests-5: source has 12 except block(s) but no test file found (looked in tests/, hooks/lib/tests/, ...)\n\nscanned: writing-prose:1-4 (stylistic; broader Unicode class), writing-code:2 (history references in code comments), writing-code:4 (Django ORM kwarg validation, same-file models; AST), writing-code:7 (silent error swallowing; AST), writing-code:8 (optional-import callsite guards; AST), writing-code:9 (silently-dropped parameters; AST scoped visitor), writing-code:15 (unbounded blocking I/O; AST, incl. Popen chains, Session/Client instance methods, invalid literal timeouts), writing-tests:3 (skip messages must be actionable), writing-tests:5 (untested named exception handlers, cross-file; AST), writing-claims:2 (countable claims need Verified-by trailer), rule citations in messages require Rule-executed evidence (#282), writing-releases:3 (deprecation messages need version+removal-keyword anchors; AST). Not mechanized (judgment-bound): writing-code:1/3/5/6, writing-tests:1/2/4, writing-claims:1/3, writing-releases:1/2.\nviolations: 4\n",
+  "ignore_paths": [],
+  "config_override": null,
+  "scanner_config_present": false,
+  "identities": [
+    {
+      "path": "hooks/lib/command-text.py",
+      "staged_blob": "baa8f9e67ebe785241e1e93ca256355e414390e1",
+      "sha256": "2e9645b32d6547da722d1eff800ffa3be8c2a55cf6ed70bc4bdc8cee84e10908"
+    },
+    {
+      "path": "hooks/lib/extract-json.py",
+      "staged_blob": "e3ffa1861c575c22ec2ca68e7731bd2e9d089353",
+      "sha256": "9263182700ebf9856622297ac79b68a3c832e66cc7eec0800f4a28dd711658c2"
+    },
+    {
+      "path": "hooks/lib/git_command.py",
+      "staged_blob": "9ab1f9d14ac8ed1abdeccde316d219268168a509",
+      "sha256": "9047bb192cff0f6e4b5f8b0920fc0e511272ca3dab1c362e1033d952d6a753b6"
+    },
+    {
+      "path": "hooks/_test/reader_git_safety.py",
+      "staged_blob": "8608624d3d824e1b6a9903ea005f7cf74ae92334",
+      "sha256": "3edd851dba499d8892bcbb2f2896de6a740fbf2786aabd6a9d9566e7fc1a264d"
+    },
+    {
+      "path": "hooks/_test/commit_detector.test.sh",
+      "staged_blob": "b854e1b3a32216292fdef2c18a3e1bfaa41e16d2",
+      "sha256": "6aa8aab00ee68fda3ea5e7f910470a84a26c20bec64aff009aeb4f73c75536e5"
+    },
+    {
+      "path": "bin/_test/review_risk_test.py",
+      "staged_blob": "415646fcb36eae17686eb2998d8a42eeda9420e2",
+      "sha256": "e90b2058519ca8fb97890a339f57a655f393d7603c50fdda112580fdf529f9e6"
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/scan.sh",
+      "staged_blob": "633280ea6b4e196e3a4e2eca8819bbce2a2f4669",
+      "sha256": "e7fc8ef0ab0c77a5e196fbbe26ae2a718463f49a168e90d5fe1de7526896b939"
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/scan_ast.py",
+      "staged_blob": "e295d2dcfdf6e8b9567c6ac4a8c88f01b65c2609",
+      "sha256": "27e0960e2ee767ff8573d4c02ed0d72e7f92fc37382a63b325fbe11971ae7b44"
+    },
+    {
+      "path": "skills/detect-ai-fingerprints/scan_snapshot.py",
+      "staged_blob": "e2e394b24e69b6db8d4e3931135da50efd120951",
+      "sha256": "64745818e514113d12a9ac58264546316fd47f7918af1b03a0b3291edfd4257d"
+    },
+    {
+      "path": ".claude/scanner-test-map.json",
+      "staged_blob": "04017cc6dc9c23ea87f1a378d8e972011d6b747d",
+      "sha256": "4b6804024fe2225f47e6e3c2e7c2a50b29d42f28f52d38dff01fa4df50c9a77c"
+    }
+  ],
+  "probe_control_sha256": "352c71771d4fb2ff9c85db8467cf35a98cfe06c6b62e773b7256d9e21511208b",
+  "probe_control": {
+    "path": "/private/tmp/ticket-probe-failure-control.py",
+    "source": "import importlib.util,sys,io,contextlib\nfrom pathlib import Path\nfrom unittest.mock import patch\nroot=Path('/private/tmp/claude-ticket-dispatch-20261030');sys.path.insert(0,str(root/'hooks/lib'))\ns=importlib.util.spec_from_file_location('ticket_failure_probe',root/'hooks/lib/git_command.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m)\nfor policy in ('branch','destructive'):\n for failure in (m.UnknownShape('proof unavailable'),OSError('metadata unavailable')):\n  output=io.StringIO()\n  with patch.object(sys,'argv',['git_command.py','--cwd','/private/tmp','--policy',policy]),patch.object(sys,'stdin',io.StringIO('git commit -m subject > log')),patch.object(m,'invocations',side_effect=[m.UnknownShape('original unresolved operation'),failure]) as calls,contextlib.redirect_stdout(output):\n   code=m.main()\n  assert code==2 and 'original unresolved operation' in output.getvalue(),(policy,code,output.getvalue())\n  assert calls.call_args_list[1].kwargs=={'strict':True,'redirect_probe':True}\nprint('PASS branch/destructive failed inspection never supplies absence proof; original denial/error retained (4 cases)')\n",
+    "output": "PASS branch/destructive failed inspection never supplies absence proof; original denial/error retained (4 cases)\n"
+  }
+}

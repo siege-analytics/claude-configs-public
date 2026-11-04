@@ -59,6 +59,17 @@ if [[ -z "$COMMAND" ]]; then
     fi
 fi
 
+# Quoted command examples in an existing artifact body are not publication.
+if python3 -B - "$COMMAND" "$CWD" "$HOOK_DIR/../lib" <<'PY_METADATA'
+import sys
+sys.path.insert(0, sys.argv[3])
+from task_actions import action, released_read_verdict
+sys.exit(0 if released_read_verdict(sys.argv[1]) == 0 or action(sys.argv[1], sys.argv[2]).get("metadata_only") else 1)
+PY_METADATA
+then
+    exit 0
+fi
+
 TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
 if ! echo "$COMMAND" | grep -qE "$TRIGGERS"; then
     exit 0

@@ -515,7 +515,7 @@ def insert_trailers(message, trailers, cwd):
     return result.stdout
 
 
-def resolve(command, cwd):
+def resolve(command, cwd, *, forbid_edit=False):
     """Return the effective message, None for non-direct dispatch, or raise."""
     tokens, heredocs = command_tokens(command)
     if tokens is None:
@@ -561,6 +561,8 @@ def resolve(command, cwd):
     if state["trailers"]:
         message = insert_trailers(message, state["trailers"], cwd)
     message = cleanup_message(message, mode, cwd, state["editing"])
+    if forbid_edit and state["editing"]:
+        raise MessageSourceError("editor-dependent commit message cannot be determined before execution; use literal -m or -F without --edit")
     return message
 
 

@@ -190,7 +190,7 @@ def registration(workspace: Path, *, router_path_override=None) -> tuple[dict, d
             or receipt.get("global_settings_path") != str(global_settings)
             or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", str(receipt.get("source_revision", "")))):
         raise RoutingError("Craft hook registration receipt is missing, corrupt or bound elsewhere")
-    for key, path in (("router_sha256", router), ("policy_sha256", policy), ("session_anchor_sha256", anchor), ("read_classifier_sha256", workspace / "hooks/lib/read-only-command.py"), ("task_resolver_sha256", workspace / "hooks/lib/resolve-think-gate.py")):
+    for key, path in (("router_sha256", router), ("policy_sha256", policy), ("session_anchor_sha256", anchor), ("read_classifier_sha256", workspace / "hooks/lib/read-only-command.py"), ("task_resolver_sha256", workspace / "hooks/lib/resolve-think-gate.py"), ("hook_payload_sha256", workspace / "hooks/lib/hook_payload.py"), ("task_actions_sha256", workspace / "hooks/lib/task_actions.py")):
         if receipt.get(key) != hashlib.sha256(regular_bytes(path)).hexdigest():
             raise RoutingError("Craft hook generation changed; rerun exact-main registration")
     parsed_policy = object_json(regular_bytes(policy))
@@ -198,29 +198,17 @@ def registration(workspace: Path, *, router_path_override=None) -> tuple[dict, d
     return receipt, parsed_policy
 
 
-def metadata_environment(payload: dict) -> str:
-    """Bound exec metadata while the original SDK bytes remain on stdin."""
-    def slim(value):
-        if isinstance(value, str):
-            return "" if len(value) > 4096 else value
-        if isinstance(value, dict):
-            return {key: slim(field) for key, field in value.items()}
-        if isinstance(value, list):
-            return [slim(field) for field in value]
-        return value
-    metadata = slim(payload)
-    if payload.get("tool_name") == "Bash":
-        tool_input = payload.get("tool_input")
-        command = tool_input.get("command") if isinstance(tool_input, dict) else None
-        if not isinstance(command, str):
-            raise RoutingError("Bash command metadata must be a string")
-        if len(command.encode("utf-8", "surrogatepass")) > 65536:
-            raise RoutingError("Bash command exceeds its 64 KiB transport bound")
-        metadata["tool_input"]["command"] = command
-    encoded = json.dumps(metadata, ensure_ascii=True, allow_nan=False)
-    if len(encoded.encode("utf-8")) > 98304:
-        raise RoutingError("hook metadata exceeds its 96 KiB environment bound")
-    return encoded
+def metadata_environment(payload: dict, helper_path=None) -> str:
+    """Use the one serializer; global copies import only a verified workspace helper."""
+    helper = helper_path or Path(__file__).with_name('hook_payload.py')
+    spec = importlib.util.spec_from_file_location('siege_hook_payload', helper)
+    module = importlib.util.module_from_spec(spec)
+    sys.dont_write_bytecode = True
+    spec.loader.exec_module(module)
+    try:
+        return module.metadata_environment(payload)
+    except (ValueError, TypeError) as error:
+        raise RoutingError(str(error)) from error
 
 
 def session_context(raw: bytes, event: str, environment: dict):
@@ -252,7 +240,7 @@ def session_context(raw: bytes, event: str, environment: dict):
                  "CLAUDE_SESSION_DIR", "CLAUDE_SESSION_ID", "CLAUDE_CODE_SESSION_ID", "SESSION_ID",
                  "CLAUDE_SIGNAL_DIR", "CRAFT_SIGNAL_DIR", "CRAFT_AGENT_SIGNAL_DIR", "CCP_TASK_ID"):
         child_environment.pop(name, None)
-    child_environment.update(CRAFT_AGENT_WORKSPACE=str(workspace), CCP_HOOK_INPUT_JSON=metadata_environment(payload),
+    child_environment.update(CRAFT_AGENT_WORKSPACE=str(workspace), CCP_HOOK_INPUT_JSON=metadata_environment(payload, workspace / "hooks/lib/hook_payload.py"),
                              CCP_CRAFT_ROUTER_SOURCE_REVISION=receipt["source_revision"],
                              CCP_CRAFT_ROUTER_POLICY_SHA256=receipt["policy_sha256"],
                              CCP_CRAFT_ROUTER_SHA256=receipt["router_sha256"])
@@ -511,17 +499,22 @@ def route(raw: bytes, event: str, workspace: Path, environment=None):
     policy, child_environment, bound = session_context(raw, event, environment)
     payload = object_json(raw)
     if not bound:
-        note = "Craft session identity metadata is pending or ambiguous. No task authority was borrowed; use reads to diagnose and retry after host metadata is persisted. Mutations require a verified own-session binding."
+        note = "Craft session identity metadata is pending or ambiguous. No task authority was borrowed; reads and existing-artifact text edits remain available. Task mutations require a verified own-session binding; retry after host metadata is persisted."
         if event != "PreToolUse":
             return 0, {"hookSpecificOutput": {"hookEventName": event, "additionalContext": note}}, ""
-        proven_read = payload.get("tool_name") in {"Read", "Glob", "Grep", "LS"}
+        permitted_without_identity = payload.get("tool_name") in {"Read", "Glob", "Grep", "LS"}
         if payload.get("tool_name") == "Bash":
             spec = importlib.util.spec_from_file_location("siege_verified_read_classifier", workspace / "hooks/lib/read-only-command.py")
             classifier = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(classifier)
             command = payload.get("tool_input", {}).get("command")
-            proven_read = isinstance(command, str) and classifier.main(command) == 0
-        if not proven_read:
+            permitted_without_identity = isinstance(command, str) and classifier.main(command) == 0
+            if isinstance(command, str) and not permitted_without_identity:
+                spec = importlib.util.spec_from_file_location("siege_verified_task_actions", workspace / "hooks/lib/task_actions.py")
+                actions = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(actions)
+                permitted_without_identity = actions.action(command, payload.get("cwd") or str(workspace)).get("metadata_only", False)
+        if not permitted_without_identity:
             return aggregate(event, [(2, "", note)])
     outputs, deadline, output_bytes = [], time.monotonic() + TOTAL_SECONDS, 0
     commands = matching_hooks(policy, event, payload)

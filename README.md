@@ -101,6 +101,14 @@ outside Craft return without running Craft policy. Preserve operator-owned
 terminal hooks when reconciling an existing installation; do not merge the full
 Craft hook snippet into user-level settings. See [Craft enforcement](craft-agent/README.md).
 
+The AST scanner can locate repository-specific tests through
+[`.claude/scanner-test-map.json`](.claude/scanner-test-map.json):
+`{"schema_version": 1, "source_to_tests": {"bin/tool.py": ["bin/_test/tool_test.py"]}}`.
+The map and tests come from the selected Git snapshot. Malformed maps, unsupported
+schema versions, and missing declared files make the scan incomplete. Locating a
+test does not prove that it covers an exception handler. The JSON map needs only Python's
+standard library. Existing optional TOML decorator settings are unchanged.
+
 For local validation, use Python 3.10+ with `requirements-validation.txt`
 installed. Run from an isolated development worktree, keeping any checkout used
 by active hooks on clean released `main`:

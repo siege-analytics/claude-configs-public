@@ -18,6 +18,19 @@ block_invalid_kernel() {
 [[ "$(wc -c < "$KERNEL" | tr -d ' ')" -le 80000 ]] || block_invalid_kernel
 cmp -s "$CANONICAL_KERNEL" "$KERNEL" || block_invalid_kernel
 PAYLOAD="$(cat || true)"
+# Buffer the complete delivery, including optional plan warnings, before stdout.
+# Keep the original descriptor available for a sole structured failure response.
+exec 8>&1
+block_delivery() {
+  printf '%s\n' '{"continue":false,"systemMessage":"BLOCKED: complete mandatory policy cannot be delivered within the declared delivery byte limit; restore compact canonical KERNEL.md and writable temporary storage."}' >&8
+  exit 0
+}
+DELIVERY_FILE="$(mktemp "${TMPDIR:-/tmp}/craft-hook-output.XXXXXX" 2>/dev/null)" ||
+  DELIVERY_FILE="$(mktemp /tmp/craft-hook-output.XXXXXX 2>/dev/null)" || block_delivery
+trap 'rm -f -- "$DELIVERY_FILE"' EXIT
+trap 'block_delivery' ERR
+COMPOSED_ENVELOPE=0
+{
 MODE="${CLAUDE_PROGRESSIVE_LOADING:-on}"
 if [[ "$MODE" == "off" || "$MODE" == "kernel-only" ]]; then
   cat <<EOF
@@ -42,7 +55,12 @@ else
   [[ "$MODE" != "canary" ]] || RENDER_MODE="canary"
   # One interpreter per prompt: the selector reads prompt and cwd from the
   # payload itself. Interpreter startup dominates this hook's latency (#1064).
-  RESULT="$(printf '%s' "$PAYLOAD" | python3 "$SELECTOR" --payload-stdin --render-hook --mode "$RENDER_MODE" 2>/dev/null || true)"
+  if RESULT="$(printf '%s' "$PAYLOAD" | python3 "$SELECTOR" --payload-stdin --render-hook --mode "$RENDER_MODE" 2>/dev/null)"; then
+    # This leading envelope is emitted only after resident identity/bytes validate.
+    if [[ "$RESULT" == '<project-resident>'$'\n'* ]]; then COMPOSED_ENVELOPE=1; fi
+  else
+    RESULT=""
+  fi
   cat <<EOF
 <skill-kernel mode="$MODE">
 $(cat "$KERNEL")
@@ -59,22 +77,18 @@ fi
 # Scan locations: CRAFT_AGENT_PLANS_PATH (session plans) and CWD/plans/ (repo plans).
 # Only emit the warning if think-*.md files exist (no noise otherwise).
 
-PLANS_DIRS=""
-[[ -n "${CRAFT_AGENT_PLANS_PATH:-}" ]] && [[ -d "$CRAFT_AGENT_PLANS_PATH" ]] && PLANS_DIRS="$CRAFT_AGENT_PLANS_PATH"
-[[ -d "plans" ]] && PLANS_DIRS="$PLANS_DIRS${PLANS_DIRS:+ }plans"
+PLANS_DIRS=()
+[[ -n "${CRAFT_AGENT_PLANS_PATH:-}" ]] && [[ -d "$CRAFT_AGENT_PLANS_PATH" ]] && PLANS_DIRS+=("$CRAFT_AGENT_PLANS_PATH")
+[[ -d "plans" ]] && PLANS_DIRS+=("plans")
 
-if [[ -n "$PLANS_DIRS" ]]; then
-    # shellcheck disable=SC2086
-    THINK_FILES=$(find $PLANS_DIRS -maxdepth 1 -name 'think-*.md' 2>/dev/null | sed -n '1,10p')
+if [[ "${#PLANS_DIRS[@]}" -gt 0 ]]; then
+    THINK_FILES=$(find "${PLANS_DIRS[@]}" -maxdepth 1 -name 'think-*.md' 2>/dev/null | sed -n '1,10p' || true)
 
     if [[ -n "$THINK_FILES" ]]; then
         # Check for downstream artifacts (any, not ticket-matched — v1)
-        # shellcheck disable=SC2086
-        HAS_INVESTIGATE=$(find $PLANS_DIRS -maxdepth 1 -name 'investigate-*.md' 2>/dev/null | sed -n '1p')
-        # shellcheck disable=SC2086
-        HAS_PREMORTEM=$(find $PLANS_DIRS -maxdepth 1 \( -name 'pre-mortem-*.md' -o -name 'premortem-*.md' \) 2>/dev/null | sed -n '1p')
-        # shellcheck disable=SC2086
-        HAS_SELFREVIEW=$(find $PLANS_DIRS -maxdepth 1 -name 'self-review-*.md' 2>/dev/null | sed -n '1p')
+        HAS_INVESTIGATE=$(find "${PLANS_DIRS[@]}" -maxdepth 1 -name 'investigate-*.md' 2>/dev/null | sed -n '1p' || true)
+        HAS_PREMORTEM=$(find "${PLANS_DIRS[@]}" -maxdepth 1 \( -name 'pre-mortem-*.md' -o -name 'premortem-*.md' \) 2>/dev/null | sed -n '1p' || true)
+        HAS_SELFREVIEW=$(find "${PLANS_DIRS[@]}" -maxdepth 1 -name 'self-review-*.md' 2>/dev/null | sed -n '1p' || true)
 
         MISSING=""
         [[ -z "$HAS_INVESTIGATE" ]] && MISSING="${MISSING}  [!] investigate artifact: MISSING — produce Fact Sheet before implementation\n"
@@ -98,3 +112,23 @@ PIPELINE
         fi
     fi
 fi
+
+} > "$DELIVERY_FILE"
+DELIVERY_BYTES="$(LC_ALL=C wc -c < "$DELIVERY_FILE")"
+DELIVERY_LIMIT=10000
+# The checked composed resident has an existing 80000-byte budget of its own.
+if [[ "$COMPOSED_ENVELOPE" == 1 ]]; then DELIVERY_LIMIT=$((10000 + 80000)); fi
+if [[ "$DELIVERY_BYTES" -ge "$DELIVERY_LIMIT" ]]; then
+  # Required composed context must never be silently replaced by generic policy.
+  if [[ "$COMPOSED_ENVELOPE" == 1 ]]; then block_delivery; fi
+  {
+    printf '%s\n' '<skill-kernel mode="kernel-only">'
+    cat "$CANONICAL_KERNEL"
+    printf '%s\n' '</skill-kernel>' '<progressive-load-set>' 'state: over-budget' 'project: none' 'diagnostic: final hook output exceeds inline byte limit; kernel only' '</progressive-load-set>'
+  } > "$DELIVERY_FILE"
+  DELIVERY_BYTES="$(LC_ALL=C wc -c < "$DELIVERY_FILE")"
+  [[ "$DELIVERY_BYTES" -lt 10000 ]] || block_delivery
+fi
+# The decision is complete: never append structured failure output after publish.
+trap - ERR
+cat "$DELIVERY_FILE"

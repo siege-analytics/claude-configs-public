@@ -74,9 +74,9 @@ def make_repo(path: Path) -> None:
         ["git", "config", "user.email", "fixture@example.com"],
         ["git", "remote", "add", "origin", "git@github.com:siege-analytics/f23-fixture.git"],
     ):
-        subprocess.run(command, cwd=path, check=True)
+        subprocess.run(command, cwd=path, check=True, timeout=30)
     (path / "README.md").write_text("consumer runtime fixture\n")
-    subprocess.run(["git", "add", "README.md"], cwd=path, check=True)
+    subprocess.run(["git", "add", "README.md"], cwd=path, check=True, timeout=30)
     subprocess.run(
         [
             "git",
@@ -87,6 +87,7 @@ def make_repo(path: Path) -> None:
         ],
         cwd=path,
         check=True,
+        timeout=30,
     )
 
 
@@ -100,7 +101,9 @@ def main() -> None:
         for case_id, prompt, repo in CASES
     }
 
-    with tempfile.TemporaryDirectory(prefix="ccp-installed-consumers-") as raw:
+    # Positive delivery uses an in-budget physical root; long-root refusal is
+    # exercised below against genuine packaged hooks with the same assertions.
+    with tempfile.TemporaryDirectory(prefix="cr-", dir="/tmp") as raw:
         temp = Path(raw)
         repo = temp / "clean-repo"
         make_repo(repo)
@@ -150,6 +153,7 @@ def main() -> None:
                 ["git", "remote", "set-url", "origin", EXACT_REPO],
                 cwd=repo,
                 check=True,
+                timeout=30,
             )
             payload = json.dumps({"prompt": "review this signature and error path", "cwd": str(repo)})
             hook = run(
@@ -157,6 +161,7 @@ def main() -> None:
                 input_text=payload,
             )
             assert hook.returncode == 0, (form, hook.stdout, hook.stderr)
+            assert len(hook.stdout.encode("utf-8")) < 10000, (form, "positive fixture exceeds base budget")
             assert "project: siege-utilities" in hook.stdout, (form, hook.stdout)
             emitted = re.findall(r"^(?:load|candidate): .*? \| path=(.*?) \| source=(.*?) \|", hook.stdout, re.MULTILINE)
             assert emitted, (form, hook.stdout)
@@ -168,6 +173,18 @@ def main() -> None:
                 if source.startswith("projects/"):
                     emitted_project_sources.add(source)
             assert PROJECT_SOURCES <= emitted_project_sources, (form, emitted_project_sources)
+
+            if form in {"nested", "flat"}:
+                long_package = temp / ("long-install-" + "x" * 140) / form
+                long_package.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(package, long_package)
+                overflow = run(["bash", str(long_package / "hooks/resolver/inject-resolver.sh")], input_text=payload)
+                assert overflow.returncode == 0, overflow.stderr
+                assert len(overflow.stdout.encode("utf-8")) < 10000, form
+                assert "state: over-budget" in overflow.stdout, (form, overflow.stdout)
+                assert (long_package / "skills/KERNEL.md").read_text() in overflow.stdout, form
+                assert not re.search(r"(?m)^(load|candidate):", overflow.stdout), form
+                assert "<project-resident>" not in overflow.stdout, form
 
             push_payload = json.dumps(
                 {"tool_input": {"command": "git push origin HEAD"}, "cwd": str(repo)}

@@ -24,7 +24,7 @@ import sys
 
 def main() -> int:
     try:
-        data = json.load(sys.stdin)
+        data = json.load(sys.stdin.buffer)
     except Exception:
         return 0
 
@@ -42,9 +42,10 @@ def main() -> int:
         if cur is None or cur == "":
             continue
         if isinstance(cur, (dict, list)):
-            print(json.dumps(cur))
+            value = json.dumps(cur)
         else:
-            print(cur)
+            value = str(cur)
+        sys.stdout.buffer.write((value + "\n").encode("utf-8"))
         return 0
 
     return 0

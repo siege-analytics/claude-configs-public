@@ -378,7 +378,7 @@ expect_block "(parse24) last cleanup option strip removes comment ticket" "$HOOK
     "$(make_payload 'git commit -m "subject" -m "#994" --cleanup=whitespace --cleanup=strip')"
 expect_block "(parse25) -e defaults cleanup to strip with no-op editor" "$HOOK" \
     "$(make_payload 'git commit -e -m "subject only" -m "#994"')"
-expect_pass "(parse26) --edit default strip preserves non-comment ticket" "$HOOK" \
+expect_block "(parse26) editor-dependent final message cannot be proven" "$HOOK" \
     "$(make_payload 'git commit --edit -m "subject" -m "Refs: #994"')"
 
 # --- ALLOWS: GitHub/GitLab style ---
@@ -481,9 +481,9 @@ expect_pass "(read15) plain log" "$HOOK" \
 
 # --- ALLOWS: amend/merge commits (skip enforcement) ---
 
-expect_pass "(u) git commit --amend" "$HOOK" \
+expect_block "(u) interactive amend message cannot be proven" "$HOOK" \
     "$(make_payload 'git commit --amend')"
-expect_pass "(v) git commit --no-edit" "$HOOK" \
+expect_block "(v) implicit no-edit message cannot be proven" "$HOOK" \
     "$(make_payload 'git commit --no-edit')"
 
 # Validate against actual final Git messages, including custom comment prefixes.
@@ -538,7 +538,7 @@ for i, (name, config, mode, editing, body, ticket, *extra) in enumerate(cases):
     subprocess.run(['git', '-C', str(repo)] + args, env=env, check=True, capture_output=True)
     final = subprocess.check_output(['git', '-C', str(repo), 'log', '-1', '--format=%B'], env=env, text=True)
     assert ('#994' in final) == ticket, (name, final)
-    assert result.returncode == (0 if ticket else 2), (name, result.returncode, result.stderr, final)
+    assert result.returncode == (0 if ticket and not editing else 2), (name, result.returncode, result.stderr, final)
 # Repository trailer commands must never run during a read-only hook probe.
 repo = base / 'trailer-command'; repo.mkdir()
 subprocess.run(['git', 'init', '-q', str(repo)], env=env, check=True)
@@ -588,6 +588,199 @@ print('  [PASS] four large-message controls and conflicting comment-prefix negat
 PY
 then
     _HARNESS_PASS=$((_HARNESS_PASS + 5))
+else
+    _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
+fi
+
+
+if python3 - "$HOOK" "$TMP" <<'PYCONTROLS'
+import json, os, pathlib, shlex, subprocess, sys
+hook, base = sys.argv[1], pathlib.Path(sys.argv[2])
+repo = base / 'opaque-ticket-controls'; repo.mkdir()
+foreign = base / 'foreign-ticket-controls'; foreign.mkdir()
+for directory, owner in ((repo, 'siege-analytics'), (foreign, 'foreign-owner')):
+    subprocess.run(['git', 'init', '-q', str(directory)], check=True, timeout=10)
+    subprocess.run(['git', '-C', str(directory), 'remote', 'add', 'origin',
+                    'https://github.com/' + owner + '/ticket-fixture.git'], check=True, timeout=10)
+commit = 'git commit -m "no reference"'
+commands = [
+    '(' + commit + ')',
+    'for item in one; do ' + commit + '; done',
+    'value=$(' + commit + ')',
+    'nohup ' + commit,
+    'echo input | xargs ' + commit,
+    'stdbuf -oL ' + commit,
+    'xcrun ' + commit,
+    'arch -arm64 ' + commit,
+    'caffeinate ' + commit,
+    'find . -maxdepth 0 -exec ' + commit + r' \;',
+    'watch ' + commit,
+    'script -q /dev/null ' + commit,
+    'flock lockfile ' + commit,
+    'chronic ' + commit,
+    'doas ' + commit,
+    'parallel ' + commit + ' ::: one',
+    "watch 'git commit -m no_reference'",
+    "find . -exec sh -c 'git commit -m no_reference' " + r'\;',
+    'printf %s "$(git commit -m no_reference)"',
+    'watch "git commit -m no_reference" &',
+    "env FOO=1 bash -c '(git commit -m none)'",
+    "sudo sh -c '`git commit -m none`'",
+    "time eval '(git commit -m none)'",
+    "nice bash -c 'true;(git commit -m none)'",
+]
+passed = 0
+def check(command, cwd, expected, extra=None):
+    global passed
+    payload = {'tool_name': 'Bash', 'cwd': str(cwd), 'tool_input': {'command': command}}
+    result = subprocess.run(['bash', hook], input=json.dumps(payload), cwd=cwd,
+                            env={**os.environ, **(extra or {})}, text=True, capture_output=True, timeout=20)
+    assert result.returncode == expected, (command, expected, result.returncode, result.stderr)
+    passed += 1
+outside_commit = 'git -C ' + shlex.quote(str(foreign)) + ' commit -m subject'
+for command_index, command in enumerate(commands):
+    check(command, repo, 2)
+    check(command + ' > ' + shlex.quote(str(repo / 'output')), repo, 2)
+    check('printf %s ' + shlex.quote(command) + ' > ' + shlex.quote(str(repo / 'prose')), repo, 0)
+    # Unsupported supplied code has unknown target state in every initial cwd.
+    check(command, foreign, 2 if command_index in {0, 1, 2, 18, 20, 21, 22, 23} else 0)
+    check(outside_commit + ' && ' + command, repo, 2)
+check(outside_commit + ' && printf %s ' + shlex.quote('git commit example'), repo, 0)
+check(outside_commit + ' && touch owned-file', repo, 0)
+for resource in ('issue', 'pr'):
+    prose = 'gh ' + resource + ' create --body ' + shlex.quote('see git commit docs')
+    check(prose, repo, 0)
+    check(prose + ' > ' + shlex.quote(str(repo / 'create-output')), repo, 0)
+    check(prose + " && watch 'git commit -m no_reference'", repo, 2)
+    check(prose + ' && git commit -m no_reference', repo, 2)
+for resource in ('issue', 'pr'):
+    prose = 'gh ' + resource + ' comment 1 --body ' + shlex.quote('please git commit later')
+    check(prose, repo, 0)
+    check(prose + ' > ' + shlex.quote(str(repo / 'comment-output')), repo, 0)
+    check(prose + " && watch 'git commit -m no_reference'", repo, 2)
+    check(prose + ' && git commit -m no_reference', repo, 2)
+for command in ("sed -i '' 's/a/git commit/' notes.md", "sed -i 's|a|git commit|g' notes.md"):
+    check(command, repo, 0)
+    check(command + " > output", repo, 0)
+    check(command + " && watch 'git commit -m none'", repo, 2)
+for command in ("sed -i '' 's/a/git commit/e' notes.md", "sed -i '' 'e git commit -m none' notes.md"):
+    check(command, repo, 2)
+for command in (
+    "watch 'git -C " + str(repo) + " commit -m subject'",
+    "watch 'git -c user.name=Fixture commit -m subject'",
+    "watch 'git --no-pager commit -m subject'",
+    "watch 'git -C " + str(repo) + " commit -m subject' > output",
+):
+    check(command, repo, 2)
+    check(command, foreign, 2 if '-C ' in command else 0)
+for cwd in (repo, foreign):
+    for operation, expected in (('commit -m subject', 2), ('status', 0), ('diff', 0), ("commit -m 'Refs: #1107'", 0)):
+        check('git -C ' + shlex.quote(str(repo)) + ' ' + operation + ' # comment', cwd, expected)
+    check('git -C ' + shlex.quote(str(foreign)) + ' commit -m subject # comment', cwd, 0)
+for marker in ('[task:  ]', '[task: \t ]', '[no-ticket: Reason: ; Evidence: yes; Falsification: yes]',
+               '[no-ticket: Reason: yes; Evidence: ; Falsification: yes]',
+               '[no-ticket: Reason: yes; Evidence: yes; Falsification: ]',
+               '[no-ticket: Reason: \t ; Evidence: yes; Falsification: yes]',
+               '[no-ticket: Reason: yes; Evidence: \t ; Falsification: yes]',
+               '[no-ticket: Reason: yes; Evidence: yes; Falsification: \t ]'):
+    check('git commit -m ' + shlex.quote(marker), repo, 2)
+for marker in ('[task: meaningful task]', '[no-ticket: Reason: own; Evidence: local; Falsification: tracked]'):
+    check('git commit -m ' + shlex.quote(marker), repo, 0)
+spaced = base / 'owned repository with spaces'
+spaced.mkdir()
+subprocess.run(['git', 'init', '-q', str(spaced)], check=True, timeout=10)
+subprocess.run(['git', '-C', str(spaced), 'remote', 'add', 'origin',
+                'https://github.com/siege-analytics/spaced.git'], check=True, timeout=10)
+wrapped = 'watch ' + shlex.quote('git -C ' + shlex.quote(str(spaced)) + ' commit -m subject')
+check(wrapped, repo, 2)
+check(wrapped, foreign, 2)
+check('git -C ' + shlex.quote(str(spaced)) + ' diff # comment', foreign, 0)
+for command in ('git-commit -m subject', '/usr/bin/git-commit -m subject',
+                "watch 'git-commit -m subject'", "watch '/usr/bin/git-commit -m subject'"):
+    check(command, repo, 2)
+    check(command, foreign, 0)
+for operation in ('status', 'diff'):
+    check('watch ' + shlex.quote('git -C ' + shlex.quote(str(repo)) + ' ' + operation), foreign, 0)
+    check('watch ' + shlex.quote('git -C ' + shlex.quote(str(foreign)) + ' ' + operation), repo, 0)
+for directory in (repo, foreign):
+    subprocess.run(['git', '-C', str(directory), 'config', 'alias.ci', 'commit'], check=True, timeout=10)
+check('(git ci -m subject)', repo, 2)
+check('(git ci -m subject)', foreign, 2)
+check('(git status)', foreign, 2)
+check('(git diff)', foreign, 2)
+assert passed == 193, passed
+navigation_start = passed
+for cwd in (repo, foreign):
+    for leader in ('cd', 'cd -P', 'cd -L', 'cd --', 'command cd', 'command builtin cd', 'command command cd', 'builtin cd'):
+        owned = leader + ' ' + shlex.quote(str(repo))
+        outside = leader + ' ' + shlex.quote(str(foreign))
+        check(owned + ' && git commit -m subject', cwd, 2)
+        check(owned + " && git commit -m 'Refs: #1107'", cwd, 0)
+        check(owned + ' && git status', cwd, 0)
+        check(outside + ' && git commit -m subject', cwd, 0)
+        check('watch ' + shlex.quote(owned + ' && git commit -m subject'), cwd, 2)
+        check('watch ' + shlex.quote(outside + ' && git commit -m subject'), cwd, 0)
+        check('watch ' + shlex.quote(owned + ' && git status'), cwd, 0)
+        check('watch ' + shlex.quote(outside + ' && git diff'), cwd, 0)
+    check('bash -c ' + shlex.quote('cd ' + shlex.quote(str(repo)) + " && git commit -m 'Refs: #1107'"), cwd, 0)
+    for separator in (';', '||'):
+        command = 'cd ' + shlex.quote(str(foreign)) + separator + ' git commit -m subject'
+        check(command, cwd, 2)
+        check('watch ' + shlex.quote(command), cwd, 2)
+    missing = str(base / 'missing-directory')
+    command = 'cd ' + shlex.quote(str(repo)) + ' && cd ' + shlex.quote(missing)
+    for separator in (';', '||'):
+        check(command + separator + ' git commit -m subject', cwd, 2)
+        check('watch ' + shlex.quote(command + separator + ' git commit -m subject'), cwd, 2)
+    for mutator in ('pushd ' + shlex.quote(str(repo)), 'popd',
+                    'eval ' + shlex.quote('cd ' + shlex.quote(str(repo))),
+                    'source /nonexistent/cwd-script', '. /nonexistent/cwd-script'):
+        command = mutator + ' && git commit -m subject'
+        check(command, cwd, 2)
+        check('watch ' + shlex.quote(command), cwd, 2)
+    for prefix in ('GIT_DIR=' + shlex.quote(str(repo / '.git')),
+                   'env GIT_DIR=' + shlex.quote(str(repo / '.git')),
+                   'GIT_WORK_TREE=' + shlex.quote(str(repo)) + ' GIT_DIR=' + shlex.quote(str(repo / '.git'))):
+        check(prefix + ' git commit -m subject', cwd, 2)
+        check('watch ' + shlex.quote(prefix + ' git commit -m subject'), cwd, 2)
+    for leader in ('export GIT_DIR=' + shlex.quote(str(repo / '.git')),
+                   'GIT_DIR=' + shlex.quote(str(repo / '.git'))):
+        check(leader + ' && git commit -m subject', cwd, 2)
+        check('watch ' + shlex.quote(leader + ' && git commit -m subject'), cwd, 2)
+    for leader in ('BASH_ENV=/nonexistent/startup bash -c ', 'env BASH_ENV=/nonexistent/startup bash -c '):
+        command = leader + shlex.quote('git commit -m subject')
+        check(command, cwd, 2)
+        check('watch ' + shlex.quote(command), cwd, 2)
+    check('cd relative-name && git commit -m subject', cwd, 2, {'CDPATH': str(repo.parent)})
+    check("printf %s 'cd; export GIT_DIR=owned; git commit'", cwd, 0)
+    check("echo cd && git commit -m 'Refs: #1107'", cwd, 0)
+    check('git status', cwd, 0)
+    for external in ('/usr/bin/command', '/usr/bin/env'):
+        check(external + ' cd ' + shlex.quote(str(foreign)) + ' && git commit -m subject', cwd, 2)
+foreign_sub = foreign / 'sub'; foreign_sub.mkdir()
+logical = repo / 'logical'; logical.symlink_to(foreign_sub, target_is_directory=True)
+check('cd -L ' + shlex.quote(str(logical / '..')) + ' && git commit -m subject', foreign, 2)
+check('cd -P ' + shlex.quote(str(logical / '..')) + ' && git commit -m subject', repo, 0)
+check('cd ' + shlex.quote(str(logical)) + ' && cd .. && git commit -m subject', foreign, 2)
+for cwd in (repo, foreign):
+    binding = 'CCP_TASK_ID=' + shlex.quote('siege-analytics/fixture#1107')
+    check(binding + ' git -C ' + shlex.quote(str(repo)) + " commit -m 'Refs: #1107'", cwd, 0)
+    check(binding + ' git -C ' + shlex.quote(str(repo)) + ' commit -m subject', cwd, 2)
+    check(binding + ' cd ' + shlex.quote(str(repo)) + " && git commit -m 'Refs: #1107'", cwd, 0)
+    check(binding + ' cd ' + shlex.quote(str(repo)) + ' && git commit -m subject', cwd, 2)
+    check('cd -P ' + shlex.quote(str(spaced)) + " && git commit -m 'Refs: #1107'", cwd, 0)
+    check('watch ' + shlex.quote('cd ' + shlex.quote(str(spaced)) + ' && git commit -m subject'), cwd, 2)
+for cwd in (repo, foreign):
+    check("bash -lc 'git commit -m subject'", cwd, 2)
+    check("bash -lc 'git status'", cwd, 0)
+    check('bash -lc ' + shlex.quote("printf %s 'git commit'"), cwd, 0)
+    check('sudo git -C ' + shlex.quote(str(foreign)) + ' commit -m subject', cwd, 2)
+    check('bash -c ' + shlex.quote('git -C ' + shlex.quote(str(foreign)) + ' commit -m subject'), cwd, 0)
+assert passed == 424, passed
+print('  [PASS] 424 actual dispatch/data/scope controls including ' + str(passed - navigation_start) + ' target-state cases')
+PYCONTROLS
+then
+    _HARNESS_PASS=$((_HARNESS_PASS + 424))
 else
     _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
 fi
