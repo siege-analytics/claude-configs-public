@@ -21,7 +21,7 @@ from task_actions import UnknownShape, shell_tokens, released_read_verdict, acti
 
 PROTECTED = {"main", "master", "develop", "dev", "development", "staging", "next", "integration"}
 BUILTINS = set("add am annotate apply archive bisect blame branch bundle cat-file check-attr check-ignore check-mailmap check-ref-format checkout checkout-index cherry cherry-pick clean clone column commit config count-objects credential describe diff diff-files diff-index diff-tree difftool fast-export fast-import fetch filter-branch fmt-merge-msg for-each-ref format-patch fsck gc get-tar-commit-id grep hash-object help index-pack init instaweb interpret-trailers log ls-files ls-remote ls-tree mailinfo mailsplit maintenance merge merge-base merge-file merge-index merge-one-file merge-tree mergetool mktag mktree multi-pack-index mv name-rev notes pack-objects pack-redundant pack-refs patch-id prune prune-packed pull push range-diff read-tree rebase reflog remote repack replace request-pull rerere reset restore rev-list rev-parse revert rm send-email send-pack shortlog show show-branch show-index show-ref sparse-checkout stage stash status stripspace submodule subtree switch symbolic-ref tag unpack-file unpack-objects update-index update-ref update-server-info var verify-commit verify-pack verify-tag version whatchanged worktree write-tree".split())
-SAFE_ENV = {"LANG", "LC_ALL", "LC_CTYPE", "GIT_PAGER", "PAGER", "GIT_TERMINAL_PROMPT", "GIT_OPTIONAL_LOCKS"}
+SAFE_ENV = {"CCP_TASK_ID", "LANG", "LC_ALL", "LC_CTYPE", "GIT_PAGER", "PAGER", "GIT_TERMINAL_PROMPT", "GIT_OPTIONAL_LOCKS"}
 
 
 class UnresolvedLiteralDispatch(UnknownShape):
@@ -109,6 +109,66 @@ def prefix(words, cwd):
     raise UnknownShape("recursive Git alias cannot be normalized")
 
 
+PARENT_TARGET_MUTATORS = {"cd", "pushd", "popd", "eval", "source", ".", "export", "unset", "declare", "typeset", "readonly", "set", "local", "if", "then", "else", "elif", "fi", "for", "while", "until", "do", "done", "case", "esac", "select", "function", "!"}
+
+
+def directory_target(words):
+    """Resolve only an explicit literal absolute cd; other mutators are unknown."""
+    if not words:
+        return None
+    raw = list(words)
+    environment = []
+    for _ in range(5):
+        leading = list(raw)
+        while leading and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", leading[0]):
+            leading.pop(0)
+        if leading and leading[0] != os.path.basename(leading[0]) and os.path.basename(leading[0]) in {"command", "env", "builtin"} and any(word in PARENT_TARGET_MUTATORS for word in leading[1:]):
+            raise UnknownShape("external wrappers do not prove parent cwd; use an explicit tool cwd or git -C /absolute/repo")
+        if raw[:1] == ["builtin"]:
+            raw = raw[1:]
+            if raw[:1] == ["--"]:
+                raw = raw[1:]
+            continue
+        try:
+            dispatch, bound = literal_prefix(raw, strict=True)
+        except UnknownShape as error:
+            raise UnknownShape("target wrapper is unproved; remove overrides and use an explicit tool cwd or git -C /absolute/repo") from error
+        environment.extend(bound)
+        if raw[:1] == ["env"] and any(word in PARENT_TARGET_MUTATORS for word in dispatch):
+            raise UnknownShape("external environment wrapper cannot prove parent cwd; use an explicit tool cwd or git -C /absolute/repo")
+        if dispatch == raw:
+            break
+        raw = dispatch
+    else:
+        if any(word in PARENT_TARGET_MUTATORS for word in raw):
+            raise UnknownShape("directory wrapper depth is unproved; use an explicit tool cwd or git -C /absolute/repo")
+        return None
+    dispatch = raw
+    if any(name not in SAFE_ENV for name in environment):
+        raise UnknownShape("target/startup environment is unproved; remove overrides and use an explicit tool cwd or git -C /absolute/repo")
+    if not dispatch or dispatch[0] not in PARENT_TARGET_MUTATORS:
+        if dispatch and (dispatch[0] in {"command", "builtin", "exec", "sudo", "time", "nice", "timeout", "env"} or dispatch[0].startswith("-")) and any(word in PARENT_TARGET_MUTATORS for word in dispatch[1:]):
+            raise UnknownShape("directory wrapper is unproved; use an explicit tool cwd or git -C /absolute/repo")
+        return None
+    if dispatch[0] != "cd" or any(name not in SAFE_ENV for name in environment):
+        raise UnknownShape("parent-shell directory state is unproved; use an explicit tool cwd or git -C /absolute/repo")
+    args = dispatch[1:]
+    physical = False
+    while args and args[0].startswith("-"):
+        option = args.pop(0)
+        if option == "--":
+            break
+        if option not in {"-P", "-L"}:
+            raise UnknownShape("unsupported cd option; use an explicit tool cwd or git -C /absolute/repo")
+        physical = option == "-P"
+    if len(args) != 1 or not os.path.isabs(args[0]) or (not physical and ".." in args[0].split("/")):
+        raise UnknownShape("cd target is unproved; use an explicit tool cwd or git -C /absolute/repo")
+    target = os.path.realpath(args[0])
+    if not os.path.isdir(target) or not os.access(target, os.X_OK):
+        raise UnknownShape("cd target is unavailable; use an explicit tool cwd or git -C /absolute/repo")
+    return target
+
+
 def invocations(command, cwd, depth=0, *, strict=False, companions=None, redirect_probe=False, inspection_comments=False):
     """Literal commands only. Preserve quote boundaries through shell_tokens."""
     if depth > 4:
@@ -137,14 +197,15 @@ def invocations(command, cwd, depth=0, *, strict=False, companions=None, redirec
     groups.append(words)
     if pending_redirect:
         raise UnknownShape("Git redirection target is missing")
-    if any(g[:1] == ["cd"] for g in groups) and any(op and word != "&&" for word, op, _ in parsed):
-        raise UnknownShape("Git directory changes require an explicit && chain")
     found = []
     for words in groups:
         if not words:
             continue
-        if words[0] == "cd" and len(words) == 2:
-            cwd = os.path.realpath(os.path.join(cwd, words[1]))
+        target = directory_target(words)
+        if target is not None:
+            if any(operator and word != "&&" for word, operator, _ in parsed):
+                raise UnknownShape("directory control flow is unproved; use an explicit tool cwd or git -C /absolute/repo")
+            cwd = target
             continue
         dispatch, environment = literal_prefix(words, strict=True) if strict else (words, [])
         if strict and dispatch:
@@ -279,8 +340,10 @@ def ticket_reference(message):
 
 
 
-def opaque_commit_scope(value, cwd, scoped=None, depth=0):
+def opaque_commit_scope(value, cwd, scoped=None, depth=0, *, navigation_unknown=False):
     """Inspection only: resolve literal Git options inside opaque argv."""
+    if released_read_verdict(value) == 0:
+        return False
     mentions_git = re.search(r"(?:^|[^0-9A-Za-z_.-])git(?:[-\s]|$)", value)
     if depth > 4:
         return bool(mentions_git)
@@ -288,17 +351,28 @@ def opaque_commit_scope(value, cwd, scoped=None, depth=0):
         parsed = shell_tokens(value, inspection_comments=True)
     except UnknownShape:
         value = re.sub(r"[\\\"']", "", value)
-        # An unparsed target override cannot borrow the payload CWD's scope.
-        if re.search(r"(?:^|[^0-9A-Za-z_.-])git(?:[-\s]|$)", value) and re.search(r"(?:^|\s)(?:-C|-c|--git-dir|--work-tree)", value):
-            return True
-        return bool(re.search(r"(?:^|[^0-9A-Za-z_.-])git(?:[-\s]|$)", value)
-                    and (in_scope(cwd) if scoped is None else scoped))
+        # Unparsed supplied code cannot establish any foreign target scope.
+        return bool(re.search(r"(?:^|[^0-9A-Za-z_.-])git(?:[-\s]|$)", value))
     words = []
-    for word, operator, glob in [*parsed, (";", True, ())]:
+    unsupported_flow = any(operator and word != "&&" for word, operator, _ in parsed)
+    for word, operator, _glob in [*parsed, (";", True, ())]:
         if not operator:
             words.append(word)
             continue
+        try:
+            target = directory_target(words)
+            if target is not None:
+                if unsupported_flow:
+                    navigation_unknown = True
+                elif not navigation_unknown:
+                    cwd, scoped = target, None
+                words = []
+                continue
+        except (UnknownShape, OSError, subprocess.SubprocessError):
+            navigation_unknown = True
         for index, argument in enumerate(words):
+            if navigation_unknown and (os.path.basename(argument) == "git" or os.path.basename(argument).startswith("git-")):
+                return True
             if os.path.basename(argument).startswith("git-"):
                 if any(option.startswith(('-C', '-c', '--git-dir', '--work-tree')) for option in words[index + 1:]):
                     return True
@@ -314,7 +388,7 @@ def opaque_commit_scope(value, cwd, scoped=None, depth=0):
                 except (UnknownShape, OSError, subprocess.SubprocessError):
                     return True
             elif argument != value and any(char.isspace() or char in "'\"`()" for char in argument):
-                if opaque_commit_scope(argument, cwd, scoped, depth + 1):
+                if opaque_commit_scope(argument, cwd, scoped, depth + 1, navigation_unknown=navigation_unknown):
                     return True
         words = []
     return False
@@ -352,7 +426,7 @@ def unresolved_commit_candidate(command, cwd, companions, *, scoped=None):
                 # Built-in content bodies are data; opaque executors stay code.
                 candidates.append(text.code_only(literal))
             else:
-                candidates.append(" ".join(words))
+                candidates.append(literal)
     return any(opaque_commit_scope(value, cwd, scoped) for value in candidates)
 
 
@@ -446,7 +520,7 @@ def main():
                 if isinstance(probe_error, UnresolvedLiteralDispatch):
                     # Its argument may be code that the data heuristic cannot
                     # unwrap. Preserve the existing conservative candidate test.
-                    if unresolved_commit_candidate(command, os.path.realpath(options.cwd or os.getcwd()), None, scoped=scoped):
+                    if opaque_commit_scope(command, os.path.realpath(options.cwd or os.getcwd()), scoped, navigation_unknown=True):
                         print("BLOCKED: Cannot safely determine ticketed Git commit: " + str(exc))
                         return 2
                     print("handled")

@@ -42,6 +42,31 @@ class Payload(unittest.TestCase):
         with self.assertRaises(ValueError):
             payload.metadata_environment(value)
 
+    def test_hub_preflight_is_bounded_and_real_oversize_pipeline_stays_closed(self):
+        import types
+        from unittest.mock import patch
+        hook = ROOT / 'hooks/agent-comms/hub-concurrency-gate.sh'
+        raw = json.dumps({'tool_input': {'message': 'x' * (2 * 1024 * 1024)}}).encode()
+        result = subprocess.run(['bash', str(hook)], input=raw, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn(b'1 MiB', result.stderr)
+        for small in (b'{', b'{}'):
+            result = subprocess.run(['bash', str(hook)], input=small, capture_output=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stderr)
+        preflight = hook.read_text().split("python3 -c '\n", 1)[1].split("\n'", 1)[0]
+        calls = []
+        class Bounded:
+            def read(inner, size=-1):
+                calls.append(size)
+                self.assertEqual(size, 1024 * 1024 + 1)
+                return raw[:size]
+        with patch.object(sys, 'stdin', types.SimpleNamespace(buffer=Bounded())), \
+                patch.object(json, 'loads', side_effect=AssertionError('oversize JSON was parsed')):
+            with self.assertRaises(SystemExit) as exit:
+                exec(compile(preflight, str(hook) + ':preflight', 'exec'), {})
+        self.assertEqual(exit.exception.code, 0)
+        self.assertEqual(calls, [1024 * 1024 + 1])
+
     def test_cli_rejects_ambiguous_invalid_and_oversize_input(self):
         for raw in ('{"cwd":"a","cwd":"b"}', '{"cwd":NaN}', '[1]', 'x' * (1024 * 1024 + 1), b'\xff'):
             result = subprocess.run([sys.executable, str(ROOT / 'hooks/lib/hook_payload.py')], input=raw.encode() if isinstance(raw, str) else raw, capture_output=True, timeout=20)

@@ -1,0 +1,15 @@
+# Independent current target-state scanner review
+
+Verdict: ACCEPT S01 and S02 individually for source tree3ca6468e20774b2a2236e70a5a94da17a17a9218 and selected evidence tree024bda9eef89996a87881de85ff8bdc501ed69e4. No must-fix found in these two dispositions. This is a current handler/caller review, not acceptance by inherited line number, unchanged AST or finding count.
+
+S01 ACCEPT. Reason: failure of the non-ticket absence probe does not supply absence authority. Current main falls through to the existing conservative literal-Git denial and retains its original policy error. Evidence: I reran four actual-main branch/destructive UnknownShape/OSError controls; each returned2 and preserved the original error. Falsification: a failed probe allowing the tested Git candidate or discarding its denial invalidates this disposition. Unrelated non-Git fallback is not a claim of blanket denial of arbitrary programs.
+
+S02 ACCEPT. Reason: actual hooks/_test callback fixtures exist and invoke production decisions outside the locator's expected directory/name convention. Evidence: current source closure independently ran42 paired actual-hook outcomes. For this fresh review I reran three prefix and three directory-inspector faults (UnknownShape, OSError, SubprocessError) with initial scope forced foreign; all six current actual-main outcomes denied2 with a blocking diagnostic. Current opaque navigation marks inspection failure unknown, propagates that state and does not donate foreign cwd proof to a possible literal Git operation. The author552-case callback result is attributed evidence, not an independent duplicate run. Twenty-three named exception clauses are not twenty-three individually raised exceptions; no all-handler coverage is claimed. Falsification: missing actual dispatch evidence, or a failed prefix/directory inspection receiving foreign-scope acceptance, invalidates this locator explanation.
+
+All nine source/test/scanner/map SHA256 identities match working bytes and selected Git tree. Retained raw bytes match embedded output and SHA25647d0988f76539afc07b36b0229147bed2eef82fd18e9ef69485db416d8bae372. Executed handler-controls.py matches the embedded source. Ten independent fault controls passed; independent-handler-controls.log retains the result. The selected scan remains complete non-clean exit1 with individual dispositions, no source suppression, ignore, exit mapping or count waiver. Aggregate producer completion, final publication reconciliation, protected CI and installation remain separate. Changed pins or caller behavior require renewed review.
+
+handler-controls.py SHA256 b4f658a2b4e48e93aacfc542a0131309a7ffefa10fb204e724e207cd95e31a0e
+
+independent-handler-controls.log SHA256 10b6675bf72a1175c348ccec142b1be45fae438f200a3a310a623f7694ca1016
+
+Verified-by: independent python3 -B handler-controls.py (ten outcomes PASS); current catch/caller inspection; nine working/tree identity checks; raw/control source comparison. Prior42 actual-hook independent outcomes are retained in independent-target-state-closure.md.

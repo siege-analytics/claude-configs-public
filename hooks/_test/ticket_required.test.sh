@@ -594,7 +594,7 @@ fi
 
 
 if python3 - "$HOOK" "$TMP" <<'PYCONTROLS'
-import json, pathlib, shlex, subprocess, sys
+import json, os, pathlib, shlex, subprocess, sys
 hook, base = sys.argv[1], pathlib.Path(sys.argv[2])
 repo = base / 'opaque-ticket-controls'; repo.mkdir()
 foreign = base / 'foreign-ticket-controls'; foreign.mkdir()
@@ -630,19 +630,20 @@ commands = [
     "nice bash -c 'true;(git commit -m none)'",
 ]
 passed = 0
-def check(command, cwd, expected):
+def check(command, cwd, expected, extra=None):
     global passed
     payload = {'tool_name': 'Bash', 'cwd': str(cwd), 'tool_input': {'command': command}}
     result = subprocess.run(['bash', hook], input=json.dumps(payload), cwd=cwd,
-                            text=True, capture_output=True, timeout=20)
+                            env={**os.environ, **(extra or {})}, text=True, capture_output=True, timeout=20)
     assert result.returncode == expected, (command, expected, result.returncode, result.stderr)
     passed += 1
 outside_commit = 'git -C ' + shlex.quote(str(foreign)) + ' commit -m subject'
-for command in commands:
+for command_index, command in enumerate(commands):
     check(command, repo, 2)
     check(command + ' > ' + shlex.quote(str(repo / 'output')), repo, 2)
     check('printf %s ' + shlex.quote(command) + ' > ' + shlex.quote(str(repo / 'prose')), repo, 0)
-    check(command, foreign, 0)
+    # Unsupported supplied code has unknown target state in every initial cwd.
+    check(command, foreign, 2 if command_index in {0, 1, 2, 18, 20, 21, 22, 23} else 0)
     check(outside_commit + ' && ' + command, repo, 2)
 check(outside_commit + ' && printf %s ' + shlex.quote('git commit example'), repo, 0)
 check(outside_commit + ' && touch owned-file', repo, 0)
@@ -704,14 +705,82 @@ for operation in ('status', 'diff'):
 for directory in (repo, foreign):
     subprocess.run(['git', '-C', str(directory), 'config', 'alias.ci', 'commit'], check=True, timeout=10)
 check('(git ci -m subject)', repo, 2)
-check('(git ci -m subject)', foreign, 0)
-check('(git status)', foreign, 0)
-check('(git diff)', foreign, 0)
+check('(git ci -m subject)', foreign, 2)
+check('(git status)', foreign, 2)
+check('(git diff)', foreign, 2)
 assert passed == 193, passed
-print('  [PASS] 193 actual opaque-dispatch, redirect, quoted-prose, scope and mixed-command controls')
+navigation_start = passed
+for cwd in (repo, foreign):
+    for leader in ('cd', 'cd -P', 'cd -L', 'cd --', 'command cd', 'command builtin cd', 'command command cd', 'builtin cd'):
+        owned = leader + ' ' + shlex.quote(str(repo))
+        outside = leader + ' ' + shlex.quote(str(foreign))
+        check(owned + ' && git commit -m subject', cwd, 2)
+        check(owned + " && git commit -m 'Refs: #1107'", cwd, 0)
+        check(owned + ' && git status', cwd, 0)
+        check(outside + ' && git commit -m subject', cwd, 0)
+        check('watch ' + shlex.quote(owned + ' && git commit -m subject'), cwd, 2)
+        check('watch ' + shlex.quote(outside + ' && git commit -m subject'), cwd, 0)
+        check('watch ' + shlex.quote(owned + ' && git status'), cwd, 0)
+        check('watch ' + shlex.quote(outside + ' && git diff'), cwd, 0)
+    check('bash -c ' + shlex.quote('cd ' + shlex.quote(str(repo)) + " && git commit -m 'Refs: #1107'"), cwd, 0)
+    for separator in (';', '||'):
+        command = 'cd ' + shlex.quote(str(foreign)) + separator + ' git commit -m subject'
+        check(command, cwd, 2)
+        check('watch ' + shlex.quote(command), cwd, 2)
+    missing = str(base / 'missing-directory')
+    command = 'cd ' + shlex.quote(str(repo)) + ' && cd ' + shlex.quote(missing)
+    for separator in (';', '||'):
+        check(command + separator + ' git commit -m subject', cwd, 2)
+        check('watch ' + shlex.quote(command + separator + ' git commit -m subject'), cwd, 2)
+    for mutator in ('pushd ' + shlex.quote(str(repo)), 'popd',
+                    'eval ' + shlex.quote('cd ' + shlex.quote(str(repo))),
+                    'source /nonexistent/cwd-script', '. /nonexistent/cwd-script'):
+        command = mutator + ' && git commit -m subject'
+        check(command, cwd, 2)
+        check('watch ' + shlex.quote(command), cwd, 2)
+    for prefix in ('GIT_DIR=' + shlex.quote(str(repo / '.git')),
+                   'env GIT_DIR=' + shlex.quote(str(repo / '.git')),
+                   'GIT_WORK_TREE=' + shlex.quote(str(repo)) + ' GIT_DIR=' + shlex.quote(str(repo / '.git'))):
+        check(prefix + ' git commit -m subject', cwd, 2)
+        check('watch ' + shlex.quote(prefix + ' git commit -m subject'), cwd, 2)
+    for leader in ('export GIT_DIR=' + shlex.quote(str(repo / '.git')),
+                   'GIT_DIR=' + shlex.quote(str(repo / '.git'))):
+        check(leader + ' && git commit -m subject', cwd, 2)
+        check('watch ' + shlex.quote(leader + ' && git commit -m subject'), cwd, 2)
+    for leader in ('BASH_ENV=/nonexistent/startup bash -c ', 'env BASH_ENV=/nonexistent/startup bash -c '):
+        command = leader + shlex.quote('git commit -m subject')
+        check(command, cwd, 2)
+        check('watch ' + shlex.quote(command), cwd, 2)
+    check('cd relative-name && git commit -m subject', cwd, 2, {'CDPATH': str(repo.parent)})
+    check("printf %s 'cd; export GIT_DIR=owned; git commit'", cwd, 0)
+    check("echo cd && git commit -m 'Refs: #1107'", cwd, 0)
+    check('git status', cwd, 0)
+    for external in ('/usr/bin/command', '/usr/bin/env'):
+        check(external + ' cd ' + shlex.quote(str(foreign)) + ' && git commit -m subject', cwd, 2)
+foreign_sub = foreign / 'sub'; foreign_sub.mkdir()
+logical = repo / 'logical'; logical.symlink_to(foreign_sub, target_is_directory=True)
+check('cd -L ' + shlex.quote(str(logical / '..')) + ' && git commit -m subject', foreign, 2)
+check('cd -P ' + shlex.quote(str(logical / '..')) + ' && git commit -m subject', repo, 0)
+check('cd ' + shlex.quote(str(logical)) + ' && cd .. && git commit -m subject', foreign, 2)
+for cwd in (repo, foreign):
+    binding = 'CCP_TASK_ID=' + shlex.quote('siege-analytics/fixture#1107')
+    check(binding + ' git -C ' + shlex.quote(str(repo)) + " commit -m 'Refs: #1107'", cwd, 0)
+    check(binding + ' git -C ' + shlex.quote(str(repo)) + ' commit -m subject', cwd, 2)
+    check(binding + ' cd ' + shlex.quote(str(repo)) + " && git commit -m 'Refs: #1107'", cwd, 0)
+    check(binding + ' cd ' + shlex.quote(str(repo)) + ' && git commit -m subject', cwd, 2)
+    check('cd -P ' + shlex.quote(str(spaced)) + " && git commit -m 'Refs: #1107'", cwd, 0)
+    check('watch ' + shlex.quote('cd ' + shlex.quote(str(spaced)) + ' && git commit -m subject'), cwd, 2)
+for cwd in (repo, foreign):
+    check("bash -lc 'git commit -m subject'", cwd, 2)
+    check("bash -lc 'git status'", cwd, 0)
+    check('bash -lc ' + shlex.quote("printf %s 'git commit'"), cwd, 0)
+    check('sudo git -C ' + shlex.quote(str(foreign)) + ' commit -m subject', cwd, 2)
+    check('bash -c ' + shlex.quote('git -C ' + shlex.quote(str(foreign)) + ' commit -m subject'), cwd, 0)
+assert passed == 424, passed
+print('  [PASS] 424 actual dispatch/data/scope controls including ' + str(passed - navigation_start) + ' target-state cases')
 PYCONTROLS
 then
-    _HARNESS_PASS=$((_HARNESS_PASS + 193))
+    _HARNESS_PASS=$((_HARNESS_PASS + 424))
 else
     _HARNESS_FAIL=$((_HARNESS_FAIL + 1))
 fi
