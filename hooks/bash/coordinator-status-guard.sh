@@ -309,6 +309,14 @@ ARTIFACT_CONDITIONAL_START = re.compile(
 )
 
 
+# Completion of the artifact itself is not completion of the project lane.
+# Remove only the named subject/predicate, retaining other clauses to inspect.
+ARTIFACT_RESULT = re.compile(
+    r'\b(?:review|investigation|fact[ -]sheet|audit|checklist|(?:(?:named|listed|adversarial)[ \t]+)?checks)'
+    r'[ \t]+(?:(?:is|are|was|were|has[ \t]+been|have[ \t]+been)[ \t]+)?(?:complete|completed|done)\b'
+)
+
+
 def artifact_claims(lowered):
     """Lines that would count as completion claims in an unmarked comment.
 
@@ -320,6 +328,7 @@ def artifact_claims(lowered):
     for raw in lowered.splitlines():
         line = re.sub(r'^(?:[ \t>#*_`|-]+|\[[ x]\][ \t]*|[0-9]+[.)][ \t]*)+', '', raw)
         line = re.sub(r'[*_`]+', '', line).strip()
+        line = ARTIFACT_RESULT.sub('', line)
         if not line or not COMPLETION_RE.search(line):
             continue
         field = re.match(r'(.{1,40}?)(?::|[ \t]+(?:—|--)[ \t]+)[ \t]*(.*)', line)

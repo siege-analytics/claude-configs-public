@@ -96,11 +96,11 @@ if echo "$COMMIT_MSG" | grep -qF '[no-review]'; then
     fi
 fi
 
-if [[ "$NO_REVIEW_A" != "true" ]] && ! echo "$TRAILERS" | grep -qi '^Self-Review:'; then
+if [[ "$NO_REVIEW_A" != "true" ]] && ! echo "$TRAILERS" | grep -qi '^Self-Review:[[:space:]]*\S'; then
     MISSING+=("Self-Review: $(trailer_example Self-Review)")
 fi
 # Tier B/C require a durable focused/full artifact.
-if [[ "$TIER_VALUE" != "A" ]] && ! echo "$TRAILERS" | grep -qi '^Self-Review-Source:'; then
+if [[ "$TIER_VALUE" != "A" ]] && ! echo "$TRAILERS" | grep -qi '^Self-Review-Source:[[:space:]]*\S'; then
     MISSING+=("Self-Review-Source: $(trailer_example Self-Review-Source)")
 fi
 if [[ "$TIER_VALUE" == "C" ]]; then
