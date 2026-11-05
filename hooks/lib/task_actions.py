@@ -375,6 +375,62 @@ def _has_symlink(path: str, limit: int = 2000) -> bool:
     return False
 
 
+def _copy_destinations(sources, destination, options, cwd):
+    """Actual copied names plus bounded existing descendants, never just a parent."""
+    raw = os.path.join(cwd, destination)
+    options = options[:options.index('--')] if '--' in options else options
+    no_directory = any((t.startswith('-') and not t.startswith('--') and 'T' in t[1:])
+                       or _long_option_matches(t, ('--no-target-directory',)) for t in options)
+    if any(_long_option_matches(t, ('--parents',)) for t in options if t.startswith('--')):
+        raise UnknownShape('copy --parents needs explicit destination modeling; use explicit source/destination names')
+    targets = [raw]
+    if os.path.isdir(raw) and not no_directory:
+        targets = [os.path.join(raw, os.path.basename(os.path.normpath(source))) for source in sources]
+        # Recursive trailing-slash and /. semantics differ across cp versions.
+        # Count the merge destination as well as the named child, conservatively.
+        if any(source.endswith(('/', '/.', '/..')) for source in sources):
+            targets.append(raw)
+    directories = []
+    result = []
+    def unreadable(error):
+        raise UnknownShape('cannot inspect existing copy destination') from error
+    for target in targets:
+        result.append(canonical(target))
+        if os.path.isdir(target) and not os.path.islink(target):
+            directories.append(canonical(target))
+            for root, dirs, files in os.walk(target, onerror=unreadable, followlinks=False):
+                for name in dirs + files:
+                    child = os.path.join(root, name)
+                    result.append(canonical(child))
+                    if len(result) > 2000:
+                        raise UnknownShape('copy destination inspection exceeds bounded scope; split the copy')
+                    if os.path.isdir(child) and not os.path.islink(child):
+                        directories.append(canonical(child))
+    return result, directories
+
+
+def _commit_write_operands(args):
+    """Commit message files are input, not worktree mutation targets."""
+    result = []
+    i = 0
+    while i < len(args):
+        token = args[i]
+        if token == '--':
+            result.extend(args[i:])
+            break
+        if token in {'-F', '--file'}:
+            if i + 1 >= len(args):
+                raise UnknownShape('Git commit message option needs a file')
+            i += 2
+            continue
+        if token.startswith('--file=') or token.startswith('-F') and len(token) > 2:
+            i += 1
+            continue
+        result.append(token)
+        i += 1
+    return result
+
+
 def _git_toplevel(directory: str) -> str:
     try:
         return canonical(subprocess.check_output(["git", "-C", directory, "rev-parse", "--show-toplevel"], text=True, stderr=subprocess.DEVNULL, timeout=3).strip())
@@ -779,6 +835,8 @@ def _action(command: str, cwd: str) -> dict:
     file_paths = []
     remote_repos = []
     remote_actions = []
+    mutation_commands = 0
+    commit_commands = 0
     unproven_companions = []
     args = []
     arg_globs = []
@@ -786,7 +844,7 @@ def _action(command: str, cwd: str) -> dict:
     binding = ""
 
     def finish():
-        nonlocal args, arg_globs, effective, reads, binding, diagnostic, self_managed
+        nonlocal args, arg_globs, effective, reads, binding, diagnostic, self_managed, mutation_commands, commit_commands
         if not args:
             return
         while args and args[0].startswith("CCP_TASK_ID="):
@@ -832,6 +890,7 @@ def _action(command: str, cwd: str) -> dict:
             if any(arg_globs):
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             reads = False
+            mutation_commands += 1
             project = github_project_action(args)
             if project is not None:
                 remote_actions.append(project)
@@ -865,7 +924,11 @@ def _action(command: str, cwd: str) -> dict:
                     raise UnknownShape("Git helper execution has unbounded effects; use --no-textconv/--no-ext-diff for inspection")
                 local = operation["cwd"]
                 paths.append(_git_toplevel(local))
-                git_operands = [x.split('=', 1)[-1] if '=' in x else x for x in operation["args"][1:]]
+                rest = operation['args'][1:]
+                if operation['args'][0] == 'commit':
+                    commit_commands += 1
+                    rest = _commit_write_operands(rest)
+                git_operands = [x.split('=', 1)[-1] if '=' in x else x for x in rest]
                 paths.extend(canonical(x, local) for x in git_operands if '/' in x and '://' not in x and not x.startswith('-'))
             elif args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown", "patch"}:
                 # Options that take the next token as their value. Without this,
@@ -873,6 +936,7 @@ def _action(command: str, cwd: str) -> dict:
                 # review): GNU tools permute options, so values can trail.
                 value_options = {
                     'touch': {'-r', '--reference', '-d', '--date', '-t'},
+                    'mkdir': {'-m', '--mode'},
                     'cp': {'-S', '--suffix'}, 'mv': {'-S', '--suffix'},
                     'chmod': {'--reference'}, 'chown': {'--reference'},
                 }.get(args[0], set())
@@ -904,14 +968,14 @@ def _action(command: str, cwd: str) -> dict:
                         skip = True
                     elif args[0] in {'cp', 'mv'} and not token.startswith('--') and token.endswith('S'):
                         skip = True  # a short cluster such as -aS takes the next token
-                if args[0] == 'cp' and not _cp_link_copy(args[1:]) and not (
-                        _cp_keeps_symlinks(args[1:])
-                        and any(_has_symlink(os.path.join(effective, x)) for x in operands[:-1])):
-                    # Common copy form: source(s) are reads, final operand writes.
-                    # A link copy, or a copy that carries a symlink across, makes
-                    # the destination reach the source, so every operand is a
-                    # target (#1100).
-                    operands = operands[-1:]
+                copied_directories = []
+                if args[0] in {'cp', 'mv'} and len(operands) >= 2:
+                    sources, destination = operands[:-1], operands[-1]
+                    targets, copied_directories = _copy_destinations(sources, destination, args[1:], effective)
+                    source_writes = (args[0] == 'mv' or _cp_link_copy(args[1:]) or
+                                     _cp_keeps_symlinks(args[1:]) and any(_has_symlink(os.path.join(effective, x)) for x in sources))
+                    operands = (sources if source_writes else []) + targets
+                    directory_paths.extend(copied_directories)
                 elif args[0] in {'chmod', 'chown'} and not has_reference:
                     operands = operands[1:]  # the first operand is the mode/owner
                 operands = operands + option_paths
@@ -921,7 +985,7 @@ def _action(command: str, cwd: str) -> dict:
                     if args[0] == 'rmdir':
                         directory_removals.extend(canonical(x, effective) for x in operands)
                 else:
-                    file_paths.extend(canonical(x, effective) for x in operands)
+                    file_paths.extend(canonical(x, effective) for x in operands if canonical(x, effective) not in copied_directories)
                     if args[0] == 'rm':
                         file_removals.extend(canonical(x, effective) for x in operands)
                 if not operands:
@@ -1024,6 +1088,8 @@ def _action(command: str, cwd: str) -> dict:
                 raise UnknownShape("unsupported shell operator")
             i += 1
         finish()
+        if commit_commands and mutation_commands > commit_commands:
+            raise UnknownShape('separate configuration/file mutations from commit calls; run git commit -F FILE first, then a separately scoped cleanup command')
     except UnknownShape as e:
         return {"read_only": False, "paths": list(dict.fromkeys(paths + [effective])), "error": str(e), "binding": binding}
     if remote_repos or remote_actions:
