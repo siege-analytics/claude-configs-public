@@ -64,6 +64,11 @@ Update after the first commit (cdee884):
 - `session_signal_resolution.test.sh` fails the same 2 cases on that clean export ("hook JSON session id beats workspace root", "repo-matched singleton not bound under unknown session").
 - The files after those 40 did not run locally.
 - develop (7e1e0ae, which contains main f004df3c) was merged into this branch as instructed by the hub. Develop's tree equals the base, so the merge brought no file changes.
+- Review of 85bdbff (Root, posted on PR #1179) found two must-fixes in `test-tracking-guard.sh`, fixed in the next commit:
+  - (1) `ct_code_only` dropped double-quoted text and unquoted heredoc bodies whole, hiding a `$(git push)` or backtick substitution the shell still runs. A command with any `$(` or backtick now keeps the raw text. Cases 1162k, 1162l and 1162m.
+  - (2) Without perl the listing ran unbounded. It now falls back to a python3 runner with the same 6 s deadline. With neither runner it blocks and names the prerequisite. Cases 1162n and 1162o.
+  - `test_tracking_guard.test.sh`: 25 passed, 0 failed.
+  - Mutation checks M7 (guard dropped) and M8 (python3 branch without a deadline) each made the test fail, as did M3 and M4 again.
 - No test-evidence receipt could be recorded for `hooks/lib/craft-settings-router.py`. This session's working directory is the configs clone, so two hook stacks run: the Craft workspace stack and the clone's project stack. Each requires its own copy of `hooks/lib/test-evidence.py` as the producer path, so neither path is accepted by both.
 
 Defect found by the existing suite and fixed before commit:

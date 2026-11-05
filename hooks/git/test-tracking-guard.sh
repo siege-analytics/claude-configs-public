@@ -87,10 +87,16 @@ fi
 # keeps `bash -c` arguments and unbalanced text, and falls back to the raw
 # command when its helper cannot run, so a real push still matches. Without
 # the library at all, the raw command is matched as before.
+# ct_code_only drops double-quoted text and heredoc bodies whole, but a `$(...)`
+# or backtick inside them still runs: `echo "$(git push)"` pushes. A command
+# with any live expansion keeps the raw text, which over-matches (#1179 review).
 COMMAND_CODE=$COMMAND
 source "$HOOK_DIR/../lib/command-text.sh" 2>/dev/null
 if declare -F ct_code_only >/dev/null; then
-    COMMAND_CODE=$(ct_code_only "$COMMAND")
+    case "$COMMAND" in
+        *'$('*|*'`'*) ;;
+        *) COMMAND_CODE=$(ct_code_only "$COMMAND") ;;
+    esac
 fi
 TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge)|glab[[:space:]]+mr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
 if ! printf '%s\n' "$COMMAND_CODE" | grep -qE "$TRIGGERS"; then
@@ -157,16 +163,37 @@ fi
 LIST_SECONDS=6
 LIST_START=$SECONDS
 LIST_CMD=(git -C "$REPO_ROOT" ls-files --others --ignored --exclude-standard -- ':(glob)**/tests/**/test_*.py')
+# Every path has a deadline: there is no unbounded fallback (#1179 review).
+# 142 is the shell's code for SIGALRM; both runners report a timeout with it.
+LIST_RUNNER=""
 if command -v perl >/dev/null 2>&1; then
+    LIST_RUNNER=perl
     # alarm survives exec, so git itself receives SIGALRM at the deadline.
     IGNORED_UNTRACKED=$(perl -e 'alarm shift; exec @ARGV or exit 127' "$LIST_SECONDS" "${LIST_CMD[@]}" 2>/dev/null)
     LIST_RC=$?
-else
-    IGNORED_UNTRACKED=$("${LIST_CMD[@]}" 2>/dev/null)
+elif command -v python3 >/dev/null 2>&1; then
+    LIST_RUNNER=python3
+    # subprocess.run kills the child when the timeout expires.
+    IGNORED_UNTRACKED=$(python3 -c '
+import subprocess, sys
+try:
+    r = subprocess.run(sys.argv[2:], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=float(sys.argv[1]))
+except subprocess.TimeoutExpired:
+    sys.exit(142)
+except OSError:
+    sys.exit(127)
+sys.stdout.buffer.write(r.stdout)
+sys.exit(r.returncode if r.returncode >= 0 else 128 - r.returncode)
+' "$LIST_SECONDS" "${LIST_CMD[@]}" 2>/dev/null)
     LIST_RC=$?
+else
+    IGNORED_UNTRACKED=""
+    LIST_RC=127
 fi
 if [[ "$LIST_RC" -ne 0 ]]; then
-    if [[ "$LIST_RC" -eq 142 ]]; then
+    if [[ -z "$LIST_RUNNER" ]]; then
+        LIST_REASON="could not run: neither perl nor python3 is on PATH to bound it"
+    elif [[ "$LIST_RC" -eq 142 ]]; then
         LIST_REASON="did not finish within its ${LIST_SECONDS}s bound"
     else
         LIST_REASON="failed with exit status ${LIST_RC}"

@@ -149,6 +149,22 @@ expect_block_because \
   "$HOOK" "$(payload "echo don't && git push" "$R1")" \
   "silently git-ignored"
 
+# A substitution inside quotes or an unquoted heredoc still runs (#1179 review).
+expect_block_because \
+  "1162k double-quoted \$(git push) still blocks" \
+  "$HOOK" "$(payload 'echo "$(git push)"' "$R1")" \
+  "silently git-ignored"
+expect_block_because \
+  "1162l double-quoted backtick push still blocks" \
+  "$HOOK" "$(payload 'echo "`git push`"' "$R1")" \
+  "silently git-ignored"
+expect_block_because \
+  "1162m unquoted heredoc with \$(git push) still blocks" \
+  "$HOOK" "$(payload 'cat <<EOF
+$(git push)
+EOF' "$R1")" \
+  "silently git-ignored"
+
 # --- #1162: the ignored-file listing is bounded and never fails open ---
 REAL_GIT=$(command -v git)
 FAKE_SLOW="$WORK/fake-slow-git"
@@ -181,6 +197,42 @@ PATH="$FAKE_FAIL:$PATH" expect_block_because \
   "1162i failed listing blocks instead of reading as no offenders" \
   "$HOOK" "$(payload "git push" "$R2")" \
   "failed with exit status 128"
+
+# Without perl the listing still has a deadline (python3), and without either
+# runner it blocks naming the prerequisite; it never runs unbounded (#1179 review).
+# The sandbox PATH holds every system tool except perl and python.
+SANDBOX="$WORK/no-runner-bin"
+PYONLY="$WORK/python-only-bin"
+mkdir -p "$SANDBOX" "$PYONLY"
+for d in /usr/bin /bin; do
+  for f in "$d"/*; do
+    b="${f##*/}"
+    case "$b" in perl*|python*) continue ;; esac
+    [[ -e "$SANDBOX/$b" ]] || ln -s "$f" "$SANDBOX/$b"
+  done
+done
+ln -sf "$REAL_GIT" "$SANDBOX/git"
+ln -s "$(python3 -c 'import sys; print(sys.executable)')" "$PYONLY/python3"
+_PY_START=$SECONDS
+PATH="$FAKE_SLOW:$SANDBOX:$PYONLY" expect_block_because \
+  "1162n without perl, python3 bounds the slow listing" \
+  "$HOOK" "$(payload "git push" "$R2")" \
+  "did not finish within its 6s bound"
+if (( SECONDS - _PY_START < 10 )); then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1)); printf '  [PASS] 1162n python3-bounded listing returned inside the 10s hook timeout\n'
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1)); _HARNESS_FAILED_NAMES+=("1162n python3 bound")
+  printf '  [FAIL] 1162n python3-bounded listing took %ss\n' "$((SECONDS - _PY_START))"
+fi
+# No python3 either: payload extraction fails, so run from inside the repo,
+# where the hook's native git-hook path still reaches the listing.
+OUT_NR=$(cd "$R2" && printf '%s' "$(payload "git push" "$R2")" | PATH="$SANDBOX" bash "$HOOK" 2>&1); RC_NR=$?
+if [[ $RC_NR -eq 2 && "$OUT_NR" == *"neither perl nor python3"* ]]; then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1)); printf '  [PASS] 1162o no bounded runner blocks and names the prerequisite\n'
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1)); _HARNESS_FAILED_NAMES+=("1162o no runner")
+  printf '  [FAIL] 1162o rc=%s: %s\n' "$RC_NR" "${OUT_NR:0:300}"
+fi
 
 # --- #1162: many offenders are listed in one pass and capped ---
 R7=$(mkrepo many)

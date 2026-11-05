@@ -5450,6 +5450,7 @@
         "hooks/_test/craft_workspace_trust.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/hook_path.test.sh",
         "hooks/_test/hook_payload.test.sh",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
@@ -8984,6 +8985,7 @@
         "hooks/_test/detect_ai_fingerprints.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/hook_path.test.sh",
         "hooks/_test/pr_base_guard.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/read_allowlist.test.sh",
@@ -9436,7 +9438,8 @@
         "bin/_test/review_risk_test.py",
         "bin/_test/scanner_source_test.py",
         "hooks/_test/detect_ai_fingerprints.test.sh",
-        "hooks/_test/git_hook_fast_skip.test.sh"
+        "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/hook_path.test.sh"
       ],
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
@@ -10870,6 +10873,7 @@
         "hooks/_test/craft_workspace_trust.test.sh",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/hook_path.test.sh",
         "hooks/_test/hook_payload.test.sh",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
