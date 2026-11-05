@@ -40,3 +40,7 @@ Both accepted risk views remain; unknown and mixed commands retain the conservat
 After resolving the actual combined resolver conflict, ten named-staging tests passed in 9.964 seconds and eleven test-execution risk tests passed in 19.456 seconds. Logs: /tmp/ccp-batch-git-add.log and /tmp/ccp-batch-pytest-risk.log. Individual #1173 full protected CI passed; combined full CI and native installation are pending.
 
 Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-public/pull/1177
+
+## Own-session operand integration
+
+Integrated reviewed #1178 head4312e8f without a source conflict. On the combined source, nine own-session operand tests passed in 8.366 seconds and thirteen project-scope tests passed in 23.433 seconds. Logs: /tmp/ccp-batch-own-session.log and /tmp/ccp-batch-project.log. Independent source acceptance binds the copied-destination and commit-message model to task_actions SHA af7a232b. Real copy effects and alias denials remain separate from installed-session proof, which is still pending.
