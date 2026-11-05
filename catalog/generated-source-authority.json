@@ -2737,30 +2737,30 @@
       "artifacts": {
         "claude-code": {
           "destination": "dist/claude-code/skills/self-review",
-          "file_count": 1,
-          "tree_sha256": "34b65e9ca293f1bd7765d14828041cbd96d4bbf2ee076216581b8d6b4d631dd3"
+          "file_count": 3,
+          "tree_sha256": "5dc2d52cfbf644d0ed999c9462b466b5ec233d4475a2df65651141140411a452"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/self-review",
-          "file_count": 1,
-          "tree_sha256": "34b65e9ca293f1bd7765d14828041cbd96d4bbf2ee076216581b8d6b4d631dd3"
+          "file_count": 3,
+          "tree_sha256": "5dc2d52cfbf644d0ed999c9462b466b5ec233d4475a2df65651141140411a452"
         },
         "flat": {
           "destination": "dist/flat/skills/self-review",
-          "file_count": 1,
-          "tree_sha256": "34b65e9ca293f1bd7765d14828041cbd96d4bbf2ee076216581b8d6b4d631dd3"
+          "file_count": 3,
+          "tree_sha256": "5dc2d52cfbf644d0ed999c9462b466b5ec233d4475a2df65651141140411a452"
         },
         "nested": {
           "destination": "dist/nested/skills/self-review",
-          "file_count": 1,
-          "tree_sha256": "34b65e9ca293f1bd7765d14828041cbd96d4bbf2ee076216581b8d6b4d631dd3"
+          "file_count": 3,
+          "tree_sha256": "5dc2d52cfbf644d0ed999c9462b466b5ec233d4475a2df65651141140411a452"
         }
       },
       "canonical_source": "skills/self-review/SKILL.md",
       "kind": "skill",
       "slug": "self-review",
-      "source_file_count": 1,
-      "source_tree_sha256": "13e38060ba40b73b35cc7b149c2082f2aa0988f8d164ef069d86002689a18d63"
+      "source_file_count": 3,
+      "source_tree_sha256": "9b79b88e1fdc0557f523dbb024c2fc2905fae0797b862f93dfcbca4ff7f18417"
     },
     {
       "artifacts": {
@@ -5755,8 +5755,8 @@
     "artifact_snapshot_count": 804,
     "canonical_source_count": 198,
     "destination_collision_count": 0,
-    "generated_file_mapping_count": 2916,
-    "source_owned_file_count": 729,
+    "generated_file_mapping_count": 2924,
+    "source_owned_file_count": 731,
     "support_source_count": 3,
     "unowned_generated_file_count": 0
   },

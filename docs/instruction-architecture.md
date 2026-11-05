@@ -9,7 +9,7 @@ This map guides maintenance. It adds no operational authority or new gate. Exist
 | Permission, scope, preservation and evidence boundaries | `skills/KERNEL.md` | Preserve the invariant and link to its procedure. |
 | Conditional authorization and readiness | `skills/_standing-approval-rules.md` | Apply the existing grant and its actual conditions. |
 | Choosing and continuing authorized work | `skills/_autonomy-rules.md`, `skills/_strategic-agency-rules.md` | Use the rule for the decision it owns. |
-| Review artifacts and applicable review depth | `skills/self-review/SKILL.md` and selected project review policy | Request or produce required evidence through the selected procedure. |
+| Review artifacts and applicable review depth | `skills/self-review/SKILL.md` and selected project review policy | Use the selected procedure; generic Self-review has one flat entry and ordinary artifact-contract/review-checklists siblings. Produced artifact formats remain unchanged. |
 | Approved branch topology | K5 for the Siege scaffold; approved target-project policy elsewhere | Inspect the actual target and use its declared workflow. |
 | Task-owned design evidence and lifecycle | `skills/think/SKILL.md`; runtime ownership helpers | Follow exact session/task scope and preserve other tasks. |
 | Collaborator role boundaries | `skills/_tandem-agent-rules.md` | State and respect the assigned role. |

@@ -389,18 +389,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     **Incident justification:** Epic #776 dogfood session (2026-05-28/29). Agent went idle 7 hours overnight (no ScheduleWakeup after last agent completed) and produced "No response requested" twice when loop prompts stacked up. Root cause: rules alone don't prevent the agent from rationalizing inaction. The signal file + hook injection makes the standing order mechanically persistent — it cannot be "forgotten" or rationalized away because it is re-injected on every turn.
 
-14. **Verify-before-push**: the self-review skill's mechanical verification floor (Gates 1-4) is **non-negotiable**. Before any `git push`, all applicable gates must have run and their evidence must appear in the self-review artifact:
-
-    - **Gate 1** — `ast.parse` on every changed `.py` file.
-    - **Gate 2** — `pytest tests/ -x -q -o "addopts=" -m smoke` (exit 0).
-    - **Gate 3** — `sphinx-build -q docs/source/ /tmp/docs-verify` (exit 0), required when any file under `docs/` was modified.
-    - **Gate 4** — Notebook API verification: every library call in changed `.ipynb` files grep-verified against source. Required when any `.ipynb` is in the diff.
-
-    **Scope rationalizations are the exact failure mode these gates exist to prevent.** "Doc-only changes can't break tests," "config-only changes don't need a build," "test-only changes are self-verifying," "the notebook runs so the API must be right" — these are the sentences the Junior says right before pushing a broken commit. The gates are fast (seconds). The rework from skipping them is hours.
-
-    **Mechanical test:** if a self-review artifact lacks Gate 1 and Gate 2 evidence lines, the push MUST NOT proceed. If `docs/` was modified and Gate 3 evidence is missing, the push MUST NOT proceed. If `.ipynb` files are in the diff and Gate 4 evidence is missing, the push MUST NOT proceed.
-
-    **Incident justification:** Session 260603-golden-shark (2026-06-03). Four PRs merged across #816, #580, #970 without running `pytest` or `sphinx-build` once. Every self-review declared "trivial — doc/notebook only" and skipped verification. Zero of the four were actually verified before push. Hostile review then found 3 S2 notebook bugs (wrong method name, false narrative claims, output contradicting story) that Gate 4 would have caught mechanically.
+14. **Verify-before-push**: apply the target project's selected review procedure. The generic [skill:self-review] owns the applicable verification floor (Gates 1-5), exact artifact contract, review checklists and evidence placement. Before push, complete the applicable syntax, test, documentation, notebook/API and owning-task review checks with the project's actual supported tools, and record their commands/results. Missing applicable evidence stops the dependent push; scope rationalizations do not waive it. This navigation entry does not impose another project's tool commands or replace required project/protected checks.
 
 ---
 
