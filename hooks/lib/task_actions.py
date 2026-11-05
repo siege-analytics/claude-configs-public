@@ -804,7 +804,7 @@ def github_metadata_target(args, cwd: str):
 
 
 def github_project_action(args):
-    """Literal project adds only; unsupported remote writes never become cwd writes."""
+    """Literal typed project mutations; unsupported remote writes never become cwd writes."""
     if args[:1] != ['gh']:
         wrapped = os.path.basename(args[0]) == 'gh' or (
             re.match(r'[A-Za-z_][A-Za-z0-9_]*=', args[0]) and 'gh' in args[1:])
@@ -817,8 +817,20 @@ def github_project_action(args):
         if len(args) > 1 and args[1].startswith('-') and any(word in {'project', 'api'} for word in args[2:]):
             raise UnknownShape('GitHub project global options are not supported; use the literal scoped operation')
         return None
+    if args[2:3] == ['item-edit']:
+        names = {'--project-id':'project_id', '--id':'item_id', '--field-id':'field_id', '--single-select-option-id':'option_id'}
+        if len(args) != 11:
+            raise UnknownShape('GitHub project item-edit requires exactly project/item/field/single-select IDs')
+        fields = {}
+        for index in (3, 5, 7, 9):
+            if args[index] not in names or names[args[index]] in fields or not re.fullmatch(r'[A-Za-z0-9_-]{1,200}', args[index + 1]):
+                raise UnknownShape('GitHub project item-edit has unknown/duplicate flags or invalid literal IDs')
+            fields[names[args[index]]] = args[index + 1]
+        if len(fields) != 4:
+            raise UnknownShape('GitHub project item-edit is missing a required ID')
+        return dict(operation='item-edit', host='github.com', **fields)
     if args[2:3] != ['item-add']:
-        raise UnknownShape('Unsupported GitHub project mutation; only task-owned item-add is modeled (item-edit requires verified item/field authority)')
+        raise UnknownShape('Unsupported GitHub project mutation; only task-owned item-add and verified Status item-edit are modeled')
     if len(args) != 8 or not re.fullmatch(r'[1-9][0-9]*', args[3]):
         raise UnknownShape('GitHub project item-add requires a literal project, --owner and --url only')
     fields = {}

@@ -31,6 +31,9 @@
     ],
     "bin/progressive-loading-metrics.py": [
       "bin/_test/inline_delivery_test.py"
+    ],
+    "hooks/lib/github-project-status.py": [
+      "hooks/_test/github_project_status.py"
     ]
   }
 }

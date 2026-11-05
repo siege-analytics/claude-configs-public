@@ -827,15 +827,21 @@ def project_policy() -> list:
     fields = {'host', 'owner', 'project', 'operation', 'issue_owner', 'issue_binding', 'authority_source'}
     seen = set()
     for grant in data['grants']:
-        if not isinstance(grant, dict) or set(grant) != fields:
+        extra = {'field_name', 'field_type', 'values'} if isinstance(grant, dict) and grant.get('operation') == 'item-edit' else set()
+        if not isinstance(grant, dict) or set(grant) != fields | extra:
             raise ValueError('invalid GitHub project standing grant fields')
-        if (grant['host'] != 'github.com' or grant['operation'] != 'item-add'
+        if (grant['host'] != 'github.com' or grant['operation'] not in {'item-add', 'item-edit'}
                 or grant['issue_binding'] != 'current-task-ticket'
                 or type(grant['project']) is not int or grant['project'] < 1
                 or any(not isinstance(grant[k], str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*', grant[k]) for k in ('owner', 'issue_owner'))
                 or not isinstance(grant['authority_source'], str) or not grant['authority_source'].strip()):
             raise ValueError('invalid GitHub project standing grant values')
-        key = (grant['host'], grant['owner'].lower(), grant['project'], grant['issue_owner'].lower())
+        if extra and (grant['field_name'] != 'Status' or grant['field_type'] != 'SINGLE_SELECT'
+                      or not isinstance(grant['values'], list) or not grant['values']
+                      or any(v not in ('In Progress', 'In Review') for v in grant['values'])
+                      or len(set(grant['values'])) != len(grant['values'])):
+            raise ValueError('item-edit grant is limited to Status In Progress/In Review')
+        key = (grant['host'], grant['owner'].lower(), grant['project'], grant['issue_owner'].lower(), grant['operation'])
         if key in seen:
             raise ValueError('ambiguous duplicate GitHub project standing grants')
         seen.add(key)
@@ -857,8 +863,22 @@ def select_project_task(workspace: str, shape: dict) -> dict:
         grants = project_policy()
     except (OSError, ValueError, TypeError) as exc:
         return deny('cannot validate installed standing policy: ' + str(exc))
+    if any(t['operation'] == 'item-edit' for t in shape['remote_actions']) and len(shape['remote_actions']) != 1:
+        return deny('split Status edits from other remote mutations; one bounded live lookup per invocation.')
     selected = []
     for target in shape['remote_actions']:
+        if target['operation'] == 'item-edit':
+            if not any(g['operation'] == 'item-edit' for g in grants):
+                return deny('installed standing policy has no Status item-edit grant.')
+            try:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location('github_status', os.path.join(os.path.dirname(__file__), 'github-project-status.py'))
+                module = importlib.util.module_from_spec(spec)
+                sys.dont_write_bytecode = True
+                spec.loader.exec_module(module)
+                target = module.verify(target, grants)
+            except (OSError, ValueError, TypeError) as error:
+                return deny('cannot verify live Status membership: ' + str(error))
         permitted = any(g['host'] == target['host'] and g['operation'] == target['operation']
                         and g['project'] == target['project'] and g['owner'].lower() == target['owner'].lower()
                         and g['issue_owner'].lower() == target['issue_owner'].lower() for g in grants)
