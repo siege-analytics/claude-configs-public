@@ -139,8 +139,9 @@ class ProjectScope(unittest.TestCase):
 
     def test_unsupported_remote_mutations_fail_with_broad_local_gate(self):
         self.f.task('electinfo/enterprise#3300', self.f.ws, artifacts=True)
-        for command in ['gh project item-edit --project-id PVT_x --id PVTI_x --field-id PVTF_x --single-select-option-id option',
-                        'gh project item-delete 1 --owner electinfo --id PVTI_x',
+        denied = self.hook('gh project item-edit --project-id PVT_x --id PVTI_x --field-id PVTF_x --single-select-option-id option', 2)
+        self.assertIn('installed standing policy has no Status item-edit grant', denied.stderr)
+        for command in ['gh project item-delete 1 --owner electinfo --id PVTI_x',
                         'gh project delete 1 --owner electinfo',
                         "gh api graphql -f 'query=mutation { deleteProjectV2(input:{projectId:\"x\"}) { clientMutationId } }'",
                         'gh api graphql',
