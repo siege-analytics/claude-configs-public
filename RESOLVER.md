@@ -48,37 +48,13 @@ non-trivial — diff size does not matter.
 
 ---
 
-## THE FIRST GATE: `think`
+## Design and task authorization: `think`
 
-> **The most important skill in this entire chain is `think`.** Every catalog-bypass, every premature cutover, every half-designed pipeline this resolver exists to prevent traces back to acting before thinking.
+Before non-trivial implementation, use [skill:think] for applicability, design and required preparation. Its ordinary sibling references contain the design workflow, exact task evidence/lifecycle and verifiable premise claims; they ship with the same discoverable skill.
 
-Before ANY of the following, you MUST read `skills/thinking/think/SKILL.md` and produce a written design note:
+Think distinguishes authored preparation, the mutation gate's pre-edit A/B/C evidence and the separate [skill:self-review] commit-review contract. A mechanically permitted operation does not waive applicable preparation. A signal's existence does not prove approval. Follow [rule:strategic-agency], [rule:autonomy] and [rule:standing-approval] for existing authorization, material owner decisions, role limits and actual holds. Continue authorized work without inventing a fresh approval checkpoint.
 
-- Implementing a new feature
-- Refactoring existing code
-- Changing architecture (new layer, new catalog, new data path, new integration)
-- Making a cutover (moving Consumer / production traffic to a new source)
-- Proposing a schema change
-- Building a new skill, hook, or enforcement mechanism (yes, including this resolver itself)
-- Any task estimated > 30 minutes
-
-**Explicit exemptions** (from `think` skill): changes to non-executable content only (markdown prose, comments with no functional effect, whitespace), following step-by-step instructions from the user, research/read-only work. Any change to executable code (`.sh`, `.py`, `.sql`, `.js`, `.ts`, etc.) requires the full pipeline. See #338.
-
-The `think` gate is not a pattern-match entry below — it is the **first gate**. Every other pattern in this resolver assumes `think` has already fired.
-
-**Companion gate: `survey-context`.** When the task references existing entities (models, tables, functions, files, APIs, env vars), `skills/thinking/survey-context/SKILL.md` is the author-time counterpart to the static scanner. Run it before authoring code that touches existing infrastructure. Pairs with `think` Step 1 (Context) and self-review's `Goal source:` field.
-
-**Post-think pipeline: `investigate` -> `pre-mortem`.** After think produces a design note and verifies existing task authorization plus any explicit design sign-off requirement, the investigation and risk gates fire before implementation. Routine methods within an approved outcome do not require a fresh operator decision:
-
-1. **`investigate`** (`skills/thinking/investigate/SKILL.md`): Evidentiary fact-finding. Produces a Fact Sheet with file:line citations, impact chain (upstream → task → downstream), data shape verification, coherence check, and hypothesis/falsification. Investigation is non-discretionary — it gates ALL artifact CRUD, not just code files. Skill/hook/rule edits are the highest-stakes class (the recursive case) and are never exempt. Two tiers: Full (all sections) for cross-module work, Focused (4 sections) for 1-2 file changes with no interface impact. Hard rule: "File:line or it didn't happen."
-
-2. **`pre-mortem`** (`skills/thinking/pre-mortem/SKILL.md`): Adversarial risk classification using Tiger / Paper Tiger / Elephant framework. Operates on the Fact Sheet — not speculation. Each scenario must pass a coherence check (does it logically follow from the evidence it cites?) before classification. Launch-Blocking Tigers halt implementation until mitigated. Paper Tigers must cite their mitigation. Elephants are named with deferral rationale.
-
-3. **`post-mortem`** (`skills/post-mortem/SKILL.md`): Triggered by confirmed failures (shipped bug, materialized Tiger, misclassified Paper Tiger). Traces backward through the skill pipeline to identify where the failure could have been caught — including whether coherence checks ran at each gate. When root cause is a skill/hook/rule deficiency, action items must fix the pipeline artifact (the recursive case). Action items must be testable, must pass the Allspaw test, and must update skills — not just code.
-
-**Coherence is checked at every stage:** investigate Phase 5 (do the findings agree with each other?), pre-mortem Step 3 (does each scenario follow from its cited evidence?), self-review Lead Phase A (do the artifacts form a consistent logical structure?). Internal coherence first, then external verification.
-
-The full pipeline: think → investigate → pre-mortem → implementation → self-review → (on failure) post-mortem.
+For existing entities, follow Think's [skill:survey-context] and [skill:investigate] routing; [skill:pre-mortem] classifies risks against verified facts. [skill:post-mortem] applies to confirmed failures. Preserve their coherence, posting and evidence requirements through the owning procedures rather than a copied summary here.
 
 ---
 
