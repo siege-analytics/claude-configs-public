@@ -15,7 +15,7 @@
 # Ref: claude-configs-public#320
 
 set -uo pipefail
-export PATH="/home/craftagents/bin:$PATH"
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
 # Hook-local text transport must not turn valid Unicode into an empty command.
 export PYTHONUTF8=1
 

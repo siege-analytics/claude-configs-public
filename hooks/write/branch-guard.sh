@@ -25,7 +25,7 @@
 # allow for the write to proceed. Defense-in-depth.
 
 set -uo pipefail
-export PATH="/home/craftagents/bin:$PATH"
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
 
 INPUT=$(cat)
 

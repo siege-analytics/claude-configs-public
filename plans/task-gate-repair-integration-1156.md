@@ -44,3 +44,7 @@ Hostile-review-artifact: https://github.com/siege-analytics/claude-configs-publi
 ## Own-session operand integration
 
 Integrated reviewed #1178 head4312e8f without a source conflict. On the combined source, nine own-session operand tests passed in 8.366 seconds and thirteen project-scope tests passed in 23.433 seconds. Logs: /tmp/ccp-batch-own-session.log and /tmp/ccp-batch-project.log. Independent source acceptance binds the copied-destination and commit-message model to task_actions SHA af7a232b. Real copy effects and alias denials remain separate from installed-session proof, which is still pending.
+
+## Push-latency integration
+
+Accepted #1179 at f5b53381 after independent review required preservation of executable substitutions and a bounded runner without Perl. Both corrections have focused controls. Merge resolution preserves the project-policy C floor and the shared PATH-helper C floor; generated inventory and review-risk metrics are regenerated from the combined staged sources. Component queued CI is superseded by required full combined CI, not treated as a pass.

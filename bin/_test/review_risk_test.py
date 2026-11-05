@@ -251,9 +251,32 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/artifact-casefold-candidate.py
 hooks/write/ticket-propagation-guard.sh|hooks/lib/canonical-path.py
 hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
+hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/hook-path.sh
+hooks/agent-comms/no-slug-form-outbound.sh|hooks/lib/hook-path.sh
+hooks/agent-comms/spawn-guard.sh|hooks/lib/hook-path.sh
+hooks/bash/coordinator-status-guard.sh|hooks/lib/hook-path.sh
+hooks/bash/destructive-guard.sh|hooks/lib/hook-path.sh
+hooks/bash/universal-mutation-gate.sh|hooks/lib/hook-path.sh
+hooks/git/branch-guard.sh|hooks/lib/hook-path.sh
+hooks/git/detect-ai-fingerprints.sh|hooks/lib/hook-path.sh
+hooks/git/fix-shape-guard.sh|hooks/lib/hook-path.sh
+hooks/git/no-attribution.sh|hooks/lib/hook-path.sh
+hooks/git/no-broad-staging.sh|hooks/lib/hook-path.sh
+hooks/git/no-sensitive-files.sh|hooks/lib/hook-path.sh
+hooks/git/post-error-revision-required.sh|hooks/lib/hook-path.sh
+hooks/git/pr-base-guard.sh|hooks/lib/hook-path.sh
+hooks/git/self-review.sh|hooks/lib/hook-path.sh
+hooks/git/survey-context.sh|hooks/lib/hook-path.sh
+hooks/git/test-guard.sh|hooks/lib/hook-path.sh
+hooks/git/test-tracking-guard.sh|hooks/lib/hook-path.sh
+hooks/git/test-tracking-guard.sh|hooks/lib/command-text.sh
+hooks/git/ticket-required.sh|hooks/lib/hook-path.sh
+hooks/infrastructure/catalog-guard.sh|hooks/lib/hook-path.sh
+hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
+hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "1231a256a9f45177360f1dcdfb0a82f80282e28a9801fbe727ebd97b9c7fb9bb"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "2223da50fbb722deb878634678b3591f7f052f3e2db6d10e9304008a351a9946"
 REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "94457079e711f0e4be9ef27704231842e6c678b1bb0180f79be49bb6708c95f0"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
