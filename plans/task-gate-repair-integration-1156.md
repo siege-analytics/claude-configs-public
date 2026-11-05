@@ -52,3 +52,7 @@ Accepted #1179 at f5b53381 after independent review required preservation of exe
 ## Registered-provider integration
 
 Accepted #1182 at b8c3f92. The router auto-merge retains named timeout/registration error classification plus the optional upgraded producer pin and registered provider selection. Against the combined source, eight provider cases passed in 8.879 seconds and all thirty-six router cases passed in 14.000 seconds. This includes legacy receipt upgrade, direct/headless and native behavior, and invalid binding/provider controls. These are isolated source fixtures; live dual-stack verification remains pending. Logs: /tmp/ccp-batch-provider.log and /tmp/ccp-batch-router.log.
+
+## Artifact and trailer integration
+
+Integrated canonical #1181 with corrective #1183 at 97f6960, preserving the canonical author's history. Independent whole-parent review and Root corrective review accepted the bounded source. After combining with the platform PATH and registered-provider changes, ten actual body-file/native-field methods passed in 3.158 seconds and all twenty-nine trailer aggregation scenarios passed. Logs: /tmp/ccp-batch-artifacts.log and /tmp/ccp-batch-trailers.log. The guard distinguishes completion of a review/checklist from project completion and still scans remaining mixed clauses. This remains a lexical heuristic, not proof of review quality or all natural-language truth.

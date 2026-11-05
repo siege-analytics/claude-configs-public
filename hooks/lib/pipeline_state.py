@@ -21,6 +21,21 @@ def atomic_signal(path, obj):
         if os.path.exists(temp):
             os.unlink(temp)
 
+import re
+# Skill-defined artifact headings (#1164): skills/self-review (Junior task
+# description, Senior adversarial checklist), skills/pre-mortem, skills/investigate.
+JUNIOR_HEADINGS = r'junior task description|pre-implementation comprehension|junior[ /-]senior review'
+SENIOR_HEADINGS = r'senior adversarial checklist|senior review|junior[ /-]senior review'
+INVESTIGATION_HEADINGS = r'investigation fact sheet|fact sheet|investigation'
+PREMORTEM_HEADINGS = r'pre[- ]?mortem'
+
+
+def artifact_heading(lowered_comments, names):
+    """True when a markdown heading starting with one of names is followed by content."""
+    return bool(re.search(r'^#{1,6}[ \t]+[*_`]*(?:' + names + r')\b[^\n]*\n(?:[ \t]*\n)*[ \t]*[^#\s]',
+                          lowered_comments, re.M))
+
+
 try:
     data = json.load(open(signal_path))
 except Exception as e:
@@ -238,6 +253,12 @@ if status == 'implementing' and current_ticket:
                 senior_hits = sum(1 for s in senior_stems if s in comments)
                 if senior_hits >= 5:
                     senior_found = True
+                # A posted artifact headed with its skill name counts even when
+                # its prose uses none of the stems (#1164). These are the same
+                # headings coordinator-status-guard admits as artifacts. The
+                # heading must be followed by a non-blank content line.
+                junior_found = junior_found or artifact_heading(comments, JUNIOR_HEADINGS)
+                senior_found = senior_found or artifact_heading(comments, SENIOR_HEADINGS)
             else:
                 api_ok = False
                 api_error = (result.stderr or '').strip()[:200] or f'gh api rc={result.returncode}'
@@ -286,6 +307,8 @@ if status == 'implementing' and current_ticket:
             premortem_hits = sum(1 for s in premortem_stems if s in comments)
             if premortem_hits >= 3:
                 premortem_posted = True
+            investigate_posted = investigate_posted or artifact_heading(comments, INVESTIGATION_HEADINGS)
+            premortem_posted = premortem_posted or artifact_heading(comments, PREMORTEM_HEADINGS)
     except Exception:
         pass
 
