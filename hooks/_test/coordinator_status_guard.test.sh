@@ -257,4 +257,248 @@ expect_block \
   "$HOOK" \
   "$(payload "gh issue reopen 31")"
 
+# #1164: gate-required think-pipeline artifacts (pre-mortem, investigation,
+# junior/senior review) post as-is; the marker cannot launder status claims.
+PREMORTEM_BODY=$'## Pre-Mortem\nTicket: siege-analytics/claude-configs-public#1164\n#### Tiger 1: guard rejects the post\n- **Severity:** 8 (P1)\n- Blocker risk: the gate will reject the comment and we will re-run the gate later.\n- **Status:** Mitigated'
+UNMARKED_BODY=$'Pre-mortem notes\nTicket: siege-analytics/claude-configs-public#1164\n- Blocker risk: the gate will reject the comment and we will re-run the gate later.'
+
+expect_pass \
+  "AC1: marked pre-mortem with will/gate/blocker passes" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '$PREMORTEM_BODY'")"
+
+expect_block_because \
+  "AC1 control: same text without the artifact heading still blocks" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '$UNMARKED_BODY'")" \
+  "future-plan comment"
+
+expect_pass \
+  "marked investigation fact sheet with blocked status line passes" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Investigation Fact Sheet
+Ticket: #1164
+Status: blocked on nothing; the guard is the obstacle and we will rerun the gate.'")"
+
+expect_pass \
+  "AC3: marked junior task description passes" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Junior task description
+Ticket: #1164
+Current behavior: the lane is blocked and the gate rejects the post.
+**Success criteria** — done when the gate accepts the post; tests green.
+5. What could go wrong: missing fixtures leave the blocker unresolved.'")"
+
+expect_pass \
+  "AC3: marked senior adversarial checklist passes" \
+  "$HOOK" \
+  "$(payload "gh pr comment 1170 --body '### Senior adversarial checklist
+Task-ID: siege-analytics/claude-configs-public#1164
+1. Hasty mistakes: the blocker case is missing a fixture; we will re-run the gate.'")"
+
+expect_pass \
+  "AC3: junior/senior review with #N in the heading passes" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Junior/Senior review for #1164
+The gate is blocked; we will re-run it after the fix.'")"
+
+expect_pass \
+  "marked artifact via gh api comments field passes" \
+  "$HOOK" \
+  "$(payload "gh api repos/siege-analytics/claude-configs-public/issues/1164/comments -f body='$PREMORTEM_BODY'")"
+
+ARTIFACT_FILE="$(mktemp)"
+trap 'rm -f "$ARTIFACT_FILE"' EXIT
+printf '%s\n' "$PREMORTEM_BODY" > "$ARTIFACT_FILE"
+expect_pass \
+  "marked artifact via readable --body-file passes" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body-file $ARTIFACT_FILE")"
+
+expect_pass \
+  "conditional risk scenario naming merge/deploy is not a claim" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Pre-Mortem
+Ticket: #1164
+- Scenario: the PR is merged before CI finishes and the hook is deployed broken.
+- Mitigation: if CI is red the gate will hold.'")"
+
+expect_block_because \
+  "AC2: unmarked finish claim without evidence still blocks" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body 'The work is done and merged.'")" \
+  "lacks required evidence"
+
+expect_block_because \
+  "AC2: marked artifact asserting a deploy without evidence blocks" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Pre-Mortem
+Ticket: #1164
+The fix is merged and released.'")" \
+  "asserts completion status"
+
+expect_block_because \
+  "AC2: marked artifact with a completion status line blocks" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Design note
+Ticket: #1164
+**Status:** done'")" \
+  "asserts completion status"
+
+expect_block_because \
+  "AC2: marked artifact with a line-leading merge claim blocks" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Junior task description
+Ticket: #1164
+Merged and shipped.'")" \
+  "asserts completion status"
+
+expect_pass \
+  "marked artifact claim with full evidence passes" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Pre-Mortem
+Ticket: #1164
+The fix is merged and released. Owner approval thread: https://github.com/x/y/pull/1#issuecomment-1. Target branch: develop. Rollout: UAT not applicable.'")"
+
+expect_block_because \
+  "heading after a status update does not relabel it" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body 'Status: complete. Lane done.
+
+## Pre-Mortem
+Ticket: #1164'")" \
+  "lacks required evidence"
+
+expect_block_because \
+  "artifact heading without a task reference gets normal rules" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Pre-Mortem
+- Blocker risk: we will re-run the gate later.'")" \
+  "future-plan comment"
+
+expect_block_because \
+  "artifact heading with Ticket: N/A gets normal rules" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Pre-Mortem
+Ticket: N/A
+- Blocker risk: we will re-run the gate later.'")" \
+  "future-plan comment"
+
+expect_block_because \
+  "artifact marker on issue close still needs transition evidence" \
+  "$HOOK" \
+  "$(payload "gh issue close 1164 --comment '## Pre-Mortem
+Ticket: #1164
+risk list'")" \
+  "lacks required evidence"
+
+expect_block_because \
+  "artifact marker on PR review still needs completion evidence" \
+  "$HOOK" \
+  "$(payload "gh pr review 1170 --approve --body '## Senior review
+Ticket: #1164
+Looks done.'")" \
+  "lacks required evidence"
+
+expect_block_because \
+  "comment rejection names the artifact form" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '$UNMARKED_BODY'")" \
+  "Ticket: <task reference>.*Ref: #1164"
+
+# Hostile-pass inputs (#1164): parity with the unmarked completion rules.
+expect_block_because \
+  "laundering: unauxiliaried completion words and checkboxes block" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1201 --body '## Investigation fact sheet
+Ticket: #1201
+
+Done — fix deployed to production. Lane complete.
+- [x] Merged
+- [x] Deployed'")" \
+  "asserts completion status"
+
+expect_block_because \
+  "laundering: checkbox-only merge claim blocks" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Pre-Mortem
+Ticket: #1164
+- [x] Merged'")" \
+  "asserts completion status"
+
+expect_block_because \
+  "laundering: a mid-line conditional word does not hide a claim" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Pre-Mortem
+Ticket: #1164
+Status: shipped to prod before the release cut; no residual risk.'")" \
+  "asserts completion status"
+
+expect_block_because \
+  "laundering: the heading line itself is scanned" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Senior lane status: done #1164
+Shipped.'")" \
+  "asserts completion status"
+
+expect_block_because \
+  "laundering: a numbered list prefix does not hide a claim" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Junior task description
+Ticket: #1164
+1. Merged to develop.'")" \
+  "asserts completion status"
+
+expect_pass \
+  "a line opening with a conditional is not a claim" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Pre-Mortem
+Ticket: #1164
+- If the PR is merged early, the gate will hold.
+- Trigger condition: CI green on a stale head.'")"
+
+expect_pass \
+  "plural Design Notes heading is recognized" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Design Notes
+Ticket: #1164
+The blocker is the guard; we will re-run the gate after the fix.'")"
+
+expect_block_because \
+  "Ticket: - is not a task reference" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '## Pre-Mortem
+Ticket: -
+- Blocker risk: we will re-run the gate later.'")" \
+  "future-plan comment"
+
+expect_pass \
+  "plans artifact with YAML front matter before the heading passes" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '---
+ticket_refs:
+  - siege-analytics/claude-configs-public#1164: comment pending
+---
+## Pre-Mortem
+Ticket: siege-analytics/claude-configs-public#1164
+- Blocker risk: the gate will reject the post; we will re-run the gate.'")"
+
+expect_block_because \
+  "front matter does not hide a claim" \
+  "$HOOK" \
+  "$(payload "gh issue comment 1164 --body '---
+status: done
+---
+## Pre-Mortem
+Ticket: #1164'")" \
+  "asserts completion status"
+
+out=$(printf '%s' "$(payload "gh issue comment 31 --body 'Status: complete. Lane done.'")" | bash "$HOOK" 2>&1)
+if [[ "$out" == *"Ref: #1164"* ]]; then
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1)); _HARNESS_FAILED_NAMES+=("plain status update gets no artifact hint")
+  printf '  [FAIL] plain status update gets no artifact hint\n'
+else
+  _HARNESS_PASS=$((_HARNESS_PASS + 1)); printf '  [PASS] plain status update gets no artifact hint\n'
+fi
+
 report

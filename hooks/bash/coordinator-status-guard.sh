@@ -7,10 +7,21 @@
 # owner signoff, merge/branch, and rollout evidence are absent, or when
 # unresolved blockers are mentioned in the same completion claim.
 #
-# Ref: claude-configs-public#609
+# Think-pipeline artifacts (#1164): a comment whose first non-blank line is a
+# heading naming a pre-mortem, investigation/fact sheet, junior/senior review or
+# design note, and which carries a `Ticket: #N` / `Task-ID:` line (or `#N` in
+# that heading), is a gate-required artifact, not a lane update. The status-tone
+# rules (future plan, completion+blocker mix, blocked reason) do not apply to it.
+# Completion vocabulary still needs the same owner/merge/rollout evidence as in
+# an unmarked comment, except on skill-defined hypothetical fields (Scenario,
+# Mitigation, Success criteria, ...) or lines that open with a conditional.
+# Comment actions only; close, reopen, ready, PR review and API state fields
+# never take this lane.
+#
+# Ref: claude-configs-public#609, #1164
 
 set -uo pipefail
-export PATH="/home/craftagents/bin:$PATH"
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
 
 INPUT=$(cat)
 # Fast skip (#1083): exit before starting python3 when the tool payload's
@@ -239,6 +250,120 @@ if uninspectable_editor_body and action in {"comment", "edit", "review"}:
     print("Use a literal inline --body value or a readable --body-file path instead of --editor/--web for status updates.", file=sys.stderr)
     sys.exit(2)
 
+EVIDENCE_HELP = "Required evidence: owner/maintainer signoff, merge/branch target evidence, and deploy/UAT/rollout evidence or N/A."
+# Gate-required think-pipeline artifacts (#1164). The Tier C artifacts-posted
+# gate needs pre-mortem, investigation and junior/senior posts on the ticket;
+# those are risk and plan documents by nature, not lane status updates.
+ARTIFACT_HINT = (
+    "If this is a gate-required think-pipeline artifact (pre-mortem, investigation fact sheet, "
+    "junior/senior review, design note), make its first line a heading naming it (e.g. '## Pre-Mortem') "
+    "and include a 'Ticket: <task reference>' line. Completion words outside its hypothetical fields "
+    "(Scenario, Mitigation, Success criteria, ...) still need evidence. Ref: #1164."
+)
+
+
+def block(*lines):
+    for line in lines:
+        print(line, file=sys.stderr)
+    # Only a body that already reads as an artifact gets the format hint; a
+    # plain status update is not coached toward the artifact lane.
+    if action == "comment" and not state_action and ARTIFACT_WORDS.search(lower):
+        print(ARTIFACT_HINT, file=sys.stderr)
+    sys.exit(2)
+
+
+def missing_evidence(lowered):
+    evidence = {
+        "owner_signoff": re.search(r'\b(owner|maintainer|operator)\b.{0,40}\b(approved|signoff|sign-off|signed off|confirmed)\b|\b(approved|signed off|confirmed)\b.{0,40}\bby\b.{0,20}\b(owner|maintainer|operator)\b|\bapproval thread\b.{0,80}\bhttps?://|\bowner response\b.{0,80}\bhttps?://', lowered, re.S),
+        "merge_or_branch": re.search(r'\b(merged|merge commit|merge evidence|pr #[0-9]+|pull/[0-9]+|branch target|target branch|base branch|develop|main|hotfix)\b|\b[0-9a-f]{7,40}\b', lowered),
+        "rollout": re.search(r'\b(deploy|deployed|deployment|uat|user acceptance|rollout|release|released|backfill|reindex|migration|not applicable|n/a)\b', lowered),
+    }
+    return [name for name, ok in evidence.items() if not ok]
+
+
+COMPLETION_RE = re.compile(r'\b(done|complete|completed|resolved|closed|ready|shipped|released|merged|unblocked|green|go)\b')
+ARTIFACT_WORDS = re.compile(r'\b(pre-?mortem|investigation|fact sheet|junior|senior|design notes?|tiger)\b')
+# The marker is the body's first non-blank line, so a heading appended to a
+# status update cannot relabel it; a task reference ties it to one task.
+ARTIFACT_HEADING = re.compile(
+    r'#{1,6}[ \t]+[*_`]*(?:pre[- ]?mortem|investigation|fact sheet|junior|senior|pre-implementation comprehension|design notes?)\b',
+    re.I,
+)
+ARTIFACT_TASK_REF = re.compile(
+    r'^[ \t>*_-]*(?:ticket|task[ _-]?id|refs?|issue)[*_]*[ \t]*:[*_]*[ \t]*(?:[\w.-]+/[\w.-]+)?#[0-9]+\b'
+    r'|^[ \t>*_-]*task[ _-]?id[*_]*[ \t]*:[*_]*[ \t]*(?!n/?a\b|none\b|tbd\b)[a-z0-9][\w./-]{2,}',
+    re.I | re.M,
+)
+# Fields the pre-mortem, investigation and junior/senior formats define for
+# hypothetical or planned content (skills/pre-mortem, skills/investigate,
+# skills/self-review). A completion word there describes a risk or a goal.
+ARTIFACT_HYPOTHETICAL_FIELDS = {
+    "scenario", "trigger", "trigger condition", "risk", "risks", "failure mode", "what could go wrong",
+    "mitigation", "why it's handled", "what it is", "why it's deferred", "cost of deferral",
+    "trigger for revisiting", "intended behavior", "intended outcome", "success criteria",
+    "steps", "steps to get there", "hypothesis", "falsification", "falsification criteria",
+    "falsifiable-by", "definition of done", "open question", "open questions", "assumption", "assumptions",
+}
+ARTIFACT_CONDITIONAL_START = re.compile(
+    r'(?:if|when|whenever|unless|until|once|could|might|would|may|should|suppose|assuming|in case)\b'
+)
+
+
+# Completion of the artifact itself is not completion of the project lane.
+# Remove only the named subject/predicate, retaining other clauses to inspect.
+ARTIFACT_RESULT = re.compile(
+    r'\b(?:review|investigation|fact[ -]sheet|audit|checklist|(?:(?:named|listed|adversarial)[ \t]+)?checks)'
+    r'[ \t]+(?:(?:is|are|was|were|has[ \t]+been|have[ \t]+been)[ \t]+)?(?:complete|completed|done)\b'
+)
+
+
+def artifact_claims(lowered):
+    """Lines that would count as completion claims in an unmarked comment.
+
+    Parity with the base rules: the same completion vocabulary needs the same
+    evidence, except on lines that are hypothetical (a skill-defined
+    hypothetical field, or a line/value that opens with a conditional).
+    """
+    claims = []
+    for raw in lowered.splitlines():
+        line = re.sub(r'^(?:[ \t>#*_`|-]+|\[[ x]\][ \t]*|[0-9]+[.)][ \t]*)+', '', raw)
+        line = re.sub(r'[*_`]+', '', line).strip()
+        line = ARTIFACT_RESULT.sub('', line)
+        if not line or not COMPLETION_RE.search(line):
+            continue
+        field = re.match(r'(.{1,40}?)(?::|[ \t]+(?:—|--)[ \t]+)[ \t]*(.*)', line)
+        if field and field.group(1).strip() in ARTIFACT_HYPOTHETICAL_FIELDS:
+            continue
+        if ARTIFACT_CONDITIONAL_START.match(line) or (field and ARTIFACT_CONDITIONAL_START.match(field.group(2))):
+            continue
+        claims.append(raw.strip())
+    return claims
+
+
+body_lines = [line.strip() for line in (body or "").splitlines() if line.strip()]
+# A plans/ artifact posted verbatim opens with YAML front matter (required by
+# ticket-propagation-guard); its marker heading is the first line after it.
+# The claim scan below still covers the front matter.
+if body_lines[:1] == ["---"] and "---" in body_lines[1:]:
+    body_lines = body_lines[body_lines.index("---", 1) + 1:]
+first_line = body_lines[0] if body_lines else ""
+if (
+    action == "comment"
+    and not state_action
+    and ARTIFACT_HEADING.match(first_line)
+    and (ARTIFACT_TASK_REF.search(body) or re.search(r'#[0-9]+\b', first_line))
+):
+    claims = artifact_claims(lower)
+    missing = missing_evidence(lower) if claims else []
+    if missing:
+        print("BLOCKED: think-pipeline artifact also asserts completion status without evidence.", file=sys.stderr)
+        print("Claim: " + claims[0], file=sys.stderr)
+        print("Missing: " + ", ".join(missing), file=sys.stderr)
+        print(EVIDENCE_HELP, file=sys.stderr)
+        print("Remove the status claim from the artifact, or post it separately with evidence. Ref: #1164.", file=sys.stderr)
+        sys.exit(2)
+    sys.exit(0)
+
 if not state_action and not coordinator_marker:
     sys.exit(0)
 
@@ -250,35 +375,26 @@ future_gate_plan = re.search(r"\b(i'll|i will|we will|i am going to|i'm going to
 # Gate/deploy/UAT/hotfix movement updates must report current evidence or a
 # concrete blocker, not future intent. Ref: #609.
 if future_gate_plan:
-    print("BLOCKED: coordinator gate/status update is a future-plan comment, not evidence.", file=sys.stderr)
-    print("Run the gates first, then post current evidence or an explicit blocker/failure reason.", file=sys.stderr)
-    sys.exit(2)
+    block("BLOCKED: coordinator gate/status update is a future-plan comment, not evidence.",
+          "Run the gates first, then post current evidence or an explicit blocker/failure reason.")
 
 # Block comments that imply completion while naming unresolved blockers.
 if completion and blocked:
-    print("BLOCKED: coordinator status update mixes completion with unresolved blocker language.", file=sys.stderr)
-    print("Keep the lane visibly blocked until the blocker is resolved, or remove the completion claim.", file=sys.stderr)
-    sys.exit(2)
+    block("BLOCKED: coordinator status update mixes completion with unresolved blocker language.",
+          "Keep the lane visibly blocked until the blocker is resolved, or remove the completion claim.")
 
 # Blocked states are valid only when the failure reason is explicit.
 if blocked and not re.search(r'\b(blocked because|blocker:|failure reason:|reason:|missing:|waiting on|awaiting)', lower):
-    print("BLOCKED: blocked coordinator state must include an explicit failure reason.", file=sys.stderr)
-    print("Add 'Blocker:', 'Failure reason:', 'Missing:', or 'Waiting on:' with concrete evidence.", file=sys.stderr)
-    sys.exit(2)
+    block("BLOCKED: blocked coordinator state must include an explicit failure reason.",
+          "Add 'Blocker:', 'Failure reason:', 'Missing:', or 'Waiting on:' with concrete evidence.")
 
 # Completion/close/ready transitions require evidence prerequisites.
 if completion or action in {"close", "reopen", "ready"} or api_state_transition:
-    evidence = {
-        "owner_signoff": re.search(r'\b(owner|maintainer|operator)\b.{0,40}\b(approved|signoff|sign-off|signed off|confirmed)\b|\b(approved|signed off|confirmed)\b.{0,40}\bby\b.{0,20}\b(owner|maintainer|operator)\b|\bapproval thread\b.{0,80}\bhttps?://|\bowner response\b.{0,80}\bhttps?://', lower, re.S),
-        "merge_or_branch": re.search(r'\b(merged|merge commit|merge evidence|pr #[0-9]+|pull/[0-9]+|branch target|target branch|base branch|develop|main|hotfix)\b|\b[0-9a-f]{7,40}\b', lower),
-        "rollout": re.search(r'\b(deploy|deployed|deployment|uat|user acceptance|rollout|release|released|backfill|reindex|migration|not applicable|n/a)\b', lower),
-    }
-    missing = [name for name, ok in evidence.items() if not ok]
+    missing = missing_evidence(lower)
     if missing:
-        print("BLOCKED: coordinator completion/state transition lacks required evidence.", file=sys.stderr)
-        print("Missing: " + ", ".join(missing), file=sys.stderr)
-        print("Required evidence: owner/maintainer signoff, merge/branch target evidence, and deploy/UAT/rollout evidence or N/A.", file=sys.stderr)
-        sys.exit(2)
+        block("BLOCKED: coordinator completion/state transition lacks required evidence.",
+              "Missing: " + ", ".join(missing),
+              EVIDENCE_HELP)
 
 sys.exit(0)
 PY

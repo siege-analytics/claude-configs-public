@@ -22,7 +22,7 @@
 # V2: promoted from warn-only to blocking (exit 2). Ref: #575.
 
 set -uo pipefail
-export PATH="/home/craftagents/bin:$PATH"
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
 
 INPUT=$(cat)
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"

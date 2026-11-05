@@ -10,6 +10,7 @@ non-option prefix or a genuine -- terminator; quoted patterns do not expand.
 from __future__ import annotations
 
 import ast
+import json
 import os
 import re
 import shlex
@@ -375,6 +376,62 @@ def _has_symlink(path: str, limit: int = 2000) -> bool:
     return False
 
 
+def _copy_destinations(sources, destination, options, cwd):
+    """Actual copied names plus bounded existing descendants, never just a parent."""
+    raw = os.path.join(cwd, destination)
+    options = options[:options.index('--')] if '--' in options else options
+    no_directory = any((t.startswith('-') and not t.startswith('--') and 'T' in t[1:])
+                       or _long_option_matches(t, ('--no-target-directory',)) for t in options)
+    if any(_long_option_matches(t, ('--parents',)) for t in options if t.startswith('--')):
+        raise UnknownShape('copy --parents needs explicit destination modeling; use explicit source/destination names')
+    targets = [raw]
+    if os.path.isdir(raw) and not no_directory:
+        targets = [os.path.join(raw, os.path.basename(os.path.normpath(source))) for source in sources]
+        # Recursive trailing-slash and /. semantics differ across cp versions.
+        # Count the merge destination as well as the named child, conservatively.
+        if any(source.endswith(('/', '/.', '/..')) for source in sources):
+            targets.append(raw)
+    directories = []
+    result = []
+    def unreadable(error):
+        raise UnknownShape('cannot inspect existing copy destination') from error
+    for target in targets:
+        result.append(canonical(target))
+        if os.path.isdir(target) and not os.path.islink(target):
+            directories.append(canonical(target))
+            for root, dirs, files in os.walk(target, onerror=unreadable, followlinks=False):
+                for name in dirs + files:
+                    child = os.path.join(root, name)
+                    result.append(canonical(child))
+                    if len(result) > 2000:
+                        raise UnknownShape('copy destination inspection exceeds bounded scope; split the copy')
+                    if os.path.isdir(child) and not os.path.islink(child):
+                        directories.append(canonical(child))
+    return result, directories
+
+
+def _commit_write_operands(args):
+    """Commit message files are input, not worktree mutation targets."""
+    result = []
+    i = 0
+    while i < len(args):
+        token = args[i]
+        if token == '--':
+            result.extend(args[i:])
+            break
+        if token in {'-F', '--file'}:
+            if i + 1 >= len(args):
+                raise UnknownShape('Git commit message option needs a file')
+            i += 2
+            continue
+        if token.startswith('--file=') or token.startswith('-F') and len(token) > 2:
+            i += 1
+            continue
+        result.append(token)
+        i += 1
+    return result
+
+
 def _git_toplevel(directory: str) -> str:
     try:
         return canonical(subprocess.check_output(["git", "-C", directory, "rev-parse", "--show-toplevel"], text=True, stderr=subprocess.DEVNULL, timeout=3).strip())
@@ -528,7 +585,7 @@ def action(command: str, cwd: str) -> dict:
         # thinks; the targets found below still pick the owning task's gate.
         result.update(read_only=False, investigation=False, self_management=False,
                       veto="read-only-command: option writes or runs a program")
-        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") else [canonical(cwd)])
+        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') else [canonical(cwd)])
     return result
 
 
@@ -570,8 +627,25 @@ def _test_receipt_record(tokens, cwd: str):
     while index < len(words) and words[index] in {"-I", "-B"}:
         index += 1
     owned = os.path.join(os.path.realpath(os.path.dirname(__file__)), "test-evidence.py")
+    # Both registered host and project stacks must select the same pinned
+    # provider. An unregistered context keeps its exact local producer.
+    import importlib.util
+    provider_module = os.path.join(os.path.dirname(__file__), 'craft-settings-router.py')
+    spec = importlib.util.spec_from_file_location('receipt_provider_registration', provider_module)
+    module = importlib.util.module_from_spec(spec)
+    sys.dont_write_bytecode = True
+    spec.loader.exec_module(module)
+    try:
+        payload = json.loads(os.environ.get('CCP_HOOK_INPUT_JSON') or '{}')
+        if not isinstance(payload, dict):
+            raise ValueError('hook metadata must be an object')
+        registered = module.registered_test_provider(os.environ, payload)
+    except (OSError, ValueError, TypeError) as error:
+        raise UnknownShape('cannot verify the registered test receipt provider: ' + str(error)) from error
+    if registered is not None:
+        owned = str(registered)
     if index >= len(words) or os.path.abspath(os.path.join(cwd, words[index])) != owned:
-        raise UnknownShape("use this policy generation's exact hooks/lib/test-evidence.py producer")
+        raise UnknownShape('use the exact selected test receipt provider: ' + owned)
     if os.path.realpath(owned) != owned:
         raise UnknownShape("test receipt producer cannot be a symlink")
     try:
@@ -729,6 +803,68 @@ def github_metadata_target(args, cwd: str):
     return repo.lower()
 
 
+def github_project_action(args):
+    """Literal typed project mutations; unsupported remote writes never become cwd writes."""
+    if args[:1] != ['gh']:
+        wrapped = os.path.basename(args[0]) == 'gh' or (
+            re.match(r'[A-Za-z_][A-Za-z0-9_]*=', args[0]) and 'gh' in args[1:])
+        if wrapped and any(word in {'project', 'api'} for word in args[1:]):
+            raise UnknownShape('GitHub project operations require literal gh without executable aliases or environment prefixes')
+        return None
+    if args[1:2] == ['api']:
+        raise UnknownShape('Unsupported GitHub API mutation requires explicit remote authority; GraphQL is not modeled')
+    if args[1:2] != ['project']:
+        if len(args) > 1 and args[1].startswith('-') and any(word in {'project', 'api'} for word in args[2:]):
+            raise UnknownShape('GitHub project global options are not supported; use the literal scoped operation')
+        return None
+    if args[2:3] == ['item-edit']:
+        names = {'--project-id':'project_id', '--id':'item_id', '--field-id':'field_id', '--single-select-option-id':'option_id'}
+        if len(args) != 11:
+            raise UnknownShape('GitHub project item-edit requires exactly project/item/field/single-select IDs')
+        fields = {}
+        for index in (3, 5, 7, 9):
+            if args[index] not in names or names[args[index]] in fields or not re.fullmatch(r'[A-Za-z0-9_-]{1,200}', args[index + 1]):
+                raise UnknownShape('GitHub project item-edit has unknown/duplicate flags or invalid literal IDs')
+            fields[names[args[index]]] = args[index + 1]
+        if len(fields) != 4:
+            raise UnknownShape('GitHub project item-edit is missing a required ID')
+        return dict(operation='item-edit', host='github.com', **fields)
+    if args[2:3] != ['item-add']:
+        raise UnknownShape('Unsupported GitHub project mutation; only task-owned item-add and verified Status item-edit are modeled')
+    if len(args) != 8 or not re.fullmatch(r'[1-9][0-9]*', args[3]):
+        raise UnknownShape('GitHub project item-add requires a literal project, --owner and --url only')
+    fields = {}
+    for i in (4, 6):
+        if args[i] not in {'--owner', '--url'} or args[i] in fields:
+            raise UnknownShape('GitHub project item-add has unknown or duplicate flags')
+        fields[args[i]] = args[i + 1]
+    if set(fields) != {'--owner', '--url'} or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*', fields['--owner']):
+        raise UnknownShape('GitHub project item-add requires an explicit owner and canonical issue URL')
+    issue = re.fullmatch(r'https://github\.com/([A-Za-z0-9][A-Za-z0-9-]*)/([A-Za-z0-9_.-]+)/issues/([1-9][0-9]*)', fields['--url'])
+    if not issue or issue[2] in {'.', '..'}:
+        raise UnknownShape('GitHub project item-add requires a canonical https://github.com/owner/repository/issues/number target')
+    return dict(operation='item-add', host='github.com', owner=fields['--owner'],
+                project=int(args[3]), issue_owner=issue[1], repository=issue[2], issue=int(issue[3]))
+
+
+def _literal_operand_family(args: list[str]) -> bool:
+    """Known commands whose quoted glob characters are literal operand data.
+
+    This changes target parsing only, never reader status or task authority.
+    Git is excluded because its own pathspec language can expand quoted input.
+    Unknown executable families retain the conservative operand check.
+    """
+    if args[0] in {'touch', 'mkdir', 'rm', 'rmdir', 'cp', 'mv', 'tee', 'chmod', 'chown'}:
+        return True
+    executable = args[0]
+    name = os.path.basename(executable)
+    if executable == 'pytest' or os.path.isabs(executable) and name == 'pytest':
+        return True
+    python = executable in {'python', 'python3'} or (os.path.isabs(executable)
+             and re.fullmatch(r'python(?:3(?:\.[0-9]+)?)?', name) is not None)
+    return python and args[1:3] == ['-m', 'pytest']
+
+
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
@@ -746,6 +882,9 @@ def _action(command: str, cwd: str) -> dict:
     file_removals = []  # rm operands: unlinking a name never writes the file (#1100)
     file_paths = []
     remote_repos = []
+    remote_actions = []
+    mutation_commands = 0
+    commit_commands = 0
     unproven_companions = []
     args = []
     arg_globs = []
@@ -753,7 +892,7 @@ def _action(command: str, cwd: str) -> dict:
     binding = ""
 
     def finish():
-        nonlocal args, arg_globs, effective, reads, binding, diagnostic, self_managed
+        nonlocal args, arg_globs, effective, reads, binding, diagnostic, self_managed, mutation_commands, commit_commands
         if not args:
             return
         while args and args[0].startswith("CCP_TASK_ID="):
@@ -771,6 +910,17 @@ def _action(command: str, cwd: str) -> dict:
             if len(args) != 2 or args[1].startswith("-") or arg_globs[1]:
                 raise UnknownShape("unsupported cd; use an explicit concrete path")
             effective = canonical(args[1], effective)
+        elif args[:2] == ['gh', 'api'] and released_read_verdict(shlex.join(args)) != 0:
+            # Existing text metadata is the only modeled API write. Unknown API
+            # operations cannot borrow cwd/file authority, regardless of endpoint.
+            remote = github_metadata_target(args, effective)
+            if remote is None:
+                raise UnknownShape('Unsupported GitHub API mutation requires explicit remote authority; GraphQL is not modeled')
+            reads = False
+            remote_repos.append(remote)
+            self_managed = False
+            args, arg_globs = [], []
+            return
         elif investigation(args):
             _reader_globs(args, arg_globs)
             diagnostic = True
@@ -782,10 +932,19 @@ def _action(command: str, cwd: str) -> dict:
             # Re-prove each companion before granting the metadata exception.
             if released_read_verdict(shlex.join(args)) != 0:
                 unproven_companions.append(effective)
+        elif args[:2] == ['gh', 'project'] and released_read_verdict(shlex.join(args)) == 0:
+            pass
         else:
             if any(arg_globs):
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             reads = False
+            mutation_commands += 1
+            project = github_project_action(args)
+            if project is not None:
+                remote_actions.append(project)
+                self_managed = False
+                args, arg_globs = [], []
+                return
             remote = github_metadata_target(args, effective)
             if remote is not None:
                 remote_repos.append(remote)
@@ -797,7 +956,11 @@ def _action(command: str, cwd: str) -> dict:
                 raise UnknownShape('opaque inline execution has unbounded mutation targets')
             local = effective
             operands = [x.split('=', 1)[-1] if '=' in x else x for x in args[1:]]
-            if any(any(c in x for c in '*?[') or x.startswith('~') for x in operands):
+            # Unquoted glob positions were rejected above. Retain that lexical
+            # proof for known literal operands; do not reinterpret quoted data.
+            if (any(x.startswith('~') for x in operands)
+                    or not _literal_operand_family(args)
+                    and any(any(c in x for c in '*?[') for x in operands)):
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             if args[0] not in {'touch', 'mkdir', 'rm', 'rmdir', 'cp', 'mv', 'tee', 'chmod', 'chown', 'git'}:
                 paths.extend(canonical(x, effective) for x in operands if '/' in x and '://' not in x and not x.startswith('-'))
@@ -813,7 +976,11 @@ def _action(command: str, cwd: str) -> dict:
                     raise UnknownShape("Git helper execution has unbounded effects; use --no-textconv/--no-ext-diff for inspection")
                 local = operation["cwd"]
                 paths.append(_git_toplevel(local))
-                git_operands = [x.split('=', 1)[-1] if '=' in x else x for x in operation["args"][1:]]
+                rest = operation['args'][1:]
+                if operation['args'][0] == 'commit':
+                    commit_commands += 1
+                    rest = _commit_write_operands(rest)
+                git_operands = [x.split('=', 1)[-1] if '=' in x else x for x in rest]
                 paths.extend(canonical(x, local) for x in git_operands if '/' in x and '://' not in x and not x.startswith('-'))
             elif args[0] in {"touch", "mkdir", "rm", "rmdir", "cp", "mv", "tee", "chmod", "chown", "patch"}:
                 # Options that take the next token as their value. Without this,
@@ -821,6 +988,7 @@ def _action(command: str, cwd: str) -> dict:
                 # review): GNU tools permute options, so values can trail.
                 value_options = {
                     'touch': {'-r', '--reference', '-d', '--date', '-t'},
+                    'mkdir': {'-m', '--mode'},
                     'cp': {'-S', '--suffix'}, 'mv': {'-S', '--suffix'},
                     'chmod': {'--reference'}, 'chown': {'--reference'},
                 }.get(args[0], set())
@@ -852,14 +1020,14 @@ def _action(command: str, cwd: str) -> dict:
                         skip = True
                     elif args[0] in {'cp', 'mv'} and not token.startswith('--') and token.endswith('S'):
                         skip = True  # a short cluster such as -aS takes the next token
-                if args[0] == 'cp' and not _cp_link_copy(args[1:]) and not (
-                        _cp_keeps_symlinks(args[1:])
-                        and any(_has_symlink(os.path.join(effective, x)) for x in operands[:-1])):
-                    # Common copy form: source(s) are reads, final operand writes.
-                    # A link copy, or a copy that carries a symlink across, makes
-                    # the destination reach the source, so every operand is a
-                    # target (#1100).
-                    operands = operands[-1:]
+                copied_directories = []
+                if args[0] in {'cp', 'mv'} and len(operands) >= 2:
+                    sources, destination = operands[:-1], operands[-1]
+                    targets, copied_directories = _copy_destinations(sources, destination, args[1:], effective)
+                    source_writes = (args[0] == 'mv' or _cp_link_copy(args[1:]) or
+                                     _cp_keeps_symlinks(args[1:]) and any(_has_symlink(os.path.join(effective, x)) for x in sources))
+                    operands = (sources if source_writes else []) + targets
+                    directory_paths.extend(copied_directories)
                 elif args[0] in {'chmod', 'chown'} and not has_reference:
                     operands = operands[1:]  # the first operand is the mode/owner
                 operands = operands + option_paths
@@ -869,7 +1037,7 @@ def _action(command: str, cwd: str) -> dict:
                     if args[0] == 'rmdir':
                         directory_removals.extend(canonical(x, effective) for x in operands)
                 else:
-                    file_paths.extend(canonical(x, effective) for x in operands)
+                    file_paths.extend(canonical(x, effective) for x in operands if canonical(x, effective) not in copied_directories)
                     if args[0] == 'rm':
                         file_removals.extend(canonical(x, effective) for x in operands)
                 if not operands:
@@ -972,14 +1140,17 @@ def _action(command: str, cwd: str) -> dict:
                 raise UnknownShape("unsupported shell operator")
             i += 1
         finish()
+        if commit_commands and mutation_commands > commit_commands:
+            raise UnknownShape('separate configuration/file mutations from commit calls; run git commit -F FILE first, then a separately scoped cleanup command')
     except UnknownShape as e:
         return {"read_only": False, "paths": list(dict.fromkeys(paths + [effective])), "error": str(e), "binding": binding}
-    if remote_repos:
+    if remote_repos or remote_actions:
         paths.extend(unproven_companions)
     return {"read_only": reads and not diagnostic and bool(tokens), "investigation": reads and diagnostic,
             "self_managed_shape": self_managed and not diagnostic, "directory_paths": [p for p in directory_paths if p not in file_paths], "directory_removals": directory_removals,
             # A path only removed, never also written in the same command (#1100).
             "file_removals": [p for p in file_removals if paths.count(p) == file_removals.count(p)],
-            "paths": list(dict.fromkeys(paths or ([] if remote_repos else [effective]))),
+            "paths": list(dict.fromkeys(paths or ([] if remote_repos or remote_actions else [effective]))),
             "remote_repos": list(dict.fromkeys(remote_repos)),
-            "metadata_only": bool(remote_repos) and not paths and not diagnostic, "binding": binding}
+            "remote_actions": remote_actions,
+            "metadata_only": bool(remote_repos) and not remote_actions and not paths and not diagnostic, "binding": binding}

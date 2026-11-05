@@ -221,6 +221,9 @@ def ss_kills(args):
 def gh_ok(args):
     if any(long_opt(a, "--web") or short_has(a, "w", "HpqtRJLSB") for a in args[1:]):
         return False   # --web/-w launches a browser (#1089)
+    # Project schema/membership reads do not extend other resource verbs.
+    if args[:2] in (["project", "field-list"], ["project", "item-list"]):
+        return not any(long_opt(a, "--hostname") for a in args[2:])
     if len(args) >= 2 and args[0] in {"pr", "issue", "run", "repo", "release", "workflow", "label", "project", "search"}:
         return args[1] in GH_READ_VERBS or args[0] == "search"
     if args[:1] == ["api"]:
@@ -231,13 +234,41 @@ def gh_ok(args):
     return args[:2] in (["auth", "status"],)
 
 
-def sed_ok(args):
-    # Exactly `sed -n Np [FILE]`. GNU sed permutes options, so a trailing or
-    # interleaved -i edits in place (siege#1057 safelist suite).
-    if len(args) < 2 or args[0] != "-n" or re.fullmatch(r"[0-9]+(,[0-9$]+)?p", args[1]) is None:
+def sed_substitution_ok(args):
+    """One slash-delimited stdin substitution, never a script/file program."""
+    index, seen = 0, set()
+    while index < len(args) and args[index] in {'-E', '-r', '-n'}:
+        option = args[index]
+        if option in seen or option in {'-E', '-r'} and seen & {'-E', '-r'}:
+            return False
+        seen.add(option)
+        index += 1
+    if len(args) != index + 1:
+        return False  # No file operands, late options or extra expressions.
+    script = args[index]
+    if not script.startswith('s/') or len(script) > 4096 or any(c in script for c in '\n\r\0;'):
         return False
-    rest = args[2:]
-    return len(rest) <= 1 and not any(a.startswith("-") for a in rest)
+    index, delimiters = 2, 0
+    while index < len(script):
+        if script[index] == '\\':
+            index += 2  # A backslash escapes exactly one following character.
+            continue
+        if script[index] == '/':
+            delimiters += 1
+            if delimiters == 2:
+                # GNU sed's e flag executes and w writes; neither is a reader.
+                # https://www.gnu.org/software/sed/manual/sed.html
+                return script[index + 1:] in {'', 'g', 'p', 'gp', 'pg'}
+        index += 1
+    return False
+
+
+def sed_ok(args):
+    # Preserve exactly `sed -n Np [FILE]`, including rejection of late -i.
+    if len(args) >= 2 and args[0] == '-n' and re.fullmatch(r"[0-9]+(,[0-9$]+)?p", args[1]) is not None:
+        rest = args[2:]
+        return len(rest) <= 1 and not any(a.startswith('-') for a in rest)
+    return sed_substitution_ok(args)
 
 
 def find_ok(args):

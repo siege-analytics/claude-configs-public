@@ -38,6 +38,7 @@ import re
 import shlex
 import sys
 import glob
+import stat
 import subprocess
 from task_actions import action, canonical
 from session_anchor import correct_environ as _correct_session_environ
@@ -754,6 +755,14 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         return shape  # No gate lookup for recognized reads/approved diagnostics.
     if shape.get("error"):
         return {**shape, "gate": None, "error": "Cannot resolve mutation targets: " + shape["error"]}
+    if shape.get('remote_actions'):
+        remote = select_project_task(workspace, shape)
+        if not remote.get('gate') or not shape['paths']:
+            return {**shape, **remote, 'remote_only_authorized': bool(remote.get('gate')) and not shape['paths']}
+        # Remote permission never replaces local ownership or implementation gates.
+        local = select_task(workspace, shape['paths'], shape.get('binding') or task_binding())
+        if not local.get('gate') or canonical(local['gate']['path']) != canonical(remote['gate']['path']):
+            return {**shape, 'gate': None, 'error': local.get('error') or 'Local and remote mutations belong to different tasks; split the action.'}
     managed_shape = shape.get('self_managed_shape', not command)
     if managed_shape:
         directories = shape.get('directory_paths', [])
@@ -791,8 +800,110 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         result["session_dir"] = own_session_directory(workspace)
         result["artifacts"] = {name: g["path"] if (g := _artifact_for(tg, name, workspace)) else None for name in ("investigate-gate", "junior-senior-gate", "artifacts-posted-gate", "review-gate", "test-gate")}
         result["task"] = task_identity(tg["data"])
-        result["tier"] = task_tier(tg["data"], shape["paths"], command)
+        result["tier"] = task_tier(tg["data"], shape["paths"], command, cwd)
     return result
+
+
+def project_policy() -> list:
+    """Fixed installed policy, owned and delivered with the hook source."""
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'github-project-policy.json'))
+    if canonical(path) != path:
+        raise ValueError('standing policy must be a regular installed file, not a symlink')
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('duplicate standing policy key: ' + key)
+            result[key] = value
+        return result
+    fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+    with os.fdopen(fd, encoding='utf-8') as source:
+        info = os.fstat(source.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_size > 65536:
+            raise ValueError('standing policy must be a bounded regular installed file')
+        data = json.loads(source.read(65537), object_pairs_hook=unique)
+    if not isinstance(data, dict) or set(data) != {'schema_version', 'grants'} or type(data['schema_version']) is not int or data['schema_version'] != 1 or not isinstance(data['grants'], list):
+        raise ValueError('invalid GitHub project standing policy schema')
+    fields = {'host', 'owner', 'project', 'operation', 'issue_owner', 'issue_binding', 'authority_source'}
+    seen = set()
+    for grant in data['grants']:
+        extra = {'field_name', 'field_type', 'values'} if isinstance(grant, dict) and grant.get('operation') == 'item-edit' else set()
+        if not isinstance(grant, dict) or set(grant) != fields | extra:
+            raise ValueError('invalid GitHub project standing grant fields')
+        if (grant['host'] != 'github.com' or grant['operation'] not in {'item-add', 'item-edit'}
+                or grant['issue_binding'] != 'current-task-ticket'
+                or type(grant['project']) is not int or grant['project'] < 1
+                or any(not isinstance(grant[k], str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*', grant[k]) for k in ('owner', 'issue_owner'))
+                or not isinstance(grant['authority_source'], str) or not grant['authority_source'].strip()):
+            raise ValueError('invalid GitHub project standing grant values')
+        if extra and (grant['field_name'] != 'Status' or grant['field_type'] != 'SINGLE_SELECT'
+                      or not isinstance(grant['values'], list) or not grant['values']
+                      or any(v not in ('In Progress', 'In Review') for v in grant['values'])
+                      or len(set(grant['values'])) != len(grant['values'])):
+            raise ValueError('item-edit grant is limited to Status In Progress/In Review')
+        key = (grant['host'], grant['owner'].lower(), grant['project'], grant['issue_owner'].lower(), grant['operation'])
+        if key in seen:
+            raise ValueError('ambiguous duplicate GitHub project standing grants')
+        seen.add(key)
+    return data['grants']
+
+
+def select_project_task(workspace: str, shape: dict) -> dict:
+    """Standing permission narrows to one current task's exact canonical ticket."""
+    def deny(message):
+        return {'gate': None, 'error': 'GitHub project remote scope: ' + message}
+    if not session_id_from_env():
+        return deny('restore the current-session task identity; filesystem scope cannot supply remote authority.')
+    binding = shape.get('binding') or task_binding()
+    if shape.get('binding') and task_binding() and shape['binding'] != task_binding():
+        return deny('conflicting explicit task bindings.')
+    if (os.environ.get('GH_HOST') or 'github.com').lower() != 'github.com' or os.environ.get('GH_REPO'):
+        return deny('ambient GH_HOST/GH_REPO overrides do not match the literal scoped operation.')
+    try:
+        grants = project_policy()
+    except (OSError, ValueError, TypeError) as exc:
+        return deny('cannot validate installed standing policy: ' + str(exc))
+    if any(t['operation'] == 'item-edit' for t in shape['remote_actions']) and len(shape['remote_actions']) != 1:
+        return deny('split Status edits from other remote mutations; one bounded live lookup per invocation.')
+    selected = []
+    for target in shape['remote_actions']:
+        if target['operation'] == 'item-edit':
+            if not any(g['operation'] == 'item-edit' for g in grants):
+                return deny('installed standing policy has no Status item-edit grant.')
+            try:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location('github_status', os.path.join(os.path.dirname(__file__), 'github-project-status.py'))
+                module = importlib.util.module_from_spec(spec)
+                sys.dont_write_bytecode = True
+                spec.loader.exec_module(module)
+                target = module.verify(target, grants)
+            except (OSError, ValueError, TypeError) as error:
+                return deny('cannot verify live Status membership: ' + str(error))
+        permitted = any(g['host'] == target['host'] and g['operation'] == target['operation']
+                        and g['project'] == target['project'] and g['owner'].lower() == target['owner'].lower()
+                        and g['issue_owner'].lower() == target['issue_owner'].lower() for g in grants)
+        if not permitted:
+            return deny('installed standing policy does not grant this owner/project/issue-owner operation; task fields cannot grant it.')
+        ticket = f"{target['issue_owner']}/{target['repository']}#{target['issue']}".lower()
+        owners = []
+        for gate in _session_thinks(workspace):
+            value = gate['data'].get('ticket') or gate['data'].get('task_id', '')
+            if (isinstance(value, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+#[1-9][0-9]*', value)
+                    and value.lower() == ticket and (not binding or task_identity(gate['data']) == binding)):
+                alias = gate['data'].get('task_id', '')
+                if (isinstance(alias, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+#[1-9][0-9]*', alias)
+                        and alias.lower() != ticket):
+                    return deny('conflicting canonical issue in ticket and task_id; repair the owning task identity.')
+                owners.append(gate)
+        if len(owners) != 1:
+            return deny('requires one unambiguous current-session task with canonical ticket or task_id=' + ticket + '; a parent, slug or local scope is insufficient.')
+        gate = owners[0]
+        if gate['data'].get('status') != 'implementing':
+            return deny('the owning task must be implementing; no remote authority from another lifecycle status.')
+        selected.append(gate)
+    if len({canonical(g['path']) for g in selected}) != 1:
+        return deny('remote mutations span different tasks; split the action.')
+    return {'gate': selected[0], 'error': '', 'task': task_identity(selected[0]['data'])}
 
 
 TIER_ORDER = {"A": 0, "B": 1, "C": 2}
@@ -826,7 +937,150 @@ def _lone_git_commit(command: str) -> bool:
     return bool(words) and words[0] == "git" and i < len(words) and words[i] == "commit"
 
 
-def task_tier(gate: dict, paths: list, command: str = "") -> dict:
+def _named_git_add_targets(command: str, cwd: str, repo_root: str) -> Optional[list]:
+    """Risk targets for a lone, explicit named-file staging operation.
+
+    This never selects task ownership. Unproved shapes retain the ordinary
+    repository-wide risk calculation, including directories and missing files.
+    """
+    from task_actions import shell_tokens, UnknownShape
+    from git_command import prefix
+    try:
+        tokens = shell_tokens(command)
+        if any(operator or globs for _, operator, globs in tokens):
+            return None
+        words = [word for word, _, _ in tokens]
+        if words and words[0].startswith('CCP_TASK_ID='):
+            words = words[1:]
+        if not words or words[0] != 'git':
+            return None
+        # Restrict dispatch before reusing the shared normalizer: aliases and
+        # configuration overrides are not part of this named-file exception.
+        rest = words[1:]
+        while rest and rest[0].startswith('-'):
+            if rest[0] == '-C' and len(rest) > 1:
+                rest = rest[2:]
+            elif rest[0].startswith('-C') and len(rest[0]) > 2:
+                rest = rest[1:]
+            elif rest[0] in {'--no-pager', '--no-optional-locks'}:
+                rest = rest[1:]
+            else:
+                return None
+        if not rest or rest[0] != 'add':
+            return None
+        operation = prefix(words, cwd)
+        if not operation or operation['config'] or operation['args'][0] != 'add':
+            return None
+        targets, terminated = [], False
+        allowed = {'-f', '--force', '-v', '--verbose', '-u', '--update', '-A', '--all'}
+        for word in operation['args'][1:]:
+            if not terminated and word == '--':
+                terminated = True
+                continue
+            if not terminated and word.startswith('-'):
+                if word not in allowed:
+                    return None
+                continue
+            if not word or word.startswith(':') or any(c in word for c in '*?[\n\r\0'):
+                return None
+            lexical = os.path.abspath(os.path.join(operation['cwd'], word))
+            target = canonical(word, operation['cwd'])
+            if (target != lexical or not _within(target, repo_root)
+                    or not stat.S_ISREG(os.lstat(target).st_mode)):
+                return None
+            targets.append(os.path.relpath(target, repo_root).replace(os.sep, '/'))
+        return sorted(set(targets)) if targets else None
+    except (UnknownShape, OSError, subprocess.SubprocessError):
+        return None
+
+
+def _pytest_execution_targets(command: str, cwd: str, repo_root: str) -> Optional[list]:
+    """Risk view for bounded task-owned test execution, not a reader certificate.
+
+    Local remote-tracking refs are a checkout risk heuristic, not a server
+    freshness proof or an authority grant. Existing Git metadata trust applies.
+    """
+    from task_actions import shell_tokens, UnknownShape, _options
+    try:
+        tokens = shell_tokens(command)
+    except UnknownShape:
+        return None
+    while tokens and tokens[0][0].startswith('CCP_TASK_ID=') and not tokens[0][1] and not tokens[0][2]:
+        tokens.pop(0)
+    effective = canonical(cwd)
+    if (len(tokens) >= 3 and tokens[0][0] == 'cd' and tokens[2][0] == '&&'
+            and tokens[2][1] and not tokens[1][1] and not tokens[1][2]
+            and not tokens[1][0].startswith('-')):
+        effective = canonical(tokens[1][0], effective)
+        tokens = tokens[3:]
+    if not tokens or any(operator or glob for _, operator, glob in tokens):
+        return None
+    args = [word for word, _, _ in tokens]
+    if args[0] == 'pytest':
+        arguments = args[1:]
+    elif args[:3] == ['python3', '-m', 'pytest'] or args[:3] == ['python', '-m', 'pytest']:
+        arguments = args[3:]
+    else:
+        return None
+    if effective != repo_root or os.environ.get('PYTEST_ADDOPTS') or os.environ.get('PYTEST_PLUGINS'):
+        return None
+    flags = set('-q -qq -v -vv -x -s --collect-only --disable-warnings --strict-markers --strict-config --no-header --no-summary'.split())
+    values = set('-k -m --maxfail --tb --color'.split())
+    if not _options(arguments, flags=flags, values=values):
+        return None
+    selectors, literal, index = [], False, 0
+    while index < len(arguments):
+        word = arguments[index]
+        if not literal and word == '--':
+            literal = True
+        elif not literal and word.startswith('-'):
+            if word.partition('=')[0] in values and '=' not in word:
+                index += 1
+        else:
+            selector = word.split('::', 1)[0]
+            path = canonical(selector, effective)
+            if not _within(path, repo_root) or not os.path.exists(path) or os.path.islink(os.path.join(effective, selector)):
+                return None
+            relative = os.path.relpath(path, repo_root).replace(os.sep, '/')
+            if os.path.isdir(path):
+                listed = _git_lines(repo_root, 'ls-files', '-z', '--', relative)
+                if listed is None:
+                    raise ValueError('cannot list explicit test selector')
+                selectors.extend(listed)
+            else:
+                selectors.append(relative)
+        index += 1
+    bases = []
+    for ref in ('refs/remotes/origin/main', 'refs/remotes/origin/develop'):
+        existing = _git_lines(repo_root, 'rev-parse', '--verify', ref)
+        if existing is None:
+            continue
+        common = _git_lines(repo_root, 'merge-base', ref, 'HEAD')
+        if common is None or len(common) != 1:
+            raise ValueError('cannot resolve protected test-execution baseline')
+        bases.append(common[0])
+    if not bases:
+        raise ValueError('test execution has no canonical remote main/develop baseline')
+    base = bases[0]
+    for candidate in bases[1:]:
+        if _git_lines(repo_root, 'merge-base', '--is-ancestor', base, candidate) is not None:
+            base = candidate
+        elif _git_lines(repo_root, 'merge-base', '--is-ancestor', candidate, base) is None:
+            raise ValueError('test execution has incomparable protected baselines')
+    changed = []
+    for arguments in (
+            ('diff', '--no-ext-diff', '--no-textconv', '--name-only', '-z', '--no-renames', base, 'HEAD'),
+            ('diff', '--no-ext-diff', '--no-textconv', '--cached', '--name-only', '-z', '--no-renames'),
+            ('diff', '--no-ext-diff', '--no-textconv', '--name-only', '-z', '--no-renames'),
+            ('ls-files', '--others', '--exclude-standard', '-z')):
+        paths = _git_lines(repo_root, *arguments)
+        if paths is None:
+            raise ValueError('cannot enumerate changed test-execution paths')
+        changed.extend(paths)
+    return sorted(set(changed + selectors))
+
+
+def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict:
     """Effective review tier for this mutation (#1086): the higher of the gate's
     declared `tier` and the floor bin/review-risk.py computes for the targets.
 
@@ -835,8 +1089,12 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
     scripts) is classified by the tracked files under it plus a probe path
     inside it, so `rm -rf hooks/bash` is C wherever hooks/bash holds Tier C
     files. A lone `git commit` is classified by the staged and modified files
-    it can record. A declared lower tier never wins; a missing classifier,
-    policy, repo_root or git listing fails closed to C."""
+    it can record. A lone explicit named-file git add uses those files for
+    risk while retaining repository ownership. A declared lower tier never
+    wins; a missing classifier,
+    policy, repo_root or git listing fails closed to C. Bounded root pytest
+    uses its branch/working delta and selectors, with at least B; normal task
+    ownership and preparation requirements still apply."""
     declared = str(gate.get("tier") or gate.get("review_tier") or "").strip().upper()
     declared = declared if declared in TIER_ORDER else ""
     root = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
@@ -852,10 +1110,13 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
         if not repo_root:
             raise ValueError("gate has no repo_root")
         rel = []
+        pytest_targets = (_pytest_execution_targets(command, cwd or repo_root, repo_root)
+                          if any(os.path.realpath(p) == repo_root for p in paths) else None)
         # A lone commit records only staged/modified files: its other operands
         # (message words such as "docs: a/b") are not targets. Only when the
         # repository itself is a target, so the staged set is what gets classified.
         lone_commit = _lone_git_commit(command) and any(os.path.realpath(p) == repo_root for p in paths)
+        named_add = _named_git_add_targets(command, cwd or repo_root, repo_root)
         for p in paths:
             rp = os.path.realpath(p)
             if lone_commit and rp != repo_root:
@@ -863,7 +1124,11 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
             if not (rp == repo_root or rp.startswith(repo_root + os.sep)):
                 raise ValueError("target outside the gate's repo_root")
             r = "" if rp == repo_root else os.path.relpath(rp, repo_root).replace(os.sep, "/")
-            if r == "" and lone_commit:
+            if r == "" and named_add is not None:
+                rel.extend(named_add)
+            elif r == "" and pytest_targets is not None:
+                rel.extend(pytest_targets)
+            elif r == "" and lone_commit:
                 staged = _git_lines(repo_root, "diff", "--cached", "--name-only", "-z")
                 modified = _git_lines(repo_root, "diff", "--name-only", "-z")
                 if staged is None or modified is None:
@@ -878,6 +1143,8 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
                 rel.append(r)
         verdict = module.classify(policy, sorted(set(rel)))
         floor, reasons = verdict["computed_tier"], [x for x in verdict["reasons"] if x.startswith(verdict["computed_tier"])]
+        if pytest_targets is not None and TIER_ORDER[floor] < TIER_ORDER['B']:
+            floor, reasons = 'B', ['B:task-owned test execution']
     except Exception as exc:
         floor, reasons = "C", [f"C:{exc}; failing closed" if isinstance(exc, ValueError)
                                else f"C:review-risk classifier unavailable ({type(exc).__name__}); failing closed"]
