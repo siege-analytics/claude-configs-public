@@ -193,9 +193,50 @@ def registration(workspace: Path, *, router_path_override=None) -> tuple[dict, d
     for key, path in (("router_sha256", router), ("policy_sha256", policy), ("session_anchor_sha256", anchor), ("read_classifier_sha256", workspace / "hooks/lib/read-only-command.py"), ("task_resolver_sha256", workspace / "hooks/lib/resolve-think-gate.py"), ("hook_payload_sha256", workspace / "hooks/lib/hook_payload.py"), ("task_actions_sha256", workspace / "hooks/lib/task_actions.py")):
         if receipt.get(key) != hashlib.sha256(regular_bytes(path)).hexdigest():
             raise RoutingError("Craft hook generation changed; rerun exact-main registration")
+    # Old registrations still route their existing policy. Only upgraded
+    # registrations can supply the new cross-stack receipt-provider authority.
+    if 'test_evidence_sha256' in receipt and receipt['test_evidence_sha256'] != hashlib.sha256(regular_bytes(workspace / 'hooks/lib/test-evidence.py')).hexdigest():
+        raise RoutingError('Craft test receipt producer changed; rerun exact-main registration')
     parsed_policy = object_json(regular_bytes(policy))
     verify_global(object_json(regular_bytes(global_settings)), router, workspace, policy=parsed_policy)
     return receipt, parsed_policy
+
+
+def registered_test_provider(environment: dict, payload: dict):
+    """One enrolled host provider for all project/workspace hook generations."""
+    directory = environment.get('CRAFT_SESSION_DIR') or environment.get('CRAFT_AGENT_SESSION_DIR') or environment.get('CLAUDE_SESSION_DIR')
+    if not directory:
+        return None  # The existing native/unregistered local-generation lane.
+    session = Path(directory)
+    if not session.is_absolute() or session.parent.name != 'sessions' or session.resolve() != session:
+        raise RoutingError('receipt execution requires a physical host session directory')
+    workspace = session.parent.parent
+    target = router_path(Path.home(), workspace)
+    marker = environment.get('CRAFT_AGENT_WORKSPACE')
+    if marker and marker != str(workspace):
+        raise RoutingError('receipt workspace differs from the host session binding')
+    # A direct-hook/headless workspace can have a policy without this external
+    # registration. Preserve its existing exact local-generation producer.
+    enrolled = any(path.exists() or path.is_symlink() for path in (
+        workspace / '.claude/craft-hook-registration.json', target))
+    if not enrolled:
+        return None
+    if payload.get('hook_event_name') != 'PreToolUse' or payload.get('tool_name') != 'Bash':
+        raise RoutingError('registered receipt execution requires the actual Bash callback')
+    receipt, _policy = registration(workspace, router_path_override=target)
+    if 'test_evidence_sha256' not in receipt:
+        raise RoutingError('registered receipt provider is not pinned; upgrade through the normal exact-main installer')
+    # Registration verifies these workspace helper bytes before import. A task
+    # field, environment provider path or bare router marker cannot choose code.
+    helper = workspace / 'hooks/lib/session_anchor.py'
+    spec = importlib.util.spec_from_file_location('receipt_registered_session', helper)
+    module = importlib.util.module_from_spec(spec)
+    sys.dont_write_bytecode = True
+    spec.loader.exec_module(module)
+    bound = module.registered_session_dir(str(workspace), str(session), payload)
+    if not bound or bound != str(session):
+        raise RoutingError('registered receipt execution has no exact payload-bound own session')
+    return workspace / 'hooks/lib/test-evidence.py'
 
 
 def metadata_environment(payload: dict, helper_path=None) -> str:

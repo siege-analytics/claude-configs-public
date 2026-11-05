@@ -10,6 +10,7 @@ non-option prefix or a genuine -- terminator; quoted patterns do not expand.
 from __future__ import annotations
 
 import ast
+import json
 import os
 import re
 import shlex
@@ -626,8 +627,25 @@ def _test_receipt_record(tokens, cwd: str):
     while index < len(words) and words[index] in {"-I", "-B"}:
         index += 1
     owned = os.path.join(os.path.realpath(os.path.dirname(__file__)), "test-evidence.py")
+    # Both registered host and project stacks must select the same pinned
+    # provider. An unregistered context keeps its exact local producer.
+    import importlib.util
+    provider_module = os.path.join(os.path.dirname(__file__), 'craft-settings-router.py')
+    spec = importlib.util.spec_from_file_location('receipt_provider_registration', provider_module)
+    module = importlib.util.module_from_spec(spec)
+    sys.dont_write_bytecode = True
+    spec.loader.exec_module(module)
+    try:
+        payload = json.loads(os.environ.get('CCP_HOOK_INPUT_JSON') or '{}')
+        if not isinstance(payload, dict):
+            raise ValueError('hook metadata must be an object')
+        registered = module.registered_test_provider(os.environ, payload)
+    except (OSError, ValueError, TypeError) as error:
+        raise UnknownShape('cannot verify the registered test receipt provider: ' + str(error)) from error
+    if registered is not None:
+        owned = str(registered)
     if index >= len(words) or os.path.abspath(os.path.join(cwd, words[index])) != owned:
-        raise UnknownShape("use this policy generation's exact hooks/lib/test-evidence.py producer")
+        raise UnknownShape('use the exact selected test receipt provider: ' + owned)
     if os.path.realpath(owned) != owned:
         raise UnknownShape("test receipt producer cannot be a symlink")
     try:
