@@ -28,7 +28,7 @@
 # Ref: claude-configs-public#931
 
 set -uo pipefail
-export PATH="/home/craftagents/bin:$PATH"
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
 
 INPUT=$(cat)
 # Fast skip (#1083): exit before starting python3 when the tool payload's
@@ -81,8 +81,19 @@ fi
 # Trigger on git push, gh pr create / merge, or glab mr create / merge.
 # Word boundaries via portable character-class form (not BSD-incompatible
 # \b); mirrors self-review.sh / test-guard.sh (CCP#201 pattern).
+# Match only the part of the command the shell runs (#1162): an issue title or
+# body that mentions pushing is data, and treating it as a push made this hook
+# list every ignored file of a large repo and pass its timeout. ct_code_only
+# keeps `bash -c` arguments and unbalanced text, and falls back to the raw
+# command when its helper cannot run, so a real push still matches. Without
+# the library at all, the raw command is matched as before.
+COMMAND_CODE=$COMMAND
+source "$HOOK_DIR/../lib/command-text.sh" 2>/dev/null
+if declare -F ct_code_only >/dev/null; then
+    COMMAND_CODE=$(ct_code_only "$COMMAND")
+fi
 TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge)|glab[[:space:]]+mr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
-if ! echo "$COMMAND" | grep -qE "$TRIGGERS"; then
+if ! printf '%s\n' "$COMMAND_CODE" | grep -qE "$TRIGGERS"; then
     exit 0
 fi
 
@@ -136,26 +147,67 @@ fi
 # untracked AND matched by a gitignore rule (tracked files are never listed).
 # Filter to a `tests/` path component with a test_*.py basename, so scratch
 # files outside tests/ are not flagged.
-IGNORED_UNTRACKED=$(git -C "$REPO_ROOT" ls-files --others --ignored --exclude-standard 2>/dev/null || echo "")
+#
+# The listing is bounded (#1162). The pathspec asks git for exactly the paths
+# the loop below keeps, so a repo with a large ignored tree no longer feeds tens
+# of thousands of lines through bash (46 s in the Craft workspace repo). git
+# still walks that tree, so the walk gets a deadline inside the 10 s hook
+# timeout. A listing that fails or runs out of time blocks with its reason; it
+# never counts as "no offenders".
+LIST_SECONDS=6
+LIST_START=$SECONDS
+LIST_CMD=(git -C "$REPO_ROOT" ls-files --others --ignored --exclude-standard -- ':(glob)**/tests/**/test_*.py')
+if command -v perl >/dev/null 2>&1; then
+    # alarm survives exec, so git itself receives SIGALRM at the deadline.
+    IGNORED_UNTRACKED=$(perl -e 'alarm shift; exec @ARGV or exit 127' "$LIST_SECONDS" "${LIST_CMD[@]}" 2>/dev/null)
+    LIST_RC=$?
+else
+    IGNORED_UNTRACKED=$("${LIST_CMD[@]}" 2>/dev/null)
+    LIST_RC=$?
+fi
+if [[ "$LIST_RC" -ne 0 ]]; then
+    if [[ "$LIST_RC" -eq 142 ]]; then
+        LIST_REASON="did not finish within its ${LIST_SECONDS}s bound"
+    else
+        LIST_REASON="failed with exit status ${LIST_RC}"
+    fi
+    cat >&2 <<HOOKEOF
+BLOCKED: test-tracking-guard could not check for silently git-ignored test files.
 
-OFFENDERS=""
-while IFS= read -r f; do
-    [[ -z "$f" ]] && continue
-    base="${f##*/}"
-    case "$base" in
-        test_*.py) ;;
-        *) continue ;;
-    esac
-    # Require a `tests` directory somewhere in the path.
-    case "/$f" in
-        */tests/*) OFFENDERS="${OFFENDERS}  - ${f}"$'\n' ;;
-    esac
-done <<< "$IGNORED_UNTRACKED"
+Listing ignored tests/test_*.py files in ${REPO_ROOT} ${LIST_REASON}
+(after $((SECONDS - LIST_START))s). Without that list the hook cannot tell
+whether a test file would be left out of this push, so it does not allow it.
+
+Check the repository with:
+
+  git -C "${REPO_ROOT}" ls-files --others --ignored --exclude-standard -- ':(glob)**/tests/**/test_*.py'
+
+A very large ignored tree (virtualenvs, build output, session data) is the
+usual cause of a slow listing; run the command from a checkout without it.
+
+Ref: #931, #1162
+HOOKEOF
+    exit 2
+fi
+
+# Keep a test_*.py basename with a `tests` directory somewhere in the path (the
+# pathspec's predicate, re-checked here). One awk pass, not a bash loop: growing
+# a bash string line by line was quadratic and took about 40 s for 7,000 paths
+# (#1162). The block lists the first 50 and counts the rest.
+OFFENDERS=$(printf '%s\n' "$IGNORED_UNTRACKED" | LC_ALL=C awk '
+    $0 == "" { next }
+    { n = split($0, part, "/") }
+    part[n] ~ /^test_.*\.py$/ && ("/" $0) ~ /\/tests\// {
+        count++
+        if (count <= 50) print "  - " $0
+    }
+    END { if (count > 50) print "  ... and " (count - 50) " more" }')
 
 # No silently-dropped test files — warning-free pass.
 if [[ -z "$OFFENDERS" ]]; then
     exit 0
 fi
+OFFENDERS+=$'\n'
 
 # --- Offenders found: check for a structured [test-track-skip: ...] override ---
 # Evidence-chain override accepted per writing-rules:4; bare form rejected (#579).

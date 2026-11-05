@@ -13,7 +13,8 @@
 # `<`, not a letter).
 
 set -uo pipefail
-export PATH="/home/craftagents/bin:$PATH:/usr/local/bin:/opt/homebrew/bin"
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
+export PATH="$PATH:/usr/local/bin:/opt/homebrew/bin"
 
 INPUT=$(cat)
 

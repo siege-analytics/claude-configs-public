@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: push-time hook timeouts on macOS and the router timeout message
+
+- Hooks add `/home/craftagents/bin` to PATH only where it exists, through one shared `hooks/lib/hook-path.sh` (#1162). On macOS the missing directory sits under the `/home` autofs mount, and every command lookup through it was slow: the commit-message scan of a 75-line message took 17 to 18 s against its 15 s timeout, and now takes about 6 s. A missing helper file cannot change a hook's own decision.
+- `test-tracking-guard.sh` ignores trigger words inside quoted text and heredoc bodies, lists only `tests/**/test_*.py` candidates in one pass, and bounds the listing at 6 s. A listing that fails or runs out of time blocks with its reason instead of passing (#1162).
+- A router timeout names the hook, its elapsed time and its limit. The exact-main installer advice appears only for registration faults: receipt, router copy, generation or global registration (#1163).
+
 ### Fixed: Craft prompt recovery and reviewed hook repairs
 
 - Restore advisory prompt recovery for a verified packaged Craft host with nested Claude/Codex markers. Standalone spoofing controls and explicit child hard stops remain enforced.

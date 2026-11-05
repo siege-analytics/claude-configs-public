@@ -116,4 +116,86 @@ expect_block_because \
   "$HOOK" "$(payload "git push" "$R6")" \
   "silently git-ignored"
 
+# --- #1162: trigger words inside quoted data are not a push ---
+# R1 has an offender, so any scenario that reaches the listing blocks. Before
+# the fix these titles and bodies made the hook list every ignored file.
+expect_pass \
+  "1162a quoted issue title mentioning git push passes" \
+  "$HOOK" "$(payload 'gh issue create --title "hooks: git push is slow" --body x' "$R1")"
+expect_pass \
+  "1162b single-quoted body mentioning gh pr create passes" \
+  "$HOOK" "$(payload "gh issue comment 1 --body 'run gh pr create after git push'" "$R1")"
+expect_pass \
+  "1162c heredoc body mentioning git push passes" \
+  "$HOOK" "$(payload "gh issue create --title t --body-file - <<'EOF'
+then git push the branch
+EOF" "$R1")"
+
+# The shell still runs these, so they still trigger.
+expect_block_because \
+  "1162d bash -c argument is code, still blocks" \
+  "$HOOK" "$(payload 'bash -c "git push origin main"' "$R1")" \
+  "silently git-ignored"
+expect_block_because \
+  "1162e quoted message then a real push still blocks" \
+  "$HOOK" "$(payload 'echo "about to push" && git push' "$R1")" \
+  "silently git-ignored"
+expect_block_because \
+  "1162f quoted single-word verb still blocks" \
+  "$HOOK" "$(payload 'git "push"' "$R1")" \
+  "silently git-ignored"
+expect_block_because \
+  "1162g unbalanced quote keeps the text and blocks" \
+  "$HOOK" "$(payload "echo don't && git push" "$R1")" \
+  "silently git-ignored"
+
+# --- #1162: the ignored-file listing is bounded and never fails open ---
+REAL_GIT=$(command -v git)
+FAKE_SLOW="$WORK/fake-slow-git"
+FAKE_FAIL="$WORK/fake-fail-git"
+mkdir -p "$FAKE_SLOW" "$FAKE_FAIL"
+cat > "$FAKE_SLOW/git" <<EOF
+#!/bin/bash
+for a in "\$@"; do [[ "\$a" == ls-files ]] && exec sleep 30; done
+exec "$REAL_GIT" "\$@"
+EOF
+cat > "$FAKE_FAIL/git" <<EOF
+#!/bin/bash
+for a in "\$@"; do [[ "\$a" == ls-files ]] && exit 128; done
+exec "$REAL_GIT" "\$@"
+EOF
+chmod +x "$FAKE_SLOW/git" "$FAKE_FAIL/git"
+# R2 is clean (its test is tracked), so only the listing can block it.
+_SLOW_START=$SECONDS
+PATH="$FAKE_SLOW:$PATH" expect_block_because \
+  "1162h listing past its bound blocks with the reason" \
+  "$HOOK" "$(payload "git push" "$R2")" \
+  "did not finish within its 6s bound"
+if (( SECONDS - _SLOW_START < 10 )); then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1)); printf '  [PASS] 1162h bounded listing returned inside the 10s hook timeout\n'
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1)); _HARNESS_FAILED_NAMES+=("1162h listing bound")
+  printf '  [FAIL] 1162h bounded listing took %ss\n' "$((SECONDS - _SLOW_START))"
+fi
+PATH="$FAKE_FAIL:$PATH" expect_block_because \
+  "1162i failed listing blocks instead of reading as no offenders" \
+  "$HOOK" "$(payload "git push" "$R2")" \
+  "failed with exit status 128"
+
+# --- #1162: many offenders are listed in one pass and capped ---
+R7=$(mkrepo many)
+mkdir -p "$R7/tests"
+for i in $(seq 1 60); do printf 'def test_x():\n assert 1\n' > "$R7/tests/test_m$i.py"; done
+printf 'def test_x():\n assert 1\n' > "$R7/test_root_scratch.py"   # outside tests/: not listed
+printf 'test_*.py\n' > "$R7/.gitignore"
+git -C "$R7" add .gitignore && git -C "$R7" commit -q -m gi
+OUT7=$(printf '%s' "$(payload "git push" "$R7")" | bash "$HOOK" 2>&1); RC7=$?
+LISTED7=$(printf '%s\n' "$OUT7" | grep -c '^  - tests/test_m')
+if [[ $RC7 -eq 2 && $LISTED7 -eq 50 && "$OUT7" == *"  ... and 10 more"* && "$OUT7" != *test_root_scratch* ]]; then
+  _HARNESS_PASS=$((_HARNESS_PASS + 1)); printf '  [PASS] 1162j 60 offenders block, 50 listed plus a count\n'
+else
+  _HARNESS_FAIL=$((_HARNESS_FAIL + 1)); _HARNESS_FAILED_NAMES+=("1162j offender cap")
+  printf '  [FAIL] 1162j rc=%s listed=%s: %s\n' "$RC7" "$LISTED7" "${OUT7:0:300}"
+fi
+
 report

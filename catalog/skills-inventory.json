@@ -8542,6 +8542,7 @@
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
         "hooks/_test/task_keyed_gates.py",
+        "hooks/_test/test_tracking_guard.test.sh",
         "hooks/_test/ticket_propagation_guard.test.sh",
         "hooks/_test/universal_mutation_gate_safelist.test.sh",
         "hooks/_test/verify_enforcement.test.sh",
@@ -9430,6 +9431,7 @@
       "slug": "detect-ai-fingerprints",
       "source_path": "skills/detect-ai-fingerprints/SKILL.md",
       "test_evidence": [
+        "bin/_test/craft_hook_router_test.py",
         "bin/_test/hook_payload_test.py",
         "bin/_test/review_risk_test.py",
         "bin/_test/scanner_source_test.py",

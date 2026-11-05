@@ -33,6 +33,28 @@ class RoutingError(ValueError):
     pass
 
 
+class RegistrationError(RoutingError):
+    """The receipt, router copy or global registration is wrong; reinstalling fixes it.
+
+    Only this class carries the installer advice. A hook that times out or
+    misbehaves is not repaired by a reinstall, and saying so sent users after
+    the wrong fix (#1163).
+    """
+
+
+REGISTRATION_ADVICE = "Repair registration from native CLI with the exact-main installer."
+# [label, start] of the hook now running, for the whole-invocation alarm message.
+RUNNING_HOOK: list = []
+
+
+def hook_label(command: str) -> str:
+    """The hooks/<group>/<file> a policy command runs, for diagnostics only."""
+    match = re.search(r"hooks/([^/\s'\"]+/[^/\s'\"]+\.(?:sh|py))", command)
+    if match:
+        return match[1]
+    return command if len(command) <= 80 else command[:77] + "..."
+
+
 def regular_bytes(path: Path, *, header=False) -> bytes:
     if not path.is_absolute() or path.resolve(strict=True) != path:
         raise RoutingError("registration/session paths must be physical, without aliases")
@@ -219,7 +241,16 @@ def session_context(raw: bytes, event: str, environment: dict):
     if not original.is_absolute() or original.resolve(strict=True) != original or original.parent.name != "sessions":
         raise RoutingError("Craft requires an absolute physical session directory")
     workspace = original.parent.parent
-    receipt, policy = registration(workspace)
+    try:
+        receipt, policy = registration(workspace)
+    except RegistrationError:
+        raise
+    except (OSError, ValueError) as error:
+        # Receipt, router copy, generation and global registration checks, and
+        # unreadable or corrupt registration files: the failures a reinstall
+        # from exact main repairs. RoutingError is a ValueError.
+        detail = str(error) if isinstance(error, RoutingError) else "registration files are unreadable: " + type(error).__name__
+        raise RegistrationError(detail) from error
     helper = workspace / "hooks/lib/session_anchor.py"
     spec = importlib.util.spec_from_file_location("siege_verified_session_anchor", helper)
     module = importlib.util.module_from_spec(spec)
@@ -285,14 +316,25 @@ def matching_hooks(policy: dict, event: str, payload: dict) -> list[tuple[str, f
     return list(found.items())
 
 
+class HookTimeout(RoutingError):
+    pass
+
+
 def execute_hook(command: str, raw: bytes, environment: dict, budget: float):
+    start = time.monotonic()
     process = subprocess.Popen(command, shell=True, executable="/bin/bash", stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment,
                                cwd=os.getcwd(), start_new_session=True)
     selector = selectors.DefaultSelector()
     chunks = {"stdout": bytearray(), "stderr": bytearray()}
-    deadline = time.monotonic() + budget
+    deadline = start + budget
     completed = False
+
+    def timed_out():
+        # Name the hook and how long it ran: the message is the only trace a
+        # timeout leaves, because the audit line is written after all hooks.
+        return HookTimeout(f"workspace hook {hook_label(command)} timed out after "
+                           f"{time.monotonic() - start:.1f}s (limit {budget:.1f}s)")
     try:
         os.set_blocking(process.stdin.fileno(), False)
         selector.register(process.stdin, selectors.EVENT_WRITE, "stdin")
@@ -301,7 +343,7 @@ def execute_hook(command: str, raw: bytes, environment: dict, budget: float):
             selector.register(pipe, selectors.EVENT_READ, name)
         while selector.get_map():
             if time.monotonic() >= deadline:
-                raise RoutingError("workspace hook timed out")
+                raise timed_out()
             for key, _ in selector.select(min(0.1, max(0, deadline - time.monotonic()))):
                 if key.data == "stdin":
                     try:
@@ -319,8 +361,11 @@ def execute_hook(command: str, raw: bytes, environment: dict, budget: float):
                     continue
                 chunks[key.data].extend(data)
                 if len(chunks[key.data]) > LIMIT:
-                    raise RoutingError("workspace hook output exceeded its bound")
-        result = process.wait(timeout=max(0.01, deadline - time.monotonic()))
+                    raise RoutingError(f"workspace hook {hook_label(command)} output exceeded its bound")
+        try:
+            result = process.wait(timeout=max(0.01, deadline - time.monotonic()))
+        except subprocess.TimeoutExpired:
+            raise timed_out() from None
         completed = True
         return result, chunks["stdout"].decode("utf-8", "replace"), chunks["stderr"].decode("utf-8", "replace")
     finally:
@@ -521,8 +566,16 @@ def route(raw: bytes, event: str, workspace: Path, environment=None):
     for command, seconds in commands:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            raise RoutingError("workspace hook event exceeded its total budget")
-        output = execute_hook(command, raw, child_environment, min(seconds, remaining))
+            raise RoutingError(f"workspace hook event exceeded its {TOTAL_SECONDS}s total budget "
+                               f"after {TOTAL_SECONDS - remaining:.1f}s, before {hook_label(command)} could run")
+        RUNNING_HOOK[:] = [hook_label(command), time.monotonic()]
+        try:
+            output = execute_hook(command, raw, child_environment, min(seconds, remaining))
+        except HookTimeout as error:
+            if seconds <= remaining:
+                raise
+            raise HookTimeout(f"{error}; its {seconds:g}s timeout was cut by the {TOTAL_SECONDS}s event budget") from None
+        RUNNING_HOOK.clear()
         output_bytes += len(output[1].encode()) + len(output[2].encode())
         if output_bytes > LIMIT:
             raise RoutingError("combined hook output exceeds the invocation bound")
@@ -545,8 +598,13 @@ def main():
     # Native callbacks with no Craft marker do not resolve paths or read policy.
     if not (os.environ.get("CRAFT_SESSION_DIR") or os.environ.get("CRAFT_AGENT_WORKSPACE")):
         return 0
+    started = time.monotonic()
+    RUNNING_HOOK.clear()
+
     def expired(_signal, _frame):
-        raise RoutingError("whole SDK hook invocation exceeded its time budget")
+        running = f" while {RUNNING_HOOK[0]} had run {time.monotonic() - RUNNING_HOOK[1]:.1f}s" if RUNNING_HOOK else ""
+        raise RoutingError(f"whole SDK hook invocation exceeded its {TOTAL_SECONDS}s time budget "
+                           f"after {time.monotonic() - started:.1f}s{running}")
     previous_handler = signal.signal(signal.SIGALRM, expired)
     previous_timer = signal.setitimer(signal.ITIMER_REAL, TOTAL_SECONDS)
     try:
@@ -557,7 +615,9 @@ def main():
             code, value, diagnostics = route(raw, args.event, args.workspace)
         except Exception as error:  # SDK exit-1 failures must not bypass enforcement.
             detail = str(error) if isinstance(error, RoutingError) else type(error).__name__
-            diagnostics = "Craft hook routing failed closed: " + detail + ". Repair registration from native CLI with the exact-main installer."
+            diagnostics = "Craft hook routing failed closed: " + detail + "."
+            if isinstance(error, RegistrationError):
+                diagnostics += " " + REGISTRATION_ADVICE
             code, value, _ = aggregate(args.event, [(2, "", diagnostics)])
     except Exception as error:
         detail = str(error) if isinstance(error, RoutingError) else type(error).__name__
