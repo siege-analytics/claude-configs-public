@@ -587,6 +587,8 @@ def main():
  for path in AUTHORITY_DEPENDENCY_FLOOR:assert tier([path])=="C",("authority dependency",path)
  for path in ["catalog/effective-policy.json","examples/scaffolding/strict-release-policy.json","examples/scaffolding/synthetic-trunk-policy.json"]:assert tier([path])=="B",("proposal content",path)
  for path in ["hooks/git/self-review.sh","hooks/resolver/skill-enforcement-gate.sh","hooks/resolver/inject-resolver.sh","hooks/settings-snippet.json",".github/workflows/build-and-publish.yml","skills/KERNEL.md","bin/install.sh","bin/resolve-load-set.py","bin/skill-lifecycle.py","bin/data-scope.py","bin/_test/data_scope_test.py","catalog/data-scope-ledger.json","catalog/data-scope-fixtures.json","catalog/review-risk-policy.json","catalog/resolver-manifest.json","catalog/skill-lifecycle-approved-exceptions.json","auth/token.py","VERSION",*AUDITED_ENFORCEMENT_DEPENDENCIES]:assert tier([path])=="C",path
+ for path in ["hooks/github-project-policy.json","hooks/electinfo/overrides/github-project-policy.json"]:assert tier([path])=="C",("remote standing authority",path)
+ assert tier(["docs/github-project-policy-example.json"])=="B"
  for path in ["hooks/lib/log-block.sh","hooks/create-ticket/scaffold-test-stub.sh","bin/review-risk-metrics.py","hooks/agent-comms/future-advisory.sh"]:assert tier([path])=="B",path
  for path in ["catalog/generated-source-authority.json","catalog/kernel-budget.json"]:assert tier([path])=="A",path
  stripped=json.loads(json.dumps(policy));stripped["high_risk_path_patterns"]=[]

@@ -38,6 +38,7 @@ import re
 import shlex
 import sys
 import glob
+import stat
 import subprocess
 from task_actions import action, canonical
 from session_anchor import correct_environ as _correct_session_environ
@@ -754,6 +755,14 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         return shape  # No gate lookup for recognized reads/approved diagnostics.
     if shape.get("error"):
         return {**shape, "gate": None, "error": "Cannot resolve mutation targets: " + shape["error"]}
+    if shape.get('remote_actions'):
+        remote = select_project_task(workspace, shape)
+        if not remote.get('gate') or not shape['paths']:
+            return {**shape, **remote, 'remote_only_authorized': bool(remote.get('gate')) and not shape['paths']}
+        # Remote permission never replaces local ownership or implementation gates.
+        local = select_task(workspace, shape['paths'], shape.get('binding') or task_binding())
+        if not local.get('gate') or canonical(local['gate']['path']) != canonical(remote['gate']['path']):
+            return {**shape, 'gate': None, 'error': local.get('error') or 'Local and remote mutations belong to different tasks; split the action.'}
     managed_shape = shape.get('self_managed_shape', not command)
     if managed_shape:
         directories = shape.get('directory_paths', [])
@@ -793,6 +802,88 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         result["task"] = task_identity(tg["data"])
         result["tier"] = task_tier(tg["data"], shape["paths"], command)
     return result
+
+
+def project_policy() -> list:
+    """Fixed installed policy, owned and delivered with the hook source."""
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'github-project-policy.json'))
+    if canonical(path) != path:
+        raise ValueError('standing policy must be a regular installed file, not a symlink')
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('duplicate standing policy key: ' + key)
+            result[key] = value
+        return result
+    fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+    with os.fdopen(fd, encoding='utf-8') as source:
+        info = os.fstat(source.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_size > 65536:
+            raise ValueError('standing policy must be a bounded regular installed file')
+        data = json.loads(source.read(65537), object_pairs_hook=unique)
+    if not isinstance(data, dict) or set(data) != {'schema_version', 'grants'} or type(data['schema_version']) is not int or data['schema_version'] != 1 or not isinstance(data['grants'], list):
+        raise ValueError('invalid GitHub project standing policy schema')
+    fields = {'host', 'owner', 'project', 'operation', 'issue_owner', 'issue_binding', 'authority_source'}
+    seen = set()
+    for grant in data['grants']:
+        if not isinstance(grant, dict) or set(grant) != fields:
+            raise ValueError('invalid GitHub project standing grant fields')
+        if (grant['host'] != 'github.com' or grant['operation'] != 'item-add'
+                or grant['issue_binding'] != 'current-task-ticket'
+                or type(grant['project']) is not int or grant['project'] < 1
+                or any(not isinstance(grant[k], str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*', grant[k]) for k in ('owner', 'issue_owner'))
+                or not isinstance(grant['authority_source'], str) or not grant['authority_source'].strip()):
+            raise ValueError('invalid GitHub project standing grant values')
+        key = (grant['host'], grant['owner'].lower(), grant['project'], grant['issue_owner'].lower())
+        if key in seen:
+            raise ValueError('ambiguous duplicate GitHub project standing grants')
+        seen.add(key)
+    return data['grants']
+
+
+def select_project_task(workspace: str, shape: dict) -> dict:
+    """Standing permission narrows to one current task's exact canonical ticket."""
+    def deny(message):
+        return {'gate': None, 'error': 'GitHub project remote scope: ' + message}
+    if not session_id_from_env():
+        return deny('restore the current-session task identity; filesystem scope cannot supply remote authority.')
+    binding = shape.get('binding') or task_binding()
+    if shape.get('binding') and task_binding() and shape['binding'] != task_binding():
+        return deny('conflicting explicit task bindings.')
+    if (os.environ.get('GH_HOST') or 'github.com').lower() != 'github.com' or os.environ.get('GH_REPO'):
+        return deny('ambient GH_HOST/GH_REPO overrides do not match the literal scoped operation.')
+    try:
+        grants = project_policy()
+    except (OSError, ValueError, TypeError) as exc:
+        return deny('cannot validate installed standing policy: ' + str(exc))
+    selected = []
+    for target in shape['remote_actions']:
+        permitted = any(g['host'] == target['host'] and g['operation'] == target['operation']
+                        and g['project'] == target['project'] and g['owner'].lower() == target['owner'].lower()
+                        and g['issue_owner'].lower() == target['issue_owner'].lower() for g in grants)
+        if not permitted:
+            return deny('installed standing policy does not grant this owner/project/issue-owner operation; task fields cannot grant it.')
+        ticket = f"{target['issue_owner']}/{target['repository']}#{target['issue']}".lower()
+        owners = []
+        for gate in _session_thinks(workspace):
+            value = gate['data'].get('ticket') or gate['data'].get('task_id', '')
+            if (isinstance(value, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+#[1-9][0-9]*', value)
+                    and value.lower() == ticket and (not binding or task_identity(gate['data']) == binding)):
+                alias = gate['data'].get('task_id', '')
+                if (isinstance(alias, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+#[1-9][0-9]*', alias)
+                        and alias.lower() != ticket):
+                    return deny('conflicting canonical issue in ticket and task_id; repair the owning task identity.')
+                owners.append(gate)
+        if len(owners) != 1:
+            return deny('requires one unambiguous current-session task with canonical ticket or task_id=' + ticket + '; a parent, slug or local scope is insufficient.')
+        gate = owners[0]
+        if gate['data'].get('status') != 'implementing':
+            return deny('the owning task must be implementing; no remote authority from another lifecycle status.')
+        selected.append(gate)
+    if len({canonical(g['path']) for g in selected}) != 1:
+        return deny('remote mutations span different tasks; split the action.')
+    return {'gate': selected[0], 'error': '', 'task': task_identity(selected[0]['data'])}
 
 
 TIER_ORDER = {"A": 0, "B": 1, "C": 2}
