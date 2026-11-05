@@ -48,37 +48,13 @@ non-trivial — diff size does not matter.
 
 ---
 
-## THE FIRST GATE: `think`
+## Design and task authorization: `think`
 
-> **The most important skill in this entire chain is `think`.** Every catalog-bypass, every premature cutover, every half-designed pipeline this resolver exists to prevent traces back to acting before thinking.
+Before non-trivial implementation, use [skill:think] for applicability, design and required preparation. Its ordinary sibling references contain the design workflow, exact task evidence/lifecycle and verifiable premise claims; they ship with the same discoverable skill.
 
-Before ANY of the following, you MUST read `skills/thinking/think/SKILL.md` and produce a written design note:
+Think distinguishes authored preparation, the mutation gate's pre-edit A/B/C evidence and the separate [skill:self-review] commit-review contract. A mechanically permitted operation does not waive applicable preparation. A signal's existence does not prove approval. Follow [rule:strategic-agency], [rule:autonomy] and [rule:standing-approval] for existing authorization, material owner decisions, role limits and actual holds. Continue authorized work without inventing a fresh approval checkpoint.
 
-- Implementing a new feature
-- Refactoring existing code
-- Changing architecture (new layer, new catalog, new data path, new integration)
-- Making a cutover (moving Consumer / production traffic to a new source)
-- Proposing a schema change
-- Building a new skill, hook, or enforcement mechanism (yes, including this resolver itself)
-- Any task estimated > 30 minutes
-
-**Explicit exemptions** (from `think` skill): changes to non-executable content only (markdown prose, comments with no functional effect, whitespace), following step-by-step instructions from the user, research/read-only work. Any change to executable code (`.sh`, `.py`, `.sql`, `.js`, `.ts`, etc.) requires the full pipeline. See #338.
-
-The `think` gate is not a pattern-match entry below — it is the **first gate**. Every other pattern in this resolver assumes `think` has already fired.
-
-**Companion gate: `survey-context`.** When the task references existing entities (models, tables, functions, files, APIs, env vars), `skills/thinking/survey-context/SKILL.md` is the author-time counterpart to the static scanner. Run it before authoring code that touches existing infrastructure. Pairs with `think` Step 1 (Context) and self-review's `Goal source:` field.
-
-**Post-think pipeline: `investigate` -> `pre-mortem`.** After think produces a design note and verifies existing task authorization plus any explicit design sign-off requirement, the investigation and risk gates fire before implementation. Routine methods within an approved outcome do not require a fresh operator decision:
-
-1. **`investigate`** (`skills/thinking/investigate/SKILL.md`): Evidentiary fact-finding. Produces a Fact Sheet with file:line citations, impact chain (upstream → task → downstream), data shape verification, coherence check, and hypothesis/falsification. Investigation is non-discretionary — it gates ALL artifact CRUD, not just code files. Skill/hook/rule edits are the highest-stakes class (the recursive case) and are never exempt. Two tiers: Full (all sections) for cross-module work, Focused (4 sections) for 1-2 file changes with no interface impact. Hard rule: "File:line or it didn't happen."
-
-2. **`pre-mortem`** (`skills/thinking/pre-mortem/SKILL.md`): Adversarial risk classification using Tiger / Paper Tiger / Elephant framework. Operates on the Fact Sheet — not speculation. Each scenario must pass a coherence check (does it logically follow from the evidence it cites?) before classification. Launch-Blocking Tigers halt implementation until mitigated. Paper Tigers must cite their mitigation. Elephants are named with deferral rationale.
-
-3. **`post-mortem`** (`skills/post-mortem/SKILL.md`): Triggered by confirmed failures (shipped bug, materialized Tiger, misclassified Paper Tiger). Traces backward through the skill pipeline to identify where the failure could have been caught — including whether coherence checks ran at each gate. When root cause is a skill/hook/rule deficiency, action items must fix the pipeline artifact (the recursive case). Action items must be testable, must pass the Allspaw test, and must update skills — not just code.
-
-**Coherence is checked at every stage:** investigate Phase 5 (do the findings agree with each other?), pre-mortem Step 3 (does each scenario follow from its cited evidence?), self-review Lead Phase A (do the artifacts form a consistent logical structure?). Internal coherence first, then external verification.
-
-The full pipeline: think → investigate → pre-mortem → implementation → self-review → (on failure) post-mortem.
+For existing entities, follow Think's [skill:survey-context] and [skill:investigate] routing; [skill:pre-mortem] classifies risks against verified facts. [skill:post-mortem] applies to confirmed failures. Preserve their coherence, posting and evidence requirements through the owning procedures rather than a copied summary here.
 
 ---
 
@@ -260,10 +236,10 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 | About to… | Read first |
 |---|---|
 | End a session / hand off work | `skills/session/wrap-up/SKILL.md` |
-| Spawn sub-sessions / delegate work to parallel agents | Universal check #12 (spawn-protocol). Requires: execute/allow-all for sessions that must act or reply, explicit model/source selection, high-reasoning fresh sessions for reviews, worktree isolation, checkpoint-and-wait in prompt, artifact attachment to tickets, Phase 0 read instruction. |
+| Spawn sub-sessions / delegate work to parallel agents | [rule:session-coordination], Dispatch protocol, plus [rule:tandem-agent] for role boundaries. Universal check #12 is the compatibility entry. |
 | Receive a standing "work until X" instruction from user | Universal check #13 (standing-order continuity). Maintain running agents plus a runtime-available re-entry mechanism when one exists. Never go idle with pending work; never claim operator-visible cadence from async tools unless this deployment proves visibility. |
 | Recover from a magnum / enterprise-runner outage | `electinfo_claude_skills/skills/monitor-magnum/SKILL.md` |
-| A session seems stuck, silent, or stuck on a repeating error (rate limit, timeout, generic failure) that isn't clearing | `skills/stalled-session-recovery/SKILL.md` -- diagnose the real failure shape before nudging or respawning; don't trust the error label alone |
+| A session seems stuck, silent, or stuck on a repeating error (rate limit, timeout, generic failure) that isn't clearing | [skill:stalled-session-recovery] -- inspect actual state and supported host controls before a bounded repair or successor; an observation timeout does not prove termination |
 | SSH to a shared server / launch a batch job / triage server health | `skills/infrastructure/ops/SKILL.md` |
 | Create a new skill | `skills/meta/skillbuilder/SKILL.md` |
 
@@ -309,36 +285,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     **Interaction with test-before-bulk (#5):** test-before-bulk applies to batch data operations (20+ items). This check applies to batch ticket execution (2+ tickets). They are complementary: test-before-bulk prevents data damage from untested batch operations; batch-execution-is-not-one-action prevents quality damage from uninvestigated batch implementations. Both fire when the agent is doing "many of something."
 
-12. **Spawn-protocol**: when spawning sub-sessions (via `spawn_session`, `Agent`, or any delegation mechanism) for work that writes code or creates commits:
-
-    a. **Check for existing WIP and prior resolution before spawning.** Before creating a session for ticket N, perform two checks:
-
-       **Check 1 — branch exists?** `git branch -r --list "origin/fix/*N*" "origin/feat/*N*"`. If found, inspect (commits ahead of develop, PR state via `gh pr list --head`):
-       - Branch exists + PR already open → do NOT spawn; review the PR instead.
-       - Branch exists + no PR → inspect commits; decide whether to push+PR (work complete) or resume (work incomplete).
-       - No branch → proceed to Check 2.
-
-       **Check 2 — already resolved on develop?** `git log origin/develop --oneline --grep="N"` (where N is the ticket number). If a fix commit is already merged:
-       - Verify the ticket is closed or the code matches the fix description.
-       - If resolved → do NOT spawn; close the ticket if still open and move on.
-       - If ambiguous → spawn with explicit instruction to verify-before-implementing.
-
-       (Incidents: (1) successor session spawned agent for #692 which was already committed and PR'd. (2) Spawned agents for #690 and #689 which were already fixed on develop — agents correctly identified this but wasted startup time re-deriving what a 2-second `git log --grep` would have shown.)
-
-    b. **Worktree isolation is required.** Parallel sessions sharing a single working tree cause stash collisions, branch drift, and commits landing on wrong branches. Use `isolation: "worktree"` or equivalent. If the tool doesn't support isolation (e.g., `spawn_session` has no worktree parameter), instruct agents to create their own worktree in the prompt: `git worktree add /tmp/fix-NNN origin/develop && cd /tmp/fix-NNN`. If worktrees are impractical, serialize — do not run parallel sessions on a shared checkout. (Incident: siege_utilities #800 session had its uncommitted edits stashed by sibling session #801; commit later landed on wrong branch via checkout race.)
-
-    c. **Supervised vs unsupervised determines checkpoint behavior.**
-       - **Supervised** (coordinator session is actively monitoring — has ScheduleWakeup or is in interactive mode with user): agents run self-driving. They post artifacts to tickets and continue without waiting. The coordinator reviews asynchronously and sends corrections via `send_agent_message` if needed.
-       - **Unsupervised** (spawning into an unmonitored window — overnight, fire-and-forget): use checkpoint-and-wait. The prompt must include explicit checkpoints where the session stops and routes work back to the coordinator before proceeding. Checkpoints: (1) design note, (2) investigation findings, (3) implementation complete (no PR yet), (4) self-review artifact. At each: "send to coordinator via `send_agent_message` and WAIT for reply before proceeding." Do NOT rely on follow-up messages to redirect — they arrive too late.
-       (Incident rationale: self-driving was validated for supervised sessions in the #776 batch. Checkpoint-and-wait prevents runaway agents in unmonitored windows. Both are correct — in different contexts.)
-
-    d. **Attach artifacts to tickets, not just session plans.** Session-scoped plan files are ephemeral. The coordinator must ensure that investigation Fact Sheets and self-review artifacts are posted to the ticket as comments (or committed to the repo and linked from the ticket) before the session is dismissed. The next agent who works on related code must be able to find these artifacts without re-deriving them.
-
-    e. **Investigation reads existing knowledge.** The spawn prompt must instruct the session to check for prior investigations, related tickets, and existing documentation before starting its own investigation (see `investigate` skill Phase 0). Re-deriving facts already documented elsewhere is wasted work.
-
-    f. **Spawn with the right permissions, model, reasoning level, and sources at creation time.** A spawned session that must edit files, run commands, post artifacts, or reply through `send_agent_message` must be created in execute/allow-all mode, not safe/read-only mode. A review session must be a fresh session with the strongest appropriate review model available and high or higher reasoning enabled; do not use a weaker/default model for hostile, security, or bypass review when a better model is available. Every spawn call/prompt must name the intended model class, reasoning level, and enabled sources/tools required for the task. If a needed source is unavailable, either authenticate/enable it before spawning or state the degraded source set in the prompt and the artifact. Do not rely on inherited defaults for permission, model, reasoning, or source selection.
-
-    **Mechanical test:** if you are about to call `spawn_session` without (a) checking for existing WIP branches, (b) either checkpoint instructions (unsupervised) or ticket-posting instructions (supervised) in the prompt, and (c) explicit permission mode, model/reasoning selection, and required source/tool selection, you are violating this check.
+12. **Spawn-protocol**: Before dispatching a collaborator, apply [rule:session-coordination], section **Dispatch protocol**, for prior-work checks, isolation, supervision/checkpoints, durable artifacts, investigation preparation and creation-time configuration. Apply [rule:tandem-agent] for the role contract, permitted actions and re-review. Delegation does not expand existing authority or release an owner hold.
 
 13. **Standing-order continuity**: when the user gives a standing instruction to work autonomously until a specified time or condition ("work until 10:00 AM", "keep going overnight", "clear as much ground as you can"), that instruction is a **standing order**. Think of it as shift work: you know what you are supposed to be doing, do it according to the rules, and only ask for help when it becomes necessary.
 
@@ -389,18 +336,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
     **Incident justification:** Epic #776 dogfood session (2026-05-28/29). Agent went idle 7 hours overnight (no ScheduleWakeup after last agent completed) and produced "No response requested" twice when loop prompts stacked up. Root cause: rules alone don't prevent the agent from rationalizing inaction. The signal file + hook injection makes the standing order mechanically persistent — it cannot be "forgotten" or rationalized away because it is re-injected on every turn.
 
-14. **Verify-before-push**: the self-review skill's mechanical verification floor (Gates 1-4) is **non-negotiable**. Before any `git push`, all applicable gates must have run and their evidence must appear in the self-review artifact:
-
-    - **Gate 1** — `ast.parse` on every changed `.py` file.
-    - **Gate 2** — `pytest tests/ -x -q -o "addopts=" -m smoke` (exit 0).
-    - **Gate 3** — `sphinx-build -q docs/source/ /tmp/docs-verify` (exit 0), required when any file under `docs/` was modified.
-    - **Gate 4** — Notebook API verification: every library call in changed `.ipynb` files grep-verified against source. Required when any `.ipynb` is in the diff.
-
-    **Scope rationalizations are the exact failure mode these gates exist to prevent.** "Doc-only changes can't break tests," "config-only changes don't need a build," "test-only changes are self-verifying," "the notebook runs so the API must be right" — these are the sentences the Junior says right before pushing a broken commit. The gates are fast (seconds). The rework from skipping them is hours.
-
-    **Mechanical test:** if a self-review artifact lacks Gate 1 and Gate 2 evidence lines, the push MUST NOT proceed. If `docs/` was modified and Gate 3 evidence is missing, the push MUST NOT proceed. If `.ipynb` files are in the diff and Gate 4 evidence is missing, the push MUST NOT proceed.
-
-    **Incident justification:** Session 260603-golden-shark (2026-06-03). Four PRs merged across #816, #580, #970 without running `pytest` or `sphinx-build` once. Every self-review declared "trivial — doc/notebook only" and skipped verification. Zero of the four were actually verified before push. Hostile review then found 3 S2 notebook bugs (wrong method name, false narrative claims, output contradicting story) that Gate 4 would have caught mechanically.
+14. **Verify-before-push**: apply the target project's selected review procedure. The generic [skill:self-review] owns the applicable verification floor (Gates 1-5), exact artifact contract, review checklists and evidence placement. Before push, complete the applicable syntax, test, documentation, notebook/API and owning-task review checks with the project's actual supported tools, and record their commands/results. Missing applicable evidence stops the dependent push; scope rationalizations do not waive it. This navigation entry does not impose another project's tool commands or replace required project/protected checks.
 
 ---
 

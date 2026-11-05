@@ -8,6 +8,8 @@ allowed-tools: Read Grep Glob Bash mcp__session__get_session_info mcp__session__
 
 A session that has stopped producing useful turns is not one problem -- it is at least three different problems that happen to look similar from the outside. Treating all of them the same way (wait, or nudge-and-wait) fixes one and wastes hours on the other two. This skill is the diagnostic-then-fix procedure, and the discipline that makes it reliable: **never classify a stalled session from its error's `errorCode`/`errorTitle` alone.** Read the last *coherent* content before deciding what happened.
 
+Before choosing a repair, read [host controls and deployment navigation](host-controls.md). Verify actual supported controls, current operation state and your existing authority. An observation timeout is not proof that the operation stopped. Preserve actual owner holds and continue independent authorized work.
+
 ## When to invoke
 
 - Checking on a session that "seems stuck" or hasn't produced a turn in an abnormal stretch.
@@ -34,7 +36,7 @@ Every attempt fails identically, because the request itself cannot succeed, not 
 - **Wrong model/connection pair for the account tier** -- e.g. a model listed as selectable for a connection but not actually supported for that specific account type. Every turn errors immediately, with no other activity in between.
 - **Oversized single request** -- e.g. a large diff pushed as one API call. Look for the session's own words a few turns *before* the error run starts; a model that already said something like "the JSON body was too large for a single API call, I'll split this into multiple commits" and then never got the chance to is exactly this shape. Retrying the identical oversized request fails identically forever.
 
-**Fix:** cannot be repaired in place -- there is no tool to edit an existing session's model/connection, and no way to shrink a request that already failed to send. Respawn with a corrected configuration (a working model for the connection; instructions to chunk large pushes into smaller commits) and carry the original prompt/task forward verbatim plus the specific correction.
+**Fix:** inspect the host's supported configuration and retry controls. If an authorized in-place correction is supported, apply the bounded correction and observe a real successful turn. Do not retry the unchanged failing request. If the host cannot make the needed correction, use the successor procedure below with a working configuration and instructions to chunk oversized requests. Preserve the original objective, task state and specific correction.
 
 ### 3. Wedged session (a stuck tool call, not a stuck request)
 
@@ -42,9 +44,9 @@ The most dangerous shape because it looks the most "alive." A single tool call g
 
 **Signature:** a long run (dozens to hundreds) of consecutive tool-call entries, same tool name, at a fixed interval (e.g. every ~30s), sharing one parent tool-use id, with **no assistant text in between** and often empty tool input. This is different from a genuinely busy session dispatching to many workers, which shows *varied* targets/content and assistant narration describing what it's doing between calls. Grep the tail for an unbroken run of tool-type entries with zero interleaved assistant-type entries; a run in the hundreds, spanning hours, is the signature -- a handful is not.
 
-**Fix:** cannot be un-stuck from outside; nothing available interrupts another session's in-flight tool call. Read backward from where the loop *started* (not the tail) to recover the last coherent state -- what it was doing, what was in flight, what tickets/mutations were mid-way. Spawn a successor with that context, plus an explicit instruction not to reproduce whatever produced the loop (e.g. don't build a manual sleep-and-poll pattern inside one tool call; use the platform's own scheduling/monitoring primitives instead).
+**Fix:** read backward from where the loop *started* (not the tail) to recover the last coherent state, pending tools and incomplete mutations. Inspect supported native interruption controls. Use one only within the existing grant, observe its result, and reconcile durable state before resuming or starting a successor. If interruption is unavailable or fails, report that specific live operation and use the successor procedure only when concurrent ownership is settled. Carry forward the failure diagnosis and instructions not to reproduce it; use supported scheduling/monitoring rather than an unbounded manual polling call.
 
-**Expect `archive_session` (or equivalent) to fail on a wedged session** with something like "currently processing a turn" -- that failure is itself confirmation of the diagnosis, not a bug in the archiving step. If it keeps failing after the successor is confirmed alive, this needs whatever manual/UI-level intervention the platform provides for a hung session; don't loop retrying the same archive call expecting it to eventually succeed on its own.
+An archive refusal such as "currently processing a turn" reports a current host state; it does not by itself prove the session is wedged or that its tools stopped. Inspect supported controls and the live operation. Do not loop the same failing archive request. Preserve the predecessor until successor ownership, evidence and any required retirement conditions are settled.
 
 ## Diagnostic procedure (apply before deciding anything)
 

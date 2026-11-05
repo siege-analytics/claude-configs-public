@@ -164,6 +164,26 @@ class ProjectScope(unittest.TestCase):
                 result = self.hook(command, 2)
                 self.assertIn('Cannot resolve mutation targets', result.stderr)
 
+    def test_wrapped_remote_mutations_cannot_borrow_a_broad_local_gate(self):
+        self.f.task('electinfo/enterprise#3300', self.f.ws, artifacts=True)
+        for prefix in ('timeout 5 ', 'nice ', 'time ', 'timeout --signal=KILL 5 ', '/usr/bin/nice '):
+            for operation in ('gh project delete 1 --owner electinfo',
+                              'gh project item-delete 1 --owner electinfo --id PVTI_x',
+                              "gh api /graphql -f 'query=mutation {x}'"):
+                command = 'cd ' + str(self.f.repo) + ' && ' + prefix + operation
+                with self.subTest(command=command):
+                    shape = fixture.r.action(command, str(self.f.ws))
+                    reader = subprocess.run([sys.executable, str(ROOT / 'hooks/lib/read-only-command.py'), command],
+                                            capture_output=True, text=True, timeout=10)
+                    result = self.hook(command, 2)
+                    self.assertNotEqual(reader.returncode,0)
+                    self.assertTrue(shape.get('error'),shape)
+                    self.assertIn('Wrapped GitHub',result.stderr)
+        self.hook(ADD)
+        self.hook('timeout 5 gh project list --owner electinfo')
+        self.hook('nice gh project view 1 --owner electinfo')
+        self.hook('cd ' + str(self.f.repo) + ' && timeout 5 pytest')
+
     def test_ambient_host_and_repository_overrides_are_not_authority(self):
         self.task()
         for fields in ({'GH_HOST':'example.invalid'}, {'GH_REPO':'other/repo'}):

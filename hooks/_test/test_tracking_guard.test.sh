@@ -131,6 +131,22 @@ expect_pass \
 then git push the branch
 EOF" "$R1")"
 
+# #1204: quoted stdin delivered to a shell remains executable code.
+expect_block_because \
+  "1204 quoted push piped to bash still blocks" \
+  "$HOOK" "$(payload "printf '%s\\n' 'git push origin feature' | bash" "$R1")" \
+  "silently git-ignored"
+expect_block_because \
+  "1204 absolute shell with stdin option still blocks" \
+  "$HOOK" "$(payload "printf '%s\\n' 'git push origin feature' | /bin/sh -s" "$R1")" \
+  "silently git-ignored"
+expect_pass \
+  "1204 inert quoted shell pipeline example passes" \
+  "$HOOK" "$(payload "printf '%s\\n' 'git push origin feature | bash'" "$R1")"
+expect_pass \
+  "1204 quoted push piped to cat remains data" \
+  "$HOOK" "$(payload "printf '%s\\n' 'git push origin feature' | cat" "$R1")"
+
 # The shell still runs these, so they still trigger.
 expect_block_because \
   "1162d bash -c argument is code, still blocks" \

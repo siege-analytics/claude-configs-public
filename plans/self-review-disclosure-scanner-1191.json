@@ -1,0 +1,393 @@
+{
+  "base": "7e1e0ae2f89862b70f082ce8f8180d4220093699",
+  "source_scan_exit": 1,
+  "source_raw_sha256": "d0679ac7f7b7721633ec007bc62bf0e377b54d4a8b05d5575261db9e502de0e5",
+  "preserved_region_sha256": {
+    "template": "75604494106ee6254c54ef657a739081c240ecd13ca6335cde3d396a8cb9a5f5",
+    "fields": "5b844bcc2a023e7a1a18dc6f8a7fe72d5138d39aad67583a5bac26cd80e5171a",
+    "checklists": "3613f823346d2ba43a54e43978afc2a15f01c8d7cf8d6067c796e703d561d09e"
+  },
+  "reason": "Exact extraction preserves the approved template/field/checklist regions; these are real inherited style findings, not clean or false-positive claims. Later style cleanup is separate from this byte-preserving refactor under epic1156.",
+  "evidence": "Every row maps to the identical baseline line and pinned complete region; focused tests verify the three region digests. Newly authored plan style findings were corrected.",
+  "falsification": "Any mapped line or preserved region changes, an unmapped new finding appears, or byte-preservation tests fail; this bounded disposition no longer applies.",
+  "findings": [
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 20,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 93,
+      "line_sha256": "d05538a8e968f1ee8a9915e64ade8ea70aee4be42fe41eacf1b740449216fc07",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 30,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 103,
+      "line_sha256": "1f0392f33c13badb876ca71701d9bb4bd78fb16f7eb6a17d621dd3617d0eb30c",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 33,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 106,
+      "line_sha256": "114a7538bc3a3c6e74b0d9a445481167cb1ea8ca1b098ce74c13996ce87f9b93",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 35,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 108,
+      "line_sha256": "0cd037c7ce44c6a814fdc8b16dfb4f10d998f2973eb054dd4f94ba9e91b1f632",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 37,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 110,
+      "line_sha256": "ce4f64b166cf57e4aac5aed8fde2435d0c520380711d4144040d00adde76c5ab",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 39,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 112,
+      "line_sha256": "a91500fe702bceda07dc279d689f5581c4e2831f0c298c771d0b6fa3d3b88eb5",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 42,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 115,
+      "line_sha256": "c34df34eea645fac3f19498b95550d5f3e3ce5c28184614f8d73c599c899dc07",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 48,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 121,
+      "line_sha256": "e1978750102f9b2ff9d229190a46dd0f0869207d46a2c75b53916ec1f1a7dbb4",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 55,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 128,
+      "line_sha256": "b91750e8a59905ab70ae8e2bfb47a149f34f64c32a19baec6888bf76bc51371f",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 131,
+      "rule": "writing-prose-1-arrow-right",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 204,
+      "line_sha256": "5247626657c7d65f3d508117f08a8e80cbdd855ff640cb6444de2943a80be4d9",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 137,
+      "rule": "writing-prose-1-arrow-right",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 210,
+      "line_sha256": "bd0b060cf150cd53d20bb77fe4ecc0d307666206fc83a77bf126ba701960def2",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 137,
+      "rule": "writing-prose-1-arrow-right",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 210,
+      "line_sha256": "bd0b060cf150cd53d20bb77fe4ecc0d307666206fc83a77bf126ba701960def2",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 137,
+      "rule": "writing-prose-1-arrow-right",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 210,
+      "line_sha256": "bd0b060cf150cd53d20bb77fe4ecc0d307666206fc83a77bf126ba701960def2",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 137,
+      "rule": "writing-prose-1-arrow-right",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 210,
+      "line_sha256": "bd0b060cf150cd53d20bb77fe4ecc0d307666206fc83a77bf126ba701960def2",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 197,
+      "rule": "writing-prose-1-arrow-right",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 441,
+      "line_sha256": "2cf30373a419375dd1f4ff3e465563673722a039d07f72b87acf6debffcf0961",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 197,
+      "rule": "writing-prose-1-arrow-right",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 441,
+      "line_sha256": "2cf30373a419375dd1f4ff3e465563673722a039d07f72b87acf6debffcf0961",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 227,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 471,
+      "line_sha256": "143c31f11d4f962651a828fb67ec8ae9da1cf5c305af8541a445829eb61da4e7",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 229,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 473,
+      "line_sha256": "5e17cb251188f212348241987b55fd30539ecf8843cc808957899e0f0f6a8f47",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 247,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 491,
+      "line_sha256": "cec992996320eb32fae6c68cd50d37f21dbef6d8bbeb6da4b5280aa9641ad046",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 257,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 501,
+      "line_sha256": "a2e943983215fa37a70b6625f0e6acb4652d013b008c7ea4fddc15f16ce20ea8",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 296,
+      "rule": "writing-prose-3-adverb(explicitly)",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 540,
+      "line_sha256": "f0acad854bd3106cf6a65d177238d4ae97eb7a8a6fb11c4d111f0cf1e6d1a8ea",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 393,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 637,
+      "line_sha256": "4a449f29e22509a3b38b6659c9f67f4c6fb10fbd29214df052a342c65a267de2",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 412,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 656,
+      "line_sha256": "b8975e16be80ad7d1c07b2106d1396c9ea673dbc94083317acbe34d5bdfbb24f",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 413,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 657,
+      "line_sha256": "780c61832b8a66b7278b552d94b61a8a6670b4a1d49cbaafec509c819de75a03",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 414,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 658,
+      "line_sha256": "c178e973d641015b480a3794f5f5dc0c98a9de041ad6a5b5a2910cbc0a6b10bb",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 415,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 659,
+      "line_sha256": "9491f3ba6a3ba4ef9393ee78cd349f6d74b4ea9aa9dc0315d4a423590c803447",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 417,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 661,
+      "line_sha256": "f5488a9f1f0c2935210bc9b32cb6bd474ef4c2a86b52f3c4d4b1efdf9e34661b",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 421,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 665,
+      "line_sha256": "a03bc2d49371d27cb5a5ec8b6129e83dd1401898be62271d13e90e9f13a67fee",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 422,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 666,
+      "line_sha256": "d8c436d421b2e2120da407cb4b8a1fcf8ae66fe896331f62b125815b75ff2d42",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 425,
+      "rule": "writing-prose-1-arrow-right",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 669,
+      "line_sha256": "245c803146e305a2c2fa7be33654de7ea1c3d8d7d63efe8f7ad19b12671942d2",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/artifact-contract.md",
+      "line": 427,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 671,
+      "line_sha256": "20f6808a0e9338b3a05ab3f7cd84120d817074b845ee252d28f08980e48db00d",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/review-checklists.md",
+      "line": 170,
+      "rule": "writing-prose-3-adverb(explicitly)",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 838,
+      "line_sha256": "a924807eee07f7032c6d3ee6ae7d7c1411f5568cde3622eb3a027c93e345d890",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/review-checklists.md",
+      "line": 290,
+      "rule": "writing-prose-3-adverb(explicitly)",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 958,
+      "line_sha256": "567668fc069a9d7441217c610d434293994d2404dcde38038b6dd93e28f62d3d",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/review-checklists.md",
+      "line": 296,
+      "rule": "writing-prose-3-adverb(explicitly)",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 964,
+      "line_sha256": "fd0fc1900719e525b2be417bfb45b36a4f93ad6e3a0dea16ce6ae40ecc09c03f",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/review-checklists.md",
+      "line": 317,
+      "rule": "writing-prose-3-adverb(explicitly)",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 985,
+      "line_sha256": "0e28b011ced93c2d106314438976e0508a4db66afdde1c4c9712c50ce0f6f349",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/review-checklists.md",
+      "line": 320,
+      "rule": "writing-prose-3-adverb(explicitly)",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 988,
+      "line_sha256": "c2e3816625fd86cee25527cceb4d07b0cd1ae2ec04ea7b2491607e51961b87eb",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/review-checklists.md",
+      "line": 323,
+      "rule": "writing-prose-3-adverb(explicitly)",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 991,
+      "line_sha256": "9ec27d2df8a3aafc5ad719b62eec3011fd4b4c64915da1411cb18acabeae28a5",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/review-checklists.md",
+      "line": 407,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 1075,
+      "line_sha256": "2910c27a17df1d1af59a65422668fbc02a4a67013ccbbc7b7ddf47bfca180bd9",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/review-checklists.md",
+      "line": 408,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 1076,
+      "line_sha256": "f3ad1edded404bce8dd812c10cd338ddd43e7e4e1c97dddfd4a4f09769494a98",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/review-checklists.md",
+      "line": 409,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 1077,
+      "line_sha256": "f3bcfe34ad8e5cf1c6a72088b51c002f84664facb664f1acddc00e9bf50cd741",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/review-checklists.md",
+      "line": 431,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 1099,
+      "line_sha256": "a10ef57e1c47cecef48edd79d7ef6e08d2f90154108ba87fa657cadc89185857",
+      "disposition": "inherited-style-debt-preserved-region"
+    },
+    {
+      "path": "skills/self-review/review-checklists.md",
+      "line": 432,
+      "rule": "writing-prose-1-em-dash",
+      "baseline_path": "skills/self-review/SKILL.md",
+      "baseline_line": 1100,
+      "line_sha256": "2c7e13602204ad1b5053ba593942ad22084872f8f44508589a1a2bf3afbefceb",
+      "disposition": "inherited-style-debt-preserved-region"
+    }
+  ]
+}

@@ -60,6 +60,12 @@ out=$(run_msg "$TMP/partial.msg"); rc=$?
 [[ $rc -ne 0 ]] && ok "commit-msg: partial Tier C trailers rejected" || bad "commit-msg accepted partial Tier C trailers"
 expect_all "AC2 commit-msg: lists the absent trailers" "$out" Negative-Tests Full-Suite Canary-Rollback
 expect_none "AC2 commit-msg: omits trailers already present" "$out" Review-Tier Self-Review Self-Review-Source Hostile-Review "ticket reference"
+sed 's@https://example.com/review@plans/nonexistent.md@' "$TMP/partial.msg" > "$TMP/missing-source.msg"
+out=$(run_msg "$TMP/missing-source.msg"); rc=$?
+[[ $rc -eq 1 ]] && ok "commit-msg: missing path with other absent trailers is rejected" || bad "commit-msg: missing path expected exit 1, got $rc"
+expect_all "commit-msg: reports missing file and absent trailers together" "$out" Self-Review-Source Negative-Tests Full-Suite Canary-Rollback
+one_rejection "commit-msg: missing source has one aggregate rejection" "$out" '^BLOCKED:'
+printf '%s\n' "$out" | grep -q 'file not found: plans/nonexistent.md' && ok "commit-msg: aggregate names the actual absent file" || bad "commit-msg: absent file diagnostic missing"
 
 cat > "$TMP/down.msg" <<'EOF'
 fix: gate (#1168)
@@ -142,6 +148,12 @@ out=$(sr_hook); rc=$?
 [[ $rc -eq 2 ]] && ok "self-review: partial Tier C trailers rejected" || bad "self-review: partial expected exit 2, got $rc"
 expect_all "AC2 self-review: lists the absent trailers" "$out" Negative-Tests Full-Suite Canary-Rollback
 expect_none "AC2 self-review: omits trailers already present" "$out" Review-Tier Self-Review Self-Review-Source Hostile-Review "ticket reference"
+git -C "$R" commit --amend --no-verify -q -F "$TMP/missing-source.msg"
+out=$(sr_hook); rc=$?
+[[ $rc -eq 2 ]] && ok "self-review: missing path with absent trailers is rejected" || bad "self-review: missing path expected exit 2, got $rc"
+expect_all "self-review: reports missing file and absent trailers together" "$out" Self-Review-Source Negative-Tests Full-Suite Canary-Rollback
+one_rejection "self-review: missing source has one aggregate rejection" "$out" '^BLOCKED:'
+printf '%s\n' "$out" | grep -q 'file not found: plans/nonexistent.md' && ok "self-review: aggregate names the actual absent file" || bad "self-review: absent file diagnostic missing"
 git -C "$R" commit --amend --no-verify -q -F "$TMP/down.msg"
 out=$(sr_hook)
 expect_all "self-review: downgrade lists tier and every Tier C trailer" "$out" Review-Tier Self-Review-Source Hostile-Review Negative-Tests Full-Suite Canary-Rollback

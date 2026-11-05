@@ -574,7 +574,8 @@ class Gates(unittest.TestCase):
         shutil.copytree(ROOT / 'hooks', self.ws / 'hooks')
         fakebin = self.ws / 'fakebin'; fakebin.mkdir()
         gh = fakebin / 'gh'
-        gh.write_text('#!/bin/sh\necho "current behavior intended behavior steps to get there success criteria what could go wrong hasty mistakes observable behavior over-focusing leave out prior work right environment failure case instance or class done match skip if nobody findings citations disposition fact sheet investigation verified evidence severity: tiger risks pre-mortem elephant mitigation"\n')
+        comment = 'current behavior intended behavior steps to get there success criteria what could go wrong hasty mistakes observable behavior over-focusing leave out prior work right environment failure case instance or class done match skip if nobody findings citations disposition fact sheet investigation verified evidence severity: tiger risks pre-mortem elephant mitigation'
+        gh.write_text('#!' + sys.executable + '\nimport json\nprint(json.dumps(' + repr(comment) + '))\n')
         gh.chmod(0o755)
         def run(sid, ticket, legacy=False):
             directory = self.task(ticket, self.repo, sid=sid)
@@ -584,6 +585,11 @@ class Gates(unittest.TestCase):
                     shutil.copyfile(source, directory.parent.parent / source.name)
                 shutil.rmtree(directory)
                 self.task('o/r#other', self.a, status='designing', sid=sid)
+            # Prove the production writer creates both companions; setup or
+            # legacy migration must not leave an already-passing artifact.
+            for target in (directory, directory.parent.parent) if legacy else (directory,):
+                for name in ('junior-senior-gate.json', 'artifacts-posted-gate.json'):
+                    (target / name).unlink(missing_ok=True)
             env = {**self.env, 'CRAFT_SESSION_DIR': str(directory.parent.parent), 'PATH': str(fakebin) + os.pathsep + self.env['PATH']}
             result = subprocess.run(['bash', str(self.ws / 'hooks/resolver/pipeline-state-guard.sh')], input=json.dumps(craft_payload(cwd=str(self.repo))), env=env, capture_output=True, text=True, timeout=120)
             self.assertEqual(result.returncode, 0, result.stderr + result.stdout)

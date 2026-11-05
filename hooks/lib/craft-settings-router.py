@@ -230,19 +230,27 @@ def registered_test_provider(environment: dict, payload: dict):
     if not directory:
         return None  # The existing native/unregistered local-generation lane.
     session = Path(directory)
-    if not session.is_absolute() or session.parent.name != 'sessions' or session.resolve() != session:
-        raise RoutingError('receipt execution requires a physical host session directory')
     workspace = session.parent.parent
-    target = router_path(Path.home(), workspace)
     marker = environment.get('CRAFT_AGENT_WORKSPACE')
-    if marker and marker != str(workspace):
-        raise RoutingError('receipt workspace differs from the host session binding')
     # A direct-hook/headless workspace can have a policy without this external
     # registration. Preserve its existing exact local-generation producer.
-    enrolled = any(path.exists() or path.is_symlink() for path in (
-        workspace / '.claude/craft-hook-registration.json', target))
+    # Discover enrollment before imposing Craft's sessions/ layout on native
+    # CLAUDE_SESSION_DIR values. A marker or symlink cannot hide enrollment and
+    # make a malformed registered binding fall back to the native producer.
+    candidates = {workspace, session.resolve().parent.parent}
+    if marker and Path(marker).is_absolute():
+        candidates.add(Path(marker))
+    enrolled = any(path.exists() or path.is_symlink()
+                   for candidate in candidates if candidate.is_absolute()
+                   for path in (candidate / '.claude/craft-hook-registration.json',
+                                router_path(Path.home(), candidate)))
     if not enrolled:
         return None
+    if not session.is_absolute() or session.parent.name != 'sessions' or session.resolve() != session:
+        raise RoutingError('receipt execution requires a physical host session directory')
+    if marker and marker != str(workspace):
+        raise RoutingError('receipt workspace differs from the host session binding')
+    target = router_path(Path.home(), workspace)
     if payload.get('hook_event_name') != 'PreToolUse' or payload.get('tool_name') != 'Bash':
         raise RoutingError('registered receipt execution requires the actual Bash callback')
     receipt, _policy = registration(workspace, router_path_override=target)

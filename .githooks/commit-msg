@@ -112,6 +112,13 @@ if [[ "$TIER_VALUE" == "C" ]]; then
     done
 fi
 
+SOURCE_VALUE=$(echo "$TRAILERS" | { grep -i '^Self-Review-Source:' || true; } | head -1 | sed 's/^[^:]*:[[:space:]]*//')
+if [[ "$TIER_VALUE" != "A" && -n "$SOURCE_VALUE" ]] && ! echo "$SOURCE_VALUE" | grep -qE '^(https?://|#[0-9]+$)'; then
+    if [[ ! -f "$SOURCE_VALUE" ]]; then
+        MISSING+=("Self-Review-Source: file not found: $SOURCE_VALUE")
+    fi
+fi
+
 if [[ ${#MISSING[@]} -gt 0 ]]; then
     {
         echo ""
