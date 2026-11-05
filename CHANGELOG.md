@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: ssh is gated by host, not as a local cwd mutation
+
+- The mutation gate no longer treats `ssh` as a mutation of the working directory (#1160). `ssh` to a host on the operator-owned `hooks/lib/ssh-host-allowlist.json` (initially `cyberpower`) passes without a task gate, from any directory.
+- Any other host is denied with a message naming the allowlist, even under a covering task gate.
+- The following are denied:
+  - options with local effects or that are not modeled (`ProxyCommand`, `LocalCommand`, `HostName`, `-F`, `-E`, `-S`, `-M`, `-L`/`-R`/`-D`, `-f`, `-W`, `-J`, `-i` and others), including options placed after the destination;
+  - `ssh` hidden behind another path, an environment assignment or an exec wrapper.
+- Local redirects, `tee` and chained commands keep their local targets. `scp`, `rsync` and `sftp` are unchanged.
+- The new `remote_contact_only` flag is read only by the mutation gate. Other guards, including destructive-guard, still inspect ssh commands.
+- Behavior change: ssh to a non-allowlisted host, for example `ssh -T git@github.com`, used to pass under a covering task gate and is now denied until the operator adds the host.
+
 ### Fixed: Craft prompt recovery and reviewed hook repairs
 
 - Restore advisory prompt recovery for a verified packaged Craft host with nested Claude/Codex markers. Standalone spoofing controls and explicit child hard stops remain enforced.
