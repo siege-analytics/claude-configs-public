@@ -70,3 +70,7 @@ Six prose findings are corrected in final wording/quote cleanup. Three Unicode f
 These dispositions do not assert the entire library or every backend is repaired. Remaining scope includes #1161 item-edit support and the other open parser/scanner residuals, plus the rest of #1156 instruction consolidation. The current release packet restores the concrete reviewed local and remote workflows without a global approval state or new owner confirmation.
 
 The final documentation-delta scan remains nonclean for three literal historical rule identifiers inside the scanner ledger. They name the corrected prose findings; they are data, not new prose or executable changes. Their exact identifiers are retained for traceability. No ignore option or encoded-word workaround was used.
+
+## Local full-validation mode correction
+
+The real Mac full workflow passed its earlier steps, then stopped at the Claude package hook validator because hooks/lib/hook-path.sh was committed as mode 100644. Corrected only its executable mode to 100755; the blob remains 9a90989163502aee8a2bef8d3ee248f40348feb0. A rebuild and source/both-consumer hook validators are required before resuming the remaining workflow steps. The stopped run is not called a complete pass. The Python receipt remains content-valid because no Python blob changed.
