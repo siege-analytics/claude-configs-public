@@ -974,6 +974,92 @@ def _named_git_add_targets(command: str, cwd: str, repo_root: str) -> Optional[l
         return None
 
 
+def _pytest_execution_targets(command: str, cwd: str, repo_root: str) -> Optional[list]:
+    """Risk view for bounded task-owned test execution, not a reader certificate.
+
+    Local remote-tracking refs are a checkout risk heuristic, not a server
+    freshness proof or an authority grant. Existing Git metadata trust applies.
+    """
+    from task_actions import shell_tokens, UnknownShape, _options
+    try:
+        tokens = shell_tokens(command)
+    except UnknownShape:
+        return None
+    while tokens and tokens[0][0].startswith('CCP_TASK_ID=') and not tokens[0][1] and not tokens[0][2]:
+        tokens.pop(0)
+    effective = canonical(cwd)
+    if (len(tokens) >= 3 and tokens[0][0] == 'cd' and tokens[2][0] == '&&'
+            and tokens[2][1] and not tokens[1][1] and not tokens[1][2]
+            and not tokens[1][0].startswith('-')):
+        effective = canonical(tokens[1][0], effective)
+        tokens = tokens[3:]
+    if not tokens or any(operator or glob for _, operator, glob in tokens):
+        return None
+    args = [word for word, _, _ in tokens]
+    if args[0] == 'pytest':
+        arguments = args[1:]
+    elif args[:3] == ['python3', '-m', 'pytest'] or args[:3] == ['python', '-m', 'pytest']:
+        arguments = args[3:]
+    else:
+        return None
+    if effective != repo_root or os.environ.get('PYTEST_ADDOPTS') or os.environ.get('PYTEST_PLUGINS'):
+        return None
+    flags = set('-q -qq -v -vv -x -s --collect-only --disable-warnings --strict-markers --strict-config --no-header --no-summary'.split())
+    values = set('-k -m --maxfail --tb --color'.split())
+    if not _options(arguments, flags=flags, values=values):
+        return None
+    selectors, literal, index = [], False, 0
+    while index < len(arguments):
+        word = arguments[index]
+        if not literal and word == '--':
+            literal = True
+        elif not literal and word.startswith('-'):
+            if word.partition('=')[0] in values and '=' not in word:
+                index += 1
+        else:
+            selector = word.split('::', 1)[0]
+            path = canonical(selector, effective)
+            if not _within(path, repo_root) or not os.path.exists(path) or os.path.islink(os.path.join(effective, selector)):
+                return None
+            relative = os.path.relpath(path, repo_root).replace(os.sep, '/')
+            if os.path.isdir(path):
+                listed = _git_lines(repo_root, 'ls-files', '-z', '--', relative)
+                if listed is None:
+                    raise ValueError('cannot list explicit test selector')
+                selectors.extend(listed)
+            else:
+                selectors.append(relative)
+        index += 1
+    bases = []
+    for ref in ('refs/remotes/origin/main', 'refs/remotes/origin/develop'):
+        existing = _git_lines(repo_root, 'rev-parse', '--verify', ref)
+        if existing is None:
+            continue
+        common = _git_lines(repo_root, 'merge-base', ref, 'HEAD')
+        if common is None or len(common) != 1:
+            raise ValueError('cannot resolve protected test-execution baseline')
+        bases.append(common[0])
+    if not bases:
+        raise ValueError('test execution has no canonical remote main/develop baseline')
+    base = bases[0]
+    for candidate in bases[1:]:
+        if _git_lines(repo_root, 'merge-base', '--is-ancestor', base, candidate) is not None:
+            base = candidate
+        elif _git_lines(repo_root, 'merge-base', '--is-ancestor', candidate, base) is None:
+            raise ValueError('test execution has incomparable protected baselines')
+    changed = []
+    for arguments in (
+            ('diff', '--no-ext-diff', '--no-textconv', '--name-only', '-z', '--no-renames', base, 'HEAD'),
+            ('diff', '--no-ext-diff', '--no-textconv', '--cached', '--name-only', '-z', '--no-renames'),
+            ('diff', '--no-ext-diff', '--no-textconv', '--name-only', '-z', '--no-renames'),
+            ('ls-files', '--others', '--exclude-standard', '-z')):
+        paths = _git_lines(repo_root, *arguments)
+        if paths is None:
+            raise ValueError('cannot enumerate changed test-execution paths')
+        changed.extend(paths)
+    return sorted(set(changed + selectors))
+
+
 def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict:
     """Effective review tier for this mutation (#1086): the higher of the gate's
     declared `tier` and the floor bin/review-risk.py computes for the targets.
@@ -986,7 +1072,9 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict
     it can record. A lone explicit named-file git add uses those files for
     risk while retaining repository ownership. A declared lower tier never
     wins; a missing classifier,
-    policy, repo_root or git listing fails closed to C."""
+    policy, repo_root or git listing fails closed to C. Bounded root pytest
+    uses its branch/working delta and selectors, with at least B; normal task
+    ownership and preparation requirements still apply."""
     declared = str(gate.get("tier") or gate.get("review_tier") or "").strip().upper()
     declared = declared if declared in TIER_ORDER else ""
     root = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
@@ -1002,6 +1090,8 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict
         if not repo_root:
             raise ValueError("gate has no repo_root")
         rel = []
+        pytest_targets = (_pytest_execution_targets(command, cwd or repo_root, repo_root)
+                          if any(os.path.realpath(p) == repo_root for p in paths) else None)
         # A lone commit records only staged/modified files: its other operands
         # (message words such as "docs: a/b") are not targets. Only when the
         # repository itself is a target, so the staged set is what gets classified.
@@ -1016,6 +1106,8 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict
             r = "" if rp == repo_root else os.path.relpath(rp, repo_root).replace(os.sep, "/")
             if r == "" and named_add is not None:
                 rel.extend(named_add)
+            elif r == "" and pytest_targets is not None:
+                rel.extend(pytest_targets)
             elif r == "" and lone_commit:
                 staged = _git_lines(repo_root, "diff", "--cached", "--name-only", "-z")
                 modified = _git_lines(repo_root, "diff", "--name-only", "-z")
@@ -1031,6 +1123,8 @@ def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict
                 rel.append(r)
         verdict = module.classify(policy, sorted(set(rel)))
         floor, reasons = verdict["computed_tier"], [x for x in verdict["reasons"] if x.startswith(verdict["computed_tier"])]
+        if pytest_targets is not None and TIER_ORDER[floor] < TIER_ORDER['B']:
+            floor, reasons = 'B', ['B:task-owned test execution']
     except Exception as exc:
         floor, reasons = "C", [f"C:{exc}; failing closed" if isinstance(exc, ValueError)
                                else f"C:review-risk classifier unavailable ({type(exc).__name__}); failing closed"]
