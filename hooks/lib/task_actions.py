@@ -847,6 +847,24 @@ def github_project_action(args):
                 project=int(args[3]), issue_owner=issue[1], repository=issue[2], issue=int(issue[3]))
 
 
+def _literal_operand_family(args: list[str]) -> bool:
+    """Known commands whose quoted glob characters are literal operand data.
+
+    This changes target parsing only, never reader status or task authority.
+    Git is excluded because its own pathspec language can expand quoted input.
+    Unknown executable families retain the conservative operand check.
+    """
+    if args[0] in {'touch', 'mkdir', 'rm', 'rmdir', 'cp', 'mv', 'tee', 'chmod', 'chown'}:
+        return True
+    executable = args[0]
+    name = os.path.basename(executable)
+    if executable == 'pytest' or os.path.isabs(executable) and name == 'pytest':
+        return True
+    python = executable in {'python', 'python3'} or (os.path.isabs(executable)
+             and re.fullmatch(r'python(?:3(?:\.[0-9]+)?)?', name) is not None)
+    return python and args[1:3] == ['-m', 'pytest']
+
+
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
@@ -938,7 +956,11 @@ def _action(command: str, cwd: str) -> dict:
                 raise UnknownShape('opaque inline execution has unbounded mutation targets')
             local = effective
             operands = [x.split('=', 1)[-1] if '=' in x else x for x in args[1:]]
-            if any(any(c in x for c in '*?[') or x.startswith('~') for x in operands):
+            # Unquoted glob positions were rejected above. Retain that lexical
+            # proof for known literal operands; do not reinterpret quoted data.
+            if (any(x.startswith('~') for x in operands)
+                    or not _literal_operand_family(args)
+                    and any(any(c in x for c in '*?[') for x in operands)):
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             if args[0] not in {'touch', 'mkdir', 'rm', 'rmdir', 'cp', 'mv', 'tee', 'chmod', 'chown', 'git'}:
                 paths.extend(canonical(x, effective) for x in operands if '/' in x and '://' not in x and not x.startswith('-'))
