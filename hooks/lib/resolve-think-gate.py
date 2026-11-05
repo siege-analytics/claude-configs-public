@@ -800,7 +800,7 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         result["session_dir"] = own_session_directory(workspace)
         result["artifacts"] = {name: g["path"] if (g := _artifact_for(tg, name, workspace)) else None for name in ("investigate-gate", "junior-senior-gate", "artifacts-posted-gate", "review-gate", "test-gate")}
         result["task"] = task_identity(tg["data"])
-        result["tier"] = task_tier(tg["data"], shape["paths"], command)
+        result["tier"] = task_tier(tg["data"], shape["paths"], command, cwd)
     return result
 
 
@@ -917,7 +917,64 @@ def _lone_git_commit(command: str) -> bool:
     return bool(words) and words[0] == "git" and i < len(words) and words[i] == "commit"
 
 
-def task_tier(gate: dict, paths: list, command: str = "") -> dict:
+def _named_git_add_targets(command: str, cwd: str, repo_root: str) -> Optional[list]:
+    """Risk targets for a lone, explicit named-file staging operation.
+
+    This never selects task ownership. Unproved shapes retain the ordinary
+    repository-wide risk calculation, including directories and missing files.
+    """
+    from task_actions import shell_tokens, UnknownShape
+    from git_command import prefix
+    try:
+        tokens = shell_tokens(command)
+        if any(operator or globs for _, operator, globs in tokens):
+            return None
+        words = [word for word, _, _ in tokens]
+        if words and words[0].startswith('CCP_TASK_ID='):
+            words = words[1:]
+        if not words or words[0] != 'git':
+            return None
+        # Restrict dispatch before reusing the shared normalizer: aliases and
+        # configuration overrides are not part of this named-file exception.
+        rest = words[1:]
+        while rest and rest[0].startswith('-'):
+            if rest[0] == '-C' and len(rest) > 1:
+                rest = rest[2:]
+            elif rest[0].startswith('-C') and len(rest[0]) > 2:
+                rest = rest[1:]
+            elif rest[0] in {'--no-pager', '--no-optional-locks'}:
+                rest = rest[1:]
+            else:
+                return None
+        if not rest or rest[0] != 'add':
+            return None
+        operation = prefix(words, cwd)
+        if not operation or operation['config'] or operation['args'][0] != 'add':
+            return None
+        targets, terminated = [], False
+        allowed = {'-f', '--force', '-v', '--verbose', '-u', '--update', '-A', '--all'}
+        for word in operation['args'][1:]:
+            if not terminated and word == '--':
+                terminated = True
+                continue
+            if not terminated and word.startswith('-'):
+                if word not in allowed:
+                    return None
+                continue
+            if not word or word.startswith(':') or any(c in word for c in '*?[\n\r\0'):
+                return None
+            lexical = os.path.abspath(os.path.join(operation['cwd'], word))
+            target = canonical(word, operation['cwd'])
+            if (target != lexical or not _within(target, repo_root)
+                    or not stat.S_ISREG(os.lstat(target).st_mode)):
+                return None
+            targets.append(os.path.relpath(target, repo_root).replace(os.sep, '/'))
+        return sorted(set(targets)) if targets else None
+    except (UnknownShape, OSError, subprocess.SubprocessError):
+        return None
+
+
+def task_tier(gate: dict, paths: list, command: str = "", cwd: str = "") -> dict:
     """Effective review tier for this mutation (#1086): the higher of the gate's
     declared `tier` and the floor bin/review-risk.py computes for the targets.
 
@@ -926,7 +983,9 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
     scripts) is classified by the tracked files under it plus a probe path
     inside it, so `rm -rf hooks/bash` is C wherever hooks/bash holds Tier C
     files. A lone `git commit` is classified by the staged and modified files
-    it can record. A declared lower tier never wins; a missing classifier,
+    it can record. A lone explicit named-file git add uses those files for
+    risk while retaining repository ownership. A declared lower tier never
+    wins; a missing classifier,
     policy, repo_root or git listing fails closed to C."""
     declared = str(gate.get("tier") or gate.get("review_tier") or "").strip().upper()
     declared = declared if declared in TIER_ORDER else ""
@@ -947,6 +1006,7 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
         # (message words such as "docs: a/b") are not targets. Only when the
         # repository itself is a target, so the staged set is what gets classified.
         lone_commit = _lone_git_commit(command) and any(os.path.realpath(p) == repo_root for p in paths)
+        named_add = _named_git_add_targets(command, cwd or repo_root, repo_root)
         for p in paths:
             rp = os.path.realpath(p)
             if lone_commit and rp != repo_root:
@@ -954,7 +1014,9 @@ def task_tier(gate: dict, paths: list, command: str = "") -> dict:
             if not (rp == repo_root or rp.startswith(repo_root + os.sep)):
                 raise ValueError("target outside the gate's repo_root")
             r = "" if rp == repo_root else os.path.relpath(rp, repo_root).replace(os.sep, "/")
-            if r == "" and lone_commit:
+            if r == "" and named_add is not None:
+                rel.extend(named_add)
+            elif r == "" and lone_commit:
                 staged = _git_lines(repo_root, "diff", "--cached", "--name-only", "-z")
                 modified = _git_lines(repo_root, "diff", "--name-only", "-z")
                 if staged is None or modified is None:
