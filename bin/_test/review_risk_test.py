@@ -79,6 +79,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/probe-runner.py",
  "hooks/lib/resolve-think-gate.py",
  "hooks/lib/task_actions.py",
+ "hooks/lib/github-project-status.py",
  "hooks/lib/test-evidence.py",
  "hooks/lib/craft-settings-router.py",
  "bin/install-craft-hook-router.py",
