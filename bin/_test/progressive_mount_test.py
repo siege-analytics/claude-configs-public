@@ -4,6 +4,7 @@ import importlib.util
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -70,14 +71,28 @@ def main() -> None:
             text=True, capture_output=True, check=True, timeout=60,
         )
         assert "load: coding" in routed.stdout and "load: python" in routed.stdout
+        # The boundary fixture must remain oversized when real skills shrink.
+        oversized = base / "oversized-package"
+        shutil.copytree(migrated, oversized, symlinks=True)
+        oversized_merge = oversized / "skills/merge/SKILL.md"
+        oversized_merge.write_text("# Synthetic budget fixture\n" + "x" * 80001)
+        oversized_manifest = json.loads((oversized / "catalog/resolver-manifest.json").read_text())
+        fixture_inventory = {"items": list(oversized_manifest["known_by_source"].values())}
+        for item in fixture_inventory["items"]:
+            if item["slug"] == "merge":
+                item["characters"] = len(oversized_merge.read_text())
+                item["estimated_tokens"] = (item["characters"] + 3) // 4
+        fixture_inventory_path = base / "oversized-inventory.json"
+        fixture_inventory_path.write_text(json.dumps(fixture_inventory))
         boundary = subprocess.run(
-            [sys.executable, str(migrated / "bin" / "resolve-load-set.py"),
-             "--prompt", "[skill:merge] [skill:self-review]", "--repo", "other/repo"],
+            [sys.executable, str(oversized / "bin" / "resolve-load-set.py"),
+             "--prompt", "[skill:merge] [skill:self-review]", "--repo", "other/repo",
+             "--inventory", str(fixture_inventory_path)],
             text=True, capture_output=True, check=True, timeout=60,
         )
         boundary_result = json.loads(boundary.stdout)
         actual_characters = sum(
-            len((migrated / "skills" / slug / "SKILL.md").read_text())
+            len((oversized / "skills" / slug / "SKILL.md").read_text())
             for slug in ("merge", "self-review")
         )
         assert actual_characters > 80000

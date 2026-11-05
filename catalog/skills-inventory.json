@@ -4081,6 +4081,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "docs/instruction-architecture.md",
         "skills/KERNEL.md",
         "skills/RESOLVER.md"
       ],
@@ -5982,6 +5983,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "docs/instruction-architecture.md",
         "hooks/_test/coordination_alias.test.sh",
         "plans/hostile-review-478-sync-references.md",
         "plans/review-deferred-709.md",
@@ -6192,6 +6194,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "docs/instruction-architecture.md",
         "docs/post-mortems/2026-06-09-pour-now-engagement.md",
         "skills/RESOLVER.md",
         "skills/_prospective-memory-rules.md",
@@ -6292,6 +6295,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "docs/instruction-architecture.md",
         "skills/KERNEL.md"
       ],
       "kind": "rule",
@@ -6385,6 +6389,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "docs/instruction-architecture.md",
         "hooks/_test/coordination_alias.test.sh",
         "plans/design-note-tandem-agent-operating-model.md",
         "skills/KERNEL.md",
@@ -7350,7 +7355,9 @@
         "skills/_django-rest-framework-rules.md",
         "skills/code-review/SKILL.md",
         "skills/detect-ai-fingerprints/SKILL.md",
+        "skills/develop-guard/SKILL.md",
         "skills/django-rest-framework/SKILL.md",
+        "skills/merge/SKILL.md",
         "skills/publish-flat-layout/SKILL.md"
       ],
       "kind": "rule",
@@ -9435,10 +9442,10 @@
     },
     {
       "canonical_source": "skills/develop-guard/SKILL.md",
-      "characters": 16433,
-      "content_sha256": "d72e52db93bbc4ed9e01c58308bffe6e7179ec50d0def2620fb9d0e0e725b7fa",
+      "characters": 16992,
+      "content_sha256": "8715b63114bf38d5e5287d0a830c8ad9f179e884ba7063f1d0240aa4e84ecba8",
       "description": "Enforce the curation invariant -- main-role (main, master, prod, production, trunk, stable, release) is the project's best, ready-to-use work; develop-role (develop, dev, development, next, integration, staging, develop-next) is the origin where experiments compete for main. Detect repo mode (Gitflow vs GitHub Flow). Prevent direct feature-PRs to main-role when develop-role is the workflow.",
-      "estimated_tokens": 4109,
+      "estimated_tokens": 4248,
       "frontmatter_name": "develop-guard",
       "generated_outputs": [
         "dist/nested/skills/develop-guard",
@@ -9446,28 +9453,30 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "plans/self-review-self-reviewed-linear-promotion.md",
         "skills/KERNEL.md",
-        "skills/RESOLVER.md"
+        "skills/RESOLVER.md",
+        "skills/merge/SKILL.md"
       ],
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 226,
+      "lines": 223,
       "owner": [
         "unknown"
       ],
       "project": null,
       "quality": {
         "completeness": 0,
-        "cross_references": 50,
+        "cross_references": 100.0,
         "grade": "F",
         "provenance": 0,
         "structure": 100.0,
-        "total": 37.5
+        "total": 50.0
       },
       "rule_definitions": [],
       "slug": "develop-guard",
@@ -10181,10 +10190,10 @@
     },
     {
       "canonical_source": "skills/merge/SKILL.md",
-      "characters": 11284,
-      "content_sha256": "01b9794062fe1a0cd8d20f1bc1f3c661de7f10cff1452dfe538961f7c75c7847",
-      "description": "Merge branches following a develop-first workflow. Feature branches merge to develop; develop merges to main under explicit or applicable standing authorization.",
-      "estimated_tokens": 2821,
+      "characters": 4145,
+      "content_sha256": "01491f42bc8f99ae13c7bcd060c29e44745eb28b0553bf1197a3772797dafc8d",
+      "description": "Merge a reviewed branch or pull request using the target project's approved topology, method and readiness conditions. Use for integration, release or hotfix merges; project policy supplies the applicable route and authority.",
+      "estimated_tokens": 1037,
       "frontmatter_name": "merge",
       "generated_outputs": [
         "dist/nested/skills/merge",
@@ -10192,13 +10201,16 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "bin/_test/progressive_mount_test.py",
         "catalog/data-scope-fixtures.json",
         "catalog/generated-source-authority.json",
         "catalog/language-scope-fixtures.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "docs/instruction-architecture.md",
         "hooks/_test/progressive_loading.test.sh",
+        "plans/instruction-architecture-1157.md",
         "plans/self-review-422.md",
         "plans/self-review-epic-962-remediation.md",
         "skills/KERNEL.md",
@@ -10208,7 +10220,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 244,
+      "lines": 44,
       "owner": [
         "unknown"
       ],
@@ -10217,9 +10229,9 @@
         "completeness": 0,
         "cross_references": 100.0,
         "grade": "F",
-        "provenance": 20,
-        "structure": 95.0,
-        "total": 53.75
+        "provenance": 0,
+        "structure": 100.0,
+        "total": 50.0
       },
       "rule_definitions": [],
       "slug": "merge",
@@ -11358,6 +11370,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "docs/instruction-architecture.md",
         "examples/composition/projects/strict-release/_rules.md",
         "hooks/README.md",
         "hooks/git/pre-push-self-review.sh",
@@ -11386,6 +11399,7 @@
         "skills/_writing-rules-rules.md",
         "skills/_writing-tests-rules.md",
         "skills/engagement-post-mortem/SKILL.md",
+        "skills/merge/SKILL.md",
         "skills/post-error-revision/SKILL.md",
         "skills/shelves/AUTHORING.md",
         "skills/shelves/geospatial/SKILL.md"
@@ -11975,6 +11989,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "docs/instruction-architecture.md",
         "hooks/README.md",
         "hooks/lib/resolve-think-gate.py",
         "hooks/resolver/skill-enforcement-gate.sh",
@@ -12449,9 +12464,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2680591,
+    "characters": 2674011,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 670227,
+    "estimated_tokens": 668582,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12472,7 +12487,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1284197
+      "unclassified": 1277617
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12484,7 +12499,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 321093
+      "unclassified": 319448
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

@@ -22,14 +22,14 @@ allowed-tools: Bash
 > | **Gitflow** (a develop-role branch exists; recent merged PRs target it) | the develop-role branch | Feature/task/bugfix branches merge to the develop-role branch; the main-role branch only receives commits via promotion from develop-role or back-merged hotfix. `main-role` ⊆ `develop-role`. |
 > | **GitHub Flow / Trunk-based** (no develop-role branch, or it is decorative; recent merged PRs target main-role) | the main-role branch itself | Feature/task/bugfix branches merge to main-role via PR; the PR review is the curation gate. Only blessed work lands; half-baked work stays on its feature branch. |
 >
-> **Do not override an explicit project topology.** This repository mandates feature/fix -> develop -> main (K5); observed PR history may reveal drift but cannot authorize main-direct work. In other projects, detect mode and ask when uncertain; never silently create or push an integration branch.
+> **Do not override an explicit project topology.** The Siege scaffold (`github.com/siege-analytics/claude-configs-public`) mandates feature/fix -> develop -> main (K5); observed PR history may reveal drift but cannot authorize main-direct work. In other projects, detect mode and ask when uncertain; never silently create or push an integration branch.
 
 # Instructions
 
 This skill is a guardrail that runs before branching or merging. A declared project topology takes precedence over observed workflow history.
 
 1. **Verify the declared topology, then detect workflow drift** (see Mode detection below). Sample the last ~10 merged PR bases; main-direct history in a declared develop-first repository is drift to surface, not permission to change the PR base.
-2. **Apply the declared project topology first (this repository: develop-first), then the verified mode where no project policy exists:**
+2. **Apply the declared project topology first (the Siege scaffold: develop-first), then the verified mode where no project policy exists:**
    - *Gitflow*: branch from `develop`; PR base is `develop`; merges to main are promotion events that require existing explicit or applicable standing release authorization with its conditions satisfied. A `promote/*` branch may target `main` only when it represents an already-merged `develop` tree and the PR body carries `Self-Review-Source: <artifact>` evidence.
    - *GitHub Flow*: branch from `main`; PR base is `main`; the PR review IS the curation gate. Don't insist on a develop layer the repo doesn't use.
 3. **If a declared develop-first project has a missing or stale integration branch**, verify current refs and keep dependent branching stopped until repaired. Use an existing explicit or applicable standing instruction to perform the scoped sync or creation through the required reviewed workflow. If that authority is missing, ask for it once. Do not infer a topology change, overwrite existing work or fall through to main. Repeated stale-develop history is drift to repair within authority, not permission to change the declared topology.
@@ -62,7 +62,7 @@ If multiple develop-role synonyms exist (e.g., both `dev` and `staging`), check 
 
 ## Stale-develop detection (declared develop-first or verified Gitflow repos)
 
-This check applies when project policy requires develop-first or when an undeclared project's verified mode is Gitflow. If recent merged PRs target main, this may be drift: check the declared project policy before treating develop as decorative. For this repository staleness blocks branching regardless of PR history.
+This check applies when project policy requires develop-first or when an undeclared project's verified mode is Gitflow. If recent merged PRs target main, this may be drift: check the declared project policy before treating develop as decorative. For the Siege scaffold staleness blocks branching regardless of PR history.
 
 For develop-first repos:
 
@@ -112,36 +112,33 @@ Before any merge to main, verify the applicable existing authorization and readi
 
 ## Decision tree
 
+Choose the target project's approved topology before applying source-branch checks:
+
 ```
-Merge target is main?
-├── Applicable explicit/standing release authority AND readiness satisfied?
-│   ├── No authority? -> Ask for that missing decision; continue authorized preparation
-│   ├── Missing review/CI/evidence? -> Complete prerequisites within role; keep merge stopped
-│   └── Yes -> Apply the source/topology checks below
-├── Source is develop? -> Proceed after the common authorization/readiness check
-├── Source is promote/*?
-│   ├── Final tree equals intended develop snapshot AND Self-Review-Source exists? -> Proceed after common check
-│   └── Missing evidence or tree mismatch? -> Fix promotion PR; keep merge stopped
-├── Source is an authorized hotfix/ branch? -> Proceed after common check, then back-merge to develop
-├── Source is any other branch?
-│   └── Stop main merge; use declared integration path
-│       └── A requested topology change needs a separate explicit policy decision
-└── Direct commit to main? -> Stop; use the declared reviewed branch path
+Approved integration workflow?
+|-- Missing or ambiguous -> inspect policy and existing decisions; hold dependent selection
+|-- Approved trunk/GitHub Flow -> feature PR targets its approved integration branch
+|   |-- Existing feature-merge authority and current review/checks pass? -> use its normal route
+|   `-- Missing predicate? -> complete it within role or ask for the specific missing decision
+`-- Declared develop-first/Gitflow -> apply the promotion checks below
+
+Develop-first merge targets its release/main branch?
+|-- Existing release authority and current readiness required for every route
+|-- Source is the declared integration branch -> reviewed promotion
+|-- Source is promote/* -> require the intended integration tree and Self-Review-Source
+|-- Source is hotfix/* -> only if this project's approved policy names that exception
+|   `-- Siege scaffold K5 has no main-direct feature/fix exception
+`-- Other source -> stop that merge; use the declared integration route
+
+Unreviewed direct commit/push to a protected branch?
+`-- Stop; use the declared reviewed path. Siege scaffold changes require its K5 PR route.
 ```
 
-## Phrasing the question
+A verified integration branch is not a release or hotfix grant. The Siege scaffold's release source is develop and its installation source is exact current main. Use [rule:writing-releases] for release artifact/version mechanics when applicable; it does not change topology or authorize publication. Other projects keep their own approved release procedure.
 
-Only when applicable release authorization is missing, ask:
+## Missing decisions
 
-> This will merge `develop` into `main`. Merges to main are release events. Proceed?
-
-or
-
-> This branch (`feature/xyz`) targets `main` directly. The standard workflow is to merge into `develop` first. Should I:
-> 1. Merge into `develop` instead (recommended)
-> 2. Stop and request a separate topology/policy decision (no direct feature merge to main)
-
-Be clear about what you're doing and why you're asking.
+Check existing instructions and source-bound readiness before asking. Name the actual repository, source, destination and missing authority or predicate. A develop-first feature aimed at its release branch needs the integration route; an approved trunk feature aimed at its integration branch does not need a new develop layer or a separate release grant merely because that branch is named main.
 
 # Mode detection
 
@@ -157,7 +154,7 @@ Decision rule:
 - **All / nearly-all merged PRs based on `develop` (or synonym)** -> repo is **Gitflow**. Branch from develop; PR to develop. Merges to main are release events.
 - **Mixed** -> follow an existing declared topology and surface drift. If no declared policy or prior decision settles the mode, ask for that missing topology decision; do not invent one from mixed history.
 
-A `develop` branch that exists but receives no PRs is NOT evidence of Gitflow -- it's evidence of a workflow that aspires to Gitflow but operates as GitHub Flow. Surface observed workflow and check declared project topology; PR-base history cannot silently override this repository's develop-first policy.
+A `develop` branch that exists but receives no PRs is NOT evidence of Gitflow -- it's evidence of a workflow that aspires to Gitflow but operates as GitHub Flow. Surface observed workflow and check declared project topology; PR-base history cannot silently override the Siege scaffold's develop-first policy.
 
 # Repository setup patterns
 
@@ -216,7 +213,7 @@ When this skill fires on a Gitflow repo missing the guard, propose adding it -- 
 # Checklist
 
 - [ ] Checked declared project topology first; sampled PR bases to identify drift, not to override it
-- [ ] Picked branch / PR-base per declared topology (this repository: develop; only undeclared GitHub Flow projects may target main after verification)
+- [ ] Picked branch / PR-base per declared topology (Siege scaffold: develop; other projects use their approved integration route)
 - [ ] *Develop-first*: checked the declared integration invariant; if repair is needed, verified existing sync authority or asked for the missing decision
 - [ ] *Develop-first*: missing/stale integration repair uses explicit or applicable standing authority and its required reviewed workflow; no inferred topology change or overwritten work
 - [ ] *GitHub Flow*: did not insist on a develop layer the repo doesn't use
