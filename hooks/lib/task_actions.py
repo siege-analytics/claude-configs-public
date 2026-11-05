@@ -528,7 +528,7 @@ def action(command: str, cwd: str) -> dict:
         # thinks; the targets found below still pick the owning task's gate.
         result.update(read_only=False, investigation=False, self_management=False,
                       veto="read-only-command: option writes or runs a program")
-        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") else [canonical(cwd)])
+        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') else [canonical(cwd)])
     return result
 
 
@@ -729,6 +729,38 @@ def github_metadata_target(args, cwd: str):
     return repo.lower()
 
 
+def github_project_action(args):
+    """Literal project adds only; unsupported remote writes never become cwd writes."""
+    if args[:1] != ['gh']:
+        wrapped = os.path.basename(args[0]) == 'gh' or (
+            re.match(r'[A-Za-z_][A-Za-z0-9_]*=', args[0]) and 'gh' in args[1:])
+        if wrapped and any(word in {'project', 'api'} for word in args[1:]):
+            raise UnknownShape('GitHub project operations require literal gh without executable aliases or environment prefixes')
+        return None
+    if args[1:2] == ['api']:
+        raise UnknownShape('Unsupported GitHub API mutation requires explicit remote authority; GraphQL is not modeled')
+    if args[1:2] != ['project']:
+        if len(args) > 1 and args[1].startswith('-') and any(word in {'project', 'api'} for word in args[2:]):
+            raise UnknownShape('GitHub project global options are not supported; use the literal scoped operation')
+        return None
+    if args[2:3] != ['item-add']:
+        raise UnknownShape('Unsupported GitHub project mutation; only task-owned item-add is modeled (item-edit requires verified item/field authority)')
+    if len(args) != 8 or not re.fullmatch(r'[1-9][0-9]*', args[3]):
+        raise UnknownShape('GitHub project item-add requires a literal project, --owner and --url only')
+    fields = {}
+    for i in (4, 6):
+        if args[i] not in {'--owner', '--url'} or args[i] in fields:
+            raise UnknownShape('GitHub project item-add has unknown or duplicate flags')
+        fields[args[i]] = args[i + 1]
+    if set(fields) != {'--owner', '--url'} or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*', fields['--owner']):
+        raise UnknownShape('GitHub project item-add requires an explicit owner and canonical issue URL')
+    issue = re.fullmatch(r'https://github\.com/([A-Za-z0-9][A-Za-z0-9-]*)/([A-Za-z0-9_.-]+)/issues/([1-9][0-9]*)', fields['--url'])
+    if not issue or issue[2] in {'.', '..'}:
+        raise UnknownShape('GitHub project item-add requires a canonical https://github.com/owner/repository/issues/number target')
+    return dict(operation='item-add', host='github.com', owner=fields['--owner'],
+                project=int(args[3]), issue_owner=issue[1], repository=issue[2], issue=int(issue[3]))
+
+
 def _action(command: str, cwd: str) -> dict:
     try:
         tokens = shell_tokens(command)
@@ -746,6 +778,7 @@ def _action(command: str, cwd: str) -> dict:
     file_removals = []  # rm operands: unlinking a name never writes the file (#1100)
     file_paths = []
     remote_repos = []
+    remote_actions = []
     unproven_companions = []
     args = []
     arg_globs = []
@@ -771,6 +804,17 @@ def _action(command: str, cwd: str) -> dict:
             if len(args) != 2 or args[1].startswith("-") or arg_globs[1]:
                 raise UnknownShape("unsupported cd; use an explicit concrete path")
             effective = canonical(args[1], effective)
+        elif args[:2] == ['gh', 'api'] and released_read_verdict(shlex.join(args)) != 0:
+            # Existing text metadata is the only modeled API write. Unknown API
+            # operations cannot borrow cwd/file authority, regardless of endpoint.
+            remote = github_metadata_target(args, effective)
+            if remote is None:
+                raise UnknownShape('Unsupported GitHub API mutation requires explicit remote authority; GraphQL is not modeled')
+            reads = False
+            remote_repos.append(remote)
+            self_managed = False
+            args, arg_globs = [], []
+            return
         elif investigation(args):
             _reader_globs(args, arg_globs)
             diagnostic = True
@@ -782,10 +826,18 @@ def _action(command: str, cwd: str) -> dict:
             # Re-prove each companion before granting the metadata exception.
             if released_read_verdict(shlex.join(args)) != 0:
                 unproven_companions.append(effective)
+        elif args[:2] == ['gh', 'project'] and released_read_verdict(shlex.join(args)) == 0:
+            pass
         else:
             if any(arg_globs):
                 raise UnknownShape('expanded mutation targets require explicit concrete paths')
             reads = False
+            project = github_project_action(args)
+            if project is not None:
+                remote_actions.append(project)
+                self_managed = False
+                args, arg_globs = [], []
+                return
             remote = github_metadata_target(args, effective)
             if remote is not None:
                 remote_repos.append(remote)
@@ -974,12 +1026,13 @@ def _action(command: str, cwd: str) -> dict:
         finish()
     except UnknownShape as e:
         return {"read_only": False, "paths": list(dict.fromkeys(paths + [effective])), "error": str(e), "binding": binding}
-    if remote_repos:
+    if remote_repos or remote_actions:
         paths.extend(unproven_companions)
     return {"read_only": reads and not diagnostic and bool(tokens), "investigation": reads and diagnostic,
             "self_managed_shape": self_managed and not diagnostic, "directory_paths": [p for p in directory_paths if p not in file_paths], "directory_removals": directory_removals,
             # A path only removed, never also written in the same command (#1100).
             "file_removals": [p for p in file_removals if paths.count(p) == file_removals.count(p)],
-            "paths": list(dict.fromkeys(paths or ([] if remote_repos else [effective]))),
+            "paths": list(dict.fromkeys(paths or ([] if remote_repos or remote_actions else [effective]))),
             "remote_repos": list(dict.fromkeys(remote_repos)),
-            "metadata_only": bool(remote_repos) and not paths and not diagnostic, "binding": binding}
+            "remote_actions": remote_actions,
+            "metadata_only": bool(remote_repos) and not remote_actions and not paths and not diagnostic, "binding": binding}
