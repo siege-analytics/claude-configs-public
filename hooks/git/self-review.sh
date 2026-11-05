@@ -66,7 +66,7 @@
 # in Craft Agent sessions. See #261.
 
 set -uo pipefail
-export PATH="/home/craftagents/bin:$PATH"
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
 
 INPUT=$(cat)
 # Fast skip (#1083): exit before starting python3 when the tool payload's
@@ -207,55 +207,84 @@ if [[ ! -f "$RISK_SCRIPT" ]]; then
     echo "BLOCKED: canonical review risk classifier is unavailable." >&2
     exit 2
 fi
+# Every absent or invalid policy trailer is collected and reported in one
+# rejection (#1168). An absent or downgraded tier is replaced by the computed
+# one so the remaining requirements can be listed; classifier failures and
+# the legacy path keep their own handling.
+MISSING=()
+PROTECTED_RE='^(bin/review-risk\.py|catalog/review-risk-policy\.json|\.githooks/commit-msg|hooks/git/(self-review|pre-push-self-review)\.sh)$'
 if [[ "$TIER_COUNT" -ne 1 || ! "$REVIEW_TIER" =~ ^[ABC]$ ]]; then
     POLICY_PATH="$HOOK_DIR/../../catalog/review-risk-policy.json"
     COMMIT_EPOCH=$(git -C "$EFFECTIVE_CWD" log -1 --format=%ct HEAD 2>/dev/null || echo 0)
     LEGACY_EPOCH=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["legacy_before_epoch"])' "$POLICY_PATH" 2>/dev/null || echo 0)
-    if [[ "$COMMIT_EPOCH" -ge "$LEGACY_EPOCH" ]]; then
-        echo "BLOCKED: post-policy commit requires exactly one Review-Tier: A|B|C trailer." >&2
-        exit 2
-    fi
-    # Pre-policy history preserves full validation rather than weakening.
-    LEGACY_TIER=true
     if ! RISK_RESULT=$(python3 "$RISK_SCRIPT" --repo "$EFFECTIVE_CWD" --commit HEAD 2>&1); then
         echo "BLOCKED: review classifier failure: $RISK_RESULT" >&2; exit 2
     fi
-    COMPUTED_LEGACY_TIER=$(printf '%s' "$RISK_RESULT" | python3 -c 'import json,sys; print(json.load(sys.stdin)["computed_tier"])' 2>/dev/null || true)
+    COMPUTED_TIER=$(printf '%s' "$RISK_RESULT" | python3 -c 'import json,sys; print(json.loads(sys.stdin.read().strip().splitlines()[-1])["computed_tier"])' 2>/dev/null || true)
+    if [[ "$COMMIT_EPOCH" -ge "$LEGACY_EPOCH" ]]; then
+        if [[ ! "$COMPUTED_TIER" =~ ^[ABC]$ ]]; then
+            echo "BLOCKED: post-policy commit requires exactly one Review-Tier: A|B|C trailer." >&2
+            exit 2
+        fi
+        git -C "$EFFECTIVE_CWD" diff-tree --root --no-renames --name-only -r HEAD | grep -Eq "$PROTECTED_RE" && COMPUTED_TIER="C"
+        MISSING+=("Review-Tier: $COMPUTED_TIER  (post-policy commit requires exactly one Review-Tier: A|B|C trailer; computed minimum is Tier $COMPUTED_TIER)")
+        REVIEW_TIER="$COMPUTED_TIER"
+    else
+        # Pre-policy history preserves full validation rather than weakening.
+        LEGACY_TIER=true
+        REVIEW_TIER="C"
+        echo "[self-review] warn: legacy commit has no Review-Tier; computed Tier $COMPUTED_TIER and preserving legacy full validation." >&2
+    fi
+elif [[ "$REVIEW_TIER" != "C" ]] && git -C "$EFFECTIVE_CWD" diff-tree --root --no-renames --name-only -r HEAD | grep -Eq "$PROTECTED_RE"; then
+    MISSING+=("Review-Tier: C  (review-policy bootstrap files independently require Tier C)")
     REVIEW_TIER="C"
-    echo "[self-review] warn: legacy commit has no Review-Tier; computed Tier $COMPUTED_LEGACY_TIER and preserving legacy full validation." >&2
-elif [[ "$REVIEW_TIER" != "C" ]] && git -C "$EFFECTIVE_CWD" diff-tree --root --no-renames --name-only -r HEAD | grep -Eq '^(bin/review-risk\.py|catalog/review-risk-policy\.json|\.githooks/commit-msg|hooks/git/(self-review|pre-push-self-review)\.sh)$'; then
-    echo "BLOCKED: review-policy bootstrap files independently require Tier C." >&2
-    exit 2
 elif ! RISK_RESULT=$(python3 "$RISK_SCRIPT" --repo "$EFFECTIVE_CWD" --commit HEAD --declared "$REVIEW_TIER" 2>&1); then
-    echo "BLOCKED: review tier downgrade or classifier failure: $RISK_RESULT" >&2
-    exit 2
+    COMPUTED_TIER=$(printf '%s' "$RISK_RESULT" | python3 -c 'import json,sys; print(json.loads(sys.stdin.read().strip().splitlines()[-1]).get("computed_tier", ""))' 2>/dev/null || true)
+    if [[ ! "$COMPUTED_TIER" =~ ^[ABC]$ ]]; then
+        echo "BLOCKED: review tier downgrade or classifier failure: $RISK_RESULT" >&2
+        exit 2
+    fi
+    MISSING+=("Review-Tier: $COMPUTED_TIER  (declared Tier $REVIEW_TIER downgrades the computed Tier $COMPUTED_TIER)")
+    REVIEW_TIER="$COMPUTED_TIER"
 fi
 if [[ "$REVIEW_TIER" == "C" && "$LEGACY_TIER" == "false" ]]; then
     for EVIDENCE in Hostile-Review Negative-Tests Full-Suite Canary-Rollback; do
-        if [[ $(echo "$TRAILERS" | grep -cE "^${EVIDENCE}:[[:space:]]+\\S") -ne 1 ]]; then
-            echo "BLOCKED: Tier C requires exactly one ${EVIDENCE}: evidence trailer." >&2
-            exit 2
+        COUNT=$(echo "$TRAILERS" | grep -cE "^${EVIDENCE}:[[:space:]]+\\S")
+        if [[ "$COUNT" -ne 1 ]]; then
+            case "$EVIDENCE" in
+                Hostile-Review) EXAMPLE="<URL, #ticket, or committed file with the independent hostile review>" ;;
+                Negative-Tests) EXAMPLE="<negative cases exercised and their result>" ;;
+                Full-Suite) EXAMPLE="<full suite command and pass/fail counts>" ;;
+                Canary-Rollback) EXAMPLE="<canary or revert proof, or N/A with reason>" ;;
+            esac
+            MISSING+=("${EVIDENCE}: ${EXAMPLE}  (Tier C requires exactly one ${EVIDENCE}: evidence trailer; found $COUNT)")
         fi
     done
 fi
 
 NO_REVIEW=false; [[ "$COMMIT_MSG" == *'[no-review]'* ]] && NO_REVIEW=true
 if [[ "$NO_REVIEW" == "true" && "$REVIEW_TIER" != "A" ]]; then
-    echo "BLOCKED: [no-review] is allowed only for independently validated Tier A." >&2
-    exit 2
+    MISSING+=("remove [no-review]: it is allowed only for independently validated Tier A")
 fi
 if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
-    echo "BLOCKED: missing ticket reference or [no-ticket]." >&2
-    exit 2
+    MISSING+=("ticket reference: #NNN in the message, or [no-ticket] if exempt")
 fi
 if [[ "$REVIEW_COUNT" -ne 1 ]]; then
     if [[ "$NO_REVIEW" != "true" || "$REVIEW_TIER" != "A" ]]; then
-        cat >&2 <<HOOKEOF
-BLOCKED: Latest commit is missing the Self-Review: trailer.
+        MISSING+=("Self-Review: <one-line summary of the review pass>  (exactly one non-empty trailer; found $REVIEW_COUNT)")
+    fi
+fi
+if [[ "$REVIEW_TIER" != "A" && "$SOURCE_LINES" -ne 1 ]]; then
+    MISSING+=("Self-Review-Source: <path-or-ticket pointing at the review artifact>  (exactly one; found $SOURCE_LINES)")
+fi
 
-Add to the commit message's trailer block (after the last paragraph):
-  Self-Review: <one-line summary of the review pass>
-  Self-Review-Source: <path-or-ticket pointing at the review artifact>
+if [[ ${#MISSING[@]} -gt 0 ]]; then
+    {
+        echo "BLOCKED: Latest commit lacks ${#MISSING[@]} required review item(s) for Tier $REVIEW_TIER."
+        echo ""
+        echo "Add every item below to the commit message's trailer block in one amend:"
+        printf '  - %s\n' "${MISSING[@]}"
+        cat <<HOOKEOF
 
 The review artifact must follow skills/self-review/SKILL.md:
   - ## Assumptions (with Goal source: from outside the diff, role(s) named,
@@ -263,34 +292,15 @@ The review artifact must follow skills/self-review/SKILL.md:
   - ## Peer review (shelf checks with grep/test-output evidence)
   - ## Lead review (role-tagged affirmative standards)
 
-Amend the commit (git commit --amend) and retry.
+Amend the commit (git commit --amend) and retry. Ref: #1168
 HOOKEOF
-        exit 2
-    fi
+    } >&2
+    exit 2
 fi
 
 # Tier A uses the one-line Self-Review trailer as its short review record.
 if [[ "$REVIEW_TIER" == "A" ]]; then
     exit 0
-fi
-
-if [[ "$SOURCE_LINES" -eq 0 ]]; then
-    cat >&2 <<HOOKEOF
-BLOCKED: Latest commit has Self-Review: but is missing Self-Review-Source:.
-
-Add to the commit trailer block:
-  Self-Review-Source: <path-or-ticket pointing at the review artifact>
-HOOKEOF
-    exit 2
-fi
-
-if [[ "$SOURCE_LINES" -gt 1 ]]; then
-    cat >&2 <<HOOKEOF
-BLOCKED: Latest commit has multiple Self-Review-Source: trailers.
-
-Provide exactly one. The hook cannot disambiguate which artifact is canonical.
-HOOKEOF
-    exit 2
 fi
 
 SOURCE_VALUE=$(echo "$TRAILERS" | grep -E '^Self-Review-Source:[[:space:]]+' | sed -E 's/^Self-Review-Source:[[:space:]]+'//)

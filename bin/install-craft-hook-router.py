@@ -221,6 +221,9 @@ def install(workspace: Path, home: Path, *, apply=False):
     actions_bytes = source_bytes(revision, "hooks/lib/task_actions.py", apply=apply)
     if saved(workspace / "hooks/lib/task_actions.py")["raw"] != actions_bytes:
         raise ValueError("installed action classifier differs from accepted source")
+    evidence_bytes = source_bytes(revision, "hooks/lib/test-evidence.py", apply=apply)
+    if saved(workspace / "hooks/lib/test-evidence.py")["raw"] != evidence_bytes:
+        raise ValueError("installed test receipt producer differs from accepted source")
     receipt = {"schema_version": 1, "state": "active", "source_revision": revision,
                "workspace": str(workspace), "policy_path": str(policy_path),
                "policy_sha256": hashlib.sha256(policy_snapshot["raw"]).hexdigest(),
@@ -230,6 +233,7 @@ def install(workspace: Path, home: Path, *, apply=False):
                "task_resolver_sha256": hashlib.sha256(resolver_bytes).hexdigest(),
                "hook_payload_sha256": hashlib.sha256(payload_bytes).hexdigest(),
                "task_actions_sha256": hashlib.sha256(actions_bytes).hexdigest(),
+               "test_evidence_sha256": hashlib.sha256(evidence_bytes).hexdigest(),
                "global_settings_path": str(global_path)}
     summary = {"mode": "apply" if apply else "preview", "workspace": str(workspace),
                "router_path": str(target), "policy_path": str(policy_path), "owned_event_count": len(router.EVENTS),
@@ -270,6 +274,8 @@ def install(workspace: Path, home: Path, *, apply=False):
         router.verify_global(trust.document(saved(global_path)), target, workspace, policy=policy)
         if saved(target)["raw"] != router_bytes or saved(workspace / ANCHOR_SOURCE)["raw"] != anchor_bytes:
             raise ValueError("router/session generation changed during activation; registration remains staging")
+        if saved(workspace / 'hooks/lib/test-evidence.py')['raw'] != evidence_bytes:
+            raise ValueError('test receipt producer changed during activation; registration remains staging')
         actual_legacy = trust.document(saved(legacy_path))
         if retire_project(actual_legacy, owned) != actual_legacy:
             raise ValueError("project managed policy retirement is incomplete; registration remains staging")

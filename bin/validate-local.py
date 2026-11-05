@@ -7,10 +7,12 @@ run steps; GitHub checkout/setup/provenance actions remain CI responsibilities.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 import shlex
 import signal
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -106,6 +108,127 @@ def run_step(command, environment, timeout):
         raise
 
 
+def probe(argv, environment, *, input=None):
+    """Bounded feature probe; never source shell startup or operator Git config."""
+    process = subprocess.Popen(argv, cwd=ROOT, env=environment, text=True,
+                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, start_new_session=True)
+    try:
+        stdout, stderr = process.communicate(input, timeout=10)
+    except BaseException:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        process.communicate(timeout=5)
+        raise
+    if process.returncode:
+        raise ValueError(shlex.join(argv[:2]) + ': ' + stderr.strip()[:500])
+    return stdout
+
+
+def full_prerequisites(command):
+    # This is a small adapter for the selected CI entrypoints, not a shell parser.
+    # In particular, synthetic workflows must not inherit unused suite tools.
+    try:
+        whole = shlex.split(command, comments=True)
+    except ValueError:
+        return False, False, False, False
+    if any('\n' in token or '\r' in token or '<<' in token for token in whole):
+        # Heredocs/here-strings and multiline quoted tokens can contain apparent
+        # commands as data. Unsupported complex shapes lose early diagnostics;
+        # their actual workflow commands and tests still execute unchanged.
+        return False, False, False, False
+    entrypoints = set()
+    hooks = False
+    for line in command.splitlines():
+        try:
+            tokens = shlex.split(line, comments=True)
+        except ValueError:
+            continue  # Unsupported line shape: do not infer extra prerequisites.
+        if not tokens:
+            continue
+        if tokens[0] in ('python3', 'bash') and len(tokens) > 1:
+            entrypoints.add(tokens[1])
+        hooks |= tokens[0] == 'files=(hooks/_test/*.test.sh)'
+    hooks |= 'hooks/_test/*.test.sh' in entrypoints
+    ticket = hooks or 'hooks/_test/ticket_required.test.sh' in entrypoints
+    reader = hooks or any(path in entrypoints for path in (
+        'hooks/_test/reader_git_safety.test.sh', 'hooks/_test/reader_git_safety.py'))
+    registration = any(path in entrypoints for path in (
+        'bin/_test/selected_registration_test.py', 'examples/selected-registration/run.py'))
+    # Build and registration consume the pinned frontmatter parser. Only the
+    # registration fixtures compare the outer interpreter's literal command vector.
+    python = registration or 'bin/build.py' in entrypoints
+    return python, registration, ticket, reader
+
+
+def full_environment(environment, bindings):
+    child = {**environment, **bindings}
+    # Fixtures reject symlink aliases. Normalize only this invocation's children,
+    # including steps that supply their own temporary-directory bindings.
+    child['TMPDIR'] = child['RUNNER_TEMP'] = environment['RUNNER_TEMP']
+    return child
+
+
+def preflight_full(commands, environment):
+    """Fail before workflow side effects when a selected suite cannot run."""
+    seen = set()
+    for name, command, bindings in commands:
+        child = full_environment(environment, bindings)
+        python, registration, ticket, reader = full_prerequisites(command)
+        signature = (python, registration, ticket, reader, tuple(sorted(child.items())))
+        if signature in seen:
+            continue
+        seen.add(signature)
+        feature = 'Bash shell features'
+        try:
+            # Every full step uses this dispatch shell.
+            probe(['bash', '--noprofile', '--norc', '-e', '-o', 'pipefail', '-c',
+                   "if (false | true); then exit 1; fi"], child)
+            if ticket or reader:
+                # Actual hook suites need these Bash features, not a guessed version.
+                probe(['bash', '--noprofile', '--norc', '-e', '-o', 'pipefail', '-c',
+                       "a=(ok); [[ ${a[0]} == ok ]]; shopt -s nullglob; "
+                       'missing=("$RUNNER_TEMP"/.preflight-unmatched-*); [[ ${#missing[@]} == 0 ]]; '
+                       "[[ $(cat <<<ok) == ok ]]; "
+                       "IFS= read -r -d '' value < <(printf 'ok\\0'); [[ $value == ok ]]"], child)
+            if python:
+                feature = 'PATH python3 interpreter and pinned YAML dependency'
+                code = ("import json,sys; sys.path.insert(0, 'bin'); "
+                        "from frontmatter_validation import check_dependency; "
+                        "check_dependency(); print(json.dumps(sys.executable))")
+                executable = json.loads(probe(['python3', '-c', code], child))
+                if registration and os.path.abspath(executable) != os.path.abspath(sys.executable):
+                    raise ValueError('PATH python3 reports ' + str(executable) +
+                                     '; adapter uses ' + sys.executable +
+                                     '. Invoke the adapter with that exact python3 executable; '
+                                     'symlink spellings are significant to command-vector fixtures.')
+            if ticket:
+                feature = 'Git multi-character core.commentString stripping'
+                output = probe(['git', '-c', 'core.commentString=;;', 'stripspace',
+                                '--strip-comments'], child, input=';; hidden\nkept\n')
+                if output != 'kept\n':
+                    raise ValueError('Git did not strip the multi-character comment prefix; '
+                                     'select a Git executable supporting core.commentString.')
+            if reader and sys.platform == 'darwin':
+                feature = 'Darwin base64 -D -i/-o behavior'
+                with tempfile.TemporaryDirectory(dir=child['RUNNER_TEMP']) as raw:
+                    source, target = Path(raw) / 'input', Path(raw) / 'output'
+                    source.write_text('YWJj\n')
+                    output = probe(['base64', '-D', '-i', str(source)], child)
+                    probe(['base64', '-D', '-i', str(source), '-o', str(target)], child)
+                    if output != 'abc' or target.read_bytes() != b'abc':
+                        raise ValueError('decode did not produce abc')
+        except (OSError, ValueError, subprocess.SubprocessError) as error:
+            tool = {'Bash': 'bash', 'PATH': 'python3', 'Git': 'git', 'Darwin': 'base64'}[feature.split()[0]]
+            resolved = shutil.which(tool, path=child.get('PATH')) or '(not found)'
+            raise ValueError('full preflight failed for ' + name + ': ' + feature +
+                             ' [' + resolved + ']: ' + str(error) +
+                             '. Select compatible tools in the invocation environment; '
+                             'the adapter does not install tools or rewrite PATH.') from error
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mode', choices=('check', 'refresh', 'full'), default='check')
@@ -126,11 +249,16 @@ def main():
                        GIT_CONFIG_SYSTEM=os.devnull)
     with tempfile.TemporaryDirectory(prefix='configs-validation-') as raw:
         environment['RUNNER_TEMP'] = str(Path(raw).resolve())
+        if args.mode == 'full' and not args.list:
+            environment['TMPDIR'] = environment['RUNNER_TEMP']
+            preflight_full(commands, environment)
         for name, command, bindings in commands:
             print('\n== ' + name + ' ==\n' + command, flush=True)
             if args.list:
                 continue
-            returncode = run_step(command, {**environment, **bindings}, args.step_timeout)
+            child = (full_environment(environment, bindings) if args.mode == 'full'
+                     else {**environment, **bindings})
+            returncode = run_step(command, child, args.step_timeout)
             if returncode:
                 print('FAILED: ' + name, file=sys.stderr)
                 return returncode

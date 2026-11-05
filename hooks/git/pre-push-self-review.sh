@@ -113,35 +113,69 @@ while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA EXTRA || [[ -n "$LOCAL_R
         HOSTILE_COUNT=$(echo "$TRAILERS" | grep -cE '^Hostile-Review:[[:space:]]+\S')
         SOURCE_VALUE=$(echo "$TRAILERS" | grep -E '^Self-Review-Source:' | sed -E 's/^Self-Review-Source:[[:space:]]+//')
         HOSTILE_VALUE=$(echo "$TRAILERS" | grep -E '^Hostile-Review:' | sed -E 's/^Hostile-Review:[[:space:]]+//')
-        REASON=""
-        if [[ ! -f "$RISK_SCRIPT" || "$TIER_COUNT" -ne 1 || ! "$TIER" =~ ^[ABC]$ ]]; then
-            REASON="requires exactly one valid Review-Tier trailer"
-        elif [[ "$TIER" != "C" ]] && git diff-tree --root --no-renames --name-only -r "$COMMIT" | grep -Eq '^(bin/review-risk\.py|catalog/review-risk-policy\.json|\.githooks/commit-msg|hooks/git/(self-review|pre-push-self-review)\.sh)$'; then
-            REASON="review-policy bootstrap files independently require Tier C"
-        elif ! python3 "$RISK_SCRIPT" --repo "$REPO_ROOT" --commit "$COMMIT" --declared "$TIER" >/dev/null 2>&1; then
-            REASON="declared review tier downgrades computed risk"
-        elif [[ "$SELF_COUNT" -ne 1 ]]; then
-            REASON="requires exactly one non-empty Self-Review trailer"
-        elif [[ "$MSG" == *'[no-review]'* && "$TIER" != "A" ]]; then
-            REASON="[no-review] is allowed only for validated Tier A"
-        elif ! echo "$MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
-            REASON="missing ticket reference or [no-ticket]"
-        elif [[ "$TIER" != "A" && "$SOURCE_COUNT" -ne 1 ]]; then
-            REASON="Tier $TIER requires exactly one Self-Review-Source"
-        elif [[ "$TIER" != "A" ]] && ! validate_committed_artifact "$COMMIT" "$SOURCE_VALUE" "$TIER"; then
-            REASON="Self-Review-Source lacks required committed Tier $TIER content"
-        elif [[ "$TIER" == "C" && "$HOSTILE_COUNT" -ne 1 ]]; then
-            REASON="Tier C requires exactly one Hostile-Review"
-        elif [[ "$TIER" == "C" && ! "$HOSTILE_VALUE" =~ ^(https?://|#[0-9]+$) ]] && { ! git cat-file -e "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || [[ $(git cat-file -s "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || echo 0) -eq 0 ]]; }; then
-            REASON="Hostile-Review is not a URL, ticket, or non-empty file in the commit"
-        elif [[ "$TIER" == "C" ]]; then
-            for EVIDENCE in Negative-Tests Full-Suite Canary-Rollback; do
-                [[ $(echo "$TRAILERS" | grep -cE "^${EVIDENCE}:[[:space:]]+\\S") -eq 1 ]] || { REASON="Tier C requires exactly one $EVIDENCE trailer"; break; }
-            done
+        # Collect every violation for this commit in one report (#1168). An
+        # absent or downgraded tier is replaced by the computed one so the
+        # remaining trailer requirements can be listed; a classifier failure
+        # still stops evaluation of this commit.
+        REASONS=()
+        PROTECTED=false
+        git diff-tree --root --no-renames --name-only -r "$COMMIT" | grep -Eq '^(bin/review-risk\.py|catalog/review-risk-policy\.json|\.githooks/commit-msg|hooks/git/(self-review|pre-push-self-review)\.sh)$' && PROTECTED=true
+        DECLARED=""; [[ "$TIER_COUNT" -eq 1 && "$TIER" =~ ^[ABC]$ ]] && DECLARED="$TIER"
+        COMPUTED=""
+        if [[ -f "$RISK_SCRIPT" ]]; then
+            RISK_RESULT=$(python3 "$RISK_SCRIPT" --repo "$REPO_ROOT" --commit "$COMMIT" ${DECLARED:+--declared "$DECLARED"} 2>/dev/null) && RISK_OK=true || RISK_OK=false
+            COMPUTED=$(printf '%s' "$RISK_RESULT" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("computed_tier", ""))' 2>/dev/null || true)
         fi
-        if [[ -n "$REASON" ]]; then
+        if [[ ! "$COMPUTED" =~ ^[ABC]$ ]]; then
+            if [[ ! -f "$RISK_SCRIPT" ]]; then
+                REASONS+=("requires exactly one valid Review-Tier trailer (review risk classifier unavailable)")
+            elif [[ -z "$DECLARED" ]]; then
+                REASONS+=("requires exactly one valid Review-Tier trailer")
+            else
+                REASONS+=("declared review tier downgrades computed risk (or the review classifier failed)")
+            fi
+        else
+            REQUIRED="$COMPUTED"; [[ "$PROTECTED" == "true" ]] && REQUIRED="C"
+            if [[ -z "$DECLARED" ]]; then
+                REASONS+=("Review-Tier: $REQUIRED  (requires exactly one valid Review-Tier trailer)")
+                TIER="$REQUIRED"
+            elif [[ "$DECLARED" != "C" && "$PROTECTED" == "true" ]]; then
+                REASONS+=("Review-Tier: C  (review-policy bootstrap files independently require Tier C)")
+                TIER="C"
+            elif [[ "$RISK_OK" != "true" ]]; then
+                REASONS+=("Review-Tier: $REQUIRED  (declared review tier downgrades computed risk)")
+                TIER="$REQUIRED"
+            fi
+            [[ "$SELF_COUNT" -eq 1 ]] || REASONS+=("Self-Review: <one-line summary of the review pass>  (requires exactly one non-empty Self-Review trailer)")
+            [[ "$MSG" == *'[no-review]'* && "$TIER" != "A" ]] && REASONS+=("[no-review] is allowed only for validated Tier A")
+            echo "$MSG" | grep -qE '(#[0-9]+|\[no-ticket\])' || REASONS+=("ticket reference: #NNN in the message, or [no-ticket]  (missing ticket reference or [no-ticket])")
+            if [[ "$TIER" != "A" && "$SOURCE_COUNT" -ne 1 ]]; then
+                REASONS+=("Self-Review-Source: <path or URL to the self-review artifact>  (Tier $TIER requires exactly one Self-Review-Source)")
+            elif [[ "$TIER" != "A" ]] && ! validate_committed_artifact "$COMMIT" "$SOURCE_VALUE" "$TIER"; then
+                REASONS+=("Self-Review-Source lacks required committed Tier $TIER content")
+            fi
+            if [[ "$TIER" == "C" && "$HOSTILE_COUNT" -ne 1 ]]; then
+                REASONS+=("Hostile-Review: <URL, #ticket, or committed file with the independent hostile review>  (Tier C requires exactly one Hostile-Review)")
+            elif [[ "$TIER" == "C" && ! "$HOSTILE_VALUE" =~ ^(https?://|#[0-9]+$) ]] && { ! git cat-file -e "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || [[ $(git cat-file -s "$COMMIT:${HOSTILE_VALUE#./}" 2>/dev/null || echo 0) -eq 0 ]]; }; then
+                REASONS+=("Hostile-Review is not a URL, ticket, or non-empty file in the commit")
+            fi
+            if [[ "$TIER" == "C" ]]; then
+                for EVIDENCE in Negative-Tests Full-Suite Canary-Rollback; do
+                    case "$EVIDENCE" in
+                        Negative-Tests) EXAMPLE="<negative cases exercised and their result>" ;;
+                        Full-Suite) EXAMPLE="<full suite command and pass/fail counts>" ;;
+                        Canary-Rollback) EXAMPLE="<canary or revert proof, or N/A with reason>" ;;
+                    esac
+                    [[ $(echo "$TRAILERS" | grep -cE "^${EVIDENCE}:[[:space:]]+\\S") -eq 1 ]] || REASONS+=("$EVIDENCE: $EXAMPLE  (Tier C requires exactly one $EVIDENCE trailer)")
+                done
+            fi
+        fi
+        if [[ ${#REASONS[@]} -gt 0 ]]; then
             BLOCKED=1
-            BLOCKED_COMMITS="${BLOCKED_COMMITS}\n  ${SHORT} — ${REASON}"
+            BLOCKED_COMMITS="${BLOCKED_COMMITS}\n  ${SHORT}:"
+            for REASON in "${REASONS[@]}"; do
+                BLOCKED_COMMITS="${BLOCKED_COMMITS}\n    - ${REASON}"
+            done
         fi
     done
 done
@@ -155,7 +189,9 @@ The following commits violate proportional review policy:
 $(echo -e "$BLOCKED_COMMITS")
 
 Every non-merge commit must include Review-Tier: A|B|C and Self-Review:.
-Tier B/C also require Self-Review-Source:. Tier C requires Hostile-Review:.
+Tier B/C also require Self-Review-Source:. Tier C also requires Hostile-Review:,
+Negative-Tests:, Full-Suite: and Canary-Rollback:. Each commit lists every
+violation found, so one amend can fix them all (#1168).
 The declared tier may escalate but cannot be lower than the machine-computed tier.
 
 To add trailers, amend the commit:
