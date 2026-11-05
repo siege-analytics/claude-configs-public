@@ -56,6 +56,16 @@ Full suite status, stated as it is:
   - My diff does not touch `detect-host.sh` or `ca-enforcement-gate.sh`.
 - Protected CI on the exact head is the required full run.
 
+Update after the first commit (cdee884):
+
+- The direct all-suites run was stopped after 40 files (38 passed, 2 failed), so that develop could be merged. Merging changes the tree under a running suite.
+- `ca_enforcement_runtime.test.sh` fails the same 4 cases on a clean export of 94dd034f2c once `bin/build.py` has produced `dist/craft-agent/enforcement-manifest.json`.
+  - Without a built manifest that test skips with exit 0, which first made the base look clean.
+- `session_signal_resolution.test.sh` fails the same 2 cases on that clean export ("hook JSON session id beats workspace root", "repo-matched singleton not bound under unknown session").
+- The files after those 40 did not run locally.
+- develop (7e1e0ae, which contains main f004df3c) was merged into this branch as instructed by the hub. Develop's tree equals the base, so the merge brought no file changes.
+- No test-evidence receipt could be recorded for `hooks/lib/craft-settings-router.py`. This session's working directory is the configs clone, so two hook stacks run: the Craft workspace stack and the clone's project stack. Each requires its own copy of `hooks/lib/test-evidence.py` as the producer path, so neither path is accepted by both.
+
 Defect found by the existing suite and fixed before commit:
 
 - `catalog-guard.sh` runs `set -e`, so a plain `source` of a missing helper exited 1. That is a non-blocking hook error, which would have failed open.
