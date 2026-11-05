@@ -1723,29 +1723,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/develop-guard",
           "file_count": 1,
-          "tree_sha256": "92a6ec5794c04b26b2bf5729b79caaa04deca0094be86666f748d95811b19608"
+          "tree_sha256": "dd79085743fb5da97763d65adb30d0b6c0f4f3a43287156002d7592b372c9f73"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/develop-guard",
           "file_count": 1,
-          "tree_sha256": "92a6ec5794c04b26b2bf5729b79caaa04deca0094be86666f748d95811b19608"
+          "tree_sha256": "dd79085743fb5da97763d65adb30d0b6c0f4f3a43287156002d7592b372c9f73"
         },
         "flat": {
           "destination": "dist/flat/skills/develop-guard",
           "file_count": 1,
-          "tree_sha256": "92a6ec5794c04b26b2bf5729b79caaa04deca0094be86666f748d95811b19608"
+          "tree_sha256": "dd79085743fb5da97763d65adb30d0b6c0f4f3a43287156002d7592b372c9f73"
         },
         "nested": {
           "destination": "dist/nested/skills/develop-guard",
           "file_count": 1,
-          "tree_sha256": "92a6ec5794c04b26b2bf5729b79caaa04deca0094be86666f748d95811b19608"
+          "tree_sha256": "dd79085743fb5da97763d65adb30d0b6c0f4f3a43287156002d7592b372c9f73"
         }
       },
       "canonical_source": "skills/develop-guard/SKILL.md",
       "kind": "skill",
       "slug": "develop-guard",
       "source_file_count": 1,
-      "source_tree_sha256": "92a6ec5794c04b26b2bf5729b79caaa04deca0094be86666f748d95811b19608"
+      "source_tree_sha256": "c665b0624fa234f156ea94bdaf6082995ddc59a0cb2f3559c03ff14c566fba5b"
     },
     {
       "artifacts": {
@@ -2129,29 +2129,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/merge",
           "file_count": 1,
-          "tree_sha256": "111982a47773b90003d89d175eeb963e7dfcfd4d89569ce7f06bc43178a1cb96"
+          "tree_sha256": "44c478758f65156968a53e8a7e5baf484d37c6fe9eddcb942e2231575a5af615"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/merge",
           "file_count": 1,
-          "tree_sha256": "111982a47773b90003d89d175eeb963e7dfcfd4d89569ce7f06bc43178a1cb96"
+          "tree_sha256": "44c478758f65156968a53e8a7e5baf484d37c6fe9eddcb942e2231575a5af615"
         },
         "flat": {
           "destination": "dist/flat/skills/merge",
           "file_count": 1,
-          "tree_sha256": "111982a47773b90003d89d175eeb963e7dfcfd4d89569ce7f06bc43178a1cb96"
+          "tree_sha256": "44c478758f65156968a53e8a7e5baf484d37c6fe9eddcb942e2231575a5af615"
         },
         "nested": {
           "destination": "dist/nested/skills/merge",
           "file_count": 1,
-          "tree_sha256": "111982a47773b90003d89d175eeb963e7dfcfd4d89569ce7f06bc43178a1cb96"
+          "tree_sha256": "44c478758f65156968a53e8a7e5baf484d37c6fe9eddcb942e2231575a5af615"
         }
       },
       "canonical_source": "skills/merge/SKILL.md",
       "kind": "skill",
       "slug": "merge",
       "source_file_count": 1,
-      "source_tree_sha256": "5d603f3363bc2996afdced74dd388d0ee19f4b52f1483a055f8e9505a7a96465"
+      "source_tree_sha256": "5dd86c88d88c66d05045319f285d5dcd4c5c0e6a5963da5abdd8be11fcaa5050"
     },
     {
       "artifacts": {

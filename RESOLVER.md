@@ -235,7 +235,7 @@ The auto-trigger language in `verify-failure-premise` and `post-error-revision` 
 |---|---|
 | Create a git branch | `skills/git-workflow/branch/SKILL.md` + `skills/git-workflow/develop-guard/SKILL.md` |
 | Create a commit | `skills/git-workflow/commit/SKILL.md` |
-| Merge a branch | `skills/git-workflow/merge/SKILL.md` - **self-review gate applies at merge time, not just push time.** Before executing `gh pr merge` or `git merge`, verify the self-review artifact exists and trailers are on the latest commit. Inspect existing evidence, complete missing preparation within your role and obtain required independent review before merging; do not request a waiver by default. A "merge" instruction authorizes the destination, not the method. |
+| Merge a branch | `skills/merge/SKILL.md` - Run the shared procedure with the target project policy. It routes to the canonical readiness and review owners; project extensions supply their scoped release conditions. |
 | After merging a PR | `skills/compound/SKILL.md` — post-merge success compounding. Answer three questions (what worked, discoverable, skill/rule update needed). Produces a solutions catalog entry, skill-update ticket, or "nothing novel" declaration. Advisory — does not block. |
 | Open a pull request | `skills/git-workflow/create-pr/SKILL.md` |
 | Triage / respond to PR comments | `skills/session/pr-comments/SKILL.md` |
@@ -287,7 +287,7 @@ These fire for every non-trivial action, regardless of whether a pattern above m
 
 6. **Ticket-required + Epic-in-project + Dependency-clear**: Any work that creates a change in state or behavior of the software that will impact the product requires a ticket. Typographical corrections with no functional effect are exempt. That ticket must belong to a project or epic — unprojected tickets are not worked. All blocking upstream tickets must be Done before you start. Include the ticket reference in every commit. Read `skills/planning/pre-work-check/SKILL.md` before starting any such work.
 
-7. **Branch-correct**: you are on a feature branch, not main / master / develop, for any write. The PR base is `develop` (or its synonym - `dev`, `development`, `staging`, `next`, `integration`, `trunk`), NOT `main`. **Invariant:** develop is the origin of all work. `main` is downstream of develop, never upstream of unblessed work. Recurring stale-develop is workflow drift to *repair*, not a workflow to *accept*. If `develop` is missing or stale, verify current refs and keep dependent branching stopped until repaired. Carry out an already-authorized sync or creation through the required reviewed workflow; otherwise ask for the specific missing authority. Do not infer a topology change, silently fall back to main, overwrite existing work, or patch the rule to accommodate drift. See `skills/git-workflow/develop-guard/SKILL.md`.
+7. **Branch-correct**: read `skills/develop-guard/SKILL.md` and apply the target project's approved workflow. For the Siege scaffold, K5 requires feature/fix -> develop -> main. Other projects follow their independently approved integration and release policy. Branch existence or observed PR history does not authorize changing that policy. The guard owns mode detection and missing/stale integration-branch repair; use its procedure rather than inventing another route here.
 
 8. **Dual-mirror check** (for dual-tracked repos electinfo↔gitlab): after acting on one side, mirror to the other.
 
