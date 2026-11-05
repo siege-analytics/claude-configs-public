@@ -16,6 +16,7 @@ This map guides maintenance. It adds no operational authority or new gate. Exist
 | Collaborator coordination and dependency waits | `skills/_session-coordination-rules.md` | Coordinate authorized slices and hold only dependent work. |
 | Merge procedure | `skills/merge/SKILL.md` | Supply the matching project policy; avoid a copied generic procedure. |
 | Scaffold source/deployment integrity | K5 and the existing build/install/verification code | Verify actual source and installed artifacts. |
+| Session repair and recovery navigation | `skills/stalled-session-recovery/SKILL.md` and its host-controls reference | Verify actual host capabilities and operation state; retain the normal canonical deployment path. |
 
 The mapping is a navigation document. Do not copy detailed policy into this table. Where owners still overlap, resolve one concern in a scoped follow-up rather than adding another always-on rule.
 
