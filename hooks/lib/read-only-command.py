@@ -221,6 +221,9 @@ def ss_kills(args):
 def gh_ok(args):
     if any(long_opt(a, "--web") or short_has(a, "w", "HpqtRJLSB") for a in args[1:]):
         return False   # --web/-w launches a browser (#1089)
+    # Project schema/membership reads do not extend other resource verbs.
+    if args[:2] in (["project", "field-list"], ["project", "item-list"]):
+        return not any(long_opt(a, "--hostname") for a in args[2:])
     if len(args) >= 2 and args[0] in {"pr", "issue", "run", "repo", "release", "workflow", "label", "project", "search"}:
         return args[1] in GH_READ_VERBS or args[0] == "search"
     if args[:1] == ["api"]:
