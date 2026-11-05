@@ -24,10 +24,28 @@ def atomic_signal(path, obj):
 import re
 # Skill-defined artifact headings (#1164): skills/self-review (Junior task
 # description, Senior adversarial checklist), skills/pre-mortem, skills/investigate.
-JUNIOR_HEADINGS = r'junior task description|pre-implementation comprehension|junior[ /-]senior review'
+JUNIOR_HEADINGS = r'junior task description|junior review|pre-implementation comprehension|junior[ /-]senior review'
 SENIOR_HEADINGS = r'senior adversarial checklist|senior review|junior[ /-]senior review'
 INVESTIGATION_HEADINGS = r'investigation fact sheet|fact sheet|investigation'
 PREMORTEM_HEADINGS = r'pre[- ]?mortem'
+
+
+def comment_text(body):
+    """Exclude fenced examples within one actual GitHub comment."""
+    output, fence = [], None
+    for line in body.splitlines():
+        marker = re.match(r'^ {0,3}(`{3,}|~{3,})', line)
+        if marker:
+            token = marker.group(1)
+            if fence is None:
+                fence = token
+            elif (token[0] == fence[0] and len(token) >= len(fence)
+                  and not line[marker.end():].strip()):
+                fence = None
+            continue
+        if fence is None:
+            output.append(line)
+    return '\n'.join(output)
 
 
 def artifact_heading(lowered_comments, names):
@@ -241,11 +259,14 @@ if status == 'implementing' and current_ticket:
                 api_path = f'repos/siege-analytics/claude-configs-public/issues/{issue_num}/comments'
 
             result = subprocess.run(
-                ['gh', 'api', api_path, '--paginate', '-q', '.[].body'],
+                ['gh', 'api', api_path, '--paginate', '-q', '.[].body | @json'],
                 capture_output=True, text=True, timeout=15
             )
             if result.returncode == 0:
-                comments = result.stdout.lower()
+                bodies = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
+                if not all(isinstance(body, str) for body in bodies):
+                    raise ValueError('GitHub comment body is not text')
+                comments = '\n# comment boundary\n'.join(comment_text(body) for body in bodies).lower()
                 junior_hits = sum(1 for s in junior_stems if s in comments)
                 if junior_hits >= 3:
                     junior_found = True

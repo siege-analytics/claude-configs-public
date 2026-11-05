@@ -286,7 +286,7 @@ ARTIFACT_WORDS = re.compile(r'\b(pre-?mortem|investigation|fact sheet|junior|sen
 # The marker is the body's first non-blank line, so a heading appended to a
 # status update cannot relabel it; a task reference ties it to one task.
 ARTIFACT_HEADING = re.compile(
-    r'#{1,6}[ \t]+[*_`]*(?:pre[- ]?mortem|investigation|fact sheet|junior|senior|pre-implementation comprehension|design notes?)\b',
+    r'#{1,6}[ \t]+[*_`]*(?:pre[- ]?mortem|investigation|fact sheet|junior task description|junior review|junior[ /-]senior review|senior adversarial checklist|senior review|pre-implementation comprehension|design notes?)\b',
     re.I,
 )
 ARTIFACT_TASK_REF = re.compile(
@@ -317,27 +317,36 @@ ARTIFACT_RESULT = re.compile(
 )
 
 
-def artifact_claims(lowered):
-    """Lines that would count as completion claims in an unmarked comment.
-
-    Parity with the base rules: the same completion vocabulary needs the same
-    evidence, except on lines that are hypothetical (a skill-defined
-    hypothetical field, or a line/value that opens with a conditional).
-    """
-    claims = []
+def artifact_factual_lines(lowered):
+    """Keep factual clauses; wrapped hypothetical fields cannot supply evidence."""
+    factual, hypothetical = [], False
     for raw in lowered.splitlines():
         line = re.sub(r'^(?:[ \t>#*_`|-]+|\[[ x]\][ \t]*|[0-9]+[.)][ \t]*)+', '', raw)
         line = re.sub(r'[*_`]+', '', line).strip()
-        line = ARTIFACT_RESULT.sub('', line)
-        if not line or not COMPLETION_RE.search(line):
+        if not line:
+            hypothetical = False
             continue
         field = re.match(r'(.{1,40}?)(?::|[ \t]+(?:—|--)[ \t]+)[ \t]*(.*)', line)
-        if field and field.group(1).strip() in ARTIFACT_HYPOTHETICAL_FIELDS:
+        if field:
+            hypothetical = field.group(1).strip() in ARTIFACT_HYPOTHETICAL_FIELDS
+        elif hypothetical and not raw[:1].isspace():
+            hypothetical = False
+        elif raw.lstrip().startswith(('#', '-', '*')):
+            hypothetical = False
+        if hypothetical:
             continue
-        if ARTIFACT_CONDITIONAL_START.match(line) or (field and ARTIFACT_CONDITIONAL_START.match(field.group(2))):
-            continue
-        claims.append(raw.strip())
-    return claims
+        # A conditional opener applies to its clause, not a later assertion.
+        clauses = re.split(r'[;.!?][ \t]+', line)
+        for index, clause in enumerate(clauses):
+            value = field.group(2) if index == 0 and field else clause
+            if ARTIFACT_CONDITIONAL_START.match(value):
+                continue
+            factual.append(clause)
+    return factual
+
+
+def artifact_claims(lines):
+    return [line for line in lines if COMPLETION_RE.search(ARTIFACT_RESULT.sub('', line))]
 
 
 body_lines = [line.strip() for line in (body or "").splitlines() if line.strip()]
@@ -353,8 +362,9 @@ if (
     and ARTIFACT_HEADING.match(first_line)
     and (ARTIFACT_TASK_REF.search(body) or re.search(r'#[0-9]+\b', first_line))
 ):
-    claims = artifact_claims(lower)
-    missing = missing_evidence(lower) if claims else []
+    factual = artifact_factual_lines(lower)
+    claims = artifact_claims(factual)
+    missing = missing_evidence('\n'.join(factual)) if claims else []
     if missing:
         print("BLOCKED: think-pipeline artifact also asserts completion status without evidence.", file=sys.stderr)
         print("Claim: " + claims[0], file=sys.stderr)

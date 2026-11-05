@@ -16,7 +16,11 @@ run_case(){
   local sid="s-$1" dir
   dir="$TMP/ws/sessions/$sid/tasks/t"; mkdir -p "$dir"
   printf '{"ticket": "o/r#1846", "sessionId": "%s", "repo_root": "%s", "scope_paths": ["%s"], "status": "implementing"}\n' "$sid" "$REPO" "$REPO" > "$dir/think-gate.json"
-  printf '%s\n' "$2" > "$TMP/comments.txt"
+  python3 - "$2" > "$TMP/comments.txt" <<'PYBODY'
+import json, sys
+for body in sys.argv[1].split('\x1e'):
+    print(json.dumps(body))
+PYBODY
   CRAFT_SESSION_DIR="$TMP/ws/sessions/$sid" CRAFT_SESSION_ID="$sid" PATH="$FAKE:$PATH" \
     python3 "$ROOT/hooks/lib/pipeline_state.py" "$dir/think-gate.json" "$TMP/ws" "$ROOT/hooks/lib" >/dev/null 2>&1
   python3 - "$dir" <<'PY'
@@ -47,5 +51,16 @@ expect "headings without content do not count" "${got% * *}" "false false"
 
 got=$(run_case prose $'See the Junior task description and Senior adversarial checklist below.')
 expect "a prose mention without a heading does not count" "${got% * *}" "false false"
+
+got=$(run_case junior $'## Junior Review\nActual task description content.')
+expect "known Junior Review heading counts" "${got% * *}" "true false"
+got=$(run_case fenced $'```markdown\n## Junior Review\nQuoted description.\n## Senior review\nQuoted checklist.\n```')
+expect "fenced templates do not supply reviews" "${got% * *}" "false false"
+got=$(run_case falseclose $'```markdown\n```not-a-closing-fence\n## Junior Review\nQuoted description.\n## Senior review\nQuoted checklist.\n```')
+expect "closing fence with text does not expose code headings" "${got% * *}" "false false"
+got=$(run_case separated $'## Junior Review\x1eContent in another comment.\n## Senior review\x1eAnother unrelated comment.')
+expect "headings cannot borrow another comment content" "${got% * *}" "false false"
+got=$(run_case unknown $'## Junior Plan\nNot a review artifact.')
+expect "unknown Junior heading does not supply review" "${got% * *}" "false false"
 
 echo "pipeline_review_headings_1164: $pass passed, $fail failed"; [[ $fail -eq 0 ]]

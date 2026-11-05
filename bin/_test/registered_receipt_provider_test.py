@@ -164,10 +164,31 @@ class ReceiptProviders(unittest.TestCase):
         spec = importlib.util.spec_from_file_location('native_receipt_actions', ROOT / 'hooks/lib/task_actions.py')
         actions = importlib.util.module_from_spec(spec); spec.loader.exec_module(actions)
         env = {key:value for key,value in os.environ.items() if not key.startswith(('CRAFT_', 'CLAUDE_', 'CCP_'))}
-        with patch.dict(os.environ, env, clear=True):
-            shape = actions.action(self.command(ROOT / 'hooks/lib/test-evidence.py'), str(self.project))
-        self.assertFalse(shape.get('error'), shape)
-        self.assertEqual(shape['test_receipt_repo'], str(self.project))
+        for native_directory in (None, str(self.host.fixture.base / 'native-history' / 'one')):
+            native_env = dict(env)
+            if native_directory:
+                Path(native_directory).mkdir(parents=True)
+                native_env['CLAUDE_SESSION_DIR'] = native_directory
+            with self.subTest(native_directory=native_directory), patch.dict(os.environ, native_env, clear=True):
+                shape = actions.action(self.command(ROOT / 'hooks/lib/test-evidence.py'), str(self.project))
+                self.assertFalse(shape.get('error'), shape)
+                self.assertEqual(shape['test_receipt_repo'], str(self.project))
+
+    def test_unenrolled_native_session_directory_does_not_require_craft_layout(self):
+        native = self.host.fixture.base / 'native-history' / 'one'
+        native.mkdir(parents=True)
+        environment = {'CLAUDE_SESSION_DIR': str(native)}
+        with patch.dict(os.environ, environment, clear=True):
+            self.assertIsNone(router_fixture.r.registered_test_provider(environment, {}))
+
+    def test_registered_marker_cannot_hide_invalid_session_layout(self):
+        native = self.host.fixture.base / 'native-history' / 'one'
+        native.mkdir(parents=True)
+        environment = {'CLAUDE_SESSION_DIR': str(native),
+                       'CRAFT_AGENT_WORKSPACE': str(self.workspace)}
+        with patch.dict(os.environ, environment, clear=True):
+            with self.assertRaisesRegex(router_fixture.r.RoutingError, 'physical host session'):
+                router_fixture.r.registered_test_provider(environment, {})
 
 
 if __name__ == '__main__':

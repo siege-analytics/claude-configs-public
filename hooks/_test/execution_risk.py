@@ -126,7 +126,7 @@ class ExecutionRisk(unittest.TestCase):
         self.assertIn("cannot enumerate", " ".join(verdict["reasons"]))
 
     def test_unknown_options_wrappers_and_mixed_mutations_stay_conservative(self):
-        for command in ["pytest -p arbitrary", "pytest -c pytest.ini", "pytest --junitxml=out.xml", "env pytest", "python3 -c 'import pytest; pytest.main()'", "pytest && touch app.py", "pytest > result.txt", "pytest tests/*.py"]:
+        for command in ["timeout 5 pytest", "nice pytest", "pytest -p arbitrary", "pytest -c pytest.ini", "pytest --junitxml=out.xml", "env pytest", "python3 -c 'import pytest; pytest.main()'", "pytest && touch app.py", "pytest > result.txt", "pytest tests/*.py"]:
             with self.subTest(command=command):
                 self.hook(command, 2)
 
@@ -136,6 +136,32 @@ class ExecutionRisk(unittest.TestCase):
         (self.repo / "app.py").write_text("value = 2\n")
         self.hook()
         self.hook("pytest .github/workflows/ci.yml", 2)
+
+    def test_ignored_directory_selectors_include_c_and_preserve_b(self):
+        critical = self.repo / 'hooks/bash'
+        benign = self.repo / 'tests/ignored-only'
+        critical.mkdir(parents=True); benign.mkdir()
+        (critical / 'test_risk.py').write_text('def test_risk(): pass\n')
+        (benign / 'test_local.py').write_text('def test_local(): pass\n')
+        (self.repo / '.gitignore').write_text('hooks/bash/\ntests/ignored-only/\n')
+        self.git('add','.gitignore'); self.git('commit','-qm','fixture ignore selected tests')
+        self.hook('pytest tests/ignored-only')
+        result = self.hook('pytest hooks',2)
+        self.assertIn('review tier is C',result.stderr)
+        paths = f.r._pytest_execution_targets('pytest hooks',str(self.repo),str(self.repo))
+        self.assertIn('hooks/bash/test_risk.py',paths)
+
+    def test_explicit_directory_listing_failure_cannot_lower_floor(self):
+        original = f.r._git_lines
+        def listing(repo,*arguments):
+            if arguments[:4] == ('ls-files','--cached','--others','-z'):
+                return None
+            return original(repo,*arguments)
+        data = json.loads((self.gate / 'think-gate.json').read_text())
+        with patch.object(f.r,'_git_lines',side_effect=listing):
+            verdict=f.r.task_tier(data,[str(self.repo)],'pytest tests',str(self.repo))
+        self.assertEqual(verdict['floor'],'C')
+        self.assertIn('cannot list explicit test selector',' '.join(verdict['reasons']))
 
     def test_task_lifecycle_and_cross_task_authority_unchanged(self):
         data = json.loads((self.gate / "think-gate.json").read_text())

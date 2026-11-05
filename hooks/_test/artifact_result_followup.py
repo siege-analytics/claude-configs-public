@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 import shutil
+import shlex
 import subprocess
 import tempfile
 import unittest
@@ -12,14 +13,27 @@ HOOK = ROOT / 'hooks/bash/coordinator-status-guard.sh'
 
 class ArtifactResults(unittest.TestCase):
     def hook(self, body, expected, action='comment'):
-        with tempfile.TemporaryDirectory() as folder:
+        with tempfile.TemporaryDirectory(prefix="artifact review ") as folder:
             path = Path(folder) / 'body.md'
             path.write_text(body)
-            payload = {'cwd': str(ROOT), 'tool_input': {'command': f'gh issue {action} 1164 --body-file {path}'}}
+            payload = {'cwd': str(ROOT), 'tool_input': {'command': f'gh issue {action} 1164 --body-file {shlex.quote(str(path))}'}}
             result = subprocess.run(['bash', str(HOOK)], input=json.dumps(payload), text=True,
                                     capture_output=True, timeout=20)
             self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
             return result
+
+    def test_wrapped_hypothetical_field_is_not_project_completion(self):
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario:\n  The deployment is complete without a verified owner.\n\nMitigation: retain the actual review.\n', 0)
+
+    def test_unindented_sentence_does_not_borrow_hypothetical_field(self):
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: tests may fail.\nDeployment complete.\n', 2)
+
+    def test_conditional_prefix_does_not_hide_later_factual_claim(self):
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nIf tests fail, stop rollout; the deployment is complete.\n', 2)
+
+    def test_hypothetical_text_cannot_supply_actual_completion_evidence(self):
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario: owner approved main deployment.\nStatus: complete.\n', 2)
+        self.hook('## Pre-Mortem\nTicket: o/r#1164\nScenario:\n  owner approved main deployment.\n\nStatus: complete.\n', 2)
 
     def test_actual_junior_senior_review_result_needs_no_deployment(self):
         self.hook('# Junior/Senior Review\nTicket: siege-analytics/claude-configs-public#1164\nReview completed: no blocking findings.\n', 0)

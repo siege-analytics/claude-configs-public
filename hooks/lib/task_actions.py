@@ -805,6 +805,8 @@ def github_metadata_target(args, cwd: str):
 
 def github_project_action(args):
     """Literal typed project mutations; unsupported remote writes never become cwd writes."""
+    if os.path.basename(args[0]) in {'timeout', 'nice', 'time'} and any(os.path.basename(word) == 'gh' for word in args[1:]):
+        raise UnknownShape('Wrapped GitHub mutations are not modeled; use the literal scoped gh operation')
     if args[:1] != ['gh']:
         wrapped = os.path.basename(args[0]) == 'gh' or (
             re.match(r'[A-Za-z_][A-Za-z0-9_]*=', args[0]) and 'gh' in args[1:])

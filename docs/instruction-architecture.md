@@ -9,13 +9,14 @@ This map guides maintenance. It adds no operational authority or new gate. Exist
 | Permission, scope, preservation and evidence boundaries | `skills/KERNEL.md` | Preserve the invariant and link to its procedure. |
 | Conditional authorization and readiness | `skills/_standing-approval-rules.md` | Apply the existing grant and its actual conditions. |
 | Choosing and continuing authorized work | `skills/_autonomy-rules.md`, `skills/_strategic-agency-rules.md` | Use the rule for the decision it owns. |
-| Review artifacts and applicable review depth | `skills/self-review/SKILL.md` and selected project review policy | Request or produce required evidence through the selected procedure. |
+| Review artifacts and applicable review depth | `skills/self-review/SKILL.md` and selected project review policy | Use the selected procedure; generic Self-review has one flat entry and ordinary artifact-contract/review-checklists siblings. Produced artifact formats remain unchanged. |
 | Approved branch topology | K5 for the Siege scaffold; approved target-project policy elsewhere | Inspect the actual target and use its declared workflow. |
-| Task-owned design evidence and lifecycle | `skills/think/SKILL.md`; runtime ownership helpers | Follow exact session/task scope and preserve other tasks. |
+| Task-owned design evidence and lifecycle | `skills/think/SKILL.md` and its sibling design/task/claims references; runtime ownership helpers | Follow exact session/task scope and preserve other tasks. |
 | Collaborator role boundaries | `skills/_tandem-agent-rules.md` | State and respect the assigned role. |
-| Collaborator coordination and dependency waits | `skills/_session-coordination-rules.md` | Coordinate authorized slices and hold only dependent work. |
+| Collaborator dispatch, coordination and dependency waits | `skills/_session-coordination-rules.md` | Use its Dispatch protocol, coordinate authorized slices and hold only dependent actions. Resolver check12 is navigation. |
 | Merge procedure | `skills/merge/SKILL.md` | Supply the matching project policy; avoid a copied generic procedure. |
 | Scaffold source/deployment integrity | K5 and the existing build/install/verification code | Verify actual source and installed artifacts. |
+| Session repair and recovery navigation | `skills/stalled-session-recovery/SKILL.md` and its host-controls reference | Verify actual host capabilities and operation state; retain the normal canonical deployment path. |
 
 The mapping is a navigation document. Do not copy detailed policy into this table. Where owners still overlap, resolve one concern in a scoped follow-up rather than adding another always-on rule.
 
@@ -35,3 +36,5 @@ Authored overlays must live outside generated output paths. Rebuilding must be d
 4. Expand to more clients after one active client passes source, package and delivery checks.
 
 At each slice, track which duplicate decisions disappear and which compatibility paths remain. A reduced line count alone is not acceptance.
+
+Think has one discoverable entrypoint. Its ordinary sibling Markdown references carry design, task evidence/lifecycle and verifiable claims detail in both layouts. Pre-edit mutation tiers and commit-review tiers are distinct checkpoints; navigation does not waive authored preparation, grant authority or release owner holds.

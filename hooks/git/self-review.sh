@@ -278,6 +278,17 @@ if [[ "$REVIEW_TIER" != "A" && "$SOURCE_LINES" -ne 1 ]]; then
     MISSING+=("Self-Review-Source: <path-or-ticket pointing at the review artifact>  (exactly one; found $SOURCE_LINES)")
 fi
 
+SOURCE_VALUE=$(echo "$TRAILERS" | grep -E '^Self-Review-Source:[[:space:]]+' | sed -E 's/^Self-Review-Source:[[:space:]]+'//)
+if [[ "$REVIEW_TIER" != "A" ]] && { [[ "$SOURCE_VALUE" =~ \.(md|txt)$ ]] || [[ "$SOURCE_VALUE" == /* ]] || [[ "$SOURCE_VALUE" == ./* ]]; }; then
+    case "$SOURCE_VALUE" in
+        /*) SOURCE_PATH="$SOURCE_VALUE" ;;
+        *) SOURCE_PATH="$EFFECTIVE_CWD/$SOURCE_VALUE" ;;
+    esac
+    if [[ ! -f "$SOURCE_PATH" ]]; then
+        MISSING+=("Self-Review-Source: file not found: $SOURCE_VALUE (at $SOURCE_PATH)")
+    fi
+fi
+
 if [[ ${#MISSING[@]} -gt 0 ]]; then
     {
         echo "BLOCKED: Latest commit lacks ${#MISSING[@]} required review item(s) for Tier $REVIEW_TIER."

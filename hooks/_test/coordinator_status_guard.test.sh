@@ -437,7 +437,7 @@ Status: shipped to prod before the release cut; no residual risk.'")" \
 expect_block_because \
   "laundering: the heading line itself is scanned" \
   "$HOOK" \
-  "$(payload "gh issue comment 1164 --body '## Senior lane status: done #1164
+  "$(payload "gh issue comment 1164 --body '## Senior review lane status: done #1164
 Shipped.'")" \
   "asserts completion status"
 

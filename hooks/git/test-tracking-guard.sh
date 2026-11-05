@@ -98,6 +98,14 @@ if declare -F ct_code_only >/dev/null; then
         *) COMMAND_CODE=$(ct_code_only "$COMMAND") ;;
     esac
 fi
+# A literal pipeline into a direct shell feeds it executable stdin (#1204).
+# Detect the consumer in quote-stripped code, so a quoted example containing
+# "| bash" remains data. Retain raw producer text only for this bounded shape;
+# ordinary issue prose and printf-to-cat do not become push triggers.
+SHELL_STDIN='[|][[:space:]]*([^[:space:];|&]*/)?(bash|sh|zsh|dash|ash|ksh)([[:space:]]+-s)?[[:space:]]*($|[;&|])'
+if printf '%s\n' "$COMMAND_CODE" | grep -qE "$SHELL_STDIN"; then
+    COMMAND_CODE=$COMMAND
+fi
 TRIGGERS='(^|[^[:alnum:]])(git[[:space:]]+push|gh[[:space:]]+pr[[:space:]]+(create|merge)|glab[[:space:]]+mr[[:space:]]+(create|merge))([^[:alnum:]]|$)'
 if ! printf '%s\n' "$COMMAND_CODE" | grep -qE "$TRIGGERS"; then
     exit 0

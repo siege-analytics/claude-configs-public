@@ -1043,7 +1043,7 @@ def _pytest_execution_targets(command: str, cwd: str, repo_root: str) -> Optiona
                 return None
             relative = os.path.relpath(path, repo_root).replace(os.sep, '/')
             if os.path.isdir(path):
-                listed = _git_lines(repo_root, 'ls-files', '-z', '--', relative)
+                listed = _git_lines(repo_root, 'ls-files', '--cached', '--others', '-z', '--', relative)
                 if listed is None:
                     raise ValueError('cannot list explicit test selector')
                 selectors.extend(listed)
