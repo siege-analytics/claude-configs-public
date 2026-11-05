@@ -50,7 +50,7 @@ Project-contribution: Gate-required think-pipeline posts no longer need wording 
 - **Trailer collectors.** A tier is replaced by the computed one only when an item has also been added to the rejection list. A replacement can therefore never lead to acceptance.
   - Classifier unavailability or an unparsable classifier result remains a hard block.
   - The legacy pre-policy path is unchanged.
-- **Residual risk.** A deliberately relabeled line inside an allowlisted hypothetical field (for example `Mitigation: shipped`) is exempt.
+- **Residual risk.** A relabeled line inside an allowlisted hypothetical field (for example `Mitigation: shipped`) is exempt.
   - The allowlist is bounded and matches the skill formats.
   - Base already accepts `Owner-signoff: N/A` as owner evidence. That is pre-existing and out of scope.
 

@@ -321,7 +321,7 @@ def artifact_claims(lowered):
     """Lines that would count as completion claims in an unmarked comment.
 
     Parity with the base rules: the same completion vocabulary needs the same
-    evidence, except on lines that are explicitly hypothetical (a skill-defined
+    evidence, except on lines that are hypothetical (a skill-defined
     hypothetical field, or a line/value that opens with a conditional).
     """
     claims = []
