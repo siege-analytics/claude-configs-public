@@ -4082,6 +4082,7 @@
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/instruction-architecture.md",
+        "plans/coordination-dispatch-1187.md",
         "skills/KERNEL.md",
         "skills/RESOLVER.md"
       ],
@@ -5968,10 +5969,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 21806,
-      "content_sha256": "f9d9d38b32840b6962e9007d73bd24329a959ef017607f54e87c16cdd50a4a86",
+      "characters": 27699,
+      "content_sha256": "9b46527b385a6989967024fb87d1df2b0e03cb29b6fdf0552f6bcd4f265e3cdf",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 5452,
+      "estimated_tokens": 6925,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -5980,11 +5981,13 @@
       "generated_outputs_verified": true,
       "inbound_source_references": [
         "CHANGELOG.md",
+        "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/instruction-architecture.md",
         "hooks/_test/coordination_alias.test.sh",
+        "plans/coordination-dispatch-1187.md",
         "plans/hostile-review-478-sync-references.md",
         "plans/review-deferred-709.md",
         "plans/self-review-478-sync-references.md",
@@ -5998,7 +6001,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 146,
+      "lines": 174,
       "owner": [
         "unknown"
       ],
@@ -6375,10 +6378,10 @@
     },
     {
       "canonical_source": "skills/_tandem-agent-rules.md",
-      "characters": 6041,
-      "content_sha256": "1bc454fc9a65f1b7c7f9ad51672eec681d966838d8fedf123ea433d087c3eff2",
+      "characters": 6763,
+      "content_sha256": "9eb073c1f7c8079103491794cc9d74f63da9cc83b160d6ae90baca8f4687cbb8",
       "description": "Always-on. Rules for coordinator, reviewer, and implementer agents working in tandem. Requires explicit role contracts, active collaborator supervision, review-only boundaries, authorization gates before role changes, durable handoffs, and re-review after implementation. No override flag except explicit operator authorization recorded in the work item or coordinator message.",
-      "estimated_tokens": 1511,
+      "estimated_tokens": 1691,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_tandem-agent-rules.md",
@@ -6386,11 +6389,13 @@
       ],
       "generated_outputs_verified": true,
       "inbound_source_references": [
+        "RESOLVER.md",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
         "docs/instruction-architecture.md",
         "hooks/_test/coordination_alias.test.sh",
+        "plans/coordination-dispatch-1187.md",
         "plans/design-note-tandem-agent-operating-model.md",
         "skills/KERNEL.md",
         "skills/_session-coordination-rules.md",
@@ -9460,6 +9465,7 @@
         "plans/self-review-self-reviewed-linear-promotion.md",
         "skills/KERNEL.md",
         "skills/RESOLVER.md",
+        "skills/_session-coordination-rules.md",
         "skills/merge/SKILL.md"
       ],
       "kind": "skill",
@@ -12464,9 +12470,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2674011,
+    "characters": 2680626,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 668582,
+    "estimated_tokens": 670235,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12487,7 +12493,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1277617
+      "unclassified": 1284232
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12499,7 +12505,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 319448
+      "unclassified": 321101
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

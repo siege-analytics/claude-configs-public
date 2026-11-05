@@ -13,7 +13,7 @@ This map guides maintenance. It adds no operational authority or new gate. Exist
 | Approved branch topology | K5 for the Siege scaffold; approved target-project policy elsewhere | Inspect the actual target and use its declared workflow. |
 | Task-owned design evidence and lifecycle | `skills/think/SKILL.md`; runtime ownership helpers | Follow exact session/task scope and preserve other tasks. |
 | Collaborator role boundaries | `skills/_tandem-agent-rules.md` | State and respect the assigned role. |
-| Collaborator coordination and dependency waits | `skills/_session-coordination-rules.md` | Coordinate authorized slices and hold only dependent work. |
+| Collaborator dispatch, coordination and dependency waits | `skills/_session-coordination-rules.md` | Use its Dispatch protocol, coordinate authorized slices and hold only dependent actions. Resolver check12 is navigation. |
 | Merge procedure | `skills/merge/SKILL.md` | Supply the matching project policy; avoid a copied generic procedure. |
 | Scaffold source/deployment integrity | K5 and the existing build/install/verification code | Verify actual source and installed artifacts. |
 

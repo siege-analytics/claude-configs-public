@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **198**
-- Characters: **2,674,011**
-- Estimated tokens: **668,582** (character/4 estimate)
+- Characters: **2,680,626**
+- Estimated tokens: **670,235** (character/4 estimate)
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 110 | 1,277,617 | 319,448 |
+| unclassified | 110 | 1,284,232 | 321,101 |
 
 ## Largest source items
 
@@ -52,6 +52,7 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--one-page-marketing` | reference-shelf | 30,696 | 7,674 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
 | `writing-rules` | rule | 30,148 | 7,537 | `skills/_writing-rules-rules.md` |
 | `shelves--hundred-million-offers` | reference-shelf | 29,309 | 7,328 | `skills/shelves/sales/hundred-million-offers/SKILL.md` |
+| `session-coordination` | rule | 27,699 | 6,925 | `skills/_session-coordination-rules.md` |
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
 | `writing-tests` | rule | 27,373 | 6,844 | `skills/_writing-tests-rules.md` |
 | `hostile-review` | skill | 26,756 | 6,689 | `skills/hostile-review/SKILL.md` |
@@ -65,7 +66,6 @@ This report describes committed source evidence. Missing references or tests do 
 | `shelves--ios-hig-design` | reference-shelf | 24,657 | 6,165 | `skills/shelves/design/ios-hig-design/SKILL.md` |
 | `shelves--37signals-way` | reference-shelf | 24,449 | 6,113 | `skills/shelves/team/37signals-way/SKILL.md` |
 | `drive-while-away` | skill | 24,027 | 6,007 | `skills/drive-while-away/SKILL.md` |
-| `code-review` | skill | 23,840 | 5,960 | `skills/code-review/SKILL.md` |
 
 ## Evidence gaps
 
