@@ -39,83 +39,95 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 HOOK_ROOT=$(cd "$(dirname "$0")/.." 2>/dev/null && pwd || true)
 RISK_SCRIPT="${CLAUDE_CONFIG_ROOT:-$HOOK_ROOT}/bin/review-risk.py"
 [[ -f "$RISK_SCRIPT" ]] || RISK_SCRIPT="$REPO_ROOT/bin/review-risk.py"
-TIER_VALUE=$(echo "$TRAILERS" | grep -i '^Review-Tier:' | sed 's/^[^:]*:[[:space:]]*//' | tr '[:lower:]' '[:upper:]')
-if [[ ! -f "$RISK_SCRIPT" || ! "$TIER_VALUE" =~ ^[ABC]$ ]]; then
+if [[ ! -f "$RISK_SCRIPT" ]]; then
     echo "BLOCKED: add exactly one Review-Tier: A|B|C trailer; risk classifier unavailable or declaration invalid." >&2
     exit 1
 fi
+# Every absent or invalid trailer is collected and reported in one rejection
+# (#1168). Each pipeline tolerates no-match under set -e/pipefail.
+MISSING=()
+trailer_example() {
+    case "$1" in
+        Self-Review) echo "<one-line summary of the review pass>" ;;
+        Self-Review-Source) echo "<path or URL to the self-review artifact>" ;;
+        Hostile-Review) echo "<URL, #ticket, or committed file with the independent hostile review>" ;;
+        Negative-Tests) echo "<negative cases exercised and their result>" ;;
+        Full-Suite) echo "<full suite command and pass/fail counts>" ;;
+        Canary-Rollback) echo "<canary or revert proof, or N/A with reason>" ;;
+    esac
+}
+TIER_VALUE=$(echo "$TRAILERS" | { grep -i '^Review-Tier:' || true; } | sed 's/^[^:]*:[[:space:]]*//' | tr '[:lower:]' '[:upper:]')
+DECLARED=""; [[ "$TIER_VALUE" =~ ^[ABC]$ ]] && DECLARED="$TIER_VALUE"
 PROTECTED_RE='^(bin/review-risk\.py|catalog/review-risk-policy\.json|\.githooks/commit-msg|hooks/git/(self-review|pre-push-self-review)\.sh)$'
-if git diff --cached --no-renames --name-only --diff-filter=ACDMRT | grep -Eq "$PROTECTED_RE" && [[ "$TIER_VALUE" != "C" ]]; then
-    echo "BLOCKED: review-policy bootstrap files require Review-Tier: C independently of the classifier." >&2
-    exit 1
-fi
-if ! RISK_RESULT=$(python3 "$RISK_SCRIPT" --repo "$REPO_ROOT" --staged --declared "$TIER_VALUE" 2>&1); then
+PROTECTED=false
+if git diff --cached --no-renames --name-only --diff-filter=ACDMRT | grep -Eq "$PROTECTED_RE"; then PROTECTED=true; fi
+RISK_RESULT=$(python3 "$RISK_SCRIPT" --repo "$REPO_ROOT" --staged ${DECLARED:+--declared "$DECLARED"} 2>&1) && RISK_OK=true || RISK_OK=false
+# The classifier prints one JSON line last; interpreter warnings on stderr must
+# not turn into a classifier failure.
+COMPUTED=$(printf '%s' "$RISK_RESULT" | python3 -c 'import json,sys; print(json.loads(sys.stdin.read().strip().splitlines()[-1]).get("computed_tier", ""))' 2>/dev/null || true)
+if [[ ! "$COMPUTED" =~ ^[ABC]$ ]]; then
     echo "BLOCKED: review tier downgrade or classifier failure: $RISK_RESULT" >&2
     exit 1
+fi
+REQUIRED="$COMPUTED"; [[ "$PROTECTED" == "true" ]] && REQUIRED="C"
+if [[ -z "$DECLARED" ]]; then
+    MISSING+=("Review-Tier: $REQUIRED  (exactly one Review-Tier: A|B|C trailer; computed minimum is Tier $REQUIRED)")
+    TIER_VALUE="$REQUIRED"
+elif [[ "$RISK_OK" != "true" || "$DECLARED" < "$REQUIRED" ]]; then
+    NOTE=""
+    if [[ "$PROTECTED" == "true" ]]; then NOTE="; review-policy bootstrap files require Tier C"; fi
+    MISSING+=("Review-Tier: $REQUIRED  (declared Tier $DECLARED is below the required Tier $REQUIRED$NOTE)")
+    TIER_VALUE="$REQUIRED"
 fi
 
 # Ticket traceability remains universal, including Tier A and [no-review].
 if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
-    echo "BLOCKED: Missing ticket reference. Include #NNN or [no-ticket]." >&2
-    exit 1
+    MISSING+=("ticket reference: #NNN in the message, or [no-ticket] if exempt")
 fi
 
 # The legacy escape is valid only for computed Tier A. Tier B/C can never
 # suppress review by adding a message token.
+NO_REVIEW_A=false
 if echo "$COMMIT_MSG" | grep -qF '[no-review]'; then
-    if [[ "$TIER_VALUE" == "A" ]]; then exit 0; fi
-    echo "BLOCKED: [no-review] is permitted only for validated Tier A changes." >&2
-    exit 1
+    if [[ "$TIER_VALUE" == "A" ]]; then
+        NO_REVIEW_A=true
+    else
+        MISSING+=("remove [no-review]: it is permitted only for validated Tier A changes")
+    fi
 fi
 
-# Check for Self-Review trailer
-if ! echo "$TRAILERS" | grep -qi '^Self-Review:'; then
-    echo ""
-    echo "BLOCKED: Missing Self-Review: trailer."
-    echo ""
-    echo "Every commit to configs-public requires a Self-Review artifact."
-    echo "Add these trailers to your commit message:"
-    echo ""
-    echo "  Self-Review: <one-line summary>"
-    echo "  Self-Review-Source: <path or URL to artifact>"
-    echo ""
-    echo "For genuinely trivial commits (typo fix, whitespace):"
-    echo "  Include [no-review] in the commit message."
-    echo ""
-    echo "See: skills/self-review/SKILL.md"
-    echo "Ref: #355"
+if [[ "$NO_REVIEW_A" != "true" ]] && ! echo "$TRAILERS" | grep -qi '^Self-Review:'; then
+    MISSING+=("Self-Review: $(trailer_example Self-Review)")
+fi
+# Tier B/C require a durable focused/full artifact.
+if [[ "$TIER_VALUE" != "A" ]] && ! echo "$TRAILERS" | grep -qi '^Self-Review-Source:'; then
+    MISSING+=("Self-Review-Source: $(trailer_example Self-Review-Source)")
+fi
+if [[ "$TIER_VALUE" == "C" ]]; then
+    for REQUIRED_TRAILER in "Hostile-Review" "Negative-Tests" "Full-Suite" "Canary-Rollback"; do
+        COUNT=$(echo "$TRAILERS" | { grep -ci "^${REQUIRED_TRAILER}:[[:space:]]*\S" || true; })
+        if [[ "$COUNT" -ne 1 ]]; then
+            MISSING+=("${REQUIRED_TRAILER}: $(trailer_example "$REQUIRED_TRAILER")  (Tier C requires exactly one; found $COUNT)")
+        fi
+    done
+fi
+
+if [[ ${#MISSING[@]} -gt 0 ]]; then
+    {
+        echo ""
+        echo "BLOCKED: commit message lacks ${#MISSING[@]} required review item(s) for Tier $TIER_VALUE."
+        echo "Add every item below in one edit, then retry:"
+        printf '  - %s\n' "${MISSING[@]}"
+        echo ""
+        echo "For genuinely trivial Tier A commits, [no-review] replaces Self-Review:."
+        echo "See: skills/self-review/SKILL.md. Ref: #355, #1168"
+    } >&2
     exit 1
 fi
 
 # Tier A's short review record is the Self-Review line itself.
 if [[ "$TIER_VALUE" == "A" ]]; then
     exit 0
-fi
-
-# Tier B/C require a durable focused/full artifact.
-if ! echo "$TRAILERS" | grep -qi '^Self-Review-Source:'; then
-    echo ""
-    echo "BLOCKED: Missing Self-Review-Source: trailer."
-    echo "Add: Self-Review-Source: <path or URL to the self-review artifact>"
-    exit 1
-fi
-
-# Check for ticket reference
-if ! echo "$COMMIT_MSG" | grep -qE '(#[0-9]+|\[no-ticket\])'; then
-    echo ""
-    echo "BLOCKED: Missing ticket reference."
-    echo "Include #NNN in the commit message, or [no-ticket] if exempt."
-    exit 1
-fi
-
-if [[ "$TIER_VALUE" == "C" ]]; then
-    for REQUIRED_TRAILER in "Hostile-Review" "Negative-Tests" "Full-Suite" "Canary-Rollback"; do
-        COUNT=$(echo "$TRAILERS" | grep -ci "^${REQUIRED_TRAILER}:[[:space:]]*\S")
-        if [[ "$COUNT" -ne 1 ]]; then
-            echo "BLOCKED: Tier C requires exactly one ${REQUIRED_TRAILER}: evidence trailer." >&2
-            exit 1
-        fi
-    done
 fi
 
 # If Self-Review-Source is a file path (not a URL), verify it exists

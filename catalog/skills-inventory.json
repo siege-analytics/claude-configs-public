@@ -10660,6 +10660,7 @@
       "source_path": "skills/pre-mortem/SKILL.md",
       "test_evidence": [
         "bin/_test/settings_drift_test.py",
+        "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
         "hooks/_test/self_review_hook_819_820.test.sh",
@@ -12041,6 +12042,7 @@
         "hooks/_test/ca_enforcement_gate.test.sh",
         "hooks/_test/ca_enforcement_manifest.test.sh",
         "hooks/_test/ca_enforcement_runtime.test.sh",
+        "hooks/_test/coordinator_status_guard.test.sh",
         "hooks/_test/gate_registry.test.sh",
         "hooks/_test/investigate_gate_schema.test.sh",
         "hooks/_test/kb_consultation_advisory.test.sh",

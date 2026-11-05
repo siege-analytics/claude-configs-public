@@ -4,6 +4,24 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: gate artifact posts and one-pass trailer rejections
+
+- coordinator-status-guard now accepts gate-required think-pipeline artifacts. These are the pre-mortem, investigation fact sheet, junior/senior review and design note posts that the Tier C artifacts-posted gate needs.
+  - Format: the comment's first line is a heading naming the artifact, with a `Ticket:`/`Task-ID:` line (or `#N` in the heading).
+  - The status-tone rules do not apply to these posts, so the "(followed)" workaround is no longer needed.
+  - An assertive completion or deploy claim inside an artifact still needs owner/merge/rollout evidence.
+  - Close, reopen, ready, PR review and API state changes never take this lane.
+  - Rejected comments now name the artifact format (#1164).
+- The pipeline-state writer of `junior-senior-gate.json` and `artifacts-posted-gate.json` now recognizes posted artifacts by those same skill headings, when followed by content, as well as by keyword stems.
+  - Real `## Junior task description` and `## Senior adversarial checklist` comments no longer read as absent (#1164).
+- The commit-msg, pre-push and PreToolUse self-review hooks now list every absent or invalid review item in one rejection, each with an example value:
+  - Review-Tier (computed when absent or downgraded);
+  - the ticket reference;
+  - Self-Review and Self-Review-Source;
+  - Hostile-Review, Negative-Tests, Full-Suite and Canary-Rollback.
+  - Items already present are not listed.
+  - commit-msg no longer exits silently when Review-Tier or a Tier C trailer is absent (#1168).
+
 ### Fixed: Craft prompt recovery and reviewed hook repairs
 
 - Restore advisory prompt recovery for a verified packaged Craft host with nested Claude/Codex markers. Standalone spoofing controls and explicit child hard stops remain enforced.
