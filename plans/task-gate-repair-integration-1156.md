@@ -48,3 +48,7 @@ Integrated reviewed #1178 head4312e8f without a source conflict. On the combined
 ## Push-latency integration
 
 Accepted #1179 at f5b53381 after independent review required preservation of executable substitutions and a bounded runner without Perl. Both corrections have focused controls. Merge resolution preserves the project-policy C floor and the shared PATH-helper C floor; generated inventory and review-risk metrics are regenerated from the combined staged sources. Component queued CI is superseded by required full combined CI, not treated as a pass.
+
+## Registered-provider integration
+
+Accepted #1182 at b8c3f92. The router auto-merge retains named timeout/registration error classification plus the optional upgraded producer pin and registered provider selection. Against the combined source, eight provider cases passed in 8.879 seconds and all thirty-six router cases passed in 14.000 seconds. This includes legacy receipt upgrade, direct/headless and native behavior, and invalid binding/provider controls. These are isolated source fixtures; live dual-stack verification remains pending. Logs: /tmp/ccp-batch-provider.log and /tmp/ccp-batch-router.log.
