@@ -24,6 +24,15 @@ Authorized by the Siege Claude Hub (261106-neat-boulder, 11:55 CST): D1 merge, D
 - Generated artifacts (`review-risk-metrics.json`, `skills-inventory.json`) were regenerated with the repo tools, not hand-merged.
 - D2(a): the strict global allowlist is kept. The `ssh -T git@github.com` global-denial tradeoff is documented in the CHANGELOG and PR. Task-declared hosts are noted as a possible follow-up and not implemented.
 - New D2(a) tests: with a covering task gate, the resolver output for allowlisted ssh carries `remote_contact_only` with no `gate`, `task`, `remote_only_authorized` or `tier`. A local write beside ssh still binds the task gate normally.
+- Observed D2(a) outcome (`universal-mutation-gate.sh` from a copied tree, command `ssh cyberpower 'touch /srv/x'`):
+
+  | Context | Hook exit | Result |
+  |---|---|---|
+  | No task gate | 0 | admitted |
+  | Covering task gate | 0 | admitted |
+
+  A remote mutating command on an allowlisted host passes this hook without any task gate. This is the accepted tradeoff: contact is not task authorization, and remote-side authority stays operator policy.
+- Second integration (2026-11-06 ~15:35 CST): merged develop fe4e0e1, which contains main 9f47b03 (#1214, #1217). The only overlapping file was the generated `catalog/skills-inventory.json`. It auto-merged, and `bin/skill-inventory.py` regenerated it byte-identically.
 - Post-integration evidence, measured on the merged tree before commit:
 
   | Check | Result |
