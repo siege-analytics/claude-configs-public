@@ -766,8 +766,8 @@ def resolve_action(workspace: str, payload: dict) -> dict:
         except (OSError, ValueError, TypeError, KeyError, ImportError, SyntaxError) as exc:
             return {'read_only': False, 'paths': [], 'gate': None, 'error': 'Queue enqueue denied: ' + str(exc)}
     shape = action(command, cwd) if command else {"read_only": False, "paths": [canonical(ti.get("file_path") or ti.get("notebook_path") or ti.get("path") or cwd, cwd)]}
-    if shape["read_only"] or shape.get('investigation') or shape.get("metadata_only"):
-        return shape  # No gate lookup for recognized reads/approved diagnostics.
+    if shape["read_only"] or shape.get('investigation') or shape.get("metadata_only") or shape.get("remote_contact_only"):
+        return shape  # No gate lookup for recognized reads/approved diagnostics/allowlisted ssh (#1160).
     if shape.get("error"):
         return {**shape, "gate": None, "error": "Cannot resolve mutation targets: " + shape["error"]}
     if shape.get('remote_actions'):

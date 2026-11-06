@@ -89,6 +89,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "bin/_test/craft_workspace_trust_test.py",
  "hooks/lib/pipeline_state.py",
  "hooks/lib/hub-concurrency-policy.json",
+ "hooks/lib/ssh-host-allowlist.json",
  "hooks/lib/scope-check.sh",
  "hooks/lib/split-frontmatter.py",
  "bin/build.py",

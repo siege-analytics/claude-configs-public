@@ -439,6 +439,144 @@ def _git_toplevel(directory: str) -> str:
         raise UnknownShape("cannot resolve repository toplevel for Git mutation")
 
 
+# ssh contacts another machine and writes nothing local by itself, so it is
+# gated by destination, not by the cwd (#1160). Only hosts on the operator-owned
+# allowlist pass, and only with options whose effects stay remote. Anything
+# else is denied even under a covering task gate: options that run or write
+# locally (ProxyCommand, LocalCommand, -F, -E, -S/-M, forwards, -f) and forms
+# that hide ssh behind another argv0. scp, rsync and sftp keep their local
+# operands and are not handled here.
+SSH_ALLOWLIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ssh-host-allowlist.json")
+SSH_EXECUTABLES = {"ssh", "/usr/bin/ssh"}
+SSH_WRAPPERS = {"timeout", "gtimeout", "nohup", "nice", "time", "xargs", "sudo", "doas", "stdbuf", "setsid",
+                "caffeinate", "watch", "unbuffer", "script", "flock", "ionice", "taskset", "chrt", "arch",
+                "env", "command", "exec", "builtin", "nocorrect", "noglob"}
+_SSH_LABEL = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
+_SSH_HOST = re.compile(_SSH_LABEL + r"(?:\." + _SSH_LABEL + r")*")
+_SSH_LOGIN = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]*")
+_SSH_FLAGS = set("46aCnqTtvx")  # no-value flags with no local effect
+_SSH_VALUES = set("lop")         # -l login, -o option, -p port
+_SSH_CONFIG = {  # -o keys whose effects stay remote, and their accepted values
+    "batchmode": r"yes|no",
+    "compression": r"yes|no",
+    "connecttimeout": r"[0-9]{1,5}",
+    "connectionattempts": r"[0-9]{1,3}",
+    "serveraliveinterval": r"[0-9]{1,5}",
+    "serveralivecountmax": r"[0-9]{1,3}",
+    "loglevel": r"quiet|fatal|error|info|verbose|debug|debug1|debug2|debug3",
+    "requesttty": r"yes|no|force|auto",
+    "port": r"[0-9]{1,5}",
+    "user": _SSH_LOGIN.pattern,
+}
+
+
+def ssh_allowlist():
+    """Allowed ssh hosts and the allowlist source. Any defect admits no host."""
+    try:
+        with open(SSH_ALLOWLIST, encoding="utf-8") as handle:
+            data = json.load(handle)
+        hosts = data.get("hosts") if isinstance(data, dict) else None
+        if not isinstance(hosts, list) or not all(isinstance(h, str) and _SSH_HOST.fullmatch(h) for h in hosts):
+            raise ValueError('"hosts" must be a list of hostnames')
+        return frozenset(h.lower() for h in hosts), SSH_ALLOWLIST
+    except Exception as exc:  # unreadable, malformed or mistyped: deny every host
+        return frozenset(), f"{SSH_ALLOWLIST} (unusable: {exc})"
+
+
+def _ssh_option(flag: str, value: str) -> None:
+    if flag == "p" and re.fullmatch(r"[0-9]{1,5}", value):
+        return
+    if flag == "l" and _SSH_LOGIN.fullmatch(value):
+        return
+    if flag == "o":
+        # ssh reads `-o` as one config line: `Key=Value` or `Key Value`.
+        match = re.fullmatch(r"\s*([A-Za-z]+)(?:\s*=\s*|\s+)(\S+)\s*", value)
+        if match and re.fullmatch(_SSH_CONFIG.get(match[1].lower(), r"(?!)"), match[2], re.IGNORECASE):
+            return
+        raise UnknownShape(f"ssh -o {value!r} is not allowed: only {', '.join(sorted(_SSH_CONFIG))} "
+                           "with plain values stay remote (#1160)")
+    raise UnknownShape(f"ssh -{flag} {value!r} is not a plain {'port' if flag == 'p' else 'login'} (#1160)")
+
+
+def _ssh_host(destination: str) -> str:
+    if destination.startswith("ssh://"):
+        match = re.fullmatch(r"ssh://(?:([^@/?#]+)@)?([^@:/?#]+)(?::[0-9]{1,5})?/?", destination)
+        user, host = (match[1], match[2]) if match else ("", "")
+    else:
+        user, _, host = destination.rpartition("@")  # ssh splits at the last @
+    if not _SSH_HOST.fullmatch(host) or user and not re.fullmatch(r"[A-Za-z0-9_.@-]+", user):
+        raise UnknownShape(f"ssh destination {destination!r} is not a plain [user@]host (#1160)")
+    return host.lower()
+
+
+def ssh_destination(args: list[str]) -> str:
+    """Destination host of a literal `ssh` argv, or UnknownShape.
+
+    Like ssh.c, options are parsed before the destination and again after it
+    until `--` or the first other word; the rest is the remote command, which
+    runs remotely and names no local target.
+    """
+    words, host, index, ended = args[1:], None, 0, False
+    while index < len(words):
+        word = words[index]
+        if not ended and word == "--":
+            ended = True
+            index += 1
+            if host is not None:
+                break
+            continue
+        if not ended and word.startswith("-") and word != "-":
+            position = 1
+            while position < len(word):
+                flag = word[position]
+                if flag in _SSH_FLAGS:
+                    position += 1
+                    continue
+                if flag not in _SSH_VALUES:
+                    raise UnknownShape(f"ssh option -{flag} is not allowed: it has local effects or is not "
+                                       "modeled by the mutation gate (#1160)")
+                value = word[position + 1:]
+                if not value:
+                    index += 1
+                    if index >= len(words):
+                        raise UnknownShape(f"ssh option -{flag} is missing its value")
+                    value = words[index]
+                _ssh_option(flag, value)
+                break
+            index += 1
+            continue
+        if host is not None:
+            break
+        host = _ssh_host(word)
+        index += 1
+    if host is None:
+        raise UnknownShape("ssh requires a literal destination host (#1160)")
+    return host
+
+
+def ssh_invocation(args: list[str]):
+    """Host of a direct `ssh` command, None when argv does not run ssh.
+
+    ssh hidden behind an environment assignment, another path or an exec
+    wrapper cannot be host-checked here, so it is refused.
+    """
+    head = 0
+    while head < len(args) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", args[head], re.S):
+        head += 1
+    if head >= len(args):
+        return None
+    word = args[head]
+    if head == 0 and word in SSH_EXECUTABLES:
+        return ssh_destination(args)
+    if word in SSH_EXECUTABLES or os.path.basename(word) == "ssh":
+        raise UnknownShape("run ssh directly as `ssh` or /usr/bin/ssh, without environment assignments, "
+                           "so its host can be checked against the ssh host allowlist (#1160)")
+    if os.path.basename(word) in SSH_WRAPPERS and any(
+            w.split() and os.path.basename(w.split()[0]) == "ssh" for w in args[head + 1:]):
+        raise UnknownShape("ssh behind a command wrapper cannot be host-checked; run ssh directly (#1160)")
+    return None
+
+
 def reader(args: list[str]) -> bool:
     if not args:
         return False
@@ -585,7 +723,7 @@ def action(command: str, cwd: str) -> dict:
         # thinks; the targets found below still pick the owning task's gate.
         result.update(read_only=False, investigation=False, self_management=False,
                       veto="read-only-command: option writes or runs a program")
-        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') else [canonical(cwd)])
+        result["paths"] = result.get("paths") or ([] if result.get("metadata_only") or result.get('remote_actions') or result.get("remote_contact_only") else [canonical(cwd)])
     return result
 
 
@@ -885,6 +1023,7 @@ def _action(command: str, cwd: str) -> dict:
     file_paths = []
     remote_repos = []
     remote_actions = []
+    remote_hosts = []  # allowlisted ssh destinations (#1160)
     mutation_commands = 0
     commit_commands = 0
     unproven_companions = []
@@ -950,6 +1089,20 @@ def _action(command: str, cwd: str) -> dict:
             remote = github_metadata_target(args, effective)
             if remote is not None:
                 remote_repos.append(remote)
+                self_managed = False
+                args, arg_globs = [], []
+                return
+            # ssh names no local target; its destination is checked instead
+            # (#1160). This precedes the operand pass below, which would read
+            # remote text such as 'cat /etc/x' as local paths.
+            host = ssh_invocation(args)
+            if host is not None:
+                allowed, source = ssh_allowlist()
+                if host not in allowed:
+                    raise UnknownShape(f"ssh host {host!r} is not on the ssh host allowlist {source} "
+                                       f"(allowed: {', '.join(sorted(allowed)) or 'none'}); "
+                                       "only the operator can add a host (#1160)")
+                remote_hosts.append(host)
                 self_managed = False
                 args, arg_globs = [], []
                 return
@@ -1146,13 +1299,20 @@ def _action(command: str, cwd: str) -> dict:
             raise UnknownShape('separate configuration/file mutations from commit calls; run git commit -F FILE first, then a separately scoped cleanup command')
     except UnknownShape as e:
         return {"read_only": False, "paths": list(dict.fromkeys(paths + [effective])), "error": str(e), "binding": binding}
-    if remote_repos or remote_actions:
+    if remote_repos or remote_actions or remote_hosts:
         paths.extend(unproven_companions)
+    # Remote-only: no local target and no diagnostic companion. ssh gets its
+    # own flag; metadata_only lets other guards skip their checks (#1160).
+    # A project action beside ssh keeps its task-owned project authorization:
+    # remote_contact_only never short-circuits remote_actions.
+    remote_only = not paths and not diagnostic
     return {"read_only": reads and not diagnostic and bool(tokens), "investigation": reads and diagnostic,
             "self_managed_shape": self_managed and not diagnostic, "directory_paths": [p for p in directory_paths if p not in file_paths], "directory_removals": directory_removals,
             # A path only removed, never also written in the same command (#1100).
             "file_removals": [p for p in file_removals if paths.count(p) == file_removals.count(p)],
-            "paths": list(dict.fromkeys(paths or ([] if remote_repos or remote_actions else [effective]))),
+            "paths": list(dict.fromkeys(paths or ([] if (remote_repos or remote_actions or remote_hosts) and not (remote_hosts and not remote_only) else [effective]))),
             "remote_repos": list(dict.fromkeys(remote_repos)),
             "remote_actions": remote_actions,
-            "metadata_only": bool(remote_repos) and not remote_actions and not paths and not diagnostic, "binding": binding}
+            "remote_hosts": list(dict.fromkeys(remote_hosts)),
+            "metadata_only": bool(remote_repos) and not remote_actions and not remote_hosts and remote_only,
+            "remote_contact_only": bool(remote_hosts) and not remote_actions and remote_only, "binding": binding}

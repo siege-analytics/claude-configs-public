@@ -4,6 +4,20 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: ssh is gated by host, not as a local cwd mutation
+
+- The mutation gate no longer treats `ssh` as a mutation of the working directory (#1160). `ssh` to a host on the operator-owned `hooks/lib/ssh-host-allowlist.json` (initially `cyberpower`) passes without a task gate, from any directory.
+- Any other host is denied with a message naming the allowlist, even under a covering task gate.
+- The following are denied:
+  - options with local effects or that are not modeled (`ProxyCommand`, `LocalCommand`, `HostName`, `-F`, `-E`, `-S`, `-M`, `-L`/`-R`/`-D`, `-f`, `-W`, `-J`, `-i` and others), including options placed after the destination;
+  - `ssh` hidden behind another path, an environment assignment or an exec wrapper.
+- Local redirects, `tee` and chained commands keep their local targets. `scp`, `rsync` and `sftp` are unchanged.
+- The new `remote_contact_only` flag is read only by the mutation gate. Other guards, including destructive-guard, still inspect ssh commands.
+- Behavior change, accepted tradeoff: the allowlist is strict and global.
+  - ssh to a non-allowlisted host, for example `ssh -T git@github.com`, used to pass under a covering task gate. It is now denied everywhere until the operator adds the host. A task gate cannot admit extra hosts.
+  - An allowlisted contact is outbound contact only. It never selects a task gate, and it is not authorization for remote-side mutation, which stays operator policy.
+  - Task-declared hosts would be a separate, reviewed follow-up.
+
 ### Fixed: task scopes and evidence execution
 
 - Add a GitHub issue to an approved project through the exact current task and a source-owned standing policy, without inventing a filesystem target. Other issues, projects, destructive operations and arbitrary API writes remain guarded (#1161).
