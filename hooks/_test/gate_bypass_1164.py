@@ -57,6 +57,8 @@ B1 = {
                                        'Did the owner approve the rollout', 2),
     'owner_evidence_split_across_lines': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
                                           'Owner:\napproved.', 2),
+    'typographic_negated_modal_supplies_nothing': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
+                                                   'The owner won\u2019t have approved the rollout.', 2),
     'modal_risk_wording_passes': (MARKER + '- Scenario: the PR could be merged before CI finishes and the hook deployed broken.\n'
                                   '- Mitigation: if CI is red, the gate will hold.', 0),
     'delimited_conditional_passes': (MARKER + '- If the PR is merged early, the gate will hold.\n'

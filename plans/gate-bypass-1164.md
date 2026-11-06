@@ -59,7 +59,7 @@ Container closure is name-aware (R3). A closing tag ends its own open element an
 ## Test plan
 
 - `hooks/_test/gate_bypass_1164.py` (run by `gate_bypass_1164.test.sh`):
-  - B1: all 10 main-review payloads plus 18 extra shapes against the real guard. Refusals must name "asserts completion status".
+  - B1: all 10 main-review payloads plus 19 extra shapes against the real guard. Refusals must name "asserts completion status".
   - B2: all 13 main-review fixtures plus 21 extra shapes.
     - Each runs the real writer, then the unchanged universal-mutation-gate on both an existing and a missing hook target.
     - The writer reads from a fake `gh` that applies the writer's actual query to raw API records with real `jq`.

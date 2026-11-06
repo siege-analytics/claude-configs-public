@@ -346,7 +346,7 @@
   {
    "file": "literal-B1.json",
    "name": "curly_modal_literal_control",
-   "body": "## Pre-Mortem\nTicket: #1164\nScenario: The gate won’t be green.",
+   "body": "## Pre-Mortem\nTicket: #1164\nScenario: The gate won\u2019t be green.",
    "develop_exit": 0,
    "candidate_exit": 0,
    "expected_exit": 0,
@@ -355,7 +355,7 @@
   {
    "file": "literal-B1.json",
    "name": "emdash_field_evidence_excluded",
-   "body": "## Pre-Mortem\nTicket: #1164\nSuccess criteria — The owner approved; merged on main and released.\nStatus: complete.",
+   "body": "## Pre-Mortem\nTicket: #1164\nSuccess criteria \u2014 The owner approved; merged on main and released.\nStatus: complete.",
    "develop_exit": 2,
    "candidate_exit": 2,
    "expected_exit": 2,
@@ -364,7 +364,7 @@
   {
    "file": "literal-B1.json",
    "name": "endash_conditional_control",
-   "body": "## Pre-Mortem\nTicket: #1164\nIf the gate is green – investigate.",
+   "body": "## Pre-Mortem\nTicket: #1164\nIf the gate is green \u2013 investigate.",
    "develop_exit": 0,
    "candidate_exit": 0,
    "expected_exit": 0,
@@ -373,7 +373,7 @@
   {
    "file": "old-wording-B1.json",
    "name": "old_junior_success_criteria",
-   "body": "## Junior task description\nTicket: #1164\nCurrent behavior: the lane is blocked and the gate rejects the post.\n**Success criteria** — done when the gate accepts the post; tests green.\n5. What could go wrong: missing fixtures leave the blocker unresolved.",
+   "body": "## Junior task description\nTicket: #1164\nCurrent behavior: the lane is blocked and the gate rejects the post.\n**Success criteria** \u2014 done when the gate accepts the post; tests green.\n5. What could go wrong: missing fixtures leave the blocker unresolved.",
    "develop_exit": 0,
    "candidate_exit": 2,
    "expected_exit": 2,

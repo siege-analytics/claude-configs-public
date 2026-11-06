@@ -331,7 +331,7 @@ ARTIFACT_CONDITIONAL_START = re.compile(
 # approved the rollout?").
 ARTIFACT_MODAL_WORD = re.compile(
     r"\b(?:could|might|would|may|should|will|shall|must|can|cannot|ought|"
-    r"(?:can|couldn|wouldn|shouldn|won|mustn|shan)['’]t)\b"
+    r"(?:can|couldn|wouldn|shouldn|won|mustn|shan)['\u2019]t)\b"
 )
 ARTIFACT_QUESTION_START = re.compile(r'(?:did|does|do|has|have|had|is|are|was|were|am)\b')
 
