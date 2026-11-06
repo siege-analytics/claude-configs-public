@@ -162,7 +162,9 @@ class ProjectScope(unittest.TestCase):
                         '/usr/bin/gh project delete 1 --owner electinfo']:
             with self.subTest(command=command):
                 result = self.hook(command, 2)
-                self.assertIn('Cannot resolve mutation targets', result.stderr)
+                diagnostic = ('Queue enqueue denied' if command.startswith('gh api graphql')
+                              else 'Cannot resolve mutation targets')
+                self.assertIn(diagnostic, result.stderr)
 
     def test_wrapped_remote_mutations_cannot_borrow_a_broad_local_gate(self):
         self.f.task('electinfo/enterprise#3300', self.f.ws, artifacts=True)

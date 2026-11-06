@@ -5011,6 +5011,7 @@
         "hooks/_test/detect_host.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/github_merge_queue.py",
         "hooks/_test/github_project_reads.py",
         "hooks/_test/github_project_scope.py",
         "hooks/_test/investigate_gate_schema.test.sh",
@@ -5541,6 +5542,8 @@
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_add_risk.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/github_merge_queue.py",
+        "hooks/_test/github_merge_queue.test.sh",
         "hooks/_test/github_project_reads.py",
         "hooks/_test/github_project_reads.test.sh",
         "hooks/_test/github_project_scope.py",
@@ -6103,10 +6106,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 27699,
-      "content_sha256": "9b46527b385a6989967024fb87d1df2b0e03cb29b6fdf0552f6bcd4f265e3cdf",
+      "characters": 27864,
+      "content_sha256": "2ef3d7a61637add51f9d120e7dc7a780baf28ceb4f38440a4451199f4be0172a",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 6925,
+      "estimated_tokens": 6966,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6116,6 +6119,7 @@
       "inbound_source_references": [
         "CHANGELOG.md",
         "RESOLVER.md",
+        "bin/_test/self_review_disclosure_test.py",
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
@@ -8750,6 +8754,7 @@
         "bin/_test/selected_composition_test.py",
         "bin/_test/selected_generation_test.py",
         "bin/_test/selected_registration_test.py",
+        "bin/_test/self_review_disclosure_test.py",
         "bin/_test/skill_lifecycle_test.py",
         "hooks/_test/block_log_advisory_utc.test.sh",
         "hooks/_test/branch_state_advisory.test.sh",
@@ -8758,6 +8763,7 @@
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/gate_registry.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/github_merge_queue.py",
         "hooks/_test/hub_concurrency_gate.test.sh",
         "hooks/_test/pr_base_guard.test.sh",
         "hooks/_test/progressive_loading.test.sh",
@@ -9213,6 +9219,7 @@
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/github_merge_queue.py",
         "hooks/_test/hook_path.test.sh",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/pr_base_guard.test.sh",
@@ -9670,6 +9677,7 @@
         "bin/_test/scanner_source_test.py",
         "hooks/_test/detect_ai_fingerprints.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/github_merge_queue.py",
         "hooks/_test/hook_path.test.sh"
       ],
       "tier": "unclassified",
@@ -10492,6 +10500,7 @@
         "bin/_test/progressive_mount_test.py",
         "bin/_test/protected_policy_test.py",
         "bin/_test/resolve_load_set_test.py",
+        "bin/_test/review_risk_test.py",
         "bin/_test/scanner_source_test.py",
         "bin/_test/selected_generation_test.py",
         "bin/_test/skill_inventory_test.py",
@@ -10500,6 +10509,8 @@
         "hooks/_test/destructive_bash_guard.test.sh",
         "hooks/_test/execution_risk.py",
         "hooks/_test/fix_shape_guard.test.sh",
+        "hooks/_test/github_merge_queue.py",
+        "hooks/_test/github_merge_queue.test.sh",
         "hooks/_test/own_session_operands.py",
         "hooks/_test/pr_base_guard.test.sh",
         "hooks/_test/progressive_loading.test.sh",
@@ -11126,6 +11137,8 @@
         "hooks/_test/fix_shape_guard.test.sh",
         "hooks/_test/git_add_risk.test.sh",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/github_merge_queue.py",
+        "hooks/_test/github_merge_queue.test.sh",
         "hooks/_test/github_project_reads.py",
         "hooks/_test/github_project_reads.test.sh",
         "hooks/_test/github_project_scope.py",
@@ -11719,6 +11732,7 @@
         "bin/_test/selected_registration_test.py",
         "bin/_test/self_review_disclosure_test.py",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/github_merge_queue.py",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/_test/review_risk_policy.test.sh",
         "hooks/_test/self_review_hook_489_deploy_model.test.sh",
@@ -12141,6 +12155,7 @@
         "bin/_test/hook_payload_test.py",
         "bin/_test/review_risk_test.py",
         "hooks/_test/git_hook_fast_skip.test.sh",
+        "hooks/_test/github_merge_queue.py",
         "hooks/_test/survey_context.test.sh"
       ],
       "tier": "unclassified",
@@ -12764,9 +12779,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2611531,
+    "characters": 2611696,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 652962,
+    "estimated_tokens": 653003,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12787,7 +12802,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1215137
+      "unclassified": 1215302
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12799,7 +12814,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 303828
+      "unclassified": 303869
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

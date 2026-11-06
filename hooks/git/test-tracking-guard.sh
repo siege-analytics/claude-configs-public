@@ -65,6 +65,11 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+# A standalone pinned queue request publishes no local HEAD or local tests.
+# This is shape classification, not permission: UMG owns queue proof + audit.
+if [[ -n "$COMMAND" ]] && python3 "$HOOK_DIR/../lib/github-merge-queue.py" --classify "$COMMAND" >/dev/null 2>&1; then
+    exit 0
+fi
 
 # Native git hook path: when called from .githooks/pre-push, stdin is the
 # ref list (not PreToolUse JSON). Detect and set COMMAND/CWD so the rest

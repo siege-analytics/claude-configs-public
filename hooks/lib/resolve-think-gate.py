@@ -750,6 +750,20 @@ def resolve_action(workspace: str, payload: dict) -> dict:
     ti = payload.get("tool_input") or {}
     command = ti.get("command", "")
     cwd = payload.get("cwd") or os.getcwd()
+    if command:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('merge_queue', os.path.join(os.path.dirname(__file__), 'github-merge-queue.py'))
+        queue = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(queue)
+        try:
+            target = queue.parse(command)
+            if target is not None:
+                verified = queue.verify(target, cwd)
+                queue.audit(verified, session_id_from_env(), own_session_directory(workspace))
+                return {'read_only': False, 'paths': [], 'remote_only_authorized': True,
+                        'queue_enqueue': verified, 'error': ''}
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            return {'read_only': False, 'paths': [], 'gate': None, 'error': 'Queue enqueue denied: ' + str(exc)}
     shape = action(command, cwd) if command else {"read_only": False, "paths": [canonical(ti.get("file_path") or ti.get("notebook_path") or ti.get("path") or cwd, cwd)]}
     if shape["read_only"] or shape.get('investigation') or shape.get("metadata_only"):
         return shape  # No gate lookup for recognized reads/approved diagnostics.
