@@ -8,7 +8,8 @@
 # JSON). See hooks/README.md for state/role contracts.
 
 set -uo pipefail
-export PATH="/home/craftagents/bin:$PATH:/usr/local/bin:/opt/homebrew/bin"
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
+export PATH="$PATH:/usr/local/bin:/opt/homebrew/bin"
 
 # Fail open if python3 is unavailable -- never block on a missing interpreter.
 command -v python3 >/dev/null 2>&1 || exit 0

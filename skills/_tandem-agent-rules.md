@@ -24,9 +24,9 @@ Minimum contract fields:
 
 If a reviewer discovers a one-line fix, the correct output is a finding with a proposed fix shape and proof fixture, not a commit.
 
-**tandem-agent:3. Implementation authorization must be explicit and scoped.** A role change from reviewer/observer to implementer requires a fresh authorization message that names: work item, repo, branch, allowed files or modules, findings to fix, tests to run, whether pushing is allowed, and whether opening/updating a PR is allowed. Ambiguous phrases such as "handle it," "go ahead," or "looks good" authorize nothing beyond the current role unless paired with those fields.
+**tandem-agent:3. Implementation authorization must be explicit and scoped.** A reviewer/observer remains in that role until the operator or authorized coordinator grants the implementation role for the affected work. The grant must unambiguously cover the work item, repo/branch, allowed files or modules, findings to fix, required tests and whether pushing or opening/updating a PR is allowed. It may name those details directly or incorporate an established scoped contract and durable findings by reference. Inspect the existing contract and messages before asking for fields already supplied; authorization need not be repeated at each step.
 
-When authorization is absent or ambiguous, stop and ask the coordinator/operator for the missing scope instead of inferring permission.
+Vague assent such as "looks good" does not itself expand a review-only role. A clear implementation instruction may use an established contract without restating it. If material authority or scope is genuinely missing or conflicting, keep that dependent action stopped and ask the coordinator/operator for the specific missing decision. Continue independent work already authorized in the current role. Required review and owner holds remain binding.
 
 **tandem-agent:4. Compatibility alias for session-coordination:9.** Apply `[rule:session-coordination]` session-coordination:9 for the canonical post-handoff check, status/result inspection, and resume/redirect/retire/waiting-state contract. Tandem-specific refinement: after guidance or configuration changes land, explicitly resume or retire paused collaborators. Perform collaborator checks in short batches, then return the operator control surface with a checkpoint; internal message churn must not hide the next operator decision.
 
@@ -40,7 +40,7 @@ Default: spawned reviewers report to the coordinator via `send_agent_message`; t
 
 ## Pause/resume protocol
 
-When guidance, configs, or source-of-truth files are under revision, collaborators depending on them must be paused. The coordinator's resume message must include the promoted/synced revision identifier, the files to read, any invalid old instructions to avoid, and the unchanged permission boundary.
+When guidance, configs, or source-of-truth files are under revision, stop the affected dependent actions until their prerequisites are settled. State the affected scope and preserve any explicit owner hold; do not pause the whole collaborator when independent authorized work can continue. Before resuming the dependent action, provide the applicable promoted/synced revision identifier, files to read, invalid old instructions to avoid and unchanged permission boundary. A revision notification does not expand the role or release a hold.
 
 ## Cross-references
 

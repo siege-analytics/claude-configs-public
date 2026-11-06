@@ -24,13 +24,20 @@
       "bin/_test/craft_hook_router_test.py"
     ],
     "hooks/lib/resolve-think-gate.py": [
-      "hooks/_test/task_keyed_gates.py"
+      "hooks/_test/task_keyed_gates.py",
+      "hooks/_test/github_merge_queue.py"
     ],
     "hooks/lib/task_actions.py": [
       "hooks/_test/task_keyed_gates.py"
     ],
     "bin/progressive-loading-metrics.py": [
       "bin/_test/inline_delivery_test.py"
+    ],
+    "hooks/lib/github-project-status.py": [
+      "hooks/_test/github_project_status.py"
+    ],
+    "hooks/lib/github-merge-queue.py": [
+      "hooks/_test/github_merge_queue.py"
     ]
   }
 }

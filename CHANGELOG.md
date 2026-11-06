@@ -13,7 +13,42 @@ All notable changes to this project are documented here. Versioning follows [Sem
   - `ssh` hidden behind another path, an environment assignment or an exec wrapper.
 - Local redirects, `tee` and chained commands keep their local targets. `scp`, `rsync` and `sftp` are unchanged.
 - The new `remote_contact_only` flag is read only by the mutation gate. Other guards, including destructive-guard, still inspect ssh commands.
-- Behavior change: ssh to a non-allowlisted host, for example `ssh -T git@github.com`, used to pass under a covering task gate and is now denied until the operator adds the host.
+- Behavior change, accepted tradeoff: the allowlist is strict and global.
+  - ssh to a non-allowlisted host, for example `ssh -T git@github.com`, used to pass under a covering task gate. It is now denied everywhere until the operator adds the host. A task gate cannot admit extra hosts.
+  - An allowlisted contact is outbound contact only. It never selects a task gate, and it is not authorization for remote-side mutation, which stays operator policy.
+  - Task-declared hosts would be a separate, reviewed follow-up.
+
+### Fixed: task scopes and evidence execution
+
+- Add a GitHub issue to an approved project through the exact current task and a source-owned standing policy, without inventing a filesystem target. Other issues, projects, destructive operations and arbitrary API writes remain guarded (#1161).
+- Classify named-file Git staging by the files it stages while preserving repository task ownership. Root pytest execution uses changed paths and selected tests with at least Tier B, preserving real Tier C changes and declared requirements (#1174, #1171).
+- Treat ordinary copy sources and Git commit message files as reads. Own-session copies use their actual destinations; aliases, hard links and moves retain their ownership checks (#1166).
+- Use one registered, pinned test-evidence producer across project and workspace hooks. Preserve legacy registration upgrades, direct headless hooks and native CLI behavior (#1180).
+- Preflight the local full-validation runner's selected tool features and physical temporary paths before its workflow steps; preserve the complete validation workload (#1156).
+
+### Fixed: push-time hook timeouts on macOS and the router timeout message
+
+- Hooks add `/home/craftagents/bin` to PATH only where it exists, through one shared `hooks/lib/hook-path.sh` (#1162). On macOS the missing directory sits under the `/home` autofs mount, and every command lookup through it was slow: the commit-message scan of a 75-line message took 17 to 18 s against its 15 s timeout, and now takes about 6 s. A missing helper file cannot change a hook's own decision.
+- `test-tracking-guard.sh` ignores ordinary quoted trigger prose. Commands containing substitution syntax take the conservative raw-text route, so complex quoted examples can still trigger the check. It lists only `tests/**/test_*.py` candidates in one pass and bounds the listing at 6 s with perl or python3. A listing that fails, runs out of time or has no bounded runner blocks with its reason instead of passing (#1162).
+- A router timeout names the hook, its elapsed time and its limit. The exact-main installer advice appears only for registration faults: receipt, router copy, generation or global registration (#1163).
+
+### Fixed: gate artifact posts and one-pass trailer rejections
+
+- coordinator-status-guard now accepts gate-required think-pipeline artifacts. These are the pre-mortem, investigation fact sheet, junior/senior review and design note posts that the Tier C artifacts-posted gate needs.
+  - Format: the comment's first line is a heading naming the artifact, with a `Ticket:`/`Task-ID:` line (or `#N` in the heading).
+  - The status-tone rules do not apply to these posts, so the "(followed)" workaround is no longer needed.
+  - Completing the review or checklist itself does not require deployment evidence. Actual project-completion or deployment claims retain the existing evidence check; mixed claims do not inherit the artifact exception.
+  - Close, reopen, ready, PR review and API state changes never take this lane.
+  - Rejected comments now name the artifact format (#1164).
+- The pipeline-state writer of `junior-senior-gate.json` and `artifacts-posted-gate.json` now recognizes posted artifacts by those same skill headings, when followed by content, as well as by keyword stems.
+  - Real `## Junior task description` and `## Senior adversarial checklist` comments no longer read as absent (#1164).
+- The commit-msg, pre-push and PreToolUse self-review hooks now list every absent or invalid review item in one rejection, each with an example value:
+  - Review-Tier (computed when absent or downgraded);
+  - the ticket reference;
+  - Self-Review and Self-Review-Source;
+  - Hostile-Review, Negative-Tests, Full-Suite and Canary-Rollback.
+  - Items already present are not listed.
+  - commit-msg no longer exits silently when Review-Tier or a Tier C trailer is absent (#1168).
 
 ### Fixed: Craft prompt recovery and reviewed hook repairs
 

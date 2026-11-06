@@ -9,6 +9,31 @@ Branch `bugfix/ssh_host_scope`, base `origin/develop` 94dd034f2c. Tier C: enforc
 
 This is the implementer's own self-review. The cross-family hostile review has **not** happened yet. The Siege Claude Hub commissions it at the pushed PR head, and its findings will be recorded on the PR and #1160.
 
+## Integration with develop 1cd83f9 (2026-11-06)
+
+Authorized by the Siege Claude Hub (261106-neat-boulder, 11:55 CST): D1 merge, D2 option (a), D3 hostile review at the post-integration head.
+
+- `git merge origin/develop` (normal merge commit). Conflicts were in `task_actions.py`, `universal-mutation-gate.sh`, `catalog/review-risk-policy.json`, `CHANGELOG.md` and `catalog/review-risk-metrics.json`. `resolve-think-gate.py`, `review_risk_test.py` and `skills-inventory.json` auto-merged.
+- Kept both sides, dropping neither:
+  - develop's `remote_actions` (task-owned GitHub project actions, #1161/#1193) with `select_project_task` authorization and the `remote_only_authorized` EARLY_ALLOW;
+  - develop's queue-enqueue lane (#1207/#1209);
+  - develop's `mutation_commands`/`commit_commands` split;
+  - develop's `github-project-policy.json` and `hook-path.sh` risk pins;
+  - plus every #1160 change.
+- **Interaction found and closed.** My `remote_contact_only` early return runs before develop's `remote_actions` project authorization in `resolve_action`. So the flag now also requires *no* `remote_actions`: a project action beside ssh can never bypass its project task. New test cases cover it, and revert proof R6 shows they catch it.
+- Generated artifacts (`review-risk-metrics.json`, `skills-inventory.json`) were regenerated with the repo tools, not hand-merged.
+- D2(a): the strict global allowlist is kept. The `ssh -T git@github.com` global-denial tradeoff is documented in the CHANGELOG and PR. Task-declared hosts are noted as a possible follow-up and not implemented.
+- New D2(a) tests: with a covering task gate, the resolver output for allowlisted ssh carries `remote_contact_only` with no `gate`, `task`, `remote_only_authorized` or `tier`. A local write beside ssh still binds the task gate normally.
+- Post-integration evidence, measured on the merged tree before commit:
+
+  | Check | Result |
+  |---|---|
+  | ssh harness | 138 passed, 0 failed |
+  | Revert proofs | 6 of 6 make named cases fail: R1 25, R2 103, R3 3, R4 5, R5 1, R6 2 |
+  | Full `hooks/_test` (69 files) | 66 pass |
+
+  The 3 full-suite failures (`ca_enforcement_runtime` 4 cases, `session_signal_resolution` 2 cases, `universal_mutation_gate_empty_reporoot` `--session-known`) reproduce identically on a develop `1cd83f9` snapshot in this environment.
+
 ## Assumptions
 
 Goal source: #1160 (operator request, Dheeraj 2026-11-04 22:25 CST, relayed by the Siege Claude Hub; AC1-AC5)

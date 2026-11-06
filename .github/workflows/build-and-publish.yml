@@ -197,6 +197,7 @@ jobs:
       - name: Skill inventory fixtures and freshness
         run: |
           python3 bin/_test/frontmatter_validation_test.py
+          python3 bin/_test/self_review_disclosure_test.py
           python3 bin/_test/skill_inventory_test.py
           python3 bin/skill-inventory.py --check
 

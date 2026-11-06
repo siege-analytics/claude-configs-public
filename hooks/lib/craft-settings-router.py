@@ -33,6 +33,28 @@ class RoutingError(ValueError):
     pass
 
 
+class RegistrationError(RoutingError):
+    """The receipt, router copy or global registration is wrong; reinstalling fixes it.
+
+    Only this class carries the installer advice. A hook that times out or
+    misbehaves is not repaired by a reinstall, and saying so sent users after
+    the wrong fix (#1163).
+    """
+
+
+REGISTRATION_ADVICE = "Repair registration from native CLI with the exact-main installer."
+# [label, start] of the hook now running, for the whole-invocation alarm message.
+RUNNING_HOOK: list = []
+
+
+def hook_label(command: str) -> str:
+    """The hooks/<group>/<file> a policy command runs, for diagnostics only."""
+    match = re.search(r"hooks/([^/\s'\"]+/[^/\s'\"]+\.(?:sh|py))", command)
+    if match:
+        return match[1]
+    return command if len(command) <= 80 else command[:77] + "..."
+
+
 def regular_bytes(path: Path, *, header=False) -> bytes:
     if not path.is_absolute() or path.resolve(strict=True) != path:
         raise RoutingError("registration/session paths must be physical, without aliases")
@@ -193,9 +215,58 @@ def registration(workspace: Path, *, router_path_override=None) -> tuple[dict, d
     for key, path in (("router_sha256", router), ("policy_sha256", policy), ("session_anchor_sha256", anchor), ("read_classifier_sha256", workspace / "hooks/lib/read-only-command.py"), ("task_resolver_sha256", workspace / "hooks/lib/resolve-think-gate.py"), ("hook_payload_sha256", workspace / "hooks/lib/hook_payload.py"), ("task_actions_sha256", workspace / "hooks/lib/task_actions.py")):
         if receipt.get(key) != hashlib.sha256(regular_bytes(path)).hexdigest():
             raise RoutingError("Craft hook generation changed; rerun exact-main registration")
+    # Old registrations still route their existing policy. Only upgraded
+    # registrations can supply the new cross-stack receipt-provider authority.
+    if 'test_evidence_sha256' in receipt and receipt['test_evidence_sha256'] != hashlib.sha256(regular_bytes(workspace / 'hooks/lib/test-evidence.py')).hexdigest():
+        raise RoutingError('Craft test receipt producer changed; rerun exact-main registration')
     parsed_policy = object_json(regular_bytes(policy))
     verify_global(object_json(regular_bytes(global_settings)), router, workspace, policy=parsed_policy)
     return receipt, parsed_policy
+
+
+def registered_test_provider(environment: dict, payload: dict):
+    """One enrolled host provider for all project/workspace hook generations."""
+    directory = environment.get('CRAFT_SESSION_DIR') or environment.get('CRAFT_AGENT_SESSION_DIR') or environment.get('CLAUDE_SESSION_DIR')
+    if not directory:
+        return None  # The existing native/unregistered local-generation lane.
+    session = Path(directory)
+    workspace = session.parent.parent
+    marker = environment.get('CRAFT_AGENT_WORKSPACE')
+    # A direct-hook/headless workspace can have a policy without this external
+    # registration. Preserve its existing exact local-generation producer.
+    # Discover enrollment before imposing Craft's sessions/ layout on native
+    # CLAUDE_SESSION_DIR values. A marker or symlink cannot hide enrollment and
+    # make a malformed registered binding fall back to the native producer.
+    candidates = {workspace, session.resolve().parent.parent}
+    if marker and Path(marker).is_absolute():
+        candidates.add(Path(marker))
+    enrolled = any(path.exists() or path.is_symlink()
+                   for candidate in candidates if candidate.is_absolute()
+                   for path in (candidate / '.claude/craft-hook-registration.json',
+                                router_path(Path.home(), candidate)))
+    if not enrolled:
+        return None
+    if not session.is_absolute() or session.parent.name != 'sessions' or session.resolve() != session:
+        raise RoutingError('receipt execution requires a physical host session directory')
+    if marker and marker != str(workspace):
+        raise RoutingError('receipt workspace differs from the host session binding')
+    target = router_path(Path.home(), workspace)
+    if payload.get('hook_event_name') != 'PreToolUse' or payload.get('tool_name') != 'Bash':
+        raise RoutingError('registered receipt execution requires the actual Bash callback')
+    receipt, _policy = registration(workspace, router_path_override=target)
+    if 'test_evidence_sha256' not in receipt:
+        raise RoutingError('registered receipt provider is not pinned; upgrade through the normal exact-main installer')
+    # Registration verifies these workspace helper bytes before import. A task
+    # field, environment provider path or bare router marker cannot choose code.
+    helper = workspace / 'hooks/lib/session_anchor.py'
+    spec = importlib.util.spec_from_file_location('receipt_registered_session', helper)
+    module = importlib.util.module_from_spec(spec)
+    sys.dont_write_bytecode = True
+    spec.loader.exec_module(module)
+    bound = module.registered_session_dir(str(workspace), str(session), payload)
+    if not bound or bound != str(session):
+        raise RoutingError('registered receipt execution has no exact payload-bound own session')
+    return workspace / 'hooks/lib/test-evidence.py'
 
 
 def metadata_environment(payload: dict, helper_path=None) -> str:
@@ -219,7 +290,16 @@ def session_context(raw: bytes, event: str, environment: dict):
     if not original.is_absolute() or original.resolve(strict=True) != original or original.parent.name != "sessions":
         raise RoutingError("Craft requires an absolute physical session directory")
     workspace = original.parent.parent
-    receipt, policy = registration(workspace)
+    try:
+        receipt, policy = registration(workspace)
+    except RegistrationError:
+        raise
+    except (OSError, ValueError) as error:
+        # Receipt, router copy, generation and global registration checks, and
+        # unreadable or corrupt registration files: the failures a reinstall
+        # from exact main repairs. RoutingError is a ValueError.
+        detail = str(error) if isinstance(error, RoutingError) else "registration files are unreadable: " + type(error).__name__
+        raise RegistrationError(detail) from error
     helper = workspace / "hooks/lib/session_anchor.py"
     spec = importlib.util.spec_from_file_location("siege_verified_session_anchor", helper)
     module = importlib.util.module_from_spec(spec)
@@ -285,14 +365,25 @@ def matching_hooks(policy: dict, event: str, payload: dict) -> list[tuple[str, f
     return list(found.items())
 
 
+class HookTimeout(RoutingError):
+    pass
+
+
 def execute_hook(command: str, raw: bytes, environment: dict, budget: float):
+    start = time.monotonic()
     process = subprocess.Popen(command, shell=True, executable="/bin/bash", stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=environment,
                                cwd=os.getcwd(), start_new_session=True)
     selector = selectors.DefaultSelector()
     chunks = {"stdout": bytearray(), "stderr": bytearray()}
-    deadline = time.monotonic() + budget
+    deadline = start + budget
     completed = False
+
+    def timed_out():
+        # Name the hook and how long it ran: the message is the only trace a
+        # timeout leaves, because the audit line is written after all hooks.
+        return HookTimeout(f"workspace hook {hook_label(command)} timed out after "
+                           f"{time.monotonic() - start:.1f}s (limit {budget:.1f}s)")
     try:
         os.set_blocking(process.stdin.fileno(), False)
         selector.register(process.stdin, selectors.EVENT_WRITE, "stdin")
@@ -301,7 +392,7 @@ def execute_hook(command: str, raw: bytes, environment: dict, budget: float):
             selector.register(pipe, selectors.EVENT_READ, name)
         while selector.get_map():
             if time.monotonic() >= deadline:
-                raise RoutingError("workspace hook timed out")
+                raise timed_out()
             for key, _ in selector.select(min(0.1, max(0, deadline - time.monotonic()))):
                 if key.data == "stdin":
                     try:
@@ -319,8 +410,11 @@ def execute_hook(command: str, raw: bytes, environment: dict, budget: float):
                     continue
                 chunks[key.data].extend(data)
                 if len(chunks[key.data]) > LIMIT:
-                    raise RoutingError("workspace hook output exceeded its bound")
-        result = process.wait(timeout=max(0.01, deadline - time.monotonic()))
+                    raise RoutingError(f"workspace hook {hook_label(command)} output exceeded its bound")
+        try:
+            result = process.wait(timeout=max(0.01, deadline - time.monotonic()))
+        except subprocess.TimeoutExpired:
+            raise timed_out() from None
         completed = True
         return result, chunks["stdout"].decode("utf-8", "replace"), chunks["stderr"].decode("utf-8", "replace")
     finally:
@@ -521,8 +615,16 @@ def route(raw: bytes, event: str, workspace: Path, environment=None):
     for command, seconds in commands:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            raise RoutingError("workspace hook event exceeded its total budget")
-        output = execute_hook(command, raw, child_environment, min(seconds, remaining))
+            raise RoutingError(f"workspace hook event exceeded its {TOTAL_SECONDS}s total budget "
+                               f"after {TOTAL_SECONDS - remaining:.1f}s, before {hook_label(command)} could run")
+        RUNNING_HOOK[:] = [hook_label(command), time.monotonic()]
+        try:
+            output = execute_hook(command, raw, child_environment, min(seconds, remaining))
+        except HookTimeout as error:
+            if seconds <= remaining:
+                raise
+            raise HookTimeout(f"{error}; its {seconds:g}s timeout was cut by the {TOTAL_SECONDS}s event budget") from None
+        RUNNING_HOOK.clear()
         output_bytes += len(output[1].encode()) + len(output[2].encode())
         if output_bytes > LIMIT:
             raise RoutingError("combined hook output exceeds the invocation bound")
@@ -545,8 +647,13 @@ def main():
     # Native callbacks with no Craft marker do not resolve paths or read policy.
     if not (os.environ.get("CRAFT_SESSION_DIR") or os.environ.get("CRAFT_AGENT_WORKSPACE")):
         return 0
+    started = time.monotonic()
+    RUNNING_HOOK.clear()
+
     def expired(_signal, _frame):
-        raise RoutingError("whole SDK hook invocation exceeded its time budget")
+        running = f" while {RUNNING_HOOK[0]} had run {time.monotonic() - RUNNING_HOOK[1]:.1f}s" if RUNNING_HOOK else ""
+        raise RoutingError(f"whole SDK hook invocation exceeded its {TOTAL_SECONDS}s time budget "
+                           f"after {time.monotonic() - started:.1f}s{running}")
     previous_handler = signal.signal(signal.SIGALRM, expired)
     previous_timer = signal.setitimer(signal.ITIMER_REAL, TOTAL_SECONDS)
     try:
@@ -557,7 +664,9 @@ def main():
             code, value, diagnostics = route(raw, args.event, args.workspace)
         except Exception as error:  # SDK exit-1 failures must not bypass enforcement.
             detail = str(error) if isinstance(error, RoutingError) else type(error).__name__
-            diagnostics = "Craft hook routing failed closed: " + detail + ". Repair registration from native CLI with the exact-main installer."
+            diagnostics = "Craft hook routing failed closed: " + detail + "."
+            if isinstance(error, RegistrationError):
+                diagnostics += " " + REGISTRATION_ADVICE
             code, value, _ = aggregate(args.event, [(2, "", diagnostics)])
     except Exception as error:
         detail = str(error) if isinstance(error, RoutingError) else type(error).__name__

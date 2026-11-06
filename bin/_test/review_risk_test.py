@@ -79,6 +79,8 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/probe-runner.py",
  "hooks/lib/resolve-think-gate.py",
  "hooks/lib/task_actions.py",
+ "hooks/lib/github-project-status.py",
+ "hooks/lib/github-merge-queue.py",
  "hooks/lib/test-evidence.py",
  "hooks/lib/craft-settings-router.py",
  "bin/install-craft-hook-router.py",
@@ -181,6 +183,13 @@ CI_INVOCATION_SITES = [
 ]
 REQUIRED_HELPER_EDGES = {
  tuple(row.split("|")) for row in """
+hooks/bash/destructive-guard.sh|hooks/lib/github-merge-queue.py
+hooks/git/detect-ai-fingerprints.sh|hooks/lib/github-merge-queue.py
+hooks/git/fix-shape-guard.sh|hooks/lib/github-merge-queue.py
+hooks/git/self-review.sh|hooks/lib/github-merge-queue.py
+hooks/git/survey-context.sh|hooks/lib/github-merge-queue.py
+hooks/git/test-guard.sh|hooks/lib/github-merge-queue.py
+hooks/git/test-tracking-guard.sh|hooks/lib/github-merge-queue.py
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/session_anchor.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/hook_payload.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/session_anchor.py
@@ -252,9 +261,32 @@ hooks/write/ticket-propagation-guard.sh|hooks/lib/artifact-casefold-candidate.py
 hooks/write/ticket-propagation-guard.sh|hooks/lib/canonical-path.py
 hooks/write/ticket-propagation-guard.sh|hooks/lib/split-frontmatter.py
 hooks/write/write-guard.sh|hooks/lib/extract-json.py
+hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/hook-path.sh
+hooks/agent-comms/no-slug-form-outbound.sh|hooks/lib/hook-path.sh
+hooks/agent-comms/spawn-guard.sh|hooks/lib/hook-path.sh
+hooks/bash/coordinator-status-guard.sh|hooks/lib/hook-path.sh
+hooks/bash/destructive-guard.sh|hooks/lib/hook-path.sh
+hooks/bash/universal-mutation-gate.sh|hooks/lib/hook-path.sh
+hooks/git/branch-guard.sh|hooks/lib/hook-path.sh
+hooks/git/detect-ai-fingerprints.sh|hooks/lib/hook-path.sh
+hooks/git/fix-shape-guard.sh|hooks/lib/hook-path.sh
+hooks/git/no-attribution.sh|hooks/lib/hook-path.sh
+hooks/git/no-broad-staging.sh|hooks/lib/hook-path.sh
+hooks/git/no-sensitive-files.sh|hooks/lib/hook-path.sh
+hooks/git/post-error-revision-required.sh|hooks/lib/hook-path.sh
+hooks/git/pr-base-guard.sh|hooks/lib/hook-path.sh
+hooks/git/self-review.sh|hooks/lib/hook-path.sh
+hooks/git/survey-context.sh|hooks/lib/hook-path.sh
+hooks/git/test-guard.sh|hooks/lib/hook-path.sh
+hooks/git/test-tracking-guard.sh|hooks/lib/hook-path.sh
+hooks/git/test-tracking-guard.sh|hooks/lib/command-text.sh
+hooks/git/ticket-required.sh|hooks/lib/hook-path.sh
+hooks/infrastructure/catalog-guard.sh|hooks/lib/hook-path.sh
+hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
+hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "1231a256a9f45177360f1dcdfb0a82f80282e28a9801fbe727ebd97b9c7fb9bb"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "1b8bcba5cd49fbb5b0a575387259f87635cf02d99b668d426098edfa2c3835f9"
 REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "94457079e711f0e4be9ef27704231842e6c678b1bb0180f79be49bb6708c95f0"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (
@@ -588,6 +620,8 @@ def main():
  for path in AUTHORITY_DEPENDENCY_FLOOR:assert tier([path])=="C",("authority dependency",path)
  for path in ["catalog/effective-policy.json","examples/scaffolding/strict-release-policy.json","examples/scaffolding/synthetic-trunk-policy.json"]:assert tier([path])=="B",("proposal content",path)
  for path in ["hooks/git/self-review.sh","hooks/resolver/skill-enforcement-gate.sh","hooks/resolver/inject-resolver.sh","hooks/settings-snippet.json",".github/workflows/build-and-publish.yml","skills/KERNEL.md","bin/install.sh","bin/resolve-load-set.py","bin/skill-lifecycle.py","bin/data-scope.py","bin/_test/data_scope_test.py","catalog/data-scope-ledger.json","catalog/data-scope-fixtures.json","catalog/review-risk-policy.json","catalog/resolver-manifest.json","catalog/skill-lifecycle-approved-exceptions.json","auth/token.py","VERSION",*AUDITED_ENFORCEMENT_DEPENDENCIES]:assert tier([path])=="C",path
+ for path in ["hooks/github-project-policy.json","hooks/electinfo/overrides/github-project-policy.json"]:assert tier([path])=="C",("remote standing authority",path)
+ assert tier(["docs/github-project-policy-example.json"])=="B"
  for path in ["hooks/lib/log-block.sh","hooks/create-ticket/scaffold-test-stub.sh","bin/review-risk-metrics.py","hooks/agent-comms/future-advisory.sh"]:assert tier([path])=="B",path
  for path in ["catalog/generated-source-authority.json","catalog/kernel-budget.json"]:assert tier([path])=="A",path
  stripped=json.loads(json.dumps(policy));stripped["high_risk_path_patterns"]=[]

@@ -170,6 +170,18 @@ deny "heredoc" "ssh cyberpower cat <<EOF" "unsupported shell operator"
 deny "subshell" "(ssh cyberpower uptime)" "shell group"
 deny "unknown host chained after an allowed one" "ssh cyberpower uptime; ssh evil uptime" "$NOT_LISTED"
 deny "unproven local reader companion keeps its cwd target" "ssh cyberpower uptime; printenv" "$UNSCOPED"
+# A GitHub project action beside ssh keeps its task-owned project
+# authorization (#1161/#1193): remote_contact_only never short-circuits it.
+PROJECT_ADD='gh project item-add 1 --owner electinfo --url https://github.com/electinfo/enterprise/issues/3300'
+run bash/universal-mutation-gate.sh "$PROJECT_ADD && ssh cyberpower uptime"
+[[ $? == 2 ]] && record 1 "project action beside ssh still needs its project task" \
+    || record 0 "project action beside ssh still needs its project task"
+shape="$(cd "$REPO" && "$REAL_PY" -c 'import sys,json; sys.path.insert(0, sys.argv[1]); import task_actions as t
+s = t.action(sys.argv[3], sys.argv[2]); print(json.dumps([bool(s.get("remote_actions")), s.get("remote_contact_only"), s.get("metadata_only")]))' \
+    "$WS/hooks/lib" "$REPO" "$PROJECT_ADD && ssh cyberpower uptime")"
+printf '%s' "$shape" > "$T/out"
+[[ "$shape" == '[true, false, false]' ]] && record 1 "action(): project+ssh is never remote_contact_only or metadata_only" \
+    || record 0 "action(): project+ssh is never remote_contact_only or metadata_only"
 
 echo "--- the operator-owned allowlist is the only source, and defects deny ---"
 variant() {  # variant <name> <allowlist contents | __absent__>
@@ -211,6 +223,30 @@ deny "unknown host denied even under a covering gate" "ssh unknown-host true" "$
 deny "local-effect option denied even under a covering gate" "ssh -o ProxyCommand=nc cyberpower true" "$OPTION"
 deny "wrapper denied even under a covering gate" "timeout 5 ssh unknown-host true" "$HIDDEN"
 allow "allowlisted ssh still passes alongside a covering gate" "ssh cyberpower uptime"
+
+# Root review on PR #1170: an allowlisted contact is outbound contact only. Even
+# with a covering task gate, the resolution must not select, bind or report
+# that task for the ssh, so it can never be read as task-authorized remote
+# mutation. A local write in the same command still binds the gate normally.
+resolution() {  # resolution <command> -> resolver JSON for the copied tree, in $T/out
+    payload "$1" | (cd "$REPO" && env -i PATH="$PYDIR:/usr/bin:/bin" HOME="$T/home" CRAFT_AGENT_WORKSPACE="$WS" \
+        CRAFT_SESSION_ID="$SID" CCP_HOOK_INPUT_JSON="$(cat)" "$REAL_PY" "$WS/hooks/lib/resolve-think-gate.py" \
+        --workspace "$WS" --action-json > "$T/out" 2>&1)
+}
+contact_only() {  # contact_only <name> <command>: flag set, no task authority attached
+    resolution "$2"
+    "$REAL_PY" -c 'import json,sys; d=json.load(open(sys.argv[1]))
+sys.exit(0 if d.get("remote_contact_only") is True and not d.get("gate") and not d.get("task")
+         and not d.get("remote_only_authorized") and not d.get("tier") and d.get("paths") == [] else 1)' "$T/out" \
+        && record 1 "$1" || record 0 "$1"
+}
+contact_only "covering gate: allowlisted contact carries no task authority" "ssh cyberpower 'screen -ls'"
+contact_only "covering gate: remote-side write text is still only contact" "ssh cyberpower 'touch /srv/remote-file'"
+resolution "ssh cyberpower cat x > out.txt"
+"$REAL_PY" -c 'import json,sys; d=json.load(open(sys.argv[1])); g=d.get("gate") or {}
+sys.exit(0 if not d.get("remote_contact_only") and str(g.get("path","")).endswith("tasks/ssh-fixture/think-gate.json") else 1)' "$T/out" \
+    && record 1 "covering gate: a local write beside ssh binds the task gate normally" \
+    || record 0 "covering gate: a local write beside ssh binds the task gate normally"
 
 echo "--- other guards still see ssh commands (metadata_only is not reused) ---"
 run bash/destructive-guard.sh "ssh cyberpower kubectl delete pod web"
