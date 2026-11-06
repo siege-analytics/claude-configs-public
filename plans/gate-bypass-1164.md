@@ -6,6 +6,7 @@ ticket_refs:
 
 ## Assumptions
 
+Working as: software engineer
 Domain(s): software engineering
 Geospatial cross-cut: no
 Goal source: ticket siege-analytics/claude-configs-public#1164, hostile-review findings https://github.com/siege-analytics/claude-configs-public/issues/1164#issuecomment-6690927636
@@ -39,6 +40,45 @@ B2, `hooks/lib/pipeline_state.py`. The comment query now projects `user.login`, 
   - B2: all 13 review-harness fixtures plus 18 extra shapes. Each runs the real writer, with a fake `gh` that projects raw API records exactly as the writer's query does, followed by the unchanged universal-mutation-gate on both an existing and a missing hook target. Refused cases need all four signals false with `api_reachable` true and gate exit 2; counted cases need all four true and exit 0.
 - Five accepted fixtures relied on the label exemption: three in `hooks/_test/coordinator_status_guard.test.sh` and two in `hooks/_test/artifact_result_followup.py`. They are reworded to modal form with the same intent, and their old wording is added as refusal cases. No refusal expectation is relaxed; `test_hypothetical_text_cannot_supply_actual_completion_evidence` still refuses.
 - `hooks/_test/pipeline_review_headings_1164.test.sh`: the fake `gh` now emits attributed records (MEMBER). All its expectations are unchanged.
+
+## Before and after
+
+`coordinator-status-guard.sh` and `pipeline_state.py` are byte-identical on main 9f47b035 and develop 1cd83f95, so the develop column is also main.
+
+| B1 payload (guard exit) | develop | this branch |
+|---|---:|---:|
+| original_mitigation | 0 | 2 |
+| original_frontmatter | 0 | 2 |
+| conditional_no_split | 0 | 2 |
+| wrapped_mitigation | 0 | 2 |
+| original_conditional | 2 | 2 |
+| original_field_conditional | 2 | 2 |
+| original_split_sentence | 2 | 2 |
+| conditional_comma | 2 | 2 |
+| plain_claim_control | 2 | 2 |
+| genuine_hypothesis_control | 0 | 0 |
+
+| B2 fixture (Junior, Senior, investigation, pre-mortem flags / gate exit, existing and absent target) | develop | this branch |
+|---|---|---|
+| wrong_ticket | TTTT / 0 0 | FFFF / 2 2 |
+| outsider_author | TTTT / 0 0 | FFFF / 2 2 |
+| html_pre_code | TTTT / 0 0 | FFFF / 2 2 |
+| html_blockquote | TTTT / 0 0 | FFFF / 2 2 |
+| original_fenced_example | FFFF / 2 2 | FFFF / 2 2 |
+| unlabelled_code_fence | FFFF / 2 2 | FFFF / 2 2 |
+| tilde_code_fence | FFFF / 2 2 | FFFF / 2 2 |
+| indented_fence_3_spaces | FFFF / 2 2 | FFFF / 2 2 |
+| indented_code_4_spaces | FFFF / 2 2 | FFFF / 2 2 |
+| markdown_blockquote | FFFF / 2 2 | FFFF / 2 2 |
+| cross_comment_boundary | FFFF / 2 2 | FFFF / 2 2 |
+| empty_control | FFFF / 2 2 | FFFF / 2 2 |
+| plain_heading_control | TTTT / 0 0 | TTTT / 0 0 |
+
+Revert proofs at da86bfd:
+
+1. Develop's guard: 13 B1 cases fail, the 4 reported among them.
+2. Develop's writer: 15 B2 cases fail with the actual bypass (TTTT, gate 0), the 4 reported among them.
+3. HTML-container stripping alone disabled: exactly the 5 HTML-container cases fail.
 
 ## Peer review
 
