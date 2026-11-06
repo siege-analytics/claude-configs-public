@@ -4893,10 +4893,10 @@
     },
     {
       "canonical_source": "skills/_output-rules.md",
-      "characters": 4501,
-      "content_sha256": "b44c459bd400e6bec5d17f4bd1142466329fa1b8736b53bc729311c4b5fe53e7",
+      "characters": 6688,
+      "content_sha256": "bce83d809f6383a7634ee7f47b67d835862465f55aa7a3251bca577731138692",
       "description": "unknown",
-      "estimated_tokens": 1126,
+      "estimated_tokens": 1672,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_output-rules.md",
@@ -4909,6 +4909,7 @@
         "catalog/generated-source-authority.json",
         "catalog/skill-lifecycle-bootstrap.json",
         "catalog/skill-lifecycle-legacy.json",
+        "plans/attribution-recovery-continuation-1215.md",
         "plans/self-review-466.md",
         "projects/CONTRIBUTING.md",
         "skills/RESOLVER.md",
@@ -4930,6 +4931,7 @@
         "skills/_writing-tests-rules.md",
         "skills/api-integration/SKILL.md",
         "skills/ask-questions/SKILL.md",
+        "skills/commit/SKILL.md",
         "skills/databricks/SKILL.md",
         "skills/detect-ai-fingerprints/SKILL.md",
         "skills/distill-lessons/SKILL.md",
@@ -4949,7 +4951,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 119,
+      "lines": 124,
       "owner": [
         "unknown"
       ],
@@ -9183,10 +9185,10 @@
     },
     {
       "canonical_source": "skills/commit/SKILL.md",
-      "characters": 21326,
-      "content_sha256": "e145d8e0d00a1e7b4f66b7ccda4258eb3d5ecdebd5e6cfa690c3159984000e0c",
+      "characters": 22335,
+      "content_sha256": "a3a73348d59abd5a293bedc0435a9572ef41d76fdb488843098c93567a0cae02",
       "description": "Create git commits with descriptive messages that link to tickets and explain the why. Enforces ticket references.",
-      "estimated_tokens": 5332,
+      "estimated_tokens": 5584,
       "frontmatter_name": "commit",
       "generated_outputs": [
         "dist/nested/skills/commit",
@@ -9204,6 +9206,7 @@
         "catalog/skill-lifecycle-legacy.json",
         "hooks/_test/progressive_loading.test.sh",
         "hooks/git/test-guard.sh",
+        "plans/attribution-recovery-continuation-1215.md",
         "plans/hostile-review-runtime-final-delta.md",
         "plans/runtime-final-source-verification.json",
         "plans/scanner-recovery-identities.json",
@@ -9222,7 +9225,7 @@
       "kind": "skill",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 419,
+      "lines": 421,
       "owner": [
         "unknown"
       ],
@@ -12835,9 +12838,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2625682,
+    "characters": 2628878,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 656501,
+    "estimated_tokens": 657299,
     "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
@@ -12858,7 +12861,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1229288
+      "unclassified": 1232484
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12870,7 +12873,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 307367
+      "unclassified": 308165
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 195,

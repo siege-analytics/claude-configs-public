@@ -8,13 +8,13 @@
     },
     "kernel": 7913,
     "legacy_root_resolver": 39782,
-    "legacy_rules_bundle": 433642,
+    "legacy_rules_bundle": 435829,
     "skill_resolver": 19663
   },
   "fixture_selected_content": {
     "explicit_overflow": {
-      "characters": 148817,
-      "estimated_tokens": 37209,
+      "characters": 149826,
+      "estimated_tokens": 37461,
       "items": 13
     },
     "generic": {
