@@ -7,15 +7,15 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **198**
-- Characters: **2,674,011**
-- Estimated tokens: **668,582** (character/4 estimate)
+- Characters: **2,612,205**
+- Estimated tokens: **653,131** (character/4 estimate)
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
 - Without heuristic test evidence: **99**
 - Duplicate rule IDs: **0**
 - Current build-rubric D/F grades: **151**
-- Quality grades: C: 6, D: 19, F: 132, unknown: 41
+- Quality grades: C: 6, D: 18, F: 133, unknown: 41
 
 ### By kind
 
@@ -35,23 +35,23 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 110 | 1,277,617 | 319,448 |
+| unclassified | 110 | 1,215,811 | 303,997 |
 
 ## Largest source items
 
 | Slug | Kind | Characters | Est. tokens | Source |
 |---|---|---:|---:|---|
-| `self-review` | skill | 71,287 | 17,822 | `skills/self-review/SKILL.md` |
 | `authoring-against-state` | rule | 57,270 | 14,318 | `skills/_authoring-against-state-rules.md` |
 | `writing-code` | rule | 51,999 | 13,000 | `skills/_writing-code-rules.md` |
 | `investigate` | skill | 39,733 | 9,934 | `skills/investigate/SKILL.md` |
 | `shelves--top-design` | reference-shelf | 38,675 | 9,669 | `skills/shelves/design/top-design/SKILL.md` |
-| `think` | skill | 34,205 | 8,552 | `skills/think/SKILL.md` |
 | `writing-claims` | rule | 31,339 | 7,835 | `skills/_writing-claims-rules.md` |
 | `shelves--two-scoops-django` | reference-shelf | 30,998 | 7,750 | `skills/shelves/django/two-scoops-django/SKILL.md` |
 | `shelves--one-page-marketing` | reference-shelf | 30,696 | 7,674 | `skills/shelves/marketing/one-page-marketing/SKILL.md` |
 | `writing-rules` | rule | 30,148 | 7,537 | `skills/_writing-rules-rules.md` |
+| `self-review` | skill | 29,789 | 7,448 | `skills/self-review/SKILL.md` |
 | `shelves--hundred-million-offers` | reference-shelf | 29,309 | 7,328 | `skills/shelves/sales/hundred-million-offers/SKILL.md` |
+| `session-coordination` | rule | 28,373 | 7,094 | `skills/_session-coordination-rules.md` |
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
 | `writing-tests` | rule | 27,373 | 6,844 | `skills/_writing-tests-rules.md` |
 | `hostile-review` | skill | 26,756 | 6,689 | `skills/hostile-review/SKILL.md` |

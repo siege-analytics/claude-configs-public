@@ -29,7 +29,7 @@
 #   - Auto-suggest the doc-page edit.
 
 set -uo pipefail
-export PATH="/home/craftagents/bin:$PATH"
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
 
 INPUT=$(cat)
 # Fast skip (#1083): exit before starting python3 when the tool payload's
@@ -66,6 +66,11 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
+# Only a proven required-queue request skips these local publication checks.
+# This predicate grants no permission; UMG owns admission and its audit.
+if [[ -n "$COMMAND" ]] && python3 "$HOOK_DIR/../lib/github-merge-queue.py" --queue-required "$COMMAND" "$CWD" >/dev/null 2>&1; then
+    exit 0
+fi
 if [[ -z "$COMMAND" ]]; then
     COMMAND=$(printf '%s' "$INPUT" | sed -nE 's/.*"command"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/p' | head -1)
 fi

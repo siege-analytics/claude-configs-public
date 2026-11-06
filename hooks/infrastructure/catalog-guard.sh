@@ -24,7 +24,7 @@
 # than another orphaned-file cleanup.
 
 set -euo pipefail
-export PATH="/home/craftagents/bin:$PATH"
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
 
 # Claude Code sends the tool call JSON on stdin for PreToolUse.
 INPUT=$(cat)

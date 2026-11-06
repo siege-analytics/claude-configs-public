@@ -9,7 +9,7 @@
 # shellcheck source=../lib/command-text.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/command-text.sh"
 set -uo pipefail
-export PATH="/home/craftagents/bin:$PATH"
+source "$(f="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../lib/hook-path.sh"; [[ -f "$f" ]] && printf '%s' "$f" || printf /dev/null)"
 
 INPUT=$(cat)
 # Fast skip (#1083): exit before starting python3 when the tool payload's

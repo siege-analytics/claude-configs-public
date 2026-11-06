@@ -1,0 +1,655 @@
+{
+  "scan": {
+    "candidate": "6d9799f3ff063769b3e3fd8eef47a52c81d4b34f",
+    "base": "7e1e0ae2f89862b70f082ce8f8180d4220093699",
+    "selected_tree": "70f7788e1bb2e845ed61877b0bc77bf12a72f98b",
+    "exit_code": 1,
+    "log": "/tmp/ccp-repair-batch-scan.log"
+  },
+  "raw_sha256": "864c2a701b0c5eadbb6a7c4db8c937616933e2c6de6364478c98a2c6160bd550",
+  "findings": [
+    {
+      "path": "hooks/_test/coordinator_status_guard.test.sh",
+      "line": 289,
+      "rule": "writing-prose-1-em-dash",
+      "disposition": "D1"
+    },
+    {
+      "path": "hooks/_test/coordinator_status_guard.test.sh",
+      "line": 416,
+      "rule": "writing-prose-1-em-dash",
+      "disposition": "D1"
+    },
+    {
+      "path": "hooks/bash/coordinator-status-guard.sh",
+      "line": 324,
+      "rule": "writing-prose-3-adverb(explicitly)",
+      "disposition": "D2"
+    },
+    {
+      "path": "hooks/bash/coordinator-status-guard.sh",
+      "line": 334,
+      "rule": "writing-prose-1-em-dash",
+      "disposition": "D1"
+    },
+    {
+      "path": "plans/gate-ergonomics-1164.md",
+      "line": 53,
+      "rule": "writing-prose-3-adverb(deliberately)",
+      "disposition": "D2"
+    },
+    {
+      "path": "plans/self-review-github-project-1161.md",
+      "line": 30,
+      "rule": "writing-prose-3-adverb(intentionally)",
+      "disposition": "D2"
+    },
+    {
+      "path": "plans/task-gate-repair-integration-1156.md",
+      "line": 3,
+      "rule": "writing-prose-1-curly-squote-right",
+      "disposition": "D2"
+    },
+    {
+      "path": "plans/task-gate-repair-integration-1156.md",
+      "line": 9,
+      "rule": "writing-prose-1-curly-squote-right",
+      "disposition": "D2"
+    },
+    {
+      "path": "plans/task-gate-repair-integration-1156.md",
+      "line": 13,
+      "rule": "writing-prose-1-curly-squote-right",
+      "disposition": "D2"
+    },
+    {
+      "path": "bin/install-craft-hook-router.py",
+      "line": 244,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/install-craft-hook-router.py",
+      "line": 299,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/install-craft-hook-router.py",
+      "line": 299,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/install-craft-hook-router.py",
+      "line": 299,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/install-craft-hook-router.py",
+      "line": 299,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 147,
+      "rule": "writing-code-7-silent-swallow(Continue)",
+      "disposition": "D4"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 121,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "disposition": "D4"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 99,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 118,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 272,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 272,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 272,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 272,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 223,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 223,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 104,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "bin/validate-local.py",
+      "line": 121,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 629,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 417,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 160,
+      "rule": "writing-code-7-silent-swallow(Continue)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 273,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 289,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 629,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 663,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 408,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 615,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 657,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 417,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/craft-settings-router.py",
+      "line": 392,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/pipeline_state.py",
+      "line": 80,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/pipeline_state.py",
+      "line": 88,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/pipeline_state.py",
+      "line": 100,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/pipeline_state.py",
+      "line": 312,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "disposition": "D5"
+    },
+    {
+      "path": "hooks/lib/pipeline_state.py",
+      "line": 141,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "disposition": "D5"
+    },
+    {
+      "path": "hooks/lib/pipeline_state.py",
+      "line": 345,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "disposition": "D5"
+    },
+    {
+      "path": "hooks/lib/pipeline_state.py",
+      "line": 380,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "disposition": "D5"
+    },
+    {
+      "path": "hooks/lib/pipeline_state.py",
+      "line": 397,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "disposition": "D5"
+    },
+    {
+      "path": "hooks/lib/pipeline_state.py",
+      "line": 416,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "disposition": "D5"
+    },
+    {
+      "path": "hooks/lib/pipeline_state.py",
+      "line": 430,
+      "rule": "writing-code-7-silent-swallow(Pass)",
+      "disposition": "D5"
+    },
+    {
+      "path": "hooks/lib/pipeline_state.py",
+      "line": 41,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 393,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 632,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 896,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 909,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 973,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 986,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 1143,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 118,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 118,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 164,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 227,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 242,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 314,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 335,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 335,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 335,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 393,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 393,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 632,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 632,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 858,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 858,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 858,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 896,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 896,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 909,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 973,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 973,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 973,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 986,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 1128,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 1143,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 1143,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 1143,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 444,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 732,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 734,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 1177,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 773,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 773,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 487,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/resolve-think-gate.py",
+      "line": 487,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 220,
+      "rule": "writing-code-7-silent-swallow(Return)",
+      "disposition": "D4"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 220,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 220,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 438,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 438,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 572,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 643,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 643,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 643,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 653,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 709,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 709,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 844,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    },
+    {
+      "path": "hooks/lib/task_actions.py",
+      "line": 1111,
+      "rule": "writing-tests-5",
+      "disposition": "D3"
+    }
+  ],
+  "limits": [
+    "Scan is nonclean; no ignore option or source exclusion used.",
+    "Locator mismatch is not proof that every listed exception type was raised.",
+    "Pipeline-state persistence debt remains open as #1184; readers may see stale or missing stored signals after write failure.",
+    "Final style cleanup is limited to wording and quote normalization; Unicode grammar/fixtures remain."
+  ],
+  "dispositions": {
+    "D1": "literal parser grammar or real-body fixture exercising supported Unicode input, not authored status prose",
+    "D2": "style corrected in final documentation-only cleanup; no behavior change",
+    "D3": "test-convention mismatch; command outcomes are tested; no exhaustive exception-branch coverage claim",
+    "D4": "contract-specific denial/unavailable sentinel, bounded cancellation cleanup, optional audit, or prerequisite-inference boundary; no authority from this handler",
+    "D5": "inherited derived-signal persistence and diagnostic debt tracked in #1184; catch creates no new grant, but stale or missing stored state remains a risk"
+  }
+}

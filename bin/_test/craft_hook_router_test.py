@@ -466,6 +466,82 @@ class Router(unittest.TestCase):
         self.assertLess(time.monotonic() - start, 2)
         self.assertEqual(json.loads(stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
 
+    def install_policy(self, hooks):
+        self.policy_path.write_text(json.dumps({"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": hooks}]}}))
+        receipt = json.loads(self.receipt_path.read_text())
+        receipt["policy_sha256"] = hashlib.sha256(self.policy_path.read_bytes()).hexdigest()
+        self.receipt_path.write_text(json.dumps(receipt))
+
+    def slow_hook(self, name="slow-fixture.sh"):
+        script = self.workspace / "hooks/git" / name
+        script.write_text("#!/bin/bash\nsleep 5\n")
+        return f"bash {shlex.quote(str(script))}"
+
+    def test_hook_timeout_names_hook_and_elapsed_without_installer_advice(self):
+        # #1163 AC1: a timeout is not a registration fault; say which hook and how long.
+        self.activate()
+        self.install_policy([{"type": "command", "command": self.slow_hook(), "timeout": 0.3}])
+        start = time.monotonic()
+        code, stdout, stderr = self.main(self.payload())
+        self.assertLess(time.monotonic() - start, 3)
+        self.assertEqual(code, 2)
+        self.assertEqual(json.loads(stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
+        self.assertIn("workspace hook git/slow-fixture.sh timed out after", stderr)
+        self.assertIn("(limit 0.3s)", stderr)
+        elapsed = float(stderr.split("timed out after ", 1)[1].split("s", 1)[0])
+        self.assertGreaterEqual(elapsed, 0.3)
+        self.assertNotIn("exact-main installer", stderr)
+        self.assertNotIn("Repair registration", stderr)
+
+    def test_event_budget_cut_names_hook_without_installer_advice(self):
+        self.activate()
+        self.install_policy([{"type": "command", "command": self.slow_hook("budget-fixture.sh"), "timeout": 30}])
+        with patch.object(r, "TOTAL_SECONDS", 0.4):
+            code, stdout, stderr = self.main(self.payload())
+        self.assertEqual(code, 2)
+        self.assertEqual(json.loads(stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
+        # The per-hook deadline and the whole-invocation alarm race at the same
+        # instant; either message must name the hook and omit the reinstall advice.
+        self.assertIn("git/budget-fixture.sh", stderr)
+        self.assertRegex(stderr, r"(timed out after [0-9.]+s \(limit 0\.4s\); its 30s timeout was cut by the 0\.4s event budget"
+                                 r"|exceeded its 0\.4s time budget after [0-9.]+s while git/budget-fixture\.sh had run)")
+        self.assertNotIn("exact-main installer", stderr)
+
+    def test_registration_failures_keep_installer_advice(self):
+        # #1163 AC2: the advice is reserved for faults a reinstall repairs.
+        self.activate()
+        self.receipt_path.write_text("{")
+        code, _, stderr = self.main(self.payload())
+        self.assertEqual(code, 2)
+        self.assertIn("Repair registration from native CLI with the exact-main installer.", stderr)
+        self.activate()
+        self.policy_path.write_text(self.policy_path.read_text() + "\n")
+        with self.assertRaises(r.RegistrationError):
+            self.route()
+        code, _, stderr = self.main(self.payload())
+        self.assertEqual(code, 2)
+        self.assertIn("Craft hook generation changed", stderr)
+        self.assertIn("exact-main installer", stderr)
+
+    def test_non_registration_routing_errors_omit_installer_advice(self):
+        self.activate()
+        with patch.object(r, "matching_hooks", side_effect=r.RoutingError("workspace matcher must be a regex")):
+            code, _, stderr = self.main(self.payload())
+        self.assertEqual(code, 2)
+        self.assertIn("failed closed: workspace matcher must be a regex.", stderr)
+        self.assertNotIn("exact-main installer", stderr)
+        with patch.object(r, "matching_hooks", side_effect=KeyError("crash")):
+            code, _, stderr = self.main(self.payload())
+        self.assertEqual(code, 2)
+        self.assertIn("failed closed: KeyError.", stderr)
+        self.assertNotIn("exact-main installer", stderr)
+
+    def test_hook_label_names_policy_hook_files(self):
+        self.assertEqual(r.hook_label("bash /w/hooks/git/detect-ai-fingerprints.sh"), "git/detect-ai-fingerprints.sh")
+        self.assertEqual(r.hook_label("python3 '/w s/hooks/lib/x.py' --flag"), "lib/x.py")
+        self.assertEqual(r.hook_label("sleep 5"), "sleep 5")
+        self.assertEqual(len(r.hook_label("x" * 200)), 80)
+
     def test_large_write_keeps_original_stdin_and_bounded_metadata_with_context(self):
         self.activate()
         (self.session / "data").mkdir(exist_ok=True)
