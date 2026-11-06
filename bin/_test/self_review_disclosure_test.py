@@ -89,6 +89,22 @@ class ReviewDisclosure(unittest.TestCase):
                         APPROVED_INTEGRATION_REF="origin/develop")
         result = self.run_cmd(["bash", "-c", command + '; git symbolic-ref --short HEAD'])
         self.assertEqual(result.stdout.splitlines()[-1], "task/fixture-review")
+        # Discovery must include canonical and project-specific names, local
+        # branches, remote-only refs and recorded heads with no ticket number.
+        branches = ["bugfix/repair_692", "feature/completion_692", "task/cleanup_692",
+                    "chore/tooling_692", "hotfix/urgent_692", "project-approved/recorded_head"]
+        for name in branches:
+            self.run_cmd(["git", "branch", name])
+        self.run_cmd(["git", "update-ref", "refs/remotes/origin/project-approved/remote_head", "HEAD"])
+        discover = "git for-each-ref --format='%(refname:short)' refs/heads refs/remotes"
+        self.assertIn('`' + discover + '`', rules)
+        found = self.run_cmd(["bash", "-c", discover]).stdout.splitlines()
+        self.assertTrue(set(branches + ["origin/project-approved/remote_head", "task/fixture-review"]).issubset(found))
+        self.assertIn('`git worktree list --porcelain`', rules)
+        worktrees = self.run_cmd(["git", "worktree", "list", "--porcelain"]).stdout
+        self.assertIn("branch refs/heads/task/fixture-review", worktrees)
+        self.assertIn("ticket or PR's recorded head branch", rules)
+        self.assertIn("Missing an ID match is not proof that work is absent", rules)
 
     def support_fragments(self, entry, directory):
         for link in compose.raw_link_targets(entry):

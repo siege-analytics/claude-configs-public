@@ -285,7 +285,7 @@ hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
 hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "a69f118926b5b7f54227813070cdcb2428f3a41ab832c5215a649f54e10b749d"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "1b8bcba5cd49fbb5b0a575387259f87635cf02d99b668d426098edfa2c3835f9"
 REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "94457079e711f0e4be9ef27704231842e6c678b1bb0180f79be49bb6708c95f0"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (

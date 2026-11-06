@@ -20,38 +20,96 @@ def require(value, message):
         raise ValueError('pinned merge queue: ' + message)
 
 
+def merge_flags(args, check_pins):
+    """Inspect literal merge flags while keeping option values as data."""
+    flags, pins, index = [], [], 3
+    value_flags = {'--match-head-commit', '--repo', '-R', '--subject', '-t',
+                   '--body', '-b', '--body-file', '-F', '--author-email', '-A'}
+    while index < len(args):
+        word = args[index]
+        if word == '--':
+            break
+        flag, equal, value = word.partition('=')
+        if word.startswith('-'):
+            require(flag != '--admin', 'admin bypass is not supported')
+            flags.append((flag, bool(equal)))
+            if check_pins and flag.startswith('--match'):
+                require(flag == '--match-head-commit', 'unsupported head pin option')
+                if not equal:
+                    value = args[index + 1] if index + 1 < len(args) else ''
+                require(re.fullmatch(SHA, value), 'full head pin required')
+                pins.append(value)
+            if flag in value_flags and not equal:
+                index += 1
+        index += 1
+    return flags, pins
+
+
+def command_segments(tokens):
+    """Inspect supported control segments, excluding redirection operands."""
+    segment, index = [], 0
+    while index < len(tokens):
+        word, operator, _globs = tokens[index]
+        if operator and word in {'&&', '||', ';', '|'}:
+            yield segment
+            segment = []
+        elif operator and re.fullmatch(r'[0-9]*(?:>>|>&|<&|>\||>|<)|&>>|&>', word):
+            index += 1  # The redirected filename is not a command or an option.
+        elif not operator:
+            segment.append(word)
+        index += 1
+    yield segment
+
+
 def parse(command):
     """One complete literal command. No shell or GraphQL program extension."""
     if not re.match(r'^\s*gh\s+(?:pr\s+merge|api\s+graphql)(?:\s|$)', command):
         return None
     tokens = shell_tokens(command)
     args = [word for word, _, _ in tokens]
-    if args[:3] == ['gh', 'pr', 'merge'] and not any(word.startswith('--match') for word in args[3:]):
-        require(not any(word.split('=', 1)[0] in {'--admin', '--auto', '--disable-auto'} for word in args[3:]), 'unsupported merge bypass/auto option')
-        # Ordinary scoped merges remain ordinary mutations. Returning None
-        # grants no permission: the existing action/task/ownership path runs.
-        return None
+    if args[:3] == ['gh', 'pr', 'merge']:
+        segments = list(command_segments(tokens))
+        for segment in segments[1:]:
+            if segment[:3] == ['gh', 'pr', 'merge']:
+                merge_flags(segment, False)  # An ordinary fallback cannot hide a later admin merge.
+        flags, pins = merge_flags(segments[0], True)
+        require(len(pins) <= 1, 'one full head pin required')
+        if not pins:
+            return None  # Ordinary task-scoped merge, never a queue exemption.
+        if any(operator or globs for _, operator, globs in tokens):
+            return None  # Ordinary composition must cover every target; no queue exemption.
+        canonical = {'--merge', '--match-head-commit', '--repo', '-R'}
+        if any(flag not in canonical or equal for flag, equal in flags):
+            return None  # Non-exempt CLI options retain all ordinary guards.
+        if len(args) < 4 or not re.fullmatch(r'[1-9][0-9]*', args[3]):
+            return None  # Branch/URL/default selectors are not the canonical queue form.
     require(not any(operator or globs for _, operator, globs in tokens), 'standalone command required')
     require('\x00' not in command and '\n' not in command and '\r' not in command, 'single line required')
     if args[:3] == ['gh', 'pr', 'merge']:
-        require(len(args) >= 7 and re.fullmatch(r'[1-9][0-9]*', args[3]), 'literal PR number required')
+        if len(args) < 7:
+            return None
         fields = {}
         i = 4
         while i < len(args):
             flag = args[i]
-            require(flag in {'--merge', '--match-head-commit', '--repo', '-R'}, 'unsupported merge option')
+            if flag not in {'--merge', '--match-head-commit', '--repo', '-R'}:
+                return None
             key = '--repo' if flag == '-R' else flag
-            require(key not in fields, 'duplicate merge option')
+            if key in fields:
+                return None
             if key == '--merge':
                 fields[key] = True
                 i += 1
             else:
-                require(i + 1 < len(args), 'missing option value')
+                if i + 1 >= len(args):
+                    return None
                 fields[key] = args[i + 1]
                 i += 2
-        require(fields.get('--merge') is True and re.fullmatch(SHA, fields.get('--match-head-commit', '')), 'merge and full head pin required')
+        if fields.get('--merge') is not True:
+            return None
         repo = fields.get('--repo', '')
-        require(not repo or re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*', repo), 'literal GitHub repository required')
+        if repo and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*', repo):
+            return None
         return {'form': 'cli', 'number': int(args[3]), 'head': fields['--match-head-commit'].lower(), 'repo': repo}
     require(args[:3] == ['gh', 'api', 'graphql'], 'literal GraphQL endpoint required')
     fields = {}
@@ -121,7 +179,9 @@ def verify(target, cwd):
         require(pr['number'] == target['number'] and (not target['repo'] or target['repo'].lower() == repo.lower()), 'PR repository mismatch')
     require(isinstance(pr['baseRefName'], str) and pr['baseRefName'], 'missing destination branch')
     rules = read(['api', '--hostname', 'github.com', 'repos/' + repo + '/rules/branches/' + quote(pr['baseRefName'], safe='')])
-    require(isinstance(rules, list) and any(isinstance(rule, dict) and rule.get('type') == 'merge_queue' for rule in rules), 'effective branch rules do not prove a required merge queue')
+    require(isinstance(rules, list), 'malformed effective branch rules')
+    if not any(isinstance(rule, dict) and rule.get('type') == 'merge_queue' for rule in rules):
+        return None  # Confirmed ordinary merge: retain task and publication checks.
     return dict(target, repository=repo, number=pr['number'], node=pr['id'], base=pr['baseRefName'])
 
 
@@ -160,10 +220,14 @@ def audit(target, session, directory):
 
 if __name__ == '__main__':
     import sys
-    # Local publication guards classify shape only. They grant no remote
-    # authority: UMG separately proves queue rules and durably audits once.
+    # Pure grammar inspection has no authority. Guard exemptions use the fresh
+    # queue predicate; UMG separately owns admission and the single audit.
     try:
-        matched = len(sys.argv) == 3 and sys.argv[1] == '--classify' and parse(sys.argv[2]) is not None
-    except ValueError:
+        target = parse(sys.argv[2]) if len(sys.argv) in {3, 4} else None
+        matched = target is not None and (
+            len(sys.argv) == 3 and sys.argv[1] == '--classify'
+            or len(sys.argv) == 4 and sys.argv[1] == '--queue-required'
+            and verify(target, sys.argv[3]) is not None)
+    except (OSError, ValueError, TypeError, KeyError, ImportError, SyntaxError):
         matched = False
     sys.exit(0 if matched else 1)

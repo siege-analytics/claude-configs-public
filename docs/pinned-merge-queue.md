@@ -24,6 +24,14 @@ Replace both placeholders with the actual literal values. The exact single enque
 
 The command must remain standalone. Admin, unpinned merge, auto-merge, REST merge, dequeue, extra mutation/response syntax, wrappers, shell expansions, redirections and chained writes cannot use this exemption. Normal local changes retain their own scope and evidence checks.
 
+## Queue exemption versus ordinary merge scope
+
+Pure `--classify` inspection recognizes grammar and carries no permission. Local publication guards use `--queue-required COMMAND CWD`: the CLI form performs fresh bounded PR/head and required-queue lookups before skipping unrelated local HEAD/test checks. The exact GraphQL enqueue is queue-specific by its operation. Only UMG writes the own-session admission audit.
+
+A valid CLI proof that confirms no required queue returns to the normal task/scope path and all local publication checks. Supported ordinary CLI options, including auto-merge, squash/rebase, branch deletion, body options and an equals-style full head pin, receive no queue exemption; they retain those existing checks. Literal option data is not treated as a bypass flag. Admin bypass and malformed head pins are rejected. Composed ordinary operations need one task covering all their targets; recognizing a queue prefix grants nothing to a companion action.
+
+Each CLI queue proof has one three-second read budget. Guards prove it afresh rather than trusting an environment flag, task-written decision cache or a role claim. Multiple guards can therefore perform repeated reads; the workspace router's whole-event budget still applies. Proof errors or a changed head deny queue admission. Current branch-rule proof and later command execution are not an atomic transaction.
+
 ## Audit and actual result
 
 Before admission, the resolver appends an own-session `data/merge-queue-decisions.jsonl` entry identifying the target, expected head and session. An entry records permission to attempt the constrained operation; it is not enqueue or merge success. Audit failures are visible denials. Raw credentials and command bodies are not logged.
