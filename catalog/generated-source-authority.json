@@ -418,29 +418,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_output-rules.md",
           "file_count": 1,
-          "tree_sha256": "dd1caf17841a5c6f1a3e6142ec02d59d093d60061562730d620181140b0fdda5"
+          "tree_sha256": "b92984d3482e632b5b88b14f1bd5c99d6809bf3d177b7ed0c6a20ab2514dea61"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_output-rules.md",
           "file_count": 1,
-          "tree_sha256": "dd1caf17841a5c6f1a3e6142ec02d59d093d60061562730d620181140b0fdda5"
+          "tree_sha256": "b92984d3482e632b5b88b14f1bd5c99d6809bf3d177b7ed0c6a20ab2514dea61"
         },
         "flat": {
           "destination": "dist/flat/skills/_output-rules.md",
           "file_count": 1,
-          "tree_sha256": "dd1caf17841a5c6f1a3e6142ec02d59d093d60061562730d620181140b0fdda5"
+          "tree_sha256": "b92984d3482e632b5b88b14f1bd5c99d6809bf3d177b7ed0c6a20ab2514dea61"
         },
         "nested": {
           "destination": "dist/nested/skills/_output-rules.md",
           "file_count": 1,
-          "tree_sha256": "dd1caf17841a5c6f1a3e6142ec02d59d093d60061562730d620181140b0fdda5"
+          "tree_sha256": "b92984d3482e632b5b88b14f1bd5c99d6809bf3d177b7ed0c6a20ab2514dea61"
         }
       },
       "canonical_source": "skills/_output-rules.md",
       "kind": "rule",
       "slug": "output",
       "source_file_count": 1,
-      "source_tree_sha256": "dd1caf17841a5c6f1a3e6142ec02d59d093d60061562730d620181140b0fdda5"
+      "source_tree_sha256": "b92984d3482e632b5b88b14f1bd5c99d6809bf3d177b7ed0c6a20ab2514dea61"
     },
     {
       "artifacts": {
@@ -1462,29 +1462,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/commit",
           "file_count": 1,
-          "tree_sha256": "dc2289b0467df7fb021bd394b8b14adbf12d440399dce624c4012dbaed5ba0af"
+          "tree_sha256": "3759b708f57e4b97db34e3ef57b744d03ddeffa4055810b9cf4949a316ef8a03"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/commit",
           "file_count": 1,
-          "tree_sha256": "dc2289b0467df7fb021bd394b8b14adbf12d440399dce624c4012dbaed5ba0af"
+          "tree_sha256": "3759b708f57e4b97db34e3ef57b744d03ddeffa4055810b9cf4949a316ef8a03"
         },
         "flat": {
           "destination": "dist/flat/skills/commit",
           "file_count": 1,
-          "tree_sha256": "dc2289b0467df7fb021bd394b8b14adbf12d440399dce624c4012dbaed5ba0af"
+          "tree_sha256": "3759b708f57e4b97db34e3ef57b744d03ddeffa4055810b9cf4949a316ef8a03"
         },
         "nested": {
           "destination": "dist/nested/skills/commit",
           "file_count": 1,
-          "tree_sha256": "dc2289b0467df7fb021bd394b8b14adbf12d440399dce624c4012dbaed5ba0af"
+          "tree_sha256": "3759b708f57e4b97db34e3ef57b744d03ddeffa4055810b9cf4949a316ef8a03"
         }
       },
       "canonical_source": "skills/commit/SKILL.md",
       "kind": "skill",
       "slug": "commit",
       "source_file_count": 1,
-      "source_tree_sha256": "e661de9d3ab89abd3979afb1fe86d80c6e1f46fe66d33c4d233634ac35ebf729"
+      "source_tree_sha256": "436dead97772e79d34260c9332761998a0f28e8742d69d422a07c843815af99f"
     },
     {
       "artifacts": {

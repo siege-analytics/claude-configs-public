@@ -363,14 +363,16 @@ Part-of: #335"
 
 ## Fixing a mistake in the previous commit
 
-If you need to amend (only if the commit has NOT been pushed):
+For an unpublished owned tip, amend it directly:
 
 ```bash
 git add forgotten_file.py
 git commit --amend
 ```
 
-If the commit has already been pushed, create a new commit instead. Never force-push to shared branches.
+For an ordinary source correction after a push, create a new commit rather than rewriting shared history. Prohibited AI/agent attribution is different: another commit cannot remove a trailer from an earlier candidate commit. Follow [rule:output], Diffs and destructive operations, for bounded cleanup of the owned candidate history. An unpublished tip can be amended; earlier candidate messages can be reworded through scoped rebase. A published owned feature branch may be rewritten only under the existing role and project policy, coordinated with active writers and using force-with-lease. Never rewrite protected branches or another owner's/shared history outside that grant.
+
+Do not stop the whole objective because attribution cleanup is pending. Continue authorized implementation, design and verification; hold only the publication or rewrite action whose readiness or authority is missing. Preserve genuine human authorship, keep the attribution ban and hooks intact, and rebind required exact-head evidence after cleanup. Do not ask for repeat authority or use a repository-wide history filter as an automatic repair.
 
 # Sensitive files
 
