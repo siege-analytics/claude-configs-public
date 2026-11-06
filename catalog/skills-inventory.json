@@ -3,13 +3,13 @@
     "discovery_parity": {
       "extra": [],
       "missing": [],
-      "source_count": 198,
+      "source_count": 199,
       "status": "matched"
     },
     "duplicate_rule_ids": {},
     "generated_output_plan": {
       "destination_collisions": [],
-      "source_count": 198,
+      "source_count": 199,
       "status": "derived-from-build.py"
     },
     "ignored_sources": [],
@@ -53,6 +53,7 @@
       "writing-tests",
       "analysis",
       "api-integration",
+      "ask-questions",
       "branch",
       "cascading-documentation",
       "ci-billing-failure-merge",
@@ -449,6 +450,7 @@
       "shelves--team",
       "analysis",
       "api-integration",
+      "ask-questions",
       "branch",
       "cascading-documentation",
       "ci-billing-failure-merge",
@@ -4076,10 +4078,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 12831,
-      "content_sha256": "64a8e51852778caab620a2ab04ce6c036a7eb5410d9552dac507ea7f8e75d8d1",
+      "characters": 13208,
+      "content_sha256": "5c6afe1d496024e5175f5d618d463ed2236f9991ae687e4ab2f7d09db8f1c062",
       "description": "unknown",
-      "estimated_tokens": 3208,
+      "estimated_tokens": 3302,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -4101,7 +4103,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 173,
+      "lines": 175,
       "owner": [
         "unknown"
       ],
@@ -6106,10 +6108,10 @@
     },
     {
       "canonical_source": "skills/_session-coordination-rules.md",
-      "characters": 28373,
-      "content_sha256": "57a75e831fa6551f8b7c7bf1a8017c4fc5033f12f14fe0fb7717494d9d3d18c0",
+      "characters": 28703,
+      "content_sha256": "4e29c66b9ccf7388528108d0abb75221e074e99f5e7c438e829d1328adc3d7a9",
       "description": "Always-on. Cross-session coordination discipline for agent-to-agent message cadence. Nine rules covering processing-state declarations, ping discipline, slow-vs-stuck framing, explicit baton handoff, decision checklist gating, operator control-surface preservation, hub spoke-source selection, worker/reviewer retirement, and collaborator follow-up after handoffs. Operator-overridable in the rule body when the operator is waiting; no `[coordination-skip]` flag.",
-      "estimated_tokens": 7094,
+      "estimated_tokens": 7176,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_session-coordination-rules.md",
@@ -6139,7 +6141,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 174,
+      "lines": 173,
       "owner": [
         "unknown"
       ],
@@ -6439,10 +6441,10 @@
     },
     {
       "canonical_source": "skills/_strategic-agency-rules.md",
-      "characters": 3874,
-      "content_sha256": "697ae62a652ae1e3bcf07c61e576f3879a960a3cab7cdb5863b85be0b098eaec",
+      "characters": 3858,
+      "content_sha256": "512b9bd8d4b7becc72de18297c0788e31117fd22828cca1cb5044bdaf9be7234",
       "description": "Always-on. Mission-first doctrine for hubs and workers. Skills exist to help agents accomplish strategic goals by deriving and advancing tactical goals with bounded initiative. Agents should keep moving when tactical ordering is safe and non-critical, and should ask for guidance when the choice affects strategy, authorization, risk, or operator control.",
-      "estimated_tokens": 969,
+      "estimated_tokens": 965,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_strategic-agency-rules.md",
@@ -8690,6 +8692,52 @@
       "tier": "unclassified",
       "tier_basis": "no committed tier metadata",
       "verification": "unknown"
+    },
+    {
+      "canonical_source": "skills/ask-questions/SKILL.md",
+      "characters": 8666,
+      "content_sha256": "5090123d1f16deafc5ec3ef03c8d6eb12600af775d22b6764df34dc169feb873",
+      "description": "Operator question protocol. Use whenever you need answers or decisions from the operator, or when the operator asks you to ask questions. Treat it as a survey: show the complete question list once; ask exactly one question per turn with context, choices, pros and cons, a recommendation and a default; go straight to the next question after each answer without routing answers, updating tickets or starting work on them; after the last answer, summarize and then route and act on all answers in one batch. It never freezes or blocks running work. The single canonical procedure; session-coordination:5 defers to it for hubs.",
+      "estimated_tokens": 2167,
+      "frontmatter_name": "ask-questions",
+      "generated_outputs": [
+        "dist/nested/skills/ask-questions",
+        "dist/flat/skills/ask-questions"
+      ],
+      "generated_outputs_verified": true,
+      "inbound_source_references": [
+        "RESOLVER.md",
+        "bin/_test/resolve_load_set_test.py",
+        "catalog/generated-source-authority.json",
+        "skills/_autonomy-rules.md",
+        "skills/_session-coordination-rules.md",
+        "skills/_strategic-agency-rules.md"
+      ],
+      "kind": "skill",
+      "last_reviewed": "2026-11-06",
+      "lifecycle": "active",
+      "lines": 107,
+      "owner": [
+        "unknown"
+      ],
+      "project": null,
+      "quality": {
+        "completeness": 20,
+        "cross_references": 100.0,
+        "grade": "D",
+        "provenance": 20,
+        "structure": 100.0,
+        "total": 60.0
+      },
+      "rule_definitions": [],
+      "slug": "ask-questions",
+      "source_path": "skills/ask-questions/SKILL.md",
+      "test_evidence": [
+        "bin/_test/resolve_load_set_test.py"
+      ],
+      "tier": "unclassified",
+      "tier_basis": "no committed tier metadata",
+      "verification": "bin/_test/resolve_load_set_test.py"
     },
     {
       "canonical_source": "skills/branch/SKILL.md",
@@ -12779,45 +12827,45 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2612205,
+    "characters": 2621562,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 653131,
-    "item_count": 198,
+    "estimated_tokens": 655470,
+    "item_count": 199,
     "kind_counts": {
       "project-rule": 1,
       "project-skill": 3,
       "reference-shelf": 69,
       "rule": 37,
       "shelf-router": 15,
-      "skill": 73
+      "skill": 74
     },
     "quality_grade_counts": {
       "C": 6,
-      "D": 18,
+      "D": 19,
       "F": 133,
       "unknown": 41
     },
-    "quality_low_grade_count": 151,
+    "quality_low_grade_count": 152,
     "tier_characters": {
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1215811
+      "unclassified": 1225168
     },
     "tier_counts": {
       "on-demand": 15,
       "project": 4,
       "reference": 69,
-      "unclassified": 110
+      "unclassified": 111
     },
     "tier_estimated_tokens": {
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 303997
+      "unclassified": 306336
     },
     "unknown_lifecycle_count": 198,
-    "unknown_owner_count": 194,
+    "unknown_owner_count": 195,
     "without_source_references_count": 0,
     "without_test_evidence_count": 99
   }

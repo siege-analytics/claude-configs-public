@@ -7,7 +7,7 @@ SPEC=importlib.util.spec_from_file_location("resolver",SCRIPT); assert SPEC and 
 M=importlib.util.module_from_spec(SPEC);sys.modules[SPEC.name]=M;SPEC.loader.exec_module(M)
 def inv():
  def i(s,k="skill"):return {"slug":s,"kind":k,"characters":100,"estimated_tokens":25}
- slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","close-ticket","ci-billing-failure-merge","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","pipeline-jobs","analysis","scala-on-spark","postgis","geopandas","sedona","duckdb-spatial","django","django-rest-framework","react","typescript","vue","rust","stalled-session-recovery","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
+ slugs=["branch","commit","create-pr","merge","code-review","skillbuilder","ticket-guard","create-ticket","update-ticket","close-ticket","ci-billing-failure-merge","coding","python","testing-frameworks","test-coverage-audit","sql","spatial","spark","databricks","unity-catalog","pipeline-jobs","analysis","scala-on-spark","postgis","geopandas","sedona","duckdb-spatial","django","django-rest-framework","react","typescript","vue","rust","stalled-session-recovery","ask-questions","develop-guard","siege-utilities--hostile-review","siege-utilities--notebook-impact","siege-utilities--error-path-tests"]
  return {"items":[i(s,"project-skill" if s.startswith("siege-utilities--") else "skill") for s in slugs]+[i("siege-utilities--rules","project-rule"),i("shelves--security","shelf-item")]}
 def main():
  manifest=json.loads((ROOT/"catalog/resolver-manifest.json").read_text()); inventory=inv()
@@ -18,6 +18,15 @@ def main():
  assert a==M.select(manifest,inventory,"review this Python pull request", "github.com/siege-analytics/siege_utilities")
  generic=M.select(manifest,inventory,"write a friendly greeting","other/repo")
  assert generic["state"]=="unknown" and generic["selected"]==[] and generic["project"] is None
+ # The operator question protocol (#1056) loads on question-session phrasings, not on any "ask".
+ for prompt in ("use the ask questions skill","Ask me questions before you dispatch","I have decision questions for you","go one question at a time","ask all your questions first","You keep acting without asking. Ask me questions one at a time.","Don't ask them all at once; ask me questions one at a time."):
+  result=M.select(manifest,inventory,prompt,"other/repo")
+  assert result["state"]=="matched" and "ask-questions" in [x["slug"] for x in result["selected"]],(prompt,result)
+ for prompt in ("write a friendly greeting","ask me before you push","review this diff","summarize the survey questions","don't ask questions, just do it"):
+  result=M.select(manifest,inventory,prompt,"other/repo")
+  assert "ask-questions" not in [x["slug"] for x in result["selected"]],(prompt,result)
+ explicit_ask=M.select(manifest,inventory,"[skill:ask-questions]","other/repo")
+ assert [x["slug"] for x in explicit_ask["selected"]]==["ask-questions"],explicit_ask
  outside=M.select(manifest,inventory,"review this diff","other/repo")
  assert not any(x["slug"].startswith("siege-utilities--") for x in outside["selected"])
  explicit=M.select(manifest,inventory,"create ticket [skill:python]","other/repo")

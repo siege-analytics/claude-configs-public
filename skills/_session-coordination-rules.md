@@ -26,11 +26,9 @@ Escalation language ("stuck," "hung," "death spiral") implies a specific failure
 
 Baton declarations name the action expected of the partner ("present the unified plan to operator," "open the consolidation PR," "merge after CI green") so the next move is unambiguous. An implicit baton -- "I'm done" without naming what the partner should now do -- is rule-4 non-compliance and produces the same read-error as a missing at-rest declaration.
 
-**session-coordination:5. Collect user decisions and scope each dependency.** When a spoke needs an unresolved operator decision, present a concrete checklist of the actual decisions, with the context, options, tradeoffs and recommendation for each. Check prior instructions and available evidence first; do not ask again for a settled decision or treat routine technical methods as operator choices.
+**session-coordination:5. Ask operator questions as a survey; route the answers after the last one.** When a spoke needs an unresolved operator decision, the hub asks through [skill:ask-questions]. That skill is the only procedure for building, showing and asking the question list and for summarizing the answers; this rule adds no question format of its own. Check prior instructions and available evidence first; do not ask again for a settled decision or treat routine technical methods as operator choices.
 
-Hold only briefings or actions that depend on an unanswered decision. As soon as a slice has its required decisions and authorization, coordinate that slice; independent authorized work need not wait for the entire checklist. Summarize each decision as it is settled so collaborators use the same current scope. Do not substitute an assumed answer for missing authority.
-
-Group independent questions when that makes answering easier; sequence questions only when a later question depends on an earlier answer. Keep the operator control surface responsive and avoid repeated status pings that add no new evidence. A checklist is a coordination aid, not a new approval gate.
+Hub rule: no answer routing or answer-based briefing until the survey is finished. While questions are open, do not relay answers to spokes or other hubs, brief or re-task a spoke on an answer, or update tickets with answers, even when one spoke's question is already answered. After the last answer, send collaborators the answer summary in one batch so they work from the same scope. This governs acting on the answers, not work in general: running spokes and other authorized work continue as before, including work the questions concern, and nothing is paused or blocked while questions are open. Do not substitute an assumed answer for missing authority, and keep the operator control surface responsive while asking (session-coordination:6).
 
 **session-coordination:6. Preserve the operator control surface during spoke coordination.** The hub session may be the underlying messaging surface, but it must remain the operator's steering wheel. Internal spoke coordination must not become a long foreground activity that prevents the operator from correcting course, answering the next question, changing priority, or stopping the process.
 
@@ -131,6 +129,7 @@ These rules are mandatory. The carve-out in rule 2 (operator override) lives ins
 - `[rule:writing-prose]` writing-prose:5 covers future-tense commitments to action. A baton declaration is the present-tense sibling: "the next move is yours, not mine."
 - `[rule:tandem-agent]` handles the role-contract and authorization side of multi-agent work; this file handles cadence and baton clarity.
 - `[skill:drive-while-away]` handles operator-handoff cadence for autonomous sessions. session-coordination rules are the agent-to-agent analog.
+- `[skill:ask-questions]` is the single operator question procedure that session-coordination:5 defers to; this file keeps only the hub gating.
 
 ## Originating evidence
 

@@ -6,16 +6,16 @@ This report describes committed source evidence. Missing references or tests do 
 
 ## Summary
 
-- Source items: **198**
-- Characters: **2,612,205**
-- Estimated tokens: **653,131** (character/4 estimate)
-- Unknown owners: **194**
+- Source items: **199**
+- Characters: **2,621,562**
+- Estimated tokens: **655,470** (character/4 estimate)
+- Unknown owners: **195**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
 - Without heuristic test evidence: **99**
 - Duplicate rule IDs: **0**
-- Current build-rubric D/F grades: **151**
-- Quality grades: C: 6, D: 18, F: 133, unknown: 41
+- Current build-rubric D/F grades: **152**
+- Quality grades: C: 6, D: 19, F: 133, unknown: 41
 
 ### By kind
 
@@ -26,7 +26,7 @@ This report describes committed source evidence. Missing references or tests do 
 | reference-shelf | 69 |
 | rule | 37 |
 | shelf-router | 15 |
-| skill | 73 |
+| skill | 74 |
 
 ### By proposed tier
 
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 110 | 1,215,811 | 303,997 |
+| unclassified | 111 | 1,225,168 | 306,336 |
 
 ## Largest source items
 
@@ -51,7 +51,7 @@ This report describes committed source evidence. Missing references or tests do 
 | `writing-rules` | rule | 30,148 | 7,537 | `skills/_writing-rules-rules.md` |
 | `self-review` | skill | 29,789 | 7,448 | `skills/self-review/SKILL.md` |
 | `shelves--hundred-million-offers` | reference-shelf | 29,309 | 7,328 | `skills/shelves/sales/hundred-million-offers/SKILL.md` |
-| `session-coordination` | rule | 28,373 | 7,094 | `skills/_session-coordination-rules.md` |
+| `session-coordination` | rule | 28,703 | 7,176 | `skills/_session-coordination-rules.md` |
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
 | `writing-tests` | rule | 27,373 | 6,844 | `skills/_writing-tests-rules.md` |
 | `hostile-review` | skill | 26,756 | 6,689 | `skills/hostile-review/SKILL.md` |
@@ -69,8 +69,8 @@ This report describes committed source evidence. Missing references or tests do 
 
 ## Evidence gaps
 
-- Unclassified tier: 110
-- Unknown owners: 194
+- Unclassified tier: 111
+- Unknown owners: 195
 - Unknown lifecycle: 198
 - No tracked source references: 0
 - No heuristic test evidence: 99

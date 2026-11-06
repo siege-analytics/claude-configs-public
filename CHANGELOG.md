@@ -4,6 +4,16 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Added: ask-questions operator question protocol
+
+- New `ask-questions` skill: the single procedure for asking the operator questions, run as a survey.
+  - Show the full list once, then ask one question per turn with context, choices, pros and cons, a recommendation and a default.
+  - After each answer, go straight to the next question. Answers are not routed, tickets are not updated and no work starts on them in between.
+  - After the last answer, summarize, then route and act on everything in one batch. Running work never pauses or blocks.
+  - The resolver loads it for "ask questions", "ask me questions", "ask your questions", "ask all your questions", "decision questions" and "one question at a time", except in prompts that say "don't ask questions", "do not ask questions", "don't ask me questions", "do not ask me questions" or "no questions" (#1056).
+- `strategic-agency:4` and `autonomy:2`/`autonomy:3` now defer the operator question format and sequence to the skill. The next question preempts background work, and answers reach tickets only after the last one (#1056).
+- `session-coordination:5` now defers to the skill for the question procedure and keeps only the hub rule: no answer routing or answer-based spoke briefing until the survey is finished, with running work unaffected. The per-slice release and question-grouping text is removed (#1056).
+
 ### Fixed: task scopes and evidence execution
 
 - Add a GitHub issue to an approved project through the exact current task and a source-owned standing policy, without inventing a filesystem target. Other issues, projects, destructive operations and arbitrary API writes remain guarded (#1161).
