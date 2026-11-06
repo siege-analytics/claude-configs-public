@@ -180,7 +180,7 @@ A drive-mode turn is productive when it changes authoritative state or leaves su
 - verification output captured in a durable file or ticket comment,
 - first escalation of a blocker, or new evidence that changes its resolution, with `Blocked because` / `Waiting on` / `Unblocks when` evidence.
 
-These artifacts must record actual work or new findings; creating another file or repeating a promise alone does not satisfy the bar. A verified live wait may yield without pretending to be progress: retain its real handle, current observation and supported re-entry condition. If neither an authorized action nor a verified wait remains, apply the whole-objective termination criteria below.
+These artifacts must record actual work or new findings; creating another file or repeating a promise alone does not satisfy the bar. A verified live wait or authorized bounded passive watch may yield without pretending to be progress: retain its real handle or polling target, current observation and supported re-entry condition. A passive watch for future events needs no currently running target operation, but its polling and re-entry must be verified and remain within the granted horizon. If no authorized action, verified live wait or authorized bounded passive watch remains, apply the whole-objective termination criteria below.
 
 ## **DO NOT** stop at progress reports between fires
 
@@ -207,7 +207,7 @@ You actively stop the whole loop ONLY when:
 1. The operator explicitly stops or pauses the whole objective, or replaces it. A target-only pause parks only that target; continue other authorized targets. A status question or the operator returning does not by itself cancel it.
 2. The original objective is genuinely complete.
 3. The granted time horizon or applicable lease expires. Do not silently extend it; renew only within existing authority and current host capabilities. Respect the 7-day `CronCreate` expiry.
-4. The whole objective reaches a genuine impasse: no independent authorized action remains and there is no verified live wait that can advance it.
+4. The whole objective reaches a genuine impasse: no independent authorized action remains and there is no verified live wait or authorized bounded passive watch that can advance it.
 
 When a whole-loop termination criterion is met, record the outcome or blocker and stop the existing job with `CronDelete` or the host's supported equivalent. Do not promise further fires after expiry or without a working scheduler. Stopping the scheduler does not itself cancel external jobs: preserve their handles and do not cancel or replay them without authority. On an authorized resume, inspect existing jobs and current state before restoring continuation. Otherwise keep the existing continuation mechanism; do not create duplicate jobs.
 
@@ -221,7 +221,7 @@ Record and report the affected target when:
 
 Diagnose errors and perform repair or preparation within the existing grant; repeated failures require revising the failing approach, not unchanged retries. Follow `[skill:think]` and the canonical autonomy/authorization rules. Park only the dependent action, name what unblocks it, and continue independent authorized targets. Do not delete the whole job because one target is blocked, treat supervision as new authority, bypass a hold, or replay an operation whose side effects are uncertain. An explicit user pause remains binding within its stated scope.
 
-If the granted horizon expires, stop rather than treating independent work or a live wait as permission to extend it. If all targets are parked with no authorized next action and no verified live wait, report the whole-objective impasse and stop the loop under the termination criteria above.
+If the granted horizon expires, stop rather than treating independent work or a live wait as permission to extend it. If all targets are parked with no authorized next action and neither a verified live wait nor an authorized bounded passive watch, report the whole-objective impasse and stop the loop under the termination criteria above.
 
 ## If no autonomy tool is available or visible cadence is unproven
 
@@ -283,5 +283,5 @@ On each fired turn:
 3. Take action per result.
 4. If terminated → CronDelete + brief operator with what was accomplished.
 5. If a target needs escalation → surface its concrete blocker, continue independent authorized work, and keep the job unless a whole-loop termination criterion applies.
-6. Otherwise → check the remaining inventory and do any available authorized action. Yield only after verifying a live wait and working re-entry, or applying the termination criteria. Honor requested status updates; keep routine fires quiet.
+6. Otherwise → check the remaining inventory and do any available authorized action. Yield only after verifying a live wait or an authorized bounded passive watch with a working polling target and re-entry within the granted horizon, or applying the termination criteria. A passive watch does not require a currently running target operation. Honor requested status updates; keep routine fires quiet.
 ```
