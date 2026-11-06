@@ -7,8 +7,8 @@ This report describes committed source evidence. Missing references or tests do 
 ## Summary
 
 - Source items: **198**
-- Characters: **2,620,663**
-- Estimated tokens: **655,245** (character/4 estimate)
+- Characters: **2,621,884**
+- Estimated tokens: **655,550** (character/4 estimate)
 - Unknown owners: **194**
 - Unknown lifecycle states: **198**
 - Without tracked source references: **0**
@@ -35,7 +35,7 @@ This report describes committed source evidence. Missing references or tests do 
 | on-demand | 15 | 43,064 | 10,771 |
 | project | 4 | 55,846 | 13,964 |
 | reference | 69 | 1,297,484 | 324,399 |
-| unclassified | 110 | 1,224,269 | 306,111 |
+| unclassified | 110 | 1,225,490 | 306,416 |
 
 ## Largest source items
 
@@ -52,9 +52,9 @@ This report describes committed source evidence. Missing references or tests do 
 | `self-review` | skill | 29,789 | 7,448 | `skills/self-review/SKILL.md` |
 | `shelves--hundred-million-offers` | reference-shelf | 29,309 | 7,328 | `skills/shelves/sales/hundred-million-offers/SKILL.md` |
 | `session-coordination` | rule | 28,689 | 7,173 | `skills/_session-coordination-rules.md` |
+| `drive-while-away` | skill | 27,451 | 6,863 | `skills/drive-while-away/SKILL.md` |
 | `shelves--web-typography` | reference-shelf | 27,391 | 6,848 | `skills/shelves/design/web-typography/SKILL.md` |
 | `writing-tests` | rule | 27,373 | 6,844 | `skills/_writing-tests-rules.md` |
-| `drive-while-away` | skill | 26,963 | 6,741 | `skills/drive-while-away/SKILL.md` |
 | `hostile-review` | skill | 26,756 | 6,689 | `skills/hostile-review/SKILL.md` |
 | `engagement-post-mortem` | skill | 26,695 | 6,674 | `skills/engagement-post-mortem/SKILL.md` |
 | `siege-utilities--hostile-review` | project-skill | 25,909 | 6,478 | `projects/siege-utilities/skills/hostile-review/SKILL.md` |

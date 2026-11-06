@@ -15,11 +15,12 @@ delegation or status report does not complete the assignment.
 
 Before ending a working turn, inspect that inventory and do the next available
 authorized action. Do not wait for another nudge or approval to continue work
-already assigned. If no action remains available, verify the actual dependency
-or running operation, preserve its handle and supported re-entry, and name the
-precise missing decision or release condition. Report completed, pending and
-held work accurately; do not call an idle plan work in progress. Actual owner
-holds, role boundaries and granted horizons remain binding only in their scope.
+already assigned. If the assigned scope is verified complete, with no pending,
+held or running work, report that completion; do not invent a dependency.
+Otherwise, if no action remains available, verify the actual dependency, running operation or authorized
+bounded watch, preserve its handle and supported re-entry, and name any missing
+decision or release condition. Report completed, pending and held work accurately;
+do not call an idle plan work in progress. Actual owner holds, role boundaries and granted horizons remain binding only in their scope.
 
 ## The four autonomy principles
 

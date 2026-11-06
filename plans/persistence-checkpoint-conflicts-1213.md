@@ -116,3 +116,30 @@ repairing unexpected differences before publication while other work continues.
 Verify source/build freshness and focused decision cases, then use the normal
 feature/develop/main flow and rebind both promotion review threads to the actual
 published source. These are unresolved review findings, not a completed rollout.
+
+## Final review corrections (#1213, #1215)
+
+Before implementation, inspect promotion #1219 comments 4498464348,
+4498464378, 4497517167 and 4497517177 against current sources. Scope is four
+instruction owners only: distinguish verified assignment completion from a
+blocked/live wait; retain an authorized bounded passive watch with a verified
+polling target and re-entry until its horizon; pin a published rewrite lease to
+the verified remote tip; and exclude staged file changes from message-only tip
+amendment. Preserve actual roles, holds, review requirements, source trees and
+other writers. A source correction may still use ordinary amend; no new policy
+machinery, blanket mutation prohibition, or automatic history rewrite is added.
+Validate the decision boundaries and an isolated Git staged-change/lease case;
+stage authored inputs before the established canonical refresh. Root reviews
+the frozen source before any commit or push. Reject the generic review-tool
+suggestion to never mutate: it contradicts the existing authorized task scope.
+
+The isolated Git controls passed: a message-only `--amend --only` with no paths
+preserved the original tree and retained unrelated staged changes; a second
+writer advanced the disposable remote and a background fetch updated tracking,
+but the explicit old-tip lease still rejected the rewrite and preserved that
+writer's remote tip. This is local fixture evidence, not a published rewrite.
+Decision review: completed assigned scope reports completion; a genuinely
+blocked action names its dependency; an authorized empty-queue watch retains
+verified polling/re-entry within its horizon; expired or unproved watches do
+not acquire authority to continue. No model-evaluation or live activation pass
+is claimed from this source inspection.
