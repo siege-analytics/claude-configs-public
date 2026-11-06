@@ -4076,10 +4076,10 @@
     },
     {
       "canonical_source": "skills/_autonomy-rules.md",
-      "characters": 13632,
-      "content_sha256": "a0af21045a00bb188a52cc725f708d55d1fa11af5282fb6f95531949ed177001",
+      "characters": 14514,
+      "content_sha256": "6ad9bbd75a0afbb5a64af00ed441f2e6b0499e44251f3c80bc552d83ec9d4736",
       "description": "unknown",
-      "estimated_tokens": 3408,
+      "estimated_tokens": 3629,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_autonomy-rules.md",
@@ -4101,7 +4101,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 174,
+      "lines": 189,
       "owner": [
         "unknown"
       ],
@@ -4890,10 +4890,10 @@
     },
     {
       "canonical_source": "skills/_output-rules.md",
-      "characters": 6688,
-      "content_sha256": "bce83d809f6383a7634ee7f47b67d835862465f55aa7a3251bca577731138692",
+      "characters": 7015,
+      "content_sha256": "673653e0fed71d2d27b8ae7e81f285a0648c0cc6e4ef19ba19691e8720b39df5",
       "description": "unknown",
-      "estimated_tokens": 1672,
+      "estimated_tokens": 1754,
       "frontmatter_name": "unknown",
       "generated_outputs": [
         "dist/nested/skills/_output-rules.md",
@@ -4947,7 +4947,7 @@
       "kind": "rule",
       "last_reviewed": "unknown",
       "lifecycle": "unknown",
-      "lines": 124,
+      "lines": 125,
       "owner": [
         "unknown"
       ],
@@ -9895,10 +9895,10 @@
     },
     {
       "canonical_source": "skills/drive-while-away/SKILL.md",
-      "characters": 26852,
-      "content_sha256": "aa5603d1b580035e66e8afdecfaa59782a0f4a078ad6408bcd242efff604a089",
+      "characters": 26963,
+      "content_sha256": "a2bb7e6d1a9945e968a2b34fe3dc664ea9b31b88c706cb989c8ab5c98f94c425",
       "description": "When the operator hands off continuous work for an extended period (\"drive while I'm gone,\" \"monitor X overnight,\" \"keep going while I'm out,\" \"watch this and handle it\"), set up an autonomous-re-entry mechanism (CronCreate for regular Claude/Codex sessions, ScheduleWakeup for /loop sessions) when available, but do not claim operator-visible cadence unless the runtime proves those events render in the operator UI. In Craft Agent, use foreground tool calls, durable artifacts, and issue/PR updates for visible evidence; treat async wakeups as agent-internal until proven otherwise. Continuation is automatic only when the scheduler exists and is wired; stopping requires an active decision. Forbids the \"do one task, present a progress report, wait for praise\" anti-pattern.",
-      "estimated_tokens": 6713,
+      "estimated_tokens": 6741,
       "frontmatter_name": "drive-while-away",
       "generated_outputs": [
         "dist/nested/skills/drive-while-away",
@@ -12785,9 +12785,9 @@
   },
   "schema_version": 1,
   "summary": {
-    "characters": 2619343,
+    "characters": 2620663,
     "duplicate_rule_id_count": 0,
-    "estimated_tokens": 654914,
+    "estimated_tokens": 655245,
     "item_count": 198,
     "kind_counts": {
       "project-rule": 1,
@@ -12808,7 +12808,7 @@
       "on-demand": 43064,
       "project": 55846,
       "reference": 1297484,
-      "unclassified": 1222949
+      "unclassified": 1224269
     },
     "tier_counts": {
       "on-demand": 15,
@@ -12820,7 +12820,7 @@
       "on-demand": 10771,
       "project": 13964,
       "reference": 324399,
-      "unclassified": 305780
+      "unclassified": 306111
     },
     "unknown_lifecycle_count": 198,
     "unknown_owner_count": 194,

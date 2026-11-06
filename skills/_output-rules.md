@@ -117,6 +117,7 @@ Never reference the current task in a comment (`# added for issue #123`). That r
 - For an unpublished owned work branch, perform that bounded cleanup before publication. For a published owned feature branch, coordinate active writers and apply the project's rewrite policy; use `git push --force-with-lease` only when that rewrite is already authorized, never bare `--force`.
 - Never rewrite `main`, `master`, `develop`, another owner's history or shared history outside the existing grant. Do not run whole-repository `filter-branch` or `filter-repo` as automatic attribution cleanup.
 - If a rewrite genuinely needs missing authority, hold only that rewrite. Continue independent authorized work and prepare a clean candidate through the permitted project path, such as a replacement branch/PR from the approved base or a handoff to the branch owner; do not disable a hook, waive the ban or silently replace another writer's branch.
+- Before a message-only rewrite, retain the original candidate tip. Preserve merge-resolution content and compare the original and rewritten file trees; repair unexpected differences before publication. A rebase that drops a merge resolution is not attribution cleanup. Continue independent authorized work while repairing it.
 - Preserve legitimate human credit, inspect the resulting candidate history, and refresh the exact-head review and CI evidence required by the project after a rewrite. A message-only repair does not authorize unrelated source changes.
 
 ## Attribution Policy
