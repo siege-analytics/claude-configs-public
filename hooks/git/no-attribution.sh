@@ -95,12 +95,17 @@ PATTERNS=(
 for pattern in "${PATTERNS[@]}"; do
     if echo "$MESSAGE_AREA" | grep -iqE "$pattern"; then
         cat >&2 <<HOOKEOF
-BLOCKED: Commit message contains AI/agent attribution.
+COMMIT MESSAGE REJECTED: This commit command contains AI/agent attribution.
 
 Remove any mention of Claude, Cursor, Copilot, Anthropic, OpenAI,
 Co-Authored-By lines referencing AI tools, or "Generated with" markers.
 
-This is enforced by the attribution policy in CLAUDE.md.
+Correct the message and retry the commit with this hook enabled.
+Continue other authorized implementation, design and verification; this
+rejection does not stop the task. Existing candidate trailers can be removed
+by bounded owned-branch history cleanup before publication under rule:output.
+Do not rewrite protected or other writers' history or run a repository-wide
+history filter as an automatic repair.
 HOOKEOF
         exit 2
     fi
