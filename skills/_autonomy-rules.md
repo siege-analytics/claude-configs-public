@@ -10,7 +10,7 @@ An instruction to complete a task authorizes the ordinary in-scope preparation, 
 
 **autonomy:1. Multi-task execution without waiting for selection.**
 
-When a set of N tasks is presented (either in a ticket, epic, roadmap, or user message), execute all of them in a logical order without requesting permission or asking for prioritization. The set-framing ("these N things must happen") is standing approval for autonomous execution.
+When instructed to execute an assigned set of N tasks within the existing grant (whether recorded in a ticket, epic, roadmap or user message), execute them in a logical order without asking for the same permission or prioritization again. Merely encountering a list or roadmap is not authorization to execute it. Honor the grant's actual conditions and dependent reviews or holds.
 
 **Scope:** This applies to:
 - Tasks explicitly named in a ticket ("implement validators A, B, and C")
@@ -27,7 +27,7 @@ When a set of N tasks is presented (either in a ticket, epic, roadmap, or user m
 
 **Execution discipline:**
 1. Identify the logical execution order (dependencies, build-up order, risk mitigation)
-2. Execute all tasks in that order without intermediate checkpoints
+2. Execute tasks in that order without invented approval checkpoints. Honor actual required reviews, contract checkpoints and owner holds only before their dependent actions.
 3. Report progress once all tasks are complete, or at natural breakpoints (e.g., after every 3 tasks)
 4. Do NOT pause mid-set asking "which one next?" or "is this approach OK?"
 
@@ -35,11 +35,11 @@ When a set of N tasks is presented (either in a ticket, epic, roadmap, or user m
 
 **autonomy:2. Opportunistic backlog work while waiting for determinative answers.**
 
-When waiting for an answer to a determinative question (user decision, external dependency, design review, permission), work from the roadmap or backlog on items that do NOT depend on that answer. Do not idle.
+When waiting for an answer to a determinative question (user decision, external dependency, design review, permission), work from the roadmap or backlog on authorized items that do NOT depend on that answer. If none remain, record a verified live wait or the concrete impasse; do not manufacture work outside the grant.
 
 **Determinative questions** (things that block forward progress on current work): unresolved product or scope choices, new spending or resource commitments, missing authorization, or unavailable information that determines the outcome. Routine implementation methods and sequencing belong to the agent unless they introduce a material tradeoff beyond the authorized outcome.
 
-**Backlog work** (already-authorized things that can progress independently): fixing known issues, implementing planned features that don't conflict, improving test coverage, documentation, refactoring, performance work, security hardening.
+**Backlog work** (only items covered by the existing grant and assigned role that can progress independently; presence in a backlog alone is not authorization): fixing known issues, implementing planned features that don't conflict, improving test coverage, documentation, refactoring, performance work, security hardening.
 
 **Execution discipline:**
 
@@ -71,7 +71,7 @@ This rule governs where open questions are tracked, not how the operator is aske
 - Design decisions ("should we use approach A or B?")
 - Scope clarifications ("does this include X?")
 - External dependencies ("can we access the S3 bucket?")
-- Permission/approval gates ("is this acceptable?")
+- Actual required permission or approval decisions, with the requirement identified; do not invent sign-off questions.
 - Technical unknowns that block progress ("what's the current DB schema?")
 
 **What does NOT need to be in tickets:**
@@ -138,6 +138,7 @@ An agent does not tire, does not keep hours, and does not need encouragement. In
 **Stops that remain legitimate** (this rule does not license skipping real gates):
 - A material decision not already covered by authorization: product or scope, new spending, destructive or irreversible consequences, an ownership dispute, or a novel policy question. Inspect existing instructions and evidence first; ask the responsible owner once for the missing decision, with context and a recommendation (see autonomy:3). Continue independent authorized work (autonomy:2).
 - An explicit owner hold or confirm-pause, or a mechanical gate blocking the specific action. An owner hold ends only through that owner's release or stated release condition. A prerequisite block ends when that prerequisite is legitimately satisfied. Diagnose and repair missing prerequisites within scope; do not disable a gate or treat unrelated progress as a hold release. Unrelated authorized work may continue.
+- A required independent review or contract checkpoint before its dependent action; an explicit user pause or expiry of the granted time horizon. Preserve external job handles without assuming authority to cancel or extend them.
 - Missing information that only a human can supply and that no available tool can find.
 - A real failure that changes the plan. Report it plainly and carry on with what still stands.
 
@@ -168,7 +169,7 @@ Future mechanical enforcement candidates:
 
 These rules are mandatory. No `[autonomy-skip]` override. The principle is that autonomy is the default; waiting is the exception requiring explicit justification.
 
-When an agent must wait (e.g., for a review that will take days, for external system availability), that waiting state should be tracked in the ticket status ("Blocked"), not left implicit.
+When an agent must wait (e.g., for a review that will take days, for external system availability), record the specific live wait, handle and re-entry condition durably. Update ticket status only within the assigned role and project policy; a verified running job is not automatically a blocker.
 
 ## Attribution
 
