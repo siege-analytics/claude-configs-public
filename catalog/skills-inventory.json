@@ -4097,6 +4097,7 @@
         "plans/coordination-dispatch-1187.md",
         "skills/KERNEL.md",
         "skills/RESOLVER.md",
+        "skills/ask-questions/SKILL.md",
         "skills/stalled-session-recovery/host-controls.md",
         "skills/think/SKILL.md"
       ],
@@ -4928,6 +4929,7 @@
         "skills/_writing-releases-rules.md",
         "skills/_writing-tests-rules.md",
         "skills/api-integration/SKILL.md",
+        "skills/ask-questions/SKILL.md",
         "skills/databricks/SKILL.md",
         "skills/detect-ai-fingerprints/SKILL.md",
         "skills/distill-lessons/SKILL.md",
@@ -6136,7 +6138,8 @@
         "plans/self-review-867-hub-rule-count.md",
         "skills/KERNEL.md",
         "skills/_tandem-agent-rules.md",
-        "skills/_ticket-lifecycle-rules.md"
+        "skills/_ticket-lifecycle-rules.md",
+        "skills/ask-questions/SKILL.md"
       ],
       "kind": "rule",
       "last_reviewed": "unknown",
@@ -6458,6 +6461,7 @@
         "catalog/skill-lifecycle-legacy.json",
         "docs/instruction-architecture.md",
         "skills/KERNEL.md",
+        "skills/ask-questions/SKILL.md",
         "skills/think/SKILL.md"
       ],
       "kind": "rule",
@@ -8709,6 +8713,7 @@
         "RESOLVER.md",
         "bin/_test/resolve_load_set_test.py",
         "catalog/generated-source-authority.json",
+        "plans/self-review-1056-ask-questions.md",
         "skills/_autonomy-rules.md",
         "skills/_session-coordination-rules.md",
         "skills/_strategic-agency-rules.md"
