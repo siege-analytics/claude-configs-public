@@ -207,6 +207,11 @@ class Gates(unittest.TestCase):
         for verb in ('create', 'merge 1'):
             command = 'gh pr ' + verb + ' # ' + marker
             self.assertGate(0, command, cwd=self.a)
+            if verb == 'merge 1':
+                classified = subprocess.run([sys.executable, str(ROOT / 'hooks/lib/github-merge-queue.py'), '--classify', command],
+                                            env=self.env, text=True, capture_output=True, timeout=10)
+                self.assertNotEqual(classified.returncode, 0)  # Scoped mutation, never queue carve-out.
+                self.assertFalse((self.ws / 'sessions/one/data/merge-queue-decisions.jsonl').exists())
             payload = craft_payload(tool_name='Bash', cwd=str(self.a), tool_input={'command': command})
             guard = subprocess.run(['bash', str(ROOT / 'hooks/bash/destructive-guard.sh')],
                                    input=json.dumps(payload), env=self.env, text=True,

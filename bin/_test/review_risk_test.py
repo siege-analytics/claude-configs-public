@@ -80,6 +80,7 @@ AUDITED_ENFORCEMENT_DEPENDENCIES = AUTHORITY_DEPENDENCY_FLOOR + [
  "hooks/lib/resolve-think-gate.py",
  "hooks/lib/task_actions.py",
  "hooks/lib/github-project-status.py",
+ "hooks/lib/github-merge-queue.py",
  "hooks/lib/test-evidence.py",
  "hooks/lib/craft-settings-router.py",
  "bin/install-craft-hook-router.py",
@@ -181,6 +182,13 @@ CI_INVOCATION_SITES = [
 ]
 REQUIRED_HELPER_EDGES = {
  tuple(row.split("|")) for row in """
+hooks/bash/destructive-guard.sh|hooks/lib/github-merge-queue.py
+hooks/git/detect-ai-fingerprints.sh|hooks/lib/github-merge-queue.py
+hooks/git/fix-shape-guard.sh|hooks/lib/github-merge-queue.py
+hooks/git/self-review.sh|hooks/lib/github-merge-queue.py
+hooks/git/survey-context.sh|hooks/lib/github-merge-queue.py
+hooks/git/test-guard.sh|hooks/lib/github-merge-queue.py
+hooks/git/test-tracking-guard.sh|hooks/lib/github-merge-queue.py
 hooks/agent-comms/hub-concurrency-gate.sh|hooks/lib/session_anchor.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/hook_payload.py
 hooks/bash/universal-mutation-gate.sh|hooks/lib/session_anchor.py
@@ -277,7 +285,7 @@ hooks/write/branch-guard.sh|hooks/lib/hook-path.sh
 hooks/write/write-guard.sh|hooks/lib/hook-path.sh
 """.strip().splitlines()
 }
-REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "2223da50fbb722deb878634678b3591f7f052f3e2db6d10e9304008a351a9946"
+REQUIRED_HELPER_INVOCATION_SITES_SHA256 = "a69f118926b5b7f54227813070cdcb2428f3a41ab832c5215a649f54e10b749d"
 REQUIRED_HELPER_ASSIGNMENT_USE_SITES_SHA256 = "94457079e711f0e4be9ef27704231842e6c678b1bb0180f79be49bb6708c95f0"
 REQUIRED_HELPER_USE_COUNTS = {
  (source,target):int(count) for source,target,count in (

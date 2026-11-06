@@ -17,11 +17,12 @@ SKILL = ROOT / "skills/self-review"
 spec = importlib.util.spec_from_file_location("compose_review_fixture", ROOT / "bin/compose-project.py")
 compose = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(compose)
-# Independent baseline7e1 regions, measured before extraction.
+# Template/fields retain baseline7e1 bytes. The checks pin includes the
+# reviewed project-tooling correction after extraction (PR1203 findings).
 EXPECTED = {
     "template": "75604494106ee6254c54ef657a739081c240ecd13ca6335cde3d396a8cb9a5f5",
     "fields": "5b844bcc2a023e7a1a18dc6f8a7fe72d5138d39aad67583a5bac26cd80e5171a",
-    "checks": "3613f823346d2ba43a54e43978afc2a15f01c8d7cf8d6067c796e703d561d09e",
+    "checks": "fe89f4c4c025589717e91736e88ba5b6181a72ba0ddc5039c3b3116fa152400b",
 }
 
 
@@ -64,6 +65,30 @@ class ReviewDisclosure(unittest.TestCase):
         regions["checks"] = checks[checks.index(b"## Domains and roles\n"):]
         for name, content in regions.items():
             self.assertEqual(hashlib.sha256(content).hexdigest(), EXPECTED[name], name)
+
+    def test_project_verification_contract_is_not_python_specific(self):
+        entry = (SKILL / "SKILL.md").read_text()
+        checks = (SKILL / "review-checklists.md").read_text()
+        lead = checks.split("5. **Did the Junior run the mechanical verification gates?**", 1)[1]
+        self.assertIn("Use the actual project test runner", entry)
+        self.assertIn("selected project's actual test", lead)
+        self.assertIn("Always\n     required for projects with a test suite", lead)
+        self.assertIn("plain Markdown without a builder", lead)
+        self.assertIn("Record the actual command and result", lead)
+        self.assertNotIn("evidence line for `pytest`. Always required", lead)
+        self.assertNotIn("evidence line for `sphinx-build`. Required", lead)
+
+    def test_dispatch_example_creates_a_named_task_branch_from_remote_ref(self):
+        rules = (ROOT / "skills/_session-coordination-rules.md").read_text()
+        command = 'git worktree add -b "$TASK_BRANCH" "$TASK_WORKTREE" "$APPROVED_INTEGRATION_REF" && cd "$TASK_WORKTREE"'
+        self.assertIn('`' + command + '`', rules)
+        self.run_cmd(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                      "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "-qm", "fixture"])
+        self.run_cmd(["git", "update-ref", "refs/remotes/origin/develop", "HEAD"])
+        self.env.update(TASK_BRANCH="task/fixture-review", TASK_WORKTREE=str(self.base / "isolated worker"),
+                        APPROVED_INTEGRATION_REF="origin/develop")
+        result = self.run_cmd(["bash", "-c", command + '; git symbolic-ref --short HEAD'])
+        self.assertEqual(result.stdout.splitlines()[-1], "task/fixture-review")
 
     def support_fragments(self, entry, directory):
         for link in compose.raw_link_targets(entry):

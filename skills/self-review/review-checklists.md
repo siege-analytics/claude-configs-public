@@ -312,12 +312,16 @@ the work touches:
 
    - Gate 1 (syntax): evidence line for `ast.parse` on changed `.py`
      files. Always required when `.py` files are in the diff.
-   - Gate 2 (test suite): evidence line for `pytest`. Always required
-     for projects with a test suite. If the project has no test suite,
-     state "Test suite: N/A (no test suite)" explicitly.
-   - Gate 3 (doc build): evidence line for `sphinx-build`. Required
-     when any file under `docs/` was modified. Must state "N/A (no
-     docs/ changes)" explicitly if not applicable.
+   - Gate 2 (test suite): evidence for the selected project's actual test
+     runner, using its supported command and reporting the result. Always
+     required for projects with a test suite; `pytest` applies to pytest
+     projects, not every project. If there is no test suite, record that
+     applicability fact and the actual checks run; do not invent a runner.
+   - Gate 3 (documentation): when `docs/` changes, evidence for the project's
+     declared documentation builder, or its actual documentation/reference
+     validation for plain Markdown without a builder. `sphinx-build` applies
+     to Sphinx projects. Record the actual command and result; if there are
+     no documentation changes, state that applicability fact.
    - Gate 4 (notebook API): evidence line for API verification.
      Required when any `.ipynb` is in the diff. Must state "N/A (no
      notebook changes)" explicitly if not applicable.
