@@ -248,7 +248,7 @@ Do NOT silently accept the handoff. Per `[rule:writing-prose]` writing-prose:5 a
 | Confusing `Monitor` with driving | "Monitor `bd5po7f0p` will fire on terminal state." Then silence. | `Monitor` watches one bash task. It doesn't iterate, doesn't handle multiple targets, doesn't autonomously wake. |
 | Vague cron prompt | `CronCreate(prompt="check on things")` | Fired turn has no context, can't reconstruct intent, makes wrong decisions. Always encode the digested directive + target list + termination criteria + iteration_count. |
 | Forgetting to `CronDelete` when work is done | Cron keeps firing every cadence for 7 days after the work finished, agent has to no-op each fire. | When termination criteria met, call `CronDelete <job-id>`. |
-| Briefing the operator between fires | Fired turn ends with "Update: PR #42 still pending, will check again next hour." | The operator is not watching. Save the report for when they ping you, or for the escalation case. Keep routine fires quiet unless the operator requested progress updates; honor that cadence without making acknowledgment a condition of continuing. |
+| Briefing the operator between fires | Fired turn ends with "Update: PR #42 still pending, will check again next hour." | Publish durable milestones and material transitions. Keep routine chat briefings quiet unless the operator requested updates; honor that cadence without making acknowledgment a condition of continuing. |
 
 ## Incident justification
 
@@ -275,7 +275,7 @@ Agent (same response):
 2. Restate directive + identify targets + pick cadence (e.g., every 20 min: "7,27,47 * * * *")
 3. CronCreate(cron="7,27,47 * * * *", recurring=true, prompt="<digested directive + targets + termination + iteration_count=0>")
 4. Brief operator: "Cron job <id> set, firing at :07/:27/:47. Watching <targets>. Stops on <criteria>. Auto-expires in 7 days. Stop with /cron-delete <id>."
-5. End turn.
+5. Continue available authorized work; end the turn only at a verified wait with working re-entry, or a genuine termination condition.
 
 On each fired turn:
 1. Read directive from prompt.
