@@ -30,7 +30,7 @@ INVESTIGATION_HEADINGS = r'investigation fact sheet|fact sheet|investigation'
 PREMORTEM_HEADINGS = r'pre[- ]?mortem'
 # GitHub renders these as code or quotation, never as the artifact itself.
 HTML_CONTAINER = re.compile(
-    r'<(/?)(?:pre|code|blockquote|q|samp|kbd|tt|var|xmp|listing|plaintext|textarea|script|style|template|noscript)\b[^>]*>',
+    r'<(/?)(pre|code|blockquote|q|samp|kbd|tt|var|xmp|listing|plaintext|textarea|script|style|template|noscript)\b[^>]*>',
     re.I)
 TICKET_REF = re.compile(
     r'github\.com/(?P<url_repo>[\w.-]+/[\w.-]+)/(?:issues|pull)/(?P<url_num>[0-9]+)\b'
@@ -65,18 +65,27 @@ def comment_text(body):
     # start a line with `#` and become a heading.
     text = re.sub(r'(`+)(?!`).+?(?<!`)\1(?!`)', ' ', '\n'.join(output))
     text = re.sub(r'<!--.*?(?:-->|\Z)', ' ', text, flags=re.S)
-    kept, depth, position = [], 0, 0
+    text = re.sub(r'<!\[CDATA\[.*?(?:\]\]>|\Z)', ' ', text, flags=re.S)
+    # Closure is name-aware (#1164 R3): `</blockquote>` cannot end an open
+    # `<pre>`. A closing tag ends its own element and anything opened inside it;
+    # one naming no open container closes nothing.
+    kept, stack, position = [], [], 0
     for tag in HTML_CONTAINER.finditer(text):
-        if depth == 0:
-            if tag.group(1):
+        closing, name = bool(tag.group(1)), tag.group(2).lower()
+        if not stack:
+            if closing:
                 continue  # a stray closing tag is plain text
             kept.append(text[position:tag.start()])
-        depth += -1 if tag.group(1) else 1
-        if depth == 0:
-            kept.append(' ')
-            position = tag.end()
+            stack.append(name)
+        elif not closing:
+            stack.append(name)
+        elif name in stack:
+            del stack[len(stack) - 1 - stack[::-1].index(name):]
+            if not stack:
+                kept.append(' ')
+                position = tag.end()
     # An unclosed container hides the rest of the comment.
-    kept.append(text[position:] if depth == 0 else ' ')
+    kept.append(text[position:] if not stack else ' ')
     return ''.join(kept)
 
 
@@ -86,12 +95,30 @@ def ticket_refs(text):
             for m in TICKET_REF.finditer(text)]
 
 
-def declares_other_ticket(text, repo_slug, issue_num):
-    """True when a ticket declaration or artifact heading names only other tickets."""
-    for line in text.splitlines():
-        if not (TICKET_DECLARATION.match(line) or ARTIFACT_HEADING_LINE.match(line)):
+def declarations(text):
+    """Each artifact heading line and each ticket declaration's entire value.
+
+    A declaration value is its inline text plus every following indented or
+    list-item line (#1164 R2): YAML `ticket_refs:` lists, wrapped `Ticket:` values.
+    """
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if ARTIFACT_HEADING_LINE.match(line):
+            yield line
+        if not TICKET_DECLARATION.match(line):
             continue
-        refs = ticket_refs(line)
+        value = [line]
+        for follow in lines[index + 1:]:
+            if not follow.strip() or not (follow[:1].isspace() or re.match(r'[-*+][ \t]', follow)):
+                break
+            value.append(follow)
+        yield '\n'.join(value)
+
+
+def declares_other_ticket(text, repo_slug, issue_num):
+    """True when a declaration or artifact heading names tickets, none of them the current one."""
+    for value in declarations(text):
+        refs = ticket_refs(value)
         if refs and not any(num == issue_num and repo in ('', repo_slug) for repo, num in refs):
             return True
     return False

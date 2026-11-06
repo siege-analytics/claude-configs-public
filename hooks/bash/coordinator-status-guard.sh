@@ -325,6 +325,15 @@ ARTIFACT_MODAL_HEDGE = re.compile(
 ARTIFACT_CONDITIONAL_START = re.compile(
     r'(?:if|when|whenever|unless|until|once|suppose|supposing|assuming|in case|provided)\b'
 )
+# Evidence eligibility is separate from claim masking (#1164 R1). A modal
+# anywhere in a clause, or a question, cannot supply owner/merge/rollout
+# evidence even when it holds no completion word ("Could the owner have
+# approved the rollout?").
+ARTIFACT_MODAL_WORD = re.compile(
+    r"\b(?:could|might|would|may|should|will|shall|must|can|cannot|ought|"
+    r"(?:can|couldn|wouldn|shouldn|won|mustn|shan)['’]t)\b"
+)
+ARTIFACT_QUESTION_START = re.compile(r'(?:did|does|do|has|have|had|is|are|was|were|am)\b')
 
 
 # Completion of the artifact itself is not completion of the project lane.
@@ -346,10 +355,11 @@ def mask_modal_hedges(clause):
 
 
 def artifact_factual_lines(lowered):
-    """(text, may supply evidence) for every line, front matter and wrapped lines included.
+    """(claim text, evidence text) for every line, front matter and wrapped lines included.
 
-    Hypothetical clauses are dropped and modal-governed completion words masked.
-    A hypothetical field's lines stay claims but cannot supply evidence.
+    Claim text drops hypothetical conditional clauses and masks modal-governed
+    completion words. Evidence text keeps only factual clauses: no question,
+    no modal, no conditional, and nothing under a hypothetical field.
     """
     factual, hypothetical = [], False
     for raw in lowered.splitlines():
@@ -362,8 +372,10 @@ def artifact_factual_lines(lowered):
             hypothetical = field.group(1).strip() in ARTIFACT_HYPOTHETICAL_FIELDS
         elif not raw[:1].isspace() or raw.lstrip().startswith(('#', '-', '*')):
             hypothetical = False
-        kept = []
+        kept, evidence = [], []
         for sentence in re.split(r'(?<=[;.!?])[ \t]+', line):
+            question = (sentence.rstrip().endswith('?')
+                        or bool(ARTIFACT_QUESTION_START.match(sentence.strip())))
             # `://` is a URL, not a field separator.
             parts = re.split(r'(,|:(?!//)|[ \t]+(?:—|–|--)[ \t]+|\bthen\b)', sentence)
             clauses, separators = parts[0::2], parts[1::2] + ['']
@@ -372,10 +384,21 @@ def artifact_factual_lines(lowered):
                 if consequent and ARTIFACT_CONDITIONAL_START.match(clause.strip()):
                     clause = ''
                 kept.append(mask_modal_hedges(clause) + separators[index])
+                if not (hypothetical or question or ARTIFACT_MODAL_WORD.search(clause)):
+                    evidence.append(clause + separators[index])
         text = ' '.join(''.join(kept).split())
         if text:
-            factual.append((text, not hypothetical))
+            factual.append((text, ' '.join(''.join(evidence).split())))
     return factual
+
+
+def artifact_missing_evidence(evidence_lines):
+    """Evidence kinds no single line supplies; a predicate never spans lines."""
+    missing = missing_evidence('')
+    for line in evidence_lines:
+        absent = missing_evidence(line)
+        missing = [name for name in missing if name in absent]
+    return missing
 
 
 def artifact_claims(lines):
@@ -397,7 +420,7 @@ if (
 ):
     factual = artifact_factual_lines(lower)
     claims = artifact_claims([text for text, _ in factual])
-    missing = missing_evidence('\n'.join(text for text, evidence in factual if evidence)) if claims else []
+    missing = artifact_missing_evidence(evidence for _, evidence in factual if evidence) if claims else []
     if missing:
         print("BLOCKED: think-pipeline artifact also asserts completion status without evidence.", file=sys.stderr)
         print("Claim: " + claims[0], file=sys.stderr)

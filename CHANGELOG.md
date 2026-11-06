@@ -8,14 +8,16 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 - coordinator-status-guard: in a think-pipeline artifact post, completion wording needs the same evidence on every line.
   - A field label (Mitigation, Scenario, Success criteria, ...), YAML front matter or a wrapped line no longer exempts it.
-  - A completion word is hypothetical only when a modal governs it ("CI could be green", "should not be merged"), or inside a conditional clause followed by its consequent ("if CI is green, deploy"). An unsplit conditional opener no longer hides the assertion after it.
-  - Risks stated in the indicative ("Scenario: the PR is merged before CI finishes") now need modal or conditional wording, or evidence.
-  - Text under a hypothetical field still cannot supply that evidence.
+  - A completion word is treated as hypothetical in two cases only:
+    - A modal directly precedes it, optionally with adverbs and linking verbs ("CI could be green", "should not be merged", "to be done"). Without a linking verb, only `go` and `complete` are hedged; a bare `to` ("set to done") hedges nothing.
+    - It sits in a conditional clause (if, when, unless, until, once, ...) followed by a non-empty consequent in the same sentence ("if CI is green, deploy"). An unsplit conditional opener no longer hides the assertion after it.
+  - Evidence is a separate test from claim masking. A question, or a clause containing any modal, never supplies owner/merge/rollout evidence ("Could the owner have approved the rollout?"). Text under a hypothetical field cannot supply it either. Each evidence predicate must match within one line.
+  - **Behavior change:** #1164's original "no wording workarounds needed" outcome no longer holds. Risks or criteria stated in the indicative ("Scenario: the PR is merged before CI finishes") now need modal or conditional wording, or real evidence. Approval evidence wrapped across lines no longer counts.
 - The pipeline-state writer counts a posted comment toward `junior-senior-gate.json` and `artifacts-posted-gate.json` only when:
   - its author is the authenticated `gh` login, or has the GitHub-attested OWNER, MEMBER or COLLABORATOR role;
-  - it declares no other ticket in a Ticket/Task/Issue/Refs line or an artifact heading.
-  - HTML comments, inline code, and HTML `pre`, `code`, `blockquote` and similar container content no longer supply headings or keywords.
-  - The unchanged Tier C mutation gate therefore refuses wrong-ticket, outsider and HTML-quoted artifacts.
+  - no ticket declaration names only other tickets. A declaration is a Ticket/Task/Issue/Refs/`ticket_refs` key, or an artifact heading, with its entire value: indented and list-item continuation lines are included, so YAML `ticket_refs:` lists and wrapped `Ticket:` values count.
+  - HTML comments, CDATA, inline code, and HTML `pre`, `code`, `blockquote` and similar container content no longer supply headings or keywords. Container closure is name-aware: a mismatched closing tag cannot end an open container.
+  - The unchanged Tier C mutation gate therefore refuses the tested wrong-ticket, outsider and HTML-quoted shapes. The filters are bounded parsers, not a full Markdown/HTML renderer.
 
 ### Fixed: task scopes and evidence execution
 

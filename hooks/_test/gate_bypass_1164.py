@@ -50,6 +50,13 @@ B1 = {
     'label_cannot_supply_evidence': (MARKER + 'Mitigation: the owner approved it; merged to main and released.', 2),
     'url_evidence_line_passes': (MARKER + 'The fix is merged and released. Owner approval thread: https://github.com/x/y/pull/1#issuecomment-1. '
                                  'Target branch: develop. Rollout: UAT not applicable.', 0),
+    # R1: a question or a modal clause never supplies evidence; predicates never span lines.
+    'question_without_modal_supplies_nothing': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
+                                                'Has the owner approved the rollout?', 2),
+    'inverted_question_without_mark': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
+                                       'Did the owner approve the rollout', 2),
+    'owner_evidence_split_across_lines': (MARKER + 'Status: The gate is complete; the fix is merged and released.\n'
+                                          'Owner:\napproved.', 2),
     'modal_risk_wording_passes': (MARKER + '- Scenario: the PR could be merged before CI finishes and the hook deployed broken.\n'
                                   '- Mitigation: if CI is red, the gate will hold.', 0),
     'delimited_conditional_passes': (MARKER + '- If the PR is merged early, the gate will hold.\n'
@@ -113,15 +120,21 @@ B2 = {
     'member_counts_without_actor': ([comment('Ticket: o/r#1164\n' + H, 'teammate', 'MEMBER')], None, True),
     'own_actor_counts_without_role': ([comment(H, 'task-owner', 'NONE')], 'task-owner', True),
     'current_ticket_among_others_counts': ([comment('Ticket: o/r#1164, other/repo#99999\n' + H)], 'task-owner', True),
+    # R2/R3 context controls.
+    'yaml_ticket_refs_with_current_counts': ([comment('---\nticket_refs:\n  - other/repo#99999: comment posted\n'
+                                                      '  - o/r#1164: comment posted\n---\n' + H)], 'task-owner', True),
+    'nested_code_close_keeps_pre_open': ([comment('<pre><code>a</code>\n' + H + '\n</pre>')], 'task-owner', False),
+    'unclosed_cdata': ([comment('<![CDATA[\n' + H)], 'task-owner', False),
 }
 
 COMMENT_QUERY = '.[] | {author: .user.login, association: .author_association, body: .body} | @json'
 LEGACY_QUERY = '.[].body | @json'
-# A fake gh that projects raw API records exactly as real gh would for the
-# writer's query. It also serves the pre-#1164 body-only query, so a reverted
-# writer reproduces the original bypass instead of an unreachable API.
+# A fake gh that applies the writer's actual jq query to raw API records with
+# real jq, as gh does (null user/author_association included). It also serves
+# the pre-#1164 body-only query, so a reverted writer reproduces the original
+# bypass instead of an unreachable API.
 FAKE_GH = '''#!{python}
-import json, sys
+import json, subprocess, sys
 from pathlib import Path
 here = Path(__file__).resolve().parent.parent
 args = sys.argv[1:]
@@ -134,25 +147,34 @@ if args[:2] == ['api', 'user']:
 assert args[:2] == ['api', 'repos/o/r/issues/1164/comments'], args
 query = args[args.index('-q') + 1]
 assert query in ({query!r}, {legacy!r}), query
-for r in json.loads((here / 'api-comments.json').read_text()):
-    if query == {legacy!r}:
-        print(json.dumps(r['body']))
-    else:
-        print(json.dumps({{'author': r['user']['login'], 'association': r['author_association'], 'body': r['body']}}))
+records = (here / 'api-comments.json').read_text()
+sys.exit(subprocess.run(['jq', '-r', query], input=records, text=True, timeout=10).returncode)
 '''
+REVIEW_CASES = json.loads((Path(__file__).resolve().parent / 'gate_bypass_1164_review_cases.json').read_text())
+
+
+def guard(body):
+    payload = {'tool_name': 'Bash', 'cwd': str(ROOT),
+               'tool_input': {'command': 'gh issue comment 1164 --body ' + shlex.quote(body)}}
+    return subprocess.run(['bash', str(GUARD)], input=json.dumps(payload), text=True,
+                          capture_output=True, env=ENV, timeout=60)
 
 
 class GuardArtifactLane(unittest.TestCase):
     def test_b1_payloads(self):
         for name, (body, expected) in B1.items():
             with self.subTest(name):
-                payload = {'tool_name': 'Bash', 'cwd': str(ROOT),
-                           'tool_input': {'command': 'gh issue comment 1164 --body ' + shlex.quote(body)}}
-                result = subprocess.run(['bash', str(GUARD)], input=json.dumps(payload), text=True,
-                                        capture_output=True, env=ENV, timeout=60)
+                result = guard(body)
                 self.assertEqual(result.returncode, expected, result.stderr)
                 if expected:
                     self.assertIn('asserts completion status', result.stderr)
+
+    def test_review_corpus_b1(self):
+        """Every B1 payload of the 371c4fe review, byte-for-byte; R1 cases now refuse."""
+        for case in REVIEW_CASES['B1']:
+            with self.subTest(case['file'] + ':' + case['name']):
+                result = guard(case['body'])
+                self.assertEqual(result.returncode, case['expected_exit'], result.stderr)
 
 
 class WriterGateChain(unittest.TestCase):
@@ -168,7 +190,7 @@ class WriterGateChain(unittest.TestCase):
         task, repo, fake = session / 'tasks/t', case / 'repo', case / 'fakebin'
         for path in (task, repo / 'hooks/bash', repo / 'plans', fake):
             path.mkdir(parents=True)
-        subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+        subprocess.run(['git', 'init', '-q', str(repo)], check=True, timeout=10)
         existing = repo / 'hooks/bash/example.sh'
         existing.write_text('#!/bin/bash\n# fixture only\n')
         ident = {'ticket': 'o/r#1164', 'task_id': 'o/r#1164', 'sessionId': session.name, 'repo_root': str(repo),
@@ -199,15 +221,25 @@ class WriterGateChain(unittest.TestCase):
             exits.append((gate.returncode, gate.stdout + gate.stderr))
         return flags, exits
 
+    def assertChain(self, name, comments, actor, counted):
+        flags, exits = self.chain(name, comments, actor)
+        self.assertEqual(flags, [counted] * 4)
+        for code, output in exits:
+            self.assertEqual(code, 0 if counted else 2, output)
+            if not counted:
+                self.assertIn('Tier', output)
+
     def test_b2_chain(self):
         for name, (comments, actor, counted) in B2.items():
             with self.subTest(name):
-                flags, exits = self.chain(name, comments, actor)
-                self.assertEqual(flags, [counted] * 4)
-                for code, output in exits:
-                    self.assertEqual(code, 0 if counted else 2, output)
-                    if not counted:
-                        self.assertIn('Tier', output)
+                self.assertChain(name, comments, actor, counted)
+
+    def test_review_corpus_b2(self):
+        """Every B2 record set of the 371c4fe review, byte-for-byte; R2/R3 cases now refuse."""
+        for index, case in enumerate(REVIEW_CASES['B2']):
+            with self.subTest(case['file'] + ':' + case['name']):
+                actor = None if case['actor_failure'] else case['actor']
+                self.assertChain('review-%d' % index, case['records'], actor, case['expected_counted'])
 
 
 if __name__ == '__main__':
