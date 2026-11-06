@@ -53,6 +53,44 @@ else: sys.exit(99)
         self.assertEqual(run.returncode,code,(command,run.stdout,run.stderr))
         return run
 
+    def unavailable_helper_controls(self, content):
+        helper = self.install/'hooks/lib/github-merge-queue.py'
+        if content is None:
+            helper.unlink()
+        else:
+            helper.write_text(content)
+        self.hook('pwd')
+        self.hook('gh issue view 1794')
+        self.hook('gh issue edit 1794 --title "Existing review notes"')
+        command = 'touch ' + str(self.f.repo/'local-edit.txt')
+        self.hook(command, 2)  # Missing helper cannot create a local allowance.
+        write_payload = fixture.craft_payload(tool_name='Write', cwd=str(self.f.repo),
+                                             tool_input={'file_path':str(self.f.repo/'write.txt'),
+                                                         'content':'fixture', 'command':None})
+        def write_check(expected):
+            result = subprocess.run(['bash',str(self.install/'hooks/bash/universal-mutation-gate.sh')],
+                                    input=json.dumps(write_payload), env=self.env, text=True,
+                                    capture_output=True, timeout=12)
+            self.assertEqual(result.returncode, expected, result.stderr)
+        write_check(2)
+        self.f.task('own-local', self.f.repo)
+        self.hook(command)
+        write_check(0)
+        for candidate in (CLI, GQL):
+            result = self.hook(candidate, 2)
+            self.assertIn('Queue enqueue denied:', result.stderr)
+        self.assertFalse(self.calls.exists())
+        self.assertFalse(self.audit.exists())
+
+    def test_missing_helper_does_not_affect_ordinary_actions(self):
+        self.unavailable_helper_controls(None)
+
+    def test_malformed_helper_does_not_affect_ordinary_actions(self):
+        self.unavailable_helper_controls('def broken(:\n')
+
+    def test_helper_import_failure_does_not_affect_ordinary_actions(self):
+        self.unavailable_helper_controls('raise ImportError("fixture missing queue dependency")\n')
+
     def test_cli_no_gate_requires_queue_and_audits(self):
         self.hook(CLI)
         self.hook(CLI+' --repo siege-analytics/siege_utilities')

@@ -60,12 +60,12 @@ Canonical procedure for resolver check12 and the legacy Spawn-session discipline
 
 a. **Check for existing WIP and prior resolution before implementation dispatch.** This prevents duplicate implementation; it does not prohibit an independent review of an existing PR. Resolve the target project's approved integration ref through [skill:develop-guard] and K5 before using the examples below. For Siege this is origin/develop; another project must supply its own approved ref, not a guessed trunk/dev default. The examples call that verified value `APPROVED_INTEGRATION_REF`. For ticket N, perform two checks:
 
-   **Check 1 - branch exists?** `git branch -r --list "origin/fix/*N*" "origin/feat/*N*"`. If found, inspect (commits ahead of the approved integration ref, PR state via `gh pr list --head`):
+   **Check 1 - branch exists?** Enumerate local and remote branches with `git for-each-ref --format='%(refname:short)' refs/heads refs/remotes` and inspect active worker worktrees on each relevant local or remote host with `git worktree list --porcelain`. Match the target project's approved names and the ticket or PR's recorded head branch, including branches without a ticket ID; do not limit discovery to `fix/` or `feat/`. Inspect matching local/remote work, commits ahead of the approved integration ref and PR state via `gh pr list --head`:
    - Branch exists + PR already open -> do NOT spawn; review the PR instead.
    - Branch exists + no PR -> inspect commits; decide whether to push+PR (work complete) or resume (work incomplete).
    - No branch -> proceed to Check 2.
 
-   **Check 2 - already resolved on the approved integration branch?** `git log "$APPROVED_INTEGRATION_REF" --oneline --grep="N"` (where N is the ticket number). If a fix commit is already merged:
+   **Check 2 - already resolved on the approved integration branch?** Search `git log "$APPROVED_INTEGRATION_REF" --oneline --grep="N"` using the ticket number, then check the ticket/PR's recorded branch and merge commit when the name or commit omits that ID. Missing an ID match is not proof that work is absent. If a fix commit is already merged:
    - Verify the ticket is closed or the code matches the fix description.
    - If resolved -> do NOT spawn; close the ticket if still open and move on.
    - If ambiguous -> spawn with explicit instruction to verify-before-implementing.
