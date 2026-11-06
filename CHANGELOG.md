@@ -4,6 +4,19 @@ All notable changes to this project are documented here. Versioning follows [Sem
 
 ## [Unreleased]
 
+### Fixed: gate artifact laundering and spoofed artifact signals (#1164)
+
+- coordinator-status-guard: in a think-pipeline artifact post, completion wording needs the same evidence on every line.
+  - A field label (Mitigation, Scenario, Success criteria, ...), YAML front matter or a wrapped line no longer exempts it.
+  - A completion word is hypothetical only when a modal governs it ("CI could be green", "should not be merged"), or inside a conditional clause followed by its consequent ("if CI is green, deploy"). An unsplit conditional opener no longer hides the assertion after it.
+  - Risks stated in the indicative ("Scenario: the PR is merged before CI finishes") now need modal or conditional wording, or evidence.
+  - Text under a hypothetical field still cannot supply that evidence.
+- The pipeline-state writer counts a posted comment toward `junior-senior-gate.json` and `artifacts-posted-gate.json` only when:
+  - its author is the authenticated `gh` login, or has the GitHub-attested OWNER, MEMBER or COLLABORATOR role;
+  - it declares no other ticket in a Ticket/Task/Issue/Refs line or an artifact heading.
+  - HTML comments, inline code, and HTML `pre`, `code`, `blockquote` and similar container content no longer supply headings or keywords.
+  - The unchanged Tier C mutation gate therefore refuses wrong-ticket, outsider and HTML-quoted artifacts.
+
 ### Fixed: task scopes and evidence execution
 
 - Add a GitHub issue to an approved project through the exact current task and a source-owned standing policy, without inventing a filesystem target. Other issues, projects, destructive operations and arbitrary API writes remain guarded (#1161).

@@ -13,8 +13,10 @@
 # that heading), is a gate-required artifact, not a lane update. The status-tone
 # rules (future plan, completion+blocker mix, blocked reason) do not apply to it.
 # Completion vocabulary still needs the same owner/merge/rollout evidence as in
-# an unmarked comment, except on skill-defined hypothetical fields (Scenario,
-# Mitigation, Success criteria, ...) or lines that open with a conditional.
+# an unmarked comment. Field labels (Scenario, Mitigation, ...), YAML front
+# matter and wrapped lines exempt nothing; only a completion word governed by a
+# modal ("could be green") or inside a conditional clause that a consequent
+# follows ("if CI is green, deploy") is hypothetical.
 # Comment actions only; close, reopen, ready, PR review and API state fields
 # never take this lane.
 #
@@ -257,8 +259,9 @@ EVIDENCE_HELP = "Required evidence: owner/maintainer signoff, merge/branch targe
 ARTIFACT_HINT = (
     "If this is a gate-required think-pipeline artifact (pre-mortem, investigation fact sheet, "
     "junior/senior review, design note), make its first line a heading naming it (e.g. '## Pre-Mortem') "
-    "and include a 'Ticket: <task reference>' line. Completion words outside its hypothetical fields "
-    "(Scenario, Mitigation, Success criteria, ...) still need evidence. Ref: #1164."
+    "and include a 'Ticket: <task reference>' line. Completion words still need evidence under any field "
+    "label; state a hypothetical with a modal ('CI could be green') or a conditional clause followed by "
+    "its consequent ('if CI is green, deploy'). Ref: #1164."
 )
 
 
@@ -296,7 +299,8 @@ ARTIFACT_TASK_REF = re.compile(
 )
 # Fields the pre-mortem, investigation and junior/senior formats define for
 # hypothetical or planned content (skills/pre-mortem, skills/investigate,
-# skills/self-review). A completion word there describes a risk or a goal.
+# skills/self-review). Text there, wrapped lines included, cannot supply
+# evidence; it never exempts a completion claim either (#1164).
 ARTIFACT_HYPOTHETICAL_FIELDS = {
     "scenario", "trigger", "trigger condition", "risk", "risks", "failure mode", "what could go wrong",
     "mitigation", "why it's handled", "what it is", "why it's deferred", "cost of deferral",
@@ -304,8 +308,22 @@ ARTIFACT_HYPOTHETICAL_FIELDS = {
     "steps", "steps to get there", "hypothesis", "falsification", "falsification criteria",
     "falsifiable-by", "definition of done", "open question", "open questions", "assumption", "assumptions",
 }
+# Hypothetical wording is recognized per completion word, never by a field
+# label (#1164): a Mitigation/Scenario label, YAML front matter or a wrapped
+# line carries a factual claim as easily as any other line. A modal governs a
+# word directly ("could go") or through linking verbs ("should not be merged",
+# "to be done"); a bare `to` ("set to done") hedges nothing.
+ARTIFACT_MODAL_HEDGE = re.compile(
+    r"\b(?:could|might|would|may|should|will|must|can|cannot|(?:can|couldn|wouldn|shouldn|won|mustn)['’]t|to)"
+    r"(?:[ \t]+(?:not|never|also|still|yet|ever|already|only|just|probably|likely|eventually))*"
+    r"(?P<aux>(?:[ \t]+(?:be|become|get|go|turn|stay|remain|look|seem|appear|have|been|being))*)"
+    r"(?:[ \t]+(?:fully|really|actually|already|still|all|truly))?[ \t]+$"
+)
+# A conditional clause is hypothetical only when a consequent clause follows it
+# in the same sentence ("if CI is green, deploy"). An unsplit opener ("if anyone
+# asks the gate is complete") cannot hide the assertion after it.
 ARTIFACT_CONDITIONAL_START = re.compile(
-    r'(?:if|when|whenever|unless|until|once|could|might|would|may|should|suppose|assuming|in case)\b'
+    r'(?:if|when|whenever|unless|until|once|suppose|supposing|assuming|in case|provided)\b'
 )
 
 
@@ -317,31 +335,46 @@ ARTIFACT_RESULT = re.compile(
 )
 
 
+def mask_modal_hedges(clause):
+    """Mask completion words a modal governs; they are neither claims nor evidence."""
+    def masked(match):
+        hedge = ARTIFACT_MODAL_HEDGE.search(clause[:match.start()])
+        if hedge and (hedge.group('aux') or match.group(0) in {'go', 'complete'}):
+            return '_'
+        return match.group(0)
+    return COMPLETION_RE.sub(masked, clause)
+
+
 def artifact_factual_lines(lowered):
-    """Keep factual clauses; wrapped hypothetical fields cannot supply evidence."""
+    """(text, may supply evidence) for every line, front matter and wrapped lines included.
+
+    Hypothetical clauses are dropped and modal-governed completion words masked.
+    A hypothetical field's lines stay claims but cannot supply evidence.
+    """
     factual, hypothetical = [], False
     for raw in lowered.splitlines():
         line = re.sub(r'^(?:[ \t>#*_`|-]+|\[[ x]\][ \t]*|[0-9]+[.)][ \t]*)+', '', raw)
         line = re.sub(r'[*_`]+', '', line).strip()
         if not line:
-            hypothetical = False
-            continue
-        field = re.match(r'(.{1,40}?)(?::|[ \t]+(?:—|--)[ \t]+)[ \t]*(.*)', line)
+            continue  # a blank line does not end a field's indented continuation
+        field = re.match(r'(.{1,40}?)(?::|[ \t]+(?:—|--)[ \t]+)', line)
         if field:
             hypothetical = field.group(1).strip() in ARTIFACT_HYPOTHETICAL_FIELDS
-        elif hypothetical and not raw[:1].isspace():
+        elif not raw[:1].isspace() or raw.lstrip().startswith(('#', '-', '*')):
             hypothetical = False
-        elif raw.lstrip().startswith(('#', '-', '*')):
-            hypothetical = False
-        if hypothetical:
-            continue
-        # A conditional opener applies to its clause, not a later assertion.
-        clauses = re.split(r'[;.!?][ \t]+', line)
-        for index, clause in enumerate(clauses):
-            value = field.group(2) if index == 0 and field else clause
-            if ARTIFACT_CONDITIONAL_START.match(value):
-                continue
-            factual.append(clause)
+        kept = []
+        for sentence in re.split(r'(?<=[;.!?])[ \t]+', line):
+            # `://` is a URL, not a field separator.
+            parts = re.split(r'(,|:(?!//)|[ \t]+(?:—|–|--)[ \t]+|\bthen\b)', sentence)
+            clauses, separators = parts[0::2], parts[1::2] + ['']
+            for index, clause in enumerate(clauses):
+                consequent = any(re.search(r'\w', later) for later in clauses[index + 1:])
+                if consequent and ARTIFACT_CONDITIONAL_START.match(clause.strip()):
+                    clause = ''
+                kept.append(mask_modal_hedges(clause) + separators[index])
+        text = ' '.join(''.join(kept).split())
+        if text:
+            factual.append((text, not hypothetical))
     return factual
 
 
@@ -363,8 +396,8 @@ if (
     and (ARTIFACT_TASK_REF.search(body) or re.search(r'#[0-9]+\b', first_line))
 ):
     factual = artifact_factual_lines(lower)
-    claims = artifact_claims(factual)
-    missing = missing_evidence('\n'.join(factual)) if claims else []
+    claims = artifact_claims([text for text, _ in factual])
+    missing = missing_evidence('\n'.join(text for text, evidence in factual if evidence)) if claims else []
     if missing:
         print("BLOCKED: think-pipeline artifact also asserts completion status without evidence.", file=sys.stderr)
         print("Claim: " + claims[0], file=sys.stderr)
