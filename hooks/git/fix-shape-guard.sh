@@ -49,9 +49,9 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 EXTRACT="$HOOK_DIR/../lib/extract-json.py"
 COMMAND=$(printf '%s' "$INPUT" | python3 "$EXTRACT" tool_input.command 2>/dev/null || true)
 CWD=$(printf '%s' "$INPUT" | python3 "$EXTRACT" cwd 2>/dev/null || true)
-# A standalone pinned queue request publishes no local HEAD or local tests.
-# This is shape classification, not permission: UMG owns queue proof + audit.
-if [[ -n "$COMMAND" ]] && python3 "$HOOK_DIR/../lib/github-merge-queue.py" --classify "$COMMAND" >/dev/null 2>&1; then
+# Only a proven required-queue request skips these local publication checks.
+# This predicate grants no permission; UMG owns admission and its audit.
+if [[ -n "$COMMAND" ]] && python3 "$HOOK_DIR/../lib/github-merge-queue.py" --queue-required "$COMMAND" "$CWD" >/dev/null 2>&1; then
     exit 0
 fi
 

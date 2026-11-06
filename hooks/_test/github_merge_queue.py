@@ -135,7 +135,7 @@ else: sys.exit(99)
 
     def test_bad_merge_flags_and_composition_never_borrow_local_gate(self):
         self.f.task('local-review',self.f.repo)
-        bad=[CLI+' --admin',CLI+' --auto',CLI.replace(SHA,'8801'),CLI.replace(SHA,'z'*40),CLI+' --delete-branch',CLI+' --merge',CLI+' --squash',CLI+' --repo other/repo --repo other/repo',CLI+' && rm -rf x','timeout 5 '+CLI,'bash -c '+repr(CLI),CLI+' > output',CLI+' | cat','env '+CLI,'gh api -X PUT repos/siege-analytics/siege_utilities/pulls/1794/merge']
+        bad=[CLI+' --admin',CLI.replace(SHA,'8801'),CLI.replace(SHA,'z'*40),'timeout 5 '+CLI,'bash -c '+repr(CLI),'env '+CLI,'gh api -X PUT repos/siege-analytics/siege_utilities/pulls/1794/merge']
         for command in bad:
             with self.subTest(command=command): self.hook(command,2)
         self.assertFalse(self.audit.exists())
@@ -150,7 +150,68 @@ else: sys.exit(99)
         self.f.task('own-local', self.f.repo)
         self.hook(command)
         self.assertFalse(self.audit.exists())
-        self.hook(CLI.replace('--match-head-commit ', '--match-head-commit='), 2)
+        self.hook(CLI.replace('--match-head-commit ', '--match-head-commit='))
+        self.assertFalse(self.audit.exists())
+
+    def test_nonqueue_pinned_merges_retain_task_scope_and_local_guards(self):
+        subprocess.run(['git','-C',str(self.f.repo),'remote','add','origin','https://github.com/siege-analytics/siege_utilities.git'],check=True,timeout=5)
+        subprocess.run(['git','-C',str(self.f.repo),'-c','core.hooksPath=/dev/null','-c','user.name=Fixture',
+                        '-c','user.email=fixture@example.invalid','commit','--allow-empty','-qm','Unreviewed fixture HEAD'],check=True,timeout=5)
+        (self.f.repo/'.gitignore').write_text('tests/\n')
+        tests = self.f.repo/'tests'; tests.mkdir(); (tests/'test_ignored.py').write_text('assert True\n')
+        self.mode.write_text('noqueue')
+        ordinary = [CLI, CLI+' --auto', CLI.replace(' --merge',''), CLI+' --merge',
+                    CLI+' --repo siege-analytics/siege_utilities --repo siege-analytics/siege_utilities', CLI.replace('--merge','--squash'), CLI.replace('--merge','--rebase'),
+                    CLI+' --delete-branch', CLI+' --body "--admin"',
+                    CLI.replace('--match-head-commit ', '--match-head-commit='),
+                    CLI+' && touch '+str(self.f.repo/'owned.txt'), CLI+' > '+str(self.f.repo/'output.txt')]
+        for command in ordinary:
+            with self.subTest(no_gate=command): self.hook(command,2)
+        self.f.task('own-local',self.f.repo)
+        for command in ordinary:
+            with self.subTest(owned=command):
+                self.hook(command)
+                predicate = subprocess.run([sys.executable,str(self.install/'hooks/lib/github-merge-queue.py'),
+                                            '--queue-required',command,str(self.f.repo)],env=self.env,
+                                           capture_output=True,timeout=5)
+                self.assertNotEqual(predicate.returncode,0)
+                for guard in ['git/self-review.sh','git/test-tracking-guard.sh']:
+                    payload = fixture.craft_payload(tool_name='Bash',cwd=str(self.f.repo),tool_input={'command':command})
+                    run = subprocess.run(['bash',str(self.install/'hooks'/guard)],input=json.dumps(payload),
+                                         env=self.env,cwd=self.f.repo,text=True,capture_output=True,timeout=12)
+                    self.assertEqual(run.returncode,2,(guard,command,run.stdout,run.stderr))
+        self.hook(CLI+' && touch '+str(self.f.ws/'outside-owned-task.txt'),2)
+        self.hook(CLI.replace(SHA,'bad'),2)
+        self.hook(CLI+' --admin',2)
+        self.assertFalse(self.audit.exists())
+
+    def test_composed_admin_merge_cannot_borrow_task_scope(self):
+        self.f.task('own-local',self.f.repo)
+        for command in ['gh pr merge 1 --merge && gh pr merge 2 --admin',
+                        CLI+' > '+str(self.f.repo/'log')+' && gh pr merge 2 --admin',
+                        CLI+' && gh pr merge 2 > '+str(self.f.repo/'log')+' --admin']:
+            with self.subTest(command=command):
+                result = self.hook(command,2)
+                self.assertIn('admin bypass is not supported',result.stderr)
+                predicate = subprocess.run([sys.executable,str(self.install/'hooks/lib/github-merge-queue.py'),
+                                            '--queue-required',command,str(self.f.repo)],env=self.env,
+                                           capture_output=True,timeout=5)
+                self.assertNotEqual(predicate.returncode,0)
+        self.assertFalse(self.calls.exists())
+        self.assertFalse(self.audit.exists())
+
+    def test_admin_words_in_body_and_echo_remain_ordinary_data(self):
+        self.mode.write_text('noqueue')
+        self.f.task('own-local',self.f.repo)
+        for command in [CLI+' --body "--admin"', CLI+' && echo --admin',
+                        CLI+' && printf %s "gh pr merge 2 --admin"']:
+            with self.subTest(command=command):
+                self.hook(command)
+                predicate = subprocess.run([sys.executable,str(self.install/'hooks/lib/github-merge-queue.py'),
+                                            '--queue-required',command,str(self.f.repo)],env=self.env,
+                                           capture_output=True,timeout=5)
+                self.assertNotEqual(predicate.returncode,0)
+        self.assertFalse(self.audit.exists())
 
     def test_bad_graphql_forms(self):
         bad=[GQL.replace('enqueuePullRequest','dequeuePullRequest'),GQL.replace(',expectedHeadOid:$oid',''),GQL.replace(SHA,'abc'),GQL+' -f oid='+SHA,GQL.replace('position state','position state}} deleteIssue(input:{id:$id}){clientMutationId'),GQL+' && touch x',GQL.replace('-f query=', '--input '),GQL.replace('graphql','/graphql'),GQL.replace("'mutation(", '"mutation(').replace("}}}'", '}}}"')]
@@ -174,6 +235,7 @@ else: sys.exit(99)
         (self.f.repo/'.gitignore').write_text('tests/\n')
         tests=self.f.repo/'tests';tests.mkdir();(tests/'test_ignored.py').write_text('assert True\n')
         guards=['git/self-review.sh','git/test-guard.sh','git/test-tracking-guard.sh','git/decomposition-guard.sh','git/fix-shape-guard.sh','git/detect-ai-fingerprints.sh','git/survey-context.sh','bash/destructive-guard.sh']
+        self.f.task('broad-local', self.f.repo)
         for command in [CLI+' --repo siege-analytics/siege_utilities',GQL]:
             self.hook(command)
             payload=fixture.craft_payload(tool_name='Bash',cwd=str(self.f.repo),tool_input={'command':command})
@@ -181,6 +243,8 @@ else: sys.exit(99)
                 run=subprocess.run(['bash',str(self.install/'hooks'/guard)],input=json.dumps(payload),env=self.env,cwd=self.f.repo,text=True,capture_output=True,timeout=12)
                 self.assertEqual(run.returncode,0,(guard,run.stdout,run.stderr))
         self.assertEqual(len(self.audit.read_text().splitlines()),2)
+        calls = [json.loads(line) for line in self.calls.read_text().splitlines()]
+        self.assertEqual(len(calls),18)  # UMG + eight fresh CLI proofs; GQL needs no reads.
         # Ordinary local publication still checks the unrelated local state.
         for guard in ['git/self-review.sh','git/test-tracking-guard.sh']:
             payload=fixture.craft_payload(tool_name='Bash',cwd=str(self.f.repo),tool_input={'command':'git push'})

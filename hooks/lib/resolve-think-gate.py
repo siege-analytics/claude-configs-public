@@ -759,9 +759,10 @@ def resolve_action(workspace: str, payload: dict) -> dict:
             target = queue.parse(command)
             if target is not None:
                 verified = queue.verify(target, cwd)
-                queue.audit(verified, session_id_from_env(), own_session_directory(workspace))
-                return {'read_only': False, 'paths': [], 'remote_only_authorized': True,
-                        'queue_enqueue': verified, 'error': ''}
+                if verified is not None:
+                    queue.audit(verified, session_id_from_env(), own_session_directory(workspace))
+                    return {'read_only': False, 'paths': [], 'remote_only_authorized': True,
+                            'queue_enqueue': verified, 'error': ''}
         except (OSError, ValueError, TypeError, KeyError, ImportError, SyntaxError) as exc:
             return {'read_only': False, 'paths': [], 'gate': None, 'error': 'Queue enqueue denied: ' + str(exc)}
     shape = action(command, cwd) if command else {"read_only": False, "paths": [canonical(ti.get("file_path") or ti.get("notebook_path") or ti.get("path") or cwd, cwd)]}
