@@ -99,3 +99,20 @@ The ElectInfo TC remains the actual runtime counterexample: current guidance
 was read, yet allowed preparation stopped until a user nudge. Activation must
 check actual reads and subsequent authorized actions, rather than asking the
 agent merely whether it agrees with the policy.
+
+## Final promotion review and operator clarification
+
+The operator explicitly requests outcome ownership at the shared Siege level,
+not an ElectInfo-only reminder. The agent must continue from partial progress
+to the authorized outcome without another nudge. A final promotion review also
+found quick-reference step 6 could still end a fired turn without checking the
+independent inventory, and that attribution rebase guidance needs explicit
+preservation of merge-resolution content. Resolve these in the three canonical
+owners: Autonomy owns outcome completion, Drive defers to that cycle, and Output
+owns bounded history cleanup. Preserve actual role authority and holds; add no
+universal final-response hook, new GO, or permission bypass. For message-only
+history cleanup retain the original tip and require unchanged file trees,
+repairing unexpected differences before publication while other work continues.
+Verify source/build freshness and focused decision cases, then use the normal
+feature/develop/main flow and rebind both promotion review threads to the actual
+published source. These are unresolved review findings, not a completed rollout.

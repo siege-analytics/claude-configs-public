@@ -283,5 +283,5 @@ On each fired turn:
 3. Take action per result.
 4. If terminated → CronDelete + brief operator with what was accomplished.
 5. If a target needs escalation → surface its concrete blocker, continue independent authorized work, and keep the job unless a whole-loop termination criterion applies.
-6. Otherwise → honor any requested status cadence, then end the fired turn. Keep routine fires quiet; the existing cron continues.
+6. Otherwise → check the remaining inventory and do any available authorized action. Yield only after verifying a live wait and working re-entry, or applying the termination criteria. Honor requested status updates; keep routine fires quiet.
 ```
