@@ -186,29 +186,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "b3327c2db3c7d927c579b9bb6213ac366f5e494384537930db75d3d08010822c"
+          "tree_sha256": "15e734beb5483dfa4eef6012148225c70b62a711c21b5bde5fa9553190f7673a"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "b3327c2db3c7d927c579b9bb6213ac366f5e494384537930db75d3d08010822c"
+          "tree_sha256": "15e734beb5483dfa4eef6012148225c70b62a711c21b5bde5fa9553190f7673a"
         },
         "flat": {
           "destination": "dist/flat/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "b3327c2db3c7d927c579b9bb6213ac366f5e494384537930db75d3d08010822c"
+          "tree_sha256": "15e734beb5483dfa4eef6012148225c70b62a711c21b5bde5fa9553190f7673a"
         },
         "nested": {
           "destination": "dist/nested/skills/_autonomy-rules.md",
           "file_count": 1,
-          "tree_sha256": "b3327c2db3c7d927c579b9bb6213ac366f5e494384537930db75d3d08010822c"
+          "tree_sha256": "15e734beb5483dfa4eef6012148225c70b62a711c21b5bde5fa9553190f7673a"
         }
       },
       "canonical_source": "skills/_autonomy-rules.md",
       "kind": "rule",
       "slug": "autonomy",
       "source_file_count": 1,
-      "source_tree_sha256": "b3327c2db3c7d927c579b9bb6213ac366f5e494384537930db75d3d08010822c"
+      "source_tree_sha256": "15e734beb5483dfa4eef6012148225c70b62a711c21b5bde5fa9553190f7673a"
     },
     {
       "artifacts": {
@@ -418,29 +418,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/_output-rules.md",
           "file_count": 1,
-          "tree_sha256": "b92984d3482e632b5b88b14f1bd5c99d6809bf3d177b7ed0c6a20ab2514dea61"
+          "tree_sha256": "dc4982278fa8660bec322da0826c9c6b4eeff6af6a04b3d2386bd0b2d20f38e4"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/_output-rules.md",
           "file_count": 1,
-          "tree_sha256": "b92984d3482e632b5b88b14f1bd5c99d6809bf3d177b7ed0c6a20ab2514dea61"
+          "tree_sha256": "dc4982278fa8660bec322da0826c9c6b4eeff6af6a04b3d2386bd0b2d20f38e4"
         },
         "flat": {
           "destination": "dist/flat/skills/_output-rules.md",
           "file_count": 1,
-          "tree_sha256": "b92984d3482e632b5b88b14f1bd5c99d6809bf3d177b7ed0c6a20ab2514dea61"
+          "tree_sha256": "dc4982278fa8660bec322da0826c9c6b4eeff6af6a04b3d2386bd0b2d20f38e4"
         },
         "nested": {
           "destination": "dist/nested/skills/_output-rules.md",
           "file_count": 1,
-          "tree_sha256": "b92984d3482e632b5b88b14f1bd5c99d6809bf3d177b7ed0c6a20ab2514dea61"
+          "tree_sha256": "dc4982278fa8660bec322da0826c9c6b4eeff6af6a04b3d2386bd0b2d20f38e4"
         }
       },
       "canonical_source": "skills/_output-rules.md",
       "kind": "rule",
       "slug": "output",
       "source_file_count": 1,
-      "source_tree_sha256": "b92984d3482e632b5b88b14f1bd5c99d6809bf3d177b7ed0c6a20ab2514dea61"
+      "source_tree_sha256": "dc4982278fa8660bec322da0826c9c6b4eeff6af6a04b3d2386bd0b2d20f38e4"
     },
     {
       "artifacts": {
@@ -1462,29 +1462,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/commit",
           "file_count": 1,
-          "tree_sha256": "3759b708f57e4b97db34e3ef57b744d03ddeffa4055810b9cf4949a316ef8a03"
+          "tree_sha256": "f069c6f5c660d3e9782f7b1fd3e669668f7842240a3121850c9a7cdc30863fe3"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/commit",
           "file_count": 1,
-          "tree_sha256": "3759b708f57e4b97db34e3ef57b744d03ddeffa4055810b9cf4949a316ef8a03"
+          "tree_sha256": "f069c6f5c660d3e9782f7b1fd3e669668f7842240a3121850c9a7cdc30863fe3"
         },
         "flat": {
           "destination": "dist/flat/skills/commit",
           "file_count": 1,
-          "tree_sha256": "3759b708f57e4b97db34e3ef57b744d03ddeffa4055810b9cf4949a316ef8a03"
+          "tree_sha256": "f069c6f5c660d3e9782f7b1fd3e669668f7842240a3121850c9a7cdc30863fe3"
         },
         "nested": {
           "destination": "dist/nested/skills/commit",
           "file_count": 1,
-          "tree_sha256": "3759b708f57e4b97db34e3ef57b744d03ddeffa4055810b9cf4949a316ef8a03"
+          "tree_sha256": "f069c6f5c660d3e9782f7b1fd3e669668f7842240a3121850c9a7cdc30863fe3"
         }
       },
       "canonical_source": "skills/commit/SKILL.md",
       "kind": "skill",
       "slug": "commit",
       "source_file_count": 1,
-      "source_tree_sha256": "436dead97772e79d34260c9332761998a0f28e8742d69d422a07c843815af99f"
+      "source_tree_sha256": "baa0cb2d5f85d8af8f2c1c807f801b8899df09ebe659ba3130efc585fb01e3b1"
     },
     {
       "artifacts": {
@@ -1839,29 +1839,29 @@
         "claude-code": {
           "destination": "dist/claude-code/skills/drive-while-away",
           "file_count": 3,
-          "tree_sha256": "16859f871d41163f67b043144e7143c94c337dd9609461b7ccbea1af4f02c3fd"
+          "tree_sha256": "af699189ec17e63b2b473d9f27e4e621c8cd53bf7243fbc194d54ca5c46344d9"
         },
         "craft-agent": {
           "destination": "dist/craft-agent/skills/drive-while-away",
           "file_count": 3,
-          "tree_sha256": "16859f871d41163f67b043144e7143c94c337dd9609461b7ccbea1af4f02c3fd"
+          "tree_sha256": "af699189ec17e63b2b473d9f27e4e621c8cd53bf7243fbc194d54ca5c46344d9"
         },
         "flat": {
           "destination": "dist/flat/skills/drive-while-away",
           "file_count": 3,
-          "tree_sha256": "16859f871d41163f67b043144e7143c94c337dd9609461b7ccbea1af4f02c3fd"
+          "tree_sha256": "af699189ec17e63b2b473d9f27e4e621c8cd53bf7243fbc194d54ca5c46344d9"
         },
         "nested": {
           "destination": "dist/nested/skills/drive-while-away",
           "file_count": 3,
-          "tree_sha256": "16859f871d41163f67b043144e7143c94c337dd9609461b7ccbea1af4f02c3fd"
+          "tree_sha256": "af699189ec17e63b2b473d9f27e4e621c8cd53bf7243fbc194d54ca5c46344d9"
         }
       },
       "canonical_source": "skills/drive-while-away/SKILL.md",
       "kind": "skill",
       "slug": "drive-while-away",
       "source_file_count": 3,
-      "source_tree_sha256": "04d8cc39d68359827d812fc1200d0181205f5795c548aa1aaf2a60122b1e2ec6"
+      "source_tree_sha256": "453dc7ba51a4f1b494f5ed43df34fe7a50d07908ba0c4ca17f2d8214a6757bb7"
     },
     {
       "artifacts": {
